@@ -6,7 +6,12 @@ export class RandomContactList<Contact extends IContact> extends EventEmitter<Ev
     private contactsById: Map<PeerIDKey, ContactState<Contact>> = new Map()
     private contactIds: PeerID[] = []
 
-    constructor(private ownId: PeerID, private maxSize: number, private randomness = 0.20) {
+    constructor(
+        private ownId: PeerID,
+        private maxSize: number,
+        private randomness = 0.20,
+        private getContactsLimit = 20
+    ) {
         super()
         this.ownId = ownId
     }
@@ -57,7 +62,7 @@ export class RandomContactList<Contact extends IContact> extends EventEmitter<Ev
         return this.contactsById.get(id.toKey())!
     }
 
-    public getContacts(limit = this.maxSize): Contact[] {
+    public getContacts(limit = this.getContactsLimit): Contact[] {
         const ret: Contact[] = []
         this.contactIds.forEach((contactId) => {
             const contact = this.contactsById.get(contactId.toKey())

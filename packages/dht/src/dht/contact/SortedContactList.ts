@@ -7,7 +7,7 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
     private contactsById: Map<PeerIDKey, ContactState<Contact>> = new Map()
     private contactIds: PeerID[] = []
 
-    constructor(private ownId: PeerID, private maxSize: number) {
+    constructor(private ownId: PeerID, private maxSize: number, private getContactsLimit = 20) {
         super()
         this.compareIds = this.compareIds.bind(this)
         this.ownId = ownId
@@ -39,13 +39,13 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
                 this.emit(
                     'contactRemoved',
                     contact.getPeerDescriptor(),
-                    this.getClosestContacts(25).map((contact: Contact) => contact.getPeerDescriptor())
+                    this.getClosestContacts().map((contact: Contact) => contact.getPeerDescriptor())
                 )
             }
             this.emit(
                 'newContact',
                 contact.getPeerDescriptor(),
-                this.getClosestContacts(25).map((contact: Contact) => contact.getPeerDescriptor())
+                this.getClosestContacts().map((contact: Contact) => contact.getPeerDescriptor())
             )
         }
     }
@@ -66,7 +66,7 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
         }
     }
 
-    public getClosestContacts(limit = this.maxSize): Contact[] {
+    public getClosestContacts(limit = this.getContactsLimit): Contact[] {
         const ret: Contact[] = []
         this.contactIds.forEach((contactId) => {
             const contact = this.contactsById.get(contactId.toKey())
@@ -126,7 +126,11 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
             const index = this.contactIds.indexOf(id)
             this.contactIds.splice(index, 1)
             this.contactsById.delete(id.toKey())
-            this.emit('contactRemoved', removedDescriptor, this.getClosestContacts(25).map((contact: Contact) => contact.getPeerDescriptor()))
+            this.emit(
+                'contactRemoved',
+                removedDescriptor,
+                this.getClosestContacts().map((contact: Contact) => contact.getPeerDescriptor())
+            )
             return true
         }
         return false

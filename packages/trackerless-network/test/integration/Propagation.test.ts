@@ -74,8 +74,6 @@ describe('Propagation', () => {
             streamPartId: STREAM_ID
         }
         randomGraphNodes[0].broadcast(message)
-        await waitForCondition(() => {
-            return totalReceived >= NUM_OF_NODES
-        })
+        await waitForCondition(() => totalReceived >= NUM_OF_NODES)
     }, 25000)
 })
