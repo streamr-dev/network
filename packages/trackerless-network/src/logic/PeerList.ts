@@ -56,8 +56,9 @@ export class PeerList {
         return PeerID.fromValue(peerDescriptor.peerId).toKey()
     }
 
-    size(): number {
-        return this.peers.size
+    size(exclude: string[] = []): number {
+
+        return [...this.peers.keys()].filter((peer) => !exclude.includes(peer)).length
     }
 
     getRandom(exclude: string[]): RemoteRandomGraphNode | undefined {

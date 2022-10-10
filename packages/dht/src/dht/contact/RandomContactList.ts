@@ -28,7 +28,7 @@ export class RandomContactList<Contact extends IContact> extends EventEmitter<Ev
             this.emit(
                 'newContact',
                 contact.getPeerDescriptor(),
-                this.getContacts(25).map((contact: Contact) => contact.getPeerDescriptor())
+                this.getContacts().map((contact: Contact) => contact.getPeerDescriptor())
             )
         }
     }

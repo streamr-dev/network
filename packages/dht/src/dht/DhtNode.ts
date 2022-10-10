@@ -232,7 +232,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
                     this.emit(
                         'newKbucketContact',
                         contact.getPeerDescriptor(),
-                        this.neighborList!.getClosestContacts(25).map((peer) => peer.getPeerDescriptor())
+                        this.neighborList!.getClosestContacts(20).map((peer) => peer.getPeerDescriptor())
                     )
                 } else {
                     this.removeContact(contact.getPeerDescriptor())
@@ -514,7 +514,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             const dhtPeer = new DhtPeer(contact, toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())))
             const peerId = PeerID.fromValue(contact.peerId)
             this.neighborList!.addContact(dhtPeer)
-            this.randomPeers!.addContact(dhtPeer)
+            if (!this.neighborList!.hasContact(peerId)) {
+                this.randomPeers!.addContact(dhtPeer)
+            }
             if (contact.openInternet) {
                 this.openInternetPeers!.addContact(dhtPeer)
             }

@@ -39,6 +39,14 @@ export class Handshaker {
     public async findParallelTargetsAndHandshake(excludedIds: string[]): Promise<string[]> {
         const exclude = excludedIds.concat(this.targetNeighbors.getStringIds())
         const targetNeighbors = this.nearbyContactPool.getClosestAndFurthest(exclude)
+        while (targetNeighbors.length < 2 && this.randomContactPool.size(exclude) > 0) {
+            const random = this.randomContactPool.getRandom(exclude)
+            if (random) {
+                targetNeighbors.push(random)
+                const id = PeerID.fromValue(random!.getPeerDescriptor().peerId).toKey()
+                exclude.push(id)
+            }
+        }
         targetNeighbors.forEach((contact) => this.ongoingHandshakes.add(PeerID.fromValue(contact.getPeerDescriptor().peerId).toKey()))
 
         const promises = [...targetNeighbors.values()].map(async (target: RemoteRandomGraphNode, i) => {

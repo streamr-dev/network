@@ -41,7 +41,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     private stopped = false
     private started = false
     private readonly N = 4
-    private readonly PEER_VIEW_SIZE = 25
+    private readonly PEER_VIEW_SIZE = 20
     private readonly randomGraphId: string // StreamPartID
     private readonly layer1: DhtNode
     private readonly nearbyContactPool: PeerList

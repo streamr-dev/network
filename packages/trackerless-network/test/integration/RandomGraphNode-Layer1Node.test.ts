@@ -122,7 +122,7 @@ describe('RandomGraphNode-DhtNode', () => {
                 waitForCondition(() => node.getContactPoolIds().length >= 8),
                 waitForCondition(() => {
                     return node.getTargetNeighborStringIds().length >= 3
-                })
+                }, 10000)
             ])
         ))
 

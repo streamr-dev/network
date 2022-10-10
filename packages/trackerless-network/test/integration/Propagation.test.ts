@@ -16,7 +16,7 @@ describe('Propagation', () => {
     const STREAM_ID = 'testingtesting'
     let totalReceived: number
 
-    const NUM_OF_NODES = 512
+    const NUM_OF_NODES = 256
 
     beforeEach(async () => {
         totalReceived = 0
@@ -75,6 +75,7 @@ describe('Propagation', () => {
         }
         randomGraphNodes[0].broadcast(message)
         await waitForCondition(() => {
+            console.log(totalReceived)
             return totalReceived >= NUM_OF_NODES
         })
     }, 25000)
