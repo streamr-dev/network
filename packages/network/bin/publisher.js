@@ -74,6 +74,7 @@ setInterval(() => {
                 noise: generateString(noise),
                 sequenceNumber
             },
+            signature: 'signature'
         })
         publisher.publish(streamMessage)
     })
