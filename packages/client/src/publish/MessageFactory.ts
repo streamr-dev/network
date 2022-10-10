@@ -3,11 +3,11 @@ import {
     createSignaturePayload,
     EncryptedGroupKey,
     EncryptionType,
+    MessageID,
     SignatureType,
     StreamID,
     StreamMessage,
-    StreamMessageOptions,
-    toStreamPartID 
+    StreamMessageOptions
 } from 'streamr-client-protocol'
 import { EncryptionUtil } from '../encryption/EncryptionUtil'
 import { GroupKeyId } from '../encryption/GroupKey'
@@ -63,9 +63,8 @@ export class MessageFactory {
         this.defaultMessageChainIds = new Mapping(async (_partition: number) => {
             return createRandomMsgChainId()
         })
-        this.messageChains = new Mapping(async (partition: number, msgChainId: string) => {
-            const publisherId = await this.authentication.getAddress()
-            return new MessageChain(toStreamPartID(this.streamId, partition), publisherId, msgChainId)
+        this.messageChains = new Mapping(async (_partition: number, _msgChainId: string) => {
+            return new MessageChain()
         })
     }
 
@@ -97,11 +96,13 @@ export class MessageFactory {
                 : this.getDefaultPartition(partitionCount)
         }
 
+        const msgChainId = metadata.msgChainId ?? await this.defaultMessageChainIds.get(partition)
         const chain = await this.messageChains.get(
             partition,
-            metadata.msgChainId ?? await this.defaultMessageChainIds.get(partition)
+            msgChainId
         )
-        const [messageId, prevMsgRef] = chain.add(metadata.timestamp)
+        const [msgRef, prevMsgRef] = chain.add(metadata.timestamp)
+        const messageId = new MessageID(this.streamId, partition, msgRef.timestamp, msgRef.sequenceNumber, publisherId, msgChainId)
 
         const encryptionType = (await this.streamRegistry.isPublic(this.streamId)) ? EncryptionType.NONE : EncryptionType.AES
         let groupKeyId: GroupKeyId | undefined
