@@ -93,7 +93,7 @@ export class MessageFactory {
             }
         }
 
-        const message = new StreamMessage<any>({
+        const message = new StreamMessage<T>({
             content: serializedContent,
             messageId,
             prevMsgRef,
