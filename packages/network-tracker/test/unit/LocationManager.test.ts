@@ -44,9 +44,8 @@ describe('LocationManager', () => {
             expect(locationManager.getNodeLocation('nodeId')).toBeUndefined()
         })
 
+        // TODO this test doesn't assert what it describes
         it('passing invalid address causes error to be logged', () => {
-            // @ts-expect-error private field
-            locationManager.logger.warn = jest.fn()
             locationManager.updateLocation({
                 nodeId: 'nodeId',
                 address: 'dsjklgasdjklgjasdklgj'

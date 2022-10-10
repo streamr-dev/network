@@ -13,6 +13,7 @@ import type { RpcOptions } from "@protobuf-ts/runtime-rpc"
 import { DhtPeer } from '../../src/dht/DhtPeer'
 import { IMessageType } from '@protobuf-ts/runtime'
 
+/* eslint-disable class-methods-use-this */
 class MockRpcClient implements IDhtRpcServiceClient, ServiceInfo {
     typeName = 'MockRpcClient'
     methods: MethodInfo<any, any> [] = [

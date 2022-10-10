@@ -70,6 +70,7 @@ function DataChannelEmitter(dataChannel: DataChannel) {
 export const webRtcConnectionFactory = new class implements WebRtcConnectionFactory {
     activeWebRtcEndpointCount = 0
     logger = new Logger(module)
+    // eslint-disable-next-line class-methods-use-this
     createConnection(opts: ConstructorOptions): WebRtcConnection {
         return new NodeWebRtcConnection(opts)
     }

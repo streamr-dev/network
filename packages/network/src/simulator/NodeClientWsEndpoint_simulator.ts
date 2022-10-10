@@ -46,12 +46,14 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
         return new NodeClientWsConnection(this.ownAddress, this.peerInfo, serverAddress, serverPeerInfo, this)
     }
 
+    // eslint-disable-next-line class-methods-use-this
     protected doHandshakeResponse(uuid: string, peerId: PeerId, serverAddress: string): void {
         delete this.pendingHandshakes[peerId]
         Simulator.instance().wsSend(this.ownAddress, this.peerInfo, serverAddress, JSON.stringify({ uuid, peerId: this.peerInfo.peerId }))
         //ws.send(JSON.stringify({ uuid, peerId: this.peerInfo.peerId }))
     }
 
+    // eslint-disable-next-line class-methods-use-this
     protected doHandshakeParse(message: string | Buffer | Buffer[]): HandshakeValues {
         const { uuid, peerId } = JSON.parse(message.toString())
         return {
@@ -63,6 +65,7 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
     /****************** Called by Simulator ************/
 
     //not implemented in client socket
+    // eslint-disable-next-line class-methods-use-this
     public handleIncomingConnection(_ufromAddress: string, _ufromInfo: PeerInfo): void { }
 
     public handleIncomingDisconnection(_ufromAddress: string, fromInfo: PeerInfo, code: DisconnectionCode, 

@@ -2,7 +2,7 @@ import * as Err from './errors'
 
 // TODO: Replace with streamr-utils library import
 export function promiseTimeout<T>(ms: number, givenPromise: Promise<T>): Promise<T> {
-    const timeoutPromise = new Promise((resolve, reject) => {
+    const timeoutPromise = new Promise((_resolve, reject) => {
         const timeoutRef = setTimeout(() => {
             reject(new Err.RpcTimeout('Timed out in ' + ms + 'ms.'))
         }, ms)

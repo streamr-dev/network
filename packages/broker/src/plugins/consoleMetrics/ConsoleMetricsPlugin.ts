@@ -33,6 +33,7 @@ export class ConsoleMetricsPlugin extends Plugin<ConsoleMetricsPluginConfig> {
         this.producer?.stop()
     }
 
+    // eslint-disable-next-line class-methods-use-this
     override getConfigSchema(): Schema {
         return PLUGIN_CONFIG_SCHEMA
     }

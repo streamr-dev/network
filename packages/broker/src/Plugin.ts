@@ -52,6 +52,7 @@ export abstract class Plugin<T> {
      */
     abstract stop(): Promise<unknown>
 
+    // eslint-disable-next-line class-methods-use-this
     getConfigSchema(): Schema | undefined {
         return undefined
     }

@@ -182,7 +182,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         const connection = this.connectionFactory.createConnection(connectionOptions)
 
         if (connection.isOffering()) {
-            connection.once('localDescription', (type, description) => {
+            connection.once('localDescription', (_type, description) => {
                 this.rtcSignaller.sendRtcOffer(routerId, connection.getPeerId(), connection.getConnectionId(), description)
                 this.attemptProtocolVersionValidation(connection)
             })

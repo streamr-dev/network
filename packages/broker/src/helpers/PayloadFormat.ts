@@ -53,6 +53,7 @@ const parsePayloadJson = (payload: string) => {
     }
 }
 
+/* eslint-disable class-methods-use-this */
 export class PlainPayloadFormat implements PayloadFormat {
     createMessage(payload: string): Message | never {
         const content = parsePayloadJson(payload)

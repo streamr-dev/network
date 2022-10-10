@@ -6,7 +6,6 @@ import { SubscriptionSession } from './SubscriptionSession'
 import { Subscription, SubscriptionOnMessage } from './Subscription'
 import { StreamPartID } from 'streamr-client-protocol'
 import { StreamIDBuilder } from '../StreamIDBuilder'
-import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { StreamDefinition } from '../types'
 import { Resends } from './Resends'
 import { GroupKeyStore } from '../encryption/GroupKeyStore'
@@ -15,6 +14,7 @@ import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { StreamrClientEventEmitter } from '../events'
 import { DestroySignal } from '../DestroySignal'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 
 /**
  * Public Subscribe APIs

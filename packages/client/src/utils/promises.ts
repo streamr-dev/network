@@ -70,7 +70,6 @@ export function pOrderedResolve<ArgsType extends unknown[], ReturnType>(
     return Object.assign(async (...args: ArgsType) => {
         const d = Defer<ReturnType>()
         const done = queue(() => d)
-        // eslint-disable-next-line promise/catch-or-return
         await Promise.resolve(fn(...args)).then(d.resolve, d.reject)
         return done
     }, {

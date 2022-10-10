@@ -66,7 +66,7 @@ describe('check status message flow between tracker and two nodes', () => {
     it('tracker should receive status message from node', (done) => {
         nodeOne.subscribe(streamPartIdOne)
         // @ts-expect-error private field
-        tracker.trackerServer.once(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, peerInfo) => {
+        tracker.trackerServer.once(TrackerServerEvent.NODE_STATUS_RECEIVED, (_statusMessage, peerInfo) => {
             expect(peerInfo).toEqual('node-1')
             done()
         })
@@ -78,7 +78,7 @@ describe('check status message flow between tracker and two nodes', () => {
     it('tracker should receive status from second node', (done) => {
         nodeTwo.subscribe(streamPartIdOne)
         // @ts-expect-error private field
-        tracker.trackerServer.once(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, peerInfo) => {
+        tracker.trackerServer.once(TrackerServerEvent.NODE_STATUS_RECEIVED, (_statusMessage, peerInfo) => {
             expect(peerInfo).toEqual('node-2')
             done()
         })
@@ -93,7 +93,7 @@ describe('check status message flow between tracker and two nodes', () => {
         let doneCalled = false
 
         // @ts-expect-error private field
-        tracker.trackerServer.on(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, nodeId) => {
+        tracker.trackerServer.on(TrackerServerEvent.NODE_STATUS_RECEIVED, (_statusMessage, nodeId) => {
 
             if (nodeId === 'node-1' && !nodeOneStatusReceived) {
                 nodeOneStatusReceived = true

@@ -23,8 +23,9 @@ export class NodeClientWsConnection extends AbstractWsConnection {
     constructor(private ownAddress: string, 
         private ownPeerInfo: PeerInfo, 
         private remoteAddress: string, 
-        private remotePeerInfo: PeerInfo,
-        private endpoint: NodeClientWsEndpoint) {
+        remotePeerInfo: PeerInfo,
+        private endpoint: NodeClientWsEndpoint
+    ) {
         super(remotePeerInfo)
     }
 
@@ -41,6 +42,7 @@ export class NodeClientWsConnection extends AbstractWsConnection {
         this.endpoint.doOnClose(this, DisconnectionCode.DEAD_CONNECTION, '')
     }
 
+    // eslint-disable-next-line class-methods-use-this
     getBufferedAmount(): number {
         return 0
     }

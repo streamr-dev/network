@@ -56,6 +56,7 @@ export interface Events {
 /**
  * The factory is used so that integration tests can replace the real network node with a fake instance
  */
+/* eslint-disable class-methods-use-this */
 @scoped(Lifecycle.ContainerScoped)
 export class NetworkNodeFactory {
     createNetworkNode(opts: NetworkNodeOptions): NetworkNodeStub {

@@ -13,7 +13,6 @@ import { createSubscribePipeline } from './SubscribePipeline'
 import { StorageNodeRegistry } from '../registry/StorageNodeRegistry'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamDefinition } from '../types'
-import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { random } from 'lodash'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { HttpUtil } from '../HttpUtil'
@@ -23,6 +22,7 @@ import { GroupKeyStore } from '../encryption/GroupKeyStore'
 import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'
 import { StreamrClientEventEmitter } from '../events'
 import { DestroySignal } from '../DestroySignal'
+import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 

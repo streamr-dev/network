@@ -71,6 +71,7 @@ const parseErrorCode = (body: string) => {
     return code in ErrorCode ? code : ErrorCode.UNKNOWN
 }
 
+/* eslint-disable class-methods-use-this */
 @scoped(Lifecycle.ContainerScoped)
 export class HttpUtil {
     async fetchHttpStream(

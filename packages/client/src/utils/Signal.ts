@@ -245,7 +245,6 @@ export class Signal<ArgsType extends any[] = []> {
 
         // execute tasks in sequence
         await tasks.reduce(async (prev, task) => {
-            // eslint-disable-next-line promise/always-return
             await prev
             await task(...args)
         }, Promise.resolve())
@@ -310,7 +309,6 @@ export class ErrorSignal<ArgsType extends [Error] = [Error]> extends Signal<Args
 
         // execute tasks in sequence
         await tasks.reduce(async (prev, task) => {
-            // eslint-disable-next-line promise/always-return
             // pass previous error to next
             try {
                 await prev

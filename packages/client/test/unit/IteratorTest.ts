@@ -172,7 +172,7 @@ export function IteratorTest(name: string, fn: (...args: any[]) => any): void {
             const itr = fn({
                 items: expected, max: MAX_ITEMS
             })[Symbol.asyncIterator]()
-            const tasks = expected.map(async (v, index, arr) => {
+            const tasks = expected.map(async (_v, index, arr) => {
                 // resolve backwards
                 const result = await itr.next()
                 await wait(WAIT + (WAIT * 10 * ((arr.length - index) / arr.length)))
@@ -188,7 +188,7 @@ export function IteratorTest(name: string, fn: (...args: any[]) => any): void {
                 items: expected,
             })[Symbol.asyncIterator]()
             const err = new Error('expected')
-            const tasks = expected.map(async (v, index, arr) => {
+            const tasks = expected.map(async (_v, index, arr) => {
                 const result = await itr.next()
                 await wait(WAIT + WAIT * ((arr.length - index) / arr.length))
                 if (index === MAX_ITEMS) {
