@@ -17,7 +17,7 @@ import { random } from 'lodash'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { HttpUtil } from '../HttpUtil'
 import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
-import { EthereumAddress, wait } from '@streamr/utils'
+import { EthereumAddress, toEthereumAddress, wait } from '@streamr/utils'
 import { GroupKeyStore } from '../encryption/GroupKeyStore'
 import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'
 import { StreamrClientEventEmitter } from '../events'
@@ -39,14 +39,14 @@ export interface ResendLastOptions {
 
 export interface ResendFromOptions {
     from: ResendRef
-    publisherId?: EthereumAddress
+    publisherId?: string
 }
 
 export interface ResendRangeOptions {
     from: ResendRef
     to: ResendRef
     msgChainId?: string
-    publisherId?: EthereumAddress
+    publisherId?: string
 }
 
 export type ResendOptions = ResendLastOptions | ResendFromOptions | ResendRangeOptions
@@ -124,7 +124,7 @@ export class Resends implements Context {
                 fromSequenceNumber: options.from.sequenceNumber,
                 toTimestamp: new Date(options.to.timestamp).getTime(),
                 toSequenceNumber: options.to.sequenceNumber,
-                publisherId: options.publisherId,
+                publisherId: options.publisherId !== undefined ? toEthereumAddress(options.publisherId) : undefined,
                 msgChainId: options.msgChainId,
             })
         }
@@ -133,7 +133,7 @@ export class Resends implements Context {
             return this.from<T>(streamPartId, {
                 fromTimestamp: new Date(options.from.timestamp).getTime(),
                 fromSequenceNumber: options.from.sequenceNumber,
-                publisherId: options.publisherId,
+                publisherId: options.publisherId !== undefined ? toEthereumAddress(options.publisherId) : undefined,
             })
         }
 
