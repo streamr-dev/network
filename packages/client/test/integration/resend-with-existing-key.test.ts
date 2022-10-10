@@ -35,6 +35,7 @@ describe('resend with existing key', () => {
             nextEncryptionKey: nextGroupKey,
             stream,
             publisher: publisherWallet,
+            msgChainId: 'mock-msgChainId'
         })
         storageNode.storeMessage(message)
     }

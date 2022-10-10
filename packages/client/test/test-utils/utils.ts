@@ -129,7 +129,7 @@ export const createMockMessage = (
     const plainContent = opts.content ?? DEFAULT_CONTENT
     return factory.createMessage(plainContent, {
         timestamp: opts.timestamp ?? Date.now(),
-        msgChainId: opts.msgChainId ?? `mockMsgChainId-${opts.publisher.address}`
+        msgChainId: opts.msgChainId
     }, partition)
 }
 
