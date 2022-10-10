@@ -43,7 +43,7 @@ interface MessageOptions {
 
 const validate = async (messageOptions: MessageOptions, validatorOptions: Partial<SubscribeConfig> = {}) => {
     const validator = createMockValidator(validatorOptions)
-    const msg = createMockMessage({
+    const msg = await createMockMessage({
         streamPartId: toStreamPartID(toStreamID('streamId'), messageOptions.partition ?? 0),
         publisher: messageOptions.publisher ?? publisherWallet,
     })
