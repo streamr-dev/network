@@ -296,27 +296,19 @@ export default class StreamMessage<T = unknown> {
      * e.g.
      * ```
      * const signedMessage: StreamMessageSigned = Object.assign(unsigedMessage, {
-     *     signature: unsigedMessage.getPayloadToSign(SignatureType.ETH),
+     *     signature: unsigedMessage.getPayloadToSign(),
      * })
      * ```
      */
-    getPayloadToSign(newSignatureType?: SignatureType): string {
-        if (newSignatureType != null) {
-            StreamMessage.validateSignatureType(newSignatureType)
-            this.signatureType = newSignatureType
-        }
-
-        const { signatureType } = this
-        if (signatureType === StreamMessage.SIGNATURE_TYPES.ETH) {
+    getPayloadToSign(): string {
+        if (this.signatureType === StreamMessage.SIGNATURE_TYPES.ETH) {
             // Nullable fields
             const prev = (this.prevMsgRef ? `${this.prevMsgRef.timestamp}${this.prevMsgRef.sequenceNumber}` : '')
             const newGroupKey = (this.newGroupKey ? this.newGroupKey.serialize() : '')
-
             return `${this.getStreamId()}${this.getStreamPartition()}${this.getTimestamp()}${this.messageId.sequenceNumber}`
                 + `${this.getPublisherId().toLowerCase()}${this.messageId.msgChainId}${prev}${this.getSerializedContent()}${newGroupKey}`
         }
-        
-        throw new ValidationError(`Unrecognized signature type: ${signatureType}`)
+        throw new ValidationError(`Unrecognized signature type: ${this.signatureType}`)
     }
 
     static registerSerializer(version: number, serializer: Serializer<StreamMessage<unknown>>): void {

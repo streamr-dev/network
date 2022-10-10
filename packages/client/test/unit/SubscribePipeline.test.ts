@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 import { GroupKey } from './../../src/encryption/GroupKey'
-import { StreamMessage, StreamPartID, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
+import { StreamPartID, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
 import { Wallet } from '@ethersproject/wallet'
 import { createMockMessage } from './../test-utils/utils'
 import { MessageStream } from './../../src/subscribe/MessageStream'
@@ -97,7 +97,7 @@ describe('SubscribePipeline', () => {
             streamPartId
         })
         msg.serializedContent = '{ invalid-json'
-        msg.signature = sign(msg.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), publisher.privateKey)
+        msg.signature = sign(msg.getPayloadToSign(), publisher.privateKey)
         await input.push(msg)
         input.endWrite()
         const onError = jest.fn()

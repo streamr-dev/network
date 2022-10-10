@@ -50,7 +50,8 @@ describe('client behaviour on invalid message', () => {
             prevMsgRef: null,
             content: { not: 'allowed' }
         })
-        msg.signature = sign(msg.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), publisherWallet.privateKey.substring(2))
+        msg.signatureType = StreamMessage.SIGNATURE_TYPES.ETH
+        msg.signature = sign(msg.getPayloadToSign(), publisherWallet.privateKey.substring(2))
         networkNode.publish(msg)
         await wait(PROPAGATION_WAIT_TIME)
         expect(true).toEqual(true) // we never get here if subscriberClient crashes

@@ -59,8 +59,9 @@ describe('PublisherKeyExchange', () => {
             messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST,
             encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
             contentType: StreamMessage.CONTENT_TYPES.JSON,
+            signatureType: StreamMessage.SIGNATURE_TYPES.ETH
         })
-        msg.signature = sign(msg.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), publisher.privateKey)
+        msg.signature = sign(msg.getPayloadToSign(), publisher.privateKey)
         return msg
     }
 

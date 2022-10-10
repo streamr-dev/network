@@ -56,7 +56,8 @@ describe('StreamMessageValidator', () => {
     }
 
     const sign = (msgToSign: StreamMessage, privateKey: string) => {
-        msgToSign.signature = nonWrappedSign(msgToSign.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), privateKey)
+        msgToSign.signatureType = StreamMessage.SIGNATURE_TYPES.ETH
+        msgToSign.signature = nonWrappedSign(msgToSign.getPayloadToSign(), privateKey)
     }
 
     beforeEach(async () => {

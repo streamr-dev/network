@@ -82,8 +82,8 @@ export class FakeStorageNode extends FakeNetworkNode {
                         streamPart: streamPartId,
                     }
                 })
-                const payload = assignmentMessage.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH)
-                assignmentMessage.signature = sign(payload, this.privateKey)
+                assignmentMessage.signatureType = StreamMessage.SIGNATURE_TYPES.ETH
+                assignmentMessage.signature = sign(assignmentMessage.getPayloadToSign(), this.privateKey)
                 this.publish(assignmentMessage)
             }
         })
