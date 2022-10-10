@@ -25,7 +25,6 @@ export enum ContentType {
 }
 
 export enum SignatureType {
-    NONE = 0,
     ETH = 2
 }
 
@@ -45,7 +44,7 @@ export interface StreamMessageOptions<T> {
     groupKeyId?: string | null
     newGroupKey?: EncryptedGroupKey | null
     signatureType?: SignatureType
-    signature?: string | null
+    signature: string
 }
 
 export interface ObjectType<T> { 
@@ -61,7 +60,7 @@ export interface ObjectType<T> {
     groupKeyId: string | null
     content: string | T
     signatureType: SignatureType
-    signature: string | null
+    signature: string
 }
 
 /**
@@ -107,7 +106,7 @@ export default class StreamMessage<T = unknown> {
     groupKeyId: string | null
     newGroupKey: EncryptedGroupKey | null
     signatureType: SignatureType
-    signature: string | null
+    signature: string
     parsedContent?: T
     serializedContent: string
 
@@ -142,8 +141,8 @@ export default class StreamMessage<T = unknown> {
         encryptionType = StreamMessage.ENCRYPTION_TYPES.NONE,
         groupKeyId = null,
         newGroupKey = null,
-        signatureType = StreamMessage.SIGNATURE_TYPES.NONE,
-        signature = null,
+        signatureType = StreamMessage.SIGNATURE_TYPES.ETH,
+        signature,
     }: StreamMessageOptions<T>) {
         validateIsType('messageId', messageId, 'MessageID', MessageID)
         this.messageId = messageId
@@ -169,7 +168,7 @@ export default class StreamMessage<T = unknown> {
         StreamMessage.validateSignatureType(signatureType)
         this.signatureType = signatureType
 
-        validateIsString('signature', signature, true)
+        validateIsString('signature', signature, false)
         this.signature = signature
 
         if (typeof content === 'string') {
