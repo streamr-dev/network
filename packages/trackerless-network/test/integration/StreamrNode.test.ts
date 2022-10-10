@@ -48,11 +48,11 @@ describe('StreamrNode', () => {
         transport1 = new ConnectionManager({ ownPeerDescriptor: peer1, simulator, serviceIdPrefix: 'simulator/' })
         transport2 = new ConnectionManager({ ownPeerDescriptor: peer2, simulator, serviceIdPrefix: 'simulator/' })
         layer01 = new DhtNode({
-            transportLayer: transport1,
+            connectionManager: transport1,
             peerDescriptor: peer1
         })
         layer02 = new DhtNode({
-            transportLayer: transport2,
+            connectionManager: transport2,
             peerDescriptor: peer2
         })
         await Promise.all([
