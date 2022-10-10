@@ -61,6 +61,7 @@ describe('StreamMessage', () => {
             const streamMessage = new StreamMessage({
                 messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
                 content: JSON.stringify(content),
+                signature: 'signature'
             })
             assert.strictEqual(streamMessage.getStreamId(), 'streamId')
             assert.strictEqual(streamMessage.getStreamPartition(), 0)
@@ -76,14 +77,15 @@ describe('StreamMessage', () => {
             assert.deepStrictEqual(streamMessage.getContent(), content)
             assert.strictEqual(streamMessage.getSerializedContent(), JSON.stringify(content))
             assert.strictEqual(streamMessage.getNewGroupKey(), null)
-            assert.strictEqual(streamMessage.signatureType, StreamMessage.SIGNATURE_TYPES.NONE)
-            assert.strictEqual(streamMessage.signature, null)
+            assert.strictEqual(streamMessage.signatureType, StreamMessage.SIGNATURE_TYPES.ETH)
+            assert.strictEqual(streamMessage.signature, 'signature')
         })
 
         it('create StreamMessage with object as content instead of string', () => {
             const streamMessage = new StreamMessage({
                 messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
                 content,
+                signature: 'signature'
             })
             assert.deepStrictEqual(streamMessage.getContent(), content)
             assert.strictEqual(streamMessage.getSerializedContent(), JSON.stringify(content))
@@ -223,6 +225,7 @@ describe('StreamMessage', () => {
             const streamMessage = new StreamMessage({
                 messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
                 content: JSON.stringify(content),
+                signature: 'signature'
             })
             const streamMessageClone = streamMessage.clone()
             expect(streamMessageClone).not.toBe(streamMessage)

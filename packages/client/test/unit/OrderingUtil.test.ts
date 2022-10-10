@@ -13,6 +13,7 @@ const createMsg = (
         messageId: new MessageID(toStreamID('streamId'), 0, timestamp, sequenceNumber, publisherId, msgChainId),
         prevMsgRef,
         content,
+        signature: 'signature'
     })
 }
 

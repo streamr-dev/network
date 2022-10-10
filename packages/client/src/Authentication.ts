@@ -37,7 +37,7 @@ export interface Authentication {
     isAuthenticated: () => boolean
     // always in lowercase
     getAddress: () => Promise<EthereumAddress>
-    createMessagePayloadSignature: (payload: string) => Promise<string>
+    createMessageSignature: (payload: string) => Promise<string>
     getStreamRegistryChainSigner: () => Promise<Signer>
 }
 
@@ -48,7 +48,7 @@ export const createAuthentication = (authConfig: AuthConfig, ethereumConfig: Eth
         return {
             isAuthenticated: () => true,
             getAddress: async () => address,
-            createMessagePayloadSignature: async (payload: string) => sign(payload, key),
+            createMessageSignature: async (payload: string) => sign(payload, key),
             getStreamRegistryChainSigner: async () => new Wallet(key, getStreamRegistryChainProvider(ethereumConfig))
         }
     } else if (authConfig.ethereum !== undefined) {
@@ -68,7 +68,7 @@ export const createAuthentication = (authConfig: AuthConfig, ethereumConfig: Eth
                     throw new Error('no addresses connected+selected in Metamask')
                 }
             }),
-            createMessagePayloadSignature: pLimitFn(async (payload: string) => {
+            createMessageSignature: pLimitFn(async (payload: string) => {
                 // sign one at a time & wait a moment before asking for next signature
                 // otherwise metamask extension may not show the prompt window
                 const sig = await signer.signMessage(payload)
@@ -101,7 +101,7 @@ export const createAuthentication = (authConfig: AuthConfig, ethereumConfig: Eth
             getAddress: async () => { 
                 throw new Error('StreamrClient is not authenticated with private key')
             },
-            createMessagePayloadSignature: async () => {
+            createMessageSignature: async () => {
                 throw new Error('Need either "privateKey" or "ethereum"')
             },
             getStreamRegistryChainSigner: async () => {

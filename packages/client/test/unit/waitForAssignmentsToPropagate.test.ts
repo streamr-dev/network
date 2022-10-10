@@ -3,23 +3,28 @@ import { MessageID, StreamID, StreamMessage, StreamPartID, toStreamID, toStreamP
 import { PushPipeline } from '../../src/utils/PushPipeline'
 import { range, shuffle } from 'lodash'
 import { wait } from '@streamr/utils'
+import { createSignedMessage } from '../../src/publish/MessageFactory'
+import { createRandomAuthentication } from '../test-utils/utils'
 
-function makeMsg<T>(ts: number, content: T): StreamMessage<T> {
-    return new StreamMessage({
+const authentication = createRandomAuthentication()
+
+async function makeMsg<T>(ts: number, content: T): Promise<StreamMessage<T>> {
+    return createSignedMessage({
         messageId: new MessageID(toStreamID('assignmentStreamId'), 0, ts, 0, 'publisher', 'msgChain'),
-        content
+        serializedContent: JSON.stringify(content),
+        authentication
     })
 }
 
-function createAssignmentMessagesFor(stream: {
+async function createAssignmentMessagesFor(stream: {
     id: StreamID
     partitions: number
-}): StreamMessage<{ streamPart: StreamPartID }>[] {
-    return range(0, stream.partitions).map((partition) => (
+}): Promise<StreamMessage<{ streamPart: StreamPartID }>[]> {
+    return Promise.all(range(0, stream.partitions).map((partition) => (
         makeMsg(partition * 1000, {
             streamPart: toStreamPartID(stream.id, partition)
         })
-    ))
+    )))
 }
 
 const RACE_TIMEOUT_IN_MS = 20
@@ -49,10 +54,10 @@ describe(waitForAssignmentsToPropagate, () => {
 
     describe('ignore cases', () => {
         it('invalid payloads are ignored', async () => {
-            await pushPipeline.push(makeMsg(1000, {
+            await pushPipeline.push(await makeMsg(1000, {
                 something: 'unexpected'
             }))
-            await pushPipeline.push(makeMsg(1200, {}))
+            await pushPipeline.push(await makeMsg(1200, {}))
             await Promise.race([propagatePromise, wait(RACE_TIMEOUT_IN_MS)])
             expect(propagatePromiseState).toEqual('pending') // would be rejected if error instead of ignore
         })
@@ -62,7 +67,7 @@ describe(waitForAssignmentsToPropagate, () => {
                 id: toStreamID('test.eth/other/stream'),
                 partitions: TARGET_STREAM.partitions
             }
-            for (const message of createAssignmentMessagesFor(otherStream)) {
+            for (const message of await createAssignmentMessagesFor(otherStream)) {
                 await pushPipeline.push(message)
             }
             await Promise.race([propagatePromise, wait(RACE_TIMEOUT_IN_MS)])
@@ -70,7 +75,7 @@ describe(waitForAssignmentsToPropagate, () => {
         })
 
         it('duplicate assignments are ignored', async () => {
-            const messagesButMissingOne = createAssignmentMessagesFor(TARGET_STREAM).slice(0, -1)
+            const messagesButMissingOne = (await createAssignmentMessagesFor(TARGET_STREAM)).slice(0, -1)
             for (const message of messagesButMissingOne) {
                 await pushPipeline.push(message)
             }
@@ -82,14 +87,14 @@ describe(waitForAssignmentsToPropagate, () => {
         })
 
         it('non-existing partition assignments are ignored', async () => {
-            const messagesButMissingOne = createAssignmentMessagesFor(TARGET_STREAM).slice(0, -1)
+            const messagesButMissingOne = (await createAssignmentMessagesFor(TARGET_STREAM)).slice(0, -1)
             for (const message of messagesButMissingOne) {
                 await pushPipeline.push(message)
             }
-            await pushPipeline.push(makeMsg(8000, {
+            await pushPipeline.push(await makeMsg(8000, {
                 streamPart: toStreamPartID(TARGET_STREAM.id, TARGET_STREAM.partitions)
             }))
-            await pushPipeline.push(makeMsg(9000, {
+            await pushPipeline.push(await makeMsg(9000, {
                 streamPart: toStreamPartID(TARGET_STREAM.id, TARGET_STREAM.partitions + 1)
             }))
             await Promise.race([propagatePromise, wait(RACE_TIMEOUT_IN_MS)])
@@ -98,7 +103,7 @@ describe(waitForAssignmentsToPropagate, () => {
     })
 
     it('resolves if all assignments received one-by-one', async () => {
-        for (const message of createAssignmentMessagesFor(TARGET_STREAM)) {
+        for (const message of await createAssignmentMessagesFor(TARGET_STREAM)) {
             expect(propagatePromiseState).toEqual('pending')
             await pushPipeline.push(message)
         }
@@ -107,19 +112,19 @@ describe(waitForAssignmentsToPropagate, () => {
     })
 
     it('resolves if all assignments received, out-of-order with ignored cases between', async () => {
-        const assignments = createAssignmentMessagesFor({ ...TARGET_STREAM, partitions: 8 })
+        const assignments = await createAssignmentMessagesFor({ ...TARGET_STREAM, partitions: 8 })
         const validAssignments = assignments.slice(0, 5)
         const invalidPartitionAssignments = assignments.slice(5, 8)
         const duplicateAssignments = assignments.slice(1, 3)
-        const otherStreamAssignments = createAssignmentMessagesFor({
+        const otherStreamAssignments = await createAssignmentMessagesFor({
             id: toStreamID('test.eth/other/stream'),
             partitions: TARGET_STREAM.partitions
         })
         const invalidMessages = [
-            makeMsg(1000, {
+            await makeMsg(1000, {
                 something: 'unexpected'
             }),
-            makeMsg(1200, {})
+            await makeMsg(1200, {})
         ]
 
         const messagesToPush = shuffle([

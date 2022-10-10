@@ -206,6 +206,7 @@ describe('Proxy connection tests', () => {
                 content: {
                     hello: 'world'
                 },
+                signature: 'signature'
             }))
         ])
     })
@@ -219,6 +220,7 @@ describe('Proxy connection tests', () => {
                 content: {
                     hello: 'world'
                 },
+                signature: 'signature'
             }))
         ])
 
@@ -231,6 +233,7 @@ describe('Proxy connection tests', () => {
             content: {
                 hello: 'world'
             },
+            signature: 'signature'
         }))).toThrow('Cannot publish')
     })
 
@@ -302,6 +305,7 @@ describe('Proxy connection tests', () => {
                 content: {
                     hello: 'world'
                 },
+                signature: 'signature'
             }))
         ])
     }, 20100)

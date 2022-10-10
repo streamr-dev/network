@@ -19,7 +19,8 @@ const createMockMessage = (i: number) => {
         messageId: new MessageID(toStreamID(MOCK_STREAM_ID), 0, i, 0, MOCK_PUBLISHER_ID, MOCK_MSG_CHAIN_ID),
         content: {
             value: i
-        }
+        },
+        signature: 'signature'
     })
 }
 const MOCK_MESSAGES = [1, 2, 3].map((contentValue: number) => createMockMessage(contentValue))

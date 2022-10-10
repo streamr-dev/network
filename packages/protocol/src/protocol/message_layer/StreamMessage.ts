@@ -25,7 +25,6 @@ export enum ContentType {
 }
 
 export enum SignatureType {
-    NONE = 0,
     ETH = 2
 }
 
@@ -45,7 +44,7 @@ export interface StreamMessageOptions<T> {
     groupKeyId?: string | null
     newGroupKey?: EncryptedGroupKey | null
     signatureType?: SignatureType
-    signature?: string | null
+    signature: string
 }
 
 export interface ObjectType<T> { 
@@ -61,7 +60,7 @@ export interface ObjectType<T> {
     groupKeyId: string | null
     content: string | T
     signatureType: SignatureType
-    signature: string | null
+    signature: string
 }
 
 /**
@@ -107,7 +106,7 @@ export default class StreamMessage<T = unknown> {
     groupKeyId: string | null
     newGroupKey: EncryptedGroupKey | null
     signatureType: SignatureType
-    signature: string | null
+    signature: string
     parsedContent?: T
     serializedContent: string
 
@@ -142,8 +141,8 @@ export default class StreamMessage<T = unknown> {
         encryptionType = StreamMessage.ENCRYPTION_TYPES.NONE,
         groupKeyId = null,
         newGroupKey = null,
-        signatureType = StreamMessage.SIGNATURE_TYPES.NONE,
-        signature = null,
+        signatureType = StreamMessage.SIGNATURE_TYPES.ETH,
+        signature,
     }: StreamMessageOptions<T>) {
         validateIsType('messageId', messageId, 'MessageID', MessageID)
         this.messageId = messageId
@@ -169,7 +168,7 @@ export default class StreamMessage<T = unknown> {
         StreamMessage.validateSignatureType(signatureType)
         this.signatureType = signatureType
 
-        validateIsString('signature', signature, true)
+        validateIsString('signature', signature, false)
         this.signature = signature
 
         if (typeof content === 'string') {
@@ -271,28 +270,6 @@ export default class StreamMessage<T = unknown> {
 
     getNewGroupKey(): EncryptedGroupKey | null {
         return this.newGroupKey
-    }
-
-    /**
-     * Gets appropriate payload to sign for this signature type.
-     * Optionally sets new signature type at same time, which allows typesafe
-     * signing without messages needing to be in a partially signed state.
-     * e.g.
-     * ```
-     * const signedMessage: StreamMessageSigned = Object.assign(unsigedMessage, {
-     *     signature: unsigedMessage.getPayloadToSign(),
-     * })
-     * ```
-     */
-    getPayloadToSign(): string {
-        if (this.signatureType === StreamMessage.SIGNATURE_TYPES.ETH) {
-            // Nullable fields
-            const prev = (this.prevMsgRef ? `${this.prevMsgRef.timestamp}${this.prevMsgRef.sequenceNumber}` : '')
-            const newGroupKey = (this.newGroupKey ? this.newGroupKey.serialize() : '')
-            return `${this.getStreamId()}${this.getStreamPartition()}${this.getTimestamp()}${this.messageId.sequenceNumber}`
-                + `${this.getPublisherId().toLowerCase()}${this.messageId.msgChainId}${prev}${this.getSerializedContent()}${newGroupKey}`
-        }
-        throw new ValidationError(`Unrecognized signature type: ${this.signatureType}`)
     }
 
     static registerSerializer(version: number, serializer: Serializer<StreamMessage<unknown>>): void {

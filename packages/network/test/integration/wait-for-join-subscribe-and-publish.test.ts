@@ -100,7 +100,8 @@ describe('subscribe and wait for the node to join the stream', () => {
             prevMsgRef: null,
             content: {
                 foo: 'bar'
-            }
+            },
+            signature: 'signature'
         })
         const firstNeighbors = await nodes[0].subscribeAndWaitForJoin(stream2, TIMEOUT)
         const result = await Promise.all([

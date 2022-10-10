@@ -1,5 +1,5 @@
 import { NetworkNode } from '../../src/logic/NetworkNode'
-import { MessageID, StreamMessage, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
+import { MessageID, SignatureType, StreamMessage, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
 import { startTracker, Tracker } from '@streamr/network-tracker'
 import { createNetworkNode } from '../../src/composition'
 
@@ -63,6 +63,8 @@ describe('message buffering of Node', () => {
             content: {
                 hello: 'world'
             },
+            signatureType: SignatureType.ETH,
+            signature: 'signature'
         }))
     })
 })

@@ -8,7 +8,8 @@ function makeMsg(streamId: string, partition: number, ts: number, msgNo: number)
         messageId: new MessageID(toStreamID(streamId), partition, ts, 0, 'publisher', 'msgChain'),
         content: {
             msgNo
-        }
+        },
+        signature: 'signature'
     })
 }
 

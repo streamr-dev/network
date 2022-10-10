@@ -104,6 +104,7 @@ describe('message propagation in network', () => {
                 content: {
                     messageNo: i
                 },
+                signature: 'signature'
             }))
 
             n4.publish(new StreamMessage({
@@ -112,6 +113,7 @@ describe('message propagation in network', () => {
                 content: {
                     messageNo: i * 100
                 },
+                signature: 'signature'
             }))
         }
 
