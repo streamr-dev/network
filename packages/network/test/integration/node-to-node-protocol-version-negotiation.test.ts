@@ -102,7 +102,7 @@ describe('Node-to-Node protocol version negotiation', () => {
     })
 
     it('messages are sent with the negotiated protocol version', (done) => {
-        ep2.once(wrtcEvent.MESSAGE_RECEIVED, (peerInfo, data) => {
+        ep2.once(wrtcEvent.MESSAGE_RECEIVED, (_peerInfo, data) => {
             const parsedData = JSON.parse(data)
             expect(parsedData[0]).toEqual(2)
             expect(parsedData[3][0]).toEqual(32)

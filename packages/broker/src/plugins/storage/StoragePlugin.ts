@@ -71,6 +71,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
         ])
     }
 
+    // eslint-disable-next-line class-methods-use-this
     override getConfigSchema(): Schema {
         return PLUGIN_CONFIG_SCHEMA
     }

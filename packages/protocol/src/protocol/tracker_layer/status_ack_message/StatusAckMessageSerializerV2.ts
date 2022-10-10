@@ -7,6 +7,7 @@ import { toStreamID } from '../../../utils/StreamID'
 
 const VERSION = 2
 
+/* eslint-disable class-methods-use-this */
 export default class StatusAckMessageSerializerV2 extends Serializer<StatusAckMessage> {
     toArray(statusAckMessage: StatusAckMessage): any[] {
         return [
@@ -21,7 +22,7 @@ export default class StatusAckMessageSerializerV2 extends Serializer<StatusAckMe
     fromArray(arr: any[]): StatusAckMessage {
         const [
             version,
-            type, // eslint-disable-line @typescript-eslint/no-unused-vars
+            _type,
             requestId,
             streamId,
             streamPartition

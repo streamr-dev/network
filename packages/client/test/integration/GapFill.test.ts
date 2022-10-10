@@ -87,7 +87,7 @@ describe('GapFill', () => {
                 // @ts-expect-error private
                 const calledResend = jest.spyOn(client.resends, 'range')
                 const sub = await client.subscribe(stream.id)
-                monkeypatchMessageHandler(sub, (msg, count) => {
+                monkeypatchMessageHandler(sub, (_msg, count) => {
                     if (count === 2) {
                         return null
                     }

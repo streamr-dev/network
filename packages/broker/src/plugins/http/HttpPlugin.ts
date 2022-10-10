@@ -6,6 +6,7 @@ export class HttpPlugin extends Plugin<void> {
         this.addHttpServerRouter(createEndpoint(this.streamrClient!))
     }
 
+    // eslint-disable-next-line class-methods-use-this
     async stop(): Promise<void> {
     }
 }

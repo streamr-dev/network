@@ -259,6 +259,7 @@ export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvents> impleme
         this.ongoingRequests.delete(response.requestId)
     }
 
+    // eslint-disable-next-line class-methods-use-this
     private createResponseRpcMessage(
         { request, body, responseError }: { request: RpcMessage, body?: Uint8Array, responseError?: RpcResponseError }
     ): RpcMessage {

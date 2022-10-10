@@ -12,6 +12,7 @@ import { WakeUpRpcServiceClient } from '../proto/WakeUpRpc.client'
 import { IWakeUpRpcService } from '../proto/WakeUpRpc.server'
 
 // Rpc call service
+/* eslint-disable class-methods-use-this */
 class HelloService implements IHelloRpcService {
     async sayHello(request: HelloRequest, _context: ServerCallContext): Promise<HelloResponse> {
         return { greeting: 'Hello ' + request.myName + '!' }
