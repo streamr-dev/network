@@ -99,10 +99,7 @@ export class MessageFactory {
         const msgChainKey = formLookupKey(partition, msgChainId)
         const prevMsgRef = this.prevMsgRefs.get(msgChainKey)
         const msgRef = createMessageRef(metadata.timestamp, prevMsgRef)
-        const isBackdated = (prevMsgRef !== undefined) && (prevMsgRef.timestamp > metadata.timestamp)
-        if (!isBackdated) {
-            this.prevMsgRefs.set(msgChainKey, msgRef)
-        }
+        this.prevMsgRefs.set(msgChainKey, msgRef)
         const messageId = new MessageID(this.streamId, partition, msgRef.timestamp, msgRef.sequenceNumber, publisherId, msgChainId)
 
         const encryptionType = (await this.streamRegistry.isPublic(this.streamId)) ? EncryptionType.NONE : EncryptionType.AES

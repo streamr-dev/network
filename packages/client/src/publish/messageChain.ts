@@ -16,10 +16,15 @@ export const createMessageRef = (timestamp: number, prevMsgRef?: MessageRef): Me
     // storage considers timestamp+sequence number unique, so the newer messages will clobber the older messages
     // Not feasible to keep greatest sequence number for every millisecond timestamp so not sure a good way around this.
     // Possible we should keep a global sequence number
+    // The sequence breaking issue above can be "fixed" if we throw an exception for backdated timestamp.
+    // In that case we don't publish the message and the backdated timestamp won't be useds as prevMsgRef
+    // for a possible subsequent publish request.
+    const isBackdated = (prevMsgRef !== undefined) && (timestamp < prevMsgRef.timestamp)
+    if (isBackdated) {
+        throw new Error('prevMessageRef must come before current')
+    }
     const isSameTimestamp = (prevMsgRef !== undefined) && (prevMsgRef.timestamp === timestamp)
     const nextSequenceNumber = isSameTimestamp ? prevMsgRef!.sequenceNumber + 1 : 0
     const createdMessageRef = new MessageRef(timestamp, nextSequenceNumber)
-    // sequence breaking issue above can be "fixed" if caller of this function checks if 
-    // timestamp < previous timestamp, but then this message will silently disappear
     return createdMessageRef
 }
