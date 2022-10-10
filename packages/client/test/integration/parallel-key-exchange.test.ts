@@ -11,6 +11,7 @@ import { wait } from '@streamr/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { MessageFactory } from '../../src/publish/MessageFactory'
 import { createAuthentication } from '../../src/Authentication'
+import { createGroupKeyQueue, createStreamRegistryCached } from '../test-utils/utils'
 
 const PUBLISHER_COUNT = 50
 const MESSAGE_COUNT_PER_PUBLISHER = 3
@@ -54,16 +55,17 @@ describe('parallel key exchange', () => {
         const sub = await subscriber.subscribe(stream.id)
 
         for (const publisher of PUBLISHERS) {
-            const authentication = createAuthentication({
-                privateKey: publisher.wallet.privateKey
-            }, undefined as any)
             const messageFactory = new MessageFactory({
                 streamId: stream.id,
-                authentication,
-                getPartitionCount: async () => 1,
-                isPublicStream: async () => false,
-                isPublisher: async () => true,
-                useGroupKey: async () => ({ current: publisher.groupKey })
+                authentication: createAuthentication({
+                    privateKey: publisher.wallet.privateKey
+                }, undefined as any),
+                streamRegistry: createStreamRegistryCached({
+                    partitionCount: 1,
+                    isPublicStream: false,
+                    isStreamPublisher: true
+                }),
+                groupKeyQueue: await createGroupKeyQueue(publisher.groupKey)
             })
             for (let i = 0; i < MESSAGE_COUNT_PER_PUBLISHER; i++) {
                 const msg = await messageFactory.createMessage({

@@ -2,7 +2,6 @@ import { random } from 'lodash'
 import { 
     EncryptedGroupKey,
     EncryptionType,
-    EthereumAddress,
     SignatureType,
     StreamID,
     StreamMessage,
@@ -14,17 +13,16 @@ import { GroupKeyId } from '../encryption/GroupKey'
 import { createRandomMsgChainId, MessageChain } from './MessageChain'
 import { MessageMetadata } from './Publisher'
 import { keyToArrayIndex } from '@streamr/utils'
-import { GroupKeySequence } from './GroupKeyQueue'
+import { GroupKeyQueue } from './GroupKeyQueue'
 import { Mapping } from '../utils/Mapping'
 import { Authentication } from '../Authentication'
+import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 
 export interface MessageFactoryOptions {
     streamId: StreamID
     authentication: Authentication
-    getPartitionCount: (streamId: StreamID) => Promise<number>
-    isPublicStream: (streamId: StreamID) => Promise<boolean>
-    isPublisher: (streamId: StreamID, publisherId: EthereumAddress) => Promise<boolean>
-    useGroupKey: () => Promise<GroupKeySequence>
+    streamRegistry: Pick<StreamRegistryCached, 'getStream' | 'isPublic' | 'isStreamPublisher'>
+    groupKeyQueue: GroupKeyQueue
 }
 
 export const createSignedMessage = async <T>(
@@ -47,18 +45,14 @@ export class MessageFactory {
     private defaultPartition: number | undefined
     private readonly defaultMessageChainIds: Mapping<[partition: number], string>
     private readonly messageChains: Mapping<[partition: number, msgChainId: string], MessageChain>
-    private readonly getPartitionCount: (streamId: StreamID) => Promise<number>
-    private readonly isPublicStream: (streamId: StreamID) => Promise<boolean>
-    private readonly isPublisher: (streamId: StreamID, publisherId: EthereumAddress) => Promise<boolean>
-    private readonly useGroupKey: () => Promise<GroupKeySequence>
+    private readonly streamRegistry: Pick<StreamRegistryCached, 'getStream' | 'isPublic' | 'isStreamPublisher'>
+    private readonly groupKeyQueue: GroupKeyQueue
 
     constructor(opts: MessageFactoryOptions) {
         this.streamId = opts.streamId
         this.authentication = opts.authentication
-        this.getPartitionCount = opts.getPartitionCount
-        this.isPublicStream = opts.isPublicStream
-        this.isPublisher = opts.isPublisher
-        this.useGroupKey = opts.useGroupKey
+        this.streamRegistry = opts.streamRegistry
+        this.groupKeyQueue = opts.groupKeyQueue
         this.defaultMessageChainIds = new Mapping(async (_partition: number) => {
             return createRandomMsgChainId()
         })
@@ -75,12 +69,12 @@ export class MessageFactory {
         explicitPartition?: number
     ): Promise<StreamMessage<T>> {
         const publisherId = await this.authentication.getAddress()
-        const isPublisher = await this.isPublisher(this.streamId, publisherId)
+        const isPublisher = await this.streamRegistry.isStreamPublisher(this.streamId, publisherId)
         if (!isPublisher) {
             throw new Error(`${publisherId} is not a publisher on stream ${this.streamId}`)
         }
 
-        const partitionCount = await this.getPartitionCount(this.streamId)
+        const partitionCount = (await this.streamRegistry.getStream(this.streamId)).partitions
         let partition
         if (explicitPartition !== undefined) {
             if ((explicitPartition < 0 || explicitPartition >= partitionCount)) {
@@ -102,12 +96,12 @@ export class MessageFactory {
         )
         const [messageId, prevMsgRef] = chain.add(metadata.timestamp)
 
-        const encryptionType = (await this.isPublicStream(this.streamId)) ? EncryptionType.NONE : EncryptionType.AES
+        const encryptionType = (await this.streamRegistry.isPublic(this.streamId)) ? EncryptionType.NONE : EncryptionType.AES
         let groupKeyId: GroupKeyId | undefined
         let newGroupKey: EncryptedGroupKey | undefined
         let serializedContent = JSON.stringify(content)
         if (encryptionType === EncryptionType.AES) {
-            const keySequence = await this.useGroupKey()
+            const keySequence = await this.groupKeyQueue.useGroupKey()
             serializedContent = EncryptionUtil.encryptWithAES(Buffer.from(serializedContent, 'utf8'), keySequence.current.data)
             groupKeyId = keySequence.current.id
             if (keySequence.next !== undefined) {

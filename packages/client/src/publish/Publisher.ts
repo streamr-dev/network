@@ -1,4 +1,4 @@
-import { EthereumAddress, StreamID, StreamMessage } from 'streamr-client-protocol'
+import { StreamID, StreamMessage } from 'streamr-client-protocol'
 import { scoped, Lifecycle, inject } from 'tsyringe'
 import pLimit from 'p-limit'
 import { instanceId } from '../utils/utils'
@@ -138,17 +138,11 @@ export class Publisher {
 
     /* eslint-disable @typescript-eslint/no-shadow */
     private async createMessageFactory(streamId: StreamID): Promise<MessageFactory> {
-        const queue = await this.groupKeyQueues.get(streamId)
         return new MessageFactory({
             streamId,
             authentication: this.authentication,
-            getPartitionCount: async (streamId: StreamID) => {
-                const stream = await this.streamRegistryCached.getStream(streamId)
-                return stream.partitions
-            },
-            isPublicStream: (streamId: StreamID) => this.streamRegistryCached.isPublic(streamId),
-            isPublisher: (streamId: StreamID, publisherId: EthereumAddress) => this.streamRegistryCached.isStreamPublisher(streamId, publisherId),
-            useGroupKey: () => queue.useGroupKey()
+            streamRegistry: this.streamRegistryCached,
+            groupKeyQueue: await this.groupKeyQueues.get(streamId)
         })
     } 
 }
