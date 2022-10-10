@@ -75,7 +75,6 @@ describe('Propagation', () => {
         }
         randomGraphNodes[0].broadcast(message)
         await waitForCondition(() => {
-            console.log(totalReceived)
             return totalReceived >= NUM_OF_NODES
         })
     }, 25000)
