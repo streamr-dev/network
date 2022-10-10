@@ -1,6 +1,6 @@
 import crypto from 'crypto'
 import { DependencyContainer } from 'tsyringe'
-import { fetchPrivateKeyWithGas } from 'streamr-test-utils'
+import { fastPrivateKey, fetchPrivateKeyWithGas } from 'streamr-test-utils'
 import { wait } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import {
@@ -23,7 +23,7 @@ import { addAfterFn } from './jest-utils'
 import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
 import { StreamrClientEventEmitter } from '../../src/events'
 import { MessageFactory } from '../../src/publish/MessageFactory'
-import { createAuthentication } from '../../src/Authentication'
+import { Authentication, createAuthentication } from '../../src/Authentication'
 
 const testDebugRoot = Debug('test')
 const testDebug = testDebugRoot.extend.bind(testDebugRoot)
@@ -149,4 +149,10 @@ export const startPublisherKeyExchangeSubscription = async (
     streamPartId: StreamPartID): Promise<void> => {
     const node = await publisherClient.getNode()
     node.subscribe(streamPartId)
+}
+
+export const createRandomAuthentication = (): Authentication => {
+    return createAuthentication({
+        privateKey: `0x${fastPrivateKey()}`
+    }, undefined as any)
 }

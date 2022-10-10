@@ -21,7 +21,8 @@ import { FakeNetworkNode } from '../test-utils/fake/FakeNetworkNode'
 import { fastWallet } from 'streamr-test-utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { createRandomMsgChainId } from '../../src/publish/MessageChain'
-import { sign } from '../../src/utils/signingUtils'
+import { createSignedMessage } from '../../src/publish/MessageFactory'
+import { createAuthentication } from '../../src/Authentication'
 
 describe('PublisherKeyExchange', () => {
 
@@ -42,15 +43,15 @@ describe('PublisherKeyExchange', () => {
         return stream
     }
 
-    const createGroupKeyRequest = (
+    const createGroupKeyRequest = async (
         groupKeyId: GroupKeyId,
         publisher = subscriberWallet,
         rsaPublicKey = subscriberRSAKeyPair.getPublicKey()
-    ): StreamMessage => {
+    ): Promise<StreamMessage<unknown>> => {
         const [ streamId, partition ] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
-        const msg = new StreamMessage({
+        return await createSignedMessage({
             messageId: new MessageID(streamId, partition, 0, Date.now(), publisher.address, createRandomMsgChainId()),
-            content: JSON.stringify([
+            serializedContent: JSON.stringify([
                 uuid(),
                 publisherWallet.address,
                 rsaPublicKey,
@@ -59,10 +60,10 @@ describe('PublisherKeyExchange', () => {
             messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST,
             encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
             contentType: StreamMessage.CONTENT_TYPES.JSON,
-            signatureType: StreamMessage.SIGNATURE_TYPES.ETH
+            authentication: createAuthentication({
+                privateKey: publisher.privateKey
+            }, undefined as any)
         })
-        msg.signature = sign(msg.getPayloadToSign(), publisher.privateKey)
-        return msg
     }
 
     const testSuccessResponse = async (actualResponse: StreamMessage, expectedGroupKeys: GroupKey[]): Promise<void> => {
@@ -113,7 +114,7 @@ describe('PublisherKeyExchange', () => {
             const key = GroupKey.generate()
             await getGroupKeyStore(publisherWallet.address).add(key, StreamPartIDUtils.getStreamID(streamPartId))
 
-            const request = createGroupKeyRequest(key.id)
+            const request = await createGroupKeyRequest(key.id)
             subscriberNode.publish(request)
 
             const response = await environment.getNetwork().waitForSentMessage({

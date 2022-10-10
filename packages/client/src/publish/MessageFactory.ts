@@ -1,5 +1,14 @@
 import { random } from 'lodash'
-import { EncryptedGroupKey, EncryptionType, EthereumAddress, StreamID, StreamMessage, toStreamPartID } from 'streamr-client-protocol'
+import { 
+    EncryptedGroupKey,
+    EncryptionType,
+    EthereumAddress,
+    SignatureType,
+    StreamID,
+    StreamMessage,
+    StreamMessageOptions,
+    toStreamPartID
+} from 'streamr-client-protocol'
 import { EncryptionUtil } from '../encryption/EncryptionUtil'
 import { GroupKeyId } from '../encryption/GroupKey'
 import { createRandomMsgChainId, MessageChain } from './MessageChain'
@@ -16,6 +25,19 @@ export interface MessageFactoryOptions {
     isPublicStream: (streamId: StreamID) => Promise<boolean>
     isPublisher: (streamId: StreamID, publisherId: EthereumAddress) => Promise<boolean>
     useGroupKey: () => Promise<GroupKeySequence>
+}
+
+export const createSignedMessage = async <T>(
+    opts: Omit<StreamMessageOptions<T>, 'signature' | 'signatureType' | 'content'> 
+    & { serializedContent: string, authentication: Authentication }
+): Promise<StreamMessage<T>> => {
+    const msg = new StreamMessage<T>({
+        ...opts,
+        signatureType: SignatureType.ETH,
+        content: opts.serializedContent,
+    })
+    msg.signature = await opts.authentication.createMessagePayloadSignature(msg.getPayloadToSign())
+    return msg
 }
 
 export class MessageFactory {
@@ -93,18 +115,15 @@ export class MessageFactory {
             }
         }
 
-        const message = new StreamMessage<T>({
-            content: serializedContent,
+        return createSignedMessage<T>({
             messageId,
+            serializedContent,
             prevMsgRef,
             encryptionType,
             groupKeyId,
             newGroupKey,
-            signatureType: StreamMessage.SIGNATURE_TYPES.ETH
+            authentication: this.authentication
         })
-        message.signature = await this.authentication.createMessagePayloadSignature(message.getPayloadToSign())
-
-        return message
     }
 
     private getDefaultPartition(partitionCount: number): number {
