@@ -92,10 +92,6 @@ export const getCreateClient = (
     }
 }
 
-export const createEthereumAddress = (id: number): string => {
-    return '0x' + padEnd(String(id), 40, '0')
-}
-
 type CreateMockMessageOptions = {
     publisher: Wallet
     content?: any
