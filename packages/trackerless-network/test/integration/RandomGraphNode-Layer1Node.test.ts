@@ -120,7 +120,7 @@ describe('RandomGraphNode-DhtNode', () => {
         await Promise.all(graphNodes.map((node) =>
             Promise.all([
                 waitForCondition(() => node.getContactPoolIds().length >= 8),
-                waitForCondition(() => node.getTargetNeighborStringIds().length >= 3, 10000)
+                waitForCondition(() => node.getTargetNeighborStringIds().length >= 3, 18000)
             ])
         ))
 
@@ -136,5 +136,5 @@ describe('RandomGraphNode-DhtNode', () => {
         }, 0) / numOfNodes
 
         logger.info(`AVG Number of neighbors: ${avg}`)
-    }, 10000)
+    }, 20000)
 })
