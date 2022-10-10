@@ -40,7 +40,6 @@ export interface SubscribeConfig {
     orderMessages: boolean
     gapFill: boolean
     maxGapRequests: number
-    verifySignatures: 'auto' | 'always' | 'never'
     retryResendAfter: number
     gapFillTimeout: number
 }
@@ -117,9 +116,6 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     gapFillTimeout: 5000,
     gapFill: true,
     maxGapRequests: 5,
-
-    // Encryption options
-    verifySignatures: 'auto',
 
     // Ethereum related options
     // For ethers.js provider params, see https://docs.ethers.io/ethers.js/v5-beta/api-providers.html#provider
