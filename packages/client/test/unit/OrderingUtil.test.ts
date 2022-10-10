@@ -88,13 +88,13 @@ describe('OrderingUtil', () => {
         const expected1 = [msg1Pub1]
         const expected2 = [msg1Pub2]
         const expected3 = [msg1Pub3]
-        for (let i = 2; i <= 100000; i++) {
+        for (let i = 2; i <= 100; i++) {
             expected1.push(await createMsg(i, 0, i - 1, 0, {}, 'publisherId1'))
         }
-        for (let i = 2; i <= 100000; i++) {
+        for (let i = 2; i <= 100; i++) {
             expected2.push(await createMsg(i, 0, i - 1, 0, {}, 'publisherId2'))
         }
-        for (let i = 2; i <= 100000; i++) {
+        for (let i = 2; i <= 100; i++) {
             expected3.push(await createMsg(i, 0, i - 1, 0, {}, 'publisherId3'))
         }
         const shuffled = shuffle(expected1.concat(expected2).concat(expected3))
