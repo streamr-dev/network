@@ -8,6 +8,7 @@ const streamId = toStreamID('stream')
 const streamPartition = 0
 const senderId = 'node'
 const direction = ProxyDirection.SUBSCRIBE
+const userId = 'mockUser'
 
 // Message definitions
 const message = new ProxyConnectionRequest({
@@ -16,7 +17,8 @@ const message = new ProxyConnectionRequest({
     streamPartition,
     direction,
     senderId,
-    requestId: 'requestId'
+    requestId: 'requestId',
+    userId
 })
 const serializedMessage = JSON.stringify([
     VERSION,
@@ -25,7 +27,8 @@ const serializedMessage = JSON.stringify([
     streamId,
     streamPartition,
     senderId,
-    direction
+    direction,
+    userId
 ])
 
 describe('ProxyConnectionRequestSerializerV2', () => {

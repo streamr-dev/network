@@ -68,7 +68,7 @@ export function initContainer(
         [ConfigInjectionToken.Connection, config],
         [ConfigInjectionToken.Subscribe, config],
         [ConfigInjectionToken.Publish, config],
-        [ConfigInjectionToken.Encryption, config],
+        [ConfigInjectionToken.Decryption, config.decryption],
         [ConfigInjectionToken.Cache, config.cache],
         // eslint-disable-next-line no-underscore-dangle
         [ConfigInjectionToken.Timeouts, config._timeouts],

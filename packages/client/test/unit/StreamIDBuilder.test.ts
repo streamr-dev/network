@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 import { StreamIDBuilder } from '../../src/StreamIDBuilder'
-import { KeyExchangeStreamIDUtils, StreamPartIDUtils } from 'streamr-client-protocol'
+import { StreamPartIDUtils } from 'streamr-client-protocol'
 import { StreamDefinition } from '../../src'
 import { Authentication } from '../../src/Authentication'
 
@@ -26,12 +26,6 @@ describe('StreamIDBuilder', () => {
             return expect(streamIdBuilder.toStreamID('7wa7APtlTq6EC5iTCBy6dw'))
                 .resolves
                 .toEqual('7wa7APtlTq6EC5iTCBy6dw')
-        })
-
-        it('key-exchange stream id', () => {
-            return expect(streamIdBuilder.toStreamID(KeyExchangeStreamIDUtils.STREAM_ID_PREFIX + '0xABCdef12345'))
-                .resolves
-                .toEqual('SYSTEM/keyexchange/0xABCdef12345')
         })
 
         it('full stream id', () => {

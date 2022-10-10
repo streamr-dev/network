@@ -2,7 +2,6 @@ import {
     StreamIDUtils,
     toStreamID
 } from '../../../src'
-import { KeyExchangeStreamIDUtils } from '../../../src/utils/KeyExchangeStreamID'
 
 const address = '0xaAAAaaaaAA123456789012345678901234567890'
 
@@ -40,12 +39,6 @@ describe('toStreamID', () => {
         expect(actual).toBe(id)
     })
 
-    it('key-exchange format', () => {
-        const id = 'SYSTEM/keyexchange/0xcccccccccc123456789012345678901234567890'
-        const actual = toStreamID(id)
-        expect(actual).toBe(id)
-    })
-
     it('empty string throws error', () => {
         return expect(() => {
             toStreamID('')
@@ -56,10 +49,6 @@ describe('toStreamID', () => {
 describe('isPathOnlyFormat', () => {
     it('returns true on path-only format', () => {
         expect(StreamIDUtils.isPathOnlyFormat('/foo/bar')).toEqual(true)
-    })
-
-    it('returns false on key-exchange format', () => {
-        expect(StreamIDUtils.isPathOnlyFormat(toStreamID(KeyExchangeStreamIDUtils.formStreamPartID(address)))).toEqual(false)
     })
 
     it('returns false on legacy format', () => {
@@ -80,10 +69,6 @@ describe('getDomainAndPath', () => {
         expect(StreamIDUtils.getDomainAndPath(toStreamID('7wa7APtlTq6EC5iTCBy6dw'))).toBeUndefined()
     })
 
-    it('returns undefined for key-exchange stream id', () => {
-        expect(StreamIDUtils.getDomainAndPath(toStreamID(KeyExchangeStreamIDUtils.formStreamPartID(address)))).toBeUndefined()
-    })
-
     it('returns domain and path for full stream id', () => {
         expect(StreamIDUtils.getDomainAndPath(toStreamID('/foo/bar', address)))
             .toEqual([address.toLowerCase(), '/foo/bar'])
@@ -93,10 +78,6 @@ describe('getDomainAndPath', () => {
 describe('getDomain', () => {
     it('returns undefined for legacy stream id', () => {
         expect(StreamIDUtils.getDomain(toStreamID('7wa7APtlTq6EC5iTCBy6dw'))).toBeUndefined()
-    })
-
-    it('returns undefined for key-exchange stream id', () => {
-        expect(StreamIDUtils.getDomain(toStreamID(KeyExchangeStreamIDUtils.formStreamPartID(address)))).toBeUndefined()
     })
 
     it('returns address for full stream id', () => {
@@ -132,10 +113,6 @@ describe('isENSAddress', () => {
 describe('getPath', () => {
     it('returns undefined for legacy stream id', () => {
         expect(StreamIDUtils.getPath(toStreamID('7wa7APtlTq6EC5iTCBy6dw'))).toBeUndefined()
-    })
-
-    it('returns undefined for key-exchange stream id', () => {
-        expect(StreamIDUtils.getPath(toStreamID(KeyExchangeStreamIDUtils.formStreamPartID(address)))).toBeUndefined()
     })
 
     it('returns path for full stream id', () => {

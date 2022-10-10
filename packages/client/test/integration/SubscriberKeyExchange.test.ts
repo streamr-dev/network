@@ -1,6 +1,5 @@
 import 'reflect-metadata'
 import {
-    KeyExchangeStreamIDUtils,
     StreamMessage,
     StreamPartID,
     StreamPartIDUtils,
@@ -11,14 +10,12 @@ import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { fastWallet, waitForCondition } from 'streamr-test-utils'
-import { 
+import {
     createMockMessage,
     createRelativeTestStreamId,
-    getGroupKeyStore,
-    startPublisherKeyExchangeSubscription
+    getGroupKeyStore
 } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
-import { NetworkNodeStub } from '../../src'
 
 describe('SubscriberKeyExchange', () => {
 
@@ -37,7 +34,8 @@ describe('SubscriberKeyExchange', () => {
         return s
     }
 
-    const triggerGroupKeyRequest = (key: GroupKey, publisherNode: NetworkNodeStub): void => {
+    const triggerGroupKeyRequest = async (key: GroupKey, publisher: StreamrClient): Promise<void> => {
+        const publisherNode = await publisher.getNode()
         publisherNode.publish(createMockMessage({
             streamPartId,
             publisher: publisherWallet,
@@ -46,11 +44,10 @@ describe('SubscriberKeyExchange', () => {
     }
 
     const assertGroupKeyRequest = async (request: StreamMessage, expectedRequestedKeyIds: string[]): Promise<void> => {
-        const publisherKeyExchangeStreamPartId = KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address)
         expect(request).toMatchObject({
             messageId: {
-                streamId: StreamPartIDUtils.getStreamID(publisherKeyExchangeStreamPartId),
-                streamPartition:  StreamPartIDUtils.getStreamPartition(publisherKeyExchangeStreamPartId),
+                streamId: StreamPartIDUtils.getStreamID(streamPartId),
+                streamPartition:  StreamPartIDUtils.getStreamPartition(streamPartId),
                 publisherId: subscriberWallet.address.toLowerCase()
             },
             messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST,
@@ -61,7 +58,7 @@ describe('SubscriberKeyExchange', () => {
         })
         expect(request!.getParsedContent()).toEqual([
             expect.any(String),
-            StreamPartIDUtils.getStreamID(streamPartId),
+            expect.toEqualCaseInsensitive(publisherWallet.address),
             expect.any(String),
             expectedRequestedKeyIds
         ])
@@ -96,25 +93,19 @@ describe('SubscriberKeyExchange', () => {
             const publisher = environment.createClient({
                 auth: {
                     privateKey: publisherWallet.privateKey
-                },
-                encryptionKeys: {
-                    [StreamPartIDUtils.getStreamID(streamPartId)]: {
-                        [groupKey.id]: groupKey
-                    }
                 }
             })
-            await startPublisherKeyExchangeSubscription(publisher)
-            const publisherNode = await publisher.getNode()
+            await publisher.addEncryptionKey(groupKey, StreamPartIDUtils.getStreamID(streamPartId))
             await subscriber.subscribe(streamPartId, () => {})
 
-            triggerGroupKeyRequest(groupKey, publisherNode)
-            
+            await triggerGroupKeyRequest(groupKey, publisher)
+
             const request = await environment.getNetwork().waitForSentMessage({
                 messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST
             })
             await assertGroupKeyRequest(request!, [groupKey.id])
             const keyPersistence = getGroupKeyStore(StreamPartIDUtils.getStreamID(streamPartId), subscriberWallet.address)
             await waitForCondition(async () => (await keyPersistence.get(groupKey.id)) !== undefined)
-        }) 
+        })
     })
 })

@@ -653,6 +653,25 @@ In detail, the difference between the methods is:
 - In `rekey` method, the client sends the new key individually to each subscriber. Every subscriber receives a separate message which is encrypted with their public RSA key. The `StreamPermission.SUBSCRIBE` permission is checked by the publisher for each subscriber before a key is sent.
 - In optimized `rotate` method, the key is broadcasted to the network in the metadata of the next message. The key is encrypted with the previous encryption key and therefore subscribers can use it only if they know the previous key (https://en.wikipedia.org/wiki/Forward_secrecy). As the key is broadcasted to everyone, no permissions are checked. Note that recently expired subscribers most likely have the previous key, therefore they can use that new key, too.
 
+#### Pre-agreed keys
+
+If you don't want to exchange the keys via the network, you can use pre-agreed keys like this:
+
+```
+const key = new GroupKey('key-id', crypto.randomBytes(32))
+publisher.updateEncryptionKey({
+    key,
+    streamId,
+    distibutionMethod: 'rekey'
+})
+subscriber.addEncryptionKey(key, streamId)
+```
+
+#### Configuration
+
+There are two optional configuration options related to encryption keys:
+- `decryption.keyRequestTimeout`: max time (in milliseconds) to wait before a key request timeouts
+- `decryption.maxKeyRequestsPerSecond`: max count of key request to be sent within a second (i.e. it throttles the requests if it receives messages from many new publishers within a short period of time)
 
 ### Proxy publishing and subscribing
 

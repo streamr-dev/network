@@ -30,6 +30,11 @@ export class Subscription<T = unknown> extends MessageStream<T> {
         // this.debug('create', this.key, new Error('Subscription').stack)
     }
 
+    async unsubscribe(): Promise<void> {
+        this.end()
+        await this.return()
+    }
+
     /** @internal */
     waitForNeighbours(numNeighbours?: number, timeout?: number): Promise<boolean> {
         return this.context.waitForNeighbours(numNeighbours, timeout)

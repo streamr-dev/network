@@ -56,12 +56,13 @@ export class PeerList {
         return PeerID.fromValue(peerDescriptor.peerId).toKey()
     }
 
-    size(): number {
-        return this.peers.size
+    size(exclude: string[] = []): number {
+
+        return [...this.peers.keys()].filter((peer) => !exclude.includes(peer)).length
     }
 
-    getRandom(): RemoteRandomGraphNode | undefined {
-        const keys = [...this.peers.keys()]
+    getRandom(exclude: string[]): RemoteRandomGraphNode | undefined {
+        const keys = [...this.peers.keys()].filter((key) => !exclude.includes(key))
         const shuffled = shuffle(keys)
         if (shuffled.length) {
             return this.peers.get(shuffled[0])
