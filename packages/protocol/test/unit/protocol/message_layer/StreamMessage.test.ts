@@ -89,27 +89,15 @@ describe('StreamMessage', () => {
             assert.strictEqual(streamMessage.getSerializedContent(), JSON.stringify(content))
         })
 
-        it('can detect signed/encrypted etc', () => {
+        it('can detect encrypted', () => {
             const streamMessage = new StreamMessage({
-                messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
-                content: JSON.stringify(content),
-            })
-            expect(StreamMessage.isEncrypted(streamMessage)).toBe(false)
-            expect(StreamMessage.isUnencrypted(streamMessage)).toBe(true)
-            expect(StreamMessage.isSigned(streamMessage)).toBe(false)
-            expect(StreamMessage.isUnsigned(streamMessage)).toBe(true)
-
-            const signedMessage = new StreamMessage({
                 messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
                 content: JSON.stringify(content),
                 signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
                 signature: 'something'
             })
-
-            expect(StreamMessage.isEncrypted(signedMessage)).toBe(false)
-            expect(StreamMessage.isUnencrypted(signedMessage)).toBe(true)
-            expect(StreamMessage.isSigned(signedMessage)).toBe(true)
-            expect(StreamMessage.isUnsigned(signedMessage)).toBe(false)
+            expect(StreamMessage.isEncrypted(streamMessage)).toBe(false)
+            expect(StreamMessage.isUnencrypted(streamMessage)).toBe(true)
             const encryptedMessage = new StreamMessage({
                 messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
                 content: JSON.stringify(content),
@@ -120,8 +108,6 @@ describe('StreamMessage', () => {
 
             expect(StreamMessage.isEncrypted(encryptedMessage)).toBe(true)
             expect(StreamMessage.isUnencrypted(encryptedMessage)).toBe(false)
-            expect(StreamMessage.isSigned(encryptedMessage)).toBe(true)
-            expect(StreamMessage.isUnsigned(encryptedMessage)).toBe(false)
         })
 
         it('should throw if required fields are not defined', () => {

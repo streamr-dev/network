@@ -15,6 +15,7 @@ import { inject, Lifecycle, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { createRandomMsgChainId } from '../publish/MessageChain'
+import { createSignedMessage } from '../publish/MessageFactory'
 import { Context } from '../utils/Context'
 import { Debugger } from '../utils/log'
 import { instanceId } from '../utils/utils'
@@ -102,7 +103,7 @@ export class PublisherKeyExchange {
             requestId,
             encryptedGroupKeys
         })
-        const response = new StreamMessage({
+        const response = createSignedMessage<GroupKeyResponseSerialized>({
             messageId: new MessageID(
                 StreamPartIDUtils.getStreamID(streamPartId),
                 StreamPartIDUtils.getStreamPartition(streamPartId),
@@ -111,12 +112,11 @@ export class PublisherKeyExchange {
                 await this.authentication.getAddress(),
                 createRandomMsgChainId()
             ),
+            serializedContent: JSON.stringify(responseContent.toArray()),
             messageType: StreamMessageType.GROUP_KEY_RESPONSE,
             encryptionType: StreamMessage.ENCRYPTION_TYPES.RSA,
-            content: responseContent.toArray(),
-            signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
+            authentication: this.authentication
         })
-        response.signature = await this.authentication.createMessagePayloadSignature(response.getPayloadToSign())
         return response
     }
 }

@@ -35,6 +35,7 @@ describe('resend with existing key', () => {
             nextEncryptionKey: nextGroupKey,
             stream,
             publisher: publisherWallet,
+            msgChainId: 'mock-msgChainId'
         })
         storageNode.storeMessage(message)
     }
@@ -102,7 +103,7 @@ describe('resend with existing key', () => {
             { timestamp: 6000, groupKey: rekeyedKey }
         ]
         for (const msg of allMessages) {
-            storeMessage(msg.timestamp, msg.groupKey, msg.nextGroupKey, storageNode)
+            await storeMessage(msg.timestamp, msg.groupKey, msg.nextGroupKey, storageNode)
         }
     })
 

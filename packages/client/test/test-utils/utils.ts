@@ -1,6 +1,6 @@
 import crypto from 'crypto'
 import { DependencyContainer } from 'tsyringe'
-import { fetchPrivateKeyWithGas } from 'streamr-test-utils'
+import { fastPrivateKey, fetchPrivateKeyWithGas } from 'streamr-test-utils'
 import { wait } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import {
@@ -10,7 +10,6 @@ import {
     EthereumAddress,
     MAX_PARTITION_COUNT
 } from 'streamr-client-protocol'
-import { sign } from '../../src/utils/signingUtils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils/utils'
 import { Debug } from '../../src/utils/log'
@@ -24,6 +23,9 @@ import { addAfterFn } from './jest-utils'
 import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
 import { StreamrClientEventEmitter } from '../../src/events'
 import { MessageFactory } from '../../src/publish/MessageFactory'
+import { Authentication, createAuthentication } from '../../src/Authentication'
+import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
+import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
 
 const testDebugRoot = Debug('test')
 const testDebug = testDebugRoot.extend.bind(testDebugRoot)
@@ -106,30 +108,29 @@ type CreateMockMessageOptions = {
     nextEncryptionKey?: GroupKey
 } & ({ streamPartId: StreamPartID, stream?: never } | { stream: Stream, streamPartId?: never })
 
-export const createMockMessage = (
+export const createMockMessage = async (
     opts: CreateMockMessageOptions
 ): Promise<StreamMessage<any>> => {
     const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(
         opts.streamPartId ?? opts.stream.getStreamParts()[0]
     )
     const factory = new MessageFactory({
-        publisherId: opts.publisher.address.toLowerCase(),
+        authentication: createAuthentication({
+            privateKey: opts.publisher.privateKey
+        }, undefined as any),
         streamId,
-        getPartitionCount: async () => MAX_PARTITION_COUNT,
-        isPublicStream: async () => (opts.encryptionKey === undefined),
-        isPublisher: async () => true,
-        createSignature: async (payload: string) => sign(payload, opts.publisher.privateKey),
-        useGroupKey: async () => {
-            return (opts.encryptionKey !== undefined)
-                ? ({ current: opts.encryptionKey, next: opts.nextEncryptionKey })
-                : Promise.reject()
-        }
+        streamRegistry: createStreamRegistryCached({
+            partitionCount: MAX_PARTITION_COUNT,
+            isPublicStream: (opts.encryptionKey === undefined),
+            isStreamPublisher: true
+        }),
+        groupKeyQueue: await createGroupKeyQueue(opts.encryptionKey, opts.nextEncryptionKey)
     })
     const DEFAULT_CONTENT = {}
     const plainContent = opts.content ?? DEFAULT_CONTENT
     return factory.createMessage(plainContent, {
         timestamp: opts.timestamp ?? Date.now(),
-        msgChainId: opts.msgChainId ?? `mockMsgChainId-${opts.publisher.address}`
+        msgChainId: opts.msgChainId
     }, partition)
 }
 
@@ -148,4 +149,45 @@ export const startPublisherKeyExchangeSubscription = async (
     streamPartId: StreamPartID): Promise<void> => {
     const node = await publisherClient.getNode()
     node.subscribe(streamPartId)
+}
+
+export const createRandomAuthentication = (): Authentication => {
+    return createAuthentication({
+        privateKey: `0x${fastPrivateKey()}`
+    }, undefined as any)
+}
+
+export const createStreamRegistryCached = (opts: {
+    partitionCount?: number
+    isPublicStream?: boolean
+    isStreamPublisher?: boolean
+    isStreamSubscriber?: boolean
+}): StreamRegistryCached => {
+    return {
+        getStream: async () => {
+            return {
+                partitions: opts?.partitionCount ?? 1
+            } as any
+        },
+        isPublic: async () => {
+            return opts.isPublicStream ?? false
+        },
+        isStreamPublisher: async () => {
+            return opts.isStreamPublisher ?? true
+        },
+        isStreamSubscriber: async () => {
+            return opts.isStreamSubscriber ?? true
+        },
+    } as any
+}
+
+export const createGroupKeyQueue = async (current?: GroupKey, next?: GroupKey): Promise<GroupKeyQueue> => {
+    const queue = new GroupKeyQueue(undefined as any, { add: async () => {} } as any)
+    if (current !== undefined) {
+        await queue.rekey(current)
+    }
+    if (next !== undefined) {
+        await queue.rotate(next)
+    }
+    return queue
 }
