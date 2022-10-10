@@ -7,6 +7,7 @@ import { IErrorRpcService } from './proto/ErrorRpc.server'
 import { ErrorRpcServiceClient } from './proto/ErrorRpc.client'
 
 // Rpc service
+/* eslint-disable class-methods-use-this */
 class ErrorService implements IErrorRpcService {
     async timeout(request: HelloRequest, _context: ServerCallContext): Promise<HelloResponse> {
         return new Promise((resolve, _reject) => {

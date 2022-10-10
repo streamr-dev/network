@@ -12,6 +12,7 @@ const logger = new Logger(module)
 const MAX_MESSAGE_SIZE = 1048576
 
 export const WEB_RTC_CLEANUP = new class {
+    // eslint-disable-next-line class-methods-use-this
     cleanUp(): void {
         nodeDatachannel.cleanup()
     }

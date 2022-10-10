@@ -29,6 +29,7 @@ export class ServerWsConnection extends AbstractWsConnection {
         this.readyState = 3
     }
 
+    // eslint-disable-next-line class-methods-use-this
     getBufferedAmount(): number {
         return 0
     }

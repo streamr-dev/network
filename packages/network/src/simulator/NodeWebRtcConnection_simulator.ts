@@ -5,6 +5,7 @@ import { WebRtcConnectionFactory } from "../connection/webrtc/WebRtcEndpoint"
 import { Simulator } from "./Simulator"
 import { DescriptionType } from 'node-datachannel'
 
+/* eslint-disable class-methods-use-this */
 export const webRtcConnectionFactory = new class implements WebRtcConnectionFactory {
     createConnection(opts: ConstructorOptions): WebRtcConnection {
         return new NodeWebRtcConnection(opts)

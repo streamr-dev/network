@@ -7,6 +7,7 @@ import { toStreamID } from '../../../utils/StreamID'
 
 const VERSION = 2
 
+/* eslint-disable class-methods-use-this */
 export default class InstructionMessageSerializerV2 extends Serializer<InstructionMessage> {
     toArray(instructionMessage: InstructionMessage): any[] {
         return [

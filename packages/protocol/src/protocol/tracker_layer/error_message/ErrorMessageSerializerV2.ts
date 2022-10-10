@@ -6,6 +6,7 @@ import { Serializer } from '../../../Serializer'
 
 const VERSION = 2
 
+/* eslint-disable class-methods-use-this */
 export default class ErrorMessageSerializerV2 extends Serializer<ErrorMessage> {
     toArray(errorMessage: ErrorMessage): (string | number)[] {
         return [

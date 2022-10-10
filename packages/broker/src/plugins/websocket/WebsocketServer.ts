@@ -87,6 +87,7 @@ export class WebsocketServer {
         logger.info('Websocket server listening on ' + port)
     }
 
+    // eslint-disable-next-line class-methods-use-this
     private createConnection(connectionUrl: ConnectionUrl): Connection | never {
         switch (connectionUrl.action) {
             case Action.PUBLISH:
@@ -98,6 +99,7 @@ export class WebsocketServer {
         }
     }
 
+    // eslint-disable-next-line class-methods-use-this
     private parseUrl(url: string): ConnectionUrl {
         const PATH_PATTERN = new RegExp(`^.*/streams/(.*)/(${Action.PUBLISH}|${Action.SUBSCRIBE})(\\?.*)?$`)
         const groups = url.match(PATH_PATTERN)

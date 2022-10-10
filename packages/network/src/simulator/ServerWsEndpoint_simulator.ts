@@ -214,6 +214,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> imp
         return this.getConnectionByPeerId(peerId)?.getRemoteAddress()
     }
 
+    // eslint-disable-next-line class-methods-use-this
     protected doClose(_connection: ServerWsConnection, _code: DisconnectionCode, _reason: DisconnectionReason): void { }
 
     protected async doStop(): Promise<void> {

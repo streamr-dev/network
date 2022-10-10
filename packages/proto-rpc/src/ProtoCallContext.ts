@@ -17,6 +17,7 @@ export interface ProtoRpcOptions extends RpcOptions {
     isProtoRpc?: boolean
 }
 
+/* eslint-disable class-methods-use-this */
 export class ProtoCallContext implements ServerCallContext, ProtoRpcOptions {
     // implementation of the extended interfaces
     method = undefined as unknown as any
