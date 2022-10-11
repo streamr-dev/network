@@ -1,4 +1,4 @@
-import { DhtNode, Simulator, SimulatorTransport, PeerDescriptor, PeerID } from '@streamr/dht'
+import { DhtNode, Simulator, ConnectionManager, PeerDescriptor, PeerID } from '@streamr/dht'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { range } from 'lodash'
 import { waitForCondition } from 'streamr-test-utils'
@@ -22,16 +22,16 @@ describe('RandomGraphNode-DhtNode', () => {
 
     const peerDescriptors: PeerDescriptor[] = range(numOfNodes).map((i) => {
         return {
-            peerId: PeerID.fromString(`peer${i}`).value,
+            peerId: PeerID.fromString(`${i}`).value,
             type: 0
         }
     })
     beforeEach(async () => {
         const simulator = new Simulator()
-        const entrypointCm = new SimulatorTransport(entrypointDescriptor, simulator)
+        const entrypointCm = new ConnectionManager({ ownPeerDescriptor: entrypointDescriptor, simulator, serviceIdPrefix: 'simulator/' })
 
-        const cms: SimulatorTransport[] = range(numOfNodes).map((i) =>
-            new SimulatorTransport(peerDescriptors[i], simulator)
+        const cms: ConnectionManager[] = range(numOfNodes).map((i) =>
+            new ConnectionManager({ ownPeerDescriptor: peerDescriptors[i], simulator, serviceIdPrefix: 'simulator/' })
         )
 
         dhtEntryPoint = new DhtNode({
@@ -120,13 +120,21 @@ describe('RandomGraphNode-DhtNode', () => {
         await Promise.all(graphNodes.map((node) =>
             Promise.all([
                 waitForCondition(() => node.getContactPoolIds().length >= 8),
-                waitForCondition(() => node.getTargetNeighborStringIds().length >= 3)
+                waitForCondition(() => node.getTargetNeighborStringIds().length >= 3, 18000)
             ])
         ))
+
+        await waitForCondition(() => {
+            const avg = graphNodes.reduce((acc, curr) => {
+                return acc + curr.getTargetNeighborStringIds().length
+            }, 0) / numOfNodes
+            return avg >= 3.9
+        })
+
         const avg = graphNodes.reduce((acc, curr) => {
             return acc + curr.getTargetNeighborStringIds().length
         }, 0) / numOfNodes
 
         logger.info(`AVG Number of neighbors: ${avg}`)
-    })
+    }, 20000)
 })

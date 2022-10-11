@@ -1,6 +1,6 @@
 import { Database } from 'sqlite'
 import { toStreamID } from 'streamr-client-protocol'
-import { fastWallet } from 'streamr-test-utils'
+import { randomEthereumAddress } from 'streamr-test-utils'
 import ServerPersistence from '../../src/utils/persistence/ServerPersistence'
 import { mockContext } from '../test-utils/utils'
 
@@ -9,7 +9,7 @@ describe('ServerPersistence', () => {
     let persistence: ServerPersistence
 
     beforeEach(async () => {
-        const clientId = fastWallet().address
+        const clientId = randomEthereumAddress()
         const streamId = toStreamID('0x0000000000000000000000000000000000000001/path')
         persistence = new ServerPersistence({
             context: mockContext(),

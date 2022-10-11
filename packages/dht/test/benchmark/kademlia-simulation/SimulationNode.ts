@@ -1,6 +1,6 @@
 import KBucket from 'k-bucket'
 import { Contact } from './Contact'
-import { SortedContactList } from '../../../src/dht/SortedContactList'
+import { SortedContactList } from '../../../src/dht/contact/SortedContactList'
 import { PeerID } from '../../../src/helpers/PeerID'
 
 export class SimulationNode {

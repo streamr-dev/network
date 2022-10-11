@@ -39,7 +39,7 @@ enum RTCPeerConnectionStateEnum {
 
 type RTCPeerConnectionState = keyof typeof RTCPeerConnectionStateEnum
 
-type Events = WebRtcConnectionEvents | ConnectionEvents
+type Events = WebRtcConnectionEvents & ConnectionEvents
 
 export class NodeWebRtcConnection extends EventEmitter<Events> implements IConnection, IWebRtcConnection {
 
@@ -48,7 +48,6 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
     private dataChannel?: DataChannel
     private lastState: RTCPeerConnectionState = 'connecting'
     private remoteDescriptionSet = false
-
     private connectingTimeoutRef?: NodeJS.Timeout
 
     public readonly connectionType: ConnectionType = ConnectionType.WEBRTC
@@ -120,7 +119,6 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
                     this.connection!.addRemoteCandidate(candidate, mid)
                 } catch (err) {
                     logger.warn(`Failed to set remote candidate for peer ${this.remotePeerDescriptor.peerId.toString()}`)
-                    this.close()
                 }
             } else {
                 this.close(`Tried to set candidate before description`)
@@ -139,16 +137,16 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
                 // this.close()
             }
         } else {
-            if (this.lastState === 'closed'
-                || this.lastState === RTCPeerConnectionStateEnum.disconnected
-                || this.lastState === RTCPeerConnectionStateEnum.failed
-            ) {
-                this.close()
-            }
-            logger.trace(
-                `Tried to send data on a non-open connection (${PeerID.fromValue(this.remotePeerDescriptor.peerId).toKey()}) `
-                + `last connection states: ${this.lastState} ${!!this.dataChannel} ${this.closed}`)
-
+            // if (this.lastState === 'closed'
+            //     || this.lastState === RTCPeerConnectionStateEnum.disconnected
+            //     || this.lastState === RTCPeerConnectionStateEnum.failed
+            // ) {
+            //     this.close()
+            // }
+            // logger.trace(
+            //     `Tried to send data on a non-open connection (${PeerID.fromValue(this.remotePeerDescriptor.peerId).toKey()}) `
+            //     + `last connection states: ${this.lastState} ${!!this.dataChannel} ${this.closed}`)
+            logger.warn('Tried to send data on a non-open connection' + this.lastState + " " + !!this.dataChannel)
         }
     }
 
@@ -221,7 +219,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
             || state === RTCPeerConnectionStateEnum.disconnected
             || state === RTCPeerConnectionStateEnum.failed
         ) {
-            this.close(`Connection state change to ${state}`)
+            this.close()
         }
     }
 

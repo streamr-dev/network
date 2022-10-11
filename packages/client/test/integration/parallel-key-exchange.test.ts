@@ -6,7 +6,7 @@ import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { Wallet } from '@ethersproject/wallet'
-import { createMockMessage, startPublisherKeyExchangeSubscription } from '../test-utils/utils'
+import { createMockMessage } from '../test-utils/utils'
 import { MessageRef, StreamMessage } from 'streamr-client-protocol'
 import { wait } from '@streamr/utils'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -39,18 +39,12 @@ describe('parallel key exchange', () => {
                 user: publisher.wallet.address,
                 permissions: [StreamPermission.PUBLISH]
             })
-            const groupKey = publisher.groupKey
             publisher.client = environment.createClient({
                 auth: {
                     privateKey: publisher.wallet.privateKey
-                },
-                encryptionKeys: {
-                    [stream.id]: {
-                        [groupKey.id]: groupKey
-                    }
                 }
             })
-            await startPublisherKeyExchangeSubscription(publisher.client)
+            await publisher.client.addEncryptionKey(publisher.groupKey, stream.id)
         }))
     }, 20000)
 

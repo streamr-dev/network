@@ -12,6 +12,7 @@ import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { RemoteWebSocketConnector } from './RemoteWebSocketConnector'
 import {
     ConnectivityResponseMessage,
+    Message,
     PeerDescriptor,
     WebSocketConnectionRequest,
     WebSocketConnectionResponse
@@ -55,7 +56,7 @@ export class WebSocketConnector extends EventEmitter<ManagedConnectionSourceEven
 
         this.canConnectFunction = fnCanConnect.bind(this)
 
-        this.rpcCommunicator = new RoutingRpcCommunicator(WebSocketConnector.WEBSOCKET_CONNECTOR_SERVICE_ID, this.rpcTransport, {
+        this.rpcCommunicator = new RoutingRpcCommunicator(WebSocketConnector.WEBSOCKET_CONNECTOR_SERVICE_ID, this.rpcTransport.send, {
             rpcRequestTimeout: 15000
         })
 
@@ -67,6 +68,10 @@ export class WebSocketConnector extends EventEmitter<ManagedConnectionSourceEven
             'requestConnection',
             this.requestConnection
         )
+        
+        this.rpcTransport.on('message', (msg: Message) => {
+            this.rpcCommunicator.handleMessageFromPeer(msg)
+        })
     }
 
     public async start(): Promise<void> {

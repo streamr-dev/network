@@ -65,9 +65,10 @@ describe('WebSocket Connection Management', () => {
             serviceId: serviceId,
             body: new Uint8Array(),
             messageType: MessageType.RPC,
-            messageId: 'mockerer'
+            messageId: 'mockerer',
+            targetDescriptor: noWsServerConnectorPeerDescriptor
         }
-        noWsServerManager.on('data', (message: Message, _peerDescriptor: PeerDescriptor) => {
+        noWsServerManager.on('message', (message: Message) => {
             expect(message.messageId).toEqual('mockerer')
             expect(wsServerManager.getConnection(noWsServerConnectorPeerDescriptor)!.connectionType).toEqual(ConnectionType.WEBSOCKET_SERVER)
             expect(noWsServerManager.getConnection(wsServerConnectorPeerDescriptor)!.connectionType).toEqual(ConnectionType.WEBSOCKET_CLIENT)
@@ -75,7 +76,7 @@ describe('WebSocket Connection Management', () => {
             done()
         })
 
-        wsServerManager.send(dummyMessage, noWsServerConnectorPeerDescriptor)
+        wsServerManager.send(dummyMessage)
     })
 
     it('Can open connections to peer with server', async () => {
@@ -83,9 +84,10 @@ describe('WebSocket Connection Management', () => {
             serviceId: serviceId,
             body: new Uint8Array(),
             messageType: MessageType.RPC,
-            messageId: 'mockerer'
+            messageId: 'mockerer',
+            targetDescriptor: wsServerConnectorPeerDescriptor
         }
-        await noWsServerManager.send(dummyMessage, wsServerConnectorPeerDescriptor)
+        await noWsServerManager.send(dummyMessage)
         await waitForCondition(
             () => {
                 return (!!wsServerManager.getConnection(noWsServerConnectorPeerDescriptor)
@@ -102,13 +104,15 @@ describe('WebSocket Connection Management', () => {
             serviceId: serviceId,
             body: new Uint8Array(),
             messageType: MessageType.RPC,
-            messageId: 'mockerer'
+            messageId: 'mockerer',
+            targetDescriptor: noWsServerConnectorPeerDescriptor
         }
-        await expect(noWsServerManager.send(dummyMessage, noWsServerConnectorPeerDescriptor))
+        await expect(noWsServerManager.send(dummyMessage))
             .rejects
             .toEqual(new Err.CannotConnectToSelf('Cannot send to self'))
 
-        await expect(wsServerManager.send(dummyMessage, wsServerConnectorPeerDescriptor))
+        dummyMessage.targetDescriptor = wsServerConnectorPeerDescriptor
+        await expect(wsServerManager.send(dummyMessage))
             .rejects
             .toEqual(new Err.CannotConnectToSelf('Cannot send to self'))
     })

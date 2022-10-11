@@ -19,8 +19,12 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
     constructor(private ownPeerDescriptor: PeerDescriptor, 
         private protocolVersion: string, 
         private connection: IConnection) {
+        
         super()
-        this.connection.on('data', this.onData)
+
+        connection.on('data', (bytes: Uint8Array) => {
+            this.onData(bytes)
+        })
     }
 
     public run(): void {

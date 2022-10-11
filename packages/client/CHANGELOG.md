@@ -8,13 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Add method `subscribeAll` to subscribe to all stream partitions.
-- Add method `resendAll` to resend data from all stream partitions.
 - Method `updateEncryptionKey` to update stream encryption key
 - The client publishes metrics to the network at regular intervals (configurable with `metrics` config option)
+- There is a limit for concurrent smart contract calls (per contract, configurable with `maxConcurrentContractCalls` config option)
 
 ### Changed
 
+- Group keys are delivered in-stream, not in a separate key exchange stream
+  - new optional config options `decryption.keyRequestTimeout` and `decryption.maxKeyRequestsPerSecond`
 - Method signatures of `client.publish` and `stream.publish` have changed: optional `metadata` is given an object instead of positional arguments
   - new metadata field: `msgChainId`
 - Method `getStorageNodesOf()` renamed to `getStorageNodes()`
@@ -29,7 +30,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - method `onResent(listener)` replaced with `subscription.once('resendComplete', listener)`
 - Behavior changes:
   - resends support multiple storage nodes (the data is fetched from a random storage node)
-- Configuration parameter `groupKeys` renamed to `encryptionKeys`
 - Exported classes `GroupKey` and `GroupKeyId` renamed to `EncryptionKey` and `EncryptionKeyId`
 - When a `MessageStream` is returned from `resend()`, it doesn't reject if an encryption key is not available
 
@@ -44,6 +44,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove method `unsubscribeAll()`, use `unsubscribe()` without arguments instead
 - Remove client configuration option `client.network.name`
 - Remove `subscription.onMessage`, `onStart` and `onError` methods, use `subscription.on('error', cb)` to add an error listener
+- Remove configuration option `groupKeys`
+  - use `updateEncryptionKey` and `addEncryptionKey` methods instead
 
 ### Fixed
 

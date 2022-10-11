@@ -20,11 +20,13 @@ export class ManagedConnection extends EventEmitter<Events> {
     private implementation?: IConnection
 
     private outputBuffer: Uint8Array[] = []
-    private inputBuffer: [data: Uint8Array, remotePeerDescriptor: PeerDescriptor][] = []
+    private inputBuffer: [data: Uint8Array][] = []
 
     public connectionId: ConnectionID
     private peerDescriptor?: PeerDescriptor
     public connectionType: ConnectionType
+
+    private handshaker?: Handshaker
     private handshakeCompleted = false
 
     constructor(private ownPeerDescriptor: PeerDescriptor,
@@ -46,6 +48,7 @@ export class ManagedConnection extends EventEmitter<Events> {
         }
 
         if (connectingConnection) {
+            this.handshaker = new Handshaker(this.ownPeerDescriptor, this.protocolVersion, connectingConnection)
             connectingConnection.once('connected', () => {
                 this.attachImplementation(connectingConnection)
                 this.emit('connected')
@@ -55,13 +58,21 @@ export class ManagedConnection extends EventEmitter<Events> {
             })
         } else {
             if (connectedConnection) {
+                this.handshaker = new Handshaker(this.ownPeerDescriptor, this.protocolVersion, connectedConnection!)
                 this.attachImplementation(connectedConnection!)
             }
         }
+
+        if (this.handshaker) {
+            this.handshaker.on('handshakeCompleted', this.onHandshakeCompleted)
+        }
+        //(peerDescriptor: PeerDescriptor) => {
+        //    this.onHandshakeCompleted(peerDescriptor)
+        //})
     }
 
     // eventemitter3 does not implement the standard 'newListener' event, so we need to override
-    
+
     override on(
         event: keyof Events,
         fn: (...args: any) => void,
@@ -72,7 +83,7 @@ export class ManagedConnection extends EventEmitter<Events> {
             while (this.inputBuffer.length > 0) {
                 logger.trace('emptying inputBuffer objectId: ' + this.objectId)
                 const data = (this.inputBuffer.shift()!)
-                fn(data[0], data[1])
+                fn(data[0], this.getPeerDescriptor())
             }
         }
         super.on(event, fn, context)
@@ -91,7 +102,7 @@ export class ManagedConnection extends EventEmitter<Events> {
                 while (this.inputBuffer.length > 0) {
                     logger.trace('emptying inputBuffer objectId: ' + this.objectId)
                     const data = (this.inputBuffer.shift()!)
-                    fn(data[0], data[1])
+                    fn(data[0], this.getPeerDescriptor())
                 }
             } else {
                 super.once(event, fn, context)
@@ -120,7 +131,7 @@ export class ManagedConnection extends EventEmitter<Events> {
             logger.trace('emptying outputBuffer objectId: ' + this.objectId)
             this.implementation!.send(this.outputBuffer.shift()!)
         }
-        
+
         logger.trace('emitting handshake_completed, objectId: ' + this.objectId)
         this.emit('handshakeCompleted', peerDescriptor)
     }
@@ -132,7 +143,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
             if (this.listenerCount('managedData') < 1) {
                 logger.trace('pushing data to inputbuffer objectId: ' + this.objectId)
-                this.inputBuffer.push([bytes, this.getPeerDescriptor()!])
+                this.inputBuffer.push([bytes])
             } else {
                 logger.trace('emitting data as ManagedConnectionEvents.DATA objectId: ' + this.objectId)
                 this.emit('managedData', bytes, this.getPeerDescriptor()!)
@@ -143,9 +154,10 @@ export class ManagedConnection extends EventEmitter<Events> {
             this.emit('error', name)
         })
         impl.on('connected', () => {
+            logger.info('connected emitted')
             this.emit('connected')
         })
-        impl.off('disconnected', () => {
+        impl.on('disconnected', () => {
             this.emit('disconnected')
         })
         impl.on('disconnected', (code?: number, reason?: string) => {
@@ -155,13 +167,9 @@ export class ManagedConnection extends EventEmitter<Events> {
         this.implementation = impl
 
         if (!peerDescriptor) {
-            const handshaker = new Handshaker(this.ownPeerDescriptor, this.protocolVersion, impl)
-            handshaker.on('handshakeCompleted', (peerDescriptor: PeerDescriptor) => {
-                this.onHandshakeCompleted(peerDescriptor)
-            })
-
-            handshaker.run()
+            this.handshaker?.run()
         } else {
+            this.handshaker?.off('handshakeCompleted', this.onHandshakeCompleted)
             this.onHandshakeCompleted(peerDescriptor)
         }
     }

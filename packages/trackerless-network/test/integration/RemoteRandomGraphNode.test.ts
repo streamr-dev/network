@@ -1,4 +1,4 @@
-import { RoutingRpcCommunicator, Simulator, SimulatorTransport, PeerDescriptor, PeerID } from '@streamr/dht'
+import { RoutingRpcCommunicator, Simulator, ConnectionManager, PeerDescriptor, PeerID, Message } from '@streamr/dht'
 import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
 import { NetworkRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import {
@@ -33,13 +33,21 @@ describe('RemoteRandomGraphNode', () => {
     beforeEach(() => {
         recvCounter = 0
         const simulator = new Simulator()
-        const mockConnectionManager1 = new SimulatorTransport(serverPeer, simulator)
-        const mockConnectionManager2 = new SimulatorTransport(clientPeer, simulator)
-        simulator.addConnectionManager(mockConnectionManager1)
-        simulator.addConnectionManager(mockConnectionManager2)
+        const mockConnectionManager1 = new ConnectionManager({ ownPeerDescriptor: serverPeer, simulator, serviceIdPrefix: 'simulator/' })
+        const mockConnectionManager2 = new ConnectionManager({ ownPeerDescriptor: clientPeer, simulator, serviceIdPrefix: 'simulator/' })
+        //simulator.addConnectionManager(mockConnectionManager1)
+        //simulator.addConnectionManager(mockConnectionManager2)
 
-        mockServerRpc = new RoutingRpcCommunicator('test', mockConnectionManager1)
-        clientRpc = new RoutingRpcCommunicator('test', mockConnectionManager2)
+        mockServerRpc = new RoutingRpcCommunicator('test', mockConnectionManager1.send)
+        clientRpc = new RoutingRpcCommunicator('test', mockConnectionManager2.send)
+
+        mockConnectionManager1.on('message', (msg: Message) => {
+            mockServerRpc.handleMessageFromPeer(msg)
+        })
+
+        mockConnectionManager2.on('message', (msg: Message) => {
+            clientRpc.handleMessageFromPeer(msg)
+        })
 
         mockServerRpc.registerRpcNotification(
             DataMessage,

@@ -1,4 +1,4 @@
-import { SortedContactList } from '../../src/dht/SortedContactList'
+import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import type { ServiceInfo, MethodInfo } from "@protobuf-ts/runtime-rpc"
 import { PeerID } from '../../src/helpers/PeerID'
 import { toProtoRpcClient } from '@streamr/proto-rpc'

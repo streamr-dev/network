@@ -15,7 +15,8 @@ export class SimulatorConnection extends EventEmitter<ConnectionEvents> implemen
     }
 
     close(): void {
-
+        this.simulator.disconnect(this.ownPeerDescriptor, this.targetPeerDescriptor)
+        this.emit('disconnected')
     }
 
     connect(): void {
@@ -25,5 +26,9 @@ export class SimulatorConnection extends EventEmitter<ConnectionEvents> implemen
 
     handleIncomingData(data: Uint8Array): void {
         this.emit('data', data)
+    }
+
+    handleIncomingDisconnection(): void {
+        this.emit('disconnected')
     }
 }

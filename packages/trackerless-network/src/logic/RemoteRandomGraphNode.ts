@@ -1,12 +1,12 @@
 import { INetworkRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { PeerDescriptor, UUID, PeerID } from '@streamr/dht'
+import { PeerDescriptor, UUID, PeerID, DhtRpcOptions } from '@streamr/dht'
 import {
     DataMessage,
     HandshakeRequest,
     InterleaveNotice,
-    LeaveNotice, NeighborUpdate
+    LeaveNotice,
+    NeighborUpdate
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
-import { DhtRpcOptions } from '@streamr/dht/dist/src/rpc-protocol/DhtRpcOptions'
 import { Logger } from '@streamr/utils'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
 

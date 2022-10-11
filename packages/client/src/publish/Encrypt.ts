@@ -2,10 +2,10 @@
  * Encrypt StreamMessages in-place.
  */
 import { StreamMessage } from 'streamr-client-protocol'
-import { PublisherKeyExchange } from '../encryption/PublisherKeyExchange'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
-import { scoped, Lifecycle, inject, delay } from 'tsyringe'
+import { scoped, Lifecycle } from 'tsyringe'
 import { EncryptionUtil } from '../encryption/EncryptionUtil'
+import { GroupKeyStoreFactory } from '../encryption/GroupKeyStoreFactory'
 
 @scoped(Lifecycle.ContainerScoped)
 export class Encrypt {
@@ -13,7 +13,7 @@ export class Encrypt {
 
     constructor(
         private streamRegistryCached: StreamRegistryCached,
-        @inject(delay(() => PublisherKeyExchange)) private keyExchange: PublisherKeyExchange,
+        private groupKeyStoreFactory: GroupKeyStoreFactory
     ) {
     }
 
@@ -36,7 +36,8 @@ export class Encrypt {
             return
         }
 
-        const [groupKey, nextGroupKey] = await this.keyExchange.useGroupKey(streamId)
+        const groupKeyStore = await this.groupKeyStoreFactory.getStore(streamId)
+        const [groupKey, nextGroupKey] = await groupKeyStore.useGroupKey()
         if (this.isStopped) { return }
 
         if (!groupKey) {

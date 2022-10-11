@@ -10,6 +10,7 @@ import { IDhtRpcService, IWebSocketConnectorService } from '../src/proto/DhtRpc.
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { Simulator } from '../src/connection/Simulator'
 import { ConnectionManager } from '../src/exports'
+import { v4 } from 'uuid'
 
 export const generateId = (stringId: string): Uint8Array => {
     return PeerID.fromString(stringId).value
@@ -29,7 +30,7 @@ export const createMockConnectionDhtNode = async (stringId: string, simulator: S
 
     const mockConnectionManager = new ConnectionManager({ ownPeerDescriptor: peerDescriptor, simulator: simulator })
     
-    const node = new DhtNode({ peerDescriptor: peerDescriptor, transportLayer: mockConnectionManager, 
+    const node = new DhtNode({ peerDescriptor: peerDescriptor, connectionManager: mockConnectionManager, 
         nodeName: stringId, numberOfNodesPerKBucket: K })
     await node.start()
 
@@ -43,7 +44,7 @@ export const createMockConnectionLayer1Node = async (stringId: string, layer0Nod
         type: 0
     }
 
-    const node = new DhtNode({ peerDescriptor: descriptor, transportLayer: layer0Node })
+    const node = new DhtNode({ peerDescriptor: descriptor, transportLayer: layer0Node, serviceId: 'layer1' })
     await node.start()
     return node
 }
@@ -55,7 +56,7 @@ export const createWrappedClosestPeersRequest = (
 
     const routedMessage: ClosestPeersRequest = {
         peerDescriptor: sourceDescriptor,
-        requestId: '11111'
+        requestId: v4()
     }
     const rpcWrapper: RpcMessage = {
         body: ClosestPeersRequest.toBinary(routedMessage),
@@ -63,7 +64,7 @@ export const createWrappedClosestPeersRequest = (
             method: 'closestPeersRequest',
             request: 'request'
         },
-        requestId: 'testId'
+        requestId: v4()
     }
     return rpcWrapper
 }

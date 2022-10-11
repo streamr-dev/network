@@ -7,3 +7,4 @@ export { ConnectionManager, ConnectionLocker } from './connection/ConnectionMana
 export { PeerID } from './helpers/PeerID'
 export { DhtPeer } from './dht/DhtPeer'
 export { UUID } from './helpers/UUID'
+export { DhtRpcOptions } from './rpc-protocol/DhtRpcOptions'

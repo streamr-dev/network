@@ -20,7 +20,6 @@ export interface ServerPersistenceOptions {
     valueColumnName: string
     clientId: string
     streamId: StreamID
-    initialData?: Record<string, string> // key -> value
     migrationsPath?: string
     onInit?: (db: Database) => Promise<void>
 }
@@ -36,7 +35,6 @@ export default class ServerPersistence implements Persistence<string, string>, C
     private readonly dbFilePath: string
     private store?: Database
     private error?: Error
-    private readonly initialData
     private initCalled = false
     private readonly migrationsPath?: string
     private readonly onInit?: (db: Database) => Promise<void>
@@ -48,7 +46,6 @@ export default class ServerPersistence implements Persistence<string, string>, C
         streamId,
         tableName,
         valueColumnName,
-        initialData = {},
         migrationsPath,
         onInit
     }: ServerPersistenceOptions) {
@@ -57,7 +54,6 @@ export default class ServerPersistence implements Persistence<string, string>, C
         this.valueColumnName = valueColumnName
         this.debug = context.debug.extend(this.id)
         this.streamId = encodeURIComponent(streamId)
-        this.initialData = initialData
         const paths = envPaths('streamr-client')
         const dbFilePath = resolve(paths.data, join('./', clientId, `${tableName}.db`))
         this.dbFilePath = dbFilePath
@@ -142,9 +138,6 @@ export default class ServerPersistence implements Persistence<string, string>, C
             throw this.error
         }
 
-        await Promise.all(Object.entries(this.initialData).map(async ([key, value]) => {
-            return this.setKeyValue(key, value)
-        }))
         this.debug('init')
     }
 
@@ -170,8 +163,8 @@ export default class ServerPersistence implements Persistence<string, string>, C
         return !!(value && value['COUNT(*)'] != null && value['COUNT(*)'] !== 0)
     }
 
-    private async setKeyValue(key: string, value: string): Promise<void> {
-        // set, but without init so init can insert initialData
+    async set(key: string, value: string): Promise<void> {
+        await this.init()
         await this.store!.run(
             `INSERT INTO ${this.tableName} VALUES ($id, $${this.valueColumnName}, $streamId) ON CONFLICT DO NOTHING`, 
             {
@@ -180,11 +173,6 @@ export default class ServerPersistence implements Persistence<string, string>, C
                 $streamId: this.streamId,
             }
         )
-    }
-
-    async set(key: string, value: string): Promise<void> {
-        await this.init()
-        return this.setKeyValue(key, value)
     }
 
     private async clear(): Promise<void> {

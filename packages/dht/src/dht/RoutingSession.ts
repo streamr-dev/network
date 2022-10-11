@@ -1,6 +1,6 @@
 import { PeerDescriptor } from "../exports"
 import { DhtPeer } from "./DhtPeer"
-import { SortedContactList } from "./SortedContactList"
+import { SortedContactList } from "./contact/SortedContactList"
 import { PeerID, PeerIDKey } from '../helpers/PeerID'
 import { Logger } from "@streamr/utils"
 import EventEmitter from 'eventemitter3'
@@ -45,7 +45,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     ) {
         super()
         this.contactList = new SortedContactList(PeerID.fromValue(this.messageToRoute!.destinationPeer!.peerId),
-            10000, true, this.messageToRoute!.previousPeer ? PeerID.fromValue(this.messageToRoute!.previousPeer!.peerId) : undefined)
+            10000, undefined, true, this.messageToRoute!.previousPeer ? PeerID.fromValue(this.messageToRoute!.previousPeer!.peerId) : undefined)
     }
 
     private onRequestFailed(peerId: PeerID) {
@@ -114,6 +114,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
                     } else {
                         this.onRequestFailed(nextPeer!.peerId)
                     }
+                    return nextPeer
                 }).catch((_e) => { })
         }
     }
