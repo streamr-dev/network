@@ -5,7 +5,8 @@ import {
     MessageRef,
     MessageID,
     EncryptedGroupKey,
-    toStreamID
+    toStreamID,
+    ValidationError
 } from '../../../../src/index'
 import { toEthereumAddress } from '@streamr/utils'
 
@@ -41,12 +42,33 @@ const serializedMessage = JSON.stringify([
 ])
 
 describe('StreamMessageSerializerV32', () => {
+
     describe('deserialize', () => {
+    
         it('correctly parses messages', () => {
             assert.deepStrictEqual(StreamMessage.deserialize(serializedMessage), message)
         })
+
+        it('throws if invalid signature type', () => {
+            const serializedMessage = JSON.stringify([
+                VERSION,
+                ['streamId', 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'],
+                [1564046132168, 5],
+                StreamMessage.MESSAGE_TYPES.MESSAGE,
+                StreamMessage.CONTENT_TYPES.JSON,
+                StreamMessage.ENCRYPTION_TYPES.AES,
+                'groupKeyId',
+                'encrypted-content',
+                '["groupKeyId","encryptedGroupKeyHex"]',
+                0,
+                'signature'
+            ])
+            assert.throws(() => StreamMessage.deserialize(serializedMessage), ValidationError)
+        })
     })
+
     describe('serialize', () => {
+
         it('correctly serializes messages', () => {
             assert.deepStrictEqual(message.serialize(VERSION), serializedMessage)
         })
