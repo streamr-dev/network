@@ -6,16 +6,11 @@ import { Provider } from '@ethersproject/providers'
 import { scoped, Lifecycle, inject, delay, DependencyContainer } from 'tsyringe'
 import { BrubeckContainer } from '../Container'
 import { EthereumConfig, getAllStreamRegistryChainProviders, getStreamRegistryOverrides } from '../Ethereum'
-import { instanceId } from '../utils/utils'
 import { until } from '../utils/promises'
-import { Context } from '../utils/Context'
 import { ConfigInjectionToken, TimeoutsConfig } from '../Config'
 import { Stream, StreamProperties } from '../Stream'
 import { ErrorCode, NotFoundError } from '../HttpUtil'
-import {
-    StreamID,
-    StreamIDUtils
-} from 'streamr-client-protocol'
+import { StreamID, StreamIDUtils } from 'streamr-client-protocol'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { omit } from 'lodash'
 import { SynchronizedGraphQLClient } from '../utils/SynchronizedGraphQLClient'
@@ -39,7 +34,8 @@ import {
 import { StreamRegistryCached } from './StreamRegistryCached'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ContractFactory } from '../ContractFactory'
-import { EthereumAddress, isENSName, toEthereumAddress } from '@streamr/utils'
+import { EthereumAddress, isENSName, Logger, toEthereumAddress } from '@streamr/utils'
+import { LoggerFactory } from '../utils/LoggerFactory'
 
 /* 
  * On-chain registry of stream metadata and permissions.
@@ -70,15 +66,14 @@ const streamContractErrorProcessor = (err: any, streamId: StreamID, registry: st
 }
 
 @scoped(Lifecycle.ContainerScoped)
-export class StreamRegistry implements Context {
-    readonly id
-    readonly debug
+export class StreamRegistry {
+    private readonly logger: Logger
     private streamRegistryContract?: ObservableContract<StreamRegistryContract>
     private streamRegistryContractsReadonly: ObservableContract<StreamRegistryContract>[]
 
     constructor(
-        context: Context,
         private contractFactory: ContractFactory,
+        @inject(LoggerFactory) loggerFactory: LoggerFactory,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(BrubeckContainer) private container: DependencyContainer,
         @inject(SynchronizedGraphQLClient) private graphQLClient: SynchronizedGraphQLClient,
@@ -87,9 +82,7 @@ export class StreamRegistry implements Context {
         @inject(ConfigInjectionToken.Ethereum) private ethereumConfig: EthereumConfig,
         @inject(ConfigInjectionToken.Timeouts) private timeoutsConfig: TimeoutsConfig
     ) {
-        this.id = instanceId(this)
-        this.debug = context.debug.extend(this.id)
-        this.debug('create')
+        this.logger = loggerFactory.createLogger(module)
         const chainProviders = getAllStreamRegistryChainProviders(ethereumConfig)
         this.streamRegistryContractsReadonly = chainProviders.map((provider: Provider) => {
             return this.contractFactory.createReadContract<StreamRegistryContract>(
@@ -119,17 +112,11 @@ export class StreamRegistry implements Context {
     }
 
     async getOrCreateStream(props: { id: string, partitions?: number }): Promise<Stream> {
-        this.debug('getOrCreateStream %o', {
-            props,
-        })
         try {
             return await this.getStream(props.id)
         } catch (err: any) {
-            // If stream does not exist, attempt to create it
             if (err.errorCode === ErrorCode.NOT_FOUND) {
-                const stream = await this.createStream(props)
-                this.debug('created stream: %s %o', props.id, stream.toObject())
-                return stream
+                return this.createStream(props)
             }
             throw err
         }
@@ -203,7 +190,6 @@ export class StreamRegistry implements Context {
 
     async deleteStream(streamIdOrPath: string): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        this.debug('Deleting stream %s', streamId)
         await this.connectToContract()
         const ethersOverrides = getStreamRegistryOverrides(this.ethereumConfig)
         await waitForTx(this.streamRegistryContract!.deleteStream(
@@ -214,7 +200,7 @@ export class StreamRegistry implements Context {
 
     private async streamExistsOnChain(streamIdOrPath: string): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        this.debug('Checking if stream exists on chain %s', streamId)
+        this.logger.debug('checking if stream "%s" exists on chain', streamId)
         return Promise.any([
             ...this.streamRegistryContractsReadonly.map((contract: StreamRegistryContract) => {
                 return contract.exists(streamId)
@@ -224,7 +210,6 @@ export class StreamRegistry implements Context {
 
     async getStream(streamIdOrPath: string): Promise<Stream> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        this.debug('Getting stream %s', streamId)
         let metadata
         try {
             metadata = await this.queryAllReadonlyContracts((contract: StreamRegistryContract) => {
@@ -242,7 +227,7 @@ export class StreamRegistry implements Context {
             permissionFilter,
             this.graphQLClient,
             (id: StreamID, metadata: string) => this.parseStream(id, metadata),
-            this.debug)
+            this.logger)
     }
 
     getStreamPublishers(streamIdOrPath: string): AsyncGenerator<EthereumAddress> {
@@ -255,7 +240,6 @@ export class StreamRegistry implements Context {
 
     private async* getStreamPublishersOrSubscribersList(streamIdOrPath: string, fieldName: string): AsyncGenerator<EthereumAddress> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        this.debug(`Get stream ${fieldName}s for stream id ${streamId}`)
         const backendResults = this.graphQLClient.fetchPaginatedResults<StreamPublisherOrSubscriberItem>(
             (lastId: string, pageSize: number) => StreamRegistry.buildStreamPublishersOrSubscribersQuery(streamId, fieldName, lastId, pageSize)
         )
