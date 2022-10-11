@@ -3,20 +3,22 @@ import {
     createSignaturePayload,
     EncryptedGroupKey,
     EncryptionType,
+    MessageID,
+    MessageRef,
     StreamID,
     StreamMessage,
-    StreamMessageOptions,
-    toStreamPartID
+    StreamMessageOptions
 } from 'streamr-client-protocol'
 import { EncryptionUtil } from '../encryption/EncryptionUtil'
 import { GroupKeyId } from '../encryption/GroupKey'
-import { createRandomMsgChainId, MessageChain } from './MessageChain'
+import { createMessageRef, createRandomMsgChainId } from './messageChain'
 import { MessageMetadata } from './Publisher'
 import { keyToArrayIndex } from '@streamr/utils'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { Mapping } from '../utils/Mapping'
 import { Authentication } from '../Authentication'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
+import { formLookupKey } from '../utils/utils'
 
 export interface MessageFactoryOptions {
     streamId: StreamID
@@ -48,7 +50,7 @@ export class MessageFactory {
     private readonly authentication: Authentication
     private defaultPartition: number | undefined
     private readonly defaultMessageChainIds: Mapping<[partition: number], string>
-    private readonly messageChains: Mapping<[partition: number, msgChainId: string], MessageChain>
+    private readonly prevMsgRefs: Map<string, MessageRef> = new Map()
     private readonly streamRegistry: Pick<StreamRegistryCached, 'getStream' | 'isPublic' | 'isStreamPublisher'>
     private readonly groupKeyQueue: GroupKeyQueue
 
@@ -59,10 +61,6 @@ export class MessageFactory {
         this.groupKeyQueue = opts.groupKeyQueue
         this.defaultMessageChainIds = new Mapping(async (_partition: number) => {
             return createRandomMsgChainId()
-        })
-        this.messageChains = new Mapping(async (partition: number, msgChainId: string) => {
-            const publisherId = await this.authentication.getAddress()
-            return new MessageChain(toStreamPartID(this.streamId, partition), publisherId, msgChainId)
         })
     }
 
@@ -94,11 +92,12 @@ export class MessageFactory {
                 : this.getDefaultPartition(partitionCount)
         }
 
-        const chain = await this.messageChains.get(
-            partition,
-            metadata.msgChainId ?? await this.defaultMessageChainIds.get(partition)
-        )
-        const [messageId, prevMsgRef] = chain.add(metadata.timestamp)
+        const msgChainId = metadata.msgChainId ?? await this.defaultMessageChainIds.get(partition)
+        const msgChainKey = formLookupKey(partition, msgChainId)
+        const prevMsgRef = this.prevMsgRefs.get(msgChainKey)
+        const msgRef = createMessageRef(metadata.timestamp, prevMsgRef)
+        this.prevMsgRefs.set(msgChainKey, msgRef)
+        const messageId = new MessageID(this.streamId, partition, msgRef.timestamp, msgRef.sequenceNumber, publisherId, msgChainId)
 
         const encryptionType = (await this.streamRegistry.isPublic(this.streamId)) ? EncryptionType.NONE : EncryptionType.AES
         let groupKeyId: GroupKeyId | undefined

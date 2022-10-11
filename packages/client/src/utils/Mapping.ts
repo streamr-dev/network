@@ -1,9 +1,9 @@
+import { formLookupKey } from './utils'
+
 // an wrapper object is used so that we can store undefined values
 interface ValueWrapper<V> {
     value: V
 }
-
-const KEY_SEPARATOR = '|'
 
 /*
  * A map data structure which lazily evaluates values. A factory function
@@ -21,7 +21,7 @@ export class Mapping<K extends (string | number)[], V> {
     }
 
     async get(...args: K): Promise<V> {
-        const key = args.join(KEY_SEPARATOR)
+        const key = formLookupKey(...args)
         let valueWrapper = this.delegate.get(key)
         if (valueWrapper === undefined) {
             const value = await this.valueFactory(...args)

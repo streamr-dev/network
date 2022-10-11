@@ -13,7 +13,7 @@ import {
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
-import { createRandomMsgChainId } from '../publish/MessageChain'
+import { createRandomMsgChainId } from '../publish/messageChain'
 import { createSignedMessage } from '../publish/MessageFactory'
 import { Context } from '../utils/Context'
 import { Debugger } from '../utils/log'
