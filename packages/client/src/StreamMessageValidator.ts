@@ -124,21 +124,14 @@ export default class StreamMessageValidator {
             prevMsgRef: streamMessage.prevMsgRef ?? undefined,
             newGroupKey: streamMessage.newGroupKey ?? undefined
         }) 
-
-        if (streamMessage.signatureType === StreamMessage.SIGNATURE_TYPES.ETH) {
-            let success
-            try {
-                success = verifyFn(streamMessage.getPublisherId(), payload, streamMessage.signature!)
-            } catch (err) {
-                throw new StreamMessageError(`An error occurred during address recovery from signature: ${err}`, streamMessage)
-            }
-
-            if (!success) {
-                throw new StreamMessageError('Signature validation failed', streamMessage)
-            }
-        } else {
-            // We should never end up here, as StreamMessage construction throws if the signature type is invalid
-            throw new StreamMessageError(`Unrecognized signature type: ${streamMessage.signatureType}`, streamMessage)
+        let success
+        try {
+            success = verifyFn(streamMessage.getPublisherId(), payload, streamMessage.signature!)
+        } catch (err) {
+            throw new StreamMessageError(`An error occurred during address recovery from signature: ${err}`, streamMessage)
+        }
+        if (!success) {
+            throw new StreamMessageError('Signature validation failed', streamMessage)
         }
     }
 
