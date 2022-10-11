@@ -172,11 +172,6 @@ describe('StreamMessageValidator', () => {
             })
         })
 
-        it('rejects messages with unknown signature type', async () => {
-            msg.signatureType = 666
-            await assert.rejects(getValidator().validate(msg))
-        })
-
         it('rejects if getStream rejects', async () => {
             const testError = new Error('test error')
             getStream = jest.fn().mockRejectedValue(testError)

@@ -125,7 +125,6 @@ describe('delivery of messages in protocol layer', () => {
                 hello: 'world'
             },
             messageType: StreamMessage.MESSAGE_TYPES.MESSAGE,
-            signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
             signature: 'signature',
         })
         const messagePromise = waitForEvent(nodeToNode1, NodeToNodeEvent.DATA_RECEIVED)
@@ -140,7 +139,6 @@ describe('delivery of messages in protocol layer', () => {
         expect(msg.streamMessage.getParsedContent()).toEqual({
             hello: 'world'
         })
-        expect(msg.streamMessage.signatureType).toEqual(StreamMessage.SIGNATURE_TYPES.ETH)
         expect(msg.streamMessage.signature).toEqual('signature')
     })
 

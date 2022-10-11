@@ -66,7 +66,6 @@ describe('MessageFactory', () => {
             groupKeyId: GROUP_KEY.id,
             newGroupKey: null,
             signature: expect.stringMatching(/^0x[0-9a-f]+$/),
-            signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
             contentType: StreamMessage.CONTENT_TYPES.JSON,
             serializedContent: expect.stringMatching(/^[0-9a-f]+$/)
         })

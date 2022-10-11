@@ -25,10 +25,6 @@ export enum ContentType {
     JSON = 0
 }
 
-export enum SignatureType {
-    ETH = 2
-}
-
 export enum EncryptionType {
     NONE = 0,
     RSA = 1,
@@ -44,7 +40,6 @@ export interface StreamMessageOptions<T> {
     encryptionType?: EncryptionType
     groupKeyId?: string | null
     newGroupKey?: EncryptedGroupKey | null
-    signatureType?: SignatureType
     signature: string
 }
 
@@ -60,7 +55,6 @@ export interface ObjectType<T> {
     encryptionType: EncryptionType
     groupKeyId: string | null
     content: string | T
-    signatureType: SignatureType
     signature: string
 }
 
@@ -91,10 +85,6 @@ export default class StreamMessage<T = unknown> {
 
     static VALID_CONTENT_TYPES = new Set(Object.values(StreamMessage.CONTENT_TYPES))
 
-    static SIGNATURE_TYPES = SignatureType
-
-    static VALID_SIGNATURE_TYPES = new Set(Object.values(StreamMessage.SIGNATURE_TYPES))
-
     static ENCRYPTION_TYPES = EncryptionType
 
     static VALID_ENCRYPTIONS = new Set(Object.values(StreamMessage.ENCRYPTION_TYPES))
@@ -106,7 +96,6 @@ export default class StreamMessage<T = unknown> {
     encryptionType: EncryptionType
     groupKeyId: string | null
     newGroupKey: EncryptedGroupKey | null
-    signatureType: SignatureType
     signature: string
     parsedContent?: T
     serializedContent: string
@@ -128,7 +117,6 @@ export default class StreamMessage<T = unknown> {
             encryptionType: this.encryptionType,
             groupKeyId: this.groupKeyId,
             newGroupKey: this.newGroupKey,
-            signatureType: this.signatureType,
             signature: this.signature,
         })
     }
@@ -142,7 +130,6 @@ export default class StreamMessage<T = unknown> {
         encryptionType = StreamMessage.ENCRYPTION_TYPES.NONE,
         groupKeyId = null,
         newGroupKey = null,
-        signatureType = StreamMessage.SIGNATURE_TYPES.ETH,
         signature,
     }: StreamMessageOptions<T>) {
         validateIsType('messageId', messageId, 'MessageID', MessageID)
@@ -165,9 +152,6 @@ export default class StreamMessage<T = unknown> {
 
         validateIsType('newGroupKey', newGroupKey, 'EncryptedGroupKey', EncryptedGroupKey, true)
         this.newGroupKey = newGroupKey
-
-        StreamMessage.validateSignatureType(signatureType)
-        this.signatureType = signatureType
 
         validateIsString('signature', signature, false)
         this.signature = signature
@@ -341,12 +325,6 @@ export default class StreamMessage<T = unknown> {
         }
     }
 
-    static validateSignatureType(signatureType: SignatureType): void {
-        if (!StreamMessage.VALID_SIGNATURE_TYPES.has(signatureType)) {
-            throw new ValidationError(`Unsupported signature type: ${signatureType}`)
-        }
-    }
-
     static versionSupportsEncryption(streamMessageVersion: number): boolean {
         return streamMessageVersion >= 31
     }
@@ -394,7 +372,6 @@ export default class StreamMessage<T = unknown> {
             encryptionType: this.encryptionType,
             groupKeyId: this.groupKeyId,
             content: (this.encryptionType === StreamMessage.ENCRYPTION_TYPES.NONE ? this.getParsedContent() : this.getSerializedContent()),
-            signatureType: this.signatureType,
             signature: this.signature,
         }
     }

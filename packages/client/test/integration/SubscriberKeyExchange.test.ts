@@ -54,7 +54,6 @@ describe('SubscriberKeyExchange', () => {
             messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST,
             contentType: StreamMessage.CONTENT_TYPES.JSON,
             encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
-            signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
             signature: expect.any(String)
         })
         expect(request!.getParsedContent()).toEqual([
