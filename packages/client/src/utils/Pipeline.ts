@@ -2,12 +2,11 @@ import { instanceId } from './utils'
 import { pOnce } from './promises'
 import { Debug } from './log'
 import { iteratorFinally } from './iterators'
-import { ContextError, Context } from './Context'
+import { ContextError } from './Context'
 import * as G from './GeneratorUtils'
 import { ErrorSignal, Signal } from './Signal'
 
 export type PipelineTransform<InType = any, OutType = any> = (src: AsyncGenerator<InType>) => AsyncGenerator<OutType>
-export type FinallyFn = ((err?: Error) => void | Promise<void>)
 
 class PipelineError extends ContextError {}
 
@@ -30,21 +29,15 @@ export type IPipeline<InType, OutType = InType> = {
     collect(n?: number): Promise<OutType[]>
     consume(): Promise<void>
     pipeBefore(fn: PipelineTransform<InType, InType>): IPipeline<InType, OutType>
-} & AsyncGenerator<OutType> & Context
+} & AsyncGenerator<OutType>
 
 class PipelineDefinition<InType, OutType = InType> {
-    id
-    debug
     public source: AsyncGeneratorWithId<InType>
     constructor(
-        context: Context,
         source: AsyncGenerator<InType>,
         protected transforms: PipelineTransform[] = [],
         protected transformsBefore: PipelineTransform[] = []
     ) {
-        this.id = instanceId(this)
-        this.debug = context.debug.extend(this.id)
-        // this.debug('create')
         this.source = this.setSource(source)
     }
 
@@ -100,7 +93,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
     constructor(public source: AsyncGenerator<InType>, definition?: PipelineDefinition<InType, OutType>) {
         this.id = instanceId(this)
         this.debug = Debug(this.id)
-        this.definition = definition || new PipelineDefinition<InType, OutType>(this, source)
+        this.definition = definition || new PipelineDefinition<InType, OutType>(source)
         this.cleanup = pOnce(this.cleanup.bind(this))
         this.iterator = iteratorFinally(this.iterate(), this.cleanup)
         this.handleError = this.handleError.bind(this)
