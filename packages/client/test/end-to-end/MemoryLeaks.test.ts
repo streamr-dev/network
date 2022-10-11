@@ -71,7 +71,6 @@ describe('MemoryLeaks', () => {
             createContainer = async (opts: any = {}): Promise<{
                 config: StrictStreamrClientConfig
                 childContainer: DependencyContainer
-                rootContext: any
             }> => {
                 const config = createStrictConfig({
                     ...ConfigTest,
@@ -81,31 +80,13 @@ describe('MemoryLeaks', () => {
                     ...opts,
                 })
                 const childContainer = rootContainer.createChildContainer()
-                const rootContext = initContainer(config, childContainer)
-                return { config, childContainer, rootContext }
+                initContainer(config, childContainer)
+                return { config, childContainer }
             }
         })
 
-        /* Uncomment to debug get all failure
-        for (const [key, value] of Object.entries(Dependencies)) {
-            test(`container get ${key}`, async () => {
-                const { config, childContainer, rootContext } = createContainer()
-                const destroySignal = childContainer.resolve<any>(Dependencies.DestroySignal)
-                const result = childContainer.resolve<any>(value as any)
-                expect(result).toBeTruthy()
-                await wait(100)
-                leaksDetector.addAll(rootContext.id, { config, childContainer, result })
-                if (result && typeof result.stop === 'function') {
-                    await result.stop()
-                }
-                await destroySignal.trigger()
-                childContainer.clearInstances()
-            })
-        }
-        */
-
         test('container get all', async () => {
-            const { config, childContainer, rootContext } = await createContainer()
+            const { config, childContainer } = await createContainer()
             const toStop = []
             const destroySignal = childContainer.resolve(Dependencies.DestroySignal)
             for (const [key, value] of Object.entries(Dependencies)) {
@@ -118,7 +99,7 @@ describe('MemoryLeaks', () => {
                 leaksDetector.addAll(key, result)
             }
             await wait(100)
-            leaksDetector.addAll(rootContext.id, { config, childContainer })
+            leaksDetector.addAll('id', { config, childContainer })
             await destroySignal.trigger()
             for (const result of toStop) {
                 await result.stop()

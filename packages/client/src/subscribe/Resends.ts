@@ -286,7 +286,7 @@ export class Resends {
                 }
             }
 
-            this.logger.info('message not found, retrying... %j', {
+            this.logger.debug('message not found, retrying... %j', {
                 msg: streamMessage.getMessageID(),
                 'last 3': last.slice(-3).map((l) => l.getMessageID())
             })
