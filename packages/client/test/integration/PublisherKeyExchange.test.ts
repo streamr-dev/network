@@ -1,36 +1,26 @@
 import 'reflect-metadata'
-import { v4 as uuid } from 'uuid'
 import {
     GroupKeyResponse,
-    MessageID,
     StreamMessage,
     StreamPartID,
-    StreamPartIDUtils
+    StreamPartIDUtils,
 } from 'streamr-client-protocol'
-import { GroupKey, GroupKeyId } from '../../src/encryption/GroupKey'
+import { GroupKey } from '../../src/encryption/GroupKey'
 import { Wallet } from 'ethers'
-import { RSAKeyPair } from '../../src/encryption/RSAKeyPair'
 import { StreamPermission } from '../../src/permission'
 import { 
     createRelativeTestStreamId,
-    getGroupKeyStore,
     startPublisherKeyExchangeSubscription
 } from '../test-utils/utils'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
-import { FakeNetworkNode } from '../test-utils/fake/FakeNetworkNode'
 import { fastWallet } from 'streamr-test-utils'
 import { StreamrClient } from '../../src/StreamrClient'
-import { createRandomMsgChainId } from '../../src/publish/MessageChain'
-import { createSignedMessage } from '../../src/publish/MessageFactory'
-import { createAuthentication } from '../../src/Authentication'
 
 describe('PublisherKeyExchange', () => {
 
     let publisherWallet: Wallet
     let publisherClient: StreamrClient
     let subscriberWallet: Wallet
-    let subscriberRSAKeyPair: RSAKeyPair
-    let subscriberNode: FakeNetworkNode
     let streamPartId: StreamPartID
     let environment: FakeEnvironment
 
@@ -43,30 +33,17 @@ describe('PublisherKeyExchange', () => {
         return stream
     }
 
-    const createGroupKeyRequest = async (
-        groupKeyId: GroupKeyId,
-        publisher = subscriberWallet,
-        rsaPublicKey = subscriberRSAKeyPair.getPublicKey()
-    ): Promise<StreamMessage<unknown>> => {
-        const [ streamId, partition ] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
-        return await createSignedMessage({
-            messageId: new MessageID(streamId, partition, 0, Date.now(), publisher.address, createRandomMsgChainId()),
-            serializedContent: JSON.stringify([
-                uuid(),
-                publisherWallet.address,
-                rsaPublicKey,
-                [groupKeyId]
-            ]),
-            messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST,
-            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
-            contentType: StreamMessage.CONTENT_TYPES.JSON,
-            authentication: createAuthentication({
-                privateKey: publisher.privateKey
-            }, undefined as any)
+    const triggerGroupKeyRequest = async (): Promise<void> => {
+        const subscriberClient = environment.createClient({
+            auth: {
+                privateKey: subscriberWallet.privateKey
+            }
         })
+        await subscriberClient.subscribe(streamPartId)
+        await publisherClient.publish(streamPartId, {})
     }
 
-    const testSuccessResponse = async (actualResponse: StreamMessage, expectedGroupKeys: GroupKey[]): Promise<void> => {
+    const testSuccessResponse = async (actualResponse: StreamMessage, expectedGroupKey: GroupKey): Promise<void> => {
         expect(actualResponse).toMatchObject({
             messageId: {
                 streamId: StreamPartIDUtils.getStreamID(streamPartId),
@@ -77,17 +54,18 @@ describe('PublisherKeyExchange', () => {
             contentType: StreamMessage.CONTENT_TYPES.JSON,
             encryptionType: StreamMessage.ENCRYPTION_TYPES.RSA,
             signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
-            signature: expect.any(String)
+            signature: expect.any(String),
         })
         const encryptedGroupKeys = (GroupKeyResponse.fromStreamMessage(actualResponse) as GroupKeyResponse).encryptedGroupKeys
-        const actualKeys = encryptedGroupKeys.map((encryptedKey) => GroupKey.decryptRSAEncrypted(encryptedKey, subscriberRSAKeyPair.getPrivateKey()))
-        expect(actualKeys).toEqual(expectedGroupKeys)
+        expect(encryptedGroupKeys).toMatchObject([{
+            groupKeyId: expectedGroupKey.id,
+            encryptedGroupKeyHex: expect.stringMatching(/^[0-9a-f]+$/i)
+        }])
     }
 
     beforeEach(async () => {
         publisherWallet = fastWallet()
         subscriberWallet = fastWallet()
-        subscriberRSAKeyPair = await RSAKeyPair.create()
         environment = new FakeEnvironment()
         publisherClient = environment.createClient({
             auth: {
@@ -96,7 +74,6 @@ describe('PublisherKeyExchange', () => {
         })
         const stream = await createStream()
         streamPartId = stream.getStreamParts()[0]
-        subscriberNode = environment.startNode(subscriberWallet.address)
         await startPublisherKeyExchangeSubscription(publisherClient, streamPartId)
     })
 
@@ -112,15 +89,18 @@ describe('PublisherKeyExchange', () => {
          */
         it('happy path', async () => {
             const key = GroupKey.generate()
-            await getGroupKeyStore(publisherWallet.address).add(key, StreamPartIDUtils.getStreamID(streamPartId))
+            await publisherClient.updateEncryptionKey({
+                key,
+                distributionMethod: 'rekey',
+                streamId: StreamPartIDUtils.getStreamID(streamPartId)
+            })
 
-            const request = await createGroupKeyRequest(key.id)
-            subscriberNode.publish(request)
+            await triggerGroupKeyRequest()
 
             const response = await environment.getNetwork().waitForSentMessage({
                 messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE
             })
-            await testSuccessResponse(response!, [key])
+            await testSuccessResponse(response!, key)
         })
     })
 })
