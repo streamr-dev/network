@@ -14,7 +14,6 @@ import { GroupKeyStore } from '../encryption/GroupKeyStore'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { Mapping } from '../utils/Mapping'
 import { Debugger } from '../utils/log'
-import { EthereumAddress } from '@streamr/utils'
 
 export class PublishError extends Error {
 
