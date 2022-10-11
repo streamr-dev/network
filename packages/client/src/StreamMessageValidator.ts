@@ -118,7 +118,6 @@ export default class StreamMessageValidator {
         verifyFn: (address: EthereumAddress, payload: string, signature: string) => boolean
     ): Promise<void> {
         const payload = createSignaturePayload({
-            signatureType: streamMessage.signatureType,
             messageId: streamMessage.getMessageID(),
             serializedContent: streamMessage.getSerializedContent(),
             prevMsgRef: streamMessage.prevMsgRef ?? undefined,

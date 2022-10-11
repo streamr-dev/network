@@ -3,7 +3,6 @@ import {
     createSignaturePayload,
     EncryptedGroupKey,
     EncryptionType,
-    SignatureType,
     StreamID,
     StreamMessage,
     StreamMessageOptions,
@@ -31,7 +30,6 @@ export const createSignedMessage = async <T>(
     & { serializedContent: string, authentication: Authentication }
 ): Promise<StreamMessage<T>> => {
     const signature = await opts.authentication.createMessageSignature(createSignaturePayload({
-        signatureType: SignatureType.ETH,
         messageId: opts.messageId,
         serializedContent: opts.serializedContent,
         prevMsgRef: opts.prevMsgRef ?? undefined,
