@@ -17,10 +17,6 @@ function isError(err: any): err is Error {
     )
 }
 
-export interface PushBufferOptions {
-    name?: string
-}
-
 export type IPushBuffer<InType, OutType = InType> = {
     push(item: InType): Promise<boolean>
     end(error?: Error): void

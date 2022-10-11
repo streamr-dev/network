@@ -5,8 +5,6 @@
  */
 import { PipelineTransform } from '../utils/Pipeline'
 import { PushPipeline } from '../utils/PushPipeline'
-import { instanceId } from '../utils/utils'
-import { Context } from '../utils/Context'
 import { StreamMessage } from 'streamr-client-protocol'
 import * as G from '../utils/GeneratorUtils'
 
@@ -18,10 +16,8 @@ export class MessageStream<
     OutType extends StreamMessage<T> | unknown = InType
 > extends PushPipeline<InType, OutType> {
     /** @internal */
-    constructor(context: Context) {
+    constructor() {
         super(undefined)
-        this.id = instanceId(this)
-        this.debug = context.debug.extend(this.id)
     }
 
     /**
