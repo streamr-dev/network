@@ -1,7 +1,7 @@
 import { random } from 'lodash'
 import { MAX_PARTITION_COUNT, StreamMessage, toStreamID } from 'streamr-client-protocol'
 import { fastWallet } from 'streamr-test-utils'
-import { keyToArrayIndex } from '@streamr/utils'
+import { keyToArrayIndex, toEthereumAddress } from '@streamr/utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { MessageFactory } from '../../src/publish/MessageFactory'
 import { MessageMetadata } from '../../src'
@@ -11,7 +11,7 @@ import { createGroupKeyQueue, createStreamRegistryCached } from '../test-utils/u
 import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
 
 const WALLET = fastWallet()
-const STREAM_ID = toStreamID('/path', WALLET.address)
+const STREAM_ID = toStreamID('/path', toEthereumAddress(WALLET.address))
 const CONTENT = { foo: 'bar' }
 const TIMESTAMP = Date.parse('2001-02-03T04:05:06Z')
 const PARTITION_COUNT = 50
@@ -23,7 +23,7 @@ const createMessageFactory = async (opts?: {
 }) => {
     return new MessageFactory({
         streamId: STREAM_ID,
-        authentication: createAuthentication({ 
+        authentication: createAuthentication({
             privateKey: WALLET.privateKey
         }, undefined as any),
         streamRegistry: createStreamRegistryCached({

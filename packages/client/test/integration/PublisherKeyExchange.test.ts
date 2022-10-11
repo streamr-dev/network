@@ -8,7 +8,7 @@ import {
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { Wallet } from 'ethers'
 import { StreamPermission } from '../../src/permission'
-import { 
+import {
     createRelativeTestStreamId,
     startPublisherKeyExchangeSubscription
 } from '../test-utils/utils'

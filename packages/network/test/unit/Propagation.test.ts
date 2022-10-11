@@ -1,11 +1,19 @@
-import { MessageID, StreamPartID, StreamMessage, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
+import {
+    MessageID,
+    StreamPartID,
+    StreamMessage,
+    StreamPartIDUtils,
+    toStreamID
+} from 'streamr-client-protocol'
 import { Propagation } from '../../src/logic/propagation/Propagation'
 import { NodeId } from '../../src/identifiers'
-import { wait } from '@streamr/utils'
+import { toEthereumAddress, wait } from '@streamr/utils'
+
+const PUBLISHER_ID = toEthereumAddress('0x1111111111111111111111111111111111111111')
 
 function makeMsg(streamId: string, partition: number, ts: number, msgNo: number): StreamMessage {
     return new StreamMessage({
-        messageId: new MessageID(toStreamID(streamId), partition, ts, 0, 'publisher', 'msgChain'),
+        messageId: new MessageID(toStreamID(streamId), partition, ts, 0, PUBLISHER_ID, 'msgChain'),
         content: {
             msgNo
         },

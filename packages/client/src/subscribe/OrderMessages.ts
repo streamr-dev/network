@@ -2,7 +2,7 @@
  * Makes OrderingUtil more compatible with use in pipeline.
  */
 import { injectable } from 'tsyringe'
-import { StreamMessage, StreamPartID, MessageRef, EthereumAddress } from 'streamr-client-protocol'
+import { StreamMessage, StreamPartID, MessageRef } from 'streamr-client-protocol'
 
 import { PushBuffer } from '../utils/PushBuffer'
 import { Context } from '../utils/Context'
@@ -13,6 +13,7 @@ import { Resends } from './Resends'
 import { MessageStream } from './MessageStream'
 import { SubscribeConfig } from '../Config'
 import OrderingUtil from './ordering/OrderingUtil'
+import { EthereumAddress } from '@streamr/utils'
 
 /**
  * Wraps OrderingUtil into a PushBuffer.

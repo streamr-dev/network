@@ -6,10 +6,9 @@ import {
     MessageID,
     StreamPartID,
     StreamID,
-    StreamPartIDUtils,
-    EthereumAddress
+    StreamPartIDUtils
 } from 'streamr-client-protocol'
-import { randomString } from '@streamr/utils'
+import { EthereumAddress, randomString } from '@streamr/utils'
 
 export const createRandomMsgChainId = (): string => randomString(20)
 

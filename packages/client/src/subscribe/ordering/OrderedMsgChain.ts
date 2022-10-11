@@ -4,8 +4,9 @@ import Debug from 'debug'
 import Heap from 'heap'
 import StrictEventEmitter from 'strict-event-emitter-types'
 
-import { StreamMessage, MessageRef, EthereumAddress } from 'streamr-client-protocol'
+import { StreamMessage, MessageRef } from 'streamr-client-protocol'
 import GapFillFailedError from './GapFillFailedError'
+import { EthereumAddress } from '@streamr/utils'
 
 function toMsgRefId(streamMessage: StreamMessage): MsgRefId {
     return streamMessage.getMessageRef().serialize()
@@ -175,8 +176,13 @@ class OrderedMsgChain extends MsgChainEmitter {
     debug: ReturnType<typeof Debug>
 
     constructor(
-        publisherId: EthereumAddress, msgChainId: string, inOrderHandler: MessageHandler, gapHandler: GapHandler,
-        propagationTimeout = DEFAULT_PROPAGATION_TIMEOUT, resendTimeout = DEFAULT_RESEND_TIMEOUT, maxGapRequests = MAX_GAP_REQUESTS
+        publisherId: EthereumAddress,
+        msgChainId: string,
+        inOrderHandler: MessageHandler,
+        gapHandler: GapHandler,
+        propagationTimeout = DEFAULT_PROPAGATION_TIMEOUT,
+        resendTimeout = DEFAULT_RESEND_TIMEOUT,
+        maxGapRequests = MAX_GAP_REQUESTS
     ) {
         super()
         ID += 1

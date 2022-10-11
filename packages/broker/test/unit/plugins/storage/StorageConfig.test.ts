@@ -1,12 +1,14 @@
 import { StorageConfig } from '../../../../src/plugins/storage/StorageConfig'
 import { StorageNodeAssignmentEvent, Stream, StreamrClient, StreamrClientEvents } from 'streamr-client'
-import { EthereumAddress, StreamPartID, StreamPartIDUtils, toStreamID, toStreamPartID } from 'streamr-client-protocol'
-import { wait } from '@streamr/utils'
+import { StreamPartID, StreamPartIDUtils, toStreamID, toStreamPartID } from 'streamr-client-protocol'
+import { EthereumAddress, toEthereumAddress, wait } from '@streamr/utils'
 import { range } from 'lodash'
 
 const { parse } = StreamPartIDUtils
 
 const POLL_TIME = 10
+
+const CLUSTER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
 const PARTITION_COUNT_LOOKUP: Record<string, number> = Object.freeze({
     'stream-1': 2,
@@ -49,7 +51,7 @@ describe(StorageConfig, () => {
         }
         onStreamPartAdded = jest.fn()
         onStreamPartRemoved = jest.fn()
-        storageConfig = new StorageConfig('clusterId', 1, 0, POLL_TIME, stubClient as StreamrClient, {
+        storageConfig = new StorageConfig(CLUSTER_ID, 1, 0, POLL_TIME, stubClient as StreamrClient, {
             onStreamPartAdded,
             onStreamPartRemoved
         })
@@ -102,19 +104,19 @@ describe(StorageConfig, () => {
             const removeFromStorageNodeListener = storageEventListeners.get('removeFromStorageNode')!
             addToStorageNodeListener({
                 streamId: 'stream-1',
-                nodeAddress: 'clusterId',
+                nodeAddress: CLUSTER_ID,
                 blockNumber: 10,
             })
             await wait(0)
             addToStorageNodeListener({
                 streamId: 'stream-3',
-                nodeAddress: 'clusterId',
+                nodeAddress: CLUSTER_ID,
                 blockNumber: 15,
             })
             await wait(0)
             removeFromStorageNodeListener({
                 streamId: 'stream-1',
-                nodeAddress: 'clusterId',
+                nodeAddress: CLUSTER_ID,
                 blockNumber: 13,
             })
             await wait(0)

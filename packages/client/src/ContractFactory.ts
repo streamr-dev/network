@@ -3,10 +3,10 @@ import { Contract, ContractInterface, ContractReceipt, ContractTransaction } fro
 import { Provider } from '@ethersproject/providers'
 import { Signer } from '@ethersproject/abstract-signer'
 import { ObservableContract, createDecoratedContract } from './utils/contract'
-import { EthereumAddress } from 'streamr-client-protocol'
 import { SynchronizedGraphQLClient } from './utils/SynchronizedGraphQLClient'
 import { EthereumConfig } from './Ethereum'
 import { ConfigInjectionToken } from './Config'
+import { EthereumAddress } from '@streamr/utils'
 
 @scoped(Lifecycle.ContainerScoped)
 export class ContractFactory {

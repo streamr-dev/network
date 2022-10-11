@@ -4,7 +4,8 @@ import { SEPARATOR } from './uuid'
 import pkg from '../../package.json'
 
 import { Debug } from './log'
-import { EthereumAddress, StreamID, toStreamID } from 'streamr-client-protocol'
+import { StreamID, toStreamID } from 'streamr-client-protocol'
+import { toEthereumAddress } from '@streamr/utils'
 
 export const debug = Debug('utils')
 
@@ -94,8 +95,8 @@ export const getEndpointUrl = (baseUrl: string, ...pathParts: string[]): string 
     return baseUrl + '/' + pathParts.map((part) => encodeURIComponent(part)).join('/')
 }
 
-export function formStorageNodeAssignmentStreamId(clusterAddress: EthereumAddress): StreamID {
-    return toStreamID('/assignments', clusterAddress)
+export function formStorageNodeAssignmentStreamId(clusterAddress: string): StreamID {
+    return toStreamID('/assignments', toEthereumAddress(clusterAddress))
 }
 
 export class MaxSizedSet<T> {

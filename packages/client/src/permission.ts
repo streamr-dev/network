@@ -1,6 +1,6 @@
 import { MaxInt256 } from '@ethersproject/constants'
 import { BigNumber } from '@ethersproject/bignumber'
-import { EthereumAddress } from 'streamr-client-protocol'
+import { EthereumAddress } from '@streamr/utils'
 
 export enum StreamPermission {
     EDIT = 'edit',
@@ -13,7 +13,7 @@ export enum StreamPermission {
 export interface UserPermissionQuery {
     streamId: string
     permission: StreamPermission
-    user: EthereumAddress
+    user: string
     allowPublic: boolean
 }
 
@@ -27,7 +27,7 @@ export type PermissionQuery = UserPermissionQuery | PublicPermissionQuery
 
 export interface UserPermissionAssignment {
     permissions: StreamPermission[]
-    user: EthereumAddress
+    user: string
 }
 
 export interface PublicPermissionAssignment {
