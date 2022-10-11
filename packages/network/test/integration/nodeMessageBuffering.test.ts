@@ -2,6 +2,9 @@ import { NetworkNode } from '../../src/logic/NetworkNode'
 import { MessageID, SignatureType, StreamMessage, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
 import { startTracker, Tracker } from '@streamr/network-tracker'
 import { createNetworkNode } from '../../src/composition'
+import { toEthereumAddress } from '@streamr/utils'
+
+const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
 /**
  * When a node receives a message for a stream it hasn't still subscribed to, it
@@ -47,7 +50,7 @@ describe('message buffering of Node', () => {
     test('first message to unknown stream eventually gets delivered', (done) => {
         destinationNode.addMessageListener((streamMessage) => {
             expect(streamMessage.messageId).toEqual(
-                new MessageID(toStreamID('id'), 0, 1, 0, 'publisher-id', 'session-id')
+                new MessageID(toStreamID('id'), 0, 1, 0, PUBLISHER_ID, 'session-id')
             )
             expect(streamMessage.getParsedContent()).toEqual({
                 hello: 'world'
@@ -59,7 +62,7 @@ describe('message buffering of Node', () => {
 
         // "Client" pushes data
         sourceNode.publish(new StreamMessage({
-            messageId: new MessageID(toStreamID('id'), 0, 1, 0, 'publisher-id', 'session-id'),
+            messageId: new MessageID(toStreamID('id'), 0, 1, 0, PUBLISHER_ID, 'session-id'),
             content: {
                 hello: 'world'
             },

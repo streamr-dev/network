@@ -1,5 +1,9 @@
-import { EthereumAddress, ENSName } from './types'
-import { BrandedString } from '@streamr/utils'
+import {
+    BrandedString,
+    ENSName,
+    EthereumAddress,
+    toEthereumAddressOrENSName
+} from '@streamr/utils'
 
 export type StreamID = BrandedString<'StreamID'>
 
@@ -24,9 +28,9 @@ export function toStreamID(streamIdOrPath: string, domain?: EthereumAddress | EN
         if (domain === undefined) {
             throw new Error(`path-only format "${streamIdOrPath}" provided without domain`)
         }
-        return (domain.toLowerCase() + streamIdOrPath) as StreamID
+        return (domain + streamIdOrPath) as StreamID
     } else {
-        const domain = streamIdOrPath.substring(0, firstSlashIdx).toLowerCase()
+        const domain = toEthereumAddressOrENSName(streamIdOrPath.substring(0, firstSlashIdx))
         const path = streamIdOrPath.substring(firstSlashIdx)
         return (domain + path) as StreamID
     }
@@ -43,14 +47,6 @@ export class StreamIDUtils {
         const domainAndPath = StreamIDUtils.getDomainAndPath(streamId)
         return domainAndPath?.[0]
     }
-
-    static isENSName(domain: string): boolean {
-        return domain.indexOf('.') !== -1
-    }
-
-    static isENSAddress(address: string): boolean {
-        return address.indexOf('.') !== -1
-    }
     
     static getPath(streamId: StreamID): string | undefined {
         const domainAndPath = StreamIDUtils.getDomainAndPath(streamId)
@@ -60,10 +56,10 @@ export class StreamIDUtils {
     static getDomainAndPath(streamId: StreamID): [EthereumAddress | ENSName, string] | undefined {
         const firstSlashIdx = streamId.indexOf('/')
         if (firstSlashIdx !== -1) {
-            return [streamId.substring(0, firstSlashIdx), streamId.substring(firstSlashIdx)]
+            const domain = streamId.substring(0, firstSlashIdx) as EthereumAddress | ENSName
+            return [domain, streamId.substring(firstSlashIdx)]
         } else {
             return undefined
         }
     }
-
 }

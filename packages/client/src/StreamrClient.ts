@@ -19,7 +19,7 @@ import { StreamDefinition } from './types'
 import { Subscription, SubscriptionOnMessage } from './subscribe/Subscription'
 import { StreamIDBuilder } from './StreamIDBuilder'
 import { StreamrClientEventEmitter, StreamrClientEvents } from './events'
-import { EthereumAddress, ProxyDirection, StreamMessage } from 'streamr-client-protocol'
+import { ProxyDirection, StreamMessage } from 'streamr-client-protocol'
 import { MessageStream, MessageStreamOnMessage } from './subscribe/MessageStream'
 import { Stream, StreamProperties } from './Stream'
 import { SearchStreamsPermissionFilter } from './registry/searchStreams'
@@ -31,6 +31,7 @@ import { Authentication, AuthenticationInjectionToken } from './Authentication'
 import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
 import { GroupKey } from './encryption/GroupKey'
 import { PublisherKeyExchange } from './encryption/PublisherKeyExchange'
+import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 
 /**
  * @category Important
@@ -280,35 +281,35 @@ export class StreamrClient implements Context {
         return this.streamRegistry.setPermissions(...items)
     }
 
-    isStreamPublisher(streamIdOrPath: string, userAddress: EthereumAddress): Promise<boolean> {
-        return this.streamRegistry.isStreamPublisher(streamIdOrPath, userAddress)
+    async isStreamPublisher(streamIdOrPath: string, userAddress: string): Promise<boolean> {
+        return this.streamRegistry.isStreamPublisher(streamIdOrPath, toEthereumAddress(userAddress))
     }
 
-    isStreamSubscriber(streamIdOrPath: string, userAddress: EthereumAddress): Promise<boolean> {
-        return this.streamRegistry.isStreamSubscriber(streamIdOrPath, userAddress)
+    async isStreamSubscriber(streamIdOrPath: string, userAddress: string): Promise<boolean> {
+        return this.streamRegistry.isStreamSubscriber(streamIdOrPath, toEthereumAddress(userAddress))
     }
 
     // --------------------------------------------------------------------------------------------
     // Storage
     // --------------------------------------------------------------------------------------------
 
-    addStreamToStorageNode(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<void> {
-        return this.streamStorageRegistry.addStreamToStorageNode(streamIdOrPath, nodeAddress)
+    async addStreamToStorageNode(streamIdOrPath: string, nodeAddress: string): Promise<void> {
+        return this.streamStorageRegistry.addStreamToStorageNode(streamIdOrPath, toEthereumAddress(nodeAddress))
     }
 
-    removeStreamFromStorageNode(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<void> {
-        return this.streamStorageRegistry.removeStreamFromStorageNode(streamIdOrPath, nodeAddress)
+    async removeStreamFromStorageNode(streamIdOrPath: string, nodeAddress: string): Promise<void> {
+        return this.streamStorageRegistry.removeStreamFromStorageNode(streamIdOrPath, toEthereumAddress(nodeAddress))
     }
 
-    isStoredStream(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<boolean> {
-        return this.streamStorageRegistry.isStoredStream(streamIdOrPath, nodeAddress)
+    async isStoredStream(streamIdOrPath: string, nodeAddress: string): Promise<boolean> {
+        return this.streamStorageRegistry.isStoredStream(streamIdOrPath, toEthereumAddress(nodeAddress))
     }
 
-    getStoredStreams(nodeAddress: EthereumAddress): Promise<{ streams: Stream[], blockNumber: number }> {
-        return this.streamStorageRegistry.getStoredStreams(nodeAddress)
+    async getStoredStreams(nodeAddress: string): Promise<{ streams: Stream[], blockNumber: number }> {
+        return this.streamStorageRegistry.getStoredStreams(toEthereumAddress(nodeAddress))
     }
 
-    getStorageNodes(streamIdOrPath?: string): Promise<EthereumAddress[]> {
+    async getStorageNodes(streamIdOrPath?: string): Promise<EthereumAddress[]> {
         return this.streamStorageRegistry.getStorageNodes(streamIdOrPath)
     }
 
@@ -316,8 +317,8 @@ export class StreamrClient implements Context {
         return this.storageNodeRegistry.setStorageNodeMetadata(metadata)
     }
 
-    getStorageNodeMetadata(nodeAddress: EthereumAddress): Promise<StorageNodeMetadata> {
-        return this.storageNodeRegistry.getStorageNodeMetadata(nodeAddress)
+    async getStorageNodeMetadata(nodeAddress: string): Promise<StorageNodeMetadata> {
+        return this.storageNodeRegistry.getStorageNodeMetadata(toEthereumAddress(nodeAddress))
     }
 
     // --------------------------------------------------------------------------------------------

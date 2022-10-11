@@ -8,9 +8,9 @@
  *    and we can remove the hardcoded values
  */
 
-import { EthereumAddress } from 'streamr-client-protocol'
+import { EthereumAddress } from '@streamr/utils'
 
-const NAMES: Record<EthereumAddress, string> = {
+const NAMES: Record<string, string> = {
     '0xb9e7cebf7b03ae26458e32a059488386b05798e8': 'T1',
     '0x0540a3e144cdd81f402e7772c76a5808b71d2d30': 'T2',
     '0xf2c195be194a2c91e93eacb1d6d55a00552a85e2': 'T3',

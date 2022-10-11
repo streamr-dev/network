@@ -11,6 +11,9 @@ import { runAndWaitForEvents } from "streamr-test-utils"
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { WebRtcEndpoint } from '../../src/connection/webrtc/WebRtcEndpoint'
 import { webRtcConnectionFactory } from '../../src/connection/webrtc/NodeWebRtcConnection'
+import { toEthereumAddress } from '@streamr/utils'
+
+const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
 describe('Node-to-Node protocol version negotiation', () => {
     let tracker: Tracker
@@ -110,7 +113,7 @@ describe('Node-to-Node protocol version negotiation', () => {
         })
         const i = 1
         const msg1 = new StreamMessage({
-            messageId: new MessageID(toStreamID('stream-1'), 0, i, 0, 'node-endpoint1', 'msgChainId'),
+            messageId: new MessageID(toStreamID('stream-1'), 0, i, 0, PUBLISHER_ID, 'msgChainId'),
             prevMsgRef: null,
             content: {
                 messageNo: i

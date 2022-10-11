@@ -11,6 +11,7 @@ import * as BrokerConfigSchema from './config.schema.json'
 import { getDefaultFile } from './config'
 import { CURRENT_CONFIGURATION_VERSION, formSchemaUrl } from '../config/migration'
 import { generateMnemonicFromAddress } from '../helpers/generateMnemonicFromAddress'
+import { toEthereumAddress } from '@streamr/utils'
 
 export interface PrivateKeyAnswers extends Answers {
     generateOrImportPrivateKey: 'Import' | 'Generate'
@@ -237,7 +238,7 @@ export const getNodeIdentity = (privateKey: string): {
     networkExplorerUrl: string
 } => {
     const nodeAddress = new Wallet(privateKey).address
-    const mnemonic = generateMnemonicFromAddress(nodeAddress)
+    const mnemonic = generateMnemonicFromAddress(toEthereumAddress(nodeAddress))
     const networkExplorerUrl = `https://streamr.network/network-explorer/nodes/${nodeAddress}`
     return {
         mnemonic,

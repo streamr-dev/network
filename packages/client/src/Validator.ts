@@ -5,7 +5,6 @@ import { inject, Lifecycle, scoped, delay } from 'tsyringe'
 import {
     StreamMessage,
     StreamID,
-    EthereumAddress
 } from 'streamr-client-protocol'
 
 import { formLookupKey, instanceId } from './utils/utils'
@@ -16,6 +15,7 @@ import { StreamRegistryCached } from './registry/StreamRegistryCached'
 import { ConfigInjectionToken, SubscribeConfig, CacheConfig } from './Config'
 import StreamMessageValidator from './StreamMessageValidator'
 import { verify } from './utils/signingUtils'
+import { EthereumAddress } from '@streamr/utils'
 
 /**
  * Wrap StreamMessageValidator in a way that ensures it can validate in parallel but

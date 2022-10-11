@@ -5,6 +5,7 @@ import { STREAMR_DOCKER_DEV_HOST } from "../../../utils"
 import { startCassandraStorage, Storage } from '../../../../src/plugins/storage/Storage'
 import { MessageID, StreamMessage, toStreamID } from 'streamr-client-protocol'
 import { randomEthereumAddress } from 'streamr-test-utils'
+import { toEthereumAddress } from '@streamr/utils'
 
 jest.setTimeout(30000)
 
@@ -53,7 +54,14 @@ async function storeMockMessages({
     for (let i = 0; i < count; i++) {
         const timestamp = Math.floor((i / (count - 1)) * (1E10))
         const msg = new StreamMessage({
-            messageId: new MessageID(toStreamID(streamId), 0, timestamp, 0, '', ''),
+            messageId: new MessageID(
+                toStreamID(streamId),
+                0,
+                timestamp,
+                0,
+                toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
+                ''
+            ),
             content: JSON.stringify({}),
             signature: 'signature'
         })

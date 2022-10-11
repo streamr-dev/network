@@ -1,12 +1,23 @@
 import assert from 'assert'
 
 import shuffle from 'array-shuffle'
-import { EthereumAddress, MessageID, MessageRef, StreamMessage, toStreamID } from 'streamr-client-protocol'
+import { MessageID, MessageRef, StreamMessage, toStreamID } from 'streamr-client-protocol'
 import OrderingUtil from '../../src/subscribe/ordering/OrderingUtil'
+import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
+
+const defaultPublisherId = toEthereumAddress('0x0000000000000000000000000000000000000001')
+const publisherId1 = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+const publisherId2 = toEthereumAddress('0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb')
+const publisherId3 = toEthereumAddress('0xcccccccccccccccccccccccccccccccccccccccc')
 
 const createMsg = (
-    timestamp = 1, sequenceNumber = 0, prevTimestamp: number | null = null,
-    prevSequenceNumber = 0, content = {}, publisherId = 'publisherId', msgChainId = '1',
+    timestamp = 1,
+    sequenceNumber = 0,
+    prevTimestamp: number | null = null,
+    prevSequenceNumber = 0,
+    content = {},
+    publisherId = defaultPublisherId,
+    msgChainId = '1',
 ) => {
     const prevMsgRef = prevTimestamp ? new MessageRef(prevTimestamp, prevSequenceNumber) : null
     return new StreamMessage({
@@ -38,7 +49,7 @@ describe('OrderingUtil', () => {
             assert.equal(from.sequenceNumber, 1)
             assert.equal(to.timestamp, 3)
             assert.equal(to.sequenceNumber, 0)
-            assert.equal(publisherId, 'publisherId')
+            assert.equal(publisherId, defaultPublisherId)
             done()
         }
         util = new OrderingUtil( () => {}, gapHandler, 50, 50)
@@ -65,31 +76,31 @@ describe('OrderingUtil', () => {
         }, 500)
     })
     it('handles unordered messages in order (large randomized test)', () => {
-        const msg1Pub1 = createMsg(1, 0, null, 0, {}, 'publisherId1')
-        const msg1Pub2 = createMsg(1, 0, null, 0, {}, 'publisherId2')
-        const msg1Pub3 = createMsg(1, 0, null, 0, {}, 'publisherId3')
+        const msg1Pub1 = createMsg(1, 0, null, 0, {}, publisherId1)
+        const msg1Pub2 = createMsg(1, 0, null, 0, {}, publisherId2)
+        const msg1Pub3 = createMsg(1, 0, null, 0, {}, publisherId3)
         const expected1 = [msg1Pub1]
         const expected2 = [msg1Pub2]
         const expected3 = [msg1Pub3]
         for (let i = 2; i <= 100000; i++) {
-            expected1.push(createMsg(i, 0, i - 1, 0, {}, 'publisherId1'))
+            expected1.push(createMsg(i, 0, i - 1, 0, {}, publisherId1))
         }
         for (let i = 2; i <= 100000; i++) {
-            expected2.push(createMsg(i, 0, i - 1, 0, {}, 'publisherId2'))
+            expected2.push(createMsg(i, 0, i - 1, 0, {}, publisherId2))
         }
         for (let i = 2; i <= 100000; i++) {
-            expected3.push(createMsg(i, 0, i - 1, 0, {}, 'publisherId3'))
+            expected3.push(createMsg(i, 0, i - 1, 0, {}, publisherId3))
         }
         const shuffled = shuffle(expected1.concat(expected2).concat(expected3))
         const received1: StreamMessage[] = []
         const received2: StreamMessage[] = []
         const received3: StreamMessage[] = []
         util = new OrderingUtil((m) => {
-            if (m.getPublisherId() === 'publisherId1') {
+            if (m.getPublisherId() === publisherId1) {
                 received1.push(m)
-            } else if (m.getPublisherId() === 'publisherId2') {
+            } else if (m.getPublisherId() === publisherId2) {
                 received2.push(m)
-            } else if (m.getPublisherId() === 'publisherId3') {
+            } else if (m.getPublisherId() === publisherId3) {
                 received3.push(m)
             }
         }, () => {}, 50)

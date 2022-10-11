@@ -6,9 +6,10 @@ import LeakDetector from 'jest-leak-detector' // requires weak-napi
 import { StreamID, toStreamID } from 'streamr-client-protocol'
 import { randomEthereumAddress } from 'streamr-test-utils'
 import { range } from 'lodash'
+import { EthereumAddress } from '@streamr/utils'
 
 describe('GroupKeyStore', () => {
-    let clientId: string
+    let clientId: EthereumAddress
     let streamId: StreamID
     let store: GroupKeyStore
     let leakDetector: LeakDetector

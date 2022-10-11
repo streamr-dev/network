@@ -1,18 +1,18 @@
 import 'reflect-metadata'
 import { BigNumber } from '@ethersproject/bignumber'
-import { StreamID, StreamIDUtils, toStreamID } from 'streamr-client-protocol'
-import { randomEthereumAddress } from 'streamr-test-utils'
+import { StreamID, toStreamID } from 'streamr-client-protocol'
 import { searchStreams, SearchStreamsResultItem } from '../../src/registry/searchStreams'
 import { collect } from '../../src/utils/GeneratorUtils'
 import { Stream } from '../../src/Stream'
 import { SynchronizedGraphQLClient } from '../../src/utils/SynchronizedGraphQLClient'
+import { randomEthereumAddress } from 'streamr-test-utils'
 
 const MOCK_USER = randomEthereumAddress()
 
 const createMockResultItem = (streamId: StreamID, metadata: string): SearchStreamsResultItem => {
     return {
         id: streamId,
-        userAddress: StreamIDUtils.getDomain(streamId)!,
+        userAddress: MOCK_USER,
         stream: {
             id: streamId,
             metadata

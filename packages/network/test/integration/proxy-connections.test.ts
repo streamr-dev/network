@@ -8,10 +8,12 @@ import {
     StreamPartIDUtils,
     toStreamID
 } from 'streamr-client-protocol'
-import { waitForEvent } from '@streamr/utils'
+import { toEthereumAddress, waitForEvent } from '@streamr/utils'
 
 import { createNetworkNode } from '../../src/composition'
 import { Event as NodeEvent } from '../../src/logic/Node'
+
+const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
 const defaultStreamPartId = StreamPartIDUtils.parse('stream-0#0')
 
@@ -202,7 +204,7 @@ describe('Proxy connection tests', () => {
             waitForEvent(contactNode, NodeEvent.MESSAGE_RECEIVED),
             waitForEvent(contactNode2, NodeEvent.MESSAGE_RECEIVED),
             onewayNode.publish(new StreamMessage({
-                messageId: new MessageID(toStreamID('stream-0'), 0, 120, 0, 'publisher', 'session'),
+                messageId: new MessageID(toStreamID('stream-0'), 0, 120, 0, PUBLISHER_ID, 'session'),
                 content: {
                     hello: 'world'
                 },
@@ -216,7 +218,7 @@ describe('Proxy connection tests', () => {
         await Promise.all([
             waitForEvent(onewayNode, NodeEvent.MESSAGE_RECEIVED),
             contactNode.publish(new StreamMessage({
-                messageId: new MessageID(toStreamID('stream-0'), 0, 120, 0, 'publisher', 'session'),
+                messageId: new MessageID(toStreamID('stream-0'), 0, 120, 0, PUBLISHER_ID, 'session'),
                 content: {
                     hello: 'world'
                 },
@@ -229,7 +231,7 @@ describe('Proxy connection tests', () => {
     it('proxied subscribers cannot publish data', async () => {
         await onewayNode.openProxyConnection(defaultStreamPartId, 'contact-node', ProxyDirection.SUBSCRIBE, 'subscriber')
         expect(() => onewayNode.publish(new StreamMessage({
-            messageId: new MessageID(toStreamID('stream-0'), 0, 120, 0, 'publisher', 'session'),
+            messageId: new MessageID(toStreamID('stream-0'), 0, 120, 0, PUBLISHER_ID, 'session'),
             content: {
                 hello: 'world'
             },
@@ -301,7 +303,7 @@ describe('Proxy connection tests', () => {
             waitForEvent(contactNode, NodeEvent.MESSAGE_RECEIVED),
             waitForEvent(contactNode2, NodeEvent.MESSAGE_RECEIVED),
             onewayNode.publish(new StreamMessage({
-                messageId: new MessageID(toStreamID('stream-0'), 0, 120, 0, 'publisher', 'session'),
+                messageId: new MessageID(toStreamID('stream-0'), 0, 120, 0, PUBLISHER_ID, 'session'),
                 content: {
                     hello: 'world'
                 },

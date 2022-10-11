@@ -1,5 +1,5 @@
 import { random } from 'lodash'
-import { 
+import {
     createSignaturePayload,
     EncryptedGroupKey,
     EncryptionType,
@@ -29,7 +29,7 @@ export interface MessageFactoryOptions {
 }
 
 export const createSignedMessage = async <T>(
-    opts: Omit<StreamMessageOptions<T>, 'signature' | 'signatureType' | 'content'> 
+    opts: Omit<StreamMessageOptions<T>, 'signature' | 'signatureType' | 'content'>
     & { serializedContent: string, authentication: Authentication }
 ): Promise<StreamMessage<T>> => {
     const signature = await opts.authentication.createMessageSignature(createSignaturePayload({

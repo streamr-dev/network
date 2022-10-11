@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 import { Wallet } from '@ethersproject/wallet'
-import { EthereumAddress, toStreamID, toStreamPartID } from 'streamr-client-protocol'
+import { toStreamID, toStreamPartID } from 'streamr-client-protocol'
 import { Stream } from '../../src/Stream'
 import { StreamRegistry } from '../../src/registry/StreamRegistry'
 import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
@@ -8,6 +8,7 @@ import { Validator } from '../../src/Validator'
 import { createMockMessage, mockContext } from '../test-utils/utils'
 import { STREAM_CLIENT_DEFAULTS, SubscribeConfig } from '../../src/Config'
 import { fastWallet } from 'streamr-test-utils'
+import { EthereumAddress } from '@streamr/utils'
 
 const publisherWallet = fastWallet()
 const PARTITION_COUNT = 3

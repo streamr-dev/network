@@ -1,5 +1,5 @@
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import { EthereumAddress, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
+import { StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
 import { StreamIDBuilder } from '../../../src/StreamIDBuilder'
 import { FakeStorageNode } from './FakeStorageNode'
 import { FakeNetwork } from './FakeNetwork'
@@ -7,6 +7,7 @@ import { Stream } from '../../../src/Stream'
 import { StreamStorageRegistry } from '../../../src/registry/StreamStorageRegistry'
 import { Methods } from '../types'
 import { FakeChain } from './FakeChain'
+import { EthereumAddress } from '@streamr/utils'
 
 @scoped(Lifecycle.ContainerScoped)
 export class FakeStreamStorageRegistry implements Methods<StreamStorageRegistry> {
@@ -26,9 +27,8 @@ export class FakeStreamStorageRegistry implements Methods<StreamStorageRegistry>
     }
 
     private async hasAssignment(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<boolean> {
-        const normalizedNodeAddress = nodeAddress.toLowerCase()
         const assignments = await this.getStorageNodes(streamIdOrPath)
-        return assignments.includes(normalizedNodeAddress)
+        return assignments.includes(nodeAddress)
     }
 
     async getStorageNodes(streamIdOrPath?: string): Promise<EthereumAddress[]> {
@@ -55,13 +55,12 @@ export class FakeStreamStorageRegistry implements Methods<StreamStorageRegistry>
         }
     }
 
-    async addStreamToStorageNode(streamIdOrPath: string, nodeAddress: string): Promise<void> {
+    async addStreamToStorageNode(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<void> {
         if (!(await this.hasAssignment(streamIdOrPath, nodeAddress))) {
-            const normalizedNodeAddress = nodeAddress.toLowerCase()
             const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
             const node = this.network.getNode(nodeAddress)
             if (node !== undefined) {
-                this.chain.storageAssignments.add(streamId, normalizedNodeAddress)
+                this.chain.storageAssignments.add(streamId, nodeAddress)
                 await (node as FakeStorageNode).addAssignment(streamId)
             } else {
                 throw new Error(`No storage node ${nodeAddress} for ${streamId}`)

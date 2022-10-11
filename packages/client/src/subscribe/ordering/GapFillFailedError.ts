@@ -1,4 +1,5 @@
-import { EthereumAddress, MessageRef } from "streamr-client-protocol"
+import { MessageRef } from "streamr-client-protocol"
+import { EthereumAddress } from '@streamr/utils'
 
 export default class GapFillFailedError extends Error {
 

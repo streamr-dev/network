@@ -7,12 +7,15 @@ import {
     EncryptedGroupKey,
     toStreamID
 } from '../../../../src/index'
+import { toEthereumAddress } from '@streamr/utils'
 
 const VERSION = 32
 
+const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+
 // Message definitions
 const message = new StreamMessage({
-    messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
+    messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
     prevMsgRef: new MessageRef(1564046132168, 5),
     content: 'encrypted-content',
     messageType: StreamMessage.MESSAGE_TYPES.MESSAGE,
@@ -25,7 +28,7 @@ const message = new StreamMessage({
 })
 const serializedMessage = JSON.stringify([
     VERSION,
-    ['streamId', 0, 1564046332168, 10, 'publisherId', 'msgChainId'],
+    ['streamId', 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'],
     [1564046132168, 5],
     StreamMessage.MESSAGE_TYPES.MESSAGE,
     StreamMessage.CONTENT_TYPES.JSON,

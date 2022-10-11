@@ -1,7 +1,6 @@
 import { without } from 'lodash'
 import {
     EncryptedGroupKey,
-    EthereumAddress,
     GroupKeyRequest,
     GroupKeyResponse,
     GroupKeyResponseSerialized,
@@ -23,6 +22,7 @@ import { Validator } from '../Validator'
 import { EncryptionUtil } from './EncryptionUtil'
 import { GroupKey, GroupKeyId } from './GroupKey'
 import { GroupKeyStore } from './GroupKeyStore'
+import { EthereumAddress } from '@streamr/utils'
 
 /*
  * Sends group key responses
