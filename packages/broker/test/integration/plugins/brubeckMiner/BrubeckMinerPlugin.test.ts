@@ -2,7 +2,7 @@ import { Server } from 'http'
 import { once } from 'events'
 import { Wallet } from 'ethers'
 import express, { Request, Response } from 'express'
-import { Logger } from '@streamr/utils'
+import { Logger, toEthereumAddress } from '@streamr/utils'
 import { Tracker } from '@streamr/network-tracker'
 import { Stream, StreamPermission, StreamrClient } from 'streamr-client'
 import { fastWallet, waitForCondition } from 'streamr-test-utils'
@@ -107,7 +107,7 @@ describe('BrubeckMinerPlugin', () => {
         await publishRewardCode(rewardStreamId)
         await waitForCondition(() => claimServer.claimRequestBody !== undefined, 30000)
         expect(claimServer.claimRequestBody.rewardCode).toBe(MOCK_REWARD_CODE)
-        expect(claimServer.claimRequestBody.nodeAddress).toBe(brokerWallet.address)
+        expect(claimServer.claimRequestBody.nodeAddress).toBe(toEthereumAddress(brokerWallet.address))
         expect(claimServer.claimRequestBody.clientServerLatency).toBeGreaterThanOrEqual(0)
         expect(claimServer.claimRequestBody.waitTime).toBeGreaterThanOrEqual(0)
         // will have broker as peer

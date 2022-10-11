@@ -2,7 +2,6 @@ import assert from 'assert'
 
 import {
     toStreamID,
-    EthereumAddress,
     StreamMessage,
     MessageID,
     GroupKeyMessage,
@@ -16,10 +15,11 @@ import { Authentication } from '../../src/Authentication'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
 import StreamMessageValidator, { StreamMetadata } from '../../src/StreamMessageValidator'
 import { createRandomAuthentication } from '../test-utils/utils'
+import { EthereumAddress } from '@streamr/utils'
 
 const groupKeyMessageToStreamMessage = async (
-    groupKeyMessage: GroupKeyMessage, 
-    messageId: MessageID, 
+    groupKeyMessage: GroupKeyMessage,
+    messageId: MessageID,
     prevMsgRef: MessageRef | null,
     authentication: Authentication
 ): Promise<StreamMessage> => {
@@ -97,14 +97,14 @@ describe('StreamMessageValidator', () => {
 
         groupKeyRequest = await groupKeyMessageToStreamMessage(new GroupKeyRequest({
             requestId: 'requestId',
-            recipient: publisher.toLowerCase(),
+            recipient: publisher,
             rsaPublicKey: 'rsaPublicKey',
             groupKeyIds: ['groupKeyId1', 'groupKeyId2']
         }), new MessageID(toStreamID('streamId'), 0, 0, 0, subscriber, 'msgChainId'), null, subscriberAuthentication)
 
         groupKeyResponse = await groupKeyMessageToStreamMessage(new GroupKeyResponse({
             requestId: 'requestId',
-            recipient: subscriber.toLowerCase(),
+            recipient: subscriber,
             encryptedGroupKeys: [
                 new EncryptedGroupKey('groupKeyId1', 'encryptedKey1'),
                 new EncryptedGroupKey('groupKeyId2', 'encryptedKey2')

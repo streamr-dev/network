@@ -2,7 +2,7 @@ import 'reflect-metadata'
 import {
     StreamMessage,
     StreamPartID,
-    StreamPartIDUtils,
+    StreamPartIDUtils
 } from 'streamr-client-protocol'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { Wallet } from 'ethers'
@@ -16,6 +16,7 @@ import {
     getGroupKeyStore
 } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
+import { toEthereumAddress } from '@streamr/utils'
 
 describe('SubscriberKeyExchange', () => {
 
@@ -104,7 +105,7 @@ describe('SubscriberKeyExchange', () => {
                 messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST
             })
             await assertGroupKeyRequest(request!, [groupKey.id])
-            const keyStore = getGroupKeyStore(subscriberWallet.address)
+            const keyStore = getGroupKeyStore(toEthereumAddress(subscriberWallet.address))
             await waitForCondition(async () => (await keyStore.get(groupKey.id, StreamPartIDUtils.getStreamID(streamPartId))) !== undefined)
         })
     })

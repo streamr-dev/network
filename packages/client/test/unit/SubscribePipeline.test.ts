@@ -13,6 +13,7 @@ import { DestroySignal } from '../../src/DestroySignal'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { createAuthentication } from '../../src/Authentication'
 import { StreamrClientEventEmitter } from '../../src/events'
+import { toEthereumAddress } from '@streamr/utils'
 
 const CONTENT = {
     foo: 'bar'
@@ -37,7 +38,7 @@ describe('SubscribePipeline', () => {
                 partition,
                 Date.now(),
                 0,
-                publisher.address,
+                toEthereumAddress(publisher.address),
                 'mock-msgChainId'
             ),
             serializedContent: JSON.stringify(CONTENT),

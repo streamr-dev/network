@@ -5,7 +5,7 @@ import express from 'express'
 import cors from 'cors'
 import crypto from 'crypto'
 import { Wallet } from '@ethersproject/wallet'
-import { waitForEvent } from '@streamr/utils'
+import { EthereumAddress, toEthereumAddress, waitForEvent } from '@streamr/utils'
 import fetch from 'node-fetch'
 
 export type Event = string
@@ -237,8 +237,8 @@ export function fastWallet(): Wallet {
     return new Wallet(fastPrivateKey())
 }
 
-export function randomEthereumAddress(): string {
-    return '0x' + crypto.randomBytes(20).toString('hex')
+export function randomEthereumAddress(): EthereumAddress {
+    return toEthereumAddress('0x' + crypto.randomBytes(20).toString('hex'))
 }
 
 /**

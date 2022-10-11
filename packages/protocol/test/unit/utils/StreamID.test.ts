@@ -2,13 +2,14 @@ import {
     StreamIDUtils,
     toStreamID
 } from '../../../src'
+import { toEthereumAddress } from '@streamr/utils'
 
 const address = '0xaAAAaaaaAA123456789012345678901234567890'
 
 describe('toStreamID', () => {
     it('path-only format', () => {
         const path = '/foo/BAR'
-        const actual = toStreamID(path, address)
+        const actual = toStreamID(path, toEthereumAddress(address))
         expect(actual).toBe('0xaaaaaaaaaa123456789012345678901234567890/foo/BAR')
     })
 
@@ -70,7 +71,7 @@ describe('getDomainAndPath', () => {
     })
 
     it('returns domain and path for full stream id', () => {
-        expect(StreamIDUtils.getDomainAndPath(toStreamID('/foo/bar', address)))
+        expect(StreamIDUtils.getDomainAndPath(toStreamID('/foo/bar', toEthereumAddress(address))))
             .toEqual([address.toLowerCase(), '/foo/bar'])
     })
 })
@@ -81,32 +82,13 @@ describe('getDomain', () => {
     })
 
     it('returns address for full stream id', () => {
-        expect(StreamIDUtils.getDomain(toStreamID('/foo/bar', address))).toEqual(address.toLowerCase())
+        const streamId = toStreamID('/foo/bar', toEthereumAddress(address))
+        expect(StreamIDUtils.getDomain(streamId)).toEqual(address.toLowerCase())
     })
 
     it('returns ENS name for full stream id', () => {
         const ensName = 'name.eth'
         expect(StreamIDUtils.getDomain(toStreamID(`${ensName}/foo/bar`))).toEqual(ensName)
-    })
-})
-
-describe('isENSName', () => {
-    it('ENS name', () => {
-        expect(StreamIDUtils.isENSName('foobar.eth')).toBe(true)
-    })
-
-    it('Ethereum address', () => {
-        expect(StreamIDUtils.isENSName('0x1234567890123456789012345678901234567890')).toBe(false)
-    })
-})
-
-describe('isENSAddress', () => {
-    it('ENS name', () => {
-        expect(StreamIDUtils.isENSAddress('foobar.eth')).toBe(true)
-    })
-
-    it('Ethereum address', () => {
-        expect(StreamIDUtils.isENSAddress('0x1234567890123456789012345678901234567890')).toBe(false)
     })
 })
 
@@ -116,7 +98,7 @@ describe('getPath', () => {
     })
 
     it('returns path for full stream id', () => {
-        expect(StreamIDUtils.getPath(toStreamID('/foo/bar', address))).toEqual('/foo/bar')
+        expect(StreamIDUtils.getPath(toStreamID('/foo/bar', toEthereumAddress(address)))).toEqual('/foo/bar')
     })
 })
 

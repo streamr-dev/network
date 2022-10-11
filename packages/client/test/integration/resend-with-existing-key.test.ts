@@ -10,6 +10,7 @@ import { DecryptError } from '../../src/encryption/EncryptionUtil'
 import { collect } from '../../src/utils/GeneratorUtils'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 import { StreamrClient } from '../../src/StreamrClient'
+import { toEthereumAddress } from '@streamr/utils'
 
 /*
  * A subscriber has some GroupKeys in the local store and reads historical data
@@ -72,7 +73,7 @@ describe('resend with existing key', () => {
     }
 
     beforeEach(async () => {
-        const streamId = toStreamID(createRelativeTestStreamId(module), publisherWallet.address)
+        const streamId = toStreamID(createRelativeTestStreamId(module), toEthereumAddress(publisherWallet.address))
         environment = new FakeEnvironment()
         subscriber = environment.createClient({
             auth: {

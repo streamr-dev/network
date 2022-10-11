@@ -9,7 +9,7 @@ import type { AuthConfig } from './Authentication'
 import type { EthereumConfig } from './Ethereum'
 
 import CONFIG_SCHEMA from './config.schema.json'
-import { EthereumAddress, SmartContractRecord } from 'streamr-client-protocol'
+import { SmartContractRecord } from 'streamr-client-protocol'
 
 import type { NetworkNodeOptions } from 'streamr-network'
 import type { ConnectionInfo } from '@ethersproject/web'
@@ -49,7 +49,10 @@ export interface ConnectionConfig {
     theGraphUrl: string
 }
 
-export interface TrackerRegistrySmartContract { jsonRpcProvider?: ConnectionInfo, contractAddress: EthereumAddress }
+export interface TrackerRegistrySmartContract {
+    jsonRpcProvider?: ConnectionInfo
+    contractAddress: string
+}
 
 export type NetworkConfig = Omit<NetworkNodeOptions, 'trackers' | 'metricsContext'> & {
     trackers: SmartContractRecord[] | TrackerRegistrySmartContract

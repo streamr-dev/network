@@ -1,5 +1,4 @@
 import {
-    EthereumAddress,
     StreamID,
     StreamIDUtils,
     StreamPartID,
@@ -10,6 +9,7 @@ import {
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { StreamDefinition } from './types'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
+import { EthereumAddress } from '@streamr/utils'
 
 export const DEFAULT_PARTITION = 0
 

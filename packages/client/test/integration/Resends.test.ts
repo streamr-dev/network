@@ -8,6 +8,9 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 import { createRandomAuthentication, createRelativeTestStreamId } from '../test-utils/utils'
+import { toEthereumAddress } from '@streamr/utils'
+
+const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
 describe('Resends', () => {
 
@@ -59,7 +62,7 @@ describe('Resends', () => {
         it('no message', async () => {
             await stream.addToStorageNode(storageNode.id)
             const msg = await createSignedMessage({
-                messageId: new MessageID(stream.id, 0, Date.now(), 0, 'publisherId', 'msgChainId'),
+                messageId: new MessageID(stream.id, 0, Date.now(), 0, PUBLISHER_ID, 'msgChainId'),
                 serializedContent: JSON.stringify({}),
                 authentication
             })
@@ -75,7 +78,7 @@ describe('Resends', () => {
 
         it('no storage assigned', async () => {
             const msg = await createSignedMessage({
-                messageId: new MessageID(stream.id, 0, Date.now(), 0, 'publisherId', 'msgChainId'),
+                messageId: new MessageID(stream.id, 0, Date.now(), 0, PUBLISHER_ID, 'msgChainId'),
                 serializedContent: JSON.stringify({}),
                 authentication
             })

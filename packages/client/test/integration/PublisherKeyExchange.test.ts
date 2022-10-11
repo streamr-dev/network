@@ -11,7 +11,7 @@ import { GroupKey, GroupKeyId } from '../../src/encryption/GroupKey'
 import { Wallet } from 'ethers'
 import { RSAKeyPair } from '../../src/encryption/RSAKeyPair'
 import { StreamPermission } from '../../src/permission'
-import { 
+import {
     createRelativeTestStreamId,
     getGroupKeyStore,
     startPublisherKeyExchangeSubscription
@@ -23,6 +23,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { createRandomMsgChainId } from '../../src/publish/MessageChain'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { createAuthentication } from '../../src/Authentication'
+import { toEthereumAddress } from '@streamr/utils'
 
 describe('PublisherKeyExchange', () => {
 
@@ -50,7 +51,14 @@ describe('PublisherKeyExchange', () => {
     ): Promise<StreamMessage<unknown>> => {
         const [ streamId, partition ] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
         return await createSignedMessage({
-            messageId: new MessageID(streamId, partition, 0, Date.now(), publisher.address, createRandomMsgChainId()),
+            messageId: new MessageID(
+                streamId,
+                partition,
+                0,
+                Date.now(),
+                toEthereumAddress(publisher.address),
+                createRandomMsgChainId()
+            ),
             serializedContent: JSON.stringify([
                 uuid(),
                 publisherWallet.address,
@@ -112,7 +120,8 @@ describe('PublisherKeyExchange', () => {
          */
         it('happy path', async () => {
             const key = GroupKey.generate()
-            await getGroupKeyStore(publisherWallet.address).add(key, StreamPartIDUtils.getStreamID(streamPartId))
+            await getGroupKeyStore(toEthereumAddress(publisherWallet.address))
+                .add(key, StreamPartIDUtils.getStreamID(streamPartId))
 
             const request = await createGroupKeyRequest(key.id)
             subscriberNode.publish(request)

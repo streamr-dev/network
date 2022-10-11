@@ -1,13 +1,12 @@
 import crypto from 'crypto'
 import { DependencyContainer } from 'tsyringe'
 import { fastPrivateKey, fetchPrivateKeyWithGas } from 'streamr-test-utils'
-import { wait } from '@streamr/utils'
+import { EthereumAddress, wait } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import {
     StreamMessage,
     StreamPartID,
     StreamPartIDUtils,
-    EthereumAddress,
     MAX_PARTITION_COUNT
 } from 'streamr-client-protocol'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -15,7 +14,6 @@ import { counterId } from '../../src/utils/utils'
 import { Debug } from '../../src/utils/log'
 import { Stream, StreamProperties } from '../../src/Stream'
 import { ConfigTest } from '../../src/ConfigTest'
-import { padEnd } from 'lodash'
 import { Context } from '../../src/utils/Context'
 import { StreamrClientConfig } from '../../src/Config'
 import { GroupKey } from '../../src/encryption/GroupKey'
@@ -93,10 +91,6 @@ export const getCreateClient = (
 
         return c
     }
-}
-
-export const createEthereumAddress = (id: number): string => {
-    return '0x' + padEnd(String(id), 40, '0')
 }
 
 type CreateMockMessageOptions = {

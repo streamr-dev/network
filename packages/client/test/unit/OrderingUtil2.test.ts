@@ -1,7 +1,12 @@
-import { EthereumAddress, MessageID, MessageRef, StreamMessage, toStreamID } from 'streamr-client-protocol'
+import {
+    MessageID,
+    MessageRef,
+    StreamMessage,
+    toStreamID
+} from 'streamr-client-protocol'
 import shuffle from 'array-shuffle'
 import { waitForCondition } from 'streamr-test-utils'
-import { wait } from '@streamr/utils'
+import { EthereumAddress, toEthereumAddress, wait } from '@streamr/utils'
 import OrderingUtil from '../../src/subscribe/ordering/OrderingUtil'
 
 const MESSAGES_PER_PUBLISHER = 1000
@@ -14,7 +19,11 @@ const PROPAGATION_TIMEOUT = 200
 const RESEND_TIMEOUT = 100
 const MAX_GAP_REQUESTS = 5
 
-const PUBLISHER_IDS = ['publisherOne', 'publisherTwo', 'publisherThree']
+const PUBLISHER_IDS = [
+    '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+    '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+    '0xcccccccccccccccccccccccccccccccccccccccc'
+].map(toEthereumAddress)
 
 enum Delivery {
     REAL_TIME,

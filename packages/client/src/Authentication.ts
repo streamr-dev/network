@@ -2,13 +2,12 @@ import { Wallet } from '@ethersproject/wallet'
 import { Web3Provider } from '@ethersproject/providers'
 import type { Signer } from '@ethersproject/abstract-signer'
 import { computeAddress } from '@ethersproject/transactions'
-import { EthereumAddress } from 'streamr-client-protocol'
 import type { ExternalProvider } from '@ethersproject/providers'
 import { EthereumConfig, getStreamRegistryChainProvider } from './Ethereum'
 import { XOR } from './types'
 import { pLimitFn } from './utils/promises'
 import pMemoize from 'p-memoize'
-import { wait } from '@streamr/utils'
+import { EthereumAddress, toEthereumAddress, wait } from '@streamr/utils'
 import { sign } from './utils/signingUtils'
 
 export type ProviderConfig = ExternalProvider
@@ -22,7 +21,7 @@ export interface PrivateKeyAuthConfig {
     // The address property is not used. It is included to make the object
     // compatible with StreamrClient.generateEthereumAccount(), as we typically
     // use that method to generate the client "auth" option.
-    address?: EthereumAddress
+    address?: string
 }
 
 // eslint-disable-next-line @typescript-eslint/ban-types
@@ -44,7 +43,7 @@ export interface Authentication {
 export const createAuthentication = (authConfig: AuthConfig, ethereumConfig: EthereumConfig): Authentication => {
     if (authConfig.privateKey !== undefined) {
         const key = authConfig.privateKey
-        const address = computeAddress(key).toLowerCase()
+        const address = toEthereumAddress(computeAddress(key))
         return {
             isAuthenticated: () => true,
             getAddress: async () => address,
@@ -63,7 +62,7 @@ export const createAuthentication = (authConfig: AuthConfig, ethereumConfig: Eth
                         throw new Error(`invalid ethereum provider ${ethereumConfig}`)
                     }
                     const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
-                    return accounts[0].toLowerCase()
+                    return toEthereumAddress(accounts[0])
                 } catch {
                     throw new Error('no addresses connected+selected in Metamask')
                 }

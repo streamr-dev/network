@@ -1,5 +1,5 @@
 import { random } from 'lodash'
-import { 
+import {
     createSignaturePayload,
     EncryptedGroupKey,
     EncryptionType,
@@ -7,7 +7,7 @@ import {
     StreamID,
     StreamMessage,
     StreamMessageOptions,
-    toStreamPartID 
+    toStreamPartID
 } from 'streamr-client-protocol'
 import { EncryptionUtil } from '../encryption/EncryptionUtil'
 import { GroupKeyId } from '../encryption/GroupKey'
@@ -27,7 +27,7 @@ export interface MessageFactoryOptions {
 }
 
 export const createSignedMessage = async <T>(
-    opts: Omit<StreamMessageOptions<T>, 'signature' | 'signatureType' | 'content'> 
+    opts: Omit<StreamMessageOptions<T>, 'signature' | 'signatureType' | 'content'>
     & { serializedContent: string, authentication: Authentication }
 ): Promise<StreamMessage<T>> => {
     const signature = await opts.authentication.createMessageSignature(createSignaturePayload({

@@ -1,4 +1,4 @@
-import { wait } from '@streamr/utils'
+import { toEthereumAddress, wait } from '@streamr/utils'
 import { counterId } from '../../src/utils/utils'
 import { Context } from '../../src/utils/Context'
 import { createRandomAuthentication, Debug } from '../test-utils/utils'
@@ -10,6 +10,8 @@ import { Readable } from 'stream'
 import { waitForCondition } from 'streamr-test-utils'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { Authentication } from '../../src/Authentication'
+
+const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
 const fromReadable = async (readable: Readable, context: Context, onMessage?: MessageStreamOnMessage<any>) => {
     const result = new MessageStream<any>(context)
@@ -40,7 +42,7 @@ describe('MessageStream', () => {
 
     const createMockMessage = async () => {
         return await createSignedMessage({
-            messageId: new MessageID(streamId, 0, 0, 0, 'publisherId', 'msgChainId'),
+            messageId: new MessageID(streamId, 0, 0, 0, PUBLISHER_ID, 'msgChainId'),
             serializedContent: JSON.stringify(Msg()),
             authentication
         })
@@ -110,7 +112,7 @@ describe('MessageStream', () => {
         leaksDetector.add('err', err)
         leaksDetector.add('testMessage', testMessage)
         const streamMessage = createSignedMessage({
-            messageId: new MessageID(streamId, 0, 1, 0, 'publisherId', 'msgChainId'),
+            messageId: new MessageID(streamId, 0, 1, 0, PUBLISHER_ID, 'msgChainId'),
             serializedContent: JSON.stringify(testMessage),
             authentication
         })

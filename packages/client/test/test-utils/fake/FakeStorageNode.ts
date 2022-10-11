@@ -1,6 +1,5 @@
 import { range } from 'lodash'
 import {
-    EthereumAddress,
     StreamID,
     StreamMessage,
     StreamMessageType,
@@ -10,7 +9,7 @@ import {
 import { FakeNetworkNode } from './FakeNetworkNode'
 import { FakeNetwork } from './FakeNetwork'
 import { formStorageNodeAssignmentStreamId } from '../../../src/utils/utils'
-import { Multimap } from '@streamr/utils'
+import { EthereumAddress, Multimap, toEthereumAddress } from '@streamr/utils'
 import { FakeChain } from './FakeChain'
 import { StreamPermission } from '../../../src/permission'
 import { Wallet } from 'ethers'
@@ -24,7 +23,7 @@ const createStorageNodeUrl = (address: EthereumAddress): string => `${URL_SCHEME
 export const parseNodeIdFromStorageNodeUrl = (url: string): EthereumAddress => {
     const groups = url.match(new RegExp('(.*)://([^/]*)(/.*)?'))
     if ((groups !== null) && (groups[1] === URL_SCHEME)) {
-        return groups[2]
+        return toEthereumAddress(groups[2])
     } else {
         throw new Error(`unknown storage node url: ${url}`)
     }
@@ -42,16 +41,17 @@ export class FakeStorageNode extends FakeNetworkNode {
 
     constructor(wallet: Wallet, network: FakeNetwork, chain: FakeChain) {
         super({
-            id: wallet.address
+            id: toEthereumAddress(wallet.address)
         } as any, network)
         this.wallet = wallet
         this.chain = chain
-        chain.storageNodeMetadatas.set(wallet.address.toLowerCase(), {
-            http: createStorageNodeUrl(wallet.address)
+        const address = toEthereumAddress(wallet.address)
+        chain.storageNodeMetadatas.set(address, {
+            http: createStorageNodeUrl(address)
         })
-        const storageNodeAssignmentStreamPermissions = new Multimap<string, StreamPermission>()
-        storageNodeAssignmentStreamPermissions.add(wallet.address.toLowerCase(), StreamPermission.PUBLISH)
-        this.chain.streams.set(formStorageNodeAssignmentStreamId(wallet.address), {
+        const storageNodeAssignmentStreamPermissions = new Multimap<EthereumAddress, StreamPermission>()
+        storageNodeAssignmentStreamPermissions.add(address, StreamPermission.PUBLISH)
+        this.chain.streams.set(formStorageNodeAssignmentStreamId(address), {
             metadata: {},
             permissions: storageNodeAssignmentStreamPermissions
         })

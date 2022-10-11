@@ -1,5 +1,5 @@
 import { inject, DependencyContainer, scoped, Lifecycle } from 'tsyringe'
-import { EthereumAddress, StreamID } from 'streamr-client-protocol'
+import { StreamID } from 'streamr-client-protocol'
 import { Stream, StreamProperties } from '../../../src/Stream'
 import {
     StreamPermission,
@@ -15,8 +15,8 @@ import { NotFoundError, SearchStreamsPermissionFilter } from '../../../src'
 import { StreamRegistryCached } from '../../../src/registry/StreamRegistryCached'
 import { Authentication, AuthenticationInjectionToken } from '../../../src/Authentication'
 import { Methods } from '../types'
-import { Multimap } from '@streamr/utils'
-import { FakeChain, PUBLIC_PERMISSION_TARGET, StreamRegistryItem } from './FakeChain'
+import { EthereumAddress, Multimap, toEthereumAddress } from '@streamr/utils'
+import { FakeChain, PUBLIC_PERMISSION_TARGET, PublicPermissionTarget, StreamRegistryItem } from './FakeChain'
 
 @scoped(Lifecycle.ContainerScoped)
 export class FakeStreamRegistry implements Omit<Methods<StreamRegistry>, 'debug'> {
@@ -51,7 +51,7 @@ export class FakeStreamRegistry implements Omit<Methods<StreamRegistry>, 'debug'
         if (this.chain.streams.has(streamId)) {
             throw new Error(`Stream already exists: ${streamId}`)
         }
-        const authenticatedUser: EthereumAddress = (await this.authentication.getAddress())!.toLowerCase()
+        const authenticatedUser: EthereumAddress = await this.authentication.getAddress()
         const permissions = new Multimap<EthereumAddress, StreamPermission>()
         permissions.addAll(authenticatedUser, Object.values(StreamPermission))
         const registryItem: StreamRegistryItem = {
@@ -137,7 +137,7 @@ export class FakeStreamRegistry implements Omit<Methods<StreamRegistry>, 'debug'
         return this.updatePermissions(
             streamIdOrPath,
             assignments,
-            (registryItem: StreamRegistryItem, target: string, permissions: StreamPermission[]) => {
+            (registryItem: StreamRegistryItem, target: EthereumAddress | PublicPermissionTarget, permissions: StreamPermission[]) => {
                 const nonExistingPermissions = permissions.filter((p) => !registryItem.permissions.has(target, p))
                 registryItem.permissions.addAll(target, nonExistingPermissions)
             }
@@ -148,7 +148,7 @@ export class FakeStreamRegistry implements Omit<Methods<StreamRegistry>, 'debug'
         return this.updatePermissions(
             streamIdOrPath,
             assignments,
-            (registryItem: StreamRegistryItem, target: string, permissions: StreamPermission[]) => {
+            (registryItem: StreamRegistryItem, target: EthereumAddress | PublicPermissionTarget, permissions: StreamPermission[]) => {
                 registryItem.permissions.removeAll(target, permissions)
             }
         )
@@ -157,7 +157,11 @@ export class FakeStreamRegistry implements Omit<Methods<StreamRegistry>, 'debug'
     async updatePermissions(
         streamIdOrPath: string,
         assignments: PermissionAssignment[],
-        modifyRegistryItem: (registryItem: StreamRegistryItem, target: string, permissions: StreamPermission[]) => void
+        modifyRegistryItem: (
+            registryItem: StreamRegistryItem,
+            target: EthereumAddress | PublicPermissionTarget,
+            permissions: StreamPermission[]
+        ) => void
     ): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.streamRegistryCached.clearStream(streamId)
@@ -168,7 +172,7 @@ export class FakeStreamRegistry implements Omit<Methods<StreamRegistry>, 'debug'
             for (const assignment of assignments) {
                 const target = isPublicPermissionAssignment(assignment)
                     ? PUBLIC_PERMISSION_TARGET
-                    : assignment.user.toLowerCase()
+                    : toEthereumAddress(assignment.user)
                 modifyRegistryItem(registryItem, target, assignment.permissions)
             }
         }
@@ -213,12 +217,12 @@ export class FakeStreamRegistry implements Omit<Methods<StreamRegistry>, 'debug'
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getStreamPublishers(_streamIdOrPath: string): AsyncGenerator<string, any, unknown> {
+    getStreamPublishers(_streamIdOrPath: string): AsyncGenerator<EthereumAddress, any, unknown> {
         throw new Error('not implemented')
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getStreamSubscribers(_streamIdOrPath: string): AsyncGenerator<string, any, unknown> {
+    getStreamSubscribers(_streamIdOrPath: string): AsyncGenerator<EthereumAddress, any, unknown> {
         throw new Error('not implemented')
     }
 }
