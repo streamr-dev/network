@@ -43,7 +43,7 @@ export class SubscriptionSession<T> {
         node: NetworkNodeFacade,
         streamrClientEventEmitter: StreamrClientEventEmitter,
         destroySignal: DestroySignal,
-        @inject(LoggerFactory) loggerFactory: LoggerFactory,
+        loggerFactory: LoggerFactory,
         @inject(ConfigInjectionToken.Root) rootConfig: StrictStreamrClientConfig
     ) {
         this.streamPartId = streamPartId
