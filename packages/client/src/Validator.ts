@@ -7,7 +7,7 @@ import {
     StreamID,
 } from 'streamr-client-protocol'
 
-import { instanceId } from './utils/utils'
+import { formLookupKey, instanceId } from './utils/utils'
 import { pOrderedResolve } from './utils/promises'
 import { CacheFn } from './utils/caches'
 import { Context } from './utils/Context'
@@ -62,7 +62,7 @@ export class Validator extends StreamMessageValidator implements Context {
         // forcibly use small cache otherwise keeps n serialized messages in memory
         ...this.cacheOptions,
         maxSize: 100,
-        cacheKey: (args) => args.join('|'),
+        cacheKey: (args) => formLookupKey(...args),
     })
 
     orderedValidate = pOrderedResolve(async (msg: StreamMessage) => {

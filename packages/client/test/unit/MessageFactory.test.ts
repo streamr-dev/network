@@ -37,7 +37,7 @@ const createMessageFactory = async (opts?: {
 }
 
 const createMessage = async (
-    opts: Omit<MessageMetadata, 'timestamp'> & { explicitPartition?: number }, 
+    opts: Omit<MessageMetadata, 'timestamp'> & { timestamp?: number, explicitPartition?: number }, 
     messageFactory: MessageFactory
 ): Promise<StreamMessage<any>> => {
     return messageFactory.createMessage(CONTENT, {
@@ -219,6 +219,16 @@ describe('MessageFactory', () => {
             expect(msg2.getMessageID().msgChainId).not.toBe('mock-id')
             expect(msg2.getPreviousMessageRef()).toBe(null)
             expect(msg3.getMessageID().msgChainId).toBe('mock-id')
+            expect(msg3.getPreviousMessageRef()).toEqual(msg1.getMessageRef())
+        })
+
+        it('backdated', async () => {
+            const messageFactory = await createMessageFactory()
+            const msg1 = await createMessage({}, messageFactory)
+            await expect(() => {
+                return createMessage({ timestamp: 1000 }, messageFactory)
+            }).rejects.toThrow('prevMessageRef must come before current')
+            const msg3 = await createMessage({}, messageFactory)
             expect(msg3.getPreviousMessageRef()).toEqual(msg1.getMessageRef())
         })
     })

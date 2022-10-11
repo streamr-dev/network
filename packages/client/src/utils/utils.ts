@@ -119,3 +119,9 @@ export class MaxSizedSet<T> {
         this.delegate.delete(value)
     }
 }
+
+// A unique internal identifier to some list of primitive values. Useful
+// e.g. as a map key or a cache key.
+export const formLookupKey = <K extends (string | number)[]>(...args: K): string => {
+    return args.join('|')
+}
