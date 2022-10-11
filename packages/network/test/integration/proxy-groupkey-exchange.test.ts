@@ -98,6 +98,7 @@ describe('GroupKey exchange via proxy connections', () => {
             encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
             content: requestContent,
             signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
+            signature: 'signature'
         })
 
         await Promise.all([
@@ -129,6 +130,7 @@ describe('GroupKey exchange via proxy connections', () => {
             encryptionType: StreamMessage.ENCRYPTION_TYPES.RSA,
             content: responseContent,
             signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
+            signature: 'signature'
         })
 
         await Promise.all([

@@ -81,10 +81,12 @@ describe('node unsubscribing from a stream', () => {
         nodeA.publish(new StreamMessage({
             messageId: new MessageID(toStreamID('s'), 2, 0, 0, PUBLISHER_ID, 'msgChainId'),
             content: {},
+            signature: 'signature'
         }))
         nodeA.publish(new StreamMessage({
             messageId: new MessageID(toStreamID('s'), 1, 0, 0, PUBLISHER_ID, 'msgChainId'),
             content: {},
+            signature: 'signature'
         }))
         await waitForEvent(nodeB, NodeEvent.UNSEEN_MESSAGE_RECEIVED)
         expect(actual).toEqual(['s#1'])

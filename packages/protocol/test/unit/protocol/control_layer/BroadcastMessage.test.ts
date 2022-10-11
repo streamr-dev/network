@@ -31,6 +31,7 @@ describe('BroadcastMessage', () => {
             const streamMessage = new StreamMessage({
                 messageId: new MessageID(toStreamID('streamId'), 0, 1529549961116, 0, PUBLISHER_ID, 'msgChainId'),
                 content: {},
+                signature: 'signature'
             })
             const msg = new BroadcastMessage({
                 requestId: 'requestId',

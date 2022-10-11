@@ -139,18 +139,11 @@ export class Publisher {
 
     /* eslint-disable @typescript-eslint/no-shadow */
     private async createMessageFactory(streamId: StreamID): Promise<MessageFactory> {
-        const queue = await this.groupKeyQueues.get(streamId)
         return new MessageFactory({
-            publisherId: await this.authentication.getAddress(),
             streamId,
-            getPartitionCount: async (streamId: StreamID) => {
-                const stream = await this.streamRegistryCached.getStream(streamId)
-                return stream.partitions
-            },
-            isPublicStream: (streamId: StreamID) => this.streamRegistryCached.isPublic(streamId),
-            isPublisher: (streamId: StreamID, publisherId: EthereumAddress) => this.streamRegistryCached.isStreamPublisher(streamId, publisherId),
-            createSignature: (payload: string) => this.authentication.createMessagePayloadSignature(payload),
-            useGroupKey: () => queue.useGroupKey()
+            authentication: this.authentication,
+            streamRegistry: this.streamRegistryCached,
+            groupKeyQueue: await this.groupKeyQueues.get(streamId)
         })
     } 
 }

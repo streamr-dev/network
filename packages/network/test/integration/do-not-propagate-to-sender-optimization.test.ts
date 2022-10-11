@@ -90,6 +90,7 @@ describe('optimization: do not propagate to sender', () => {
             content: {
                 hello: 'world'
             },
+            signature: 'signature'
         }))
 
         await waitForCondition(() => onDuplicateMessage.mock.calls.length >= 2)

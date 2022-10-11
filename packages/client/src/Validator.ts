@@ -4,7 +4,6 @@
 import { inject, Lifecycle, scoped, delay } from 'tsyringe'
 import {
     StreamMessage,
-    StreamMessageError,
     StreamID,
 } from 'streamr-client-protocol'
 
@@ -17,12 +16,6 @@ import { ConfigInjectionToken, SubscribeConfig, CacheConfig } from './Config'
 import StreamMessageValidator from './StreamMessageValidator'
 import { verify } from './utils/signingUtils'
 import { EthereumAddress } from '@streamr/utils'
-
-export class SignatureRequiredError extends StreamMessageError {
-    constructor(streamMessage: StreamMessage, code?: string) {
-        super('Client requires data to be signed.', streamMessage, code)
-    }
-}
 
 /**
  * Wrap StreamMessageValidator in a way that ensures it can validate in parallel but
@@ -74,16 +67,6 @@ export class Validator extends StreamMessageValidator implements Context {
 
     orderedValidate = pOrderedResolve(async (msg: StreamMessage) => {
         if (this.isStopped) { return }
-        const { options } = this
-
-        // Check special cases controlled by the verifySignatures policy
-        if (options.verifySignatures === 'never' && msg.messageType === StreamMessage.MESSAGE_TYPES.MESSAGE) {
-            return // no validation required
-        }
-
-        if (options.verifySignatures === 'always' && !msg.signature) {
-            throw new SignatureRequiredError(msg)
-        }
 
         // In all other cases validate using the validator
         // will throw with appropriate validation failure

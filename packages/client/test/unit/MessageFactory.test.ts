@@ -1,32 +1,38 @@
 import { random } from 'lodash'
 import { MAX_PARTITION_COUNT, StreamMessage, toStreamID } from 'streamr-client-protocol'
-import { randomEthereumAddress } from 'streamr-test-utils'
-import { keyToArrayIndex } from '@streamr/utils'
+import { fastWallet } from 'streamr-test-utils'
+import { keyToArrayIndex, toEthereumAddress } from '@streamr/utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
-import { MessageFactory, MessageFactoryOptions } from '../../src/publish/MessageFactory'
+import { MessageFactory } from '../../src/publish/MessageFactory'
 import { MessageMetadata } from '../../src'
+import { createAuthentication } from '../../src/Authentication'
+import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
+import { createGroupKeyQueue, createStreamRegistryCached } from '../test-utils/utils'
+import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
 
-const AUTHENTICATED_USER = randomEthereumAddress()
-const STREAM_ID = toStreamID('/path', AUTHENTICATED_USER)
+const WALLET = fastWallet()
+const STREAM_ID = toStreamID('/path', toEthereumAddress(WALLET.address))
 const CONTENT = { foo: 'bar' }
 const TIMESTAMP = Date.parse('2001-02-03T04:05:06Z')
 const PARTITION_COUNT = 50
-const SIGNATURE = 'mock-signature'
 const GROUP_KEY = GroupKey.generate()
 
-const createMessageFactory = (overridenOpts?: Partial<MessageFactoryOptions>) => {
-    const defaultOpts = {
-        publisherId: AUTHENTICATED_USER,
-        streamId: STREAM_ID,
-        getPartitionCount: async () => PARTITION_COUNT,
-        isPublicStream: async () => false,
-        isPublisher: async () => true,
-        createSignature: async () => SIGNATURE,
-        useGroupKey: async () => ({ current: GROUP_KEY })
-    }
+const createMessageFactory = async (opts?: {
+    streamRegistry?: StreamRegistryCached
+    groupKeyQueue?: GroupKeyQueue
+}) => {
     return new MessageFactory({
-        ...defaultOpts,
-        ...overridenOpts
+        streamId: STREAM_ID,
+        authentication: createAuthentication({
+            privateKey: WALLET.privateKey
+        }, undefined as any),
+        streamRegistry: createStreamRegistryCached({
+            partitionCount: PARTITION_COUNT,
+            isPublicStream: false,
+            isStreamPublisher: true
+        }),
+        groupKeyQueue: await createGroupKeyQueue(GROUP_KEY),
+        ...opts
     })
 }
 
@@ -43,12 +49,12 @@ const createMessage = async (
 describe('MessageFactory', () => {
 
     it('happy path', async () => {
-        const messageFactory = createMessageFactory()
+        const messageFactory = await createMessageFactory()
         const msg = await createMessage({}, messageFactory)
         expect(msg).toMatchObject({
             messageId: {
                 msgChainId: expect.any(String),
-                publisherId: AUTHENTICATED_USER.toLowerCase(),
+                publisherId: WALLET.address.toLowerCase(),
                 sequenceNumber: 0,
                 streamId: STREAM_ID,
                 streamPartition: expect.toBeWithin(0, PARTITION_COUNT),
@@ -59,17 +65,18 @@ describe('MessageFactory', () => {
             encryptionType: StreamMessage.ENCRYPTION_TYPES.AES,
             groupKeyId: GROUP_KEY.id,
             newGroupKey: null,
-            signature: SIGNATURE,
+            signature: expect.stringMatching(/^0x[0-9a-f]+$/),
             signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
             contentType: StreamMessage.CONTENT_TYPES.JSON,
-            serializedContent: expect.stringMatching(/^[0-9a-f]+$/),
+            serializedContent: expect.stringMatching(/^[0-9a-f]+$/)
         })
     })
 
     it('public stream', async () => {
-        const messageFactory = createMessageFactory({
-            isPublicStream: async () => true,
-            useGroupKey: () => Promise.reject()
+        const messageFactory = await createMessageFactory({
+            streamRegistry: createStreamRegistryCached({
+                isPublicStream: true
+            })
         })
         const msg = await createMessage({}, messageFactory)
         expect(msg).toMatchObject({
@@ -80,7 +87,7 @@ describe('MessageFactory', () => {
     })
 
     it('metadata', async () => {
-        const messageFactory = createMessageFactory()
+        const messageFactory = await createMessageFactory()
         const partitionKey = 'mock-partitionKey'
         const msgChainId = 'mock-msgChainId'
         const msg = await createMessage({
@@ -97,8 +104,8 @@ describe('MessageFactory', () => {
 
     it('next group key', async () => {
         const nextGroupKey = GroupKey.generate()
-        const messageFactory = createMessageFactory({
-            useGroupKey: async () => ({ current: GROUP_KEY, next: nextGroupKey })
+        const messageFactory = await createMessageFactory({
+            groupKeyQueue: await createGroupKeyQueue(GROUP_KEY, nextGroupKey)
         })
         const msg = await createMessage({}, messageFactory)
         expect(msg.groupKeyId).toBe(GROUP_KEY.id)
@@ -109,9 +116,11 @@ describe('MessageFactory', () => {
         expect(GROUP_KEY.decryptNextGroupKey(msg.newGroupKey!)).toEqual(nextGroupKey)
     })
 
-    it('not a publisher', () => {
-        const messageFactory = createMessageFactory({
-            isPublisher: async () => false
+    it('not a publisher', async () => {
+        const messageFactory = await createMessageFactory({
+            streamRegistry: createStreamRegistryCached({
+                isStreamPublisher: false
+            })
         })
         return expect(() => 
             createMessage({}, messageFactory)
@@ -121,7 +130,7 @@ describe('MessageFactory', () => {
     describe('partitions', () => {
 
         it('out of range', async () => {
-            const messageFactory = createMessageFactory()
+            const messageFactory = await createMessageFactory()
             await expect(() => 
                 createMessage({ explicitPartition: -1 }, messageFactory)
             ).rejects.toThrow(/out of range/)
@@ -131,21 +140,21 @@ describe('MessageFactory', () => {
         })
 
         it('partition and partitionKey', async () => {
-            const messageFactory = createMessageFactory()
+            const messageFactory = await createMessageFactory()
             return expect(() => 
                 createMessage({ partitionKey: 'mockPartitionKey', explicitPartition: 0 }, messageFactory)
             ).rejects.toThrow('Invalid combination of "partition" and "partitionKey"')
         })
 
         it('no partition key: uses same partition for all messages', async () => {
-            const messageFactory = createMessageFactory()
+            const messageFactory = await createMessageFactory()
             const msg1 = await createMessage({}, messageFactory)
             const msg2 = await createMessage({}, messageFactory)
             expect(msg1!.messageId.streamPartition).toBe(msg2!.messageId.streamPartition)
         })
 
         it('same partition key maps to same partition', async () => {
-            const messageFactory = createMessageFactory()
+            const messageFactory = await createMessageFactory()
             const partitionKey = `mock-partition-key-${random(Number.MAX_SAFE_INTEGER)}`
             const msg1 = await createMessage({ partitionKey }, messageFactory)
             const msg2 = await createMessage({ partitionKey }, messageFactory)
@@ -153,14 +162,14 @@ describe('MessageFactory', () => {
         })
 
         it('numeric partition key maps to the partition if in range', async () => {
-            const messageFactory = createMessageFactory()
+            const messageFactory = await createMessageFactory()
             const partitionKey = 10
             const msg = await createMessage({ partitionKey }, messageFactory)
             expect(msg!.messageId.streamPartition).toBe(partitionKey)
         })
 
         it('numeric partition key maps to partition range', async () => {
-            const messageFactory = createMessageFactory()
+            const messageFactory = await createMessageFactory()
             const partitionOffset = 20
             const msg = await createMessage({ partitionKey: PARTITION_COUNT + partitionOffset }, messageFactory)
             expect(msg!.messageId.streamPartition).toBe(partitionOffset)
@@ -168,8 +177,10 @@ describe('MessageFactory', () => {
 
         it('selected random partition in range when partition count decreases', async () => {
             let partitionCount: number = MAX_PARTITION_COUNT - 1
-            const messageFactory = createMessageFactory({
-                getPartitionCount: async () => partitionCount
+            const messageFactory = await createMessageFactory({
+                streamRegistry: createStreamRegistryCached({
+                    partitionCount: 1
+                })
             })
             while (partitionCount > 0) {
                 const msg = await createMessage({}, messageFactory)
@@ -181,7 +192,7 @@ describe('MessageFactory', () => {
 
     describe('message chains', () => {
         it('happy path', async () => {
-            const messageFactory = createMessageFactory()
+            const messageFactory = await createMessageFactory()
             const msg1 = await createMessage({}, messageFactory)
             const msg2 = await createMessage({}, messageFactory)
             expect(msg2.getMessageID().msgChainId).toBe(msg1.getMessageID().msgChainId)
@@ -189,7 +200,7 @@ describe('MessageFactory', () => {
         })
 
         it('partitions have separate chains', async () => {
-            const messageFactory = createMessageFactory()
+            const messageFactory = await createMessageFactory()
             const msg1 = await createMessage({ explicitPartition: 10 }, messageFactory)
             const msg2 = await createMessage({ partitionKey: 'mock-key' }, messageFactory)
             const msg3 = await createMessage({ msgChainId: msg2.getMsgChainId(), explicitPartition: 20 }, messageFactory)
@@ -200,7 +211,7 @@ describe('MessageFactory', () => {
         })
 
         it('explicit msgChainId', async () => {
-            const messageFactory = createMessageFactory()
+            const messageFactory = await createMessageFactory()
             const msg1 = await createMessage({ msgChainId: 'mock-id' }, messageFactory)
             const msg2 = await createMessage({}, messageFactory)
             const msg3 = await createMessage({ msgChainId: 'mock-id' }, messageFactory)

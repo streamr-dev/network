@@ -14,6 +14,7 @@ import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, DecryptionConfig } from '../Config'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { createRandomMsgChainId } from '../publish/MessageChain'
+import { createSignedMessage } from '../publish/MessageFactory'
 import { Context } from '../utils/Context'
 import { Debugger } from '../utils/log'
 import { withThrottling, pOnce } from '../utils/promises'
@@ -95,7 +96,7 @@ export class SubscriberKeyExchange {
             rsaPublicKey,
             groupKeyIds: [groupKeyId],
         }).toArray()
-        const request = new StreamMessage({
+        return createSignedMessage<GroupKeyRequestSerialized>({
             messageId: new MessageID(
                 StreamPartIDUtils.getStreamID(streamPartId),
                 StreamPartIDUtils.getStreamPartition(streamPartId),
@@ -104,13 +105,11 @@ export class SubscriberKeyExchange {
                 await this.authentication.getAddress(),
                 createRandomMsgChainId()
             ),
+            serializedContent: JSON.stringify(requestContent),
             messageType: StreamMessageType.GROUP_KEY_REQUEST,
             encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
-            content: requestContent,
-            signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
+            authentication: this.authentication
         })
-        request.signature = await this.authentication.createMessagePayloadSignature(request.getPayloadToSign())
-        return request
     }
 
     private async onMessage(msg: StreamMessage<any>): Promise<void> {

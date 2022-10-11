@@ -5,7 +5,8 @@ import {
     StreamID,
     StreamMessage,
     StreamMessageError,
-    ValidationError
+    ValidationError,
+    createSignaturePayload
 } from "streamr-client-protocol"
 import { verify as verifyImpl } from './utils/signingUtils'
 
@@ -116,7 +117,13 @@ export default class StreamMessageValidator {
         streamMessage: StreamMessage,
         verifyFn: (address: EthereumAddress, payload: string, signature: string) => boolean
     ): Promise<void> {
-        const payload = streamMessage.getPayloadToSign()
+        const payload = createSignaturePayload({
+            signatureType: streamMessage.signatureType,
+            messageId: streamMessage.getMessageID(),
+            serializedContent: streamMessage.getSerializedContent(),
+            prevMsgRef: streamMessage.prevMsgRef ?? undefined,
+            newGroupKey: streamMessage.newGroupKey ?? undefined
+        }) 
 
         if (streamMessage.signatureType === StreamMessage.SIGNATURE_TYPES.ETH) {
             let success

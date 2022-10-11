@@ -106,12 +106,14 @@ describe('duplicate message detection and avoidance', () => {
             content: {
                 hello: 'world'
             },
+            signature: 'signature'
         }))
         contactNode.publish(new StreamMessage({
             messageId: new MessageID(toStreamID('stream-id'), 0, 120, 0, PUBLISHER_ID, 'session'),
             content: {
                 hello: 'world'
             },
+            signature: 'signature'
         }))
 
         await waitForCondition(() => totalMessages > 9, 8000)

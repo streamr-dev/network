@@ -64,6 +64,7 @@ describe('StreamMessage', () => {
             const streamMessage = new StreamMessage({
                 messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
                 content: JSON.stringify(content),
+                signature: 'signature'
             })
             assert.strictEqual(streamMessage.getStreamId(), 'streamId')
             assert.strictEqual(streamMessage.getStreamPartition(), 0)
@@ -79,40 +80,29 @@ describe('StreamMessage', () => {
             assert.deepStrictEqual(streamMessage.getContent(), content)
             assert.strictEqual(streamMessage.getSerializedContent(), JSON.stringify(content))
             assert.strictEqual(streamMessage.getNewGroupKey(), null)
-            assert.strictEqual(streamMessage.signatureType, StreamMessage.SIGNATURE_TYPES.NONE)
-            assert.strictEqual(streamMessage.signature, null)
+            assert.strictEqual(streamMessage.signatureType, StreamMessage.SIGNATURE_TYPES.ETH)
+            assert.strictEqual(streamMessage.signature, 'signature')
         })
 
         it('create StreamMessage with object as content instead of string', () => {
             const streamMessage = new StreamMessage({
                 messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
                 content,
+                signature: 'signature'
             })
             assert.deepStrictEqual(streamMessage.getContent(), content)
             assert.strictEqual(streamMessage.getSerializedContent(), JSON.stringify(content))
         })
 
-        it('can detect signed/encrypted etc', () => {
+        it('can detect encrypted', () => {
             const streamMessage = new StreamMessage({
-                messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
-                content: JSON.stringify(content),
-            })
-            expect(StreamMessage.isEncrypted(streamMessage)).toBe(false)
-            expect(StreamMessage.isUnencrypted(streamMessage)).toBe(true)
-            expect(StreamMessage.isSigned(streamMessage)).toBe(false)
-            expect(StreamMessage.isUnsigned(streamMessage)).toBe(true)
-
-            const signedMessage = new StreamMessage({
                 messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
                 content: JSON.stringify(content),
                 signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
                 signature: 'something'
             })
-
-            expect(StreamMessage.isEncrypted(signedMessage)).toBe(false)
-            expect(StreamMessage.isUnencrypted(signedMessage)).toBe(true)
-            expect(StreamMessage.isSigned(signedMessage)).toBe(true)
-            expect(StreamMessage.isUnsigned(signedMessage)).toBe(false)
+            expect(StreamMessage.isEncrypted(streamMessage)).toBe(false)
+            expect(StreamMessage.isUnencrypted(streamMessage)).toBe(true)
             const encryptedMessage = new StreamMessage({
                 messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
                 content: JSON.stringify(content),
@@ -123,8 +113,6 @@ describe('StreamMessage', () => {
 
             expect(StreamMessage.isEncrypted(encryptedMessage)).toBe(true)
             expect(StreamMessage.isUnencrypted(encryptedMessage)).toBe(false)
-            expect(StreamMessage.isSigned(encryptedMessage)).toBe(true)
-            expect(StreamMessage.isUnsigned(encryptedMessage)).toBe(false)
         })
 
         it('should throw if required fields are not defined', () => {
@@ -240,6 +228,7 @@ describe('StreamMessage', () => {
             const streamMessage = new StreamMessage({
                 messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
                 content: JSON.stringify(content),
+                signature: 'signature'
             })
             const streamMessageClone = streamMessage.clone()
             expect(streamMessageClone).not.toBe(streamMessage)

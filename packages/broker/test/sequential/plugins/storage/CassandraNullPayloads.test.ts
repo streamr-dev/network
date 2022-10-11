@@ -62,7 +62,8 @@ async function storeMockMessages({
                 toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
                 ''
             ),
-            content: JSON.stringify({})
+            content: JSON.stringify({}),
+            signature: 'signature'
         })
         storePromises.push(storage.store(msg))
     }

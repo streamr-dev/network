@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replace method `subscription.onResent(listener)` with `subscription.once('resendComplete', listener)`
 - Resend supports multiple storage nodes: the data is fetched from a random storage node
 - Enforce concurrency limit for smart contract calls (per contract, configurable with `maxConcurrentContractCalls` config option)
+- Enforce presence of message signatures
+  - all non-signed messages received by client are simply ignored
 - Method `stream.update()` parameter `props` is no longer optional
 - Rename method `getStorageNodesOf()` to `getStorageNodes()`
 - Rename method `getStoredStreamsOf()` to `getStoredStreams()`
@@ -48,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - use `subscription.on('error', cb)` to add an error listener
 - Remove configuration option `groupKeys`
   - use methods `updateEncryptionKey` and `addEncryptionKey` instead
+- Remove client configuration option `verifySignatures`
 - Remove client configuration option `client.network.name`
 - Remove client configuration option `client.debug`
 - Remove (non-functional) client configuration options `autoConnect`, `autoDisconnect`, and `maxRetries`

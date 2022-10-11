@@ -118,6 +118,7 @@ describe('Node-to-Node protocol version negotiation', () => {
             content: {
                 messageNo: i
             },
+            signature: 'signature'
         })
         nodeToNode1.sendData('node-endpoint2', msg1)
     })

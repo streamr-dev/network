@@ -1,17 +1,19 @@
 import 'reflect-metadata'
-import { GroupKey } from './../../src/encryption/GroupKey'
-import { StreamMessage, StreamPartID, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
+import { GroupKey, GroupKeyId } from './../../src/encryption/GroupKey'
+import { EncryptionType, MessageID, StreamMessage, StreamPartID, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
 import { Wallet } from '@ethersproject/wallet'
-import { createMockMessage } from './../test-utils/utils'
 import { MessageStream } from './../../src/subscribe/MessageStream'
 import { fastWallet, randomEthereumAddress } from "streamr-test-utils"
 import { createSubscribePipeline } from "../../src/subscribe/SubscribePipeline"
 import { mockContext } from '../test-utils/utils'
 import { collect } from '../../src/utils/GeneratorUtils'
-import { DecryptError } from '../../src/encryption/EncryptionUtil'
+import { DecryptError, EncryptionUtil } from '../../src/encryption/EncryptionUtil'
 import { Stream } from '../../src'
 import { DestroySignal } from '../../src/DestroySignal'
-import { sign } from '../../src/utils/signingUtils'
+import { createSignedMessage } from '../../src/publish/MessageFactory'
+import { createAuthentication } from '../../src/Authentication'
+import { StreamrClientEventEmitter } from '../../src/events'
+import { toEthereumAddress } from '@streamr/utils'
 
 const CONTENT = {
     foo: 'bar'
@@ -23,6 +25,29 @@ describe('SubscribePipeline', () => {
     let input: MessageStream
     let streamPartId: StreamPartID
     let publisher: Wallet
+
+    const createMessage = async (opts: { 
+        serializedContent?: string
+        encryptionType?: EncryptionType
+        groupKeyId?: GroupKeyId
+    } = {}): Promise<StreamMessage<unknown>> => {
+        const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
+        return createSignedMessage({
+            messageId: new MessageID(
+                streamId,
+                partition,
+                Date.now(),
+                0,
+                toEthereumAddress(publisher.address),
+                'mock-msgChainId'
+            ),
+            serializedContent: JSON.stringify(CONTENT),
+            authentication: createAuthentication({
+                privateKey: publisher.privateKey
+            }, undefined as any),
+            ...opts
+        })
+    }
 
     beforeEach(async () => {
         streamPartId = StreamPartIDUtils.parse(`${randomEthereumAddress()}/path#0`)
@@ -51,7 +76,7 @@ describe('SubscribePipeline', () => {
                 isStreamPublisher: async () => true,
                 clearStream: () => {}
             } as any,
-            streamrClientEventEmitter: undefined as any,
+            streamrClientEventEmitter: new StreamrClientEventEmitter(),
             destroySignal: new DestroySignal(context),
             rootConfig: {
                 decryption: {
@@ -62,11 +87,8 @@ describe('SubscribePipeline', () => {
     })
 
     it('happy path', async () => {
-        await input.push(await createMockMessage({
-            publisher,
-            streamPartId,
-            content: CONTENT
-        }))
+        const msg = await createMessage()
+        await input.push(msg)
         input.endWrite()
         const output = await collect(pipeline)
         expect(output).toHaveLength(1)
@@ -74,11 +96,7 @@ describe('SubscribePipeline', () => {
     })
 
     it('error: invalid signature', async () => {
-        const msg = await createMockMessage({
-            publisher,
-            streamPartId,
-            content: CONTENT
-        })
+        const msg = await createMessage()
         msg.signature = 'invalid-signature'
         await input.push(msg)
         input.endWrite()
@@ -92,12 +110,9 @@ describe('SubscribePipeline', () => {
     })
 
     it('error: invalid content', async () => {
-        const msg = await createMockMessage({
-            publisher,
-            streamPartId
+        const msg = await createMessage({
+            serializedContent: '{ invalid-json',
         })
-        msg.serializedContent = '{ invalid-json'
-        msg.signature = sign(msg.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), publisher.privateKey)
         await input.push(msg)
         input.endWrite()
         const onError = jest.fn()
@@ -111,11 +126,11 @@ describe('SubscribePipeline', () => {
 
     it('error: no encryption key available', async () => {
         const encryptionKey = GroupKey.generate()
-        await input.push(await createMockMessage({
-            publisher,
-            streamPartId,
-            content: CONTENT,
-            encryptionKey
+        const serializedContent = EncryptionUtil.encryptWithAES(Buffer.from(JSON.stringify(CONTENT), 'utf8'), encryptionKey.data)
+        await input.push(await createMessage({
+            serializedContent,
+            encryptionType: EncryptionType.AES,
+            groupKeyId: encryptionKey.id
         }))
         input.endWrite()
         const onError = jest.fn()
@@ -124,6 +139,7 @@ describe('SubscribePipeline', () => {
         expect(onError).toBeCalledTimes(1)
         const error = onError.mock.calls[0][0]
         expect(error).toBeInstanceOf(DecryptError)
+        expect(error.message).toMatch(/timed out/)
         expect(output).toEqual([])
     })
 })

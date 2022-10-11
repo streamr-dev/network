@@ -86,6 +86,7 @@ function createMsg({ publisherId, timestamp }: MessageInfo): StreamMessage {
         messageId,
         prevMsgRef,
         content: {},
+        signature: 'signature'
     })
 }
 

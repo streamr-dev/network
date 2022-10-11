@@ -32,7 +32,8 @@ function buildMsg(
             publisherId,
             msgChainId
         ),
-        content: JSON.stringify(content)
+        content: JSON.stringify(content),
+        signature: 'signature'
     })
 }
 

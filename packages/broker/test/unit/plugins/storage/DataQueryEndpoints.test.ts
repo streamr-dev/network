@@ -40,6 +40,7 @@ describe('DataQueryEndpoints', () => {
                 'msgChainId'
             ),
             content,
+            signature: 'signature'
         })
     }
 

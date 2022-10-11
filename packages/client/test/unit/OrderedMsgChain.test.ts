@@ -1,15 +1,15 @@
 import assert from 'assert'
 
 import shuffle from 'array-shuffle'
-import {
-    MessageID,
-    MessageRef,
-    StreamMessage,
-    toStreamID
-} from 'streamr-client-protocol'
+import { MessageID, MessageRef, StreamMessage, toStreamID } from 'streamr-client-protocol'
 import OrderedMsgChain from '../../src/subscribe/ordering/OrderedMsgChain'
 import GapFillFailedError from '../../src/subscribe/ordering/GapFillFailedError'
+import { createSignedMessage } from '../../src/publish/MessageFactory'
+import { createRandomAuthentication } from '../test-utils/utils'
+import { Defer } from '../../src/utils/Defer'
 import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
+
+const authentication = createRandomAuthentication()
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
@@ -35,7 +35,7 @@ function splitArrayIntoChunks<T>(array: T[], numChunks = 1): T[][] {
     return result
 }
 
-const createMsg = ({
+const createMsg = async ({
     timestamp = 1,
     sequenceNumber = 0,
     prevTimestamp = null,
@@ -53,21 +53,31 @@ const createMsg = ({
     msgChainId?: string
 } = {}) => {
     const prevMsgRef = prevTimestamp ? new MessageRef(prevTimestamp, prevSequenceNumber) : null
-    return new StreamMessage({
+    return createSignedMessage({
         messageId: new MessageID(toStreamID('streamId'), 0, timestamp, sequenceNumber, publisherId, msgChainId),
         prevMsgRef,
-        content,
+        serializedContent: JSON.stringify(content),
+        authentication
     })
 }
 
 describe('OrderedMsgChain', () => {
-    const msg1 = createMsg({ timestamp: 1, sequenceNumber: 0 })
-    const msg2 = createMsg({ timestamp: 2, sequenceNumber: 0, prevTimestamp: 1, prevSequenceNumber: 0 })
-    const msg3 = createMsg({ timestamp: 3, sequenceNumber: 0, prevTimestamp: 2, prevSequenceNumber: 0 })
-    const msg4 = createMsg({ timestamp: 4, sequenceNumber: 0, prevTimestamp: 3, prevSequenceNumber: 0 })
-    const msg5 = createMsg({ timestamp: 5, sequenceNumber: 0, prevTimestamp: 4, prevSequenceNumber: 0 })
-    const msg6 = createMsg({ timestamp: 6, sequenceNumber: 0, prevTimestamp: 5, prevSequenceNumber: 0 })
+    let msg1: StreamMessage
+    let msg2: StreamMessage
+    let msg3: StreamMessage
+    let msg4: StreamMessage
+    let msg5: StreamMessage
+    let msg6: StreamMessage
     let util: OrderedMsgChain
+
+    beforeEach(async () => {
+        msg1 = await createMsg({ timestamp: 1, sequenceNumber: 0 })
+        msg2 = await createMsg({ timestamp: 2, sequenceNumber: 0, prevTimestamp: 1, prevSequenceNumber: 0 })
+        msg3 = await createMsg({ timestamp: 3, sequenceNumber: 0, prevTimestamp: 2, prevSequenceNumber: 0 })
+        msg4 = await createMsg({ timestamp: 4, sequenceNumber: 0, prevTimestamp: 3, prevSequenceNumber: 0 })
+        msg5 = await createMsg({ timestamp: 5, sequenceNumber: 0, prevTimestamp: 4, prevSequenceNumber: 0 })
+        msg6 = await createMsg({ timestamp: 6, sequenceNumber: 0, prevTimestamp: 5, prevSequenceNumber: 0 })
+    })
 
     afterEach(() => {
         util.clearGap()
@@ -105,7 +115,7 @@ describe('OrderedMsgChain', () => {
         expect(onDrain).toHaveBeenCalledTimes(1) // should have queued > 1
     })
 
-    it('handles unchained messages in the order in which they arrive if they are newer', () => {
+    it('handles unchained messages in the order in which they arrive if they are newer', async () => {
         const onDrain = jest.fn()
         // NOTE: this behaviour isn't ideal, perhaps debounce in the hope that
         // a better ordering appears?  When unchained messages arrive they just
@@ -118,9 +128,9 @@ describe('OrderedMsgChain', () => {
         // get a better ordering Perhaps we could add a momentary delay for
         // unchained, or even initial messages, in the hopes that more ordered
         // messages will arrive shortly
-        const m2 = createMsg({ timestamp: 4, sequenceNumber: 0 })
-        const m3 = createMsg({ timestamp: 7, sequenceNumber: 0 })
-        const m4 = createMsg({ timestamp: 17, sequenceNumber: 0 })
+        const m2 = await createMsg({ timestamp: 4, sequenceNumber: 0 })
+        const m3 = await createMsg({ timestamp: 7, sequenceNumber: 0 })
+        const m4 = await createMsg({ timestamp: 17, sequenceNumber: 0 })
         const received: StreamMessage[] = []
         util = new OrderedMsgChain(PUBLISHER_ID, 'msgChainId', (msg: StreamMessage) => {
             received.push(msg)
@@ -134,8 +144,9 @@ describe('OrderedMsgChain', () => {
         expect(onDrain).toHaveBeenCalledTimes(0) // nothing should have queued
     })
 
-    it('handles unchained messages arriving that fill a gap', (done) => {
-        const unchainedMsg2 = createMsg({ timestamp: 2, sequenceNumber: 0 })
+    it('handles unchained messages arriving that fill a gap', async () => {
+        const done = Defer()
+        const unchainedMsg2 = await createMsg({ timestamp: 2, sequenceNumber: 0 })
         const received: StreamMessage[] = []
         util = new OrderedMsgChain(PUBLISHER_ID, 'msgChainId', (msg: StreamMessage) => {
             received.push(msg)
@@ -145,17 +156,19 @@ describe('OrderedMsgChain', () => {
 
         util.once('drain', () => {
             expect(received).toEqual([msg1, unchainedMsg2, msg3])
-            done()
+            done.resolve(undefined)
         })
         util.add(msg1)
         util.add(msg3)
+        await done
     })
 
-    it('handles out-of-order unchained messages arriving that partially fill a gap', (done) => {
+    it('handles out-of-order unchained messages arriving that partially fill a gap', async () => {
+        const done = Defer()
         // ensures unchained messages don't break anything during gapfill
         // take a chain with multiple gaps, and fill them in reverse order using unchained messages.
-        const unchainedMsg2 = createMsg({ timestamp: 2, sequenceNumber: 0 })
-        const unchainedMsg4 = createMsg({ timestamp: 4, sequenceNumber: 0 })
+        const unchainedMsg2 = await createMsg({ timestamp: 2, sequenceNumber: 0 })
+        const unchainedMsg4 = await createMsg({ timestamp: 4, sequenceNumber: 0 })
         const received: StreamMessage[] = []
         let count = 0
         util = new OrderedMsgChain(PUBLISHER_ID, 'msgChainId', (msg: StreamMessage) => {
@@ -183,13 +196,14 @@ describe('OrderedMsgChain', () => {
 
         util.once('drain', () => {
             expect(received).toEqual([msg1, unchainedMsg2, msg3, unchainedMsg4, msg5])
-            done()
+            done.resolve(undefined)
         })
 
         // 1. add chain with multiple gaps
         util.add(msg1)
         util.add(msg3)
         util.add(msg5)
+        await done
     })
 
     it('drops duplicates', () => {
@@ -617,10 +631,10 @@ describe('OrderedMsgChain', () => {
         })
     })
 
-    it('handles unordered messages in order (large randomized test)', () => {
+    it('handles unordered messages in order (large randomized test)', async () => {
         const expected = [msg1]
         for (let i = 2; i <= 1000; i++) {
-            expected.push(createMsg({ timestamp: i, sequenceNumber: 0, prevTimestamp: i - 1, prevSequenceNumber: 0 }))
+            expected.push(await createMsg({ timestamp: i, sequenceNumber: 0, prevTimestamp: i - 1, prevSequenceNumber: 0 }))
         }
         const shuffled = shuffle(expected)
         const received: StreamMessage[] = []
@@ -648,13 +662,14 @@ describe('OrderedMsgChain', () => {
         }
     })
 
-    it('handles unordered messages in order with gapfill (large randomized test)', (done) => {
+    it('handles unordered messages in order with gapfill (large randomized test)', async () => {
+        const done = Defer()
         // this test breaks a large number of messages in random order, with duplicates, into chunks
         // each time queue is drained or gap is detected, it adds the next chunk of messages.
         const expected = [msg1]
         const NUM_CHUNKS = 12
         for (let i = 2; i <= 1000; i++) {
-            expected.push(createMsg({
+            expected.push(await createMsg({
                 timestamp: i,
                 sequenceNumber: 0,
                 prevTimestamp: i - 1,
@@ -707,11 +722,11 @@ describe('OrderedMsgChain', () => {
                 })
 
                 expect(received)
-                done(new Error('Was expecting to receive messages ordered per timestamp but instead received timestamps in this '
+                done.reject(new Error('Was expecting to receive messages ordered per timestamp but instead received timestamps in this '
                     + `order:\n${receivedTimestamps}.\nThe unordered messages were processed in the following timestamp order:\n${timestamps}`))
                 return
             }
-            done()
+            done.resolve(undefined)
         }
 
         const received: StreamMessage[] = []
@@ -735,5 +750,6 @@ describe('OrderedMsgChain', () => {
         util.add(msg1)
 
         next()
+        await done
     }, 10000)
 })

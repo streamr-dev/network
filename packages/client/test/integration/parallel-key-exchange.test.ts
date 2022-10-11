@@ -7,10 +7,11 @@ import { Stream } from '../../src/Stream'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { Wallet } from '@ethersproject/wallet'
 import { StreamMessage } from 'streamr-client-protocol'
-import { toEthereumAddress, wait } from '@streamr/utils'
+import { wait } from '@streamr/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { MessageFactory } from '../../src/publish/MessageFactory'
 import { createAuthentication } from '../../src/Authentication'
+import { createGroupKeyQueue, createStreamRegistryCached } from '../test-utils/utils'
 
 const PUBLISHER_COUNT = 50
 const MESSAGE_COUNT_PER_PUBLISHER = 3
@@ -54,17 +55,17 @@ describe('parallel key exchange', () => {
         const sub = await subscriber.subscribe(stream.id)
 
         for (const publisher of PUBLISHERS) {
-            const authentication = createAuthentication({
-                privateKey: publisher.wallet.privateKey
-            }, undefined as any)
             const messageFactory = new MessageFactory({
-                publisherId: toEthereumAddress(publisher.wallet.address),
                 streamId: stream.id,
-                getPartitionCount: async () => 1,
-                isPublicStream: async () => false,
-                isPublisher: async () => true,
-                createSignature: async (payload: string) => authentication.createMessagePayloadSignature(payload),
-                useGroupKey: async () => ({ current: publisher.groupKey })
+                authentication: createAuthentication({
+                    privateKey: publisher.wallet.privateKey
+                }, undefined as any),
+                streamRegistry: createStreamRegistryCached({
+                    partitionCount: 1,
+                    isPublicStream: false,
+                    isStreamPublisher: true
+                }),
+                groupKeyQueue: await createGroupKeyQueue(publisher.groupKey)
             })
             for (let i = 0; i < MESSAGE_COUNT_PER_PUBLISHER; i++) {
                 const msg = await messageFactory.createMessage({
