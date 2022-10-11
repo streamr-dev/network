@@ -26,7 +26,7 @@ export interface MessageFactoryOptions {
 }
 
 export const createSignedMessage = async <T>(
-    opts: Omit<StreamMessageOptions<T>, 'signature' | 'signatureType' | 'content'>
+    opts: Omit<StreamMessageOptions<T>, 'signature' | 'content'>
     & { serializedContent: string, authentication: Authentication }
 ): Promise<StreamMessage<T>> => {
     const signature = await opts.authentication.createMessageSignature(createSignaturePayload({
@@ -37,7 +37,6 @@ export const createSignedMessage = async <T>(
     }))
     return new StreamMessage<T>({
         ...opts,
-        signatureType: SignatureType.ETH,
         signature,
         content: opts.serializedContent,
     })
