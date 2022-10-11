@@ -2,9 +2,7 @@
  * Client-wide destroy signal.
  */
 import { scoped, Lifecycle } from 'tsyringe'
-import { instanceId } from './utils/utils'
 
-import { Context, ContextError } from './utils/Context'
 import { Signal } from './utils/Signal'
 
 /**
@@ -13,16 +11,13 @@ import { Signal } from './utils/Signal'
  * Trigger this to destroy the client.
  */
 @scoped(Lifecycle.ContainerScoped)
-export class DestroySignal implements Context {
-    public onDestroy = Signal.once()
-    public trigger = this.destroy
-    readonly id = instanceId(this)
-    readonly debug
+export class DestroySignal {
+    public readonly onDestroy = Signal.once()
+    public readonly trigger = this.destroy
 
-    constructor(context: Context) {
-        this.debug = context.debug.extend(this.id)
+    constructor() {
         this.onDestroy.listen(() => {
-            this.debug('triggered')
+            // no-op, needed?
         })
     }
 
@@ -30,9 +25,9 @@ export class DestroySignal implements Context {
         return this.onDestroy.trigger()
     }
 
-    assertNotDestroyed(context: Context, msg = 'Client is destroyed. Create a new instance'): void {
+    assertNotDestroyed(): void {
         if (this.isDestroyed()) {
-            throw new ContextError(context, msg)
+            throw new StreamrClientError('Client is destroyed. Create a new instance')
         }
     }
 

@@ -96,7 +96,7 @@ export class NetworkNodeFacade implements Context {
     }
 
     private assertNotDestroyed(): void {
-        this.destroySignal.assertNotDestroyed(this)
+        this.destroySignal.assertNotDestroyed()
     }
 
     private async getNormalizedNetworkOptions(): Promise<NetworkNodeOptions> {
@@ -229,7 +229,7 @@ export class NetworkNodeFacade implements Context {
         // Otherwise will wait for node to start.
         this.debug('publishToNode >> %o', streamMessage.getMessageID())
         try {
-            this.destroySignal.assertNotDestroyed(this)
+            this.destroySignal.assertNotDestroyed()
 
             if (this.isStarting()) {
                 // use .then instead of async/await so
