@@ -112,9 +112,6 @@ describe('StreamrClient', () => {
                 sub.unsubscribe()
                 const parsedContent = streamMessage.getParsedContent()
                 expect(parsedContent).toEqual(msg)
-
-                // Check signature stuff
-                expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
                 expect(streamMessage.getPublisherId()).toBeTruthy()
                 expect(streamMessage.signature).toBeTruthy()
             }))
@@ -130,9 +127,6 @@ describe('StreamrClient', () => {
             const msg = Msg()
             await client.subscribe<typeof msg>(streamDefinition, done.wrap(async (parsedContent, streamMessage) => {
                 expect(parsedContent).toEqual(msg)
-
-                // Check signature stuff
-                expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
                 expect(streamMessage.getPublisherId()).toBeTruthy()
                 expect(streamMessage.signature).toBeTruthy()
             }))
@@ -184,8 +178,6 @@ describe('StreamrClient', () => {
             const received: StreamMessage[] = []
             const sub = await client.subscribe<any>(streamDefinition, done.wrapError((_content, streamMessage) => {
                 received.push(streamMessage)
-                // Check signature stuff
-                expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
                 expect(streamMessage.getPublisherId()).toBeTruthy()
                 expect(streamMessage.signature).toBeTruthy()
                 if (received.length === MAX_MESSAGES) {

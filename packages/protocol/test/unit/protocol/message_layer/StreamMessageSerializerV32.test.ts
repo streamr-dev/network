@@ -9,6 +9,7 @@ import {
     ValidationError
 } from '../../../../src/index'
 import { toEthereumAddress } from '@streamr/utils'
+import { SIGNATURE_TYPE_ETH } from '../../../../src/protocol/message_layer/StreamMessageSerializerV32'
 
 const VERSION = 32
 
@@ -24,7 +25,6 @@ const message = new StreamMessage({
     groupKeyId: 'groupKeyId',
     encryptionType: StreamMessage.ENCRYPTION_TYPES.AES,
     newGroupKey: new EncryptedGroupKey('groupKeyId', 'encryptedGroupKeyHex', '["groupKeyId","encryptedGroupKeyHex"]'),
-    signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
     signature: 'signature',
 })
 const serializedMessage = JSON.stringify([
@@ -37,7 +37,7 @@ const serializedMessage = JSON.stringify([
     'groupKeyId',
     'encrypted-content',
     '["groupKeyId","encryptedGroupKeyHex"]',
-    StreamMessage.SIGNATURE_TYPES.ETH,
+    SIGNATURE_TYPE_ETH,
     'signature'
 ])
 
