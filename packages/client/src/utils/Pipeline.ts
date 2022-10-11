@@ -1,14 +1,12 @@
 import { instanceId } from './utils'
 import { pOnce } from './promises'
-import { Debug } from './log'
 import { iteratorFinally } from './iterators'
-import { ContextError } from './Context'
 import * as G from './GeneratorUtils'
 import { ErrorSignal, Signal } from './Signal'
 
 export type PipelineTransform<InType = any, OutType = any> = (src: AsyncGenerator<InType>) => AsyncGenerator<OutType>
 
-class PipelineError extends ContextError {}
+class PipelineError extends StreamrClientError {}
 
 type AsyncGeneratorWithId<T> = AsyncGenerator<T> & {
     id: string
@@ -79,10 +77,6 @@ class PipelineDefinition<InType, OutType = InType> {
 }
 
 export class Pipeline<InType, OutType = InType> implements IPipeline<InType, OutType> {
-    /** @internal */
-    id
-    /** @internal */
-    debug
     protected iterator: AsyncGenerator<OutType>
     private isIterating = false
     /** @internal */
@@ -91,8 +85,6 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
 
     /** @internal */
     constructor(public source: AsyncGenerator<InType>, definition?: PipelineDefinition<InType, OutType>) {
-        this.id = instanceId(this)
-        this.debug = Debug(this.id)
         this.definition = definition || new PipelineDefinition<InType, OutType>(source)
         this.cleanup = pOnce(this.cleanup.bind(this))
         this.iterator = iteratorFinally(this.iterate(), this.cleanup)
@@ -106,7 +98,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
      */
     pipe<NewOutType>(fn: PipelineTransform<OutType, NewOutType>): Pipeline<InType, NewOutType> {
         if (this.isIterating) {
-            throw new PipelineError(this, `cannot pipe after already iterating: ${this.isIterating}`)
+            throw new PipelineError(`cannot pipe after already iterating: ${this.isIterating}`)
         }
         this.definition.pipe(fn)
         // this allows .pipe chaining to be type aware
@@ -121,7 +113,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
      */
     pipeBefore(fn: PipelineTransform<InType, InType>): Pipeline<InType, OutType> {
         if (this.isIterating) {
-            throw new PipelineError(this, `cannot pipe after already iterating: ${this.isIterating}`)
+            throw new PipelineError(`cannot pipe after already iterating: ${this.isIterating}`)
         }
 
         this.definition.pipeBefore(fn)
@@ -254,7 +246,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
 
         // this.debug('iterate', this.definition.source)
         if (!this.definition.source) {
-            throw new PipelineError(this, 'no source')
+            throw new PipelineError('no source')
         }
 
         const transforms = this.definition.getTransforms()
@@ -328,7 +320,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
 
     [Symbol.asyncIterator](): this {
         if (this.isIterating) {
-            throw new PipelineError(this, 'already iterating')
+            throw new PipelineError('already iterating')
         }
 
         return this
