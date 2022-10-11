@@ -1,7 +1,5 @@
 import { scoped, Lifecycle, inject } from 'tsyringe'
 import { join } from 'path'
-import { instanceId } from '../utils/utils'
-import { Context } from '../utils/Context'
 import { GroupKey, GroupKeyId } from './GroupKey'
 import { StreamID } from 'streamr-client-protocol'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -9,6 +7,8 @@ import { StreamrClientEventEmitter } from '../events'
 import { Persistence } from '../utils/persistence/Persistence'
 import ServerPersistence from '../utils/persistence/ServerPersistence'
 import { pOnce } from '../utils/promises'
+import { LoggerFactory } from '../utils/LoggerFactory'
+import { Logger } from '@streamr/utils'
 
 // In the client API we use the term EncryptionKey instead of GroupKey.
 // The GroupKey name comes from the protocol. TODO: we could rename all classes
@@ -21,23 +21,21 @@ export interface UpdateEncryptionKeyOptions {
 }
 
 @scoped(Lifecycle.ContainerScoped)
-export class GroupKeyStore implements Context {
-    readonly id
-    readonly debug
+export class GroupKeyStore {
+    private readonly logger: Logger
+    private readonly ensureInitialized: () => Promise<void>
     private persistence: Persistence<GroupKeyId, string> | undefined
-    private ensureInitialized: () => Promise<void>
 
     constructor(
-        context: Context,
+        @inject(LoggerFactory) loggerFactory: LoggerFactory,
         @inject(AuthenticationInjectionToken) private authentication: Authentication,
         @inject(StreamrClientEventEmitter) private eventEmitter: StreamrClientEventEmitter
     ) {
-        this.id = instanceId(this)
-        this.debug = context.debug.extend(this.id)
+        this.logger = loggerFactory.createLogger(module)
         this.ensureInitialized = pOnce(async () => {
             const clientId = await this.authentication.getAddress()
             this.persistence = new ServerPersistence({
-                context: this,
+                loggerFactory,
                 tableName: 'GroupKeys',
                 valueColumnName: 'groupKey',
                 clientId,
@@ -55,7 +53,7 @@ export class GroupKeyStore implements Context {
 
     async add(key: GroupKey, streamId: StreamID): Promise<void> {
         await this.ensureInitialized()
-        this.debug('Add key %s', key.id)
+        this.logger.debug('add key %s', key.id)
         await this.persistence!.set(key.id, key.hex, streamId)
         this.eventEmitter.emit('addGroupKey', key)
     }
