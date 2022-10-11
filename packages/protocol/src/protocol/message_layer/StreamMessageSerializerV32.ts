@@ -7,7 +7,7 @@ import { Serializer } from '../../Serializer'
 import ValidationError from '../../errors/ValidationError'
 
 const VERSION = 32
-const SIGNATURE_TYPE_ETH = 2
+export const SIGNATURE_TYPE_ETH = 2
 
 /* eslint-disable class-methods-use-this */
 export default class StreamMessageSerializerV32 extends Serializer<StreamMessage> {
@@ -22,7 +22,7 @@ export default class StreamMessageSerializerV32 extends Serializer<StreamMessage
             streamMessage.groupKeyId,
             streamMessage.serializedContent,
             streamMessage.newGroupKey ? streamMessage.newGroupKey.serialize() : null,
-            streamMessage.signatureType,
+            SIGNATURE_TYPE_ETH,
             streamMessage.signature,
         ]
     }
@@ -39,7 +39,7 @@ export default class StreamMessageSerializerV32 extends Serializer<StreamMessage
             serializedContent,
             serializedNewGroupKey,
             signatureType,
-            signature,
+            signature
         ] = arr
 
         if (signatureType !== SIGNATURE_TYPE_ETH) {
@@ -55,8 +55,7 @@ export default class StreamMessageSerializerV32 extends Serializer<StreamMessage
             encryptionType,
             groupKeyId,
             newGroupKey: serializedNewGroupKey ? EncryptedGroupKey.deserialize(serializedNewGroupKey) : null,
-            signatureType,
-            signature,
+            signature
         })
     }
 }
