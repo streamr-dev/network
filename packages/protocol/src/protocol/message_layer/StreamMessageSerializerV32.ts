@@ -4,8 +4,10 @@ import MessageID from './MessageID'
 import EncryptedGroupKey from './EncryptedGroupKey'
 
 import { Serializer } from '../../Serializer'
+import ValidationError from '../../errors/ValidationError'
 
 const VERSION = 32
+export const SIGNATURE_TYPE_ETH = 2
 
 /* eslint-disable class-methods-use-this */
 export default class StreamMessageSerializerV32 extends Serializer<StreamMessage> {
@@ -20,7 +22,7 @@ export default class StreamMessageSerializerV32 extends Serializer<StreamMessage
             streamMessage.groupKeyId,
             streamMessage.serializedContent,
             streamMessage.newGroupKey ? streamMessage.newGroupKey.serialize() : null,
-            streamMessage.signatureType,
+            SIGNATURE_TYPE_ETH,
             streamMessage.signature,
         ]
     }
@@ -37,8 +39,12 @@ export default class StreamMessageSerializerV32 extends Serializer<StreamMessage
             serializedContent,
             serializedNewGroupKey,
             signatureType,
-            signature,
+            signature
         ] = arr
+
+        if (signatureType !== SIGNATURE_TYPE_ETH) {
+            throw new ValidationError(`Unsupported signature type: ${signatureType}`)
+        }
 
         return new StreamMessage({
             messageId: MessageID.fromArray(messageIdArr),
@@ -49,8 +55,7 @@ export default class StreamMessageSerializerV32 extends Serializer<StreamMessage
             encryptionType,
             groupKeyId,
             newGroupKey: serializedNewGroupKey ? EncryptedGroupKey.deserialize(serializedNewGroupKey) : null,
-            signatureType,
-            signature,
+            signature
         })
     }
 }

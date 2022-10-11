@@ -28,7 +28,6 @@ const msg = ({ timestamp = 1564046332168, sequenceNumber = 10, ...overrides } = 
         content: JSON.stringify(content),
         messageType: StreamMessage.MESSAGE_TYPES.MESSAGE,
         encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
-        signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
         signature: 'signature',
         newGroupKey,
         ...overrides
@@ -55,7 +54,6 @@ describe('StreamMessage', () => {
             assert.deepStrictEqual(streamMessage.getContent(), content)
             assert.strictEqual(streamMessage.getSerializedContent(), JSON.stringify(content))
             assert.deepStrictEqual(streamMessage.getNewGroupKey(), newGroupKey)
-            assert.strictEqual(streamMessage.signatureType, StreamMessage.SIGNATURE_TYPES.ETH)
             assert.strictEqual(streamMessage.signature, 'signature')
             assert.strictEqual(streamMessage.getStreamPartID(), StreamPartIDUtils.parse('streamId#0'))
         })
@@ -80,7 +78,6 @@ describe('StreamMessage', () => {
             assert.deepStrictEqual(streamMessage.getContent(), content)
             assert.strictEqual(streamMessage.getSerializedContent(), JSON.stringify(content))
             assert.strictEqual(streamMessage.getNewGroupKey(), null)
-            assert.strictEqual(streamMessage.signatureType, StreamMessage.SIGNATURE_TYPES.ETH)
             assert.strictEqual(streamMessage.signature, 'signature')
         })
 
@@ -98,7 +95,6 @@ describe('StreamMessage', () => {
             const streamMessage = new StreamMessage({
                 messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
                 content: JSON.stringify(content),
-                signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
                 signature: 'something'
             })
             expect(StreamMessage.isEncrypted(streamMessage)).toBe(false)
@@ -106,7 +102,6 @@ describe('StreamMessage', () => {
             const encryptedMessage = new StreamMessage({
                 messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
                 content: JSON.stringify(content),
-                signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
                 signature: 'something',
                 encryptionType: StreamMessage.ENCRYPTION_TYPES.RSA,
             })
@@ -240,7 +235,6 @@ describe('StreamMessage', () => {
             const encryptedMessage = new StreamMessage({
                 messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
                 content: JSON.stringify(content),
-                signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
                 signature: 'something',
                 encryptionType: StreamMessage.ENCRYPTION_TYPES.RSA,
                 prevMsgRef: new MessageRef(1564046332168, 5),

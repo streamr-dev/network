@@ -48,13 +48,13 @@ export class GroupKeyStore {
         await this.ensureInitialized()
         const value = await this.persistence!.get(keyId, streamId)
         if (value === undefined) { return undefined }
-        return new GroupKey(keyId, value)
+        return new GroupKey(keyId, Buffer.from(value, 'hex'))
     }
 
     async add(key: GroupKey, streamId: StreamID): Promise<void> {
         await this.ensureInitialized()
         this.logger.debug('add key %s', key.id)
-        await this.persistence!.set(key.id, key.hex, streamId)
+        await this.persistence!.set(key.id, Buffer.from(key.data).toString('hex'), streamId)
         this.eventEmitter.emit('addGroupKey', key)
     }
 
