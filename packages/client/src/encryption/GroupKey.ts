@@ -69,25 +69,6 @@ export class GroupKey {
         }
     }
 
-    equals(other: GroupKey): boolean {
-        if (!(other instanceof GroupKey)) {
-            return false
-        }
-        return this === other || (this.hex === other.hex && this.id === other.id)
-    }
-
-    toString(): string {
-        return this.id
-    }
-
-    toArray(): string[] {
-        return [this.id, this.hex]
-    }
-
-    serialize(): string {
-        return JSON.stringify(this.toArray())
-    }
-
     static generate(id = uuid('GroupKey')): GroupKey {
         const keyBytes = crypto.randomBytes(32)
         return new GroupKey(id, keyBytes)
