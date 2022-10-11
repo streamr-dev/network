@@ -1,10 +1,5 @@
-import { instanceId } from './utils'
 import { Gate } from './Gate'
-import { Debug } from './log'
-import { Context, ContextError } from './Context'
 import * as G from './GeneratorUtils'
-
-export class PushBufferError extends ContextError {}
 
 export const DEFAULT_BUFFER_SIZE = 256
 
@@ -35,19 +30,14 @@ export type IPushBuffer<InType, OutType = InType> = {
     isDone(): boolean
     clear(): void
     collect(n?: number): Promise<OutType[]>
-} & Context & AsyncGenerator<OutType>
+} & AsyncGenerator<OutType>
 
 /**
  * Implements an async buffer.
  * Push items into buffer, push will async block once buffer is full.
  * and will unblock once buffer has been consumed.
  */
-export class PushBuffer<T> implements IPushBuffer<T>, Context {
-    static Error = PushBufferError
-
-    readonly id
-    readonly debug
-
+export class PushBuffer<T> implements IPushBuffer<T> {
     protected buffer: (T | Error)[] = []
     readonly bufferSize: number
 
@@ -60,18 +50,15 @@ export class PushBuffer<T> implements IPushBuffer<T>, Context {
     protected iterator: AsyncGenerator<T>
     protected isIterating = false
 
-    constructor(bufferSize = DEFAULT_BUFFER_SIZE, options: PushBufferOptions = {}) {
-        this.id = instanceId(this, options.name)
-        this.debug = Debug(this.id)
-
+    constructor(bufferSize = DEFAULT_BUFFER_SIZE) {
         if (!(bufferSize > 0 && Number.isSafeInteger(bufferSize))) {
-            throw new PushBufferError(this, `bufferSize must be a safe positive integer, got: ${bufferSize}`)
+            throw new StreamrClientError(`bufferSize must be a safe positive integer, got: ${bufferSize}`)
         }
 
         this.bufferSize = bufferSize
         // start both closed
-        this.writeGate = new Gate(`${this.id}-write`)
-        this.readGate = new Gate(`${this.id}-read`)
+        this.writeGate = new Gate()
+        this.readGate = new Gate()
         this.writeGate.close()
         this.readGate.close()
         this.iterator = this.iterate()
