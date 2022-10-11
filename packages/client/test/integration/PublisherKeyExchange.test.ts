@@ -43,7 +43,7 @@ describe('PublisherKeyExchange', () => {
         await publisherClient.publish(streamPartId, {})
     }
 
-    const testSuccessResponse = async (actualResponse: StreamMessage, expectedGroupKey: GroupKey): Promise<void> => {
+    const assertValidResponse = async (actualResponse: StreamMessage, expectedGroupKey: GroupKey): Promise<void> => {
         expect(actualResponse).toMatchObject({
             messageId: {
                 streamId: StreamPartIDUtils.getStreamID(streamPartId),
@@ -100,7 +100,7 @@ describe('PublisherKeyExchange', () => {
             const response = await environment.getNetwork().waitForSentMessage({
                 messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE
             })
-            await testSuccessResponse(response!, key)
+            await assertValidResponse(response!, key)
         })
     })
 })
