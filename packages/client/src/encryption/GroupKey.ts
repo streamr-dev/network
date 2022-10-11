@@ -34,11 +34,9 @@ export class GroupKey {
         if (!groupKeyId) {
             throw new GroupKeyError(`groupKeyId must not be falsey ${groupKeyId}`)
         }
-
         if (!groupKeyBufferOrHexString) {
             throw new GroupKeyError(`groupKeyBufferOrHexString must not be falsey ${groupKeyBufferOrHexString}`)
         }
-
         if (typeof groupKeyBufferOrHexString === 'string') {
             this.hex = groupKeyBufferOrHexString
             this.data = Buffer.from(this.hex, 'hex')
@@ -46,7 +44,6 @@ export class GroupKey {
             this.data = groupKeyBufferOrHexString
             this.hex = Buffer.from(this.data).toString('hex')
         }
-
         GroupKey.validate(this)
     }
 
@@ -54,30 +51,24 @@ export class GroupKey {
         if (!maybeGroupKey) {
             throw new GroupKeyError(`value must be a ${this.name}: ${maybeGroupKey}`, maybeGroupKey)
         }
-
         if (!(maybeGroupKey instanceof this)) {
             throw new GroupKeyError(`value must be a ${this.name}: ${maybeGroupKey}`, maybeGroupKey)
         }
-
         if (!maybeGroupKey.id || typeof maybeGroupKey.id !== 'string') {
             throw new GroupKeyError(`${this.name} id must be a string: ${maybeGroupKey}`, maybeGroupKey)
         }
-
         if (maybeGroupKey.id.includes('---BEGIN')) {
             throw new GroupKeyError(
                 `${this.name} public/private key is not a valid group key id: ${maybeGroupKey}`,
                 maybeGroupKey
             )
         }
-
         if (!maybeGroupKey.data || !Buffer.isBuffer(maybeGroupKey.data)) {
             throw new GroupKeyError(`${this.name} data must be a Buffer: ${maybeGroupKey}`, maybeGroupKey)
         }
-
         if (!maybeGroupKey.hex || typeof maybeGroupKey.hex !== 'string') {
             throw new GroupKeyError(`${this.name} hex must be a string: ${maybeGroupKey}`, maybeGroupKey)
         }
-
         if (maybeGroupKey.data.length !== 32) {
             throw new GroupKeyError(`Group key must have a size of 256 bits, not ${maybeGroupKey.data.length * 8}`, maybeGroupKey)
         }
@@ -87,7 +78,6 @@ export class GroupKey {
         if (!(other instanceof GroupKey)) {
             return false
         }
-
         return this === other || (this.hex === other.hex && this.id === other.id)
     }
 
