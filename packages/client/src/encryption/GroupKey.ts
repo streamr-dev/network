@@ -29,21 +29,16 @@ export class GroupKey {
     /** @internal */
     readonly data: Uint8Array
 
-    constructor(groupKeyId: GroupKeyId, groupKeyBufferOrHexString: Uint8Array | string) {
+    constructor(groupKeyId: GroupKeyId, data: Uint8Array) {
         this.id = groupKeyId
         if (!groupKeyId) {
             throw new GroupKeyError(`groupKeyId must not be falsey ${groupKeyId}`)
         }
-        if (!groupKeyBufferOrHexString) {
-            throw new GroupKeyError(`groupKeyBufferOrHexString must not be falsey ${groupKeyBufferOrHexString}`)
+        if (!data) {
+            throw new GroupKeyError(`groupKeyBufferOrHexString must not be falsey ${data}`)
         }
-        if (typeof groupKeyBufferOrHexString === 'string') {
-            this.hex = groupKeyBufferOrHexString
-            this.data = Buffer.from(this.hex, 'hex')
-        } else {
-            this.data = groupKeyBufferOrHexString
-            this.hex = Buffer.from(this.data).toString('hex')
-        }
+        this.data = data
+        this.hex = Buffer.from(this.data).toString('hex')
         GroupKey.validate(this)
     }
 
