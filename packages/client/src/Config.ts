@@ -76,7 +76,7 @@ export type MetricsConfig = {
  * @category Important
  */
 export type StrictStreamrClientConfig = {
-    /** Custom human-readable debug id for client. Used in logging. Unique id will be generated regardless. */
+    /** Custom human-readable debug id for client. Used in logging. */
     id?: string
     /**
     * Authentication: identity used by this StreamrClient instance.
@@ -96,7 +96,7 @@ export type StrictStreamrClientConfig = {
     & SubscribeConfig
 )
 
-export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'network' | 'decryption' | 'debug'> & {
+export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'network' | 'decryption'> & {
     network: Partial<StrictStreamrClientConfig['network']>
     decryption: Partial<StrictStreamrClientConfig['decryption']>
 }>

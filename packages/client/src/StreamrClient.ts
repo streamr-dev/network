@@ -2,7 +2,6 @@ import 'reflect-metadata'
 import { container as rootContainer, DependencyContainer } from 'tsyringe'
 import { generateEthereumAccount as _generateEthereumAccount } from './Ethereum'
 import { pOnce } from './utils/promises'
-import { Debug } from './utils/log'
 import { StreamrClientConfig, createStrictConfig } from './Config'
 import { Publisher } from './publish/Publisher'
 import { Subscriber } from './subscribe/Subscriber'
@@ -25,7 +24,7 @@ import { SearchStreamsPermissionFilter } from './registry/searchStreams'
 import { PermissionAssignment, PermissionQuery } from './permission'
 import { MetricsPublisher } from './MetricsPublisher'
 import { MessageMetadata } from '../src/publish/Publisher'
-import { initContainer } from './Container'
+import { initContainer, StreamrClientIdToken } from './Container'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
 import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
 import { GroupKey } from './encryption/GroupKey'
@@ -38,6 +37,7 @@ import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 export class StreamrClient {
     static readonly generateEthereumAccount = _generateEthereumAccount
 
+    public readonly id: string
     private readonly container: DependencyContainer
     private readonly node: NetworkNodeFacade
     private readonly authentication: Authentication
@@ -59,6 +59,7 @@ export class StreamrClient {
         initContainer(config, container)
 
         this.container = container
+        this.id = container.resolve<string>(StreamrClientIdToken)
         this.node = container.resolve<NetworkNodeFacade>(NetworkNodeFacade)
         this.authentication = container.resolve<Authentication>(AuthenticationInjectionToken)
         this.resends = container.resolve<Resends>(Resends)
@@ -358,20 +359,6 @@ export class StreamrClient {
         await Promise.allSettled(tasks)
         await Promise.all(tasks)
     })
-
-    // --------------------------------------------------------------------------------------------
-    // Logging
-    // --------------------------------------------------------------------------------------------
-
-    /** @internal */
-    enableDebugLogging(prefix = 'Streamr*'): void { // eslint-disable-line class-methods-use-this
-        Debug.enable(prefix)
-    }
-
-    /** @internal */
-    disableDebugLogging(): void { // eslint-disable-line class-methods-use-this
-        Debug.disable()
-    }
 
     // --------------------------------------------------------------------------------------------
     // Events

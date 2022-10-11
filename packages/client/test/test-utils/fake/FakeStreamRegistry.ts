@@ -19,7 +19,7 @@ import { EthereumAddress, Multimap, toEthereumAddress } from '@streamr/utils'
 import { FakeChain, PUBLIC_PERMISSION_TARGET, PublicPermissionTarget, StreamRegistryItem } from './FakeChain'
 
 @scoped(Lifecycle.ContainerScoped)
-export class FakeStreamRegistry implements Omit<Methods<StreamRegistry>, 'debug'> {
+export class FakeStreamRegistry implements Methods<StreamRegistry> {
 
     private readonly chain: FakeChain
     private readonly streamIdBuilder: StreamIDBuilder

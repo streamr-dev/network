@@ -1,6 +1,7 @@
 import { wait } from '@streamr/utils'
 import { range } from 'lodash'
 import { createDecoratedContract, ObservableContract } from '../../src/utils/contract'
+import { mockLoggerFactory } from '../test-utils/utils'
 
 interface MockContract {
     foo: () => Promise<number>
@@ -16,7 +17,7 @@ const createContract = (fooFn: () => Promise<number>, maxConcurrentCalls = 99999
             foo: 'mock-artifact-definition'
         }
     } as any
-    return createDecoratedContract(mockContract as any, 'mock-contract', maxConcurrentCalls)
+    return createDecoratedContract(mockContract as any, 'mock-contract', mockLoggerFactory(), maxConcurrentCalls)
 }
 
 describe('contracts', () => {

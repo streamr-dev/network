@@ -121,7 +121,7 @@ export class Subscriber {
         const subSession = this.getOrCreateSubscriptionSession<T>(streamPartId)
 
         // create subscription
-        const sub = new Subscription<T>(subSession)
+        const sub = new Subscription<T>(subSession, this.loggerFactory)
         return this.addSubscription(sub)
     }
 

@@ -6,7 +6,6 @@ import { GraphQLClient } from '../utils/GraphQLClient'
 import { filter, map, unique } from '../utils/GeneratorUtils'
 import { SynchronizedGraphQLClient } from '../utils/SynchronizedGraphQLClient'
 import { Stream } from '../Stream'
-import { Debugger } from '../utils/log'
 import { EthereumAddress, Logger, toEthereumAddress } from '@streamr/utils'
 
 export interface SearchStreamsPermissionFilter {

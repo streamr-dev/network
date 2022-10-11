@@ -5,9 +5,6 @@ import { MaybeAsync } from '../types'
 import { AggregatedError } from './AggregatedError'
 import { pTimeout } from './promises'
 import { Defer } from './Defer'
-import { Debug } from './log'
-
-export const debug = Debug('iterators')
 
 export interface ICancelable {
     cancel(err?: Error): Promise<void>

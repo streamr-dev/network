@@ -3,11 +3,8 @@ import { SEPARATOR } from './uuid'
 
 import pkg from '../../package.json'
 
-import { Debug } from './log'
 import { StreamID, toStreamID } from 'streamr-client-protocol'
 import { toEthereumAddress } from '@streamr/utils'
-
-export const debug = Debug('utils')
 
 /**
  * Generates counter-based ids.

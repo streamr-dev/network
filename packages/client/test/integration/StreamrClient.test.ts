@@ -78,7 +78,7 @@ describe('StreamrClient', () => {
             })
 
             it('client.subscribe then unsubscribe after subscribed', async () => {
-                const subTask = client.subscribe<{ test: string }>(streamDefinition, () => {})
+                const subTask = client.subscribe(streamDefinition, () => {})
                 expect(await client.getSubscriptions()).toHaveLength(0) // does not have subscription yet
 
                 const sub = await subTask

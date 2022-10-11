@@ -11,7 +11,6 @@ import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { GroupKeyStore } from '../encryption/GroupKeyStore'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { Mapping } from '../utils/Mapping'
-import { LoggerFactory } from '../utils/LoggerFactory'
 
 export class PublishError extends Error {
 

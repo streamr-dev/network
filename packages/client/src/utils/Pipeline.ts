@@ -3,6 +3,7 @@ import { pOnce } from './promises'
 import { iteratorFinally } from './iterators'
 import * as G from './GeneratorUtils'
 import { ErrorSignal, Signal } from './Signal'
+import { StreamrClientError } from '../StreamrClientError'
 
 export type PipelineTransform<InType = any, OutType = any> = (src: AsyncGenerator<InType>) => AsyncGenerator<OutType>
 

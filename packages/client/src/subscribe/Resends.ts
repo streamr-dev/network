@@ -22,6 +22,7 @@ import { DestroySignal } from '../DestroySignal'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { counterId } from '../utils/utils'
+import { StreamrClientError } from '../StreamrClientError'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 

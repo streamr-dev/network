@@ -4,6 +4,7 @@
 import { scoped, Lifecycle } from 'tsyringe'
 
 import { Signal } from './utils/Signal'
+import { StreamrClientError } from './StreamrClientError'
 
 /**
  * Listen to onDestroy to fire cleanup code on destroy.
