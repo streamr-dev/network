@@ -8,6 +8,9 @@
         "id": {
             "type": "string"
         },
+        "logLevel": {
+            "type": "string"
+        },
         "auth": {
             "type": "object",
             "additionalProperties": false,
