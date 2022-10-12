@@ -8,11 +8,10 @@ import { PeerID } from '../../helpers/PeerID'
 import { ClientWebSocket } from './ClientWebSocket'
 import { IConnection, ConnectionType } from '../IConnection'
 import { ITransport } from '../../transport/ITransport'
-import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
+import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { RemoteWebSocketConnector } from './RemoteWebSocketConnector'
 import {
     ConnectivityResponseMessage,
-    Message,
     PeerDescriptor,
     WebSocketConnectionRequest,
     WebSocketConnectionResponse
@@ -33,7 +32,7 @@ const logger = new Logger(module)
 
 export class WebSocketConnector extends EventEmitter<ManagedConnectionSourceEvent> implements IWebSocketConnectorService {
     private static readonly WEBSOCKET_CONNECTOR_SERVICE_ID = 'system/websocketconnector'
-    private readonly rpcCommunicator: RoutingRpcCommunicator
+    private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly canConnectFunction: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean
     private readonly webSocketServer?: WebSocketServer
     private readonly connectivityChecker: ConnectivityChecker
@@ -56,7 +55,7 @@ export class WebSocketConnector extends EventEmitter<ManagedConnectionSourceEven
 
         this.canConnectFunction = fnCanConnect.bind(this)
 
-        this.rpcCommunicator = new RoutingRpcCommunicator(WebSocketConnector.WEBSOCKET_CONNECTOR_SERVICE_ID, this.rpcTransport.send, {
+        this.rpcCommunicator = new ListeningRpcCommunicator(WebSocketConnector.WEBSOCKET_CONNECTOR_SERVICE_ID, this.rpcTransport, {
             rpcRequestTimeout: 15000
         })
 
@@ -68,10 +67,6 @@ export class WebSocketConnector extends EventEmitter<ManagedConnectionSourceEven
             'requestConnection',
             this.requestConnection
         )
-        
-        this.rpcTransport.on('message', (msg: Message) => {
-            this.rpcCommunicator.handleMessageFromPeer(msg)
-        })
     }
 
     public async start(): Promise<void> {

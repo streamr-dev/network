@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events'
-import { DhtNode, PeerID, PeerDescriptor, DhtPeer, RoutingRpcCommunicator, ITransport, ConnectionLocker, Message } from '@streamr/dht'
+import { DhtNode, PeerID, PeerDescriptor, DhtPeer, ListeningRpcCommunicator, ITransport, ConnectionLocker } from '@streamr/dht'
 import {
     DataMessage,
     HandshakeRequest,
@@ -48,7 +48,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     private readonly nearbyContactPool: PeerList
     private readonly randomContactPool: PeerList
     private readonly targetNeighbors: PeerList = new PeerList(4)
-    private rpcCommunicator: RoutingRpcCommunicator | null = null
+    private rpcCommunicator: ListeningRpcCommunicator | null = null
     private readonly P2PTransport: ITransport
     private readonly connectionLocker: ConnectionLocker
     private readonly duplicateDetector: DuplicateMessageDetector
@@ -73,7 +73,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
 
         this.started = true
 
-        this.rpcCommunicator = new RoutingRpcCommunicator(`layer2-${ this.randomGraphId }`, this.P2PTransport.send)
+        this.rpcCommunicator = new ListeningRpcCommunicator(`layer2-${ this.randomGraphId }`, this.P2PTransport)
         this.layer1.on('newContact', (peerDescriptor, closestPeers) => this.newContact(peerDescriptor, closestPeers))
         this.layer1.on('contactRemoved', (peerDescriptor, closestPeers) => this.removedContact(peerDescriptor, closestPeers))
         this.layer1.on('newRandomContact', (peerDescriptor, randomPeers) => this.newRandomContact(peerDescriptor, randomPeers))
@@ -98,10 +98,6 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         this.neighborUpdateIntervalRef = setTimeout(async () => {
             await this.updateNeighborInfo()
         }, 20)
-
-        this.P2PTransport.on('message', (msg: Message) => {
-            this.rpcCommunicator?.handleMessageFromPeer(msg)
-        })
     }
 
     stop(): void {

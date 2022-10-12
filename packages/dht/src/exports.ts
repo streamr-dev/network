@@ -1,5 +1,5 @@
 export { DhtNode, DhtNodeEvents } from './dht/DhtNode'
-export { RoutingRpcCommunicator } from './transport/RoutingRpcCommunicator'
+export { ListeningRpcCommunicator } from './transport/ListeningRpcCommunicator'
 export { Simulator } from './connection/Simulator'
 export { SimulatorTransport } from './connection/SimulatorTransport'
 export { PeerDescriptor, Message, NodeType } from './proto/DhtRpc'
