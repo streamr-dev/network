@@ -32,9 +32,14 @@ export class Logger {
         return _.padEnd(longName.substring(0, this.NAME_LENGTH), this.NAME_LENGTH, ' ')
     }
 
-    protected readonly logger: pino.Logger
+    private readonly logger: pino.Logger
 
-    constructor(module: NodeJS.Module, context?: string, logLevel = process.env.LOG_LEVEL || 'info') {
+    constructor(
+        module: NodeJS.Module,
+        context?: string,
+        logLevel = process.env.LOG_LEVEL || 'info',
+        destinationStream?: { write(msg: string): void }
+    ) {
         const options: pino.LoggerOptions = {
             name: Logger.createName(module, context),
             enabled: !process.env.NOLOG,
@@ -51,7 +56,7 @@ export class Logger {
                 levelFirst: true,
             }
         }
-        this.logger = pino(options)
+        this.logger = destinationStream !== undefined ? pino(options, destinationStream) : pino(options)
     }
 
     fatal(msg: string, ...args: any[]): void {

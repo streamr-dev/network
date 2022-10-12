@@ -94,7 +94,7 @@ describe(Logger, () => {
         }
 
         let lines: string[]
-        const logger = new Logger(module, '', {
+        const logger = new Logger(module, '', undefined, {
             write: (msg: string) => {
                 lines = msg.split('\n').map((line) => line.trim())
             }
