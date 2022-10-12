@@ -78,7 +78,7 @@ export type MetricsConfig = {
 export type StrictStreamrClientConfig = {
     /** Custom human-readable debug id for client. Used in logging. */
     id?: string
-    logLevel?: 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace'
+    logLevel?: 'silent' | 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace'
     /**
     * Authentication: identity used by this StreamrClient instance.
     * Can contain member privateKey or (window.)ethereum
