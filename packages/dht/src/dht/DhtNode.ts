@@ -43,7 +43,6 @@ export interface DhtNodeEvents {
 }
 
 export class DhtNodeConfig {
-    connectionManager?: ConnectionManager
     transportLayer?: ITransport
     peerDescriptor?: PeerDescriptor
     entryPoints?: PeerDescriptor[]
@@ -124,15 +123,15 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         }
         logger.info(`Starting new Streamr Network DHT Node with serviceId ${this.config.serviceId}`)
         this.started = true
-        // If connectionmanager or transportLayer is given, do not create a ConnectionManager
+        
+        // If transportLayer is given, do not create a ConnectionManager
 
-        if (this.config.connectionManager) {
-            this.transportLayer = this.config.connectionManager
-            this.connectionManager = this.config.connectionManager
-            this.ownPeerDescriptor = this.transportLayer.getPeerDescriptor()
-        } else if (this.config.transportLayer) {
+        if (this.config.transportLayer) {
             this.transportLayer = this.config.transportLayer
             this.ownPeerDescriptor = this.transportLayer.getPeerDescriptor()
+            if (this.config.transportLayer instanceof ConnectionManager) {
+                this.connectionManager = this.config.transportLayer
+            }
         } else {
             const connectionManagerConfig: ConnectionManagerConfig = {
                 transportLayer: this,
@@ -610,7 +609,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         })
         this.forwardingTable.clear()
         this.removeAllListeners()
-        if (this.connectionManager && !this.config.connectionManager) {
+        if (this.connectionManager && !this.config.transportLayer) {
             await this.connectionManager.stop()
         }
     }

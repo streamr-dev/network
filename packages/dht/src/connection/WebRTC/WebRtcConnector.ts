@@ -3,14 +3,13 @@ import EventEmitter from 'eventemitter3'
 import { ManagedConnectionSourceEvent } from '../IManagedConnectionSource'
 import {
     IceCandidate,
-    Message,
     PeerDescriptor,
     RtcAnswer,
     RtcOffer, WebRtcConnectionRequest
 } from '../../proto/DhtRpc'
 import { Empty } from '../../proto/google/protobuf/empty'
 import { ITransport } from '../../transport/ITransport'
-import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
+import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { NodeWebRtcConnection } from './NodeWebRtcConnection'
 import { RemoteWebrtcConnector } from './RemoteWebrtcConnector'
 import { WebRtcConnectorServiceClient } from '../../proto/DhtRpc.client'
@@ -34,7 +33,7 @@ export interface WebRtcConnectorConfig {
 
 export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> implements IWebRtcConnectorService {
     private static readonly WEBRTC_CONNECTOR_SERVICE_ID = 'system/webrtc_connector'
-    private readonly rpcCommunicator: RoutingRpcCommunicator
+    private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly ongoingConnectAttempts: Map<PeerIDKey, ManagedWebRtcConnection> = new Map()
     private readonly rpcTransport: ITransport
     private ownPeerDescriptor?: PeerDescriptor
@@ -44,7 +43,7 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
         super()
         this.rpcTransport = config.rpcTransport
 
-        this.rpcCommunicator = new RoutingRpcCommunicator(WebRtcConnector.WEBRTC_CONNECTOR_SERVICE_ID, this.rpcTransport.send, {
+        this.rpcCommunicator = new ListeningRpcCommunicator(WebRtcConnector.WEBRTC_CONNECTOR_SERVICE_ID, this.rpcTransport, {
             rpcRequestTimeout: 15000
         })
 
@@ -57,10 +56,6 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
         this.rpcCommunicator.registerRpcNotification(RtcAnswer, 'rtcAnswer', this.rtcAnswer)
         this.rpcCommunicator.registerRpcNotification(IceCandidate, 'iceCandidate', this.iceCandidate)
         this.rpcCommunicator.registerRpcNotification(WebRtcConnectionRequest, 'requestConnection', this.requestConnection)
-    
-        this.rpcTransport.on('message', (msg: Message) => {
-            this.rpcCommunicator.handleMessageFromPeer(msg)
-        })
     }
 
     connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {

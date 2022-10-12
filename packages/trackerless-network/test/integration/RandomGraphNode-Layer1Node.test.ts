@@ -1,4 +1,4 @@
-import { DhtNode, Simulator, ConnectionManager, PeerDescriptor, PeerID } from '@streamr/dht'
+import { DhtNode, Simulator, SimulatorTransport, PeerDescriptor, PeerID } from '@streamr/dht'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { range } from 'lodash'
 import { waitForCondition } from 'streamr-test-utils'
@@ -28,10 +28,10 @@ describe('RandomGraphNode-DhtNode', () => {
     })
     beforeEach(async () => {
         const simulator = new Simulator()
-        const entrypointCm = new ConnectionManager({ ownPeerDescriptor: entrypointDescriptor, simulator, serviceIdPrefix: 'simulator/' })
+        const entrypointCm = new SimulatorTransport(entrypointDescriptor, simulator)
 
-        const cms: ConnectionManager[] = range(numOfNodes).map((i) =>
-            new ConnectionManager({ ownPeerDescriptor: peerDescriptors[i], simulator, serviceIdPrefix: 'simulator/' })
+        const cms: SimulatorTransport[] = range(numOfNodes).map((i) =>
+            new SimulatorTransport(peerDescriptors[i], simulator)
         )
 
         dhtEntryPoint = new DhtNode({
