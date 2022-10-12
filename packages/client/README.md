@@ -742,8 +742,24 @@ Example broker config
 
 ### Logging
 
-The library supports [debug](https://github.com/visionmedia/debug) for logging.
+There are two ways to set a desired logging level.
 
-In node.js, start your app like this: `DEBUG=StreamrClient* node your-app.js`
+You can pass the logging level in the StreamrClient constructor as follows:
+```ts
+const streamr = new StreamrClient({
+  logLevel: 'debug',
+  // ... more options
+})
+```
 
-In the browser, set `localStorage.debug = 'StreamrClient*'`
+Alternatively, when running your application in Node.js, you can provide the
+logging level via the environment variable `LOG_LEVEL`, for example, by running
+your application as follows:
+
+```bash
+LOG_LEVEL=trace node your-app.js
+```
+
+When defining both the environment variable takes precedence. Default logging
+level is `info`. Valid logging levels are `silent`, `fatal`, `error`, `warn`,
+`info`, `debug`, and `trace`.
