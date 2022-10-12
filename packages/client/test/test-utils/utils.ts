@@ -22,7 +22,7 @@ import { LoggerFactory } from '../../src/utils/LoggerFactory'
 const logger = new Logger(module)
 
 export function mockLoggerFactory(clientId?: string): LoggerFactory {
-    return new LoggerFactory(clientId ?? counterId('TestCtx'))
+    return new LoggerFactory(clientId ?? counterId('TestCtx'), {})
 }
 
 export const uid = (prefix?: string): string => counterId(`p${process.pid}${prefix ? '-' + prefix : ''}`)
