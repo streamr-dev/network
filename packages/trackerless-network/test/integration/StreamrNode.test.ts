@@ -1,4 +1,4 @@
-import { DhtNode, ConnectionManager, PeerDescriptor, PeerID, Simulator } from '@streamr/dht'
+import { DhtNode, PeerDescriptor, PeerID, Simulator, SimulatorTransport } from '@streamr/dht'
 import { NodeType } from '@streamr/dht/dist/src/proto/DhtRpc'
 import { waitForCondition } from 'streamr-test-utils'
 import { StreamrNode, Event as NodeEvent } from '../../src/logic/StreamrNode'
@@ -10,8 +10,8 @@ describe('StreamrNode', () => {
 
     let layer01: DhtNode
     let layer02: DhtNode
-    let transport1: ConnectionManager
-    let transport2: ConnectionManager
+    let transport1: SimulatorTransport
+    let transport2: SimulatorTransport
     let node1: StreamrNode
     let node2: StreamrNode
 
@@ -45,8 +45,8 @@ describe('StreamrNode', () => {
 
     beforeEach(async () => {
         const simulator = new Simulator()
-        transport1 = new ConnectionManager({ ownPeerDescriptor: peer1, simulator, serviceIdPrefix: 'simulator/' })
-        transport2 = new ConnectionManager({ ownPeerDescriptor: peer2, simulator, serviceIdPrefix: 'simulator/' })
+        transport1 = new SimulatorTransport(peer1, simulator)
+        transport2 = new SimulatorTransport(peer2, simulator)
         layer01 = new DhtNode({
             connectionManager: transport1,
             peerDescriptor: peer1

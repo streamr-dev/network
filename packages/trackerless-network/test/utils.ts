@@ -1,4 +1,4 @@
-import { Simulator, ConnectionManager, PeerDescriptor, DhtNode, ConnectionLocker } from '@streamr/dht'
+import { Simulator, PeerDescriptor, DhtNode, ConnectionLocker, SimulatorTransport } from '@streamr/dht'
 import { RandomGraphNode } from '../src/logic/RandomGraphNode'
 
 export const mockConnectionLocker: ConnectionLocker = {
@@ -12,9 +12,9 @@ export const createMockRandomGraphNodeAndDhtNode = (
     randomGraphId: string,
     simulator: Simulator
 ): [ DhtNode, RandomGraphNode ]  => {
-    const mockCm = new ConnectionManager({ ownPeerDescriptor: ownPeerDescriptor, simulator, serviceIdPrefix: 'simulator/' })
+    const mockCm = new SimulatorTransport(ownPeerDescriptor, simulator)
     const dhtNode = new DhtNode({
-        transportLayer: mockCm,
+        connectionManager: mockCm,
         peerDescriptor: ownPeerDescriptor,
         numberOfNodesPerKBucket: 4
     })
