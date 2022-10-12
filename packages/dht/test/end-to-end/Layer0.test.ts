@@ -6,7 +6,7 @@ describe('Layer0', () => {
     const epPeerDescriptor: PeerDescriptor = {
         peerId: Uint8Array.from([1, 2, 3]),
         type: NodeType.NODEJS,
-        websocket: { ip: 'localhost', port: 10011 }
+        websocket: { ip: '127.0.0.1', port: 10011 }
     }
     
     let epDhtNode: DhtNode
