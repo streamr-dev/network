@@ -263,9 +263,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         })
 
         this.neighborList = new SortedContactList(selfId, this.config.maxNeighborListSize)
-        this.neighborList.on('contactRemoved', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
+        this.neighborList.on('contactRemoved', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) => {
             this.emit('contactRemoved', peerDescriptor, activeContacts)
-        )
+            this.randomPeers!.addContact(new DhtPeer(peerDescriptor, toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport()))))
+        })
         this.neighborList.on('newContact', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
             this.emit('newContact', peerDescriptor, activeContacts)
         )
@@ -289,6 +290,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
         this.transportLayer!.on('disconnected', (peerDescriptor: PeerDescriptor) => {
             this.connections.delete(PeerID.fromValue(peerDescriptor.peerId).toKey())
+            this.bucket!.remove(peerDescriptor.peerId)
+            this.connectionManager?.unlockConnection(peerDescriptor, this.config.serviceId)
             this.emit('disconnected', peerDescriptor)
         })
         this.randomPeers = new RandomContactList(selfId, this.config.maxNeighborListSize)
@@ -484,27 +487,23 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
     }
 
     private addNewContact(contact: PeerDescriptor, setActive = false): void {
-        if (!this.started || this.stopped
-            || (
-                !this.bucket!.get(contact.peerId)
-                && !this.neighborList!.getContact(PeerID.fromValue(contact.peerId))
-            )
-        ) {
+        if (this.started && !this.stopped) {
             logger.trace(`Adding new contact ${contact.peerId.toString()}`)
             const dhtPeer = new DhtPeer(contact, toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())))
             const peerId = PeerID.fromValue(contact.peerId)
-            this.neighborList!.addContact(dhtPeer)
-            if (!this.neighborList!.hasContact(peerId)) {
+            if (!this.bucket!.get(contact.peerId) && !this.neighborList!.getContact(PeerID.fromValue(contact.peerId))) {
+                this.neighborList!.addContact(dhtPeer)
+                if (contact.openInternet) {
+                    this.openInternetPeers!.addContact(dhtPeer)
+                }
+                if (setActive) {
+                    this.neighborList!.setActive(peerId)
+                    this.openInternetPeers!.setActive(peerId)
+                }
+                this.bucket!.add(dhtPeer)
+            } else {
                 this.randomPeers!.addContact(dhtPeer)
             }
-            if (contact.openInternet) {
-                this.openInternetPeers!.addContact(dhtPeer)
-            }
-            if (setActive) {
-                this.neighborList!.setActive(peerId)
-                this.openInternetPeers!.setActive(peerId)
-            }
-            this.bucket!.add(dhtPeer)
         }
     }
 

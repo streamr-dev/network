@@ -15,6 +15,11 @@ interface HandshakeResponse {
     interleaveTarget?: PeerDescriptor
 }
 
+interface UpdateNeighborsResponse {
+    peers: PeerDescriptor[],
+    removeMe: boolean
+}
+
 const logger = new Logger(module)
 
 export class RemoteRandomGraphNode {
@@ -109,7 +114,7 @@ export class RemoteRandomGraphNode {
         return this.remotePeerDescriptor
     }
 
-    async updateNeighbors(ownPeerDescriptor: PeerDescriptor, neighbors: PeerDescriptor[]): Promise<PeerDescriptor[]> {
+    async updateNeighbors(ownPeerDescriptor: PeerDescriptor, neighbors: PeerDescriptor[]): Promise<UpdateNeighborsResponse> {
         const options: DhtRpcOptions = {
             sourceDescriptor: ownPeerDescriptor as PeerDescriptor,
             targetDescriptor: this.remotePeerDescriptor as PeerDescriptor,
@@ -117,14 +122,21 @@ export class RemoteRandomGraphNode {
         const request: NeighborUpdate = {
             senderId: PeerID.fromValue(ownPeerDescriptor.peerId).toKey(),
             randomGraphId: this.graphId,
-            neighborDescriptors: neighbors
+            neighborDescriptors: neighbors,
+            removeMe: false
         }
         try {
             const response = await this.client.neighborUpdate(request, options)
-            return response.neighborDescriptors!
+            return {
+                peers: response.neighborDescriptors!,
+                removeMe: response.removeMe
+            }
         } catch (err: any) {
             logger.debug(err)
-            return []
+            return {
+                peers: [],
+                removeMe: true
+            }
         }
     }
 

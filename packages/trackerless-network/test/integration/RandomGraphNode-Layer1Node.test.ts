@@ -78,10 +78,10 @@ describe('RandomGraphNode-DhtNode', () => {
         await graphNodes[0].start()
 
         await Promise.all([
-            waitForCondition(() => graphNodes[0].getContactPoolIds().length === 1),
+            waitForCondition(() => graphNodes[0].getNearbyContactPoolIds().length === 1),
             waitForCondition(() => graphNodes[0].getTargetNeighborStringIds().length === 1)
         ])
-        expect(graphNodes[0].getContactPoolIds().length).toEqual(1)
+        expect(graphNodes[0].getNearbyContactPoolIds().length).toEqual(1)
         expect(graphNodes[0].getTargetNeighborStringIds().length).toEqual(1)
     })
 
@@ -95,7 +95,7 @@ describe('RandomGraphNode-DhtNode', () => {
         await waitForCondition(() => graphNodes[3].getTargetNeighborStringIds().length >= 4)
 
         range(4).map((i) => {
-            expect(graphNodes[i].getContactPoolIds().length).toBeGreaterThanOrEqual(4)
+            expect(graphNodes[i].getNearbyContactPoolIds().length).toBeGreaterThanOrEqual(4)
             expect(graphNodes[i].getTargetNeighborStringIds().length).toBeGreaterThanOrEqual(4)
         })
 
@@ -103,7 +103,7 @@ describe('RandomGraphNode-DhtNode', () => {
         const allNodes = graphNodes
         allNodes.push(entryPointRandomGraphNode)
         range(5).map((i) => {
-            allNodes[i].getContactPoolIds().forEach((stringId) => {
+            allNodes[i].getNearbyContactPoolIds().forEach((stringId) => {
                 const neighbor = allNodes.find((peer) => {
                     return peer.getOwnStringId() === stringId
                 })
@@ -119,7 +119,7 @@ describe('RandomGraphNode-DhtNode', () => {
         }))
         await Promise.all(graphNodes.map((node) =>
             Promise.all([
-                waitForCondition(() => node.getContactPoolIds().length >= 8),
+                waitForCondition(() => node.getNearbyContactPoolIds().length >= 8),
                 waitForCondition(() => node.getTargetNeighborStringIds().length >= 3, 18000)
             ])
         ))

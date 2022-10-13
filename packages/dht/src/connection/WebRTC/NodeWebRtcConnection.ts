@@ -58,6 +58,8 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
     private readonly remotePeerDescriptor: PeerDescriptor
     private closed = false
 
+    private ownPeerDescriptor?: PeerDescriptor
+
     constructor(params: Params) {
         super()
         this.connectionId = new ConnectionID()
@@ -104,7 +106,6 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
                 this.remoteDescriptionSet = true
             } catch (err) {
                 logger.warn(`Failed to set remote descriptor for peer ${this.remotePeerDescriptor.peerId.toString()}`)
-                this.close()
             }
         } else {
             this.close(`Tried to set description for non-existent connection`)
@@ -119,6 +120,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
                     this.connection!.addRemoteCandidate(candidate, mid)
                 } catch (err) {
                     logger.warn(`Failed to set remote candidate for peer ${this.remotePeerDescriptor.peerId.toString()}`)
+                    this.close()
                 }
             } else {
                 this.close(`Tried to set candidate before description`)
@@ -129,14 +131,19 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
     }
 
     send(data: Uint8Array): void {
-        if (this.isOpen()) {
+        // if (this.isOpen()) {
             try {
                 this.dataChannel?.sendMessageBinary(data as Buffer)
             } catch (err) {
-                logger.warn('Failed to send binary message')
+                logger.warn(
+                    'Failed to send binary message to '
+                    + PeerID.fromValue(this.remotePeerDescriptor.peerId).toKey()
+                    + ' --- '
+                    + PeerID.fromValue(this.ownPeerDescriptor!.peerId).toKey()
+                )
                 // this.close()
             }
-        } else {
+        // } else {
             // if (this.lastState === 'closed'
             //     || this.lastState === RTCPeerConnectionStateEnum.disconnected
             //     || this.lastState === RTCPeerConnectionStateEnum.failed
@@ -146,8 +153,8 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
             // logger.trace(
             //     `Tried to send data on a non-open connection (${PeerID.fromValue(this.remotePeerDescriptor.peerId).toKey()}) `
             //     + `last connection states: ${this.lastState} ${!!this.dataChannel} ${this.closed}`)
-            logger.warn('Tried to send data on a non-open connection' + this.lastState + " " + !!this.dataChannel)
-        }
+            // logger.warn('Tried to send data on a non-open connection' + this.lastState + " " + !!this.dataChannel)
+        // }
     }
 
     close(reason?: string): void {
@@ -160,12 +167,23 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
             if (this.connectingTimeoutRef) {
                 clearTimeout(this.connectingTimeoutRef)
             }
+
             this.emit('disconnected')
-            if (this.dataChannel) {
-                this.dataChannel.close()
-            }
+
             if (this.connection) {
-                this.connection.close()
+                try {
+                    this.connection.close()
+                } catch (e) {
+                    logger.warn('conn.close() errored: %s', e)
+                }
+            }
+
+            if (this.dataChannel) {
+                try {
+                    this.dataChannel.close()
+                } catch (e) {
+                    logger.warn('dc.close() errored: %s', e)
+                }
             }
             this.removeAllListeners()
         }
@@ -229,5 +247,9 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
 
     public setConnectionId(connectionID: string): void {
         this.connectionId = new ConnectionID(connectionID)
+    }
+
+    public setOwnPeerDescriptor(peerDescriptor: PeerDescriptor): void {
+        this.ownPeerDescriptor = peerDescriptor
     }
 }

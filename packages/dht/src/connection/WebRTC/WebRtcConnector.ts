@@ -186,6 +186,14 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
             remoteConnector.sendIceCandidate(this.ownPeerDescriptor!, candidate, mid, connection.connectionId.toString())
         })
 
+        connection.on('disconnected', () => {
+            this.ongoingConnectAttempts.delete(PeerID.fromValue(targetPeerDescriptor.peerId).toKey())
+        })
+
+        connection.on('connected', () => {
+            this.ongoingConnectAttempts.delete(PeerID.fromValue(targetPeerDescriptor.peerId).toKey())
+        })
+
         connection.start(offering)
         if (offering === false && sendRequest) {
             remoteConnector.requestConnection(this.ownPeerDescriptor!, connection.connectionId.toString())

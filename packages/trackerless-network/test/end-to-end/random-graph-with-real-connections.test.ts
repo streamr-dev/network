@@ -96,12 +96,12 @@ describe('random graph with real connections', () => {
     it('can fully connected topologies ', async () => {
 
         await waitForCondition(() => {
-            return randomGraphNode1.getTargetNeighborStringIds().length >= 4
-                && randomGraphNode2.getTargetNeighborStringIds().length >= 4
-                && randomGraphNode3.getTargetNeighborStringIds().length >= 4
-                && randomGraphNode4.getTargetNeighborStringIds().length >= 4
-                && randomGraphNode5.getTargetNeighborStringIds().length >= 4
-        })
+            return randomGraphNode1.getTargetNeighborStringIds().length >= 3
+                && randomGraphNode2.getTargetNeighborStringIds().length >= 3
+                && randomGraphNode3.getTargetNeighborStringIds().length >= 3
+                && randomGraphNode4.getTargetNeighborStringIds().length >= 3
+                && randomGraphNode5.getTargetNeighborStringIds().length >= 3
+        }, 10000)
 
         expect(randomGraphNode1.getTargetNeighborStringIds().length).toEqual(4)
         expect(randomGraphNode2.getTargetNeighborStringIds().length).toEqual(4)
@@ -118,12 +118,19 @@ describe('random graph with real connections', () => {
         randomGraphNode5.on(Event.MESSAGE, () => numOfMessagesReceived += 1)
 
         await waitForCondition(() => {
-            return randomGraphNode1.getTargetNeighborStringIds().length >= 4
-                && randomGraphNode2.getTargetNeighborStringIds().length >= 4
-                && randomGraphNode3.getTargetNeighborStringIds().length >= 4
-                && randomGraphNode4.getTargetNeighborStringIds().length >= 4
-                && randomGraphNode5.getTargetNeighborStringIds().length >= 4
-        })
+            console.log(
+                randomGraphNode1.getTargetNeighborStringIds().length,
+                randomGraphNode2.getTargetNeighborStringIds().length,
+                randomGraphNode3.getTargetNeighborStringIds().length,
+                randomGraphNode4.getTargetNeighborStringIds().length,
+                randomGraphNode5.getTargetNeighborStringIds().length
+            )
+            return randomGraphNode1.getTargetNeighborStringIds().length >= 3
+                && randomGraphNode2.getTargetNeighborStringIds().length >= 3
+                && randomGraphNode3.getTargetNeighborStringIds().length >= 3
+                && randomGraphNode4.getTargetNeighborStringIds().length >= 3
+                && randomGraphNode5.getTargetNeighborStringIds().length >= 3
+        }, 10000)
 
         const messageRef: MessageRef = {
             sequenceNumber: 1,

@@ -4,6 +4,7 @@ import { Handshaker } from "./Handshaker"
 import { PeerDescriptor } from "../proto/DhtRpc"
 import { Logger } from "@streamr/utils"
 import EventEmitter from "eventemitter3"
+import { NodeWebRtcConnection } from './WebRTC/NodeWebRtcConnection'
 
 export interface ManagedConnectionEvents {
     managedData: (bytes: Uint8Array, remotePeerDescriptor: PeerDescriptor) => void
@@ -48,6 +49,9 @@ export class ManagedConnection extends EventEmitter<Events> {
         }
 
         if (connectingConnection) {
+            if (this.connectionType === ConnectionType.WEBRTC) {
+                (connectingConnection as NodeWebRtcConnection).setOwnPeerDescriptor(this.ownPeerDescriptor)
+            }
             this.handshaker = new Handshaker(this.ownPeerDescriptor, this.protocolVersion, connectingConnection)
             connectingConnection.once('connected', () => {
                 this.attachImplementation(connectingConnection)
@@ -60,6 +64,9 @@ export class ManagedConnection extends EventEmitter<Events> {
             if (connectedConnection) {
                 this.handshaker = new Handshaker(this.ownPeerDescriptor, this.protocolVersion, connectedConnection!)
                 this.attachImplementation(connectedConnection!)
+                if (this.connectionType === ConnectionType.WEBRTC) {
+                    (connectedConnection as NodeWebRtcConnection).setOwnPeerDescriptor(this.ownPeerDescriptor)
+                }
             }
         }
 
@@ -154,7 +161,7 @@ export class ManagedConnection extends EventEmitter<Events> {
             this.emit('error', name)
         })
         impl.on('connected', () => {
-            logger.info('connected emitted')
+            logger.trace('connected emitted')
             this.emit('connected')
         })
         impl.on('disconnected', () => {

@@ -103,6 +103,7 @@ describe('Full node network with WebRTC connections', () => {
         epStreamrNode.publishToStream(randomGraphId, epPeerDescriptor, message)
 
         await waitForCondition(() => {
+            console.log(numOfMessagesReceived)
             return numOfMessagesReceived === NUM_OF_NODES
         }, 15000)
 
