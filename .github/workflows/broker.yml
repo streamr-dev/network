@@ -63,7 +63,7 @@ jobs:
 
       - name: Docker meta
         id: docker_meta_failure
-        uses: docker/metadata-action@v4.0.1
+        uses: docker/metadata-action@v4.1.0
         # if test steps failed, push sha anyway
         if: ${{ always() && (needs.test-unit.result == 'failure' || needs.test-integration.result == 'failure' || needs.test-docker.result == 'failure') }}
         with:
