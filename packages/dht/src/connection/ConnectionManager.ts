@@ -347,7 +347,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             return
         }
         if (this.connections.has(id)) {
-            // logger.trace(`Disconnecting from Peer ${id}${reason ? `: ${reason}` : ''}`)
+            logger.trace(`Disconnecting from Peer ${id}${reason ? `: ${reason}` : ''}`)
             const connectionToClose = this.connections.get(id)!
             this.connections.delete(id)
             connectionToClose.close()

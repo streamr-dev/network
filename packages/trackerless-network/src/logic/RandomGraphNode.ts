@@ -165,17 +165,17 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         logger.trace(`Updating neighbor info to peers`)
         const neighborDescriptors = this.targetNeighbors.values().map((neighbor) => neighbor.getPeerDescriptor())
 
-        await Promise.allSettled(this.targetNeighbors.values().map((neighbor) => {
-                return neighbor.updateNeighbors(this.layer1.getPeerDescriptor(), neighborDescriptors)
-                    .then((res) => {
-                        if (res.removeMe) {
-                            this.targetNeighbors.remove(neighbor.getPeerDescriptor())
-                            if (!this.findNeighborsIntervalRef) {
-                                this.findNeighbors([PeerID.fromValue(neighbor.getPeerDescriptor().peerId).toKey()])
-                            }
+        await Promise.allSettled(this.targetNeighbors.values().map((neighbor) =>
+            neighbor.updateNeighbors(this.layer1.getPeerDescriptor(), neighborDescriptors)
+                .then((res) => {
+                    if (res.removeMe) {
+                        this.targetNeighbors.remove(neighbor.getPeerDescriptor())
+                        if (!this.findNeighborsIntervalRef) {
+                            this.findNeighbors([PeerID.fromValue(neighbor.getPeerDescriptor().peerId).toKey()])
                         }
-                    })
-            }
+                    }
+                    return
+                })
         ))
 
         this.neighborUpdateIntervalRef = setTimeout(async () => {

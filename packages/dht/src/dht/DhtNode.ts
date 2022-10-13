@@ -265,7 +265,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         this.neighborList = new SortedContactList(selfId, this.config.maxNeighborListSize)
         this.neighborList.on('contactRemoved', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) => {
             this.emit('contactRemoved', peerDescriptor, activeContacts)
-            this.randomPeers!.addContact(new DhtPeer(peerDescriptor, toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport()))))
+            this.randomPeers!.addContact(
+                new DhtPeer(peerDescriptor, toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())))
+            )
         })
         this.neighborList.on('newContact', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
             this.emit('newContact', peerDescriptor, activeContacts)

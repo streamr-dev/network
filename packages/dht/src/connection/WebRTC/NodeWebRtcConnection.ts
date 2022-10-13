@@ -131,30 +131,17 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
     }
 
     send(data: Uint8Array): void {
-        // if (this.isOpen()) {
-            try {
-                this.dataChannel?.sendMessageBinary(data as Buffer)
-            } catch (err) {
-                logger.warn(
-                    'Failed to send binary message to '
-                    + PeerID.fromValue(this.remotePeerDescriptor.peerId).toKey()
-                    + ' --- '
-                    + PeerID.fromValue(this.ownPeerDescriptor!.peerId).toKey()
-                )
-                // this.close()
-            }
-        // } else {
-            // if (this.lastState === 'closed'
-            //     || this.lastState === RTCPeerConnectionStateEnum.disconnected
-            //     || this.lastState === RTCPeerConnectionStateEnum.failed
-            // ) {
-            //     this.close()
-            // }
-            // logger.trace(
-            //     `Tried to send data on a non-open connection (${PeerID.fromValue(this.remotePeerDescriptor.peerId).toKey()}) `
-            //     + `last connection states: ${this.lastState} ${!!this.dataChannel} ${this.closed}`)
-            // logger.warn('Tried to send data on a non-open connection' + this.lastState + " " + !!this.dataChannel)
-        // }
+        try {
+            this.dataChannel?.sendMessageBinary(data as Buffer)
+        } catch (err) {
+            logger.warn(
+                'Failed to send binary message to '
+                + PeerID.fromValue(this.remotePeerDescriptor.peerId).toKey()
+                + ' --- '
+                + PeerID.fromValue(this.ownPeerDescriptor!.peerId).toKey()
+            )
+            // this.close()
+        }
     }
 
     close(reason?: string): void {

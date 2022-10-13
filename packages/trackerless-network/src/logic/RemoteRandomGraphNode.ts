@@ -16,7 +16,7 @@ interface HandshakeResponse {
 }
 
 interface UpdateNeighborsResponse {
-    peers: PeerDescriptor[],
+    peers: PeerDescriptor[]
     removeMe: boolean
 }
 
