@@ -110,9 +110,7 @@ export class StreamrClient implements Context {
         const streamId = await this.streamIdBuilder.toStreamID(opts.streamId)
         const queue = await this.publisher.getGroupKeyQueue(streamId)
         if (opts.distributionMethod === 'rotate') {
-            if (opts.key === undefined) {
-                await queue.rotate(opts.key)
-            }
+            await queue.rotate(opts.key)
         } else if (opts.distributionMethod === 'rekey') {
             await queue.rekey(opts.key)
         } else {
