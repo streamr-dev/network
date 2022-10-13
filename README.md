@@ -151,6 +151,21 @@ git push origin utils/vX.Y.Z
 npm publish --access public
 ```
 
+### Protocol
+```
+git checkout main
+cd packages/protocol
+npm version <SEMVER_OPTION>
+# Go thru other packages' package.json and update streamr-client-protocol entry (if present) to newly generated version
+git add package.json
+git commit -m "release(protocol): vX.Y.Z"
+git tag protocol/vX.Y.Z
+git push origin
+git push origin protocol/vX.Y.Z
+
+npm publish
+```
+
 ### Network
 ```
 git checkout main
