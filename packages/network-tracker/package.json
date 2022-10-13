@@ -38,7 +38,7 @@
     "lodash": "^4.17.21",
     "morgan": "^1.10.0",
     "streamr-client-protocol": "^13.0.0",
-    "streamr-network": "35.0.0",
+    "streamr-network": "36.0.0",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
