@@ -143,19 +143,23 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         logger.trace(`Finding new neighbors...`)
         let newExcludes: string[]
         // Handshake with two contacts if there is room
-        if (this.targetNeighbors.size() < this.N - 2) {
-            newExcludes = await this.handshaker!.findParallelTargetsAndHandshake(excluded)
-        } else {
-            newExcludes = await this.handshaker!.findNewTargetAndHandshake(excluded)
+        try {
+            if (this.targetNeighbors.size() + this.handshaker!.getOngoingHandshakes().size < this.N - 2) {
+                newExcludes = await this.handshaker!.findParallelTargetsAndHandshake(excluded)
+            } else if (this.targetNeighbors.size() + this.handshaker!.getOngoingHandshakes().size < this.N) {
+                newExcludes = await this.handshaker!.findNewTargetAndHandshake(excluded)
+            }
+        } catch (err) {
+            logger.warn(err)
         }
 
-        if (this.targetNeighbors.size() + this.handshaker!.getOngoingHandshakes().size < this.N) {
+        if (this.targetNeighbors.size() < this.N) {
             this.findNeighborsIntervalRef = setTimeout(() => {
                 if (this.findNeighborsIntervalRef) {
                     clearTimeout(this.findNeighborsIntervalRef)
                 }
                 this.findNeighbors(newExcludes).catch(() => {})
-            }, 250)
+            }, 100)
         } else {
             this.findNeighborsIntervalRef = null
         }
@@ -305,11 +309,17 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         )
 
         // Add checking for connection handshakes
-        if (this.targetNeighbors.size() >= this.N && request.neighbors.length <= this.N - 2) {
+        if (this.targetNeighbors.hasPeer(requester.getPeerDescriptor())) {
+            // console.log("here0", this.getOwnStringId(), PeerID.fromValue(requester.getPeerDescriptor().peerId).toKey())
+            return this.handshaker!.acceptedResponse(request, requester)
+        } else if (this.targetNeighbors.size() >= this.N && request.neighbors.length <= this.N - 2) {
+            // console.log("here1", this.getOwnStringId(), PeerID.fromValue(requester.getPeerDescriptor().peerId).toKey())
             return this.handshaker!.interleavingResponse(request, requester)
         } else if (this.targetNeighbors.size() + this.handshaker!.getOngoingHandshakes().size >= this.N && request.neighbors.length > this.N - 2) {
+            // console.log("here2", this.getOwnStringId(), PeerID.fromValue(requester.getPeerDescriptor().peerId).toKey())
             return this.handshaker!.unacceptedResponse(request)
         } else if (this.targetNeighbors.size() + this.handshaker!.getOngoingHandshakes().size < this.N && request.neighbors.length < this.N) {
+            // console.log("here3", this.getOwnStringId(), PeerID.fromValue(requester.getPeerDescriptor().peerId).toKey())
             return this.handshaker!.acceptedResponse(request, requester)
         }
 
