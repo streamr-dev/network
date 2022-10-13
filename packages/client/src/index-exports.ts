@@ -30,6 +30,7 @@ export {
     ConnectionConfig,
     TrackerRegistrySmartContract,
     NetworkConfig,
+    DecryptionConfig,
     CacheConfig,
     STREAMR_STORAGE_NODE_GERMANY,
     STREAM_CLIENT_DEFAULTS,
