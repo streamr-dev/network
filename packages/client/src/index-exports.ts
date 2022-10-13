@@ -48,7 +48,7 @@ export {
     ChainConnectionInfo,
     EthereumNetworkConfig,
 } from './Ethereum'
-export { GroupKey as EncryptionKey, GroupKeyId as EncryptionKeyId } from './encryption/GroupKey'
+export { GroupKey as EncryptionKey } from './encryption/GroupKey'
 export { UpdateEncryptionKeyOptions } from './encryption/GroupKeyStore'
 
 export { ConfigTest } from './ConfigTest'

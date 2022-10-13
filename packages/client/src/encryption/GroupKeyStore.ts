@@ -2,7 +2,7 @@ import { scoped, Lifecycle, inject } from 'tsyringe'
 import { join } from 'path'
 import { instanceId } from '../utils/utils'
 import { Context } from '../utils/Context'
-import { GroupKey, GroupKeyId } from './GroupKey'
+import { GroupKey } from './GroupKey'
 import { StreamID } from 'streamr-client-protocol'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { StreamrClientEventEmitter } from '../events'
@@ -24,7 +24,7 @@ export interface UpdateEncryptionKeyOptions {
 export class GroupKeyStore implements Context {
     readonly id
     readonly debug
-    private persistence: Persistence<GroupKeyId, string> | undefined
+    private persistence: Persistence<string, string> | undefined
     private ensureInitialized: () => Promise<void>
 
     constructor(
@@ -46,7 +46,7 @@ export class GroupKeyStore implements Context {
         })
     }
 
-    async get(keyId: GroupKeyId, streamId: StreamID): Promise<GroupKey | undefined> {
+    async get(keyId: string, streamId: StreamID): Promise<GroupKey | undefined> {
         await this.ensureInitialized()
         const value = await this.persistence!.get(keyId, streamId)
         if (value === undefined) { return undefined }

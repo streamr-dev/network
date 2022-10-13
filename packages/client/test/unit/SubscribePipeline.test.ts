@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-import { GroupKey, GroupKeyId } from './../../src/encryption/GroupKey'
+import { GroupKey } from './../../src/encryption/GroupKey'
 import { EncryptionType, MessageID, StreamMessage, StreamPartID, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
 import { Wallet } from '@ethersproject/wallet'
 import { MessageStream } from './../../src/subscribe/MessageStream'
@@ -26,10 +26,10 @@ describe('SubscribePipeline', () => {
     let streamPartId: StreamPartID
     let publisher: Wallet
 
-    const createMessage = async (opts: { 
+    const createMessage = async (opts: {
         serializedContent?: string
         encryptionType?: EncryptionType
-        groupKeyId?: GroupKeyId
+        groupKeyId?: string
     } = {}): Promise<StreamMessage<unknown>> => {
         const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
         return createSignedMessage({

@@ -20,12 +20,12 @@ import { Debugger } from '../utils/log'
 import { withThrottling, pOnce } from '../utils/promises'
 import { instanceId, MaxSizedSet } from '../utils/utils'
 import { Validator } from '../Validator'
-import { GroupKey, GroupKeyId } from './GroupKey'
+import { GroupKey } from './GroupKey'
 import { GroupKeyStore } from './GroupKeyStore'
 import { RSAKeyPair } from './RSAKeyPair'
 import { EthereumAddress } from '@streamr/utils'
 
-const MAX_PENDING_REQUEST_COUNT = 50000 // just some limit, we can tweak the number if needed 
+const MAX_PENDING_REQUEST_COUNT = 50000 // just some limit, we can tweak the number if needed
 
 /*
  * Sends group key requests and receives group key responses
@@ -42,8 +42,8 @@ export class SubscriberKeyExchange {
     private readonly pendingRequests: MaxSizedSet<string> = new MaxSizedSet(MAX_PENDING_REQUEST_COUNT)
     private readonly debug: Debugger
     private readonly ensureStarted: () => Promise<void>
-    requestGroupKey: (groupKeyId: GroupKeyId, publisherId: EthereumAddress, streamPartId: StreamPartID) => Promise<void>
-    
+    requestGroupKey: (groupKeyId: string, publisherId: EthereumAddress, streamPartId: StreamPartID) => Promise<void>
+
     constructor(
         context: Context,
         networkNodeFacade: NetworkNodeFacade,
@@ -63,12 +63,12 @@ export class SubscriberKeyExchange {
             node.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
             this.debug('Started')
         })
-        this.requestGroupKey = withThrottling((groupKeyId: GroupKeyId, publisherId: EthereumAddress, streamPartId: StreamPartID) => { 
+        this.requestGroupKey = withThrottling((groupKeyId: string, publisherId: EthereumAddress, streamPartId: StreamPartID) => {
             return this.doRequestGroupKey(groupKeyId, publisherId, streamPartId)
         }, decryptionConfig.maxKeyRequestsPerSecond)
     }
 
-    private async doRequestGroupKey(groupKeyId: GroupKeyId, publisherId: EthereumAddress, streamPartId: StreamPartID): Promise<void> {
+    private async doRequestGroupKey(groupKeyId: string, publisherId: EthereumAddress, streamPartId: StreamPartID): Promise<void> {
         await this.ensureStarted()
         const requestId = uuidv4()
         this.debug('Request group key %s, requestId=%s', groupKeyId, requestId)
@@ -84,7 +84,7 @@ export class SubscriberKeyExchange {
     }
 
     private async createRequest(
-        groupKeyId: GroupKeyId,
+        groupKeyId: string,
         streamPartId: StreamPartID,
         publisherId: EthereumAddress,
         rsaPublicKey: string,
@@ -128,7 +128,7 @@ export class SubscriberKeyExchange {
                 }
             } catch (e: any) {
                 this.debug('Error in SubscriberKeyExchange: %s', e.message)
-            }    
+            }
         }
     }
 }

@@ -3,8 +3,6 @@ import { EncryptedGroupKey } from 'streamr-client-protocol'
 import { uuid } from '../utils/uuid'
 import { EncryptionUtil } from './EncryptionUtil'
 
-export type GroupKeyId = string
-
 export class GroupKeyError extends Error {
     constructor(message: string, public groupKey?: GroupKey) {
         super(message)
@@ -19,11 +17,11 @@ export class GroupKeyError extends Error {
 export class GroupKey {
 
     /** @internal */
-    readonly id: GroupKeyId
+    readonly id: string
     /** @internal */
     readonly data: Uint8Array
 
-    constructor(groupKeyId: GroupKeyId, data: Uint8Array) {
+    constructor(groupKeyId: string, data: Uint8Array) {
         this.id = groupKeyId
         if (!groupKeyId) {
             throw new GroupKeyError(`groupKeyId must not be falsey ${groupKeyId}`)

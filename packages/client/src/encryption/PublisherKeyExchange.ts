@@ -20,7 +20,7 @@ import { Debugger } from '../utils/log'
 import { instanceId } from '../utils/utils'
 import { Validator } from '../Validator'
 import { EncryptionUtil } from './EncryptionUtil'
-import { GroupKey, GroupKeyId } from './GroupKey'
+import { GroupKey } from './GroupKey'
 import { GroupKeyStore } from './GroupKeyStore'
 import { EthereumAddress } from '@streamr/utils'
 
@@ -65,14 +65,14 @@ export class PublisherKeyExchange {
                     this.debug('Handling group key request %s', requestId)
                     await this.validator.validate(request)
                     const keys = without(
-                        await Promise.all(groupKeyIds.map((id: GroupKeyId) => this.store.get(id, request.getStreamId()))),
+                        await Promise.all(groupKeyIds.map((id: string) => this.store.get(id, request.getStreamId()))),
                         undefined) as GroupKey[]
                     if (keys.length > 0) {
                         const response = await this.createResponse(
-                            keys, 
+                            keys,
                             request.getStreamPartID(),
-                            rsaPublicKey, 
-                            request.getPublisherId(), 
+                            rsaPublicKey,
+                            request.getPublisherId(),
                             requestId)
                         const node = await this.networkNodeFacade.getNode()
                         node.publish(response)
