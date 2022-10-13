@@ -30,6 +30,6 @@
     "streamr-test-utils": "^2.0.0"
   },
   "dependencies": {
-    "@streamr/utils": "^0.0.1"
+    "@streamr/utils": "^1.0.0"
   }
 }

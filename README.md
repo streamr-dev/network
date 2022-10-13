@@ -136,6 +136,21 @@ as you expect e.g. `^X.Y.Z` vs `X.Y.Z`
 
 ## Releasing
 
+### Utils
+```
+git checkout main
+cd packages/utils
+npm version <SEMVER_OPTION>
+# Go thru other packages' package.json and update @streamr/utils entry (if present) to newly generated version
+git add package.json
+git commit -m "release(utils): vX.Y.Z"
+git tag utils/vX.Y.Z
+git push origin
+git push origin utils/vX.Y.Z
+
+npm publish
+```
+
 ### Network
 ```
 git checkout main
