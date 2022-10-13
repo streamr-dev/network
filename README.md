@@ -148,7 +148,7 @@ git tag utils/vX.Y.Z
 git push origin
 git push origin utils/vX.Y.Z
 
-npm publish
+npm publish --access public
 ```
 
 ### Network
@@ -206,7 +206,7 @@ git push origin
 git push origin cli-tools/vX.Y.Z
 
 npm run build
-npm publish
+npm publish --access public
 ```
 
 
