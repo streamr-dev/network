@@ -56,7 +56,7 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
                 }
 
                 latency = this.latencyTable![sourceRegion!][targetRegion!]
-                logger.info('Using latency' + latency)
+                logger.trace('Using latency' + latency)
 
             } else {
                 latency = Math.random() * (250 - 5) + 5
