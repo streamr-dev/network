@@ -1,10 +1,9 @@
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamPermission } from '../../src/permission'
-import { sign } from '../../src/utils/signingUtils'
-import { createTestStream } from '../test-utils/utils'
+import { createMockMessage, createTestStream } from '../test-utils/utils'
 import { fastWallet } from 'streamr-test-utils'
 import { wait } from '@streamr/utils'
-import { MessageID, StreamID, StreamMessage } from 'streamr-client-protocol'
+import { StreamID, toStreamPartID } from 'streamr-client-protocol'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 
 const PROPAGATION_WAIT_TIME = 2000
@@ -12,7 +11,6 @@ const PROPAGATION_WAIT_TIME = 2000
 describe('client behaviour on invalid message', () => {
     let streamId: StreamID
     let subscriberClient: StreamrClient
-    let publisherClient: StreamrClient
     let environment: FakeEnvironment
 
     beforeAll(async () => {
@@ -32,24 +30,10 @@ describe('client behaviour on invalid message', () => {
 
     beforeEach(async () => {
         subscriberClient = environment.createClient()
-        publisherClient = environment.createClient()
     })
 
     afterEach(async () => {
         await environment.destroy()
-    })
-
-    it('publishing with insufficient permissions prevents message from being sent to network (NET-773)', async () => {
-        const onMessage = jest.fn()
-        const onError = jest.fn()
-        const subscription = await subscriberClient.subscribe(streamId, onMessage)
-        subscription.onError.listen(onError)
-        await expect(publisherClient.publish(streamId, { not: 'allowed' }))
-            .rejects
-            .toThrow(/is not a publisher on stream/)
-        await wait(PROPAGATION_WAIT_TIME)
-        expect(onMessage).not.toHaveBeenCalled()
-        expect(onError).not.toHaveBeenCalled()
     })
 
     it('invalid messages received by subscriber do not cause unhandled promise rejection (NET-774)', async () => {
@@ -59,13 +43,11 @@ describe('client behaviour on invalid message', () => {
             throw new Error('should not get here')
         })
         const publisherWallet = fastWallet()
-        const networkNode = environment.startNode(publisherWallet.address)
-        const msg = new StreamMessage({
-            messageId: new MessageID(streamId, 0, Date.now(), 0, publisherWallet.address, ''),
-            prevMsgRef: null,
-            content: { not: 'allowed' }
+        const msg = await createMockMessage({
+            streamPartId: toStreamPartID(streamId, 0),
+            publisher: publisherWallet
         })
-        msg.signature = sign(msg.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), publisherWallet.privateKey.substring(2))
+        const networkNode = environment.startNode(publisherWallet.address)
         networkNode.publish(msg)
         await wait(PROPAGATION_WAIT_TIME)
         expect(true).toEqual(true) // we never get here if subscriberClient crashes

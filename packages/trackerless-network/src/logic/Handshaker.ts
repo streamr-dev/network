@@ -145,6 +145,7 @@ export class Handshaker {
         return res
     }
 
+    // eslint-disable-next-line class-methods-use-this
     public unacceptedResponse(request: HandshakeRequest): HandshakeResponse {
         const res: HandshakeResponse = {
             requestId: request.requestId,

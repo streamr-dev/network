@@ -3,6 +3,7 @@ import { StreamIDBuilder } from '../../src/StreamIDBuilder'
 import { StreamPartIDUtils } from 'streamr-client-protocol'
 import { StreamDefinition } from '../../src'
 import { Authentication } from '../../src/Authentication'
+import { toEthereumAddress } from '@streamr/utils'
 
 const address = '0xf5B45CC4cc510C31Cd6B64B8F4f341C283894086'
 const normalizedAddress = address.toLowerCase()
@@ -51,7 +52,7 @@ describe('StreamIDBuilder', () => {
 
         it('returns full stream id given path-only format if authenticated', () => {
             isAuthenticated.mockReturnValue(true)
-            getAddress.mockResolvedValue(address)
+            getAddress.mockResolvedValue(toEthereumAddress(address))
             return expect(streamIdBuilder.toStreamID('/foo/bar'))
                 .resolves
                 .toEqual(`${normalizedAddress}/foo/bar`)

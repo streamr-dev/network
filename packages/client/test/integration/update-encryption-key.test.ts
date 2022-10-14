@@ -65,6 +65,8 @@ describe('update encryption key', () => {
         expect(msg2!.getParsedContent()).toEqual({
             mockId: 2
         })
+        // @ts-expect-error the type definition defines that newGroupKey EncryptedGroupKey (see EncryptionUtil:82)
+        expect(msg2!.newGroupKey!.id).toBe(rotatedKey.id)
 
         await publisher.publish(streamPartId, {
             mockId: 3
@@ -73,6 +75,7 @@ describe('update encryption key', () => {
         expect(msg3!.getParsedContent()).toEqual({
             mockId: 3
         })
+        expect(msg3?.groupKeyId).toBe(rotatedKey.id)
     })
 
     it('rekey', async () => {
@@ -98,6 +101,7 @@ describe('update encryption key', () => {
         expect(msg2!.getParsedContent()).toEqual({
             mockId: 2
         })
+        expect(msg2?.groupKeyId).toBe(rekeyedKey.id)
     })
 
     describe('permission revoked', () => {

@@ -2,7 +2,7 @@ import { validateIsArray, validateIsString } from '../../utils/validations'
 
 import GroupKeyMessage from './GroupKeyMessage'
 import StreamMessage, { StreamMessageType } from './StreamMessage'
-import { EthereumAddress } from '../../utils'
+import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 
 interface Options {
     requestId: string
@@ -40,7 +40,7 @@ export default class GroupKeyRequest extends GroupKeyMessage {
         const [requestId, recipient, rsaPublicKey, groupKeyIds] = args
         return new GroupKeyRequest({
             requestId,
-            recipient,
+            recipient: toEthereumAddress(recipient),
             rsaPublicKey,
             groupKeyIds,
         })

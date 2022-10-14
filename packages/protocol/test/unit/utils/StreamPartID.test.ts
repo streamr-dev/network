@@ -1,8 +1,9 @@
 import { StreamPartIDUtils, toStreamID, toStreamPartID } from '../../../src'
+import { toEthereumAddress } from '@streamr/utils'
 
 const INVALID_PARTITIONS = [-1, 100, Math.PI, 'abc' as unknown as number]
 
-const streamId = toStreamID('/foo/bar', '0xaAAAaaaaAA123456789012345678901234567890')
+const streamId = toStreamID('/foo/bar', toEthereumAddress('0xaAAAaaaaAA123456789012345678901234567890'))
 
 describe('toStreamPartID', () => {
     it('valid arguments', () => {

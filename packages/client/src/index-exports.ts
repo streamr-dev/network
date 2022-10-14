@@ -5,7 +5,7 @@ export * from './StreamrClient'
 export * from './Stream'
 export { DecryptError } from './encryption/EncryptionUtil'
 export { StreamrClientEvents } from './events'
-export { MessageMetadata } from './publish/PublishPipeline'
+export { MessageMetadata } from './publish/Publisher'
 export { Subscription, SubscriptionOnMessage } from './subscribe/Subscription'
 export { MessageStreamOnMessage } from './subscribe/MessageStream'
 export type { MessageStream } from './subscribe/MessageStream'
@@ -30,7 +30,6 @@ export {
     ConnectionConfig,
     TrackerRegistrySmartContract,
     NetworkConfig,
-    DebugConfig,
     CacheConfig,
     STREAMR_STORAGE_NODE_GERMANY,
     STREAM_CLIENT_DEFAULTS,
@@ -50,7 +49,7 @@ export {
     EthereumNetworkConfig,
 } from './Ethereum'
 export { GroupKey as EncryptionKey, GroupKeyId as EncryptionKeyId } from './encryption/GroupKey'
-export { UpdateEncryptionKeyOptions } from './encryption/GroupKeyStoreFactory'
+export { UpdateEncryptionKeyOptions } from './encryption/GroupKeyStore'
 
 export { ConfigTest } from './ConfigTest'
 export { NetworkNodeStub } from './NetworkNodeFacade'
@@ -58,7 +57,7 @@ export { NotFoundError, ErrorCode } from './HttpUtil'
 export * from './types'
 export { formStorageNodeAssignmentStreamId } from './utils/utils'
 
-export { EthereumAddress, StreamPartID } from 'streamr-client-protocol'
+export { StreamPartID } from 'streamr-client-protocol'
 
 export { BigNumber } from '@ethersproject/bignumber'
 export type { ConnectionInfo } from '@ethersproject/web'

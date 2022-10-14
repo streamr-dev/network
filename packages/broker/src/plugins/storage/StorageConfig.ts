@@ -1,4 +1,4 @@
-import { keyToArrayIndex, Logger } from '@streamr/utils'
+import { EthereumAddress, keyToArrayIndex, Logger } from '@streamr/utils'
 import { StreamPartID } from 'streamr-client-protocol'
 import { Stream, StreamrClient } from 'streamr-client'
 import { Diff, SetMembershipSynchronizer } from './SetMembershipSynchronizer'
@@ -41,7 +41,7 @@ export class StorageConfig {
     private readonly storageEventListener: StorageEventListener
 
     constructor(
-        clusterId: string,
+        clusterId: EthereumAddress,
         clusterSize: number,
         myIndexInCluster: number,
         pollInterval: number,

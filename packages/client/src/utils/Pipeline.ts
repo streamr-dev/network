@@ -72,7 +72,7 @@ class PipelineDefinition<InType, OutType = InType> {
     }
 
     setSource(source: AsyncGenerator<InType> | AsyncGeneratorWithId<InType>) {
-        const id = 'id' in source ? source.id : instanceId(source, 'Source') // eslint-disable-line no-param-reassign
+        const id = 'id' in source ? source.id : instanceId(source, 'Source')
         this.source = Object.assign(source, {
             id,
         })
@@ -172,7 +172,6 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
     /** @internal */
     onMessage = Signal.create<[OutType]>()
 
-    // eslint-disable-next-line func-call-spacing, no-spaced-func
     /** @internal */
     onError = ErrorSignal.create<[Error, (InType | OutType)?, number?]>()
 

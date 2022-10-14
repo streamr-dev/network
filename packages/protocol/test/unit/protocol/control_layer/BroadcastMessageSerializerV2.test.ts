@@ -1,10 +1,20 @@
 import assert from 'assert'
 
-import { StreamMessage, BroadcastMessage, ControlMessage, ContentType, EncryptionType } from '../../../../src/index'
+import {
+    StreamMessage,
+    BroadcastMessage,
+    ControlMessage,
+    ContentType,
+    EncryptionType
+} from '../../../../src/index'
+import { toEthereumAddress } from '@streamr/utils'
+import { SIGNATURE_TYPE_ETH } from '../../../../src/protocol/message_layer/StreamMessageSerializerV32'
 
-const streamMessage = StreamMessage.deserialize([32, ['streamId', 0, 1529549961116, 0, 'address', 'msg-chain-id'],
+const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+
+const streamMessage = StreamMessage.deserialize([32, ['streamId', 0, 1529549961116, 0, PUBLISHER_ID, 'msg-chain-id'],
     [1529549961000, 0], StreamMessage.MESSAGE_TYPES.MESSAGE,
-    ContentType.JSON, EncryptionType.NONE, null, '{"valid": "json"}', null, StreamMessage.SIGNATURE_TYPES.ETH, 'signature'])
+    ContentType.JSON, EncryptionType.NONE, null, '{"valid": "json"}', null, SIGNATURE_TYPE_ETH, 'signature'])
 
 const VERSION = 2
 

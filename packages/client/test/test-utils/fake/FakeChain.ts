@@ -1,7 +1,7 @@
-import { EthereumAddress, StreamID } from 'streamr-client-protocol'
+import { StreamID } from 'streamr-client-protocol'
 import { StreamProperties } from '../../../src/Stream'
 import { StreamPermission } from '../../../src/permission'
-import { Multimap } from '@streamr/utils'
+import { EthereumAddress, Multimap } from '@streamr/utils'
 import { StorageNodeMetadata } from '../../../src/registry/StorageNodeRegistry'
 
 export type PublicPermissionTarget = 'public'

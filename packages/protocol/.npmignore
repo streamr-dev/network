@@ -2,10 +2,13 @@
 /test
 .github
 tsconfig.json
+tsconfig.*.json
 /contracts
 .eslintignore
 .eslintrc.js
 jest.config.js
+typedoc.js
+*.tsbuildinfo
 
 # Logs
 logs

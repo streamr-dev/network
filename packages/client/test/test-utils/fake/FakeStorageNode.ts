@@ -1,22 +1,20 @@
 import { range } from 'lodash'
 import {
-    EthereumAddress,
-    MessageID,
     StreamID,
     StreamMessage,
     StreamMessageType,
     StreamPartID,
-    toStreamID,
     toStreamPartID
 } from 'streamr-client-protocol'
 import { FakeNetworkNode } from './FakeNetworkNode'
 import { FakeNetwork } from './FakeNetwork'
 import { formStorageNodeAssignmentStreamId } from '../../../src/utils/utils'
-import { sign } from '../../../src/utils/signingUtils'
-import { Multimap } from '@streamr/utils'
+import { EthereumAddress, Multimap, toEthereumAddress } from '@streamr/utils'
 import { FakeChain } from './FakeChain'
 import { StreamPermission } from '../../../src/permission'
 import { Wallet } from 'ethers'
+import { createMockMessage } from '../utils'
+import { DEFAULT_PARTITION } from '../../../src/StreamIDBuilder'
 
 const URL_SCHEME = 'FakeStorageNode'
 
@@ -25,7 +23,7 @@ const createStorageNodeUrl = (address: EthereumAddress): string => `${URL_SCHEME
 export const parseNodeIdFromStorageNodeUrl = (url: string): EthereumAddress => {
     const groups = url.match(new RegExp('(.*)://([^/]*)(/.*)?'))
     if ((groups !== null) && (groups[1] === URL_SCHEME)) {
-        return groups[2]
+        return toEthereumAddress(groups[2])
     } else {
         throw new Error(`unknown storage node url: ${url}`)
     }
@@ -38,31 +36,31 @@ const isStorableMessage = (msg: StreamMessage): boolean => {
 export class FakeStorageNode extends FakeNetworkNode {
 
     private readonly streamPartMessages: Multimap<StreamPartID, StreamMessage> = new Multimap()
-    private readonly privateKey: string
+    private readonly wallet: Wallet
     private readonly chain: FakeChain
 
     constructor(wallet: Wallet, network: FakeNetwork, chain: FakeChain) {
         super({
-            id: wallet.address
+            id: toEthereumAddress(wallet.address)
         } as any, network)
-        this.privateKey = wallet.privateKey
+        this.wallet = wallet
         this.chain = chain
-        chain.storageNodeMetadatas.set(wallet.address.toLowerCase(), {
-            http: createStorageNodeUrl(wallet.address)
+        const address = toEthereumAddress(wallet.address)
+        chain.storageNodeMetadatas.set(address, {
+            http: createStorageNodeUrl(address)
         })
-        const storageNodeAssignmentStreamPermissions = new Multimap<string, StreamPermission>()
-        storageNodeAssignmentStreamPermissions.add(wallet.address.toLowerCase(), StreamPermission.PUBLISH)
-        this.chain.streams.set(formStorageNodeAssignmentStreamId(wallet.address), {
+        const storageNodeAssignmentStreamPermissions = new Multimap<EthereumAddress, StreamPermission>()
+        storageNodeAssignmentStreamPermissions.add(address, StreamPermission.PUBLISH)
+        this.chain.streams.set(formStorageNodeAssignmentStreamId(address), {
             metadata: {},
             permissions: storageNodeAssignmentStreamPermissions
         })
-    
     }
 
     async addAssignment(streamId: StreamID): Promise<void> {
         const partitionCount = this.chain.streams.get(streamId)!.metadata.partitions
         const streamParts = range(0, partitionCount).map((p) => toStreamPartID(streamId, p))
-        streamParts.forEach(async (streamPartId, idx) => {
+        streamParts.forEach(async (streamPartId) => {
             if (!this.subscriptions.has(streamPartId)) {
                 this.addMessageListener((msg: StreamMessage) => {
                     if ((msg.getStreamPartID() === streamPartId) && isStorableMessage(msg)) {
@@ -70,21 +68,13 @@ export class FakeStorageNode extends FakeNetworkNode {
                     }
                 })
                 this.subscribe(streamPartId)
-                const assignmentMessage = new StreamMessage({
-                    messageId: new MessageID(
-                        toStreamID(formStorageNodeAssignmentStreamId(this.id)),
-                        0,
-                        Date.now(),
-                        idx,
-                        this.id,
-                        ''
-                    ),
+                const assignmentMessage = await createMockMessage({
+                    streamPartId: toStreamPartID(formStorageNodeAssignmentStreamId(this.id), DEFAULT_PARTITION),
+                    publisher: this.wallet,
                     content: {
                         streamPart: streamPartId,
                     }
                 })
-                const payload = assignmentMessage.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH)
-                assignmentMessage.signature = sign(payload, this.privateKey)
                 this.publish(assignmentMessage)
             }
         })
@@ -105,7 +95,6 @@ export class FakeStorageNode extends FakeNetworkNode {
                 const serialized = msg.serialize()
                 return StreamMessage.deserialize(serialized)
             })
-            // eslint-disable-next-line no-else-return
         } else {
             // TODO throw an error if this storage node doesn't isn't configured to store the stream?
             return []
@@ -131,7 +120,6 @@ export class FakeStorageNode extends FakeNetworkNode {
                         || ((msg.getTimestamp() === opts.toTimestamp) && (msg.getSequenceNumber() <= opts.toSequenceNumber))
                     )
             })
-            // eslint-disable-next-line no-else-return
         } else {
             // TODO throw an error if this storage node doesn't isn't configured to store the stream?
             return []

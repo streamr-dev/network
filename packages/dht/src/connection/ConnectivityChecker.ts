@@ -134,6 +134,7 @@ export class ConnectivityChecker {
         connection.send(Message.toBinary(msg))
     }
 
+    // eslint-disable-next-line class-methods-use-this
     private async connectAsync({ host, port, url, timeoutMs }:
         { host?: string, port?: number, url?: string, timeoutMs: number } = { timeoutMs: 1000 }): Promise<IConnection> {
 

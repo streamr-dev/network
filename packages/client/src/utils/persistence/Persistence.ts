@@ -1,8 +1,7 @@
+import { StreamID } from "streamr-client-protocol"
+
 export interface Persistence<K, V> {
-    get(key: K): Promise<V | undefined>
-    set(key: K, value: V): Promise<void>
-    has(key: K): Promise<boolean>
+    get(key: K, streamId: StreamID): Promise<V | undefined>
+    set(key: K, value: V, streamId: StreamID): Promise<void>
     close(): Promise<void>
-    destroy(): Promise<void>
-    exists(): Promise<boolean>
 }

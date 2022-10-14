@@ -43,6 +43,8 @@ export class PeerID {
         return new PeerID({ stringValue })
     }
 
+    // TODO convert to static method?
+    // eslint-disable-next-line class-methods-use-this
     private ip2Int(ip: string): number {
         return ip.split('.').map((octet, index, array) => {
             return parseInt(octet) * Math.pow(256, (array.length - index - 1))

@@ -1,5 +1,5 @@
 import * as utils from '../../src/utils/utils'
-import { inspect, format, DEFAULT_INSPECT_OPTS } from '../../src/utils/log'
+import { format } from '../../src/utils/log'
 
 describe('utils', () => {
     describe('getEndpointUrl', () => {
@@ -11,12 +11,9 @@ describe('utils', () => {
     })
 
     describe('util/log', () => {
-        const longString = 'longString'.repeat(DEFAULT_INSPECT_OPTS.maxStringLength)
-        it('inspect limits string length', () => {
-            expect(inspect({ longString }).length).toBeLessThan(DEFAULT_INSPECT_OPTS.maxStringLength * 1.2)
-        })
+        const longString = 'longString'.repeat(500)
         it('format limits string length', () => {
-            expect(format('%o', { longString }).length).toBeLessThan(DEFAULT_INSPECT_OPTS.maxStringLength * 1.2)
+            expect(format('%o', { longString }).length).toBeLessThan(longString.length * 1.2)
         })
     })
 })

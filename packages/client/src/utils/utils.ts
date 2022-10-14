@@ -4,7 +4,8 @@ import { SEPARATOR } from './uuid'
 import pkg from '../../package.json'
 
 import { Debug } from './log'
-import { EthereumAddress, StreamID, toStreamID } from 'streamr-client-protocol'
+import { StreamID, toStreamID } from 'streamr-client-protocol'
+import { toEthereumAddress } from '@streamr/utils'
 
 export const debug = Debug('utils')
 
@@ -94,10 +95,8 @@ export const getEndpointUrl = (baseUrl: string, ...pathParts: string[]): string 
     return baseUrl + '/' + pathParts.map((part) => encodeURIComponent(part)).join('/')
 }
 
-/* eslint-disable object-curly-newline */
-
-export function formStorageNodeAssignmentStreamId(clusterAddress: EthereumAddress): StreamID {
-    return toStreamID('/assignments', clusterAddress)
+export function formStorageNodeAssignmentStreamId(clusterAddress: string): StreamID {
+    return toStreamID('/assignments', toEthereumAddress(clusterAddress))
 }
 
 export class MaxSizedSet<T> {
@@ -119,4 +118,10 @@ export class MaxSizedSet<T> {
     delete(value: T): void {
         this.delegate.delete(value)
     }
+}
+
+// A unique internal identifier to some list of primitive values. Useful
+// e.g. as a map key or a cache key.
+export const formLookupKey = <K extends (string | number)[]>(...args: K): string => {
+    return args.join('|')
 }

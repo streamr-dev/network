@@ -57,6 +57,7 @@ class WebsocketPluginPublisher implements PluginPublisher {
     }
 }
 
+/* eslint-disable class-methods-use-this */
 class HttpPluginPublisher implements PluginPublisher {
     async connect(): Promise<void> {
     }
@@ -184,6 +185,5 @@ describe('multiple publisher plugins', () => {
         await waitForCondition(() => receivedMessages.size() >= messages.length)
         expect(receivedMessages.items).toIncludeSameMembers(messages)
         await subscriber.end(true)
-
     })
 })

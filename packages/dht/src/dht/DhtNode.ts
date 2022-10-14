@@ -574,6 +574,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         return response
     }
 
+    // eslint-disable-next-line class-methods-use-this
     public async ping(request: PingRequest, _context: ServerCallContext): Promise<PingResponse> {
         const response: PingResponse = {
             requestId: request.requestId

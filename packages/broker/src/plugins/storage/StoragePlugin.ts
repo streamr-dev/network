@@ -1,4 +1,4 @@
-import { EthereumAddress, StreamMessage, StreamMessageType } from 'streamr-client-protocol'
+import { StreamMessage, StreamMessageType } from 'streamr-client-protocol'
 import { router as dataQueryEndpoints } from './DataQueryEndpoints'
 import { router as dataMetadataEndpoint } from './DataMetadataEndpoints'
 import { router as storageConfigEndpoints } from './StorageConfigEndpoints'
@@ -8,7 +8,7 @@ import { StorageConfig } from './StorageConfig'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { Schema } from 'ajv'
 import { MetricsContext } from 'streamr-network'
-import { Logger } from '@streamr/utils'
+import { EthereumAddress, Logger } from '@streamr/utils'
 import { formStorageNodeAssignmentStreamId, Stream } from 'streamr-client'
 
 const logger = new Logger(module)
@@ -71,6 +71,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
         ])
     }
 
+    // eslint-disable-next-line class-methods-use-this
     override getConfigSchema(): Schema {
         return PLUGIN_CONFIG_SCHEMA
     }
@@ -90,7 +91,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
         return cassandraStorage
     }
 
-    private async startStorageConfig(clusterId: string, assignmentStream: Stream): Promise<StorageConfig> {
+    private async startStorageConfig(clusterId: EthereumAddress, assignmentStream: Stream): Promise<StorageConfig> {
         const node = await this.streamrClient.getNode()
         const storageConfig = new StorageConfig(
             clusterId,

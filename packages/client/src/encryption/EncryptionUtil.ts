@@ -22,7 +22,6 @@ export class EncryptionUtil {
     /**
      * Returns a Buffer or a hex String
      */
-    /* eslint-disable no-dupe-class-members */
     static encryptWithRSAPublicKey(plaintextBuffer: Uint8Array, publicKey: crypto.KeyLike, outputInHex: true): string
     // These overrides tell ts outputInHex returns string
     static encryptWithRSAPublicKey(plaintextBuffer: Uint8Array, publicKey: crypto.KeyLike): string
@@ -35,7 +34,6 @@ export class EncryptionUtil {
         }
         return ciphertextBuffer
     }
-    /* eslint-disable no-dupe-class-members */
 
     // Returns a Buffer
     static decryptWithRSAPrivateKey(ciphertext: string | Uint8Array, privateKey: crypto.KeyLike, isHexString = false): Buffer {
@@ -61,27 +59,11 @@ export class EncryptionUtil {
         return Buffer.concat([decipher.update(ciphertext.slice(32), 'hex'), decipher.final()])
     }
 
-    /*
-     * Sets the content of 'streamMessage' with the encryption result of the old content with 'groupKey'.
-     */
-    static encryptStreamMessage(streamMessage: StreamMessage, groupKey: GroupKey, nextGroupKey?: GroupKey): void {
-        /* eslint-disable no-param-reassign */
-        streamMessage.encryptionType = StreamMessage.ENCRYPTION_TYPES.AES
-        streamMessage.groupKeyId = groupKey.id
-        streamMessage.serializedContent = this.encryptWithAES(Buffer.from(streamMessage.getSerializedContent(), 'utf8'), groupKey.data)
-        if (nextGroupKey) {
-            streamMessage.newGroupKey = groupKey.encryptNextGroupKey(nextGroupKey)
-        }
-        streamMessage.parsedContent = undefined
-        /* eslint-enable no-param-reassign */
-    }
-
     static decryptStreamMessage(streamMessage: StreamMessage, groupKey: GroupKey): void | never {
         if ((streamMessage.encryptionType !== StreamMessage.ENCRYPTION_TYPES.AES)) {
             return
         }
 
-        /* eslint-disable no-param-reassign */
         try {
             streamMessage.encryptionType = StreamMessage.ENCRYPTION_TYPES.NONE
             const serializedContent = this.decryptWithAES(streamMessage.getSerializedContent(), groupKey.data).toString()

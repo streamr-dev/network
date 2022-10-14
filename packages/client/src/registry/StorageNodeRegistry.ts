@@ -5,10 +5,10 @@ import { scoped, Lifecycle, inject } from 'tsyringe'
 import { ConfigInjectionToken } from '../Config'
 import { EthereumConfig, getStreamRegistryChainProvider, getStreamRegistryOverrides } from '../Ethereum'
 import { NotFoundError } from '../HttpUtil'
-import { EthereumAddress } from 'streamr-client-protocol'
 import { waitForTx } from '../utils/contract'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ContractFactory } from '../ContractFactory'
+import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 
 /**
  * Store a mapping of storage node addresses <-> storage node URLs
@@ -33,7 +33,7 @@ export class StorageNodeRegistry {
     ) {
         const chainProvider = getStreamRegistryChainProvider(ethereumConfig)
         this.nodeRegistryContractReadonly = this.contractFactory.createReadContract(
-            this.ethereumConfig.storageNodeRegistryChainAddress,
+            toEthereumAddress(this.ethereumConfig.storageNodeRegistryChainAddress),
             NodeRegistryArtifact,
             chainProvider,
             'storageNodeRegistry'
@@ -44,7 +44,7 @@ export class StorageNodeRegistry {
         if (!this.nodeRegistryContract) {
             const chainSigner = await this.authentication.getStreamRegistryChainSigner()
             this.nodeRegistryContract = this.contractFactory.createWriteContract<NodeRegistryContract>(
-                this.ethereumConfig.storageNodeRegistryChainAddress,
+                toEthereumAddress(this.ethereumConfig.storageNodeRegistryChainAddress),
                 NodeRegistryArtifact,
                 chainSigner,
                 'storageNodeRegistry'

@@ -1,6 +1,9 @@
 import { StorageEventListener } from '../../../../src/plugins/storage/StorageEventListener'
 import { StorageNodeAssignmentEvent, Stream, StreamrClient, StreamrClientEvents } from 'streamr-client'
-import { wait } from '@streamr/utils'
+import { EthereumAddress, toEthereumAddress, wait } from '@streamr/utils'
+
+const clusterId = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+const otherClusterId = toEthereumAddress('0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb')
 
 describe(StorageEventListener, () => {
     let stubClient: Pick<StreamrClient, 'getStream' | 'on' | 'off'>
@@ -22,7 +25,7 @@ describe(StorageEventListener, () => {
             off: jest.fn()
         }
         onEvent = jest.fn()
-        listener = new StorageEventListener('clusterId', stubClient as StreamrClient, onEvent)
+        listener = new StorageEventListener(clusterId, stubClient as StreamrClient, onEvent)
     })
 
     afterEach(() => {
@@ -41,7 +44,7 @@ describe(StorageEventListener, () => {
         expect(stubClient.off).toHaveBeenCalledTimes(2)
     })
 
-    function addToStorageNode(recipient: string) {
+    function addToStorageNode(recipient: EthereumAddress) {
         storageEventListeners.get('addToStorageNode')!({
             nodeAddress: recipient,
             streamId: 'streamId',
@@ -51,7 +54,7 @@ describe(StorageEventListener, () => {
 
     it('storage node assignment event gets passed to onEvent', async () => {
         await listener.start()
-        addToStorageNode('clusterId')
+        addToStorageNode(clusterId)
         await wait(0)
         expect(onEvent).toHaveBeenCalledTimes(1)
         expect(onEvent).toHaveBeenCalledWith(
@@ -63,7 +66,7 @@ describe(StorageEventListener, () => {
 
     it('storage node assignment events meant for another recipient are ignored', async () => {
         await listener.start()
-        addToStorageNode('otherClusterId')
+        addToStorageNode(otherClusterId)
         await wait(0)
         expect(onEvent).toHaveBeenCalledTimes(0)
     })
