@@ -1,12 +1,13 @@
 import { DhtNode } from '../../src/dht/DhtNode'
-import { PeerDescriptor } from '../../src/proto/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils'
 import { LatencyType, Simulator } from '../../src/connection/Simulator'
+import { PeerDescriptor } from '../../src/proto/DhtRpc'
+import { getRandomRegion } from '../data/pings'
 
-describe('Mock connection Dht joining with latencies', () => {
+describe('Mock connection Dht joining with real latencies', () => {
     let entryPoint: DhtNode
     let nodes: DhtNode[]
-    const simulator = new Simulator(LatencyType.RANDOM)
+    const simulator = new Simulator(LatencyType.REAL)
     let entrypointDescriptor: PeerDescriptor
     
     beforeEach(async () => {
@@ -17,7 +18,8 @@ describe('Mock connection Dht joining with latencies', () => {
        
         entrypointDescriptor = {
             peerId: entryPoint.getNodeId().value,
-            type: 0
+            type: 0,
+            region: getRandomRegion()
         }
         
         for (let i = 1; i < 100; i++) {
