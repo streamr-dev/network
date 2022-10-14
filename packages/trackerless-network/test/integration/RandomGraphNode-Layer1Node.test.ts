@@ -142,7 +142,7 @@ describe('RandomGraphNode-DhtNode', () => {
             node.getTargetNeighborStringIds().forEach((neighborId) => {
                 if (neighborId !== entryPointRandomGraphNode.getOwnStringId()) {
                     const neighbor = graphNodes.find((n) => n.getOwnStringId() === neighborId)
-                    expect(neighbor.getTargetNeighborStringIds()).toContain(nodeId)
+                    expect(neighbor!.getTargetNeighborStringIds()).toContain(nodeId)
                 }
             })
         })

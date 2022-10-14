@@ -57,7 +57,6 @@ export class PeerList {
     }
 
     size(exclude: string[] = []): number {
-
         return [...this.peers.keys()].filter((peer) => !exclude.includes(peer)).length
     }
 

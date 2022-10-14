@@ -131,16 +131,18 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
     }
 
     send(data: Uint8Array): void {
-        try {
-            this.dataChannel?.sendMessageBinary(data as Buffer)
-        } catch (err) {
-            logger.warn(
-                'Failed to send binary message to '
-                + PeerID.fromValue(this.remotePeerDescriptor.peerId).toKey()
-                + ' --- '
-                + PeerID.fromValue(this.ownPeerDescriptor!.peerId).toKey()
-            )
-            // this.close()
+        if (this.isOpen()) {
+            try {
+                this.dataChannel?.sendMessageBinary(data as Buffer)
+            } catch (err) {
+                logger.warn(
+                    'Failed to send binary message to '
+                    + PeerID.fromValue(this.remotePeerDescriptor.peerId).toKey()
+                    + ' --- '
+                    + PeerID.fromValue(this.ownPeerDescriptor!.peerId).toKey()
+                )
+                // this.close()
+            }
         }
     }
 

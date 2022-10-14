@@ -28,7 +28,7 @@ describe('Full node network with WebRTC connections', () => {
         streamrNodes = []
         connectionManagers = []
 
-        const layer0Ep = new DhtNode({ peerDescriptor: epPeerDescriptor, numberOfNodesPerKBucket: 3, routeMessageTimeout: 10000 })
+        const layer0Ep = new DhtNode({ peerDescriptor: epPeerDescriptor, numberOfNodesPerKBucket: 4, routeMessageTimeout: 10000 })
         await layer0Ep.start()
         await layer0Ep.joinDht(epPeerDescriptor)
 
@@ -50,6 +50,7 @@ describe('Full node network with WebRTC connections', () => {
             // console.log(i, peerId.toKey())
 
             const layer0 = new DhtNode({
+                numberOfNodesPerKBucket: 2,
                 peerDescriptor,
                 routeMessageTimeout: 10000,
                 entryPoints: [epPeerDescriptor]

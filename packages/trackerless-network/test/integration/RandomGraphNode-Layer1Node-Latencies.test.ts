@@ -2,7 +2,7 @@ import { DhtNode, Simulator, SimulatorTransport, PeerDescriptor, PeerID } from '
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { range } from 'lodash'
 import { waitForCondition } from 'streamr-test-utils'
-import { Logger } from '@streamr/utils'
+import { Logger, wait } from '@streamr/utils'
 import { mockConnectionLocker } from '../utils'
 
 const logger = new Logger(module)
@@ -86,7 +86,7 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         expect(graphNodes[0].getTargetNeighborStringIds().length).toEqual(1)
     })
 
-    it.only('happy path 4 peers', async () => {
+    it('happy path 5 peers', async () => {
         entryPointRandomGraphNode.start()
         range(4).map((i) => graphNodes[i].start())
         await Promise.all(range(4).map(async (i) => {
@@ -96,23 +96,24 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         await Promise.all(range(4).map((i) => {
             return waitForCondition(() => {
                 return graphNodes[i].getTargetNeighborStringIds().length >= 4
-            }, 10000)
+            }, 10000, 2000)
         }))
-        
+
         range(4).map((i) => {
             expect(graphNodes[i].getNearbyContactPoolIds().length).toBeGreaterThanOrEqual(4)
-            expect(graphNodes[i].getTargetNeighborStringIds().length).toBeGreaterThanOrEqual(3)
+            expect(graphNodes[i].getTargetNeighborStringIds().length).toBeGreaterThanOrEqual(4)
         })
 
         // Check bidirectionality
         const allNodes = graphNodes
         allNodes.push(entryPointRandomGraphNode)
         range(5).map((i) => {
+            const nodeId = allNodes[i].getOwnStringId()
             allNodes[i].getNearbyContactPoolIds().forEach((stringId) => {
                 const neighbor = allNodes.find((peer) => {
                     return peer.getOwnStringId() === stringId
                 })
-                expect(neighbor!.getTargetNeighborStringIds().includes(allNodes[i].getOwnStringId())).toEqual(true)
+                expect(neighbor!.getTargetNeighborStringIds()).toContain(nodeId)
             })
         })
     }, 60000)
@@ -125,15 +126,16 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         await Promise.all(graphNodes.map((node) =>
             Promise.all([
                 waitForCondition(() => node.getNearbyContactPoolIds().length >= 8),
-                waitForCondition(() => node.getTargetNeighborStringIds().length >= 3, 18000)
+                waitForCondition(() => node.getTargetNeighborStringIds().length >= 3, 10000)
             ])
         ))
+
 
         await waitForCondition(() => {
             const avg = graphNodes.reduce((acc, curr) => {
                 return acc + curr.getTargetNeighborStringIds().length
             }, 0) / numOfNodes
-            return avg >= 3.9
+            return avg >= 3.8
         })
 
         const avg = graphNodes.reduce((acc, curr) => {
@@ -147,9 +149,9 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
             node.getTargetNeighborStringIds().forEach((neighborId) => {
                 if (neighborId !== entryPointRandomGraphNode.getOwnStringId()) {
                     const neighbor = graphNodes.find((n) => n.getOwnStringId() === neighborId)
-                    expect(neighbor.getTargetNeighborStringIds()).toContain(nodeId)
+                    expect(neighbor!.getTargetNeighborStringIds()).toContain(nodeId)
                 }
             })
         })
-    }, 20000)
+    }, 60000)
 })

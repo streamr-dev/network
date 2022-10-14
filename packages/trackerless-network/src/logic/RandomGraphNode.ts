@@ -47,7 +47,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     private readonly layer1: DhtNode
     private readonly nearbyContactPool: PeerList
     private readonly randomContactPool: PeerList
-    private readonly targetNeighbors: PeerList = new PeerList(4)
+    private readonly targetNeighbors: PeerList = new PeerList(this.N)
     private rpcCommunicator: ListeningRpcCommunicator | null = null
     private readonly P2PTransport: ITransport
     private readonly connectionLocker: ConnectionLocker
@@ -142,24 +142,22 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         }
         logger.trace(`Finding new neighbors...`)
         let newExcludes: string[]
-        // Handshake with two contacts if there is room
-        try {
-            if (this.targetNeighbors.size() + this.handshaker!.getOngoingHandshakes().size < this.N - 2) {
-                newExcludes = await this.handshaker!.findParallelTargetsAndHandshake(excluded)
-            } else if (this.targetNeighbors.size() + this.handshaker!.getOngoingHandshakes().size < this.N) {
-                newExcludes = await this.handshaker!.findNewTargetAndHandshake(excluded)
-            }
-        } catch (err) {
-            logger.warn(err)
+
+        if (this.targetNeighbors.size() + this.handshaker!.getOngoingHandshakes().size < this.N - 2) {
+            newExcludes = await this.handshaker!.findParallelTargetsAndHandshake(excluded)
+        } else if (this.targetNeighbors.size() + this.handshaker!.getOngoingHandshakes().size < this.N) {
+            newExcludes = await this.handshaker!.findNewTargetAndHandshake(excluded)
+        } else {
+            newExcludes = excluded
         }
 
-        if (this.targetNeighbors.size() < this.N) {
+        if (this.targetNeighbors.size() < this.N && newExcludes.length < this.nearbyContactPool.size()) {
             this.findNeighborsIntervalRef = setTimeout(() => {
                 if (this.findNeighborsIntervalRef) {
                     clearTimeout(this.findNeighborsIntervalRef)
                 }
                 this.findNeighbors(newExcludes).catch(() => {})
-            }, 100)
+            }, 250)
         } else {
             this.findNeighborsIntervalRef = null
         }
@@ -184,7 +182,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
 
         this.neighborUpdateIntervalRef = setTimeout(async () => {
             await this.updateNeighborInfo()
-        }, 10000)
+        }, 7500)
 
     }
 
@@ -309,7 +307,10 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         )
 
         // Add checking for connection handshakes
-        if (this.targetNeighbors.hasPeer(requester.getPeerDescriptor())) {
+        if (
+            this.targetNeighbors.hasPeer(requester.getPeerDescriptor())
+            || this.handshaker!.getOngoingHandshakes().has(PeerID.fromValue(requester.getPeerDescriptor().peerId).toKey())
+        ) {
             // console.log("here0", this.getOwnStringId(), PeerID.fromValue(requester.getPeerDescriptor().peerId).toKey())
             return this.handshaker!.acceptedResponse(request, requester)
         } else if (this.targetNeighbors.size() >= this.N && request.neighbors.length <= this.N - 2) {
@@ -379,28 +380,21 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     async neighborUpdate(message: NeighborUpdate, _context: ServerCallContext): Promise<NeighborUpdate> {
         if (this.targetNeighbors.hasPeerWithStringId(message.senderId)) {
             this.targetNeighbors.getNeighborByStringId(message.senderId)!.setLocalNeighbors(message.neighborDescriptors)
-            if (
-                this.targetNeighbors.size() === 3
-                && message.neighborDescriptors.length < this.N
-                && this.handshaker!.getOngoingHandshakes().size === 0
-            ) {
-                setImmediate(async () => {
-                    const found = message.neighborDescriptors
-                        .map((desc) => PeerID.fromValue(desc.peerId).toKey() as string)
-                        .find((stringId) => stringId !== this.getOwnStringId() && !this.targetNeighbors.getStringIds().includes(stringId))
-
-                    if (found) {
-                        const targetPeerDescriptor = message.neighborDescriptors.find(
-                            (descriptor) => PeerID.fromValue(descriptor.peerId).toKey() === found
-                        )
-                        const targetNeighbor = new RemoteRandomGraphNode(
-                            targetPeerDescriptor!,
-                            this.randomGraphId,
-                            toProtoRpcClient(new NetworkRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
-                        )
-                        await this.handshaker!.handshakeWithTarget(targetNeighbor)
-                    }
+            const newPeers = message.neighborDescriptors
+                .filter((peerDescriptor) => {
+                    const stringId = PeerID.fromValue(peerDescriptor.peerId).toKey()
+                    return stringId !== this.getOwnStringId() && !this.targetNeighbors.getStringIds().includes(stringId)
                 })
+
+            newPeers.forEach((peer) => this.nearbyContactPool.add(
+                new RemoteRandomGraphNode(
+                    peer,
+                    this.randomGraphId,
+                    toProtoRpcClient(new NetworkRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
+                ))
+            )
+            if (this.findNeighborsIntervalRef) {
+                this.findNeighbors([]).catch(() => {})
             }
         } else {
             const response: NeighborUpdate = {

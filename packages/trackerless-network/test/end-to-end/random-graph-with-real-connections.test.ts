@@ -103,11 +103,11 @@ describe('random graph with real connections', () => {
                 && randomGraphNode5.getTargetNeighborStringIds().length >= 3
         }, 10000)
 
-        expect(randomGraphNode1.getTargetNeighborStringIds().length).toEqual(4)
-        expect(randomGraphNode2.getTargetNeighborStringIds().length).toEqual(4)
-        expect(randomGraphNode3.getTargetNeighborStringIds().length).toEqual(4)
-        expect(randomGraphNode4.getTargetNeighborStringIds().length).toEqual(4)
-        expect(randomGraphNode5.getTargetNeighborStringIds().length).toEqual(4)
+        expect(randomGraphNode1.getTargetNeighborStringIds().length).toBeGreaterThanOrEqual(3)
+        expect(randomGraphNode2.getTargetNeighborStringIds().length).toBeGreaterThanOrEqual(3)
+        expect(randomGraphNode3.getTargetNeighborStringIds().length).toBeGreaterThanOrEqual(3)
+        expect(randomGraphNode4.getTargetNeighborStringIds().length).toBeGreaterThanOrEqual(3)
+        expect(randomGraphNode5.getTargetNeighborStringIds().length).toBeGreaterThanOrEqual(3)
     })
 
     it('can propagate messages', async () => {
