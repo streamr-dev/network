@@ -16,7 +16,8 @@ export const createMockRandomGraphNodeAndDhtNode = (
     const dhtNode = new DhtNode({
         transportLayer: mockCm,
         peerDescriptor: ownPeerDescriptor,
-        numberOfNodesPerKBucket: 4
+        numberOfNodesPerKBucket: 4,
+        entryPoints: [entryPointDescriptor]
     })
 
     const randomGraphNode = new RandomGraphNode({
