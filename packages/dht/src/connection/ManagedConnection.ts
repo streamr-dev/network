@@ -4,7 +4,6 @@ import { Handshaker } from "./Handshaker"
 import { PeerDescriptor } from "../proto/DhtRpc"
 import { Logger } from "@streamr/utils"
 import EventEmitter from "eventemitter3"
-import { NodeWebRtcConnection } from './WebRTC/NodeWebRtcConnection'
 
 export interface ManagedConnectionEvents {
     managedData: (bytes: Uint8Array, remotePeerDescriptor: PeerDescriptor) => void

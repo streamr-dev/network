@@ -2,7 +2,7 @@ import { DhtNode, Simulator, SimulatorTransport, PeerDescriptor, PeerID } from '
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { range } from 'lodash'
 import { waitForCondition } from 'streamr-test-utils'
-import { Logger, wait } from '@streamr/utils'
+import { Logger } from '@streamr/utils'
 import { mockConnectionLocker } from '../utils'
 
 const logger = new Logger(module)
@@ -128,8 +128,7 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
                 waitForCondition(() => node.getTargetNeighborStringIds().length >= 3, 10000)
             ])
         ))
-
-
+        
         await waitForCondition(() => {
             const avg = graphNodes.reduce((acc, curr) => {
                 return acc + curr.getTargetNeighborStringIds().length

@@ -78,7 +78,6 @@ describe('Full node network with WebRTC connections', () => {
 
     }, 1500000)
 
-
     afterEach(async () => {
         await Promise.all([
             epStreamrNode.destroy(),
