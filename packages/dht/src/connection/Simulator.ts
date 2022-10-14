@@ -12,8 +12,8 @@ const logger = new Logger(module)
 export enum LatencyType { NONE = 'NONE', RANDOM = 'RANDOM', REAL = 'REAL' }
 
 export class Simulator extends EventEmitter<ConnectionSourceEvents> {
-        private connectors: Map<PeerIDKey, SimulatorConnector> = new Map()
-        private latenciesEnabled = false
+    private connectors: Map<PeerIDKey, SimulatorConnector> = new Map()
+    private latenciesEnabled = false
 
     private connectionManagers: Map<PeerIDKey, SimulatorTransport> = new Map()
 
@@ -30,12 +30,12 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
         this.connectors.set(PeerID.fromValue(connector.getPeerDescriptor().peerId).toKey(), connector)
     }
 
-    connect(sourceDescriptor: PeerDescriptor, targetDescriptor: PeerDescriptor): void  {
+    connect(sourceDescriptor: PeerDescriptor, targetDescriptor: PeerDescriptor): void {
         const target = this.connectors.get(PeerID.fromValue(targetDescriptor.peerId).toKey())
         target!.handleIncomingConnection(sourceDescriptor)
     }
 
-    disconnect(sourceDescriptor: PeerDescriptor, targetDescriptor: PeerDescriptor): void  {
+    disconnect(sourceDescriptor: PeerDescriptor, targetDescriptor: PeerDescriptor): void {
         const target = this.connectors.get(PeerID.fromValue(targetDescriptor.peerId).toKey())
         target!.handleIncomingDisconnection(sourceDescriptor)
     }

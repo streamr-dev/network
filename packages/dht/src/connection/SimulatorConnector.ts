@@ -1,3 +1,5 @@
+/* eslint-disable class-methods-use-this */
+
 import 'setimmediate'
 import EventEmitter from 'eventemitter3'
 import {

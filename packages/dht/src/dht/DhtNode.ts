@@ -1,3 +1,5 @@
+/* eslint-disable class-methods-use-this */
+
 import { DhtPeer } from './DhtPeer'
 import KBucket from 'k-bucket'
 import { EventEmitter } from 'eventemitter3'
