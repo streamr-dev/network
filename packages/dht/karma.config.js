@@ -42,7 +42,7 @@ module.exports = function (config) {
                 }
             }
         },
-        browserDisconnectTimeout: 15000,
+        browserDisconnectTimeout: 30000,
         browserNoActivityTimeout: 400000,
         browsers: ['CustomElectron'],
         client: {
