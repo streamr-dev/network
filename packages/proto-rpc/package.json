@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@protobuf-ts/plugin": "^2.8.0",
-    "@streamr/utils": "^0.0.1",
+    "@streamr/utils": "^1.0.0",
     "lodash": "^4.17.21",
     "uuid": "^8.3.2"
   },
