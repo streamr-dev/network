@@ -1,10 +1,12 @@
 import { NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
+import { PeerID } from '../../src/helpers/PeerID'
+import { waitForCondition } from 'streamr-test-utils'
 
 describe('WebSocket IConnection Requests', () => {
     const epPeerDescriptor: PeerDescriptor = {
-        peerId: Uint8Array.from([1, 2, 3]),
+        peerId: PeerID.fromString('3').value, // Uint8Array.from([1, 2, 3]),
         type: NodeType.NODEJS,
         websocket: { ip: 'localhost', port: 10021 }
     }
@@ -19,8 +21,8 @@ describe('WebSocket IConnection Requests', () => {
 
         await epDhtNode.joinDht(epPeerDescriptor)
 
-        node1 = new DhtNode({ peerIdString: '1', webSocketPort: 10022, entryPoints: [epPeerDescriptor] })
-        node2 = new DhtNode({ peerIdString: 'PeerWithoutServer', entryPoints: [epPeerDescriptor] })
+        node1 = new DhtNode({ peerIdString: '2', webSocketPort: 10022, entryPoints: [epPeerDescriptor] })
+        node2 = new DhtNode({ peerIdString: '1', entryPoints: [epPeerDescriptor] })
         await node1.start()
         await node2.start()
 
@@ -34,8 +36,27 @@ describe('WebSocket IConnection Requests', () => {
     })
 
     it('Happy Path', async () => {
+
+        let connected1 = false
+        let connected2 = false
+
+        node1.on('connected', (peerDescriptor: PeerDescriptor) => {
+            if (PeerID.fromValue(node2.getPeerDescriptor().peerId)
+                .equals(PeerID.fromValue(peerDescriptor.peerId))) {
+                connected1 = true
+            }
+        })
+        node2.on('connected', (peerDescriptor: PeerDescriptor) => {
+            if (PeerID.fromValue(node1.getPeerDescriptor().peerId)
+                .equals(PeerID.fromValue(peerDescriptor.peerId))) {
+                connected2 = true
+            }
+        })
+
         await node2.joinDht(epPeerDescriptor)
         await node1.joinDht(epPeerDescriptor)
+
+        await waitForCondition(() => { return (connected1 && connected2) })
 
         expect((node1.getTransport() as ConnectionManager).hasConnection(node2.getPeerDescriptor())).toEqual(true)
         expect((node2.getTransport() as ConnectionManager).hasConnection(node1.getPeerDescriptor())).toEqual(true)

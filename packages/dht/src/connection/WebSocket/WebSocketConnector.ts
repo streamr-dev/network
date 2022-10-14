@@ -8,7 +8,7 @@ import { PeerID } from '../../helpers/PeerID'
 import { ClientWebSocket } from './ClientWebSocket'
 import { IConnection, ConnectionType } from '../IConnection'
 import { ITransport } from '../../transport/ITransport'
-import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
+import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { RemoteWebSocketConnector } from './RemoteWebSocketConnector'
 import {
     ConnectivityResponseMessage,
@@ -32,12 +32,13 @@ const logger = new Logger(module)
 
 export class WebSocketConnector extends EventEmitter<ManagedConnectionSourceEvent> implements IWebSocketConnectorService {
     private static readonly WEBSOCKET_CONNECTOR_SERVICE_ID = 'system/websocketconnector'
-    private readonly rpcCommunicator: RoutingRpcCommunicator
+    private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly canConnectFunction: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean
     private readonly webSocketServer?: WebSocketServer
     private readonly connectivityChecker: ConnectivityChecker
     private readonly ongoingConnectRequests: Map<PeerIDKey, ManagedConnection> = new Map()
     private ownPeerDescriptor?: PeerDescriptor
+    private stopped = false
 
     constructor(
         private protocolVersion: string,
@@ -54,7 +55,7 @@ export class WebSocketConnector extends EventEmitter<ManagedConnectionSourceEven
 
         this.canConnectFunction = fnCanConnect.bind(this)
 
-        this.rpcCommunicator = new RoutingRpcCommunicator(WebSocketConnector.WEBSOCKET_CONNECTOR_SERVICE_ID, this.rpcTransport, {
+        this.rpcCommunicator = new ListeningRpcCommunicator(WebSocketConnector.WEBSOCKET_CONNECTOR_SERVICE_ID, this.rpcTransport, {
             rpcRequestTimeout: 15000
         })
 

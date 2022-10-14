@@ -9,7 +9,7 @@ import {
 } from '../../proto/DhtRpc'
 import { Empty } from '../../proto/google/protobuf/empty'
 import { ITransport } from '../../transport/ITransport'
-import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
+import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { NodeWebRtcConnection } from './NodeWebRtcConnection'
 import { RemoteWebrtcConnector } from './RemoteWebrtcConnector'
 import { WebRtcConnectorServiceClient } from '../../proto/DhtRpc.client'
@@ -33,7 +33,7 @@ export interface WebRtcConnectorConfig {
 
 export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> implements IWebRtcConnectorService {
     private static readonly WEBRTC_CONNECTOR_SERVICE_ID = 'system/webrtc_connector'
-    private readonly rpcCommunicator: RoutingRpcCommunicator
+    private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly ongoingConnectAttempts: Map<PeerIDKey, ManagedWebRtcConnection> = new Map()
     private readonly rpcTransport: ITransport
     private ownPeerDescriptor?: PeerDescriptor
@@ -43,7 +43,7 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
         super()
         this.rpcTransport = config.rpcTransport
 
-        this.rpcCommunicator = new RoutingRpcCommunicator(WebRtcConnector.WEBRTC_CONNECTOR_SERVICE_ID, this.rpcTransport, {
+        this.rpcCommunicator = new ListeningRpcCommunicator(WebRtcConnector.WEBRTC_CONNECTOR_SERVICE_ID, this.rpcTransport, {
             rpcRequestTimeout: 15000
         })
 
@@ -89,8 +89,7 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
         description: string,
         connectionId: string
     ): void {
-        if (this.stopped ||
-            !PeerID.fromValue(this.ownPeerDescriptor!.peerId).equals(PeerID.fromValue(targetPeer.peerId))) {
+        if (this.stopped || !PeerID.fromValue(this.ownPeerDescriptor!.peerId).equals(PeerID.fromValue(targetPeer.peerId))) {
             return
         }
         const peerKey = PeerID.fromValue(remotePeer.peerId).toKey()
@@ -115,8 +114,7 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
         description: string,
         connectionId: string
     ): void {
-        if (this.stopped ||
-            !PeerID.fromValue(this.ownPeerDescriptor!.peerId).equals(PeerID.fromValue(targetPeerDescriptor.peerId))) {
+        if (this.stopped || !PeerID.fromValue(this.ownPeerDescriptor!.peerId).equals(PeerID.fromValue(targetPeerDescriptor.peerId))) {
             return
         }
         const peerKey = PeerID.fromValue(remotePeerDescriptor.peerId).toKey()
@@ -131,6 +129,9 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
     }
 
     private onConnectionRequest(targetPeerDescriptor: PeerDescriptor): void {
+        if (this.stopped) {
+            return
+        }
         const managedConnection = this.connect(targetPeerDescriptor)
         managedConnection.setPeerDescriptor(targetPeerDescriptor)
         this.emit('newConnection', managedConnection)
@@ -142,8 +143,7 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
         mid: string,
         connectionId: string
     ): void {
-        if (this.stopped ||
-            !PeerID.fromValue(this.ownPeerDescriptor!.peerId).equals(PeerID.fromValue(targetPeerDescriptor.peerId))) {
+        if (this.stopped || !PeerID.fromValue(this.ownPeerDescriptor!.peerId).equals(PeerID.fromValue(targetPeerDescriptor.peerId))) {
             return
         }
         const peerKey = PeerID.fromValue(remotePeerDescriptor.peerId).toKey()
@@ -185,10 +185,7 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
         connection.on('localCandidate', (candidate: string, mid: string) => {
             remoteConnector.sendIceCandidate(this.ownPeerDescriptor!, candidate, mid, connection.connectionId.toString())
         })
-        connection.on('connected', () => {
-            // Sending Connected event is now handled by ManagedConnection
-            // this.emit(ManagedConnectionSourceEvents.CONNECTED, connection)
-        })
+
         connection.start(offering)
         if (offering === false && sendRequest) {
             remoteConnector.requestConnection(this.ownPeerDescriptor!, connection.connectionId.toString())

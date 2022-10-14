@@ -1,6 +1,6 @@
 import { PeerList } from '../../src/logic/PeerList'
 import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
-import { PeerDescriptor, RoutingRpcCommunicator, Simulator, SimulatorTransport, PeerID } from '@streamr/dht'
+import { PeerDescriptor, ListeningRpcCommunicator, Simulator, PeerID, SimulatorTransport } from '@streamr/dht'
 import { NetworkRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 
@@ -19,7 +19,9 @@ describe('PeerList', () => {
 
     const createRemoteGraphNode = (peerDescriptor: PeerDescriptor) => {
         const mockTransport = new SimulatorTransport(peerDescriptor, simulator)
-        const mockClient = new RoutingRpcCommunicator(`layer2-${ graphId }`, mockTransport).getRpcClientTransport()
+        const mockCommunicator = new ListeningRpcCommunicator(`layer2-${ graphId }`, mockTransport)
+        const mockClient = mockCommunicator.getRpcClientTransport()
+        
         return new RemoteRandomGraphNode(peerDescriptor, graphId, toProtoRpcClient(new NetworkRpcClient(mockClient)))
     }
     beforeEach(() => {

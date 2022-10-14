@@ -33,7 +33,6 @@ async function run(): Promise<void> {
     const streamrNode = new StreamrNode()
     await streamrNode.start(layer0, connectionManager, connectionManager)
 
-    await streamrNode.joinStream(streamPartId, epPeerDescriptor)
     streamrNode.subscribeToStream(streamPartId, epPeerDescriptor)
 
     streamrNode.on(StreamrNodeEvent.NEW_MESSAGE, (msg: DataMessage, _nodeId: string) => {

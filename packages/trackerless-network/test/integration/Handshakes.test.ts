@@ -1,5 +1,5 @@
 import { Handshaker } from '../../src/logic/Handshaker'
-import { NodeType, PeerDescriptor, RoutingRpcCommunicator, Simulator, SimulatorTransport } from '@streamr/dht'
+import { NodeType, PeerDescriptor, ListeningRpcCommunicator, Simulator, SimulatorTransport } from '@streamr/dht'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { NetworkRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { PeerList } from '../../src/logic/PeerList'
@@ -25,9 +25,9 @@ describe('Handshakes', () => {
         type: NodeType.NODEJS
     }
 
-    let rpcCommunicator1: RoutingRpcCommunicator
-    let rpcCommunicator2: RoutingRpcCommunicator
-    let rpcCommunicator3: RoutingRpcCommunicator
+    let rpcCommunicator1: ListeningRpcCommunicator
+    let rpcCommunicator2: ListeningRpcCommunicator
+    let rpcCommunicator3: ListeningRpcCommunicator
 
     let contactPool: PeerList
 
@@ -64,14 +64,14 @@ describe('Handshakes', () => {
 
     beforeEach(() => {
         const simulator = new Simulator()
-        
+
         const simulatorTransport1 = new SimulatorTransport(peerDescriptor1, simulator)
         const simulatorTransport2 = new SimulatorTransport(peerDescriptor2, simulator)
         const simulatorTransport3 = new SimulatorTransport(peerDescriptor3, simulator)
 
-        rpcCommunicator1 = new RoutingRpcCommunicator(randomGraphId, simulatorTransport1)
-        rpcCommunicator2 = new RoutingRpcCommunicator(randomGraphId, simulatorTransport2)
-        rpcCommunicator3 = new RoutingRpcCommunicator(randomGraphId, simulatorTransport3)
+        rpcCommunicator1 = new ListeningRpcCommunicator(randomGraphId, simulatorTransport1)
+        rpcCommunicator2 = new ListeningRpcCommunicator(randomGraphId, simulatorTransport2)
+        rpcCommunicator3 = new ListeningRpcCommunicator(randomGraphId, simulatorTransport3)
 
         contactPool = new PeerList(10)
 

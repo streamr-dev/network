@@ -120,7 +120,7 @@ const runAndWait = async <T extends EventEmitter.ValidEventTypes>(
  * @returns {Promise<unknown[]>} resolves with event arguments if event occurred
  * within timeout. Otherwise rejected.
  */
-export const runAndWaitForEvents = async <T extends EventEmitter.ValidEventTypes>(
+export const runAndWaitForEvents3 = async <T extends EventEmitter.ValidEventTypes>(
     operations: (() => void)[],
     waitedEvents: [emitter: EventEmitter<T>, event: keyof T][],
     timeout = 5000

@@ -1,5 +1,4 @@
 import { DhtNode } from '../src/dht/DhtNode'
-import { SimulatorTransport } from '../src/connection/SimulatorTransport'
 import {
     ClosestPeersRequest, ClosestPeersResponse,
     NodeType,
@@ -10,6 +9,8 @@ import { PeerID } from '../src/helpers/PeerID'
 import { IDhtRpcService, IWebSocketConnectorService } from '../src/proto/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { Simulator } from '../src/connection/Simulator'
+import { ConnectionManager } from '../src/connection/ConnectionManager'
+import { v4 } from 'uuid'
 import { getRandomRegion } from './data/pings'
 
 export const generateId = (stringId: string): Uint8Array => {
@@ -29,13 +30,12 @@ export const createMockConnectionDhtNode = async (stringId: string, simulator: S
         region: getRandomRegion()
     }
 
-    const mockConnectionLayer = new SimulatorTransport(peerDescriptor, simulator)
-
-    const node = new DhtNode({ peerDescriptor: peerDescriptor, transportLayer: mockConnectionLayer, 
+    const mockConnectionManager = new ConnectionManager({ ownPeerDescriptor: peerDescriptor, simulator: simulator })
+    
+    const node = new DhtNode({ peerDescriptor: peerDescriptor, transportLayer: mockConnectionManager, 
         nodeName: stringId, numberOfNodesPerKBucket: K })
     await node.start()
 
-    simulator.addConnectionManager(mockConnectionLayer)
     return node
 }
 
@@ -46,7 +46,7 @@ export const createMockConnectionLayer1Node = async (stringId: string, layer0Nod
         type: 0
     }
 
-    const node = new DhtNode({ peerDescriptor: descriptor, transportLayer: layer0Node })
+    const node = new DhtNode({ peerDescriptor: descriptor, transportLayer: layer0Node, serviceId: 'layer1' })
     await node.start()
     return node
 }
@@ -58,7 +58,7 @@ export const createWrappedClosestPeersRequest = (
 
     const routedMessage: ClosestPeersRequest = {
         peerDescriptor: sourceDescriptor,
-        requestId: '11111'
+        requestId: v4()
     }
     const rpcWrapper: RpcMessage = {
         body: ClosestPeersRequest.toBinary(routedMessage),
@@ -66,7 +66,7 @@ export const createWrappedClosestPeersRequest = (
             method: 'closestPeersRequest',
             request: 'request'
         },
-        requestId: 'testId'
+        requestId: v4()
     }
     return rpcWrapper
 }

@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events'
-import { DhtNode, PeerID, PeerDescriptor, DhtPeer, RoutingRpcCommunicator, ITransport, ConnectionLocker } from '@streamr/dht'
+import { DhtNode, PeerID, PeerDescriptor, DhtPeer, ListeningRpcCommunicator, ITransport, ConnectionLocker } from '@streamr/dht'
 import {
     DataMessage,
     HandshakeRequest,
@@ -19,6 +19,7 @@ import { DuplicateMessageDetector, NumberPair } from '@streamr/utils'
 import { Logger } from '@streamr/utils'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Handshaker } from './Handshaker'
+import { clearTimeout } from 'timers'
 
 export enum Event {
     MESSAGE = 'streamr:layer2:random-graph-node:onmessage'
@@ -47,7 +48,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     private readonly nearbyContactPool: PeerList
     private readonly randomContactPool: PeerList
     private readonly targetNeighbors: PeerList = new PeerList(4)
-    private rpcCommunicator: RoutingRpcCommunicator | null = null
+    private rpcCommunicator: ListeningRpcCommunicator | null = null
     private readonly P2PTransport: ITransport
     private readonly connectionLocker: ConnectionLocker
     private readonly duplicateDetector: DuplicateMessageDetector
@@ -72,7 +73,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
 
         this.started = true
 
-        this.rpcCommunicator = new RoutingRpcCommunicator(`layer2-${ this.randomGraphId }`, this.P2PTransport)
+        this.rpcCommunicator = new ListeningRpcCommunicator(`layer2-${ this.randomGraphId }`, this.P2PTransport)
         this.layer1.on('newContact', (peerDescriptor, closestPeers) => this.newContact(peerDescriptor, closestPeers))
         this.layer1.on('contactRemoved', (peerDescriptor, closestPeers) => this.removedContact(peerDescriptor, closestPeers))
         this.layer1.on('newRandomContact', (peerDescriptor, randomPeers) => this.newRandomContact(peerDescriptor, randomPeers))
@@ -125,9 +126,9 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         if (!previousPeer) {
             this.markAndCheckDuplicate(msg.messageRef!, msg.previousMessageRef)
         }
-        this.targetNeighbors.getStringIds().map((remote) => {
+        this.targetNeighbors.getStringIds().forEach((remote) => {
             if (previousPeer !== remote) {
-                this.targetNeighbors.getNeighborWithId(remote)!.sendData(this.layer1.getPeerDescriptor(), msg)
+                this.targetNeighbors.getNeighborWithId(remote)!.sendData(this.layer1.getPeerDescriptor(), msg).catch((err) => logger.warn(err))
             }
         })
     }
@@ -144,7 +145,11 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
 
         if ((this.targetNeighbors.size() + this.handshaker!.getOngoingHandshakes().size) < this.N) {
             this.findNeighborsIntervalRef = setTimeout(() => {
+                if (this.findNeighborsIntervalRef) {
+                    clearTimeout(this.findNeighborsIntervalRef)
+                }
                 this.findNeighbors(newExcludes).catch(() => {})
+                this.findNeighborsIntervalRef = null
             }, 250)
         }
     }
@@ -232,6 +237,14 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         return this.nearbyContactPool.getStringIds()
     }
 
+    private onPeerDisconnected(peerDescriptor: PeerDescriptor): void {
+        if (this.targetNeighbors.hasPeer(peerDescriptor)) {
+            this.targetNeighbors.remove(peerDescriptor)
+            this.connectionLocker.unlockConnection(peerDescriptor, this.randomGraphId)
+            logger.info("on Peer Disconnected")
+        }
+    }
+
     private markAndCheckDuplicate(currentMessageRef: MessageRef, previousMessageRef?: MessageRef): boolean {
         const previousNumberPair = previousMessageRef ?
             new NumberPair(Number(previousMessageRef!.timestamp), previousMessageRef!.sequenceNumber)
@@ -284,7 +297,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
             const { previousPeer } = message
             message["previousPeer"] = PeerID.fromValue(this.layer1.getPeerDescriptor().peerId).toKey()
             this.emit(Event.MESSAGE, message)
-            this.broadcast(message, previousPeer)
+            setImmediate(() => this.broadcast(message, previousPeer))
         }
         return Empty
     }

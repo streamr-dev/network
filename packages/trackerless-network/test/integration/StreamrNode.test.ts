@@ -1,4 +1,4 @@
-import { DhtNode, SimulatorTransport, PeerDescriptor, PeerID, Simulator } from '@streamr/dht'
+import { DhtNode, PeerDescriptor, PeerID, Simulator, SimulatorTransport } from '@streamr/dht'
 import { NodeType } from '@streamr/dht/dist/src/proto/DhtRpc'
 import { waitForCondition } from 'streamr-test-utils'
 import { StreamrNode, Event as NodeEvent } from '../../src/logic/StreamrNode'

@@ -1,5 +1,8 @@
+import EventEmitter from "eventemitter3"
 import { PeerID, PeerIDKey } from "../helpers/PeerID"
-import { Message, PeerDescriptor } from "../proto/DhtRpc"
+import { PeerDescriptor } from "../proto/DhtRpc"
+import { ConnectionSourceEvents } from "./IConnectionSource"
+import { SimulatorConnector } from "./SimulatorConnector"
 import { SimulatorTransport } from "./SimulatorTransport"
 import { Logger } from "@streamr/utils"
 import { getRegionDelayMatrix } from "../../test/data/pings"
@@ -8,26 +11,39 @@ const logger = new Logger(module)
 
 export enum LatencyType { NONE = 'NONE', RANDOM = 'RANDOM', REAL = 'REAL' }
 
-export class Simulator {
+export class Simulator extends EventEmitter<ConnectionSourceEvents> {
+    private connectors: Map<PeerIDKey, SimulatorConnector> = new Map()
+    private latenciesEnabled = false
 
     private connectionManagers: Map<PeerIDKey, SimulatorTransport> = new Map()
 
     private latencyTable?: Array<Array<number>>
 
     constructor(private latencyType: LatencyType = LatencyType.NONE) {
+        super()
         if (this.latencyType == LatencyType.REAL) {
             this.latencyTable = getRegionDelayMatrix()
         }
     }
 
-    addConnectionManager(manager: SimulatorTransport): void {
-        this.connectionManagers.set(PeerID.fromValue(manager.getPeerDescriptor().peerId).toKey(), manager)
+    addConnector(connector: SimulatorConnector): void {
+        this.connectors.set(PeerID.fromValue(connector.getPeerDescriptor().peerId).toKey(), connector)
     }
 
-    send(sourceDescriptor: PeerDescriptor, targetDescriptor: PeerDescriptor, msg: Message): void {
+    connect(sourceDescriptor: PeerDescriptor, targetDescriptor: PeerDescriptor): void {
+        const target = this.connectors.get(PeerID.fromValue(targetDescriptor.peerId).toKey())
+        target!.handleIncomingConnection(sourceDescriptor)
+    }
 
+    disconnect(sourceDescriptor: PeerDescriptor, targetDescriptor: PeerDescriptor): void {
+        const target = this.connectors.get(PeerID.fromValue(targetDescriptor.peerId).toKey())
+        target!.handleIncomingDisconnection(sourceDescriptor)
+    }
+
+    send(sourceDescriptor: PeerDescriptor, targetDescriptor: PeerDescriptor, data: Uint8Array): void {
+        const target = this.connectors.get(PeerID.fromValue(targetDescriptor.peerId).toKey())
         if (this.latencyType == LatencyType.NONE) {
-            this.connectionManagers.get(PeerID.fromValue(targetDescriptor.peerId).toKey())!.handleIncomingMessage(sourceDescriptor, msg)
+            target!.handleIncomingData(sourceDescriptor, data)
         } else {
             let latency: number = 0
             if (this.latencyType == LatencyType.REAL) {
@@ -40,14 +56,14 @@ export class Simulator {
                 }
 
                 latency = this.latencyTable![sourceRegion!][targetRegion!]
-                logger.info('Using latency' + latency)
+                logger.trace('Using latency' + latency)
 
             } else {
                 latency = Math.random() * (250 - 5) + 5
             }
 
             setTimeout(() => {
-                this.connectionManagers.get(PeerID.fromValue(targetDescriptor.peerId).toKey())!.handleIncomingMessage(sourceDescriptor, msg)
+                target!.handleIncomingData(sourceDescriptor, data)
             }, latency)
         }
     }

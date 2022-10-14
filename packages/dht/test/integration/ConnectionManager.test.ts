@@ -1,11 +1,9 @@
 import { ConnectionManager } from "../../src/connection/ConnectionManager"
-import { Message, MessageType, NodeType, PeerDescriptor } from "../../src/proto/DhtRpc"
-import { waitForEvent3 } from '../../src/helpers/waitForEvent3'
-import { ClientWebSocket } from '../../src/connection/WebSocket/ClientWebSocket'
-import { SimulatorTransport } from '../../src/connection/SimulatorTransport'
+import { Message, MessageType, NodeType, PeerDescriptor, RpcMessage } from "../../src/proto/DhtRpc"
 import { PeerID } from '../../src/helpers/PeerID'
 import { Simulator } from '../../src/connection/Simulator'
 import { DhtNode } from "../../src/dht/DhtNode"
+import { v4 } from "uuid"
 
 describe('ConnectionManager', () => {
     const serviceId = 'demo'
@@ -18,11 +16,20 @@ describe('ConnectionManager', () => {
         peerId: PeerID.fromString("tester2").value,
         type: NodeType.NODEJS
     }
+
+    const mockPeerDescriptor3: PeerDescriptor = {
+        peerId: PeerID.fromString("tester3").value,
+        type: NodeType.NODEJS
+    }
+    const mockPeerDescriptor4: PeerDescriptor = {
+        peerId: PeerID.fromString("tester4").value,
+        type: NodeType.NODEJS
+    }
     const simulator = new Simulator()
 
-    const mockTransport = new SimulatorTransport(mockPeerDescriptor1, simulator)
-    const mockConnectorTransport1 = new SimulatorTransport(mockPeerDescriptor1, simulator)
-    const mockConnectorTransport2 = new SimulatorTransport(mockPeerDescriptor2, simulator)
+    const mockTransport = new ConnectionManager({ ownPeerDescriptor: mockPeerDescriptor1, simulator: simulator })
+    const mockConnectorTransport1 = new ConnectionManager({ ownPeerDescriptor: mockPeerDescriptor1, simulator })
+    const mockConnectorTransport2 = new ConnectionManager({ ownPeerDescriptor: mockPeerDescriptor2, simulator })
 
     it('Can start alone', async () => {
         const connectionManager = new ConnectionManager({ transportLayer: mockTransport, webSocketHost: 'localhost', webSocketPort: 9991 })
@@ -105,29 +112,50 @@ describe('ConnectionManager', () => {
             return peerDescriptor2
         })
 
-        const arr = new Uint8Array(10)
+        const rpcMessage: RpcMessage = {
+            header: {},
+            body: new Uint8Array(10),
+            requestId: v4()
+        }
+
         const msg: Message = {
             serviceId: serviceId,
             messageType: MessageType.RPC,
             messageId: '1',
-            body: arr
+            body: RpcMessage.toBinary(rpcMessage)
         }
 
         const promise = new Promise<void>((resolve, _reject) => {
-            connectionManager2.on('data', async (message: Message, _peerDescriptor: PeerDescriptor) => {
+            connectionManager2.on('message', async (message: Message) => {
                 expect(message.messageType).toBe(MessageType.RPC)
                 resolve()
             })
         })
-        connectionManager1.send(msg, peerDescriptor2!)
 
-        await promise
+        const connectedPromise1 = new Promise<void>((resolve, _reject) => {
+            connectionManager1.on('connected', (_peerDescriptor: PeerDescriptor) => {
+                //expect(message.messageType).toBe(MessageType.RPC)
+                resolve()
+            })
+        })
+
+        const connectedPromise2 = new Promise<void>((resolve, _reject) => {
+            connectionManager2.on('connected', (_peerDescriptor: PeerDescriptor) => {
+                //expect(message.messageType).toBe(MessageType.RPC)
+                resolve()
+            })
+        })
+
+        msg.targetDescriptor = peerDescriptor2
+        connectionManager1.send(msg)
+
+        await Promise.all([promise, connectedPromise1, connectedPromise2])
 
         await connectionManager1.stop()
         await connectionManager2.stop()
     })
 
-    it('Can disconnect', async () => {
+    it('Can disconnect websockets', async () => {
         const connectionManager1 = new ConnectionManager({ transportLayer: mockConnectorTransport1, webSocketHost: 'localhost', webSocketPort: 9997 })
 
         let peerDescriptor: PeerDescriptor | undefined
@@ -151,30 +179,108 @@ describe('ConnectionManager', () => {
             return peerDescriptor2
         })
 
-        const arr = new Uint8Array(10)
+        const rpcMessage: RpcMessage = {
+            header: {},
+            body: new Uint8Array(10),
+            requestId: v4()
+        }
+
         const msg: Message = {
             serviceId: serviceId,
             messageType: MessageType.RPC,
             messageId: '1',
-            body: arr
+            body: RpcMessage.toBinary(rpcMessage)
         }
 
+        const disconnectedPromise1 = new Promise<void>((resolve, _reject) => {
+            connectionManager1.on('disconnected', (_peerDescriptor: PeerDescriptor) => {
+                //expect(message.messageType).toBe(MessageType.RPC)
+                resolve()
+            })
+        })
+
+        const disconnectedPromise2 = new Promise<void>((resolve, _reject) => {
+            connectionManager2.on('disconnected', (_peerDescriptor: PeerDescriptor) => {
+                //expect(message.messageType).toBe(MessageType.RPC)
+                resolve()
+            })
+        })
+
         const promise = new Promise<void>((resolve, _reject) => {
-            connectionManager2.on('data', async (message: Message, _peerDescriptor: PeerDescriptor) => {
+            connectionManager2.on('message', async (message: Message) => {
                 expect(message.messageType).toBe(MessageType.RPC)
                 resolve()
             })
         })
-        connectionManager1.send(msg, peerDescriptor2!)
-
+        msg.targetDescriptor = peerDescriptor2
+        connectionManager1.send(msg)
+        
         await promise
-        await Promise.all([
-            // @ts-expect-error private
-            waitForEvent3(connectionManager2.getConnection(peerDescriptor!).implementation as ClientWebSocket, 'disconnected'),
-            connectionManager1.disconnect(peerDescriptor2!, undefined, 100)
-        ])
+        
+        connectionManager1.disconnect(peerDescriptor2!, undefined, 100)
+        await Promise.all([disconnectedPromise1, disconnectedPromise2])
+        
         await connectionManager1.stop()
         await connectionManager2.stop()
+    })
+
+    it('Connects and disconnects over simulated connections', async () => {
+        const simulator2 = new Simulator()
+        const connectionManager3 = new ConnectionManager({ ownPeerDescriptor: mockPeerDescriptor3, simulator: simulator2 })
+        const connectionManager4 = new ConnectionManager({ ownPeerDescriptor: mockPeerDescriptor4, simulator: simulator2 })
+
+        const rpcMessage: RpcMessage = {
+            header: {},
+            body: new Uint8Array(10),
+            requestId: v4()
+        }
+
+        const msg: Message = {
+            serviceId: serviceId,
+            messageType: MessageType.RPC,
+            messageId: '1',
+            body: RpcMessage.toBinary(rpcMessage)
+        }
+
+        const dataPromise = new Promise<void>((resolve, _reject) => {
+            connectionManager4.on('message', async (message: Message) => {
+                expect(message.messageType).toBe(MessageType.RPC)
+                resolve()
+            })
+        })
+
+        const connectedPromise1 = new Promise<void>((resolve, _reject) => {
+            connectionManager4.on('connected', (_peerDescriptor: PeerDescriptor) => {
+                //expect(message.messageType).toBe(MessageType.RPC)
+                resolve()
+            })
+        })
+
+        const connectedPromise2 = new Promise<void>((resolve, _reject) => {
+            connectionManager3.on('connected', (_peerDescriptor: PeerDescriptor) => {
+                //expect(message.messageType).toBe(MessageType.RPC)
+                resolve()
+            })
+        })
+
+        const disconnectedPromise1 = new Promise<void>((resolve, _reject) => {
+            connectionManager4.on('disconnected', (_peerDescriptor: PeerDescriptor) => {
+                //expect(message.messageType).toBe(MessageType.RPC)
+                resolve()
+            })
+        })
+
+        const disconnectedPromise2 = new Promise<void>((resolve, _reject) => {
+            connectionManager3.on('disconnected', (_peerDescriptor: PeerDescriptor) => {
+                //expect(message.messageType).toBe(MessageType.RPC)
+                resolve()
+            })
+        })
+        msg.targetDescriptor = mockPeerDescriptor4
+        connectionManager3.send(msg)
+        await Promise.all([dataPromise, connectedPromise1, connectedPromise2])
+        connectionManager3.disconnect(mockPeerDescriptor4!, undefined, 100)
+        await Promise.all([disconnectedPromise1, disconnectedPromise2])
     })
 
     afterAll(async () => {
