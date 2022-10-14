@@ -598,7 +598,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         logger.trace(`Peer ${this.ownPeerId?.value} routing message ${routedMessage.requestId} 
             from ${routedMessage.sourcePeer?.peerId} to ${routedMessage.destinationPeer?.peerId}`)
 
-        const session = new RoutingSession(this.ownPeerDescriptor!, routedMessage, this.connections, 5, 1000)
+        const session = new RoutingSession(this.ownPeerDescriptor!, routedMessage, this.connections, 2, 1000)
 
         const result = await runAndRaceEvents3<RoutingSessionEvents>([() => {
             session.start()
