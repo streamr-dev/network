@@ -14,7 +14,6 @@ import { Stream, StreamProperties } from '../Stream'
 import { ErrorCode, NotFoundError } from '../HttpUtil'
 import {
     StreamID,
-    EthereumAddress,
     StreamIDUtils
 } from 'streamr-client-protocol'
 import { StreamIDBuilder } from '../StreamIDBuilder'
@@ -40,6 +39,7 @@ import {
 import { StreamRegistryCached } from './StreamRegistryCached'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ContractFactory } from '../ContractFactory'
+import { EthereumAddress, isENSName, toEthereumAddress } from '@streamr/utils'
 
 /* 
  * On-chain registry of stream metadata and permissions.
@@ -93,7 +93,7 @@ export class StreamRegistry implements Context {
         const chainProviders = getAllStreamRegistryChainProviders(ethereumConfig)
         this.streamRegistryContractsReadonly = chainProviders.map((provider: Provider) => {
             return this.contractFactory.createReadContract<StreamRegistryContract>(
-                this.ethereumConfig.streamRegistryChainAddress,
+                toEthereumAddress(this.ethereumConfig.streamRegistryChainAddress),
                 StreamRegistryArtifact,
                 provider,
                 'streamRegistry'
@@ -110,7 +110,7 @@ export class StreamRegistry implements Context {
         if (!this.streamRegistryContract) {
             const chainSigner = await this.authentication.getStreamRegistryChainSigner()
             this.streamRegistryContract = this.contractFactory.createWriteContract<StreamRegistryContract>(
-                this.ethereumConfig.streamRegistryChainAddress,
+                toEthereumAddress(this.ethereumConfig.streamRegistryChainAddress),
                 StreamRegistryArtifact,
                 chainSigner,
                 'streamRegistry'
@@ -151,7 +151,7 @@ export class StreamRegistry implements Context {
         const [domain, path] = domainAndPath
 
         await this.connectToContract()
-        if (StreamIDUtils.isENSAddress(domain)) {
+        if (isENSName(domain)) {
             /*
                 The call to createStreamWithENS delegates the ENS ownership check, and therefore the
                 call doesn't fail e.g. if the user doesn't own the ENS name. To see whether the stream
@@ -281,7 +281,7 @@ export class StreamRegistry implements Context {
     ): string {
         const query = `
         {
-            permissions (first: ${pageSize}, where: {stream: "${streamId}" ${fieldName}_gt: "${Date.now()}" id_gt: "${lastId}"}) {
+            permissions (first: ${pageSize}, where: {stream: "${streamId}" ${fieldName}_gt: "${Math.round(Date.now() / 1000)}" id_gt: "${lastId}"}) {
                 id
                 userAddress
                 stream {
@@ -328,9 +328,9 @@ export class StreamRegistry implements Context {
             if (isPublicPermissionQuery(query)) {
                 return contract.hasPublicPermission(streamId, permissionType)
             } else if (query.allowPublic) {
-                return contract.hasPermission(streamId, query.user, permissionType)
+                return contract.hasPermission(streamId, toEthereumAddress(query.user), permissionType)
             } else {
-                return contract.hasDirectPermission(streamId, query.user, permissionType)
+                return contract.hasDirectPermission(streamId, toEthereumAddress(query.user), permissionType)
             }
         })
     }
@@ -395,7 +395,7 @@ export class StreamRegistry implements Context {
         for (const assignment of assignments) {
             for (const permission of assignment.permissions) {
                 const solidityType = streamPermissionToSolidityType(permission)
-                const user = isPublicPermissionAssignment(assignment) ? undefined : assignment.user
+                const user = isPublicPermissionAssignment(assignment) ? undefined : toEthereumAddress(assignment.user)
                 const txToSubmit = createTransaction(streamId, user, solidityType)
                 // eslint-disable-next-line no-await-in-loop
                 await waitForTx(txToSubmit)

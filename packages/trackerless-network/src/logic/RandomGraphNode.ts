@@ -157,6 +157,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
                     clearTimeout(this.findNeighborsIntervalRef)
                 }
                 this.findNeighbors(newExcludes).catch(() => {})
+                this.findNeighborsIntervalRef = null
             }, 250)
         } else {
             this.findNeighborsIntervalRef = null

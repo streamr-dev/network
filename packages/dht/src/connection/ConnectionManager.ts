@@ -262,18 +262,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             return
         }
 
-        /*
-        if (!PeerID.fromValue(this.ownPeerDescriptor!.peerId).equals
-            (PeerID.fromValue(message.targetDescriptor!.peerId))) {
-            logger.error('Node ' + PeerID.fromValue(this.ownPeerDescriptor!.peerId).toString() +
-                ' received message meant for node ' + PeerID.fromValue(message.targetDescriptor!.peerId).toString())
-            return
-        }
-        */
-
         if (this.messageDuplicateDetector.isMostLikelyDuplicate(message.messageId)) {
-            //logger.error('Node ' + PeerID.fromValue(this.ownPeerDescriptor!.peerId).toString() +
-            //    ' filtered out duplicate Message with messageId ' + message.messageId)
             return
         }
 

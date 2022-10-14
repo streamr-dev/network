@@ -147,12 +147,10 @@ describe('PubSub with multiple clients', () => {
                 receivedMessagesMain[streamMessage.getPublisherId().toLowerCase()] = msgs
             })
 
-            /* eslint-disable no-await-in-loop */
             const publishers: StreamrClient[] = []
             for (let i = 0; i < 3; i++) {
                 publishers.push(await createPublisher(i))
             }
-            /* eslint-enable no-await-in-loop */
             const published: Record<string, StreamMessage[]> = {}
             await Promise.all(publishers.map(async (pubClient) => {
                 const publisherId = (await pubClient.getAddress()).toLowerCase()
@@ -298,13 +296,11 @@ describe('PubSub with multiple clients', () => {
             receivedMessagesMain[key] = msgs
         })
 
-        /* eslint-disable no-await-in-loop */
         const publishers: StreamrClient[] = []
         for (let i = 0; i < 1; i++) {
             publishers.push(await createPublisher(i))
         }
 
-        /* eslint-enable no-await-in-loop */
         const published: Record<string, StreamMessage[]> = {}
         await Promise.all(publishers.map(async (pubClient) => {
             const publisherId = (await pubClient.getAddress()).toLowerCase()
@@ -355,14 +351,12 @@ describe('PubSub with multiple clients', () => {
             }
         })
 
-        /* eslint-disable no-await-in-loop */
         const publishers: StreamrClient[] = []
         for (let i = 0; i < 3; i++) {
             publishers.push(await createPublisher(i))
         }
 
         let counter = 0
-        /* eslint-enable no-await-in-loop */
         await Promise.all(publishers.map(async (pubClient) => {
             const publisherId = (await pubClient.getAddress()).toString().toLowerCase()
             const publishTestMessages = getPublishTestStreamMessages(pubClient, stream, {

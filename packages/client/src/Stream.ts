@@ -3,15 +3,12 @@
  */
 import { DependencyContainer, inject } from 'tsyringe'
 
-import { inspect } from './utils/log'
-
 import { Resends } from './subscribe/Resends'
 import { Publisher } from './publish/Publisher'
 import { StreamRegistry } from './registry/StreamRegistry'
 import { BrubeckContainer } from './Container'
 import { StreamRegistryCached } from './registry/StreamRegistryCached'
 import {
-    EthereumAddress,
     StreamID,
     StreamMessage,
     StreamPartID,
@@ -23,10 +20,9 @@ import { PermissionAssignment, PublicPermissionQuery, UserPermissionQuery } from
 import { Subscriber } from './subscribe/Subscriber'
 import { formStorageNodeAssignmentStreamId } from './utils/utils'
 import { waitForAssignmentsToPropagate } from './utils/waitForAssignmentsToPropagate'
-import { InspectOptions } from 'util'
-import { MessageMetadata } from './index-exports'
+import { MessageMetadata } from '../src/publish/Publisher'
 import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
-import { withTimeout } from '@streamr/utils'
+import { toEthereumAddress, withTimeout } from '@streamr/utils'
 import { StreamMetadata } from './StreamMessageValidator'
 
 export interface StreamProperties {
@@ -74,6 +70,7 @@ function getFieldType(value: any): (Field['type'] | undefined) {
 /**
  * @category Important
  */
+/* eslint-disable no-underscore-dangle */
 class StreamrStream implements StreamMetadata {
     id: StreamID
     description?: string
@@ -181,12 +178,13 @@ class StreamrStream implements StreamMetadata {
     /**
      * @category Important
      */
-    async addToStorageNode(nodeAddress: EthereumAddress, waitOptions: { timeout?: number } = {}): Promise<void> {
+    async addToStorageNode(nodeAddress: string, waitOptions: { timeout?: number } = {}): Promise<void> {
         let assignmentSubscription
+        const normalizedNodeAddress = toEthereumAddress(nodeAddress)
         try {
-            assignmentSubscription = await this._subscriber.subscribe(formStorageNodeAssignmentStreamId(nodeAddress))
+            assignmentSubscription = await this._subscriber.subscribe(formStorageNodeAssignmentStreamId(normalizedNodeAddress))
             const propagationPromise = waitForAssignmentsToPropagate(assignmentSubscription, this)
-            await this._streamStorageRegistry.addStreamToStorageNode(this.id, nodeAddress)
+            await this._streamStorageRegistry.addStreamToStorageNode(this.id, normalizedNodeAddress)
             await withTimeout(
                 propagationPromise,
                 // eslint-disable-next-line no-underscore-dangle
@@ -202,9 +200,9 @@ class StreamrStream implements StreamMetadata {
     /**
      * @category Important
      */
-    async removeFromStorageNode(nodeAddress: EthereumAddress): Promise<void> {
+    async removeFromStorageNode(nodeAddress: string): Promise<void> {
         try {
-            return this._streamStorageRegistry.removeStreamFromStorageNode(this.id, nodeAddress)
+            return this._streamStorageRegistry.removeStreamFromStorageNode(this.id, toEthereumAddress(nodeAddress))
         } finally {
             this._streamRegistryCached.clearStream(this.id)
         }
@@ -261,13 +259,6 @@ class StreamrStream implements StreamMetadata {
         return this._streamRegistry.revokePermissions(this.id, ...assignments)
     }
 
-    [Symbol.for('nodejs.util.inspect.custom')](depth: number, options: InspectOptions): string {
-        return inspect(this.toObject(), {
-            ...options,
-            customInspect: false,
-            depth,
-        })
-    }
 }
 
 export {

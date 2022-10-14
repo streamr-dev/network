@@ -28,7 +28,6 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
     })
     beforeEach(async () => {
         const simulator = new Simulator()
-        simulator.enableLatencies()
         const entrypointCm = new SimulatorTransport(entrypointDescriptor, simulator)
 
         const cms: SimulatorTransport[] = range(numOfNodes).map((i) =>

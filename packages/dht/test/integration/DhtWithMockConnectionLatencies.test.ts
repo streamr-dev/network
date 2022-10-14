@@ -1,16 +1,14 @@
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerDescriptor } from '../../src/proto/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils'
-import { Simulator } from '../../src/connection/Simulator'
+import { LatencyType, Simulator } from '../../src/connection/Simulator'
 
 describe('Mock connection Dht joining with latencies', () => {
     let entryPoint: DhtNode
     let nodes: DhtNode[]
-    const simulator = new Simulator()
+    const simulator = new Simulator(LatencyType.RANDOM)
     let entrypointDescriptor: PeerDescriptor
     
-    simulator.enableLatencies()
-
     beforeEach(async () => {
         nodes = []
 

@@ -6,6 +6,7 @@ import StrictEventEmitter from 'strict-event-emitter-types'
 
 import { StreamMessage, MessageRef } from 'streamr-client-protocol'
 import GapFillFailedError from './GapFillFailedError'
+import { EthereumAddress } from '@streamr/utils'
 
 function toMsgRefId(streamMessage: StreamMessage): MsgRefId {
     return streamMessage.getMessageRef().serialize()
@@ -123,7 +124,7 @@ class MsgChainQueue {
 }
 
 export type MessageHandler = (msg: StreamMessage) => void
-export type GapHandler = (from: MessageRef, to: MessageRef, publisherId: string, msgChainId: string) => void | Promise<void>
+export type GapHandler = (from: MessageRef, to: MessageRef, publisherId: EthereumAddress, msgChainId: string) => void | Promise<void>
 
 /**
  * Strict types for EventEmitter interface.
@@ -164,7 +165,7 @@ class OrderedMsgChain extends MsgChainEmitter {
     hasPendingGap = false
     gapRequestCount = 0
     maxGapRequests: number
-    publisherId: string
+    publisherId: EthereumAddress
     msgChainId: string
     inOrderHandler: MessageHandler
     gapHandler: GapHandler
@@ -175,8 +176,13 @@ class OrderedMsgChain extends MsgChainEmitter {
     debug: ReturnType<typeof Debug>
 
     constructor(
-        publisherId: string, msgChainId: string, inOrderHandler: MessageHandler, gapHandler: GapHandler,
-        propagationTimeout = DEFAULT_PROPAGATION_TIMEOUT, resendTimeout = DEFAULT_RESEND_TIMEOUT, maxGapRequests = MAX_GAP_REQUESTS
+        publisherId: EthereumAddress,
+        msgChainId: string,
+        inOrderHandler: MessageHandler,
+        gapHandler: GapHandler,
+        propagationTimeout = DEFAULT_PROPAGATION_TIMEOUT,
+        resendTimeout = DEFAULT_RESEND_TIMEOUT,
+        maxGapRequests = MAX_GAP_REQUESTS
     ) {
         super()
         ID += 1

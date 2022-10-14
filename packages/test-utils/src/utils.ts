@@ -5,7 +5,7 @@ import express from 'express'
 import cors from 'cors'
 import crypto from 'crypto'
 import { Wallet } from '@ethersproject/wallet'
-import { waitForEvent } from '@streamr/utils'
+import { EthereumAddress, toEthereumAddress, waitForEvent } from '@streamr/utils'
 import fetch from 'node-fetch'
 
 export type Event = string
@@ -206,23 +206,6 @@ export const eventsWithArgsToArray = (emitter: EventEmitter, events: ReadonlyArr
 }
 
 /**
- * Convert a function that has as its last argument a callback of the form
- * (err, result) into a Promise.
- *
- * @param fn should be of format (arg1, arg2, ..., argN, (err, res) => {...})
- * @param args arguments to be passed into fn (before callback)
- * @returns {Promise<T>} rejects with `err` if `err` is "true-ish" in cb.
- * Otherwise resolves with `res`.
- */
-export const callbackToPromise = <T>(fn: (...innerArgs: any[]) => any, ...args: unknown[]): Promise<T> => {
-    return new Promise((resolve, reject) => {
-        return fn(...args, (err: Error, result: T) => {
-            return err ? reject(err) : resolve(result)
-        })
-    })
-}
-
-/**
  * Create a {ReadableStream} out of an array of items. Any {Error} items will
  * be emitted as error events instead of pushed to stream.
  * @param args an array of items
@@ -254,8 +237,8 @@ export function fastWallet(): Wallet {
     return new Wallet(fastPrivateKey())
 }
 
-export function randomEthereumAddress(): string {
-    return '0x' + crypto.randomBytes(20).toString('hex')
+export function randomEthereumAddress(): EthereumAddress {
+    return toEthereumAddress('0x' + crypto.randomBytes(20).toString('hex'))
 }
 
 /**

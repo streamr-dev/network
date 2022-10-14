@@ -16,7 +16,7 @@ describe('Propagation', () => {
     const STREAM_ID = 'testingtesting'
     let totalReceived: number
 
-    const NUM_OF_NODES = 1024
+    const NUM_OF_NODES = 512
 
     beforeEach(async () => {
         totalReceived = 0

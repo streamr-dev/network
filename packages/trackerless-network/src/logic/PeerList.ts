@@ -52,6 +52,7 @@ export class PeerList {
         return this.peers.get(id)
     }
 
+    // eslint-disable-next-line class-methods-use-this
     private toStringId(peerDescriptor: PeerDescriptor): string {
         return PeerID.fromValue(peerDescriptor.peerId).toKey()
     }

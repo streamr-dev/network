@@ -20,7 +20,7 @@ import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
 import { Resends } from '../../src/subscribe/Resends'
 import { Publisher } from '../../src/publish/Publisher'
 import { Subscriber } from '../../src/subscribe/Subscriber'
-import { GroupKeyStoreFactory } from '../../src/encryption/GroupKeyStoreFactory'
+import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
 import { DestroySignal } from '../../src/DestroySignal'
 import { Debug } from '../test-utils/utils'
 
@@ -32,7 +32,7 @@ const Dependencies = {
     Resends,
     Publisher,
     Subscriber,
-    GroupKeyStoreFactory,
+    GroupKeyStore,
     DestroySignal
 }
 
@@ -95,7 +95,6 @@ describe('MemoryLeaks', () => {
 
         /* Uncomment to debug get all failure
         for (const [key, value] of Object.entries(Dependencies)) {
-            // eslint-disable-next-line no-loop-func
             test(`container get ${key}`, async () => {
                 const { config, childContainer, rootContext } = createContainer()
                 const destroySignal = childContainer.resolve<any>(Dependencies.DestroySignal)
@@ -129,7 +128,6 @@ describe('MemoryLeaks', () => {
             leaksDetector.addAll(rootContext.id, { config, childContainer })
             await destroySignal.trigger()
             for (const result of toStop) {
-                // eslint-disable-next-line no-await-in-loop
                 await result.stop()
             }
             childContainer.clearInstances()

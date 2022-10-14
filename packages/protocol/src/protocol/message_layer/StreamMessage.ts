@@ -10,9 +10,9 @@ import EncryptedGroupKey from './EncryptedGroupKey'
 import { Serializer } from '../../Serializer'
 import { StreamID } from '../../utils/StreamID'
 import { StreamPartID } from "../../utils/StreamPartID"
+import { EthereumAddress } from '@streamr/utils'
 
 const serializerByVersion: Record<string, Serializer<StreamMessage>> = {}
-const BYE_KEY = '_bye'
 const LATEST_VERSION = 32
 
 export enum StreamMessageType {
@@ -23,11 +23,6 @@ export enum StreamMessageType {
 
 export enum ContentType {
     JSON = 0
-}
-
-export enum SignatureType {
-    NONE = 0,
-    ETH = 2
 }
 
 export enum EncryptionType {
@@ -45,8 +40,7 @@ export interface StreamMessageOptions<T> {
     encryptionType?: EncryptionType
     groupKeyId?: string | null
     newGroupKey?: EncryptedGroupKey | null
-    signatureType?: SignatureType
-    signature?: string | null
+    signature: string
 }
 
 export interface ObjectType<T> { 
@@ -61,23 +55,6 @@ export interface ObjectType<T> {
     encryptionType: EncryptionType
     groupKeyId: string | null
     content: string | T
-    signatureType: SignatureType
-    signature: string | null
-}
-
-/**
- * Unsigned StreamMessage.
- */
-export type StreamMessageUnsigned<T> = StreamMessage<T> & {
-    signatureType: SignatureType.NONE
-    signature: '' | null
-}
-
-/**
- * Signed StreamMessage.
- */
-export type StreamMessageSigned<T> = StreamMessage<T> & {
-    signatureType: SignatureType.ETH
     signature: string
 }
 
@@ -108,10 +85,6 @@ export default class StreamMessage<T = unknown> {
 
     static VALID_CONTENT_TYPES = new Set(Object.values(StreamMessage.CONTENT_TYPES))
 
-    static SIGNATURE_TYPES = SignatureType
-
-    static VALID_SIGNATURE_TYPES = new Set(Object.values(StreamMessage.SIGNATURE_TYPES))
-
     static ENCRYPTION_TYPES = EncryptionType
 
     static VALID_ENCRYPTIONS = new Set(Object.values(StreamMessage.ENCRYPTION_TYPES))
@@ -123,8 +96,7 @@ export default class StreamMessage<T = unknown> {
     encryptionType: EncryptionType
     groupKeyId: string | null
     newGroupKey: EncryptedGroupKey | null
-    signatureType: SignatureType
-    signature: string | null
+    signature: string
     parsedContent?: T
     serializedContent: string
 
@@ -145,7 +117,6 @@ export default class StreamMessage<T = unknown> {
             encryptionType: this.encryptionType,
             groupKeyId: this.groupKeyId,
             newGroupKey: this.newGroupKey,
-            signatureType: this.signatureType,
             signature: this.signature,
         })
     }
@@ -159,8 +130,7 @@ export default class StreamMessage<T = unknown> {
         encryptionType = StreamMessage.ENCRYPTION_TYPES.NONE,
         groupKeyId = null,
         newGroupKey = null,
-        signatureType = StreamMessage.SIGNATURE_TYPES.NONE,
-        signature = null,
+        signature,
     }: StreamMessageOptions<T>) {
         validateIsType('messageId', messageId, 'MessageID', MessageID)
         this.messageId = messageId
@@ -183,10 +153,7 @@ export default class StreamMessage<T = unknown> {
         validateIsType('newGroupKey', newGroupKey, 'EncryptedGroupKey', EncryptedGroupKey, true)
         this.newGroupKey = newGroupKey
 
-        StreamMessage.validateSignatureType(signatureType)
-        this.signatureType = signatureType
-
-        validateIsString('signature', signature, true)
+        validateIsString('signature', signature, false)
         this.signature = signature
 
         if (typeof content === 'string') {
@@ -222,7 +189,7 @@ export default class StreamMessage<T = unknown> {
         return this.messageId.sequenceNumber
     }
 
-    getPublisherId(): string {
+    getPublisherId(): EthereumAddress {
         return this.messageId.publisherId
     }
 
@@ -288,40 +255,6 @@ export default class StreamMessage<T = unknown> {
 
     getNewGroupKey(): EncryptedGroupKey | null {
         return this.newGroupKey
-    }
-
-    isByeMessage(): boolean {
-        return !!((this.getParsedContent() as any)[BYE_KEY])
-    }
-
-    /**
-     * Gets appropriate payload to sign for this signature type.
-     * Optionally sets new signature type at same time, which allows typesafe
-     * signing without messages needing to be in a partially signed state.
-     * e.g.
-     * ```
-     * const signedMessage: StreamMessageSigned = Object.assign(unsigedMessage, {
-     *     signature: unsigedMessage.getPayloadToSign(SignatureType.ETH),
-     * })
-     * ```
-     */
-    getPayloadToSign(newSignatureType?: SignatureType): string {
-        if (newSignatureType != null) {
-            StreamMessage.validateSignatureType(newSignatureType)
-            this.signatureType = newSignatureType
-        }
-
-        const { signatureType } = this
-        if (signatureType === StreamMessage.SIGNATURE_TYPES.ETH) {
-            // Nullable fields
-            const prev = (this.prevMsgRef ? `${this.prevMsgRef.timestamp}${this.prevMsgRef.sequenceNumber}` : '')
-            const newGroupKey = (this.newGroupKey ? this.newGroupKey.serialize() : '')
-
-            return `${this.getStreamId()}${this.getStreamPartition()}${this.getTimestamp()}${this.messageId.sequenceNumber}`
-                + `${this.getPublisherId().toLowerCase()}${this.messageId.msgChainId}${prev}${this.getSerializedContent()}${newGroupKey}`
-        }
-        
-        throw new ValidationError(`Unrecognized signature type: ${signatureType}`)
     }
 
     static registerSerializer(version: number, serializer: Serializer<StreamMessage<unknown>>): void {
@@ -392,12 +325,6 @@ export default class StreamMessage<T = unknown> {
         }
     }
 
-    static validateSignatureType(signatureType: SignatureType): void {
-        if (!StreamMessage.VALID_SIGNATURE_TYPES.has(signatureType)) {
-            throw new ValidationError(`Unsupported signature type: ${signatureType}`)
-        }
-    }
-
     static versionSupportsEncryption(streamMessageVersion: number): boolean {
         return streamMessageVersion >= 31
     }
@@ -424,14 +351,6 @@ export default class StreamMessage<T = unknown> {
         }
     }
 
-    static isUnsigned<T = unknown>(msg: StreamMessage<T>): msg is StreamMessageUnsigned<T> {
-        return !this.isSigned(msg)
-    }
-
-    static isSigned<T = unknown>(msg: StreamMessage<T>): msg is StreamMessageSigned<T> {
-        return !!(msg && msg.signature && msg.signatureType !== SignatureType.NONE)
-    }
-
     static isEncrypted<T = unknown>(msg: StreamMessage<T>): msg is StreamMessageEncrypted<T> {
         return !!(msg && msg.encryptionType !== EncryptionType.NONE)
     }
@@ -453,7 +372,6 @@ export default class StreamMessage<T = unknown> {
             encryptionType: this.encryptionType,
             groupKeyId: this.groupKeyId,
             content: (this.encryptionType === StreamMessage.ENCRYPTION_TYPES.NONE ? this.getParsedContent() : this.getSerializedContent()),
-            signatureType: this.signatureType,
             signature: this.signature,
         }
     }

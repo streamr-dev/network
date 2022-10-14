@@ -9,8 +9,9 @@ import { PeerID } from '../src/helpers/PeerID'
 import { IDhtRpcService, IWebSocketConnectorService } from '../src/proto/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { Simulator } from '../src/connection/Simulator'
-import { ConnectionManager } from '../src/exports'
+import { ConnectionManager } from '../src/connection/ConnectionManager'
 import { v4 } from 'uuid'
+import { getRandomRegion } from './data/pings'
 
 export const generateId = (stringId: string): Uint8Array => {
     return PeerID.fromString(stringId).value
@@ -25,7 +26,8 @@ export const createMockConnectionDhtNode = async (stringId: string, simulator: S
     }
     const peerDescriptor: PeerDescriptor = {
         peerId: id.value,
-        type: NodeType.NODEJS
+        type: NodeType.NODEJS,
+        region: getRandomRegion()
     }
 
     const mockConnectionManager = new ConnectionManager({ ownPeerDescriptor: peerDescriptor, simulator: simulator })

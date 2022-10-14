@@ -1,4 +1,3 @@
-import { inspect } from 'util'
 import pLimit from 'p-limit'
 import pThrottle from 'p-throttle'
 import { wait } from '@streamr/utils'
@@ -71,7 +70,6 @@ export function pOrderedResolve<ArgsType extends unknown[], ReturnType>(
     return Object.assign(async (...args: ArgsType) => {
         const d = Defer<ReturnType>()
         const done = queue(() => d)
-        // eslint-disable-next-line promise/catch-or-return
         await Promise.resolve(fn(...args)).then(d.resolve, d.reject)
         return done
     }, {
@@ -226,7 +224,7 @@ export async function pTimeout<T>(promise: Promise<T>, ...args: pTimeoutArgs): P
     const { timeout = 0, message = '', rejectOnTimeout = true } = opts
 
     if (typeof timeout !== 'number') {
-        throw new Error(`timeout must be a number, got ${inspect(timeout)}`)
+        throw new Error(`timeout must be a number, got ${timeout}`)
     }
 
     let timedOut = false

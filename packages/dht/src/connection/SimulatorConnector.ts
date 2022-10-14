@@ -1,3 +1,5 @@
+/* eslint-disable class-methods-use-this */
+
 import 'setimmediate'
 import EventEmitter from 'eventemitter3'
 import {
@@ -65,7 +67,7 @@ export class SimulatorConnector extends EventEmitter<ManagedConnectionSourceEven
 
     public handleIncomingDisconnection(source: PeerDescriptor): void {
         const connection = this.simulatorConnections.get(PeerID.fromValue(source.peerId).toKey())
-        connection!.handleIncomingDisconnection()
+        connection?.handleIncomingDisconnection()
         this.simulatorConnections.delete(PeerID.fromValue(source.peerId).toKey())
     }
 

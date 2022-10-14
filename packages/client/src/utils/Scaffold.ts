@@ -117,7 +117,6 @@ export function Scaffold(
                     collectErrors(err)
                 }
                 onDownSteps.push(onDownStep || (() => {}))
-                // eslint-disable-next-line no-return-await
                 return await nextScaffoldStep() // return await gives us a better stack trace
             }
         } else if (onDownSteps.length) {
@@ -130,11 +129,9 @@ export function Scaffold(
                 collectErrors(err)
             }
             nextSteps.push(prevSteps.pop() as StepUp)
-            // eslint-disable-next-line no-return-await
             return await nextScaffoldStep() // return await gives us a better stack trace
         } else if (error) {
             const err = error
-            // eslint-disable-next-line require-atomic-updates
             error = undefined
             isDone = true
             throw err

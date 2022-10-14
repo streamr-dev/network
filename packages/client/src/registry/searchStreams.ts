@@ -1,5 +1,5 @@
 /* eslint-disable padding-line-between-statements */
-import { EthereumAddress, StreamID, toStreamID } from 'streamr-client-protocol'
+import { StreamID, toStreamID } from 'streamr-client-protocol'
 import { StreamQueryResult } from './StreamRegistry'
 import { StreamPermission, ChainPermissions, convertChainPermissionsToStreamPermissions, PUBLIC_PERMISSION_ADDRESS } from '../permission'
 import { GraphQLClient } from '../utils/GraphQLClient'
@@ -7,9 +7,10 @@ import { filter, map, unique } from '../utils/GeneratorUtils'
 import { SynchronizedGraphQLClient } from '../utils/SynchronizedGraphQLClient'
 import { Stream } from '../Stream'
 import { Debugger } from '../utils/log'
+import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 
 export interface SearchStreamsPermissionFilter {
-    user: EthereumAddress
+    user: string
     /*
      * If possible, prefer allOf to anyOf because the query performance is better
      */
@@ -102,12 +103,12 @@ const buildQuery = (
         id_gt: lastId
     }
     if (permissionFilter !== undefined) {
-        variables.userAddress_in = [permissionFilter.user]
+        variables.userAddress_in = [toEthereumAddress(permissionFilter.user)]
         if (permissionFilter.allowPublic) {
             variables.userAddress_in.push(PUBLIC_PERMISSION_ADDRESS)
         }
         if (permissionFilter.allOf !== undefined) {
-            const now = String(Date.now())
+            const now = String(Math.round(Date.now() / 1000))
             variables.canEdit = permissionFilter.allOf.includes(StreamPermission.EDIT)
             variables.canDelete = permissionFilter.allOf.includes(StreamPermission.DELETE)
             variables.publishExpiration_gt = permissionFilter.allOf.includes(StreamPermission.PUBLISH) ? now : undefined

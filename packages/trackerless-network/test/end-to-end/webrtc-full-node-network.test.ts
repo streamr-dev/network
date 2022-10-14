@@ -3,6 +3,7 @@ import { StreamrNode, Event as StreamrNodeEvent } from '../../src/logic/StreamrN
 // import { range } from 'lodash'
 import { waitForCondition } from 'streamr-test-utils'
 import { DataMessage, MessageRef } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { getRandomRegion } from '@streamr/dht/dist/test/data/pings'
 // import { wait } from '@streamr/utils'
 
 describe('Full node network with WebRTC connections', () => {
@@ -12,7 +13,8 @@ describe('Full node network with WebRTC connections', () => {
     const epPeerDescriptor: PeerDescriptor = {
         peerId: PeerID.fromString(`entrypoint`).value,
         type: NodeType.NODEJS,
-        websocket: { ip: 'localhost', port: 14444 }
+        websocket: { ip: 'localhost', port: 14444 },
+        region: getRandomRegion()
     }
 
     const randomGraphId = 'webrtc-network'
@@ -29,6 +31,7 @@ describe('Full node network with WebRTC connections', () => {
         connectionManagers = []
 
         const layer0Ep = new DhtNode({ peerDescriptor: epPeerDescriptor, numberOfNodesPerKBucket: 4, routeMessageTimeout: 10000 })
+
         await layer0Ep.start()
         await layer0Ep.joinDht(epPeerDescriptor)
 
@@ -45,6 +48,7 @@ describe('Full node network with WebRTC connections', () => {
             const peerDescriptor: PeerDescriptor = {
                 peerId: peerId.value,
                 type: NodeType.NODEJS,
+                region: getRandomRegion()
             }
 
             // console.log(i, peerId.toKey())
@@ -73,6 +77,7 @@ describe('Full node network with WebRTC connections', () => {
         // })
 
     }, 1500000)
+
 
     afterEach(async () => {
         await Promise.all([

@@ -78,6 +78,10 @@ export interface PeerDescriptor {
      * @generated from protobuf field: optional bool openInternet = 6;
      */
     openInternet?: boolean;
+    /**
+     * @generated from protobuf field: optional uint32 region = 7;
+     */
+    region?: number;
 }
 /**
  * @generated from protobuf message ConnectivityMethod
@@ -580,7 +584,8 @@ class PeerDescriptor$Type extends MessageType$<PeerDescriptor> {
             { no: 3, name: "udp", kind: "message", T: () => ConnectivityMethod },
             { no: 4, name: "tcp", kind: "message", T: () => ConnectivityMethod },
             { no: 5, name: "websocket", kind: "message", T: () => ConnectivityMethod },
-            { no: 6, name: "openInternet", kind: "scalar", opt: true, T: 8 /*ScalarType.BOOL*/ }
+            { no: 6, name: "openInternet", kind: "scalar", opt: true, T: 8 /*ScalarType.BOOL*/ },
+            { no: 7, name: "region", kind: "scalar", opt: true, T: 13 /*ScalarType.UINT32*/ }
         ]);
     }
 }

@@ -76,6 +76,7 @@ describe('Route Message With Mock Connections', () => {
                 requestId: 'tsatsa',
                 sourcePeer: sourceNode.getPeerDescriptor(),
                 reachableThrough: []
+
             })
         }], [[destinationNode, 'message']])
     })
@@ -196,7 +197,6 @@ describe('Route Message With Mock Connections', () => {
         await Promise.all(
             Object.values(numsOfReceivedMessages).map(async (count) =>
                 waitForCondition(() => {
-                    //console.info(count)
                     return count >= routers.length - 1
                 }, 30000)
             )
@@ -210,4 +210,5 @@ describe('Route Message With Mock Connections', () => {
         })
 
     })
+
 })

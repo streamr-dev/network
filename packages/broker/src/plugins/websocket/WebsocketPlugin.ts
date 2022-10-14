@@ -32,6 +32,7 @@ export class WebsocketPlugin extends Plugin<WebsocketPluginConfig> {
         await this.server!.stop()
     }
 
+    // eslint-disable-next-line class-methods-use-this
     override getConfigSchema(): Schema {
         return PLUGIN_CONFIG_SCHEMA
     }

@@ -49,9 +49,6 @@ export class ManagedConnection extends EventEmitter<Events> {
         }
 
         if (connectingConnection) {
-            if (this.connectionType === ConnectionType.WEBRTC) {
-                (connectingConnection as NodeWebRtcConnection).setOwnPeerDescriptor(this.ownPeerDescriptor)
-            }
             this.handshaker = new Handshaker(this.ownPeerDescriptor, this.protocolVersion, connectingConnection)
             connectingConnection.once('connected', () => {
                 this.attachImplementation(connectingConnection)
@@ -64,18 +61,12 @@ export class ManagedConnection extends EventEmitter<Events> {
             if (connectedConnection) {
                 this.handshaker = new Handshaker(this.ownPeerDescriptor, this.protocolVersion, connectedConnection!)
                 this.attachImplementation(connectedConnection!)
-                if (this.connectionType === ConnectionType.WEBRTC) {
-                    (connectedConnection as NodeWebRtcConnection).setOwnPeerDescriptor(this.ownPeerDescriptor)
-                }
             }
         }
 
         if (this.handshaker) {
             this.handshaker.on('handshakeCompleted', this.onHandshakeCompleted)
         }
-        //(peerDescriptor: PeerDescriptor) => {
-        //    this.onHandshakeCompleted(peerDescriptor)
-        //})
     }
 
     // eventemitter3 does not implement the standard 'newListener' event, so we need to override

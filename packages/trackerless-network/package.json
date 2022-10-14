@@ -19,7 +19,7 @@
     "test": "jest",
     "test-unit": "jest test/unit",
     "test-integration": "jest test/integration",
-    "test-e2e": "jest test/end-to-end",
+    "test-e2e": "jest --runInBand test/end-to-end",
     "preinstall": "./proto.sh"
   },
   "dependencies": {
@@ -27,7 +27,7 @@
     "@protobuf-ts/runtime-rpc": "^2.8.0",
     "@streamr/dht": "1.0.0",
     "@streamr/proto-rpc": "1.2.0",
-    "@streamr/utils": "^0.0.1",
+    "@streamr/utils": "^1.0.0",
     "lodash": "^4.17.21"
   },
   "devDependencies": {

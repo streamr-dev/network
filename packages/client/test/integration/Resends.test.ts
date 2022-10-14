@@ -1,11 +1,16 @@
 import 'reflect-metadata'
-import { MessageID, StreamMessage } from 'streamr-client-protocol'
+import { MessageID } from 'streamr-client-protocol'
+import { Authentication } from '../../src/Authentication'
 import { StreamPermission } from '../../src/permission'
+import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
-import { createRelativeTestStreamId } from '../test-utils/utils'
+import { createRandomAuthentication, createRelativeTestStreamId } from '../test-utils/utils'
+import { toEthereumAddress } from '@streamr/utils'
+
+const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
 describe('Resends', () => {
 
@@ -14,8 +19,10 @@ describe('Resends', () => {
         let client: StreamrClient
         let stream: Stream
         let storageNode: FakeStorageNode
+        let authentication: Authentication
 
         beforeEach(async () => {
+            authentication = createRandomAuthentication()
             const environment = new FakeEnvironment()
             client = environment.createClient()
             stream = await client.createStream({
@@ -54,9 +61,10 @@ describe('Resends', () => {
 
         it('no message', async () => {
             await stream.addToStorageNode(storageNode.id)
-            const msg = new StreamMessage({
-                messageId: new MessageID(stream.id, 0, Date.now(), 0, 'publisherId', 'msgChainId'),
-                content: {}
+            const msg = await createSignedMessage({
+                messageId: new MessageID(stream.id, 0, Date.now(), 0, PUBLISHER_ID, 'msgChainId'),
+                serializedContent: JSON.stringify({}),
+                authentication
             })
             await expect(() => client.waitForStorage(msg, {
                 interval: 50,
@@ -69,9 +77,10 @@ describe('Resends', () => {
         })
 
         it('no storage assigned', async () => {
-            const msg = new StreamMessage({
-                messageId: new MessageID(stream.id, 0, Date.now(), 0, 'publisherId', 'msgChainId'),
-                content: {}
+            const msg = await createSignedMessage({
+                messageId: new MessageID(stream.id, 0, Date.now(), 0, PUBLISHER_ID, 'msgChainId'),
+                serializedContent: JSON.stringify({}),
+                authentication
             })
             await expect(() => client.waitForStorage(msg, {
                 messageMatchFn: () => {

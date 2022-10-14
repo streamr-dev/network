@@ -12,6 +12,7 @@ const logger = new Logger(module)
 const MAX_MESSAGE_SIZE = 1048576
 
 export const WEB_RTC_CLEANUP = new class {
+    // eslint-disable-next-line class-methods-use-this
     cleanUp(): void {
         nodeDatachannel.cleanup()
     }
@@ -52,19 +53,17 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
 
     public readonly connectionType: ConnectionType = ConnectionType.WEBRTC
     private readonly stunUrls: string[]
-    private readonly bufferThresholdHigh: number // TODO: buffer handling must be implemented before production use
+    //private readonly bufferThresholdHigh: number // TODO: buffer handling must be implemented before production use
     private readonly bufferThresholdLow: number
     private readonly connectingTimeout: number
     private readonly remotePeerDescriptor: PeerDescriptor
     private closed = false
 
-    private ownPeerDescriptor?: PeerDescriptor
-
     constructor(params: Params) {
         super()
         this.connectionId = new ConnectionID()
         this.stunUrls = params.stunUrls || []
-        this.bufferThresholdHigh = params.bufferThresholdHigh || 2 ** 17
+        //this.bufferThresholdHigh = params.bufferThresholdHigh || 2 ** 17
         this.bufferThresholdLow = params.bufferThresholdLow || 2 ** 15
         this.connectingTimeout = params.connectingTimeout || 20000
         this.remotePeerDescriptor = params.remotePeerDescriptor
@@ -135,13 +134,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
             try {
                 this.dataChannel?.sendMessageBinary(data as Buffer)
             } catch (err) {
-                logger.warn(
-                    'Failed to send binary message to '
-                    + PeerID.fromValue(this.remotePeerDescriptor.peerId).toKey()
-                    + ' --- '
-                    + PeerID.fromValue(this.ownPeerDescriptor!.peerId).toKey()
-                )
-                // this.close()
+                logger.warn('Failed to send binary message to ' + PeerID.fromValue(this.remotePeerDescriptor.peerId).toKey())
             }
         }
     }
@@ -236,9 +229,5 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
 
     public setConnectionId(connectionID: string): void {
         this.connectionId = new ConnectionID(connectionID)
-    }
-
-    public setOwnPeerDescriptor(peerDescriptor: PeerDescriptor): void {
-        this.ownPeerDescriptor = peerDescriptor
     }
 }

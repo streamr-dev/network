@@ -1,3 +1,5 @@
+/* eslint-disable class-methods-use-this */
+
 import { DhtPeer } from './DhtPeer'
 import KBucket from 'k-bucket'
 import { EventEmitter } from 'eventemitter3'
@@ -57,7 +59,7 @@ export class DhtNodeConfig {
     numberOfNodesPerKBucket = 1
     joinNoProgressLimit = 4
     routeMessageTimeout = 4000
-    dhtJoinTimeout = 120000
+    dhtJoinTimeout = 60000
 
     constructor(conf: Partial<DhtNodeConfig>) {
         // assign given non-undefined config vars over defaults
@@ -294,6 +296,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             this.connections.delete(PeerID.fromValue(peerDescriptor.peerId).toKey())
             this.bucket!.remove(peerDescriptor.peerId)
             this.connectionManager?.unlockConnection(peerDescriptor, this.config.serviceId)
+
             this.emit('disconnected', peerDescriptor)
         })
         this.randomPeers = new RandomContactList(selfId, this.config.maxNeighborListSize)
@@ -435,8 +438,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         if (this.ownPeerId!.equals(entryPoint.peerId)) {
             return
         }
-
-        // this.config.entryPoints = [entryPointDescriptor]
 
         if (this.connectionManager) {
             this.connectionManager.lockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
@@ -627,6 +628,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         return response
     }
 
+    // eslint-disable-next-line class-methods-use-this
     public async ping(request: PingRequest, _context: ServerCallContext): Promise<PingResponse> {
         const response: PingResponse = {
             requestId: request.requestId
@@ -748,5 +750,4 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             return this.doRouteMessage(routedMessage, true)
         }
     }
-
 }

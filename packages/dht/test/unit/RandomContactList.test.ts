@@ -21,13 +21,18 @@ class MockRpcClient implements IDhtRpcServiceClient, ServiceInfo {
         { name: 'routeMessage', O: {} as IMessageType<RouteMessageAck> } as MethodInfo<any, any>,
     ]
     options = {}
+
+    // eslint-disable-next-line class-methods-use-this
     getClosestPeers(_input: ClosestPeersRequest, _options?: RpcOptions): UnaryCall<ClosestPeersRequest, ClosestPeersResponse> {
         return {} as  UnaryCall<ClosestPeersRequest, ClosestPeersResponse>
     }
+
+    // eslint-disable-next-line class-methods-use-this
     ping(_input: PingRequest, _options?: RpcOptions): UnaryCall <PingRequest, PingResponse> {
         return {} as UnaryCall<PingRequest, PingResponse>
     }
 
+    // eslint-disable-next-line class-methods-use-this
     routeMessage(_input: RouteMessageWrapper, _options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck> {
         return {} as UnaryCall<RouteMessageWrapper, RouteMessageAck>
     }

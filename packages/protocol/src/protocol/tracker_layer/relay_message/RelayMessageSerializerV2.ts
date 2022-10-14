@@ -6,6 +6,7 @@ import { Serializer } from '../../../Serializer'
 
 const VERSION = 2
 
+/* eslint-disable class-methods-use-this */
 export default class RelayMessageSerializerV2 extends Serializer<RelayMessage> {
     toArray(relayMessage: RelayMessage): any[] {
         return [
@@ -22,7 +23,7 @@ export default class RelayMessageSerializerV2 extends Serializer<RelayMessage> {
     fromArray(arr: any[]): RelayMessage {
         const [
             version,
-            type, // eslint-disable-line @typescript-eslint/no-unused-vars
+            _type,
             requestId,
             originator,
             targetNode,

@@ -12,7 +12,7 @@ app.use('/static', express.static(path.join(__dirname, '/../../dist')))
 
 let server
 
-app.get('/stop', (req, res) => {
+app.get('/stop', (_req, res) => {
     res.end()
 
     if (server) {
@@ -21,7 +21,7 @@ app.get('/stop', (req, res) => {
     }
 })
 
-app.get('/', (req, res) => {
+app.get('/', (_req, res) => {
     res.sendFile(path.join(__dirname, 'browser.html'))
 })
 

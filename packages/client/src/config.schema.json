@@ -117,14 +117,6 @@
         "maxGapRequests": {
             "type": "number"
         },
-        "verifySignatures": {
-            "type": "string",
-            "enum": [
-                "auto",
-                "always",
-                "never"
-            ]
-        },
         "retryResendAfter": {
             "type": "number"
         },
@@ -249,15 +241,6 @@
                 },
                 "maxKeyRequestsPerSecond": {
                     "type": "number"
-                }
-            }
-        },
-        "debug": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "inspectOpts": {
-                    "type": "object"
                 }
             }
         },
