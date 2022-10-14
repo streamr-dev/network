@@ -7,7 +7,7 @@ import { counterId } from './utils/utils'
 import { uuid } from './utils/uuid'
 
 function generateClientId(): string {
-    return counterId(process.pid ? `${process.pid}` : `${uuid().slice(-4)}${uuid().slice(0, 4)}`)
+    return counterId(process.pid ? `${process.pid}` : `${uuid().slice(-4)}${uuid().slice(0, 4)}`, '/')
 }
 
 /**

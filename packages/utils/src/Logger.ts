@@ -28,7 +28,7 @@ export class Logger {
             fileId = parts[parts.length - 1]
         }
         const appId = process.env.STREAMR_APPLICATION_ID
-        const longName = _.without([appId, fileId, context], undefined).join(':')
+        const longName = _.without([appId, context, fileId], undefined).join(':')
         return _.padEnd(longName.substring(0, this.NAME_LENGTH), this.NAME_LENGTH, ' ')
     }
 
