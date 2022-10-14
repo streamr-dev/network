@@ -26,7 +26,6 @@ export const createMockRandomGraphNodeAndDhtNode = (
         layer1: dhtNode,
         connectionLocker: mockConnectionLocker
     })
-    //simulator.addConnectionManager(mockCm)
 
     return [dhtNode, randomGraphNode]
 

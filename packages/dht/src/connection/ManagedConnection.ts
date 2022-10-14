@@ -66,9 +66,6 @@ export class ManagedConnection extends EventEmitter<Events> {
         if (this.handshaker) {
             this.handshaker.on('handshakeCompleted', this.onHandshakeCompleted)
         }
-        //(peerDescriptor: PeerDescriptor) => {
-        //    this.onHandshakeCompleted(peerDescriptor)
-        //})
     }
 
     // eventemitter3 does not implement the standard 'newListener' event, so we need to override

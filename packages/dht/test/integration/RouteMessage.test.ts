@@ -148,8 +148,6 @@ describe('Route Message With Mock Connections', () => {
                 node.on('message', (msg: Message) => {
                     numsOfReceivedMessages[node.getNodeId().toKey()] = numsOfReceivedMessages[node.getNodeId().toKey()] + 1
                     try {
-                        // console.info("[" + (parseInt(node.getNodeId().toString()) - 1) + "," + 
-                        // (parseInt(PeerID.fromValue(msg.sourceDescriptor!.peerId!).toString()) - 1) + "]")
                         const target = receiveMatrix[parseInt(node.getNodeId().toString()) - 1]
                         target[parseInt(PeerID.fromValue(msg.sourceDescriptor!.peerId!).toString()) - 1]++
                     } catch (e) {
@@ -185,16 +183,12 @@ describe('Route Message With Mock Connections', () => {
                 }))
             )
         )
-        await waitForCondition(() => {
-            //console.info(JSON.stringify(receiveMatrix))
-            //console.info(numsOfReceivedMessages[PeerID.fromString('1').toKey()]) 
-            return (numsOfReceivedMessages[PeerID.fromString('1').toKey()] >= routers.length - 1
-            )
-        }, 30000)
+        await waitForCondition(() =>
+            (numsOfReceivedMessages[PeerID.fromString('1').toKey()] >= routers.length - 1), 30000
+        )
         await Promise.all(
             Object.values(numsOfReceivedMessages).map(async (count) =>
                 waitForCondition(() => {
-                    //console.info(count)
                     return count >= routers.length - 1
                 }, 30000)
             )
