@@ -1,4 +1,3 @@
-import { EventEmitter } from 'events'
 import { ConstructorOptions, WebRtcConnection } from '../connection/webrtc/WebRtcConnection'
 import { Logger } from "@streamr/utils"
 import { NameDirectory } from "../NameDirectory"
@@ -6,6 +5,7 @@ import { WebRtcConnectionFactory } from "../connection/webrtc/WebRtcEndpoint"
 import { Simulator } from "./Simulator"
 import { DescriptionType } from 'node-datachannel'
 
+/* eslint-disable class-methods-use-this */
 export const webRtcConnectionFactory = new class implements WebRtcConnectionFactory {
     createConnection(opts: ConstructorOptions): WebRtcConnection {
         return new NodeWebRtcConnection(opts)
@@ -22,8 +22,6 @@ export class NodeWebRtcConnection extends WebRtcConnection {
     //private connection: PeerConnection | null
     //private dataChannel: DataChannel | null
     
-    private dataChannelEmitter?: EventEmitter
-    private connectionEmitter?: EventEmitter
     private lastState?: string = 'connecting'
     private lastGatheringState?: string
     private open = false

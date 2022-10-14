@@ -1,26 +1,28 @@
 /**
  * Public Resends API
  */
-import { DependencyContainer, inject, Lifecycle, scoped, delay } from 'tsyringe'
-import { MessageRef, StreamPartID, StreamPartIDUtils, EthereumAddress, StreamMessage } from 'streamr-client-protocol'
+import { inject, Lifecycle, scoped, delay } from 'tsyringe'
+import { MessageRef, StreamPartID, StreamPartIDUtils, StreamMessage } from 'streamr-client-protocol'
 
 import { instanceId, counterId } from '../utils/utils'
 import { Context, ContextError } from '../utils/Context'
-import { inspect } from '../utils/log'
 
 import { MessageStream, MessageStreamOnMessage } from './MessageStream'
-import { SubscribePipeline } from './SubscribePipeline'
+import { createSubscribePipeline } from './SubscribePipeline'
 
 import { StorageNodeRegistry } from '../registry/StorageNodeRegistry'
-import { BrubeckContainer } from '../Container'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamDefinition } from '../types'
-import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { random } from 'lodash'
-import { ConfigInjectionToken, TimeoutsConfig } from '../Config'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { HttpUtil } from '../HttpUtil'
 import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
-import { wait } from '@streamr/utils'
+import { EthereumAddress, toEthereumAddress, wait } from '@streamr/utils'
+import { GroupKeyStore } from '../encryption/GroupKeyStore'
+import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'
+import { StreamrClientEventEmitter } from '../events'
+import { DestroySignal } from '../DestroySignal'
+import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 
@@ -37,14 +39,14 @@ export interface ResendLastOptions {
 
 export interface ResendFromOptions {
     from: ResendRef
-    publisherId?: EthereumAddress
+    publisherId?: string
 }
 
 export interface ResendRangeOptions {
     from: ResendRef
     to: ResendRef
     msgChainId?: string
-    publisherId?: EthereumAddress
+    publisherId?: string
 }
 
 export type ResendOptions = ResendLastOptions | ResendFromOptions | ResendRangeOptions
@@ -65,6 +67,11 @@ function isResendRange<T extends ResendRangeOptions>(options: any): options is T
 export class Resends implements Context {
     readonly id
     readonly debug
+    private groupKeyStore: GroupKeyStore
+    private subscriberKeyExchange: SubscriberKeyExchange
+    private streamrClientEventEmitter: StreamrClientEventEmitter
+    private destroySignal: DestroySignal
+    private rootConfig: StrictStreamrClientConfig
 
     constructor(
         context: Context,
@@ -72,12 +79,20 @@ export class Resends implements Context {
         @inject(delay(() => StorageNodeRegistry)) private storageNodeRegistry: StorageNodeRegistry,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(delay(() => StreamRegistryCached)) private streamRegistryCached: StreamRegistryCached,
-        @inject(BrubeckContainer) private container: DependencyContainer,
         @inject(HttpUtil) private httpUtil: HttpUtil,
-        @inject(ConfigInjectionToken.Timeouts) private timeoutsConfig: TimeoutsConfig
+        groupKeyStore: GroupKeyStore,
+        subscriberKeyExchange: SubscriberKeyExchange,
+        streamrClientEventEmitter: StreamrClientEventEmitter,
+        destroySignal: DestroySignal,
+        @inject(ConfigInjectionToken.Root) rootConfig: StrictStreamrClientConfig
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
+        this.groupKeyStore = groupKeyStore
+        this.subscriberKeyExchange = subscriberKeyExchange
+        this.streamrClientEventEmitter = streamrClientEventEmitter
+        this.destroySignal = destroySignal
+        this.rootConfig = rootConfig
     }
 
     async resend<T>(
@@ -109,7 +124,7 @@ export class Resends implements Context {
                 fromSequenceNumber: options.from.sequenceNumber,
                 toTimestamp: new Date(options.to.timestamp).getTime(),
                 toSequenceNumber: options.to.sequenceNumber,
-                publisherId: options.publisherId,
+                publisherId: options.publisherId !== undefined ? toEthereumAddress(options.publisherId) : undefined,
                 msgChainId: options.msgChainId,
             })
         }
@@ -118,11 +133,11 @@ export class Resends implements Context {
             return this.from<T>(streamPartId, {
                 fromTimestamp: new Date(options.from.timestamp).getTime(),
                 fromSequenceNumber: options.from.sequenceNumber,
-                publisherId: options.publisherId,
+                publisherId: options.publisherId !== undefined ? toEthereumAddress(options.publisherId) : undefined,
             })
         }
 
-        throw new ContextError(this, `can not resend without valid resend options: ${inspect({ streamPartId, options })}`)
+        throw new ContextError(this, `can not resend without valid resend options: ${JSON.stringify({ streamPartId, options })}`)
     }
 
     private async fetchStream<T>(
@@ -134,7 +149,7 @@ export class Resends implements Context {
         debug('fetching resend %s %s %o', endpointSuffix, streamPartId, query)
         const nodeAddresses = await this.streamStorageRegistry.getStorageNodes(StreamPartIDUtils.getStreamID(streamPartId))
         if (!nodeAddresses.length) {
-            const err = new ContextError(this, `no storage assigned: ${inspect(streamPartId)}`)
+            const err = new ContextError(this, `no storage assigned: ${streamPartId}`)
             err.code = 'NO_STORAGE_NODES'
             throw err
         }
@@ -142,12 +157,18 @@ export class Resends implements Context {
         const nodeAddress = nodeAddresses[random(0, nodeAddresses.length - 1)]
         const nodeUrl = (await this.storageNodeRegistry.getStorageNodeMetadata(nodeAddress)).http
         const url = this.createUrl(nodeUrl, endpointSuffix, streamPartId, query)
-        const messageStream = SubscribePipeline<T>(
-            new MessageStream<T>(this),
+        const messageStream = createSubscribePipeline<T>({
+            messageStream: new MessageStream<T>(this),
             streamPartId,
-            this.container.resolve<Context>(Context as any),
-            this.container
-        )
+            context: this,
+            resends: this,
+            groupKeyStore: this.groupKeyStore,
+            subscriberKeyExchange: this.subscriberKeyExchange,
+            streamRegistryCached: this.streamRegistryCached,
+            streamrClientEventEmitter: this.streamrClientEventEmitter,
+            destroySignal: this.destroySignal,
+            rootConfig: this.rootConfig
+        })
 
         let count = 0
         messageStream.forEach(() => {
@@ -220,8 +241,10 @@ export class Resends implements Context {
     }
 
     async waitForStorage(streamMessage: StreamMessage, {
-        interval = this.timeoutsConfig.storageNode.retryInterval,
-        timeout = this.timeoutsConfig.storageNode.timeout,
+        // eslint-disable-next-line no-underscore-dangle
+        interval = this.rootConfig._timeouts.storageNode.retryInterval,
+        // eslint-disable-next-line no-underscore-dangle
+        timeout = this.rootConfig._timeouts.storageNode.timeout,
         count = 100,
         messageMatchFn = (msgTarget: StreamMessage, msgGot: StreamMessage) => {
             return msgTarget.signature === msgGot.signature
@@ -233,16 +256,14 @@ export class Resends implements Context {
         messageMatchFn?: (msgTarget: StreamMessage, msgGot: StreamMessage) => boolean
     } = {}): Promise<void> {
         if (!streamMessage) {
-            throw new ContextError(this, 'waitForStorage requires a StreamMessage, got:', streamMessage)
+            throw new ContextError(this, 'waitForStorage requires a StreamMessage')
         }
 
         const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamMessage.getStreamPartID())
         const streamDefinition = { streamId, partition }
 
-        /* eslint-disable no-await-in-loop */
         const start = Date.now()
         let last: StreamMessage[]
-        // eslint-disable-next-line no-constant-condition
         let found = false
         while (!found) {
             const duration = Date.now() - start
@@ -254,7 +275,7 @@ export class Resends implements Context {
                     streamMessage,
                     last: last!.map((l: any) => l.content),
                 })
-                const err: any = new Error(`timed out after ${duration}ms waiting for message: ${inspect(streamMessage)}`)
+                const err: any = new Error(`timed out after ${duration}ms waiting for message`)
                 err.streamMessage = streamMessage
                 throw err
             }

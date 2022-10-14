@@ -129,7 +129,6 @@ export const createDecoratedContract = <T extends Contract>(
         eventEmitter
     }
     // copy own properties and inherited properties (e.g. contract.removeAllListeners)
-    // eslint-disable-next-line
     for (const key in contract) {
         result[key] = methods[key] !== undefined ? methods[key] : contract[key]
     }

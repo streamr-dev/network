@@ -6,13 +6,14 @@ import {
     MessageRef,
     RelayMessage,
     RelayMessageSubType,
+    StatusAckMessage,
     StatusMessage,
     StreamMessage,
     StreamPartIDUtils,
     toStreamID
 } from 'streamr-client-protocol'
 import { runAndWaitForEvents } from 'streamr-test-utils'
-import { waitForEvent } from '@streamr/utils'
+import { toEthereumAddress, waitForEvent } from '@streamr/utils'
 import { startTracker, Tracker, TrackerServer, TrackerServerEvent } from '@streamr/network-tracker'
 import { Event as NodeToNodeEvent, NodeToNode } from '../../src/protocol/NodeToNode'
 import { Event as NodeToTrackerEvent, NodeToTracker } from '../../src/protocol/NodeToTracker'
@@ -29,6 +30,8 @@ const UUID_REGEX = /[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]
 
 // eslint-disable-next-line no-underscore-dangle
 declare let _streamr_electron_test: any
+
+const PUBLISHER_ID = toEthereumAddress('0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb')
 
 describe('delivery of messages in protocol layer', () => {
     let signallingTracker: Tracker | undefined
@@ -116,13 +119,12 @@ describe('delivery of messages in protocol layer', () => {
 
     it('sendData is delivered', async () => {
         const streamMessage = new StreamMessage({
-            messageId: new MessageID(toStreamID('stream'), 10, 666, 0, 'publisherId', 'msgChainId'),
+            messageId: new MessageID(toStreamID('stream'), 10, 666, 0, PUBLISHER_ID, 'msgChainId'),
             prevMsgRef: new MessageRef(665, 0),
             content: {
                 hello: 'world'
             },
             messageType: StreamMessage.MESSAGE_TYPES.MESSAGE,
-            signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
             signature: 'signature',
         })
         const messagePromise = waitForEvent(nodeToNode1, NodeToNodeEvent.DATA_RECEIVED)
@@ -132,12 +134,11 @@ describe('delivery of messages in protocol layer', () => {
         expect(msg).toBeInstanceOf(BroadcastMessage)
         expect(source).toEqual('node2')
         expect(msg.requestId).toEqual('')
-        expect(msg.streamMessage.messageId).toEqual(new MessageID(toStreamID('stream'), 10, 666, 0, 'publisherId', 'msgChainId'))
+        expect(msg.streamMessage.messageId).toEqual(new MessageID(toStreamID('stream'), 10, 666, 0, PUBLISHER_ID, 'msgChainId'))
         expect(msg.streamMessage.prevMsgRef).toEqual(new MessageRef(665, 0))
         expect(msg.streamMessage.getParsedContent()).toEqual({
             hello: 'world'
         })
-        expect(msg.streamMessage.signatureType).toEqual(StreamMessage.SIGNATURE_TYPES.ETH)
         expect(msg.streamMessage.signature).toEqual('signature')
     })
 
@@ -153,6 +154,18 @@ describe('delivery of messages in protocol layer', () => {
         expect(msg.streamPartition).toEqual(10)
         expect(msg.nodeIds).toEqual(['node1'])
         expect(msg.counter).toEqual(15)
+    })
+
+    it('sendStatusAck is delivered', async () => {
+        const messagePromise = waitForEvent(nodeToTracker, NodeToTrackerEvent.STATUS_ACK_RECEIVED)
+        trackerServer.sendStatusAck('node1', StreamPartIDUtils.parse('stream#10'))
+        const [msg, trackerId]: any = await messagePromise
+
+        expect(trackerId).toEqual('trackerServer')
+        expect(msg).toBeInstanceOf(StatusAckMessage)
+        expect(msg.requestId).toMatch(UUID_REGEX)
+        expect(msg.streamId).toEqual('stream')
+        expect(msg.streamPartition).toEqual(10)
     })
 
     it('sendStatus is delivered', async () => {

@@ -1,10 +1,12 @@
 import { NetworkNode } from '../../src/logic/NetworkNode'
 import { Tracker, startTracker } from '@streamr/network-tracker'
 import { MessageID, StreamMessage, toStreamID, toStreamPartID } from 'streamr-client-protocol'
-import { waitForEvent } from '@streamr/utils'
+import { toEthereumAddress, waitForEvent } from '@streamr/utils'
 
 import { createNetworkNode, NodeToTrackerEvent } from '../../src/composition'
 import { Event as NodeEvent } from '../../src/logic/Node'
+
+const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
 /**
  * This test verifies that on receiving a duplicate message, it is not re-emitted to the node's subscribers.
@@ -96,11 +98,12 @@ describe('subscribe and wait for the node to join the stream', () => {
 
     test('wait for join and publish', async () => {
         const msg = new StreamMessage({
-            messageId: new MessageID(toStreamID('stream-2'), 0, 0, 0, 'publisherId', 'msgChainId'),
+            messageId: new MessageID(toStreamID('stream-2'), 0, 0, 0, PUBLISHER_ID, 'msgChainId'),
             prevMsgRef: null,
             content: {
                 foo: 'bar'
-            }
+            },
+            signature: 'signature'
         })
         const firstNeighbors = await nodes[0].subscribeAndWaitForJoin(stream2, TIMEOUT)
         const result = await Promise.all([

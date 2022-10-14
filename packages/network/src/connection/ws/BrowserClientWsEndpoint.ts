@@ -61,10 +61,12 @@ export default class BrowserClientWsEndpoint extends AbstractClientWsEndpoint<Br
         return connection
     }
 
+    // eslint-disable-next-line class-methods-use-this
     protected doHandshakeResponse(uuid: string, _peerId: PeerId, ws: w3cwebsocket): void {
         ws.send(JSON.stringify({ uuid, peerId: this.peerInfo.peerId }))
     }
 
+    // eslint-disable-next-line class-methods-use-this
     protected doHandshakeParse(message: IMessageEvent): HandshakeValues {
         const { uuid, peerId } = JSON.parse(message.data.toString())
         return {

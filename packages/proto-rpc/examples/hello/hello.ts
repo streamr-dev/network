@@ -5,6 +5,7 @@ import { IHelloRpcService } from './proto/HelloRpc.server'
 import { HelloRpcServiceClient } from './proto/HelloRpc.client'
 
 // Rpc service
+/* eslint-disable class-methods-use-this */
 class HelloService implements IHelloRpcService {
     async sayHello(request: HelloRequest, _context: ServerCallContext): Promise<HelloResponse> {
         return { greeting: 'Hello ' + request.myName + '!' }

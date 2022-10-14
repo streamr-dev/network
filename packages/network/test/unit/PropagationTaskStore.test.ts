@@ -1,6 +1,6 @@
 import { MessageID, StreamMessage, toStreamID } from 'streamr-client-protocol'
 import { NodeId } from '../../src/identifiers'
-import { wait } from '@streamr/utils'
+import { toEthereumAddress, wait } from '@streamr/utils'
 import {
     PropagationTaskStore,
     PropagationTask
@@ -11,10 +11,18 @@ function makeTask(streamId: string, partition: number, ts: number, neighbors: st
     // Contents (apart from messageId) not so important here, but generate some for variety
     return {
         message: new StreamMessage({
-            messageId: new MessageID(toStreamID(streamId), partition, ts, 0, '', ''),
+            messageId: new MessageID(
+                toStreamID(streamId),
+                partition,
+                ts,
+                0,
+                toEthereumAddress('0x0000000000000000000000000000000000000001'),
+                ''
+            ),
             content: {
                 message: `${streamId}-${partition}-${ts}`
-            }
+            },
+            signature: 'signature'
         }),
         source: null,
         handledNeighbors: new Set<NodeId>(neighbors)

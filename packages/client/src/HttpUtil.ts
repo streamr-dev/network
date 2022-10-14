@@ -1,5 +1,5 @@
 import fetch, { Response } from 'node-fetch'
-import { Debug, Debugger, inspect } from './utils/log'
+import { Debug, Debugger } from './utils/log'
 
 import { getVersionString, counterId } from './utils/utils'
 import { Readable } from 'stream'
@@ -28,8 +28,7 @@ export class HttpError extends Error {
     constructor(message: string, response?: Response, body?: any, errorCode?: ErrorCode) {
         const typePrefix = errorCode ? errorCode + ': ' : ''
         // add leading space if there is a body set
-        const bodyMessage = body ? ` ${inspect(body)}` : ''
-        super(typePrefix + message + bodyMessage)
+        super(typePrefix + message)
         this.response = response
         this.body = body
         this.code = errorCode || ErrorCode.UNKNOWN
@@ -72,6 +71,7 @@ const parseErrorCode = (body: string) => {
     return code in ErrorCode ? code : ErrorCode.UNKNOWN
 }
 
+/* eslint-disable class-methods-use-this */
 @scoped(Lifecycle.ContainerScoped)
 export class HttpUtil {
     async fetchHttpStream(
@@ -123,7 +123,7 @@ async function fetchResponse(
 ): Promise<Response> {
     if (!debug) {
         const id = counterId('httpResponse')
-        debug = Debug('utils').extend(id) // eslint-disable-line no-param-reassign
+        debug = Debug('utils').extend(id)
     }
 
     const timeStart = Date.now()

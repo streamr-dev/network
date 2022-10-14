@@ -2,10 +2,12 @@ import { NetworkNode } from '../../src/logic/NetworkNode'
 import { Tracker, startTracker } from '@streamr/network-tracker'
 import { MessageID, StreamMessage, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
 import { waitForCondition } from 'streamr-test-utils'
-import { waitForEvent } from '@streamr/utils'
+import { toEthereumAddress, waitForEvent } from '@streamr/utils'
 
 import { createNetworkNode } from '../../src/composition'
 import { Event as NodeEvent } from '../../src/logic/Node'
+
+const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
 /**
  * This test verifies that on receiving a duplicate message, it is not re-emitted to the node's subscribers.
@@ -100,16 +102,18 @@ describe('duplicate message detection and avoidance', () => {
 
         // Produce data
         contactNode.publish(new StreamMessage({
-            messageId: new MessageID(toStreamID('stream-id'), 0, 100, 0, 'publisher', 'session'),
+            messageId: new MessageID(toStreamID('stream-id'), 0, 100, 0, PUBLISHER_ID, 'session'),
             content: {
                 hello: 'world'
             },
+            signature: 'signature'
         }))
         contactNode.publish(new StreamMessage({
-            messageId: new MessageID(toStreamID('stream-id'), 0, 120, 0, 'publisher', 'session'),
+            messageId: new MessageID(toStreamID('stream-id'), 0, 120, 0, PUBLISHER_ID, 'session'),
             content: {
                 hello: 'world'
             },
+            signature: 'signature'
         }))
 
         await waitForCondition(() => totalMessages > 9, 8000)

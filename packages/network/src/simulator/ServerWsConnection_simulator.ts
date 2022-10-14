@@ -13,7 +13,8 @@ export class ServerWsConnection extends AbstractWsConnection {
     constructor(private ownAddress: string,
         private ownPeerInfo: PeerInfo,
         private remoteAddress: string,
-        private remotePeerInfo: PeerInfo) {
+        remotePeerInfo: PeerInfo
+    ) {
         super(remotePeerInfo)
     }
 
@@ -28,6 +29,7 @@ export class ServerWsConnection extends AbstractWsConnection {
         this.readyState = 3
     }
 
+    // eslint-disable-next-line class-methods-use-this
     getBufferedAmount(): number {
         return 0
     }

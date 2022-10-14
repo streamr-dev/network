@@ -17,6 +17,7 @@ export class InfoPlugin extends Plugin<void> {
         return router
     }
 
+    // eslint-disable-next-line class-methods-use-this
     async stop(): Promise<void> {
     }
 }

@@ -6,10 +6,12 @@ import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { Wallet } from '@ethersproject/wallet'
-import { createMockMessage } from '../test-utils/utils'
-import { MessageRef, StreamMessage } from 'streamr-client-protocol'
+import { StreamMessage } from 'streamr-client-protocol'
 import { wait } from '@streamr/utils'
 import { StreamrClient } from '../../src/StreamrClient'
+import { MessageFactory } from '../../src/publish/MessageFactory'
+import { createAuthentication } from '../../src/Authentication'
+import { createGroupKeyQueue, createStreamRegistryCached } from '../test-utils/utils'
 
 const PUBLISHER_COUNT = 50
 const MESSAGE_COUNT_PER_PUBLISHER = 3
@@ -27,11 +29,12 @@ const PUBLISHERS: PublisherInfo[] = range(PUBLISHER_COUNT).map(() => ({
 
 describe('parallel key exchange', () => {
 
+    let environment: FakeEnvironment
     let stream: Stream
     let subscriber: StreamrClient
 
     beforeAll(async () => {
-        const environment = new FakeEnvironment()
+        environment = new FakeEnvironment()
         subscriber = environment.createClient()
         stream = await subscriber.createStream('/path')
         await Promise.all(PUBLISHERS.map(async (publisher) => {
@@ -52,21 +55,27 @@ describe('parallel key exchange', () => {
         const sub = await subscriber.subscribe(stream.id)
 
         for (const publisher of PUBLISHERS) {
-            let prevMessage: StreamMessage | undefined
+            const messageFactory = new MessageFactory({
+                streamId: stream.id,
+                authentication: createAuthentication({
+                    privateKey: publisher.wallet.privateKey
+                }, undefined as any),
+                streamRegistry: createStreamRegistryCached({
+                    partitionCount: 1,
+                    isPublicStream: false,
+                    isStreamPublisher: true
+                }),
+                groupKeyQueue: await createGroupKeyQueue(publisher.groupKey)
+            })
             for (let i = 0; i < MESSAGE_COUNT_PER_PUBLISHER; i++) {
-                const msg = createMockMessage({
-                    content: {
-                        foo: 'bar'
-                    },
-                    stream,
-                    publisher: publisher.wallet,
-                    encryptionKey: publisher.groupKey,
-                    prevMsgRef: (prevMessage !== undefined) ? new MessageRef(prevMessage.getTimestamp(), prevMessage.getSequenceNumber()) : null
+                const msg = await messageFactory.createMessage({
+                    foo: 'bar'
+                }, {
+                    timestamp: Date.now()
                 })
                 const node = await publisher.client!.getNode()
                 node.publish(msg)
                 await wait(10)
-                prevMessage = msg
             }
         }
 
@@ -74,5 +83,8 @@ describe('parallel key exchange', () => {
         const messages = await sub.collect(expectedMessageCount)
         expect(messages).toHaveLength(expectedMessageCount)
         expect(messages.filter((msg) => !((msg.getParsedContent() as any).foo === 'bar'))).toEqual([])
+        expect(environment.getNetwork().getSentMessages({
+            messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST
+        })).toHaveLength(PUBLISHER_COUNT)
     }, 30 * 1000)
 })

@@ -1,10 +1,10 @@
 import { Wallet } from 'ethers'
 import { ConfigTest, Stream } from '../../src'
 import { StreamrClient } from '../../src/StreamrClient'
-import { createEthereumAddress, createTestStream } from '../test-utils/utils'
+import { createTestStream } from '../test-utils/utils'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
-import { EthereumAddress } from 'streamr-client-protocol'
-import { fetchPrivateKeyWithGas } from 'streamr-test-utils'
+import { fetchPrivateKeyWithGas, randomEthereumAddress } from 'streamr-test-utils'
+import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 
 jest.setTimeout(30000)
 
@@ -32,7 +32,7 @@ describe('StorageNodeRegistry2', () => {
                 privateKey: storageNodeWallet.privateKey
             }
         })
-        storageNodeAddress = storageNodeWallet.address
+        storageNodeAddress = toEthereumAddress(storageNodeWallet.address)
         createdStream = await createTestStream(client, module)
     })
 
@@ -94,7 +94,7 @@ describe('StorageNodeRegistry2', () => {
 
     it('metadata from non-existing node', async () => {
         return expect(async () => {
-            await storageNodeClient.getStorageNodeMetadata(createEthereumAddress(Date.now()))
+            await storageNodeClient.getStorageNodeMetadata(randomEthereumAddress())
         }).rejects.toThrow('Node not found')
     })
 })

@@ -9,11 +9,12 @@ import { instanceId } from './utils/utils'
 import { pOnce } from './utils/promises'
 import { Context } from './utils/Context'
 import { NetworkConfig, ConfigInjectionToken, TrackerRegistrySmartContract } from './Config'
-import { StreamMessage, StreamPartID, ProxyDirection, } from 'streamr-client-protocol'
+import { StreamMessage, StreamPartID, ProxyDirection } from 'streamr-client-protocol'
 import { DestroySignal } from './DestroySignal'
 import { EthereumConfig, generateEthereumAccount, getMainnetProvider } from './Ethereum'
 import { getTrackerRegistryFromContract } from './registry/getTrackerRegistryFromContract'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
+import { toEthereumAddress } from '@streamr/utils'
 
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
 export interface NetworkNodeStub {
@@ -55,6 +56,7 @@ export interface Events {
 /**
  * The factory is used so that integration tests can replace the real network node with a fake instance
  */
+/* eslint-disable class-methods-use-this */
 @scoped(Lifecycle.ContainerScoped)
 export class NetworkNodeFactory {
     createNetworkNode(opts: NetworkNodeOptions): NetworkNodeStub {
@@ -100,7 +102,7 @@ export class NetworkNodeFacade implements Context {
     private async getNormalizedNetworkOptions(): Promise<NetworkNodeOptions> {
         if ((this.networkConfig.trackers as TrackerRegistrySmartContract).contractAddress) {
             const trackerRegistry = await getTrackerRegistryFromContract({
-                contractAddress: (this.networkConfig.trackers as TrackerRegistrySmartContract).contractAddress,
+                contractAddress: toEthereumAddress((this.networkConfig.trackers as TrackerRegistrySmartContract).contractAddress),
                 jsonRpcProvider: getMainnetProvider(this.ethereumConfig)
             })
             return {
@@ -147,7 +149,6 @@ export class NetworkNodeFacade implements Context {
         if (this.authentication.isAuthenticated()) {
             const address = await this.authentication.getAddress()
             return `${address}#${uuid()}`
-            // eslint-disable-next-line no-else-return
         } else {
             return generateEthereumAccount().address
         }

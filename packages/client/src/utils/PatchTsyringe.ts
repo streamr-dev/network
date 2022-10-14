@@ -9,7 +9,7 @@
 // @ts-nocheck
 import { container } from 'tsyringe'
 // `dist` import below are intentional. Will not work properly if imported directly.
-// eslint-disable-next-line import/no-unresolved,no-restricted-imports
+// eslint-disable-next-line no-restricted-imports
 import { isTokenDescriptor, isTransformDescriptor } from 'tsyringe/dist/cjs/providers/injection-token'
 // eslint-disable-next-line no-restricted-imports
 import { formatErrorCtor } from 'tsyringe/dist/cjs/error-helpers'
@@ -30,13 +30,11 @@ container.constructor.prototype.resolveParams = function resolveParams(context, 
                             this.resolve(param.token, context),
                             ...param.transformArgs
                         )
-                // eslint-disable-next-line no-else-return
                 } else {
                     return param.multiple
                         ? this.resolveAll(param.token)
                         : this.resolve(param.token, context)
                 }
-            // eslint-disable-next-line no-else-return
             } else if (isTransformDescriptor(param)) {
                 return this.resolve(param.transform, context).transform(
                     this.resolve(param.token, context),

@@ -33,7 +33,7 @@
     "@protobuf-ts/runtime": "^2.8.0",
     "@protobuf-ts/runtime-rpc": "^2.8.0",
     "@streamr/proto-rpc": "^1.1.1",
-    "@streamr/utils": "^0.0.1",
+    "@streamr/utils": "^1.0.0",
     "bloomfilter": "^0.0.18",
     "k-bucket": "^5.1.0",
     "karma-mocha-reporter": "^2.2.5",

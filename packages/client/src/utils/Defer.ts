@@ -37,7 +37,6 @@ export type DeferReturnType<T> = Promise<T> &
     isSettled(): boolean
 } 
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function Defer<T>(executor: (...args: Parameters<Promise<T>['then']>) => void = noop): DeferReturnType<T> {
     let resolveFn: PromiseResolve | undefined
     let rejectFn: PromiseResolve | undefined
@@ -61,7 +60,6 @@ export function Defer<T>(executor: (...args: Parameters<Promise<T>['then']>) => 
         }
     }
 
-    // eslint-disable-next-line promise/param-names
     const p: Promise<T> = new Promise((_resolve, _reject) => {
         resolveFn = _resolve
         rejectFn = _reject

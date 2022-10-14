@@ -1,4 +1,5 @@
 import { StreamrClientConfig } from './Config'
+import { toEthereumAddress } from '@streamr/utils'
 
 function toNumber(value: any): number | undefined {
     return (value !== undefined) ? Number(value) : undefined
@@ -67,4 +68,4 @@ export const ConfigTest: StreamrClientConfig = {
     metrics: false
 }
 
-export const DOCKER_DEV_STORAGE_NODE = '0xde1112f631486CfC759A50196853011528bC5FA0'
+export const DOCKER_DEV_STORAGE_NODE = toEthereumAddress('0xde1112f631486CfC759A50196853011528bC5FA0')

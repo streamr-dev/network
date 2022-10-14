@@ -5,7 +5,6 @@ const TEST_REPEATS = (process.env.TEST_REPEATS) ? parseInt(process.env.TEST_REPE
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function describeRepeats(msg: string, fn: any, describeFn = describe): void {
     for (let k = 0; k < TEST_REPEATS; k++) {
-        // eslint-disable-next-line no-loop-func
         describe(msg, () => {
             describeFn(`test repeat ${k + 1} of ${TEST_REPEATS}`, fn)
         })

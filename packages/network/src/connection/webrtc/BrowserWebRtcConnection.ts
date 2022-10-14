@@ -3,6 +3,7 @@ import { Logger } from "@streamr/utils"
 import { NameDirectory } from "../../NameDirectory"
 import { WebRtcConnectionFactory } from "./WebRtcEndpoint"
 
+/* eslint-disable class-methods-use-this */
 export const webRtcConnectionFactory = new class implements WebRtcConnectionFactory {
     createConnection(opts: ConstructorOptions): WebRtcConnection {
         return new BrowserWebRtcConnection(opts)
@@ -13,6 +14,7 @@ export const webRtcConnectionFactory = new class implements WebRtcConnectionFact
     }
 }
 
+/** eslint-disable class-methods-use-this */
 export class BrowserWebRtcConnection extends WebRtcConnection {
     private readonly logger: Logger
     private peerConnection: RTCPeerConnection | null = null

@@ -1,5 +1,6 @@
+import { EthereumAddress } from '@streamr/utils'
 import { Readable } from 'stream'
-import { EthereumAddress, StreamID, StreamMessage, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
+import { StreamID, StreamMessage, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
 import { URLSearchParams } from 'url'
 import { HttpUtil } from '../../../src/HttpUtil'
 import { FakeNetwork } from './FakeNetwork'
@@ -80,7 +81,6 @@ export class FakeHttpUtil implements HttpUtil {
                 streamPartId,
                 query: (queryParams !== undefined) ? new URLSearchParams(queryParams.substring(1)) : undefined
             }
-            // eslint-disable-next-line no-else-return
         } else {
             return undefined
         }

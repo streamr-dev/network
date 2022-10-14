@@ -1,5 +1,4 @@
 import {
-    EthereumAddress,
     StreamID,
     StreamIDUtils,
     StreamPartID,
@@ -10,10 +9,10 @@ import {
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { StreamDefinition } from './types'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
+import { EthereumAddress } from '@streamr/utils'
 
 export const DEFAULT_PARTITION = 0
 
-/* eslint-disable no-else-return */
 function pickStreamId(definition: { id: string } | { stream: string } | { streamId: string }): StreamID {
     const obj = definition as any
     if (obj.id !== undefined) {
@@ -37,26 +36,6 @@ function parseRawDefinition(definition: StreamDefinition): [string, number | und
     }
 }
 
-/*
- * Use this e.g. for internal logging purposes where any kind of string representation is fine.
- *
- * Note that sometimes it is better to write this object to a log than just write e.g. JSON
- * representation of a stream definition. The stream definition object may be any instance which
- * implements the StreamDefinition interface (e.g a Stream object), and we don't want to write
- * many extra fields to the log. By converting the streamDefinition to a string with this method
- * we write just the information we need. Also calling JSON.strinfigy for a Stream object may
- * fail because the object contains circular refences.
- * */
-export const formStreamDefinitionDescription = (definition: StreamDefinition): string => {
-    const raw = parseRawDefinition(definition)
-    let str = raw[0]
-    if (raw[1] !== undefined) {
-        str += '#' + raw[1] // TODO '#' from a constant?
-    }
-    return str
-}
-
-/* eslint-disable no-else-return */
 @scoped(Lifecycle.ContainerScoped)
 export class StreamIDBuilder {
     constructor(@inject(AuthenticationInjectionToken) private authentication: Authentication) {}

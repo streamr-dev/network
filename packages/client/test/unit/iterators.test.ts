@@ -69,7 +69,6 @@ describe('Iterator Utils', () => {
                 for await (const msg of itr) {
                     received.push(msg)
                     if (received.length === MAX_ITEMS) {
-                        // eslint-disable-next-line no-loop-func
                         setTimeout(done.wrap(() => {
                             onTimeoutReached()
                             receievedAtCallTime = received
@@ -445,7 +444,6 @@ describe('Iterator Utils', () => {
                     for await (const msg of itr) {
                         received.push(msg)
                         if (received.length === MAX_ITEMS) {
-                            // eslint-disable-next-line no-loop-func
                             setTimeout(done.wrap(async () => {
                                 receievedAtCallTime = received
                                 await itr.cancel(err)
@@ -476,7 +474,6 @@ describe('Iterator Utils', () => {
                 for await (const msg of itr) {
                     received.push(msg)
                     if (received.length === MAX_ITEMS) {
-                        // eslint-disable-next-line no-loop-func
                         setTimeout(done.wrap(async () => {
                             receievedAtCallTime = received
                             await itr.cancel()
@@ -554,7 +551,6 @@ describe('Iterator Utils', () => {
                 for await (const msg of itr) {
                     received.push(msg)
                     if (received.length === expected.length) {
-                        // eslint-disable-next-line no-loop-func
                         setTimeout(done.wrap(async () => {
                             await itr.cancel()
                             expect(onFinally).toHaveBeenCalledTimes(1)
@@ -620,7 +616,6 @@ describe('Iterator Utils', () => {
                     for await (const msg of itr) {
                         received.push(msg)
                         if (received.length === MAX_ITEMS) {
-                            // eslint-disable-next-line no-loop-func
                             setTimeout(done.wrap(async () => {
                                 receievedAtCallTime = received
                                 await itr.cancel(err)
@@ -749,7 +744,6 @@ describe('Iterator Utils', () => {
                     for await (const msg of itr) {
                         received.push(msg)
                         if (received.length === MAX_ITEMS) {
-                            // eslint-disable-next-line no-loop-func
                             setTimeout(done.wrap(async () => {
                                 receievedAtCallTime = received
                                 await itr.cancel(err)

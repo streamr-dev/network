@@ -2,13 +2,12 @@ import { Wallet } from '@ethersproject/wallet'
 import { Web3Provider } from '@ethersproject/providers'
 import type { Signer } from '@ethersproject/abstract-signer'
 import { computeAddress } from '@ethersproject/transactions'
-import { EthereumAddress } from 'streamr-client-protocol'
 import type { ExternalProvider } from '@ethersproject/providers'
 import { EthereumConfig, getStreamRegistryChainProvider } from './Ethereum'
 import { XOR } from './types'
 import { pLimitFn } from './utils/promises'
 import pMemoize from 'p-memoize'
-import { wait } from '@streamr/utils'
+import { EthereumAddress, toEthereumAddress, wait } from '@streamr/utils'
 import { sign } from './utils/signingUtils'
 
 export type ProviderConfig = ExternalProvider
@@ -22,7 +21,7 @@ export interface PrivateKeyAuthConfig {
     // The address property is not used. It is included to make the object
     // compatible with StreamrClient.generateEthereumAccount(), as we typically
     // use that method to generate the client "auth" option.
-    address?: EthereumAddress
+    address?: string
 }
 
 // eslint-disable-next-line @typescript-eslint/ban-types
@@ -37,18 +36,18 @@ export interface Authentication {
     isAuthenticated: () => boolean
     // always in lowercase
     getAddress: () => Promise<EthereumAddress>
-    createMessagePayloadSignature: (payload: string) => Promise<string>
+    createMessageSignature: (payload: string) => Promise<string>
     getStreamRegistryChainSigner: () => Promise<Signer>
 }
 
 export const createAuthentication = (authConfig: AuthConfig, ethereumConfig: EthereumConfig): Authentication => {
     if (authConfig.privateKey !== undefined) {
         const key = authConfig.privateKey
-        const address = computeAddress(key).toLowerCase()
+        const address = toEthereumAddress(computeAddress(key))
         return {
             isAuthenticated: () => true,
             getAddress: async () => address,
-            createMessagePayloadSignature: async (payload: string) => sign(payload, key),
+            createMessageSignature: async (payload: string) => sign(payload, key),
             getStreamRegistryChainSigner: async () => new Wallet(key, getStreamRegistryChainProvider(ethereumConfig))
         }
     } else if (authConfig.ethereum !== undefined) {
@@ -63,12 +62,12 @@ export const createAuthentication = (authConfig: AuthConfig, ethereumConfig: Eth
                         throw new Error(`invalid ethereum provider ${ethereumConfig}`)
                     }
                     const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
-                    return accounts[0].toLowerCase()
+                    return toEthereumAddress(accounts[0])
                 } catch {
                     throw new Error('no addresses connected+selected in Metamask')
                 }
             }),
-            createMessagePayloadSignature: pLimitFn(async (payload: string) => {
+            createMessageSignature: pLimitFn(async (payload: string) => {
                 // sign one at a time & wait a moment before asking for next signature
                 // otherwise metamask extension may not show the prompt window
                 const sig = await signer.signMessage(payload)
@@ -101,7 +100,7 @@ export const createAuthentication = (authConfig: AuthConfig, ethereumConfig: Eth
             getAddress: async () => { 
                 throw new Error('StreamrClient is not authenticated with private key')
             },
-            createMessagePayloadSignature: async () => {
+            createMessageSignature: async () => {
                 throw new Error('Need either "privateKey" or "ethereum"')
             },
             getStreamRegistryChainSigner: async () => {

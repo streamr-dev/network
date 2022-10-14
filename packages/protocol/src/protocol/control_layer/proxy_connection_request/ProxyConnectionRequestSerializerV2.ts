@@ -7,6 +7,7 @@ import { toStreamID } from '../../../../src/utils/StreamID'
 
 const VERSION = 2
 
+/* eslint-disable class-methods-use-this */
 export default class ProxyConnectionRequestSerializerV2 extends Serializer<ProxyConnectionRequest> {
     toArray(proxyConnectionRequest: ProxyConnectionRequest): any[] {
         return [
@@ -24,7 +25,7 @@ export default class ProxyConnectionRequestSerializerV2 extends Serializer<Proxy
     fromArray(arr: any[]): ProxyConnectionRequest {
         const [
             version,
-            type, // eslint-disable-line @typescript-eslint/no-unused-vars
+            __type,
             requestId,
             streamId,
             streamPartition,

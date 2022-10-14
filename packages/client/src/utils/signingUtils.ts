@@ -1,6 +1,6 @@
 import secp256k1 from 'secp256k1'
 import { Keccak } from 'sha3'
-import { EthereumAddress } from 'streamr-client-protocol'
+import { EthereumAddress } from '@streamr/utils'
 
 const SIGN_MAGIC = '\u0019Ethereum Signed Message:\n'
 const keccak = new Keccak(256)
@@ -60,7 +60,6 @@ export function recover(
     const payloadBuffer = Buffer.from(payload, 'utf-8')
 
     if (!publicKeyBuffer) {
-        // eslint-disable-next-line no-param-reassign
         publicKeyBuffer = recoverPublicKey(signatureBuffer, payloadBuffer)
     }
     const pubKeyWithoutFirstByte = publicKeyBuffer.subarray(1, publicKeyBuffer.length)
