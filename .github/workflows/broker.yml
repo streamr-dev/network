@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3.1.0
-      - uses: actions/setup-node@v3.5.0
+      - uses: actions/setup-node@v3.5.1
         with:
           cache: 'npm'
           cache-dependency-path: package-lock.json
@@ -45,7 +45,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3.1.0
       - name: Cache Docker layers
-        uses: actions/cache@v3.0.10
+        uses: actions/cache@v3.0.11
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-buildx-v1-${{ github.sha }}

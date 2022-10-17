@@ -1,4 +1,4 @@
-import { inject, DependencyContainer, scoped, Lifecycle } from 'tsyringe'
+import { inject, scoped, Lifecycle } from 'tsyringe'
 import { StreamID } from 'streamr-client-protocol'
 import { Stream, StreamProperties } from '../../../src/Stream'
 import {
@@ -9,7 +9,6 @@ import {
     PermissionQuery
 } from '../../../src/permission'
 import { StreamIDBuilder } from '../../../src/StreamIDBuilder'
-import { BrubeckContainer } from '../../../src/Container'
 import { StreamRegistry } from '../../../src/registry/StreamRegistry'
 import { NotFoundError, SearchStreamsPermissionFilter } from '../../../src'
 import { StreamRegistryCached } from '../../../src/registry/StreamRegistryCached'
@@ -17,6 +16,7 @@ import { Authentication, AuthenticationInjectionToken } from '../../../src/Authe
 import { Methods } from '../types'
 import { EthereumAddress, Multimap, toEthereumAddress } from '@streamr/utils'
 import { FakeChain, PUBLIC_PERMISSION_TARGET, PublicPermissionTarget, StreamRegistryItem } from './FakeChain'
+import { StreamFactory } from '../../../src/StreamFactory'
 
 @scoped(Lifecycle.ContainerScoped)
 export class FakeStreamRegistry implements Methods<StreamRegistry> {
@@ -24,20 +24,20 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
     private readonly chain: FakeChain
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly authentication: Authentication
-    private readonly container: DependencyContainer
+    private readonly streamFactory: StreamFactory
     private readonly streamRegistryCached: StreamRegistryCached
 
     constructor(
-        @inject(FakeChain) chain: FakeChain,
-        @inject(StreamIDBuilder) streamIdBuilder: StreamIDBuilder,
-        @inject(AuthenticationInjectionToken) authentication: Authentication,
-        @inject(BrubeckContainer) container: DependencyContainer,
-        @inject(StreamRegistryCached) streamRegistryCached: StreamRegistryCached
+        chain: FakeChain,
+        streamIdBuilder: StreamIDBuilder,
+        streamFactory: StreamFactory,
+        streamRegistryCached: StreamRegistryCached,
+        @inject(AuthenticationInjectionToken) authentication: Authentication
     ) {
         this.chain = chain
         this.streamIdBuilder = streamIdBuilder
         this.authentication = authentication
-        this.container = container
+        this.streamFactory = streamFactory
         this.streamRegistryCached = streamRegistryCached
     }
 
@@ -59,21 +59,16 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
             permissions
         }
         this.chain.streams.set(streamId, registryItem)
-        return this.createFakeStream({
+        return this.streamFactory.createStream({
             ...props,
             id: streamId
         })
     }
 
-    private createFakeStream = (props: StreamProperties & { id: StreamID }) => {
-        const s = new Stream(props, this.container)
-        return s
-    }
-
     async getStream(id: StreamID): Promise<Stream> {
         const registryItem = this.chain.streams.get(id)
         if (registryItem !== undefined) {
-            return this.createFakeStream({ ...registryItem.metadata, id })
+            return this.streamFactory.createStream({ ...registryItem.metadata, id })
         } else {
             throw new NotFoundError('Stream not found: id=' + id)
         }
@@ -88,10 +83,10 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         } else {
             registryItem.metadata = props
         }
-        return new Stream({
+        return this.streamFactory.createStream({
             ...props,
             id: streamId
-        }, this.container)
+        })
     }
 
     async hasPermission(query: PermissionQuery): Promise<boolean> {

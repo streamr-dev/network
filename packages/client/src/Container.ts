@@ -4,17 +4,7 @@ import { DependencyContainer } from 'tsyringe'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
 import { AuthenticationInjectionToken, createAuthentication } from './Authentication'
 
-/**
- * DI Token for injecting the Client container.
- * Use sparingly, but can be necessary for factories
- * or to work around circular dependencies.
- */
-export const BrubeckContainer = Symbol('BrubeckContainer')
-
 export function initContainer(config: StrictStreamrClientConfig, c: DependencyContainer): void {
-    c.register(BrubeckContainer, {
-        useValue: c
-    })
     c.register(AuthenticationInjectionToken, {
         useValue: createAuthentication(config.auth, config)
     })
