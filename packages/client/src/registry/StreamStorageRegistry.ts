@@ -2,8 +2,7 @@ import debug from 'debug'
 import type { StreamStorageRegistry as StreamStorageRegistryContract } from '../ethereumArtifacts/StreamStorageRegistry'
 import StreamStorageRegistryArtifact from '../ethereumArtifacts/StreamStorageRegistry.json'
 import { StreamQueryResult } from './StreamRegistry'
-import { scoped, Lifecycle, inject, DependencyContainer } from 'tsyringe'
-import { BrubeckContainer } from '../Container'
+import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 import { ConfigInjectionToken } from '../Config'
 import { Stream, StreamProperties } from '../Stream'
 import { EthereumConfig, getStreamRegistryChainProvider, getStreamRegistryOverrides } from '../Ethereum'
@@ -15,6 +14,7 @@ import { StreamrClientEventEmitter, StreamrClientEvents, initEventGateway } from
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ContractFactory } from '../ContractFactory'
 import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
+import { StreamFactory } from '../StreamFactory'
 
 /**
  * Stores storage node assignments (mapping of streamIds <-> storage nodes addresses)
@@ -68,7 +68,7 @@ export class StreamStorageRegistry {
 
     constructor(
         private contractFactory: ContractFactory,
-        @inject(BrubeckContainer) private container: DependencyContainer,
+        @inject(delay(() => StreamFactory)) private streamFactory: StreamFactory,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(SynchronizedGraphQLClient) private graphQLClient: SynchronizedGraphQLClient,
         @inject(StreamrClientEventEmitter) eventEmitter: StreamrClientEventEmitter,
@@ -152,7 +152,7 @@ export class StreamStorageRegistry {
         const res = await this.graphQLClient.sendQuery(query) as StorageNodeQueryResult
         const streams = res.node.storedStreams.map((stream) => {
             const props: StreamProperties = Stream.parsePropertiesFromMetadata(stream.metadata)
-            return new Stream({ ...props, id: toStreamID(stream.id) }, this.container) // toStreamID() not strictly necessary
+            return this.streamFactory.createStream({ ...props, id: toStreamID(stream.id) }) // toStreamID() not strictly necessary
         })
         return {
             streams,

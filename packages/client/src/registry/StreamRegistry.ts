@@ -3,8 +3,7 @@ import type { StreamRegistryV3 as StreamRegistryContract } from '../ethereumArti
 import StreamRegistryArtifact from '../ethereumArtifacts/StreamRegistryV3Abi.json'
 import { BigNumber } from '@ethersproject/bignumber'
 import { Provider } from '@ethersproject/providers'
-import { scoped, Lifecycle, inject, delay, DependencyContainer } from 'tsyringe'
-import { BrubeckContainer } from '../Container'
+import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 import { EthereumConfig, getAllStreamRegistryChainProviders, getStreamRegistryOverrides } from '../Ethereum'
 import { instanceId } from '../utils/utils'
 import { until } from '../utils/promises'
@@ -40,8 +39,9 @@ import { StreamRegistryCached } from './StreamRegistryCached'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ContractFactory } from '../ContractFactory'
 import { EthereumAddress, isENSName, toEthereumAddress } from '@streamr/utils'
+import { StreamFactory } from './../StreamFactory'
 
-/* 
+/*
  * On-chain registry of stream metadata and permissions.
  *
  * Does not support system streams (the key exchange stream)
@@ -80,7 +80,7 @@ export class StreamRegistry implements Context {
         context: Context,
         private contractFactory: ContractFactory,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
-        @inject(BrubeckContainer) private container: DependencyContainer,
+        private streamFactory: StreamFactory,
         @inject(SynchronizedGraphQLClient) private graphQLClient: SynchronizedGraphQLClient,
         @inject(delay(() => StreamRegistryCached)) private streamRegistryCached: StreamRegistryCached,
         @inject(AuthenticationInjectionToken) private authentication: Authentication,
@@ -103,7 +103,7 @@ export class StreamRegistry implements Context {
 
     private parseStream(id: StreamID, metadata: string): Stream {
         const props: StreamProperties = Stream.parsePropertiesFromMetadata(metadata)
-        return new Stream({ ...props, id }, this.container)
+        return this.streamFactory.createStream({ ...props, id })
     }
 
     private async connectToContract(): Promise<void> {
@@ -173,10 +173,10 @@ export class StreamRegistry implements Context {
             await this.ensureStreamIdInNamespaceOfAuthenticatedUser(domain, streamId)
             await waitForTx(this.streamRegistryContract!.createStream(path, metadata, ethersOverrides))
         }
-        return new Stream({
+        return this.streamFactory.createStream({
             ...props,
             id: streamId
-        }, this.container)
+        })
     }
 
     private async ensureStreamIdInNamespaceOfAuthenticatedUser(address: EthereumAddress, streamId: StreamID): Promise<void> {
@@ -195,10 +195,10 @@ export class StreamRegistry implements Context {
             StreamRegistry.formMetadata(props),
             ethersOverrides
         ))
-        return new Stream({
+        return this.streamFactory.createStream({
             ...props,
             id: streamId
-        }, this.container)
+        })
     }
 
     async deleteStream(streamIdOrPath: string): Promise<void> {
@@ -238,7 +238,7 @@ export class StreamRegistry implements Context {
 
     searchStreams(term: string | undefined, permissionFilter: SearchStreamsPermissionFilter | undefined): AsyncGenerator<Stream> {
         return _searchStreams(
-            term, 
+            term,
             permissionFilter,
             this.graphQLClient,
             (id: StreamID, metadata: string) => this.parseStream(id, metadata),
