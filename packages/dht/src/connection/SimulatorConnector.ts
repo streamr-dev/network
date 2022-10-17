@@ -23,6 +23,7 @@ const logger = new Logger(module)
 export class SimulatorConnector extends EventEmitter<ManagedConnectionSourceEvent> {
    
     private simulatorConnections: Map<PeerIDKey, SimulatorConnection> = new Map()
+    private stopped = false
 
     constructor(
         private protocolVersion: string,
@@ -53,6 +54,9 @@ export class SimulatorConnector extends EventEmitter<ManagedConnectionSourceEven
     }
 
     public handleIncomingConnection(source: PeerDescriptor): void {
+        if (this.stopped) {
+            return
+        }
         const connection = new SimulatorConnection(this.ownPeerDescriptor!, source, this.simulator)
         this.simulatorConnections.set(PeerID.fromValue(source.peerId).toKey(), connection)
 
@@ -66,16 +70,24 @@ export class SimulatorConnector extends EventEmitter<ManagedConnectionSourceEven
     }
 
     public handleIncomingDisconnection(source: PeerDescriptor): void {
+        if (this.stopped) {
+            return
+        }
         const connection = this.simulatorConnections.get(PeerID.fromValue(source.peerId).toKey())
         connection?.handleIncomingDisconnection()
         this.simulatorConnections.delete(PeerID.fromValue(source.peerId).toKey())
     }
 
     public handleIncomingData(from: PeerDescriptor, data: Uint8Array): void {
+        if (this.stopped) {
+            return
+        }
         const connection = this.simulatorConnections.get(PeerID.fromValue(from.peerId).toKey())
-        connection!.handleIncomingData(data)
+        connection?.handleIncomingData(data)
     }
 
     public async stop(): Promise<void> {
+        this.stopped = true
+        this.removeAllListeners()
     }
 }
