@@ -10,6 +10,7 @@ export class PushPipeline<InType, OutType = InType> extends Pipeline<InType, Out
     /** @internal */
     override readonly source: PushBuffer<InType>
 
+    /** @internal */
     constructor(bufferSize = DEFAULT_BUFFER_SIZE) {
         const inputBuffer = new PushBuffer<InType>(bufferSize)
         super(inputBuffer)

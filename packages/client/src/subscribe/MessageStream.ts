@@ -15,11 +15,6 @@ export class MessageStream<
     InType = StreamMessage<T>,
     OutType extends StreamMessage<T> | unknown = InType
 > extends PushPipeline<InType, OutType> {
-    /** @internal */
-    constructor() {
-        super(undefined)
-    }
-
     /**
      * Attach a legacy onMessage handler and consume if necessary.
      * onMessage is passed parsed content as first arument, and streamMessage as second argument.
