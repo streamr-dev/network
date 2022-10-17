@@ -12,7 +12,7 @@ import { pOrderedResolve } from './utils/promises'
 import { CacheFn } from './utils/caches'
 import { Context } from './utils/Context'
 import { StreamRegistryCached } from './registry/StreamRegistryCached'
-import { ConfigInjectionToken, SubscribeConfig, CacheConfig } from './Config'
+import { ConfigInjectionToken, CacheConfig } from './Config'
 import StreamMessageValidator from './StreamMessageValidator'
 import { verify } from './utils/signingUtils'
 import { EthereumAddress } from '@streamr/utils'
@@ -32,8 +32,7 @@ export class Validator extends StreamMessageValidator implements Context {
     constructor(
         context: Context,
         @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
-        @inject(ConfigInjectionToken.Subscribe) private options: SubscribeConfig,
-        @inject(ConfigInjectionToken.Cache) private cacheOptions: CacheConfig,
+        @inject(ConfigInjectionToken.Cache) private cacheOptions: CacheConfig
     ) {
         super({
             getStream: (streamId: StreamID) => {

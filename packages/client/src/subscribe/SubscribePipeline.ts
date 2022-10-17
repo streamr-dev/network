@@ -37,7 +37,6 @@ export const createSubscribePipeline = <T = unknown>(opts: SubscriptionPipelineO
     const validate = new Validator(
         opts.context,
         opts.streamRegistryCached,
-        opts.rootConfig,
         opts.rootConfig.cache
     )
 

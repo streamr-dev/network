@@ -6,14 +6,13 @@ import { StreamRegistry } from '../../src/registry/StreamRegistry'
 import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
 import { Validator } from '../../src/Validator'
 import { createMockMessage, mockContext } from '../test-utils/utils'
-import { STREAM_CLIENT_DEFAULTS, SubscribeConfig } from '../../src/Config'
 import { fastWallet } from 'streamr-test-utils'
 import { EthereumAddress } from '@streamr/utils'
 
 const publisherWallet = fastWallet()
 const PARTITION_COUNT = 3
 
-const createMockValidator = (options: Partial<SubscribeConfig>) => {
+const createMockValidator = () => {
     const streamRegistry: Pick<StreamRegistry, 'getStream' | 'isStreamPublisher'> = {
         getStream: async (): Promise<Stream> => {
             return {
@@ -28,10 +27,6 @@ const createMockValidator = (options: Partial<SubscribeConfig>) => {
     return new Validator(
         context,
         new StreamRegistryCached(context, streamRegistry as any, {} as any) as any,
-        {
-            ...STREAM_CLIENT_DEFAULTS,
-            ...options
-        } as any,
         {} as any
     )
 }
@@ -42,8 +37,8 @@ interface MessageOptions {
     signature?: string
 }
 
-const validate = async (messageOptions: MessageOptions, validatorOptions: Partial<SubscribeConfig> = {}) => {
-    const validator = createMockValidator(validatorOptions)
+const validate = async (messageOptions: MessageOptions) => {
+    const validator = createMockValidator()
     const msg = await createMockMessage({
         streamPartId: toStreamPartID(toStreamID('streamId'), messageOptions.partition ?? 0),
         publisher: messageOptions.publisher ?? publisherWallet,
