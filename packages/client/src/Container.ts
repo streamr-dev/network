@@ -8,13 +8,6 @@ import { Context } from './utils/Context'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
 import { AuthenticationInjectionToken, createAuthentication } from './Authentication'
 
-/**
- * DI Token for injecting the Client container.
- * Use sparingly, but can be necessary for factories
- * or to work around circular dependencies.
- */
-export const BrubeckContainer = Symbol('BrubeckContainer')
-
 let uid: string = process.pid != null
     // Use process id in node uid.
     ? `${process.pid}`
@@ -23,7 +16,7 @@ let uid: string = process.pid != null
     : ''
 
 export function initContainer(
-    config: StrictStreamrClientConfig, 
+    config: StrictStreamrClientConfig,
     c: DependencyContainer
 ): Context {
     uid = uid || `${uuid().slice(-4)}${uuid().slice(0, 4)}`
@@ -38,10 +31,6 @@ export function initContainer(
 
     c.register(Context as any, {
         useValue: rootContext
-    })
-
-    c.register(BrubeckContainer, {
-        useValue: c
     })
 
     c.register(AuthenticationInjectionToken, {
