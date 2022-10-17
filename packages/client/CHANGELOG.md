@@ -33,7 +33,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Change storage node assignment event handlers
   - replace method `registerStorageEventListeners(listener)` with `on('addToStorageNode', listener)` and `on('removeFromStorageNode', listener)`
   - replace method `unRegisterStorageEventListeners()` with `off('addToStorageNode', listener)` and `off('removeFromStorageNode', listener)`
-- Remove method `enableDebugLogging`.
 - Rename classes `GroupKey` and `GroupKeyId` to `EncryptionKey` and `EncryptionKeyId`
 
 ### Deprecated
