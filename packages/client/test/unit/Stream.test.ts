@@ -18,6 +18,27 @@ describe('Stream', () => {
         expect(stream.config.fields).toEqual([])
     })
 
+    it('toObject', () => {
+        const mockContainer = rootContainer.createChildContainer()
+        initContainer(createStrictConfig({}), mockContainer)
+        const factory = mockContainer.resolve(StreamFactory)
+        const stream = factory.createStream({
+            id: toStreamID('mock-id'),
+            partitions: 10,
+            storageDays: 20
+        })
+        expect(stream.toObject()).toEqual({
+            id: 'mock-id',
+            partitions: 10,
+            storageDays: 20,
+            // currently we get also this field, which was not set by the user
+            // (maybe the test should pass also if this field is not present)
+            config: {
+                fields: []
+            }
+        })
+    })
+
     describe('update', () => {
         it('fields not updated if transaction fails', async () => {
             const config = createStrictConfig({})
