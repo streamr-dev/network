@@ -91,7 +91,11 @@ describe('RandomGraphNode-DhtNode', () => {
             await dhtNodes[i].joinDht(entrypointDescriptor)
         }))
 
-        await waitForCondition(() => graphNodes[3].getTargetNeighborStringIds().length >= 4)
+        await Promise.all(range(4).map((i) => {
+            return waitForCondition(() => {
+                return graphNodes[i].getTargetNeighborStringIds().length >= 4
+            }, 10000, 2000)
+        }))
 
         range(4).map((i) => {
             expect(graphNodes[i].getNearbyContactPoolIds().length).toBeGreaterThanOrEqual(4)
