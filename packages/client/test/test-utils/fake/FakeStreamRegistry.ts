@@ -28,11 +28,11 @@ export class FakeStreamRegistry implements Omit<Methods<StreamRegistry>, 'debug'
     private readonly streamRegistryCached: StreamRegistryCached
 
     constructor(
-        @inject(FakeChain) chain: FakeChain,
-        @inject(StreamIDBuilder) streamIdBuilder: StreamIDBuilder,
-        @inject(AuthenticationInjectionToken) authentication: Authentication,
+        chain: FakeChain,
+        streamIdBuilder: StreamIDBuilder,
         streamFactory: StreamFactory,
-        @inject(StreamRegistryCached) streamRegistryCached: StreamRegistryCached
+        streamRegistryCached: StreamRegistryCached,
+        @inject(AuthenticationInjectionToken) authentication: Authentication
     ) {
         this.chain = chain
         this.streamIdBuilder = streamIdBuilder
