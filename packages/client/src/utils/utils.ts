@@ -1,10 +1,10 @@
 import LRU from '../../vendor/quick-lru'
-import { SEPARATOR, uuid } from './uuid'
+import { SEPARATOR } from './uuid'
 
 import pkg from '../../package.json'
 
 import { StreamID, toStreamID } from 'streamr-client-protocol'
-import { toEthereumAddress } from '@streamr/utils'
+import { randomString, toEthereumAddress } from '@streamr/utils'
 
 /**
  * Generates counter-based ids.
@@ -118,7 +118,7 @@ export class MaxSizedSet<T> {
 }
 
 export function generateClientId(): string {
-    return counterId(process.pid ? `${process.pid}` : `${uuid().slice(-4)}${uuid().slice(0, 4)}`, '/')
+    return counterId(process.pid ? `${process.pid}` : randomString(4), '/')
 }
 
 // A unique internal identifier to some list of primitive values. Useful
