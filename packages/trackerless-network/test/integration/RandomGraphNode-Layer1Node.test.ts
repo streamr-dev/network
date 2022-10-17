@@ -3,7 +3,6 @@ import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { range } from 'lodash'
 import { waitForCondition } from 'streamr-test-utils'
 import { Logger } from '@streamr/utils'
-import { mockConnectionLocker } from '../utils'
 
 const logger = new Logger(module)
 
@@ -50,14 +49,14 @@ describe('RandomGraphNode-DhtNode', () => {
             randomGraphId: streamId,
             layer1: dhtNodes[i],
             P2PTransport: cms[i],
-            connectionLocker: mockConnectionLocker
+            connectionLocker: cms[i]
         }))
 
         entryPointRandomGraphNode = new RandomGraphNode({
             randomGraphId: streamId,
             layer1: dhtEntryPoint,
             P2PTransport: entrypointCm,
-            connectionLocker: mockConnectionLocker
+            connectionLocker: entrypointCm
         })
 
         await dhtEntryPoint.start()

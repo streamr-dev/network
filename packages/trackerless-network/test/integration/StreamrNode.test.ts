@@ -4,7 +4,6 @@ import { waitForCondition } from 'streamr-test-utils'
 import { StreamrNode, Event as NodeEvent } from '../../src/logic/StreamrNode'
 import { DataMessage, MessageRef } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { waitForEvent } from '@streamr/utils'
-import { mockConnectionLocker } from '../utils'
 
 describe('StreamrNode', () => {
 
@@ -68,8 +67,8 @@ describe('StreamrNode', () => {
 
         node1 = new StreamrNode()
         node2 = new StreamrNode()
-        await node1.start(layer01, transport1, mockConnectionLocker)
-        await node2.start(layer02, transport2, mockConnectionLocker)
+        await node1.start(layer01, transport1, transport1)
+        await node2.start(layer02, transport2, transport2)
     })
 
     it('starts', async () => {

@@ -312,16 +312,12 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
             this.targetNeighbors.hasPeer(requester.getPeerDescriptor())
             || this.handshaker!.getOngoingHandshakes().has(PeerID.fromValue(requester.getPeerDescriptor().peerId).toKey())
         ) {
-            // console.log("here0", this.getOwnStringId(), PeerID.fromValue(requester.getPeerDescriptor().peerId).toKey())
             return this.handshaker!.acceptedResponse(request, requester)
         } else if (this.targetNeighbors.size() >= this.N && request.neighbors.length <= this.N - 2) {
-            // console.log("here1", this.getOwnStringId(), PeerID.fromValue(requester.getPeerDescriptor().peerId).toKey())
             return this.handshaker!.interleavingResponse(request, requester)
         } else if (this.targetNeighbors.size() + this.handshaker!.getOngoingHandshakes().size >= this.N && request.neighbors.length > this.N - 2) {
-            // console.log("here2", this.getOwnStringId(), PeerID.fromValue(requester.getPeerDescriptor().peerId).toKey())
             return this.handshaker!.unacceptedResponse(request)
         } else if (this.targetNeighbors.size() + this.handshaker!.getOngoingHandshakes().size < this.N && request.neighbors.length < this.N) {
-            // console.log("here3", this.getOwnStringId(), PeerID.fromValue(requester.getPeerDescriptor().peerId).toKey())
             return this.handshaker!.acceptedResponse(request, requester)
         }
 
