@@ -432,7 +432,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         this.ongoingJoinOperation = true
         this.noProgressCounter = 0
 
-        logger.info(`Joining The Streamr Network via entrypoint ${entryPointDescriptor.peerId.toString()}`)
+        logger.info(
+            `Joining ${this.config.serviceId === 'layer0' ? 'The Streamr Network' : `Control Layer for ${this.config.serviceId}`}`
+            + ` via entrypoint ${entryPointDescriptor.peerId.toString()}`
+        )
         const entryPoint = new DhtPeer(entryPointDescriptor, toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())))
 
         if (this.ownPeerId!.equals(entryPoint.peerId)) {

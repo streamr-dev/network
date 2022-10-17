@@ -4,7 +4,7 @@ import { range } from 'lodash'
 import { waitForCondition } from 'streamr-test-utils'
 import { DataMessage, MessageRef } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 
-describe('Full node network with WebRTC connections', () => {
+describe('Full node network with WebSocket connections only', () => {
 
     const NUM_OF_NODES = 64
 
@@ -39,7 +39,6 @@ describe('Full node network with WebRTC connections', () => {
 
         range(NUM_OF_NODES).map(async (i) => {
             setImmediate(async () => {
-                // for (let i = 0; i < NUM_OF_NODES; i++) {
 
                 const layer0 = new DhtNode({
                     routeMessageTimeout: 10000,
@@ -61,8 +60,6 @@ describe('Full node network with WebRTC connections', () => {
                 streamrNode.subscribeToStream(randomGraphId, epPeerDescriptor)
                 connectionManagers.push(connectionManager)
                 streamrNodes.push(streamrNode)
-                // console.log(i)
-                // }
             })
         })
 
@@ -108,6 +105,6 @@ describe('Full node network with WebRTC connections', () => {
             return numOfMessagesReceived === NUM_OF_NODES
         }, 15000)
 
-    }, 90000)
+    }, 150000)
 
 })

@@ -305,6 +305,9 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     private onDisconnected = (connection: ManagedConnection) => {
+        if (!this.started || this.stopped) {
+            return
+        }
         this.closeConnection(PeerID.fromValue(connection.getPeerDescriptor()!.peerId).toKey())
         this.emit('disconnected', connection.getPeerDescriptor()!)
     }
