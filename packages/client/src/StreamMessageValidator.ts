@@ -115,7 +115,7 @@ export default class StreamMessageValidator {
      * @param streamMessage the StreamMessage to validate.
      * @param verifyFn function(address, payload, signature): return true if the address and payload match the signature
      */
-    static async assertSignatureIsValid(
+    private static async assertSignatureIsValid(
         streamMessage: StreamMessage,
         verifyFn: (address: EthereumAddress, payload: string, signature: string) => boolean
     ): Promise<void> {
