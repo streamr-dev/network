@@ -22,7 +22,8 @@ import { LoggerFactory } from '../../src/utils/LoggerFactory'
 const logger = new Logger(module)
 
 export function mockLoggerFactory(clientId?: string): LoggerFactory {
-    return new LoggerFactory(clientId ?? counterId('TestCtx'), {
+    return new LoggerFactory({
+        id: clientId ?? counterId('TestCtx'),
         logLevel: STREAM_CLIENT_DEFAULTS.logLevel
     })
 }

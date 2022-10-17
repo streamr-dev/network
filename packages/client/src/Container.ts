@@ -11,12 +11,7 @@ import { AuthenticationInjectionToken, createAuthentication } from './Authentica
  */
 export const BrubeckContainer = Symbol('BrubeckContainer')
 
-export const StreamrClientIdToken = Symbol('StreamrClientId')
-
 export function initContainer(config: StrictStreamrClientConfig, c: DependencyContainer): void {
-    c.register(StreamrClientIdToken, {
-        useValue: config.id
-    })
     c.register(BrubeckContainer, {
         useValue: c
     })

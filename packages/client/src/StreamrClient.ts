@@ -24,7 +24,7 @@ import { SearchStreamsPermissionFilter } from './registry/searchStreams'
 import { PermissionAssignment, PermissionQuery } from './permission'
 import { MetricsPublisher } from './MetricsPublisher'
 import { MessageMetadata } from '../src/publish/Publisher'
-import { initContainer, StreamrClientIdToken } from './Container'
+import { initContainer } from './Container'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
 import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
 import { GroupKey } from './encryption/GroupKey'
@@ -59,7 +59,7 @@ export class StreamrClient {
         initContainer(config, container)
 
         this.container = container
-        this.id = container.resolve<string>(StreamrClientIdToken)
+        this.id = config.id
         this.node = container.resolve<NetworkNodeFacade>(NetworkNodeFacade)
         this.authentication = container.resolve<Authentication>(AuthenticationInjectionToken)
         this.resends = container.resolve<Resends>(Resends)
