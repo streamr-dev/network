@@ -1,5 +1,5 @@
 import LRU from '../../vendor/quick-lru'
-import { SEPARATOR } from './uuid'
+import { SEPARATOR, uuid } from './uuid'
 
 import pkg from '../../package.json'
 
@@ -115,6 +115,10 @@ export class MaxSizedSet<T> {
     delete(value: T): void {
         this.delegate.delete(value)
     }
+}
+
+export function generateClientId(): string {
+    return counterId(process.pid ? `${process.pid}` : `${uuid().slice(-4)}${uuid().slice(0, 4)}`, '/')
 }
 
 // A unique internal identifier to some list of primitive values. Useful
