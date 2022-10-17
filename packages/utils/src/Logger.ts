@@ -37,13 +37,13 @@ export class Logger {
     constructor(
         module: NodeJS.Module,
         context?: string,
-        logLevel = process.env.LOG_LEVEL || 'info',
+        defaultLogLevel = 'info',
         destinationStream?: { write(msg: string): void }
     ) {
         const options: pino.LoggerOptions = {
             name: Logger.createName(module, context),
             enabled: !process.env.NOLOG,
-            level: logLevel,
+            level: process.env.LOG_LEVEL ?? defaultLogLevel,
             // explicitly pass prettifier, otherwise pino may try to lazy require it,
             // which can fail when under jest+typescript, due to some CJS/ESM
             // incompatibility leading to throwing an error like:
