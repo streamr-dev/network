@@ -105,6 +105,6 @@ describe('Full node network with WebSocket connections only', () => {
             return numOfMessagesReceived === NUM_OF_NODES
         }, 15000)
 
-    }, 150000)
+    }, 220000)
 
 })
