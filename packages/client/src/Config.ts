@@ -108,8 +108,7 @@ export const STREAMR_STORAGE_NODE_GERMANY = '0x31546eEA76F2B2b3C5cC06B1c93601dc3
 /**
  * @category Important
  */
-export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
-    id: generateClientId(),
+export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id'> = {
     logLevel: 'info',
     auth: {},
 
@@ -209,6 +208,7 @@ export const createStrictConfig = (inputOptions: StreamrClientConfig = {}): Stri
     const defaults = cloneDeep(STREAM_CLIENT_DEFAULTS)
 
     const options: StrictStreamrClientConfig = {
+        id: generateClientId(),
         ...defaults,
         ...opts,
         network: {
