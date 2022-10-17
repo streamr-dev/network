@@ -2,7 +2,7 @@ import debug from 'debug'
 import type { StreamStorageRegistry as StreamStorageRegistryContract } from '../ethereumArtifacts/StreamStorageRegistry'
 import StreamStorageRegistryArtifact from '../ethereumArtifacts/StreamStorageRegistry.json'
 import { StreamQueryResult } from './StreamRegistry'
-import { scoped, Lifecycle, inject } from 'tsyringe'
+import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 import { ConfigInjectionToken } from '../Config'
 import { Stream, StreamProperties } from '../Stream'
 import { EthereumConfig, getStreamRegistryChainProvider, getStreamRegistryOverrides } from '../Ethereum'
@@ -68,7 +68,7 @@ export class StreamStorageRegistry {
 
     constructor(
         private contractFactory: ContractFactory,
-        private streamFactory: StreamFactory,
+        @inject(delay(() => StreamFactory)) private streamFactory: StreamFactory,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(SynchronizedGraphQLClient) private graphQLClient: SynchronizedGraphQLClient,
         @inject(StreamrClientEventEmitter) eventEmitter: StreamrClientEventEmitter,

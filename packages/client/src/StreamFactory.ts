@@ -1,4 +1,4 @@
-import { inject, Lifecycle, scoped } from 'tsyringe'
+import { delay, inject, Lifecycle, scoped } from 'tsyringe'
 import { ConfigInjectionToken, TimeoutsConfig } from './Config'
 import { Publisher } from './publish/Publisher'
 import { StreamRegistry } from './registry/StreamRegistry'
@@ -21,10 +21,10 @@ export class StreamFactory {
 
     constructor(
         resends: Resends,
-        publisher: Publisher,
+        @inject(delay(() => Publisher)) publisher: Publisher,
         subscriber: Subscriber,
-        streamRegistryCached: StreamRegistryCached,
-        streamRegistry: StreamRegistry,
+        @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
+        @inject(delay(() => StreamRegistry)) streamRegistry: StreamRegistry,
         streamStorageRegistry: StreamStorageRegistry,
         @inject(ConfigInjectionToken.Timeouts) timeoutsConfig: TimeoutsConfig
     ) {
