@@ -6,7 +6,7 @@ import { DataMessage, MessageRef } from '../../src/proto/packages/trackerless-ne
 
 describe('Full node network with WebSocket connections only', () => {
 
-    const NUM_OF_NODES = 64
+    const NUM_OF_NODES = 48
 
     const epPeerDescriptor: PeerDescriptor = {
         peerId: PeerID.fromString(`entrypoint`).value,
