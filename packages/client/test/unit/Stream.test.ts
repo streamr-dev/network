@@ -2,18 +2,19 @@ import 'reflect-metadata'
 import { container as rootContainer } from 'tsyringe'
 import { toStreamID } from 'streamr-client-protocol'
 import { initContainer } from '../../src/Container'
-import { Stream } from '../../src/Stream'
 import { StreamRegistry } from '../../src/registry/StreamRegistry'
 import { createStrictConfig } from '../../src/Config'
+import { StreamFactory } from './../../src/StreamFactory'
 
 describe('Stream', () => {
-    
+
     it('initial fields', () => {
         const mockContainer = rootContainer.createChildContainer()
         initContainer(createStrictConfig({}), mockContainer)
-        const stream = new Stream({
+        const factory = mockContainer.resolve(StreamFactory)
+        const stream = factory.createStream({
             id: toStreamID('mock-id')
-        }, mockContainer as any)
+        })
         expect(stream.config.fields).toEqual([])
     })
 
@@ -25,10 +26,11 @@ describe('Stream', () => {
             mockContainer.registerInstance(StreamRegistry, {
                 updateStream: jest.fn().mockRejectedValue(new Error('mock-error'))
             } as any)
-            const stream = new Stream({
+            const factory = mockContainer.resolve(StreamFactory)
+            const stream = factory.createStream({
                 id: toStreamID('mock-id'),
                 description: 'original-description'
-            }, mockContainer as any)
+            })
 
             await expect(() => {
                 return stream.update({

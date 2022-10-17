@@ -26,7 +26,7 @@ describe('SubscribePipeline', () => {
     let streamPartId: StreamPartID
     let publisher: Wallet
 
-    const createMessage = async (opts: { 
+    const createMessage = async (opts: {
         serializedContent?: string
         encryptionType?: EncryptionType
         groupKeyId?: GroupKeyId
@@ -52,12 +52,19 @@ describe('SubscribePipeline', () => {
     beforeEach(async () => {
         streamPartId = StreamPartIDUtils.parse(`${randomEthereumAddress()}/path#0`)
         publisher = fastWallet()
-        const stream = new Stream({
-            id: toStreamID(streamPartId),
-            partitions: 1
-        }, {
-            resolve: () => {}
-        } as any)
+        const stream = new Stream(
+            {
+                id: toStreamID(streamPartId),
+                partitions: 1,
+            },
+            undefined as any,
+            undefined as any,
+            undefined as any,
+            undefined as any,
+            undefined as any,
+            undefined as any,
+            undefined as any
+        )
         const context = mockContext()
         input = new MessageStream(context)
         pipeline = createSubscribePipeline({
