@@ -77,13 +77,13 @@ class StreamrStream implements StreamMetadata {
     partitions!: number
     storageDays?: number
     inactivityThresholdHours?: number
-    protected _resends: Resends
-    protected _publisher: Publisher
-    protected _subscriber: Subscriber
-    protected _streamRegistry: StreamRegistry
-    protected _streamRegistryCached: StreamRegistryCached
-    protected _streamStorageRegistry: StreamStorageRegistry
-    private _timeoutsConfig: TimeoutsConfig
+    private readonly _resends: Resends
+    private readonly _publisher: Publisher
+    private readonly _subscriber: Subscriber
+    private readonly _streamRegistry: StreamRegistry
+    private readonly _streamRegistryCached: StreamRegistryCached
+    private readonly _streamStorageRegistry: StreamStorageRegistry
+    private readonly _timeoutsConfig: TimeoutsConfig
 
     /** @internal */
     constructor(
