@@ -351,6 +351,9 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     public lockConnection(targetDescriptor: PeerDescriptor, serviceId: ServiceId): void {
+        if (this.stopped) {
+            return
+        }
         const hexKey = PeerID.fromValue(targetDescriptor.peerId).toKey()
         this.clearDisconnectionTimeout(hexKey)
         const remoteConnectionLocker = new RemoteConnectionLocker(
@@ -372,6 +375,9 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     public unlockConnection(targetDescriptor: PeerDescriptor, serviceId: ServiceId): void {
+        if (this.stopped) {
+            return
+        }
         const hexKey = PeerID.fromValue(targetDescriptor.peerId).toKey()
         this.localLockedConnections.get(hexKey)?.delete(serviceId)
 
