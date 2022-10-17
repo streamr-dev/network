@@ -77,13 +77,13 @@ class StreamrStream implements StreamMetadata {
     partitions!: number
     storageDays?: number
     inactivityThresholdHours?: number
-    private readonly _resends: Resends
-    private readonly _publisher: Publisher
-    private readonly _subscriber: Subscriber
-    private readonly _streamRegistry: StreamRegistry
-    private readonly _streamRegistryCached: StreamRegistryCached
-    private readonly _streamStorageRegistry: StreamStorageRegistry
-    private readonly _timeoutsConfig: TimeoutsConfig
+    private readonly resends: Resends
+    private readonly publisher: Publisher
+    private readonly subscriber: Subscriber
+    private readonly streamRegistry: StreamRegistry
+    private readonly streamRegistryCached: StreamRegistryCached
+    private readonly streamStorageRegistry: StreamStorageRegistry
+    private readonly timeoutsConfig: TimeoutsConfig
 
     /** @internal */
     constructor(
@@ -99,13 +99,13 @@ class StreamrStream implements StreamMetadata {
         Object.assign(this, props)
         this.id = props.id
         this.partitions = props.partitions ? props.partitions : 1
-        this._resends = resends
-        this._publisher = publisher
-        this._subscriber = subscriber
-        this._streamRegistryCached = streamRegistryCached
-        this._streamRegistry = streamRegistry
-        this._streamStorageRegistry = streamStorageRegistry
-        this._timeoutsConfig = timeoutsConfig
+        this.resends = resends
+        this.publisher = publisher
+        this.subscriber = subscriber
+        this.streamRegistryCached = streamRegistryCached
+        this.streamRegistry = streamRegistry
+        this.streamStorageRegistry = streamStorageRegistry
+        this.timeoutsConfig = timeoutsConfig
     }
 
     /**
@@ -113,13 +113,13 @@ class StreamrStream implements StreamMetadata {
      */
     async update(props: Omit<StreamProperties, 'id'>): Promise<void> {
         try {
-            await this._streamRegistry.updateStream({
+            await this.streamRegistry.updateStream({
                 ...this.toObject(),
                 ...props,
                 id: this.id
             })
         } finally {
-            this._streamRegistryCached.clearStream(this.id)
+            this.streamRegistryCached.clearStream(this.id)
         }
         for (const key of Object.keys(props)) {
             (this as any)[key] = (props as any)[key]
@@ -141,15 +141,15 @@ class StreamrStream implements StreamMetadata {
 
     async delete(): Promise<void> {
         try {
-            await this._streamRegistry.deleteStream(this.id)
+            await this.streamRegistry.deleteStream(this.id)
         } finally {
-            this._streamRegistryCached.clearStream(this.id)
+            this.streamRegistryCached.clearStream(this.id)
         }
     }
 
     async detectFields(): Promise<void> {
         // Get last message of the stream to be used for field detecting
-        const sub = await this._resends.resend(
+        const sub = await this.resends.resend(
             this.id,
             {
                 last: 1,
@@ -185,17 +185,17 @@ class StreamrStream implements StreamMetadata {
         let assignmentSubscription
         const normalizedNodeAddress = toEthereumAddress(nodeAddress)
         try {
-            assignmentSubscription = await this._subscriber.subscribe(formStorageNodeAssignmentStreamId(normalizedNodeAddress))
+            assignmentSubscription = await this.subscriber.subscribe(formStorageNodeAssignmentStreamId(normalizedNodeAddress))
             const propagationPromise = waitForAssignmentsToPropagate(assignmentSubscription, this)
-            await this._streamStorageRegistry.addStreamToStorageNode(this.id, normalizedNodeAddress)
+            await this.streamStorageRegistry.addStreamToStorageNode(this.id, normalizedNodeAddress)
             await withTimeout(
                 propagationPromise,
                 // eslint-disable-next-line no-underscore-dangle
-                waitOptions.timeout ?? this._timeoutsConfig.storageNode.timeout,
+                waitOptions.timeout ?? this.timeoutsConfig.storageNode.timeout,
                 'storage node did not respond'
             )
         } finally {
-            this._streamRegistryCached.clearStream(this.id)
+            this.streamRegistryCached.clearStream(this.id)
             await assignmentSubscription?.unsubscribe() // should never reject...
         }
     }
@@ -205,21 +205,21 @@ class StreamrStream implements StreamMetadata {
      */
     async removeFromStorageNode(nodeAddress: string): Promise<void> {
         try {
-            return this._streamStorageRegistry.removeStreamFromStorageNode(this.id, toEthereumAddress(nodeAddress))
+            return this.streamStorageRegistry.removeStreamFromStorageNode(this.id, toEthereumAddress(nodeAddress))
         } finally {
-            this._streamRegistryCached.clearStream(this.id)
+            this.streamRegistryCached.clearStream(this.id)
         }
     }
 
     async getStorageNodes(): Promise<string[]> {
-        return this._streamStorageRegistry.getStorageNodes(this.id)
+        return this.streamStorageRegistry.getStorageNodes(this.id)
     }
 
     /**
      * @category Important
      */
     async publish<T>(content: T, metadata?: MessageMetadata): Promise<StreamMessage<T>> {
-        return this._publisher.publish(this.id, content, metadata)
+        return this.publisher.publish(this.id, content, metadata)
     }
 
     /** @internal */
@@ -235,7 +235,7 @@ class StreamrStream implements StreamMetadata {
      * @category Important
      */
     async hasPermission(query: Omit<UserPermissionQuery, 'streamId'> | Omit<PublicPermissionQuery, 'streamId'>): Promise<boolean> {
-        return this._streamRegistry.hasPermission({
+        return this.streamRegistry.hasPermission({
             streamId: this.id,
             ...query
         })
@@ -245,21 +245,21 @@ class StreamrStream implements StreamMetadata {
      * @category Important
      */
     async getPermissions(): Promise<PermissionAssignment[]> {
-        return this._streamRegistry.getPermissions(this.id)
+        return this.streamRegistry.getPermissions(this.id)
     }
 
     /**
      * @category Important
      */
     async grantPermissions(...assignments: PermissionAssignment[]): Promise<void> {
-        return this._streamRegistry.grantPermissions(this.id, ...assignments)
+        return this.streamRegistry.grantPermissions(this.id, ...assignments)
     }
 
     /**
      * @category Important
      */
     async revokePermissions(...assignments: PermissionAssignment[]): Promise<void> {
-        return this._streamRegistry.revokePermissions(this.id, ...assignments)
+        return this.streamRegistry.revokePermissions(this.id, ...assignments)
     }
 
 }
