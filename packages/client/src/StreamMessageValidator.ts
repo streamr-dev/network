@@ -92,6 +92,8 @@ export default class StreamMessageValidator {
             throw new ValidationError('Falsey argument passed to validate()!')
         }
 
+        await StreamMessageValidator.assertSignatureIsValid(streamMessage, this.verify)
+
         switch (streamMessage.messageType) {
             case StreamMessage.MESSAGE_TYPES.MESSAGE:
                 return this.validateMessage(streamMessage)
@@ -144,7 +146,6 @@ export default class StreamMessageValidator {
             )
         }
 
-        await StreamMessageValidator.assertSignatureIsValid(streamMessage, this.verify)
         const sender = streamMessage.getPublisherId()
         // Check that the sender of the message is a valid publisher of the stream
         const senderIsPublisher = await this.isPublisher(sender, streamMessage.getStreamId())
@@ -158,8 +159,6 @@ export default class StreamMessageValidator {
         const sender = streamMessage.getPublisherId()
         const streamId = streamMessage.getStreamId()
         const recipient = groupKeyRequest.recipient
-
-        await StreamMessageValidator.assertSignatureIsValid(streamMessage, this.verify)
 
         // Check that the recipient of the request is a valid publisher of the stream
         const recipientIsPublisher = await this.isPublisher(recipient!, streamId)
@@ -175,8 +174,6 @@ export default class StreamMessageValidator {
     }
 
     private async validateGroupKeyResponse(streamMessage: StreamMessage): Promise<void> {
-        await StreamMessageValidator.assertSignatureIsValid(streamMessage, this.verify)
-
         const groupKeyMessage = GroupKeyMessage.fromStreamMessage(streamMessage) // only streamId is read
         const sender = streamMessage.getPublisherId()
         const streamId = streamMessage.getStreamId()
