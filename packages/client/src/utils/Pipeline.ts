@@ -7,8 +7,6 @@ import { StreamrClientError } from '../StreamrClientError'
 
 export type PipelineTransform<InType = any, OutType = any> = (src: AsyncGenerator<InType>) => AsyncGenerator<OutType>
 
-class PipelineError extends StreamrClientError {}
-
 type AsyncGeneratorWithId<T> = AsyncGenerator<T> & {
     id: string
 }
@@ -99,7 +97,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
      */
     pipe<NewOutType>(fn: PipelineTransform<OutType, NewOutType>): Pipeline<InType, NewOutType> {
         if (this.isIterating) {
-            throw new PipelineError(`cannot pipe after already iterating: ${this.isIterating}`)
+            throw new StreamrClientError(`cannot pipe after already iterating: ${this.isIterating}`, 'PIPELINE_ERROR')
         }
         this.definition.pipe(fn)
         // this allows .pipe chaining to be type aware
@@ -114,7 +112,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
      */
     pipeBefore(fn: PipelineTransform<InType, InType>): Pipeline<InType, OutType> {
         if (this.isIterating) {
-            throw new PipelineError(`cannot pipe after already iterating: ${this.isIterating}`)
+            throw new StreamrClientError(`cannot pipe after already iterating: ${this.isIterating}`, 'PIPELINE_ERROR')
         }
 
         this.definition.pipeBefore(fn)
@@ -247,7 +245,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
 
         // this.debug('iterate', this.definition.source)
         if (!this.definition.source) {
-            throw new PipelineError('no source')
+            throw new StreamrClientError('no source', 'PIPELINE_ERROR')
         }
 
         const transforms = this.definition.getTransforms()
@@ -321,7 +319,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
 
     [Symbol.asyncIterator](): this {
         if (this.isIterating) {
-            throw new PipelineError('already iterating')
+            throw new StreamrClientError('already iterating', 'PIPELINE_ERROR')
         }
 
         return this

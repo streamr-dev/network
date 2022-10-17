@@ -49,7 +49,10 @@ export class PushBuffer<T> implements IPushBuffer<T> {
 
     constructor(bufferSize = DEFAULT_BUFFER_SIZE) {
         if (!(bufferSize > 0 && Number.isSafeInteger(bufferSize))) {
-            throw new StreamrClientError(`bufferSize must be a safe positive integer, got: ${bufferSize}`)
+            throw new StreamrClientError(
+                `bufferSize must be a safe positive integer, got: ${bufferSize}`,
+                'INVALID_ARGUMENT'
+            )
         }
 
         this.bufferSize = bufferSize

@@ -1,7 +1,8 @@
+export type StreamrClientErrorCode = 'NO_STORAGE_NODES' | 'INVALID_ARGUMENT' | 'CLIENT_IS_DESTROYED' | 'PIPELINE_ERROR'
+
 export class StreamrClientError extends Error {
-    constructor(message: string, readonly errorCode?: 'NO_STORAGE_NODES') {
+    constructor(message: string, public readonly errorCode: StreamrClientErrorCode) {
         super(message)
-        Error.captureStackTrace(this, StreamrClientError)
         this.name = this.constructor.name
     }
 }

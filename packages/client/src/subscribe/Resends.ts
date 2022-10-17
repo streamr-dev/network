@@ -137,7 +137,10 @@ export class Resends {
             })
         }
 
-        throw new StreamrClientError(`can not resend without valid resend options: ${JSON.stringify({ streamPartId, options })}`)
+        throw new StreamrClientError(
+            `can not resend without valid resend options: ${JSON.stringify({ streamPartId, options })}`,
+            'INVALID_ARGUMENT'
+        )
     }
 
     private async fetchStream<T>(
@@ -255,7 +258,7 @@ export class Resends {
         messageMatchFn?: (msgTarget: StreamMessage, msgGot: StreamMessage) => boolean
     } = {}): Promise<void> {
         if (!streamMessage) {
-            throw new StreamrClientError('waitForStorage requires a StreamMessage')
+            throw new StreamrClientError('waitForStorage requires a StreamMessage', 'INVALID_ARGUMENT')
         }
 
         const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamMessage.getStreamPartID())
