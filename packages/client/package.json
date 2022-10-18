@@ -33,7 +33,7 @@
         "test-unit": "jest --useStderr --forceExit test/unit",
         "test-integration": "jest --useStderr --forceExit --testTimeout=40000 test/integration/*.test.*",
         "test-end-to-end": "jest --useStderr --forceExit --testTimeout=40000 test/end-to-end/*.test.*",
-        "test-browser": "npm run build-browser && concurrently -k --success=first 'node ./test/browser/server.js' 'sleep 5 && nightwatch --headless --verbose --timeout=30000 --config=nightwatch.conf.js ./test/browser/browser.js'",
+        "test-browser": "npm run build-browser-production && concurrently -k --success=first 'node ./test/browser/server.js' 'sleep 5 && nightwatch --headless --verbose --timeout=30000 --config=nightwatch.conf.js ./test/browser/browser.js'",
         "test-exports": "cd test/exports && npm run link && tsc --noEmit --project ./tsconfig.json && npm test"
     },
     "engines": {
