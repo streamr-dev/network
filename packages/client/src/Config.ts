@@ -71,6 +71,7 @@ export interface MetricsPeriodConfig {
 
 export type MetricsConfig = {
     periods: MetricsPeriodConfig[]
+    maxPublishDelay: number
 } | boolean
 
 /**
@@ -98,9 +99,10 @@ export type StrictStreamrClientConfig = {
     & SubscribeConfig
 )
 
-export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'network' | 'decryption'> & {
+export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'network' | 'decryption' | 'metrics'> & {
     network: Partial<StrictStreamrClientConfig['network']>
     decryption: Partial<StrictStreamrClientConfig['decryption']>
+    metrics: Partial<StrictStreamrClientConfig['metrics']>
 }>
 
 export const STREAMR_STORAGE_NODE_GERMANY = '0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916'
@@ -198,7 +200,8 @@ export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id'> = {
                 duration: 86400000,
                 streamId: 'streamr.eth/metrics/nodes/firehose/day'
             }
-        ]
+        ],
+        maxPublishDelay: 30000
     }
 }
 
@@ -216,6 +219,7 @@ export const createStrictConfig = (inputOptions: StreamrClientConfig = {}): Stri
             trackers: opts.network?.trackers ?? defaults.network.trackers,
         },
         decryption: merge(defaults.decryption || {}, opts.decryption),
+        metrics: merge(defaults.metrics || {}, opts.metrics) as MetricsConfig,
         cache: {
             ...defaults.cache,
             ...opts.cache,

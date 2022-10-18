@@ -27,7 +27,8 @@ describe('NodeMetrics', () => {
                         duration: 100,
                         streamId: streamPath
                     }
-                ]
+                ],
+                maxPublishDelay: 50
             }
         })
         stream = await generatorClient.createStream({
