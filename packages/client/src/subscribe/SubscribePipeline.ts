@@ -36,7 +36,6 @@ export interface SubscriptionPipelineOptions<T> {
 export const createSubscribePipeline = <T = unknown>(opts: SubscriptionPipelineOptions<T>): MessageStream<T> => {
     const validate = new Validator(
         opts.streamRegistryCached,
-        opts.rootConfig,
         opts.rootConfig.cache
     )
 
