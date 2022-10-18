@@ -9,7 +9,7 @@ import { ConfigInjectionToken, MetricsPeriodConfig, STREAM_CLIENT_DEFAULTS, Stri
 const getPeriodConfig = (rootConfig: StrictStreamrClientConfig): MetricsPeriodConfig[] => {
     switch (rootConfig.metrics) {
         case true:
-            return (STREAM_CLIENT_DEFAULTS.metrics as any).periods
+            return (STREAM_CLIENT_DEFAULTS.metrics as { periods: MetricsPeriodConfig[] }).periods
         case false:
             return []
         default:
