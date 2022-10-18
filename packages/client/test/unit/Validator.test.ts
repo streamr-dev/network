@@ -24,8 +24,7 @@ const createMockValidator = () => {
         }
     }
     return new Validator(
-        new StreamRegistryCached(mockLoggerFactory(), streamRegistry as any, {} as any) as any,
-        {} as any
+        new StreamRegistryCached(mockLoggerFactory(), streamRegistry as any, {} as any) as any
     )
 }
 
