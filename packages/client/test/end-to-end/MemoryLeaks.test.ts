@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 import { fetchPrivateKeyWithGas } from 'streamr-test-utils'
-import { wait } from '@streamr/utils'
+import { Defer, wait } from '@streamr/utils'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { LeaksDetector } from '../test-utils/LeaksDetector'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -9,7 +9,6 @@ import { container as rootContainer, DependencyContainer } from 'tsyringe'
 import { writeHeapSnapshot } from 'v8'
 import { Subscription } from '../../src/subscribe/Subscription'
 import { counterId, instanceId } from '../../src/utils/utils'
-import { Defer } from '../../src/utils/Defer'
 import { ConfigTest } from '../../src/ConfigTest'
 import { createStrictConfig, StrictStreamrClientConfig } from '../../src/Config'
 import { ethers } from 'ethers'
@@ -240,7 +239,7 @@ describe('MemoryLeaks', () => {
                     const publishTestMessages = getPublishTestStreamMessages(client, stream, {
                         retainMessages: false,
                     })
-                    const sub1Done = Defer()
+                    const sub1Done = new Defer<undefined>()
                     const received1: any[] = []
                     const SOME_MESSAGES = Math.floor(MAX_MESSAGES / 2)
                     let sub1: Subscription<any> | undefined = await client.subscribe(stream, async (msg) => {
@@ -255,7 +254,7 @@ describe('MemoryLeaks', () => {
                     const sub1LeakId = 'sub1 ' + instanceId(sub1)
                     leaksDetector.add(sub1LeakId, sub1)
 
-                    const sub2Done = Defer()
+                    const sub2Done = new Defer<undefined>()
                     const received2: any[] = []
                     const sub2 = await client.subscribe(stream, (msg) => {
                         received2.push(msg)
