@@ -5,6 +5,7 @@ import { MetricsReport } from 'streamr-network'
 import { NetworkNodeFacade, getEthereumAddressFromNodeId } from './NetworkNodeFacade'
 import { Publisher } from './publish/Publisher'
 import { ConfigInjectionToken, MetricsPeriodConfig, StrictStreamrClientConfig } from './Config'
+import { pOnce } from './utils/promises'
 
 const DEFAULT_PERIODS = [ 
     {
@@ -58,15 +59,7 @@ export class MetricsPublisher {
         this.eventEmitter = eventEmitter
         this.destroySignal = destroySignal
         this.periodConfigs = getPeriodConfig(rootConfig)
-        if (this.periodConfigs.length > 0) {
-            this.eventEmitter.on('publish', () => this.ensureStarted())
-            this.eventEmitter.on('subscribe', () => this.ensureStarted())
-            this.destroySignal.onDestroy.listen(() => this.stop())
-        }
-    }
-
-    private async ensureStarted(): Promise<void> {
-        if (this.producers.length === 0) {
+        const ensureStarted = pOnce(async () => {
             const node = await this.node.getNode()
             const metricsContext = node.getMetricsContext()
             const partitionKey = getEthereumAddressFromNodeId(node.getNodeId()).toLowerCase()
@@ -74,7 +67,12 @@ export class MetricsPublisher {
                 return metricsContext.createReportProducer(async (report: MetricsReport) => {
                     await this.publish(report, config.streamId, partitionKey)
                 }, config.duration)
-            })    
+            })
+        })
+        if (this.periodConfigs.length > 0) {
+            this.eventEmitter.on('publish', () => ensureStarted())
+            this.eventEmitter.on('subscribe', () => ensureStarted())
+            this.destroySignal.onDestroy.listen(() => this.destroy())
         }
     }
 
@@ -88,8 +86,7 @@ export class MetricsPublisher {
         }
     }
 
-    stop(): void {
+    private destroy(): void {
         this.producers.forEach((producer) => producer.stop())
-        this.producers = []
     }
 }
