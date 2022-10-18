@@ -236,15 +236,15 @@
     const publisher = new StreamrClient({
         ...StreamrClient.ConfigTest,
         id: 'publisher',
+        logLevel: 'trace',
         auth: publisherAuth,
     })
     const subscriber = new StreamrClient({
         ...StreamrClient.ConfigTest,
         id: 'subscriber',
+        logLevel: 'trace',
         auth: subscriberAuth,
     })
-    publisher.enableDebugLogging()
-    subscriber.enableDebugLogging()
     let stream
     let messages = []
 

@@ -13,6 +13,7 @@ import { SmartContractRecord } from 'streamr-client-protocol'
 
 import type { NetworkNodeOptions } from 'streamr-network'
 import type { ConnectionInfo } from '@ethersproject/web'
+import { generateClientId } from './utils/utils'
 
 export interface CacheConfig {
     maxSize: number
@@ -76,8 +77,9 @@ export type MetricsConfig = {
  * @category Important
  */
 export type StrictStreamrClientConfig = {
-    /** Custom human-readable debug id for client. Used in logging. Unique id will be generated regardless. */
-    id?: string
+    /** Custom human-readable debug id for client. Used in logging. */
+    id: string
+    logLevel: 'silent' | 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace'
     /**
     * Authentication: identity used by this StreamrClient instance.
     * Can contain member privateKey or (window.)ethereum
@@ -96,7 +98,7 @@ export type StrictStreamrClientConfig = {
     & SubscribeConfig
 )
 
-export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'network' | 'decryption' | 'debug'> & {
+export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'network' | 'decryption'> & {
     network: Partial<StrictStreamrClientConfig['network']>
     decryption: Partial<StrictStreamrClientConfig['decryption']>
 }>
@@ -106,7 +108,8 @@ export const STREAMR_STORAGE_NODE_GERMANY = '0x31546eEA76F2B2b3C5cC06B1c93601dc3
 /**
  * @category Important
  */
-export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
+export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id'> = {
+    logLevel: 'info',
     auth: {},
 
     // Streamr Core options
@@ -205,6 +208,7 @@ export const createStrictConfig = (inputOptions: StreamrClientConfig = {}): Stri
     const defaults = cloneDeep(STREAM_CLIENT_DEFAULTS)
 
     const options: StrictStreamrClientConfig = {
+        id: generateClientId(),
         ...defaults,
         ...opts,
         network: {

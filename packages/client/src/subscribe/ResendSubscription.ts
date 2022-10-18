@@ -7,13 +7,14 @@ import { OrderMessages } from './OrderMessages'
 import { ResendOptions, Resends } from './Resends'
 import EventEmitter from 'eventemitter3'
 import { DestroySignal } from '../DestroySignal'
+import { LoggerFactory } from '../utils/LoggerFactory'
 
 export interface ResendSubscriptionEvents {
     resendComplete: () => void
 }
 
 export class ResendSubscription<T> extends Subscription<T> {
-    private orderMessages
+    private orderMessages: OrderMessages<T>
     private eventEmitter: EventEmitter<ResendSubscriptionEvents>
 
     /** @internal */
@@ -23,14 +24,14 @@ export class ResendSubscription<T> extends Subscription<T> {
         private resendOptions: ResendOptions,
         container: DependencyContainer
     ) {
-        super(subSession)
+        super(subSession, container.resolve(LoggerFactory))
         this.eventEmitter = new EventEmitter<ResendSubscriptionEvents>()
         this.resendThenRealtime = this.resendThenRealtime.bind(this)
         this.orderMessages = new OrderMessages<T>(
             container.resolve(ConfigInjectionToken.Subscribe),
-            this,
             container.resolve(Resends),
             subSession.streamPartId,
+            container.resolve(LoggerFactory)
         )
         this.pipe(this.resendThenRealtime)
         this.pipe(this.orderMessages.transform())

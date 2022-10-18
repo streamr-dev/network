@@ -24,7 +24,7 @@ describe('StreamrClient', () => {
 
         it('default', () => {
             const client = createClient()
-            expect(client.id).toMatch(/client-[-a-z0-9]+/)
+            expect(client.id).toMatch(/[-a-z0-9]+/)
         })
         
         it('user defined', () => {

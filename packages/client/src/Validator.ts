@@ -2,15 +2,10 @@
  * Validation Wrapper
  */
 import { inject, Lifecycle, scoped, delay } from 'tsyringe'
-import {
-    StreamMessage,
-    StreamID,
-} from 'streamr-client-protocol'
-
-import { formLookupKey, instanceId } from './utils/utils'
+import { StreamMessage, StreamID } from 'streamr-client-protocol'
 import { pOrderedResolve } from './utils/promises'
 import { CacheFn } from './utils/caches'
-import { Context } from './utils/Context'
+import { formLookupKey } from './utils/utils'
 import { StreamRegistryCached } from './registry/StreamRegistryCached'
 import { ConfigInjectionToken, CacheConfig } from './Config'
 import StreamMessageValidator from './StreamMessageValidator'
@@ -23,14 +18,11 @@ import { EthereumAddress } from '@streamr/utils'
  * Handles caching remote calls
  */
 @scoped(Lifecycle.ContainerScoped)
-export class Validator extends StreamMessageValidator implements Context {
-    readonly id
-    readonly debug
+export class Validator extends StreamMessageValidator {
     private isStopped = false
     private doValidation: StreamMessageValidator['validate']
 
     constructor(
-        context: Context,
         @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
         @inject(ConfigInjectionToken.Cache) private cacheOptions: CacheConfig
     ) {
@@ -48,9 +40,6 @@ export class Validator extends StreamMessageValidator implements Context {
                 return this.cachedVerify(address, payload, signature)
             }
         })
-
-        this.id = instanceId(this)
-        this.debug = context.debug.extend(this.id)
         this.doValidation = super.validate.bind(this)
     }
 

@@ -47,7 +47,7 @@ jobs:
         with:
           platforms: arm64
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2.1.0
+        uses: docker/setup-buildx-action@v2.2.0
         with:
           driver-opts: |
             network=host
@@ -59,7 +59,7 @@ jobs:
 
       - name: Docker meta
         id: docker_meta_success
-        uses: docker/metadata-action@v4.1.0
+        uses: docker/metadata-action@v4.1.1
         if: ${{inputs.push_image}}
         with:
           images: ${{inputs.image_name}}

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The client publishes telemetry metrics to the network at regular intervals (enabled by default, configurable with `metrics` config option)
 - You can manually update a stream encryption key with method `updateEncryptionKey`
+- Add optional client configuration option `logLevel` to set desired logging level.
 
 ### Changed
 
