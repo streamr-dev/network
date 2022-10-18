@@ -11,6 +11,7 @@ import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { GroupKeyStore } from '../encryption/GroupKeyStore'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { Mapping } from '../utils/Mapping'
+import { StreamrClientEventEmitter } from '../events'
 
 export class PublishError extends Error {
 
@@ -61,6 +62,7 @@ export class Publisher {
     private readonly authentication: Authentication
     private readonly streamRegistryCached: StreamRegistryCached
     private readonly node: NetworkNodeFacade
+    private readonly eventEmitter: StreamrClientEventEmitter
     private readonly concurrencyLimit = pLimit(1)
 
     constructor(
@@ -68,12 +70,14 @@ export class Publisher {
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         streamRegistryCached: StreamRegistryCached,
         groupKeyStore: GroupKeyStore,
-        node: NetworkNodeFacade
+        node: NetworkNodeFacade,
+        eventEmitter: StreamrClientEventEmitter
     ) {
         this.streamIdBuilder = streamIdBuilder
         this.authentication = authentication
         this.streamRegistryCached = streamRegistryCached
         this.node = node
+        this.eventEmitter = eventEmitter
         this.messageFactories = new Mapping(async (streamId: StreamID) => {
             return this.createMessageFactory(streamId)
         })
@@ -116,6 +120,7 @@ export class Publisher {
                     partition
                 )
                 await this.node.publishToNode(message)
+                this.eventEmitter.emit('publish', undefined)
                 return message
             } catch (e) {
                 throw new PublishError(streamId, timestamp, e)

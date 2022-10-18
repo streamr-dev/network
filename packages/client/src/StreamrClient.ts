@@ -89,9 +89,7 @@ export class StreamrClient {
         content: T,
         metadata?: MessageMetadata
     ): Promise<StreamMessage<T>> {
-        const result = await this.publisher.publish(streamDefinition, content, metadata)
-        this.eventEmitter.emit('publish', undefined)
-        return result
+        return this.publisher.publish(streamDefinition, content, metadata)
     }
 
     async updateEncryptionKey(opts: UpdateEncryptionKeyOptions): Promise<void> {
