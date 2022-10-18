@@ -54,7 +54,7 @@ describe('MessageFactory', () => {
         expect(msg).toMatchObject({
             messageId: {
                 msgChainId: expect.any(String),
-                publisherId: WALLET.address.toLowerCase(),
+                publisherId: toEthereumAddress(WALLET.address),
                 sequenceNumber: 0,
                 streamId: STREAM_ID,
                 streamPartition: expect.toBeWithin(0, PARTITION_COUNT),
