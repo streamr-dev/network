@@ -69,7 +69,7 @@ export function pOrderedResolve<ArgsType extends unknown[], ReturnType>(
     return Object.assign(async (...args: ArgsType) => {
         const d = new Defer<ReturnType>()
         const done = queue(() => d)
-        await Promise.resolve(fn(...args)).then(d.resolve, d.reject)
+        await Promise.resolve(fn(...args)).then(d.resolve.bind(d), d.reject.bind(d))
         return done
     }, {
         clear() {
