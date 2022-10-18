@@ -92,7 +92,7 @@ export default class StreamMessageValidator {
             throw new ValidationError('Falsey argument passed to validate()!')
         }
 
-        await StreamMessageValidator.assertSignatureIsValid(streamMessage, this.verify)
+        await this.assertSignatureIsValid(streamMessage)
 
         switch (streamMessage.messageType) {
             case StreamMessage.MESSAGE_TYPES.MESSAGE:
@@ -115,10 +115,7 @@ export default class StreamMessageValidator {
      * @param streamMessage the StreamMessage to validate.
      * @param verifyFn function(address, payload, signature): return true if the address and payload match the signature
      */
-    private static async assertSignatureIsValid(
-        streamMessage: StreamMessage,
-        verifyFn: (address: EthereumAddress, payload: string, signature: string) => boolean
-    ): Promise<void> {
+    private async assertSignatureIsValid(streamMessage: StreamMessage): Promise<void> {
         const payload = createSignaturePayload({
             messageId: streamMessage.getMessageID(),
             serializedContent: streamMessage.getSerializedContent(),
@@ -127,7 +124,7 @@ export default class StreamMessageValidator {
         }) 
         let success
         try {
-            success = verifyFn(streamMessage.getPublisherId(), payload, streamMessage.signature!)
+            success = this.verify(streamMessage.getPublisherId(), payload, streamMessage.signature!)
         } catch (err) {
             throw new StreamMessageError(`An error occurred during address recovery from signature: ${err}`, streamMessage)
         }
