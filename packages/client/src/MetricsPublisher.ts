@@ -4,22 +4,8 @@ import { DestroySignal } from './DestroySignal'
 import { MetricsReport } from 'streamr-network'
 import { NetworkNodeFacade, getEthereumAddressFromNodeId } from './NetworkNodeFacade'
 import { Publisher } from './publish/Publisher'
-import { ConfigInjectionToken, MetricsConfig, STREAM_CLIENT_DEFAULTS, StrictStreamrClientConfig } from './Config'
+import { ConfigInjectionToken, MetricsConfig, StrictStreamrClientConfig } from './Config'
 import { wait } from '@streamr/utils'
-
-const getNormalizedConfig = (config: MetricsConfig): Exclude<MetricsConfig, boolean> => {
-    const defaults = STREAM_CLIENT_DEFAULTS.metrics as Exclude<MetricsConfig, boolean>
-    if (config === true) {
-        return defaults
-    } else if (config === false) {
-        return {
-            ...defaults,
-            periods: []
-        }
-    } else {
-        return config
-    }
-}
 
 @scoped(Lifecycle.ContainerScoped)
 export class MetricsPublisher {
@@ -28,7 +14,7 @@ export class MetricsPublisher {
     private node: NetworkNodeFacade
     private eventEmitter: StreamrClientEventEmitter
     private destroySignal: DestroySignal
-    private config: Exclude<MetricsConfig, boolean>
+    private config: MetricsConfig
     private producers: { stop: () => void }[] = []
 
     constructor(
@@ -42,7 +28,7 @@ export class MetricsPublisher {
         this.node = node
         this.eventEmitter = eventEmitter
         this.destroySignal = destroySignal
-        this.config = getNormalizedConfig(rootConfig.metrics)
+        this.config = rootConfig.metrics
         if (this.config.periods.length > 0) {
             this.eventEmitter.on('publish', () => this.ensureStarted())
             this.eventEmitter.on('subscribe', () => this.ensureStarted())

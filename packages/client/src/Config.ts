@@ -69,10 +69,10 @@ export interface MetricsPeriodConfig {
     duration: number
 }
 
-export type MetricsConfig = {
+export interface MetricsConfig {
     periods: MetricsPeriodConfig[]
     maxPublishDelay: number
-} | boolean
+}
 
 /**
  * @category Important
@@ -102,7 +102,7 @@ export type StrictStreamrClientConfig = {
 export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'network' | 'decryption' | 'metrics'> & {
     network: Partial<StrictStreamrClientConfig['network']>
     decryption: Partial<StrictStreamrClientConfig['decryption']>
-    metrics: Partial<StrictStreamrClientConfig['metrics']>
+    metrics: Partial<StrictStreamrClientConfig['metrics']> | boolean
 }>
 
 export const STREAMR_STORAGE_NODE_GERMANY = '0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916'
@@ -219,7 +219,17 @@ export const createStrictConfig = (inputOptions: StreamrClientConfig = {}): Stri
             trackers: opts.network?.trackers ?? defaults.network.trackers,
         },
         decryption: merge(defaults.decryption || {}, opts.decryption),
-        metrics: merge(defaults.metrics || {}, opts.metrics) as MetricsConfig,
+        metrics: (opts.metrics === true)
+            ? defaults.metrics
+            : (opts.metrics === false) 
+                ? {
+                    ...defaults.metrics,
+                    periods: []
+                } 
+                : {
+                    ...defaults.metrics,
+                    ...opts.metrics
+                },
         cache: {
             ...defaults.cache,
             ...opts.cache,
