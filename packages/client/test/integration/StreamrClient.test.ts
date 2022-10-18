@@ -175,14 +175,14 @@ describe('StreamrClient', () => {
         it('publish and subscribe a sequence of messages', async () => {
             const done = new Defer<unknown>()
             const received: StreamMessage[] = []
-            const sub = await client.subscribe<any>(streamDefinition, done.wrap((_content, streamMessage) => {
+            const sub = await client.subscribe<any>(streamDefinition, (_content, streamMessage) => {
                 received.push(streamMessage)
                 expect(streamMessage.getPublisherId()).toBeTruthy()
                 expect(streamMessage.signature).toBeTruthy()
                 if (received.length === MAX_MESSAGES) {
                     done.resolve(client.unsubscribe(sub))
                 }
-            }))
+            })
 
             // Publish after subscribed
             const published = await publishTestMessages(MAX_MESSAGES)
