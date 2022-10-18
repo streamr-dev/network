@@ -5,6 +5,9 @@ import { MetricsReport } from 'streamr-network'
 import { NetworkNodeFacade, getEthereumAddressFromNodeId } from './NetworkNodeFacade'
 import { Publisher } from './publish/Publisher'
 import { ConfigInjectionToken, MetricsPeriodConfig, StrictStreamrClientConfig } from './Config'
+import { wait } from '@streamr/utils'
+
+const MAX_PUBLISH_DELAY = 30 * 1000 // some delay before we publish sample to the network
 
 const DEFAULT_PERIODS = [ 
     {
@@ -79,8 +82,10 @@ export class MetricsPublisher {
     }
 
     private async publish(report: MetricsReport, streamId: string, partitionKey: string): Promise<void> {
+        await wait(Math.random() * MAX_PUBLISH_DELAY)
         try {
             await this.publisher.publish(streamId, report, {
+                timestamp: report.period.end,
                 partitionKey
             })
         } catch (e: any) {
