@@ -47,7 +47,8 @@ describe('WebRTC Connection Management', () => {
 
     const serviceId = 'dummy'
 
-    it('Peer1 can open WebRTC Datachannels', (done) => {
+    // TODO: fix flaky test, ticket NET-911
+    it.skip('Peer1 can open WebRTC Datachannels', (done) => {
         const dummyMessage: Message = {
             serviceId: serviceId,
             body: new Uint8Array(),
@@ -63,7 +64,7 @@ describe('WebRTC Connection Management', () => {
             done()
         })
         manager1.send(dummyMessage, peerDescriptor2)
-    }, 15 * 1000) // attempt to fix issue NET-911 with increased timeout
+    })
 
     it('Peer2 can open WebRTC Datachannel', (done) => {
         const dummyMessage: Message = {
