@@ -65,10 +65,10 @@ describe(Logger, () => {
             expect(Logger.createName(module)).toBe('Logger.test         ')
         })
         it('short with context', () => {
-            expect(Logger.createName(module, 'foobar')).toBe('Logger.test:foobar  ')
+            expect(Logger.createName(module, 'foobar')).toBe('foobar:Logger.test  ')
         })
         it('long with context', () => {
-            expect(Logger.createName(module, 'loremipsum')).toBe('Logger.test:loremips')
+            expect(Logger.createName(module, 'loremipsum')).toBe('loremipsum:Logger.te')
         })
         it('application id', () => {
             process.env.STREAMR_APPLICATION_ID = 'APP'
@@ -94,7 +94,7 @@ describe(Logger, () => {
         }
 
         let lines: string[]
-        const logger = new Logger(module, '', {
+        const logger = new Logger(module, '', undefined, {
             write: (msg: string) => {
                 lines = msg.split('\n').map((line) => line.trim())
             }

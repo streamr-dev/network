@@ -1,12 +1,11 @@
 import { EventEmitter } from 'events'
 
-import Debug from 'debug'
 import Heap from 'heap'
 import StrictEventEmitter from 'strict-event-emitter-types'
 
 import { StreamMessage, MessageRef } from 'streamr-client-protocol'
 import GapFillFailedError from './GapFillFailedError'
-import { EthereumAddress } from '@streamr/utils'
+import { EthereumAddress, Logger } from '@streamr/utils'
 
 function toMsgRefId(streamMessage: StreamMessage): MsgRefId {
     return streamMessage.getMessageRef().serialize()
@@ -158,6 +157,8 @@ const MAX_GAP_REQUESTS = 10
 
 let ID = 0
 
+const logger = new Logger(module)
+
 class OrderedMsgChain extends MsgChainEmitter {
     id: number
     queue = new MsgChainQueue()
@@ -173,7 +174,6 @@ class OrderedMsgChain extends MsgChainEmitter {
     resendTimeout: number
     nextGaps: ReturnType<typeof setTimeout> | null = null
     markedExplicitly = new StreamMessageSet()
-    debug: ReturnType<typeof Debug>
 
     constructor(
         publisherId: EthereumAddress,
@@ -187,7 +187,6 @@ class OrderedMsgChain extends MsgChainEmitter {
         super()
         ID += 1
         this.id = ID
-        this.debug = Debug(`StreamrClient::OrderedMsgChain::${this.id}::${msgChainId}`)
         this.publisherId = publisherId
         this.msgChainId = msgChainId
         this.inOrderHandler = inOrderHandler
@@ -196,10 +195,6 @@ class OrderedMsgChain extends MsgChainEmitter {
         this.propagationTimeout = propagationTimeout
         this.resendTimeout = resendTimeout
         this.maxGapRequests = maxGapRequests
-
-        if (!this.isGapHandlingEnabled()) {
-            this.debug('Gap handling disabled for this %s.', this.constructor.name)
-        }
     }
 
     /**
@@ -224,8 +219,8 @@ class OrderedMsgChain extends MsgChainEmitter {
         if (this.isStaleMessage(unorderedStreamMessage)) {
             const msgRef = unorderedStreamMessage.getMessageRef()
             // Prevent double-processing of messages for any reason
-            this.debug(
-                'Ignoring message: %o. Message was already enqueued or we already processed a newer message: %o.',
+            logger.trace(
+                'Ignoring message: %j. Message was already enqueued or we already processed a newer message: %j.',
                 msgRef,
                 this.lastOrderedMsgRef
             )
@@ -262,7 +257,7 @@ class OrderedMsgChain extends MsgChainEmitter {
         }
 
         if (this.isGapHandlingEnabled()) {
-            this.debug('marking message', streamMessage.getMessageRef())
+            logger.trace('marking message %j', streamMessage.getMessageRef())
         }
 
         this.markedExplicitly.add(streamMessage)
@@ -274,7 +269,7 @@ class OrderedMsgChain extends MsgChainEmitter {
      */
     clearGap(): void {
         if (this.hasPendingGap) {
-            this.debug('clearGap')
+            logger.trace('clearGap')
         }
         this.hasPendingGap = false
         clearTimeout(this.nextGaps!)
@@ -347,7 +342,7 @@ class OrderedMsgChain extends MsgChainEmitter {
         // emit drain after clearing a block. If only a single item was in the
         // queue, the queue was never blocked, so it doesn't need to 'drain'.
         if (processedMessages > 1) {
-            this.debug('queue drained', processedMessages, this.lastOrderedMsgRef)
+            logger.trace('queue drained %d %j', processedMessages, this.lastOrderedMsgRef)
             this.clearGap()
             this.emit('drain', processedMessages)
         }
@@ -365,7 +360,7 @@ class OrderedMsgChain extends MsgChainEmitter {
                 this.markedExplicitly.delete(msg)
 
                 if (this.isGapHandlingEnabled()) {
-                    this.debug('skipping message', msg.getMessageRef())
+                    logger.trace('skipping message %j', msg.getMessageRef())
                     this.emit('skip', msg)
                     return msg
                 }
@@ -392,7 +387,7 @@ class OrderedMsgChain extends MsgChainEmitter {
             return
         }
 
-        this.debug('scheduleGap in %dms', this.propagationTimeout)
+        logger.trace('scheduleGap in %d ms', this.propagationTimeout)
         const nextGap = (timeout: number) => {
             clearTimeout(this.nextGaps!)
             this.nextGaps = setTimeout(async () => {
@@ -425,7 +420,7 @@ class OrderedMsgChain extends MsgChainEmitter {
         const from = new MessageRef(lastOrderedMsgRef.timestamp, lastOrderedMsgRef.sequenceNumber + 1)
         const { gapRequestCount, maxGapRequests } = this
         if (gapRequestCount < maxGapRequests) {
-            this.debug('requestGapFill %d of %d: %o', gapRequestCount + 1, maxGapRequests, {
+            logger.trace('requestGapFill %d of %d: %j', gapRequestCount + 1, maxGapRequests, {
                 from,
                 to,
             })
@@ -450,7 +445,7 @@ class OrderedMsgChain extends MsgChainEmitter {
         const to = msg.prevMsgRef
         const from = new MessageRef(lastOrderedMsgRef.timestamp, lastOrderedMsgRef.sequenceNumber + 1)
         if (this.isGapHandlingEnabled()) {
-            this.debug('requestGapFill failed after %d attempts: %o', maxGapRequests, {
+            logger.trace('requestGapFill failed after %d attempts: %o', maxGapRequests, {
                 from,
                 to,
             })
@@ -470,7 +465,7 @@ class OrderedMsgChain extends MsgChainEmitter {
     }
 
     debugStatus(): void {
-        this.debug('Up to %o: %o', this.lastOrderedMsgRef, {
+        logger.trace('Up to %j: %j', this.lastOrderedMsgRef, {
             gapRequestCount: this.gapRequestCount,
             maxGapRequests: this.maxGapRequests,
             size: this.queue.size(),

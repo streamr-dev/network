@@ -4,32 +4,29 @@
 import { StreamMessage } from 'streamr-client-protocol'
 import { EncryptionUtil, DecryptError } from '../encryption/EncryptionUtil'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
-import { Context } from '../utils/Context'
 import { DestroySignal } from '../DestroySignal'
-import { instanceId } from '../utils/utils'
 import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'
 import { GroupKeyStore } from '../encryption/GroupKeyStore'
 import { ConfigInjectionToken, DecryptionConfig } from '../Config'
 import { inject } from 'tsyringe'
 import { GroupKey } from '../encryption/GroupKey'
-import { waitForEvent } from '@streamr/utils'
+import { Logger, waitForEvent } from '@streamr/utils'
 import { StreamrClientEventEmitter } from '../events'
+import { LoggerFactory } from '../utils/LoggerFactory'
 
-export class Decrypt<T> implements Context {
-    readonly id
-    readonly debug
+export class Decrypt<T> {
+    private readonly logger: Logger
 
     constructor(
-        context: Context,
         private groupKeyStore: GroupKeyStore,
         private keyExchange: SubscriberKeyExchange,
         private streamRegistryCached: StreamRegistryCached,
         private destroySignal: DestroySignal,
+        @inject(LoggerFactory) loggerFactory: LoggerFactory,
         @inject(StreamrClientEventEmitter) private eventEmitter: StreamrClientEventEmitter,
         @inject(ConfigInjectionToken.Decryption) private decryptionConfig: DecryptionConfig
     ) {
-        this.id = instanceId(this)
-        this.debug = context.debug.extend(this.id)
+        this.logger = loggerFactory.createLogger(module)
         this.decrypt = this.decrypt.bind(this)
     }
 
@@ -87,7 +84,7 @@ export class Decrypt<T> implements Context {
             }
             return clone as StreamMessage<T>
         } catch (err) {
-            this.debug('Decrypt Error', err)
+            this.logger.debug('failed to decrypt message %j, reason: %s', streamMessage.getMessageID(), err)
             // clear cached permissions if cannot decrypt, likely permissions need updating
             this.streamRegistryCached.clearStream(streamMessage.getStreamId())
             throw err

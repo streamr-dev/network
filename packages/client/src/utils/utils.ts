@@ -3,11 +3,8 @@ import { SEPARATOR } from './uuid'
 
 import pkg from '../../package.json'
 
-import { Debug } from './log'
 import { StreamID, toStreamID } from 'streamr-client-protocol'
-import { toEthereumAddress } from '@streamr/utils'
-
-export const debug = Debug('utils')
+import { randomString, toEthereumAddress } from '@streamr/utils'
 
 /**
  * Generates counter-based ids.
@@ -118,6 +115,10 @@ export class MaxSizedSet<T> {
     delete(value: T): void {
         this.delegate.delete(value)
     }
+}
+
+export function generateClientId(): string {
+    return counterId(process.pid ? `${process.pid}` : randomString(4), '/')
 }
 
 // A unique internal identifier to some list of primitive values. Useful

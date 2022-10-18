@@ -19,7 +19,7 @@ import { FakeChain, PUBLIC_PERMISSION_TARGET, PublicPermissionTarget, StreamRegi
 import { StreamFactory } from '../../../src/StreamFactory'
 
 @scoped(Lifecycle.ContainerScoped)
-export class FakeStreamRegistry implements Omit<Methods<StreamRegistry>, 'debug'> {
+export class FakeStreamRegistry implements Methods<StreamRegistry> {
 
     private readonly chain: FakeChain
     private readonly streamIdBuilder: StreamIDBuilder

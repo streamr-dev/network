@@ -2,7 +2,7 @@ import { Database } from 'sqlite'
 import { toStreamID } from 'streamr-client-protocol'
 import { randomEthereumAddress } from 'streamr-test-utils'
 import ServerPersistence from '../../src/utils/persistence/ServerPersistence'
-import { mockContext } from '../test-utils/utils'
+import { mockLoggerFactory } from '../test-utils/utils'
 
 const streamId = toStreamID('0x0000000000000000000000000000000000000001/path')
 
@@ -13,7 +13,7 @@ describe('ServerPersistence', () => {
     beforeEach(async () => {
         const clientId = randomEthereumAddress()
         persistence = new ServerPersistence({
-            context: mockContext(),
+            loggerFactory: mockLoggerFactory(),
             tableName: 'MockTable',
             valueColumnName: 'mockValue',
             clientId,

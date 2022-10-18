@@ -1,7 +1,4 @@
-import { instanceId } from './utils'
 import { Defer, Deferred } from './Defer'
-import { Context } from './Context'
-import { Debug } from './log'
 
 /**
  * Async Gate
@@ -34,17 +31,9 @@ import { Debug } from './log'
  * gate.close() // noop
  * ```
  */
-export class Gate implements Context {
-    readonly id
-    readonly debug
+export class Gate {
     public isLocked = false
     private pending?: Deferred<void>
-
-    constructor(name?: string) {
-        this.id = instanceId(this, name)
-        this.debug = Debug(this.id)
-        // this.debug('create')
-    }
 
     /**
      * Opens gate.

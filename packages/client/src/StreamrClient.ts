@@ -2,8 +2,6 @@ import 'reflect-metadata'
 import { container as rootContainer, DependencyContainer } from 'tsyringe'
 import { generateEthereumAccount as _generateEthereumAccount } from './Ethereum'
 import { pOnce } from './utils/promises'
-import { Debug } from './utils/log'
-import { Context } from './utils/Context'
 import { StreamrClientConfig, createStrictConfig } from './Config'
 import { Publisher } from './publish/Publisher'
 import { Subscriber } from './subscribe/Subscriber'
@@ -36,28 +34,24 @@ import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 /**
  * @category Important
  */
-export class StreamrClient implements Context {
-    static generateEthereumAccount = _generateEthereumAccount
+export class StreamrClient {
+    static readonly generateEthereumAccount = _generateEthereumAccount
 
-    /** @internal */
-    readonly id
-    /** @internal */
-    readonly debug
-
-    private container: DependencyContainer
-    private node: NetworkNodeFacade
-    private authentication: Authentication
-    private resends: Resends
-    private publisher: Publisher
-    private subscriber: Subscriber
-    private proxyPublishSubscribe: ProxyPublishSubscribe
-    private groupKeyStore: GroupKeyStore
-    private destroySignal: DestroySignal
-    private streamRegistry: StreamRegistry
-    private streamStorageRegistry: StreamStorageRegistry
-    private storageNodeRegistry: StorageNodeRegistry
-    private streamIdBuilder: StreamIDBuilder
-    private eventEmitter: StreamrClientEventEmitter
+    public readonly id: string
+    private readonly container: DependencyContainer
+    private readonly node: NetworkNodeFacade
+    private readonly authentication: Authentication
+    private readonly resends: Resends
+    private readonly publisher: Publisher
+    private readonly subscriber: Subscriber
+    private readonly proxyPublishSubscribe: ProxyPublishSubscribe
+    private readonly groupKeyStore: GroupKeyStore
+    private readonly destroySignal: DestroySignal
+    private readonly streamRegistry: StreamRegistry
+    private readonly streamStorageRegistry: StreamStorageRegistry
+    private readonly storageNodeRegistry: StorageNodeRegistry
+    private readonly streamIdBuilder: StreamIDBuilder
+    private readonly eventEmitter: StreamrClientEventEmitter
 
     constructor(options: StreamrClientConfig = {}, parentContainer = rootContainer) {
         const config = createStrictConfig(options)
@@ -65,6 +59,7 @@ export class StreamrClient implements Context {
         initContainer(config, container)
 
         this.container = container
+        this.id = config.id
         this.node = container.resolve<NetworkNodeFacade>(NetworkNodeFacade)
         this.authentication = container.resolve<Authentication>(AuthenticationInjectionToken)
         this.resends = container.resolve<Resends>(Resends)
@@ -80,10 +75,6 @@ export class StreamrClient implements Context {
         this.eventEmitter = container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter)
         container.resolve<PublisherKeyExchange>(PublisherKeyExchange) // side effect: activates publisher key exchange
         container.resolve<MetricsPublisher>(MetricsPublisher) // side effect: activates metrics publisher
-
-        const context = container.resolve<Context>(Context as any)
-        this.id = context.id
-        this.debug = context.debug
     }
 
     // --------------------------------------------------------------------------------------------
@@ -366,20 +357,6 @@ export class StreamrClient implements Context {
         await Promise.allSettled(tasks)
         await Promise.all(tasks)
     })
-
-    // --------------------------------------------------------------------------------------------
-    // Logging
-    // --------------------------------------------------------------------------------------------
-
-    /** @internal */
-    enableDebugLogging(prefix = 'Streamr*'): void { // eslint-disable-line class-methods-use-this
-        Debug.enable(prefix)
-    }
-
-    /** @internal */
-    disableDebugLogging(): void { // eslint-disable-line class-methods-use-this
-        Debug.disable()
-    }
 
     // --------------------------------------------------------------------------------------------
     // Events

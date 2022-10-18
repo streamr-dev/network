@@ -5,7 +5,7 @@ import { Stream } from '../../src/Stream'
 import { StreamRegistry } from '../../src/registry/StreamRegistry'
 import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
 import { Validator } from '../../src/Validator'
-import { createMockMessage, mockContext } from '../test-utils/utils'
+import { createMockMessage, mockLoggerFactory } from '../test-utils/utils'
 import { STREAM_CLIENT_DEFAULTS, SubscribeConfig } from '../../src/Config'
 import { fastWallet } from 'streamr-test-utils'
 import { EthereumAddress } from '@streamr/utils'
@@ -24,10 +24,8 @@ const createMockValidator = (options: Partial<SubscribeConfig>) => {
             return userAddress.toLowerCase() === publisherWallet.address.toLowerCase()
         }
     }
-    const context = mockContext()
     return new Validator(
-        context,
-        new StreamRegistryCached(context, streamRegistry as any, {} as any) as any,
+        new StreamRegistryCached(mockLoggerFactory(), streamRegistry as any, {} as any) as any,
         {
             ...STREAM_CLIENT_DEFAULTS,
             ...options

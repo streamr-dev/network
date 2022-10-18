@@ -5,9 +5,7 @@ import { inject, Lifecycle, scoped } from 'tsyringe'
 import EventEmitter from 'eventemitter3'
 import { NetworkNodeOptions, createNetworkNode as _createNetworkNode, MetricsContext } from 'streamr-network'
 import { uuid } from './utils/uuid'
-import { instanceId } from './utils/utils'
 import { pOnce } from './utils/promises'
-import { Context } from './utils/Context'
 import { NetworkConfig, ConfigInjectionToken, TrackerRegistrySmartContract } from './Config'
 import { StreamMessage, StreamPartID, ProxyDirection } from 'streamr-client-protocol'
 import { DestroySignal } from './DestroySignal'
@@ -69,18 +67,15 @@ export class NetworkNodeFactory {
  * Lazily creates & starts node on first call to getNode().
  */
 @scoped(Lifecycle.ContainerScoped)
-export class NetworkNodeFacade implements Context {
+export class NetworkNodeFacade {
     private cachedNode?: NetworkNodeStub
-    private networkConfig: NetworkConfig
-    private ethereumConfig: EthereumConfig
-    readonly id
-    readonly debug
     private startNodeCalled = false
     private startNodeComplete = false
-    private eventEmitter: EventEmitter<Events>
+    private readonly networkConfig: NetworkConfig
+    private readonly ethereumConfig: EthereumConfig
+    private readonly eventEmitter: EventEmitter<Events>
 
     constructor(
-        context: Context,
         private destroySignal: DestroySignal,
         private networkNodeFactory: NetworkNodeFactory,
         @inject(AuthenticationInjectionToken) private authentication: Authentication,
@@ -89,14 +84,12 @@ export class NetworkNodeFacade implements Context {
     ) {
         this.networkConfig = networkConfig
         this.ethereumConfig = ethereumConfig
-        this.id = instanceId(this)
-        this.debug = context.debug.extend(this.id)
         this.eventEmitter = new EventEmitter<Events>()
         destroySignal.onDestroy.listen(this.destroy)
     }
 
     private assertNotDestroyed(): void {
-        this.destroySignal.assertNotDestroyed(this)
+        this.destroySignal.assertNotDestroyed()
     }
 
     private async getNormalizedNetworkOptions(): Promise<NetworkNodeOptions> {
@@ -129,7 +122,6 @@ export class NetworkNodeFacade implements Context {
             }
         }
 
-        this.debug('initNode', id)
         const networkOptions = await this.getNormalizedNetworkOptions()
         const node = this.networkNodeFactory.createNetworkNode({
             disconnectionWaitTime: 200,
@@ -159,13 +151,10 @@ export class NetworkNodeFacade implements Context {
      * Subsequent calls to getNode/start will fail.
      */
     private destroy = pOnce(async () => {
-        this.debug('destroy >>')
-
         const node = this.cachedNode
         this.cachedNode = undefined
         // stop node only if started or in progress
         if (node && this.startNodeCalled) {
-            this.debug('stopping node >>')
             if (!this.startNodeComplete) {
                 // wait for start to finish before stopping node
                 const startNodeTask = this.startNodeTask()
@@ -174,11 +163,8 @@ export class NetworkNodeFacade implements Context {
             }
 
             await node.stop()
-            this.debug('stopping node <<')
         }
         this.startNodeTask.reset() // allow subsequent calls to fail
-
-        this.debug('destroy <<')
     })
 
     /**
@@ -186,7 +172,6 @@ export class NetworkNodeFacade implements Context {
      */
     private startNodeTask = pOnce(async () => {
         this.startNodeCalled = true
-        this.debug('start >>')
         try {
             const node = await this.initNode()
             if (!this.destroySignal.isDestroyed()) {
@@ -194,9 +179,7 @@ export class NetworkNodeFacade implements Context {
             }
 
             if (this.destroySignal.isDestroyed()) {
-                this.debug('stopping node before init >>')
                 await node.stop()
-                this.debug('stopping node before init <<')
             } else {
                 this.eventEmitter.emit('start')
             }
@@ -204,7 +187,6 @@ export class NetworkNodeFacade implements Context {
             return node
         } finally {
             this.startNodeComplete = true
-            this.debug('start <<')
         }
     })
 
@@ -227,44 +209,29 @@ export class NetworkNodeFacade implements Context {
         // NOTE: function is intentionally not async for performance reasons.
         // Will call cachedNode.publish immediately if cachedNode is set.
         // Otherwise will wait for node to start.
-        this.debug('publishToNode >> %o', streamMessage.getMessageID())
-        try {
-            this.destroySignal.assertNotDestroyed(this)
-
-            if (this.isStarting()) {
-                // use .then instead of async/await so
-                // this.cachedNode.publish call can be sync
-                return this.startNodeTask().then((node) => {
-                    return node.publish(streamMessage)
-                })
-            }
-
-            return this.cachedNode!.publish(streamMessage)
-        } finally {
-            this.debug('publishToNode << %o', streamMessage.getMessageID())
+        this.destroySignal.assertNotDestroyed()
+        if (this.isStarting()) {
+            // use .then instead of async/await so
+            // this.cachedNode.publish call can be sync
+            return this.startNodeTask().then((node) => {
+                return node.publish(streamMessage)
+            })
         }
+        return this.cachedNode!.publish(streamMessage)
     }
 
     async openProxyConnection(streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection): Promise<void> {
-        try {
-            if (this.isStarting()) {
-                await this.startNodeTask()
-            }
-            await this.cachedNode!.openProxyConnection(streamPartId, nodeId, direction, (await this.authentication.getAddress()))
-        } finally {
-            this.debug('openProxyConnectionOnStream << %o', streamPartId, nodeId)
+        if (this.isStarting()) {
+            await this.startNodeTask()
         }
+        await this.cachedNode!.openProxyConnection(streamPartId, nodeId, direction, (await this.authentication.getAddress()))
     }
 
     async closeProxyConnection(streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection): Promise<void> {
-        try {
-            if (this.isStarting()) {
-                return
-            }
-            await this.cachedNode!.closeProxyConnection(streamPartId, nodeId, direction)
-        } finally {
-            this.debug('closeProxyConnectionOnStream << %o', streamPartId, nodeId)
+        if (this.isStarting()) {
+            return
         }
+        await this.cachedNode!.closeProxyConnection(streamPartId, nodeId, direction)
     }
 
     private isStarting(): boolean {

@@ -38,7 +38,7 @@ export class FakeEnvironment {
         const httpUtil = new FakeHttpUtil(this.network)
         this.dependencyContainer.register(FakeNetwork, { useValue: this.network })
         this.dependencyContainer.register(FakeChain, { useValue: this.chain })
-        this.dependencyContainer.register(HttpUtil, { useValue: httpUtil })
+        this.dependencyContainer.register(HttpUtil, { useValue: httpUtil as any })
         this.dependencyContainer.register(NetworkNodeFactory, FakeNetworkNodeFactory)
         this.dependencyContainer.register(StreamRegistry, FakeStreamRegistry as any)
         this.dependencyContainer.register(StreamStorageRegistry, FakeStreamStorageRegistry as any)

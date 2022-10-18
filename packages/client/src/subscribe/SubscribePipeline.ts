@@ -10,7 +10,6 @@ import { OrderMessages } from './OrderMessages'
 import { MessageStream } from './MessageStream'
 import { Validator } from '../Validator'
 import { Decrypt } from './Decrypt'
-import { Context } from '../utils/Context'
 import { StrictStreamrClientConfig } from '../Config'
 import { Resends } from './Resends'
 import { DestroySignal } from '../DestroySignal'
@@ -19,11 +18,12 @@ import { MsgChainUtil } from './MsgChainUtil'
 import { GroupKeyStore } from '../encryption/GroupKeyStore'
 import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'
 import { StreamrClientEventEmitter } from '../events'
+import { LoggerFactory } from '../utils/LoggerFactory'
 
 export interface SubscriptionPipelineOptions<T> {
     messageStream: MessageStream<T>
     streamPartId: StreamPartID
-    context: Context
+    loggerFactory: LoggerFactory
     resends: Resends
     groupKeyStore: GroupKeyStore
     subscriberKeyExchange: SubscriberKeyExchange
@@ -35,7 +35,6 @@ export interface SubscriptionPipelineOptions<T> {
 
 export const createSubscribePipeline = <T = unknown>(opts: SubscriptionPipelineOptions<T>): MessageStream<T> => {
     const validate = new Validator(
-        opts.context,
         opts.streamRegistryCached,
         opts.rootConfig,
         opts.rootConfig.cache
@@ -43,9 +42,9 @@ export const createSubscribePipeline = <T = unknown>(opts: SubscriptionPipelineO
 
     const gapFillMessages = new OrderMessages<T>(
         opts.rootConfig,
-        opts.context,
         opts.resends,
         opts.streamPartId,
+        opts.loggerFactory
     )
 
     /* eslint-enable object-curly-newline */
@@ -63,11 +62,11 @@ export const createSubscribePipeline = <T = unknown>(opts: SubscriptionPipelineO
     }
 
     const decrypt = new Decrypt<T>(
-        opts.context,
         opts.groupKeyStore,
         opts.subscriberKeyExchange,
         opts.streamRegistryCached,
         opts.destroySignal,
+        opts.loggerFactory,
         opts.streamrClientEventEmitter,
         opts.rootConfig.decryption,
     )
