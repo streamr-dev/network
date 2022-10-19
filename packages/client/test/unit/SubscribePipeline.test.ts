@@ -63,6 +63,7 @@ describe('SubscribePipeline', () => {
             undefined as any,
             undefined as any,
             undefined as any,
+            undefined as any,
             undefined as any
         )
         input = new MessageStream()

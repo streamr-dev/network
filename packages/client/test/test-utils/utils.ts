@@ -123,7 +123,7 @@ export const getGroupKeyStore = (userAddress: EthereumAddress): GroupKeyStore =>
     return new GroupKeyStore(
         mockLoggerFactory(),
         {
-            getAddress: () => userAddress.toLowerCase()
+            getAddress: () => userAddress
         } as any,
         new StreamrClientEventEmitter()
     )

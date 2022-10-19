@@ -87,7 +87,7 @@ describe('SigningUtil', () => {
             }, true, 'Verify-our')
     
             const elapsedTimeEthers = await run(async () => {
-                return verifyMessage(payload, signature).toLowerCase() === wallet.address.toLowerCase()
+                return toEthereumAddress(verifyMessage(payload, signature)) === toEthereumAddress(wallet.address)
             }, true, 'Verify-ethers.js')
     
             expect(elapsedTimeOur).toBeLessThan(elapsedTimeEthers)

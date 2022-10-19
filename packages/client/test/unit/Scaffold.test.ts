@@ -1,8 +1,7 @@
 import Emitter from 'events'
 
-import { wait } from '@streamr/utils'
+import { Defer, wait } from '@streamr/utils'
 
-import { Defer } from '../../src/utils/Defer'
 import { Scaffold } from '../../src/utils/Scaffold'
 
 describe('Scaffold', () => {
@@ -518,7 +517,7 @@ describe('Scaffold', () => {
         ], async () => shouldUp, {
             onDone, onChange
         })
-        const done = Defer()
+        const done = new Defer()
         emitter.on('next', async (name: string) => {
             if (name === 'up start') {
                 shouldUp = false
@@ -603,7 +602,7 @@ describe('Scaffold', () => {
 
         it('can stop before first step', async () => {
             shouldUp = true
-            const done = Defer()
+            const done = new Defer()
             emitter.on('next', async (name: string, v: string) => {
                 if (name === 'up start' && v === 'a') {
                     shouldUp = false
@@ -629,7 +628,7 @@ describe('Scaffold', () => {
 
         it('can stop before second step', async () => {
             shouldUp = true
-            const done = Defer()
+            const done = new Defer()
             emitter.on('next', async (name: string, v: string) => {
                 if (name === 'up end' && v === 'b') {
                     shouldUp = false
@@ -658,7 +657,7 @@ describe('Scaffold', () => {
         })
 
         it('can interrupt down while going down', async () => {
-            const done = Defer()
+            const done = new Defer()
             shouldUp = true
             emitter.on('next', async (name: string, v: string) => {
                 if (name === 'down end' && v === 'b') {
@@ -687,9 +686,9 @@ describe('Scaffold', () => {
         })
 
         it('can interrupt down while going down & during change', async () => {
-            const done1 = Defer()
-            const done2 = Defer()
-            const done3 = Defer()
+            const done1 = new Defer()
+            const done2 = new Defer()
+            const done3 = new Defer()
             shouldUp = true
             let count = 0
             emitter.on('next', async (name: string, v: string) => {
