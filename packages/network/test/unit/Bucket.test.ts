@@ -8,6 +8,7 @@ import {
 } from '../../src/logic/receipts/Bucket'
 import { MessageID, toStreamID, toStreamPartID } from 'streamr-client-protocol'
 import { wait } from '@streamr/utils'
+import { randomEthereumAddress } from 'streamr-test-utils'
 
 describe(getWindowNumber, () => {
     const TIMESTAMP = 1652252054325
@@ -53,12 +54,14 @@ describe(formBucketID, () => {
     })
 })
 
+const PUBLISHER = randomEthereumAddress()
+
 const MESSAGE_ID = new MessageID(
     toStreamID('stream'),
     62,
     getWindowStartTime(31352),
     0,
-    'publisher',
+    PUBLISHER,
     'xaxaxa'
 )
 
@@ -67,7 +70,7 @@ describe(getBucketID, () => {
         expect(getBucketID(MESSAGE_ID, 'nodeId')).toEqual(formBucketID({
             nodeId: 'nodeId',
             streamPartId: toStreamPartID(toStreamID('stream'), 62),
-            publisherId: 'publisher',
+            publisherId: PUBLISHER,
             msgChainId: 'xaxaxa',
             windowNumber: 31352
         }))

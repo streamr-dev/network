@@ -6,6 +6,7 @@ import { Serializer } from '../../../Serializer'
 
 const VERSION = 2
 
+/* eslint-disable class-methods-use-this */
 export default class ReceiptResponseSerializerV2 extends Serializer<ReceiptResponse> {
     toArray(receiptResponse: ReceiptResponse): any[] {
         return [

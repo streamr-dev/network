@@ -3,7 +3,6 @@ import {
 } from '../../../utils/validations'
 import ControlMessage, { ControlMessageOptions } from '../ControlMessage'
 import { StreamID } from '../../../utils/StreamID'
-import { EthereumAddress } from "../../../utils"
 
 export interface Claim {
     streamId: StreamID
@@ -13,8 +12,8 @@ export interface Claim {
     windowNumber: number
     messageCount: number
     totalPayloadSize: number
-    sender: EthereumAddress
-    receiver: EthereumAddress
+    sender: string
+    receiver: string
     signature: string
 }
 

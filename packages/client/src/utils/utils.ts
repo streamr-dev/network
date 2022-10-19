@@ -4,7 +4,7 @@ import { SEPARATOR } from './uuid'
 import pkg from '../../package.json'
 
 import { StreamID, toStreamID } from 'streamr-client-protocol'
-import { randomString, toEthereumAddress } from '@streamr/utils'
+import { EthereumAddress, randomString, toEthereumAddress } from '@streamr/utils'
 
 /**
  * Generates counter-based ids.
@@ -96,9 +96,9 @@ export function formStorageNodeAssignmentStreamId(clusterAddress: string): Strea
     return toStreamID('/assignments', toEthereumAddress(clusterAddress))
 }
 
-export const getEthereumAddressFromNodeId = (nodeId: string): string => {
+export const getEthereumAddressFromNodeId = (nodeId: string): EthereumAddress | never => {
     const ETHERUM_ADDRESS_LENGTH = 42
-    return nodeId.substring(0, ETHERUM_ADDRESS_LENGTH)
+    return toEthereumAddress(nodeId.substring(0, ETHERUM_ADDRESS_LENGTH))
 }
 
 export class MaxSizedSet<T> {

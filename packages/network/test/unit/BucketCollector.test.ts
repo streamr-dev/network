@@ -7,6 +7,8 @@ import {
 } from 'streamr-client-protocol'
 import { BucketID, formBucketID, getWindowNumber, WINDOW_LENGTH } from '../../src/logic/receipts/Bucket'
 import { NodeId } from '../../src/identifiers'
+import { EthereumAddress } from '@streamr/utils'
+import { randomEthereumAddress } from 'streamr-test-utils'
 
 function makeBucketId(
     nodeId: NodeId,
@@ -26,7 +28,7 @@ function makeBucketId(
 
 function makeMsg(
     streamPartId: StreamPartID,
-    publisherId: string,
+    publisherId: EthereumAddress,
     msgChainId: string,
     timestamp: number,
     payloadSize: number
@@ -40,13 +42,14 @@ function makeMsg(
             publisherId,
             msgChainId
         ),
-        prevMsgRef: null,
         content: {
             'key': 'a'.repeat(payloadSize - 10) // 10 is size of structure without 'a's
-        }
+        },
+        signature: 'signature'
     })
 }
 
+const PUBLISHER_ID = randomEthereumAddress()
 const TIMESTAMP = 1652252050000
 const WINDOW_NUMBER = getWindowNumber(TIMESTAMP)
 const SP1 = StreamPartIDUtils.parse('stream-1#0')
@@ -65,15 +68,15 @@ describe(BucketCollector, () => {
     })
 
     it('recording some data and getting the bucket', () => {
-        collector.record(makeMsg(SP1, 'publisherId', 'msgChainId', TIMESTAMP, 40), 'nodeId')
-        collector.record(makeMsg(SP1, 'publisherId', 'msgChainId', TIMESTAMP + 15000, 160), 'nodeId')
-        collector.record(makeMsg(SP1, 'publisherId', 'msgChainId', TIMESTAMP + 32000, 100), 'nodeId')
-        const id = makeBucketId('nodeId', SP1, 'publisherId', 'msgChainId', WINDOW_NUMBER)
+        collector.record(makeMsg(SP1, PUBLISHER_ID, 'msgChainId', TIMESTAMP, 40), 'nodeId')
+        collector.record(makeMsg(SP1, PUBLISHER_ID, 'msgChainId', TIMESTAMP + 15000, 160), 'nodeId')
+        collector.record(makeMsg(SP1, PUBLISHER_ID, 'msgChainId', TIMESTAMP + 32000, 100), 'nodeId')
+        const id = makeBucketId('nodeId', SP1, PUBLISHER_ID, 'msgChainId', WINDOW_NUMBER)
         expect(collector.getBucket(id)).toEqual({
             id,
             nodeId: 'nodeId',
             streamPartId: SP1,
-            publisherId: 'publisherId',
+            publisherId: PUBLISHER_ID,
             msgChainId: 'msgChainId',
             windowNumber: WINDOW_NUMBER,
             messageCount: 3,
@@ -84,7 +87,7 @@ describe(BucketCollector, () => {
 
     it('recording some data spanning multiple buckets and getting the buckets', () => {
         const makeFixedMsg = (timestamp: number, payloadSize: number) => {
-            return makeMsg(SP1, 'publisherId', 'msgChainId', timestamp, payloadSize)
+            return makeMsg(SP1, PUBLISHER_ID, 'msgChainId', timestamp, payloadSize)
         }
         collector.record(makeFixedMsg(TIMESTAMP, 40), 'nodeId')
         collector.record(makeFixedMsg(TIMESTAMP + (WINDOW_LENGTH / 2), 60), 'nodeId')
@@ -97,17 +100,17 @@ describe(BucketCollector, () => {
 
         collector.record(makeFixedMsg(TIMESTAMP + 6 * WINDOW_LENGTH, 150), 'nodeId')
 
-        const id1 = makeBucketId('nodeId', SP1, 'publisherId', 'msgChainId', WINDOW_NUMBER)
-        const id2 = makeBucketId('nodeId', SP1, 'publisherId', 'msgChainId', WINDOW_NUMBER + 1)
-        const id3 = makeBucketId('nodeId', SP1, 'publisherId', 'msgChainId', WINDOW_NUMBER + 2)
-        const id4 = makeBucketId('nodeId', SP1, 'publisherId', 'msgChainId', WINDOW_NUMBER + 6)
+        const id1 = makeBucketId('nodeId', SP1, PUBLISHER_ID, 'msgChainId', WINDOW_NUMBER)
+        const id2 = makeBucketId('nodeId', SP1, PUBLISHER_ID, 'msgChainId', WINDOW_NUMBER + 1)
+        const id3 = makeBucketId('nodeId', SP1, PUBLISHER_ID, 'msgChainId', WINDOW_NUMBER + 2)
+        const id4 = makeBucketId('nodeId', SP1, PUBLISHER_ID, 'msgChainId', WINDOW_NUMBER + 6)
 
         expect(collector.getBucket(id1)).toEqual(
             {
                 id: id1,
                 nodeId: 'nodeId',
                 streamPartId: SP1,
-                publisherId: 'publisherId',
+                publisherId: PUBLISHER_ID,
                 msgChainId: 'msgChainId',
                 windowNumber: WINDOW_NUMBER,
                 messageCount: 2,
@@ -118,7 +121,7 @@ describe(BucketCollector, () => {
             id: id2,
             nodeId: 'nodeId',
             streamPartId: SP1,
-            publisherId: 'publisherId',
+            publisherId: PUBLISHER_ID,
             msgChainId: 'msgChainId',
             windowNumber: WINDOW_NUMBER + 1,
             messageCount: 2,
@@ -129,7 +132,7 @@ describe(BucketCollector, () => {
             id: id3,
             nodeId: 'nodeId',
             streamPartId: SP1,
-            publisherId: 'publisherId',
+            publisherId: PUBLISHER_ID,
             msgChainId: 'msgChainId',
             windowNumber: WINDOW_NUMBER + 2,
             messageCount: 2,
@@ -140,7 +143,7 @@ describe(BucketCollector, () => {
             id: id4,
             nodeId: 'nodeId',
             streamPartId: SP1,
-            publisherId: 'publisherId',
+            publisherId: PUBLISHER_ID,
             msgChainId: 'msgChainId',
             windowNumber: WINDOW_NUMBER + 6,
             messageCount: 1,
@@ -150,8 +153,8 @@ describe(BucketCollector, () => {
     })
 
     it('removing a bucket', () => {
-        collector.record(makeMsg(SP1, 'publisherId', 'msgChainId', TIMESTAMP, 40), 'nodeId')
-        const id = makeBucketId('nodeId', SP1, 'publisherId', 'msgChainId', WINDOW_NUMBER)
+        collector.record(makeMsg(SP1, PUBLISHER_ID, 'msgChainId', TIMESTAMP, 40), 'nodeId')
+        const id = makeBucketId('nodeId', SP1, PUBLISHER_ID, 'msgChainId', WINDOW_NUMBER)
         expect(collector.getBucket(id)).toBeDefined()
         collector.removeBucket(id)
         expect(collector.getBucket(id)).toBeUndefined()

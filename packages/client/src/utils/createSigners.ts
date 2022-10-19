@@ -11,7 +11,7 @@ export function createSigners(authentication: Authentication): Signers | undefin
     return {
         claim: {
             sign(claim: Omit<Claim, 'signature'>): Promise<string> {
-                return authentication.createMessagePayloadSignature(JSON.stringify(claim))
+                return authentication.createMessageSignature(JSON.stringify(claim))
             },
             validate({ signature, ...claim }: Claim): boolean {
                 return verify(
@@ -23,7 +23,7 @@ export function createSigners(authentication: Authentication): Signers | undefin
         },
         receipt: {
             sign(receipt: Omit<Receipt, 'signature'>): Promise<string> {
-                return authentication.createMessagePayloadSignature(JSON.stringify(receipt))
+                return authentication.createMessageSignature(JSON.stringify(receipt))
             },
             validate({ signature, ...receipt }: Receipt): boolean {
                 return verify(
