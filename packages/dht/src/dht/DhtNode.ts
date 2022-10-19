@@ -168,7 +168,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
     }
 
     public handleMessage(message: Message): void {
-        if (message.serviceId == this.config.serviceId) {
+        if (message.serviceId === this.config.serviceId) {
             this.rpcCommunicator?.handleMessageFromPeer(message)
         } else {
             this.emit('message', message)
@@ -493,10 +493,14 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
     }
 
     private addNewContact(contact: PeerDescriptor, setActive = false): void {
-        if (this.started && !this.stopped) {
+        if (!this.started || this.stopped) {
+            return
+        }
+
+        const peerId = PeerID.fromValue(contact.peerId)
+        if (!peerId.equals(this.ownPeerId!)) {
             logger.trace(`Adding new contact ${contact.peerId.toString()}`)
             const dhtPeer = new DhtPeer(contact, toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())))
-            const peerId = PeerID.fromValue(contact.peerId)
             if (!this.bucket!.get(contact.peerId) && !this.neighborList!.getContact(PeerID.fromValue(contact.peerId))) {
                 this.neighborList!.addContact(dhtPeer)
                 if (contact.openInternet) {
@@ -666,7 +670,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             session.start()
         }], session, ['noCandidatesFound', 'candidatesFound'], 1000)
 
-        if (result.winnerName == 'noCandidatesFound') {
+        if (result.winnerName === 'noCandidatesFound' || result.winnerName === 'routingFailed') {
             if (PeerID.fromValue(routedMessage.sourcePeer!.peerId).equals(this.ownPeerId!)) {
                 throw new Error(`Could not perform initial routing`)
             }

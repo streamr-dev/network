@@ -1,14 +1,13 @@
 import { DhtNode, PeerDescriptor, NodeType, ConnectionManager, PeerID } from '@streamr/dht'
 import { StreamrNode, Event as StreamrNodeEvent } from '../../src/logic/StreamrNode'
-// import { range } from 'lodash'
+import { range } from 'lodash'
 import { waitForCondition } from 'streamr-test-utils'
 import { DataMessage, MessageRef } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { getRandomRegion } from '@streamr/dht/dist/test/data/pings'
-// import { wait } from '@streamr/utils'
 
 describe('Full node network with WebRTC connections', () => {
 
-    const NUM_OF_NODES = 48
+    const NUM_OF_NODES = 24
 
     const epPeerDescriptor: PeerDescriptor = {
         peerId: PeerID.fromString(`entrypoint`).value,
@@ -41,42 +40,38 @@ describe('Full node network with WebRTC connections', () => {
 
         await epStreamrNode.joinStream(randomGraphId, epPeerDescriptor)
 
-        // range(NUM_OF_NODES).map(async (i) => {
-        //     setImmediate(async () => {
-        for (let i = 0; i < NUM_OF_NODES; i++) {
-            const peerId = PeerID.fromString(`${i}`)
-            const peerDescriptor: PeerDescriptor = {
-                peerId: peerId.value,
-                type: NodeType.NODEJS,
-                region: getRandomRegion()
-            }
+        range(NUM_OF_NODES).map(async (i) => {
+            setImmediate(async () => {
+                const peerId = PeerID.fromString(`${i}`)
+                const peerDescriptor: PeerDescriptor = {
+                    peerId: peerId.value,
+                    type: NodeType.NODEJS,
+                    region: getRandomRegion()
+                }
 
-            // console.log(i, peerId.toKey())
+                // console.log(i, peerId.toKey())
 
-            const layer0 = new DhtNode({
-                numberOfNodesPerKBucket: 4,
-                peerDescriptor,
-                routeMessageTimeout: 10000,
-                entryPoints: [epPeerDescriptor]
+                const layer0 = new DhtNode({
+                    numberOfNodesPerKBucket: 4,
+                    peerDescriptor,
+                    routeMessageTimeout: 10000,
+                    entryPoints: [epPeerDescriptor]
+                })
+
+                await layer0.start()
+                await layer0.joinDht(epPeerDescriptor)
+
+                const connectionManager = layer0.getTransport() as ConnectionManager
+                const streamrNode = new StreamrNode()
+                await streamrNode.start(layer0, connectionManager, connectionManager)
+
+                streamrNode.subscribeToStream(randomGraphId, epPeerDescriptor)
+                connectionManagers.push(connectionManager)
+                streamrNodes.push(streamrNode)
             })
+        })
 
-            await layer0.start()
-            await layer0.joinDht(epPeerDescriptor)
-
-            const connectionManager = layer0.getTransport() as ConnectionManager
-            const streamrNode = new StreamrNode()
-            await streamrNode.start(layer0, connectionManager, connectionManager)
-
-            // await streamrNode.joinStream(randomGraphId, epPeerDescriptor)
-            streamrNode.subscribeToStream(randomGraphId, epPeerDescriptor)
-            connectionManagers.push(connectionManager)
-            streamrNodes.push(streamrNode)
-            // console.log(i)
-        }
-        // })
-        // })
-
-    }, 240000)
+    }, 90000)
 
     afterEach(async () => {
         await Promise.all([
@@ -92,13 +87,6 @@ describe('Full node network with WebRTC connections', () => {
         await waitForCondition(() => streamrNodes.length === NUM_OF_NODES, 120000)
         await Promise.all([...streamrNodes.map((streamrNode) =>
             waitForCondition(() => {
-                // console.log(
-                //     PeerID.fromValue(streamrNode.getPeerDescriptor().peerId).toKey(),
-                //     streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length,
-                //     streamrNode.getStream(randomGraphId)!.layer2.getNearbyContactPoolIds().length,
-                //     streamrNode.getStream(randomGraphId)!.layer2.getNearbyContactPoolIds().length
-                // )
-
                 return streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length >= 3
             }, 60000)
         )])
@@ -126,35 +114,11 @@ describe('Full node network with WebRTC connections', () => {
 
         epStreamrNode.publishToStream(randomGraphId, epPeerDescriptor, message)
         // await wait(120000)
-        try {
-            await waitForCondition(() => {
-                // console.log(numOfMessagesReceived)
-                return numOfMessagesReceived === NUM_OF_NODES
-            }, 10000)
-        } catch (err) {
-            // console.log(successIds)
-            // console.log(successIds.length)
-            // const filtered = streamrNodes.filter((node) => !successIds.includes(PeerID.fromValue(node.getPeerDescriptor().peerId).toKey()))
-            // filtered.forEach((node) => {
-            //     const incoming = node.getStream(randomGraphId).layer2.getTargetNeighborStringIds()
-            //         .filter((id) => id !== PeerID.fromValue(epPeerDescriptor.peerId).toKey())
-            //         .map((id) => streamrNodes.find((n) => PeerID.fromValue(n.getPeerDescriptor().peerId).toKey() === id)
-            //             .getStream(
-            //             randomGraphId).layer2.getTargetNeighborStringIds()
-            //             .includes(PeerID.fromValue(node.getPeerDescriptor().peerId).toKey())
-            //         )
-            //     console.log(
-            //     PeerID.fromValue(node.getPeerDescriptor().peerId).toKey(),
-            //     node.getStream(randomGraphId).layer2.getTargetNeighborStringIds(), incoming
-            //     )
-            // })
-            // console.log(
-            // PeerID.fromValue(epStreamrNode.getPeerDescriptor().peerId).toKey(),
-            // epStreamrNode.getStream(randomGraphId).layer2.getTargetNeighborStringIds()
-            // )
-            // expect(true).toEqual(false)
-        }
+        await waitForCondition(() => {
+            // console.log(numOfMessagesReceived)
+            return numOfMessagesReceived === NUM_OF_NODES
+        }, 10000)
 
-    }, 300000)
+    }, 90000)
 
 })

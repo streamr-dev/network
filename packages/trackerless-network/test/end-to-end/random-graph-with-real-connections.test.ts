@@ -45,21 +45,41 @@ describe('random graph with real connections', () => {
                 randomGraphId,
                 layer1: epDhtNode,
                 P2PTransport: epDhtNode.getTransport(),
-                connectionLocker: epDhtNode.getTransport() as ConnectionManager
+                connectionLocker: epDhtNode.getTransport() as ConnectionManager,
+                ownPeerDescriptor: epPeerDescriptor
             }
         )
-        randomGraphNode2 = new RandomGraphNode(
-            { randomGraphId, layer1: dhtNode1, P2PTransport: dhtNode1.getTransport(), connectionLocker: dhtNode1.getTransport() as ConnectionManager }
-        )
-        randomGraphNode3 = new RandomGraphNode(
-            { randomGraphId, layer1: dhtNode2, P2PTransport: dhtNode2.getTransport(), connectionLocker: dhtNode2.getTransport() as ConnectionManager }
-        )
-        randomGraphNode4 = new RandomGraphNode(
-            { randomGraphId, layer1: dhtNode3, P2PTransport: dhtNode3.getTransport(), connectionLocker: dhtNode3.getTransport() as ConnectionManager }
-        )
-        randomGraphNode5 = new RandomGraphNode(
-            { randomGraphId, layer1: dhtNode4, P2PTransport: dhtNode4.getTransport(), connectionLocker: dhtNode4.getTransport() as ConnectionManager }
-        )
+        randomGraphNode2 = new RandomGraphNode({
+            randomGraphId,
+            layer1: dhtNode1,
+            P2PTransport: dhtNode1.getTransport(),
+            connectionLocker: dhtNode1.getTransport() as ConnectionManager,
+            ownPeerDescriptor: dhtNode1.getPeerDescriptor()
+        })
+
+        randomGraphNode3 = new RandomGraphNode({
+            randomGraphId,
+            layer1: dhtNode2,
+            P2PTransport: dhtNode2.getTransport(),
+            connectionLocker: dhtNode2.getTransport() as ConnectionManager,
+            ownPeerDescriptor: dhtNode2.getPeerDescriptor()
+        })
+
+        randomGraphNode4 = new RandomGraphNode({
+            randomGraphId,
+            layer1: dhtNode3,
+            P2PTransport: dhtNode3.getTransport(),
+            connectionLocker: dhtNode3.getTransport() as ConnectionManager,
+            ownPeerDescriptor: dhtNode3.getPeerDescriptor()
+        })
+
+        randomGraphNode5 = new RandomGraphNode({
+            randomGraphId,
+            layer1: dhtNode4,
+            P2PTransport: dhtNode4.getTransport(),
+            connectionLocker: dhtNode4.getTransport() as ConnectionManager,
+            ownPeerDescriptor: dhtNode4.getPeerDescriptor()
+        })
 
         await epDhtNode.joinDht(epPeerDescriptor)
         await Promise.all([

@@ -13,6 +13,7 @@ describe('PeerList', () => {
         new Uint8Array([1, 1, 4]),
         new Uint8Array([1, 1, 5])
     ]
+    const ownId = PeerID.fromString('test')
     const graphId = 'test'
     let peerList: PeerList
     const simulator = new Simulator()
@@ -25,7 +26,7 @@ describe('PeerList', () => {
         return new RemoteRandomGraphNode(peerDescriptor, graphId, toProtoRpcClient(new NetworkRpcClient(mockClient)))
     }
     beforeEach(() => {
-        peerList = new PeerList(6)
+        peerList = new PeerList(ownId, 6)
 
         ids.forEach((peerId) => {
             const peerDescriptor: PeerDescriptor = {

@@ -14,7 +14,7 @@ describe('Full node network with WebSocket connections only', () => {
         websocket: { ip: 'localhost', port: 15555 }
     }
 
-    const randomGraphId = 'webrtc-network'
+    const randomGraphId = 'websocket-network'
 
     let epConnectionManager: ConnectionManager
     let epStreamrNode: StreamrNode

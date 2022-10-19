@@ -354,7 +354,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     public lockConnection(targetDescriptor: PeerDescriptor, serviceId: ServiceId): void {
-        if (this.stopped) {
+        if (this.stopped || PeerID.fromValue(targetDescriptor.peerId).equals(PeerID.fromValue(this.ownPeerDescriptor!.peerId))) {
             return
         }
         const hexKey = PeerID.fromValue(targetDescriptor.peerId).toKey()
@@ -378,7 +378,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     public unlockConnection(targetDescriptor: PeerDescriptor, serviceId: ServiceId): void {
-        if (this.stopped) {
+        if (this.stopped || PeerID.fromValue(targetDescriptor.peerId).equals(PeerID.fromValue(this.ownPeerDescriptor!.peerId))) {
             return
         }
         const hexKey = PeerID.fromValue(targetDescriptor.peerId).toKey()
@@ -408,7 +408,14 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
     // IConnectionLocker server implementation
     private async lockRequest(lockRequest: LockRequest, _context: ServerCallContext): Promise<LockResponse> {
-        const hexKey = PeerID.fromValue(lockRequest.peerDescriptor!.peerId).toKey()
+        const remotePeerId = PeerID.fromValue(lockRequest.peerDescriptor!.peerId)
+        if (remotePeerId.equals(PeerID.fromValue(this.ownPeerDescriptor!.peerId))) {
+            const response: LockResponse = {
+                accepted: false
+            }
+            return response
+        }
+        const hexKey = remotePeerId.toKey()
         this.clearDisconnectionTimeout(hexKey)
         if (!this.remoteLockedConnections.has(hexKey)) {
             const newSet = new Set<string>()

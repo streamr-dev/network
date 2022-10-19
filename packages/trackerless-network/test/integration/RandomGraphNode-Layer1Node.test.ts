@@ -49,14 +49,16 @@ describe('RandomGraphNode-DhtNode', () => {
             randomGraphId: streamId,
             layer1: dhtNodes[i],
             P2PTransport: cms[i],
-            connectionLocker: cms[i]
+            connectionLocker: cms[i],
+            ownPeerDescriptor: peerDescriptors[i]
         }))
 
         entryPointRandomGraphNode = new RandomGraphNode({
             randomGraphId: streamId,
             layer1: dhtEntryPoint,
             P2PTransport: entrypointCm,
-            connectionLocker: entrypointCm
+            connectionLocker: entrypointCm,
+            ownPeerDescriptor: entrypointDescriptor
         })
 
         await dhtEntryPoint.start()

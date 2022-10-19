@@ -5,14 +5,16 @@ import { RemoteRandomGraphNode } from './RemoteRandomGraphNode'
 export class PeerList {
     private readonly peers: Map<string, RemoteRandomGraphNode>
     private readonly limit: number
+    private ownPeerID: PeerID
 
-    constructor(limit: number) {
+    constructor(ownPeerId: PeerID, limit: number) {
         this.peers = new Map()
         this.limit = limit
+        this.ownPeerID = ownPeerId
     }
 
     add(remote: RemoteRandomGraphNode): void {
-        if (this.peers.size < this.limit) {
+        if (!this.ownPeerID.equals(PeerID.fromValue(remote.getPeerDescriptor().peerId)) && this.peers.size < this.limit) {
             const stringId = this.toStringId(remote.getPeerDescriptor())
             this.peers.set(stringId, remote)
         }

@@ -107,7 +107,7 @@ export class StreamrNode extends EventEmitter {
 
         const layer1 = new DhtNode({
             transportLayer: this.layer0!,
-            serviceId: streamPartID,
+            serviceId: 'layer1::' + streamPartID,
             peerDescriptor: this.layer0!.getPeerDescriptor(),
             routeMessageTimeout: 15000,
             entryPoints: [entryPoint],
@@ -117,15 +117,18 @@ export class StreamrNode extends EventEmitter {
             randomGraphId: streamPartID,
             P2PTransport: this.P2PTransport!,
             layer1: layer1,
-            connectionLocker: this.connectionLocker!
+            connectionLocker: this.connectionLocker!,
+            ownPeerDescriptor: this.layer0!.getPeerDescriptor()
         })
         this.streams.set(streamPartID, {
             layer1,
             layer2
         })
+        this.connectionLocker!.lockConnection(entryPoint, 'layer1::' + streamPartID)
         await layer1.start()
         layer2.start()
         await layer1.joinDht(entryPoint)
+        this.connectionLocker!.unlockConnection(entryPoint, 'layer1::' + streamPartID)
     }
 
     getStream(streamPartID: string): StreamObject | undefined {
