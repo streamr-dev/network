@@ -4,19 +4,9 @@ import { DestroySignal } from './DestroySignal'
 import { MetricsReport } from 'streamr-network'
 import { NetworkNodeFacade, getEthereumAddressFromNodeId } from './NetworkNodeFacade'
 import { Publisher } from './publish/Publisher'
-import { ConfigInjectionToken, MetricsPeriodConfig, STREAM_CLIENT_DEFAULTS, StrictStreamrClientConfig } from './Config'
+import { ConfigInjectionToken, MetricsConfig, StrictStreamrClientConfig } from './Config'
 import { pOnce } from './utils/promises'
-
-const getPeriodConfig = (rootConfig: StrictStreamrClientConfig): MetricsPeriodConfig[] => {
-    switch (rootConfig.metrics) {
-        case true:
-            return (STREAM_CLIENT_DEFAULTS.metrics as { periods: MetricsPeriodConfig[] }).periods
-        case false:
-            return []
-        default:
-            return rootConfig.metrics.periods
-    }
-}
+import { wait } from '@streamr/utils'
 
 @scoped(Lifecycle.ContainerScoped)
 export class MetricsPublisher {
@@ -25,7 +15,7 @@ export class MetricsPublisher {
     private node: NetworkNodeFacade
     private eventEmitter: StreamrClientEventEmitter
     private destroySignal: DestroySignal
-    private periodConfigs: MetricsPeriodConfig[]
+    private config: MetricsConfig
     private producers: { stop: () => void }[] = []
 
     constructor(
@@ -39,18 +29,18 @@ export class MetricsPublisher {
         this.node = node
         this.eventEmitter = eventEmitter
         this.destroySignal = destroySignal
-        this.periodConfigs = getPeriodConfig(rootConfig)
+        this.config = rootConfig.metrics
         const ensureStarted = pOnce(async () => {
             const node = await this.node.getNode()
             const metricsContext = node.getMetricsContext()
             const partitionKey = getEthereumAddressFromNodeId(node.getNodeId()).toLowerCase()
-            this.producers = this.periodConfigs.map((config) => {
+            this.producers = this.config.periods.map((config) => {
                 return metricsContext.createReportProducer(async (report: MetricsReport) => {
                     await this.publish(report, config.streamId, partitionKey)
                 }, config.duration)
             })
         })
-        if (this.periodConfigs.length > 0) {
+        if (this.config.periods.length > 0) {
             this.eventEmitter.on('publish', () => ensureStarted())
             this.eventEmitter.on('subscribe', () => ensureStarted())
             this.destroySignal.onDestroy.listen(() => this.destroy())
@@ -58,8 +48,10 @@ export class MetricsPublisher {
     }
 
     private async publish(report: MetricsReport, streamId: string, partitionKey: string): Promise<void> {
+        await wait(Math.random() * this.config.maxPublishDelay)
         try {
             await this.publisher.publish(streamId, report, {
+                timestamp: report.period.end,
                 partitionKey
             })
         } catch (e: any) {
