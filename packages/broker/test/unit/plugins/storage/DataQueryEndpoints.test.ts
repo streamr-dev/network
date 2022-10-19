@@ -1,4 +1,3 @@
-import { MetricsContext } from 'streamr-network'
 import express from 'express'
 import request from 'supertest'
 import { toReadableStream } from 'streamr-test-utils'
@@ -10,7 +9,7 @@ import {
 import { Storage } from '../../../../src/plugins/storage/Storage'
 import { PassThrough } from 'stream'
 import { MessageID, StreamMessage, toStreamID } from 'streamr-client-protocol'
-import { toEthereumAddress } from '@streamr/utils'
+import { MetricsContext, toEthereumAddress } from '@streamr/utils'
 
 const createEmptyStream = () => {
     const stream = new PassThrough()

@@ -4,6 +4,15 @@ import { EthereumAddress, toEthereumAddress } from './EthereumAddress'
 import { isENSName } from './isENSName'
 import { keyToArrayIndex } from './keyToArrayIndex'
 import { Logger } from './Logger'
+import {
+    CountMetric,
+    Metric,
+    LevelMetric,
+    MetricsContext,
+    MetricsDefinition,
+    MetricsReport,
+    RateMetric
+} from './Metric'
 import { Multimap } from './Multimap'
 import { randomString } from './randomString'
 import { scheduleAtFixedRate } from './scheduleAtFixedRate'
@@ -34,4 +43,14 @@ export {
     wait,
     waitForEvent,
     withTimeout,
+}
+
+export {
+    CountMetric,
+    LevelMetric,
+    Metric,
+    MetricsContext,
+    MetricsDefinition,
+    MetricsReport,
+    RateMetric
 }

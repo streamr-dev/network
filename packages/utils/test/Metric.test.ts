@@ -1,6 +1,6 @@
 import { waitForCondition } from 'streamr-test-utils'
 import { wait } from '@streamr/utils'
-import { AverageMetric, CountMetric, LevelMetric, MetricsContext, MetricsReport, RateMetric } from '../../src/helpers/Metric'
+import { AverageMetric, CountMetric, LevelMetric, MetricsContext, MetricsReport, RateMetric } from '../src/Metric'
 
 const REPORT_INTERVAL = 100
 const ONE_SECOND = 1000

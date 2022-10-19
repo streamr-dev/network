@@ -15,13 +15,9 @@ import {
     StreamPartStatus,
     DisconnectionCode,
     DisconnectionReason,
-    MetricsContext,
     COUNTER_UNSUBSCRIBE,
-    MetricsDefinition,
-    Metric,
-    RateMetric
 } from 'streamr-network'
-import { Logger } from '@streamr/utils'
+import { Logger, MetricsContext, MetricsDefinition, Metric, RateMetric } from '@streamr/utils'
 import { InstructionAndStatusAckSender } from './InstructionAndStatusAckSender'
 import { StatusValidator } from '../helpers/SchemaValidators'
 
