@@ -1,5 +1,3 @@
-import { Defer, Deferred } from './Defer'
-
 /**
  * Async Gate
  * Useful for blocking actions until some condition is met.
@@ -31,9 +29,11 @@ import { Defer, Deferred } from './Defer'
  * gate.close() // noop
  * ```
  */
+import { Defer } from '@streamr/utils'
+
 export class Gate {
     public isLocked = false
-    private pending?: Deferred<void>
+    private pending?: Defer<undefined>
 
     /**
      * Opens gate.
@@ -89,7 +89,7 @@ export class Gate {
 
         if (!this.pending) {
             // this.debug('close')
-            this.pending = Defer<undefined>()
+            this.pending = new Defer<undefined>()
         }
     }
 

@@ -6,8 +6,7 @@ import OrderedMsgChain from '../../src/subscribe/ordering/OrderedMsgChain'
 import GapFillFailedError from '../../src/subscribe/ordering/GapFillFailedError'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { createRandomAuthentication } from '../test-utils/utils'
-import { Defer } from '../../src/utils/Defer'
-import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
+import { Defer, EthereumAddress, toEthereumAddress } from '@streamr/utils'
 
 const authentication = createRandomAuthentication()
 
@@ -145,7 +144,7 @@ describe('OrderedMsgChain', () => {
     })
 
     it('handles unchained messages arriving that fill a gap', async () => {
-        const done = Defer()
+        const done = new Defer<undefined>()
         const unchainedMsg2 = await createMsg({ timestamp: 2, sequenceNumber: 0 })
         const received: StreamMessage[] = []
         util = new OrderedMsgChain(PUBLISHER_ID, 'msgChainId', (msg: StreamMessage) => {
@@ -164,7 +163,7 @@ describe('OrderedMsgChain', () => {
     })
 
     it('handles out-of-order unchained messages arriving that partially fill a gap', async () => {
-        const done = Defer()
+        const done = new Defer<undefined>()
         // ensures unchained messages don't break anything during gapfill
         // take a chain with multiple gaps, and fill them in reverse order using unchained messages.
         const unchainedMsg2 = await createMsg({ timestamp: 2, sequenceNumber: 0 })
@@ -663,7 +662,7 @@ describe('OrderedMsgChain', () => {
     })
 
     it('handles unordered messages in order with gapfill (large randomized test)', async () => {
-        const done = Defer()
+        const done = new Defer<undefined>()
         // this test breaks a large number of messages in random order, with duplicates, into chunks
         // each time queue is drained or gap is detected, it adds the next chunk of messages.
         const expected = [msg1]
