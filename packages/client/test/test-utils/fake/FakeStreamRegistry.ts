@@ -95,12 +95,12 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         if (registryItem === undefined) {
             return false
         }
-        const targets = []
+        const targets: Array<EthereumAddress | PublicPermissionTarget> = []
         if (isPublicPermissionQuery(query) || query.allowPublic) {
             targets.push(PUBLIC_PERMISSION_TARGET)
         }
         if ((query as any).user !== undefined) {
-            targets.push((query as any).user.toLowerCase())
+            targets.push(toEthereumAddress((query as any).user))
         }
         return targets.some((target) => registryItem.permissions.get(target).includes(query.permission))
     }

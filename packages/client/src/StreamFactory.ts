@@ -1,5 +1,6 @@
 import { delay, inject, Lifecycle, scoped } from 'tsyringe'
 import { ConfigInjectionToken, TimeoutsConfig } from './Config'
+import { StreamrClientEventEmitter } from './events'
 import { Publisher } from './publish/Publisher'
 import { StreamRegistry } from './registry/StreamRegistry'
 import { StreamRegistryCached } from './registry/StreamRegistryCached'
@@ -17,6 +18,7 @@ export class StreamFactory {
     private readonly streamRegistryCached: StreamRegistryCached
     private readonly streamRegistry: StreamRegistry
     private readonly streamStorageRegistry: StreamStorageRegistry
+    private readonly eventEmitter: StreamrClientEventEmitter
     private readonly timeoutsConfig: TimeoutsConfig
 
     constructor(
@@ -26,6 +28,7 @@ export class StreamFactory {
         @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
         @inject(delay(() => StreamRegistry)) streamRegistry: StreamRegistry,
         streamStorageRegistry: StreamStorageRegistry,
+        eventEmitter: StreamrClientEventEmitter,
         @inject(ConfigInjectionToken.Timeouts) timeoutsConfig: TimeoutsConfig
     ) {
         this.resends = resends
@@ -34,6 +37,7 @@ export class StreamFactory {
         this.streamRegistryCached = streamRegistryCached
         this.streamRegistry = streamRegistry
         this.streamStorageRegistry = streamStorageRegistry
+        this.eventEmitter = eventEmitter
         this.timeoutsConfig = timeoutsConfig
     }
 
@@ -46,6 +50,7 @@ export class StreamFactory {
             this.streamRegistryCached,
             this.streamRegistry,
             this.streamStorageRegistry,
+            this.eventEmitter,
             this.timeoutsConfig
         )
     }

@@ -21,6 +21,7 @@ import { MessageMetadata } from '../src/publish/Publisher'
 import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
 import { toEthereumAddress, withTimeout } from '@streamr/utils'
 import { StreamMetadata } from './StreamMessageValidator'
+import { StreamrClientEventEmitter } from './events'
 
 export interface StreamProperties {
     id: string
@@ -83,6 +84,7 @@ class StreamrStream implements StreamMetadata {
     private readonly _streamRegistry: StreamRegistry
     private readonly _streamRegistryCached: StreamRegistryCached
     private readonly _streamStorageRegistry: StreamStorageRegistry
+    private readonly _eventEmitter: StreamrClientEventEmitter
     private readonly _timeoutsConfig: TimeoutsConfig
 
     /** @internal */
@@ -94,6 +96,7 @@ class StreamrStream implements StreamMetadata {
         streamRegistryCached: StreamRegistryCached,
         streamRegistry: StreamRegistry,
         streamStorageRegistry: StreamStorageRegistry,
+        eventEmitter: StreamrClientEventEmitter,
         timeoutsConfig: TimeoutsConfig
     ) {
         Object.assign(this, props)
@@ -105,6 +108,7 @@ class StreamrStream implements StreamMetadata {
         this._streamRegistryCached = streamRegistryCached
         this._streamRegistry = streamRegistry
         this._streamStorageRegistry = streamStorageRegistry
+        this._eventEmitter = eventEmitter
         this._timeoutsConfig = timeoutsConfig
     }
 
@@ -219,7 +223,10 @@ class StreamrStream implements StreamMetadata {
      * @category Important
      */
     async publish<T>(content: T, metadata?: MessageMetadata): Promise<StreamMessage<T>> {
-        return this._publisher.publish(this.id, content, metadata)
+        const result = this._publisher.publish(this.id, content, metadata)
+        this._eventEmitter.emit('publish', undefined)
+        return result
+
     }
 
     /** @internal */

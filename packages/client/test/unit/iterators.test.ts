@@ -1,7 +1,6 @@
-import { wait } from '@streamr/utils'
+import { Defer, wait } from '@streamr/utils'
 
 import { iteratorFinally, CancelableGenerator, nextValue } from '../../src/utils/iterators'
-import { Defer } from '../../src/utils/Defer'
 
 import { expected, MAX_ITEMS, IteratorTest } from './IteratorTest'
 
@@ -60,7 +59,7 @@ describe('Iterator Utils', () => {
         })
 
         it('runs fn when iterator.return() is called asynchronously', async () => {
-            const done = Defer()
+            const done = new Defer()
             try {
                 const received: number[] = []
                 const itr = iteratorFinally(generate(), onFinally)
@@ -432,7 +431,7 @@ describe('Iterator Utils', () => {
         })
 
         it('cancels with error when iterator.cancel(err) is called asynchronously with error', async () => {
-            const done = Defer()
+            const done = new Defer()
             try {
                 const err = new Error('expected')
                 const received: number[] = []
@@ -464,7 +463,7 @@ describe('Iterator Utils', () => {
         })
 
         it('cancels when iterator.cancel() is called asynchronously', async () => {
-            const done = Defer()
+            const done = new Defer()
             try {
                 const received: number[] = []
                 const itr = CancelableGenerator(generate(), onFinally, {
@@ -535,7 +534,7 @@ describe('Iterator Utils', () => {
         })
 
         it('interrupts outstanding .next call when called asynchronously', async () => {
-            const done = Defer()
+            const done = new Defer()
             try {
                 const received: any[] = []
                 const triggeredForever = jest.fn()
@@ -599,7 +598,7 @@ describe('Iterator Utils', () => {
         })
 
         it('interrupts outstanding .next call with error', async () => {
-            const done = Defer()
+            const done = new Defer()
             try {
                 const received: any[] = []
                 const itr = CancelableGenerator((async function* Gen() {
@@ -635,7 +634,7 @@ describe('Iterator Utils', () => {
         })
 
         it('can handle queued next calls', async () => {
-            const done = Defer()
+            const done = new Defer()
             try {
                 const triggeredForever = jest.fn()
                 const itr = CancelableGenerator((async function* Gen() {
@@ -691,7 +690,7 @@ describe('Iterator Utils', () => {
         }, 10000)
 
         it('can handle queued next calls resolving out of order', async () => {
-            const done = Defer()
+            const done = new Defer()
             try {
                 const triggeredForever = jest.fn()
                 const itr = CancelableGenerator((async function* Gen() {
@@ -727,11 +726,11 @@ describe('Iterator Utils', () => {
         })
 
         it('ignores err if cancelled', async () => {
-            const done = Defer()
+            const done = new Defer()
             try {
                 const received: number[] = []
                 const err = new Error('expected')
-                const d = Defer()
+                const d = new Defer()
                 const itr = CancelableGenerator((async function* Gen() {
                     yield* expected
                     await wait(WAIT * 2)
@@ -830,7 +829,7 @@ describe('Iterator Utils', () => {
             })
 
             it('can cancel nested cancellable iterator in finally, asynchronously', async () => {
-                const done = Defer()
+                const done = new Defer()
                 try {
                     const waitInner = jest.fn()
                     const itrInner = CancelableGenerator((async function* Gen() {

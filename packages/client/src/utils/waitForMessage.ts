@@ -1,6 +1,6 @@
+import { Defer } from '@streamr/utils'
 import { StreamMessage } from 'streamr-client-protocol'
 
-import { Defer, Deferred } from '../utils/Defer'
 import { DestroySignal } from '../DestroySignal'
 
 import { Subscription } from '../subscribe/Subscription'
@@ -11,8 +11,8 @@ const waitForSubMessage = (
     sub: Subscription<unknown>,
     matchFn: MessageMatch,
     timeoutMs?: number
-): Deferred<StreamMessage> => {
-    const task = Defer<StreamMessage>()
+): Defer<StreamMessage> => {
+    const task = new Defer<StreamMessage>()
     let timeoutRef: ReturnType<typeof setTimeout>
     if (timeoutMs !== undefined) {
         timeoutRef = setTimeout(() => {
@@ -45,7 +45,7 @@ export const publishAndWaitForResponseMessage = async (
     destroySignal: DestroySignal,
     timeoutMs?: number
 ): Promise<StreamMessage<unknown> | undefined> => {
-    let responseTask: Deferred<StreamMessage<unknown>> | undefined
+    let responseTask: Defer<StreamMessage<unknown> | undefined> | undefined
     const onDestroy = () => {
         if (responseTask) {
             responseTask.resolve(undefined)

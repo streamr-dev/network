@@ -45,8 +45,8 @@ export class StreamRegistryCached {
         return this.streamRegistry.isStreamPublisher(streamId, ethAddress)
     }, {
         ...this.cacheOptions,
-        cacheKey([streamId, ethAddress]: any): string {
-            return [streamId, ethAddress.toLowerCase()].join(SEPARATOR)
+        cacheKey([streamId, ethAddress]): string {
+            return [streamId, ethAddress].join(SEPARATOR)
         }
     })
 
@@ -58,8 +58,8 @@ export class StreamRegistryCached {
         return this.streamRegistry.isStreamSubscriber(streamId, ethAddress)
     }, {
         ...this.cacheOptions,
-        cacheKey([streamId, ethAddress]: any): string {
-            return [streamId, ethAddress.toLowerCase()].join(SEPARATOR)
+        cacheKey([streamId, ethAddress]): string {
+            return [streamId, ethAddress].join(SEPARATOR)
         }
     })
 
