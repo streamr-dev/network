@@ -115,7 +115,7 @@ export class SubscriberKeyExchange {
             try {
                 const authenticatedUser = await this.authentication.getAddress()
                 const { requestId, recipient, encryptedGroupKeys } = GroupKeyResponse.fromStreamMessage(msg) as GroupKeyResponse
-                if ((recipient.toLowerCase() === authenticatedUser) && (this.pendingRequests.has(requestId))) {
+                if ((recipient === authenticatedUser) && (this.pendingRequests.has(requestId))) {
                     this.logger.debug('handling group key response %s', requestId)
                     this.pendingRequests.delete(requestId)
                     await this.validator.validate(msg)

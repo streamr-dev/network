@@ -4,10 +4,7 @@
 import { inject, Lifecycle, scoped, delay } from 'tsyringe'
 import { StreamMessage, StreamID } from 'streamr-client-protocol'
 import { pOrderedResolve } from './utils/promises'
-import { CacheFn } from './utils/caches'
-import { formLookupKey } from './utils/utils'
 import { StreamRegistryCached } from './registry/StreamRegistryCached'
-import { ConfigInjectionToken, CacheConfig } from './Config'
 import StreamMessageValidator from './StreamMessageValidator'
 import { verify } from './utils/signingUtils'
 import { EthereumAddress } from '@streamr/utils'
@@ -23,8 +20,7 @@ export class Validator extends StreamMessageValidator {
     private doValidation: StreamMessageValidator['validate']
 
     constructor(
-        @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
-        @inject(ConfigInjectionToken.Cache) private cacheOptions: CacheConfig
+        @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached
     ) {
         super({
             getStream: (streamId: StreamID) => {
@@ -37,21 +33,11 @@ export class Validator extends StreamMessageValidator {
                 return streamRegistryCached.isStreamSubscriber(streamId, ethAddress)
             },
             verify: (address: EthereumAddress, payload: string, signature: string) => {
-                return this.cachedVerify(address, payload, signature)
+                return verify(address, payload, signature)
             }
         })
         this.doValidation = super.validate.bind(this)
     }
-
-    private cachedVerify = CacheFn( (address: EthereumAddress, payload: string, signature: string) => {
-        if (this.isStopped) { return true }
-        return verify(address, payload, signature)
-    }, {
-        // forcibly use small cache otherwise keeps n serialized messages in memory
-        ...this.cacheOptions,
-        maxSize: 100,
-        cacheKey: (args) => formLookupKey(...args),
-    })
 
     orderedValidate = pOrderedResolve(async (msg: StreamMessage) => {
         if (this.isStopped) { return }
