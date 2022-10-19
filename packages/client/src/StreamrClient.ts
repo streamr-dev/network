@@ -121,18 +121,10 @@ export class StreamrClient {
     /**
      * @category Important
      */
-    subscribe<T>(
-        options: StreamDefinition & { resend: ResendOptions },
-        onMessage?: SubscriptionOnMessage<T>
-    ): Promise<ResendSubscription<T>>
-    subscribe<T>(
-        options: StreamDefinition,
-        onMessage?: SubscriptionOnMessage<T>
-    ): Promise<Subscription<T>>
     async subscribe<T>(
         options: StreamDefinition & { resend?: ResendOptions },
         onMessage?: SubscriptionOnMessage<T>
-    ): Promise<Subscription<T> | ResendSubscription<T>> {
+    ): Promise<Subscription<T>> {
         let result
         if (options.resend !== undefined) {
             result = await this.resendSubscribe(options, options.resend, onMessage)

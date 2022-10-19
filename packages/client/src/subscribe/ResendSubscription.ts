@@ -5,17 +5,11 @@ import { StreamMessage, StreamPartIDUtils } from 'streamr-client-protocol'
 import { ConfigInjectionToken } from '../Config'
 import { OrderMessages } from './OrderMessages'
 import { ResendOptions, Resends } from './Resends'
-import EventEmitter from 'eventemitter3'
 import { DestroySignal } from '../DestroySignal'
 import { LoggerFactory } from '../utils/LoggerFactory'
 
-export interface ResendSubscriptionEvents {
-    resendComplete: () => void
-}
-
 export class ResendSubscription<T> extends Subscription<T> {
     private orderMessages: OrderMessages<T>
-    private eventEmitter: EventEmitter<ResendSubscriptionEvents>
 
     /** @internal */
     constructor(
@@ -25,7 +19,6 @@ export class ResendSubscription<T> extends Subscription<T> {
         container: DependencyContainer
     ) {
         super(subSession, container.resolve(LoggerFactory))
-        this.eventEmitter = new EventEmitter<ResendSubscriptionEvents>()
         this.resendThenRealtime = this.resendThenRealtime.bind(this)
         this.orderMessages = new OrderMessages<T>(
             container.resolve(ConfigInjectionToken.Subscribe),
@@ -57,14 +50,6 @@ export class ResendSubscription<T> extends Subscription<T> {
         })
 
         return resentMsgs
-    }
-
-    once<E extends keyof ResendSubscriptionEvents>(eventName: E, listener: ResendSubscriptionEvents[E]): void {
-        this.eventEmitter.once(eventName, listener as any)
-    }
-
-    off<E extends keyof ResendSubscriptionEvents>(eventName: E, listener: ResendSubscriptionEvents[E]): void {
-        this.eventEmitter.off(eventName, listener as any)
     }
 
     /** @internal */
