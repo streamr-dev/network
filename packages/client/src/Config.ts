@@ -13,6 +13,7 @@ import { SmartContractRecord } from 'streamr-client-protocol'
 
 import type { NetworkNodeOptions } from 'streamr-network'
 import type { ConnectionInfo } from '@ethersproject/web'
+import { generateClientId } from './utils/utils'
 
 export interface CacheConfig {
     maxSize: number
@@ -68,16 +69,18 @@ export interface MetricsPeriodConfig {
     duration: number
 }
 
-export type MetricsConfig = {
+export interface MetricsConfig {
     periods: MetricsPeriodConfig[]
-} | boolean
+    maxPublishDelay: number
+}
 
 /**
  * @category Important
  */
 export type StrictStreamrClientConfig = {
-    /** Custom human-readable debug id for client. Used in logging. Unique id will be generated regardless. */
-    id?: string
+    /** Custom human-readable debug id for client. Used in logging. */
+    id: string
+    logLevel: 'silent' | 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace'
     /**
     * Authentication: identity used by this StreamrClient instance.
     * Can contain member privateKey or (window.)ethereum
@@ -96,9 +99,10 @@ export type StrictStreamrClientConfig = {
     & SubscribeConfig
 )
 
-export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'network' | 'decryption' | 'debug'> & {
+export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'network' | 'decryption' | 'metrics'> & {
     network: Partial<StrictStreamrClientConfig['network']>
     decryption: Partial<StrictStreamrClientConfig['decryption']>
+    metrics: Partial<StrictStreamrClientConfig['metrics']> | boolean
 }>
 
 export const STREAMR_STORAGE_NODE_GERMANY = '0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916'
@@ -106,7 +110,8 @@ export const STREAMR_STORAGE_NODE_GERMANY = '0x31546eEA76F2B2b3C5cC06B1c93601dc3
 /**
  * @category Important
  */
-export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
+export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id'> = {
+    logLevel: 'info',
     auth: {},
 
     // Streamr Core options
@@ -180,10 +185,6 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     metrics: {
         periods: [
             {
-                duration: 5000,
-                streamId: 'streamr.eth/metrics/nodes/firehose/sec'
-            },
-            {
                 duration: 60000,
                 streamId: 'streamr.eth/metrics/nodes/firehose/min'
             },
@@ -195,7 +196,8 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
                 duration: 86400000,
                 streamId: 'streamr.eth/metrics/nodes/firehose/day'
             }
-        ]
+        ],
+        maxPublishDelay: 30000
     }
 }
 
@@ -205,6 +207,7 @@ export const createStrictConfig = (inputOptions: StreamrClientConfig = {}): Stri
     const defaults = cloneDeep(STREAM_CLIENT_DEFAULTS)
 
     const options: StrictStreamrClientConfig = {
+        id: generateClientId(),
         ...defaults,
         ...opts,
         network: {
@@ -212,6 +215,17 @@ export const createStrictConfig = (inputOptions: StreamrClientConfig = {}): Stri
             trackers: opts.network?.trackers ?? defaults.network.trackers,
         },
         decryption: merge(defaults.decryption || {}, opts.decryption),
+        metrics: (opts.metrics === true)
+            ? defaults.metrics
+            : (opts.metrics === false) 
+                ? {
+                    ...defaults.metrics,
+                    periods: []
+                } 
+                : {
+                    ...defaults.metrics,
+                    ...opts.metrics
+                },
         cache: {
             ...defaults.cache,
             ...opts.cache,

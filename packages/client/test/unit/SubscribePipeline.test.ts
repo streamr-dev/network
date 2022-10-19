@@ -5,7 +5,7 @@ import { Wallet } from '@ethersproject/wallet'
 import { MessageStream } from './../../src/subscribe/MessageStream'
 import { fastWallet, randomEthereumAddress } from "streamr-test-utils"
 import { createSubscribePipeline } from "../../src/subscribe/SubscribePipeline"
-import { mockContext } from '../test-utils/utils'
+import { mockLoggerFactory } from '../test-utils/utils'
 import { collect } from '../../src/utils/GeneratorUtils'
 import { DecryptError, EncryptionUtil } from '../../src/encryption/EncryptionUtil'
 import { Stream } from '../../src'
@@ -26,7 +26,7 @@ describe('SubscribePipeline', () => {
     let streamPartId: StreamPartID
     let publisher: Wallet
 
-    const createMessage = async (opts: { 
+    const createMessage = async (opts: {
         serializedContent?: string
         encryptionType?: EncryptionType
         groupKeyId?: GroupKeyId
@@ -52,18 +52,25 @@ describe('SubscribePipeline', () => {
     beforeEach(async () => {
         streamPartId = StreamPartIDUtils.parse(`${randomEthereumAddress()}/path#0`)
         publisher = fastWallet()
-        const stream = new Stream({
-            id: toStreamID(streamPartId),
-            partitions: 1
-        }, {
-            resolve: () => {}
-        } as any)
-        const context = mockContext()
-        input = new MessageStream(context)
+        const stream = new Stream(
+            {
+                id: toStreamID(streamPartId),
+                partitions: 1,
+            },
+            undefined as any,
+            undefined as any,
+            undefined as any,
+            undefined as any,
+            undefined as any,
+            undefined as any,
+            undefined as any,
+            undefined as any
+        )
+        input = new MessageStream()
         pipeline = createSubscribePipeline({
             messageStream: input,
             streamPartId,
-            context,
+            loggerFactory: mockLoggerFactory(),
             resends: undefined as any,
             groupKeyStore: {
                 get: async () => undefined
@@ -77,7 +84,7 @@ describe('SubscribePipeline', () => {
                 clearStream: () => {}
             } as any,
             streamrClientEventEmitter: new StreamrClientEventEmitter(),
-            destroySignal: new DestroySignal(context),
+            destroySignal: new DestroySignal(),
             rootConfig: {
                 decryption: {
                     keyRequestTimeout: 50

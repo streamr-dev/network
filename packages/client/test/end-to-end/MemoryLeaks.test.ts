@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 import { fetchPrivateKeyWithGas } from 'streamr-test-utils'
-import { wait } from '@streamr/utils'
+import { Defer, wait } from '@streamr/utils'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { LeaksDetector } from '../test-utils/LeaksDetector'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -8,12 +8,10 @@ import { initContainer } from '../../src/Container'
 import { container as rootContainer, DependencyContainer } from 'tsyringe'
 import { writeHeapSnapshot } from 'v8'
 import { Subscription } from '../../src/subscribe/Subscription'
-import { counterId } from '../../src/utils/utils'
-import { Defer } from '../../src/utils/Defer'
+import { counterId, instanceId } from '../../src/utils/utils'
 import { ConfigTest } from '../../src/ConfigTest'
 import { createStrictConfig, StrictStreamrClientConfig } from '../../src/Config'
 import { ethers } from 'ethers'
-import { Context } from '../../src/utils/Context'
 import { NetworkNodeFacade } from '../../src/NetworkNodeFacade'
 import { StorageNodeRegistry } from '../../src/registry/StorageNodeRegistry'
 import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
@@ -22,10 +20,8 @@ import { Publisher } from '../../src/publish/Publisher'
 import { Subscriber } from '../../src/subscribe/Subscriber'
 import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
 import { DestroySignal } from '../../src/DestroySignal'
-import { Debug } from '../test-utils/utils'
 
 const Dependencies = {
-    Context,
     NetworkNodeFacade,
     StorageNodeRegistry,
     StreamRegistryCached,
@@ -36,16 +32,12 @@ const Dependencies = {
     DestroySignal
 }
 
-const debug = Debug('test')
-
 /**
  * Write a heap snapshot file if WRITE_SNAPSHOTS env var is set.
  */
 function snapshot(): string {
     if (!process.env.WRITE_SNAPSHOTS) { return '' }
-    debug('heap snapshot >>')
     const value = writeHeapSnapshot()
-    debug('heap snapshot <<', value)
     return value
 }
 
@@ -78,7 +70,6 @@ describe('MemoryLeaks', () => {
             createContainer = async (opts: any = {}): Promise<{
                 config: StrictStreamrClientConfig
                 childContainer: DependencyContainer
-                rootContext: any
             }> => {
                 const config = createStrictConfig({
                     ...ConfigTest,
@@ -88,31 +79,13 @@ describe('MemoryLeaks', () => {
                     ...opts,
                 })
                 const childContainer = rootContainer.createChildContainer()
-                const rootContext = initContainer(config, childContainer)
-                return { config, childContainer, rootContext }
+                initContainer(config, childContainer)
+                return { config, childContainer }
             }
         })
 
-        /* Uncomment to debug get all failure
-        for (const [key, value] of Object.entries(Dependencies)) {
-            test(`container get ${key}`, async () => {
-                const { config, childContainer, rootContext } = createContainer()
-                const destroySignal = childContainer.resolve<any>(Dependencies.DestroySignal)
-                const result = childContainer.resolve<any>(value as any)
-                expect(result).toBeTruthy()
-                await wait(100)
-                leaksDetector.addAll(rootContext.id, { config, childContainer, result })
-                if (result && typeof result.stop === 'function') {
-                    await result.stop()
-                }
-                await destroySignal.trigger()
-                childContainer.clearInstances()
-            })
-        }
-        */
-
         test('container get all', async () => {
-            const { config, childContainer, rootContext } = await createContainer()
+            const { config, childContainer } = await createContainer()
             const toStop = []
             const destroySignal = childContainer.resolve(Dependencies.DestroySignal)
             for (const [key, value] of Object.entries(Dependencies)) {
@@ -125,7 +98,7 @@ describe('MemoryLeaks', () => {
                 leaksDetector.addAll(key, result)
             }
             await wait(100)
-            leaksDetector.addAll(rootContext.id, { config, childContainer })
+            leaksDetector.addAll('id', { config, childContainer })
             await destroySignal.trigger()
             for (const result of toStop) {
                 await result.stop()
@@ -152,13 +125,13 @@ describe('MemoryLeaks', () => {
         describe('with client', () => {
             test('creating client', async () => {
                 const client = await createClient()
-                leaksDetector.addAll(client.id, client)
+                leaksDetector.addAll(instanceId(client), client)
             })
 
             test('connect + destroy', async () => {
                 const client = await createClient()
                 await client.connect()
-                leaksDetector.addAll(client.id, client)
+                leaksDetector.addAll(instanceId(client), client)
                 await client.destroy()
             })
         })
@@ -168,7 +141,7 @@ describe('MemoryLeaks', () => {
 
             beforeEach(async () => {
                 client = await createClient()
-                leaksDetector.addAll(client.id, client)
+                leaksDetector.addAll(instanceId(client), client)
                 await client.connect()
             })
 
@@ -205,7 +178,7 @@ describe('MemoryLeaks', () => {
                         id: `/${counterId('stream')}-${Date.now()}`
                     })
                     const sub = await client.subscribe(stream)
-                    leaksDetector.addAll(sub.id, sub)
+                    leaksDetector.addAll(instanceId(sub), sub)
                     const publishTestMessages = getPublishTestStreamMessages(client, stream, {
                         retainMessages: false,
                     })
@@ -218,7 +191,7 @@ describe('MemoryLeaks', () => {
                         id: `/${counterId('stream')}-${Date.now()}`
                     })
                     const sub = await client.subscribe(stream)
-                    leaksDetector.addAll(sub.id, sub)
+                    leaksDetector.addAll(instanceId(sub), sub)
                     const publishTestMessages = getPublishTestStreamMessages(client, stream, {
                         retainMessages: false,
                     })
@@ -252,7 +225,7 @@ describe('MemoryLeaks', () => {
                         }
                     })
 
-                    leaksDetector.add(sub.id, sub)
+                    leaksDetector.add(instanceId(sub), sub)
 
                     await publishTestMessages(MAX_MESSAGES)
                     await wait(1000)
@@ -266,7 +239,7 @@ describe('MemoryLeaks', () => {
                     const publishTestMessages = getPublishTestStreamMessages(client, stream, {
                         retainMessages: false,
                     })
-                    const sub1Done = Defer()
+                    const sub1Done = new Defer<undefined>()
                     const received1: any[] = []
                     const SOME_MESSAGES = Math.floor(MAX_MESSAGES / 2)
                     let sub1: Subscription<any> | undefined = await client.subscribe(stream, async (msg) => {
@@ -278,10 +251,10 @@ describe('MemoryLeaks', () => {
                             sub1Done.resolve(undefined)
                         }
                     })
-                    const sub1LeakId = 'sub1 ' + sub1.id
+                    const sub1LeakId = 'sub1 ' + instanceId(sub1)
                     leaksDetector.add(sub1LeakId, sub1)
 
-                    const sub2Done = Defer()
+                    const sub2Done = new Defer<undefined>()
                     const received2: any[] = []
                     const sub2 = await client.subscribe(stream, (msg) => {
                         received2.push(msg)
@@ -290,7 +263,7 @@ describe('MemoryLeaks', () => {
                             sub2Done.resolve(undefined)
                         }
                     })
-                    leaksDetector.add('sub2 ' + sub2.id, sub2)
+                    leaksDetector.add('sub2 ' + instanceId(sub2), sub2)
 
                     await publishTestMessages(MAX_MESSAGES)
                     await sub1Done

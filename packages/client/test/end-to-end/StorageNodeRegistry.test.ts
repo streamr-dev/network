@@ -46,7 +46,7 @@ describe('StorageNodeRegistry', () => {
         await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
         let storageNodes = await stream.getStorageNodes()
         expect(storageNodes.length).toBe(1)
-        expect(storageNodes[0]).toStrictEqual(DOCKER_DEV_STORAGE_NODE.toLowerCase())
+        expect(storageNodes[0]).toStrictEqual(DOCKER_DEV_STORAGE_NODE)
         let stored = await creatorClient.getStoredStreams(DOCKER_DEV_STORAGE_NODE)
         expect(stored.streams.some((s) => s.id === stream.id)).toBe(true)
 

@@ -2,11 +2,9 @@ import { scoped, Lifecycle, inject } from 'tsyringe'
 import { GraphQLClient } from './GraphQLClient'
 import { ConfigInjectionToken, TimeoutsConfig } from '../Config'
 import { Gate } from './Gate'
-import { Context } from './Context'
-import { Debugger } from 'debug'
-import { instanceId } from './utils'
-import { TimeoutError, withTimeout } from '@streamr/utils'
+import { Logger, TimeoutError, withTimeout } from '@streamr/utils'
 import { wait } from '@streamr/utils'
+import { LoggerFactory } from './LoggerFactory'
 
 /*
  * SynchronizedGraphQLClient is used to query The Graph index. It is very similar to the
@@ -37,25 +35,25 @@ class BlockNumberGate extends Gate {
 class IndexingState {
     private blockNumber = 0
     private gates: Set<BlockNumberGate> = new Set()
-    private getCurrentBlockNumber: () => Promise<number>
-    private pollTimeout: number
-    private pollRetryInterval: number
-    private debug: Debugger
+    private readonly getCurrentBlockNumber: () => Promise<number>
+    private readonly pollTimeout: number
+    private readonly pollRetryInterval: number
+    private readonly logger: Logger
 
     constructor(
         getCurrentBlockNumber: () => Promise<number>,
         pollTimeout: number,
         pollRetryInterval: number,
-        debug: Debugger
+        loggerFactory: LoggerFactory
     ) {
         this.getCurrentBlockNumber = getCurrentBlockNumber
         this.pollTimeout = pollTimeout
         this.pollRetryInterval = pollRetryInterval
-        this.debug = debug
+        this.logger = loggerFactory.createLogger(module)
     }
 
     async waitUntilIndexed(blockNumber: number): Promise<void> {
-        this.debug(`wait until The Graph is synchronized to block ${blockNumber}`)
+        this.logger.debug('waiting until The Graph is synchronized to block %d', blockNumber)
         const gate = this.getOrCreateGate(blockNumber)
         try {
             await withTimeout(
@@ -85,12 +83,12 @@ class IndexingState {
     }
 
     private async startPolling(): Promise<void> {
-        this.debug('start polling')
+        this.logger.trace('start polling')
         while (this.gates.size > 0) {
             const newBlockNumber = await this.getCurrentBlockNumber()
             if (newBlockNumber !== this.blockNumber) {
                 this.blockNumber = newBlockNumber
-                this.debug(`poll result: blockNumber=${this.blockNumber}`)
+                this.logger.trace('poll result is blockNumber=%d', this.blockNumber)
                 this.gates.forEach((gate) => {
                     if (gate.blockNumber <= this.blockNumber) {
                         gate.open()
@@ -102,7 +100,7 @@ class IndexingState {
                 await wait(this.pollRetryInterval)
             }
         }
-        this.debug('stop polling')
+        this.logger.trace('stop polling')
     }
 }
 
@@ -114,7 +112,7 @@ export class SynchronizedGraphQLClient {
     private indexingState: IndexingState
 
     constructor(
-        context: Context,
+        @inject(LoggerFactory) loggerFactory: LoggerFactory,
         @inject(GraphQLClient) delegate: GraphQLClient,
         @inject(ConfigInjectionToken.Timeouts) timeoutsConfig: TimeoutsConfig
     ) {
@@ -123,7 +121,7 @@ export class SynchronizedGraphQLClient {
             () => this.delegate.getIndexBlockNumber(),
             timeoutsConfig.theGraph.timeout,
             timeoutsConfig.theGraph.retryInterval,
-            context.debug.extend(instanceId(this))
+            loggerFactory
         )
     }
 

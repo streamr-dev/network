@@ -7,19 +7,22 @@ import { SynchronizedGraphQLClient } from './utils/SynchronizedGraphQLClient'
 import { EthereumConfig } from './Ethereum'
 import { ConfigInjectionToken } from './Config'
 import { EthereumAddress } from '@streamr/utils'
+import { LoggerFactory } from './utils/LoggerFactory'
 
 @scoped(Lifecycle.ContainerScoped)
 export class ContractFactory {
-
     private readonly graphQLClient: SynchronizedGraphQLClient
     private readonly ethereumConfig: EthereumConfig
+    private readonly loggerFactory: LoggerFactory
 
     constructor(
         graphQLClient: SynchronizedGraphQLClient,
-        @inject(ConfigInjectionToken.Ethereum) ethereumConfig: EthereumConfig
+        @inject(ConfigInjectionToken.Ethereum) ethereumConfig: EthereumConfig,
+        @inject(LoggerFactory) loggerFactory: LoggerFactory
     ) {
         this.graphQLClient = graphQLClient
         this.ethereumConfig = ethereumConfig
+        this.loggerFactory = loggerFactory
     }
 
     createReadContract<T extends Contract>(
@@ -31,6 +34,7 @@ export class ContractFactory {
         return createDecoratedContract<T>(
             new Contract(address, contractInterface, provider),
             name,
+            this.loggerFactory,
             this.ethereumConfig.maxConcurrentContractCalls
         )
     }
@@ -44,6 +48,7 @@ export class ContractFactory {
         const contract = createDecoratedContract<T>(
             new Contract(address, contractInterface, signer),
             name,
+            this.loggerFactory,
             // The current maxConcurrentCalls value is just a placeholder as we don't support concurrent writes (as we don't use nonces).
             // When we add the support, we should use this.ethereumConfig.maxConcurrentContractCalls here.
             // Also note that if we'd use a limit of 1, it wouldn't make the concurrent transactions to a sequence of transactions,

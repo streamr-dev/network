@@ -15,7 +15,7 @@ const MAX_MESSAGES = 10
 function monkeypatchMessageHandler<T = any>(sub: Subscription<T>, fn: ((msg: StreamMessage<T>, count: number) => undefined | null)) {
     let count = 0
     // @ts-expect-error private
-    sub.context.pipeline.pipeBefore(async function* DropMessages(src: AsyncGenerator<any>) {
+    sub.subSession.pipeline.pipeBefore(async function* DropMessages(src: AsyncGenerator<any>) {
         for await (const msg of src) {
             const result = fn(msg, count)
             count += 1

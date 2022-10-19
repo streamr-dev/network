@@ -5,8 +5,6 @@
  */
 import { PipelineTransform } from '../utils/Pipeline'
 import { PushPipeline } from '../utils/PushPipeline'
-import { instanceId } from '../utils/utils'
-import { Context } from '../utils/Context'
 import { StreamMessage } from 'streamr-client-protocol'
 import * as G from '../utils/GeneratorUtils'
 
@@ -17,13 +15,6 @@ export class MessageStream<
     InType = StreamMessage<T>,
     OutType extends StreamMessage<T> | unknown = InType
 > extends PushPipeline<InType, OutType> {
-    /** @internal */
-    constructor(context: Context) {
-        super(undefined)
-        this.id = instanceId(this)
-        this.debug = context.debug.extend(this.id)
-    }
-
     /**
      * Attach a legacy onMessage handler and consume if necessary.
      * onMessage is passed parsed content as first arument, and streamMessage as second argument.

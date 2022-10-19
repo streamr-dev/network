@@ -1,9 +1,10 @@
 import 'reflect-metadata'
 import { HttpUtil } from '../../src/HttpUtil'
+import { mockLoggerFactory } from '../test-utils/utils'
 
 describe('HttpUtil', () => {
     it('query parameters with null/undefined', () => {
-        const httpUtil = new HttpUtil()
+        const httpUtil = new HttpUtil(mockLoggerFactory())
         const actual = httpUtil.createQueryString({
             a: 'foo',
             b: undefined,

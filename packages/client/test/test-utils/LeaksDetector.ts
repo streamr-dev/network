@@ -1,14 +1,13 @@
 import LeakDetector from 'jest-leak-detector' // requires weak-napi
-import { wait } from '@streamr/utils'
+import { Logger, wait } from '@streamr/utils'
 import { CounterId, instanceId } from '../../src/utils/utils'
-import { format } from '../../src/utils/log'
-import { Debug } from './utils'
+
+const logger = new Logger(module)
 
 export class LeaksDetector {
     private leakDetectors: Map<string, LeakDetector> = new Map()
     private ignoredValues = new WeakSet()
     private id = instanceId(this)
-    private debug = Debug(this.id)
     private seen = new WeakSet()
     private didGC = false
 
@@ -143,7 +142,7 @@ export class LeaksDetector {
     }
 
     async getLeaks(): Promise<Record<string, string>> {
-        this.debug('checking for leaks with %d items >>', this.leakDetectors.size)
+        logger.debug('checking for leaks with %d items >>', this.leakDetectors.size)
         await wait(10) // wait a moment for gc to run?
         const outstanding = new Set<string>()
         this.resetGC()
@@ -160,8 +159,8 @@ export class LeaksDetector {
             [id]: [...(this.idToPaths.get(id) || [])],
         }), {})
 
-        this.debug('checking for leaks with %d items <<', this.leakDetectors.size)
-        this.debug('%d leaks.', results.length)
+        logger.debug('checking for leaks with %d items <<', this.leakDetectors.size)
+        logger.debug('%d leaks.', results.length)
         return leaks
     }
 
@@ -169,7 +168,7 @@ export class LeaksDetector {
         const leaks = await this.getLeaks()
         const numLeaks = Object.keys(leaks).length
         if (numLeaks) {
-            const msg = format('Leaking %d of %d items: %o', numLeaks, this.leakDetectors.size, leaks)
+            const msg = `Leaking ${numLeaks} of ${this.leakDetectors.size} items: ${JSON.stringify(leaks)}`
             this.clear()
             throw new Error(msg)
         }
@@ -179,7 +178,7 @@ export class LeaksDetector {
         const leaks = await this.getLeaks()
         const numLeaks = Object.keys(leaks).length
         if (Object.keys(leaks).includes(id)) {
-            const msg = format('Leaking %d of %d items, including id %s: %o', numLeaks, this.leakDetectors.size, id, leaks)
+            const msg = `Leaking ${numLeaks} of ${this.leakDetectors.size} items, including id ${id}: ${leaks}`
             this.clear()
             throw new Error(msg)
         }

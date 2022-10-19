@@ -1,21 +1,14 @@
 import crypto from 'crypto'
 import { DependencyContainer } from 'tsyringe'
 import { fastPrivateKey, fetchPrivateKeyWithGas } from 'streamr-test-utils'
-import { EthereumAddress, wait } from '@streamr/utils'
+import { EthereumAddress, Logger, wait } from '@streamr/utils'
 import { Wallet } from 'ethers'
-import {
-    StreamMessage,
-    StreamPartID,
-    StreamPartIDUtils,
-    MAX_PARTITION_COUNT
-} from 'streamr-client-protocol'
+import { StreamMessage, StreamPartID, StreamPartIDUtils, MAX_PARTITION_COUNT } from 'streamr-client-protocol'
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils/utils'
-import { Debug } from '../../src/utils/log'
 import { Stream, StreamProperties } from '../../src/Stream'
 import { ConfigTest } from '../../src/ConfigTest'
-import { Context } from '../../src/utils/Context'
-import { StreamrClientConfig } from '../../src/Config'
+import { STREAM_CLIENT_DEFAULTS, StreamrClientConfig } from '../../src/Config'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { addAfterFn } from './jest-utils'
 import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
@@ -24,17 +17,15 @@ import { MessageFactory } from '../../src/publish/MessageFactory'
 import { Authentication, createAuthentication } from '../../src/Authentication'
 import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
 import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
+import { LoggerFactory } from '../../src/utils/LoggerFactory'
 
-const testDebugRoot = Debug('test')
-const testDebug = testDebugRoot.extend.bind(testDebugRoot)
+const logger = new Logger(module)
 
-export {
-    testDebug as Debug
-}
-
-export function mockContext(): Context {
-    const id = counterId('mockContext')
-    return { id, debug: testDebugRoot.extend(id) }
+export function mockLoggerFactory(clientId?: string): LoggerFactory {
+    return new LoggerFactory({
+        id: clientId ?? counterId('TestCtx'),
+        logLevel: STREAM_CLIENT_DEFAULTS.logLevel
+    })
 }
 
 export const uid = (prefix?: string): string => counterId(`p${process.pid}${prefix ? '-' + prefix : ''}`)
@@ -72,7 +63,7 @@ export const getCreateClient = (
         } else {
             key = await fetchPrivateKeyWithGas()
         }
-        const c = new StreamrClient({
+        const client = new StreamrClient({
             ...ConfigTest,
             auth: {
                 privateKey: key,
@@ -83,13 +74,13 @@ export const getCreateClient = (
 
         addAfter(async () => {
             await wait(0)
-            if (!c) { return }
-            c.debug('disconnecting after test >>')
-            await c.destroy()
-            c.debug('disconnecting after test <<')
+            if (!client) { return }
+            logger.debug('disconnecting after test >> (clientId=%s)', client.id)
+            await client.destroy()
+            logger.debug('disconnecting after test << (clientId=%s)', client.id)
         })
 
-        return c
+        return client
     }
 }
 
@@ -130,9 +121,9 @@ export const createMockMessage = async (
 
 export const getGroupKeyStore = (userAddress: EthereumAddress): GroupKeyStore => {
     return new GroupKeyStore(
-        mockContext(),
+        mockLoggerFactory(),
         {
-            getAddress: () => userAddress.toLowerCase()
+            getAddress: () => userAddress
         } as any,
         new StreamrClientEventEmitter()
     )

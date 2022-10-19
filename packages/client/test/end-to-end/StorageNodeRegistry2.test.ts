@@ -60,12 +60,12 @@ describe('StorageNodeRegistry2', () => {
     describe('getStorageNodes', () => {
         it('id', async () => {
             const storageNodeUrls = await client.getStorageNodes(createdStream.id)
-            expect(storageNodeUrls).toEqual([storageNodeAddress.toLowerCase()])
+            expect(storageNodeUrls).toEqual([storageNodeAddress])
         })
 
         it('all', async () => {
             const storageNodeUrls = await client.getStorageNodes()
-            return expect(storageNodeUrls).toContain(storageNodeAddress.toLowerCase())
+            return expect(storageNodeUrls).toContain(storageNodeAddress)
         })
     })
 

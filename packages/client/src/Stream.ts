@@ -1,12 +1,9 @@
 /**
  * Wrapper for Stream metadata and (some) methods.
  */
-import { DependencyContainer, inject } from 'tsyringe'
-
 import { Resends } from './subscribe/Resends'
 import { Publisher } from './publish/Publisher'
 import { StreamRegistry } from './registry/StreamRegistry'
-import { BrubeckContainer } from './Container'
 import { StreamRegistryCached } from './registry/StreamRegistryCached'
 import {
     StreamID,
@@ -15,7 +12,7 @@ import {
     toStreamPartID
 } from 'streamr-client-protocol'
 import { range } from 'lodash'
-import { ConfigInjectionToken, TimeoutsConfig } from './Config'
+import { TimeoutsConfig } from './Config'
 import { PermissionAssignment, PublicPermissionQuery, UserPermissionQuery } from './permission'
 import { Subscriber } from './subscribe/Subscriber'
 import { formStorageNodeAssignmentStreamId } from './utils/utils'
@@ -24,6 +21,7 @@ import { MessageMetadata } from '../src/publish/Publisher'
 import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
 import { toEthereumAddress, withTimeout } from '@streamr/utils'
 import { StreamMetadata } from './StreamMessageValidator'
+import { StreamrClientEventEmitter } from './events'
 
 export interface StreamProperties {
     id: string
@@ -80,29 +78,38 @@ class StreamrStream implements StreamMetadata {
     partitions!: number
     storageDays?: number
     inactivityThresholdHours?: number
-    protected _resends: Resends
-    protected _publisher: Publisher
-    protected _subscriber: Subscriber
-    protected _streamRegistry: StreamRegistry
-    protected _streamRegistryCached: StreamRegistryCached
-    protected _streamStorageRegistry: StreamStorageRegistry
-    private _timeoutsConfig: TimeoutsConfig
+    private readonly _resends: Resends
+    private readonly _publisher: Publisher
+    private readonly _subscriber: Subscriber
+    private readonly _streamRegistry: StreamRegistry
+    private readonly _streamRegistryCached: StreamRegistryCached
+    private readonly _streamStorageRegistry: StreamStorageRegistry
+    private readonly _eventEmitter: StreamrClientEventEmitter
+    private readonly _timeoutsConfig: TimeoutsConfig
 
     /** @internal */
     constructor(
         props: StreamrStreamConstructorOptions,
-        @inject(BrubeckContainer) _container: DependencyContainer
+        resends: Resends,
+        publisher: Publisher,
+        subscriber: Subscriber,
+        streamRegistryCached: StreamRegistryCached,
+        streamRegistry: StreamRegistry,
+        streamStorageRegistry: StreamStorageRegistry,
+        eventEmitter: StreamrClientEventEmitter,
+        timeoutsConfig: TimeoutsConfig
     ) {
         Object.assign(this, props)
         this.id = props.id
         this.partitions = props.partitions ? props.partitions : 1
-        this._resends = _container.resolve<Resends>(Resends)
-        this._publisher = _container.resolve<Publisher>(Publisher)
-        this._subscriber = _container.resolve<Subscriber>(Subscriber)
-        this._streamRegistryCached = _container.resolve<StreamRegistryCached>(StreamRegistryCached)
-        this._streamRegistry = _container.resolve<StreamRegistry>(StreamRegistry)
-        this._streamStorageRegistry = _container.resolve<StreamStorageRegistry>(StreamStorageRegistry)
-        this._timeoutsConfig = _container.resolve<TimeoutsConfig>(ConfigInjectionToken.Timeouts)
+        this._resends = resends
+        this._publisher = publisher
+        this._subscriber = subscriber
+        this._streamRegistryCached = streamRegistryCached
+        this._streamRegistry = streamRegistry
+        this._streamStorageRegistry = streamStorageRegistry
+        this._eventEmitter = eventEmitter
+        this._timeoutsConfig = timeoutsConfig
     }
 
     /**
@@ -216,7 +223,10 @@ class StreamrStream implements StreamMetadata {
      * @category Important
      */
     async publish<T>(content: T, metadata?: MessageMetadata): Promise<StreamMessage<T>> {
-        return this._publisher.publish(this.id, content, metadata)
+        const result = this._publisher.publish(this.id, content, metadata)
+        this._eventEmitter.emit('publish', undefined)
+        return result
+
     }
 
     /** @internal */
