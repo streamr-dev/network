@@ -18,7 +18,7 @@ import { Subscription, SubscriptionOnMessage } from './subscribe/Subscription'
 import { StreamIDBuilder } from './StreamIDBuilder'
 import { StreamrClientEventEmitter, StreamrClientEvents } from './events'
 import { ProxyDirection, StreamMessage } from 'streamr-client-protocol'
-import { MessageStream, MessageStreamOnMessage } from './subscribe/MessageStream'
+import { MessageStreamOnMessage } from './subscribe/MessageStream'
 import { Stream, StreamProperties } from './Stream'
 import { SearchStreamsPermissionFilter } from './registry/searchStreams'
 import { PermissionAssignment, PermissionQuery } from './permission'
@@ -185,7 +185,7 @@ export class StreamrClient {
         streamDefinition: StreamDefinition,
         options: ResendOptions,
         onMessage?: MessageStreamOnMessage<T>
-    ): Promise<MessageStream<T>> {
+    ): Promise<Subscription<T>> {
         return this.resends.resend(streamDefinition, options, onMessage)
     }
 

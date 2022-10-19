@@ -4,6 +4,7 @@ import { EncryptionType, MessageID, StreamMessage, StreamPartID, StreamPartIDUti
 import { Wallet } from '@ethersproject/wallet'
 import { MessageStream } from './../../src/subscribe/MessageStream'
 import { fastWallet, randomEthereumAddress } from "streamr-test-utils"
+import { Subscription } from "../../src/subscribe/Subscription"
 import { createSubscribePipeline } from "../../src/subscribe/SubscribePipeline"
 import { mockLoggerFactory } from '../test-utils/utils'
 import { collect } from '../../src/utils/GeneratorUtils'
@@ -22,7 +23,7 @@ const CONTENT = {
 describe('SubscribePipeline', () => {
 
     let pipeline: MessageStream
-    let input: MessageStream
+    let input: Subscription
     let streamPartId: StreamPartID
     let publisher: Wallet
 
@@ -66,11 +67,12 @@ describe('SubscribePipeline', () => {
             undefined as any,
             undefined as any
         )
-        input = new MessageStream()
+        const loggerFactory = mockLoggerFactory()
+        input = new Subscription(streamPartId, loggerFactory)
         pipeline = createSubscribePipeline({
             messageStream: input,
             streamPartId,
-            loggerFactory: mockLoggerFactory(),
+            loggerFactory,
             resends: undefined as any,
             groupKeyStore: {
                 get: async () => undefined

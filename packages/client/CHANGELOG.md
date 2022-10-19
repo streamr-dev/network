@@ -58,7 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Promise `MessageStream` returned from `resend()` does not reject in the case of an encryption key being unavailable
+- Promise returned from `resend()` does not reject in the case of an encryption key being unavailable
 - Fix timeout issue of method `addToStorageNode` when used with storage node cluster
 - Fix concurrency issue when encryption keys are added in parallel for multiple streams (`SQLITE_ERROR: no such table: GroupKeys`)
 

@@ -50,7 +50,7 @@ export class SubscriptionSession<T> {
         this.node = node
         this.onError = this.onError.bind(this)
         this.pipeline = createSubscribePipeline<T>({
-            messageStream: new MessageStream<T>(),
+            messageStream: new Subscription<T>(streamPartId, loggerFactory),
             streamPartId,
             resends,
             groupKeyStore,

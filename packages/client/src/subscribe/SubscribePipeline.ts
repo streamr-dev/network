@@ -7,7 +7,6 @@ import {
     StreamPartID
 } from 'streamr-client-protocol'
 import { OrderMessages } from './OrderMessages'
-import { MessageStream } from './MessageStream'
 import { Validator } from '../Validator'
 import { Decrypt } from './Decrypt'
 import { StrictStreamrClientConfig } from '../Config'
@@ -19,9 +18,10 @@ import { GroupKeyStore } from '../encryption/GroupKeyStore'
 import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'
 import { StreamrClientEventEmitter } from '../events'
 import { LoggerFactory } from '../utils/LoggerFactory'
+import { Subscription } from './Subscription'
 
 export interface SubscriptionPipelineOptions<T> {
-    messageStream: MessageStream<T>
+    messageStream: Subscription<T>
     streamPartId: StreamPartID
     loggerFactory: LoggerFactory
     resends: Resends
@@ -33,7 +33,7 @@ export interface SubscriptionPipelineOptions<T> {
     rootConfig: StrictStreamrClientConfig
 }
 
-export const createSubscribePipeline = <T = unknown>(opts: SubscriptionPipelineOptions<T>): MessageStream<T> => {
+export const createSubscribePipeline = <T = unknown>(opts: SubscriptionPipelineOptions<T>): Subscription<T> => {
     const validate = new Validator(
         opts.streamRegistryCached
     )

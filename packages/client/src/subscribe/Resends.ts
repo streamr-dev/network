@@ -4,7 +4,7 @@
 import { inject, Lifecycle, scoped, delay } from 'tsyringe'
 import { MessageRef, StreamPartID, StreamPartIDUtils, StreamMessage } from 'streamr-client-protocol'
 
-import { MessageStream, MessageStreamOnMessage } from './MessageStream'
+import { MessageStreamOnMessage } from './MessageStream'
 import { createSubscribePipeline } from './SubscribePipeline'
 
 import { StorageNodeRegistry } from '../registry/StorageNodeRegistry'
@@ -23,6 +23,7 @@ import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { counterId } from '../utils/utils'
 import { StreamrClientError } from '../StreamrClientError'
+import { Subscription } from './Subscription'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 
@@ -99,19 +100,16 @@ export class Resends {
         streamDefinition: StreamDefinition,
         options: ResendOptions,
         onMessage?: MessageStreamOnMessage<T>
-    ): Promise<MessageStream<T>> {
+    ): Promise<Subscription<T>> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-
         const sub = await this.resendMessages<T>(streamPartId, options)
-
         if (onMessage) {
             sub.useLegacyOnMessageHandler(onMessage)
         }
-
         return sub
     }
 
-    private resendMessages<T>(streamPartId: StreamPartID, options: ResendOptions): Promise<MessageStream<T>> {
+    private resendMessages<T>(streamPartId: StreamPartID, options: ResendOptions): Promise<Subscription<T>> {
         if (isResendLast(options)) {
             return this.last<T>(streamPartId, {
                 count: options.last,
@@ -147,7 +145,7 @@ export class Resends {
         endpointSuffix: 'last' | 'range' | 'from',
         streamPartId: StreamPartID,
         query: QueryDict = {}
-    ) {
+    ): Promise<Subscription<T>> {
         const loggerIdx = counterId('fetchStream')
         this.logger.debug('[%s] fetching resend %s for %s with options %o', loggerIdx, endpointSuffix, streamPartId, query)
         const streamId = StreamPartIDUtils.getStreamID(streamPartId)
@@ -160,7 +158,7 @@ export class Resends {
         const nodeUrl = (await this.storageNodeRegistry.getStorageNodeMetadata(nodeAddress)).http
         const url = this.createUrl(nodeUrl, endpointSuffix, streamPartId, query)
         const messageStream = createSubscribePipeline<T>({
-            messageStream: new MessageStream<T>(),
+            messageStream: new Subscription<T>(streamPartId, this.loggerFactory),
             streamPartId,
             resends: this,
             groupKeyStore: this.groupKeyStore,
@@ -190,13 +188,12 @@ export class Resends {
         return messageStream
     }
 
-    private async last<T>(streamPartId: StreamPartID, { count }: { count: number }): Promise<MessageStream<T>> {
+    private async last<T>(streamPartId: StreamPartID, { count }: { count: number }): Promise<Subscription<T>> {
         if (count <= 0) {
-            const emptyStream = new MessageStream<T>()
+            const emptyStream = new Subscription<T>(streamPartId, this.loggerFactory)
             emptyStream.endWrite()
             return emptyStream
         }
-
         return this.fetchStream('last', streamPartId, {
             count,
         })
@@ -210,7 +207,7 @@ export class Resends {
         fromTimestamp: number
         fromSequenceNumber?: number
         publisherId?: EthereumAddress
-    }): Promise<MessageStream<T>> {
+    }): Promise<Subscription<T>> {
         return this.fetchStream('from', streamPartId, {
             fromTimestamp,
             fromSequenceNumber,
@@ -232,7 +229,7 @@ export class Resends {
         toSequenceNumber?: number
         publisherId?: EthereumAddress
         msgChainId?: string
-    }): Promise<MessageStream<T>> {
+    }): Promise<Subscription<T>> {
         return this.fetchStream('range', streamPartId, {
             fromTimestamp,
             fromSequenceNumber,
