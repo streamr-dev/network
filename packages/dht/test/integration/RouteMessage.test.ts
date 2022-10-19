@@ -1,13 +1,14 @@
 /* eslint-disable @typescript-eslint/prefer-for-of */
 
 import { DhtNode, Events as DhtNodeEvents } from '../../src/dht/DhtNode'
-import { Message, MessageType, PeerDescriptor, RpcMessage } from '../../src/proto/DhtRpc'
+import { Message, MessageType, PeerDescriptor, RouteMessageWrapper, RpcMessage } from '../../src/proto/DhtRpc'
 import { runAndWaitForEvents3 } from '../../src/helpers/waitForEvent3'
 import { waitForCondition } from 'streamr-test-utils'
 import { createMockConnectionDhtNode, createWrappedClosestPeersRequest } from '../utils'
 import { PeerID } from '../../src/helpers/PeerID'
 import { Simulator } from '../../src/connection/Simulator'
 import { v4 } from 'uuid'
+import { UUID } from '../../src/helpers/UUID'
 
 describe('Route Message With Mock Connections', () => {
     let entryPoint: DhtNode
@@ -189,11 +190,9 @@ describe('Route Message With Mock Connections', () => {
                 }))
             )
         )
-        await waitForCondition(() => {
-            console.info(numsOfReceivedMessages[PeerID.fromString('1').toKey()])
-            return (numsOfReceivedMessages[PeerID.fromString('1').toKey()] >= routers.length - 1
-            )
-        }, 30000)
+        await waitForCondition(() =>
+            (numsOfReceivedMessages[PeerID.fromString('1').toKey()] >= routers.length - 1), 30000
+        )
         await Promise.all(
             Object.values(numsOfReceivedMessages).map(async (count) =>
                 waitForCondition(() => {
@@ -206,7 +205,39 @@ describe('Route Message With Mock Connections', () => {
     describe('forwarding', () => {
 
         it('Destination receives forwarded message', async () => {
+            await destinationNode.joinDht(entryPointDescriptor)
+            await sourceNode.joinDht(entryPointDescriptor)
+            await Promise.all(
+                routerNodes.map((node) => node.joinDht(entryPointDescriptor))
+            )
 
+            const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
+            const message: Message = {
+                serviceId: 'unknown',
+                messageId: v4(),
+                messageType: MessageType.RPC,
+                body: RpcMessage.toBinary(rpcWrapper)
+            }
+
+            const routeMessage: RouteMessageWrapper = {
+                message: Message.toBinary(message),
+                destinationPeer: destinationNode.getPeerDescriptor(),
+                requestId: new UUID().toString(),
+                sourcePeer: sourceNode.getPeerDescriptor(),
+                reachableThrough: [entryPointDescriptor]
+            }
+
+            const forwardedMessage: RouteMessageWrapper = {
+                message: RouteMessageWrapper.toBinary(routeMessage),
+                requestId: v4(),
+                destinationPeer: entryPointDescriptor,
+                sourcePeer: sourceNode.getPeerDescriptor(),
+                reachableThrough: []
+            }
+
+            await runAndWaitForEvents3<DhtNodeEvents>([() => {
+                sourceNode.doRouteMessage(forwardedMessage, true)
+            }], [[entryPoint, 'forwardedMessage'], [destinationNode, 'message']])
         })
 
     })

@@ -42,6 +42,7 @@ export interface DhtNodeEvents {
     openInternetContactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     newRandomContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     randomContactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
+    forwardedMessage: () => void
 }
 
 export class DhtNodeConfig {
@@ -333,9 +334,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         }
         const targetPeerDescriptor = msg.targetDescriptor!
 
-        if (!targetPeerDescriptor) {
-            logger.error('virhe')
-        }
         const params: RouteMessageWrapper = {
             message: Message.toBinary(msg),
             requestId: v4(),
@@ -742,12 +740,16 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
                     }
                     return this.createRouteMessageAck(routedMessage)
                 }
-                this.doRouteMessage(forwardedMessage).catch((err) => {
-                    logger.warn(
-                        `Failed to send (forwardMessage: ${this.config.serviceId}) to`
-                        + ` ${PeerID.fromValue(forwardedMessage.destinationPeer!.peerId).toKey()}: ${err}`
-                    )
-                })
+
+                // eslint-disable-next-line promise/catch-or-return
+                this.doRouteMessage(forwardedMessage)
+                    .catch((err) => {
+                        logger.warn(
+                            `Failed to send (forwardMessage: ${this.config.serviceId}) to`
+                            + ` ${PeerID.fromValue(forwardedMessage.destinationPeer!.peerId).toKey()}: ${err}`
+                        )
+                    })
+                    .then(() => this.emit('forwardedMessage'))
                 return this.createRouteMessageAck(routedMessage)
             } catch (err) {
                 logger.trace(`Could not forward message`)
