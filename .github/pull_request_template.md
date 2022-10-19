@@ -7,7 +7,7 @@ Please provide a summary of the changes and a motivation if applicable.
 Provide a bullet list of individual changes. Leave this section out if change
 set is small and obvious from summary.
 
-## Future improvements / Limitations
+## Limitations and future improvements
 
 Provide a bullet list or description of known omissions or limitations of the
 solution and/or any ideas for future improvement. Leave section ouf if
