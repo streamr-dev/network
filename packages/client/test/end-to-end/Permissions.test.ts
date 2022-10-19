@@ -6,6 +6,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
 import { fastWallet, fetchPrivateKeyWithGas, randomEthereumAddress } from 'streamr-test-utils'
+import { toEthereumAddress } from '@streamr/utils'
 
 jest.setTimeout(40000)
 
@@ -115,7 +116,7 @@ describe('Stream permissions', () => {
         const permissions = await stream.getPermissions()
         const owner = await client.getAddress()
         return expect(permissions).toIncludeSameMembers([{
-            user: owner.toLowerCase(),
+            user: owner,
             permissions: [
                 StreamPermission.EDIT,
                 StreamPermission.DELETE,
@@ -219,7 +220,7 @@ describe('Stream permissions', () => {
         const message = {
             foo: Date.now()
         }
-        const errorSnippet = `${otherUser.address.toLowerCase()} is not a publisher on stream ${stream.id}`
+        const errorSnippet = `${toEthereumAddress(otherUser.address)} is not a publisher on stream ${stream.id}`
         await expect(() => otherUserClient.publish(stream.id, message)).rejects.toThrow(errorSnippet)
         await client.grantPermissions(stream.id, {
             user: otherUser.address,

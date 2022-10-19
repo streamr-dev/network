@@ -117,7 +117,7 @@ export class NetworkNodeFacade {
             throw new Error(`cannot set explicit nodeId ${id} without authentication`)
         } else {
             const ethereumAddress = await this.authentication.getAddress()
-            if (!id.toLowerCase().startsWith(ethereumAddress.toLowerCase())) {
+            if (!id.toLowerCase().startsWith(ethereumAddress)) {
                 throw new Error(`given node id ${id} not compatible with authenticated wallet ${ethereumAddress}`)
             }
         }
