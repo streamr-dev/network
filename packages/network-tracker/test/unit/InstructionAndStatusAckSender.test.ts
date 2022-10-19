@@ -5,7 +5,7 @@ import {
     SendInstructionFn,
     SendStatusAckFn, StatusAck,
 } from '../../src/logic/InstructionAndStatusAckSender'
-import { MetricsContext } from 'streamr-network'
+import { MetricsContext } from '@streamr/utils'
 
 const MOCK_STREAM_PART_1 = StreamPartIDUtils.parse('stream-id#1')
 const MOCK_STREAM_PART_2 = StreamPartIDUtils.parse('stream-id#2')

@@ -7,8 +7,7 @@ import { Storage, startCassandraStorage } from './Storage'
 import { StorageConfig } from './StorageConfig'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { Schema } from 'ajv'
-import { MetricsContext } from 'streamr-network'
-import { EthereumAddress, Logger } from '@streamr/utils'
+import { EthereumAddress, Logger, MetricsContext } from '@streamr/utils'
 import { formStorageNodeAssignmentStreamId, Stream } from 'streamr-client'
 
 const logger = new Logger(module)
