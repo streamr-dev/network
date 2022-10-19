@@ -58,7 +58,7 @@ export class PublisherKeyExchange {
             try {
                 const authenticatedUser = await this.authentication.getAddress()
                 const { recipient, requestId, rsaPublicKey, groupKeyIds } = GroupKeyRequest.fromStreamMessage(request) as GroupKeyRequest
-                if (recipient.toLowerCase() === authenticatedUser) {
+                if (recipient === authenticatedUser) {
                     this.logger.debug('handling group key request %s', requestId)
                     await this.validator.validate(request)
                     const keys = without(

@@ -1,3 +1,4 @@
+import { Defer } from './Defer'
 import { ENSName, toENSName } from './ENSName'
 import { EthereumAddress, toEthereumAddress } from './EthereumAddress'
 import { isENSName } from './isENSName'
@@ -17,6 +18,7 @@ export {
     BrandedString,
     ENSName,
     EthereumAddress,
+    Defer,
     Logger,
     Multimap,
     AbortError,

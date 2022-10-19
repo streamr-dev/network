@@ -15,6 +15,7 @@ import {
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { fastWallet } from 'streamr-test-utils'
 import { StreamrClient } from '../../src/StreamrClient'
+import { toEthereumAddress } from '@streamr/utils'
 
 describe('PublisherKeyExchange', () => {
 
@@ -48,7 +49,7 @@ describe('PublisherKeyExchange', () => {
             messageId: {
                 streamId: StreamPartIDUtils.getStreamID(streamPartId),
                 streamPartition: StreamPartIDUtils.getStreamPartition(streamPartId),
-                publisherId: publisherWallet.address.toLowerCase(),
+                publisherId: toEthereumAddress(publisherWallet.address),
             },
             messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE,
             contentType: StreamMessage.CONTENT_TYPES.JSON,

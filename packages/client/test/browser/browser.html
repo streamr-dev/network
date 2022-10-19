@@ -270,7 +270,7 @@
         log('Added to storage node.')
         log('Loading storage nodes...')
         const storageNodes = await stream.getStorageNodes()
-        log(`Storage: ${JSON.stringify(storageNodes && storageNodes.map((s) => s.toLowerCase()))}`, 'storeResult')
+        log(`Storage: ${JSON.stringify(storageNodes)}`, 'storeResult')
     })
 
     $('#permissions').on('click', async () => {

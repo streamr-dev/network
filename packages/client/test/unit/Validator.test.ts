@@ -7,7 +7,7 @@ import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
 import { Validator } from '../../src/Validator'
 import { createMockMessage, mockLoggerFactory } from '../test-utils/utils'
 import { fastWallet } from 'streamr-test-utils'
-import { EthereumAddress } from '@streamr/utils'
+import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 
 const publisherWallet = fastWallet()
 const PARTITION_COUNT = 3
@@ -20,7 +20,7 @@ const createMockValidator = () => {
             } as any
         },
         isStreamPublisher: async (_streamIdOrPath: string, userAddress: EthereumAddress) => {
-            return userAddress.toLowerCase() === publisherWallet.address.toLowerCase()
+            return userAddress === toEthereumAddress(publisherWallet.address)
         }
     }
     return new Validator(
