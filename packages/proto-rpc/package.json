@@ -13,7 +13,7 @@
   "author": "Streamr Network AG <contact@streamr.network>",
   "scripts": {
     "sandbox": "ts-node src/index.ts",
-    "prebuild": "./proto.sh",
+    "generate-protoc-code": "./proto.sh",
     "build": "tsc -b tsconfig.node.json",
     "build-browser": "webpack --mode=development --progress",
     "check": "tsc -p ./tsconfig.jest.json --noEmit",

@@ -185,10 +185,6 @@ export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id'> = {
     metrics: {
         periods: [
             {
-                duration: 5000,
-                streamId: 'streamr.eth/metrics/nodes/firehose/sec'
-            },
-            {
                 duration: 60000,
                 streamId: 'streamr.eth/metrics/nodes/firehose/min'
             },
