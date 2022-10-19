@@ -6,10 +6,9 @@ export * from './Stream'
 export { DecryptError } from './encryption/EncryptionUtil'
 export { StreamrClientEvents } from './events'
 export { MessageMetadata } from './publish/Publisher'
-export { Subscription, SubscriptionOnMessage } from './subscribe/Subscription'
+export { Subscription, SubscriptionEvents, SubscriptionOnMessage } from './subscribe/Subscription'
 export { MessageStreamOnMessage } from './subscribe/MessageStream'
 export type { MessageStream } from './subscribe/MessageStream'
-export { ResendSubscription, ResendSubscriptionEvents } from './subscribe/ResendSubscription'
 export { ResendOptions, ResendLastOptions, ResendFromOptions, ResendRangeOptions, ResendRef } from './subscribe/Resends'
 export {
     StreamPermission,
