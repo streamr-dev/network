@@ -8,7 +8,7 @@ interface MetricEvents {
     record: (value: number) => void
 }
 
-export abstract class Sampler {
+abstract class Sampler {
 
     protected readonly metric: Metric
     private readonly listener: any
