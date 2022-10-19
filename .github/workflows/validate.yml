@@ -66,6 +66,10 @@ jobs:
     uses: ./.github/workflows/test-setup.yml
     with:
       package: trackerless-network
+      command: |
+        npm run test-unit
+        npm run test-integration
+        npm run test-e2e
   network:
     needs: build
     uses: ./.github/workflows/test-setup.yml

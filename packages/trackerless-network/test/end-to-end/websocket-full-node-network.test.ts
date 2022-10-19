@@ -3,20 +3,18 @@ import { StreamrNode, Event as StreamrNodeEvent } from '../../src/logic/StreamrN
 import { range } from 'lodash'
 import { waitForCondition } from 'streamr-test-utils'
 import { DataMessage, MessageRef } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { getRandomRegion } from '@streamr/dht/dist/test/data/pings'
 
-describe('Full node network with WebRTC connections', () => {
+describe('Full node network with WebSocket connections only', () => {
 
-    const NUM_OF_NODES = 24
+    const NUM_OF_NODES = 42
 
     const epPeerDescriptor: PeerDescriptor = {
         peerId: PeerID.fromString(`entrypoint`).value,
         type: NodeType.NODEJS,
-        websocket: { ip: 'localhost', port: 14444 },
-        region: getRandomRegion()
+        websocket: { ip: 'localhost', port: 15555 }
     }
 
-    const randomGraphId = 'webrtc-network'
+    const randomGraphId = 'websocket-network'
 
     let epConnectionManager: ConnectionManager
     let epStreamrNode: StreamrNode
@@ -30,7 +28,6 @@ describe('Full node network with WebRTC connections', () => {
         connectionManagers = []
 
         const layer0Ep = new DhtNode({ peerDescriptor: epPeerDescriptor, numberOfNodesPerKBucket: 4, routeMessageTimeout: 10000 })
-
         await layer0Ep.start()
         await layer0Ep.joinDht(epPeerDescriptor)
 
@@ -42,20 +39,14 @@ describe('Full node network with WebRTC connections', () => {
 
         range(NUM_OF_NODES).map(async (i) => {
             setImmediate(async () => {
-                const peerId = PeerID.fromString(`${i}`)
-                const peerDescriptor: PeerDescriptor = {
-                    peerId: peerId.value,
-                    type: NodeType.NODEJS,
-                    region: getRandomRegion()
-                }
-
-                // console.log(i, peerId.toKey())
 
                 const layer0 = new DhtNode({
-                    numberOfNodesPerKBucket: 4,
-                    peerDescriptor,
                     routeMessageTimeout: 10000,
-                    entryPoints: [epPeerDescriptor]
+                    entryPoints: [epPeerDescriptor],
+                    webSocketPort: 15556 + i,
+                    webSocketHost: 'localhost',
+                    peerIdString: `${i}`,
+                    numberOfNodesPerKBucket: 4
                 })
 
                 await layer0.start()
@@ -65,13 +56,14 @@ describe('Full node network with WebRTC connections', () => {
                 const streamrNode = new StreamrNode()
                 await streamrNode.start(layer0, connectionManager, connectionManager)
 
+                // await streamrNode.joinStream(randomGraphId, epPeerDescriptor)
                 streamrNode.subscribeToStream(randomGraphId, epPeerDescriptor)
                 connectionManagers.push(connectionManager)
                 streamrNodes.push(streamrNode)
             })
         })
 
-    }, 90000)
+    }, 120000)
 
     afterEach(async () => {
         await Promise.all([
@@ -86,19 +78,13 @@ describe('Full node network with WebRTC connections', () => {
 
         await waitForCondition(() => streamrNodes.length === NUM_OF_NODES, 120000)
         await Promise.all([...streamrNodes.map((streamrNode) =>
-            waitForCondition(() => {
-                return streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length >= 3
-            }, 60000)
+            waitForCondition(() => streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length >= 3, 600000)
         )])
 
         let numOfMessagesReceived = 0
 
-        const successIds = []
         streamrNodes.map((streamrNode) => {
-            streamrNode.on(StreamrNodeEvent.NEW_MESSAGE, () => {
-                successIds.push(PeerID.fromValue(streamrNode.getPeerDescriptor().peerId).toKey())
-                numOfMessagesReceived += 1
-            })
+            streamrNode.on(StreamrNodeEvent.NEW_MESSAGE, () => numOfMessagesReceived += 1)
         })
 
         const messageRef: MessageRef = {
@@ -113,12 +99,12 @@ describe('Full node network with WebRTC connections', () => {
         }
 
         epStreamrNode.publishToStream(randomGraphId, epPeerDescriptor, message)
-        // await wait(120000)
+
         await waitForCondition(() => {
             // console.log(numOfMessagesReceived)
             return numOfMessagesReceived === NUM_OF_NODES
-        }, 10000)
+        }, 15000)
 
-    }, 90000)
+    }, 220000)
 
 })

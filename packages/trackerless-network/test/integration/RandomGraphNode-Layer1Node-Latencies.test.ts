@@ -6,7 +6,7 @@ import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 
-describe('RandomGraphNode-DhtNode', () => {
+describe('RandomGraphNode-DhtNode-Latencies', () => {
     const numOfNodes = 128
     let dhtNodes: DhtNode[]
     let dhtEntryPoint: DhtNode
@@ -86,7 +86,7 @@ describe('RandomGraphNode-DhtNode', () => {
         expect(graphNodes[0].getTargetNeighborStringIds().length).toEqual(1)
     })
 
-    it('happy path 4 peers', async () => {
+    it('happy path 5 peers', async () => {
         entryPointRandomGraphNode.start()
         range(4).map((i) => graphNodes[i].start())
         await Promise.all(range(4).map(async (i) => {
@@ -108,14 +108,15 @@ describe('RandomGraphNode-DhtNode', () => {
         const allNodes = graphNodes
         allNodes.push(entryPointRandomGraphNode)
         range(5).map((i) => {
+            const nodeId = allNodes[i].getOwnStringId()
             allNodes[i].getNearbyContactPoolIds().forEach((stringId) => {
                 const neighbor = allNodes.find((peer) => {
                     return peer.getOwnStringId() === stringId
                 })
-                expect(neighbor!.getTargetNeighborStringIds().includes(allNodes[i].getOwnStringId())).toEqual(true)
+                expect(neighbor!.getTargetNeighborStringIds()).toContain(nodeId)
             })
         })
-    }, 10000)
+    }, 60000)
 
     it('happy path 128 peers', async () => {
         range(numOfNodes).map((i) => graphNodes[i].start())
@@ -125,15 +126,15 @@ describe('RandomGraphNode-DhtNode', () => {
         await Promise.all(graphNodes.map((node) =>
             Promise.all([
                 waitForCondition(() => node.getNearbyContactPoolIds().length >= 8),
-                waitForCondition(() => node.getTargetNeighborStringIds().length >= 3, 18000)
+                waitForCondition(() => node.getTargetNeighborStringIds().length >= 3, 10000)
             ])
         ))
-
+        
         await waitForCondition(() => {
             const avg = graphNodes.reduce((acc, curr) => {
                 return acc + curr.getTargetNeighborStringIds().length
             }, 0) / numOfNodes
-            return avg >= 3.9
+            return avg >= 3.8
         })
 
         const avg = graphNodes.reduce((acc, curr) => {
@@ -151,5 +152,5 @@ describe('RandomGraphNode-DhtNode', () => {
                 }
             })
         })
-    }, 20000)
+    }, 60000)
 })

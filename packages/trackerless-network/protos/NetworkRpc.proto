@@ -66,5 +66,6 @@ message LeaveNotice {
 message NeighborUpdate {
   string senderId = 1;
   string randomGraphId = 2;
+  bool removeMe = 3;
   repeated PeerDescriptor neighborDescriptors = 4;
 }

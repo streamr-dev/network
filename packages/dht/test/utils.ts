@@ -102,6 +102,15 @@ export const MockDhtRpc: IDhtRpcWithError = {
         }
         return response
     },
+    async forwardMessage(routed: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
+        const response: RouteMessageAck = {
+            requestId: routed.requestId,
+            destinationPeer: routed.sourcePeer,
+            sourcePeer: routed.destinationPeer,
+            error: ''
+        }
+        return response
+    },
     async throwPingError(_urequest: PingRequest, _context: ServerCallContext): Promise<PingResponse> {
         throw new Error()
     },

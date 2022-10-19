@@ -34,6 +34,10 @@ export interface IDhtRpcService<T = ServerCallContext> {
      * @generated from protobuf rpc: routeMessage(RouteMessageWrapper) returns (RouteMessageAck);
      */
     routeMessage(request: RouteMessageWrapper, context: T): Promise<RouteMessageAck>;
+    /**
+     * @generated from protobuf rpc: forwardMessage(RouteMessageWrapper) returns (RouteMessageAck);
+     */
+    forwardMessage(request: RouteMessageWrapper, context: T): Promise<RouteMessageAck>;
 }
 /**
  * @generated from protobuf service WebSocketConnectorService

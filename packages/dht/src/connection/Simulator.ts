@@ -14,7 +14,6 @@ export enum LatencyType { NONE = 'NONE', RANDOM = 'RANDOM', REAL = 'REAL' }
 export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     private connectors: Map<PeerIDKey, SimulatorConnector> = new Map()
     private latenciesEnabled = false
-
     private connectionManagers: Map<PeerIDKey, SimulatorTransport> = new Map()
 
     private latencyTable?: Array<Array<number>>

@@ -85,7 +85,8 @@ describe('RemoteRandomGraphNode', () => {
                     randomGraphId: 'testStream',
                     neighborDescriptors: [
                         peer
-                    ]
+                    ],
+                    removeMe: false
                 }
                 return update
             }
@@ -129,6 +130,6 @@ describe('RemoteRandomGraphNode', () => {
 
     it('updateNeighbors', async () => {
         const res = await remoteRandomGraphNode.updateNeighbors(clientPeer, [])
-        expect(res.length).toEqual(1)
+        expect(res.peers.length).toEqual(1)
     })
 })

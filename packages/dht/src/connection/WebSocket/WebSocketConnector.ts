@@ -141,6 +141,7 @@ export class WebSocketConnector extends EventEmitter<ManagedConnectionSourceEven
             remoteConnector.requestConnection(ownPeerDescriptor, ownPeerDescriptor.websocket!.ip, ownPeerDescriptor.websocket!.port)
         })
         const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, this.protocolVersion, ConnectionType.WEBSOCKET_SERVER)
+        managedConnection.on('disconnected', () => this.ongoingConnectRequests.delete(PeerID.fromValue(targetPeerDescriptor.peerId).toKey()))
         managedConnection.setPeerDescriptor(targetPeerDescriptor)
         this.ongoingConnectRequests.set(PeerID.fromValue(targetPeerDescriptor.peerId).toKey(), managedConnection)
         return managedConnection

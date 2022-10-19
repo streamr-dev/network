@@ -24,7 +24,8 @@ export const createMockRandomGraphNodeAndDhtNode = (
         randomGraphId,
         P2PTransport: mockCm,
         layer1: dhtNode,
-        connectionLocker: mockConnectionLocker
+        connectionLocker: mockCm,
+        ownPeerDescriptor
     })
 
     return [dhtNode, randomGraphNode]
