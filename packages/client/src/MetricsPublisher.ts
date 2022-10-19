@@ -4,32 +4,13 @@ import { DestroySignal } from './DestroySignal'
 import { MetricsReport } from 'streamr-network'
 import { NetworkNodeFacade, getEthereumAddressFromNodeId } from './NetworkNodeFacade'
 import { Publisher } from './publish/Publisher'
-import { ConfigInjectionToken, MetricsPeriodConfig, StrictStreamrClientConfig } from './Config'
+import { ConfigInjectionToken, MetricsPeriodConfig, STREAM_CLIENT_DEFAULTS, StrictStreamrClientConfig } from './Config'
 import { pOnce } from './utils/promises'
-
-const DEFAULT_PERIODS = [ 
-    {
-        "duration": 5000,
-        "streamId": "streamr.eth/metrics/nodes/firehose/sec"
-    },
-    {
-        "duration": 60000,
-        "streamId": "streamr.eth/metrics/nodes/firehose/min"
-    },
-    {
-        "duration": 3600000,
-        "streamId": "streamr.eth/metrics/nodes/firehose/hour"
-    },
-    {
-        "duration": 86400000,
-        "streamId": "streamr.eth/metrics/nodes/firehose/day"
-    }
-]
 
 const getPeriodConfig = (rootConfig: StrictStreamrClientConfig): MetricsPeriodConfig[] => {
     switch (rootConfig.metrics) {
         case true:
-            return DEFAULT_PERIODS
+            return (STREAM_CLIENT_DEFAULTS.metrics as { periods: MetricsPeriodConfig[] }).periods
         case false:
             return []
         default:
