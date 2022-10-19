@@ -11,7 +11,7 @@
   "author": "Streamr Network AG <contact@streamr.network>",
   "scripts": {
     "build": "tsc -b tsconfig.node.json",
-    "prebuild": "./proto.sh",
+    "generate-protoc-code": "./proto.sh",
     "check": "tsc -p ./tsconfig.jest.json --noEmit",
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache src/proto || true",
     "coverage": "jest --coverage",
@@ -19,8 +19,7 @@
     "test": "jest",
     "test-unit": "jest test/unit",
     "test-integration": "jest test/integration",
-    "test-e2e": "jest --forceExit --runInBand test/end-to-end",
-    "preinstall": "./proto.sh"
+    "test-e2e": "jest --forceExit --runInBand test/end-to-end"
   },
   "dependencies": {
     "@protobuf-ts/runtime": "^2.8.0",
