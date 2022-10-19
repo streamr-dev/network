@@ -1,7 +1,6 @@
 import { without } from 'lodash'
 import {
     EncryptedGroupKey,
-    EthereumAddress,
     GroupKeyRequest,
     GroupKeyResponse,
     GroupKeyResponseSerialized,
@@ -14,14 +13,14 @@ import {
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
-import { createRandomMsgChainId } from '../publish/MessageChain'
-import { Context } from '../utils/Context'
-import { Debugger } from '../utils/log'
-import { instanceId } from '../utils/utils'
+import { createRandomMsgChainId } from '../publish/messageChain'
+import { createSignedMessage } from '../publish/MessageFactory'
 import { Validator } from '../Validator'
 import { EncryptionUtil } from './EncryptionUtil'
 import { GroupKey, GroupKeyId } from './GroupKey'
 import { GroupKeyStore } from './GroupKeyStore'
+import { EthereumAddress, Logger } from '@streamr/utils'
+import { LoggerFactory } from '../utils/LoggerFactory'
 
 /*
  * Sends group key responses
@@ -29,29 +28,28 @@ import { GroupKeyStore } from './GroupKeyStore'
 
 @scoped(Lifecycle.ContainerScoped)
 export class PublisherKeyExchange {
-
+    private readonly logger: Logger
     private readonly store: GroupKeyStore
     private readonly networkNodeFacade: NetworkNodeFacade
     private readonly authentication: Authentication
     private readonly validator: Validator
-    private readonly debug: Debugger
 
     constructor(
-        context: Context,
         store: GroupKeyStore,
         networkNodeFacade: NetworkNodeFacade,
+        @inject(LoggerFactory) loggerFactory: LoggerFactory,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         validator: Validator
     ) {
-        this.debug = context.debug.extend(instanceId(this))
+        this.logger = loggerFactory.createLogger(module)
         this.store = store
         this.networkNodeFacade = networkNodeFacade
         this.authentication = authentication
         this.validator = validator
         networkNodeFacade.once('start', async () => {
             const node = await networkNodeFacade.getNode()
-            this.debug('Started')
             node.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
+            this.logger.debug('started')
         })
     }
 
@@ -60,8 +58,8 @@ export class PublisherKeyExchange {
             try {
                 const authenticatedUser = await this.authentication.getAddress()
                 const { recipient, requestId, rsaPublicKey, groupKeyIds } = GroupKeyRequest.fromStreamMessage(request) as GroupKeyRequest
-                if (recipient.toLowerCase() === authenticatedUser) {
-                    this.debug('Handling group key request %s', requestId)
+                if (recipient === authenticatedUser) {
+                    this.logger.debug('handling group key request %s', requestId)
                     await this.validator.validate(request)
                     const keys = without(
                         await Promise.all(groupKeyIds.map((id: GroupKeyId) => this.store.get(id, request.getStreamId()))),
@@ -75,13 +73,13 @@ export class PublisherKeyExchange {
                             requestId)
                         const node = await this.networkNodeFacade.getNode()
                         node.publish(response)
-                        this.debug('Sent group keys %s to %s', keys.map((k) => k.id).join(), request.getPublisherId())
+                        this.logger.debug('sent group keys %s to %s', keys.map((k) => k.id).join(), request.getPublisherId())
                     } else {
-                        this.debug('No group keys')
+                        this.logger.debug('found no group keys to send to %s', request.getPublisherId())
                     }
                 }
             } catch (e: any) {
-                this.debug('Error in PublisherKeyExchange: %s', e.message)
+                this.logger.debug('error processing group key, reason: %s', e.message)
             }
         }
     }
@@ -102,7 +100,7 @@ export class PublisherKeyExchange {
             requestId,
             encryptedGroupKeys
         })
-        const response = new StreamMessage({
+        const response = createSignedMessage<GroupKeyResponseSerialized>({
             messageId: new MessageID(
                 StreamPartIDUtils.getStreamID(streamPartId),
                 StreamPartIDUtils.getStreamPartition(streamPartId),
@@ -111,12 +109,11 @@ export class PublisherKeyExchange {
                 await this.authentication.getAddress(),
                 createRandomMsgChainId()
             ),
+            serializedContent: JSON.stringify(responseContent.toArray()),
             messageType: StreamMessageType.GROUP_KEY_RESPONSE,
             encryptionType: StreamMessage.ENCRYPTION_TYPES.RSA,
-            content: responseContent.toArray(),
-            signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
+            authentication: this.authentication
         })
-        response.signature = await this.authentication.createMessagePayloadSignature(response.getPayloadToSign())
         return response
     }
 }

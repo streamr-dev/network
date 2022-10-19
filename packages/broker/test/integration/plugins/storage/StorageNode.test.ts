@@ -6,6 +6,7 @@ import {
 } from '../../../utils'
 import { Broker } from "../../../../src/broker"
 import { fetchPrivateKeyWithGas } from 'streamr-test-utils'
+import { toEthereumAddress } from '@streamr/utils'
 
 const trackerPort = 12503
 
@@ -29,6 +30,6 @@ describe('StorageNode', () => {
     })
 
     it('has node id same as address', async () => {
-        expect((await storageNode.getNode()).getNodeId()).toEqual(storageNodeAccount.address)
+        expect((await storageNode.getNode()).getNodeId()).toEqual(toEthereumAddress(storageNodeAccount.address))
     })
 })

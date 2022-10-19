@@ -83,6 +83,7 @@ export class RSAKeyPair {
         return this.privateKey
     }
 
+    /* eslint-disable no-underscore-dangle */
     private async generateKeyPair(): Promise<void> {
         if (!this._generateKeyPairPromise) {
             this._generateKeyPairPromise = (typeof window !== 'undefined')
@@ -112,7 +113,6 @@ export class RSAKeyPair {
     }
 
     private async keyPairBrowser(): Promise<void> {
-        // eslint-disable-next-line
         const { publicKey, privateKey } = await getSubtle().generateKey({
             name: 'RSA-OAEP',
             modulusLength: 4096,

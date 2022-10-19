@@ -7,6 +7,7 @@ import { toStreamID } from '../../../../src/utils/StreamID'
 
 const VERSION = 2
 
+/* eslint-disable class-methods-use-this */
 export default class UnsubscribeRequestSerializerV2 extends Serializer<UnsubscribeRequest> {
     toArray(unsubscribeRequest: UnsubscribeRequest): any[] {
         return [
@@ -21,7 +22,7 @@ export default class UnsubscribeRequestSerializerV2 extends Serializer<Unsubscri
     fromArray(arr: any[]): UnsubscribeRequest {
         const [
             version,
-            type, // eslint-disable-line @typescript-eslint/no-unused-vars
+            _type,
             requestId,
             streamId,
             streamPartition,

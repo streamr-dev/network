@@ -1,8 +1,8 @@
-import { EthereumAddress } from 'streamr-client-protocol'
 import { Lifecycle, scoped } from 'tsyringe'
 import { StorageNodeMetadata, StorageNodeRegistry } from '../../../src/registry/StorageNodeRegistry'
 import { Methods } from '../types'
 import { FakeChain } from './FakeChain'
+import { EthereumAddress } from '@streamr/utils'
 
 @scoped(Lifecycle.ContainerScoped)
 export class FakeStorageNodeRegistry implements Methods<StorageNodeRegistry> {
@@ -20,7 +20,7 @@ export class FakeStorageNodeRegistry implements Methods<StorageNodeRegistry> {
 
     // eslint-disable-next-line class-methods-use-this
     async getStorageNodeMetadata(nodeAddress: EthereumAddress): Promise<StorageNodeMetadata | never> {
-        const metadata = this.chain.storageNodeMetadatas.get(nodeAddress.toLowerCase())
+        const metadata = this.chain.storageNodeMetadatas.get(nodeAddress)
         if (metadata !== undefined) {
             return metadata
         } else {

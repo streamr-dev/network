@@ -2,7 +2,7 @@ import 'reflect-metadata'
 import {
     StreamMessage,
     StreamPartID,
-    StreamPartIDUtils,
+    StreamPartIDUtils
 } from 'streamr-client-protocol'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { Wallet } from 'ethers'
@@ -16,6 +16,7 @@ import {
     getGroupKeyStore
 } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
+import { toEthereumAddress } from '@streamr/utils'
 
 describe('SubscriberKeyExchange', () => {
 
@@ -36,7 +37,7 @@ describe('SubscriberKeyExchange', () => {
 
     const triggerGroupKeyRequest = async (key: GroupKey, publisher: StreamrClient): Promise<void> => {
         const publisherNode = await publisher.getNode()
-        publisherNode.publish(createMockMessage({
+        publisherNode.publish(await createMockMessage({
             streamPartId,
             publisher: publisherWallet,
             encryptionKey: key
@@ -48,12 +49,11 @@ describe('SubscriberKeyExchange', () => {
             messageId: {
                 streamId: StreamPartIDUtils.getStreamID(streamPartId),
                 streamPartition:  StreamPartIDUtils.getStreamPartition(streamPartId),
-                publisherId: subscriberWallet.address.toLowerCase()
+                publisherId: toEthereumAddress(subscriberWallet.address)
             },
             messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST,
             contentType: StreamMessage.CONTENT_TYPES.JSON,
             encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
-            signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
             signature: expect.any(String)
         })
         expect(request!.getParsedContent()).toEqual([
@@ -104,7 +104,7 @@ describe('SubscriberKeyExchange', () => {
                 messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST
             })
             await assertGroupKeyRequest(request!, [groupKey.id])
-            const keyStore = getGroupKeyStore(subscriberWallet.address)
+            const keyStore = getGroupKeyStore(toEthereumAddress(subscriberWallet.address))
             await waitForCondition(async () => (await keyStore.get(groupKey.id, StreamPartIDUtils.getStreamID(streamPartId))) !== undefined)
         })
     })

@@ -1,25 +1,23 @@
 import { scoped, Lifecycle, inject } from 'tsyringe'
-import { instanceId } from './utils'
 import { ConfigInjectionToken, ConnectionConfig } from '../Config'
-import { Context } from './Context'
-import { Debugger } from 'debug'
 import { HttpFetcher } from './HttpFetcher'
+import { LoggerFactory } from './LoggerFactory'
+import { Logger } from '@streamr/utils'
 
 @scoped(Lifecycle.ContainerScoped)
 export class GraphQLClient {
-
-    private debug: Debugger
+    private readonly logger: Logger
 
     constructor(
-        context: Context,
+        @inject(LoggerFactory) loggerFactory: LoggerFactory,
         @inject(HttpFetcher) private httpFetcher: HttpFetcher,
         @inject(ConfigInjectionToken.Connection) private config: ConnectionConfig,
     ) {
-        this.debug = context.debug.extend(instanceId(this))
+        this.logger = loggerFactory.createLogger(module)
     }
 
     async sendQuery(gqlQuery: string): Promise<any> {
-        this.debug('GraphQL query: %s', gqlQuery)
+        this.logger.debug('GraphQL query: %s', gqlQuery)
         const res = await this.httpFetcher.fetch(this.config.theGraphUrl, {
             method: 'POST',
             headers: {
@@ -35,7 +33,7 @@ export class GraphQLClient {
         } catch {
             throw new Error(`GraphQL query failed with "${resText}", check that your theGraphUrl="${this.config.theGraphUrl}" is correct`)
         }
-        this.debug('GraphQL response: %o', resJson)
+        this.logger.debug('GraphQL response: %j', resJson)
         if (!resJson.data) {
             if (resJson.errors && resJson.errors.length > 0) {
                 throw new Error('GraphQL query failed: ' + JSON.stringify(resJson.errors.map((e: any) => e.message)))
@@ -54,7 +52,6 @@ export class GraphQLClient {
         do {
             const lastId = (lastResultSet !== undefined) ? lastResultSet[lastResultSet.length - 1].id : ''
             const query = createQuery(lastId, pageSize)
-            // eslint-disable-next-line no-await-in-loop
             const response = await this.sendQuery(query)
             const rootKey = Object.keys(response)[0] // there is a always a one root level property, e.g. "streams" or "permissions"
             const items: T[] = (response as any)[rootKey] as T[]

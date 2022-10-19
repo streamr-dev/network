@@ -12,6 +12,7 @@
       <excludeFolder url="file://$MODULE_DIR$/packages/network-tracker/dist" />
       <excludeFolder url="file://$MODULE_DIR$/packages/proto-rpc/dist" />
       <excludeFolder url="file://$MODULE_DIR$/packages/dht/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/utils/dist" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

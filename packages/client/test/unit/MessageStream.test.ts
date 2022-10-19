@@ -1,23 +1,19 @@
-import { wait } from '@streamr/utils'
-import { counterId } from '../../src/utils/utils'
-import { Context } from '../../src/utils/Context'
-import { Debug } from '../test-utils/utils'
+import { toEthereumAddress, wait } from '@streamr/utils'
+import { counterId, instanceId } from '../../src/utils/utils'
+import { createRandomAuthentication } from '../test-utils/utils'
 import { Msg } from '../test-utils/publish'
 import { LeaksDetector } from '../test-utils/LeaksDetector'
 import { MessageStream, MessageStreamOnMessage } from '../../src/subscribe/MessageStream'
-import { StreamMessage, MessageID, toStreamID, StreamID } from 'streamr-client-protocol'
+import { StreamMessage, MessageID, toStreamID } from 'streamr-client-protocol'
 import { Readable } from 'stream'
 import { waitForCondition } from 'streamr-test-utils'
+import { createSignedMessage } from '../../src/publish/MessageFactory'
+import { Authentication } from '../../src/Authentication'
 
-const createMockMessage = (streamId: StreamID) => {
-    return new StreamMessage({
-        messageId: new MessageID(streamId, 0, 0, 0, 'publisherId', 'msgChainId'),
-        content: Msg()
-    })
-}
+const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
-const fromReadable = async (readable: Readable, context: Context, onMessage?: MessageStreamOnMessage<any>) => {
-    const result = new MessageStream<any>(context)
+const fromReadable = async (readable: Readable, onMessage?: MessageStreamOnMessage<any>) => {
+    const result = new MessageStream<any>()
     if (onMessage !== undefined) {
         result.useLegacyOnMessageHandler(onMessage)
     }
@@ -39,16 +35,20 @@ const waitForCalls = async (onMessage: jest.Mock<any>, n: number) => {
 
 describe('MessageStream', () => {
     const streamId = toStreamID('streamId')
-    let context: Context
     let leaksDetector: LeaksDetector
+    let authentication: Authentication
+
+    const createMockMessage = async () => {
+        return await createSignedMessage({
+            messageId: new MessageID(streamId, 0, 0, 0, PUBLISHER_ID, 'msgChainId'),
+            serializedContent: JSON.stringify(Msg()),
+            authentication
+        })
+    }
 
     beforeEach(async () => {
         leaksDetector = new LeaksDetector()
-        const id = counterId('MessageStreamTest')
-        context = {
-            id,
-            debug: Debug(id),
-        }
+        authentication = createRandomAuthentication()
     })
 
     afterEach(async () => {
@@ -56,14 +56,11 @@ describe('MessageStream', () => {
     })
 
     it('works', async () => {
-        const s = new MessageStream(context)
-        leaksDetector.add(s.id, s)
+        const s = new MessageStream()
+        leaksDetector.add(instanceId(s), s)
         const testMessage = Msg()
         leaksDetector.add('testMessage', testMessage)
-        const streamMessage = new StreamMessage({
-            messageId: new MessageID(streamId, 0, 1, 0, 'publisherId', 'msgChainId'),
-            content: testMessage,
-        })
+        const streamMessage = await createMockMessage()
         leaksDetector.add('streamMessage', streamMessage)
         s.push(streamMessage)
         const received = []
@@ -81,13 +78,10 @@ describe('MessageStream', () => {
         const err = new Error(counterId('expected error'))
         leaksDetector.add('err', err)
         leaksDetector.add('testMessage', testMessage)
-        const streamMessage = new StreamMessage({
-            messageId: new MessageID(streamId, 0, 1, 0, 'publisherId', 'msgChainId'),
-            content: testMessage,
-        })
+        const streamMessage = await createMockMessage()
         leaksDetector.add('streamMessage', streamMessage)
-        const s = new MessageStream<typeof testMessage>(context)
-        leaksDetector.add(s.id, s)
+        const s = new MessageStream<typeof testMessage>()
+        leaksDetector.add(instanceId(s), s)
         const received: StreamMessage<typeof testMessage>[] = []
         s.pull((async function* g() {
             yield streamMessage
@@ -110,13 +104,14 @@ describe('MessageStream', () => {
         const err = new Error(counterId('expected error'))
         leaksDetector.add('err', err)
         leaksDetector.add('testMessage', testMessage)
-        const streamMessage = new StreamMessage({
-            messageId: new MessageID(streamId, 0, 1, 0, 'publisherId', 'msgChainId'),
-            content: testMessage,
+        const streamMessage = createSignedMessage({
+            messageId: new MessageID(streamId, 0, 1, 0, PUBLISHER_ID, 'msgChainId'),
+            serializedContent: JSON.stringify(testMessage),
+            authentication
         })
         leaksDetector.add('streamMessage', streamMessage)
-        const s = new MessageStream<typeof testMessage>(context)
-        leaksDetector.add(s.id, s)
+        const s = new MessageStream<typeof testMessage>()
+        leaksDetector.add(instanceId(s), s)
         const received: StreamMessage<typeof testMessage>[] = []
         s.onError.listen((error) => {
             throw error
@@ -139,13 +134,10 @@ describe('MessageStream', () => {
     it('handles error during iteration', async () => {
         const testMessage = Msg()
         leaksDetector.add('testMessage', testMessage)
-        const s = new MessageStream<typeof testMessage>(context)
-        leaksDetector.add(s.id, s)
+        const s = new MessageStream<typeof testMessage>()
+        leaksDetector.add(instanceId(s), s)
         const err = new Error(counterId('expected error'))
-        const streamMessage = new StreamMessage({
-            messageId: new MessageID(streamId, 0, 1, 0, 'publisherId', 'msgChainId'),
-            content: testMessage,
-        })
+        const streamMessage = await createMockMessage()
         s.push(streamMessage)
         leaksDetector.add('streamMessage', streamMessage)
         const received: StreamMessage<typeof testMessage>[] = []
@@ -163,13 +155,10 @@ describe('MessageStream', () => {
     it('emits errors', async () => {
         const testMessage = Msg()
         leaksDetector.add('testMessage', testMessage)
-        const s = new MessageStream<typeof testMessage>(context)
-        leaksDetector.add(s.id, s)
+        const s = new MessageStream<typeof testMessage>()
+        leaksDetector.add(instanceId(s), s)
         const err = new Error(counterId('expected error'))
-        const streamMessage = new StreamMessage({
-            messageId: new MessageID(streamId, 0, 1, 0, 'publisherId', 'msgChainId'),
-            content: testMessage,
-        })
+        const streamMessage = await createMockMessage()
         leaksDetector.add('streamMessage', streamMessage)
         s.push(streamMessage)
         const received: StreamMessage<typeof testMessage>[] = []
@@ -190,14 +179,11 @@ describe('MessageStream', () => {
     it('processes buffer before handling errors with endWrite', async () => {
         const testMessage = Msg()
         leaksDetector.add('testMessage', testMessage)
-        const s = new MessageStream<typeof testMessage>(context)
-        leaksDetector.add(s.id, s)
+        const s = new MessageStream<typeof testMessage>()
+        leaksDetector.add(instanceId(s), s)
         const err = new Error(counterId('expected error'))
 
-        const streamMessage = new StreamMessage({
-            messageId: new MessageID(streamId, 0, 1, 0, 'publisherId', 'msgChainId'),
-            content: testMessage,
-        })
+        const streamMessage = await createMockMessage()
         leaksDetector.add('streamMessage', streamMessage)
         s.push(streamMessage)
         s.endWrite(err)
@@ -214,12 +200,9 @@ describe('MessageStream', () => {
 
     it('can collect', async () => {
         const testMessage = Msg()
-        const s = new MessageStream<typeof testMessage>(context)
+        const s = new MessageStream<typeof testMessage>()
 
-        const streamMessage = new StreamMessage({
-            messageId: new MessageID(streamId, 0, 1, 0, 'publisherId', 'msgChainId'),
-            content: testMessage,
-        })
+        const streamMessage = await createMockMessage()
         s.push(streamMessage)
         const received = await s.collect(1)
 
@@ -228,14 +211,11 @@ describe('MessageStream', () => {
 
     it('can cancel collect with return', async () => {
         const testMessage = Msg()
-        const s = new MessageStream<typeof testMessage>(context)
+        const s = new MessageStream<typeof testMessage>()
         leaksDetector.add('testMessage', testMessage)
-        leaksDetector.add(s.id, s)
+        leaksDetector.add(instanceId(s), s)
 
-        const streamMessage = new StreamMessage({
-            messageId: new MessageID(streamId, 0, 1, 0, 'publisherId', 'msgChainId'),
-            content: testMessage,
-        })
+        const streamMessage = await createMockMessage()
         leaksDetector.add('streamMessage', streamMessage)
         s.push(streamMessage)
         const collectTask = s.collect()
@@ -248,16 +228,13 @@ describe('MessageStream', () => {
 
     it('can cancel collect with throw', async () => {
         const testMessage = Msg()
-        const s = new MessageStream<typeof testMessage>(context)
+        const s = new MessageStream<typeof testMessage>()
         const err = new Error(counterId('expected error'))
         leaksDetector.add('testMessage', testMessage)
-        leaksDetector.add(s.id, s)
+        leaksDetector.add(instanceId(s), s)
         leaksDetector.add('err', err)
 
-        const streamMessage = new StreamMessage({
-            messageId: new MessageID(streamId, 0, 1, 0, 'publisherId', 'msgChainId'),
-            content: testMessage,
-        })
+        const streamMessage = await createMockMessage()
         leaksDetector.add('streamMessage', streamMessage)
         s.push(streamMessage)
         const collectTask = s.collect()
@@ -273,10 +250,10 @@ describe('MessageStream', () => {
     describe('onMessage', () => {
 
         it('push', async () => {
-            const stream = new MessageStream<any>(context)
+            const stream = new MessageStream<any>()
             const onMessage = jest.fn()
             stream.useLegacyOnMessageHandler(onMessage)
-            const msg = createMockMessage(streamId)
+            const msg = await createMockMessage()
             stream.push(msg)
             await waitForCalls(onMessage, 1)
             expect(onMessage).toBeCalledTimes(1)
@@ -284,11 +261,11 @@ describe('MessageStream', () => {
         })
 
         it('from readable', async () => {
-            const msg1 = createMockMessage(streamId)
-            const msg2 = createMockMessage(streamId)
+            const msg1 = await createMockMessage()
+            const msg2 = await createMockMessage()
             const readable = Readable.from([msg1, msg2], { objectMode: true })
             const onMessage = jest.fn()
-            fromReadable(readable, context, onMessage)
+            fromReadable(readable, onMessage)
             await waitForCalls(onMessage, 2)
             expect(onMessage).toHaveBeenNthCalledWith(1, msg1.getParsedContent(), msg1)
             expect(onMessage).toHaveBeenNthCalledWith(2, msg2.getParsedContent(), msg2)

@@ -102,7 +102,12 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> imp
             JSON.stringify({ uuid: handshakeUUID, peerId: this.peerInfo.peerId }))
     }
 
-    public handleIncomingDisconnection(fromAddress: string, fromInfo: PeerInfo, code: DisconnectionCode, reason: DisconnectionReason | string): void {
+    public handleIncomingDisconnection(
+        _fromAddress: string, 
+        fromInfo: PeerInfo, 
+        code: DisconnectionCode, 
+        reason: DisconnectionReason | string
+    ): void {
         if (this.getConnectionByPeerId(fromInfo.peerId)) {
             this.onClose(this.getConnectionByPeerId(fromInfo.peerId) as ServerWsConnection, code, reason as DisconnectionReason)
         }
@@ -209,6 +214,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> imp
         return this.getConnectionByPeerId(peerId)?.getRemoteAddress()
     }
 
+    // eslint-disable-next-line class-methods-use-this
     protected doClose(_connection: ServerWsConnection, _code: DisconnectionCode, _reason: DisconnectionReason): void { }
 
     protected async doStop(): Promise<void> {
@@ -240,14 +246,6 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> imp
                 })
             })
         })*/
-    }
-
-    private resolveIP(request: http.IncomingMessage): string {
-        // Accept X-Forwarded-For header on connections from the local machine
-        if (request.socket.remoteAddress?.endsWith('127.0.0.1')) {
-            return (request.headers['x-forwarded-for'] || request.socket.remoteAddress) as string
-        }
-        return request.socket.remoteAddress as string
     }
 }
 

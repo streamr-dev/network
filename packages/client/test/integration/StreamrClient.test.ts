@@ -2,15 +2,12 @@ import fs from 'fs'
 import path from 'path'
 import { StreamMessage, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
 import { fastPrivateKey, fastWallet } from 'streamr-test-utils'
-import { wait } from '@streamr/utils'
+import { Defer, wait } from '@streamr/utils'
 import {
     Msg,
-    createTestMessages,
     getPublishTestStreamMessages
 } from '../test-utils/publish'
 import { StreamrClient } from '../../src/StreamrClient'
-import { Defer } from '../../src/utils/Defer'
-import * as G from '../../src/utils/GeneratorUtils'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { StreamPermission } from '../../src/permission'
 import { createTestStream } from '../test-utils/utils'
@@ -80,7 +77,7 @@ describe('StreamrClient', () => {
             })
 
             it('client.subscribe then unsubscribe after subscribed', async () => {
-                const subTask = client.subscribe<{ test: string }>(streamDefinition, () => {})
+                const subTask = client.subscribe(streamDefinition, () => {})
                 expect(await client.getSubscriptions()).toHaveLength(0) // does not have subscription yet
 
                 const sub = await subTask
@@ -105,7 +102,7 @@ describe('StreamrClient', () => {
         })
 
         it('client.subscribe (realtime) with onMessage signal', async () => {
-            const done = Defer()
+            const done = new Defer<void>()
             const msg = Msg()
 
             const sub = await client.subscribe<typeof msg>(streamDefinition)
@@ -114,9 +111,6 @@ describe('StreamrClient', () => {
                 sub.unsubscribe()
                 const parsedContent = streamMessage.getParsedContent()
                 expect(parsedContent).toEqual(msg)
-
-                // Check signature stuff
-                expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
                 expect(streamMessage.getPublisherId()).toBeTruthy()
                 expect(streamMessage.signature).toBeTruthy()
             }))
@@ -128,13 +122,10 @@ describe('StreamrClient', () => {
         })
 
         it('client.subscribe (realtime) with onMessage callback', async () => {
-            const done = Defer()
+            const done = new Defer<void>()
             const msg = Msg()
             await client.subscribe<typeof msg>(streamDefinition, done.wrap(async (parsedContent, streamMessage) => {
                 expect(parsedContent).toEqual(msg)
-
-                // Check signature stuff
-                expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
                 expect(streamMessage.getPublisherId()).toBeTruthy()
                 expect(streamMessage.signature).toBeTruthy()
             }))
@@ -146,7 +137,7 @@ describe('StreamrClient', () => {
 
         it('client.subscribe with onMessage & collect', async () => {
             const onMessageMsgs: StreamMessage[] = []
-            const done = Defer()
+            const done = new Defer<undefined>()
             const sub = await client.subscribe(streamDefinition, async (_content, msg) => {
                 onMessageMsgs.push(msg)
                 if (onMessageMsgs.length === MAX_MESSAGES) {
@@ -182,87 +173,22 @@ describe('StreamrClient', () => {
         })
 
         it('publish and subscribe a sequence of messages', async () => {
-            const done = Defer()
+            const done = new Defer<unknown>()
             const received: StreamMessage[] = []
-            const sub = await client.subscribe<any>(streamDefinition, done.wrapError((_content, streamMessage) => {
+            const sub = await client.subscribe<any>(streamDefinition, (_content, streamMessage) => {
                 received.push(streamMessage)
-                // Check signature stuff
-                expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
                 expect(streamMessage.getPublisherId()).toBeTruthy()
                 expect(streamMessage.signature).toBeTruthy()
                 if (received.length === MAX_MESSAGES) {
                     done.resolve(client.unsubscribe(sub))
                 }
-            }))
+            })
 
             // Publish after subscribed
             const published = await publishTestMessages(MAX_MESSAGES)
 
             await done
             expect(received.map((m) => m.signature)).toEqual(published.map(((m) => m.signature)))
-        })
-
-        it('destroying stops publish', async () => {
-            let publishedCount = 0
-            const publishTask = (async () => {
-                for (let i = 0; i < MAX_MESSAGES; i += 1) {
-                    // eslint-disable-next-line no-await-in-loop
-                    await client.publish(streamDefinition, Msg())
-                    // eslint-disable-next-line no-plusplus
-                    publishedCount++
-                    if (publishedCount === 3) {
-                        await client.destroy()
-                    }
-                }
-            })()
-            await expect(() => publishTask).rejects.toThrow('publish')
-            expect(publishedCount).toBe(3)
-        })
-
-        it('destroying resolves publish promises', async () => {
-            // the subscriber side of this test is partially disabled as we
-            // can't yet reliably publish messages then disconnect and know
-            // that subscriber will actually get something.
-            // Probably needs to wait for propagation.
-            const subscriber = environment.createClient({
-                auth: {
-                    privateKey
-                }
-            })
-
-            const received: any[] = []
-            await subscriber.subscribe(streamDefinition, (msg) => {
-                received.push(msg)
-            })
-
-            const msgs = await G.collect(createTestMessages(MAX_MESSAGES))
-
-            const publishTasks = [
-                client.publish(streamDefinition, msgs[0]).finally(async () => {
-                    await client.destroy()
-                }),
-                client.publish(streamDefinition, msgs[1]),
-                client.publish(streamDefinition, msgs[2]),
-                client.publish(streamDefinition, msgs[3]),
-            ]
-            const results = await Promise.allSettled(publishTasks)
-            expect(results.map((r) => r.status)).toEqual(['fulfilled', 'rejected', 'rejected', 'rejected'])
-            await wait(500)
-            // should probably get every publish that was fulfilled, right?
-            // expect(received).toEqual([msgs[0].content])
-        })
-
-        it('cannot subscribe or publish after destroy', async () => {
-            await client.destroy()
-            await expect(async () => {
-                await client.subscribe(streamDefinition)
-            }).rejects.toThrow('destroy')
-            await expect(async () => {
-                await client.publish(streamDefinition, Msg())
-            }).rejects.toThrow('destroy')
-            await expect(async () => {
-                await client.connect()
-            }).rejects.toThrow('destroy')
         })
     })
 

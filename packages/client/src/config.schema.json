@@ -8,6 +8,18 @@
         "id": {
             "type": "string"
         },
+        "logLevel": {
+            "type": "string",
+            "enum": [
+                "silent",
+                "fatal",
+                "error",
+                "warn",
+                "info",
+                "debug",
+                "trace"
+            ]
+        },
         "auth": {
             "type": "object",
             "additionalProperties": false,
@@ -116,14 +128,6 @@
         },
         "maxGapRequests": {
             "type": "number"
-        },
-        "verifySignatures": {
-            "type": "string",
-            "enum": [
-                "auto",
-                "always",
-                "never"
-            ]
         },
         "retryResendAfter": {
             "type": "number"
@@ -252,15 +256,6 @@
                 }
             }
         },
-        "debug": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "inspectOpts": {
-                    "type": "object"
-                }
-            }
-        },
         "theGraphUrl": {
             "type": "string",
             "format": "uri"
@@ -303,6 +298,9 @@
                                     }
                                 } 
                             }
+                        },
+                        "maxPublishDelay": {
+                            "type": "number"
                         }
                     }
                 }

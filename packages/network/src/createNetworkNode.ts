@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid'
-import { MetricsContext } from './helpers/Metric'
+import { MetricsContext } from '@streamr/utils'
 
 import { AbstractNodeOptions } from './identifiers'
 import { NodeToTracker } from './protocol/NodeToTracker'

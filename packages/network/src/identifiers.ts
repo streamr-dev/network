@@ -1,5 +1,5 @@
 import { StreamID } from 'streamr-client-protocol'
-import { MetricsContext } from './helpers/Metric'
+import { MetricsContext } from '@streamr/utils'
 
 export type NodeId = string
 export type TrackerId = string

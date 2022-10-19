@@ -8,10 +8,13 @@ data-api.iml
 .github
 .idea
 jest.config.js
+jest.teardown.js
 .npmrc
 coverage
 /src
 /test
+tsconfig.*.json
 tsconfig.json
 tsconfig-build.json
-tsconfig-build.tsbuildinfo
+*.tsbuildinfo
+.vscode/*

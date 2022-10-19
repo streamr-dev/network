@@ -1,33 +1,35 @@
-import { EthereumAddress, StreamID } from 'streamr-client-protocol'
+import { StreamID } from 'streamr-client-protocol'
 import { Lifecycle, scoped, inject, delay } from 'tsyringe'
-import { instanceId } from '../utils/utils'
 import { CacheAsyncFn } from '../utils/caches'
-import { Context } from '../utils/Context'
 import { CacheConfig, ConfigInjectionToken } from '../Config'
 import { StreamRegistry } from './StreamRegistry'
 import { StreamPermission } from '../permission'
 import { Stream } from '../Stream'
+import { EthereumAddress, Logger } from '@streamr/utils'
+import { LoggerFactory } from '../utils/LoggerFactory'
 
 const SEPARATOR = '|' // always use SEPARATOR for cache key
 
+/* eslint-disable no-underscore-dangle */
 @scoped(Lifecycle.ContainerScoped)
-export class StreamRegistryCached implements Context {
-    readonly id = instanceId(this)
-    readonly debug
+export class StreamRegistryCached {
+    private readonly logger: Logger
 
     constructor(
-        context: Context,
+        @inject(LoggerFactory) loggerFactory: LoggerFactory,
         @inject(delay(() => StreamRegistry)) private streamRegistry: StreamRegistry,
         @inject(ConfigInjectionToken.Cache) private cacheOptions: CacheConfig
     ) {
-        this.debug = context.debug.extend(this.id)
+        this.logger = loggerFactory.createLogger(module)
     }
 
-    private async getStreamPreloaded(streamId: StreamID): Promise<Stream> {
+    getStream(streamId: StreamID): Promise<Stream> {
+        return this._getStream(streamId)
+    }
+
+    private _getStream = CacheAsyncFn((streamId: StreamID) => {
         return this.streamRegistry.getStream(streamId)
-    }
-
-    getStream = CacheAsyncFn(this.getStreamPreloaded.bind(this), {
+    }, {
         ...this.cacheOptions,
         cacheKey: ([streamId]: any) => {
             // see clearStream
@@ -35,37 +37,43 @@ export class StreamRegistryCached implements Context {
         }
     })
 
-    private async isStreamPublisherPreloaded(streamId: StreamID, ethAddress: EthereumAddress): Promise<boolean> {
+    isStreamPublisher(streamId: StreamID, ethAddress: EthereumAddress): Promise<boolean> {
+        return this._isStreamPublisher(streamId, ethAddress)
+    }
+
+    private _isStreamPublisher = CacheAsyncFn((streamId: StreamID, ethAddress: EthereumAddress) => {
         return this.streamRegistry.isStreamPublisher(streamId, ethAddress)
-    }
-
-    isStreamPublisher = CacheAsyncFn(this.isStreamPublisherPreloaded.bind(this), {
+    }, {
         ...this.cacheOptions,
-        cacheKey([streamId, ethAddress]: any): string {
-            return [streamId, ethAddress.toLowerCase()].join(SEPARATOR)
+        cacheKey([streamId, ethAddress]): string {
+            return [streamId, ethAddress].join(SEPARATOR)
         }
     })
 
-    private async isStreamSubscriberPreloaded(streamId: StreamID, ethAddress: EthereumAddress): Promise<boolean> {
+    isStreamSubscriber(streamId: StreamID, ethAddress: EthereumAddress): Promise<boolean> {
+        return this._isStreamSubscriber(streamId, ethAddress)
+    }
+
+    private _isStreamSubscriber = CacheAsyncFn((streamId: StreamID, ethAddress: EthereumAddress) => {
         return this.streamRegistry.isStreamSubscriber(streamId, ethAddress)
-    }
-
-    isStreamSubscriber = CacheAsyncFn(this.isStreamSubscriberPreloaded.bind(this), {
+    }, {
         ...this.cacheOptions,
-        cacheKey([streamId, ethAddress]: any): string {
-            return [streamId, ethAddress.toLowerCase()].join(SEPARATOR)
+        cacheKey([streamId, ethAddress]): string {
+            return [streamId, ethAddress].join(SEPARATOR)
         }
     })
 
-    private async isPublicSubscriptionStream(streamId: StreamID): Promise<boolean> {
+    async isPublic(streamId: StreamID): Promise<boolean> {
+        return this._isPublic(streamId)
+    }
+
+    private _isPublic = CacheAsyncFn((streamId: StreamID) => {
         return this.streamRegistry.hasPermission({
             streamId,
             public: true,
             permission: StreamPermission.SUBSCRIBE
         })
-    }
-
-    isPublic = CacheAsyncFn(this.isPublicSubscriptionStream.bind(this), {
+    }, {
         ...this.cacheOptions,
         cacheKey([streamId]): any {
             return ['PublicSubscribe', streamId].join(SEPARATOR)
@@ -76,12 +84,12 @@ export class StreamRegistryCached implements Context {
      * Clear cache for streamId
      */
     clearStream(streamId: StreamID): void {
-        this.debug('clearStream', streamId)
+        this.logger.debug('clearing caches matching streamId="%s"', streamId)
         // include separator so startsWith(streamid) doesn't match streamid-something
         const target = `${streamId}${SEPARATOR}`
         const matchTarget = (s: string) => s.startsWith(target)
-        this.getStream.clearMatching(matchTarget)
-        this.isStreamPublisher.clearMatching(matchTarget)
-        this.isStreamSubscriber.clearMatching(matchTarget)
+        this._getStream.clearMatching(matchTarget)
+        this._isStreamPublisher.clearMatching(matchTarget)
+        this._isStreamSubscriber.clearMatching(matchTarget)
     }
 }

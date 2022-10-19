@@ -1,10 +1,8 @@
 import { Contract, ContractReceipt, ContractTransaction } from '@ethersproject/contracts'
 import EventEmitter from 'eventemitter3'
-import debug from 'debug'
 import { NameDirectory } from 'streamr-network'
 import pLimit from 'p-limit'
-
-const log = debug('Streamr:contract')
+import { LoggerFactory } from './LoggerFactory'
 
 export interface ContractEvent {
     onMethodExecute: (methodName: string) => void
@@ -27,12 +25,13 @@ const isTransaction = (returnValue: any): returnValue is ContractTransaction => 
     return (returnValue.wait !== undefined && (typeof returnValue.wait === 'function'))
 }
 
-const createLogger = (eventEmitter: EventEmitter<ContractEvent>): void => {
+const createLogger = (eventEmitter: EventEmitter<ContractEvent>, loggerFactory: LoggerFactory): void => {
+    const logger = loggerFactory.createLogger(module)
     eventEmitter.on('onMethodExecute', (methodName: string) => {
-        log(`execute ${methodName}`)
+        logger.debug('execute %s', methodName)
     })
     eventEmitter.on('onTransactionSubmit', (methodName: string, tx: ContractTransaction) => {
-        log(
+        logger.debug(
             'transaction submitted { method=%s, tx=%s, to=%s, nonce=%d, gasLimit=%d, gasPrice=%d }',
             methodName,
             tx.hash,
@@ -43,7 +42,7 @@ const createLogger = (eventEmitter: EventEmitter<ContractEvent>): void => {
         )
     })
     eventEmitter.on('onTransactionConfirm', (methodName: string, tx: ContractTransaction, receipt: ContractReceipt) => {
-        log(
+        logger.debug(
             'transaction confirmed { method=%s, tx=%s, block=%d, confirmations=%d, gasUsed=%d, events=%j }',
             methodName,
             tx.hash,
@@ -104,6 +103,7 @@ const createWrappedContractMethod = (
 export const createDecoratedContract = <T extends Contract>(
     contract: Contract,
     contractName: string,
+    loggerFactory: LoggerFactory,
     maxConcurrentCalls: number
 ): ObservableContract<T> => {
     const eventEmitter = new EventEmitter<ContractEvent>()
@@ -124,12 +124,11 @@ export const createDecoratedContract = <T extends Contract>(
             concurrencyLimit
         )
     })
-    createLogger(eventEmitter)
+    createLogger(eventEmitter, loggerFactory)
     const result: any = {
         eventEmitter
     }
     // copy own properties and inherited properties (e.g. contract.removeAllListeners)
-    // eslint-disable-next-line
     for (const key in contract) {
         result[key] = methods[key] !== undefined ? methods[key] : contract[key]
     }

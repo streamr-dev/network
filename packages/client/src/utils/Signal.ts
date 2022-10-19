@@ -160,7 +160,6 @@ export class Signal<ArgsType extends any[] = []> {
 
         if (this.isEnded) {
             // wait for any outstanding, ended so can't re-trigger
-            // eslint-disable-next-line promise/no-callback-in-promise
             this.getLastValue().then((args) => cb(...args)).catch(() => {})
             return this
         }
@@ -246,7 +245,6 @@ export class Signal<ArgsType extends any[] = []> {
 
         // execute tasks in sequence
         await tasks.reduce(async (prev, task) => {
-            // eslint-disable-next-line promise/always-return
             await prev
             await task(...args)
         }, Promise.resolve())
@@ -273,7 +271,6 @@ export class Signal<ArgsType extends any[] = []> {
 
     async* [Symbol.asyncIterator](): AsyncGenerator<Awaited<ArgsType[0]>, void, unknown> {
         while (!this.isEnded) {
-            // eslint-disable-next-line no-await-in-loop
             yield await this.listen()
         }
     }
@@ -312,7 +309,6 @@ export class ErrorSignal<ArgsType extends [Error] = [Error]> extends Signal<Args
 
         // execute tasks in sequence
         await tasks.reduce(async (prev, task) => {
-            // eslint-disable-next-line promise/always-return
             // pass previous error to next
             try {
                 await prev

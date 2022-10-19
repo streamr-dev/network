@@ -1,4 +1,4 @@
-import { MetricsContext } from '../../src/composition'
+import { MetricsContext } from '@streamr/utils'
 import { NodeToTracker } from '../../src/protocol/NodeToTracker'
 import { Tracker, TrackerEvent, startTracker } from '@streamr/network-tracker'
 import { PeerInfo } from '../../src/connection/PeerInfo'

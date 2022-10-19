@@ -3,7 +3,10 @@ import { v4 as uuidv4 } from 'uuid'
 import {
     ErrorMessage,
     InstructionMessage,
-    RelayMessage, StatusMessage, StreamPartID,
+    RelayMessage,
+    StatusAckMessage,
+    StatusMessage,
+    StreamPartID,
     StreamPartIDUtils,
     TrackerMessage,
     TrackerMessageType
@@ -55,7 +58,8 @@ export class TrackerServer extends EventEmitter {
     async sendInstruction(
         receiverNodeId: NodeId,
         streamPartId: StreamPartID,
-        nodeIds: NodeId[], counter: number
+        nodeIds: NodeId[],
+        counter: number
     ): Promise<void> {
         const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
         await this.send(receiverNodeId, new InstructionMessage({
@@ -64,6 +68,18 @@ export class TrackerServer extends EventEmitter {
             streamPartition,
             nodeIds,
             counter
+        }))
+    }
+
+    async sendStatusAck(
+        receiverNodeId: NodeId,
+        streamPartId: StreamPartID
+    ): Promise<void> {
+        const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
+        await this.send(receiverNodeId, new StatusAckMessage({
+            requestId: uuidv4(),
+            streamId,
+            streamPartition
         }))
     }
 

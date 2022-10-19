@@ -3,20 +3,13 @@ import type { StreamRegistryV3 as StreamRegistryContract } from '../ethereumArti
 import StreamRegistryArtifact from '../ethereumArtifacts/StreamRegistryV3Abi.json'
 import { BigNumber } from '@ethersproject/bignumber'
 import { Provider } from '@ethersproject/providers'
-import { scoped, Lifecycle, inject, delay, DependencyContainer } from 'tsyringe'
-import { BrubeckContainer } from '../Container'
+import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 import { EthereumConfig, getAllStreamRegistryChainProviders, getStreamRegistryOverrides } from '../Ethereum'
-import { instanceId } from '../utils/utils'
 import { until } from '../utils/promises'
-import { Context } from '../utils/Context'
 import { ConfigInjectionToken, TimeoutsConfig } from '../Config'
 import { Stream, StreamProperties } from '../Stream'
 import { ErrorCode, NotFoundError } from '../HttpUtil'
-import {
-    StreamID,
-    EthereumAddress,
-    StreamIDUtils
-} from 'streamr-client-protocol'
+import { StreamID, StreamIDUtils } from 'streamr-client-protocol'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { omit } from 'lodash'
 import { SynchronizedGraphQLClient } from '../utils/SynchronizedGraphQLClient'
@@ -40,8 +33,11 @@ import {
 import { StreamRegistryCached } from './StreamRegistryCached'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ContractFactory } from '../ContractFactory'
+import { EthereumAddress, isENSName, Logger, toEthereumAddress } from '@streamr/utils'
+import { LoggerFactory } from '../utils/LoggerFactory'
+import { StreamFactory } from './../StreamFactory'
 
-/* 
+/*
  * On-chain registry of stream metadata and permissions.
  *
  * Does not support system streams (the key exchange stream)
@@ -70,30 +66,27 @@ const streamContractErrorProcessor = (err: any, streamId: StreamID, registry: st
 }
 
 @scoped(Lifecycle.ContainerScoped)
-export class StreamRegistry implements Context {
-    readonly id
-    readonly debug
+export class StreamRegistry {
+    private readonly logger: Logger
     private streamRegistryContract?: ObservableContract<StreamRegistryContract>
     private streamRegistryContractsReadonly: ObservableContract<StreamRegistryContract>[]
 
     constructor(
-        context: Context,
         private contractFactory: ContractFactory,
+        @inject(LoggerFactory) loggerFactory: LoggerFactory,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
-        @inject(BrubeckContainer) private container: DependencyContainer,
+        private streamFactory: StreamFactory,
         @inject(SynchronizedGraphQLClient) private graphQLClient: SynchronizedGraphQLClient,
         @inject(delay(() => StreamRegistryCached)) private streamRegistryCached: StreamRegistryCached,
         @inject(AuthenticationInjectionToken) private authentication: Authentication,
         @inject(ConfigInjectionToken.Ethereum) private ethereumConfig: EthereumConfig,
         @inject(ConfigInjectionToken.Timeouts) private timeoutsConfig: TimeoutsConfig
     ) {
-        this.id = instanceId(this)
-        this.debug = context.debug.extend(this.id)
-        this.debug('create')
+        this.logger = loggerFactory.createLogger(module)
         const chainProviders = getAllStreamRegistryChainProviders(ethereumConfig)
         this.streamRegistryContractsReadonly = chainProviders.map((provider: Provider) => {
             return this.contractFactory.createReadContract<StreamRegistryContract>(
-                this.ethereumConfig.streamRegistryChainAddress,
+                toEthereumAddress(this.ethereumConfig.streamRegistryChainAddress),
                 StreamRegistryArtifact,
                 provider,
                 'streamRegistry'
@@ -103,14 +96,14 @@ export class StreamRegistry implements Context {
 
     private parseStream(id: StreamID, metadata: string): Stream {
         const props: StreamProperties = Stream.parsePropertiesFromMetadata(metadata)
-        return new Stream({ ...props, id }, this.container)
+        return this.streamFactory.createStream({ ...props, id })
     }
 
     private async connectToContract(): Promise<void> {
         if (!this.streamRegistryContract) {
             const chainSigner = await this.authentication.getStreamRegistryChainSigner()
             this.streamRegistryContract = this.contractFactory.createWriteContract<StreamRegistryContract>(
-                this.ethereumConfig.streamRegistryChainAddress,
+                toEthereumAddress(this.ethereumConfig.streamRegistryChainAddress),
                 StreamRegistryArtifact,
                 chainSigner,
                 'streamRegistry'
@@ -119,17 +112,11 @@ export class StreamRegistry implements Context {
     }
 
     async getOrCreateStream(props: { id: string, partitions?: number }): Promise<Stream> {
-        this.debug('getOrCreateStream %o', {
-            props,
-        })
         try {
             return await this.getStream(props.id)
         } catch (err: any) {
-            // If stream does not exist, attempt to create it
             if (err.errorCode === ErrorCode.NOT_FOUND) {
-                const stream = await this.createStream(props)
-                this.debug('created stream: %s %o', props.id, stream.toObject())
-                return stream
+                return this.createStream(props)
             }
             throw err
         }
@@ -151,7 +138,7 @@ export class StreamRegistry implements Context {
         const [domain, path] = domainAndPath
 
         await this.connectToContract()
-        if (StreamIDUtils.isENSAddress(domain)) {
+        if (isENSName(domain)) {
             /*
                 The call to createStreamWithENS delegates the ENS ownership check, and therefore the
                 call doesn't fail e.g. if the user doesn't own the ENS name. To see whether the stream
@@ -173,15 +160,15 @@ export class StreamRegistry implements Context {
             await this.ensureStreamIdInNamespaceOfAuthenticatedUser(domain, streamId)
             await waitForTx(this.streamRegistryContract!.createStream(path, metadata, ethersOverrides))
         }
-        return new Stream({
+        return this.streamFactory.createStream({
             ...props,
             id: streamId
-        }, this.container)
+        })
     }
 
     private async ensureStreamIdInNamespaceOfAuthenticatedUser(address: EthereumAddress, streamId: StreamID): Promise<void> {
         const userAddress = await this.authentication.getAddress()
-        if (address.toLowerCase() !== userAddress.toLowerCase()) {
+        if (address !== userAddress) {
             throw new Error(`stream id "${streamId}" not in namespace of authenticated user "${userAddress}"`)
         }
     }
@@ -195,15 +182,14 @@ export class StreamRegistry implements Context {
             StreamRegistry.formMetadata(props),
             ethersOverrides
         ))
-        return new Stream({
+        return this.streamFactory.createStream({
             ...props,
             id: streamId
-        }, this.container)
+        })
     }
 
     async deleteStream(streamIdOrPath: string): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        this.debug('Deleting stream %s', streamId)
         await this.connectToContract()
         const ethersOverrides = getStreamRegistryOverrides(this.ethereumConfig)
         await waitForTx(this.streamRegistryContract!.deleteStream(
@@ -214,7 +200,7 @@ export class StreamRegistry implements Context {
 
     private async streamExistsOnChain(streamIdOrPath: string): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        this.debug('Checking if stream exists on chain %s', streamId)
+        this.logger.debug('checking if stream "%s" exists on chain', streamId)
         return Promise.any([
             ...this.streamRegistryContractsReadonly.map((contract: StreamRegistryContract) => {
                 return contract.exists(streamId)
@@ -224,7 +210,6 @@ export class StreamRegistry implements Context {
 
     async getStream(streamIdOrPath: string): Promise<Stream> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        this.debug('Getting stream %s', streamId)
         let metadata
         try {
             metadata = await this.queryAllReadonlyContracts((contract: StreamRegistryContract) => {
@@ -238,11 +223,11 @@ export class StreamRegistry implements Context {
 
     searchStreams(term: string | undefined, permissionFilter: SearchStreamsPermissionFilter | undefined): AsyncGenerator<Stream> {
         return _searchStreams(
-            term, 
+            term,
             permissionFilter,
             this.graphQLClient,
             (id: StreamID, metadata: string) => this.parseStream(id, metadata),
-            this.debug)
+            this.logger)
     }
 
     getStreamPublishers(streamIdOrPath: string): AsyncGenerator<EthereumAddress> {
@@ -255,7 +240,6 @@ export class StreamRegistry implements Context {
 
     private async* getStreamPublishersOrSubscribersList(streamIdOrPath: string, fieldName: string): AsyncGenerator<EthereumAddress> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        this.debug(`Get stream ${fieldName}s for stream id ${streamId}`)
         const backendResults = this.graphQLClient.fetchPaginatedResults<StreamPublisherOrSubscriberItem>(
             (lastId: string, pageSize: number) => StreamRegistry.buildStreamPublishersOrSubscribersQuery(streamId, fieldName, lastId, pageSize)
         )
@@ -328,9 +312,9 @@ export class StreamRegistry implements Context {
             if (isPublicPermissionQuery(query)) {
                 return contract.hasPublicPermission(streamId, permissionType)
             } else if (query.allowPublic) {
-                return contract.hasPermission(streamId, query.user, permissionType)
+                return contract.hasPermission(streamId, toEthereumAddress(query.user), permissionType)
             } else {
-                return contract.hasDirectPermission(streamId, query.user, permissionType)
+                return contract.hasDirectPermission(streamId, toEthereumAddress(query.user), permissionType)
             }
         })
     }
@@ -395,7 +379,7 @@ export class StreamRegistry implements Context {
         for (const assignment of assignments) {
             for (const permission of assignment.permissions) {
                 const solidityType = streamPermissionToSolidityType(permission)
-                const user = isPublicPermissionAssignment(assignment) ? undefined : assignment.user
+                const user = isPublicPermissionAssignment(assignment) ? undefined : toEthereumAddress(assignment.user)
                 const txToSubmit = createTransaction(streamId, user, solidityType)
                 // eslint-disable-next-line no-await-in-loop
                 await waitForTx(txToSubmit)

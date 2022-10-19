@@ -118,6 +118,7 @@ export class ClientTransport extends EventEmitter<ClientTransportEvents> impleme
         }
     }
 
+    // eslint-disable-next-line class-methods-use-this
     clientStreaming<I extends object, O extends object>(method: MethodInfo<I, O>): ClientStreamingCall<I, O> {
         const e = new RpcError('Client streaming is not supported by DhtTransport')
         e.methodName = method.name
@@ -125,6 +126,7 @@ export class ClientTransport extends EventEmitter<ClientTransportEvents> impleme
         throw e
     }
 
+    // eslint-disable-next-line class-methods-use-this
     duplex<I extends object, O extends object>(method: MethodInfo<I, O>): DuplexStreamingCall<I, O> {
         const e = new RpcError('Duplex streaming is not supported by DhtTransport')
         e.methodName = method.name
@@ -132,6 +134,7 @@ export class ClientTransport extends EventEmitter<ClientTransportEvents> impleme
         throw e
     }
 
+    // eslint-disable-next-line class-methods-use-this
     serverStreaming<I extends object, O extends object>(method: MethodInfo<I, O>): ServerStreamingCall<I, O> {
         const e = new RpcError('Server streaming is not supported by DhtTransport')
         e.methodName = method.name

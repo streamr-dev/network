@@ -1,15 +1,11 @@
 import { instanceId } from './utils'
 import { pOnce } from './promises'
-import { Debug } from './log'
 import { iteratorFinally } from './iterators'
-import { ContextError, Context } from './Context'
 import * as G from './GeneratorUtils'
 import { ErrorSignal, Signal } from './Signal'
+import { StreamrClientError } from '../StreamrClientError'
 
 export type PipelineTransform<InType = any, OutType = any> = (src: AsyncGenerator<InType>) => AsyncGenerator<OutType>
-export type FinallyFn = ((err?: Error) => void | Promise<void>)
-
-class PipelineError extends ContextError {}
 
 type AsyncGeneratorWithId<T> = AsyncGenerator<T> & {
     id: string
@@ -30,21 +26,15 @@ export type IPipeline<InType, OutType = InType> = {
     collect(n?: number): Promise<OutType[]>
     consume(): Promise<void>
     pipeBefore(fn: PipelineTransform<InType, InType>): IPipeline<InType, OutType>
-} & AsyncGenerator<OutType> & Context
+} & AsyncGenerator<OutType>
 
 class PipelineDefinition<InType, OutType = InType> {
-    id
-    debug
     public source: AsyncGeneratorWithId<InType>
     constructor(
-        context: Context,
         source: AsyncGenerator<InType>,
         protected transforms: PipelineTransform[] = [],
         protected transformsBefore: PipelineTransform[] = []
     ) {
-        this.id = instanceId(this)
-        this.debug = context.debug.extend(this.id)
-        // this.debug('create')
         this.source = this.setSource(source)
     }
 
@@ -72,7 +62,7 @@ class PipelineDefinition<InType, OutType = InType> {
     }
 
     setSource(source: AsyncGenerator<InType> | AsyncGeneratorWithId<InType>) {
-        const id = 'id' in source ? source.id : instanceId(source, 'Source') // eslint-disable-line no-param-reassign
+        const id = 'id' in source ? source.id : instanceId(source, 'Source')
         this.source = Object.assign(source, {
             id,
         })
@@ -86,10 +76,6 @@ class PipelineDefinition<InType, OutType = InType> {
 }
 
 export class Pipeline<InType, OutType = InType> implements IPipeline<InType, OutType> {
-    /** @internal */
-    id
-    /** @internal */
-    debug
     protected iterator: AsyncGenerator<OutType>
     private isIterating = false
     /** @internal */
@@ -98,9 +84,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
 
     /** @internal */
     constructor(public source: AsyncGenerator<InType>, definition?: PipelineDefinition<InType, OutType>) {
-        this.id = instanceId(this)
-        this.debug = Debug(this.id)
-        this.definition = definition || new PipelineDefinition<InType, OutType>(this, source)
+        this.definition = definition || new PipelineDefinition<InType, OutType>(source)
         this.cleanup = pOnce(this.cleanup.bind(this))
         this.iterator = iteratorFinally(this.iterate(), this.cleanup)
         this.handleError = this.handleError.bind(this)
@@ -113,7 +97,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
      */
     pipe<NewOutType>(fn: PipelineTransform<OutType, NewOutType>): Pipeline<InType, NewOutType> {
         if (this.isIterating) {
-            throw new PipelineError(this, `cannot pipe after already iterating: ${this.isIterating}`)
+            throw new StreamrClientError(`cannot pipe after already iterating: ${this.isIterating}`, 'PIPELINE_ERROR')
         }
         this.definition.pipe(fn)
         // this allows .pipe chaining to be type aware
@@ -128,7 +112,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
      */
     pipeBefore(fn: PipelineTransform<InType, InType>): Pipeline<InType, OutType> {
         if (this.isIterating) {
-            throw new PipelineError(this, `cannot pipe after already iterating: ${this.isIterating}`)
+            throw new StreamrClientError(`cannot pipe after already iterating: ${this.isIterating}`, 'PIPELINE_ERROR')
         }
 
         this.definition.pipeBefore(fn)
@@ -172,7 +156,6 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
     /** @internal */
     onMessage = Signal.create<[OutType]>()
 
-    // eslint-disable-next-line func-call-spacing, no-spaced-func
     /** @internal */
     onError = ErrorSignal.create<[Error, (InType | OutType)?, number?]>()
 
@@ -262,7 +245,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
 
         // this.debug('iterate', this.definition.source)
         if (!this.definition.source) {
-            throw new PipelineError(this, 'no source')
+            throw new StreamrClientError('no source', 'PIPELINE_ERROR')
         }
 
         const transforms = this.definition.getTransforms()
@@ -336,7 +319,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
 
     [Symbol.asyncIterator](): this {
         if (this.isIterating) {
-            throw new PipelineError(this, 'already iterating')
+            throw new StreamrClientError('already iterating', 'PIPELINE_ERROR')
         }
 
         return this

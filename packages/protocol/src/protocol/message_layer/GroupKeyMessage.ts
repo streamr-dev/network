@@ -1,7 +1,7 @@
 import { validateIsString } from '../../utils/validations'
 import ValidationError from '../../errors/ValidationError'
 import StreamMessage, { StreamMessageType } from './StreamMessage'
-import { EthereumAddress } from '../../utils'
+import { EthereumAddress } from '@streamr/utils'
 
 // TODO refactor deserialization to separate class (Serializer<GroupKeyMessage>)
 //

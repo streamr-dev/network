@@ -5,12 +5,12 @@ import { trackerHttpEndpoints } from './logic/trackerHttpEndpoints'
 import {
     AbstractNodeOptions,
     HttpServerConfig,
-    MetricsContext,
     PeerInfo,
     ServerWsEndpoint,
     startHttpServer,
     DEFAULT_MAX_NEIGHBOR_COUNT
 } from 'streamr-network'
+import { MetricsContext } from '@streamr/utils'
 
 export interface TrackerOptions extends AbstractNodeOptions {
     listen: HttpServerConfig

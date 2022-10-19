@@ -40,14 +40,6 @@ describe('Config', () => {
                 }).toThrow('/network/acceptProxyConnections must be boolean')
             })
 
-            it('enum', () => {
-                expect(() => {
-                    return createStrictConfig({
-                        verifySignatures: 'foo'
-                    } as any)
-                }).toThrow('verifySignatures must be equal to one of the allowed values')
-            })
-
             it('ajv-format', () => {
                 expect(() => {
                     return createStrictConfig({
@@ -125,42 +117,45 @@ describe('Config', () => {
             expect(clientOverrides.network.trackers).not.toBe(trackers)
             expect((clientOverrides.network.trackers as SmartContractRecord[])[0]).not.toBe(trackers[0])
         })
-
-        it('can override debug settings', () => {
-            const debugPartial = {
-                inspectOpts: {
-                    depth: 99,
-                }
-            }
-            const debugFull = {
-                inspectOpts: {
-                    depth: 88,
-                    maxStringLength: 3
-                }
-            }
-
-            const clientDefaults = createStrictConfig()
-            const clientOverrides1 = createStrictConfig({
-                debug: debugPartial,
+        
+        describe('metrics', () => {
+            it('default', () => {
+                const config = createStrictConfig({})
+                expect(config.metrics.periods).toEqual(STREAM_CLIENT_DEFAULTS.metrics.periods)
+                expect(config.metrics.maxPublishDelay).toEqual(STREAM_CLIENT_DEFAULTS.metrics.maxPublishDelay)    
             })
-            const clientOverrides2 = createStrictConfig({
-                debug: debugFull,
+            it('periods overrided', () => {
+                const config = createStrictConfig({
+                    metrics: {
+                        periods: [{ duration: 10, streamId: 'foo' }]
+                    }
+                })
+                expect(config.metrics.periods).toEqual([{ duration: 10, streamId: 'foo' }])
+                expect(config.metrics.maxPublishDelay).toEqual(STREAM_CLIENT_DEFAULTS.metrics.maxPublishDelay)    
             })
-            expect(clientOverrides1.debug).toEqual({
-                ...clientDefaults.debug,
-                inspectOpts: {
-                    ...clientDefaults.debug.inspectOpts,
-                    ...debugPartial.inspectOpts,
-                }
+            it('maxPublishDelay overrided', () => {
+                const config = createStrictConfig({
+                    metrics: {
+                        maxPublishDelay: 123
+                    }
+                })
+                expect(config.metrics.periods).toEqual(STREAM_CLIENT_DEFAULTS.metrics.periods)
+                expect(config.metrics.maxPublishDelay).toEqual(123)    
             })
-            expect(clientOverrides2.debug).toEqual({
-                ...clientDefaults.debug,
-                inspectOpts: {
-                    ...clientDefaults.debug.inspectOpts,
-                    ...debugFull.inspectOpts,
-                }
+            it('enabled', () => {
+                const config = createStrictConfig({
+                    metrics: true
+                })
+                expect(config.metrics.periods).toEqual(STREAM_CLIENT_DEFAULTS.metrics.periods)
+                expect(config.metrics.maxPublishDelay).toEqual(STREAM_CLIENT_DEFAULTS.metrics.maxPublishDelay)    
+            })
+            it('disabled', () => {
+                const config = createStrictConfig({
+                    metrics: false
+                })
+                expect(config.metrics.periods).toEqual([])
+                expect(config.metrics.maxPublishDelay).toEqual(STREAM_CLIENT_DEFAULTS.metrics.maxPublishDelay)    
             })
         })
-
     })
 })

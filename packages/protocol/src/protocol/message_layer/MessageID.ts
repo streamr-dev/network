@@ -3,6 +3,7 @@ import { validateIsNotEmptyString, validateIsNotNegativeInteger, validateIsStrin
 import MessageRef from './MessageRef'
 import { StreamID, toStreamID } from '../../../src/utils/StreamID'
 import { StreamPartID, toStreamPartID } from "../../utils/StreamPartID"
+import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 export type MessageIDArray = [string, number, number, number, string, string]
 export default class MessageID {
 
@@ -10,10 +11,17 @@ export default class MessageID {
     streamPartition: number
     timestamp: number
     sequenceNumber: number
-    publisherId: string
+    publisherId: EthereumAddress
     msgChainId: string
 
-    constructor(streamId: StreamID, streamPartition: number, timestamp: number, sequenceNumber: number, publisherId: string, msgChainId: string) {
+    constructor(
+        streamId: StreamID,
+        streamPartition: number,
+        timestamp: number,
+        sequenceNumber: number,
+        publisherId: EthereumAddress,
+        msgChainId: string
+    ) {
         validateIsNotEmptyString('streamId', streamId)
         validateIsNotNegativeInteger('streamPartition', streamPartition)
         validateIsNotNegativeInteger('timestamp', timestamp)
@@ -50,7 +58,14 @@ export default class MessageID {
             msgChainId,
         ] = arr
 
-        return new MessageID(toStreamID(streamId), streamPartition, timestamp, sequenceNumber, publisherId, msgChainId)
+        return new MessageID(
+            toStreamID(streamId),
+            streamPartition,
+            timestamp,
+            sequenceNumber,
+            toEthereumAddress(publisherId),
+            msgChainId
+        )
     }
 
     getStreamPartID(): StreamPartID {
@@ -66,6 +81,6 @@ export default class MessageID {
     }
 
     clone(): MessageID {
-        return new MessageID(...this.toArray() as [StreamID, number, number, number, string, string])
+        return new MessageID(...this.toArray() as [StreamID, number, number, number, EthereumAddress, string])
     }
 }

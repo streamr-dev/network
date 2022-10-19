@@ -10,6 +10,7 @@ import { DecryptError } from '../../src/encryption/EncryptionUtil'
 import { collect } from '../../src/utils/GeneratorUtils'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 import { StreamrClient } from '../../src/StreamrClient'
+import { toEthereumAddress } from '@streamr/utils'
 
 /*
  * A subscriber has some GroupKeys in the local store and reads historical data
@@ -28,13 +29,14 @@ describe('resend with existing key', () => {
     let allMessages: { timestamp: number, groupKey: GroupKey, nextGroupKey?: GroupKey }[]
     let environment: FakeEnvironment
 
-    const storeMessage = (timestamp: number, currentGroupKey: GroupKey, nextGroupKey: GroupKey | undefined, storageNode: FakeStorageNode) => {
-        const message = createMockMessage({
+    const storeMessage = async (timestamp: number, currentGroupKey: GroupKey, nextGroupKey: GroupKey | undefined, storageNode: FakeStorageNode) => {
+        const message = await createMockMessage({
             timestamp,
             encryptionKey: currentGroupKey,
-            newGroupKey: (nextGroupKey !== undefined) ? currentGroupKey.encryptNextGroupKey(nextGroupKey) : null,
+            nextEncryptionKey: nextGroupKey,
             stream,
             publisher: publisherWallet,
+            msgChainId: 'mock-msgChainId'
         })
         storageNode.storeMessage(message)
     }
@@ -71,7 +73,7 @@ describe('resend with existing key', () => {
     }
 
     beforeEach(async () => {
-        const streamId = toStreamID(createRelativeTestStreamId(module), publisherWallet.address)
+        const streamId = toStreamID(createRelativeTestStreamId(module), toEthereumAddress(publisherWallet.address))
         environment = new FakeEnvironment()
         subscriber = environment.createClient({
             auth: {
@@ -102,7 +104,7 @@ describe('resend with existing key', () => {
             { timestamp: 6000, groupKey: rekeyedKey }
         ]
         for (const msg of allMessages) {
-            storeMessage(msg.timestamp, msg.groupKey, msg.nextGroupKey, storageNode)
+            await storeMessage(msg.timestamp, msg.groupKey, msg.nextGroupKey, storageNode)
         }
     })
 

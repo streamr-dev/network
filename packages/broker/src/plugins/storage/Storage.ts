@@ -1,5 +1,5 @@
 import { auth, Client, types, tracker } from 'cassandra-driver'
-import { MetricsContext, RateMetric } from 'streamr-network'
+import { MetricsContext, RateMetric } from '@streamr/utils'
 import { BatchManager } from './BatchManager'
 import { Readable, Transform } from 'stream'
 import { EventEmitter } from 'events'
@@ -102,7 +102,6 @@ export class Storage extends EventEmitter {
                 const uuid = uuidv1()
                 const timeout = setTimeout(() => {
                     this.pendingStores.delete(uuid)
-                    // eslint-disable-next-line promise/catch-or-return
                     this.store(streamMessage).then(resolve, reject)
                 }, this.opts.retriesIntervalMilliseconds!)
                 this.pendingStores.set(uuid, timeout)

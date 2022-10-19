@@ -5,7 +5,7 @@ import { DestroySignal } from '../../src/DestroySignal'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamrClientEventEmitter } from '../../src/events'
 import { Decrypt } from '../../src/subscribe/Decrypt'
-import { createMockMessage, mockContext } from '../test-utils/utils'
+import { createMockMessage, mockLoggerFactory } from '../test-utils/utils'
 
 describe('Decrypt', () => {
 
@@ -16,22 +16,21 @@ describe('Decrypt', () => {
         const keyExchange = {
             requestGroupKey: async () => {}
         }
-        const context = mockContext()
         const decrypt = new Decrypt(
-            context,
             groupKeyStore as any,
             keyExchange as any,
             {
                 clearStream: jest.fn()
             } as any,
-            new DestroySignal(context),
+            new DestroySignal(),
+            mockLoggerFactory(),
             new StreamrClientEventEmitter(),
             {
                 keyRequestTimeout: 50
             } as any
         )
         const groupKey = GroupKey.generate()
-        const msg = createMockMessage({
+        const msg = await createMockMessage({
             streamPartId: StreamPartIDUtils.parse('stream#0'),
             publisher: fastWallet(),
             encryptionKey: groupKey

@@ -11,8 +11,6 @@ import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from './../test-utils/fake/FakeStorageNode'
 import { StreamPermission } from './../../src/permission'
 
-/* eslint-disable no-await-in-loop */
-
 const MAX_MESSAGES = 5
 
 describe('Resends2', () => {
@@ -220,7 +218,6 @@ describe('Resends2', () => {
         let published: StreamMessage[]
 
         beforeEach(async () => {
-            // eslint-disable-next-line require-atomic-updates
             published = await publishTestMessages(MAX_MESSAGES)
             // ensure last message is in storage
             await client.waitForStorage(published[published.length - 1])

@@ -1,11 +1,12 @@
+import { EthereumAddress } from "@streamr/utils"
 import {
-    EthereumAddress,
     GroupKeyRequest,
     GroupKeyMessage,
     StreamID,
     StreamMessage,
     StreamMessageError,
-    ValidationError
+    ValidationError,
+    createSignaturePayload
 } from "streamr-client-protocol"
 import { verify as verifyImpl } from './utils/signingUtils'
 
@@ -91,6 +92,8 @@ export default class StreamMessageValidator {
             throw new ValidationError('Falsey argument passed to validate()!')
         }
 
+        await this.assertSignatureIsValid(streamMessage)
+
         switch (streamMessage.messageType) {
             case StreamMessage.MESSAGE_TYPES.MESSAGE:
                 return this.validateMessage(streamMessage)
@@ -112,36 +115,26 @@ export default class StreamMessageValidator {
      * @param streamMessage the StreamMessage to validate.
      * @param verifyFn function(address, payload, signature): return true if the address and payload match the signature
      */
-    static async assertSignatureIsValid(
-        streamMessage: StreamMessage,
-        verifyFn: (address: EthereumAddress, payload: string, signature: string) => boolean
-    ): Promise<void> {
-        const payload = streamMessage.getPayloadToSign()
-
-        if (streamMessage.signatureType === StreamMessage.SIGNATURE_TYPES.ETH) {
-            let success
-            try {
-                success = verifyFn(streamMessage.getPublisherId(), payload, streamMessage.signature!)
-            } catch (err) {
-                throw new StreamMessageError(`An error occurred during address recovery from signature: ${err}`, streamMessage)
-            }
-
-            if (!success) {
-                throw new StreamMessageError('Signature validation failed', streamMessage)
-            }
-        } else {
-            // We should never end up here, as StreamMessage construction throws if the signature type is invalid
-            throw new StreamMessageError(`Unrecognized signature type: ${streamMessage.signatureType}`, streamMessage)
+    private async assertSignatureIsValid(streamMessage: StreamMessage): Promise<void> {
+        const payload = createSignaturePayload({
+            messageId: streamMessage.getMessageID(),
+            serializedContent: streamMessage.getSerializedContent(),
+            prevMsgRef: streamMessage.prevMsgRef ?? undefined,
+            newGroupKey: streamMessage.newGroupKey ?? undefined
+        }) 
+        let success
+        try {
+            success = this.verify(streamMessage.getPublisherId(), payload, streamMessage.signature!)
+        } catch (err) {
+            throw new StreamMessageError(`An error occurred during address recovery from signature: ${err}`, streamMessage)
+        }
+        if (!success) {
+            throw new StreamMessageError('Signature validation failed', streamMessage)
         }
     }
 
     private async validateMessage(streamMessage: StreamMessage): Promise<void> {
         const stream = await this.getStream(streamMessage.getStreamId())
-
-        // Checks against stream metadata
-        if (!streamMessage.signature) {
-            throw new StreamMessageError('Stream data is required to be signed.', streamMessage)
-        }
 
         if (streamMessage.getStreamPartition() < 0 || streamMessage.getStreamPartition() >= stream.partitions) {
             throw new StreamMessageError(
@@ -150,29 +143,19 @@ export default class StreamMessageValidator {
             )
         }
 
-        if (streamMessage.signature) {
-            // Cryptographic integrity and publisher permission checks. Note that only signed messages can be validated this way.
-            await StreamMessageValidator.assertSignatureIsValid(streamMessage, this.verify)
-            const sender = streamMessage.getPublisherId()
-            // Check that the sender of the message is a valid publisher of the stream
-            const senderIsPublisher = await this.isPublisher(sender, streamMessage.getStreamId())
-            if (!senderIsPublisher) {
-                throw new StreamMessageError(`${sender} is not a publisher on stream ${streamMessage.getStreamId()}.`, streamMessage)
-            }
+        const sender = streamMessage.getPublisherId()
+        // Check that the sender of the message is a valid publisher of the stream
+        const senderIsPublisher = await this.isPublisher(sender, streamMessage.getStreamId())
+        if (!senderIsPublisher) {
+            throw new StreamMessageError(`${sender} is not a publisher on stream ${streamMessage.getStreamId()}.`, streamMessage)
         }
     }
 
     private async validateGroupKeyRequest(streamMessage: StreamMessage): Promise<void> {
-        if (!streamMessage.signature) {
-            throw new StreamMessageError(`Received unsigned group key request (the public key must be signed to avoid MitM attacks).`, streamMessage)
-        }
-
         const groupKeyRequest = GroupKeyRequest.fromStreamMessage(streamMessage)
         const sender = streamMessage.getPublisherId()
         const streamId = streamMessage.getStreamId()
         const recipient = groupKeyRequest.recipient
-
-        await StreamMessageValidator.assertSignatureIsValid(streamMessage, this.verify)
 
         // Check that the recipient of the request is a valid publisher of the stream
         const recipientIsPublisher = await this.isPublisher(recipient!, streamId)
@@ -188,12 +171,6 @@ export default class StreamMessageValidator {
     }
 
     private async validateGroupKeyResponse(streamMessage: StreamMessage): Promise<void> {
-        if (!streamMessage.signature) {
-            throw new StreamMessageError(`Received unsigned ${streamMessage.messageType} (it must be signed to avoid MitM attacks).`, streamMessage)
-        }
-
-        await StreamMessageValidator.assertSignatureIsValid(streamMessage, this.verify)
-
         const groupKeyMessage = GroupKeyMessage.fromStreamMessage(streamMessage) // only streamId is read
         const sender = streamMessage.getPublisherId()
         const streamId = streamMessage.getStreamId()

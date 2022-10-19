@@ -26,7 +26,6 @@ describe('searchStreams', () => {
     }[]) => {
         const streams: Stream[] = []
         for (const item of items) {
-            // eslint-disable-next-line no-await-in-loop
             streams.push(await client.createStream(item.streamId))
         }
         await client.setPermissions(...items)
@@ -40,7 +39,6 @@ describe('searchStreams', () => {
         return ids
     }
 
-    /* eslint-disable object-property-newline */
     beforeAll(async () => {
         client = new StreamrClient({
             ...ConfigTest,

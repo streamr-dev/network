@@ -1,33 +1,63 @@
-import { DependencyContainer, inject, scoped, delay, Lifecycle } from 'tsyringe'
-import { instanceId } from '../utils/utils'
+import { inject, scoped, Lifecycle, delay } from 'tsyringe'
 import { allSettledValues } from '../utils/promises'
-import { Context } from '../utils/Context'
 import { SubscriptionSession } from './SubscriptionSession'
 import { Subscription, SubscriptionOnMessage } from './Subscription'
 import { StreamPartID } from 'streamr-client-protocol'
-import { BrubeckContainer } from '../Container'
 import { StreamIDBuilder } from '../StreamIDBuilder'
-import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { StreamDefinition } from '../types'
+import { Resends } from './Resends'
+import { GroupKeyStore } from '../encryption/GroupKeyStore'
+import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'
+import { NetworkNodeFacade } from '../NetworkNodeFacade'
+import { StreamrClientEventEmitter } from '../events'
+import { DestroySignal } from '../DestroySignal'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import { StreamRegistryCached } from '../registry/StreamRegistryCached'
+import { LoggerFactory } from '../utils/LoggerFactory'
+import { Logger } from '@streamr/utils'
 
 /**
  * Public Subscribe APIs
  */
 
 @scoped(Lifecycle.ContainerScoped)
-export class Subscriber implements Context {
-    readonly id
-    readonly debug
+export class Subscriber {
     private readonly subSessions: Map<StreamPartID, SubscriptionSession<unknown>> = new Map()
+    private readonly streamIdBuilder: StreamIDBuilder
+    private readonly resends: Resends
+    private readonly groupKeyStore: GroupKeyStore
+    private readonly subscriberKeyExchange: SubscriberKeyExchange
+    private readonly streamRegistryCached: StreamRegistryCached
+    private readonly node: NetworkNodeFacade
+    private readonly streamrClientEventEmitter: StreamrClientEventEmitter
+    private readonly destroySignal: DestroySignal
+    private readonly rootConfig: StrictStreamrClientConfig
+    private readonly loggerFactory: LoggerFactory
+    private readonly logger: Logger
 
     constructor(
-        context: Context,
-        @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
-        @inject(BrubeckContainer) private container: DependencyContainer,
-        @inject(delay(() => StreamRegistryCached)) private streamRegistryCached: StreamRegistryCached,
+        streamIdBuilder: StreamIDBuilder,
+        resends: Resends,
+        groupKeyStore: GroupKeyStore,
+        subscriberKeyExchange: SubscriberKeyExchange,
+        @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
+        node: NetworkNodeFacade,
+        streamrClientEventEmitter: StreamrClientEventEmitter,
+        destroySignal: DestroySignal,
+        @inject(ConfigInjectionToken.Root) rootConfig: StrictStreamrClientConfig,
+        @inject(LoggerFactory) loggerFactory: LoggerFactory,
     ) {
-        this.id = instanceId(this)
-        this.debug = context.debug.extend(this.id)
+        this.streamIdBuilder = streamIdBuilder
+        this.resends = resends
+        this.groupKeyStore = groupKeyStore
+        this.subscriberKeyExchange = subscriberKeyExchange
+        this.streamRegistryCached = streamRegistryCached
+        this.node = node
+        this.streamrClientEventEmitter = streamrClientEventEmitter
+        this.destroySignal = destroySignal
+        this.rootConfig = rootConfig
+        this.loggerFactory = loggerFactory
+        this.logger = loggerFactory.createLogger(module)
     }
 
     async subscribe<T>(
@@ -50,12 +80,24 @@ export class Subscriber implements Context {
         if (this.subSessions.has(streamPartId)) {
             return this.getSubscriptionSession<T>(streamPartId)!
         }
-        this.debug('creating new SubscriptionSession: %s', streamPartId)
-        const subSession = new SubscriptionSession<T>(this, streamPartId, this.container)
+        const subSession = new SubscriptionSession<T>(
+            streamPartId,
+            this.resends,
+            this.groupKeyStore,
+            this.subscriberKeyExchange,
+            this.streamRegistryCached,
+            this.node,
+            this.streamrClientEventEmitter,
+            this.destroySignal,
+            this.loggerFactory,
+            this.rootConfig
+        )
+        
         this.subSessions.set(streamPartId, subSession as SubscriptionSession<unknown>)
         subSession.onRetired.listen(() => {
             this.subSessions.delete(streamPartId)
         })
+        this.logger.debug('created new SubscriptionSession for stream part %s', streamPartId)
         return subSession
     }
 
@@ -66,7 +108,7 @@ export class Subscriber implements Context {
         try {
             await subSession.add(sub)
         } catch (err) {
-            this.debug('failed to add', sub.id, err)
+            this.logger.debug('failed to add Subscription to SubscriptionSession, reason: %s', err)
             // clean up if fail
             await this.remove(sub)
             throw err
@@ -79,7 +121,7 @@ export class Subscriber implements Context {
         const subSession = this.getOrCreateSubscriptionSession<T>(streamPartId)
 
         // create subscription
-        const sub = new Subscription<T>(subSession)
+        const sub = new Subscription<T>(subSession, this.loggerFactory)
         return this.addSubscription(sub)
     }
 

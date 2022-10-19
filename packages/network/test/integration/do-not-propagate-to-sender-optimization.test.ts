@@ -1,9 +1,18 @@
 import { NetworkNode } from '../../src/logic/NetworkNode'
 import { Tracker, startTracker } from '@streamr/network-tracker'
-import { MessageID, MessageRef, StreamMessage, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
+import {
+    MessageID,
+    MessageRef,
+    StreamMessage,
+    StreamPartIDUtils,
+    toStreamID
+} from 'streamr-client-protocol'
 import { waitForCondition } from 'streamr-test-utils'
 
 import { createNetworkNode, NodeEvent } from '../../src/composition'
+import { toEthereumAddress } from '@streamr/utils'
+
+const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
 /**
  * This test verifies that on receiving a message, the receiver will not propagate the message to the sender as they
@@ -76,11 +85,12 @@ describe('optimization: do not propagate to sender', () => {
         })
 
         n1.publish(new StreamMessage({
-            messageId: new MessageID(toStreamID('stream-id'), 0, 100, 0, 'publisher', 'session'),
+            messageId: new MessageID(toStreamID('stream-id'), 0, 100, 0, PUBLISHER_ID, 'session'),
             prevMsgRef: new MessageRef(99, 0),
             content: {
                 hello: 'world'
             },
+            signature: 'signature'
         }))
 
         await waitForCondition(() => onDuplicateMessage.mock.calls.length >= 2)

@@ -58,7 +58,7 @@ describe('PubSub with multiple clients', () => {
         const pubClient = environment.createClient({
             id: `publisher${id}`
         })
-        const publisherId = (await pubClient.getAddress()).toLowerCase()
+        const publisherId = await pubClient.getAddress()
 
         addAfter(async () => {
             counterId.clear(publisherId) // prevent overflows in counter
@@ -133,29 +133,27 @@ describe('PubSub with multiple clients', () => {
             await otherClient.subscribe({
                 stream: stream.id,
             }, (_content, streamMessage) => {
-                const msgs = receivedMessagesOther[streamMessage.getPublisherId().toLowerCase()] || []
+                const msgs = receivedMessagesOther[streamMessage.getPublisherId()] || []
                 msgs.push(streamMessage)
-                receivedMessagesOther[streamMessage.getPublisherId().toLowerCase()] = msgs
+                receivedMessagesOther[streamMessage.getPublisherId()] = msgs
             })
 
             // subscribe to stream from main client instance
             await mainClient.subscribe({
                 stream: stream.id,
             }, (_content, streamMessage) => {
-                const msgs = receivedMessagesMain[streamMessage.getPublisherId().toLowerCase()] || []
+                const msgs = receivedMessagesMain[streamMessage.getPublisherId()] || []
                 msgs.push(streamMessage)
-                receivedMessagesMain[streamMessage.getPublisherId().toLowerCase()] = msgs
+                receivedMessagesMain[streamMessage.getPublisherId()] = msgs
             })
 
-            /* eslint-disable no-await-in-loop */
             const publishers: StreamrClient[] = []
             for (let i = 0; i < 3; i++) {
                 publishers.push(await createPublisher(i))
             }
-            /* eslint-enable no-await-in-loop */
             const published: Record<string, StreamMessage[]> = {}
             await Promise.all(publishers.map(async (pubClient) => {
-                const publisherId = (await pubClient.getAddress()).toLowerCase()
+                const publisherId = await pubClient.getAddress()
                 addAfter(() => {
                     counterId.clear(publisherId) // prevent overflows in counter
                 })
@@ -190,7 +188,7 @@ describe('PubSub with multiple clients', () => {
             const mainSub = await mainClient.subscribe({
                 stream: stream.id,
             }, (_content, streamMessage) => {
-                const key = streamMessage.getPublisherId().toLowerCase()
+                const key = streamMessage.getPublisherId()
                 const msgs = receivedMessagesMain[key] || []
                 msgs.push(streamMessage)
                 receivedMessagesMain[key] = msgs
@@ -209,7 +207,7 @@ describe('PubSub with multiple clients', () => {
             let counter = 0
             const published: Record<string, StreamMessage[]> = {}
             await Promise.all(publishers.map(async (pubClient) => {
-                const publisherId = (await pubClient.getAddress()).toLowerCase()
+                const publisherId = await pubClient.getAddress()
                 addAfter(() => {
                     counterId.clear(publisherId) // prevent overflows in counter
                 })
@@ -233,7 +231,7 @@ describe('PubSub with multiple clients', () => {
                             from: lastMessage.getMessageRef()
                         }
                     }, (_content, streamMessage) => {
-                        const key = streamMessage.getPublisherId().toLowerCase()
+                        const key = streamMessage.getPublisherId()
                         const msgs = receivedMessagesOther[key] || []
                         msgs.push(streamMessage)
                         receivedMessagesOther[key] = msgs
@@ -282,7 +280,7 @@ describe('PubSub with multiple clients', () => {
         await otherClient.subscribe({
             stream: stream.id,
         }, (_content, streamMessage) => {
-            const key = streamMessage.getPublisherId().toLowerCase()
+            const key = streamMessage.getPublisherId()
             const msgs = receivedMessagesOther[key] || []
             msgs.push(streamMessage)
             receivedMessagesOther[key] = msgs
@@ -292,22 +290,20 @@ describe('PubSub with multiple clients', () => {
         await mainClient.subscribe({
             stream: stream.id,
         }, (_content, streamMessage) => {
-            const key = streamMessage.getPublisherId().toLowerCase()
+            const key = streamMessage.getPublisherId()
             const msgs = receivedMessagesMain[key] || []
             msgs.push(streamMessage)
             receivedMessagesMain[key] = msgs
         })
 
-        /* eslint-disable no-await-in-loop */
         const publishers: StreamrClient[] = []
         for (let i = 0; i < 1; i++) {
             publishers.push(await createPublisher(i))
         }
 
-        /* eslint-enable no-await-in-loop */
         const published: Record<string, StreamMessage[]> = {}
         await Promise.all(publishers.map(async (pubClient) => {
-            const publisherId = (await pubClient.getAddress()).toLowerCase()
+            const publisherId = await pubClient.getAddress()
             const publishTestMessages = getPublishTestStreamMessages(pubClient, stream, {
                 waitForLast: true,
                 waitForLastTimeout: 35000,
@@ -346,7 +342,7 @@ describe('PubSub with multiple clients', () => {
         const mainSub = await mainClient.subscribe({
             stream: stream.id,
         }, (_content, streamMessage) => {
-            const key = streamMessage.getPublisherId().toLowerCase()
+            const key = streamMessage.getPublisherId()
             const msgs = receivedMessagesMain[key] || []
             msgs.push(streamMessage)
             receivedMessagesMain[key] = msgs
@@ -355,16 +351,14 @@ describe('PubSub with multiple clients', () => {
             }
         })
 
-        /* eslint-disable no-await-in-loop */
         const publishers: StreamrClient[] = []
         for (let i = 0; i < 3; i++) {
             publishers.push(await createPublisher(i))
         }
 
         let counter = 0
-        /* eslint-enable no-await-in-loop */
         await Promise.all(publishers.map(async (pubClient) => {
-            const publisherId = (await pubClient.getAddress()).toString().toLowerCase()
+            const publisherId = await pubClient.getAddress()
             const publishTestMessages = getPublishTestStreamMessages(pubClient, stream, {
                 waitForLast: true,
                 waitForLastTimeout: 35000,
@@ -380,7 +374,7 @@ describe('PubSub with multiple clients', () => {
                         from: lastMessage.getMessageRef()
                     }
                 }, (_content, streamMessage) => {
-                    const key = streamMessage.getPublisherId().toLowerCase()
+                    const key = streamMessage.getPublisherId()
                     const msgs = receivedMessagesOther[key] || []
                     msgs.push(streamMessage)
                     receivedMessagesOther[key] = msgs

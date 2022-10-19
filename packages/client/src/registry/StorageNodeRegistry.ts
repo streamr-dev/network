@@ -1,30 +1,25 @@
-import debug from 'debug'
 import type { NodeRegistry as NodeRegistryContract } from '../ethereumArtifacts/NodeRegistry'
 import NodeRegistryArtifact from '../ethereumArtifacts/NodeRegistryAbi.json'
 import { scoped, Lifecycle, inject } from 'tsyringe'
 import { ConfigInjectionToken } from '../Config'
 import { EthereumConfig, getStreamRegistryChainProvider, getStreamRegistryOverrides } from '../Ethereum'
 import { NotFoundError } from '../HttpUtil'
-import { EthereumAddress } from 'streamr-client-protocol'
 import { waitForTx } from '../utils/contract'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ContractFactory } from '../ContractFactory'
-
-/**
- * Store a mapping of storage node addresses <-> storage node URLs
- */
-
-const log = debug('StreamrClient:StorageNodeRegistry')
+import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 
 export interface StorageNodeMetadata {
     http: string
 }
 
+/**
+ * Store a mapping of storage node addresses <-> storage node URLs
+ */
 @scoped(Lifecycle.ContainerScoped)
 export class StorageNodeRegistry {
-
     private nodeRegistryContract?: NodeRegistryContract
-    private nodeRegistryContractReadonly: NodeRegistryContract
+    private readonly nodeRegistryContractReadonly: NodeRegistryContract
 
     constructor(
         private contractFactory: ContractFactory,
@@ -33,7 +28,7 @@ export class StorageNodeRegistry {
     ) {
         const chainProvider = getStreamRegistryChainProvider(ethereumConfig)
         this.nodeRegistryContractReadonly = this.contractFactory.createReadContract(
-            this.ethereumConfig.storageNodeRegistryChainAddress,
+            toEthereumAddress(this.ethereumConfig.storageNodeRegistryChainAddress),
             NodeRegistryArtifact,
             chainProvider,
             'storageNodeRegistry'
@@ -44,7 +39,7 @@ export class StorageNodeRegistry {
         if (!this.nodeRegistryContract) {
             const chainSigner = await this.authentication.getStreamRegistryChainSigner()
             this.nodeRegistryContract = this.contractFactory.createWriteContract<NodeRegistryContract>(
-                this.ethereumConfig.storageNodeRegistryChainAddress,
+                toEthereumAddress(this.ethereumConfig.storageNodeRegistryChainAddress),
                 NodeRegistryArtifact,
                 chainSigner,
                 'storageNodeRegistry'
@@ -53,7 +48,6 @@ export class StorageNodeRegistry {
     }
 
     async setStorageNodeMetadata(metadata: StorageNodeMetadata | undefined): Promise<void> {
-        log('setStorageNodeMetadata %j', metadata)
         await this.connectToContract()
         const ethersOverrides = getStreamRegistryOverrides(this.ethereumConfig)
         if (metadata !== undefined) {

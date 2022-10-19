@@ -10,40 +10,32 @@ docs:
 broker:
   - 'packages/broker/*'
   - 'packages/broker/**/*'
-  - '.github/workflows/broker.yml'
 network:
   - 'packages/network/*'
   - 'packages/network/**/*'
-  - '.github/workflows/network.yml'
 tracker:
   - 'packages/network-tracker/*'
   - 'packages/network-tracker/**/*'
-  - '.github/workflows/network-tracker.yml'
 dht:
   - 'packages/dht/*'
   - 'packages/dht/**/*'
-  - '.github/workflows/dht.yml'
+proto-rpc:
+  - 'packages/proto-rpc/*'
+  - 'packages/proto-rpc/**/*'
 client:
   - 'packages/client/*'
   - 'packages/client/**/*'
-  - '.github/workflows/client-build.yml'
-  - '.github/workflows/client-code.yml'
 protocol:
   - 'packages/protocol/*'
   - 'packages/protocol/**/*'
-  - '.github/workflows/protocol.yml'
 test-utils:
   - 'packages/test-utils/*'
   - 'packages/test-utils/**/*'
-  - '.github/workflows/test-utils.yml'
 utils:
   - 'packages/utils/*'
   - 'packages/utils/**/*'
-  - '.github/workflows/utils.yml'
 cli-tools:
   - 'packages/cli-tools/*'
   - 'packages/cli-tools/**/*'
-dev-config:
-  - 'packages/dev-config/*'
 changelog:
   - 'packages/*/CHANGELOG.md'

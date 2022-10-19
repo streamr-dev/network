@@ -2,11 +2,11 @@ import { StreamMessage } from 'streamr-client-protocol'
 import { fastWallet, waitForCondition } from 'streamr-test-utils'
 import { createTestStream } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
-import { Defer } from '../../src/utils/Defer'
 import { Subscription } from '../../src/subscribe/Subscription'
 import { MaybeAsync, StreamDefinition, StreamPermission } from '../../src'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
+import { Defer } from '@streamr/utils'
 
 const MAX_ITEMS = 3
 const NUM_MESSAGES = 8
@@ -320,7 +320,6 @@ describe('Subscriber', () => {
                 for await (const m of sub) {
                     received.push(m)
                     if (received.length === published.length - 1) {
-                        // eslint-disable-next-line no-loop-func
                         t = setTimeout(() => {
                             // give it a moment to incorrectly get messages
                             sub.unsubscribe()
@@ -390,7 +389,6 @@ describe('Subscriber', () => {
                     received.push(m)
                     // after first message schedule end
                     if (received.length === 1) {
-                        // eslint-disable-next-line no-loop-func
                         t = setTimeout(() => {
                             expectedLength = received.length
                             // should not see any more messages after end
@@ -638,7 +636,7 @@ describe('Subscriber', () => {
         it('can subscribe to stream multiple times then unsubscribe all mid-stream', async () => {
             let sub1Received: unknown[] = []
             let sub1ReceivedAtUnsubscribe: unknown[] = []
-            const gotOne = Defer()
+            const gotOne = new Defer<undefined>()
             let didGetOne = false
             const [received1, received2] = await Promise.all([
                 collect(sub1, async ({ received }) => {

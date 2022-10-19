@@ -1,49 +1,67 @@
-import { DependencyContainer, inject } from 'tsyringe'
+import { inject } from 'tsyringe'
 
 import { StreamMessage, StreamMessageType, StreamPartID } from 'streamr-client-protocol'
 
 import { Scaffold } from '../utils/Scaffold'
-import { instanceId } from '../utils/utils'
 import { until } from '../utils/promises'
-import { Context } from '../utils/Context'
 import { Signal } from '../utils/Signal'
 import { MessageStream } from './MessageStream'
 
 import { Subscription } from './Subscription'
-import { SubscribePipeline } from './SubscribePipeline'
-import { BrubeckContainer } from '../Container'
+import { createSubscribePipeline } from './SubscribePipeline'
 import { NetworkNodeFacade, NetworkNodeStub } from '../NetworkNodeFacade'
+import { Resends } from './Resends'
+import { GroupKeyStore } from '../encryption/GroupKeyStore'
+import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'
+import { StreamRegistryCached } from '../registry/StreamRegistryCached'
+import { StreamrClientEventEmitter } from '../events'
+import { DestroySignal } from '../DestroySignal'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import { LoggerFactory } from '../utils/LoggerFactory'
 
 /**
  * Manages adding & removing subscriptions to node as needed.
  * A session contains one or more subscriptions to a single streamId + streamPartition pair.
  */
 
-export class SubscriptionSession<T> implements Context {
-    readonly id
-    readonly debug
+export class SubscriptionSession<T> {
     public readonly streamPartId: StreamPartID
-    /** active subs */
-    private subscriptions: Set<Subscription<T>> = new Set()
-    private pendingRemoval: WeakSet<Subscription<T>> = new WeakSet()
+    public readonly onRetired = Signal.once()
     private isRetired: boolean = false
     private isStopped = false
-    private pipeline
-    private node
-    public readonly onRetired = Signal.once()
+    private readonly subscriptions: Set<Subscription<T>> = new Set()
+    private readonly pendingRemoval: WeakSet<Subscription<T>> = new WeakSet()
+    private readonly pipeline: MessageStream<T>
+    private readonly node: NetworkNodeFacade
 
     constructor(
-        context: Context,
         streamPartId: StreamPartID,
-        @inject(BrubeckContainer) container: DependencyContainer
+        resends: Resends,
+        groupKeyStore: GroupKeyStore,
+        subscriberKeyExchange: SubscriberKeyExchange,
+        streamRegistryCached: StreamRegistryCached,
+        node: NetworkNodeFacade,
+        streamrClientEventEmitter: StreamrClientEventEmitter,
+        destroySignal: DestroySignal,
+        loggerFactory: LoggerFactory,
+        @inject(ConfigInjectionToken.Root) rootConfig: StrictStreamrClientConfig
     ) {
-        this.id = instanceId(this)
-        this.debug = context.debug.extend(this.id)
         this.streamPartId = streamPartId
         this.distributeMessage = this.distributeMessage.bind(this)
-        this.node = container.resolve<NetworkNodeFacade>(NetworkNodeFacade)
+        this.node = node
         this.onError = this.onError.bind(this)
-        this.pipeline = SubscribePipeline<T>(new MessageStream<T>(this), this.streamPartId, this, container)
+        this.pipeline = createSubscribePipeline<T>({
+            messageStream: new MessageStream<T>(),
+            streamPartId,
+            resends,
+            groupKeyStore,
+            subscriberKeyExchange,
+            streamRegistryCached,
+            streamrClientEventEmitter,
+            loggerFactory,
+            destroySignal,
+            rootConfig
+        })
         this.pipeline.onError.listen(this.onError)
         this.pipeline
             .pipe(this.distributeMessage)
@@ -96,15 +114,13 @@ export class SubscriptionSession<T> implements Context {
     }
 
     private async subscribe(): Promise<NetworkNodeStub> {
-        this.debug('subscribe')
         const node = await this.node.getNode()
         node.addMessageListener(this.onMessageInput)
         node.subscribe(this.streamPartId)
         return node
     }
 
-    private async unsubscribe(node: NetworkNodeStub) {
-        this.debug('unsubscribe')
+    private async unsubscribe(node: NetworkNodeStub): Promise<void> {
         this.pipeline.end()
         this.pipeline.return()
         this.pipeline.onError.end(new Error('done'))
@@ -139,7 +155,6 @@ export class SubscriptionSession<T> implements Context {
     }
 
     async stop(): Promise<void> {
-        this.debug('stop')
         this.isStopped = true
         this.pipeline.end()
         await this.retire()
@@ -165,7 +180,6 @@ export class SubscriptionSession<T> implements Context {
 
     async add(sub: Subscription<T>): Promise<void> {
         if (!sub || this.subscriptions.has(sub) || this.pendingRemoval.has(sub)) { return } // already has
-        this.debug('add', sub.id)
         this.subscriptions.add(sub)
 
         sub.onBeforeFinally.listen(() => {
@@ -184,8 +198,6 @@ export class SubscriptionSession<T> implements Context {
             return
         }
 
-        this.debug('remove >>', sub.id)
-
         this.pendingRemoval.add(sub)
         this.subscriptions.delete(sub)
 
@@ -195,19 +207,7 @@ export class SubscriptionSession<T> implements Context {
             }
         } finally {
             await this.updateSubscriptions()
-            this.debug('remove <<', sub.id)
         }
-    }
-
-    /**
-     * Remove all subscriptions & subscription connection handles
-     */
-
-    async removeAll(): Promise<void> {
-        this.debug('removeAll %d', this.count())
-        await Promise.all([...this.subscriptions].map((sub) => (
-            this.remove(sub)
-        )))
     }
 
     /**

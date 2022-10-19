@@ -1,24 +1,23 @@
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import { Debugger } from 'debug'
-import { Context } from './Context'
 import { ConfigInjectionToken, TimeoutsConfig } from '../Config'
-import { instanceId } from './utils'
 import fetch, { Response } from 'node-fetch'
+import { Logger } from '@streamr/utils'
+import { LoggerFactory } from './LoggerFactory'
 
 @scoped(Lifecycle.ContainerScoped)
 export class HttpFetcher {
-    private readonly debug: Debugger
+    private readonly logger: Logger
 
     constructor(
-        context: Context,
+        @inject(LoggerFactory) loggerFactory: LoggerFactory,
         @inject(ConfigInjectionToken.Timeouts) private timeoutsConfig: TimeoutsConfig
     ) {
-        this.debug = context.debug.extend(instanceId(this))
+        this.logger = loggerFactory.createLogger(module)
     }
 
     fetch(url: string, init?: Record<string, unknown>): Promise<Response> {
         const timeout = this.timeoutsConfig.httpFetchTimeout
-        this.debug('fetching %s (timeout %d ms)', url, timeout)
+        this.logger.debug('fetching %s (timeout %d ms)', url, timeout)
         return fetch(url, {
             timeout,
             ...init

@@ -24,7 +24,7 @@ async function write(stream: PassThrough, data: any, ac: AbortController) {
  */
 async function pull(fromBrowserStream: ReadableStream, toNodeStream: PassThrough) {
     const reader = fromBrowserStream.getReader()
-    /* eslint-disable no-constant-condition, no-await-in-loop */
+    /* eslint-disable no-constant-condition */
     const ac = new AbortController()
     const cleanup = () => {
         ac.abort()

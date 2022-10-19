@@ -54,7 +54,7 @@ const cachedJsonGet = (
         timestamp: number
         json: string
     }
-    return app.get(endpoint, (req: express.Request, res: express.Response) => {
+    return app.get(endpoint, (_req: express.Request, res: express.Response) => {
         staticLogger.debug('request to ' + endpoint)
         if ((cache === undefined) || (Date.now() > (cache.timestamp + maxAge))) {
             cache = {
@@ -77,7 +77,7 @@ export function trackerHttpEndpoints(
     app.use(morgan(process.env.CUSTOM_MORGAN_FORMAT ?? ':method :url :status :response-time ms - :res[content-length] - :remote-addr'))
     httpServer.on('request', app)
 
-    app.get('/topology/', (req: express.Request, res: express.Response) => {
+    app.get('/topology/', (_req: express.Request, res: express.Response) => {
         staticLogger.debug('request to /topology/')
         res.json(getTopology(tracker.getOverlayPerStreamPart(), tracker.getOverlayConnectionRtts()))
     })
@@ -116,7 +116,7 @@ export function trackerHttpEndpoints(
         const result = findStreamsPartsForNode(tracker.getOverlayPerStreamPart(), nodeId)
         res.json(result)
     })
-    app.get('/location/', (req: express.Request, res: express.Response) => {
+    app.get('/location/', (_req: express.Request, res: express.Response) => {
         staticLogger.debug('request to /location/')
         res.json(getNodesWithLocationData(tracker.getNodes(), tracker.getAllNodeLocations()))
     })
@@ -127,11 +127,11 @@ export function trackerHttpEndpoints(
         staticLogger.debug(`request to /location/${nodeId}/`)
         res.json(location || {})
     })
-    app.get('/metadata/', (req: express.Request, res: express.Response) => {
+    app.get('/metadata/', (_req: express.Request, res: express.Response) => {
         staticLogger.debug('request to /metadata/')
         res.json(tracker.getAllExtraMetadatas())
     })
-    app.get('/topology-size/', async (req: express.Request, res: express.Response) => {
+    app.get('/topology-size/', async (_req: express.Request, res: express.Response) => {
         staticLogger.debug('request to /topology-size/')
         res.json(getStreamPartSizes(tracker.getOverlayPerStreamPart()))
     })

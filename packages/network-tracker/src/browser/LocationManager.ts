@@ -1,4 +1,3 @@
-import { Logger } from '@streamr/utils'
 import { Location, NodeId } from 'streamr-network'
 
 function isValidNodeLocation(location: Location | null) {
@@ -7,11 +6,9 @@ function isValidNodeLocation(location: Location | null) {
 
 export class LocationManager {
     private readonly nodeLocations: Record<NodeId, Location>
-    private readonly logger: Logger
 
     constructor() {
         this.nodeLocations = {}
-        this.logger = new Logger(module)
     }
 
     getAllNodeLocations(): Readonly<Record<NodeId, Location>> {

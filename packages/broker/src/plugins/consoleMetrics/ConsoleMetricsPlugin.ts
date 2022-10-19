@@ -1,8 +1,7 @@
 import { Schema } from 'ajv'
 import { Plugin } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
-import { MetricsReport } from 'streamr-network'
-import { Logger } from '@streamr/utils'
+import { Logger, MetricsReport } from '@streamr/utils'
 import { omit } from 'lodash'
 
 const logger = new Logger(module)
@@ -33,6 +32,7 @@ export class ConsoleMetricsPlugin extends Plugin<ConsoleMetricsPluginConfig> {
         this.producer?.stop()
     }
 
+    // eslint-disable-next-line class-methods-use-this
     override getConfigSchema(): Schema {
         return PLUGIN_CONFIG_SCHEMA
     }

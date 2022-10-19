@@ -1,4 +1,3 @@
-/* eslint-disable padding-line-between-statements */
 import { fastPrivateKey } from 'streamr-test-utils'
 import { StreamMessage } from 'streamr-client-protocol'
 import {
@@ -7,11 +6,11 @@ import {
 import {
     getPublishTestStreamMessages
 } from '../test-utils/publish'
-import { Defer } from '../../src/utils/Defer'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
+import { Defer } from '@streamr/utils'
 
 // this has publisher & subscriber clients
 // publisher begins publishing `maxMessages` messages
@@ -108,7 +107,7 @@ describe('revoke permissions', () => {
         const received: StreamMessage[] = []
         // Publish after subscribed
         let count = 0
-        const gotMessages = Defer()
+        const gotMessages = new Defer<undefined>()
         // do publish in background otherwise permission is revoked before subscriber starts processing
         const publishTask = publishTestMessages(maxMessages, {
             timestamp: 1111111,

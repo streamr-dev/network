@@ -1,15 +1,15 @@
 /* eslint-disable padding-line-between-statements */
-import { EthereumAddress, StreamID, toStreamID } from 'streamr-client-protocol'
+import { StreamID, toStreamID } from 'streamr-client-protocol'
 import { StreamQueryResult } from './StreamRegistry'
 import { StreamPermission, ChainPermissions, convertChainPermissionsToStreamPermissions, PUBLIC_PERMISSION_ADDRESS } from '../permission'
 import { GraphQLClient } from '../utils/GraphQLClient'
 import { filter, map, unique } from '../utils/GeneratorUtils'
 import { SynchronizedGraphQLClient } from '../utils/SynchronizedGraphQLClient'
 import { Stream } from '../Stream'
-import { Debugger } from '../utils/log'
+import { EthereumAddress, Logger, toEthereumAddress } from '@streamr/utils'
 
 export interface SearchStreamsPermissionFilter {
-    user: EthereumAddress
+    user: string
     /*
      * If possible, prefer allOf to anyOf because the query performance is better
      */
@@ -29,16 +29,18 @@ export const searchStreams = (
     permissionFilter: SearchStreamsPermissionFilter | undefined,
     graphQLClient: SynchronizedGraphQLClient,
     parseStream: (id: StreamID, metadata: string) => Stream,
-    debug: Debugger
+    logger: Logger
 ): AsyncGenerator<Stream> => {
     if ((term === undefined) && (permissionFilter === undefined)) {
         throw new Error('Requires a search term or a permission filter')
     }
-    debug('Search streams term=%s permissions=%j', term, permissionFilter)
+    logger.debug('search streams with term="%s" and permissions=%j', term, permissionFilter)
     return map(
         fetchSearchStreamsResultFromTheGraph(term, permissionFilter, graphQLClient),
         (item: SearchStreamsResultItem) => parseStream(toStreamID(item.stream.id), item.stream.metadata),
-        (err: Error, item: SearchStreamsResultItem) => debug('Omitting stream %s from result because %s', item.stream.id, err.message)
+        (err: Error, item: SearchStreamsResultItem) => {
+            logger.debug('omitting stream %s from result, reason: %s', item.stream.id, err.message)
+        }
     )
 }
 
@@ -102,7 +104,7 @@ const buildQuery = (
         id_gt: lastId
     }
     if (permissionFilter !== undefined) {
-        variables.userAddress_in = [permissionFilter.user]
+        variables.userAddress_in = [toEthereumAddress(permissionFilter.user)]
         if (permissionFilter.allowPublic) {
             variables.userAddress_in.push(PUBLIC_PERMISSION_ADDRESS)
         }

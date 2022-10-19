@@ -79,7 +79,7 @@ export class AggregatedError extends Error {
         if (!newErr) {
             if (oldErr && msg) {
                 // copy message
-                oldErr.message = joinMessages([oldErr.message, msg]) // eslint-disable-line no-param-reassign
+                oldErr.message = joinMessages([oldErr.message, msg])
             }
             return oldErr
         }
@@ -88,7 +88,7 @@ export class AggregatedError extends Error {
         if (!oldErr) {
             if (newErr && msg) {
                 // copy message
-                newErr.message = joinMessages([newErr.message, msg]) // eslint-disable-line no-param-reassign
+                newErr.message = joinMessages([newErr.message, msg])
             }
             return newErr
         }

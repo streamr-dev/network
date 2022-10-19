@@ -1,11 +1,19 @@
 import { Tracker, startTracker } from '@streamr/network-tracker'
 import { NetworkNode } from '../../src/logic/NetworkNode'
-import { MessageID, MessageRef, StreamMessage, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
+import {
+    MessageID,
+    MessageRef,
+    StreamMessage,
+    StreamPartIDUtils,
+    toStreamID
+} from 'streamr-client-protocol'
 import { waitForCondition } from 'streamr-test-utils'
-import { waitForEvent } from '@streamr/utils'
+import { toEthereumAddress, waitForEvent } from '@streamr/utils'
 
 import { Event as NodeEvent } from '../../src/logic/Node'
 import { createNetworkNode } from '../../src/composition'
+
+const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
 describe('message propagation in network', () => {
     let tracker: Tracker
@@ -99,19 +107,21 @@ describe('message propagation in network', () => {
 
         for (let i = 1; i <= 5; ++i) {
             n1.publish(new StreamMessage({
-                messageId: new MessageID(toStreamID('stream-1'), 0, i, 0, 'publisherId', 'msgChainId'),
+                messageId: new MessageID(toStreamID('stream-1'), 0, i, 0, PUBLISHER_ID, 'msgChainId'),
                 prevMsgRef: i === 1 ? null : new MessageRef(i - 1, 0),
                 content: {
                     messageNo: i
                 },
+                signature: 'signature'
             }))
 
             n4.publish(new StreamMessage({
-                messageId: new MessageID(toStreamID('stream-2'), 0, i * 100, 0, 'publisherId', 'msgChainId'),
+                messageId: new MessageID(toStreamID('stream-2'), 0, i * 100, 0, PUBLISHER_ID, 'msgChainId'),
                 prevMsgRef: i === 1 ? null : new MessageRef((i - 1) * 100, 0),
                 content: {
                     messageNo: i * 100
                 },
+                signature: 'signature'
             }))
         }
 

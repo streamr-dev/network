@@ -41,6 +41,7 @@ export class ServerRegistry extends EventEmitter<ServerRegistryEvents> {
     private methods = new Map<string, RegisteredMethod>()
     private notifications = new Map<string, RegisteredNotification>()
 
+    // eslint-disable-next-line class-methods-use-this
     private getImplementation<T extends RegisteredMethod | RegisteredNotification>(rpcMessage: RpcMessage, map: Map<string, T>): T {
         if (!rpcMessage || !rpcMessage.header || !rpcMessage.header.method) {
             throw new UnknownRpcMethod('Header "method" missing from RPC message')

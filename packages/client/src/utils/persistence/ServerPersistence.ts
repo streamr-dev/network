@@ -4,18 +4,15 @@ import { promises as fs } from 'fs'
 import { open, Database } from 'sqlite'
 import sqlite3 from 'sqlite3'
 
-import { instanceId } from '../utils'
 import { pOnce } from '../promises'
-import { Context } from '../Context'
 
 import { Persistence } from './Persistence'
 import { StreamID } from 'streamr-client-protocol'
-
-// eslint-disable-next-line promise/param-names
-const wait = (ms: number) => new Promise((resolveFn) => setTimeout(resolveFn, ms))
+import { Logger, wait } from '@streamr/utils'
+import { LoggerFactory } from '../LoggerFactory'
 
 export interface ServerPersistenceOptions {
-    context: Context
+    loggerFactory: LoggerFactory
     tableName: string
     valueColumnName: string
     clientId: string
@@ -26,8 +23,8 @@ export interface ServerPersistenceOptions {
 /*
  * Stores key-value pairs for a given stream
  */
-export default class ServerPersistence implements Persistence<string, string>, Context {
-    readonly id: string
+export default class ServerPersistence implements Persistence<string, string> {
+    private readonly logger: Logger
     private readonly tableName: string
     private readonly valueColumnName: string
     private readonly dbFilePath: string
@@ -36,20 +33,18 @@ export default class ServerPersistence implements Persistence<string, string>, C
     private initCalled = false
     private readonly migrationsPath?: string
     private readonly onInit?: (db: Database) => Promise<void>
-    readonly debug
 
     constructor({
-        context,
+        loggerFactory,
         clientId,
         tableName,
         valueColumnName,
         migrationsPath,
         onInit
     }: ServerPersistenceOptions) {
-        this.id = instanceId(this)
+        this.logger = loggerFactory.createLogger(module)
         this.tableName = tableName
         this.valueColumnName = valueColumnName
-        this.debug = context.debug.extend(this.id)
         const paths = envPaths('streamr-client')
         const dbFilePath = resolve(paths.data, join('./', clientId, `${tableName}.db`))
         this.dbFilePath = dbFilePath
@@ -81,7 +76,7 @@ export default class ServerPersistence implements Persistence<string, string>, C
             return await fn()
         } catch (err) {
             if (retriesLeft > 0 && err.code === 'SQLITE_BUSY') {
-                this.debug('DB Busy, retrying %d of %d', maxRetries - retriesLeft + 1, maxRetries)
+                this.logger.trace('database busy, retrying %d of %d', maxRetries - retriesLeft + 1, maxRetries)
                 return this.tryExec(async () => {
                     // wait random time and retry
                     await wait(10 + Math.random() * 500)
@@ -124,7 +119,7 @@ export default class ServerPersistence implements Persistence<string, string>, C
             await this.onInit?.(store)
             this.store = store
         } catch (err) {
-            this.debug('error', err)
+            this.logger.trace('failed to open database, reason: %s', err)
             if (!this.error) {
                 this.error = err
             }
@@ -134,7 +129,7 @@ export default class ServerPersistence implements Persistence<string, string>, C
             throw this.error
         }
 
-        this.debug('init')
+        this.logger.trace('database initialized')
     }
 
     async get(key: string, streamId: StreamID): Promise<string | undefined> {
@@ -165,7 +160,6 @@ export default class ServerPersistence implements Persistence<string, string>, C
     }
 
     async close(): Promise<void> {
-        this.debug('close')
         if (!this.initCalled) {
             // nothing to close if never opened
             return
@@ -173,6 +167,7 @@ export default class ServerPersistence implements Persistence<string, string>, C
 
         await this.init()
         await this.store!.close()
+        this.logger.trace('closed')
     }
 
     get [Symbol.toStringTag](): string {

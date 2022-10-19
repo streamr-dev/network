@@ -26,10 +26,12 @@ export class MqttPlugin extends Plugin<MqttPluginConfig> {
         return this.server.start()
     }
 
+    // eslint-disable-next-line class-methods-use-this
     async stop(): Promise<void> {
         await this.server!.stop()
     }
 
+    // eslint-disable-next-line class-methods-use-this
     override getConfigSchema(): Schema {
         return PLUGIN_CONFIG_SCHEMA
     }

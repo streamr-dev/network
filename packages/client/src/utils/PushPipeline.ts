@@ -1,4 +1,4 @@
-import { IPushBuffer, PushBuffer, DEFAULT_BUFFER_SIZE, pull, PushBufferOptions } from './PushBuffer'
+import { IPushBuffer, PushBuffer, DEFAULT_BUFFER_SIZE, pull } from './PushBuffer'
 import * as G from './GeneratorUtils'
 import { Pipeline, PipelineTransform } from './Pipeline'
 
@@ -10,8 +10,9 @@ export class PushPipeline<InType, OutType = InType> extends Pipeline<InType, Out
     /** @internal */
     override readonly source: PushBuffer<InType>
 
-    constructor(bufferSize = DEFAULT_BUFFER_SIZE, options?: PushBufferOptions) {
-        const inputBuffer = new PushBuffer<InType>(bufferSize, options)
+    /** @internal */
+    constructor(bufferSize = DEFAULT_BUFFER_SIZE) {
+        const inputBuffer = new PushBuffer<InType>(bufferSize)
         super(inputBuffer)
         this.source = inputBuffer
     }

@@ -4,6 +4,7 @@ import { Storage } from '../../../../src/plugins/storage/Storage'
 import { startCassandraStorage } from '../../../../src/plugins/storage/Storage'
 import { getTestName, STREAMR_DOCKER_DEV_HOST } from '../../../utils'
 import { buildMsg } from './Storage.test'
+import { toEthereumAddress } from '@streamr/utils'
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'
@@ -29,7 +30,7 @@ describe('Storage: lots of data', () => {
                 bucketKeepAliveSeconds: 1
             }
         })
-        streamId = getTestName(module) + '/' + Date.now()
+        streamId = getTestName(module) + Date.now()
     })
 
     afterAll(async () => {
@@ -46,7 +47,7 @@ describe('Storage: lots of data', () => {
                 streamPartition: 0,
                 timestamp: 1000000 + (i + 1),
                 sequenceNumber: 0,
-                publisherId: 'publisher1',
+                publisherId: toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
                 content: randomBuffer.toString('hex')
             })
             storePromises.push(() => storage.store(msg))

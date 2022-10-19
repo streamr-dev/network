@@ -10,7 +10,7 @@ import {
 } from 'streamr-client-protocol'
 import { Event as NodeToNodeEvent, NodeToNode } from '../protocol/NodeToNode'
 import { NodeToTracker } from '../protocol/NodeToTracker'
-import { Metric, MetricsContext, MetricsDefinition, RateMetric } from '../helpers/Metric'
+import { Metric, MetricsContext, MetricsDefinition, RateMetric } from '@streamr/utils'
 import { StreamPartManager } from './StreamPartManager'
 import { GapMisMatchError, InvalidNumberingError } from './DuplicateMessageDetector'
 import { Logger, withTimeout } from "@streamr/utils"

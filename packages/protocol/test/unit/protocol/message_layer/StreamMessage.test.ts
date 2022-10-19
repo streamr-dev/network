@@ -13,6 +13,7 @@ import ValidationError from '../../../../src/errors/ValidationError'
 import UnsupportedVersionError from '../../../../src/errors/UnsupportedVersionError'
 import { Serializer } from '../../../../src/Serializer'
 import StreamMessage from '../../../../src/protocol/message_layer/StreamMessage'
+import { toEthereumAddress } from '@streamr/utils'
 
 const content = {
     hello: 'world',
@@ -22,17 +23,18 @@ const newGroupKey = new EncryptedGroupKey('groupKeyId', 'encryptedGroupKeyHex')
 
 const msg = ({ timestamp = 1564046332168, sequenceNumber = 10, ...overrides } = {}) => {
     return new StreamMessage({
-        messageId: new MessageID(toStreamID('streamId'), 0, timestamp, sequenceNumber, 'publisherId', 'msgChainId'),
+        messageId: new MessageID(toStreamID('streamId'), 0, timestamp, sequenceNumber, PUBLISHER_ID, 'msgChainId'),
         prevMsgRef: new MessageRef(timestamp, 5),
         content: JSON.stringify(content),
         messageType: StreamMessage.MESSAGE_TYPES.MESSAGE,
         encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
-        signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
         signature: 'signature',
         newGroupKey,
         ...overrides
     })
 }
+
+const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
 describe('StreamMessage', () => {
     describe('constructor', () => {
@@ -42,7 +44,7 @@ describe('StreamMessage', () => {
             assert.strictEqual(streamMessage.getStreamPartition(), 0)
             assert.strictEqual(streamMessage.getTimestamp(), 1564046332168)
             assert.strictEqual(streamMessage.getSequenceNumber(), 10)
-            assert.strictEqual(streamMessage.getPublisherId(), 'publisherId')
+            assert.strictEqual(streamMessage.getPublisherId(), PUBLISHER_ID)
             assert.strictEqual(streamMessage.getMsgChainId(), 'msgChainId')
             assert.deepStrictEqual(streamMessage.prevMsgRef, new MessageRef(1564046332168, 5))
             assert.strictEqual(streamMessage.messageType, StreamMessage.MESSAGE_TYPES.MESSAGE)
@@ -52,21 +54,21 @@ describe('StreamMessage', () => {
             assert.deepStrictEqual(streamMessage.getContent(), content)
             assert.strictEqual(streamMessage.getSerializedContent(), JSON.stringify(content))
             assert.deepStrictEqual(streamMessage.getNewGroupKey(), newGroupKey)
-            assert.strictEqual(streamMessage.signatureType, StreamMessage.SIGNATURE_TYPES.ETH)
             assert.strictEqual(streamMessage.signature, 'signature')
             assert.strictEqual(streamMessage.getStreamPartID(), StreamPartIDUtils.parse('streamId#0'))
         })
 
         it('create StreamMessage with minimum fields defined', () => {
             const streamMessage = new StreamMessage({
-                messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
+                messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
                 content: JSON.stringify(content),
+                signature: 'signature'
             })
             assert.strictEqual(streamMessage.getStreamId(), 'streamId')
             assert.strictEqual(streamMessage.getStreamPartition(), 0)
             assert.strictEqual(streamMessage.getTimestamp(), 1564046332168)
             assert.strictEqual(streamMessage.getSequenceNumber(), 10)
-            assert.strictEqual(streamMessage.getPublisherId(), 'publisherId')
+            assert.strictEqual(streamMessage.getPublisherId(), PUBLISHER_ID)
             assert.strictEqual(streamMessage.getMsgChainId(), 'msgChainId')
             assert.deepStrictEqual(streamMessage.prevMsgRef, null)
             assert.strictEqual(streamMessage.messageType, StreamMessage.MESSAGE_TYPES.MESSAGE)
@@ -76,52 +78,36 @@ describe('StreamMessage', () => {
             assert.deepStrictEqual(streamMessage.getContent(), content)
             assert.strictEqual(streamMessage.getSerializedContent(), JSON.stringify(content))
             assert.strictEqual(streamMessage.getNewGroupKey(), null)
-            assert.strictEqual(streamMessage.signatureType, StreamMessage.SIGNATURE_TYPES.NONE)
-            assert.strictEqual(streamMessage.signature, null)
+            assert.strictEqual(streamMessage.signature, 'signature')
         })
 
         it('create StreamMessage with object as content instead of string', () => {
             const streamMessage = new StreamMessage({
-                messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
+                messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
                 content,
+                signature: 'signature'
             })
             assert.deepStrictEqual(streamMessage.getContent(), content)
             assert.strictEqual(streamMessage.getSerializedContent(), JSON.stringify(content))
         })
 
-        it('can detect signed/encrypted etc', () => {
+        it('can detect encrypted', () => {
             const streamMessage = new StreamMessage({
-                messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
+                messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
                 content: JSON.stringify(content),
+                signature: 'something'
             })
             expect(StreamMessage.isEncrypted(streamMessage)).toBe(false)
             expect(StreamMessage.isUnencrypted(streamMessage)).toBe(true)
-            expect(StreamMessage.isSigned(streamMessage)).toBe(false)
-            expect(StreamMessage.isUnsigned(streamMessage)).toBe(true)
-
-            const signedMessage = new StreamMessage({
-                messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
-                content: JSON.stringify(content),
-                signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
-                signature: 'something'
-            })
-
-            expect(StreamMessage.isEncrypted(signedMessage)).toBe(false)
-            expect(StreamMessage.isUnencrypted(signedMessage)).toBe(true)
-            expect(StreamMessage.isSigned(signedMessage)).toBe(true)
-            expect(StreamMessage.isUnsigned(signedMessage)).toBe(false)
             const encryptedMessage = new StreamMessage({
-                messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
+                messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
                 content: JSON.stringify(content),
-                signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
                 signature: 'something',
                 encryptionType: StreamMessage.ENCRYPTION_TYPES.RSA,
             })
 
             expect(StreamMessage.isEncrypted(encryptedMessage)).toBe(true)
             expect(StreamMessage.isUnencrypted(encryptedMessage)).toBe(false)
-            expect(StreamMessage.isSigned(encryptedMessage)).toBe(true)
-            expect(StreamMessage.isUnsigned(encryptedMessage)).toBe(false)
         })
 
         it('should throw if required fields are not defined', () => {
@@ -133,7 +119,7 @@ describe('StreamMessage', () => {
 
         it('should throw if content is not defined', () => {
             assert.throws(() => new StreamMessage({
-                messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
+                messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
                 // missing content
             } as any), ValidationError)
         })
@@ -235,8 +221,9 @@ describe('StreamMessage', () => {
     describe('clone', () => {
         it('works', () => {
             const streamMessage = new StreamMessage({
-                messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
+                messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
                 content: JSON.stringify(content),
+                signature: 'signature'
             })
             const streamMessageClone = streamMessage.clone()
             expect(streamMessageClone).not.toBe(streamMessage)
@@ -246,9 +233,8 @@ describe('StreamMessage', () => {
 
         it('works with encrypted messages', () => {
             const encryptedMessage = new StreamMessage({
-                messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
+                messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
                 content: JSON.stringify(content),
-                signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
                 signature: 'something',
                 encryptionType: StreamMessage.ENCRYPTION_TYPES.RSA,
                 prevMsgRef: new MessageRef(1564046332168, 5),

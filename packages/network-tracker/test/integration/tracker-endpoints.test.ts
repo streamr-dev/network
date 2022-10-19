@@ -32,6 +32,8 @@ function getHttp(url: string) {
 
 const trackerPort = 31750
 
+const address = '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+
 describe('tracker endpoint', () => {
     let tracker: Tracker
     let nodeOne: NetworkNode
@@ -69,7 +71,7 @@ describe('tracker endpoint', () => {
         nodeTwo.subscribe(StreamPartIDUtils.parse('stream-1#0'))
 
         nodeOne.subscribe(StreamPartIDUtils.parse('stream-2#0'))
-        nodeOne.subscribe(StreamPartIDUtils.parse('sandbox/test/stream-3#0'))
+        nodeOne.subscribe(StreamPartIDUtils.parse(`${address}/test/stream-3#0`))
 
         nodeOne.start()
         nodeTwo.start()
@@ -91,7 +93,7 @@ describe('tracker endpoint', () => {
         expect(status).toEqual(200)
         expect(jsonResult['stream-1#0']).not.toBeUndefined()
         expect(jsonResult['stream-2#0']).not.toBeUndefined()
-        expect(jsonResult['sandbox/test/stream-3#0']).not.toBeUndefined()
+        expect(jsonResult[`${address}/test/stream-3#0`]).not.toBeUndefined()
     })
 
     it('/topology/stream-1/', async () => {
@@ -99,15 +101,15 @@ describe('tracker endpoint', () => {
         expect(status).toEqual(200)
         expect(jsonResult['stream-1#0']).not.toBeUndefined()
         expect(jsonResult['stream-2#0']).toBeUndefined()
-        expect(jsonResult['sandbox/test/stream-3#0']).toBeUndefined()
+        expect(jsonResult[`${address}/test/stream-3#0`]).toBeUndefined()
     })
 
-    it('/topology/sandbox%2test%2stream-3/', async () => {
-        const [status, jsonResult]: any = await getHttp(`http://127.0.0.1:${trackerPort}/topology/sandbox%2Ftest%2Fstream-3/`)
+    it('/topology/0xaaa...aaa%2test%2stream-3/', async () => {
+        const [status, jsonResult]: any = await getHttp(`http://127.0.0.1:${trackerPort}/topology/${address}%2Ftest%2Fstream-3/`)
         expect(status).toEqual(200)
         expect(jsonResult['stream-1#0']).toBeUndefined()
         expect(jsonResult['stream-2#0']).toBeUndefined()
-        expect(jsonResult['sandbox/test/stream-3#0']).not.toBeUndefined()
+        expect(jsonResult[`${address}/test/stream-3#0`]).not.toBeUndefined()
     })
 
     it('/topology/non-existing-stream/', async () => {
@@ -129,15 +131,15 @@ describe('tracker endpoint', () => {
         expect(status).toEqual(200)
         expect(jsonResult['stream-1#0']).not.toBeUndefined()
         expect(jsonResult['stream-2#0']).toBeUndefined()
-        expect(jsonResult['sandbox/test/stream-3#0']).toBeUndefined()
+        expect(jsonResult[`${address}/test/stream-3#0`]).toBeUndefined()
     })
 
-    it('/topology/sandbox%2test%2stream-3/0/', async () => {
-        const [status, jsonResult]: any = await getHttp(`http://127.0.0.1:${trackerPort}/topology/sandbox%2Ftest%2Fstream-3/0/`)
+    it('/topology/0xaaa...aaa%2test%2stream-3/0/', async () => {
+        const [status, jsonResult]: any = await getHttp(`http://127.0.0.1:${trackerPort}/topology/${address}%2Ftest%2Fstream-3/0/`)
         expect(status).toEqual(200)
         expect(jsonResult['stream-1#0']).toBeUndefined()
         expect(jsonResult['stream-2#0']).toBeUndefined()
-        expect(jsonResult['sandbox/test/stream-3#0']).not.toBeUndefined()
+        expect(jsonResult[`${address}/test/stream-3#0`]).not.toBeUndefined()
     })
 
     it('/topology/non-existing-stream/0/', async () => {
@@ -175,7 +177,7 @@ describe('tracker endpoint', () => {
                 partition: 0,
                 nodeCount: 1
             }, {
-                streamId: 'sandbox/test/stream-3',
+                streamId: `${address}/test/stream-3`,
                 partition: 0,
                 nodeCount: 1
             }])
@@ -242,7 +244,7 @@ describe('tracker endpoint', () => {
         expect(jsonResult).toIncludeSameMembers([
             {
                 partition: 0,
-                streamId: 'sandbox/test/stream-3',
+                streamId: `${address}/test/stream-3`,
                 topologySize: 1
             },
             {

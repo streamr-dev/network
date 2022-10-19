@@ -1,48 +1,35 @@
 import crypto from 'crypto'
 import { DependencyContainer } from 'tsyringe'
-import { fetchPrivateKeyWithGas } from 'streamr-test-utils'
-import { wait } from '@streamr/utils'
+import { fastPrivateKey, fetchPrivateKeyWithGas } from 'streamr-test-utils'
+import { EthereumAddress, Logger, wait } from '@streamr/utils'
 import { Wallet } from 'ethers'
-import {
-    StreamMessage,
-    StreamPartID,
-    StreamPartIDUtils,
-    StreamMessageOptions,
-    MessageID,
-    EthereumAddress
-} from 'streamr-client-protocol'
-import { sign } from '../../src/utils/signingUtils'
+import { StreamMessage, StreamPartID, StreamPartIDUtils, MAX_PARTITION_COUNT } from 'streamr-client-protocol'
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils/utils'
-import { Debug } from '../../src/utils/log'
 import { Stream, StreamProperties } from '../../src/Stream'
 import { ConfigTest } from '../../src/ConfigTest'
-import { padEnd } from 'lodash'
-import { Context } from '../../src/utils/Context'
-import { StreamrClientConfig } from '../../src/Config'
+import { STREAM_CLIENT_DEFAULTS, StreamrClientConfig } from '../../src/Config'
 import { GroupKey } from '../../src/encryption/GroupKey'
-import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
 import { addAfterFn } from './jest-utils'
 import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
 import { StreamrClientEventEmitter } from '../../src/events'
+import { MessageFactory } from '../../src/publish/MessageFactory'
+import { Authentication, createAuthentication } from '../../src/Authentication'
+import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
+import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
+import { LoggerFactory } from '../../src/utils/LoggerFactory'
 
-const testDebugRoot = Debug('test')
-const testDebug = testDebugRoot.extend.bind(testDebugRoot)
+const logger = new Logger(module)
 
-export {
-    testDebug as Debug
-}
-
-export function mockContext(): Context {
-    const id = counterId('mockContext')
-    return { id, debug: testDebugRoot.extend(id) }
+export function mockLoggerFactory(clientId?: string): LoggerFactory {
+    return new LoggerFactory({
+        id: clientId ?? counterId('TestCtx'),
+        logLevel: STREAM_CLIENT_DEFAULTS.logLevel
+    })
 }
 
 export const uid = (prefix?: string): string => counterId(`p${process.pid}${prefix ? '-' + prefix : ''}`)
 
-export const createMockAddress = (): string => '0x000000000000000000000000000' + Date.now()
-
-// eslint-disable-next-line no-undef
 const getTestName = (module: NodeModule): string => {
     const fileNamePattern = new RegExp('.*/(.*).test\\...')
     const groups = module.filename.match(fileNamePattern)
@@ -76,7 +63,7 @@ export const getCreateClient = (
         } else {
             key = await fetchPrivateKeyWithGas()
         }
-        const c = new StreamrClient({
+        const client = new StreamrClient({
             ...ConfigTest,
             auth: {
                 privateKey: key,
@@ -87,62 +74,56 @@ export const getCreateClient = (
 
         addAfter(async () => {
             await wait(0)
-            if (!c) { return }
-            c.debug('disconnecting after test >>')
-            await c.destroy()
-            c.debug('disconnecting after test <<')
+            if (!client) { return }
+            logger.debug('disconnecting after test >> (clientId=%s)', client.id)
+            await client.destroy()
+            logger.debug('disconnecting after test << (clientId=%s)', client.id)
         })
 
-        return c
+        return client
     }
 }
 
-export const createEthereumAddress = (id: number): string => {
-    return '0x' + padEnd(String(id), 40, '0')
-}
-
-type CreateMockMessageOptionsBase = Omit<Partial<StreamMessageOptions<any>>, 'messageId' | 'signatureType'> & {
+type CreateMockMessageOptions = {
     publisher: Wallet
+    content?: any
     msgChainId?: string
     timestamp?: number
-    sequenceNumber?: number
     encryptionKey?: GroupKey
-}
+    nextEncryptionKey?: GroupKey
+} & ({ streamPartId: StreamPartID, stream?: never } | { stream: Stream, streamPartId?: never })
 
-export const createMockMessage = (
-    opts: CreateMockMessageOptionsBase
-    & ({ streamPartId: StreamPartID, stream?: never } | { stream: Stream, streamPartId?: never })
-): StreamMessage<any> => {
-    const DEFAULT_CONTENT = {}
+export const createMockMessage = async (
+    opts: CreateMockMessageOptions
+): Promise<StreamMessage<any>> => {
     const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(
         opts.streamPartId ?? opts.stream.getStreamParts()[0]
     )
-    const msg = new StreamMessage({
-        messageId: new MessageID(
-            streamId,
-            partition,
-            opts.timestamp ?? Date.now(),
-            opts.sequenceNumber ?? 0,
-            opts.publisher.address,
-            opts.msgChainId ?? `mockMsgChainId-${opts.publisher.address}`
-        ),
-        signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
-        content: DEFAULT_CONTENT,
-        prevMsgRef: opts.prevMsgRef,
-        ...opts
+    const factory = new MessageFactory({
+        authentication: createAuthentication({
+            privateKey: opts.publisher.privateKey
+        }, undefined as any),
+        streamId,
+        streamRegistry: createStreamRegistryCached({
+            partitionCount: MAX_PARTITION_COUNT,
+            isPublicStream: (opts.encryptionKey === undefined),
+            isStreamPublisher: true
+        }),
+        groupKeyQueue: await createGroupKeyQueue(opts.encryptionKey, opts.nextEncryptionKey)
     })
-    if (opts.encryptionKey !== undefined) {
-        EncryptionUtil.encryptStreamMessage(msg, opts.encryptionKey)
-    }
-    msg.signature = sign(msg.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), opts.publisher.privateKey)
-    return msg
+    const DEFAULT_CONTENT = {}
+    const plainContent = opts.content ?? DEFAULT_CONTENT
+    return factory.createMessage(plainContent, {
+        timestamp: opts.timestamp ?? Date.now(),
+        msgChainId: opts.msgChainId
+    }, partition)
 }
 
 export const getGroupKeyStore = (userAddress: EthereumAddress): GroupKeyStore => {
     return new GroupKeyStore(
-        mockContext(),
+        mockLoggerFactory(),
         {
-            getAddress: () => userAddress.toLowerCase()
+            getAddress: () => userAddress
         } as any,
         new StreamrClientEventEmitter()
     )
@@ -153,4 +134,45 @@ export const startPublisherKeyExchangeSubscription = async (
     streamPartId: StreamPartID): Promise<void> => {
     const node = await publisherClient.getNode()
     node.subscribe(streamPartId)
+}
+
+export const createRandomAuthentication = (): Authentication => {
+    return createAuthentication({
+        privateKey: `0x${fastPrivateKey()}`
+    }, undefined as any)
+}
+
+export const createStreamRegistryCached = (opts: {
+    partitionCount?: number
+    isPublicStream?: boolean
+    isStreamPublisher?: boolean
+    isStreamSubscriber?: boolean
+}): StreamRegistryCached => {
+    return {
+        getStream: async () => {
+            return {
+                partitions: opts?.partitionCount ?? 1
+            } as any
+        },
+        isPublic: async () => {
+            return opts.isPublicStream ?? false
+        },
+        isStreamPublisher: async () => {
+            return opts.isStreamPublisher ?? true
+        },
+        isStreamSubscriber: async () => {
+            return opts.isStreamSubscriber ?? true
+        },
+    } as any
+}
+
+export const createGroupKeyQueue = async (current?: GroupKey, next?: GroupKey): Promise<GroupKeyQueue> => {
+    const queue = new GroupKeyQueue(undefined as any, { add: async () => {} } as any)
+    if (current !== undefined) {
+        await queue.rekey(current)
+    }
+    if (next !== undefined) {
+        await queue.rotate(next)
+    }
+    return queue
 }
