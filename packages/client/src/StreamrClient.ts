@@ -126,11 +126,15 @@ export class StreamrClient {
         options: StreamDefinition & { resend?: ResendOptions },
         onMessage?: MessageListener<T>
     ): Promise<Subscription<T>> {
-        let result
+        let result: Subscription<T>
         if (options.resend !== undefined) {
-            result = await this.resendSubscribe(options, options.resend, onMessage)
+            result = await this.resendSubscribe(options, options.resend)
         } else {
-            result = await this.subscriber.subscribe(options, onMessage)
+            const streamPartId = await this.streamIdBuilder.toStreamPartID(options)
+            result = await this.subscriber.subscribe(streamPartId)
+        }
+        if (onMessage) {
+            result.useLegacyOnMessageHandler(onMessage)
         }
         this.eventEmitter.emit('subscribe', undefined)
         return result
@@ -138,8 +142,7 @@ export class StreamrClient {
 
     private async resendSubscribe<T>(
         streamDefinition: StreamDefinition,
-        resendOptions: ResendOptions,
-        onMessage?: MessageListener<T>
+        resendOptions: ResendOptions
     ): Promise<ResendSubscription<T>> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         const sub = new ResendSubscription<T>(
@@ -150,9 +153,6 @@ export class StreamrClient {
             this.loggerFactory,
             this.config
         )
-        if (onMessage) {
-            sub.useLegacyOnMessageHandler(onMessage)
-        }
         await this.subscriber.addSubscription<T>(sub)
         return sub
     }

@@ -22,6 +22,7 @@ import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
 import { toEthereumAddress, withTimeout } from '@streamr/utils'
 import { StreamMetadata } from './StreamMessageValidator'
 import { StreamrClientEventEmitter } from './events'
+import { DEFAULT_PARTITION } from './StreamIDBuilder'
 
 export interface StreamProperties {
     id: string
@@ -189,7 +190,9 @@ class StreamrStream implements StreamMetadata {
         let assignmentSubscription
         const normalizedNodeAddress = toEthereumAddress(nodeAddress)
         try {
-            assignmentSubscription = await this._subscriber.subscribe(formStorageNodeAssignmentStreamId(normalizedNodeAddress))
+            assignmentSubscription = await this._subscriber.subscribe(
+                toStreamPartID(formStorageNodeAssignmentStreamId(normalizedNodeAddress), DEFAULT_PARTITION)
+            )
             const propagationPromise = waitForAssignmentsToPropagate(assignmentSubscription, this)
             await this._streamStorageRegistry.addStreamToStorageNode(this.id, normalizedNodeAddress)
             await withTimeout(

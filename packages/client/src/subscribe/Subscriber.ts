@@ -1,7 +1,7 @@
 import { inject, scoped, Lifecycle, delay } from 'tsyringe'
 import { allSettledValues } from '../utils/promises'
 import { SubscriptionSession } from './SubscriptionSession'
-import { Subscription, MessageListener } from './Subscription'
+import { Subscription } from './Subscription'
 import { StreamPartID } from 'streamr-client-protocol'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamDefinition } from '../types'
@@ -60,22 +60,6 @@ export class Subscriber {
         this.logger = loggerFactory.createLogger(module)
     }
 
-    async subscribe<T>(
-        streamDefinition: StreamDefinition,
-        onMessage?: MessageListener<T>
-    ): Promise<Subscription<T>> {
-        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        return this.subscribeTo(streamPartId, onMessage)
-    }
-
-    private async subscribeTo<T>(streamPartId: StreamPartID, onMessage?: MessageListener<T>): Promise<Subscription<T>> {
-        const sub: Subscription<T> = await this.add(streamPartId)
-        if (onMessage) {
-            sub.useLegacyOnMessageHandler(onMessage)
-        }
-        return sub
-    }
-
     getOrCreateSubscriptionSession<T>(streamPartId: StreamPartID): SubscriptionSession<T> {
         if (this.subSessions.has(streamPartId)) {
             return this.getSubscriptionSession<T>(streamPartId)!
@@ -117,7 +101,7 @@ export class Subscriber {
         return sub
     }
 
-    private async add<T>(streamPartId: StreamPartID): Promise<Subscription<T>> {
+    async subscribe<T>(streamPartId: StreamPartID): Promise<Subscription<T>> {
         const sub = new Subscription<T>(streamPartId, this.loggerFactory)
         return this.addSubscription(sub)
     }
