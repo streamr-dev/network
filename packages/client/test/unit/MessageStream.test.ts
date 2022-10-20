@@ -1,4 +1,4 @@
-import { Subscription, SubscriptionOnMessage } from './../../src/subscribe/Subscription'
+import { Subscription, MessageListener } from './../../src/subscribe/Subscription'
 import { toEthereumAddress, wait } from '@streamr/utils'
 import { counterId, instanceId } from '../../src/utils/utils'
 import { createRandomAuthentication, mockLoggerFactory } from '../test-utils/utils'
@@ -13,7 +13,7 @@ import { Authentication } from '../../src/Authentication'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
-const fromReadable = async (readable: Readable, onMessage?: SubscriptionOnMessage<any>) => {
+const fromReadable = async (readable: Readable, onMessage?: MessageListener<any>) => {
     const result = new Subscription<any>(undefined as any, mockLoggerFactory())
     if (onMessage !== undefined) {
         result.useLegacyOnMessageHandler(onMessage)

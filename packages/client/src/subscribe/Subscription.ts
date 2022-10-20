@@ -8,7 +8,7 @@ import { LoggerFactory } from '../utils/LoggerFactory'
 import { Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 
-export type SubscriptionOnMessage<T, R = unknown> = (msg: T, streamMessage: StreamMessage<T>) => R | Promise<R>
+export type MessageListener<T, R = unknown> = (content: T, streamMessage: StreamMessage<T>) => R | Promise<R>
 
 export interface SubscriptionEvents {
     error: (err: Error) => void
@@ -48,7 +48,7 @@ export class Subscription<T = unknown> extends MessageStream<T> {
      * onMessage is passed parsed content as first arument, and streamMessage as second argument.
      * @internal
      */
-    useLegacyOnMessageHandler(onMessage?: SubscriptionOnMessage<T>): this {
+    useLegacyOnMessageHandler(onMessage?: MessageListener<T>): this {
         if (onMessage) {
             this.onMessage.listen(async (streamMessage) => {
                 if (streamMessage instanceof StreamMessage) {
