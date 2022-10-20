@@ -18,7 +18,7 @@
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "test": "jest",
     "test-unit": "jest test/unit",
-    "test-integration": "jest test/integration",
+    "test-integration": "jest --forceExit test/integration",
     "test-e2e": "jest --forceExit --runInBand test/end-to-end"
   },
   "dependencies": {
