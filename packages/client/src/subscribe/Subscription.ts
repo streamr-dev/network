@@ -3,10 +3,10 @@
  * Primary interface for consuming StreamMessages.
  */
 import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
-import { MessageStream } from './MessageStream'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
+import { PushPipeline } from '../utils/PushPipeline'
 
 export type MessageListener<T, R = unknown> = (content: T, streamMessage: StreamMessage<T>) => R | Promise<R>
 
@@ -18,7 +18,7 @@ export interface SubscriptionEvents {
 /**
  * @category Important
  */
-export class Subscription<T = unknown> extends MessageStream<T> {
+export class Subscription<T = unknown> extends PushPipeline<StreamMessage<T>, StreamMessage<T>> {
     private readonly logger: Logger
     readonly streamPartId: StreamPartID
     protected eventEmitter: EventEmitter<SubscriptionEvents>

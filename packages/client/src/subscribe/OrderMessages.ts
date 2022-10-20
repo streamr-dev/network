@@ -8,7 +8,7 @@ import { PushBuffer } from '../utils/PushBuffer'
 import { Signal } from '../utils/Signal'
 
 import { Resends } from './Resends'
-import { MessageStream } from './MessageStream'
+import { Subscription } from './Subscription'
 import { SubscribeConfig } from '../Config'
 import OrderingUtil from './ordering/OrderingUtil'
 import { EthereumAddress, Logger } from '@streamr/utils'
@@ -23,7 +23,7 @@ export class OrderMessages<T> {
     private readonly logger: Logger
     private stopSignal = Signal.once()
     private done = false
-    private resendStreams = new Set<MessageStream<T>>() // holds outstanding resends for cleanup
+    private resendStreams = new Set<Subscription<T>>() // holds outstanding resends for cleanup
     private outBuffer = new PushBuffer<StreamMessage<T>>()
     private inputClosed = false
     private orderMessages: boolean
@@ -70,7 +70,7 @@ export class OrderMessages<T> {
             to,
         })
 
-        let resendMessageStream!: MessageStream<T>
+        let resendMessageStream!: Subscription<T>
 
         try {
             resendMessageStream = await this.resends.range(this.streamPartId, {

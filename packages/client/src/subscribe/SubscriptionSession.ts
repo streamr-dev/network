@@ -4,7 +4,6 @@ import { StreamMessage, StreamMessageType, StreamPartID } from 'streamr-client-p
 
 import { Scaffold } from '../utils/Scaffold'
 import { Signal } from '../utils/Signal'
-import { MessageStream } from './MessageStream'
 
 import { Subscription } from './Subscription'
 import { createSubscribePipeline } from './SubscribePipeline'
@@ -30,7 +29,7 @@ export class SubscriptionSession<T> {
     private isStopped = false
     private readonly subscriptions: Set<Subscription<T>> = new Set()
     private readonly pendingRemoval: WeakSet<Subscription<T>> = new WeakSet()
-    private readonly pipeline: MessageStream<T>
+    private readonly pipeline: Subscription<T>
     private readonly node: NetworkNodeFacade
 
     constructor(
