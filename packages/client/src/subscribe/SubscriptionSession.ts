@@ -1,12 +1,9 @@
 import { inject } from 'tsyringe'
-
 import { StreamMessage, StreamMessageType, StreamPartID } from 'streamr-client-protocol'
-
 import { Scaffold } from '../utils/Scaffold'
 import { Signal } from '../utils/Signal'
-
 import { Subscription } from './Subscription'
-import { createSubscribePipeline } from './SubscribePipeline'
+import { createSubscribePipeline } from './subscribePipeline'
 import { NetworkNodeFacade, NetworkNodeStub } from '../NetworkNodeFacade'
 import { Resends } from './Resends'
 import { GroupKeyStore } from '../encryption/GroupKeyStore'

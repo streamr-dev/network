@@ -1,10 +1,10 @@
 import 'reflect-metadata'
-import { GroupKey, GroupKeyId } from './../../src/encryption/GroupKey'
+import { GroupKey, GroupKeyId } from '../../src/encryption/GroupKey'
 import { EncryptionType, MessageID, StreamMessage, StreamPartID, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
 import { Wallet } from '@ethersproject/wallet'
 import { fastWallet, randomEthereumAddress } from "streamr-test-utils"
 import { Subscription } from "../../src/subscribe/Subscription"
-import { createSubscribePipeline } from "../../src/subscribe/SubscribePipeline"
+import { createSubscribePipeline } from "../../src/subscribe/subscribePipeline"
 import { mockLoggerFactory } from '../test-utils/utils'
 import { collect } from '../../src/utils/GeneratorUtils'
 import { DecryptError, EncryptionUtil } from '../../src/encryption/EncryptionUtil'
@@ -19,7 +19,7 @@ const CONTENT = {
     foo: 'bar'
 }
 
-describe('SubscribePipeline', () => {
+describe('subscribePipeline', () => {
 
     let pipeline: Subscription
     let streamPartId: StreamPartID
