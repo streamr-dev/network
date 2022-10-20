@@ -2,13 +2,13 @@
  * The client.subscribe() return value.
  * Primary interface for consuming StreamMessages.
  */
-import { StreamPartID } from 'streamr-client-protocol'
-import { MessageStream, MessageStreamOnMessage } from './MessageStream'
+import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
+import { MessageStream } from './MessageStream'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 
-export { MessageStreamOnMessage as SubscriptionOnMessage }
+export type SubscriptionOnMessage<T, R = unknown> = (msg: T, streamMessage: StreamMessage<T>) => R | Promise<R>
 
 export interface SubscriptionEvents {
     error: (err: Error) => void
@@ -41,6 +41,23 @@ export class Subscription<T = unknown> extends MessageStream<T> {
     async unsubscribe(): Promise<void> {
         this.end()
         await this.return()
+    }
+
+    /**
+     * Attach a legacy onMessage handler and consume if necessary.
+     * onMessage is passed parsed content as first arument, and streamMessage as second argument.
+     * @internal
+     */
+    useLegacyOnMessageHandler(onMessage?: SubscriptionOnMessage<T>): this {
+        if (onMessage) {
+            this.onMessage.listen(async (streamMessage) => {
+                if (streamMessage instanceof StreamMessage) {
+                    await onMessage(streamMessage.getParsedContent(), streamMessage)
+                }
+            })
+        }
+        this.flow()
+        return this
     }
 
     on<E extends keyof SubscriptionEvents>(eventName: E, listener: SubscriptionEvents[E]): void {

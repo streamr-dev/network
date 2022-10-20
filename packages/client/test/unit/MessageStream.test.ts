@@ -1,9 +1,10 @@
+import { Subscription, SubscriptionOnMessage } from './../../src/subscribe/Subscription'
 import { toEthereumAddress, wait } from '@streamr/utils'
 import { counterId, instanceId } from '../../src/utils/utils'
-import { createRandomAuthentication } from '../test-utils/utils'
+import { createRandomAuthentication, mockLoggerFactory } from '../test-utils/utils'
 import { Msg } from '../test-utils/publish'
 import { LeaksDetector } from '../test-utils/LeaksDetector'
-import { MessageStream, MessageStreamOnMessage } from '../../src/subscribe/MessageStream'
+import { MessageStream } from '../../src/subscribe/MessageStream'
 import { StreamMessage, MessageID, toStreamID } from 'streamr-client-protocol'
 import { Readable } from 'stream'
 import { waitForCondition } from 'streamr-test-utils'
@@ -12,8 +13,8 @@ import { Authentication } from '../../src/Authentication'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
-const fromReadable = async (readable: Readable, onMessage?: MessageStreamOnMessage<any>) => {
-    const result = new MessageStream<any>()
+const fromReadable = async (readable: Readable, onMessage?: SubscriptionOnMessage<any>) => {
+    const result = new Subscription<any>(undefined as any, mockLoggerFactory())
     if (onMessage !== undefined) {
         result.useLegacyOnMessageHandler(onMessage)
     }
@@ -250,11 +251,11 @@ describe('MessageStream', () => {
     describe('onMessage', () => {
 
         it('push', async () => {
-            const stream = new MessageStream<any>()
+            const subscription = new Subscription<any>(undefined as any, mockLoggerFactory())
             const onMessage = jest.fn()
-            stream.useLegacyOnMessageHandler(onMessage)
+            subscription.useLegacyOnMessageHandler(onMessage)
             const msg = await createMockMessage()
-            stream.push(msg)
+            subscription.push(msg)
             await waitForCalls(onMessage, 1)
             expect(onMessage).toBeCalledTimes(1)
             expect(onMessage).toHaveBeenNthCalledWith(1, msg.getParsedContent(), msg)

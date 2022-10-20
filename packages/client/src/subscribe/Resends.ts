@@ -4,7 +4,6 @@
 import { inject, Lifecycle, scoped, delay } from 'tsyringe'
 import { MessageRef, StreamPartID, StreamPartIDUtils, StreamMessage } from 'streamr-client-protocol'
 
-import { MessageStreamOnMessage } from './MessageStream'
 import { createSubscribePipeline } from './SubscribePipeline'
 
 import { StorageNodeRegistry } from '../registry/StorageNodeRegistry'
@@ -23,7 +22,7 @@ import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { counterId } from '../utils/utils'
 import { StreamrClientError } from '../StreamrClientError'
-import { Subscription } from './Subscription'
+import { Subscription, SubscriptionOnMessage } from './Subscription'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 
@@ -99,7 +98,7 @@ export class Resends {
     async resend<T>(
         streamDefinition: StreamDefinition,
         options: ResendOptions,
-        onMessage?: MessageStreamOnMessage<T>
+        onMessage?: SubscriptionOnMessage<T>
     ): Promise<Subscription<T>> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         const sub = await this.resendMessages<T>(streamPartId, options)
