@@ -667,11 +667,12 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         logger.trace(`Peer ${this.ownPeerId?.value} routing message ${routedMessage.requestId} 
             from ${routedMessage.sourcePeer?.peerId} to ${routedMessage.destinationPeer?.peerId}`)
 
+
         const session = new RoutingSession(
             this.ownPeerDescriptor!,
             routedMessage,
             this.connections,
-            2,
+            this.ownPeerId!.equals(PeerID.fromValue(routedMessage.sourcePeer!.peerId)) ? 2 : 1,
             1000,
             forwarding
         )

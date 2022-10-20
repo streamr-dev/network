@@ -7,7 +7,7 @@ import { getRandomRegion } from '@streamr/dht/dist/test/data/pings'
 
 describe('Full node network with WebRTC connections', () => {
 
-    const NUM_OF_NODES = 24
+    const NUM_OF_NODES = 32
 
     const epPeerDescriptor: PeerDescriptor = {
         peerId: PeerID.fromString(`entrypoint`).value,
