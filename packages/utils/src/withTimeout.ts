@@ -1,3 +1,5 @@
+import { AbortError } from './AbortError'
+
 export class TimeoutError extends Error {
     readonly code = 'TimeoutError'
     constructor(timeoutInMs: number, customErrorContext?: string) {
@@ -5,16 +7,6 @@ export class TimeoutError extends Error {
             ? `timed out after ${timeoutInMs} ms`
             : `${customErrorContext} (timed out after ${timeoutInMs} ms)`)
         Error.captureStackTrace(this, TimeoutError)
-    }
-}
-
-export class AbortError extends Error {
-    readonly code = 'AbortError'
-    constructor(customErrorContext?: string) {
-        super(customErrorContext === undefined
-            ? `aborted`
-            : `${customErrorContext} aborted`)
-        Error.captureStackTrace(this, AbortError)
     }
 }
 
