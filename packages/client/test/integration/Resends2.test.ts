@@ -528,6 +528,6 @@ describe('Resends2', () => {
                 last: 1
             })
         const messages = await sub.collectContent()
-        expect(messages.map((m) => m.signature)).toEqual([publishedMessage.signature])
+        expect(messages).toEqual([publishedMessage])
     })
 })
