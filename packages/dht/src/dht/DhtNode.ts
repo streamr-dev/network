@@ -666,8 +666,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
     public async doRouteMessage(routedMessage: RouteMessageWrapper, forwarding = false): Promise<RouteMessageAck> {
         logger.trace(`Peer ${this.ownPeerId?.value} routing message ${routedMessage.requestId} 
             from ${routedMessage.sourcePeer?.peerId} to ${routedMessage.destinationPeer?.peerId}`)
-
-
+        
         const session = new RoutingSession(
             this.ownPeerDescriptor!,
             routedMessage,
