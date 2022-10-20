@@ -38,18 +38,16 @@ export class ResendSubscription<T> extends Subscription<T> {
         })
     }
 
-    private async getResent() {
+    private async getResent(): Promise<Subscription<T>> {
         const [id, partition] = StreamPartIDUtils.getStreamIDAndPartition(this.streamPartId)
         const resentMsgs = await this.resends.resend<T>({
             id,
             partition,
         }, this.resendOptions)
-
         this.onBeforeFinally.listen(async () => {
             resentMsgs.end()
             await resentMsgs.return()
         })
-
         return resentMsgs
     }
 
