@@ -154,7 +154,7 @@ export class Resends {
         const nodeAddress = nodeAddresses[random(0, nodeAddresses.length - 1)]
         const nodeUrl = (await this.storageNodeRegistry.getStorageNodeMetadata(nodeAddress)).http
         const url = this.createUrl(nodeUrl, endpointSuffix, streamPartId, query)
-        const messageStream = createSubscribePipeline<T>({
+        const subscription = createSubscribePipeline<T>({
             streamPartId,
             resends: this,
             groupKeyStore: this.groupKeyStore,
@@ -167,13 +167,13 @@ export class Resends {
         })
 
         let count = 0
-        messageStream.forEach(() => {
+        subscription.forEach(() => {
             count += 1
         })
 
         const logger = this.logger
         const dataStream = await this.httpUtil.fetchHttpStream(url)
-        messageStream.pull((async function* readStream() {
+        subscription.pull((async function* readStream() {
             try {
                 yield* dataStream
             } finally {
@@ -181,7 +181,7 @@ export class Resends {
                 dataStream.destroy()
             }
         }()))
-        return messageStream
+        return subscription
     }
 
     private async last<T>(streamPartId: StreamPartID, { count }: { count: number }): Promise<Subscription<T>> {

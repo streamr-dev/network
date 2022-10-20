@@ -53,20 +53,20 @@ describe('resend with existing key', () => {
     }
 
     const assertDecryptable = async (fromTimestamp: number, toTimestamp: number) => {
-        const messageStream = await resendRange(fromTimestamp, toTimestamp)
+        const subscription = await resendRange(fromTimestamp, toTimestamp)
         const onError = jest.fn()
-        messageStream.onError.listen(onError)
-        const messages = await collect(messageStream)
+        subscription.onError.listen(onError)
+        const messages = await collect(subscription)
         expect(onError).not.toBeCalled()
         const expectedTimestamps = allMessages.map((m) => m.timestamp).filter((ts) => ts >= fromTimestamp && ts <= toTimestamp)
         expect(messages.map((m) => m.getTimestamp())).toEqual(expectedTimestamps)
     }
 
     const assertNonDecryptable = async (fromTimestamp: number, toTimestamp: number) => {
-        const messageStream = await resendRange(fromTimestamp, toTimestamp)
+        const subscription = await resendRange(fromTimestamp, toTimestamp)
         const onError = jest.fn()
-        messageStream.onError.listen(onError)
-        await collect(messageStream)
+        subscription.onError.listen(onError)
+        await collect(subscription)
         expect(onError).toBeCalled()
         const error = onError.mock.calls[0][0]
         expect(error).toBeInstanceOf(DecryptError)
