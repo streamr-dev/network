@@ -106,11 +106,6 @@ export class PushPipeline<InType, OutType = InType> extends Pipeline<InType, Out
     }
 
     /** @internal */
-    isFull(): boolean {
-        return this.source.isFull()
-    }
-
-    /** @internal */
     clear(): void {
         return this.source.clear()
     }

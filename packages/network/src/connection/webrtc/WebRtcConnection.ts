@@ -312,10 +312,6 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         }
     }
 
-    getQueueSize(): number {
-        return this.messageQueue.size()
-    }
-
     isOffering(): boolean {
         return isOffering(this.selfId, this.peerInfo.peerId)
     }

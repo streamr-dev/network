@@ -292,21 +292,3 @@ export async function pull<InType, OutType = InType>(
         dest.endWrite()
     }
 }
-
-export function flow<T>(asyncIterable: AsyncIterable<T>): Promise<void> {
-    const consume = async () => {
-        for await (const _ of asyncIterable) {
-            // do nothing, just consume iterator
-        }
-    }
-
-    // start consuming
-    // note this function returns a promise but we want to prevent
-    // unhandled rejections so can't use async keyword as this introduces
-    // a new promise we can't attach a catch handler to.
-    // anything awaiting this promise will still get the rejection
-    // it just won't trigger unhandledrejection
-    const task = consume()
-    task.catch(() => {}) // prevent unhandled
-    return task
-}

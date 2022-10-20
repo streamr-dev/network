@@ -26,8 +26,6 @@ export interface StartCassandraOptions {
     opts?: Partial<BucketManagerOptions & { useTtl: boolean }>
 }
 
-export type MessageFilter = (streamMessage: StreamMessage) => boolean
-
 const bucketsToIds = (buckets: Bucket[]) => buckets.map((bucket: Bucket) => bucket.getId())
 
 // NET-329

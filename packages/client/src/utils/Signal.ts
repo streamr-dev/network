@@ -200,30 +200,6 @@ export class Signal<ArgsType extends any[] = []> {
         return this
     }
 
-    /**
-     * Remove all callback listeners from this Signal.
-     */
-    unlistenAll(): void {
-        this.listeners = []
-    }
-
-    // TODO better return type?
-    getListenAsMethod(): () => any {
-        // eslint-disable-next-line @typescript-eslint/no-this-alias
-        const signal = this
-        function listenAsMethod(): Promise<ArgsType[0]>
-        function listenAsMethod<ReturnType>(this: ReturnType, cb: SignalListener<ArgsType>): ReturnType
-        function listenAsMethod<ReturnType>(this: ReturnType, cb?: SignalListener<ArgsType>) {
-            if (!cb) {
-                return signal.listen()
-            }
-
-            signal.listen(cb)
-            return this
-        }
-        return listenAsMethod
-    }
-
     protected async execTrigger(
         ...args: ArgsType
     ): Promise<void> {
