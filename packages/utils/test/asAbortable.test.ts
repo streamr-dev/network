@@ -15,7 +15,7 @@ describe(asAbortable, () => {
     it('resolves if no abort controller signalled', async () => {
         const actual = await asAbortable(
             sleep(TIME_UNIT),
-            new AbortController()
+            new AbortController().signal
         )
         expect(actual).toEqual('foobar')
     })
@@ -27,7 +27,7 @@ describe(asAbortable, () => {
         }, TIME_UNIT)
         const actual = asAbortable(
             sleep(2 * TIME_UNIT),
-            abortController,
+            abortController.signal,
             'customError'
         )
         return expect(actual).rejects.toEqual(new AbortError('customError'))
@@ -40,7 +40,7 @@ describe(asAbortable, () => {
         }, 2 * TIME_UNIT)
         const actual = await asAbortable(
             sleep(TIME_UNIT),
-            abortController
+            abortController.signal
         )
         expect(actual).toEqual('foobar')
     })
@@ -50,7 +50,7 @@ describe(asAbortable, () => {
         abortController.abort()
         const actual = asAbortable(
             sleep(TIME_UNIT),
-            abortController,
+            abortController.signal,
             'customError'
         )
         return expect(actual).rejects.toEqual(new AbortError('customError'))

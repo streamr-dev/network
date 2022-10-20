@@ -9,7 +9,7 @@ export class AbortError extends Error {
 }
 
 /**
- * Wraps a Promise into one that can be aborted with `AbortController`.
+ * Wraps a Promise into one that can be aborted with `AbortSignal`.
  * Aborting causes the returned Promise to reject with `AbortError` unless
  * the underlying promise itself has already resolved or rejected.
  *
@@ -19,26 +19,26 @@ export class AbortError extends Error {
  */
 export function asAbortable<T>(
     promise: Promise<T>,
-    abortController?: AbortController,
+    abortSignal?: AbortSignal,
     customErrorContext?: string
 ): Promise<T> {
-    if (abortController?.signal.aborted === true) {
+    if (abortSignal?.aborted === true) {
         return Promise.reject(new AbortError(customErrorContext))
     }
     let abortListener: () => void
     return new Promise<T>((resolve, reject) => {
-        if (abortController?.signal !== undefined) {
+        if (abortSignal !== undefined) {
             abortListener = () => {
                 reject(new AbortError(customErrorContext))
             }
             // TODO remove the type casting when type definition for abortController has been updated to include addEventListener
-            (abortController.signal as any).addEventListener('abort', abortListener)
+            (abortSignal as any).addEventListener('abort', abortListener)
         }
         promise.then(resolve, reject)
     }).finally(() => {
         if (abortListener !== undefined) {
             // TODO remove the type casting when type definition for abortController has been updated to include removeEventListener
-            (abortController!.signal as any).removeEventListener('abort', abortListener)
+            (abortSignal as any).removeEventListener('abort', abortListener)
         }
     })
 }

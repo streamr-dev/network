@@ -14,7 +14,7 @@ export const withTimeout = <T>(
     task: Promise<T>,
     timeoutInMs: number,
     customErrorContext?: string,
-    abortController?: AbortController
+    abortSignal?: AbortSignal
 ): Promise<T> => {
     let timeoutRef: NodeJS.Timeout
     return asAbortable(
@@ -26,7 +26,7 @@ export const withTimeout = <T>(
                 }, timeoutInMs)
             })
         ]),
-        abortController,
+        abortSignal,
         customErrorContext
     ).finally(() => {
         clearTimeout(timeoutRef)
