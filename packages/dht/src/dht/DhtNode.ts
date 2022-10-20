@@ -407,8 +407,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             if (this.ongoingJoinOperation && this.isJoinCompleted()) {
                 this.emit('joinCompleted')
                 this.ongoingJoinOperation = false
-            } else {
-                this.findMoreContacts()
             }
         }
     }
