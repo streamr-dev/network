@@ -180,12 +180,14 @@ export class StreamrClient {
      * Call last/from/range as appropriate based on arguments
      * @category Important
      */
-    resend<T>(
+    async resend<T>(
         streamDefinition: StreamDefinition,
         options: ResendOptions,
         onMessage?: MessageListener<T>
     ): Promise<Subscription<T>> {
-        return this.resends.resend(streamDefinition, options, onMessage)
+        const sub = await this.resends.resend(streamDefinition, options, onMessage)
+        await this.subscriber.addSubscription<T>(sub)
+        return sub
     }
 
     waitForStorage(streamMessage: StreamMessage, options?: {
