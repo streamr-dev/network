@@ -54,7 +54,7 @@ describe('Full node network with WebRTC connections', () => {
                 const layer0 = new DhtNode({
                     numberOfNodesPerKBucket: 4,
                     peerDescriptor,
-                    routeMessageTimeout: 10000,
+                    routeMessageTimeout: 2000,
                     entryPoints: [epPeerDescriptor]
                 })
 
@@ -84,11 +84,18 @@ describe('Full node network with WebRTC connections', () => {
 
     it('happy path', async () => {
 
-        await waitForCondition(() => streamrNodes.length === NUM_OF_NODES, 120000)
+        await waitForCondition(() => streamrNodes.length === NUM_OF_NODES, 240000)
         await Promise.all([...streamrNodes.map((streamrNode) =>
             waitForCondition(() => {
+                // console.log(
+                //     streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length,
+                //     streamrNode.getStream(randomGraphId)!.layer2.getNearbyContactPoolIds().length,
+                //     streamrNode.getStream(randomGraphId)!.layer2.getRandomContactPoolIds().length
+                //
+                // )
                 return streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length >= 3
-            }, 60000)
+                    && !streamrNode.getStream(randomGraphId)!.layer1.isJoinOngoing()
+            }, 120000)
         )])
 
         let numOfMessagesReceived = 0
@@ -119,6 +126,6 @@ describe('Full node network with WebRTC connections', () => {
             return numOfMessagesReceived === NUM_OF_NODES
         }, 10000)
 
-    }, 90000)
+    }, 300000)
 
 })

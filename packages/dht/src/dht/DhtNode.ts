@@ -53,6 +53,7 @@ export class DhtNodeConfig {
     webSocketPort?: number
     peerIdString?: string
     nodeName?: string
+    rpcRequestTimeout?: number
 
     serviceId = 'layer0'
     parallelism = 3
@@ -158,7 +159,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             this.transportLayer = connectionManager
         }
 
-        this.rpcCommunicator = new RoutingRpcCommunicator(this.config.serviceId, this.transportLayer.send)
+        this.rpcCommunicator = new RoutingRpcCommunicator(
+            this.config.serviceId,
+            this.transportLayer.send,
+            { rpcRequestTimeout: this.config.rpcRequestTimeout }
+        )
 
         this.transportLayer.on('message', (message: Message) => {
             this.handleMessage(message)
@@ -451,6 +456,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         this.findMoreContacts()
         try {
             await waitForEvent3<Events>(this, 'joinCompleted', this.config.dhtJoinTimeout)
+            // console.log(this.config.serviceId, this.ownPeerId!.toKey(), this.neighborList!.getSize(), this.bucket!.count())
         } catch (_e) {
             throw (new Err.DhtJoinTimeout('join timed out'))
         } finally {
@@ -476,10 +482,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
                             if (this.isJoinCompleted()) {
                                 this.emit('joinCompleted')
                                 this.ongoingJoinOperation = false
+                            } else {
+                                this.findMoreContacts()
                             }
-                            // else {
-                            //
-                            // }
                         }
                     })
             }
@@ -600,6 +605,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         }
     }
 
+    public isJoinOngoing(): boolean {
+        return this.ongoingJoinOperation
+    }
+
     public async stop(): Promise<void> {
         if (!this.started) {
             throw new Err.CouldNotStop('Cannot not stop() before start()')
@@ -624,6 +633,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
     // IDHTRpcService implementation
 
     public async getClosestPeers(request: ClosestPeersRequest, _context: ServerCallContext): Promise<ClosestPeersResponse> {
+        if (this.config.serviceId === 'layer1::webrtc-network' && this.ownPeerId!.toKey() === '656e747279706f696e74') {
+            // logger.info(PeerID.fromValue(request.peerDescriptor!.peerId).toKey() + ", " +  this.ownPeerId!.toKey())
+        }
         const closestPeers = this.onGetClosestPeers(request.peerDescriptor!)
         const peerDescriptors = closestPeers.map((dhtPeer: DhtPeer) => dhtPeer.getPeerDescriptor())
         const response = {
