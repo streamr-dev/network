@@ -1,4 +1,3 @@
-import { setTimeout } from 'timers/promises'
 import { AbortError } from './AbortError'
 
 /**
@@ -7,13 +6,26 @@ import { AbortError } from './AbortError'
  * @param abortController to control cancellation of any wait
  * @returns {Promise<void>} resolves when time has passed
  */
-export const wait = (ms: number, abortController?: AbortController): Promise<void> => setTimeout(
-    ms,
-    undefined,
-    { signal: abortController?.signal }
-).catch((e) => {
-    if (e?.code === 'ABORT_ERR') {
-        throw new AbortError()
+export function wait(ms: number, abortController?: AbortController): Promise<void> {
+    if (abortController?.signal?.aborted === true) {
+        return Promise.reject(new AbortError())
     }
-    throw e
-})
+    let timeoutRef: NodeJS.Timeout
+    let abortListener: () => void
+    return new Promise<void>((resolve, reject) => {
+        if (abortController !== undefined) {
+            // TODO remove the type casting when type definition for abortController has been updated to include addEventListener
+            abortListener = () => {
+                reject(new AbortError())
+            }
+            (abortController.signal as any).addEventListener('abort', abortListener)
+        }
+        timeoutRef = setTimeout(resolve, ms)
+    }).finally(() => {
+        clearTimeout(timeoutRef)
+        if (abortListener !== undefined) {
+            // TODO remove the type casting when type definition for abortController has been updated to include removeEventListener
+            (abortController!.signal as any).removeEventListener('abort', abortListener)
+        }
+    })
+}
