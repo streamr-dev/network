@@ -158,7 +158,6 @@ export class Resends {
         const nodeUrl = (await this.storageNodeRegistry.getStorageNodeMetadata(nodeAddress)).http
         const url = this.createUrl(nodeUrl, endpointSuffix, streamPartId, query)
         const messageStream = createSubscribePipeline<T>({
-            messageStream: new Subscription<T>(streamPartId, this.loggerFactory),
             streamPartId,
             resends: this,
             groupKeyStore: this.groupKeyStore,

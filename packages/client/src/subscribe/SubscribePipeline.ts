@@ -20,8 +20,7 @@ import { StreamrClientEventEmitter } from '../events'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { Subscription } from './Subscription'
 
-export interface SubscriptionPipelineOptions<T> {
-    messageStream: Subscription<T>
+export interface SubscriptionPipelineOptions {
     streamPartId: StreamPartID
     loggerFactory: LoggerFactory
     resends: Resends
@@ -33,7 +32,7 @@ export interface SubscriptionPipelineOptions<T> {
     rootConfig: StrictStreamrClientConfig
 }
 
-export const createSubscribePipeline = <T = unknown>(opts: SubscriptionPipelineOptions<T>): Subscription<T> => {
+export const createSubscribePipeline = <T = unknown>(opts: SubscriptionPipelineOptions): Subscription<T> => {
     const validate = new Validator(
         opts.streamRegistryCached
     )
@@ -69,17 +68,19 @@ export const createSubscribePipeline = <T = unknown>(opts: SubscriptionPipelineO
         opts.rootConfig.decryption,
     )
 
+    const subscription = new Subscription<T>(opts.streamPartId, opts.loggerFactory)
+
     const msgChainUtil = new MsgChainUtil<T>(async (msg) => {
         await validate.validate(msg)
         return decrypt.decrypt(msg)
-    }, opts.messageStream.onError)
+    }, subscription.onError)
 
     // collect messages that fail validation/parsixng, do not push out of pipeline
     // NOTE: we let failed messages be processed and only removed at end so they don't
     // end up acting as gaps that we repeatedly try to fill.
     const ignoreMessages = new WeakSet()
-    opts.messageStream.onError.listen(onError)
-    opts.messageStream
+    subscription.onError.listen(onError)
+    subscription
         // order messages (fill gaps)
         .pipe(gapFillMessages.transform())
         // validate & decrypt
@@ -108,5 +109,5 @@ export const createSubscribePipeline = <T = unknown>(opts: SubscriptionPipelineO
             ]
             await Promise.allSettled(tasks)
         })
-    return opts.messageStream
+    return subscription
 }
