@@ -30,15 +30,4 @@ export class MessageStream<
 
         return this
     }
-
-    /** @internal */
-    async collectContent(n?: number): Promise<any[]> {
-        const messages = await this.collect(n)
-        return messages.map((streamMessage) => {
-            if (streamMessage instanceof StreamMessage) {
-                return streamMessage.getParsedContent()
-            }
-            return streamMessage
-        })
-    }
 }

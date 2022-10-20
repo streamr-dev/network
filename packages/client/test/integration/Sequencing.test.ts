@@ -162,7 +162,7 @@ describe('Sequencing', () => {
                 }
             }
         )
-        const msgsResent = await sub.collectContent()
+        const msgsResent = (await sub.collect()).map((m) => m.getParsedContent())
 
         expect(msgsReceieved).toEqual(msgsResent)
         // backdated messages disappear
@@ -230,7 +230,7 @@ describe('Sequencing', () => {
                 }
             }
         )
-        const msgsResent = await sub.collectContent()
+        const msgsResent = (await sub.collect()).map((m) => m.getParsedContent())
 
         expect(msgsReceieved).toEqual(msgsResent)
         // backdated messages disappear

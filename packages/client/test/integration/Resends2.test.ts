@@ -527,7 +527,7 @@ describe('Resends2', () => {
             {
                 last: 1
             })
-        const messages = await sub.collectContent()
+        const messages = (await sub.collect()).map((m) => m.getParsedContent())
         expect(messages).toEqual([publishedMessage])
     })
 })

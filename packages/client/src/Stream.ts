@@ -153,18 +153,18 @@ class StreamrStream implements StreamMetadata {
 
     async detectFields(): Promise<void> {
         // Get last message of the stream to be used for field detecting
-        const sub = await this._resends.resend(
+        const sub = await this._resends.resend<any>(
             this.id,
             {
                 last: 1,
             }
         )
 
-        const receivedMsgs = await sub.collectContent()
+        const receivedMsgs = await sub.collect()
 
         if (!receivedMsgs.length) { return }
 
-        const [lastMessage] = receivedMsgs
+        const lastMessage = receivedMsgs[0].getParsedContent()
 
         const fields = Object.entries(lastMessage).map(([name, value]) => {
             const type = getFieldType(value)
