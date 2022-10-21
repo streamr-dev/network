@@ -6,7 +6,7 @@ import { runAndWaitForEvents3 } from '../../src/helpers/waitForEvent3'
 import { waitForCondition } from 'streamr-test-utils'
 import { createMockConnectionDhtNode, createWrappedClosestPeersRequest } from '../utils'
 import { PeerID } from '../../src/helpers/PeerID'
-import { Simulator } from '../../src/connection/Simulator'
+import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { v4 } from 'uuid'
 
 describe('Route Message With Mock Connections', () => {

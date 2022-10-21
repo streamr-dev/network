@@ -1,4 +1,4 @@
-import { Simulator } from '../../src/connection/Simulator'
+import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerDescriptor } from '../../src/proto/DhtRpc'
 import { createMockConnectionDhtNode, createMockConnectionLayer1Node } from '../utils'

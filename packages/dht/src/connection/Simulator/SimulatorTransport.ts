@@ -1,5 +1,5 @@
-import { PeerDescriptor } from "../proto/DhtRpc"
-import { ConnectionManager } from "./ConnectionManager"
+import { PeerDescriptor } from "../../proto/DhtRpc"
+import { ConnectionManager } from "../ConnectionManager"
 import { Simulator } from "./Simulator"
 
 export class SimulatorTransport extends ConnectionManager {

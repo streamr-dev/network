@@ -15,7 +15,6 @@ import { RemoteWebrtcConnector } from './RemoteWebrtcConnector'
 import { WebRtcConnectorServiceClient } from '../../proto/DhtRpc.client'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { DescriptionType } from 'node-datachannel'
-import crypto from "crypto"
 import { ManagedWebRtcConnection } from '../ManagedWebRtcConnection'
 import { Logger } from '@streamr/utils'
 import * as Err from '../../helpers/errors'
@@ -38,9 +37,14 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
     private readonly rpcTransport: ITransport
     private ownPeerDescriptor?: PeerDescriptor
     private stopped = false
+    private static objectCounter = 0
+    private objectId = 0
 
     constructor(private config: WebRtcConnectorConfig) {
         super()
+        WebRtcConnector.objectCounter++
+        this.objectId = WebRtcConnector.objectCounter
+
         this.rpcTransport = config.rpcTransport
 
         this.rpcCommunicator = new ListeningRpcCommunicator(WebRtcConnector.WEBRTC_CONNECTOR_SERVICE_ID, this.rpcTransport, {
@@ -72,6 +76,14 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
 
             managedConnection.setPeerDescriptor(targetPeerDescriptor)
             this.ongoingConnectAttempts.set(peerKey, managedConnection)
+            
+            managedConnection.once('connected', () => {
+                this.ongoingConnectAttempts.delete(peerKey)
+            })
+            managedConnection.once('disconnected', () => {
+                this.ongoingConnectAttempts.delete(peerKey)
+            })
+            
             this.bindListenersAndStartConnection(targetPeerDescriptor, connection)
 
             return managedConnection
@@ -99,7 +111,7 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
             const managedConnection = new ManagedWebRtcConnection(this.ownPeerDescriptor!, this.config.protocolVersion, connection)
             managedConnection.setPeerDescriptor(remotePeer)
             this.ongoingConnectAttempts.set(peerKey, managedConnection)
-            this.bindListenersAndStartConnection(remotePeer, connection)
+            this.bindListenersAndStartConnection(remotePeer, connection, false)
 
             this.emit('newConnection', managedConnection)
         }
@@ -193,15 +205,19 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
     }
 
     public isOffering(targetPeerDescriptor: PeerDescriptor): boolean {
-        const myId = PeerID.fromValue(this.ownPeerDescriptor!.peerId).toKey()
-        const theirId = PeerID.fromValue(targetPeerDescriptor.peerId).toKey()
-        return WebRtcConnector.offeringHash(myId + theirId) < WebRtcConnector.offeringHash(theirId + myId)
+
+        const myId = PeerID.fromValue(this.ownPeerDescriptor!.peerId)
+        const theirId = PeerID.fromValue(targetPeerDescriptor.peerId)
+        return myId.hasSmallerHashThan(theirId)
+        
     }
 
+    /*
     private static offeringHash(idPair: string): number {
         const buffer = crypto.createHash('md5').update(idPair).digest()
         return buffer.readInt32LE(0)
     }
+    */
 
     // IWebRTCConnector implementation
 

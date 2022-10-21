@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/prefer-for-of */
+
 import { EventEmitter } from 'eventemitter3'
 import {
     ConnectivityResponseMessage,
@@ -21,8 +23,8 @@ import { ConnectionLockerClient } from '../proto/DhtRpc.client'
 import { RemoteConnectionLocker } from './RemoteConnectionLocker'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { Empty } from '../proto/google/protobuf/empty'
-import { Simulator } from './Simulator'
-import { SimulatorConnector } from './SimulatorConnector'
+import { Simulator } from './Simulator/Simulator'
+import { SimulatorConnector } from './Simulator/SimulatorConnector'
 import { DuplicateDetector } from '../dht/DuplicateDetector'
 
 export interface ConnectionManagerConfig {
@@ -256,7 +258,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
     private handleMessage(message: Message) {
         logger.trace('Received message of type ' + message!.messageType)
-        
+
         if (message!.messageType !== MessageType.RPC) {
             logger.trace('Filtered out non-RPC message of type ' + message!.messageType)
             return
@@ -314,6 +316,26 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             return
         }
         logger.trace('onNewConnection() objectId ' + connection.objectId)
+
+        const newPeerID = PeerID.fromValue(connection.getPeerDescriptor()!.peerId)
+
+        if (this.connections.has(newPeerID.toKey())) {
+            if (newPeerID.hasSmallerHashThan(
+                PeerID.fromValue(this.ownPeerDescriptor!.peerId))) {
+                // replace the current connection
+                const oldConnection = this.connections.get(newPeerID.toKey())
+                const buffer = oldConnection!.getOutputBuffer()
+
+                for (let i = 0; i < buffer.length; i++) {
+                    connection.send(buffer[i])
+                }
+                oldConnection!.close()
+            } else {
+                connection.close()
+                return
+            }
+        }
+
         connection.on('managedData', this.onData)
         if (connection.isHandshakeCompleted()) {
             this.onConnected(connection)

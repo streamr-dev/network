@@ -1,5 +1,5 @@
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
-import { Simulator } from '../../src/connection/Simulator'
+import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { Message, MessageType, NodeType, PeerDescriptor, RpcMessage } from '../../src/proto/DhtRpc'
 import { PeerID } from '../../src/helpers/PeerID'
 import { ConnectionType } from '../../src/connection/IConnection'

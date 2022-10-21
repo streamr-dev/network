@@ -8,7 +8,7 @@ import {
 import { PeerID } from '../src/helpers/PeerID'
 import { IDhtRpcService, IWebSocketConnectorService } from '../src/proto/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { Simulator } from '../src/connection/Simulator'
+import { Simulator } from '../src/connection/Simulator/Simulator'
 import { ConnectionManager } from '../src/connection/ConnectionManager'
 import { v4 } from 'uuid'
 import { getRandomRegion } from './data/pings'
