@@ -86,16 +86,11 @@ describe('Full node network with WebRTC connections', () => {
 
         await waitForCondition(() => streamrNodes.length === NUM_OF_NODES, 240000)
         await Promise.all([...streamrNodes.map((streamrNode) =>
-            waitForCondition(() => {
-                // console.log(
-                //     streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length,
-                //     streamrNode.getStream(randomGraphId)!.layer2.getNearbyContactPoolIds().length,
-                //     streamrNode.getStream(randomGraphId)!.layer2.getRandomContactPoolIds().length
-                //
-                // )
-                return streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length >= 3
-                    && !streamrNode.getStream(randomGraphId)!.layer1.isJoinOngoing()
-            }, 120000)
+            waitForCondition(() =>
+                streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length >= 3
+                && !streamrNode.getStream(randomGraphId)!.layer1.isJoinOngoing()
+            , 60000
+            )
         )])
 
         let numOfMessagesReceived = 0
@@ -121,11 +116,8 @@ describe('Full node network with WebRTC connections', () => {
 
         epStreamrNode.publishToStream(randomGraphId, epPeerDescriptor, message)
         // await wait(120000)
-        await waitForCondition(() => {
-            // console.log(numOfMessagesReceived)
-            return numOfMessagesReceived === NUM_OF_NODES
-        }, 10000)
+        await waitForCondition(() => numOfMessagesReceived === NUM_OF_NODES)
 
-    }, 300000)
+    }, 12000)
 
 })
