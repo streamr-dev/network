@@ -11,7 +11,7 @@ describe('metrics', () => {
 
         let context: MetricsContext
         let reports: (MetricsReport & { generationTime: number })[]
-        let producer: { stop: () => void }
+        let abortController: AbortController
     
         const getReport = (timestamp: number) => {
             return reports.find((report) => (timestamp <= report.generationTime))
@@ -20,16 +20,17 @@ describe('metrics', () => {
         beforeEach(() => {
             context = new MetricsContext()
             reports = []
-            producer = context.createReportProducer((report) => {
+            abortController = new AbortController()
+            context.createReportProducer((report) => {
                 reports.push({
                     ...report,
                     generationTime: Date.now()
                 })
-            }, REPORT_INTERVAL)
+            }, REPORT_INTERVAL, undefined, abortController.signal)
         })
     
         afterEach(() => {
-            producer.stop()
+            abortController?.abort()
         })
     
         it('happy path', async () => {

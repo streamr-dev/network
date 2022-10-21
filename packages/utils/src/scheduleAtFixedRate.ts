@@ -1,3 +1,5 @@
+import { setAbortableTimeout } from './abortableTimers'
+
 /*
  * @param {number} interval - execute task when UTC timestamp is divisible by the given interval
  *                            e.g. scheduleAtFixedRate(() => {},  24 * 60 * 60 * 1000) triggers the
@@ -7,34 +9,28 @@
  */
 export const scheduleAtFixedRate = (
     task: (now: number) => Promise<void>,
-    interval: number
-): { stop: () => void }  => {
-    return repeatScheduleTask((doneCb) => {
+    interval: number,
+    abortSignal?: AbortSignal
+): void  => {
+    repeatScheduleTask((doneCb) => {
         const now = Date.now()
         const next = now - (now % interval) + interval
-        return setTimeout(async () => {
+        setAbortableTimeout(async () => {
             await task(next)
             doneCb()
-        }, (next - now))
-    })
+        }, (next - now), abortSignal)
+    }, abortSignal)
 }
 
 /** @internal */
 export const repeatScheduleTask = (
-    scheduleNextTask: (doneCb: () => void) => NodeJS.Timer
-): { stop: () => void } => {
-    let timer: NodeJS.Timer | undefined
-    let stopRequested = false
+    scheduleNextTask: (doneCb: () => void) => void,
+    abortSignal?: AbortSignal
+): void => {
     const scheduleNext = () => {
-        if (!stopRequested) {
-            timer = scheduleNextTask(scheduleNext)
+        if (!abortSignal?.aborted) {
+            scheduleNextTask(scheduleNext)
         }
     }
     scheduleNext()
-    return {
-        stop: () => {
-            stopRequested = true
-            clearTimeout(timer!)
-        }
-    }
 }

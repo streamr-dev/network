@@ -209,8 +209,9 @@ export class MetricsContext {
     createReportProducer(
         onReport: (report: MetricsReport) => void, 
         interval: number,
-        formatNumber?: (value: number) => string
-    ): { stop: () => void } {
+        formatNumber?: (value: number) => string,
+        abortSignal?: AbortSignal
+    ): void {
         const ongoingSamples: Map<string, Sampler> = new Map()
         return scheduleAtFixedRate(async (now: number) => {
             if (ongoingSamples.size > 0) {
@@ -235,6 +236,6 @@ export class MetricsContext {
                 sample.start(now)
                 ongoingSamples.set(id, sample)
             })
-        }, interval)
+        }, interval, abortSignal)
     }
 }
