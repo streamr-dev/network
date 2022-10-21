@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 import fs from 'fs'
 import path from 'path'
-import { StreamMessage } from 'streamr-client-protocol'
+import { StreamID, StreamMessage } from 'streamr-client-protocol'
 import { fastWallet } from 'streamr-test-utils'
 import { createTestStream } from '../test-utils/utils'
 import { getPublishTestStreamMessages, getWaitForStorage, Msg } from '../test-utils/publish'
@@ -10,32 +10,38 @@ import { Stream } from '../../src/Stream'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from './../test-utils/fake/FakeStorageNode'
 import { StreamPermission } from './../../src/permission'
+import { Wallet } from '@ethersproject/wallet'
 
 const MAX_MESSAGES = 5
 
 describe('Resends2', () => {
+    let environment: FakeEnvironment
     let client: StreamrClient
     let publisher: StreamrClient
+    let publisherWallet: Wallet
     let stream: Stream
-    let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
     let storageNode: FakeStorageNode
 
+    const publishTestMessages = (count: number, streamId?: StreamID): Promise<StreamMessage<unknown>[]> => {
+        const task = getPublishTestStreamMessages(environment.createClient({
+            auth: {
+                privateKey: publisherWallet.privateKey
+            }
+        }), streamId ?? stream.id)
+        return task(count)
+    }
+
     beforeEach(async () => {
-        const environment = new FakeEnvironment()
+        environment = new FakeEnvironment()
         client = environment.createClient()
         stream = await createTestStream(client, module)
-        const publisherWallet = fastWallet()
+        publisherWallet = fastWallet()
         await stream.grantPermissions({
             user: publisherWallet.address,
             permissions: [StreamPermission.PUBLISH]
         })
         storageNode = environment.startStorageNode()
         await stream.addToStorageNode(storageNode.id)
-        publishTestMessages = getPublishTestStreamMessages(environment.createClient({
-            auth: {
-                privateKey: publisherWallet.privateKey
-            }
-        }), stream.id)
     })
 
     afterEach(async () => {
@@ -518,6 +524,10 @@ describe('Resends2', () => {
 
             it('no storage assigned', async () => {
                 const nonStoredStream = await createTestStream(client, module)
+                await nonStoredStream.grantPermissions({
+                    user: publisherWallet.address,
+                    permissions: [StreamPermission.PUBLISH]
+                })
                 const sub = await client.subscribe({
                     streamId: nonStoredStream.id,
                     resend: {
@@ -529,7 +539,7 @@ describe('Resends2', () => {
                 const onResent = jest.fn()
                 sub.once('resendComplete', onResent)
 
-                const publishedMessages = await getPublishTestStreamMessages(client, nonStoredStream.id)(2)
+                const publishedMessages = await publishTestMessages(2, nonStoredStream.id)
 
                 const receivedMsgs = await sub.collect(publishedMessages.length)
                 expect(receivedMsgs).toHaveLength(publishedMessages.length)
