@@ -196,11 +196,8 @@ describe('Resends2', () => {
                     }
                 })
 
-                sub.onError.listen((err: any) => {
-                    if (err.code === 'NO_STORAGE_NODES') { return }
-
-                    throw err
-                })
+                const onError = jest.fn()
+                sub.onError.listen(onError)
 
                 const publishedMessages = await publishTestMessages(3, nonStoredStream.id)
 
@@ -209,7 +206,6 @@ describe('Resends2', () => {
                 const onResent = jest.fn(() => {
                     expect(receivedMsgs).toEqual([])
                 })
-
                 sub.once('resendComplete', onResent)
 
                 for await (const msg of sub) {
@@ -221,6 +217,7 @@ describe('Resends2', () => {
 
                 expect(receivedMsgs).toHaveLength(publishedMessages.length)
                 expect(receivedMsgs.map((m) => m.signature)).toEqual(publishedMessages.map((m) => m.signature))
+                expect(onError).toHaveBeenCalledTimes(0)
                 expect(onResent).toHaveBeenCalledTimes(1)
                 expect(await client.getSubscriptions(nonStoredStream.id)).toHaveLength(0)
             })
