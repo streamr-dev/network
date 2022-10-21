@@ -183,8 +183,14 @@ describe('Resends2', () => {
             })
 
             it('no storage assigned', async () => {
+                const nonStoredStream = await createTestStream(client, module)
+                await nonStoredStream.grantPermissions({
+                    user: publisherWallet.address,
+                    permissions: [StreamPermission.PUBLISH]
+                })
+
                 const sub = await client.subscribe({
-                    streamId: stream.id,
+                    streamId: nonStoredStream.id,
                     resend: {
                         last: 100
                     }
@@ -196,7 +202,7 @@ describe('Resends2', () => {
                     throw err
                 })
 
-                const publishedStream2 = await publishTestMessages(3)
+                const publishedMessages = await publishTestMessages(3, nonStoredStream.id)
 
                 const receivedMsgs: any[] = []
 
@@ -208,15 +214,15 @@ describe('Resends2', () => {
 
                 for await (const msg of sub) {
                     receivedMsgs.push(msg)
-                    if (receivedMsgs.length === publishedStream2.length) {
+                    if (receivedMsgs.length === publishedMessages.length) {
                         break
                     }
                 }
 
-                expect(receivedMsgs).toHaveLength(publishedStream2.length)
-                expect(receivedMsgs.map((m) => m.signature)).toEqual(publishedStream2.map((m) => m.signature))
+                expect(receivedMsgs).toHaveLength(publishedMessages.length)
+                expect(receivedMsgs.map((m) => m.signature)).toEqual(publishedMessages.map((m) => m.signature))
                 expect(onResent).toHaveBeenCalledTimes(1)
-                expect(await client.getSubscriptions(stream.id)).toHaveLength(0)
+                expect(await client.getSubscriptions(nonStoredStream.id)).toHaveLength(0)
             })
         })
     })
