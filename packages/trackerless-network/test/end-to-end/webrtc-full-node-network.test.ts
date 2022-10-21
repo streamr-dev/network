@@ -83,10 +83,10 @@ describe('Full node network with WebRTC connections', () => {
         await Promise.all([
             epStreamrNode.destroy(),
             ...streamrNodes.map((streamrNode) => streamrNode.destroy()),
+            layer0Ep.stop(),
+            ...layer0DhtNodes.map((dhtNode) => dhtNode.stop()),
             epConnectionManager.stop(),
             ...connectionManagers.map((cm) => cm.stop()),
-            layer0Ep.stop(),
-            ...layer0DhtNodes.map((dhtNode) => dhtNode.stop())
         ])
     })
 
