@@ -302,7 +302,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             this.connections.delete(PeerID.fromValue(peerDescriptor.peerId).toKey())
             this.bucket!.remove(peerDescriptor.peerId)
             this.connectionManager?.unlockConnection(peerDescriptor, this.config.serviceId)
-
             this.emit('disconnected', peerDescriptor)
         })
         this.randomPeers = new RandomContactList(selfId, this.config.maxNeighborListSize)
@@ -746,7 +745,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
                 const forwardedMessage = RouteMessageWrapper.fromBinary(routedMessage.message)
                 if (this.ownPeerId!.equals(PeerID.fromValue(forwardedMessage.destinationPeer!.peerId))) {
                     if (this.connectionManager) {
-                        this.connectionManager.onData(routedMessage.message, routedMessage.sourcePeer!)
+                        this.connectionManager.onData(forwardedMessage.message, forwardedMessage.sourcePeer!)
                     }
                     return this.createRouteMessageAck(routedMessage)
                 }

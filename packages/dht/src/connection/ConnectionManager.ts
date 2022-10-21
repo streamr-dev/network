@@ -390,7 +390,9 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             toProtoRpcClient(new ConnectionLockerClient(this.rpcCommunicator!.getRpcClientTransport()))
         )
 
-        remoteConnectionLocker.unlockRequest(this.ownPeerDescriptor!, serviceId)
+        if (this.connections.has(hexKey)) {
+            remoteConnectionLocker.unlockRequest(this.ownPeerDescriptor!, serviceId)
+        }
 
         if (this.localLockedConnections.get(hexKey)?.size === 0) {
             this.localLockedConnections.delete(hexKey)

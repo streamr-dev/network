@@ -109,7 +109,7 @@ export class StreamrNode extends EventEmitter {
             transportLayer: this.layer0!,
             serviceId: 'layer1::' + streamPartID,
             peerDescriptor: this.layer0!.getPeerDescriptor(),
-            routeMessageTimeout: 2000,
+            routeMessageTimeout: 5000,
             entryPoints: [entryPoint],
             numberOfNodesPerKBucket: 4,
             rpcRequestTimeout: 15000,
