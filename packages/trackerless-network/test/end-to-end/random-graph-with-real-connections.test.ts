@@ -110,6 +110,12 @@ describe('random graph with real connections', () => {
             randomGraphNode3.stop(),
             randomGraphNode4.stop(),
             randomGraphNode5.stop(),
+            (epDhtNode.getTransport() as ConnectionManager).stop(),
+            (dhtNode1.getTransport() as ConnectionManager).stop(),
+            (dhtNode2.getTransport() as ConnectionManager).stop(),
+            (dhtNode3.getTransport() as ConnectionManager).stop(),
+            (dhtNode4.getTransport() as ConnectionManager).stop(),
+
         ])
     })
 
