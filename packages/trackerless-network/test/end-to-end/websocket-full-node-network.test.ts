@@ -22,12 +22,16 @@ describe('Full node network with WebSocket connections only', () => {
     let connectionManagers: ConnectionManager[]
     let streamrNodes: StreamrNode[]
 
+    let layer0Ep: DhtNode
+    let layer0DhtNodes: DhtNode[]
+
     beforeEach(async () => {
 
         streamrNodes = []
         connectionManagers = []
+        layer0DhtNodes = []
 
-        const layer0Ep = new DhtNode({ peerDescriptor: epPeerDescriptor, numberOfNodesPerKBucket: 4, routeMessageTimeout: 10000 })
+        layer0Ep = new DhtNode({ peerDescriptor: epPeerDescriptor, numberOfNodesPerKBucket: 4, routeMessageTimeout: 10000 })
         await layer0Ep.start()
         await layer0Ep.joinDht(epPeerDescriptor)
 
@@ -48,6 +52,8 @@ describe('Full node network with WebSocket connections only', () => {
                     peerIdString: `${i}`,
                     numberOfNodesPerKBucket: 4
                 })
+
+                layer0DhtNodes.push(layer0)
 
                 await layer0.start()
                 await layer0.joinDht(epPeerDescriptor)
@@ -70,7 +76,9 @@ describe('Full node network with WebSocket connections only', () => {
             epStreamrNode.destroy(),
             ...streamrNodes.map((streamrNode) => streamrNode.destroy()),
             epConnectionManager.stop(),
-            ...connectionManagers.map((cm) => cm.stop())
+            ...connectionManagers.map((cm) => cm.stop()),
+            layer0Ep.stop(),
+            ...layer0DhtNodes.map((dhtNode) => dhtNode.stop())
         ])
     })
 

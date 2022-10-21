@@ -99,7 +99,7 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
             const managedConnection = new ManagedWebRtcConnection(this.ownPeerDescriptor!, this.config.protocolVersion, connection)
             managedConnection.setPeerDescriptor(remotePeer)
             this.ongoingConnectAttempts.set(peerKey, managedConnection)
-            this.bindListenersAndStartConnection(remotePeer, connection)
+            this.bindListenersAndStartConnection(remotePeer, connection, false)
 
             this.emit('newConnection', managedConnection)
         }
