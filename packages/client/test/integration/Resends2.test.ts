@@ -524,32 +524,6 @@ describe('Resends2', () => {
                 expect(msgs.map((m) => m.signature)).toEqual(published.slice(0, END_AFTER).map((m) => m.signature))
                 expect(await client.getSubscriptions(stream.id)).toHaveLength(0)
             })
-
-            it('no storage assigned', async () => {
-                const nonStoredStream = await createTestStream(client, module)
-                await nonStoredStream.grantPermissions({
-                    user: publisherWallet.address,
-                    permissions: [StreamPermission.PUBLISH]
-                })
-                const sub = await client.subscribe({
-                    streamId: nonStoredStream.id,
-                    resend: {
-                        last: 5
-                    }
-                })
-                expect(await client.getSubscriptions(nonStoredStream.id)).toHaveLength(1)
-
-                const onResent = jest.fn()
-                sub.once('resendComplete', onResent)
-
-                const publishedMessages = await publishTestMessages(2, nonStoredStream.id)
-
-                const receivedMsgs = await sub.collect(publishedMessages.length)
-                expect(receivedMsgs).toHaveLength(publishedMessages.length)
-                expect(onResent).toHaveBeenCalledTimes(1)
-                expect(receivedMsgs.map((m) => m.signature)).toEqual(publishedMessages.map((m) => m.signature))
-                expect(await client.getSubscriptions(nonStoredStream.id)).toHaveLength(0)
-            })
         })
     })
 
