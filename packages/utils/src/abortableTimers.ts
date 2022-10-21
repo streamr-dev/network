@@ -1,11 +1,11 @@
 /**
- * setTimeout with AbortController support. Aborting will simply clear
+ * setTimeout with AbortSignal support. Aborting will simply clear
  * the timeout silently.
  */
 export const setAbortableTimeout = createAbortableTimerFn(setTimeout, clearTimeout, true)
 
 /**
- * setInterval with AbortController support. Aborting will simply clear
+ * setInterval with AbortSignal support. Aborting will simply clear
  * the interval silently.
  */
 export const setAbortableInterval = createAbortableTimerFn(setInterval, clearInterval, false)
