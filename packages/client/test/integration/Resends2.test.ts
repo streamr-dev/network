@@ -78,8 +78,9 @@ describe('Resends2', () => {
         }).rejects.toThrow('streamPartition')
     })
 
-    describe('no data', () => {
-        it('handles nothing to resend', async () => {
+    describe('no historical messages available', () => {
+
+        it('happy path', async () => {
             const sub = await client.resend({
                 streamId: stream.id,
                 partition: 0,
@@ -92,7 +93,7 @@ describe('Resends2', () => {
         })
 
         describe('resendSubscribe', () => {
-            it('sees realtime when no resend', async () => {
+            it('happy path', async () => {
                 const sub = await client.subscribe({
                     streamId: stream.id,
                     resend: {
@@ -175,7 +176,7 @@ describe('Resends2', () => {
                 expect(onSubError).toHaveBeenCalledTimes(1)
             })
 
-            it('sees realtime when no storage assigned', async () => {
+            it('no storage assigned', async () => {
                 const sub = await client.subscribe({
                     streamId: stream.id,
                     resend: {
@@ -214,7 +215,7 @@ describe('Resends2', () => {
         })
     })
 
-    describe('with resend data', () => {
+    describe('historical messages available', () => {
         let published: StreamMessage[]
 
         beforeEach(async () => {
@@ -351,7 +352,7 @@ describe('Resends2', () => {
         })
 
         describe('resendSubscribe', () => {
-            it('sees resends and realtime', async () => {
+            it('happy path', async () => {
                 const sub = await client.subscribe({
                     streamId: stream.id,
                     resend: {
@@ -385,7 +386,7 @@ describe('Resends2', () => {
                 expect(received.map((m) => m.signature)).toEqual(published.slice(-2).map((m) => m.signature))
             })
 
-            it('sees resends when no realtime', async () => {
+            it('receives historical messages when no realtime messages available', async () => {
                 const sub = await client.subscribe({
                     streamId: stream.id,
                     resend: {
@@ -515,7 +516,7 @@ describe('Resends2', () => {
                 expect(await client.getSubscriptions(stream.id)).toHaveLength(0)
             })
 
-            it('does not error if no storage assigned', async () => {
+            it('no storage assigned', async () => {
                 const nonStoredStream = await createTestStream(client, module)
                 const sub = await client.subscribe({
                     streamId: nonStoredStream.id,
