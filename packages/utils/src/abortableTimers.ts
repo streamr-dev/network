@@ -13,7 +13,7 @@ export const setAbortableInterval = createAbortableTimerFn(setInterval, clearInt
 function createAbortableTimerFn(
     setupTimerFn: (cb: () => void, ms?: number) => NodeJS.Timer,
     clearFn: (ref: NodeJS.Timer) => void,
-    removeListenerAfterCb: boolean
+    removeListenerOnCb: boolean
 ): (cb: () => void, ms?: number, abortSignal?: AbortSignal) => NodeJS.Timer {
     return (callback, ms, abortSignal) => {
         if (abortSignal?.aborted) {
@@ -30,7 +30,7 @@ function createAbortableTimerFn(
             (abortSignal as any).addEventListener('abort', abortListener)
         }
         const timeoutRef = setupTimerFn(() => {
-            if (abortListener !== undefined && removeListenerAfterCb) {
+            if (abortListener !== undefined && removeListenerOnCb) {
                 // TODO remove the type casting when type definition for abortController has been updated to include removeEventListener
                 (abortSignal as any).removeEventListener('abort', abortListener)
             }
