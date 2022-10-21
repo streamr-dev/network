@@ -19,7 +19,7 @@
     "test": "jest",
     "test-unit": "jest test/unit",
     "test-integration": "jest test/integration",
-    "test-e2e": "jest --runInBand test/end-to-end"
+    "test-e2e": "jest --runInBand --forceExit test/end-to-end"
   },
   "dependencies": {
     "@protobuf-ts/runtime": "^2.8.0",
