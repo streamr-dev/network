@@ -61,6 +61,7 @@ export class DhtPeer implements KBucketContact {
             return peers.peers
         } catch (err) {
             logger.debug(err)
+            // logger.warn(PeerID.fromValue(sourceDescriptor.peerId).toKey() + ", " +  PeerID.fromValue(this.peerDescriptor.peerId).toKey())
             return []
         }
     }

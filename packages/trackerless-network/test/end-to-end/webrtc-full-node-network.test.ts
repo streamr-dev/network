@@ -7,7 +7,7 @@ import { getRandomRegion } from '@streamr/dht/dist/test/data/pings'
 
 describe('Full node network with WebRTC connections', () => {
 
-    const NUM_OF_NODES = 24
+    const NUM_OF_NODES = 32
 
     const epPeerDescriptor: PeerDescriptor = {
         peerId: PeerID.fromString(`entrypoint`).value,
@@ -54,7 +54,7 @@ describe('Full node network with WebRTC connections', () => {
                 const layer0 = new DhtNode({
                     numberOfNodesPerKBucket: 4,
                     peerDescriptor,
-                    routeMessageTimeout: 10000,
+                    routeMessageTimeout: 2000,
                     entryPoints: [epPeerDescriptor]
                 })
 
@@ -84,11 +84,13 @@ describe('Full node network with WebRTC connections', () => {
 
     it('happy path', async () => {
 
-        await waitForCondition(() => streamrNodes.length === NUM_OF_NODES, 120000)
+        await waitForCondition(() => streamrNodes.length === NUM_OF_NODES, 240000)
         await Promise.all([...streamrNodes.map((streamrNode) =>
-            waitForCondition(() => {
-                return streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length >= 3
-            }, 60000)
+            waitForCondition(() =>
+                streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length >= 3
+                && !streamrNode.getStream(randomGraphId)!.layer1.isJoinOngoing()
+            , 60000
+            )
         )])
 
         let numOfMessagesReceived = 0
@@ -114,11 +116,8 @@ describe('Full node network with WebRTC connections', () => {
 
         epStreamrNode.publishToStream(randomGraphId, epPeerDescriptor, message)
         // await wait(120000)
-        await waitForCondition(() => {
-            // console.log(numOfMessagesReceived)
-            return numOfMessagesReceived === NUM_OF_NODES
-        }, 10000)
+        await waitForCondition(() => numOfMessagesReceived === NUM_OF_NODES)
 
-    }, 90000)
+    }, 120000)
 
 })

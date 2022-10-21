@@ -109,9 +109,11 @@ export class StreamrNode extends EventEmitter {
             transportLayer: this.layer0!,
             serviceId: 'layer1::' + streamPartID,
             peerDescriptor: this.layer0!.getPeerDescriptor(),
-            routeMessageTimeout: 15000,
+            routeMessageTimeout: 5000,
             entryPoints: [entryPoint],
-            numberOfNodesPerKBucket: 4
+            numberOfNodesPerKBucket: 4,
+            rpcRequestTimeout: 15000,
+            dhtJoinTimeout: 90000
         })
         const layer2 = new RandomGraphNode({
             randomGraphId: streamPartID,
@@ -124,11 +126,10 @@ export class StreamrNode extends EventEmitter {
             layer1,
             layer2
         })
-        this.connectionLocker!.lockConnection(entryPoint, 'layer1::' + streamPartID)
+
         await layer1.start()
         layer2.start()
         await layer1.joinDht(entryPoint)
-        this.connectionLocker!.unlockConnection(entryPoint, 'layer1::' + streamPartID)
     }
 
     getStream(streamPartID: string): StreamObject | undefined {

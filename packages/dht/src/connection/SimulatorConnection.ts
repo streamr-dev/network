@@ -1,10 +1,11 @@
 import { ConnectionEvents, IConnection } from "./IConnection"
 import EventEmitter from "eventemitter3"
 import { Simulator } from "./Simulator"
-import { PeerDescriptor } from "../exports"
+import { PeerDescriptor } from "../proto/DhtRpc"
 
 export class SimulatorConnection extends EventEmitter<ConnectionEvents> implements IConnection {
- 
+
+    private closed = false
     constructor(private ownPeerDescriptor: PeerDescriptor, private targetPeerDescriptor: PeerDescriptor, 
         private simulator: Simulator) {
         super()

@@ -6,7 +6,7 @@ import { DataMessage, MessageRef } from '../../src/proto/packages/trackerless-ne
 
 describe('Full node network with WebSocket connections only', () => {
 
-    const NUM_OF_NODES = 42
+    const NUM_OF_NODES = 64
 
     const epPeerDescriptor: PeerDescriptor = {
         peerId: PeerID.fromString(`entrypoint`).value,
@@ -78,7 +78,11 @@ describe('Full node network with WebSocket connections only', () => {
 
         await waitForCondition(() => streamrNodes.length === NUM_OF_NODES, 120000)
         await Promise.all([...streamrNodes.map((streamrNode) =>
-            waitForCondition(() => streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length >= 3, 600000)
+            waitForCondition(() =>
+                streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length >= 3
+                && !streamrNode.getStream(randomGraphId)!.layer1.isJoinOngoing()
+            , 90000
+            )
         )])
 
         let numOfMessagesReceived = 0
@@ -100,10 +104,7 @@ describe('Full node network with WebSocket connections only', () => {
 
         epStreamrNode.publishToStream(randomGraphId, epPeerDescriptor, message)
 
-        await waitForCondition(() => {
-            // console.log(numOfMessagesReceived)
-            return numOfMessagesReceived === NUM_OF_NODES
-        }, 15000)
+        await waitForCondition(() => numOfMessagesReceived === NUM_OF_NODES)
 
     }, 220000)
 
