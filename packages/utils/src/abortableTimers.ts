@@ -23,6 +23,8 @@ function createAbortableTimerFn(
         if (abortSignal !== undefined) {
             abortListener = () => {
                 clearFn(timeoutRef)
+                // TODO remove the type casting when type definition for abortController has been updated to include addEventListener
+                ;(abortSignal as any).removeEventListener('abort', abortListener)
             }
             // TODO remove the type casting when type definition for abortController has been updated to include addEventListener
             (abortSignal as any).addEventListener('abort', abortListener)
