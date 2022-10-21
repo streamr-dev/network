@@ -118,6 +118,6 @@ describe('Full node network with WebRTC connections', () => {
         // await wait(120000)
         await waitForCondition(() => numOfMessagesReceived === NUM_OF_NODES)
 
-    }, 12000)
+    }, 120000)
 
 })

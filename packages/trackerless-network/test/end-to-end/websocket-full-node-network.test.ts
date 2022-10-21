@@ -6,7 +6,7 @@ import { DataMessage, MessageRef } from '../../src/proto/packages/trackerless-ne
 
 describe('Full node network with WebSocket connections only', () => {
 
-    const NUM_OF_NODES = 32
+    const NUM_OF_NODES = 64
 
     const epPeerDescriptor: PeerDescriptor = {
         peerId: PeerID.fromString(`entrypoint`).value,
@@ -81,7 +81,7 @@ describe('Full node network with WebSocket connections only', () => {
             waitForCondition(() =>
                 streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length >= 3
                 && !streamrNode.getStream(randomGraphId)!.layer1.isJoinOngoing()
-            , 60000
+            , 90000
             )
         )])
 
