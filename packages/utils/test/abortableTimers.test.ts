@@ -10,7 +10,7 @@ describe('setAbortableTimeout',  () => {
         setAbortableTimeout(cb, TIMEOUT_UNIT)
         await wait(TIMEOUT_UNIT / 2)
         expect(cb).toHaveBeenCalledTimes(0)
-        await wait(TIMEOUT_UNIT)
+        await wait(TIMEOUT_UNIT + 20)
         expect(cb).toHaveBeenCalledTimes(1)
     })
 
@@ -55,8 +55,8 @@ describe('setAbortableInterval',  () => {
         const cb = jest.fn()
         ref = setAbortableInterval(cb, INTERVAL_UNIT, abortController.signal)
         await wait(INTERVAL_UNIT)
-        abortController.abort()
         const callsBeforeAbort = cb.mock.calls.length
+        abortController.abort()
         await wait(INTERVAL_UNIT * 4)
         expect(cb.mock.calls.length).toEqual(callsBeforeAbort)
     })
