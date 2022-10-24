@@ -52,7 +52,7 @@ const toThrowStreamError = function(
     }
     return {
         pass: true,
-        message: () => ''
+        message: () => `Expected not to throw ${printReceived('StreamrClientError')}`
     }
 }
 
