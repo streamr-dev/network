@@ -118,8 +118,7 @@ export class Subscriber {
     }
 
     private async add<T>(streamPartId: StreamPartID): Promise<Subscription<T>> {
-        const subSession = this.getOrCreateSubscriptionSession<T>(streamPartId)
-        const sub = new Subscription<T>(subSession.streamPartId, this.destroySignal, this.loggerFactory)
+        const sub = new Subscription<T>(streamPartId, this.destroySignal, this.loggerFactory)
         return this.addSubscription(sub)
     }
 
