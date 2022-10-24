@@ -141,8 +141,7 @@ export class StreamrClient {
         onMessage?: SubscriptionOnMessage<T>
     ): Promise<ResendSubscription<T>> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        const subSession = this.subscriber.getOrCreateSubscriptionSession<T>(streamPartId)
-        const sub = new ResendSubscription<T>(subSession, this.resends, resendOptions, this.container)
+        const sub = new ResendSubscription<T>(streamPartId, this.resends, resendOptions, this.container)
         if (onMessage) {
             sub.useLegacyOnMessageHandler(onMessage)
         }

@@ -1,4 +1,4 @@
-import { StreamMessage } from 'streamr-client-protocol'
+import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamrClientConfig } from '../../src/Config'
 import { Stream } from '../../src/Stream'
@@ -12,10 +12,16 @@ import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 
 const MAX_MESSAGES = 10
 
-function monkeypatchMessageHandler<T = any>(sub: Subscription<T>, fn: ((msg: StreamMessage<T>, count: number) => undefined | null)) {
+function monkeypatchMessageHandler<T = any>(
+    streamPartId: StreamPartID,
+    client: StreamrClient,
+    fn: ((msg: StreamMessage<T>, count: number) => undefined | null)
+) {
     let count = 0
     // @ts-expect-error private
-    sub.subSession.pipeline.pipeBefore(async function* DropMessages(src: AsyncGenerator<any>) {
+    const subSession = client.subscriber.getSubscriptionSession(streamPartId)!
+    // @ts-expect-error private
+    subSession.pipeline.pipeBefore(async function* DropMessages(src: AsyncGenerator<any>) {
         for await (const msg of src) {
             const result = fn(msg, count)
             count += 1
@@ -87,7 +93,7 @@ describe('GapFill', () => {
                 // @ts-expect-error private
                 const calledResend = jest.spyOn(client.resends, 'range')
                 const sub = await client.subscribe(stream.id)
-                monkeypatchMessageHandler(sub, (_msg, count) => {
+                monkeypatchMessageHandler(sub.streamPartId, client, (_msg, count) => {
                     if (count === 2) {
                         return null
                     }
@@ -114,7 +120,7 @@ describe('GapFill', () => {
 
             it('can fill gap of multiple messages', async () => {
                 const sub = await client.subscribe(stream.id)
-                monkeypatchMessageHandler(sub, (_msg, count) => {
+                monkeypatchMessageHandler(sub.streamPartId, client, (_msg, count) => {
                     if (count > 1 && count < 4) { return null }
                     return undefined
                 })
@@ -136,7 +142,7 @@ describe('GapFill', () => {
             it('can fill multiple gaps', async () => {
                 const sub = await client.subscribe(stream.id)
 
-                monkeypatchMessageHandler(sub, (_msg, count) => {
+                monkeypatchMessageHandler(sub.streamPartId, client, (_msg, count) => {
                     if (count === 3 || count === 4 || count === 7) { return null }
                     return undefined
                 })

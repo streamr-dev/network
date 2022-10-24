@@ -92,7 +92,7 @@ export class Subscriber {
             this.loggerFactory,
             this.rootConfig
         )
-        
+
         this.subSessions.set(streamPartId, subSession as SubscriptionSession<unknown>)
         subSession.onRetired.listen(() => {
             this.subSessions.delete(streamPartId)
@@ -121,7 +121,7 @@ export class Subscriber {
         const subSession = this.getOrCreateSubscriptionSession<T>(streamPartId)
 
         // create subscription
-        const sub = new Subscription<T>(subSession, this.loggerFactory)
+        const sub = new Subscription<T>(subSession.streamPartId, this.loggerFactory)
         return this.addSubscription(sub)
     }
 

@@ -1,7 +1,6 @@
 import { DependencyContainer } from 'tsyringe'
-import { SubscriptionSession } from './SubscriptionSession'
 import { Subscription } from './Subscription'
-import { StreamMessage, StreamPartIDUtils } from 'streamr-client-protocol'
+import { StreamMessage, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
 import { ConfigInjectionToken } from '../Config'
 import { OrderMessages } from './OrderMessages'
 import { ResendOptions, Resends } from './Resends'
@@ -13,17 +12,17 @@ export class ResendSubscription<T> extends Subscription<T> {
 
     /** @internal */
     constructor(
-        subSession: SubscriptionSession<T>,
+        streamPartId: StreamPartID,
         private resends: Resends,
         private resendOptions: ResendOptions,
         container: DependencyContainer
     ) {
-        super(subSession, container.resolve(LoggerFactory))
+        super(streamPartId, container.resolve(LoggerFactory))
         this.resendThenRealtime = this.resendThenRealtime.bind(this)
         this.orderMessages = new OrderMessages<T>(
             container.resolve(ConfigInjectionToken.Subscribe),
             container.resolve(Resends),
-            subSession.streamPartId,
+            streamPartId,
             container.resolve(LoggerFactory)
         )
         this.pipe(this.resendThenRealtime)
