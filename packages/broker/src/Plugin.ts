@@ -10,6 +10,7 @@ export interface PluginOptions {
     streamrClient: StreamrClient
     apiAuthenticator: ApiAuthenticator
     brokerConfig: Config
+    abortSignal: AbortSignal
 }
 
 export abstract class Plugin<T> {
@@ -19,6 +20,7 @@ export abstract class Plugin<T> {
     readonly apiAuthenticator: ApiAuthenticator
     readonly brokerConfig: Config
     readonly pluginConfig: T
+    readonly abortSignal: AbortSignal
     private readonly httpServerRouters: express.Router[] = []
 
     constructor(options: PluginOptions) {
@@ -27,6 +29,7 @@ export abstract class Plugin<T> {
         this.apiAuthenticator = options.apiAuthenticator
         this.brokerConfig = options.brokerConfig
         this.pluginConfig = options.brokerConfig.plugins[this.name]
+        this.abortSignal = options.abortSignal
         const configSchema = this.getConfigSchema()
         if (configSchema !== undefined) {
             validateConfig(this.pluginConfig, configSchema, `${this.name} plugin`)

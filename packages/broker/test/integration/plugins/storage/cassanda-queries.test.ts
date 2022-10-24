@@ -88,7 +88,7 @@ class ProxyClient {
 }
 
 describe('cassanda-queries', () => {
-
+    let abortController: AbortController
     let storage: Storage
     let realClient: Client
 
@@ -103,6 +103,7 @@ describe('cassanda-queries', () => {
     }
 
     beforeAll(async () => {
+        abortController = new AbortController()
         storage = await startCassandraStorage({
             contactPoints,
             localDataCenter,
@@ -111,15 +112,16 @@ describe('cassanda-queries', () => {
                 checkFullBucketsTimeout: 100,
                 storeBucketsTimeout: 100,
                 bucketKeepAliveSeconds: 1
-            }
+            },
+            abortSignal: abortController.signal
         })
         realClient = storage.cassandraClient
         await Promise.all(MOCK_MESSAGES.map((msg) => storage.store(msg)))
         await waitForStoredMessageCount(MOCK_MESSAGES.length)
     })
 
-    afterAll(async () => {
-        await storage?.close() // also cleans up realClient
+    afterAll(() => {
+        abortController.abort()
     })
 
     beforeEach(async () => {

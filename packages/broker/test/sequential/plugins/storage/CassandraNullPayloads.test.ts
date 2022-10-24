@@ -72,9 +72,11 @@ async function storeMockMessages({
 
 describe('CassandraNullPayloads', () => {
     let cassandraClient: Client
+    let abortController: AbortController
     let storage: Storage
 
     beforeAll(() => {
+        abortController = new AbortController()
         cassandraClient = new Client({
             contactPoints,
             localDataCenter,
@@ -83,6 +85,7 @@ describe('CassandraNullPayloads', () => {
     })
 
     afterAll(() => {
+        abortController.abort()
         cassandraClient.shutdown()
     })
 
@@ -95,12 +98,13 @@ describe('CassandraNullPayloads', () => {
                 checkFullBucketsTimeout: 100,
                 storeBucketsTimeout: 100,
                 bucketKeepAliveSeconds: 1
-            }
+            },
+            abortSignal: abortController.signal
         })
     })
 
-    afterEach(async () => {
-        await storage.close()
+    afterEach(() => {
+        abortController.abort()
     })
 
     test('insert a null payload and retrieve n-1 messages (null not included in return set)', async () => {

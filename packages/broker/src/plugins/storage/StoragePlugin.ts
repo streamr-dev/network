@@ -64,10 +64,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
         this.storageConfig!.getStreamParts().forEach((streamPart) => {
             node.unsubscribe(streamPart)
         })
-        await Promise.all([
-            this.cassandra!.close(),
-            this.storageConfig!.destroy()
-        ])
+        await this.storageConfig!.destroy()
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -84,7 +81,8 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
             password: this.pluginConfig.cassandra.password,
             opts: {
                 useTtl: false
-            }
+            },
+            abortSignal: this.abortSignal
         })
         cassandraStorage.enableMetrics(metricsContext)
         return cassandraStorage
@@ -119,7 +117,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
                 }
             }
         )
-        await storageConfig.start()
+        await storageConfig.start(this.abortSignal)
         return storageConfig
     }
 }

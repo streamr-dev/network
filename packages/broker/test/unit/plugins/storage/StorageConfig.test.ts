@@ -35,6 +35,7 @@ describe(StorageConfig, () => {
     let stubClient: Pick<StreamrClient, 'getStream' | 'getStoredStreams' | 'on' | 'off' >
     let onStreamPartAdded: jest.Mock<void, [StreamPartID]>
     let onStreamPartRemoved: jest.Mock<void, [StreamPartID]>
+    let abortController: AbortController
     let storageConfig: StorageConfig
 
     beforeEach(async () => {
@@ -54,6 +55,7 @@ describe(StorageConfig, () => {
         }
         onStreamPartAdded = jest.fn()
         onStreamPartRemoved = jest.fn()
+        abortController = new AbortController()
         storageConfig = new StorageConfig(CLUSTER_ID, 1, 0, POLL_TIME, stubClient as StreamrClient, {
             onStreamPartAdded,
             onStreamPartRemoved
@@ -62,6 +64,7 @@ describe(StorageConfig, () => {
     })
 
     afterEach(async () => {
+        abortController.abort()
         await storageConfig?.destroy()
     })
 
@@ -78,7 +81,7 @@ describe(StorageConfig, () => {
                 ],
                 blockNumber: 10
             })
-            await storageConfig.start()
+            await storageConfig.start(abortController.signal)
             await wait(POLL_TIME * 2)
         })
 
@@ -102,7 +105,7 @@ describe(StorageConfig, () => {
 
     describe('on event-based results', () => {
         beforeEach(async () => {
-            await storageConfig.start()
+            await storageConfig.start(abortController.signal)
             const addToStorageNodeListener = storageEventListeners.get('addToStorageNode')!
             const removeFromStorageNodeListener = storageEventListeners.get('removeFromStorageNode')!
             addToStorageNodeListener({
@@ -161,8 +164,9 @@ describe(StorageConfig, () => {
     })
 
     it('updates do not occur after destroy has been invoked', async () => {
-        await storageConfig.start()
+        await storageConfig.start(abortController.signal)
         await wait(POLL_TIME)
+        abortController.abort()
         await storageConfig.destroy()
 
         getStoredStreams.mockClear()

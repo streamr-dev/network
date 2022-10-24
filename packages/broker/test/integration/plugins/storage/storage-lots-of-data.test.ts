@@ -37,10 +37,12 @@ function retryFlakyTest(fn: () => Promise<unknown>, isFlakyError: (e: Error) => 
 }
 
 describe('Storage: lots of data', () => {
+    let abortController: AbortController
     let storage: Storage
     let streamId: string
 
     beforeAll(async () => {
+        abortController = new AbortController()
         storage = await startCassandraStorage({
             contactPoints,
             localDataCenter,
@@ -50,13 +52,14 @@ describe('Storage: lots of data', () => {
                 checkFullBucketsTimeout: 100,
                 storeBucketsTimeout: 100,
                 bucketKeepAliveSeconds: 1
-            }
+            },
+            abortSignal: abortController.signal
         })
         streamId = getTestName(module) + Date.now()
     })
 
-    afterAll(async () => {
-        await storage.close()
+    afterAll(() => {
+        abortController.abort()
     })
 
     beforeAll(async () => {

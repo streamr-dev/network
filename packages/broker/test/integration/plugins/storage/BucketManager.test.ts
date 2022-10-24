@@ -9,9 +9,10 @@ const localDataCenter = 'datacenter1'
 const keyspace = 'streamr_dev_v2'
 
 describe('BucketManager', () => {
+    let cassandraClient: Client
+    let abortController: AbortController
     let bucketManager: BucketManager
     let streamId: string
-    let cassandraClient: Client
     let streamIdx = 1
 
     const insertBuckets = async (startTimestamp: Date) => {
@@ -35,9 +36,9 @@ describe('BucketManager', () => {
             localDataCenter,
             keyspace,
         })
-
         await cassandraClient.connect()
-        bucketManager = new BucketManager(cassandraClient, {
+        abortController = new AbortController()
+        bucketManager = new BucketManager(cassandraClient, abortController.signal, {
             checkFullBucketsTimeout: 1000,
             storeBucketsTimeout: 1000,
             maxBucketSize: 10 * 300,
@@ -50,7 +51,7 @@ describe('BucketManager', () => {
     })
 
     afterEach(async () => {
-        bucketManager.stop()
+        abortController.abort()
         await cassandraClient.shutdown()
     })
 
