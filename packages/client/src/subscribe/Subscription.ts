@@ -7,6 +7,7 @@ import { MessageStream, MessageStreamOnMessage } from './MessageStream'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
+import { DestroySignal } from '../DestroySignal'
 
 export { MessageStreamOnMessage as SubscriptionOnMessage }
 
@@ -24,7 +25,7 @@ export class Subscription<T = unknown> extends MessageStream<T> {
     protected eventEmitter: EventEmitter<SubscriptionEvents>
 
     /** @internal */
-    constructor(streamPartId: StreamPartID, loggerFactory: LoggerFactory) {
+    constructor(streamPartId: StreamPartID, destroySignal: DestroySignal, loggerFactory: LoggerFactory) {
         super()
         this.streamPartId = streamPartId
         this.eventEmitter = new EventEmitter<SubscriptionEvents>()
@@ -35,6 +36,9 @@ export class Subscription<T = unknown> extends MessageStream<T> {
         this.onError.listen((err) => {
             this.eventEmitter.emit('error', err)
             this.logger.debug('onError %s', err)
+        })
+        destroySignal.onDestroy.listen(() => {
+            this.eventEmitter.removeAllListeners()
         })
     }
 

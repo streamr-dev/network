@@ -20,7 +20,7 @@ export class ResendSubscription<T> extends Subscription<T> {
         loggerFactory: LoggerFactory,
         @inject(ConfigInjectionToken.Subscribe) subscibreConfig: SubscribeConfig
     ) {
-        super(streamPartId, loggerFactory)
+        super(streamPartId, destroySignal, loggerFactory)
         this.resendThenRealtime = this.resendThenRealtime.bind(this)
         this.orderMessages = new OrderMessages<T>(
             subscibreConfig,
@@ -32,9 +32,6 @@ export class ResendSubscription<T> extends Subscription<T> {
         this.pipe(this.orderMessages.transform())
         this.onBeforeFinally.listen(async () => {
             this.orderMessages.stop()
-        })
-        destroySignal.onDestroy.listen(() => {
-            this.eventEmitter.removeAllListeners()
         })
     }
 
