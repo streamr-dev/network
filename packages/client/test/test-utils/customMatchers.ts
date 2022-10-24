@@ -1,6 +1,7 @@
 import { expect } from '@jest/globals'
 import type { MatcherState } from 'expect'
 import { printExpected, printReceived } from 'jest-matcher-utils'
+import { isFunction } from 'lodash'
 import { StreamrClientError } from './../../src/StreamrClientError'
 
 // we could ES2015 module syntax (https://jestjs.io/docs/expect#expectextendmatchers),
@@ -23,9 +24,23 @@ const formError = (description: string, expected: string, actual: string) => {
 
 const toThrowStreamError = function(
     this: MatcherState,
-    actualError: unknown,
+    actual: unknown, // should be (() => StreamrClientError) | StreamrClientError
     expectedError: Partial<StreamrClientError>
 ) {
+    let actualError
+    if (isFunction(actual)) {
+        try {
+            actual()
+            return {
+                pass: false,
+                message: () => `Function didn't throw`
+            }
+        } catch (e) {
+            actualError = e
+        }
+    } else {
+        actualError = actual
+    }
     if (!(actualError instanceof StreamrClientError)) {
         return formError('Class name', 'StreamrClientError', (actualError as any).constructor.name)
     }
