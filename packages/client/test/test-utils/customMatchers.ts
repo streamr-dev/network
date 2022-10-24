@@ -4,18 +4,28 @@ import { printExpected, printReceived } from 'jest-matcher-utils'
 import { isFunction } from 'lodash'
 import { StreamrClientError, StreamrClientErrorCode } from './../../src/StreamrClientError'
 
+interface ExpectationResult {
+    pass: boolean
+    message: () => string
+}
+
+interface PartialStreamrClientError {
+    code: StreamrClientErrorCode
+    message?: string
+}
+
 // we could ES2015 module syntax (https://jestjs.io/docs/expect#expectextendmatchers),
 // but the IDE doesn't find custom matchers if we do that
 declare global {
     // eslint-disable-next-line @typescript-eslint/no-namespace
     namespace jest {
         interface Matchers<R> {
-            toThrowStreamError(expectedError: { code: StreamrClientErrorCode, message?: string }): R
+            toThrowStreamError(expectedError: PartialStreamrClientError): R
         }
     }
 }
 
-const formError = (description: string, expected: string, actual: string) => {
+const formError = (description: string, expected: string, actual: string): ExpectationResult => {
     return {
         pass: false,
         message: () => `${description}\nExpected: ${printExpected(expected)}\nReceived: ${printReceived(actual)}`
@@ -25,8 +35,8 @@ const formError = (description: string, expected: string, actual: string) => {
 const toThrowStreamError = function(
     this: MatcherState,
     actual: unknown, // should be (() => StreamrClientError) | StreamrClientError
-    expectedError: { code: StreamrClientErrorCode, message?: string }
-) {
+    expectedError: PartialStreamrClientError
+): ExpectationResult {
     let actualError
     if (isFunction(actual)) {
         try {
