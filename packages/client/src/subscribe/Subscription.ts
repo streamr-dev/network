@@ -48,11 +48,6 @@ export class Subscription<T = unknown> extends MessageStream<T> {
         await this.return()
     }
 
-    /** @internal */
-    waitForNeighbours(numNeighbours?: number, timeout?: number): Promise<boolean> {
-        return this.subSession.waitForNeighbours(numNeighbours, timeout)
-    }
-
     on<E extends keyof SubscriptionEvents>(eventName: E, listener: SubscriptionEvents[E]): void {
         this.eventEmitter.on(eventName, listener as any)
     }
