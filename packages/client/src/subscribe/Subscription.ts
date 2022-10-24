@@ -19,7 +19,6 @@ export interface SubscriptionEvents {
  * @category Important
  */
 export class Subscription<T = unknown> extends MessageStream<T> {
-    /** @internal */
     private readonly logger: Logger
     readonly streamPartId: StreamPartID
     protected eventEmitter: EventEmitter<SubscriptionEvents>
