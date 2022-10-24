@@ -44,18 +44,6 @@ describe('Resends2', () => {
         await publisher?.destroy()
     })
 
-    it('throws error if bad stream id', async () => {
-        await expect(async () => {
-            await client.resend({
-                streamId: 'badstream',
-                partition: 0,
-            },
-            {
-                last: 5
-            })
-        }).rejects.toThrow('badstream')
-    })
-
     it('throws if no storage assigned', async () => {
         const notStoredStream = await createTestStream(client, module)
         await expect(async () => {
