@@ -9,6 +9,7 @@ import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 import { createRandomAuthentication, createRelativeTestStreamId } from '../test-utils/utils'
 import { toEthereumAddress } from '@streamr/utils'
+import { StreamrClientError } from '../../src/StreamrClientError'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
@@ -86,7 +87,7 @@ describe('Resends', () => {
                 messageMatchFn: () => {
                     return true
                 }
-            })).rejects.toThrow('no storage assigned')
+            })).rejects.toThrowStreamError(new StreamrClientError(`no storage assigned: ${stream.id}`, 'NO_STORAGE_NODES'))
         })
     })
 })

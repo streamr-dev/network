@@ -10,6 +10,7 @@ import { Stream } from '../../src/Stream'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from './../test-utils/fake/FakeStorageNode'
 import { StreamPermission } from './../../src/permission'
+import { StreamrClientError } from '../../src/StreamrClientError'
 
 const MAX_MESSAGES = 5
 
@@ -64,7 +65,7 @@ describe('Resends2', () => {
             }, {
                 last: 5
             })
-        }).rejects.toThrow('storage')
+        }).rejects.toThrowStreamError(new StreamrClientError(`no storage assigned: ${notStoredStream.id}`, 'NO_STORAGE_NODES'))
     })
 
     it('throws error if bad partition', async () => {
