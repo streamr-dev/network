@@ -21,20 +21,20 @@ export class RandomContactList<Contact extends IContact> extends EventEmitter<Ev
             return
         }
         if (!this.contactsById.has(contact.peerId.toKey())) {
-            if (Math.random() < this.randomness) {
+            const roll = Math.random()
+            if (roll < this.randomness) {
                 if (this.getSize() === this.maxSize && this.getSize() > 0) {
                     const toRemove = this.contactIds[0]
                     this.removeContact(toRemove)
                 }
                 this.contactIds.push(contact.peerId)
                 this.contactsById.set(contact.peerId.toKey(), new ContactState(contact))
+                this.emit(
+                    'newContact',
+                    contact.getPeerDescriptor(),
+                    this.getContacts().map((contact: Contact) => contact.getPeerDescriptor())
+                )
             }
-
-            this.emit(
-                'newContact',
-                contact.getPeerDescriptor(),
-                this.getContacts().map((contact: Contact) => contact.getPeerDescriptor())
-            )
         }
     }
 

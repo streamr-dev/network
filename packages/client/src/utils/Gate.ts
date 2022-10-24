@@ -1,8 +1,3 @@
-import { instanceId } from './utils'
-import { Defer, Deferred } from './Defer'
-import { Context } from './Context'
-import { Debug } from './log'
-
 /**
  * Async Gate
  * Useful for blocking actions until some condition is met.
@@ -34,17 +29,11 @@ import { Debug } from './log'
  * gate.close() // noop
  * ```
  */
-export class Gate implements Context {
-    readonly id
-    readonly debug
-    public isLocked = false
-    private pending?: Deferred<void>
+import { Defer } from '@streamr/utils'
 
-    constructor(name?: string) {
-        this.id = instanceId(this, name)
-        this.debug = Debug(this.id)
-        // this.debug('create')
-    }
+export class Gate {
+    public isLocked = false
+    private pending?: Defer<undefined>
 
     /**
      * Opens gate.
@@ -100,7 +89,7 @@ export class Gate implements Context {
 
         if (!this.pending) {
             // this.debug('close')
-            this.pending = Defer<undefined>()
+            this.pending = new Defer<undefined>()
         }
     }
 

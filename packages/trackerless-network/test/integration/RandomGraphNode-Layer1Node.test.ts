@@ -3,7 +3,6 @@ import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { range } from 'lodash'
 import { waitForCondition } from 'streamr-test-utils'
 import { Logger } from '@streamr/utils'
-import { mockConnectionLocker } from '../utils'
 
 const logger = new Logger(module)
 
@@ -50,14 +49,16 @@ describe('RandomGraphNode-DhtNode', () => {
             randomGraphId: streamId,
             layer1: dhtNodes[i],
             P2PTransport: cms[i],
-            connectionLocker: mockConnectionLocker
+            connectionLocker: cms[i],
+            ownPeerDescriptor: peerDescriptors[i]
         }))
 
         entryPointRandomGraphNode = new RandomGraphNode({
             randomGraphId: streamId,
             layer1: dhtEntryPoint,
             P2PTransport: entrypointCm,
-            connectionLocker: mockConnectionLocker
+            connectionLocker: entrypointCm,
+            ownPeerDescriptor: entrypointDescriptor
         })
 
         await dhtEntryPoint.start()
@@ -78,10 +79,10 @@ describe('RandomGraphNode-DhtNode', () => {
         await graphNodes[0].start()
 
         await Promise.all([
-            waitForCondition(() => graphNodes[0].getContactPoolIds().length === 1),
+            waitForCondition(() => graphNodes[0].getNearbyContactPoolIds().length === 1),
             waitForCondition(() => graphNodes[0].getTargetNeighborStringIds().length === 1)
         ])
-        expect(graphNodes[0].getContactPoolIds().length).toEqual(1)
+        expect(graphNodes[0].getNearbyContactPoolIds().length).toEqual(1)
         expect(graphNodes[0].getTargetNeighborStringIds().length).toEqual(1)
     })
 
@@ -92,10 +93,14 @@ describe('RandomGraphNode-DhtNode', () => {
             await dhtNodes[i].joinDht(entrypointDescriptor)
         }))
 
-        await waitForCondition(() => graphNodes[3].getTargetNeighborStringIds().length >= 4)
+        await Promise.all(range(4).map((i) => {
+            return waitForCondition(() => {
+                return graphNodes[i].getTargetNeighborStringIds().length >= 4
+            }, 10000, 2000)
+        }))
 
         range(4).map((i) => {
-            expect(graphNodes[i].getContactPoolIds().length).toBeGreaterThanOrEqual(4)
+            expect(graphNodes[i].getNearbyContactPoolIds().length).toBeGreaterThanOrEqual(4)
             expect(graphNodes[i].getTargetNeighborStringIds().length).toBeGreaterThanOrEqual(4)
         })
 
@@ -103,7 +108,7 @@ describe('RandomGraphNode-DhtNode', () => {
         const allNodes = graphNodes
         allNodes.push(entryPointRandomGraphNode)
         range(5).map((i) => {
-            allNodes[i].getContactPoolIds().forEach((stringId) => {
+            allNodes[i].getNearbyContactPoolIds().forEach((stringId) => {
                 const neighbor = allNodes.find((peer) => {
                     return peer.getOwnStringId() === stringId
                 })
@@ -119,7 +124,7 @@ describe('RandomGraphNode-DhtNode', () => {
         }))
         await Promise.all(graphNodes.map((node) =>
             Promise.all([
-                waitForCondition(() => node.getContactPoolIds().length >= 8),
+                waitForCondition(() => node.getNearbyContactPoolIds().length >= 8),
                 waitForCondition(() => node.getTargetNeighborStringIds().length >= 3, 18000)
             ])
         ))
@@ -136,5 +141,15 @@ describe('RandomGraphNode-DhtNode', () => {
         }, 0) / numOfNodes
 
         logger.info(`AVG Number of neighbors: ${avg}`)
+
+        graphNodes.forEach((node) => {
+            const nodeId = node.getOwnStringId()
+            node.getTargetNeighborStringIds().forEach((neighborId) => {
+                if (neighborId !== entryPointRandomGraphNode.getOwnStringId()) {
+                    const neighbor = graphNodes.find((n) => n.getOwnStringId() === neighborId)
+                    expect(neighbor!.getTargetNeighborStringIds()).toContain(nodeId)
+                }
+            })
+        })
     }, 20000)
 })

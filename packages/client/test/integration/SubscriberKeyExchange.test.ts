@@ -49,7 +49,7 @@ describe('SubscriberKeyExchange', () => {
             messageId: {
                 streamId: StreamPartIDUtils.getStreamID(streamPartId),
                 streamPartition:  StreamPartIDUtils.getStreamPartition(streamPartId),
-                publisherId: subscriberWallet.address.toLowerCase()
+                publisherId: toEthereumAddress(subscriberWallet.address)
             },
             messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST,
             contentType: StreamMessage.CONTENT_TYPES.JSON,

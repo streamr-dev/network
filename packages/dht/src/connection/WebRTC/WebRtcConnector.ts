@@ -141,7 +141,7 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
     }
 
     private onConnectionRequest(targetPeerDescriptor: PeerDescriptor): void {
-        if (this.stopped) {
+        if (this.stopped || this.ongoingConnectAttempts.has(PeerID.fromValue(targetPeerDescriptor.peerId).toKey())) {
             return
         }
         const managedConnection = this.connect(targetPeerDescriptor)
@@ -196,6 +196,14 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
         }
         connection.on('localCandidate', (candidate: string, mid: string) => {
             remoteConnector.sendIceCandidate(this.ownPeerDescriptor!, candidate, mid, connection.connectionId.toString())
+        })
+
+        connection.on('disconnected', () => {
+            this.ongoingConnectAttempts.delete(PeerID.fromValue(targetPeerDescriptor.peerId).toKey())
+        })
+
+        connection.on('connected', () => {
+            this.ongoingConnectAttempts.delete(PeerID.fromValue(targetPeerDescriptor.peerId).toKey())
         })
 
         connection.start(offering)

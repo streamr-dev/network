@@ -4,9 +4,6 @@
 import { inject, Lifecycle, scoped, delay } from 'tsyringe'
 import { MessageRef, StreamPartID, StreamPartIDUtils, StreamMessage } from 'streamr-client-protocol'
 
-import { instanceId, counterId } from '../utils/utils'
-import { Context, ContextError } from '../utils/Context'
-
 import { MessageStream, MessageStreamOnMessage } from './MessageStream'
 import { createSubscribePipeline } from './SubscribePipeline'
 
@@ -17,12 +14,15 @@ import { random } from 'lodash'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { HttpUtil } from '../HttpUtil'
 import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
-import { EthereumAddress, toEthereumAddress, wait } from '@streamr/utils'
+import { EthereumAddress, Logger, toEthereumAddress, wait } from '@streamr/utils'
 import { GroupKeyStore } from '../encryption/GroupKeyStore'
 import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'
 import { StreamrClientEventEmitter } from '../events'
 import { DestroySignal } from '../DestroySignal'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
+import { LoggerFactory } from '../utils/LoggerFactory'
+import { counterId } from '../utils/utils'
+import { StreamrClientError } from '../StreamrClientError'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 
@@ -64,17 +64,16 @@ function isResendRange<T extends ResendRangeOptions>(options: any): options is T
 }
 
 @scoped(Lifecycle.ContainerScoped)
-export class Resends implements Context {
-    readonly id
-    readonly debug
-    private groupKeyStore: GroupKeyStore
-    private subscriberKeyExchange: SubscriberKeyExchange
-    private streamrClientEventEmitter: StreamrClientEventEmitter
-    private destroySignal: DestroySignal
-    private rootConfig: StrictStreamrClientConfig
+export class Resends {
+    private readonly groupKeyStore: GroupKeyStore
+    private readonly subscriberKeyExchange: SubscriberKeyExchange
+    private readonly streamrClientEventEmitter: StreamrClientEventEmitter
+    private readonly destroySignal: DestroySignal
+    private readonly rootConfig: StrictStreamrClientConfig
+    private readonly loggerFactory: LoggerFactory
+    private readonly logger: Logger
 
     constructor(
-        context: Context,
         @inject(StreamStorageRegistry) private streamStorageRegistry: StreamStorageRegistry,
         @inject(delay(() => StorageNodeRegistry)) private storageNodeRegistry: StorageNodeRegistry,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
@@ -84,15 +83,16 @@ export class Resends implements Context {
         subscriberKeyExchange: SubscriberKeyExchange,
         streamrClientEventEmitter: StreamrClientEventEmitter,
         destroySignal: DestroySignal,
-        @inject(ConfigInjectionToken.Root) rootConfig: StrictStreamrClientConfig
+        @inject(ConfigInjectionToken.Root) rootConfig: StrictStreamrClientConfig,
+        @inject(LoggerFactory) loggerFactory: LoggerFactory
     ) {
-        this.id = instanceId(this)
-        this.debug = context.debug.extend(this.id)
         this.groupKeyStore = groupKeyStore
         this.subscriberKeyExchange = subscriberKeyExchange
         this.streamrClientEventEmitter = streamrClientEventEmitter
         this.destroySignal = destroySignal
         this.rootConfig = rootConfig
+        this.loggerFactory = loggerFactory
+        this.logger = loggerFactory.createLogger(module)
     }
 
     async resend<T>(
@@ -137,7 +137,10 @@ export class Resends implements Context {
             })
         }
 
-        throw new ContextError(this, `can not resend without valid resend options: ${JSON.stringify({ streamPartId, options })}`)
+        throw new StreamrClientError(
+            `can not resend without valid resend options: ${JSON.stringify({ streamPartId, options })}`,
+            'INVALID_ARGUMENT'
+        )
     }
 
     private async fetchStream<T>(
@@ -145,29 +148,27 @@ export class Resends implements Context {
         streamPartId: StreamPartID,
         query: QueryDict = {}
     ) {
-        const debug = this.debug.extend(counterId(`resend-${endpointSuffix}`))
-        debug('fetching resend %s %s %o', endpointSuffix, streamPartId, query)
+        const loggerIdx = counterId('fetchStream')
+        this.logger.debug('[%s] fetching resend %s for %s with options %o', loggerIdx, endpointSuffix, streamPartId, query)
         const nodeAddresses = await this.streamStorageRegistry.getStorageNodes(StreamPartIDUtils.getStreamID(streamPartId))
         if (!nodeAddresses.length) {
-            const err = new ContextError(this, `no storage assigned: ${streamPartId}`)
-            err.code = 'NO_STORAGE_NODES'
-            throw err
+            throw new StreamrClientError(`no storage assigned: ${streamPartId}`, 'NO_STORAGE_NODES')
         }
 
         const nodeAddress = nodeAddresses[random(0, nodeAddresses.length - 1)]
         const nodeUrl = (await this.storageNodeRegistry.getStorageNodeMetadata(nodeAddress)).http
         const url = this.createUrl(nodeUrl, endpointSuffix, streamPartId, query)
         const messageStream = createSubscribePipeline<T>({
-            messageStream: new MessageStream<T>(this),
+            messageStream: new MessageStream<T>(),
             streamPartId,
-            context: this,
             resends: this,
             groupKeyStore: this.groupKeyStore,
             subscriberKeyExchange: this.subscriberKeyExchange,
             streamRegistryCached: this.streamRegistryCached,
             streamrClientEventEmitter: this.streamrClientEventEmitter,
             destroySignal: this.destroySignal,
-            rootConfig: this.rootConfig
+            rootConfig: this.rootConfig,
+            loggerFactory: this.loggerFactory
         })
 
         let count = 0
@@ -175,12 +176,13 @@ export class Resends implements Context {
             count += 1
         })
 
+        const logger = this.logger
         const dataStream = await this.httpUtil.fetchHttpStream(url)
         messageStream.pull((async function* readStream() {
             try {
                 yield* dataStream
             } finally {
-                debug('resent %s messages.', count)
+                logger.debug('[%s] total of %d messages received for resend fetch', loggerIdx, count)
                 dataStream.destroy()
             }
         }()))
@@ -189,7 +191,7 @@ export class Resends implements Context {
 
     private async last<T>(streamPartId: StreamPartID, { count }: { count: number }): Promise<MessageStream<T>> {
         if (count <= 0) {
-            const emptyStream = new MessageStream<T>(this)
+            const emptyStream = new MessageStream<T>()
             emptyStream.endWrite()
             return emptyStream
         }
@@ -256,24 +258,21 @@ export class Resends implements Context {
         messageMatchFn?: (msgTarget: StreamMessage, msgGot: StreamMessage) => boolean
     } = {}): Promise<void> {
         if (!streamMessage) {
-            throw new ContextError(this, 'waitForStorage requires a StreamMessage')
+            throw new StreamrClientError('waitForStorage requires a StreamMessage', 'INVALID_ARGUMENT')
         }
 
         const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamMessage.getStreamPartID())
         const streamDefinition = { streamId, partition }
 
         const start = Date.now()
-        let last: StreamMessage[]
+        let last: StreamMessage[] | undefined
         let found = false
         while (!found) {
             const duration = Date.now() - start
             if (duration > timeout) {
-                this.debug('waitForStorage timeout %o', {
-                    timeout,
-                    duration
-                }, {
-                    streamMessage,
-                    last: last!.map((l: any) => l.content),
+                this.logger.debug('timed out waiting for storage to have message %j', {
+                    expected: streamMessage.getMessageID(),
+                    lastReceived: last?.map((l) => l.getMessageID()),
                 })
                 const err: any = new Error(`timed out after ${duration}ms waiting for message`)
                 err.streamMessage = streamMessage
@@ -285,14 +284,14 @@ export class Resends implements Context {
             for (const lastMsg of last) {
                 if (messageMatchFn(streamMessage, lastMsg)) {
                     found = true
-                    this.debug('last message found')
+                    this.logger.debug('message found')
                     return
                 }
             }
 
-            this.debug('message not found, retrying... %o', {
-                msg: streamMessage.getParsedContent(),
-                'last 3': last.slice(-3).map(({ content }: any) => content)
+            this.logger.debug('message not found, retrying... %j', {
+                msg: streamMessage.getMessageID(),
+                'last 3': last.slice(-3).map((l) => l.getMessageID())
             })
 
             await wait(interval)

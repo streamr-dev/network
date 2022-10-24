@@ -3,6 +3,9 @@ import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerID } from '../../src/helpers/PeerID'
 import { ConnectionType } from '../../src/connection/IConnection'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
+import EventEmitter from 'events'
+import { waitForEvent } from '@streamr/utils'
+
 
 describe('Layer0 with WebRTC connections', () => {
     const epPeerDescriptor: PeerDescriptor = {
@@ -39,7 +42,7 @@ describe('Layer0 with WebRTC connections', () => {
     })
 
     afterEach(async () => {
-        await Promise.allSettled([
+        await Promise.all([
             node1.stop(),
             node2.stop(),
             node3.stop(),
@@ -48,22 +51,31 @@ describe('Layer0 with WebRTC connections', () => {
         await epDhtNode.stop()
     })
 
-    it('Happy path two peers', (done) => {
+    class Peer0Listener extends EventEmitter {
+        constructor(nodeToListen: DhtNode) {
+            super()
+            nodeToListen.on('connected', (peer: PeerDescriptor) => {
+                if (PeerID.fromValue(peer.peerId).equals(PeerID.fromString('Peer0'))) {
+                    this.emit('peer0connected')
+                }
+            })
+        }
+    }
 
-        node2.on('connected', (peer: PeerDescriptor) => {
-            if (PeerID.fromValue(peer.peerId).equals(PeerID.fromString('Peer0'))) {
-                expect((node1.getTransport() as ConnectionManager).hasConnection(node2.getPeerDescriptor())).toEqual(true)
-                expect((node2.getTransport() as ConnectionManager).hasConnection(node1.getPeerDescriptor())).toEqual(true)
-                expect((node1.getTransport() as ConnectionManager).getConnection(node2.getPeerDescriptor())!.connectionType)
-                    .toEqual(ConnectionType.WEBRTC)
-                expect((node2.getTransport() as ConnectionManager).getConnection(node1.getPeerDescriptor())!.connectionType)
-                    .toEqual(ConnectionType.WEBRTC)
-                done()
-            }
-        })
+    it('Happy path two peers', async () => {
 
-        node2.joinDht(epPeerDescriptor)
+        await Promise.all([waitForEvent(new Peer0Listener(node2), 'peer0connected'),
+        node2.joinDht(epPeerDescriptor),
         node1.joinDht(epPeerDescriptor)
+        ])
+
+        expect((node1.getTransport() as ConnectionManager).hasConnection(node2.getPeerDescriptor())).toEqual(true)
+        expect((node2.getTransport() as ConnectionManager).hasConnection(node1.getPeerDescriptor())).toEqual(true)
+        expect((node1.getTransport() as ConnectionManager).getConnection(node2.getPeerDescriptor())!.connectionType)
+            .toEqual(ConnectionType.WEBRTC)
+        expect((node2.getTransport() as ConnectionManager).getConnection(node1.getPeerDescriptor())!.connectionType)
+            .toEqual(ConnectionType.WEBRTC)
+
     }, 10000)
 
     it('Happy path simultaneous joins', async () => {

@@ -70,6 +70,7 @@ export class StreamrNode extends EventEmitter {
                 )
                 .catch((err) => {
                     logger.warn(`Failed to subscribe to stream ${streamPartID} with error: ${err}`)
+                    this.subscribeToStream(streamPartID, entryPointDescriptor)
                 })
         }
     }
@@ -106,21 +107,26 @@ export class StreamrNode extends EventEmitter {
 
         const layer1 = new DhtNode({
             transportLayer: this.layer0!,
-            serviceId: streamPartID,
+            serviceId: 'layer1::' + streamPartID,
             peerDescriptor: this.layer0!.getPeerDescriptor(),
-            routeMessageTimeout: 15000,
-            numberOfNodesPerKBucket: 4
+            routeMessageTimeout: 5000,
+            entryPoints: [entryPoint],
+            numberOfNodesPerKBucket: 4,
+            rpcRequestTimeout: 15000,
+            dhtJoinTimeout: 90000
         })
         const layer2 = new RandomGraphNode({
             randomGraphId: streamPartID,
             P2PTransport: this.P2PTransport!,
             layer1: layer1,
-            connectionLocker: this.connectionLocker!
+            connectionLocker: this.connectionLocker!,
+            ownPeerDescriptor: this.layer0!.getPeerDescriptor()
         })
         this.streams.set(streamPartID, {
             layer1,
             layer2
         })
+
         await layer1.start()
         layer2.start()
         await layer1.joinDht(entryPoint)

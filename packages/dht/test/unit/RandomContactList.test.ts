@@ -36,6 +36,11 @@ class MockRpcClient implements IDhtRpcServiceClient, ServiceInfo {
     routeMessage(_input: RouteMessageWrapper, _options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck> {
         return {} as UnaryCall<RouteMessageWrapper, RouteMessageAck>
     }
+
+    // eslint-disable-next-line class-methods-use-this
+    forwardMessage(_input: RouteMessageWrapper, _options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck> {
+        return {} as UnaryCall<RouteMessageWrapper, RouteMessageAck>
+    }
 }
 
 describe('RandomContactList', () => {

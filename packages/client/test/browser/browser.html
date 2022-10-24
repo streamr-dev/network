@@ -236,15 +236,15 @@
     const publisher = new StreamrClient({
         ...StreamrClient.ConfigTest,
         id: 'publisher',
+        logLevel: 'trace',
         auth: publisherAuth,
     })
     const subscriber = new StreamrClient({
         ...StreamrClient.ConfigTest,
         id: 'subscriber',
+        logLevel: 'trace',
         auth: subscriberAuth,
     })
-    publisher.enableDebugLogging()
-    subscriber.enableDebugLogging()
     let stream
     let messages = []
 
@@ -270,7 +270,7 @@
         log('Added to storage node.')
         log('Loading storage nodes...')
         const storageNodes = await stream.getStorageNodes()
-        log(`Storage: ${JSON.stringify(storageNodes && storageNodes.map((s) => s.toLowerCase()))}`, 'storeResult')
+        log(`Storage: ${JSON.stringify(storageNodes)}`, 'storeResult')
     })
 
     $('#permissions').on('click', async () => {

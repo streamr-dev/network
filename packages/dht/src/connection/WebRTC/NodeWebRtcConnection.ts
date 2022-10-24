@@ -119,6 +119,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
                     this.connection!.addRemoteCandidate(candidate, mid)
                 } catch (err) {
                     logger.warn(`Failed to set remote candidate for peer ${this.remotePeerDescriptor.peerId.toString()}`)
+                    this.close()
                 }
             } else {
                 this.close(`Tried to set candidate before description`)
@@ -133,17 +134,14 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
             try {
                 this.dataChannel?.sendMessageBinary(data as Buffer)
             } catch (err) {
-                logger.warn('Failed to send binary message')
-                // this.close()
+                logger.warn('Failed to send binary message to ' + PeerID.fromValue(this.remotePeerDescriptor.peerId).toKey())
             }
-        } else {
-            logger.warn('Tried to send data on a non-open connection' + this.lastState + " " + !!this.dataChannel)
         }
     }
 
     close(reason?: string): void {
         if (this.closed === false) {
-            logger.info(
+            logger.trace(
                 `Closing Node WebRTC Connection to ${PeerID.fromValue(this.remotePeerDescriptor.peerId).toKey()}`
                 + `${reason ? `, reason: ${reason}` : ''}`
             )
@@ -151,12 +149,23 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
             if (this.connectingTimeoutRef) {
                 clearTimeout(this.connectingTimeoutRef)
             }
+
             this.emit('disconnected')
-            if (this.dataChannel) {
-                this.dataChannel.close()
-            }
+
             if (this.connection) {
-                this.connection.close()
+                try {
+                    this.connection.close()
+                } catch (e) {
+                    logger.warn('conn.close() errored: %s', e)
+                }
+            }
+
+            if (this.dataChannel) {
+                try {
+                    this.dataChannel.close()
+                } catch (e) {
+                    logger.warn('dc.close() errored: %s', e)
+                }
             }
             this.removeAllListeners()
         }

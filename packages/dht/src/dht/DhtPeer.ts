@@ -21,6 +21,7 @@ export interface RouteMessageParams {
     serviceId: string
     previousPeer?: PeerDescriptor
     messageId?: string
+    reachableThrough?: PeerDescriptor[]
 }
 
 export class DhtPeer implements KBucketContact {
@@ -60,6 +61,7 @@ export class DhtPeer implements KBucketContact {
             return peers.peers
         } catch (err) {
             logger.debug(err)
+            // logger.warn(PeerID.fromValue(sourceDescriptor.peerId).toKey() + ", " +  PeerID.fromValue(this.peerDescriptor.peerId).toKey())
             return []
         }
     }
@@ -89,7 +91,8 @@ export class DhtPeer implements KBucketContact {
             sourcePeer: params.sourcePeer,
             previousPeer: params.previousPeer,
             message: params.message,
-            requestId: params.requestId || v4()
+            requestId: params.requestId || v4(),
+            reachableThrough: params.reachableThrough || []
         }
         const options: DhtRpcOptions = {
             sourceDescriptor: params.previousPeer as PeerDescriptor,
@@ -107,6 +110,37 @@ export class DhtPeer implements KBucketContact {
 
             logger.debug(
                 `Failed to send routeMessage from ${fromNode} to ${this.peerId.toKey()} with: ${err}`
+            )
+            return false
+        }
+        return true
+    }
+
+    async forwardMessage(params: RouteMessageWrapper): Promise<boolean> {
+        const message: RouteMessageWrapper = {
+            destinationPeer: params.destinationPeer,
+            sourcePeer: params.sourcePeer,
+            previousPeer: params.previousPeer,
+            message: params.message,
+            requestId: params.requestId || v4(),
+            reachableThrough: params.reachableThrough || []
+        }
+        const options: DhtRpcOptions = {
+            sourceDescriptor: params.previousPeer as PeerDescriptor,
+            targetDescriptor: this.peerDescriptor as PeerDescriptor,
+            timeout: 10000
+        }
+        try {
+            const ack = await this.dhtClient.forwardMessage(message, options)
+            if (ack.error!.length > 0) {
+                return false
+            }
+        } catch (err) {
+            const fromNode = params.previousPeer ?
+                PeerID.fromValue(params.previousPeer!.peerId).toKey() : PeerID.fromValue(params.sourcePeer!.peerId).toKey()
+
+            logger.debug(
+                `Failed to send forwardMessage from ${fromNode} to ${this.peerId.toKey()} with: ${err}`
             )
             return false
         }

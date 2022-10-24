@@ -2,13 +2,12 @@ import fs from 'fs'
 import path from 'path'
 import { StreamMessage, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
 import { fastPrivateKey, fastWallet } from 'streamr-test-utils'
-import { wait } from '@streamr/utils'
+import { Defer, wait } from '@streamr/utils'
 import {
     Msg,
     getPublishTestStreamMessages
 } from '../test-utils/publish'
 import { StreamrClient } from '../../src/StreamrClient'
-import { Defer } from '../../src/utils/Defer'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { StreamPermission } from '../../src/permission'
 import { createTestStream } from '../test-utils/utils'
@@ -78,7 +77,7 @@ describe('StreamrClient', () => {
             })
 
             it('client.subscribe then unsubscribe after subscribed', async () => {
-                const subTask = client.subscribe<{ test: string }>(streamDefinition, () => {})
+                const subTask = client.subscribe(streamDefinition, () => {})
                 expect(await client.getSubscriptions()).toHaveLength(0) // does not have subscription yet
 
                 const sub = await subTask
@@ -103,7 +102,7 @@ describe('StreamrClient', () => {
         })
 
         it('client.subscribe (realtime) with onMessage signal', async () => {
-            const done = Defer()
+            const done = new Defer<void>()
             const msg = Msg()
 
             const sub = await client.subscribe<typeof msg>(streamDefinition)
@@ -123,7 +122,7 @@ describe('StreamrClient', () => {
         })
 
         it('client.subscribe (realtime) with onMessage callback', async () => {
-            const done = Defer()
+            const done = new Defer<void>()
             const msg = Msg()
             await client.subscribe<typeof msg>(streamDefinition, done.wrap(async (parsedContent, streamMessage) => {
                 expect(parsedContent).toEqual(msg)
@@ -138,7 +137,7 @@ describe('StreamrClient', () => {
 
         it('client.subscribe with onMessage & collect', async () => {
             const onMessageMsgs: StreamMessage[] = []
-            const done = Defer()
+            const done = new Defer<undefined>()
             const sub = await client.subscribe(streamDefinition, async (_content, msg) => {
                 onMessageMsgs.push(msg)
                 if (onMessageMsgs.length === MAX_MESSAGES) {
@@ -174,16 +173,16 @@ describe('StreamrClient', () => {
         })
 
         it('publish and subscribe a sequence of messages', async () => {
-            const done = Defer()
+            const done = new Defer<unknown>()
             const received: StreamMessage[] = []
-            const sub = await client.subscribe<any>(streamDefinition, done.wrapError((_content, streamMessage) => {
+            const sub = await client.subscribe<any>(streamDefinition, (_content, streamMessage) => {
                 received.push(streamMessage)
                 expect(streamMessage.getPublisherId()).toBeTruthy()
                 expect(streamMessage.signature).toBeTruthy()
                 if (received.length === MAX_MESSAGES) {
                     done.resolve(client.unsubscribe(sub))
                 }
-            }))
+            })
 
             // Publish after subscribed
             const published = await publishTestMessages(MAX_MESSAGES)

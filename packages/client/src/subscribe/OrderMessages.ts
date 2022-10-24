@@ -5,24 +5,22 @@ import { injectable } from 'tsyringe'
 import { StreamMessage, StreamPartID, MessageRef } from 'streamr-client-protocol'
 
 import { PushBuffer } from '../utils/PushBuffer'
-import { Context } from '../utils/Context'
 import { Signal } from '../utils/Signal'
-import { instanceId } from '../utils/utils'
 
 import { Resends } from './Resends'
 import { MessageStream } from './MessageStream'
 import { SubscribeConfig } from '../Config'
 import OrderingUtil from './ordering/OrderingUtil'
-import { EthereumAddress } from '@streamr/utils'
+import { EthereumAddress, Logger } from '@streamr/utils'
+import { LoggerFactory } from '../utils/LoggerFactory'
 
 /**
  * Wraps OrderingUtil into a PushBuffer.
  * Implements gap filling
  */
 @injectable()
-export class OrderMessages<T> implements Context {
-    readonly id
-    readonly debug
+export class OrderMessages<T> {
+    private readonly logger: Logger
     private stopSignal = Signal.once()
     private done = false
     private resendStreams = new Set<MessageStream<T>>() // holds outstanding resends for cleanup
@@ -34,12 +32,11 @@ export class OrderMessages<T> implements Context {
 
     constructor(
         private options: SubscribeConfig,
-        context: Context,
         private resends: Resends,
         private readonly streamPartId: StreamPartID,
+        private loggerFactory: LoggerFactory
     ) {
-        this.id = instanceId(this)
-        this.debug = context.debug.extend(this.id)
+        this.logger = loggerFactory.createLogger(module)
         this.stopSignal.listen(() => {
             this.done = true
         })
@@ -65,8 +62,12 @@ export class OrderMessages<T> implements Context {
 
     async onGap(from: MessageRef, to: MessageRef, publisherId: EthereumAddress, msgChainId: string): Promise<void> {
         if (this.done || !this.enabled) { return }
-        this.debug('gap %o', {
-            streamPartId: this.streamPartId, publisherId, msgChainId, from, to,
+        this.logger.debug('gap detected on %j', {
+            streamPartId: this.streamPartId,
+            publisherId,
+            msgChainId,
+            from,
+            to,
         })
 
         let resendMessageStream!: MessageStream<T>

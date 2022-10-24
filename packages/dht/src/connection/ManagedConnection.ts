@@ -159,10 +159,10 @@ export class ManagedConnection extends EventEmitter<Events> {
             this.emit('error', name)
         })
         impl.on('connected', () => {
-            logger.info('connected emitted')
+            logger.trace('connected emitted')
             this.emit('connected')
         })
-        impl.on('disconnected', () => {
+        impl.off('disconnected', () => {
             this.emit('disconnected')
         })
         impl.on('disconnected', (code?: number, reason?: string) => {

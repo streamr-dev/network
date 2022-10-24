@@ -1,4 +1,3 @@
-import debug from 'debug'
 import type { NodeRegistry as NodeRegistryContract } from '../ethereumArtifacts/NodeRegistry'
 import NodeRegistryArtifact from '../ethereumArtifacts/NodeRegistryAbi.json'
 import { scoped, Lifecycle, inject } from 'tsyringe'
@@ -10,21 +9,17 @@ import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ContractFactory } from '../ContractFactory'
 import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 
-/**
- * Store a mapping of storage node addresses <-> storage node URLs
- */
-
-const log = debug('StreamrClient:StorageNodeRegistry')
-
 export interface StorageNodeMetadata {
     http: string
 }
 
+/**
+ * Store a mapping of storage node addresses <-> storage node URLs
+ */
 @scoped(Lifecycle.ContainerScoped)
 export class StorageNodeRegistry {
-
     private nodeRegistryContract?: NodeRegistryContract
-    private nodeRegistryContractReadonly: NodeRegistryContract
+    private readonly nodeRegistryContractReadonly: NodeRegistryContract
 
     constructor(
         private contractFactory: ContractFactory,
@@ -53,7 +48,6 @@ export class StorageNodeRegistry {
     }
 
     async setStorageNodeMetadata(metadata: StorageNodeMetadata | undefined): Promise<void> {
-        log('setStorageNodeMetadata %j', metadata)
         await this.connectToContract()
         const ethersOverrides = getStreamRegistryOverrides(this.ethereumConfig)
         if (metadata !== undefined) {

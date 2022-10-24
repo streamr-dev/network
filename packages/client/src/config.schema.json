@@ -8,6 +8,18 @@
         "id": {
             "type": "string"
         },
+        "logLevel": {
+            "type": "string",
+            "enum": [
+                "silent",
+                "fatal",
+                "error",
+                "warn",
+                "info",
+                "debug",
+                "trace"
+            ]
+        },
         "auth": {
             "type": "object",
             "additionalProperties": false,
@@ -286,6 +298,9 @@
                                     }
                                 } 
                             }
+                        },
+                        "maxPublishDelay": {
+                            "type": "number"
                         }
                     }
                 }

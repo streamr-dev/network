@@ -5,15 +5,14 @@ import { Stream } from '../../src/Stream'
 import { StreamRegistry } from '../../src/registry/StreamRegistry'
 import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
 import { Validator } from '../../src/Validator'
-import { createMockMessage, mockContext } from '../test-utils/utils'
-import { STREAM_CLIENT_DEFAULTS, SubscribeConfig } from '../../src/Config'
+import { createMockMessage, mockLoggerFactory } from '../test-utils/utils'
 import { fastWallet } from 'streamr-test-utils'
-import { EthereumAddress } from '@streamr/utils'
+import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 
 const publisherWallet = fastWallet()
 const PARTITION_COUNT = 3
 
-const createMockValidator = (options: Partial<SubscribeConfig>) => {
+const createMockValidator = () => {
     const streamRegistry: Pick<StreamRegistry, 'getStream' | 'isStreamPublisher'> = {
         getStream: async (): Promise<Stream> => {
             return {
@@ -21,18 +20,11 @@ const createMockValidator = (options: Partial<SubscribeConfig>) => {
             } as any
         },
         isStreamPublisher: async (_streamIdOrPath: string, userAddress: EthereumAddress) => {
-            return userAddress.toLowerCase() === publisherWallet.address.toLowerCase()
+            return userAddress === toEthereumAddress(publisherWallet.address)
         }
     }
-    const context = mockContext()
     return new Validator(
-        context,
-        new StreamRegistryCached(context, streamRegistry as any, {} as any) as any,
-        {
-            ...STREAM_CLIENT_DEFAULTS,
-            ...options
-        } as any,
-        {} as any
+        new StreamRegistryCached(mockLoggerFactory(), streamRegistry as any, {} as any) as any
     )
 }
 
@@ -42,8 +34,8 @@ interface MessageOptions {
     signature?: string
 }
 
-const validate = async (messageOptions: MessageOptions, validatorOptions: Partial<SubscribeConfig> = {}) => {
-    const validator = createMockValidator(validatorOptions)
+const validate = async (messageOptions: MessageOptions) => {
+    const validator = createMockValidator()
     const msg = await createMockMessage({
         streamPartId: toStreamPartID(toStreamID('streamId'), messageOptions.partition ?? 0),
         publisher: messageOptions.publisher ?? publisherWallet,
@@ -86,3 +78,4 @@ describe('Validator', () => {
         })
     })
 })
+

@@ -154,6 +154,10 @@ export interface RouteMessageWrapper {
      * @generated from protobuf field: bytes message = 5;
      */
     message: Uint8Array; // Expected to be of type Message
+    /**
+     * @generated from protobuf field: repeated PeerDescriptor reachableThrough = 6;
+     */
+    reachableThrough: PeerDescriptor[];
 }
 /**
  * @generated from protobuf message RouteMessageAck
@@ -638,7 +642,8 @@ class RouteMessageWrapper$Type extends MessageType$<RouteMessageWrapper> {
             { no: 2, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "destinationPeer", kind: "message", T: () => PeerDescriptor },
             { no: 4, name: "previousPeer", kind: "message", T: () => PeerDescriptor },
-            { no: 5, name: "message", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
+            { no: 5, name: "message", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 6, name: "reachableThrough", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
         ]);
     }
 }
@@ -871,7 +876,8 @@ export const LockResponse = new LockResponse$Type();
 export const DhtRpcService = new ServiceType("DhtRpcService", [
     { name: "getClosestPeers", options: {}, I: ClosestPeersRequest, O: ClosestPeersResponse },
     { name: "ping", options: {}, I: PingRequest, O: PingResponse },
-    { name: "routeMessage", options: {}, I: RouteMessageWrapper, O: RouteMessageAck }
+    { name: "routeMessage", options: {}, I: RouteMessageWrapper, O: RouteMessageAck },
+    { name: "forwardMessage", options: {}, I: RouteMessageWrapper, O: RouteMessageAck }
 ]);
 /**
  * @generated ServiceType for protobuf service WebSocketConnectorService

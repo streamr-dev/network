@@ -153,6 +153,10 @@ export interface NeighborUpdate {
      */
     randomGraphId: string;
     /**
+     * @generated from protobuf field: bool removeMe = 3;
+     */
+    removeMe: boolean;
+    /**
      * @generated from protobuf field: repeated PeerDescriptor neighborDescriptors = 4;
      */
     neighborDescriptors: PeerDescriptor[];
@@ -274,6 +278,7 @@ class NeighborUpdate$Type extends MessageType<NeighborUpdate> {
         super("NeighborUpdate", [
             { no: 1, name: "senderId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "randomGraphId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "removeMe", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 4, name: "neighborDescriptors", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
         ]);
     }

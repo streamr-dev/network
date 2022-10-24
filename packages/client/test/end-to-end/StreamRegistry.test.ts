@@ -9,6 +9,7 @@ import { toStreamID } from 'streamr-client-protocol'
 import { collect } from '../../src/utils/GeneratorUtils'
 import { fetchPrivateKeyWithGas, randomEthereumAddress } from 'streamr-test-utils'
 import { TimeoutsConfig } from '../../src/Config'
+import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 
 jest.setTimeout(20000)
 const PARTITION_COUNT = 3
@@ -29,10 +30,12 @@ describe('StreamRegistry', () => {
 
     let client: StreamrClient
     let wallet: Wallet
+    let publicAddress: EthereumAddress
     let createdStream: Stream
 
     beforeAll(async () => {
         wallet = new Wallet(await fetchPrivateKeyWithGas())
+        publicAddress = toEthereumAddress(wallet.address)
         client = new StreamrClient({
             ...ConfigTest,
             auth: {
@@ -58,7 +61,7 @@ describe('StreamRegistry', () => {
         })
 
         it('valid id', async () => {
-            const newId = `${wallet.address.toLowerCase()}/StreamRegistry-createStream-newId-${Date.now()}`
+            const newId = `${publicAddress}/StreamRegistry-createStream-newId-${Date.now()}`
             const newStream = await client.createStream({
                 id: newId,
             })
@@ -68,7 +71,7 @@ describe('StreamRegistry', () => {
 
         it('valid path', async () => {
             const newPath = `/StreamRegistry-createStream-newPath-${Date.now()}`
-            const expectedId = `${wallet.address.toLowerCase()}${newPath}`
+            const expectedId = `${publicAddress}${newPath}`
             const newStream = await client.createStream({
                 id: newPath,
             })
@@ -122,7 +125,7 @@ describe('StreamRegistry', () => {
         })
 
         it('get a non-existing Stream', async () => {
-            const streamId = `${wallet.address.toLowerCase()}/StreamRegistry-nonexisting-${Date.now()}`
+            const streamId = `${publicAddress}/StreamRegistry-nonexisting-${Date.now()}`
             return expect(() => client.getStream(streamId)).rejects.toThrow(NotFoundError)
         })
     })
@@ -136,7 +139,7 @@ describe('StreamRegistry', () => {
         })
 
         it('new Stream by id', async () => {
-            const newId = `${wallet.address.toLowerCase()}/StreamRegistry-getOrCreate-newId-${Date.now()}`
+            const newId = `${publicAddress}/StreamRegistry-getOrCreate-newId-${Date.now()}`
             const newStream = await client.getOrCreateStream({
                 id: newId,
             })
@@ -148,7 +151,7 @@ describe('StreamRegistry', () => {
             const newStream = await client.getOrCreateStream({
                 id: newPath,
             })
-            expect(newStream.id).toEqual(`${wallet.address.toLowerCase()}${newPath}`)
+            expect(newStream.id).toEqual(`${publicAddress}${newPath}`)
 
             // ensure can get after create i.e. doesn't try create again
             const sameStream = await client.getOrCreateStream({
@@ -166,7 +169,7 @@ describe('StreamRegistry', () => {
                 await client.getOrCreateStream({
                     id: `${otherAddress}${newPath}`,
                 })
-            }).rejects.toThrow(`stream id "${otherAddress}${newPath}" not in namespace of authenticated user "${wallet.address.toLowerCase()}"`)
+            }).rejects.toThrow(`stream id "${otherAddress}${newPath}" not in namespace of authenticated user "${publicAddress}"`)
         })
     })
 

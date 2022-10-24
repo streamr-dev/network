@@ -1,13 +1,14 @@
 /* eslint-disable @typescript-eslint/prefer-for-of */
 
 import { DhtNode, Events as DhtNodeEvents } from '../../src/dht/DhtNode'
-import { Message, MessageType, PeerDescriptor, RpcMessage } from '../../src/proto/DhtRpc'
+import { Message, MessageType, PeerDescriptor, RouteMessageWrapper, RpcMessage } from '../../src/proto/DhtRpc'
 import { runAndWaitForEvents3 } from '../../src/helpers/waitForEvent3'
 import { waitForCondition } from 'streamr-test-utils'
 import { createMockConnectionDhtNode, createWrappedClosestPeersRequest } from '../utils'
 import { PeerID } from '../../src/helpers/PeerID'
 import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { v4 } from 'uuid'
+import { UUID } from '../../src/helpers/UUID'
 
 describe('Route Message With Mock Connections', () => {
     let entryPoint: DhtNode
@@ -73,8 +74,10 @@ describe('Route Message With Mock Connections', () => {
             sourceNode.doRouteMessage({
                 message: Message.toBinary(message),
                 destinationPeer: destinationNode.getPeerDescriptor(),
-                requestId: v4(),
-                sourcePeer: sourceNode.getPeerDescriptor()
+                requestId: 'tsatsa',
+                sourcePeer: sourceNode.getPeerDescriptor(),
+                reachableThrough: []
+
             })
         }], [[destinationNode, 'message']])
     })
@@ -123,13 +126,16 @@ describe('Route Message With Mock Connections', () => {
                 message: Message.toBinary(message),
                 destinationPeer: destinationNode.getPeerDescriptor(),
                 requestId: v4(),
-                sourcePeer: sourceNode.getPeerDescriptor()
+                sourcePeer: sourceNode.getPeerDescriptor(),
+                reachableThrough: []
             })
         }
-        await waitForCondition(() => receivedMessages >= numOfMessages)
+        await waitForCondition(() => {
+            return receivedMessages >= numOfMessages
+        })
     })
 
-    it('From all to all', async () => {
+    it.only('From all to all', async () => {
         const routers = routerNodes.splice(0, 30)
 
         for (let i = 0; i < routers.length; i++) {
@@ -177,14 +183,17 @@ describe('Route Message With Mock Connections', () => {
                             message: Message.toBinary(message),
                             destinationPeer: receiver.getPeerDescriptor(),
                             sourcePeer: node.getPeerDescriptor(),
-                            requestId: v4()
+                            requestId: v4(),
+                            reachableThrough: []
                         })
                     }
                 }))
             )
         )
-        await waitForCondition(() =>
-            (numsOfReceivedMessages[PeerID.fromString('1').toKey()] >= routers.length - 1), 30000
+        await waitForCondition(() => {
+            console.info(receiveMatrix)
+            return (numsOfReceivedMessages[PeerID.fromString('1').toKey()] >= routers.length - 1)
+        }, 30000
         )
         await Promise.all(
             Object.values(numsOfReceivedMessages).map(async (count) =>
@@ -193,5 +202,46 @@ describe('Route Message With Mock Connections', () => {
                 }, 30000)
             )
         )
-    }, 120000)
+    }, 60000)
+
+    describe('forwarding', () => {
+
+        it('Destination receives forwarded message', async () => {
+            await destinationNode.joinDht(entryPointDescriptor)
+            await sourceNode.joinDht(entryPointDescriptor)
+            await Promise.all(
+                routerNodes.map((node) => node.joinDht(entryPointDescriptor))
+            )
+
+            const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
+            const message: Message = {
+                serviceId: 'unknown',
+                messageId: v4(),
+                messageType: MessageType.RPC,
+                body: RpcMessage.toBinary(rpcWrapper)
+            }
+
+            const routeMessage: RouteMessageWrapper = {
+                message: Message.toBinary(message),
+                destinationPeer: destinationNode.getPeerDescriptor(),
+                requestId: new UUID().toString(),
+                sourcePeer: sourceNode.getPeerDescriptor(),
+                reachableThrough: [entryPointDescriptor]
+            }
+
+            const forwardedMessage: RouteMessageWrapper = {
+                message: RouteMessageWrapper.toBinary(routeMessage),
+                requestId: v4(),
+                destinationPeer: entryPointDescriptor,
+                sourcePeer: sourceNode.getPeerDescriptor(),
+                reachableThrough: []
+            }
+
+            await runAndWaitForEvents3<DhtNodeEvents>([() => {
+                sourceNode.doRouteMessage(forwardedMessage, true)
+            }], [[entryPoint, 'forwardedMessage'], [destinationNode, 'message']])
+        })
+
+    })
+
 })
