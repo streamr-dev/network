@@ -226,20 +226,6 @@ describe('GapFill', () => {
                 const expected = published.filter((_value: any, index: number) => index !== 2).map((m) => m.signature)
                 expect(received.map((m) => m.signature)).toEqual(expected)
             }, 20000)
-
-            it('rejects resend if no storage assigned', async () => {
-                // new stream, assign to storage node not called
-                stream = await createTestStream(client, module)
-
-                await expect(async () => {
-                    await client.resend(
-                        stream.id,
-                        {
-                            last: MAX_MESSAGES
-                        }
-                    )
-                }).rejects.toThrow('storage')
-            })
         })
     })
 

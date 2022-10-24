@@ -11,6 +11,7 @@ import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from './../test-utils/fake/FakeStorageNode'
 import { StreamPermission } from './../../src/permission'
 import { Wallet } from '@ethersproject/wallet'
+import { StreamrClientError } from '../../src/StreamrClientError'
 
 const MAX_MESSAGES = 5
 
@@ -49,18 +50,6 @@ describe('Resends2', () => {
         await publisher?.destroy()
     })
 
-    it('throws error if bad stream id', async () => {
-        await expect(async () => {
-            await client.resend({
-                streamId: 'badstream',
-                partition: 0,
-            },
-            {
-                last: 5
-            })
-        }).rejects.toThrow('badstream')
-    })
-
     it('throws if no storage assigned', async () => {
         const notStoredStream = await createTestStream(client, module)
         await expect(async () => {
@@ -70,7 +59,7 @@ describe('Resends2', () => {
             }, {
                 last: 5
             })
-        }).rejects.toThrow('storage')
+        }).rejects.toThrowStreamError(new StreamrClientError(`no storage assigned: ${notStoredStream.id}`, 'NO_STORAGE_NODES'))
     })
 
     it('throws error if bad partition', async () => {
