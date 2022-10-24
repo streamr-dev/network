@@ -34,7 +34,7 @@ export class OrderMessages<T> {
         private options: SubscribeConfig,
         private resends: Resends,
         private readonly streamPartId: StreamPartID,
-        private loggerFactory: LoggerFactory
+        loggerFactory: LoggerFactory
     ) {
         this.logger = loggerFactory.createLogger(module)
         this.stopSignal.listen(() => {
