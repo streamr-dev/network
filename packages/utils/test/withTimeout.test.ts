@@ -1,5 +1,5 @@
 import { TimeoutError, withTimeout } from '../src/withTimeout'
-import { AbortError } from '../src/AbortError'
+import { AbortError } from '../src/asAbortable'
 
 describe(withTimeout, () => {
     it('resolves if given promise resolves before timeout', () => {

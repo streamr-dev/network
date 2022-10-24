@@ -1,4 +1,4 @@
-import { AbortError } from './AbortError'
+import { AbortError, asAbortable } from './asAbortable'
 import { Defer } from './Defer'
 import { ENSName, toENSName } from './ENSName'
 import { EthereumAddress, toEthereumAddress } from './EthereumAddress'
@@ -33,6 +33,7 @@ export {
     Multimap,
     AbortError,
     TimeoutError,
+    asAbortable,
     isENSName,
     keyToArrayIndex,
     randomString,
