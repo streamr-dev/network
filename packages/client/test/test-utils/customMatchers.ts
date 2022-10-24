@@ -43,7 +43,7 @@ const toThrowStreamError = function(
             actual()
             return {
                 pass: false,
-                message: () => `Function didn't throw`
+                message: () => 'Function didn\'t throw'
             }
         } catch (e) {
             actualError = e
@@ -51,6 +51,7 @@ const toThrowStreamError = function(
     } else {
         actualError = actual
     }
+
     if (!(actualError instanceof StreamrClientError)) {
         return formError('Class name', 'StreamrClientError', (actualError as any).constructor.name)
     }
