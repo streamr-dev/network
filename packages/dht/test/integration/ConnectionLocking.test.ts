@@ -109,7 +109,7 @@ describe('Connection Locking', () => {
         expect(connectionManager1.hasConnection(mockPeerDescriptor1)).toEqual(false)
     })
 
-    it.only('maintains connection if both sides initially lock and then one end unlocks', async () => {
+    it('maintains connection if both sides initially lock and then one end unlocks', async () => {
         await Promise.all([
             waitForCondition(() => connectionManager2.hasRemoteLockedConnection(mockPeerDescriptor1)),
             waitForCondition(() => connectionManager1.hasRemoteLockedConnection(mockPeerDescriptor2)),

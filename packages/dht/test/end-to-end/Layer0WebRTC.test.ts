@@ -6,7 +6,6 @@ import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import EventEmitter from 'events'
 import { waitForEvent } from '@streamr/utils'
 
-
 describe('Layer0 with WebRTC connections', () => {
     const epPeerDescriptor: PeerDescriptor = {
         peerId: PeerID.fromString('entrypoint').value,
@@ -65,8 +64,8 @@ describe('Layer0 with WebRTC connections', () => {
     it('Happy path two peers', async () => {
 
         await Promise.all([waitForEvent(new Peer0Listener(node2), 'peer0connected'),
-        node2.joinDht(epPeerDescriptor),
-        node1.joinDht(epPeerDescriptor)
+            node2.joinDht(epPeerDescriptor),
+            node1.joinDht(epPeerDescriptor)
         ])
 
         expect((node1.getTransport() as ConnectionManager).hasConnection(node2.getPeerDescriptor())).toEqual(true)

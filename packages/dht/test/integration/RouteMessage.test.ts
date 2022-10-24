@@ -135,7 +135,7 @@ describe('Route Message With Mock Connections', () => {
         })
     })
 
-    it.only('From all to all', async () => {
+    it('From all to all', async () => {
         const routers = routerNodes.splice(0, 30)
 
         for (let i = 0; i < routers.length; i++) {
@@ -191,14 +191,13 @@ describe('Route Message With Mock Connections', () => {
             )
         )
         await waitForCondition(() => {
-            console.info(receiveMatrix)
             return (numsOfReceivedMessages[PeerID.fromString('1').toKey()] >= routers.length - 1)
         }, 30000
         )
         await Promise.all(
-            Object.values(numsOfReceivedMessages).map(async (count) =>
+            Object.keys(numsOfReceivedMessages).map(async (key) =>
                 waitForCondition(() => {
-                    return count >= routers.length - 1
+                    return numsOfReceivedMessages[key] >= routers.length - 1
                 }, 30000)
             )
         )
