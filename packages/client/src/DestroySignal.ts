@@ -28,7 +28,7 @@ export class DestroySignal {
 
     assertNotDestroyed(): void {
         if (this.isDestroyed()) {
-            throw new StreamrClientError('Client is destroyed. Create a new instance', 'CLIENT_IS_DESTROYED')
+            throw new StreamrClientError('Client is destroyed. Create a new instance', 'CLIENT_DESTROYED')
         }
     }
 
