@@ -30,13 +30,15 @@ export const createBroker = async (config: Config): Promise<Broker> => {
 
     const streamrClient = new StreamrClient(config.client)
     const apiAuthenticator = createApiAuthenticator(config)
+    const abortController = new AbortController()
 
     const plugins: Plugin<any>[] = Object.keys(config.plugins).map((name) => {
         const pluginOptions: PluginOptions = {
             name,
             streamrClient,
             apiAuthenticator,
-            brokerConfig: config
+            brokerConfig: config,
+            abortSignal: abortController.signal
         }
         return createPlugin(name, pluginOptions)
     })
@@ -83,6 +85,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             if (httpServer !== undefined) {
                 await stopServer(httpServer)
             }
+            abortController.abort()
             await Promise.all(plugins.map((plugin) => plugin.stop()))
             await streamrClient.destroy()
         }

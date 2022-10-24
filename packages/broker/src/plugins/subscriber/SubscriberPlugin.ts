@@ -1,5 +1,5 @@
 import { Plugin, PluginOptions } from '../../Plugin'
-import { Logger } from '@streamr/utils'
+import { Logger, setAbortableTimeout } from '@streamr/utils'
 import { StreamPartID, toStreamID, toStreamPartID } from 'streamr-client-protocol'
 
 interface ConfigStream {
@@ -15,10 +15,8 @@ export interface SubscriberPluginConfig {
 const logger = new Logger(module)
 
 export class SubscriberPlugin extends Plugin<SubscriberPluginConfig> {
-
     private readonly streamParts: StreamPartID[]
     private readonly subscriptionRetryInterval: number
-    private subscriptionIntervalRef: NodeJS.Timeout | null
 
     constructor(options: PluginOptions) {
         super(options)
@@ -26,7 +24,6 @@ export class SubscriberPlugin extends Plugin<SubscriberPluginConfig> {
             return toStreamPartID(toStreamID(stream.streamId), stream.streamPartition)
         })
         this.subscriptionRetryInterval = this.pluginConfig.subscriptionRetryInterval
-        this.subscriptionIntervalRef = null
     }
 
     private async subscribeToStreamParts(): Promise<void> {
@@ -46,21 +43,15 @@ export class SubscriberPlugin extends Plugin<SubscriberPluginConfig> {
                 logger.warn(`Subscription retry failed, retrying in ${this.subscriptionRetryInterval / 1000} seconds`)
             }
         }
-        this.subscriptionIntervalRef = setTimeout(() => this.subscriptionIntervalFn(), this.subscriptionRetryInterval)
+        setAbortableTimeout(() => this.subscriptionIntervalFn(), this.subscriptionRetryInterval, this.abortSignal)
     }
 
     async start(): Promise<void> {
         await this.subscribeToStreamParts()
-        this.subscriptionIntervalRef = setTimeout(() => this.subscriptionIntervalFn(), this.subscriptionRetryInterval)
+        setAbortableTimeout(() => this.subscriptionIntervalFn(), this.subscriptionRetryInterval, this.abortSignal)
         logger.info('Subscriber plugin started')
     }
 
-    async stop(): Promise<void> {
-        if (this.subscriptionIntervalRef) {
-            clearTimeout(this.subscriptionIntervalRef)
-            this.subscriptionIntervalRef = null
-        }
-        logger.info('Subscriber plugin stopped')
-    }
-
+    // eslint-disable-next-line class-methods-use-this
+    async stop(): Promise<void> {}
 }

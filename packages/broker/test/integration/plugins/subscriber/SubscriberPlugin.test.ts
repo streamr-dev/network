@@ -7,7 +7,7 @@ import { fastWallet, waitForCondition } from 'streamr-test-utils'
 const TRACKER_PORT = 12465
 const wallet = fastWallet()
 
-const createMockPlugin = async (streamrClient: StreamrClient) => {
+const createMockPlugin = async (abortSignal: AbortSignal, streamrClient: StreamrClient) => {
     const brokerConfig: any = {
         client: {
             auth: {
@@ -37,23 +37,27 @@ const createMockPlugin = async (streamrClient: StreamrClient) => {
         name: 'subscriber',
         streamrClient,
         apiAuthenticator: undefined as any,
-        brokerConfig
+        brokerConfig,
+        abortSignal
     })
 }
 
 describe('Subscriber Plugin', () => {
     let tracker: Tracker
     let client: StreamrClient
+    let abortController: AbortController
     let plugin: any
 
     beforeAll(async () => {
         tracker = await startTestTracker(TRACKER_PORT)
         client = await createClient(tracker, wallet.privateKey)
-        plugin = await createMockPlugin(client)
+        abortController = new AbortController()
+        plugin = await createMockPlugin(abortController.signal, client)
         await plugin.start()
     })
 
     afterAll(async () => {
+        abortController.abort()
         await Promise.allSettled([
             client?.destroy(),
             plugin?.stop(),

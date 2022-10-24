@@ -1,10 +1,9 @@
 import { auth, Client, types, tracker } from 'cassandra-driver'
-import { MetricsContext, RateMetric } from '@streamr/utils'
+import { listenOnceForAbort, MetricsContext, RateMetric, setAbortableTimeout, wait } from '@streamr/utils'
 import { BatchManager } from './BatchManager'
 import { Readable, Transform } from 'stream'
 import { EventEmitter } from 'events'
 import { pipeline } from 'stream'
-import { v1 as uuidv1 } from 'uuid'
 import merge2 from 'merge2'
 import { StreamMessage } from 'streamr-client-protocol'
 import { BucketManager, BucketManagerOptions } from './BucketManager'
@@ -24,6 +23,7 @@ export interface StartCassandraOptions {
     username?: string
     password?: string
     opts?: Partial<BucketManagerOptions & { useTtl: boolean }>
+    abortSignal: AbortSignal
 }
 
 export type MessageFilter = (streamMessage: StreamMessage) => boolean
@@ -51,12 +51,12 @@ export type StorageOptions = Partial<BucketManagerOptions> & {
 export class Storage extends EventEmitter {
 
     opts: StorageOptions
+    private readonly abortSignal: AbortSignal
     cassandraClient: Client
     bucketManager: BucketManager
     batchManager: BatchManager
-    pendingStores: Map<string, NodeJS.Timeout>
 
-    constructor(cassandraClient: Client, opts: StorageOptions) {
+    constructor(cassandraClient: Client, abortSignal: AbortSignal, opts: StorageOptions) {
         super()
 
         const defaultOptions = {
@@ -69,12 +69,13 @@ export class Storage extends EventEmitter {
             ...opts
         }
 
+        this.abortSignal = abortSignal
+        listenOnceForAbort(this.abortSignal, this.destroy.bind(this), 'throw')
         this.cassandraClient = cassandraClient
-        this.bucketManager = new BucketManager(cassandraClient, opts)
+        this.bucketManager = new BucketManager(cassandraClient, abortSignal, opts)
         this.batchManager = new BatchManager(cassandraClient, {
             useTtl: this.opts.useTtl
         })
-        this.pendingStores = new Map()
     }
 
     async store(streamMessage: StreamMessage): Promise<boolean> {
@@ -98,13 +99,10 @@ export class Storage extends EventEmitter {
             } else {
                 const messageId = streamMessage.messageId.serialize()
                 logger.trace(`bucket not found, put ${messageId} to pendingMessages`)
-
-                const uuid = uuidv1()
-                const timeout = setTimeout(() => {
-                    this.pendingStores.delete(uuid)
+                setAbortableTimeout(() => {
                     this.store(streamMessage).then(resolve, reject)
-                }, this.opts.retriesIntervalMilliseconds!)
-                this.pendingStores.set(uuid, timeout)
+                }, this.opts.retriesIntervalMilliseconds!, this.abortSignal)
+
             }
         })
     }
@@ -247,17 +245,11 @@ export class Storage extends EventEmitter {
         })
     }
 
-    close(): Promise<void> {
-        const keys = [...this.pendingStores.keys()]
-        keys.forEach((key) => {
-            const timeout = this.pendingStores.get(key)
-            clearTimeout(timeout!)
-            this.pendingStores.delete(key)
-        })
-
-        this.bucketManager.stop()
+    private destroy(): void {
         this.batchManager.stop()
-        return this.cassandraClient.shutdown()
+        this.cassandraClient.shutdown().catch(() => {
+            logger.warn('failed to shutdown cassandraClient cleanly')
+        })
     }
 
     private fetchRange(
@@ -527,17 +519,14 @@ export class Storage extends EventEmitter {
 
 }
 
-function sleep(ms: number) {
-    return new Promise((resolve) => setTimeout(() => resolve(undefined), ms))
-}
-
 export const startCassandraStorage = async ({
     contactPoints,
     localDataCenter,
     keyspace,
     username,
     password,
-    opts
+    opts,
+    abortSignal
 }: StartCassandraOptions): Promise<Storage> => {
     const authProvider = new auth.PlainTextAuthProvider(username || '', password || '')
     const requestLogger = new tracker.RequestLogger({
@@ -562,12 +551,12 @@ export const startCassandraStorage = async ({
         /* eslint-disable no-await-in-loop */
         try {
             await cassandraClient.connect().catch((err) => { throw err })
-            return new Storage(cassandraClient, opts || {})
+            return new Storage(cassandraClient, abortSignal, opts || {})
         } catch (err) {
             // eslint-disable-next-line no-console
             console.log('Cassandra not responding yet...')
             retryCount -= 1
-            await sleep(5000)
+            await wait(5000, abortSignal)
             lastError = err
         }
         /* eslint-enable no-await-in-loop */

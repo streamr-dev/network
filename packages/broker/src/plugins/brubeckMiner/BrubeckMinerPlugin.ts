@@ -1,5 +1,5 @@
 import fetchNatType from 'nat-type-identifier'
-import { Logger, scheduleAtInterval, withTimeout } from '@streamr/utils'
+import { Logger, scheduleAtInterval, setAbortableTimeout, withTimeout } from '@streamr/utils'
 import { wait } from '@streamr/utils'
 import { Plugin, PluginOptions } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
@@ -38,22 +38,20 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
     latencyPoller?: { stop: () => void }
     natType?: string
     dummyMessagesReceived: number
-    rewardSubscriptionRetryRef: NodeJS.Timeout | null
     subscriptionRetryInterval: number
     streamId: StreamID
 
     constructor(options: PluginOptions) {
         super(options)
         this.dummyMessagesReceived = 0
-        this.rewardSubscriptionRetryRef = null
         this.subscriptionRetryInterval = 3 * 60 * 1000
         this.streamId = toStreamID(this.pluginConfig.rewardStreamIds[Math.floor(Math.random() * this.pluginConfig.rewardStreamIds.length)])
     }
 
     async start(): Promise<void> {
-        this.latencyPoller = await scheduleAtInterval(async () => {
+        await scheduleAtInterval(async () => {
             this.latestLatency = await this.getLatency()
-        }, LATENCY_POLL_INTERVAL, true)
+        }, LATENCY_POLL_INTERVAL, true, this.abortSignal)
         if (this.pluginConfig.stunServerHost !== null) {
             this.natType = await this.getNatType()
         }
@@ -65,8 +63,7 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
 
         await this.subscribe()
 
-        this.rewardSubscriptionRetryRef = setTimeout(() => this.subscriptionIntervalFn(), this.subscriptionRetryInterval)
-
+        setAbortableTimeout(() => this.subscriptionIntervalFn(), this.subscriptionRetryInterval, this.abortSignal)
         logger.info('Brubeck miner plugin started')
     }
 
@@ -87,7 +84,7 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
                 logger.warn(`Subscription retry failed, retrying in ${this.subscriptionRetryInterval / 1000} seconds`)
             }
         }
-        this.rewardSubscriptionRetryRef = setTimeout(() => this.subscriptionIntervalFn(), this.subscriptionRetryInterval)
+        setAbortableTimeout(() => this.subscriptionIntervalFn(), this.subscriptionRetryInterval, this.abortSignal)
     }
 
     private async subscribe(): Promise<void> {
@@ -173,13 +170,8 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
         }
     }
 
-    async stop(): Promise<void> {
-        this.latencyPoller?.stop()
-        if (this.rewardSubscriptionRetryRef) {
-            clearTimeout(this.rewardSubscriptionRetryRef)
-            this.rewardSubscriptionRetryRef = null
-        }
-    }
+    // eslint-disable-next-line class-methods-use-this
+    async stop(): Promise<void> {}
 
     // eslint-disable-next-line class-methods-use-this
     override getConfigSchema(): Schema {

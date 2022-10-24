@@ -26,7 +26,6 @@ export class MqttPlugin extends Plugin<MqttPluginConfig> {
         return this.server.start()
     }
 
-    // eslint-disable-next-line class-methods-use-this
     async stop(): Promise<void> {
         await this.server!.stop()
     }

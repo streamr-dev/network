@@ -63,16 +63,15 @@ export class StorageConfig {
         })
     }
 
-    async start(): Promise<void> {
+    async start(abortSignal: AbortSignal): Promise<void> {
         await Promise.all([
-            this.storagePoller.start(),
+            this.storagePoller.start(abortSignal),
             this.storageEventListener.start()
         ])
     }
 
-    async destroy(): Promise<void> {
-        this.storagePoller.destroy()
-        await this.storageEventListener.destroy()
+    destroy(): void {
+        this.storageEventListener.destroy()
     }
 
     hasStreamPart(streamPart: StreamPartID): boolean {

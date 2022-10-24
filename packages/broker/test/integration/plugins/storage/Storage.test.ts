@@ -92,6 +92,7 @@ async function storeMockMessages({
 }
 
 describe('Storage', () => {
+    let abortController: AbortController
     let storage: Storage
     let streamId: string
     let cassandraClient: Client
@@ -103,6 +104,7 @@ describe('Storage', () => {
             localDataCenter,
             keyspace,
         })
+        abortController = new AbortController()
         storage = await startCassandraStorage({
             contactPoints,
             localDataCenter,
@@ -112,15 +114,14 @@ describe('Storage', () => {
                 checkFullBucketsTimeout: 100,
                 storeBucketsTimeout: 100,
                 bucketKeepAliveSeconds: 1
-            }
+            },
+            abortSignal: abortController.signal
         })
     })
 
     afterAll(async () => {
-        await Promise.allSettled([
-            storage?.close(),
-            cassandraClient?.shutdown()
-        ])
+        abortController.abort()
+        await cassandraClient?.shutdown()
     })
 
     beforeEach(async () => {
