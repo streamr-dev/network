@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-import { container as rootContainer, DependencyContainer } from 'tsyringe'
+import { container as rootContainer } from 'tsyringe'
 import { generateEthereumAccount as _generateEthereumAccount } from './Ethereum'
 import { pOnce } from './utils/promises'
 import { StreamrClientConfig, createStrictConfig, StrictStreamrClientConfig } from './Config'
@@ -40,7 +40,6 @@ export class StreamrClient {
 
     public readonly id: string
     private readonly config: StrictStreamrClientConfig
-    private readonly container: DependencyContainer
     private readonly node: NetworkNodeFacade
     private readonly authentication: Authentication
     private readonly resends: Resends
@@ -61,7 +60,6 @@ export class StreamrClient {
         const container = parentContainer.createChildContainer()
         initContainer(this.config, container)
 
-        this.container = container
         this.id = this.config.id
         this.node = container.resolve<NetworkNodeFacade>(NetworkNodeFacade)
         this.authentication = container.resolve<Authentication>(AuthenticationInjectionToken)
