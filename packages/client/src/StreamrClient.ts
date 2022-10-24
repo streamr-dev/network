@@ -2,7 +2,7 @@ import 'reflect-metadata'
 import { container as rootContainer, DependencyContainer } from 'tsyringe'
 import { generateEthereumAccount as _generateEthereumAccount } from './Ethereum'
 import { pOnce } from './utils/promises'
-import { StreamrClientConfig, createStrictConfig } from './Config'
+import { StreamrClientConfig, createStrictConfig, StrictStreamrClientConfig } from './Config'
 import { Publisher } from './publish/Publisher'
 import { Subscriber } from './subscribe/Subscriber'
 import { ProxyPublishSubscribe } from './ProxyPublishSubscribe'
@@ -30,6 +30,7 @@ import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
 import { GroupKey } from './encryption/GroupKey'
 import { PublisherKeyExchange } from './encryption/PublisherKeyExchange'
 import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
+import { LoggerFactory } from './utils/LoggerFactory'
 
 /**
  * @category Important
@@ -38,6 +39,7 @@ export class StreamrClient {
     static readonly generateEthereumAccount = _generateEthereumAccount
 
     public readonly id: string
+    private readonly config: StrictStreamrClientConfig
     private readonly container: DependencyContainer
     private readonly node: NetworkNodeFacade
     private readonly authentication: Authentication
@@ -50,16 +52,17 @@ export class StreamrClient {
     private readonly streamRegistry: StreamRegistry
     private readonly streamStorageRegistry: StreamStorageRegistry
     private readonly storageNodeRegistry: StorageNodeRegistry
+    private readonly loggerFactory: LoggerFactory
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly eventEmitter: StreamrClientEventEmitter
 
     constructor(options: StreamrClientConfig = {}, parentContainer = rootContainer) {
-        const config = createStrictConfig(options)
+        this.config = createStrictConfig(options)
         const container = parentContainer.createChildContainer()
-        initContainer(config, container)
+        initContainer(this.config, container)
 
         this.container = container
-        this.id = config.id
+        this.id = this.config.id
         this.node = container.resolve<NetworkNodeFacade>(NetworkNodeFacade)
         this.authentication = container.resolve<Authentication>(AuthenticationInjectionToken)
         this.resends = container.resolve<Resends>(Resends)
@@ -71,6 +74,7 @@ export class StreamrClient {
         this.streamRegistry = container.resolve<StreamRegistry>(StreamRegistry)
         this.streamStorageRegistry = container.resolve<StreamStorageRegistry>(StreamStorageRegistry)
         this.storageNodeRegistry = container.resolve<StorageNodeRegistry>(StorageNodeRegistry)
+        this.loggerFactory = container.resolve<LoggerFactory>(LoggerFactory)
         this.streamIdBuilder = container.resolve<StreamIDBuilder>(StreamIDBuilder)
         this.eventEmitter = container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter)
         container.resolve<PublisherKeyExchange>(PublisherKeyExchange) // side effect: activates publisher key exchange
@@ -141,7 +145,14 @@ export class StreamrClient {
         onMessage?: SubscriptionOnMessage<T>
     ): Promise<ResendSubscription<T>> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        const sub = new ResendSubscription<T>(streamPartId, this.resends, resendOptions, this.container)
+        const sub = new ResendSubscription<T>(
+            streamPartId,
+            resendOptions,
+            this.resends,
+            this.destroySignal,
+            this.loggerFactory,
+            this.config
+        )
         if (onMessage) {
             sub.useLegacyOnMessageHandler(onMessage)
         }
