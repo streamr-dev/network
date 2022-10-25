@@ -135,7 +135,7 @@ describe('RandomGraphNode-DhtNode', () => {
                 return acc + curr.getTargetNeighborStringIds().length
             }, 0) / numOfNodes
             return avg >= 3.92
-        }, 30000)
+        }, 60000)
 
         const avg = graphNodes.reduce((acc, curr) => {
             return acc + curr.getTargetNeighborStringIds().length
@@ -156,5 +156,5 @@ describe('RandomGraphNode-DhtNode', () => {
             })
         })
         expect(mismatchCounter).toBeLessThanOrEqual(2)
-    }, 60000)
+    }, 90000)
 })
