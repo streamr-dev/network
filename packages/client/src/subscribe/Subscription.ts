@@ -4,7 +4,6 @@
  */
 import { StreamPartID } from 'streamr-client-protocol'
 import { MessageStream, MessageStreamOnMessage } from './MessageStream'
-import { SubscriptionSession } from './SubscriptionSession'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
@@ -20,18 +19,14 @@ export interface SubscriptionEvents {
  * @category Important
  */
 export class Subscription<T = unknown> extends MessageStream<T> {
-    /** @internal */
-    private readonly subSession: SubscriptionSession<T>
-    /** @internal */
     private readonly logger: Logger
     readonly streamPartId: StreamPartID
     protected eventEmitter: EventEmitter<SubscriptionEvents>
 
     /** @internal */
-    constructor(subSession: SubscriptionSession<T>, loggerFactory: LoggerFactory) {
+    constructor(streamPartId: StreamPartID, loggerFactory: LoggerFactory) {
         super()
-        this.subSession = subSession
-        this.streamPartId = subSession.streamPartId
+        this.streamPartId = streamPartId
         this.eventEmitter = new EventEmitter<SubscriptionEvents>()
         this.logger = loggerFactory.createLogger(module)
         this.onMessage.listen((msg) => {
@@ -46,11 +41,6 @@ export class Subscription<T = unknown> extends MessageStream<T> {
     async unsubscribe(): Promise<void> {
         this.end()
         await this.return()
-    }
-
-    /** @internal */
-    waitForNeighbours(numNeighbours?: number, timeout?: number): Promise<boolean> {
-        return this.subSession.waitForNeighbours(numNeighbours, timeout)
     }
 
     on<E extends keyof SubscriptionEvents>(eventName: E, listener: SubscriptionEvents[E]): void {

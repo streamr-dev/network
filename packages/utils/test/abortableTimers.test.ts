@@ -7,7 +7,7 @@ const INTERVAL_UNIT = 50
 describe('setAbortableTimeout',  () => {
     it('invokes callback once if not aborted', async () => {
         const cb = jest.fn()
-        setAbortableTimeout(cb, TIMEOUT_UNIT)
+        setAbortableTimeout(cb, TIMEOUT_UNIT, new AbortController().signal)
         await wait(TIMEOUT_UNIT / 2)
         expect(cb).toHaveBeenCalledTimes(0)
         await wait(TIMEOUT_UNIT + 20)
@@ -35,15 +35,19 @@ describe('setAbortableTimeout',  () => {
 })
 
 describe('setAbortableInterval',  () => {
-    let ref: NodeJS.Timer
+    let defaultTestAbortController: AbortController
+
+    beforeEach(() => {
+        defaultTestAbortController = new AbortController()
+    })
 
     afterEach(() => {
-        clearTimeout(ref)
+        defaultTestAbortController.abort()
     })
 
     it('repeatedly invokes callback if not aborted', async () => {
         const cb = jest.fn()
-        ref = setAbortableInterval(cb, INTERVAL_UNIT)
+        setAbortableInterval(cb, INTERVAL_UNIT, defaultTestAbortController.signal)
         await wait(INTERVAL_UNIT / 4)
         expect(cb).toHaveBeenCalledTimes(0)
         await wait(INTERVAL_UNIT * 4 + INTERVAL_UNIT / 2)
@@ -53,7 +57,7 @@ describe('setAbortableInterval',  () => {
     it('stops invoking callback if aborted', async () => {
         const abortController = new AbortController()
         const cb = jest.fn()
-        ref = setAbortableInterval(cb, INTERVAL_UNIT, abortController.signal)
+        setAbortableInterval(cb, INTERVAL_UNIT, abortController.signal)
         await wait(INTERVAL_UNIT)
         const callsBeforeAbort = cb.mock.calls.length
         abortController.abort()
@@ -65,7 +69,7 @@ describe('setAbortableInterval',  () => {
         const abortController = new AbortController()
         abortController.abort()
         const cb = jest.fn()
-        ref = setAbortableInterval(cb, INTERVAL_UNIT, abortController.signal)
+        setAbortableInterval(cb, INTERVAL_UNIT, abortController.signal)
         await wait(INTERVAL_UNIT * 4)
         expect(cb).not.toHaveBeenCalled()
     })
