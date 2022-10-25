@@ -155,6 +155,6 @@ describe('RandomGraphNode-DhtNode', () => {
                 }
             })
         })
-        expect(mismatchCounter).toBeLessThanOrEqual(2)
+        expect(mismatchCounter).toBeLessThanOrEqual(5)
     }, 90000)
 })
