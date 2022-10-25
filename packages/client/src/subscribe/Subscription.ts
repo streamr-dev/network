@@ -48,14 +48,12 @@ export class Subscription<T = unknown> extends PushPipeline<StreamMessage<T>, St
      * onMessage is passed parsed content as first arument, and streamMessage as second argument.
      * @internal
      */
-    useLegacyOnMessageHandler(onMessage?: MessageListener<T>): this {
-        if (onMessage) {
-            this.onMessage.listen(async (streamMessage) => {
-                if (streamMessage instanceof StreamMessage) {
-                    await onMessage(streamMessage.getParsedContent(), streamMessage)
-                }
-            })
-        }
+    useLegacyOnMessageHandler(onMessage: MessageListener<T>): this {
+        this.onMessage.listen(async (streamMessage) => {
+            if (streamMessage instanceof StreamMessage) {
+                await onMessage(streamMessage.getParsedContent(), streamMessage)
+            }
+        })
         this.flow()
         return this
     }
