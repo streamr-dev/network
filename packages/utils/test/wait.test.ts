@@ -17,12 +17,12 @@ describe(wait, () => {
         setTimeout(() => {
             abortController.abort()
         }, 10)
-        return expect(wait(20, abortController)).rejects.toEqual(new AbortError())
+        return expect(wait(20, abortController.signal)).rejects.toEqual(new AbortError())
     })
 
     it('rejects if initially aborted', () => {
         const abortController = new AbortController()
         abortController.abort()
-        return expect(wait(20, abortController)).rejects.toEqual(new AbortError())
+        return expect(wait(20, abortController.signal)).rejects.toEqual(new AbortError())
     })
 })

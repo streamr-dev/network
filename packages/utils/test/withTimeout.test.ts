@@ -32,20 +32,20 @@ describe(withTimeout, () => {
         setTimeout(() => {
             abortController.abort()
         }, 10)
-        return expect(withTimeout(new Promise<unknown>(() => {}), 20, 'context', abortController))
+        return expect(withTimeout(new Promise<unknown>(() => {}), 20, 'context', abortController.signal))
             .rejects.toEqual(new AbortError('context'))
     })
 
     it('rejects if initially aborted', () => {
         const abortController = new AbortController()
         abortController.abort()
-        return expect(withTimeout(new Promise<unknown>(() => {}), 20, 'context', abortController))
+        return expect(withTimeout(new Promise<unknown>(() => {}), 20, 'context', abortController.signal))
             .rejects.toEqual(new AbortError('context'))
     })
 
     it('timeout if no abort controller signalled', () => {
         const abortController = new AbortController()
-        return expect(withTimeout(new Promise<unknown>(() => {}), 10, 'context', abortController))
+        return expect(withTimeout(new Promise<unknown>(() => {}), 10, 'context', abortController.signal))
             .rejects.toEqual(new TimeoutError(10, 'context'))
     })
 })
