@@ -163,3 +163,9 @@ export async function* unique<T>(
         }
     }
 }
+
+export const fromArray = async function* <T>(items: T[]): AsyncGenerator<T> {
+    for (const item of items) {
+        yield item
+    }
+}
