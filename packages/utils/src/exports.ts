@@ -5,6 +5,7 @@ import { ENSName, toENSName } from './ENSName'
 import { EthereumAddress, toEthereumAddress } from './EthereumAddress'
 import { isENSName } from './isENSName'
 import { keyToArrayIndex } from './keyToArrayIndex'
+import { listenOnceForAbort } from './listenOnceForAbort'
 import { Logger } from './Logger'
 import {
     CountMetric,
@@ -37,6 +38,7 @@ export {
     asAbortable,
     isENSName,
     keyToArrayIndex,
+    listenOnceForAbort,
     randomString,
     scheduleAtFixedRate,
     scheduleAtInterval,

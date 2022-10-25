@@ -1,3 +1,5 @@
+import { listenOnceForAbort } from './listenOnceForAbort'
+
 export class AbortError extends Error {
     readonly code = 'AbortError'
     constructor(customErrorContext?: string) {
@@ -22,23 +24,15 @@ export function asAbortable<T>(
     abortSignal?: AbortSignal,
     customErrorContext?: string
 ): Promise<T> {
-    if (abortSignal?.aborted === true) {
-        return Promise.reject(new AbortError(customErrorContext))
-    }
-    let abortListener: () => void
+    let state: { clear: () => void }
     return new Promise<T>((resolve, reject) => {
         if (abortSignal !== undefined) {
-            abortListener = () => {
-                reject(new AbortError(customErrorContext))
-            }
-            // TODO remove the type casting when type definition for abortController has been updated to include addEventListener
-            (abortSignal as any).addEventListener('abort', abortListener)
+            state = listenOnceForAbort(abortSignal, () => reject(new AbortError(customErrorContext)))
         }
         promise.then(resolve, reject)
     }).finally(() => {
-        if (abortListener !== undefined) {
-            // TODO remove the type casting when type definition for abortController has been updated to include removeEventListener
-            (abortSignal as any).removeEventListener('abort', abortListener)
+        if (state !== undefined) {
+            state.clear()
         }
     })
 }
