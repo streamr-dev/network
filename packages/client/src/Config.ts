@@ -89,10 +89,9 @@ export type StrictStreamrClientConfig = {
     network: NetworkConfig
     decryption: DecryptionConfig
     cache: CacheConfig
+    metrics: MetricsConfig
     /** @internal */
     _timeouts: TimeoutsConfig
-    /** @internal */
-    metrics: MetricsConfig
 } & (
     EthereumConfig
     & ConnectionConfig
@@ -217,11 +216,11 @@ export const createStrictConfig = (inputOptions: StreamrClientConfig = {}): Stri
         decryption: merge(defaults.decryption || {}, opts.decryption),
         metrics: (opts.metrics === true)
             ? defaults.metrics
-            : (opts.metrics === false) 
+            : (opts.metrics === false)
                 ? {
                     ...defaults.metrics,
                     periods: []
-                } 
+                }
                 : {
                     ...defaults.metrics,
                     ...opts.metrics

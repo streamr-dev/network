@@ -150,9 +150,10 @@ export class Resends {
     ) {
         const loggerIdx = counterId('fetchStream')
         this.logger.debug('[%s] fetching resend %s for %s with options %o', loggerIdx, endpointSuffix, streamPartId, query)
-        const nodeAddresses = await this.streamStorageRegistry.getStorageNodes(StreamPartIDUtils.getStreamID(streamPartId))
+        const streamId = StreamPartIDUtils.getStreamID(streamPartId)
+        const nodeAddresses = await this.streamStorageRegistry.getStorageNodes(streamId)
         if (!nodeAddresses.length) {
-            throw new StreamrClientError(`no storage assigned: ${streamPartId}`, 'NO_STORAGE_NODES')
+            throw new StreamrClientError(`no storage assigned: ${streamId}`, 'NO_STORAGE_NODES')
         }
 
         const nodeAddress = nodeAddresses[random(0, nodeAddresses.length - 1)]
