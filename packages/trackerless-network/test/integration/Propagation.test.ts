@@ -32,7 +32,7 @@ describe('Propagation', () => {
         dhtNodes.push(entryPoint)
         randomGraphNodes.push(node1)
 
-        range(NUM_OF_NODES).map(async (_i) => {
+        await Promise.all(range(NUM_OF_NODES).map(async (_i) => {
             const descriptor: PeerDescriptor = {
                 peerId: PeerID.fromString(new UUID().toString()).value,
                 type: 1
@@ -45,11 +45,13 @@ describe('Propagation', () => {
             )
             await dht.start()
             await graph.start()
-            await dht.joinDht(entryPointDescriptor)
-            graph.on(Event.MESSAGE, () => {totalReceived += 1})
-            dhtNodes.push(dht)
-            randomGraphNodes.push(graph)
-        })
+            return dht.joinDht(entryPointDescriptor).then(() => {
+                graph.on(Event.MESSAGE, () => {totalReceived += 1})
+                dhtNodes.push(dht)
+                randomGraphNodes.push(graph)
+            })
+
+        }))
     })
 
     afterEach(async () => {
@@ -59,10 +61,15 @@ describe('Propagation', () => {
 
     it('All nodes receive messages', async () => {
         await waitForCondition(
-            () => randomGraphNodes.every(
-                (peer) => peer.getTargetNeighborStringIds().length >= 3
-            ), 30000
+            () => randomGraphNodes.every((peer) => peer.getTargetNeighborStringIds().length >= 3), 30000
         )
+        await waitForCondition(() => {
+            const avg = randomGraphNodes.reduce((acc, curr) => {
+                return acc + curr.getTargetNeighborStringIds().length
+            }, 0) / randomGraphNodes.length
+            return avg >= 3.90
+        }, 20000)
+
         const messageRef: MessageRef = {
             sequenceNumber: 1,
             timestamp: BigInt(123123)
@@ -74,6 +81,6 @@ describe('Propagation', () => {
             streamPartId: STREAM_ID
         }
         randomGraphNodes[0].broadcast(message)
-        await waitForCondition(() => totalReceived >= NUM_OF_NODES)
+        await waitForCondition(() => totalReceived >= NUM_OF_NODES, 10000)
     }, 45000)
 })

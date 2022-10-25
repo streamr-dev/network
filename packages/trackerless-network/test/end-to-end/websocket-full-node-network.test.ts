@@ -41,33 +41,31 @@ describe('Full node network with WebSocket connections only', () => {
 
         await epStreamrNode.joinStream(randomGraphId, epPeerDescriptor)
 
-        range(NUM_OF_NODES).map(async (i) => {
-            setImmediate(async () => {
+        await Promise.all(range(NUM_OF_NODES).map(async (i) => {
+            const layer0 = new DhtNode({
+                routeMessageTimeout: 10000,
+                entryPoints: [epPeerDescriptor],
+                webSocketPort: 15556 + i,
+                webSocketHost: 'localhost',
+                peerIdString: `${i}`,
+                numberOfNodesPerKBucket: 4
+            })
 
-                const layer0 = new DhtNode({
-                    routeMessageTimeout: 10000,
-                    entryPoints: [epPeerDescriptor],
-                    webSocketPort: 15556 + i,
-                    webSocketHost: 'localhost',
-                    peerIdString: `${i}`,
-                    numberOfNodesPerKBucket: 4
-                })
+            layer0DhtNodes.push(layer0)
 
-                layer0DhtNodes.push(layer0)
+            await layer0.start()
+            await layer0.joinDht(epPeerDescriptor)
 
-                await layer0.start()
-                await layer0.joinDht(epPeerDescriptor)
+            const connectionManager = layer0.getTransport() as ConnectionManager
+            const streamrNode = new StreamrNode()
+            await streamrNode.start(layer0, connectionManager, connectionManager)
 
-                const connectionManager = layer0.getTransport() as ConnectionManager
-                const streamrNode = new StreamrNode()
-                await streamrNode.start(layer0, connectionManager, connectionManager)
-
-                // await streamrNode.joinStream(randomGraphId, epPeerDescriptor)
+            return await streamrNode.joinStream(randomGraphId, epPeerDescriptor).then(() => {
                 streamrNode.subscribeToStream(randomGraphId, epPeerDescriptor)
                 connectionManagers.push(connectionManager)
                 streamrNodes.push(streamrNode)
             })
-        })
+        }))
 
     }, 120000)
 
@@ -84,7 +82,6 @@ describe('Full node network with WebSocket connections only', () => {
 
     it('happy path', async () => {
 
-        await waitForCondition(() => streamrNodes.length === NUM_OF_NODES, 120000)
         await Promise.all([...streamrNodes.map((streamrNode) =>
             waitForCondition(() =>
                 streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length >= 3

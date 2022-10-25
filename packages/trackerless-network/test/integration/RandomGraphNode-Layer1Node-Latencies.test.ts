@@ -134,8 +134,8 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
             const avg = graphNodes.reduce((acc, curr) => {
                 return acc + curr.getTargetNeighborStringIds().length
             }, 0) / numOfNodes
-            return avg >= 3.8
-        })
+            return avg >= 3.90
+        }, 30000)
 
         const avg = graphNodes.reduce((acc, curr) => {
             return acc + curr.getTargetNeighborStringIds().length
@@ -143,14 +143,18 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
 
         logger.info(`AVG Number of neighbors: ${avg}`)
 
+        let mismatchCounter = 0
         graphNodes.forEach((node) => {
             const nodeId = node.getOwnStringId()
             node.getTargetNeighborStringIds().forEach((neighborId) => {
                 if (neighborId !== entryPointRandomGraphNode.getOwnStringId()) {
                     const neighbor = graphNodes.find((n) => n.getOwnStringId() === neighborId)
-                    expect(neighbor!.getTargetNeighborStringIds()).toContain(nodeId)
+                    if (!neighbor!.getTargetNeighborStringIds().includes(nodeId)) {
+                        mismatchCounter += 1
+                    }
                 }
             })
         })
+        expect(mismatchCounter).toBeLessThanOrEqual(2)
     }, 60000)
 })
