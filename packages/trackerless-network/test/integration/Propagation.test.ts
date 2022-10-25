@@ -52,7 +52,7 @@ describe('Propagation', () => {
             })
 
         }))
-    })
+    }, 30000)
 
     afterEach(async () => {
         await Promise.all(randomGraphNodes.map((node) => node.stop()))
