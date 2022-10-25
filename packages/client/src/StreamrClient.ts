@@ -185,8 +185,11 @@ export class StreamrClient {
         options: ResendOptions,
         onMessage?: MessageListener<T>
     ): Promise<Subscription<T>> {
-        const sub = await this.resends.resend(streamDefinition, options, onMessage)
+        const sub = await this.resends.resend<T>(streamDefinition, options)
         await this.subscriber.addSubscription<T>(sub)
+        if (onMessage) {
+            sub.useLegacyOnMessageHandler(onMessage)
+        }
         return sub
     }
 

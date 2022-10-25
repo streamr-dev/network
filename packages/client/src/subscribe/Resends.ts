@@ -20,7 +20,7 @@ import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { counterId } from '../utils/utils'
 import { StreamrClientError } from '../StreamrClientError'
-import { Subscription, MessageListener } from './Subscription'
+import { Subscription } from './Subscription'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 
@@ -95,14 +95,10 @@ export class Resends {
 
     async resend<T>(
         streamDefinition: StreamDefinition,
-        options: ResendOptions,
-        onMessage?: MessageListener<T>
+        options: ResendOptions
     ): Promise<Subscription<T>> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         const sub = await this.resendMessages<T>(streamPartId, options)
-        if (onMessage) {
-            sub.useLegacyOnMessageHandler(onMessage)
-        }
         return sub
     }
 
