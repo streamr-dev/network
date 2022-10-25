@@ -1,8 +1,9 @@
-import { Simulator } from '../../src/connection/Simulator'
+import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { waitForCondition } from 'streamr-test-utils'
 import { PeerID } from '../../src/helpers/PeerID'
+import { SimulatorTransport } from '../../src/exports'
 
 describe('Connection Locking', () => {
 
@@ -15,8 +16,6 @@ describe('Connection Locking', () => {
         type: NodeType.NODEJS
     }
 
-    const simulator = new Simulator()
-
     let mockConnectorTransport1: ConnectionManager
     let mockConnectorTransport2: ConnectionManager
 
@@ -24,18 +23,19 @@ describe('Connection Locking', () => {
     let connectionManager2: ConnectionManager
 
     beforeEach(async () => {
-        mockConnectorTransport1 = new ConnectionManager({ ownPeerDescriptor: mockPeerDescriptor1, simulator: simulator })
-        mockConnectorTransport2 = new ConnectionManager({ ownPeerDescriptor: mockPeerDescriptor2, simulator: simulator })
+        const simulator = new Simulator()
+        mockConnectorTransport1 = new SimulatorTransport(mockPeerDescriptor1, simulator)
+        mockConnectorTransport2 = new SimulatorTransport(mockPeerDescriptor2, simulator)
 
         connectionManager1 = new ConnectionManager({
             transportLayer: mockConnectorTransport1,
-            webSocketHost: 'localhost',
+            webSocketHost: '127.0.0.1',
             webSocketPort: 12312
         })
 
         connectionManager2 = new ConnectionManager({
             transportLayer: mockConnectorTransport2,
-            webSocketHost: 'localhost',
+            webSocketHost: '127.0.0.1',
             webSocketPort: 12313
         })
         await connectionManager1.start(() => mockPeerDescriptor1)

@@ -1,5 +1,6 @@
 import { UUID } from "./UUID"
 import { IllegalArguments } from './errors'
+import crypto from "crypto"
 
 export type PeerIDKey = string & { readonly __brand: 'peerIDKey' } // Nominal typing 
 
@@ -67,5 +68,16 @@ export class PeerID {
 
     get value(): Uint8Array {
         return this.data
+    }
+
+    hasSmallerHashThan(other: PeerID): boolean {
+        const myId = this.toKey()
+        const theirId = other.toKey()
+        return PeerID.offeringHash(myId + theirId) < PeerID.offeringHash(theirId + myId)
+    }
+
+    private static offeringHash(idPair: string): number {
+        const buffer = crypto.createHash('md5').update(idPair).digest()
+        return buffer.readInt32LE(0)
     }
 }

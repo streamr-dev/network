@@ -1,7 +1,7 @@
 /* eslint-disable promise/no-nesting */
 
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
-import { Simulator } from '../../src/connection/Simulator'
+import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { PeerID } from '../../src/helpers/PeerID'
 import { waitForCondition } from 'streamr-test-utils'

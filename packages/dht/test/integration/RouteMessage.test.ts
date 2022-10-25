@@ -6,7 +6,7 @@ import { runAndWaitForEvents3 } from '../../src/helpers/waitForEvent3'
 import { waitForCondition } from 'streamr-test-utils'
 import { createMockConnectionDhtNode, createWrappedClosestPeersRequest } from '../utils'
 import { PeerID } from '../../src/helpers/PeerID'
-import { Simulator } from '../../src/connection/Simulator'
+import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { v4 } from 'uuid'
 import { UUID } from '../../src/helpers/UUID'
 
@@ -190,13 +190,14 @@ describe('Route Message With Mock Connections', () => {
                 }))
             )
         )
-        await waitForCondition(() =>
-            (numsOfReceivedMessages[PeerID.fromString('1').toKey()] >= routers.length - 1), 30000
+        await waitForCondition(() => {
+            return (numsOfReceivedMessages[PeerID.fromString('1').toKey()] >= routers.length - 1)
+        }, 30000
         )
         await Promise.all(
-            Object.values(numsOfReceivedMessages).map(async (count) =>
+            Object.keys(numsOfReceivedMessages).map(async (key) =>
                 waitForCondition(() => {
-                    return count >= routers.length - 1
+                    return numsOfReceivedMessages[key] >= routers.length - 1
                 }, 30000)
             )
         )
