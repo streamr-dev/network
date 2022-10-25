@@ -134,7 +134,7 @@ describe('RandomGraphNode-DhtNode', () => {
             const avg = graphNodes.reduce((acc, curr) => {
                 return acc + curr.getTargetNeighborStringIds().length
             }, 0) / numOfNodes
-            return avg >= 3.90
+            return avg >= 3.92
         }, 30000)
 
         const avg = graphNodes.reduce((acc, curr) => {
