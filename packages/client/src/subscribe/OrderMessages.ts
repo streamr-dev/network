@@ -23,7 +23,7 @@ export class OrderMessages<T> {
     private readonly logger: Logger
     private stopSignal = Signal.once()
     private done = false
-    private resendStreams = new Set<Subscription<T>>() // holds outstanding resends for cleanup
+    private ongoingResends = new Set<Subscription<T>>()
     private outBuffer = new PushBuffer<StreamMessage<T>>()
     private inputClosed = false
     private orderMessages: boolean
@@ -70,10 +70,10 @@ export class OrderMessages<T> {
             to,
         })
 
-        let resendMessageStream!: Subscription<T>
+        let resend: Subscription<T>
 
         try {
-            resendMessageStream = await this.resends.range(this.streamPartId, {
+            resend = await this.resends.range(this.streamPartId, {
                 fromTimestamp: from.timestamp,
                 toTimestamp: to.timestamp,
                 fromSequenceNumber: from.sequenceNumber,
@@ -81,13 +81,13 @@ export class OrderMessages<T> {
                 publisherId,
                 msgChainId,
             })
-            resendMessageStream.onFinally.listen(() => {
-                this.resendStreams.delete(resendMessageStream)
+            resend.onFinally.listen(() => {
+                this.ongoingResends.delete(resend)
             })
-            this.resendStreams.add(resendMessageStream)
+            this.ongoingResends.add(resend)
             if (this.done) { return }
 
-            for await (const streamMessage of resendMessageStream) {
+            for await (const streamMessage of resend) {
                 if (this.done) { return }
                 this.orderingUtil.add(streamMessage)
             }
@@ -103,8 +103,8 @@ export class OrderMessages<T> {
                 this.outBuffer.endWrite(err)
             }
         } finally {
-            if (resendMessageStream != null) {
-                this.resendStreams.delete(resendMessageStream)
+            if (resend! != null) {
+                this.ongoingResends.delete(resend)
             }
         }
     }
@@ -159,8 +159,8 @@ export class OrderMessages<T> {
             } finally {
                 this.done = true
                 this.orderingUtil.clearGaps()
-                this.resendStreams.forEach((s) => s.end())
-                this.resendStreams.clear()
+                this.ongoingResends.forEach((s) => s.end())
+                this.ongoingResends.clear()
                 this.orderingUtil.clearGaps()
             }
         }.bind(this)
