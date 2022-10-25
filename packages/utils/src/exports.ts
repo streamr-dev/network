@@ -1,4 +1,5 @@
 import { AbortError, asAbortable } from './asAbortable'
+import { setAbortableInterval, setAbortableTimeout } from './abortableTimers'
 import { Defer } from './Defer'
 import { ENSName, toENSName } from './ENSName'
 import { EthereumAddress, toEthereumAddress } from './EthereumAddress'
@@ -39,6 +40,8 @@ export {
     randomString,
     scheduleAtFixedRate,
     scheduleAtInterval,
+    setAbortableInterval,
+    setAbortableTimeout,
     toENSName,
     toEthereumAddress,
     toEthereumAddressOrENSName,
