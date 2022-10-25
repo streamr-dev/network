@@ -70,6 +70,7 @@ jobs:
         npm run test-unit
         npm run test-integration
         npm run test-e2e
+        npm run test-browser
   network:
     needs: build
     uses: ./.github/workflows/test-setup.yml
