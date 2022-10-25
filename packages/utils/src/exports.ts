@@ -1,3 +1,4 @@
+import { AbortError, asAbortable } from './asAbortable'
 import { Defer } from './Defer'
 import { ENSName, toENSName } from './ENSName'
 import { EthereumAddress, toEthereumAddress } from './EthereumAddress'
@@ -21,7 +22,7 @@ import { toEthereumAddressOrENSName } from './toEthereumAddressOrENSName'
 import { BrandedString } from './types'
 import { wait } from './wait'
 import { waitForEvent } from './waitForEvent'
-import { AbortError, TimeoutError, withTimeout } from './withTimeout'
+import { TimeoutError, withTimeout } from './withTimeout'
 
 export {
     BrandedString,
@@ -32,6 +33,7 @@ export {
     Multimap,
     AbortError,
     TimeoutError,
+    asAbortable,
     isENSName,
     keyToArrayIndex,
     randomString,
