@@ -7,7 +7,7 @@ const INTERVAL_UNIT = 50
 describe('setAbortableTimeout',  () => {
     it('invokes callback once if not aborted', async () => {
         const cb = jest.fn()
-        setAbortableTimeout(cb, TIMEOUT_UNIT)
+        setAbortableTimeout(cb, TIMEOUT_UNIT, new AbortController().signal)
         await wait(TIMEOUT_UNIT / 2)
         expect(cb).toHaveBeenCalledTimes(0)
         await wait(TIMEOUT_UNIT + 20)

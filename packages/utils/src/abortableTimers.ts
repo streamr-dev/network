@@ -14,7 +14,7 @@ function createAbortableTimerFn(
     setupTimerFn: (cb: () => void, ms?: number) => NodeJS.Timer,
     clearFn: (ref: NodeJS.Timer) => void,
     removeListenerOnCb: boolean
-): (cb: () => void, ms?: number, abortSignal?: AbortSignal) => void {
+): (cb: () => void, ms: number, abortSignal: AbortSignal) => void {
     return (callback, ms, abortSignal): void => {
         if (abortSignal?.aborted) {
             return
