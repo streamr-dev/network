@@ -7,7 +7,7 @@ import { Logger } from '@streamr/utils'
 const logger = new Logger(module)
 
 describe('RandomGraphNode-DhtNode', () => {
-    const numOfNodes = 128
+    const numOfNodes = 100
     let dhtNodes: DhtNode[]
     let dhtEntryPoint: DhtNode
     let entryPointRandomGraphNode: RandomGraphNode
@@ -117,7 +117,7 @@ describe('RandomGraphNode-DhtNode', () => {
         })
     }, 10000)
 
-    it('happy path 128 peers', async () => {
+    it('happy path 100 peers', async () => {
         range(numOfNodes).map((i) => graphNodes[i].start())
         await Promise.all(range(numOfNodes).map(async (i) => {
             await dhtNodes[i].joinDht(entrypointDescriptor)
