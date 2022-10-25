@@ -29,11 +29,12 @@ export class ManagedConnection extends EventEmitter<Events> {
     private handshaker?: Handshaker
     private handshakeCompleted = false
 
+    private connectedReceived = false
     constructor(private ownPeerDescriptor: PeerDescriptor,
         private protocolVersion: string,
         connectionType: ConnectionType,
         protected connectingConnection?: IConnection,
-        connectedConnection?: IConnection,
+        protected connectedConnection?: IConnection,
     ) {
         super()
         this.objectId = ManagedConnection.objectCounter
@@ -49,7 +50,11 @@ export class ManagedConnection extends EventEmitter<Events> {
 
         if (connectingConnection) {
             this.handshaker = new Handshaker(this.ownPeerDescriptor, this.protocolVersion, connectingConnection)
+            this.handshaker.on('handshakeCompleted', (peerDescriptor: PeerDescriptor) => {
+                this.onHandshakeCompleted(peerDescriptor)
+            })
             connectingConnection.once('connected', () => {
+                this.connectedReceived = true
                 this.attachImplementation(connectingConnection)
                 this.emit('connected')
             })
@@ -59,12 +64,9 @@ export class ManagedConnection extends EventEmitter<Events> {
         } else {
             if (connectedConnection) {
                 this.handshaker = new Handshaker(this.ownPeerDescriptor, this.protocolVersion, connectedConnection!)
+                this.handshaker.on('handshakeCompleted', this.onHandshakeCompleted)
                 this.attachImplementation(connectedConnection!)
             }
-        }
-
-        if (this.handshaker) {
-            this.handshaker.on('handshakeCompleted', this.onHandshakeCompleted)
         }
     }
 
@@ -126,6 +128,10 @@ export class ManagedConnection extends EventEmitter<Events> {
 
         while (this.outputBuffer.length > 0) {
             logger.trace('emptying outputBuffer objectId: ' + this.objectId)
+            if (!this.implementation) {
+                logger.info('this.connectingConnection: ' + this.connectingConnection)
+                logger.info('this.connectedConnection: ' + this.connectedConnection)
+            }
             this.implementation!.send(this.outputBuffer.shift()!)
         }
 
@@ -135,6 +141,8 @@ export class ManagedConnection extends EventEmitter<Events> {
 
     public attachImplementation(impl: IConnection, peerDescriptor?: PeerDescriptor): void {
         logger.trace('attachImplementation() objectId: ' + this.objectId)
+        this.implementation = impl
+
         impl.on('data', (bytes: Uint8Array) => {
             logger.trace('received data objectId: ' + this.objectId)
 
@@ -160,8 +168,6 @@ export class ManagedConnection extends EventEmitter<Events> {
         impl.on('disconnected', (code?: number, reason?: string) => {
             this.emit('disconnected', code, reason)
         })
-
-        this.implementation = impl
 
         if (!peerDescriptor) {
             this.handshaker?.run()
@@ -190,5 +196,9 @@ export class ManagedConnection extends EventEmitter<Events> {
 
     isHandshakeCompleted(): boolean {
         return this.handshakeCompleted
+    }
+
+    getOutputBuffer(): Uint8Array[] {
+        return this.outputBuffer
     }
 }

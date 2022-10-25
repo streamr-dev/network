@@ -4,25 +4,25 @@ import 'setimmediate'
 import EventEmitter from 'eventemitter3'
 import {
     ManagedConnectionSourceEvent
-} from './IManagedConnectionSource'
+} from '../IManagedConnectionSource'
 
-import { PeerID } from '../helpers/PeerID'
-import { ConnectionType } from './IConnection'
+import { PeerID } from '../../helpers/PeerID'
+import { ConnectionType } from '../IConnection'
 
 import {
     PeerDescriptor,
-} from '../proto/DhtRpc'
+} from '../../proto/DhtRpc'
 import { Logger } from '@streamr/utils'
-import { ManagedConnection } from './ManagedConnection'
-import { PeerIDKey } from '../helpers/PeerID'
+import { ManagedConnection } from '../ManagedConnection'
+import { PeerIDKey } from '../../helpers/PeerID'
 import { Simulator } from './Simulator'
 import { SimulatorConnection } from './SimulatorConnection'
 
 const logger = new Logger(module)
 
 export class SimulatorConnector extends EventEmitter<ManagedConnectionSourceEvent> {
-   
-    private simulatorConnections: Map<PeerIDKey, SimulatorConnection> = new Map()
+
+    private connectingConnections: Map<PeerIDKey, ManagedConnection> = new Map()
     private stopped = false
 
     constructor(
@@ -37,12 +37,25 @@ export class SimulatorConnector extends EventEmitter<ManagedConnectionSourceEven
     }
 
     public connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
-        const connection = new SimulatorConnection(this.ownPeerDescriptor!, targetPeerDescriptor, this.simulator)
-        this.simulatorConnections.set(PeerID.fromValue(targetPeerDescriptor.peerId).toKey(), connection)
+        const peerKey = PeerID.fromValue(targetPeerDescriptor.peerId).toKey()
+        const existingConnection = this.connectingConnections.get(peerKey)
+        if (existingConnection) {
+            return existingConnection
+        }
+
+        const connection = new SimulatorConnection(this.ownPeerDescriptor!, targetPeerDescriptor, ConnectionType.SIMULATOR_CLIENT, this.simulator)
 
         const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, this.protocolVersion,
             ConnectionType.SIMULATOR_CLIENT, connection, undefined)
         managedConnection.setPeerDescriptor(targetPeerDescriptor!)
+
+        this.connectingConnections.set(PeerID.fromValue(targetPeerDescriptor.peerId).toKey(), managedConnection)
+        connection.once('disconnected', () => {
+            this.connectingConnections.delete(PeerID.fromValue(targetPeerDescriptor.peerId).toKey())
+        })
+        connection.once('connected', () => {
+            this.connectingConnections.delete(PeerID.fromValue(targetPeerDescriptor.peerId).toKey())
+        })
 
         connection.connect()
 
@@ -53,15 +66,18 @@ export class SimulatorConnector extends EventEmitter<ManagedConnectionSourceEven
         return this.ownPeerDescriptor
     }
 
-    public handleIncomingConnection(source: PeerDescriptor): void {
+    public handleIncomingConnection(sourceConnection: SimulatorConnection): void {
         if (this.stopped) {
             return
         }
-        const connection = new SimulatorConnection(this.ownPeerDescriptor!, source, this.simulator)
-        this.simulatorConnections.set(PeerID.fromValue(source.peerId).toKey(), connection)
+        const connection = new SimulatorConnection(this.ownPeerDescriptor!,
+            sourceConnection.ownPeerDescriptor, ConnectionType.SIMULATOR_SERVER, this.simulator)
+
+        this.simulator.accept(sourceConnection, connection)
 
         const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, this.protocolVersion,
             ConnectionType.SIMULATOR_SERVER, undefined, connection)
+
         logger.trace('connected, objectId: ' + managedConnection.objectId)
         managedConnection.once('handshakeCompleted', (_peerDescriptor: PeerDescriptor) => {
             logger.trace('handshake completed objectId: ' + managedConnection.objectId)
@@ -69,6 +85,7 @@ export class SimulatorConnector extends EventEmitter<ManagedConnectionSourceEven
         })
     }
 
+    /*
     public handleIncomingDisconnection(source: PeerDescriptor): void {
         if (this.stopped) {
             return
@@ -85,6 +102,7 @@ export class SimulatorConnector extends EventEmitter<ManagedConnectionSourceEven
         const connection = this.simulatorConnections.get(PeerID.fromValue(from.peerId).toKey())
         connection?.handleIncomingData(data)
     }
+    */
 
     public async stop(): Promise<void> {
         this.stopped = true

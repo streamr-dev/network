@@ -7,7 +7,7 @@ import { Logger } from '@streamr/utils'
 const logger = new Logger(module)
 
 describe('RandomGraphNode-DhtNode-Latencies', () => {
-    const numOfNodes = 128
+    const numOfNodes = 100
     let dhtNodes: DhtNode[]
     let dhtEntryPoint: DhtNode
     let entryPointRandomGraphNode: RandomGraphNode
@@ -118,7 +118,7 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         })
     }, 60000)
 
-    it('happy path 128 peers', async () => {
+    it('happy path 100 peers', async () => {
         range(numOfNodes).map((i) => graphNodes[i].start())
         await Promise.all(range(numOfNodes).map(async (i) => {
             await dhtNodes[i].joinDht(entrypointDescriptor)
@@ -134,8 +134,8 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
             const avg = graphNodes.reduce((acc, curr) => {
                 return acc + curr.getTargetNeighborStringIds().length
             }, 0) / numOfNodes
-            return avg >= 3.8
-        })
+            return avg >= 3.92
+        }, 30000)
 
         const avg = graphNodes.reduce((acc, curr) => {
             return acc + curr.getTargetNeighborStringIds().length
@@ -143,14 +143,18 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
 
         logger.info(`AVG Number of neighbors: ${avg}`)
 
+        let mismatchCounter = 0
         graphNodes.forEach((node) => {
             const nodeId = node.getOwnStringId()
             node.getTargetNeighborStringIds().forEach((neighborId) => {
                 if (neighborId !== entryPointRandomGraphNode.getOwnStringId()) {
                     const neighbor = graphNodes.find((n) => n.getOwnStringId() === neighborId)
-                    expect(neighbor!.getTargetNeighborStringIds()).toContain(nodeId)
+                    if (!neighbor!.getTargetNeighborStringIds().includes(nodeId)) {
+                        mismatchCounter += 1
+                    }
                 }
             })
         })
+        expect(mismatchCounter).toBeLessThanOrEqual(2)
     }, 60000)
 })
