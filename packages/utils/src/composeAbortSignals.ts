@@ -1,32 +1,37 @@
-function containsPreAbortedSignal(signals: Iterable<AbortSignal>): boolean {
+function findPreAbortedSignal(signals: Iterable<AbortSignal>): AbortSignal | undefined {
     for (const signal of signals) {
         if (signal.aborted) {
-            return true
+            return signal
         }
     }
-    return false
+    return undefined
 }
 
 /**
  * Compose a single AbortSignal from multiple AbortSignals with "OR" logic.
  */
 export function composeAbortSignals(...signals: AbortSignal[]): AbortSignal {
-    return new ComposeAbortSignals(signals)
+    if (signals.length === 0) {
+        throw new Error('must provide at least one AbortSignal')
+    }
+    const preAbortedSignal = findPreAbortedSignal(signals)
+    if (preAbortedSignal !== undefined) {
+        return preAbortedSignal
+    } else {
+        return new CompositeAbortSignal(signals)
+    }
 }
 
-class ComposeAbortSignals extends EventTarget implements AbortSignal {
-    aborted: boolean
+class CompositeAbortSignal extends EventTarget implements AbortSignal {
+    aborted = false
     onabort?: (event: Event) => void
-    private signals?: AbortSignal[]
+    private signals?: ReadonlyArray<AbortSignal>
 
-    constructor(signals: Iterable<AbortSignal>) {
+    constructor(signals: AbortSignal[]) {
         super()
-        this.aborted = containsPreAbortedSignal(signals)
-        if (!this.aborted) {
-            this.signals = [...signals]
-            for (const signal of this.signals) {
-                signal.addEventListener('abort', this.abort)
-            }
+        this.signals = [...signals]
+        for (const signal of this.signals) {
+            signal.addEventListener('abort', this.abort)
         }
     }
 

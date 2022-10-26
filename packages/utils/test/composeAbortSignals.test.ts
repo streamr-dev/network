@@ -94,4 +94,10 @@ describe(composeAbortSignals, () => {
             expect(listener).toHaveBeenCalledTimes(0)
         })
     })
+
+    it('throws error if composing empty list', () => {
+        expect(() => {
+            composeAbortSignals()
+        }).toThrowError(new Error('must provide at least one AbortSignal'))
+    })
 })
