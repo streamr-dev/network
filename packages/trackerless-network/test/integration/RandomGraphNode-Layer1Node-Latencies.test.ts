@@ -7,7 +7,7 @@ import { Logger } from '@streamr/utils'
 const logger = new Logger(module)
 
 describe('RandomGraphNode-DhtNode-Latencies', () => {
-    const numOfNodes = 100
+    const numOfNodes = 64
     let dhtNodes: DhtNode[]
     let dhtEntryPoint: DhtNode
     let entryPointRandomGraphNode: RandomGraphNode
@@ -118,7 +118,7 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         })
     }, 60000)
 
-    it('happy path 100 peers', async () => {
+    it('happy path 64 peers', async () => {
         range(numOfNodes).map((i) => graphNodes[i].start())
         await Promise.all(range(numOfNodes).map(async (i) => {
             await dhtNodes[i].joinDht(entrypointDescriptor)
@@ -155,7 +155,6 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
                 }
             })
         })
-        // Higher mismatch count for bidirectionality is accepted here due to latency
-        expect(mismatchCounter).toBeLessThanOrEqual(8)
+        expect(mismatchCounter).toBeLessThanOrEqual(2)
     }, 90000)
 })
