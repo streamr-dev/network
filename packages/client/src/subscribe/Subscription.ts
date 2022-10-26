@@ -5,7 +5,7 @@
 import { StreamPartID } from 'streamr-client-protocol'
 import { MessageStream, MessageStreamOnMessage } from './MessageStream'
 import { LoggerFactory } from '../utils/LoggerFactory'
-import { Logger } from '@streamr/utils'
+import { composeAbortSignals, Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { DestroySignal } from '../DestroySignal'
 
@@ -23,6 +23,7 @@ export class Subscription<T = unknown> extends MessageStream<T> {
     private readonly logger: Logger
     readonly streamPartId: StreamPartID
     protected eventEmitter: EventEmitter<SubscriptionEvents>
+    private unsubscribeAbortController = new AbortController()
 
     /** @internal */
     constructor(streamPartId: StreamPartID, destroySignal: DestroySignal, loggerFactory: LoggerFactory) {
@@ -37,15 +38,16 @@ export class Subscription<T = unknown> extends MessageStream<T> {
             this.eventEmitter.emit('error', err)
             this.logger.debug('onError %s', err)
         })
-        destroySignal.onDestroy.listen(() => {
+        const composedAbortSignal = composeAbortSignals(destroySignal.abortSignal, this.unsubscribeAbortController.signal)
+        composedAbortSignal.addEventListener('abort', () => {
             this.eventEmitter.removeAllListeners()
-        })
+        }, { once: true })
     }
 
     async unsubscribe(): Promise<void> {
         this.end()
         await this.return()
-        this.eventEmitter.removeAllListeners()
+        this.unsubscribeAbortController.abort()
     }
 
     on<E extends keyof SubscriptionEvents>(eventName: E, listener: SubscriptionEvents[E]): void {
