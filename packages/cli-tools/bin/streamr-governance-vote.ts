@@ -18,7 +18,7 @@ const vote = async (privateKey: string, proposal: string, choice: number) => {
             choice,
             app: 'cli-tool'
         })
-        console.log(`Successfully voted for choice ${choice} on proposal ${proposal}`)
+        console.log(`Wallet ${wallet.address} successfully voted for choice ${choice} on proposal ${proposal}`)
     } catch (err) {
         console.error(err)
     }
