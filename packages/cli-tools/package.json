@@ -30,7 +30,7 @@
   },
   "homepage": "https://github.com/streamr-dev/cli-tools#readme",
   "dependencies": {
-    "@ethersproject/wallet": "^5.7.0",
+    "@ethersproject/wallet": "^5.5.0",
     "@snapshot-labs/snapshot.js": "^0.4.43",
     "@streamr/utils": "^1.0.0",
     "commander": "^8.3.0",
