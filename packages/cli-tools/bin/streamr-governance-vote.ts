@@ -24,8 +24,6 @@ const vote = async (privateKey: string, proposal: string, choice: number) => {
     }
 }
 
-// The StreamrClient is not really used here, but we want to support the same
-// --private-key and --config args as the commands that actually use the client
 createCommand()
     .description('vote on a Streamr governance proposal')
     .arguments('<proposalId> <choiceId>')
