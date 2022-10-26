@@ -7,7 +7,7 @@ import { Logger } from '@streamr/utils'
 const logger = new Logger(module)
 
 describe('RandomGraphNode-DhtNode', () => {
-    const numOfNodes = 100
+    const numOfNodes = 64
     let dhtNodes: DhtNode[]
     let dhtEntryPoint: DhtNode
     let entryPointRandomGraphNode: RandomGraphNode
@@ -117,7 +117,7 @@ describe('RandomGraphNode-DhtNode', () => {
         })
     }, 10000)
 
-    it('happy path 100 peers', async () => {
+    it('happy path 64 peers', async () => {
         range(numOfNodes).map((i) => graphNodes[i].start())
         await Promise.all(range(numOfNodes).map(async (i) => {
             await dhtNodes[i].joinDht(entrypointDescriptor)
@@ -134,8 +134,8 @@ describe('RandomGraphNode-DhtNode', () => {
             const avg = graphNodes.reduce((acc, curr) => {
                 return acc + curr.getTargetNeighborStringIds().length
             }, 0) / numOfNodes
-            return avg >= 3.92
-        }, 30000)
+            return avg >= 3.90
+        }, 60000)
 
         const avg = graphNodes.reduce((acc, curr) => {
             return acc + curr.getTargetNeighborStringIds().length
@@ -156,5 +156,5 @@ describe('RandomGraphNode-DhtNode', () => {
             })
         })
         expect(mismatchCounter).toBeLessThanOrEqual(2)
-    }, 60000)
+    }, 90000)
 })

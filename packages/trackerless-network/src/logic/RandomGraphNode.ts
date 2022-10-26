@@ -19,7 +19,6 @@ import { DuplicateMessageDetector, NumberPair } from '@streamr/utils'
 import { Logger } from '@streamr/utils'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Handshaker } from './Handshaker'
-import { clearTimeout } from 'timers'
 
 export enum Event {
     MESSAGE = 'streamr:layer2:random-graph-node:onmessage'
