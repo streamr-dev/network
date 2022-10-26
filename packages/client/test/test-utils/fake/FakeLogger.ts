@@ -1,7 +1,7 @@
 import { Logger, LogLevel } from '@streamr/utils'
 
-interface LogMessage {
-    text: string
+interface LogEntry {
+    message: string
     level: LogLevel
 }
 
@@ -9,12 +9,12 @@ const LOG_LINE_PREFIX_LENGTH = 56 // Logger prefixes each line with level, times
 
 export class FakeLogger implements Omit<Logger, 'getFinalLogger'> {
 
-    private messages: LogMessage[] = []
-    private format: (pattern: string, args: any[], cb: (output: string) => void) => void
+    private entries: LogEntry[] = []
+    private format: (pattern: string, args: any[], cb: (message: string) => void) => void
 
     constructor() {
         // format escape sequences (%s, %o etc.) using real Logger
-        this.format = (pattern: string, args: any[], cb: (output: string) => void) => {
+        this.format = (pattern: string, args: any[], cb: (message: string) => void) => {
             const logger = new Logger(module, undefined, 'trace', {
                 write: (line: string) => {
                     // eslint-disable-next-line
@@ -29,36 +29,36 @@ export class FakeLogger implements Omit<Logger, 'getFinalLogger'> {
     }
 
     fatal(pattern: string, ...args: any[]): void {
-        this.addMessage(pattern, args, 'fatal')
+        this.addEntry(pattern, args, 'fatal')
     }
 
     error(pattern: string, ...args: any[]): void {
-        this.addMessage(pattern, args, 'error')
+        this.addEntry(pattern, args, 'error')
     }
 
     warn(pattern: string, ...args: any[]): void {
-        this.addMessage(pattern, args, 'warn')
+        this.addEntry(pattern, args, 'warn')
     }
 
     info(pattern: string, ...args: any[]): void {
-        this.addMessage(pattern, args, 'info')
+        this.addEntry(pattern, args, 'info')
     }
 
     debug(pattern: string, ...args: any[]): void {
-        this.addMessage(pattern, args, 'debug')
+        this.addEntry(pattern, args, 'debug')
     }
 
     trace(pattern: string, ...args: any[]): void {
-        this.addMessage(pattern, args, 'trace')
+        this.addEntry(pattern, args, 'trace')
     }
 
-    private addMessage(pattern: string, args: any[], level: LogLevel) {
-        this.format(pattern, args, (text: string) => {
-            this.messages.push({ text, level })
+    private addEntry(pattern: string, args: any[], level: LogLevel) {
+        this.format(pattern, args, (message: string) => {
+            this.entries.push({ message, level })
         })
     }
 
-    getMessages(): LogMessage[] {
-        return this.messages
+    getEntries(): LogEntry[] {
+        return this.entries
     }
 }
