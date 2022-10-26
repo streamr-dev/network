@@ -1,6 +1,6 @@
 import EventEmitter from 'eventemitter3'
 import { set } from 'lodash'
-import { scheduleAtFixedRate } from '@streamr/utils'
+import { scheduleAtFixedRate } from './scheduleAtFixedRate'
 
 export type MetricsDefinition = Record<string, Metric>
 
@@ -8,7 +8,7 @@ interface MetricEvents {
     record: (value: number) => void
 }
 
-export abstract class Sampler {
+abstract class Sampler {
 
     protected readonly metric: Metric
     private readonly listener: any

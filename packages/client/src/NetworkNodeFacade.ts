@@ -3,7 +3,8 @@
  */
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import EventEmitter from 'eventemitter3'
-import { NetworkNodeOptions, createNetworkNode as _createNetworkNode, MetricsContext } from 'streamr-network'
+import { NetworkNodeOptions, createNetworkNode as _createNetworkNode } from 'streamr-network'
+import { MetricsContext } from '@streamr/utils'
 import { uuid } from './utils/uuid'
 import { pOnce } from './utils/promises'
 import { NetworkConfig, ConfigInjectionToken, TrackerRegistrySmartContract } from './Config'

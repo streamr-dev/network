@@ -15,10 +15,13 @@ import { StreamrClientError } from './StreamrClientError'
 export class DestroySignal {
     public readonly onDestroy = Signal.once()
     public readonly trigger = this.destroy
+    public readonly abortSignal: AbortSignal
 
     constructor() {
+        const controller = new AbortController()
+        this.abortSignal = controller.signal
         this.onDestroy.listen(() => {
-            // no-op, needed?
+            controller.abort()
         })
     }
 
@@ -28,20 +31,11 @@ export class DestroySignal {
 
     assertNotDestroyed(): void {
         if (this.isDestroyed()) {
-            throw new StreamrClientError('Client is destroyed. Create a new instance', 'CLIENT_IS_DESTROYED')
+            throw new StreamrClientError('Client is destroyed. Create a new instance', 'CLIENT_DESTROYED')
         }
     }
 
     isDestroyed(): boolean {
         return this.onDestroy.triggerCount() > 0
-    }
-
-    createAbortController(): AbortController {
-        const controller = new AbortController()
-        if (this.isDestroyed()) {
-            controller.abort()
-        }
-        this.onDestroy.listen(async () => controller.abort())
-        return controller
     }
 }

@@ -1,5 +1,5 @@
 import { auth, Client, types, tracker } from 'cassandra-driver'
-import { MetricsContext, RateMetric } from 'streamr-network'
+import { MetricsContext, RateMetric } from '@streamr/utils'
 import { BatchManager } from './BatchManager'
 import { Readable, Transform } from 'stream'
 import { EventEmitter } from 'events'

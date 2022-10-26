@@ -6,8 +6,10 @@ import { StreamPermission } from '../../src/permission'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { fastPrivateKey } from 'streamr-test-utils'
-import { StreamMessage } from 'streamr-client-protocol'
+import { StreamMessage, toStreamPartID } from 'streamr-client-protocol'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
+import { until } from '../../src/utils/promises'
+import { DEFAULT_PARTITION } from './../../src/StreamIDBuilder'
 
 describe('Group Key Persistence', () => {
     let publisherPrivateKey: string
@@ -141,7 +143,10 @@ describe('Group Key Persistence', () => {
             const sub2 = await subscriber2.subscribe({
                 stream: stream.id,
             })
-            await sub2.waitForNeighbours()
+            const node2 = await subscriber2.getNode()
+            await until(async () => {
+                return node2.getNeighborsForStreamPart(toStreamPartID(stream.id, DEFAULT_PARTITION)).length >= 1
+            })
 
             await Promise.all([
                 sub2.collect(3),

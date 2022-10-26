@@ -216,7 +216,6 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
         return this
     }
 
-    /** @internal */
     private async cleanup(error?: Error): Promise<void> {
         this.isCleaningUp = true
         try {
