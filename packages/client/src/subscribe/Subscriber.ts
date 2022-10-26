@@ -85,10 +85,8 @@ export class Subscriber {
         return subSession
     }
 
-    async addSubscription<T>(sub: Subscription<T>): Promise<Subscription<T>> {
+    async addSubscription<T>(sub: Subscription<T>): Promise<void> {
         const subSession = this.getOrCreateSubscriptionSession<T>(sub.streamPartId)
-
-        // add subscription to subSession
         try {
             await subSession.add(sub)
         } catch (err) {
@@ -97,13 +95,12 @@ export class Subscriber {
             await this.remove(sub)
             throw err
         }
-
-        return sub
     }
 
     async subscribe<T>(streamPartId: StreamPartID): Promise<Subscription<T>> {
         const sub = new Subscription<T>(streamPartId, this.loggerFactory)
-        return this.addSubscription(sub)
+        await this.addSubscription(sub)
+        return sub
     }
 
     private async remove(sub: Subscription<any>): Promise<void> {
