@@ -15,10 +15,13 @@ import { StreamrClientError } from './StreamrClientError'
 export class DestroySignal {
     public readonly onDestroy = Signal.once()
     public readonly trigger = this.destroy
+    public readonly abortSignal: AbortSignal
 
     constructor() {
+        const controller = new AbortController()
+        this.abortSignal = controller.signal
         this.onDestroy.listen(() => {
-            // no-op, needed?
+            controller.abort()
         })
     }
 
@@ -34,14 +37,5 @@ export class DestroySignal {
 
     isDestroyed(): boolean {
         return this.onDestroy.triggerCount() > 0
-    }
-
-    createAbortController(): AbortController {
-        const controller = new AbortController()
-        if (this.isDestroyed()) {
-            controller.abort()
-        }
-        this.onDestroy.listen(async () => controller.abort())
-        return controller
     }
 }
