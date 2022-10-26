@@ -1,14 +1,13 @@
+import { StreamrNode } from './StreamrNode'
+
 /*
 Convenience wrapper for building client-facing functionality. Used by client.
  */
 
-
-import { StreamrNode } from './StreamrNode'
-
 export class NetworkNode extends StreamrNode {
-    constructor() {
-        super()
-    }
+    // constructor() {
+    //     super()
+    // }
 
     // TODO
     // setExtraMetadata(metadata: Record<string, unknown>): void {
