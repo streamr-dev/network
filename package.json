@@ -34,6 +34,7 @@
         "@protobuf-ts/plugin": "^2.8.0",
         "@tsconfig/node16": "^1.0.2",
         "@types/jest": "^28.1.2",
+        "@types/node": "^18.11.5",
         "@typescript-eslint/eslint-plugin": "^5.30.6",
         "@typescript-eslint/parser": "^5.30.6",
         "cli-table": "^0.3.6",

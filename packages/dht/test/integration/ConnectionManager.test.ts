@@ -32,10 +32,10 @@ describe('ConnectionManager', () => {
     const mockConnectorTransport2 = new ConnectionManager({ ownPeerDescriptor: mockPeerDescriptor2, simulator })
 
     it('Can start alone', async () => {
-        const connectionManager = new ConnectionManager({ transportLayer: mockTransport, webSocketHost: 'localhost', webSocketPort: 9991 })
+        const connectionManager = new ConnectionManager({ transportLayer: mockTransport, webSocketHost: '127.0.0.1', webSocketPort: 9991 })
 
         await connectionManager.start((report) => {
-            expect(report.ip).toEqual('localhost')
+            expect(report.ip).toEqual('127.0.0.1')
             expect(report.openInternet).toEqual(true)
             return DhtNode.createPeerDescriptor(report)
         })
@@ -48,7 +48,7 @@ describe('ConnectionManager', () => {
         const connectionManager = new ConnectionManager({
             transportLayer: mockTransport,
             webSocketPort: 9992, entryPoints: [
-                { peerId: Uint8Array.from([1, 2, 3]), type: NodeType.NODEJS, websocket: { ip: 'localhost', port: 12345 } }
+                { peerId: Uint8Array.from([1, 2, 3]), type: NodeType.NODEJS, websocket: { ip: '127.0.0.1', port: 12345 } }
             ]
         })
 
@@ -60,10 +60,10 @@ describe('ConnectionManager', () => {
     })
 
     it('Can probe connectivity in open internet', async () => {
-        const connectionManager1 = new ConnectionManager({ transportLayer: mockTransport, webSocketHost: 'localhost', webSocketPort: 9993 })
+        const connectionManager1 = new ConnectionManager({ transportLayer: mockTransport, webSocketHost: '127.0.0.1', webSocketPort: 9993 })
 
         await connectionManager1.start((report) => {
-            expect(report.ip).toEqual('localhost')
+            expect(report.ip).toEqual('127.0.0.1')
             expect(report.openInternet).toEqual(true)
             return DhtNode.createPeerDescriptor(report)
         })
@@ -71,7 +71,7 @@ describe('ConnectionManager', () => {
         const connectionManager2 = new ConnectionManager({
             transportLayer: mockConnectorTransport2,
             webSocketPort: 9994, entryPoints: [
-                { peerId: Uint8Array.from([1, 2, 3]), type: NodeType.NODEJS, websocket: { ip: 'localhost', port: 9993 } }
+                { peerId: Uint8Array.from([1, 2, 3]), type: NodeType.NODEJS, websocket: { ip: '127.0.0.1', port: 9993 } }
             ]
         })
 
@@ -86,12 +86,12 @@ describe('ConnectionManager', () => {
     })
 
     it('Can send data to other connectionmanager over websocket', async () => {
-        const connectionManager1 = new ConnectionManager({ transportLayer: mockConnectorTransport1, webSocketHost: 'localhost', webSocketPort: 9995 })
+        const connectionManager1 = new ConnectionManager({ transportLayer: mockConnectorTransport1, webSocketHost: '127.0.0.1', webSocketPort: 9995 })
 
         let peerDescriptor: PeerDescriptor | undefined
 
         await connectionManager1.start((report) => {
-            expect(report.ip).toEqual('localhost')
+            expect(report.ip).toEqual('127.0.0.1')
             expect(report.openInternet).toEqual(true)
             peerDescriptor = DhtNode.createPeerDescriptor(report)
             return peerDescriptor
@@ -156,11 +156,11 @@ describe('ConnectionManager', () => {
     })
 
     it('Can disconnect websockets', async () => {
-        const connectionManager1 = new ConnectionManager({ transportLayer: mockConnectorTransport1, webSocketHost: 'localhost', webSocketPort: 9997 })
+        const connectionManager1 = new ConnectionManager({ transportLayer: mockConnectorTransport1, webSocketHost: '127.0.0.1', webSocketPort: 9997 })
 
         let peerDescriptor: PeerDescriptor | undefined
         await connectionManager1.start((report) => {
-            expect(report.ip).toEqual('localhost')
+            expect(report.ip).toEqual('127.0.0.1')
             expect(report.openInternet).toEqual(true)
             peerDescriptor = DhtNode.createPeerDescriptor(report)
             return peerDescriptor

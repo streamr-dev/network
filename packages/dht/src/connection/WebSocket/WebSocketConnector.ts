@@ -82,7 +82,7 @@ export class WebSocketConnector extends EventEmitter<ManagedConnectionSourceEven
 
         const noServerConnectivityResponse: ConnectivityResponseMessage = {
             openInternet: false,
-            ip: 'localhost',
+            ip: '127.0.0.1',
             natType: NatType.UNKNOWN
         }
 

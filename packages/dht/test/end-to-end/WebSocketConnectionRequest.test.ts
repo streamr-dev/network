@@ -8,7 +8,7 @@ describe('WebSocket IConnection Requests', () => {
     const epPeerDescriptor: PeerDescriptor = {
         peerId: PeerID.fromString('3').value, // Uint8Array.from([1, 2, 3]),
         type: NodeType.NODEJS,
-        websocket: { ip: 'localhost', port: 10021 }
+        websocket: { ip: '127.0.0.1', port: 10021 }
     }
     let epDhtNode: DhtNode
     let node1: DhtNode

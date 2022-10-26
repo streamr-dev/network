@@ -6,7 +6,7 @@ describe('Layer0-Layer1', () => {
     const epPeerDescriptor: PeerDescriptor = {
         peerId: Uint8Array.from([1, 2, 3]),
         type: NodeType.NODEJS,
-        websocket: { ip: 'localhost', port: 10016 }
+        websocket: { ip: '127.0.0.1', port: 10016 }
     }
 
     const STREAM_ID1 = 'stream1'

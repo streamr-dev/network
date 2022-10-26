@@ -10,7 +10,7 @@ describe('Layer0 with WebRTC connections', () => {
     const epPeerDescriptor: PeerDescriptor = {
         peerId: PeerID.fromString('entrypoint').value,
         type: NodeType.NODEJS,
-        websocket: { ip: 'localhost', port: 10029 }
+        websocket: { ip: '127.0.0.1', port: 10029 }
     }
     let epDhtNode: DhtNode
     let node1: DhtNode
