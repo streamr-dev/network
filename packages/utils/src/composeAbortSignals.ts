@@ -7,21 +7,6 @@ function findPreAbortedSignal(signals: Iterable<AbortSignal>): AbortSignal | und
     return undefined
 }
 
-/**
- * Compose a single AbortSignal from multiple AbortSignals with "OR" logic.
- */
-export function composeAbortSignals(...signals: AbortSignal[]): AbortSignal {
-    if (signals.length === 0) {
-        throw new Error('must provide at least one AbortSignal')
-    }
-    const preAbortedSignal = findPreAbortedSignal(signals)
-    if (preAbortedSignal !== undefined) {
-        return preAbortedSignal
-    } else {
-        return new CompositeAbortSignal(signals)
-    }
-}
-
 class CompositeAbortSignal extends EventTarget implements AbortSignal {
     aborted = false
     onabort?: (event: Event) => void
@@ -44,5 +29,20 @@ class CompositeAbortSignal extends EventTarget implements AbortSignal {
         const event = new Event('abort')
         this.dispatchEvent(event)
         this.onabort?.(event)
+    }
+}
+
+/**
+ * Compose a single AbortSignal from multiple AbortSignals with "OR" logic.
+ */
+export function composeAbortSignals(...signals: AbortSignal[]): AbortSignal {
+    if (signals.length === 0) {
+        throw new Error('must provide at least one AbortSignal')
+    }
+    const preAbortedSignal = findPreAbortedSignal(signals)
+    if (preAbortedSignal !== undefined) {
+        return preAbortedSignal
+    } else {
+        return new CompositeAbortSignal(signals)
     }
 }
