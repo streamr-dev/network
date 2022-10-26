@@ -21,6 +21,7 @@ const vote = async (privateKey: string, proposal: string, choice: number) => {
         console.log(`Wallet ${wallet.address} successfully voted for choice ${choice} on proposal ${proposal}`)
     } catch (err) {
         console.error(err)
+        process.exit(1)
     }
 }
 
