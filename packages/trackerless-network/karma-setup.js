@@ -42,8 +42,6 @@ jest._checkFakeTimers = timers._checkFakeTimers
 
 Object.assign(jest, timers)
 
-expect.extend(jestExtendedMatchers)
-
 // Add missing Jest functions
 window.test = window.it
 window.test.each = (inputs) => (testName, test) =>
