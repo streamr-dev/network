@@ -4,7 +4,7 @@ import { Logger } from "@streamr/utils"
 import { PeerId, PeerInfo } from '../PeerInfo'
 import { DeferredConnectionAttempt } from './DeferredConnectionAttempt'
 import { WebRtcConnection, ConstructorOptions, isOffering } from './WebRtcConnection'
-import { CountMetric, LevelMetric, Metric, MetricsContext, MetricsDefinition, RateMetric } from '../../helpers/Metric'
+import { CountMetric, LevelMetric, Metric, MetricsContext, MetricsDefinition, RateMetric } from '@streamr/utils'
 import {
     AnswerOptions,
     ConnectOptions,

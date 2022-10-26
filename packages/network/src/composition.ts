@@ -1,17 +1,6 @@
 import 'setimmediate'
 import NodeClientWsEndpoint from './connection/ws/NodeClientWsEndpoint'
 export { NodeClientWsEndpoint }
-export { 
-    Metric, 
-    MetricsDefinition, 
-    Sampler,
-    CountMetric, 
-    AverageMetric, 
-    LevelMetric, 
-    RateMetric,
-    MetricsContext, 
-    MetricsReport
-} from './helpers/Metric'
 export {
     Location,
     AbstractNodeOptions,

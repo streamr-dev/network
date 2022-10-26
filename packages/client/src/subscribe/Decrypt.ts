@@ -63,7 +63,7 @@ export class Decrypt<T> {
                         'addGroupKey',
                         this.decryptionConfig.keyRequestTimeout,
                         (storedGroupKey: GroupKey) => storedGroupKey.id === groupKeyId,
-                        this.destroySignal.createAbortController())
+                        this.destroySignal.abortSignal)
                     groupKey = groupKeys[0] as GroupKey
                 } catch (e: any) {
                     if (this.destroySignal.isDestroyed()) {

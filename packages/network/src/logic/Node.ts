@@ -9,7 +9,7 @@ import {
 } from 'streamr-client-protocol'
 import { Event as NodeToNodeEvent, NodeToNode } from '../protocol/NodeToNode'
 import { NodeToTracker } from '../protocol/NodeToTracker'
-import { Metric, MetricsContext, MetricsDefinition, RateMetric } from '../helpers/Metric'
+import { Metric, MetricsContext, MetricsDefinition, RateMetric } from '@streamr/utils'
 import { StreamPartManager } from './StreamPartManager'
 import { Logger, withTimeout, GapMisMatchError, InvalidNumberingError } from "@streamr/utils"
 import { PeerInfo } from '../connection/PeerInfo'

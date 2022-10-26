@@ -1,12 +1,11 @@
 import { scoped, Lifecycle, inject } from 'tsyringe'
 import { StreamrClientEventEmitter } from './events'
 import { DestroySignal } from './DestroySignal'
-import { MetricsReport } from 'streamr-network'
 import { NetworkNodeFacade, getEthereumAddressFromNodeId } from './NetworkNodeFacade'
 import { Publisher } from './publish/Publisher'
 import { ConfigInjectionToken, MetricsConfig, StrictStreamrClientConfig } from './Config'
 import { pOnce } from './utils/promises'
-import { wait } from '@streamr/utils'
+import { MetricsReport, wait } from '@streamr/utils'
 
 @scoped(Lifecycle.ContainerScoped)
 export class MetricsPublisher {
