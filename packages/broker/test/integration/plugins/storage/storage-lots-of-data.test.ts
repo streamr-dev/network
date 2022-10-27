@@ -16,15 +16,15 @@ const MESSAGE_SIZE = 1e3 // 1k
 
 const logger = new Logger(module)
 
-function retryFlakyTestNET918(
+async function retryFlakyTestNET918(
     name: string,
     fn?: ((cb: (...args: any[]) => any) => void) | (() => Promise<unknown>),
     timeout?: number
-): void {
+): Promise<void> {
     const MAX_RUNS = 5
     for (let i = 1; i <= MAX_RUNS; ++i) {
         try {
-            it(name, fn, timeout)
+            await it(name, fn, timeout)
             break
         } catch (e) {
             if (e instanceof RangeError && e.message.includes('The value of "offset" is out of range')) {
