@@ -8,7 +8,7 @@ import { Wallet } from '@ethersproject/wallet'
 const hub = 'https://hub.snapshot.org'
 const snapshotClient = new snapshot.Client712(hub)
 
-const vote = async (privateKey: string, proposal: string, choice: number) => {
+const vote = async (privateKey: string, proposal: string, choice: string) => {
     const wallet = new Wallet(privateKey)
     try {
         await snapshotClient.vote(wallet, wallet.address, {
@@ -35,9 +35,9 @@ createCommand()
         if (!config.auth || !config.auth.privateKey) {
             console.error('You must pass a private key either via --private-key or via a config file using --config')
             command.help()
-        } else {
-            await vote(config.auth.privateKey, proposalId, parseInt(choiceId))
-        }
+            process.exit(1)
+        } 
+
+        await vote(config.auth.privateKey, proposalId, choiceId)
     })
-    .version(pkg.version)
     .parseAsync()
