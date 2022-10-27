@@ -622,6 +622,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         })
         this.forwardingTable.clear()
         this.removeAllListeners()
+        this.ongoingRoutingSessions.forEach((session, _id)=> {
+            session.stop()
+        })
         if (this.connectionManager && !this.config.transportLayer) {
             await this.connectionManager.stop()
         }
@@ -672,12 +675,20 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             1000,
             forwarding
         )
+        
+        this.ongoingRoutingSessions.set(session.sessionId, session)
 
         const result = await runAndRaceEvents3<RoutingSessionEvents>([() => {
             session.start()
         }], session, ['noCandidatesFound', 'candidatesFound'], 1000)
 
-        if (result.winnerName === 'noCandidatesFound' || result.winnerName === 'routingFailed') {
+        if (this.ongoingRoutingSessions.has(session.sessionId)) {
+            this.ongoingRoutingSessions.delete(session.sessionId)
+        }
+
+        if (this.stopped) {
+            return this.createRouteMessageAck(routedMessage, 'DhtNode Stopped')
+        } else if (result.winnerName === 'noCandidatesFound' || result.winnerName === 'routingFailed') {
             if (PeerID.fromValue(routedMessage.sourcePeer!.peerId).equals(this.ownPeerId!)) {
                 throw new Error(`Could not perform initial routing`)
             }

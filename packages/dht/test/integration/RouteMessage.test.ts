@@ -53,6 +53,7 @@ describe('Route Message With Mock Connections', () => {
         routerNodes.map((node) => {
             node.stop()
         })
+        simulator.stop()
     })
 
     it('Happy path', async () => {
@@ -135,7 +136,7 @@ describe('Route Message With Mock Connections', () => {
         })
     })
 
-    it('From all to all', async () => {
+    it.only('From all to all', async () => {
         const routers = routerNodes.splice(0, 30)
 
         for (let i = 0; i < routers.length; i++) {

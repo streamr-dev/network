@@ -5,20 +5,27 @@ import { Connection } from "../Connection"
 
 export class SimulatorConnection extends Connection implements IConnection {
 
-    constructor(public ownPeerDescriptor: PeerDescriptor, private targetPeerDescriptor: PeerDescriptor, 
+    constructor(public ownPeerDescriptor: PeerDescriptor, private targetPeerDescriptor: PeerDescriptor,
         connectionType: ConnectionType,
         private simulator: Simulator) {
         super(connectionType)
-        this.close = this.close.bind(this)  
+        this.close = this.close.bind(this)
     }
 
     send(data: Uint8Array): void {
         this.simulator.send(this, data)
+            .then(() => {
+                return
+            }).catch((_e) => { })
     }
 
     close(): void {
         this.simulator.disconnect(this)
-        this.emit('disconnected')
+            .then(() => {
+                this.emit('disconnected')
+                return
+            }).catch((_e) => { })
+
         this.removeAllListeners()
     }
 
