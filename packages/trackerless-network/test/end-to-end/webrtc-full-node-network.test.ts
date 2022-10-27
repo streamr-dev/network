@@ -2,8 +2,9 @@ import { DhtNode, PeerDescriptor, NodeType, ConnectionManager, PeerID } from '@s
 import { StreamrNode, Event as StreamrNodeEvent } from '../../src/logic/StreamrNode'
 import { range } from 'lodash'
 import { waitForCondition } from 'streamr-test-utils'
-import { DataMessage, MessageRef } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { getRandomRegion } from '@streamr/dht/dist/test/data/pings'
+import { createStreamMessage } from '../utils'
 
 describe('Full node network with WebRTC connections', () => {
 
@@ -110,19 +111,17 @@ describe('Full node network with WebRTC connections', () => {
             })
         })
 
-        const messageRef: MessageRef = {
-            sequenceNumber: 1,
-            timestamp: BigInt(123123)
+        const content: ContentMessage = {
+            body: JSON.stringify({ hello: "WORLD" })
         }
-        const message: DataMessage = {
-            content: JSON.stringify({ hello: "WORLD" }),
-            senderId: PeerID.fromValue(epStreamrNode.getPeerDescriptor().peerId).toString(),
-            messageRef,
-            streamPartId: randomGraphId
-        }
+        const msg = createStreamMessage(
+            content,
+            randomGraphId,
+            PeerID.fromValue(epPeerDescriptor.peerId).toString()
+        )
 
-        epStreamrNode.publishToStream(randomGraphId, epPeerDescriptor, message)
-        // await wait(120000)
+        epStreamrNode.publishToStream(randomGraphId, epPeerDescriptor, msg)
+
         await waitForCondition(() => numOfMessagesReceived === NUM_OF_NODES)
 
     }, 120000)

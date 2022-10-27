@@ -1,6 +1,6 @@
 import { RandomGraphNode, Event as RandomGraphEvent } from './RandomGraphNode'
 import { PeerDescriptor, ConnectionLocker, DhtNode, ITransport } from '@streamr/dht'
-import { DataMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
+import { StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { EventEmitter } from 'events'
 import { Logger } from '@streamr/utils'
 
@@ -14,7 +14,7 @@ export enum Event {
 }
 
 export interface StreamrNode {
-    on(event: Event.NEW_MESSAGE, listener: (msg: DataMessage, nodeId: string) => void): this
+    on(event: Event.NEW_MESSAGE, listener: (msg: StreamMessage, nodeId: string) => void): this
 }
 
 const logger = new Logger(module)
@@ -59,14 +59,14 @@ export class StreamrNode extends EventEmitter {
         if (this.streams.has(streamPartID)) {
             this.streams.get(streamPartID)!.layer2.on(
                 RandomGraphEvent.MESSAGE,
-                (message: DataMessage) =>
-                    this.emit(Event.NEW_MESSAGE, message, message.senderId))
+                (message: StreamMessage) =>
+                    this.emit(Event.NEW_MESSAGE, message))
         } else {
             this.joinStream(streamPartID, entryPointDescriptor)
                 .then(() => this.streams.get(streamPartID)?.layer2.on(
                     RandomGraphEvent.MESSAGE,
-                    (message: DataMessage) =>
-                        this.emit(Event.NEW_MESSAGE, message, message.senderId))
+                    (message: StreamMessage) =>
+                        this.emit(Event.NEW_MESSAGE, message))
                 )
                 .catch((err) => {
                     logger.warn(`Failed to subscribe to stream ${streamPartID} with error: ${err}`)
@@ -75,7 +75,7 @@ export class StreamrNode extends EventEmitter {
         }
     }
 
-    publishToStream(streamPartID: string, entryPointDescriptor: PeerDescriptor, msg: DataMessage): void {
+    publishToStream(streamPartID: string, entryPointDescriptor: PeerDescriptor, msg: StreamMessage): void {
         if (this.streams.has(streamPartID)) {
             this.streams.get(streamPartID)!.layer2.broadcast(msg)
         } else {

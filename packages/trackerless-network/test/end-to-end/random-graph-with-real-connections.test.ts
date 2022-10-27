@@ -1,7 +1,8 @@
 import { ConnectionManager, DhtNode, PeerDescriptor, PeerID, NodeType } from '@streamr/dht'
 import { Event, RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { waitForCondition } from 'streamr-test-utils'
-import { DataMessage, MessageRef } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { createStreamMessage } from '../utils'
+import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 
 describe('random graph with real connections', () => {
 
@@ -151,18 +152,17 @@ describe('random graph with real connections', () => {
                 && randomGraphNode5.getTargetNeighborStringIds().length >= 3
         }, 10000)
 
-        const messageRef: MessageRef = {
-            sequenceNumber: 1,
-            timestamp: BigInt(123123)
-        }
-        const message: DataMessage = {
-            content: JSON.stringify({ hello: "WORLD" }),
-            senderId: PeerID.fromValue(epDhtNode.getPeerDescriptor().peerId).toString(),
-            messageRef,
-            streamPartId: randomGraphId
-        }
 
-        randomGraphNode1.broadcast(message)
+        const content: ContentMessage = {
+            body: JSON.stringify({ hello: "WORLD" })
+        }
+        const msg = createStreamMessage(
+            content,
+            randomGraphId,
+            PeerID.fromValue(epDhtNode.getPeerDescriptor().peerId).toString()
+        )
+
+        randomGraphNode1.broadcast(msg)
         await waitForCondition(() => numOfMessagesReceived >= 4)
     })
 })

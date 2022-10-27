@@ -1,4 +1,6 @@
 import { StreamrNode } from './StreamrNode'
+import { StreamMessage } from 'streamr-client-protocol'
+import { PeerDescriptor } from '@streamr/dht'
 
 /*
 Convenience wrapper for building client-facing functionality. Used by client.
@@ -14,14 +16,16 @@ export class NetworkNode extends StreamrNode {
     //     this.extraMetadata = metadata
     // }
 
-    // TODO
-    // publish(streamMessage: StreamMessage): void | never {
-    //     const streamPartId = streamMessage.getStreamPartID()
-    //     if (this.isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE) && streamMessage.messageType === StreamMessageType.MESSAGE) {
-    //         throw new Error(`Cannot publish content data to ${streamPartId} as proxy subscribe connections have been set`)
-    //     }
-    //     this.onDataReceived(streamMessage)
-    // }
+
+    publish(streamMessage: StreamMessage, entrypointDescriptor: PeerDescriptor): void | never {
+        const streamPartId = streamMessage.getStreamPartID()
+        // if (this.isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE) && streamMessage.messageType === StreamMessageType.MESSAGE) {
+        //     throw new Error(`Cannot publish content data to ${streamPartId} as proxy subscribe connections have been set`)
+        // }
+
+        // const msg =
+        // this.publishToStream(streamPartId, entrypointDescriptor, streamMessage)
+    }
 
     // TODO:
     // async openProxyConnection(streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection, userId: string): Promise<void> {

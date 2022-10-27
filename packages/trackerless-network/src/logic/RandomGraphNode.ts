@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events'
 import { DhtNode, PeerID, PeerDescriptor, DhtPeer, ListeningRpcCommunicator, ITransport, ConnectionLocker } from '@streamr/dht'
 import {
-    DataMessage,
+    StreamMessage,
     HandshakeRequest,
     HandshakeResponse,
     InterleaveNotice,
@@ -25,7 +25,7 @@ export enum Event {
 }
 
 export interface RandomGraphNode {
-    on(event: Event.MESSAGE, listener: (message: DataMessage) => any): this
+    on(event: Event.MESSAGE, listener: (message: StreamMessage) => any): this
 }
 
 export interface RandomGraphNodeParams {
@@ -129,7 +129,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         }
     }
 
-    broadcast(msg: DataMessage, previousPeer?: string): void {
+    broadcast(msg: StreamMessage, previousPeer?: string): void {
         if (!previousPeer) {
             this.markAndCheckDuplicate(msg.messageRef!, msg.previousMessageRef)
         }
@@ -305,7 +305,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         this.leaveNotice = this.leaveNotice.bind(this)
         this.neighborUpdate = this.neighborUpdate.bind(this)
 
-        this.rpcCommunicator!.registerRpcNotification(DataMessage, 'sendData', this.sendData)
+        this.rpcCommunicator!.registerRpcNotification(StreamMessage, 'sendData', this.sendData)
         this.rpcCommunicator!.registerRpcNotification(LeaveNotice, 'leaveNotice', this.leaveNotice)
         this.rpcCommunicator!.registerRpcNotification(InterleaveNotice, 'interleaveNotice', this.interleaveNotice)
         this.rpcCommunicator!.registerRpcMethod(HandshakeRequest, HandshakeResponse, 'handshake', this.handshake)
@@ -338,7 +338,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     }
 
     // INetworkRpc server method
-    async sendData(message: DataMessage, _context: ServerCallContext): Promise<Empty> {
+    async sendData(message: StreamMessage, _context: ServerCallContext): Promise<Empty> {
         if (this.markAndCheckDuplicate(message.messageRef!, message.previousMessageRef)) {
             const { previousPeer } = message
             message["previousPeer"] = PeerID.fromValue(this.layer1.getPeerDescriptor().peerId).toKey()

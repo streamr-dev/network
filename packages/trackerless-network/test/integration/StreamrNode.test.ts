@@ -1,8 +1,9 @@
 import { DhtNode, PeerDescriptor, PeerID, Simulator, SimulatorTransport, NodeType } from '@streamr/dht'
 import { waitForCondition } from 'streamr-test-utils'
 import { StreamrNode, Event as NodeEvent } from '../../src/logic/StreamrNode'
-import { DataMessage, MessageRef } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { ContentMessage, MessageRef } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { waitForEvent } from '@streamr/utils'
+import { createStreamMessage } from '../utils'
 
 describe('StreamrNode', () => {
 
@@ -22,16 +23,16 @@ describe('StreamrNode', () => {
         type: NodeType.NODEJS
     }
     const STREAM_ID = 'test'
-    const messageRef: MessageRef = {
-        sequenceNumber: 1,
-        timestamp: BigInt(123123)
+
+    const content: ContentMessage = {
+        body: JSON.stringify({ hello: "WORLD" })
     }
-    const msg: DataMessage = {
-        content: JSON.stringify({ hello: "WORLD" }),
-        senderId: PeerID.fromValue(peer2.peerId).toKey(),
-        messageRef,
-        streamPartId: STREAM_ID
-    }
+    const msg = createStreamMessage(
+        content,
+        STREAM_ID,
+        PeerID.fromValue(peer2.peerId).toKey()
+    )
+
     afterEach(async () => {
         await Promise.all([
             layer01.stop(),
@@ -104,28 +105,28 @@ describe('StreamrNode', () => {
 
         await node2.joinStream(STREAM_ID, peer1)
         await node2.joinStream(stream2, peer1)
-        // node1.subscribeToStream(STREAM_ID, peer1)
-        // node2.subscribeToStream(stream2, peer1)
+        node1.subscribeToStream(STREAM_ID, peer1)
+        node2.subscribeToStream(stream2, peer1)
 
-        // await Promise.all([
-        //     waitForCondition(() => node1.getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length === 1),
-        //     waitForCondition(() => node2.getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length === 1),
-        //     waitForCondition(() => node1.getStream(stream2)!.layer2.getTargetNeighborStringIds().length === 1),
-        //     waitForCondition(() => node2.getStream(stream2)!.layer2.getTargetNeighborStringIds().length === 1)
-        // ])
-        //
-        // const msg2: DataMessage = {
-        //     content: JSON.stringify({ hello: "WORLD" }),
-        //     senderId: PeerID.fromValue(peer1.peerId).toKey(),
-        //     messageRef,
-        //     streamPartId: stream2
-        // }
-        // await Promise.all([
-        //     waitForEvent(node1, NodeEvent.NEW_MESSAGE),
-        //     waitForEvent(node2, NodeEvent.NEW_MESSAGE),
-        //     node1.publishToStream(stream2, peer1, msg2),
-        //     node2.publishToStream(STREAM_ID, peer1, msg)
-        // ])
+        await Promise.all([
+            waitForCondition(() => node1.getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length === 1),
+            waitForCondition(() => node2.getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length === 1),
+            waitForCondition(() => node1.getStream(stream2)!.layer2.getTargetNeighborStringIds().length === 1),
+            waitForCondition(() => node2.getStream(stream2)!.layer2.getTargetNeighborStringIds().length === 1)
+        ])
+
+        const msg2 = createStreamMessage(
+            content,
+            stream2,
+            PeerID.fromValue(peer1.peerId).toKey()
+        )
+
+        await Promise.all([
+            waitForEvent(node1, NodeEvent.NEW_MESSAGE),
+            waitForEvent(node2, NodeEvent.NEW_MESSAGE),
+            node1.publishToStream(stream2, peer1, msg2),
+            node2.publishToStream(STREAM_ID, peer1, msg)
+        ])
     })
 
     it('leaving streams', async () => {

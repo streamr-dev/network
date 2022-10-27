@@ -6,7 +6,7 @@ import "google/protobuf/empty.proto";
 import "packages/dht/protos/DhtRpc.proto";
 
 service NetworkRpc {
-  rpc sendData (DataMessage) returns (google.protobuf.Empty);
+  rpc sendData (StreamMessage) returns (google.protobuf.Empty);
   rpc handshake (HandshakeRequest) returns (HandshakeResponse);
   rpc leaveNotice (LeaveNotice) returns (google.protobuf.Empty);
   rpc interleaveNotice (InterleaveNotice) returns (google.protobuf.Empty);
@@ -16,15 +16,57 @@ service NetworkRpc {
 message MessageRef {
   int64 timestamp = 1;
   int32 sequenceNumber = 2;
+  string messageChainId = 3;
+  string streamId = 4;
+  int32 streamPartition = 5;
+  string publisherId = 6;
 }
 
-message DataMessage {
-  string content = 1;
-  string senderId = 2;
-  string streamPartId = 3;
-  MessageRef messageRef = 4;
-  optional MessageRef previousMessageRef = 5;
-  optional string previousPeer = 6;
+message ContentMessage {
+  string body = 1;
+}
+
+enum StreamMessageType {
+  MESSAGE = 0;
+  GROUP_KEY_REQUEST = 1;
+  GROUP_KEY_RESPONSE = 2;
+}
+
+enum EncryptionType {
+  NONE = 0;
+  RSA = 1;
+  AES = 2;
+}
+
+message EncryptedGroupKey {
+  string groupKeyId = 1;
+  string encryptedGroupKeyHex = 2;
+  optional string serialized = 3;
+}
+
+message StreamMessage {
+  StreamMessageType messageType = 1;
+  optional EncryptionType encryptionType = 2;
+  bytes content = 3;
+  string signature = 4;
+  MessageRef messageRef = 5;
+  optional MessageRef previousMessageRef = 6;
+  optional string previousPeer = 7;
+  optional string groupKeyId = 8;
+  optional string newGroupKey = 9;
+}
+
+message GroupKeyRequest {
+  string requestId = 1;
+  string recipient = 2;
+  string rsaPublicKey = 3;
+  repeated string groupKeyIds = 4;
+}
+
+message GroupKeyResponse {
+    string requestId = 1;
+    string recipient = 2;
+    repeated EncryptedGroupKey encryptedGroupKeys = 3;
 }
 
 message Layer2Message {
