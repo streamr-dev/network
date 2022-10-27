@@ -1,4 +1,4 @@
-import { PeerDescriptor, PeerID } from '@streamr/dht'
+import { PeerDescriptor } from '@streamr/dht'
 import {
     RpcCommunicator,
     ProtoCallContext,

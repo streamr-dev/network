@@ -152,7 +152,6 @@ describe('random graph with real connections', () => {
                 && randomGraphNode5.getTargetNeighborStringIds().length >= 3
         }, 10000)
 
-
         const content: ContentMessage = {
             body: JSON.stringify({ hello: "WORLD" })
         }

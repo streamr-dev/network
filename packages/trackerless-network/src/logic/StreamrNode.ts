@@ -14,7 +14,7 @@ export enum Event {
 }
 
 export interface StreamrNode {
-    on(event: Event.NEW_MESSAGE, listener: (msg: StreamMessage, nodeId: string) => void): this
+    on(event: Event.NEW_MESSAGE, listener: (msg: StreamMessage) => void): this
 }
 
 const logger = new Logger(module)
@@ -64,10 +64,8 @@ export class StreamrNode extends EventEmitter {
         } else {
             this.joinStream(streamPartID, entryPointDescriptor)
                 .then(() => this.streams.get(streamPartID)?.layer2.on(
-                    RandomGraphEvent.MESSAGE,
-                    (message: StreamMessage) =>
-                        this.emit(Event.NEW_MESSAGE, message))
-                )
+                    RandomGraphEvent.MESSAGE, (message: StreamMessage) => this.emit(Event.NEW_MESSAGE, message)
+                ))
                 .catch((err) => {
                     logger.warn(`Failed to subscribe to stream ${streamPartID} with error: ${err}`)
                     this.subscribeToStream(streamPartID, entryPointDescriptor)
@@ -132,8 +130,12 @@ export class StreamrNode extends EventEmitter {
         await layer1.joinDht(entryPoint)
     }
 
-    getStream(streamPartID: string): StreamObject | undefined {
-        return this.streams.get(streamPartID)
+    getStream(streamPartId: string): StreamObject | undefined {
+        return this.streams.get(streamPartId)
+    }
+
+    hasStream(streamPartId: string): boolean {
+        return this.streams.has(streamPartId)
     }
 
     getPeerDescriptor(): PeerDescriptor {

@@ -1,7 +1,7 @@
 import { DhtNode, PeerDescriptor, PeerID, Simulator, SimulatorTransport, NodeType } from '@streamr/dht'
 import { waitForCondition } from 'streamr-test-utils'
 import { StreamrNode, Event as NodeEvent } from '../../src/logic/StreamrNode'
-import { ContentMessage, MessageRef } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { waitForEvent } from '@streamr/utils'
 import { createStreamMessage } from '../utils'
 

@@ -46,7 +46,7 @@ describe('Propagation', () => {
             await dht.start()
             await graph.start()
             return dht.joinDht(entryPointDescriptor).then(() => {
-                graph.on(Event.MESSAGE, () => {totalReceived += 1})
+                graph.on(Event.MESSAGE, () => { totalReceived += 1 })
                 dhtNodes.push(dht)
                 randomGraphNodes.push(graph)
             })

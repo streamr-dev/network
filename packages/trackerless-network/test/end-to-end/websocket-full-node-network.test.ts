@@ -97,7 +97,6 @@ describe('Full node network with WebSocket connections only', () => {
             streamrNode.on(StreamrNodeEvent.NEW_MESSAGE, () => numOfMessagesReceived += 1)
         })
 
-
         const content: ContentMessage = {
             body: JSON.stringify({ hello: "WORLD" })
         }

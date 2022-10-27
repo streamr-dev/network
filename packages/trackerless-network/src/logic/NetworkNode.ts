@@ -1,21 +1,18 @@
-import { StreamrNode } from './StreamrNode'
-import { StreamMessage } from 'streamr-client-protocol'
+import { StreamrNode, Event as NodeEvent } from './StreamrNode'
+import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
 import { PeerDescriptor } from '@streamr/dht'
+import { StreamMessageTranslator } from './protocol-integration/stream-message/StreamMessageTranslator'
 
 /*
 Convenience wrapper for building client-facing functionality. Used by client.
  */
 
 export class NetworkNode extends StreamrNode {
-    // constructor() {
-    //     super()
-    // }
 
     // TODO
     // setExtraMetadata(metadata: Record<string, unknown>): void {
     //     this.extraMetadata = metadata
     // }
-
 
     publish(streamMessage: StreamMessage, entrypointDescriptor: PeerDescriptor): void | never {
         const streamPartId = streamMessage.getStreamPartID()
@@ -23,8 +20,15 @@ export class NetworkNode extends StreamrNode {
         //     throw new Error(`Cannot publish content data to ${streamPartId} as proxy subscribe connections have been set`)
         // }
 
-        // const msg =
-        // this.publishToStream(streamPartId, entrypointDescriptor, streamMessage)
+        const msg = StreamMessageTranslator.toProtobuf(streamMessage)
+        this.publishToStream(streamPartId, entrypointDescriptor, msg)
+    }
+
+    subscribe(streamPartId: StreamPartID, entrypointDescriptor: PeerDescriptor): void {
+        // if (this.isProxiedStreamPart(streamPartId, ProxyDirection.PUBLISH)) {
+        //     throw new Error(`Cannot subscribe to ${streamPartId} as proxy publish connections have been set`)
+        // }
+        this.subscribeToStream(streamPartId, entrypointDescriptor)
     }
 
     // TODO:
@@ -37,23 +41,16 @@ export class NetworkNode extends StreamrNode {
     //     await this.removeProxyConnection(streamPartId, contactNodeId, direction)
     // }
 
-    // TODO
-    // addMessageListener<T>(cb: (msg: StreamMessage<T>) => void): void {
-    //     this.on(NodeEvent.UNSEEN_MESSAGE_RECEIVED, cb)
-    // }
+    addMessageListener<T>(cb: (msg: StreamMessage<T>) => void): void {
+        this.on(NodeEvent.NEW_MESSAGE, (msg) => {
+            const translated = StreamMessageTranslator.toClientProtocol<T>(msg)
+            return cb(translated)
+        })
+    }
 
-    // TODO
-    // removeMessageListener<T>(cb: (msg: StreamMessage<T>) => void): void {
-    //     this.off(NodeEvent.UNSEEN_MESSAGE_RECEIVED, cb)
-    // }
-
-    // TODO
-    // subscribe(streamPartId: StreamPartID): void {
-    //     if (this.isProxiedStreamPart(streamPartId, ProxyDirection.PUBLISH)) {
-    //         throw new Error(`Cannot subscribe to ${streamPartId} as proxy publish connections have been set`)
-    //     }
-    //     this.subscribeToStreamIfHaveNotYet(streamPartId)
-    // }
+    removeMessageListener<T>(cb: (msg: StreamMessage<T>) => void): void {
+        this.off(NodeEvent.NEW_MESSAGE, cb)
+    }
 
     // TODO
     // async subscribeAndWaitForJoin(streamPartId: StreamPartID, timeout?: number): Promise<number> {
@@ -74,10 +71,9 @@ export class NetworkNode extends StreamrNode {
     //     return numOfNeighbors
     // }
 
-    // TODO
-    // unsubscribe(streamPartId: StreamPartID): void {
-    //     this.unsubscribeFromStream(streamPartId)
-    // }
+    unsubscribe(streamPartId: StreamPartID): void {
+        this.unsubscribeFromStream(streamPartId)
+    }
 
     // TODO
     // getNeighborsForStreamPart(streamPartId: StreamPartID): ReadonlyArray<NodeId> {
@@ -86,10 +82,9 @@ export class NetworkNode extends StreamrNode {
     //         : []
     // }
 
-    // TODO
-    // hasStreamPart(streamPartId: StreamPartID): boolean {
-    //     return this.streamPartManager.isSetUp(streamPartId)
-    // }
+    hasStreamPart(streamPartId: StreamPartID): boolean {
+        return this.hasStream(streamPartId)
+    }
 
     // TODO
     // hasProxyConnection(streamPartId: StreamPartID, contactNodeId: NodeId, direction: ProxyDirection): boolean {
