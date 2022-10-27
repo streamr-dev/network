@@ -103,33 +103,40 @@ export class Subscriber {
         return sub
     }
 
-    private async remove(sub: Subscription<any>): Promise<void> {
+    private async remove(sub: Subscription<any>): Promise<Subscription | undefined> {
         if (!sub) { return }
         const subSession = this.subSessions.get(sub.streamPartId)
         if (!subSession) {
             return
         }
-
         await subSession.remove(sub)
+        return sub
     }
 
-    async unsubscribe(streamDefinitionOrSubscription?: StreamDefinition | Subscription): Promise<unknown> {
+    async unsubscribe(streamDefinitionOrSubscription?: StreamDefinition | Subscription): Promise<void> {
+        let subs
         if (streamDefinitionOrSubscription instanceof Subscription) {
-            return this.remove(streamDefinitionOrSubscription)
+            const sub = await this.remove(streamDefinitionOrSubscription)
+            subs = (sub !== undefined) ? [sub] : []
+        } else {
+            subs = await this.removeAll(streamDefinitionOrSubscription)
         }
-        return this.removeAll(streamDefinitionOrSubscription)
+        for (const sub of subs) {
+            sub.eventEmitter.emit('unsubscribe')
+        }
     }
 
     /**
      * Remove all subscriptions, optionally only those matching options.
      */
-    private async removeAll(streamDefinition?: StreamDefinition): Promise<unknown> {
+    private async removeAll(streamDefinition?: StreamDefinition): Promise<Subscription[]> {
         const subs = !streamDefinition
             ? this.getAllSubscriptions()
             : await this.getSubscriptions(streamDefinition)
-        return allSettledValues(subs.map((sub) => (
+        await allSettledValues(subs.map((sub) => (
             this.remove(sub)
         )))
+        return subs
     }
 
     /**

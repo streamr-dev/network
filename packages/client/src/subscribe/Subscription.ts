@@ -13,6 +13,8 @@ export type MessageListener<T, R = unknown> = (content: T, streamMessage: Stream
 export interface SubscriptionEvents {
     error: (err: Error) => void
     resendComplete: () => void
+    /* @internal */
+    unsubscribe: () => void
 }
 
 /**
@@ -21,7 +23,8 @@ export interface SubscriptionEvents {
 export class Subscription<T = unknown> extends PushPipeline<StreamMessage<T>, StreamMessage<T>> {
     private readonly logger: Logger
     readonly streamPartId: StreamPartID
-    protected eventEmitter: EventEmitter<SubscriptionEvents>
+    /** @internal */
+    eventEmitter: EventEmitter<SubscriptionEvents>
 
     /** @internal */
     constructor(streamPartId: StreamPartID, loggerFactory: LoggerFactory) {
@@ -41,6 +44,7 @@ export class Subscription<T = unknown> extends PushPipeline<StreamMessage<T>, St
     async unsubscribe(): Promise<void> {
         this.end()
         await this.return()
+        this.eventEmitter.emit('unsubscribe')
     }
 
     /**
