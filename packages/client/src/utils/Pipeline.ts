@@ -81,6 +81,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
     /** @internal */
     public isCleaningUp = false
     private definition: PipelineDefinition<InType, OutType>
+    onIterationCompleted = Signal.once()
 
     /** @internal */
     constructor(public source: AsyncGenerator<InType>, definition?: PipelineDefinition<InType, OutType>) {
@@ -262,6 +263,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
                 await this.onMessage.trigger(msg)
                 yield msg
             }
+            await this.onIterationCompleted.trigger()
             this.isCleaningUp = true
         } catch (err) {
             this.isCleaningUp = true

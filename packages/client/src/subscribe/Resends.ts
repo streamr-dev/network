@@ -103,10 +103,16 @@ export class Resends {
     ): Promise<Subscription<T>> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         const sub = await this.resendMessages<T>(streamPartId, options)
+        sub.onIterationCompleted.listen(()=> {
+            sub.eventEmitter.emit('resendComplete')
+        })
         if (!internalSubscription) {
             this.addSubscription(sub)
             sub.on('unsubscribe', () => {
                 this.removeSubscriptions([sub])
+            })
+            sub.onIterationCompleted.listen(()=> {
+                return sub.unsubscribe()
             })
         }
         return sub
