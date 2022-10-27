@@ -180,7 +180,7 @@ export class Resends {
         return subscription
     }
 
-    private async last<T>(streamPartId: StreamPartID, { count }: { count: number }): Promise<Subscription<T>> {
+    async last<T>(streamPartId: StreamPartID, { count }: { count: number }): Promise<Subscription<T>> {
         if (count <= 0) {
             const emptyStream = new Subscription<T>(streamPartId, this.loggerFactory)
             emptyStream.endWrite()
@@ -251,9 +251,6 @@ export class Resends {
             throw new StreamrClientError('waitForStorage requires a StreamMessage', 'INVALID_ARGUMENT')
         }
 
-        const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamMessage.getStreamPartID())
-        const streamDefinition = { streamId, partition }
-
         const start = Date.now()
         let last: StreamMessage[] | undefined
         let found = false
@@ -269,7 +266,7 @@ export class Resends {
                 throw err
             }
 
-            const resendStream = await this.resend(streamDefinition, { last: count })
+            const resendStream = await this.last(streamMessage.getStreamPartID(), { count })
             last = await resendStream.collect()
             for (const lastMsg of last) {
                 if (messageMatchFn(streamMessage, lastMsg)) {

@@ -154,10 +154,10 @@ class StreamrStream implements StreamMetadata {
 
     async detectFields(): Promise<void> {
         // Get last message of the stream to be used for field detecting
-        const sub = await this._resends.resend<any>(
-            this.id,
+        const sub = await this._resends.last<any>(
+            toStreamPartID(this.id, DEFAULT_PARTITION),
             {
-                last: 1,
+                count: 1
             }
         )
 
