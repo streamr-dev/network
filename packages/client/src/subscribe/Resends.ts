@@ -2,6 +2,7 @@
  * Public Resends API
  */
 import { inject, Lifecycle, scoped, delay } from 'tsyringe'
+import { without } from 'lodash'
 import { MessageRef, StreamPartID, StreamPartIDUtils, StreamMessage } from 'streamr-client-protocol'
 import { createSubscribePipeline } from './subscribePipeline'
 import { StorageNodeRegistry } from '../registry/StorageNodeRegistry'
@@ -21,6 +22,7 @@ import { LoggerFactory } from '../utils/LoggerFactory'
 import { counterId } from '../utils/utils'
 import { StreamrClientError } from '../StreamrClientError'
 import { Subscription } from './Subscription'
+import { collect, filter, fromArray } from '../utils/GeneratorUtils'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 
@@ -63,6 +65,7 @@ function isResendRange<T extends ResendRangeOptions>(options: any): options is T
 
 @scoped(Lifecycle.ContainerScoped)
 export class Resends {
+    private subscriptions: Subscription<any>[] = []
     private readonly groupKeyStore: GroupKeyStore
     private readonly subscriberKeyExchange: SubscriberKeyExchange
     private readonly streamrClientEventEmitter: StreamrClientEventEmitter
@@ -95,10 +98,17 @@ export class Resends {
 
     async resend<T>(
         streamDefinition: StreamDefinition,
-        options: ResendOptions
+        options: ResendOptions,
+        internalSubscription = false
     ): Promise<Subscription<T>> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         const sub = await this.resendMessages<T>(streamPartId, options)
+        if (!internalSubscription) {
+            this.addSubscription(sub)
+            sub.on('unsubscribe', () => {
+                this.removeSubscriptions([sub])
+            })
+        }
         return sub
     }
 
@@ -284,6 +294,36 @@ export class Resends {
             await wait(interval)
         }
         /* eslint-enable no-await-in-loop */
+    }
+
+    async unsubscribe(streamDefinitionOrSubscription?: StreamDefinition | Subscription): Promise<void> {
+        const subs = await this.getSubscriptions(streamDefinitionOrSubscription)
+        this.removeSubscriptions(subs)
+        for (const sub of subs) {
+            sub.eventEmitter.emit('unsubscribe')
+        }
+    }
+
+    async getSubscriptions(streamDefinitionOrSubscription?: StreamDefinition | Subscription): Promise<Subscription[]> {
+        if (streamDefinitionOrSubscription === undefined) {
+            return this.subscriptions
+        } else if (streamDefinitionOrSubscription instanceof Subscription) {
+            return this.subscriptions.includes(streamDefinitionOrSubscription)
+                ? [streamDefinitionOrSubscription]
+                : []
+        } else {
+            return await collect(filter(fromArray(this.subscriptions), (sub) =>
+                this.streamIdBuilder.match(streamDefinitionOrSubscription, sub.streamPartId)
+            ))
+        }
+    }
+
+    private addSubscription(sub: Subscription<any>): void {
+        this.subscriptions.push(sub)
+    }
+
+    private removeSubscriptions(sub: Subscription<any>[]): void {
+        this.subscriptions = without(this.subscriptions, ...sub)
     }
 
     private createUrl(baseUrl: string, endpointSuffix: string, streamPartId: StreamPartID, query: QueryDict = {}): string {

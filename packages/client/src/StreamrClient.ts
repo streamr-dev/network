@@ -160,16 +160,19 @@ export class StreamrClient {
     /**
      * @category Important
      */
-    unsubscribe(streamDefinitionOrSubscription?: StreamDefinition | Subscription): Promise<unknown> {
-        return this.subscriber.unsubscribe(streamDefinitionOrSubscription)
+    async unsubscribe(streamDefinitionOrSubscription?: StreamDefinition | Subscription): Promise<void> {
+        await this.subscriber.unsubscribe(streamDefinitionOrSubscription)
+        await this.resends.unsubscribe(streamDefinitionOrSubscription)
     }
 
     /**
      * Get subscriptions matching streamId or streamId + streamPartition
      * @category Important
      */
-    getSubscriptions(streamDefinition?: StreamDefinition): Promise<Subscription<unknown>[]> {
-        return this.subscriber.getSubscriptions(streamDefinition)
+    async getSubscriptions(streamDefinition?: StreamDefinition): Promise<Subscription<unknown>[]> {
+        const realtime = await this.subscriber.getSubscriptions(streamDefinition)
+        const resend = await this.resends.getSubscriptions(streamDefinition)
+        return realtime.concat(resend)
     }
 
     // --------------------------------------------------------------------------------------------
@@ -186,7 +189,6 @@ export class StreamrClient {
         onMessage?: MessageListener<T>
     ): Promise<Subscription<T>> {
         const sub = await this.resends.resend<T>(streamDefinition, options)
-        await this.subscriber.addSubscription<T>(sub)
         if (onMessage) {
             sub.useLegacyOnMessageHandler(onMessage)
         }

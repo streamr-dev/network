@@ -43,7 +43,7 @@ export class ResendSubscription<T> extends Subscription<T> {
         const resentMsgs = await this.resends.resend<T>({
             id,
             partition,
-        }, this.resendOptions)
+        }, this.resendOptions, true)
         this.onBeforeFinally.listen(async () => {
             resentMsgs.end()
             await resentMsgs.return()
