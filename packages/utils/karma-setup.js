@@ -13,7 +13,7 @@ import { ModernFakeTimers } from '@jest/fake-timers'
 // importing jest-extended directly relies on global.expect to be set
 // importing the matchers and calling expect.extend manually
 // prevents tests failing due to global.expect not being set
-import jestExtendedMatchers from 'jest-extended/dist/matchers'
+import * as jestExtendedMatchers from 'jest-extended'
 
 let jest = jestMock
 const timers = new ModernFakeTimers({global: window, config: null })
