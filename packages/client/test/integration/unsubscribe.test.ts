@@ -28,33 +28,16 @@ describe('unsubscribe', () => {
 
     describe('Realtime subscription', () => {
 
-        describe('StreamrClient#unsubscribe', () => {
+        it('StreamrClient#unsubscribe', async () => {
+            const sub = await client.subscribe(stream.id, () => {})
+            const onUnsubscribe = jest.fn()
+            sub.on('unsubscribe', onUnsubscribe)
+            expect(await client.getSubscriptions()).toHaveLength(1)
 
-            it('unsubscribe after subscribed', async () => {
-                const sub = await client.subscribe(stream.id, () => {})
-                const onUnsubscribe = jest.fn()
-                sub.on('unsubscribe', onUnsubscribe)
-                expect(await client.getSubscriptions()).toHaveLength(1)
+            await client.unsubscribe(sub)
 
-                await client.unsubscribe(sub)
-
-                expect(await client.getSubscriptions()).toHaveLength(0)
-                expect(onUnsubscribe).toBeCalledTimes(1)
-            })
-
-            it('unsubscribe before subscribed', async () => {
-                const subTask = client.subscribe(stream.id, () => {})
-                expect(await client.getSubscriptions()).toHaveLength(0) // does not have subscription yet
-
-                const unsubTask = client.unsubscribe(stream.id)
-
-                expect(await client.getSubscriptions()).toHaveLength(0) // lost subscription immediately
-                await unsubTask
-                const sub = await subTask
-                const onUnsubscribe = jest.fn()
-                sub.on('unsubscribe', onUnsubscribe)
-                expect(onUnsubscribe).toBeCalledTimes(1)
-            })
+            expect(await client.getSubscriptions()).toHaveLength(0)
+            expect(onUnsubscribe).toBeCalledTimes(1)
         })
 
         it('Subscription#unsubscribe', async () => {
