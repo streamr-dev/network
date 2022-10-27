@@ -29,7 +29,7 @@ export class StreamMessageTranslator {
         let content: Uint8Array
         let contentType: StreamMessageType
         if (msg.messageType === OldStreamMessageType.MESSAGE) {
-            content = ContentMessage.toBinary(ContentMessageTranslator.toProtobuf(msg.getContent()))
+            content = ContentMessage.toBinary(ContentMessageTranslator.toProtobuf(msg.serializedContent))
             contentType = StreamMessageType.MESSAGE
 
         } else if (msg.messageType === OldStreamMessageType.GROUP_KEY_REQUEST) {
