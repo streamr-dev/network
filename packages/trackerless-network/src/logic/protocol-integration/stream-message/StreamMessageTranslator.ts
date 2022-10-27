@@ -87,7 +87,7 @@ export class StreamMessageTranslator {
         return translated
     }
 
-    static toClientProtocol<T>(msg: StreamMessage): OldStreamMessage {
+    static toClientProtocol<T>(msg: StreamMessage): OldStreamMessage<T> {
         let content: string
         let contentType: OldStreamMessageType
         if (msg.messageType === StreamMessageType.MESSAGE) {

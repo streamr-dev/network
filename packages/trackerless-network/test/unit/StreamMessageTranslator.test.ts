@@ -47,7 +47,7 @@ describe('StreamMessageTranslator', () => {
         expect(translated.groupKeyId).toEqual(undefined)
         expect(translated.signature).toEqual('signature')
         expect(JSON.parse(ContentMessage.fromBinary(translated.content).body)).toEqual({ hello: "WORLD" })
-        
+
     })
 
     it('translates protobuf to old protocol', () => {
