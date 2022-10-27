@@ -4,7 +4,7 @@ import { Storage } from '../../../../src/plugins/storage/Storage'
 import { startCassandraStorage } from '../../../../src/plugins/storage/Storage'
 import { getTestName, STREAMR_DOCKER_DEV_HOST } from '../../../utils'
 import { buildMsg } from './Storage.test'
-import { toEthereumAddress } from '@streamr/utils'
+import { Logger, toEthereumAddress } from '@streamr/utils'
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'
@@ -13,6 +13,28 @@ const MAX_BUCKET_MESSAGE_COUNT = 20
 
 const NUM_MESSAGES = 1000
 const MESSAGE_SIZE = 1e3 // 1k
+
+const logger = new Logger(module)
+
+function retryFlakyTestNET918(
+    name: string,
+    fn?: ((cb: (...args: any[]) => any) => void) | (() => Promise<unknown>),
+    timeout?: number
+): void {
+    for (let i = 0; i < 4; ++i) {
+        try {
+            it(name, fn, timeout)
+            break
+        } catch (e) {
+            if (e instanceof RangeError && e.message.includes('The value of "offset" is out of range')) {
+                logger.warn('Flaky test run (NET-918) detected!')
+            } else {
+                throw e
+            }
+        }
+    }
+    it(name, fn, timeout)
+}
 
 describe('Storage: lots of data', () => {
     let storage: Storage
@@ -75,7 +97,7 @@ describe('Storage: lots of data', () => {
         expect(results.length).toEqual(NUM_MESSAGES)
     })
 
-    it('can requestFrom', async () => {
+    retryFlakyTestNET918('can requestFrom', async () => {
         const streamingResults = storage.requestFrom(streamId, 0, 1000, 0, undefined)
         const results = await toArray(streamingResults)
         expect(results.length).toEqual(NUM_MESSAGES)
