@@ -35,11 +35,7 @@ const fallbacks = (env) => {
 
 const aliases = (env) => {
     const aliases = {
-        'process': 'process/browser',
-        [path.resolve(__dirname, '../dht/src/connection/WebRTC/NodeWebRtcConnection.ts')]:
-            path.resolve(__dirname, '../dht/src/connection/WebRTC/BrowserWebRtcConnection.ts'),
-        '@streamr/dht': path.resolve('../dht/src/exports.ts'),
-        '@streamr/proto-rpc': path.resolve('../proto-rpc/src/exports.ts'),
+        'process': 'process/browser'
     }
     return aliases
 }
@@ -89,7 +85,7 @@ module.exports = (env, argv) => {
             sourceMapFilename: `[name].[contenthash].js.map`,
             chunkFilename: '[id].[contenthash].js',
             path: path.resolve(__dirname, 'dist'),
-            library: 'TrackerlessNetwork',
+            library: 'utils',
             libraryTarget: 'umd2',
             umdNamedDefine: true,
         },

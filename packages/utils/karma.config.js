@@ -14,18 +14,11 @@ module.exports = function (config) {
         reporters: ['spec'],
         files: [
             './karma-setup.js',
-            './test/end-to-end/**/!(webrtc*|websocket*)',
-            './test/integration/**',
-            './test/unit/**',
-           {
-                pattern: '**/*.js.map',
-                included: false
-            }
-           
+            './test/*.ts'
         ],
         preprocessors: {
             './karma-setup.js': ['webpack'],
-            './test/**/*.ts': ['webpack','sourcemap'],
+            './test/*.ts': ['webpack', 'sourcemap'],
         },
         customLaunchers: {
             CustomElectron: {
