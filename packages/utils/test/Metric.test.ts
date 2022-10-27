@@ -1,6 +1,49 @@
-import { waitForCondition } from 'streamr-test-utils'
 import { wait } from '../src/wait'
 import { AverageMetric, CountMetric, LevelMetric, MetricsContext, MetricsReport, RateMetric } from '../src/Metric'
+
+// TODO import this from streamr-test-utils if possible
+// in browser tests we get error: "Can't resolve '@streamr/utils' in '/Users/teogeb/workspace/streamr/network-monorepo/packages/test-utils/dist/src'"
+const waitForCondition = async (
+    conditionFn: () => (boolean | Promise<boolean>),
+    timeout = 5000,
+    retryInterval = 100,
+    onTimeoutContext?: () => string
+): Promise<void> => {
+    // create error beforehand to capture more usable stack
+    const err = new Error(`waitForCondition: timed out before "${conditionFn.toString()}" became true`)
+    return new Promise((resolve, reject) => {
+        let poller: NodeJS.Timeout | undefined = undefined
+        const clearPoller = () => {
+            if (poller !== undefined) {
+                clearInterval(poller)
+            }
+        }
+        const maxTime = Date.now() + timeout
+        const poll = async () => {
+            if (Date.now() < maxTime) {
+                let result
+                try {
+                    result = await conditionFn()
+                } catch (err) {
+                    clearPoller()
+                    reject(err)
+                }
+                if (result) {
+                    clearPoller()
+                    resolve()
+                }
+            } else {
+                clearPoller()
+                if (onTimeoutContext) {
+                    err.message += `\n${onTimeoutContext()}`
+                }
+                reject(err)
+            }
+        }
+        setTimeout(poll, 0)
+        poller = setInterval(poll, retryInterval)
+    })
+}
 
 const REPORT_INTERVAL = 100
 const ONE_SECOND = 1000
