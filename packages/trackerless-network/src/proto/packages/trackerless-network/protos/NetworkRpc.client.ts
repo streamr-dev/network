@@ -11,7 +11,7 @@ import type { HandshakeResponse } from "./NetworkRpc";
 import type { HandshakeRequest } from "./NetworkRpc";
 import { stackIntercept } from "@protobuf-ts/runtime-rpc";
 import type { Empty } from "../../../google/protobuf/empty";
-import type { DataMessage } from "./NetworkRpc";
+import type { StreamMessage } from "./NetworkRpc";
 import type { UnaryCall } from "@protobuf-ts/runtime-rpc";
 import type { RpcOptions } from "@protobuf-ts/runtime-rpc";
 /**
@@ -19,9 +19,9 @@ import type { RpcOptions } from "@protobuf-ts/runtime-rpc";
  */
 export interface INetworkRpcClient {
     /**
-     * @generated from protobuf rpc: sendData(DataMessage) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: sendData(StreamMessage) returns (google.protobuf.Empty);
      */
-    sendData(input: DataMessage, options?: RpcOptions): UnaryCall<DataMessage, Empty>;
+    sendData(input: StreamMessage, options?: RpcOptions): UnaryCall<StreamMessage, Empty>;
     /**
      * @generated from protobuf rpc: handshake(HandshakeRequest) returns (HandshakeResponse);
      */
@@ -49,11 +49,11 @@ export class NetworkRpcClient implements INetworkRpcClient, ServiceInfo {
     constructor(private readonly _transport: RpcTransport) {
     }
     /**
-     * @generated from protobuf rpc: sendData(DataMessage) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: sendData(StreamMessage) returns (google.protobuf.Empty);
      */
-    sendData(input: DataMessage, options?: RpcOptions): UnaryCall<DataMessage, Empty> {
+    sendData(input: StreamMessage, options?: RpcOptions): UnaryCall<StreamMessage, Empty> {
         const method = this.methods[0], opt = this._transport.mergeOptions(options);
-        return stackIntercept<DataMessage, Empty>("unary", this._transport, method, opt, input);
+        return stackIntercept<StreamMessage, Empty>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: handshake(HandshakeRequest) returns (HandshakeResponse);

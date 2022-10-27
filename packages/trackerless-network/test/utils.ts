@@ -1,5 +1,11 @@
-import { Simulator, PeerDescriptor, DhtNode, ConnectionLocker, SimulatorTransport } from '@streamr/dht'
+import { ConnectionLocker, DhtNode, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
 import { RandomGraphNode } from '../src/logic/RandomGraphNode'
+import {
+    ContentMessage,
+    MessageRef,
+    StreamMessage,
+    StreamMessageType
+} from '../src/proto/packages/trackerless-network/protos/NetworkRpc'
 
 export const mockConnectionLocker: ConnectionLocker = {
     lockConnection: () => {},
@@ -30,4 +36,24 @@ export const createMockRandomGraphNodeAndDhtNode = (
 
     return [dhtNode, randomGraphNode]
 
+}
+
+export const createStreamMessage = (content: ContentMessage, streamId: string, publisherId: string): StreamMessage => {
+    const messageRef: MessageRef = {
+        streamId,
+        messageChainId: 'messageChain0',
+        streamPartition: 0,
+        sequenceNumber: 0,
+        timestamp: BigInt(Date.now()),
+        publisherId
+
+    }
+    const msg: StreamMessage = {
+        messageType: StreamMessageType.MESSAGE,
+        content: ContentMessage.toBinary(content),
+        messageRef,
+        signature: 'signature'
+    }
+
+    return msg
 }

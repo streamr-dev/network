@@ -6,10 +6,14 @@ import {
     toProtoRpcClient
 } from '@streamr/proto-rpc'
 import { NetworkRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { DataMessage, MessageRef } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import {
+    StreamMessage,
+    ContentMessage
+} from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { waitForCondition } from 'streamr-test-utils'
 import { Empty } from '../../src/proto/google/protobuf/empty'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
+import { createStreamMessage } from '../utils'
 
 describe('Network RPC', () => {
     const peer2: PeerDescriptor = {
@@ -30,9 +34,9 @@ describe('Network RPC', () => {
         })
         client = toProtoRpcClient(new NetworkRpcClient(rpcCommunicator1.getRpcClientTransport()))
         rpcCommunicator2.registerRpcNotification(
-            DataMessage,
+            StreamMessage,
             'sendData',
-            async (_msg: DataMessage, _context: ServerCallContext): Promise<Empty> => {
+            async (_msg: StreamMessage, _context: ServerCallContext): Promise<Empty> => {
                 recvCounter += 1
                 return Empty
             }
@@ -45,17 +49,15 @@ describe('Network RPC', () => {
     })
 
     it('sends Data', async () => {
-        const messageRef: MessageRef = {
-            sequenceNumber: 0,
-            timestamp: BigInt(0)
+        const content: ContentMessage = {
+            body: JSON.stringify({ hello: "WORLD" })
         }
-        const data: DataMessage = {
-            content: 'data',
-            senderId: 'peer1',
-            messageRef,
-            streamPartId: 'testStream'
-        }
-        await client.sendData(data,
+        const msg = createStreamMessage(
+            content,
+            'testStream',
+            'peer1'
+        )
+        await client.sendData(msg,
             { targetDescriptor: peer2, notification: 'notification' }
         )
         await waitForCondition(() => recvCounter === 1)

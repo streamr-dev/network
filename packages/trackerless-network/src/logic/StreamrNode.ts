@@ -1,6 +1,6 @@
 import { RandomGraphNode, Event as RandomGraphEvent } from './RandomGraphNode'
 import { PeerDescriptor, ConnectionLocker, DhtNode, ITransport } from '@streamr/dht'
-import { DataMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
+import { StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { EventEmitter } from 'events'
 import { Logger } from '@streamr/utils'
 
@@ -14,7 +14,7 @@ export enum Event {
 }
 
 export interface StreamrNode {
-    on(event: Event.NEW_MESSAGE, listener: (msg: DataMessage, nodeId: string) => void): this
+    on(event: Event.NEW_MESSAGE, listener: (msg: StreamMessage) => void): this
 }
 
 const logger = new Logger(module)
@@ -59,15 +59,13 @@ export class StreamrNode extends EventEmitter {
         if (this.streams.has(streamPartID)) {
             this.streams.get(streamPartID)!.layer2.on(
                 RandomGraphEvent.MESSAGE,
-                (message: DataMessage) =>
-                    this.emit(Event.NEW_MESSAGE, message, message.senderId))
+                (message: StreamMessage) =>
+                    this.emit(Event.NEW_MESSAGE, message))
         } else {
             this.joinStream(streamPartID, entryPointDescriptor)
                 .then(() => this.streams.get(streamPartID)?.layer2.on(
-                    RandomGraphEvent.MESSAGE,
-                    (message: DataMessage) =>
-                        this.emit(Event.NEW_MESSAGE, message, message.senderId))
-                )
+                    RandomGraphEvent.MESSAGE, (message: StreamMessage) => this.emit(Event.NEW_MESSAGE, message)
+                ))
                 .catch((err) => {
                     logger.warn(`Failed to subscribe to stream ${streamPartID} with error: ${err}`)
                     this.subscribeToStream(streamPartID, entryPointDescriptor)
@@ -75,7 +73,7 @@ export class StreamrNode extends EventEmitter {
         }
     }
 
-    publishToStream(streamPartID: string, entryPointDescriptor: PeerDescriptor, msg: DataMessage): void {
+    publishToStream(streamPartID: string, entryPointDescriptor: PeerDescriptor, msg: StreamMessage): void {
         if (this.streams.has(streamPartID)) {
             this.streams.get(streamPartID)!.layer2.broadcast(msg)
         } else {
@@ -132,8 +130,12 @@ export class StreamrNode extends EventEmitter {
         await layer1.joinDht(entryPoint)
     }
 
-    getStream(streamPartID: string): StreamObject | undefined {
-        return this.streams.get(streamPartID)
+    getStream(streamPartId: string): StreamObject | undefined {
+        return this.streams.get(streamPartId)
+    }
+
+    hasStream(streamPartId: string): boolean {
+        return this.streams.has(streamPartId)
     }
 
     getPeerDescriptor(): PeerDescriptor {

@@ -1,7 +1,7 @@
 import { INetworkRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { PeerDescriptor, UUID, PeerID, DhtRpcOptions } from '@streamr/dht'
 import {
-    DataMessage,
+    StreamMessage,
     HandshakeRequest,
     InterleaveNotice,
     LeaveNotice,
@@ -70,14 +70,14 @@ export class RemoteRandomGraphNode {
         }
     }
 
-    async sendData(ownPeerDescriptor: PeerDescriptor, dataMessage: DataMessage): Promise<void> {
+    async sendData(ownPeerDescriptor: PeerDescriptor, msg: StreamMessage): Promise<void> {
         const options: DhtRpcOptions = {
             sourceDescriptor: ownPeerDescriptor as PeerDescriptor,
             targetDescriptor: this.remotePeerDescriptor as PeerDescriptor,
             notification: true
         }
         try {
-            this.client.sendData(dataMessage, options)
+            this.client.sendData(msg, options)
         } catch (err: any) {
             logger.warn(err)
         }
