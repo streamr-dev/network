@@ -100,7 +100,7 @@ describe('Resends2', () => {
                     expect(receivedMsgs).toEqual([])
                 })
 
-                sub.once('resendComplete', onResent)
+                sub.on('resendComplete', onResent)
                 const publishedStream2 = await publishTestMessages(3)
 
                 const receivedMsgs: any[] = []
@@ -135,7 +135,7 @@ describe('Resends2', () => {
                 const mockFn = jest.spyOn(sub, 'getResent') as any
                 const err = new Error('expected')
                 mockFn.mockRejectedValueOnce(err)
-                sub.once('resendComplete', onResent)
+                sub.on('resendComplete', onResent)
 
                 await publishTestMessages(3)
                 await sub.collect(3)
@@ -158,7 +158,7 @@ describe('Resends2', () => {
                 const mockFn = jest.spyOn(sub, 'getResent') as any
                 const err = new Error('expected')
                 mockFn.mockRejectedValueOnce(err)
-                sub.once('resendComplete', onResent)
+                sub.on('resendComplete', onResent)
                 const onSubError = jest.fn()
                 sub.on('error', onSubError) // suppress
 
@@ -195,7 +195,7 @@ describe('Resends2', () => {
                 const onResent = jest.fn(() => {
                     expect(receivedMsgs).toEqual([])
                 })
-                sub.once('resendComplete', onResent)
+                sub.on('resendComplete', onResent)
 
                 for await (const msg of sub) {
                     receivedMsgs.push(msg)
@@ -359,7 +359,7 @@ describe('Resends2', () => {
                 })
                 expect(await client.getSubscriptions(stream.id)).toHaveLength(1)
                 const onResent = jest.fn()
-                sub.once('resendComplete', onResent)
+                sub.on('resendComplete', onResent)
                 const REALTIME_MESSAGES = 2
                 setImmediate(async () => {
                     // wrapped with setImmediate so that the request to storage node is fetched
@@ -399,7 +399,7 @@ describe('Resends2', () => {
                     expect(receivedMsgs).toEqual(publishedBefore)
                 })
 
-                sub.once('resendComplete', onResent)
+                sub.on('resendComplete', onResent)
 
                 for await (const msg of sub) {
                     receivedMsgs.push(msg)
