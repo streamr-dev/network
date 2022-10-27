@@ -21,19 +21,22 @@ function retryFlakyTestNET918(
     fn?: ((cb: (...args: any[]) => any) => void) | (() => Promise<unknown>),
     timeout?: number
 ): void {
-    for (let i = 0; i < 4; ++i) {
+    const MAX_RUNS = 5
+    for (let i = 1; i <= MAX_RUNS; ++i) {
         try {
             it(name, fn, timeout)
             break
         } catch (e) {
             if (e instanceof RangeError && e.message.includes('The value of "offset" is out of range')) {
-                logger.warn('Flaky test run (NET-918) detected!')
+                logger.warn('Flaky test run (NET-918) detected! %d/%d', i, MAX_RUNS)
+                if (i === MAX_RUNS) {
+                    throw e
+                }
             } else {
                 throw e
             }
         }
     }
-    it(name, fn, timeout)
 }
 
 describe('Storage: lots of data', () => {
