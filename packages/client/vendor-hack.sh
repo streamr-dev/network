@@ -8,3 +8,4 @@ SRCDIR=`node -p "path.dirname(require.resolve('quick-lru'))"`
 mkdir -p vendor/quick-lru
 cp -n $SRCDIR/index.d.ts vendor/quick-lru
 cp -n $SRCDIR/index.js vendor/quick-lru
+true
