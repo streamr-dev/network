@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-import pkg from '../package.json'
 import { createCommand } from '../src/command'
 import { getClientConfig } from '../src/client'
 import snapshot from '@snapshot-labs/snapshot.js'
