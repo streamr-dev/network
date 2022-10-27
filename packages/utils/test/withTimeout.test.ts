@@ -1,7 +1,7 @@
 import { TimeoutError, withTimeout } from '../src/withTimeout'
 import { AbortError } from '../src/asAbortable'
 
-describe(withTimeout, () => {
+describe('withTimeout', () => {
     it('resolves if given promise resolves before timeout', () => {
         return expect(withTimeout(new Promise((resolve) => setTimeout(() => resolve(123), 10)), 20))
             .resolves.toEqual(123)
