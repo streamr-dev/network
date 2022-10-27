@@ -67,9 +67,6 @@ describe('sequential resend subscribe', () => {
                 }
             })
 
-            const onResent = jest.fn()
-            sub.once('resendComplete', onResent)
-
             const expectedMessageCount = published.length + 1 // the realtime message which we publish next
             setImmediate(async () => {
                 const message = Msg()
