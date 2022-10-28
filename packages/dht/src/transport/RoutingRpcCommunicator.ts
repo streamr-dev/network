@@ -2,6 +2,9 @@ import { Message, MessageType, PeerDescriptor } from "../proto/DhtRpc"
 import { v4 } from "uuid"
 import { RpcCommunicator, RpcCommunicatorConfig } from "@streamr/proto-rpc"
 import { DhtCallContext } from "../rpc-protocol/DhtCallContext"
+import { Logger } from "@streamr/utils"
+
+const logger = new Logger(module)
 
 export class RoutingRpcCommunicator extends RpcCommunicator {
 
@@ -25,7 +28,7 @@ export class RoutingRpcCommunicator extends RpcCommunicator {
             }
 
             this.sendFn(message).catch((_e) => {
-                console.log('jaa');
+                logger.info('jaa')
             })
         })
     }

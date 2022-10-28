@@ -185,9 +185,9 @@ export class ManagedConnection extends EventEmitter<Events> {
             logger.trace('adding data to outputBuffer objectId: ' + this.objectId)
             this.outputBuffer.push(data)
             
-            let result = await raceEvents3<Events>(this, ['handshakeCompleted', 'disconnected'])
+            const result = await raceEvents3<Events>(this, ['handshakeCompleted', 'disconnected'])
             if (result.winnerName == 'disconnected') {
-                throw('disconnected')
+                throw 'disconnected'
             }
         }
     }

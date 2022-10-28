@@ -9,7 +9,6 @@ import { PeerID } from '../../src/helpers/PeerID'
 import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { v4 } from 'uuid'
 import { UUID } from '../../src/helpers/UUID'
-import { wait } from '@streamr/utils'
 
 describe('Route Message With Mock Connections', () => {
     let entryPoint: DhtNode
