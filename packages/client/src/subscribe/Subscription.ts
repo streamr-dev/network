@@ -7,6 +7,7 @@ import { LoggerFactory } from '../utils/LoggerFactory'
 import { Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { PushPipeline } from '../utils/PushPipeline'
+import { pOnce } from '../utils/promises'
 
 export type MessageListener<T, R = unknown> = (content: T, streamMessage: StreamMessage<T>) => R | Promise<R>
 
@@ -25,6 +26,7 @@ export class Subscription<T = unknown> extends PushPipeline<StreamMessage<T>, St
     readonly streamPartId: StreamPartID
     /** @internal */
     eventEmitter: EventEmitter<SubscriptionEvents>
+    unsubscribe: () => Promise<void>
 
     /** @internal */
     constructor(streamPartId: StreamPartID, loggerFactory: LoggerFactory) {
@@ -39,9 +41,10 @@ export class Subscription<T = unknown> extends PushPipeline<StreamMessage<T>, St
             this.eventEmitter.emit('error', err)
             this.logger.debug('onError %s', err)
         })
+        this.unsubscribe = pOnce(() => this.doUnsubscribe())
     }
 
-    async unsubscribe(): Promise<void> {
+    private async doUnsubscribe(): Promise<void> {
         this.end()
         await this.return()
         this.eventEmitter.emit('unsubscribe')

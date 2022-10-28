@@ -51,6 +51,19 @@ describe('unsubscribe', () => {
             expect(await client.getSubscriptions({ streamId: stream.id })).toHaveLength(0)
             expect(onUnsubscribe).toBeCalledTimes(1)
         })
+
+        it('unsubscribe twice', async () => {
+            const sub = await client.subscribe(stream.id, () => {})
+            const onUnsubscribe = jest.fn()
+            sub.on('unsubscribe', onUnsubscribe)
+            expect(await client.getSubscriptions({ streamId: stream.id })).toHaveLength(1)
+
+            await sub.unsubscribe()
+            await sub.unsubscribe()
+
+            expect(await client.getSubscriptions({ streamId: stream.id })).toHaveLength(0)
+            expect(onUnsubscribe).toBeCalledTimes(1)
+        })
     })
 
     describe('Resend request', () => {
