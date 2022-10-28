@@ -31,7 +31,7 @@ async function run(): Promise<void> {
         websocket: { ip: program.opts().entrypointIp, port: 23123 }
     }
 
-    const layer0 = new DhtNode({ webSocketPort: port, webSocketHost: ip, peerIdString: program.opts().id })
+    const layer0 = new DhtNode({ webSocketPort: port, webSocketHost: ip, peerIdString: program.opts().id, numberOfNodesPerKBucket: 8 })
     await layer0.start()
 
     await layer0.joinDht(epPeerDescriptor)

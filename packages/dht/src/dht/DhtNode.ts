@@ -58,7 +58,7 @@ export class DhtNodeConfig {
     serviceId = 'layer0'
     parallelism = 3
     maxNeighborListSize = 100
-    numberOfNodesPerKBucket = 1
+    numberOfNodesPerKBucket = 4
     joinNoProgressLimit = 4
     routeMessageTimeout = 4000
     dhtJoinTimeout = 60000

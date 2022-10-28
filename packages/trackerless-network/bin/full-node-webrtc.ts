@@ -32,7 +32,7 @@ async function run(): Promise<void> {
         peerId: PeerID.fromString(program.opts().id).value,
         type: NodeType.NODEJS
     }
-    const layer0 = new DhtNode({ peerDescriptor })
+    const layer0 = new DhtNode({ peerDescriptor, numberOfNodesPerKBucket: 8 })
     await layer0.start()
 
     await layer0.joinDht(epPeerDescriptor)
