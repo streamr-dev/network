@@ -62,7 +62,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
     constructor(params: Params) {
         super()
         this.connectionId = new ConnectionID()
-        this.stunUrls = params.stunUrls || []
+        this.stunUrls = params.stunUrls || ['stun:stun.streamr.network:5349']
         //this.bufferThresholdHigh = params.bufferThresholdHigh || 2 ** 17
         this.bufferThresholdLow = params.bufferThresholdLow || 2 ** 15
         this.connectingTimeout = params.connectingTimeout || 20000
