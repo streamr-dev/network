@@ -79,7 +79,7 @@ describe('unsubscribe', () => {
             }))
         })
 
-        it('Client#unsubscribe', async () => {
+        it('Client#resend', async () => {
             const sub = await client.resend(stream.id, { last: 1 }, () => {})
             const onResendComplete = jest.fn()
             const onUnsubscribe = jest.fn()
