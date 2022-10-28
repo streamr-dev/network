@@ -306,7 +306,7 @@ export class Resends {
         const subs = await this.getSubscriptions(streamDefinitionOrSubscription)
         this.removeSubscriptions(subs)
         for (const sub of subs) {
-            sub.eventEmitter.emit('unsubscribe')
+            await sub.unsubscribe()
         }
     }
 

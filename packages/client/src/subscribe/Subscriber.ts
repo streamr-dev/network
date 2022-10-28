@@ -122,7 +122,7 @@ export class Subscriber {
             subs = await this.removeAll(streamDefinitionOrSubscription)
         }
         for (const sub of subs) {
-            sub.eventEmitter.emit('unsubscribe')
+            await sub.unsubscribe()
         }
     }
 

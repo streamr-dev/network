@@ -166,11 +166,22 @@ export class SubscriptionSession<T> {
     async add(sub: Subscription<T>): Promise<void> {
         if (!sub || this.subscriptions.has(sub) || this.pendingRemoval.has(sub)) { return } // already has
         this.subscriptions.add(sub)
-
-        sub.onBeforeFinally.listen(() => {
-            return this.remove(sub)
+        sub.on('unsubscribe', () => {
+            this.remove(sub)
         })
-
+        // This is triggered when a subscription has been iterated completely
+        // - Is it a good idea that a subscription auto-subscribes when
+        //   an iterator has completed?
+        // - We could maybe remove this functionality in the future? if we start
+        //   to support multiple iterators per subscription, it doesn't
+        //   make sense to subscribe the entire subscription because one iterator
+        //   breaks out (e.g. uses break statement in for await loop)
+        sub.onBeforeFinally.listen(() => {
+            // do not wait for sub.unsubscribe() so that we don't get an infinite
+            // wait: if a call to sub.unsubscribe initiated this onBeforeFinally
+            // signal, we'd be waiting the promise which is waiting for this signal
+            sub.unsubscribe()
+        })
         await this.updateSubscriptions()
     }
 
@@ -182,17 +193,9 @@ export class SubscriptionSession<T> {
         if (!sub || this.pendingRemoval.has(sub) || !this.subscriptions.has(sub)) {
             return
         }
-
         this.pendingRemoval.add(sub)
         this.subscriptions.delete(sub)
-
-        try {
-            if (!sub.isDone()) {
-                await sub.unsubscribe()
-            }
-        } finally {
-            await this.updateSubscriptions()
-        }
+        await this.updateSubscriptions()
     }
 
     /**

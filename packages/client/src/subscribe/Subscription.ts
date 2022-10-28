@@ -45,8 +45,10 @@ export class Subscription<T = unknown> extends PushPipeline<StreamMessage<T>, St
     }
 
     private async doUnsubscribe(): Promise<void> {
-        this.end()
-        await this.return()
+        if (!this.isDone()) {
+            this.end()
+            await this.return()
+        }
         this.eventEmitter.emit('unsubscribe')
     }
 
