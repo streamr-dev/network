@@ -437,23 +437,6 @@ describe('Resends2', () => {
                 expect(await client.getSubscriptions(stream.id)).toHaveLength(0)
             })
 
-            it('can return before start', async () => {
-                const sub = await client.subscribe({
-                    streamId: stream.id,
-                    resend: {
-                        last: published.length
-                    }
-                })
-
-                expect(await client.getSubscriptions(stream.id)).toHaveLength(1)
-
-                await sub.return()
-                published.push(...await publishTestMessages(2))
-                const received = await sub.collect(published.length)
-                expect(received).toHaveLength(0)
-                expect(await client.getSubscriptions(stream.id)).toHaveLength(0)
-            })
-
             it('can end asynchronously', async () => {
                 const sub = await client.subscribe({
                     streamId: stream.id,
