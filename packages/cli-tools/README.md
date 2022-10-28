@@ -143,6 +143,24 @@ To fetch data between two date-times
 streamr stream resend range 2019-05-10T17:00:00 2019-05-11T21:00:00 <streamId> --private-key <key>
 ```
 
+### Vote
+
+The CLI tool can be used to vote on Streamr governance proposals as an alternative to doing it manually in the [voting UI](https://vote.streamr.network). This is useful if you have tokens in a large number of wallets (for example due to staking) and you therefore prefer to cast your votes programmatically.
+
+```
+streamr governance vote <proposalId> <choiceId> --private-key <key>
+```
+
+The easiest way to find the `proposalId` is to click on a proposal in the [voting UI](https://vote.streamr.network) and then look at the browser URL. The URL has the form `https://vote.streamr.network/#/proposal/<proposalId>`, i.e. the last part of the URL is the `proposalId`. It starts with `0x...`.
+
+The `choiceId` is just a sequence number. You can again use the UI to check what the choices are. The first option from the top is `1`, the next one is `2`, and so on. For example:
+
+```
+streamr governance vote 0x2109759e060ba5a37d70be00522e00da77397f838c01c12f74c8d834ad4f4b0c 1 --private-key <key>
+```
+
+You must pass either the `--private-key` or `--config` option.
+
 #### Configuration
 
 User can specify environment and authentication details with the following command line arguments:

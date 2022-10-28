@@ -7,8 +7,8 @@
   },
   "scripts": {
     "check": "tsc -p ./tsconfig.json --noEmit",
+    "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
-    "prepare": "npm run eslint && npm run build",
     "build": "tsc -b tsconfig.json",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -30,6 +30,8 @@
   },
   "homepage": "https://github.com/streamr-dev/cli-tools#readme",
   "dependencies": {
+    "@ethersproject/wallet": "^5.5.0",
+    "@snapshot-labs/snapshot.js": "^0.4.43",
     "commander": "^8.3.0",
     "easy-table": "^1.1.1",
     "event-stream": "^4.0.1",
