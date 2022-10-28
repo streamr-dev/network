@@ -30,6 +30,7 @@
   "dependencies": {
     "@ethersproject/hdnode": "^5.4.0",
     "@streamr/network-tracker": "1.0.0",
+    "@streamr/protocol": "7.0.0-beta.0",
     "@streamr/slackbot": "^1.1.0",
     "@streamr/utils": "7.0.0-beta.0",
     "aedes": "^0.47.0",
@@ -51,7 +52,6 @@
     "pino-pretty": "^5.0.2",
     "qs": "^6.10.1",
     "streamr-client": "7.0.0-beta.0",
-    "streamr-client-protocol": "^13.0.0",
     "uuid": "^8.3.2",
     "ws": "^7.5.0"
   },

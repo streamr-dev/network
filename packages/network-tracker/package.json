@@ -26,6 +26,7 @@
     "tracker": "node $NODE_DEBUG_OPTION bin/tracker.js"
   },
   "dependencies": {
+    "@streamr/protocol": "7.0.0-beta.0",
     "@streamr/slackbot": "^1.1.0",
     "@streamr/utils": "7.0.0-beta.0",
     "ajv": "^8.8.2",
@@ -37,7 +38,6 @@
     "geoip-lite": "^1.4.2",
     "lodash": "^4.17.21",
     "morgan": "^1.10.0",
-    "streamr-client-protocol": "^13.0.0",
     "streamr-network": "36.0.0",
     "uuid": "^8.3.2"
   },
