@@ -29,7 +29,7 @@
   "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
   "dependencies": {
     "@ethersproject/hdnode": "^5.4.0",
-    "@streamr/network-tracker": "1.0.0",
+    "@streamr/network-tracker": "7.0.0-beta.0",
     "@streamr/protocol": "7.0.0-beta.0",
     "@streamr/slackbot": "^1.1.0",
     "@streamr/utils": "7.0.0-beta.0",

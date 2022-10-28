@@ -1,6 +1,6 @@
 {
   "name": "@streamr/network-tracker",
-  "version": "1.0.0",
+  "version": "7.0.0-beta.0",
   "description": "Streamr Network Tracker package",
   "repository": {
     "type": "git",
