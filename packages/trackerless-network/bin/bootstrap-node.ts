@@ -17,7 +17,7 @@ async function run(): Promise<void> {
     const epPeerDescriptor: PeerDescriptor = {
         peerId: PeerID.fromString(program.opts().id).value,
         type: NodeType.NODEJS,
-        websocket: { ip: 'localhost', port: 23123 }
+        websocket: { ip: '0.0.0.0', port: 23123 }
     }
 
     const layer0 = new DhtNode({ peerDescriptor: epPeerDescriptor, numberOfNodesPerKBucket: 2 })
