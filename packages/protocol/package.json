@@ -25,9 +25,9 @@
   "author": "Streamr",
   "license": "Apache-2.0",
   "devDependencies": {
+    "@streamr/test-utils": "7.0.0-beta.0",
     "@types/sinon": "^10.0.4",
-    "sinon": "^11.1.2",
-    "streamr-test-utils": "^2.0.0"
+    "sinon": "^11.1.2"
   },
   "dependencies": {
     "@streamr/utils": "7.0.0-beta.0"
