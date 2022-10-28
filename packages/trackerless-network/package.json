@@ -23,7 +23,8 @@
     "test-browser": "npm run build-browser && karma start karma.config.js",
     "test-unit": "jest test/unit",
     "test-integration": "jest test/integration",
-    "test-e2e": "jest --runInBand --forceExit test/end-to-end"
+    "test-e2e": "jest --runInBand --forceExit test/end-to-end",
+    "network": "ts-node bin/network"
   },
   "dependencies": {
     "@protobuf-ts/runtime": "^2.8.0",
