@@ -54,6 +54,21 @@ async function run(): Promise<void> {
             `Number of connected stream neighbors ${streamrNode.getStream(streamPartId)?.layer2.getTargetNeighborStringIds().length || 0}, `
             + `targets: ${streamrNode.getStream(streamPartId)?.layer2.getTargetNeighborStringIds() || []}`
         )
+        // eslint-disable-next-line no-console
+        console.log(
+            `Layer2: Nearby Contacts ${streamrNode.getStream(streamPartId)?.layer2.getNearbyContactPoolIds().length || 0}, `,
+            `Random Contacts ${streamrNode.getStream(streamPartId)?.layer2.getRandomContactPoolIds().length || 0}, `
+        )
+        // eslint-disable-next-line no-console
+        console.log(
+            `Layer1: Kbucket size ${streamrNode.getStream(streamPartId)?.layer1.getBucketSize() || 0} `,
+            `DHT contacts ${streamrNode.getStream(streamPartId)?.layer1.getNeighborList().getSize() || 0} `,
+        )
+        // eslint-disable-next-line no-console
+        console.log(
+            `Layer0: Kbucket size ${layer0.getBucketSize() || 0} `,
+            `DHT contacts ${layer0.getNeighborList().getSize()  || 0}`
+        )
         const messageRef: MessageRef = {
             sequenceNumber,
             timestamp: BigInt(Date.now()),
