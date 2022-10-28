@@ -52,24 +52,25 @@ export class NetworkNode extends StreamrNode {
         this.off(NodeEvent.NEW_MESSAGE, cb)
     }
 
-    // TODO
-    // async subscribeAndWaitForJoin(streamPartId: StreamPartID, timeout?: number): Promise<number> {
-    //     if (this.isProxiedStreamPart(streamPartId, ProxyDirection.PUBLISH)) {
-    //         throw new Error(`Cannot subscribe to ${streamPartId} as proxy publish connections have been set`)
-    //     }
-    //     return this.subscribeAndWaitForJoinOperation(streamPartId, timeout)
-    // }
+    async subscribeAndWaitForJoin(streamPartId: StreamPartID, entrypointDescriptor: PeerDescriptor, _timeout?: number): Promise<number> {
+        // if (this.isProxiedStreamPart(streamPartId, ProxyDirection.PUBLISH)) {
+        //     throw new Error(`Cannot subscribe to ${streamPartId} as proxy publish connections have been set`)
+        // }
+        await this.joinStream(streamPartId, entrypointDescriptor)
+        this.subscribeToStream(streamPartId, entrypointDescriptor)
+        return this.getStream(streamPartId)?.layer2.getTargetNeighborStringIds().length || 0
+    }
 
-    // TODO
-    // async waitForJoinAndPublish(streamMessage: StreamMessage, timeout?: number): Promise<number> {
-    //     const streamPartId = streamMessage.getStreamPartID()
-    //     if (this.isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE)) {
-    //         throw new Error(`Cannot publish to ${streamPartId} as proxy subscribe connections have been set`)
-    //     }
-    //     const numOfNeighbors = await this.subscribeAndWaitForJoin(streamPartId, timeout)
-    //     this.onDataReceived(streamMessage)
-    //     return numOfNeighbors
-    // }
+    async waitForJoinAndPublish(streamMessage: StreamMessage, entrypointDescriptor: PeerDescriptor, _timeout?: number): Promise<number> {
+        const streamPartId = streamMessage.getStreamPartID()
+        // if (this.isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE)) {
+        //     throw new Error(`Cannot publish to ${streamPartId} as proxy subscribe connections have been set`)
+        // }
+        await this.joinStream(streamPartId, entrypointDescriptor)
+        const msg = StreamMessageTranslator.toProtobuf(streamMessage)
+        this.publishToStream(streamPartId, entrypointDescriptor, msg)
+        return this.getStream(streamPartId)?.layer2.getTargetNeighborStringIds().length || 0
+    }
 
     unsubscribe(streamPartId: StreamPartID): void {
         this.unsubscribeFromStream(streamPartId)
