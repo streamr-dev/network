@@ -332,7 +332,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         return ret
     }
 
-    public send = (msg: Message): void => {
+    public send = async (msg: Message): Promise<void> => {
         if (!this.started || this.stopped) {
             return
         }

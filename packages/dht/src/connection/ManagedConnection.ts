@@ -4,6 +4,7 @@ import { Handshaker } from "./Handshaker"
 import { PeerDescriptor } from "../proto/DhtRpc"
 import { Logger } from "@streamr/utils"
 import EventEmitter from "eventemitter3"
+import { raceEvents3 } from "../helpers/waitForEvent3"
 
 export interface ManagedConnectionEvents {
     managedData: (bytes: Uint8Array, remotePeerDescriptor: PeerDescriptor) => void
@@ -177,12 +178,17 @@ export class ManagedConnection extends EventEmitter<Events> {
         }
     }
 
-    send(data: Uint8Array): void {
+    async send(data: Uint8Array): Promise<void> {
         if (this.implementation) {
             this.implementation.send(data)
         } else {
             logger.trace('adding data to outputBuffer objectId: ' + this.objectId)
             this.outputBuffer.push(data)
+            
+            let result = await raceEvents3<Events>(this, ['handshakeCompleted', 'disconnected'])
+            if (result.winnerName == 'disconnected') {
+                throw('disconnected')
+            }
         }
     }
 

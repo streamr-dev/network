@@ -16,7 +16,9 @@ export class SimulatorConnection extends Connection implements IConnection {
         this.simulator.send(this, data)
             .then(() => {
                 return
-            }).catch((_e) => { })
+            }).catch((_e) => {
+                this.emit('disconnected')
+            })
     }
 
     close(): void {
@@ -34,7 +36,9 @@ export class SimulatorConnection extends Connection implements IConnection {
             .then(() => {
                 this.emit('connected')
                 return
-            }).catch((_e) => { })
+            }).catch((_e) => { 
+                this.emit('disconnected')
+            })
     }
 
     handleIncomingData(data: Uint8Array): void {

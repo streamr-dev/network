@@ -9,6 +9,7 @@ import { PeerID } from '../../src/helpers/PeerID'
 import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { v4 } from 'uuid'
 import { UUID } from '../../src/helpers/UUID'
+import { wait } from '@streamr/utils'
 
 describe('Route Message With Mock Connections', () => {
     let entryPoint: DhtNode
@@ -202,6 +203,7 @@ describe('Route Message With Mock Connections', () => {
                 }, 30000)
             )
         )
+        //await wait(10000)
     }, 60000)
 
     describe('forwarding', () => {

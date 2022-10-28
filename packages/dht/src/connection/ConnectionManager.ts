@@ -110,6 +110,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         }
 
         this.serviceId = (this.config.serviceIdPrefix ? this.config.serviceIdPrefix : '') + 'ConnectionManager'
+        this.send = this.send.bind(this)
         this.rpcCommunicator = new RoutingRpcCommunicator(this.serviceId, this.send, {
             rpcRequestTimeout: 10000
         })
@@ -191,7 +192,9 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         }
 
         if (this.connections.has(hexId)) {
-            this.connections.get(hexId)!.send(Message.toBinary(message))
+            this.connections.get(hexId)!.send(Message.toBinary(message)).catch((e) => {
+                throw ('juupas')
+            })
         } else {
             let connection: ManagedConnection | undefined
 
@@ -204,7 +207,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             }
 
             this.onNewConnection(connection)
-            connection.send(Message.toBinary(message))
+            connection.send(Message.toBinary(message)).catch((_e) => { })
         }
     }
 
@@ -330,7 +333,9 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 const buffer = oldConnection!.getOutputBuffer()
 
                 for (let i = 0; i < buffer.length; i++) {
-                    connection.send(buffer[i])
+                    connection.send(buffer[i]).catch((e) => {
+                        console.log('fwoijefw')
+                    })
                 }
                 oldConnection!.close()
             } else {
