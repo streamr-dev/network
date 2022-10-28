@@ -49,6 +49,7 @@ async function run(): Promise<void> {
 
     let sequenceNumber = 0
     setInterval(() => {
+        // eslint-disable-next-line no-console
         console.log(
             `Number of connected stream neighbors ${streamrNode.getStream(streamPartId)?.layer2.getTargetNeighborStringIds().length || 0}, `
             + `targets: ${streamrNode.getStream(streamPartId)?.layer2.getTargetNeighborStringIds() || []}`
