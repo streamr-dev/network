@@ -356,7 +356,7 @@ export class StreamrClient {
         this.connect.reset() // reset connect (will error on next call)
         const tasks = [
             this.destroySignal.destroy().then(() => undefined),
-            this.subscriber.stop(),
+            this.unsubscribe(),
             this.groupKeyStore.stop()
         ]
 

@@ -204,8 +204,4 @@ export class Subscriber {
             ...subSession.subscriptions
         ]))
     }
-
-    async stop(): Promise<void> {
-        await this.removeAll()
-    }
 }
