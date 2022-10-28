@@ -100,7 +100,7 @@
         "@ethersproject/transactions": "^5.5.0",
         "@ethersproject/wallet": "^5.5.0",
         "@ethersproject/web": "^5.5.0",
-        "@streamr/utils": "^1.0.0",
+        "@streamr/utils": "7.0.0-beta.0",
         "ajv": "^8.8.2",
         "ajv-formats": "^2.1.1",
         "core-js": "^3.19.1",

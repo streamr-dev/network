@@ -31,7 +31,7 @@
   "dependencies": {
     "@protobuf-ts/plugin": "^2.8.0",
     "@streamr/proto-rpc": "^1.1.1",
-    "@streamr/utils": "^1.0.0",
+    "@streamr/utils": "7.0.0-beta.0",
     "bloomfilter": "^0.0.18",
     "k-bucket": "^5.1.0",
     "karma-mocha-reporter": "^2.2.5",
