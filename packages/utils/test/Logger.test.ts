@@ -2,9 +2,6 @@ import path from 'path'
 import { Logger } from '../src/Logger'
 import Mock = jest.Mock
 
-// eslint-disable-next-line no-underscore-dangle
-declare let _streamr_electron_test: any
-
 describe('Logger', () => {
     let logger: Logger
     let fatalFn: Mock
@@ -88,10 +85,6 @@ describe('Logger', () => {
         // is not used as the default: When something, e.g a process manager,
         // has monkey-patched process.stdout.write." This is the case
         // in our browser tests.
-
-        if (typeof _streamr_electron_test !== 'undefined') {
-            return
-        }
 
         let lines: string[]
         const logger = new Logger(module, '', undefined, {
