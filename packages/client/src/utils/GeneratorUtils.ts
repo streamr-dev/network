@@ -174,9 +174,12 @@ export const fromArray = async function* <T>(items: T[]): AsyncGenerator<T> {
 
 export const counting = async function*<T>(items: AsyncIterable<T>, onFinally: (count: number) => void): AsyncGenerator<T> {
     let count = 0
-    for await (const item of items) {
-        yield item
-        count++
+    try {
+        for await (const item of items) {
+            yield item
+            count++
+        }
+    } finally {
+        onFinally(count)
     }
-    onFinally(count)
 }
