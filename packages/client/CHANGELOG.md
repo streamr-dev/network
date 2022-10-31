@@ -34,7 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - replace method `registerStorageEventListeners(listener)` with `on('addToStorageNode', listener)` and `on('removeFromStorageNode', listener)`
   - replace method `unRegisterStorageEventListeners()` with `off('addToStorageNode', listener)` and `off('removeFromStorageNode', listener)`
 - Rename classes `GroupKey` and `GroupKeyId` to `EncryptionKey` and `EncryptionKeyId`
-- Change return type of `getStreamPublishers`, `getStreamSubscribers` and `searchStreams` from `AsyncGenerator` to `AsyncIterablE`
+- Change return type of `getStreamPublishers`, `getStreamSubscribers` and `searchStreams` from `AsyncGenerator` to `AsyncIterable`
 
 ### Deprecated
 
