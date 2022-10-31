@@ -13,6 +13,11 @@ import { WebRtcEndpoint } from './connection/webrtc/WebRtcEndpoint'
 import { webRtcConnectionFactory } from './connection/webrtc/NodeWebRtcConnection'
 import { SmartContractRecord } from 'streamr-client-protocol'
 
+const DEFAULT_STUN_URLS = [
+    'stun:stun.streamr.network:5349',
+    'turn:BrubeckTurn1:MIlbgtMw4nhpmbgqRrht1Q==@turn.streamr.network:5349'
+]
+
 export interface NetworkNodeOptions extends AbstractNodeOptions {
     trackers: SmartContractRecord[]
     disconnectionWaitTime?: number
@@ -39,7 +44,7 @@ export const createNetworkNode = ({
     rttUpdateTimeout,
     webrtcDatachannelBufferThresholdLow,
     webrtcDatachannelBufferThresholdHigh,
-    stunUrls = ['stun:stun.streamr.network:5349'],
+    stunUrls = DEFAULT_STUN_URLS,
     trackerConnectionMaintenanceInterval,
     webrtcDisallowPrivateAddresses = true,
     acceptProxyConnections
