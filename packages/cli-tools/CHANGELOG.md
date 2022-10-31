@@ -8,11 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Added command `governance vote` for casting votes on Streamr governance proposals
-
 ### Changed
-
-- Replace command `storage-node list-stream-parts` with `storage-node list-streams` and change the output format
 
 ### Deprecated
 
@@ -21,6 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 ### Security
+
+## [6.1.0] - 2022-10-31
+
+### Added
+
+- Add command `streamr governance vote` for casting votes on Streamr governance proposals
 
 ## [6.0.0] - 2022-02-23
 - Add new command `stream wallet whoami` to display Ethereum address
@@ -109,7 +111,8 @@ ordering and gap filling.
 - Bump dependency commander to ^4.0.1.
 - Re-organize README.md and a few touches to Developing section paragraphs.
 
-[Unreleased]: https://github.com/streamr-dev/network-monorepo/compare/cli-tools%2fv6.0.0...HEAD
+[Unreleased]: https://github.com/streamr-dev/network-monorepo/compare/cli-tools%2fv6.1.0...HEAD
+[6.1.0]: https://github.com/streamr-dev/network-monorepo/compare/cli-tools%2fv6.0.0...cli-tools%2fv6.1.0
 [6.0.0]: https://github.com/streamr-dev/network-monorepo/compare/cli-tools%2fv5.0.1...cli-tools%2fv6.0.0
 [5.0.0]: https://github.com/streamr-dev/cli-tools/compare/v4.1.1...v5.0.0
 [4.1.1]: https://github.com/streamr-dev/cli-tools/compare/v4.1.0...v4.1.1
