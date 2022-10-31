@@ -1,14 +1,13 @@
 import 'reflect-metadata'
 
-import { fastWallet } from 'streamr-test-utils'
-import { StreamPartIDUtils } from 'streamr-client-protocol'
-import { createMockMessage } from './../test-utils/utils'
-import express from 'express'
 import { once } from 'events'
-import { HttpUtil } from '../../src/HttpUtil'
-import { mockLoggerFactory } from '../test-utils/utils'
-import { collect } from '../../src/utils/iterators'
+import express from 'express'
 import { range } from 'lodash'
+import { StreamPartIDUtils } from 'streamr-client-protocol'
+import { fastWallet } from 'streamr-test-utils'
+import { HttpUtil } from '../../src/HttpUtil'
+import { collect } from '../../src/utils/iterators'
+import { createMockMessage, mockLoggerFactory } from '../test-utils/utils'
 
 const MOCK_SERVER_PORT = 12345
 
