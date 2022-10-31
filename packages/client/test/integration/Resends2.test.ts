@@ -340,7 +340,7 @@ describe('Resends2', () => {
                 from: {
                     timestamp: published[0].getTimestamp(),
                 }
-            }, (_msg, streamMessage) => {
+            }, (_msg: any, streamMessage: any) => {
                 receivedMsgs.push(streamMessage)
             })
 

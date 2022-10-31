@@ -1,12 +1,13 @@
+import { Defer } from '@streamr/utils'
 import { StreamMessage } from 'streamr-client-protocol'
 import { fastWallet, waitForCondition } from 'streamr-test-utils'
-import { createTestStream } from '../test-utils/utils'
+import { StreamPermission } from '../../src/permission'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Subscription } from '../../src/subscribe/Subscription'
-import { MaybeAsync, StreamDefinition, StreamPermission } from '../../src'
+import { MaybeAsync, StreamDefinition } from '../../src/types'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
-import { Defer } from '@streamr/utils'
+import { createTestStream } from '../test-utils/utils'
 
 const MAX_ITEMS = 3
 const NUM_MESSAGES = 8
@@ -246,7 +247,7 @@ describe('Subscriber', () => {
                 const err = new Error('expected')
                 let count = 0
                 const received1: StreamMessage[] = []
-                const sub1 = await client.subscribe(streamDefinition, (_content, msg) => {
+                const sub1 = await client.subscribe(streamDefinition, (_content: any, msg: any) => {
                     if (count === MAX_ITEMS) {
                         throw err
                     }
@@ -270,7 +271,7 @@ describe('Subscriber', () => {
                 const err = new Error('expected')
                 let count = 0
                 const received1: any[] = []
-                const sub1 = await client.subscribe(streamDefinition, (content) => {
+                const sub1 = await client.subscribe(streamDefinition, (content: any) => {
                     if (count === MAX_ITEMS) {
                         throw err
                     }

@@ -1,9 +1,9 @@
 import 'reflect-metadata'
-import { StreamIDBuilder } from '../../src/StreamIDBuilder'
-import { StreamPartIDUtils } from 'streamr-client-protocol'
-import { StreamDefinition } from '../../src'
-import { Authentication } from '../../src/Authentication'
 import { toEthereumAddress } from '@streamr/utils'
+import { StreamPartIDUtils } from 'streamr-client-protocol'
+import { Authentication } from '../../src/Authentication'
+import { StreamIDBuilder } from '../../src/StreamIDBuilder'
+import { StreamDefinition } from '../../src/types'
 
 const address = '0xf5B45CC4cc510C31Cd6B64B8F4f341C283894086'
 const normalizedAddress = address.toLowerCase()

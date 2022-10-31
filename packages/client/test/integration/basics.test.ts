@@ -1,10 +1,10 @@
-import { createTestStream } from './../test-utils/utils'
-import { Msg, publishTestMessagesGenerator } from '../test-utils/publish'
-import { StreamrClient } from '../../src/StreamrClient'
+import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
-import { StreamPermission } from '../../src'
+import { StreamrClient } from '../../src/StreamrClient'
 import { collect } from '../../src/utils/GeneratorUtils'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
+import { Msg, publishTestMessagesGenerator } from '../test-utils/publish'
+import { createTestStream } from './../test-utils/utils'
 
 describe('Basics', () => {
     const MAX_MESSAGES = 10
