@@ -134,7 +134,7 @@ export class StreamrClient {
             const streamPartId = await this.streamIdBuilder.toStreamPartID(options)
             result = await this.subscriber.add<T>(streamPartId)
         }
-        if (onMessage) {
+        if (onMessage !== undefined) {
             result.useLegacyOnMessageHandler(onMessage)
         }
         this.eventEmitter.emit('subscribe', undefined)
