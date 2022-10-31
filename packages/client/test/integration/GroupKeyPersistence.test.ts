@@ -12,6 +12,7 @@ import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { createTestStream, startPublisherKeyExchangeSubscription } from '../test-utils/utils'
 import { DEFAULT_PARTITION } from './../../src/StreamIDBuilder'
+import { collect } from '../../src/utils/iterators'
 
 describe('Group Key Persistence', () => {
     let publisherPrivateKey: string
@@ -132,7 +133,7 @@ describe('Group Key Persistence', () => {
             // this should set up group key
             const published = await publishTestMessages(1)
 
-            const received = await sub.collect(1)
+            const received = await collect(sub, 1)
             await subscriber.destroy()
 
             const subscriber2 = environment.createClient({
@@ -151,7 +152,7 @@ describe('Group Key Persistence', () => {
             })
 
             await Promise.all([
-                sub2.collect(3),
+                collect(sub2, 3),
                 published.push(...await publishTestMessages(3)),
             ])
 

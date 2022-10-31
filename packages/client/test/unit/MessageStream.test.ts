@@ -9,6 +9,7 @@ import { Readable } from 'stream'
 import { waitForCondition } from 'streamr-test-utils'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { Authentication } from '../../src/Authentication'
+import { collect } from '../../src/utils/iterators'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
@@ -204,7 +205,7 @@ describe('MessageStream', () => {
 
         const streamMessage = await createMockMessage()
         s.push(streamMessage)
-        const received = await s.collect(1)
+        const received = await collect(s, 1)
 
         expect(received).toEqual([streamMessage])
     })
@@ -218,7 +219,7 @@ describe('MessageStream', () => {
         const streamMessage = await createMockMessage()
         leaksDetector.add('streamMessage', streamMessage)
         s.push(streamMessage)
-        const collectTask = s.collect()
+        const collectTask = collect(s)
         await wait(10)
         await s.return()
         const received = await collectTask
@@ -237,7 +238,7 @@ describe('MessageStream', () => {
         const streamMessage = await createMockMessage()
         leaksDetector.add('streamMessage', streamMessage)
         s.push(streamMessage)
-        const collectTask = s.collect()
+        const collectTask = collect(s)
         await wait(10)
         await expect(async () => {
             await s.throw(err)

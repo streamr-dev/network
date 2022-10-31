@@ -5,7 +5,7 @@ import { StreamID, toStreamID } from 'streamr-client-protocol'
 import { randomEthereumAddress } from 'streamr-test-utils'
 import { searchStreams, SearchStreamsResultItem } from '../../src/registry/searchStreams'
 import { Stream } from '../../src/Stream'
-import { collect } from '../../src/utils/GeneratorUtils'
+import { collect } from '../../src/utils/iterators'
 import { SynchronizedGraphQLClient } from '../../src/utils/SynchronizedGraphQLClient'
 import { mockLoggerFactory } from '../test-utils/utils'
 
@@ -32,7 +32,7 @@ const createMockGraphQLClient = (resultItems: SearchStreamsResultItem[]): Pick<S
         fetchPaginatedResults: async function* () {
             yield* resultItems
         } as any
-    } 
+    }
 }
 
 describe('searchStreams', () => {

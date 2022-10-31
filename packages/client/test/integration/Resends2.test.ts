@@ -8,6 +8,7 @@ import { fastWallet } from 'streamr-test-utils'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamrClientError } from '../../src/StreamrClientError'
+import { collect } from '../../src/utils/iterators'
 import { getPublishTestStreamMessages, getWaitForStorage, Msg } from '../test-utils/publish'
 import { createTestStream } from '../test-utils/utils'
 import { StreamPermission } from './../../src/permission'
@@ -84,7 +85,7 @@ describe('Resends2', () => {
                 last: 5,
             })
 
-            const receivedMsgs = await sub.collect()
+            const receivedMsgs = await collect(sub)
             expect(receivedMsgs).toHaveLength(0)
         })
 
@@ -139,7 +140,7 @@ describe('Resends2', () => {
                 sub.once('resendComplete', onResent)
 
                 await publishTestMessages(3)
-                await sub.collect(3)
+                await collect(sub, 3)
 
                 expect(await client.getSubscriptions(stream.id)).toHaveLength(0)
                 expect(onResent).toHaveBeenCalledTimes(1)
@@ -164,7 +165,7 @@ describe('Resends2', () => {
                 sub.on('error', onSubError) // suppress
 
                 const published = await publishTestMessages(3)
-                const receivedMsgs = await sub.collect(3)
+                const receivedMsgs = await collect(sub, 3)
 
                 expect(receivedMsgs.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
                 expect(await client.getSubscriptions(stream.id)).toHaveLength(0)
@@ -209,6 +210,10 @@ describe('Resends2', () => {
                 expect(receivedMsgs.map((m) => m.signature)).toEqual(publishedMessages.map((m) => m.signature))
                 expect(onError).toHaveBeenCalledTimes(0)
                 expect(onResent).toHaveBeenCalledTimes(1)
+                expect(environment.getLogger().getEntries()).toContainEqual({
+                    message: `no storage assigned: ${nonStoredStream.id}`,
+                    level: 'warn'
+                })
                 expect(await client.getSubscriptions(nonStoredStream.id)).toHaveLength(0)
             })
         })
@@ -230,7 +235,7 @@ describe('Resends2', () => {
             }, {
                 last: 0
             })
-            const receivedMsgs = await sub.collect()
+            const receivedMsgs = await collect(sub)
             expect(receivedMsgs).toHaveLength(0)
         })
 
@@ -243,7 +248,7 @@ describe('Resends2', () => {
                     last: published.length
                 })
 
-                const receivedMsgs = await sub.collect()
+                const receivedMsgs = await collect(sub)
                 expect(receivedMsgs).toHaveLength(published.length)
                 expect(receivedMsgs.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
             })
@@ -256,7 +261,7 @@ describe('Resends2', () => {
                     last: 2
                 })
 
-                const receivedMsgs = await sub.collect()
+                const receivedMsgs = await collect(sub)
                 expect(receivedMsgs).toHaveLength(2)
                 expect(receivedMsgs.map((m) => m.signature)).toEqual(published.slice(-2).map((m) => m.signature))
             })
@@ -273,7 +278,7 @@ describe('Resends2', () => {
                     }
                 })
 
-                const receivedMsgs = await sub.collect()
+                const receivedMsgs = await collect(sub)
                 expect(receivedMsgs).toHaveLength(published.length)
                 expect(receivedMsgs.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
             })
@@ -288,7 +293,7 @@ describe('Resends2', () => {
                     }
                 })
 
-                const receivedMsgs = await sub.collect()
+                const receivedMsgs = await collect(sub)
                 expect(receivedMsgs).toHaveLength(MAX_MESSAGES - 2)
                 expect(receivedMsgs.map((m) => m.signature)).toEqual(published.slice(2).map((m) => m.signature))
             })
@@ -308,7 +313,7 @@ describe('Resends2', () => {
                     }
                 })
 
-                const receivedMsgs = await sub.collect()
+                const receivedMsgs = await collect(sub)
                 expect(receivedMsgs).toHaveLength(published.length)
                 expect(receivedMsgs.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
             })
@@ -326,7 +331,7 @@ describe('Resends2', () => {
                     }
                 })
 
-                const receivedMsgs = await sub.collect()
+                const receivedMsgs = await collect(sub)
                 expect(receivedMsgs).toHaveLength(2)
                 expect(receivedMsgs.map((m) => m.signature)).toEqual(published.slice(2, 4).map((m) => m.signature))
             })
@@ -341,7 +346,7 @@ describe('Resends2', () => {
                 from: {
                     timestamp: published[0].getTimestamp(),
                 }
-            }, (_msg: any, streamMessage: any) => {
+            }, (_msg, streamMessage) => {
                 receivedMsgs.push(streamMessage)
             })
 
@@ -368,7 +373,7 @@ describe('Resends2', () => {
                     published.push(...await publishTestMessages(REALTIME_MESSAGES))
                 })
 
-                const receivedMsgs = await sub.collect(MAX_MESSAGES + REALTIME_MESSAGES)
+                const receivedMsgs = await collect(sub, MAX_MESSAGES + REALTIME_MESSAGES)
                 expect(receivedMsgs).toHaveLength(published.length)
                 expect(onResent).toHaveBeenCalledTimes(1)
                 expect(receivedMsgs.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
@@ -381,7 +386,7 @@ describe('Resends2', () => {
 
                 published.push(...await publishTestMessages(2))
 
-                const received = await sub.collect(2)
+                const received = await collect(sub, 2)
                 expect(received.map((m) => m.signature)).toEqual(published.slice(-2).map((m) => m.signature))
             })
 
@@ -450,7 +455,7 @@ describe('Resends2', () => {
 
                 await sub.return()
                 published.push(...await publishTestMessages(2))
-                const received = await sub.collect(published.length)
+                const received = await collect(sub, published.length)
                 expect(received).toHaveLength(0)
                 expect(await client.getSubscriptions(stream.id)).toHaveLength(0)
             })
@@ -528,7 +533,7 @@ describe('Resends2', () => {
             {
                 last: 1
             })
-        const messages = await sub.collectContent()
-        expect(messages.map((m) => m.signature)).toEqual([publishedMessage.signature])
+        const messages = await collect(sub)
+        expect(messages[0].getParsedContent()).toEqual(publishedMessage)
     })
 })

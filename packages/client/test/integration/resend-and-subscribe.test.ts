@@ -76,12 +76,13 @@ describe('resend and subscribe', () => {
                 last: 1
             }
         })
+        const messageIterator = sub[Symbol.asyncIterator]()
 
-        const receivedMessage1 = await nextValue(sub)
+        const receivedMessage1 = await nextValue(messageIterator)
 
         await publisher.publish(stream.id, { mockId: 2 }, { timestamp: 2000 })
 
-        const receivedMessage2 = await nextValue(sub)
+        const receivedMessage2 = await nextValue(messageIterator)
         expect(receivedMessage1!.getParsedContent()).toEqual({
             mockId: 1
         })

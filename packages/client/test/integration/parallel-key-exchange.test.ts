@@ -11,6 +11,7 @@ import { StreamPermission } from '../../src/permission'
 import { MessageFactory } from '../../src/publish/MessageFactory'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
+import { collect } from '../../src/utils/iterators'
 import { createGroupKeyQueue, createStreamRegistryCached } from '../test-utils/utils'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
 
@@ -81,7 +82,7 @@ describe('parallel key exchange', () => {
         }
 
         const expectedMessageCount = PUBLISHER_COUNT * MESSAGE_COUNT_PER_PUBLISHER
-        const messages = await sub.collect(expectedMessageCount)
+        const messages = await collect(sub, expectedMessageCount)
         expect(messages).toHaveLength(expectedMessageCount)
         expect(messages.filter((msg) => !((msg.getParsedContent() as any).foo === 'bar'))).toEqual([])
         expect(environment.getNetwork().getSentMessages({

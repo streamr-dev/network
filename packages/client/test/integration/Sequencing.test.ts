@@ -4,6 +4,7 @@ import { wait } from '@streamr/utils'
 import { waitForCondition } from 'streamr-test-utils'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
+import { collect } from '../../src/utils/iterators'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { getWaitForStorage } from '../test-utils/publish'
 import { createTestStream, uid } from '../test-utils/utils'
@@ -164,7 +165,7 @@ describe('Sequencing', () => {
                 }
             }
         )
-        const msgsResent = await sub.collectContent()
+        const msgsResent = (await collect(sub)).map((m) => m.getParsedContent())
 
         expect(msgsReceieved).toEqual(msgsResent)
         // backdated messages disappear
@@ -232,7 +233,7 @@ describe('Sequencing', () => {
                 }
             }
         )
-        const msgsResent = await sub.collectContent()
+        const msgsResent = (await collect(sub)).map((m) => m.getParsedContent())
 
         expect(msgsReceieved).toEqual(msgsResent)
         // backdated messages disappear

@@ -12,6 +12,7 @@ import {
     getPublishTestStreamMessages, Msg
 } from '../test-utils/publish'
 import { createTestStream } from '../test-utils/utils'
+import { collect } from '../../src/utils/iterators'
 
 // TODO rename this test to something more specific (and maybe divide to multiple test files?)
 
@@ -147,7 +148,7 @@ describe('StreamrClient', () => {
             })
 
             const published = await publishTestMessages(MAX_MESSAGES)
-            await expect(async () => sub.collect(1)).rejects.toThrow()
+            await expect(async () => collect(sub, 1)).rejects.toThrow()
             await done
             expect(onMessageMsgs.map(((m) => m.signature))).toEqual(published.map(((m) => m.signature)))
         })
@@ -200,7 +201,7 @@ describe('StreamrClient', () => {
             })
             const sub = await client.subscribe(streamDefinition)
             await client.publish(streamDefinition, publishedMessage)
-            const messages = await sub.collect(1)
+            const messages = await collect(sub, 1)
             expect(messages.map((s) => s.getParsedContent())).toEqual([publishedMessage])
         })
     })

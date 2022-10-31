@@ -51,7 +51,7 @@ describe('Subscriber', () => {
             content: MOCK_CONTENT
         }))
 
-        const receivedMessage = await nextValue(sub)
+        const receivedMessage = await nextValue(sub[Symbol.asyncIterator]())
         expect(receivedMessage!.getParsedContent()).toEqual(MOCK_CONTENT)
     })
 
@@ -79,7 +79,7 @@ describe('Subscriber', () => {
             encryptionKey: groupKey
         }))
 
-        const receivedMessage = await nextValue(sub)
+        const receivedMessage = await nextValue(sub[Symbol.asyncIterator]())
         expect(receivedMessage!.getParsedContent()).toEqual(MOCK_CONTENT)
         expect(receivedMessage!.groupKeyId).toEqual(groupKey.id)
     })

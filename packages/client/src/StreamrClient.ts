@@ -231,7 +231,7 @@ export class StreamrClient {
         return this.streamRegistry.deleteStream(streamIdOrPath)
     }
 
-    searchStreams(term: string | undefined, permissionFilter: SearchStreamsPermissionFilter | undefined): AsyncGenerator<Stream> {
+    searchStreams(term: string | undefined, permissionFilter: SearchStreamsPermissionFilter | undefined): AsyncIterable<Stream> {
         return this.streamRegistry.searchStreams(term, permissionFilter)
     }
 
@@ -239,11 +239,11 @@ export class StreamrClient {
     // Permissions
     // --------------------------------------------------------------------------------------------
 
-    getStreamPublishers(streamIdOrPath: string): AsyncGenerator<EthereumAddress> {
+    getStreamPublishers(streamIdOrPath: string): AsyncIterable<EthereumAddress> {
         return this.streamRegistry.getStreamPublishers(streamIdOrPath)
     }
 
-    getStreamSubscribers(streamIdOrPath: string): AsyncGenerator<EthereumAddress> {
+    getStreamSubscribers(streamIdOrPath: string): AsyncIterable<EthereumAddress> {
         return this.streamRegistry.getStreamSubscribers(streamIdOrPath)
     }
 
