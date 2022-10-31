@@ -2,7 +2,7 @@ import { waitForEvent } from '../src/waitForEvent'
 import { EventEmitter } from 'events'
 import { TimeoutError } from '../src/withTimeout'
 
-describe(waitForEvent, () => {
+describe('waitForEvent', () => {
     it("waits for correct event and records the arguments of invocation", async () => {
         const emitter = new EventEmitter()
         setTimeout(() => {
