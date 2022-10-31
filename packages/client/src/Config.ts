@@ -10,6 +10,7 @@ import type { EthereumConfig } from './Ethereum'
 
 import CONFIG_SCHEMA from './config.schema.json'
 import { SmartContractRecord } from 'streamr-client-protocol'
+import { LogLevel } from '@streamr/utils'
 
 import type { NetworkNodeOptions } from 'streamr-network'
 import type { ConnectionInfo } from '@ethersproject/web'
@@ -80,7 +81,7 @@ export interface MetricsConfig {
 export type StrictStreamrClientConfig = {
     /** Custom human-readable debug id for client. Used in logging. */
     id: string
-    logLevel: 'silent' | 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace'
+    logLevel: LogLevel
     /**
     * Authentication: identity used by this StreamrClient instance.
     * Can contain member privateKey or (window.)ethereum
