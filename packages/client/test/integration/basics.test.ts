@@ -1,4 +1,5 @@
 import 'reflect-metadata'
+
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'

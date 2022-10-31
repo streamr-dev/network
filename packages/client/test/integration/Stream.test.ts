@@ -1,8 +1,10 @@
+import 'reflect-metadata'
+
+import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
-import { createTestStream } from '../test-utils/utils'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
-import { Stream } from '../../src/Stream'
+import { createTestStream } from '../test-utils/utils'
 
 const DUMMY_ADDRESS = '0x1230000000000000000000000000000000000000'
 

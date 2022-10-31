@@ -1,4 +1,5 @@
 import 'reflect-metadata'
+
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { collect } from '../../src/utils/iterators'

@@ -1,4 +1,5 @@
 import 'reflect-metadata'
+
 import { HttpUtil } from '../../src/HttpUtil'
 import { mockLoggerFactory } from '../test-utils/utils'
 

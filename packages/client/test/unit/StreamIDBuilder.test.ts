@@ -1,4 +1,5 @@
 import 'reflect-metadata'
+
 import { toEthereumAddress } from '@streamr/utils'
 import { StreamPartIDUtils } from 'streamr-client-protocol'
 import { Authentication } from '../../src/Authentication'

@@ -1,4 +1,5 @@
 import 'reflect-metadata'
+
 import { StreamMessage } from 'streamr-client-protocol'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'

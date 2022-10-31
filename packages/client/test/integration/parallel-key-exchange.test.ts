@@ -1,17 +1,18 @@
 import 'reflect-metadata'
-import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
-import { range } from 'lodash'
-import { fastWallet } from 'streamr-test-utils'
-import { StreamPermission } from '../../src/permission'
-import { Stream } from '../../src/Stream'
-import { GroupKey } from '../../src/encryption/GroupKey'
+
 import { Wallet } from '@ethersproject/wallet'
-import { StreamMessage } from 'streamr-client-protocol'
 import { wait } from '@streamr/utils'
-import { StreamrClient } from '../../src/StreamrClient'
-import { MessageFactory } from '../../src/publish/MessageFactory'
+import { range } from 'lodash'
+import { StreamMessage } from 'streamr-client-protocol'
+import { fastWallet } from 'streamr-test-utils'
 import { createAuthentication } from '../../src/Authentication'
+import { GroupKey } from '../../src/encryption/GroupKey'
+import { StreamPermission } from '../../src/permission'
+import { MessageFactory } from '../../src/publish/MessageFactory'
+import { Stream } from '../../src/Stream'
+import { StreamrClient } from '../../src/StreamrClient'
 import { createGroupKeyQueue, createStreamRegistryCached } from '../test-utils/utils'
+import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
 
 const PUBLISHER_COUNT = 50
 const MESSAGE_COUNT_PER_PUBLISHER = 3

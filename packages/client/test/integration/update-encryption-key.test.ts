@@ -1,13 +1,14 @@
 import 'reflect-metadata'
-import { waitForCondition } from 'streamr-test-utils'
+
 import { StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
-import { StreamrClient } from './../../src/StreamrClient'
-import { Subscription } from '../../src/subscribe/Subscription'
+import { waitForCondition } from 'streamr-test-utils'
+import { DecryptError } from '../../src/encryption/EncryptionUtil'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'
-import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
+import { Subscription } from '../../src/subscribe/Subscription'
 import { nextValue } from '../../src/utils/iterators'
-import { DecryptError } from '../../src/encryption/EncryptionUtil'
+import { StreamrClient } from './../../src/StreamrClient'
+import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
 
 /*
  * Subscriber has subscribed to a stream, and the publisher updates the encryption key for that stream.

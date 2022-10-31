@@ -1,4 +1,5 @@
 import 'reflect-metadata'
+
 import { Wallet } from '@ethersproject/wallet'
 import { toEthereumAddress } from '@streamr/utils'
 import { EncryptionType, MessageID, StreamMessage, StreamPartID, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
