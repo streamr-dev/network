@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Change storage node assignment event handlers
   - replace method `registerStorageEventListeners(listener)` with `on('addToStorageNode', listener)` and `on('removeFromStorageNode', listener)`
   - replace method `unRegisterStorageEventListeners()` with `off('addToStorageNode', listener)` and `off('removeFromStorageNode', listener)`
+- Rename interface `SubscriptionOnMessage`/`MessageStreamOnMessage` to `MessageListener`
 - Rename classes `GroupKey` and `GroupKeyId` to `EncryptionKey` and `EncryptionKeyId`
 - Change interface of `MessageStream` from `AsyncGenerator` to `AsyncIterable`
 - Change return type of `getStreamPublishers`, `getStreamSubscribers` and `searchStreams` from `AsyncGenerator` to `AsyncIterable`

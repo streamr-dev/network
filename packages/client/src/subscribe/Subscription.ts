@@ -3,12 +3,10 @@
  * Primary interface for consuming StreamMessages.
  */
 import { StreamPartID } from 'streamr-client-protocol'
-import { MessageStream, MessageStreamOnMessage } from './MessageStream'
+import { MessageStream } from './MessageStream'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
-
-export { MessageStreamOnMessage as SubscriptionOnMessage }
 
 export interface SubscriptionEvents {
     error: (err: Error) => void
