@@ -1,9 +1,11 @@
 import 'reflect-metadata'
-import { container } from 'tsyringe'
+
 import { merge } from 'lodash'
-import { StreamrClient } from '../../src/StreamrClient'
+import { container } from 'tsyringe'
+import { StreamrClientConfig } from '../../src/Config'
+import { ConfigTest } from '../../src/ConfigTest'
 import { GroupKey } from '../../src/encryption/GroupKey'
-import { ConfigTest, StreamrClientConfig } from '../../src'
+import { StreamrClient } from '../../src/StreamrClient'
 
 const createClient = (opts: StreamrClientConfig = {}) => {
     return new StreamrClient(merge(

@@ -1,21 +1,22 @@
 import 'reflect-metadata'
+
+import { toEthereumAddress } from '@streamr/utils'
+import { Wallet } from 'ethers'
 import {
     GroupKeyResponse,
     StreamMessage,
     StreamPartID,
-    StreamPartIDUtils,
+    StreamPartIDUtils
 } from 'streamr-client-protocol'
+import { fastWallet } from 'streamr-test-utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
-import { Wallet } from 'ethers'
 import { StreamPermission } from '../../src/permission'
+import { StreamrClient } from '../../src/StreamrClient'
+import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import {
     createRelativeTestStreamId,
     startPublisherKeyExchangeSubscription
 } from '../test-utils/utils'
-import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
-import { fastWallet } from 'streamr-test-utils'
-import { StreamrClient } from '../../src/StreamrClient'
-import { toEthereumAddress } from '@streamr/utils'
 
 describe('PublisherKeyExchange', () => {
 
