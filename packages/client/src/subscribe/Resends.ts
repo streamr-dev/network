@@ -24,6 +24,7 @@ import { LoggerFactory } from '../utils/LoggerFactory'
 import { counterId } from '../utils/utils'
 import { StreamrClientError } from '../StreamrClientError'
 import { collect } from '../utils/iterators'
+import { counting } from '../utils/GeneratorUtils'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 
@@ -148,7 +149,7 @@ export class Resends {
         endpointSuffix: 'last' | 'range' | 'from',
         streamPartId: StreamPartID,
         query: QueryDict = {}
-    ) {
+    ): Promise<MessageStream<T>> {
         const loggerIdx = counterId('fetchStream')
         this.logger.debug('[%s] fetching resend %s for %s with options %o', loggerIdx, endpointSuffix, streamPartId, query)
         const streamId = StreamPartIDUtils.getStreamID(streamPartId)
@@ -173,21 +174,10 @@ export class Resends {
             loggerFactory: this.loggerFactory
         })
 
-        let count = 0
-        messageStream.forEach(() => {
-            count += 1
-        })
-
-        const logger = this.logger
-        const dataStream = await this.httpUtil.fetchHttpStream(url)
-        messageStream.pull((async function* readStream() {
-            try {
-                yield* dataStream
-            } finally {
-                logger.debug('[%s] total of %d messages received for resend fetch', loggerIdx, count)
-                dataStream.destroy()
-            }
-        }()))
+        const dataStream = this.httpUtil.fetchHttpStream<T>(url)
+        messageStream.pull(counting(dataStream, (count: number) => {
+            this.logger.debug('[%s] total of %d messages received for resend fetch', loggerIdx, count)
+        }))
         return messageStream
     }
 
