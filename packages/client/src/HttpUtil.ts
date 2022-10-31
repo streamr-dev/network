@@ -96,7 +96,7 @@ export class HttpUtil {
             // in the browser, response.body will be a web stream. Convert this into a node stream.
             const source: Readable = WebStreamToNodeStream(response.body as unknown as (ReadableStream | Readable))
 
-            const stream = source.pipe(split2((message: string) => {
+            stream = source.pipe(split2((message: string) => {
                 return StreamMessage.deserialize(message)
             }))
 
