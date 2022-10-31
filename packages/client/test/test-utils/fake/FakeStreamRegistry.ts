@@ -212,12 +212,12 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getStreamPublishers(_streamIdOrPath: string): AsyncGenerator<EthereumAddress, any, unknown> {
+    getStreamPublishers(_streamIdOrPath: string): AsyncIterable<EthereumAddress> {
         throw new Error('not implemented')
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getStreamSubscribers(_streamIdOrPath: string): AsyncGenerator<EthereumAddress, any, unknown> {
+    getStreamSubscribers(_streamIdOrPath: string): AsyncIterable<EthereumAddress> {
         throw new Error('not implemented')
     }
 }
