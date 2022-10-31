@@ -9,8 +9,8 @@ const LOG_LINE_PREFIX_LENGTH = 56 // Logger prefixes each line with level, times
 
 export class FakeLogger implements Omit<Logger, 'getFinalLogger'> {
 
-    private entries: LogEntry[] = []
-    private format: (pattern: string, args: any[], cb: (message: string) => void) => void
+    private readonly entries: LogEntry[] = []
+    private readonly format: (pattern: string, args: any[], cb: (message: string) => void) => void
 
     constructor() {
         // format escape sequences (%s, %o etc.) using real Logger
