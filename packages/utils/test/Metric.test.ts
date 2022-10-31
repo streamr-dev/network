@@ -1,8 +1,9 @@
 import { wait } from '../src/wait'
 import { AverageMetric, CountMetric, LevelMetric, MetricsContext, MetricsReport, RateMetric } from '../src/Metric'
 
-// TODO import this from streamr-test-utils if possible
-// in browser tests we get error: "Can't resolve '@streamr/utils' in '/Users/teogeb/workspace/streamr/network-monorepo/packages/test-utils/dist/src'"
+// this is inlined version of stream-test-utils as we get this error if we'd import this from the library:
+// "Can't resolve '@streamr/utils' in '/Users/teogeb/workspace/streamr/network-monorepo/packages/test-utils/dist/src'"
+// will be fixed in NET-920
 const waitForCondition = async (
     conditionFn: () => (boolean | Promise<boolean>),
     timeout = 5000,
