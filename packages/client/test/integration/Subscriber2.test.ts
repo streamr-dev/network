@@ -12,10 +12,9 @@ const MAX_ITEMS = 3
 const NUM_MESSAGES = 8
 
 const collect = async <T>(
-    iterator: AsyncGenerator<StreamMessage<T>>,
+    iterator: AsyncIterable<StreamMessage<T>>,
     fn: MaybeAsync<(item: {
         msg: StreamMessage<T>
-        iterator: AsyncGenerator<StreamMessage<T>>
         received: StreamMessage<T>[]
     }) => void> = async () => {}
 ): Promise<StreamMessage[]> => {
@@ -23,7 +22,7 @@ const collect = async <T>(
     for await (const msg of iterator) {
         received.push(msg)
         await fn({
-            msg, iterator, received,
+            msg, received,
         })
     }
     return received
@@ -38,7 +37,7 @@ describe('Subscriber', () => {
         // @ts-expect-error private
         return client.subscriber.count(def)
     }
-    
+
     beforeEach(async () => {
         const environment = new FakeEnvironment()
         client = environment.createClient()
@@ -261,7 +260,7 @@ describe('Subscriber', () => {
                     timestamp: 111111,
                 })
                 await waitForCondition(() => onError1.mock.calls.length > 0)
-                
+
                 expect(received1.map((m) => m.signature)).toEqual(published.slice(0, MAX_ITEMS).map((m) => m.signature))
                 expect(onError1).toHaveBeenCalledTimes(1)
             })
@@ -436,14 +435,14 @@ describe('Subscriber', () => {
             const published = await publishTestMessages()
 
             const [received1, received2] = await Promise.all([
-                collect(sub1, async ({ received, iterator }) => {
+                collect(sub1, async ({ received }) => {
                     if (received.length === published.length) {
-                        await iterator.return(undefined)
+                        await sub1.unsubscribe()
                     }
                 }),
-                collect(sub2, async ({ received, iterator }) => {
+                collect(sub2, async ({ received }) => {
                     if (received.length === published.length) {
-                        await iterator.return(undefined)
+                        await sub2.unsubscribe()
                     }
                 })
             ])
@@ -462,14 +461,14 @@ describe('Subscriber', () => {
             const published = await publishTestMessages()
 
             const [received1, received2] = await Promise.all([
-                collect(sub1, async ({ received, iterator }) => {
+                collect(sub1, async ({ received }) => {
                     if (received.length === published.length) {
-                        await iterator.return(undefined)
+                        await sub1.unsubscribe()
                     }
                 }),
-                collect(sub2, async ({ received, iterator }) => {
+                collect(sub2, async ({ received }) => {
                     if (received.length === published.length) {
-                        await iterator.return(undefined)
+                        await sub2.unsubscribe()
                     }
                 })
             ])
@@ -664,9 +663,9 @@ describe('Subscriber', () => {
         it('can subscribe to stream multiple times then unsubscribe one mid-stream', async () => {
             let sub2ReceivedAtUnsubscribe
             const [received1, received2] = await Promise.all([
-                collect(sub1, async ({ received, iterator }) => {
+                collect(sub1, async ({ received }) => {
                     if (received.length === published.length) {
-                        await iterator.return(undefined)
+                        await sub1.unsubscribe()
                     }
                 }),
                 collect(sub2, async ({ received }) => {
@@ -684,14 +683,14 @@ describe('Subscriber', () => {
 
         it('can subscribe to stream multiple times then return mid-stream', async () => {
             const [received1, received2] = await Promise.all([
-                collect(sub1, async ({ received, iterator }) => {
+                collect(sub1, async ({ received }) => {
                     if (received.length === MAX_ITEMS - 1) {
-                        await iterator.return(undefined)
+                        await sub1.unsubscribe()
                     }
                 }),
-                collect(sub2, async ({ received, iterator }) => {
+                collect(sub2, async ({ received }) => {
                     if (received.length === MAX_ITEMS) {
-                        await iterator.return(undefined)
+                        await sub2.unsubscribe()
                     }
                 }),
             ])

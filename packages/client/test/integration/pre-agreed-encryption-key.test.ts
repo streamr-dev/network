@@ -27,7 +27,7 @@ describe('pre-agreed encryption key', () => {
         await subscriber.addEncryptionKey(key, stream.id)
         const sub = await subscriber.subscribe(stream.id)
         await publisher.publish(stream.id, { foo: 'bar' })
-        const receivedMessage = await nextValue(sub)
+        const receivedMessage = await nextValue(sub[Symbol.asyncIterator]())
 
         expect(receivedMessage?.groupKeyId).toBe(key.id)
         const groupKeyRequests = environment.getNetwork().getSentMessages({

@@ -3,18 +3,22 @@
  * Subscriptions are MessageStreams.
  * Not all MessageStreams are Subscriptions.
  */
-import { PipelineTransform } from '../utils/Pipeline'
+import { Pipeline, PipelineTransform } from '../utils/Pipeline'
 import { PushPipeline } from '../utils/PushPipeline'
 import { StreamMessage } from 'streamr-client-protocol'
 import * as G from '../utils/GeneratorUtils'
 
 export type MessageStreamOnMessage<T, R = unknown> = (msg: T, streamMessage: StreamMessage<T>) => R | Promise<R>
 
-export class MessageStream<
-    T = unknown,
-    InType = StreamMessage<T>,
-    OutType extends StreamMessage<T> | unknown = InType
-> extends PushPipeline<InType, OutType> {
+export class MessageStream<T = unknown> implements AsyncIterable<StreamMessage<T>> {
+
+    private pipeline: PushPipeline<StreamMessage<T>, StreamMessage<T>> = new PushPipeline()
+
+    /** @internal */
+    // eslint-disable-next-line @typescript-eslint/no-useless-constructor
+    constructor() {
+    }
+
     /**
      * Attach a legacy onMessage handler and consume if necessary.
      * onMessage is passed parsed content as first arument, and streamMessage as second argument.
@@ -22,13 +26,13 @@ export class MessageStream<
      */
     useLegacyOnMessageHandler(onMessage?: MessageStreamOnMessage<T>): this {
         if (onMessage) {
-            this.onMessage.listen(async (streamMessage) => {
+            this.pipeline.onMessage.listen(async (streamMessage) => {
                 if (streamMessage instanceof StreamMessage) {
                     await onMessage(streamMessage.getParsedContent(), streamMessage)
                 }
             })
         }
-        this.flow()
+        this.pipeline.flow()
 
         return this
     }
@@ -44,47 +48,109 @@ export class MessageStream<
         })
     }
 
+    // TODO we could remove this methods and use collect() utility
+    // method instead (in iterators.ts)
     /** @internal */
-    override pipe<NewOutType>(fn: PipelineTransform<OutType, NewOutType>): MessageStream<T, InType, NewOutType> {
-        // this method override just fixes the output type to be MessageStream rather than Pipeline
-        super.pipe(fn)
-        return this as MessageStream<T, InType, unknown> as MessageStream<T, InType, NewOutType>
+    async collect(n?: number): Promise<StreamMessage<T>[]> {
+        return this.pipeline.collect(n)
+    }
+
+    [Symbol.asyncIterator](): AsyncIterator<StreamMessage<T>> {
+        return this.pipeline[Symbol.asyncIterator]()
+    }
+
+    /*
+     * The methods below are used to control or observe the pipeline.
+     * TODO We should refactor the pipeline handling so that a MessageStream producer
+     * (e.g. SubscriptionSession or Resends) creates a PushPipeline (or similar) data structure,
+     * and calls these methods for that pipeline. Here in MessageStream we'd see the object
+     * as Pipeline interface. Ideally here in MessageStream we'd use the pipeline only to get
+     * an async iterator when [Symbol.asyncIterator]() is called for this MessageStream.
+     * When the we have done the refactoring, all/most other methods below could be removed.
+     */
+
+    /** @internal */
+    onFinally = this.pipeline.onFinally
+
+    /** @internal */
+    onBeforeFinally = this.pipeline.onBeforeFinally
+
+    /** @internal */
+    onError = this.pipeline.onError
+
+    /** @internal */
+    onMessage = this.pipeline.onMessage
+
+    /** @internal */
+    flow(): void {
+        this.pipeline.flow()
     }
 
     /** @internal */
-    override pipeBefore(fn: PipelineTransform<InType, InType>): MessageStream<T, InType, OutType> {
-        // this method override just fixes the output type to be MessageStream rather than Pipeline
-        super.pipeBefore(fn)
-        return this
+    async push(item: StreamMessage<T>): Promise<void> {
+        await this.pipeline.push(item)
     }
 
     /** @internal */
-    override map<NewOutType>(fn: G.GeneratorMap<OutType, NewOutType>): MessageStream<T, InType, NewOutType> {
-        // this method override just fixes the output type to be MessageStream rather than Pipeline
-        return super.map(fn) as MessageStream<T, InType, NewOutType>
+    pipe<NewOutType>(fn: PipelineTransform<StreamMessage<T>, NewOutType>): Pipeline<StreamMessage<T>, NewOutType> {
+        return this.pipeline.pipe(fn)
+    }
+
+    // used only in tests
+    /** @internal */
+    pipeBefore(fn: PipelineTransform<StreamMessage<T>, StreamMessage<T>>): Pipeline<StreamMessage<T>, StreamMessage<T>> {
+        return this.pipeline.pipeBefore(fn)
     }
 
     /** @internal */
-    override filterBefore(fn: G.GeneratorFilter<InType>): MessageStream<T, InType, OutType> {
-        // this method override just fixes the output type to be MessageStream rather than Pipeline
-        return super.filterBefore(fn) as MessageStream<T, InType, OutType>
+    map<NewOutType>(fn: G.GeneratorMap<StreamMessage<T>, NewOutType>): Pipeline<StreamMessage<T>, NewOutType> {
+        return this.pipeline.map(fn)
     }
 
     /** @internal */
-    override filter(fn: G.GeneratorFilter<OutType>): MessageStream<T, InType, OutType> {
-        // this method override just fixes the output type to be MessageStream rather than Pipeline
-        return super.filter(fn) as MessageStream<T, InType, OutType>
+    forEach(fn: G.GeneratorForEach<StreamMessage<T>>): Pipeline<StreamMessage<T>, StreamMessage<T>> {
+        return this.pipeline.forEach(fn)
+    }
+
+    // used only in tests
+    /** @internal */
+    async consume(fn?: (streamMessage: StreamMessage<T>) => void): Promise<void> {
+        await this.pipeline.consume(fn)
     }
 
     /** @internal */
-    override forEach(fn: G.GeneratorForEach<OutType>): MessageStream<T, InType, OutType> {
-        // this method override just fixes the output type to be MessageStream rather than Pipeline
-        return super.forEach(fn) as MessageStream<T, InType, OutType>
+    async pull(source: AsyncGenerator<StreamMessage<T>>): Promise<void> {
+        return this.pipeline.pull(source)
     }
 
     /** @internal */
-    override forEachBefore(fn: G.GeneratorForEach<InType>): MessageStream<T, InType, OutType> {
-        // this method override just fixes the output type to be MessageStream rather than Pipeline
-        return super.forEachBefore(fn) as MessageStream<T, InType, OutType>
+    async handleError(err: Error): Promise<void> {
+        await this.pipeline.handleError(err)
+    }
+
+    /** @internal */
+    end(err?: Error): void {
+        this.pipeline.end(err)
+    }
+
+    /** @internal */
+    endWrite(err?: Error): void {
+        this.pipeline.endWrite(err)
+    }
+
+    /** @internal */
+    isDone(): boolean {
+        return this.pipeline.isDone()
+    }
+
+    /** @internal */
+    return(): Promise<unknown> {
+        return this.pipeline.return()
+    }
+
+    // used only in tests
+    /** @internal */
+    throw(err: Error): Promise<unknown> {
+        return this.pipeline.throw(err)
     }
 }

@@ -7,6 +7,7 @@ import { ResendOptions, Resends } from './Resends'
 import { DestroySignal } from '../DestroySignal'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { SubscribeConfig } from './../Config'
+import { MessageStream } from './MessageStream'
 
 export class ResendSubscription<T> extends Subscription<T> {
     private orderMessages: OrderMessages<T>
@@ -38,7 +39,7 @@ export class ResendSubscription<T> extends Subscription<T> {
         })
     }
 
-    private async getResent() {
+    private async getResent(): Promise<MessageStream<T>> {
         const [id, partition] = StreamPartIDUtils.getStreamIDAndPartition(this.streamPartId)
         const resentMsgs = await this.resends.resend<T>({
             id,
@@ -54,7 +55,7 @@ export class ResendSubscription<T> extends Subscription<T> {
     }
 
     /** @internal */
-    async* resendThenRealtime(src: AsyncGenerator<StreamMessage<T>>): AsyncGenerator<StreamMessage<T>, void, unknown> {
+    async* resendThenRealtime(src: AsyncGenerator<StreamMessage<T>>): AsyncGenerator<StreamMessage<T>, void, any> {
         try {
             yield* await this.getResent()
         } catch (err) {
