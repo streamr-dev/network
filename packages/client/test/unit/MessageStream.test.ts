@@ -3,7 +3,7 @@ import { counterId, instanceId } from '../../src/utils/utils'
 import { createRandomAuthentication } from '../test-utils/utils'
 import { Msg } from '../test-utils/publish'
 import { LeaksDetector } from '../test-utils/LeaksDetector'
-import { MessageStream, MessageStreamOnMessage } from '../../src/subscribe/MessageStream'
+import { MessageStream, MessageListener } from '../../src/subscribe/MessageStream'
 import { StreamMessage, MessageID, toStreamID } from 'streamr-client-protocol'
 import { Readable } from 'stream'
 import { waitForCondition } from 'streamr-test-utils'
@@ -12,7 +12,7 @@ import { Authentication } from '../../src/Authentication'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
-const fromReadable = async (readable: Readable, onMessage?: MessageStreamOnMessage<any>) => {
+const fromReadable = async (readable: Readable, onMessage?: MessageListener<any>) => {
     const result = new MessageStream<any>()
     if (onMessage !== undefined) {
         result.useLegacyOnMessageHandler(onMessage)

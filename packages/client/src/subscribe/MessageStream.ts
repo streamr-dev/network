@@ -8,7 +8,7 @@ import { PushPipeline } from '../utils/PushPipeline'
 import { StreamMessage } from 'streamr-client-protocol'
 import * as G from '../utils/GeneratorUtils'
 
-export type MessageStreamOnMessage<T, R = unknown> = (msg: T, streamMessage: StreamMessage<T>) => R | Promise<R>
+export type MessageListener<T, R = unknown> = (msg: T, streamMessage: StreamMessage<T>) => R | Promise<R>
 
 export class MessageStream<
     T = unknown,
@@ -20,7 +20,7 @@ export class MessageStream<
      * onMessage is passed parsed content as first arument, and streamMessage as second argument.
      * @internal
      */
-    useLegacyOnMessageHandler(onMessage?: MessageStreamOnMessage<T>): this {
+    useLegacyOnMessageHandler(onMessage?: MessageListener<T>): this {
         if (onMessage) {
             this.onMessage.listen(async (streamMessage) => {
                 if (streamMessage instanceof StreamMessage) {

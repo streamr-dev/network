@@ -1,7 +1,8 @@
 import { inject, scoped, Lifecycle, delay } from 'tsyringe'
 import { allSettledValues } from '../utils/promises'
 import { SubscriptionSession } from './SubscriptionSession'
-import { Subscription, SubscriptionOnMessage } from './Subscription'
+import { Subscription } from './Subscription'
+import { MessageListener } from './MessageStream'
 import { StreamPartID } from 'streamr-client-protocol'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamDefinition } from '../types'
@@ -62,13 +63,13 @@ export class Subscriber {
 
     async subscribe<T>(
         streamDefinition: StreamDefinition,
-        onMessage?: SubscriptionOnMessage<T>
+        onMessage?: MessageListener<T>
     ): Promise<Subscription<T>> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         return this.subscribeTo(streamPartId, onMessage)
     }
 
-    private async subscribeTo<T>(streamPartId: StreamPartID, onMessage?: SubscriptionOnMessage<T>): Promise<Subscription<T>> {
+    private async subscribeTo<T>(streamPartId: StreamPartID, onMessage?: MessageListener<T>): Promise<Subscription<T>> {
         const sub: Subscription<T> = await this.add(streamPartId)
         if (onMessage) {
             sub.useLegacyOnMessageHandler(onMessage)

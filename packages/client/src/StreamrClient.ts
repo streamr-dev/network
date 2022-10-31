@@ -14,11 +14,11 @@ import { GroupKeyStore, UpdateEncryptionKeyOptions } from './encryption/GroupKey
 import { StorageNodeMetadata, StorageNodeRegistry } from './registry/StorageNodeRegistry'
 import { StreamRegistry } from './registry/StreamRegistry'
 import { StreamDefinition } from './types'
-import { Subscription, SubscriptionOnMessage } from './subscribe/Subscription'
+import { Subscription } from './subscribe/Subscription'
 import { StreamIDBuilder } from './StreamIDBuilder'
 import { StreamrClientEventEmitter, StreamrClientEvents } from './events'
 import { ProxyDirection, StreamMessage } from 'streamr-client-protocol'
-import { MessageStream, MessageStreamOnMessage } from './subscribe/MessageStream'
+import { MessageStream, MessageListener } from './subscribe/MessageStream'
 import { Stream, StreamProperties } from './Stream'
 import { SearchStreamsPermissionFilter } from './registry/searchStreams'
 import { PermissionAssignment, PermissionQuery } from './permission'
@@ -125,13 +125,13 @@ export class StreamrClient {
      */
     async subscribe<T>(
         options: StreamDefinition & { resend?: ResendOptions },
-        onMessage?: SubscriptionOnMessage<T>
+        onMessage?: MessageListener<T>
     ): Promise<Subscription<T>> {
         let result
         if (options.resend !== undefined) {
-            result = await this.resendSubscribe(options, options.resend, onMessage)
+            result = await this.resendSubscribe<T>(options, options.resend, onMessage)
         } else {
-            result = await this.subscriber.subscribe(options, onMessage)
+            result = await this.subscriber.subscribe<T>(options, onMessage)
         }
         this.eventEmitter.emit('subscribe', undefined)
         return result
@@ -140,7 +140,7 @@ export class StreamrClient {
     private async resendSubscribe<T>(
         streamDefinition: StreamDefinition,
         resendOptions: ResendOptions,
-        onMessage?: SubscriptionOnMessage<T>
+        onMessage?: MessageListener<T>
     ): Promise<ResendSubscription<T>> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         const sub = new ResendSubscription<T>(
@@ -184,7 +184,7 @@ export class StreamrClient {
     resend<T>(
         streamDefinition: StreamDefinition,
         options: ResendOptions,
-        onMessage?: MessageStreamOnMessage<T>
+        onMessage?: MessageListener<T>
     ): Promise<MessageStream<T>> {
         return this.resends.resend(streamDefinition, options, onMessage)
     }
