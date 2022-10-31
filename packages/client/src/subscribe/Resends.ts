@@ -23,6 +23,7 @@ import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { counterId } from '../utils/utils'
 import { StreamrClientError } from '../StreamrClientError'
+import { collect } from '../utils/iterators'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 
@@ -281,7 +282,7 @@ export class Resends {
             }
 
             const resendStream = await this.resend(streamDefinition, { last: count })
-            last = await resendStream.collect()
+            last = await collect(resendStream)
             for (const lastMsg of last) {
                 if (messageMatchFn(streamMessage, lastMsg)) {
                     found = true

@@ -3,7 +3,7 @@ import { Msg, publishTestMessagesGenerator } from '../test-utils/publish'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src'
-import { collect } from '../../src/utils/GeneratorUtils'
+import { collect } from '../../src/utils/iterators'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 
 describe('Basics', () => {

@@ -12,6 +12,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { MessageFactory } from '../../src/publish/MessageFactory'
 import { createAuthentication } from '../../src/Authentication'
 import { createGroupKeyQueue, createStreamRegistryCached } from '../test-utils/utils'
+import { collect } from '../../src/utils/iterators'
 
 const PUBLISHER_COUNT = 50
 const MESSAGE_COUNT_PER_PUBLISHER = 3
@@ -80,7 +81,7 @@ describe('parallel key exchange', () => {
         }
 
         const expectedMessageCount = PUBLISHER_COUNT * MESSAGE_COUNT_PER_PUBLISHER
-        const messages = await sub.collect(expectedMessageCount)
+        const messages = await collect(sub, expectedMessageCount)
         expect(messages).toHaveLength(expectedMessageCount)
         expect(messages.filter((msg) => !((msg.getParsedContent() as any).foo === 'bar'))).toEqual([])
         expect(environment.getNetwork().getSentMessages({

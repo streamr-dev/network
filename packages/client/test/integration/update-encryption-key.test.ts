@@ -1,8 +1,7 @@
 import 'reflect-metadata'
 import { waitForCondition } from 'streamr-test-utils'
-import { StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
+import { StreamMessage, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
 import { StreamrClient } from './../../src/StreamrClient'
-import { Subscription } from '../../src/subscribe/Subscription'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
@@ -18,7 +17,8 @@ describe('update encryption key', () => {
     let publisher: StreamrClient
     let subscriber: StreamrClient
     let streamPartId: StreamPartID
-    let sub: Subscription
+    let messageIterator: AsyncIterator<StreamMessage<any>>
+    let onError: jest.Mock<(err: Error) => void>
     let environment = new FakeEnvironment()
 
     beforeEach(async () => {
@@ -35,7 +35,10 @@ describe('update encryption key', () => {
             permissions: [StreamPermission.SUBSCRIBE]
         })
         streamPartId = stream.getStreamParts()[0]
-        sub = await subscriber.subscribe(streamPartId)
+        const sub = await subscriber.subscribe(streamPartId)
+        messageIterator = sub[Symbol.asyncIterator]()
+        onError = jest.fn()
+        sub.on('error', onError)
     })
 
     afterEach(async () => {
@@ -46,7 +49,7 @@ describe('update encryption key', () => {
         await publisher.publish(streamPartId, {
             mockId: 1
         })
-        const msg1 = await nextValue(sub)
+        const msg1 = await nextValue(messageIterator)
         expect(msg1!.getParsedContent()).toEqual({
             mockId: 1
         })
@@ -61,7 +64,7 @@ describe('update encryption key', () => {
         await publisher.publish(streamPartId, {
             mockId: 2
         })
-        const msg2 = await nextValue(sub)
+        const msg2 = await nextValue(messageIterator)
         expect(msg2!.getParsedContent()).toEqual({
             mockId: 2
         })
@@ -71,7 +74,7 @@ describe('update encryption key', () => {
         await publisher.publish(streamPartId, {
             mockId: 3
         })
-        const msg3 = await nextValue(sub)
+        const msg3 = await nextValue(messageIterator)
         expect(msg3!.getParsedContent()).toEqual({
             mockId: 3
         })
@@ -82,7 +85,7 @@ describe('update encryption key', () => {
         await publisher.publish(streamPartId, {
             mockId: 1
         })
-        const msg1 = await nextValue(sub)
+        const msg1 = await nextValue(messageIterator)
         expect(msg1!.getParsedContent()).toEqual({
             mockId: 1
         })
@@ -97,7 +100,7 @@ describe('update encryption key', () => {
         await publisher.publish(streamPartId, {
             mockId: 2
         })
-        const msg2 = await nextValue(sub)
+        const msg2 = await nextValue(messageIterator)
         expect(msg2!.getParsedContent()).toEqual({
             mockId: 2
         })
@@ -110,7 +113,7 @@ describe('update encryption key', () => {
             await publisher.publish(streamPartId, {
                 mockId: 1
             })
-            const msg1 = await nextValue(sub)
+            const msg1 = await nextValue(messageIterator)
             expect(msg1!.getParsedContent()).toEqual({
                 mockId: 1
             })
@@ -129,7 +132,7 @@ describe('update encryption key', () => {
             await publisher.publish(streamPartId, {
                 mockId: 2
             })
-            const msg2 = await nextValue(sub)
+            const msg2 = await nextValue(messageIterator)
             expect(msg2!.getParsedContent()).toEqual({
                 mockId: 2
             })
@@ -139,7 +142,7 @@ describe('update encryption key', () => {
             await publisher.publish(streamPartId, {
                 mockId: 1
             })
-            const msg1 = await nextValue(sub)
+            const msg1 = await nextValue(messageIterator)
             expect(msg1!.getParsedContent()).toEqual({
                 mockId: 1
             })
@@ -157,8 +160,6 @@ describe('update encryption key', () => {
             await publisher.publish(streamPartId, {
                 mockId: 2
             })
-            const onError = jest.fn()
-            sub.on('error', onError)
             await waitForCondition(() => onError.mock.calls.length > 0, 10 * 1000)
             expect(onError.mock.calls[0][0]).toBeInstanceOf(DecryptError)
         }, 10 * 1000)

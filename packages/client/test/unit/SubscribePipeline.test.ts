@@ -6,7 +6,7 @@ import { MessageStream } from './../../src/subscribe/MessageStream'
 import { fastWallet, randomEthereumAddress } from "streamr-test-utils"
 import { createSubscribePipeline } from "../../src/subscribe/SubscribePipeline"
 import { mockLoggerFactory } from '../test-utils/utils'
-import { collect } from '../../src/utils/GeneratorUtils'
+import { collect } from '../../src/utils/iterators'
 import { DecryptError, EncryptionUtil } from '../../src/encryption/EncryptionUtil'
 import { Stream } from '../../src'
 import { DestroySignal } from '../../src/DestroySignal'

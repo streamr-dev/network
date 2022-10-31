@@ -117,6 +117,8 @@ export async function* reduce<InType, OutType>(
     }, onError)
 }
 
+// TODO many use cases could use collect() utility method
+// for AsyncIterables instead (iterators.ts)
 /**
  * Consume generator and collect results into an array.
  * Can take an optional number of items to consume.
@@ -151,7 +153,7 @@ export async function consume<InType>(
 }
 
 export async function* unique<T>(
-    source: AsyncGenerator<T>,
+    source: AsyncIterable<T>,
     getIdentity: (item: T) => string
 ): AsyncGenerator<T> {
     const seenIdentities = new Set<string>()
