@@ -181,12 +181,16 @@ export class StreamrClient {
      * Call last/from/range as appropriate based on arguments
      * @category Important
      */
-    resend<T>(
+    async resend<T>(
         streamDefinition: StreamDefinition,
         options: ResendOptions,
         onMessage?: MessageListener<T>
     ): Promise<MessageStream<T>> {
-        return this.resends.resend(streamDefinition, options, onMessage)
+        const messageStream = await this.resends.resend<T>(streamDefinition, options)
+        if (onMessage !== undefined) {
+            messageStream.useLegacyOnMessageHandler(onMessage)
+        }
+        return messageStream
     }
 
     waitForStorage(streamMessage: StreamMessage, options?: {
