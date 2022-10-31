@@ -6,4 +6,6 @@ process.once("loaded", () => {
     window.HTTP = require('http')
     window.HTTPS = require('https')
     window.NodeJsBuffer = Buffer
+    // maybe we can set this karma-setup
+    window._streamr_electron_test = true
 })
