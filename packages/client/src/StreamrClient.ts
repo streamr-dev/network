@@ -231,7 +231,7 @@ export class StreamrClient {
         return this.streamRegistry.deleteStream(streamIdOrPath)
     }
 
-    searchStreams(term: string | undefined, permissionFilter: SearchStreamsPermissionFilter | undefined): AsyncGenerator<Stream> {
+    searchStreams(term: string | undefined, permissionFilter: SearchStreamsPermissionFilter | undefined): AsyncIterable<Stream> {
         return this.streamRegistry.searchStreams(term, permissionFilter)
     }
 

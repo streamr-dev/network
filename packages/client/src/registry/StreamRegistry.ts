@@ -221,7 +221,7 @@ export class StreamRegistry {
         return this.parseStream(streamId, metadata)
     }
 
-    searchStreams(term: string | undefined, permissionFilter: SearchStreamsPermissionFilter | undefined): AsyncGenerator<Stream> {
+    searchStreams(term: string | undefined, permissionFilter: SearchStreamsPermissionFilter | undefined): AsyncIterable<Stream> {
         return _searchStreams(
             term,
             permissionFilter,
