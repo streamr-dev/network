@@ -10,6 +10,7 @@ const snapshotClient = new snapshot.Client712(hub)
 const vote = async (privateKey: string, proposal: string, choice: string) => {
     const wallet = new Wallet(privateKey)
     try {
+        // @ts-expect-error Wallet import issue
         await snapshotClient.vote(wallet, wallet.address, {
             space: 'streamr.eth',
             proposal,
