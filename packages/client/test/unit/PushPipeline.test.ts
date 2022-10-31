@@ -3,11 +3,11 @@ import { counterId, instanceId } from '../../src/utils/utils'
 import { createRandomAuthentication } from '../test-utils/utils'
 import { Msg } from '../test-utils/publish'
 import { LeaksDetector } from '../test-utils/LeaksDetector'
-import { MessageStream } from '../../src/subscribe/MessageStream'
 import { StreamMessage, MessageID, toStreamID } from 'streamr-client-protocol'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { Authentication } from '../../src/Authentication'
 import { collect } from '../../src/utils/iterators'
+import { PushPipeline } from '../../src/utils/PushPipeline'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
@@ -35,7 +35,7 @@ describe('PushPipeline', () => {
     })
 
     it('works', async () => {
-        const s = new MessageStream()
+        const s = new PushPipeline<StreamMessage>()
         leaksDetector.add(instanceId(s), s)
         const testMessage = Msg()
         leaksDetector.add('testMessage', testMessage)
@@ -59,7 +59,7 @@ describe('PushPipeline', () => {
         leaksDetector.add('testMessage', testMessage)
         const streamMessage = await createMockMessage()
         leaksDetector.add('streamMessage', streamMessage)
-        const s = new MessageStream<typeof testMessage>()
+        const s = new PushPipeline<StreamMessage>()
         leaksDetector.add(instanceId(s), s)
         const received: StreamMessage<typeof testMessage>[] = []
         s.pull((async function* g() {
@@ -89,7 +89,7 @@ describe('PushPipeline', () => {
             authentication
         })
         leaksDetector.add('streamMessage', streamMessage)
-        const s = new MessageStream<typeof testMessage>()
+        const s = new PushPipeline<StreamMessage>()
         leaksDetector.add(instanceId(s), s)
         const received: StreamMessage<typeof testMessage>[] = []
         s.onError.listen((error) => {
@@ -113,7 +113,7 @@ describe('PushPipeline', () => {
     it('handles error during iteration', async () => {
         const testMessage = Msg()
         leaksDetector.add('testMessage', testMessage)
-        const s = new MessageStream<typeof testMessage>()
+        const s = new PushPipeline<StreamMessage>()
         leaksDetector.add(instanceId(s), s)
         const err = new Error(counterId('expected error'))
         const streamMessage = await createMockMessage()
@@ -134,7 +134,7 @@ describe('PushPipeline', () => {
     it('emits errors', async () => {
         const testMessage = Msg()
         leaksDetector.add('testMessage', testMessage)
-        const s = new MessageStream<typeof testMessage>()
+        const s = new PushPipeline<StreamMessage>()
         leaksDetector.add(instanceId(s), s)
         const err = new Error(counterId('expected error'))
         const streamMessage = await createMockMessage()
@@ -158,7 +158,7 @@ describe('PushPipeline', () => {
     it('processes buffer before handling errors with endWrite', async () => {
         const testMessage = Msg()
         leaksDetector.add('testMessage', testMessage)
-        const s = new MessageStream<typeof testMessage>()
+        const s = new PushPipeline<StreamMessage>()
         leaksDetector.add(instanceId(s), s)
         const err = new Error(counterId('expected error'))
 
@@ -178,8 +178,7 @@ describe('PushPipeline', () => {
     })
 
     it('can collect', async () => {
-        const testMessage = Msg()
-        const s = new MessageStream<typeof testMessage>()
+        const s = new PushPipeline<StreamMessage>()
 
         const streamMessage = await createMockMessage()
         s.push(streamMessage)
@@ -190,7 +189,7 @@ describe('PushPipeline', () => {
 
     it('can cancel collect with return', async () => {
         const testMessage = Msg()
-        const s = new MessageStream<typeof testMessage>()
+        const s = new PushPipeline<StreamMessage>()
         leaksDetector.add('testMessage', testMessage)
         leaksDetector.add(instanceId(s), s)
 
@@ -207,7 +206,7 @@ describe('PushPipeline', () => {
 
     it('can cancel collect with throw', async () => {
         const testMessage = Msg()
-        const s = new MessageStream<typeof testMessage>()
+        const s = new PushPipeline<StreamMessage>()
         const err = new Error(counterId('expected error'))
         leaksDetector.add('testMessage', testMessage)
         leaksDetector.add(instanceId(s), s)
