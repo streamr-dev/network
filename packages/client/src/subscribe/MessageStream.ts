@@ -12,7 +12,7 @@ export type MessageStreamOnMessage<T, R = unknown> = (msg: T, streamMessage: Str
 
 export class MessageStream<T = unknown> implements AsyncIterable<StreamMessage<T>> {
 
-    private pipeline: PushPipeline<StreamMessage<T>, StreamMessage<T>> = new PushPipeline()
+    private readonly pipeline: PushPipeline<StreamMessage<T>, StreamMessage<T>> = new PushPipeline()
 
     /** @internal */
     // eslint-disable-next-line @typescript-eslint/no-useless-constructor
