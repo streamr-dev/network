@@ -186,7 +186,8 @@ export class StreamrClient {
         options: ResendOptions,
         onMessage?: MessageListener<T>
     ): Promise<MessageStream<T>> {
-        const messageStream = await this.resends.resend<T>(streamDefinition, options)
+        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
+        const messageStream = await this.resends.resend<T>(streamPartId, options)
         if (onMessage !== undefined) {
             messageStream.useLegacyOnMessageHandler(onMessage)
         }

@@ -9,7 +9,6 @@ import { createSubscribePipeline } from './SubscribePipeline'
 
 import { StorageNodeRegistry } from '../registry/StorageNodeRegistry'
 import { StreamIDBuilder } from '../StreamIDBuilder'
-import { StreamDefinition } from '../types'
 import { random } from 'lodash'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { HttpUtil } from '../HttpUtil'
@@ -96,15 +95,7 @@ export class Resends {
         this.logger = loggerFactory.createLogger(module)
     }
 
-    async resend<T>(
-        streamDefinition: StreamDefinition,
-        options: ResendOptions
-    ): Promise<MessageStream<T>> {
-        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        return this.resendMessages<T>(streamPartId, options)
-    }
-
-    private resendMessages<T>(streamPartId: StreamPartID, options: ResendOptions): Promise<MessageStream<T>> {
+    resend<T>(streamPartId: StreamPartID, options: ResendOptions): Promise<MessageStream<T>> {
         if (isResendLast(options)) {
             return this.last<T>(streamPartId, {
                 count: options.last,
@@ -255,9 +246,6 @@ export class Resends {
             throw new StreamrClientError('waitForStorage requires a StreamMessage', 'INVALID_ARGUMENT')
         }
 
-        const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamMessage.getStreamPartID())
-        const streamDefinition = { streamId, partition }
-
         const start = Date.now()
         let last: StreamMessage[] | undefined
         let found = false
@@ -273,7 +261,7 @@ export class Resends {
                 throw err
             }
 
-            const resendStream = await this.resend(streamDefinition, { last: count })
+            const resendStream = await this.resend(streamMessage.getStreamPartID(), { last: count })
             last = await collect(resendStream)
             for (const lastMsg of last) {
                 if (messageMatchFn(streamMessage, lastMsg)) {
