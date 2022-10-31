@@ -191,7 +191,7 @@ export class Resends {
         return messageStream
     }
 
-    private async last<T>(streamPartId: StreamPartID, { count }: { count: number }): Promise<MessageStream<T>> {
+    async last<T>(streamPartId: StreamPartID, { count }: { count: number }): Promise<MessageStream<T>> {
         if (count <= 0) {
             const emptyStream = new MessageStream<T>()
             emptyStream.endWrite()
