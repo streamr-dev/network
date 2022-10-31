@@ -54,8 +54,7 @@ export class ResendSubscription<T> extends Subscription<T> {
         return resentMsgs
     }
 
-    /** @internal */
-    async* resendThenRealtime(src: AsyncGenerator<StreamMessage<T>>): AsyncGenerator<StreamMessage<T>, void, any> {
+    private async* resendThenRealtime(src: AsyncGenerator<StreamMessage<T>>): AsyncGenerator<StreamMessage<T>, void, any> {
         try {
             yield* await this.getResent()
         } catch (err) {
