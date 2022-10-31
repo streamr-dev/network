@@ -5,6 +5,7 @@ import { getWaitForStorage } from '../test-utils/publish'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
+import { collect } from '../../src/utils/iterators'
 
 const Msg = (opts?: any) => ({
     value: uid('msg'),
@@ -162,7 +163,7 @@ describe('Sequencing', () => {
                 }
             }
         )
-        const msgsResent = await sub.collectContent()
+        const msgsResent = (await collect(sub)).map((m) => m.getParsedContent())
 
         expect(msgsReceieved).toEqual(msgsResent)
         // backdated messages disappear
@@ -230,7 +231,7 @@ describe('Sequencing', () => {
                 }
             }
         )
-        const msgsResent = await sub.collectContent()
+        const msgsResent = (await collect(sub)).map((m) => m.getParsedContent())
 
         expect(msgsReceieved).toEqual(msgsResent)
         // backdated messages disappear

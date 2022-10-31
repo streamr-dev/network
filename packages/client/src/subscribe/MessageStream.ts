@@ -37,24 +37,6 @@ export class MessageStream<T = unknown> implements AsyncIterable<StreamMessage<T
         return this
     }
 
-    /** @internal */
-    async collectContent(n?: number): Promise<any[]> {
-        const messages = await this.collect(n)
-        return messages.map((streamMessage) => {
-            if (streamMessage instanceof StreamMessage) {
-                return streamMessage.getParsedContent()
-            }
-            return streamMessage
-        })
-    }
-
-    // TODO we could remove this methods and use collect() utility
-    // method instead (in iterators.ts)
-    /** @internal */
-    async collect(n?: number): Promise<StreamMessage<T>[]> {
-        return this.pipeline.collect(n)
-    }
-
     [Symbol.asyncIterator](): AsyncIterator<StreamMessage<T>> {
         return this.pipeline[Symbol.asyncIterator]()
     }
