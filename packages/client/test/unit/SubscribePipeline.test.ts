@@ -1,19 +1,20 @@
 import 'reflect-metadata'
-import { GroupKey, GroupKeyId } from './../../src/encryption/GroupKey'
-import { EncryptionType, MessageID, StreamMessage, StreamPartID, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
+
 import { Wallet } from '@ethersproject/wallet'
-import { MessageStream } from './../../src/subscribe/MessageStream'
-import { fastWallet, randomEthereumAddress } from "streamr-test-utils"
-import { createSubscribePipeline } from "../../src/subscribe/SubscribePipeline"
-import { mockLoggerFactory } from '../test-utils/utils'
-import { collect } from '../../src/utils/iterators'
-import { DecryptError, EncryptionUtil } from '../../src/encryption/EncryptionUtil'
-import { Stream } from '../../src'
-import { DestroySignal } from '../../src/DestroySignal'
-import { createSignedMessage } from '../../src/publish/MessageFactory'
-import { createAuthentication } from '../../src/Authentication'
-import { StreamrClientEventEmitter } from '../../src/events'
 import { toEthereumAddress } from '@streamr/utils'
+import { EncryptionType, MessageID, StreamMessage, StreamPartID, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
+import { fastWallet, randomEthereumAddress } from "streamr-test-utils"
+import { Stream } from '../../src/Stream'
+import { createAuthentication } from '../../src/Authentication'
+import { DestroySignal } from '../../src/DestroySignal'
+import { DecryptError, EncryptionUtil } from '../../src/encryption/EncryptionUtil'
+import { StreamrClientEventEmitter } from '../../src/events'
+import { createSignedMessage } from '../../src/publish/MessageFactory'
+import { createSubscribePipeline } from "../../src/subscribe/SubscribePipeline"
+import { collect } from '../../src/utils/iterators'
+import { mockLoggerFactory } from '../test-utils/utils'
+import { GroupKey, GroupKeyId } from './../../src/encryption/GroupKey'
+import { MessageStream } from './../../src/subscribe/MessageStream'
 
 const CONTENT = {
     foo: 'bar'

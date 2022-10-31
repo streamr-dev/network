@@ -1,18 +1,19 @@
 import 'reflect-metadata'
+
+import { Wallet } from '@ethersproject/wallet'
 import fs from 'fs'
 import path from 'path'
 import { StreamID, StreamMessage } from 'streamr-client-protocol'
 import { fastWallet } from 'streamr-test-utils'
-import { createTestStream } from '../test-utils/utils'
-import { getPublishTestStreamMessages, getWaitForStorage, Msg } from '../test-utils/publish'
-import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
-import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
-import { FakeStorageNode } from './../test-utils/fake/FakeStorageNode'
-import { StreamPermission } from './../../src/permission'
-import { Wallet } from '@ethersproject/wallet'
+import { StreamrClient } from '../../src/StreamrClient'
 import { StreamrClientError } from '../../src/StreamrClientError'
 import { collect } from '../../src/utils/iterators'
+import { getPublishTestStreamMessages, getWaitForStorage, Msg } from '../test-utils/publish'
+import { createTestStream } from '../test-utils/utils'
+import { StreamPermission } from './../../src/permission'
+import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
+import { FakeStorageNode } from './../test-utils/fake/FakeStorageNode'
 
 const MAX_MESSAGES = 5
 

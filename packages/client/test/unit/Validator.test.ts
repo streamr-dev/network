@@ -1,13 +1,14 @@
 import 'reflect-metadata'
+
 import { Wallet } from '@ethersproject/wallet'
+import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 import { toStreamID, toStreamPartID } from 'streamr-client-protocol'
-import { Stream } from '../../src/Stream'
+import { fastWallet } from 'streamr-test-utils'
 import { StreamRegistry } from '../../src/registry/StreamRegistry'
 import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
+import { Stream } from '../../src/Stream'
 import { Validator } from '../../src/Validator'
 import { createMockMessage, mockLoggerFactory } from '../test-utils/utils'
-import { fastWallet } from 'streamr-test-utils'
-import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 
 const publisherWallet = fastWallet()
 const PARTITION_COUNT = 3

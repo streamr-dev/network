@@ -1,13 +1,16 @@
+import 'reflect-metadata'
+
+import { Defer } from '@streamr/utils'
 import { StreamMessage } from 'streamr-client-protocol'
 import { fastWallet, waitForCondition } from 'streamr-test-utils'
-import { createTestStream } from '../test-utils/utils'
+import { StreamPermission } from '../../src/permission'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Subscription } from '../../src/subscribe/Subscription'
-import { StreamDefinition, StreamPermission } from '../../src'
+import { StreamDefinition } from '../../src/types'
+import { collect } from '../../src/utils/iterators'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
-import { Defer } from '@streamr/utils'
-import { collect } from '../../src/utils/iterators'
+import { createTestStream } from '../test-utils/utils'
 
 const MAX_ITEMS = 3
 const NUM_MESSAGES = 8

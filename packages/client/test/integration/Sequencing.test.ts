@@ -1,11 +1,13 @@
-import { waitForCondition } from 'streamr-test-utils'
+import 'reflect-metadata'
+
 import { wait } from '@streamr/utils'
-import { uid, createTestStream } from '../test-utils/utils'
-import { getWaitForStorage } from '../test-utils/publish'
-import { StreamrClient } from '../../src/StreamrClient'
+import { waitForCondition } from 'streamr-test-utils'
 import { Stream } from '../../src/Stream'
-import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
+import { StreamrClient } from '../../src/StreamrClient'
 import { collect } from '../../src/utils/iterators'
+import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
+import { getWaitForStorage } from '../test-utils/publish'
+import { createTestStream, uid } from '../test-utils/utils'
 
 const Msg = (opts?: any) => ({
     value: uid('msg'),

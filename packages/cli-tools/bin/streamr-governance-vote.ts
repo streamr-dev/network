@@ -7,9 +7,10 @@ import { Wallet } from '@ethersproject/wallet'
 const hub = 'https://hub.snapshot.org'
 const snapshotClient = new snapshot.Client712(hub)
 
-const vote = async (privateKey: string, proposal: string, choice: string) => {
+const vote = async (privateKey: string, proposal: string, choice: number) => {
     const wallet = new Wallet(privateKey)
     try {
+        console.log(`Wallet ${wallet.address} voting for choice ${choice} on proposal ${proposal}...`)
         await snapshotClient.vote(wallet, wallet.address, {
             space: 'streamr.eth',
             proposal,
@@ -37,6 +38,13 @@ createCommand()
             process.exit(1)
         } 
 
-        await vote(config.auth.privateKey, proposalId, choiceId)
+        const choiceIdAsNumber = parseInt(choiceId)
+        if (Number.isNaN(choiceIdAsNumber) || choiceIdAsNumber <= 0) {
+            console.error(`Invalid choice number: ${choiceId}. The first choice is 1, second is 2, and so on.`)
+            command.help()
+            process.exit(1)
+        }
+
+        await vote(config.auth.privateKey, proposalId, choiceIdAsNumber)
     })
     .parseAsync()

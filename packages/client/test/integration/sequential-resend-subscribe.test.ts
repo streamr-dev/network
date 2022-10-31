@@ -1,10 +1,12 @@
-import { createTestStream } from '../test-utils/utils'
-import { getPublishTestStreamMessages, getWaitForStorage, Msg } from '../test-utils/publish'
-import { StreamrClient } from '../../src/StreamrClient'
-import { Stream } from '../../src/Stream'
+import 'reflect-metadata'
+
 import { StreamPermission } from '../../src/permission'
-import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
+import { Stream } from '../../src/Stream'
+import { StreamrClient } from '../../src/StreamrClient'
 import { collect } from '../../src/utils/iterators'
+import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
+import { getPublishTestStreamMessages, getWaitForStorage, Msg } from '../test-utils/publish'
+import { createTestStream } from '../test-utils/utils'
 
 const MAX_MESSAGES = 5
 const ITERATIONS = 4

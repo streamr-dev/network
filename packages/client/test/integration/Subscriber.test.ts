@@ -1,12 +1,14 @@
 import 'reflect-metadata'
+
 import { Wallet } from '@ethersproject/wallet'
-import { Stream } from '../../src/Stream'
-import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
-import StreamrClient, { StreamPermission } from '../../src'
-import { createMockMessage } from '../test-utils/utils'
-import { GroupKey } from '../../src/encryption/GroupKey'
-import { nextValue } from '../../src/utils/iterators'
 import { fastWallet } from 'streamr-test-utils'
+import { GroupKey } from '../../src/encryption/GroupKey'
+import { StreamPermission } from '../../src/permission'
+import { Stream } from '../../src/Stream'
+import { StreamrClient } from '../../src/StreamrClient'
+import { nextValue } from '../../src/utils/iterators'
+import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
+import { createMockMessage } from '../test-utils/utils'
 
 const MOCK_CONTENT = { foo: 'bar' }
 

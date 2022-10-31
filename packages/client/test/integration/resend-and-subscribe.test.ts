@@ -1,13 +1,14 @@
 import 'reflect-metadata'
+
 import { GroupKeyMessage, GroupKeyRequest, StreamMessage } from 'streamr-client-protocol'
-import { GroupKey } from '../../src/encryption/GroupKey'
-import { createMockMessage, startPublisherKeyExchangeSubscription } from '../test-utils/utils'
-import { Stream } from '../../src/Stream'
 import { fastWallet } from 'streamr-test-utils'
+import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'
-import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
+import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
+import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
+import { createMockMessage, startPublisherKeyExchangeSubscription } from '../test-utils/utils'
 import { nextValue } from './../../src/utils/iterators'
 
 /*

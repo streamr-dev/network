@@ -1,15 +1,16 @@
+import 'reflect-metadata'
+
+import { Defer, wait } from '@streamr/utils'
 import fs from 'fs'
 import path from 'path'
 import { StreamMessage, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
 import { fastPrivateKey, fastWallet } from 'streamr-test-utils'
-import { Defer, wait } from '@streamr/utils'
-import {
-    Msg,
-    getPublishTestStreamMessages
-} from '../test-utils/publish'
+import { StreamPermission } from '../../src/permission'
 import { StreamrClient } from '../../src/StreamrClient'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
-import { StreamPermission } from '../../src/permission'
+import {
+    getPublishTestStreamMessages, Msg
+} from '../test-utils/publish'
 import { createTestStream } from '../test-utils/utils'
 import { collect } from '../../src/utils/iterators'
 

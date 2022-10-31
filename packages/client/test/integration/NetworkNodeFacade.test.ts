@@ -1,7 +1,8 @@
 import 'reflect-metadata'
-import { StreamrClient } from '../../src/StreamrClient'
-import { ConfigTest } from '../../src/ConfigTest'
+
 import { fastPrivateKey, fastWallet } from 'streamr-test-utils'
+import { ConfigTest } from '../../src/ConfigTest'
+import { StreamrClient } from '../../src/StreamrClient'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 
 describe('NetworkNodeFacade', () => {

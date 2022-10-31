@@ -1,14 +1,16 @@
+import 'reflect-metadata'
+
 import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
-import { StreamrClient } from '../../src/StreamrClient'
 import { StreamrClientConfig } from '../../src/Config'
+import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
+import { StreamrClient } from '../../src/StreamrClient'
 import { Subscriber } from '../../src/subscribe/Subscriber'
 import { Subscription } from '../../src/subscribe/Subscription'
-import { createTestStream } from '../test-utils/utils'
-import { getPublishTestStreamMessages, Msg } from '../test-utils/publish'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
-import { StreamPermission } from '../../src'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
+import { getPublishTestStreamMessages, Msg } from '../test-utils/publish'
+import { createTestStream } from '../test-utils/utils'
 
 const MAX_MESSAGES = 10
 
