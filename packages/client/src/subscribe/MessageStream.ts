@@ -26,9 +26,7 @@ export class MessageStream<T = unknown> implements AsyncIterable<StreamMessage<T
      */
     useLegacyOnMessageHandler(onMessage: MessageListener<T>): this {
         this.pipeline.onMessage.listen(async (streamMessage) => {
-            if (streamMessage instanceof StreamMessage) {
-                await onMessage(streamMessage.getParsedContent(), streamMessage)
-            }
+            await onMessage(streamMessage.getParsedContent(), streamMessage)
         })
         this.pipeline.flow()
 
