@@ -1,3 +1,4 @@
+import 'reflect-metadata'
 import { Defer } from '@streamr/utils'
 import { StreamMessage } from 'streamr-client-protocol'
 import { fastWallet, waitForCondition } from 'streamr-test-utils'

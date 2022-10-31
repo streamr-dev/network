@@ -1,3 +1,4 @@
+import 'reflect-metadata'
 import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
 import { StreamrClientConfig } from '../../src/Config'
 import { StreamPermission } from '../../src/permission'
