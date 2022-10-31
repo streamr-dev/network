@@ -82,12 +82,10 @@ export class HttpUtil {
 
     async* fetchHttpStream<T>(
         url: string,
-        opts = {}, // eslint-disable-line @typescript-eslint/explicit-module-boundary-types
         abortController = new AbortController()
     ): AsyncIterable<StreamMessage<T>> {
         const response = await fetchResponse(url, this.logger, {
-            signal: abortController.signal,
-            ...opts,
+            signal: abortController.signal
         })
         if (!response.body) {
             throw new Error('No Response Body')
