@@ -59,6 +59,14 @@ describe('BrowserWebRtcConnection', () => {
         conn2.close()
     })
 
+    it('configuring a turn server does not cause error ', () => {
+        const conn3 = webRtcConnectionFactory.createConnection({
+            ...connectionOpts1,
+            stunUrls: ['turn:BrubeckTurn1:MIlbgtMw4nhpmbgqRrht1Q==@turn.streamr.network:5349']
+        })
+        expect(() => conn3.connect()).not.toThrowError()
+    })
+
     it('can connect', async () => {
         expect(conn1.isOpen()).toEqual(true)
         expect(conn2.isOpen()).toEqual(true)
