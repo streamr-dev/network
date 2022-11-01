@@ -10,7 +10,7 @@ import { pOnce } from './utils/promises'
 import { NetworkConfig, ConfigInjectionToken, TrackerRegistrySmartContract } from './Config'
 import { StreamMessage, StreamPartID, ProxyDirection } from 'streamr-client-protocol'
 import { DestroySignal } from './DestroySignal'
-import { EthereumConfig, generateEthereumAccount, getMainnetProvider } from './Ethereum'
+import { EthereumConfig, getMainnetProvider } from './Ethereum'
 import { getTrackerRegistryFromContract } from './registry/getTrackerRegistryFromContract'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
 import { toEthereumAddress } from '@streamr/utils'
@@ -114,8 +114,6 @@ export class NetworkNodeFacade {
         let id = this.networkConfig.id
         if (id == null || id === '') {
             id = await this.generateId()
-        } else if (!this.authentication.isAuthenticated()) {
-            throw new Error(`cannot set explicit nodeId ${id} without authentication`)
         } else {
             const ethereumAddress = await this.authentication.getAddress()
             if (!id.toLowerCase().startsWith(ethereumAddress)) {
@@ -139,12 +137,8 @@ export class NetworkNodeFacade {
     }
 
     private async generateId(): Promise<string> {
-        if (this.authentication.isAuthenticated()) {
-            const address = await this.authentication.getAddress()
-            return `${address}#${uuid()}`
-        } else {
-            return generateEthereumAccount().address
-        }
+        const address = await this.authentication.getAddress()
+        return `${address}#${uuid()}`
     }
 
     /**

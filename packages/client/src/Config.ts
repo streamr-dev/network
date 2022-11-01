@@ -86,7 +86,7 @@ export type StrictStreamrClientConfig = {
     * Authentication: identity used by this StreamrClient instance.
     * Can contain member privateKey or (window.)ethereum
     */
-    auth: AuthConfig
+    auth?: AuthConfig
     network: NetworkConfig
     decryption: DecryptionConfig
     cache: CacheConfig
@@ -110,9 +110,8 @@ export const STREAMR_STORAGE_NODE_GERMANY = '0x31546eEA76F2B2b3C5cC06B1c93601dc3
 /**
  * @category Important
  */
-export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id'> = {
+export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id' | 'auth'> = {
     logLevel: 'info',
-    auth: {},
 
     // Streamr Core options
     theGraphUrl: 'https://api.thegraph.com/subgraphs/name/streamr-dev/streams',
@@ -233,9 +232,7 @@ export const createStrictConfig = (inputOptions: StreamrClientConfig = {}): Stri
         // NOTE: sidechain and storageNode settings are not merged with the defaults
     }
 
-    options.auth = options.auth || {}
-
-    if ('privateKey' in options.auth) {
+    if (options.auth?.privateKey !== undefined) {
         const { privateKey } = options.auth
         if (typeof privateKey === 'string' && !privateKey.startsWith('0x')) {
             options.auth.privateKey = `0x${options.auth!.privateKey}`

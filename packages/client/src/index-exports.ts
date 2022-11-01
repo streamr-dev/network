@@ -35,8 +35,6 @@ export {
 } from './Config'
 export {
     AuthConfig,
-    AuthenticatedConfig,
-    UnauthenticatedAuthConfig,
     ProviderAuthConfig,
     ProviderConfig,
     PrivateKeyAuthConfig
