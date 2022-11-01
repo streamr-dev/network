@@ -10,6 +10,7 @@ import type { EthereumConfig } from './Ethereum'
 
 import CONFIG_SCHEMA from './config.schema.json'
 import { SmartContractRecord } from 'streamr-client-protocol'
+import { PRODUCTION_STUN_URLS } from 'streamr-client'
 
 import type { NetworkNodeOptions } from 'streamr-network'
 import type { ConnectionInfo } from '@ethersproject/web'
@@ -149,6 +150,7 @@ export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id'> = {
         trackers: {
             contractAddress: '0xab9BEb0e8B106078c953CcAB4D6bF9142BeF854d'
         },
+        stunUrls: PRODUCTION_STUN_URLS,
         acceptProxyConnections: false
     },
     ethereumNetworks: {
@@ -239,6 +241,10 @@ export const createStrictConfig = (inputOptions: StreamrClientConfig = {}): Stri
         if (typeof privateKey === 'string' && !privateKey.startsWith('0x')) {
             options.auth.privateKey = `0x${options.auth!.privateKey}`
         }
+    }
+
+    if (options.network.stunUrls === undefined) {
+        options.network.stunUrls = PRODUCTION_STUN_URLS
     }
 
     return options
