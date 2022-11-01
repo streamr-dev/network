@@ -16,7 +16,7 @@ export {
 export { NetworkNode } from './logic/NetworkNode'
 export { Event as NodeEvent } from './logic/Node'
 export { NameDirectory } from './NameDirectory'
-export { createNetworkNode, NetworkNodeOptions } from './createNetworkNode'
+export { PRODUCTION_STUN_URLS, createNetworkNode, NetworkNodeOptions } from './createNetworkNode'
 export { PeerId, PeerInfo } from './connection/PeerInfo'
 export { decode } from './protocol/utils'
 export { AbstractWsConnection, ReadyState } from './connection/ws/AbstractWsConnection'
