@@ -3,7 +3,7 @@ import { Event, IWebRtcEndpoint } from './IWebRtcEndpoint'
 import { Logger } from "@streamr/utils"
 import { PeerId, PeerInfo } from '../PeerInfo'
 import { DeferredConnectionAttempt } from './DeferredConnectionAttempt'
-import { WebRtcConnection, ConstructorOptions, isOffering } from './WebRtcConnection'
+import { WebRtcConnection, ConstructorOptions, isOffering, IceServer } from './WebRtcConnection'
 import { CountMetric, LevelMetric, Metric, MetricsContext, MetricsDefinition, RateMetric } from '@streamr/utils'
 import {
     AnswerOptions,
@@ -45,7 +45,7 @@ export interface WebRtcConnectionFactory {
 
 export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     private readonly peerInfo: PeerInfo
-    private readonly stunUrls: string[]
+    private readonly iceServers: ReadonlyArray<IceServer>
     private readonly rtcSignaller: RtcSignaller
     private readonly negotiatedProtocolVersions: NegotiatedProtocolVersions
     private readonly connectionFactory: WebRtcConnectionFactory
@@ -65,7 +65,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
 
     constructor(
         peerInfo: PeerInfo,
-        stunUrls: string[],
+        iceServers: ReadonlyArray<IceServer>,
         rtcSignaller: RtcSignaller,
         metricsContext: MetricsContext,
         negotiatedProtocolVersions: NegotiatedProtocolVersions,
@@ -79,7 +79,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     ) {
         super()
         this.peerInfo = peerInfo
-        this.stunUrls = stunUrls
+        this.iceServers = iceServers
         this.rtcSignaller = rtcSignaller
         this.negotiatedProtocolVersions = negotiatedProtocolVersions
         this.connectionFactory = connectionFactory
@@ -170,7 +170,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             selfId: this.peerInfo.peerId,
             targetPeerId,
             routerId,
-            stunUrls: this.stunUrls,
+            iceServers: this.iceServers,
             bufferThresholdHigh: this.bufferThresholdHigh,
             bufferThresholdLow: this.bufferThresholdLow,
             messageQueue,

@@ -7,11 +7,18 @@ import { MessageQueue, QueueItem } from '../MessageQueue'
 import { NameDirectory } from '../../NameDirectory'
 import crypto from 'crypto'
 
+export interface IceServer {
+    url: string
+    port: number
+    username?: string
+    credential?: string
+}
+
 export interface ConstructorOptions {
     selfId: PeerId
     targetPeerId: PeerId
     routerId: string
-    stunUrls: string[]
+    iceServers: ReadonlyArray<IceServer>
     pingInterval: number
     bufferThresholdLow?: number
     bufferThresholdHigh?: number
@@ -106,14 +113,14 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
     protected readonly id: string
     protected readonly maxMessageSize: number
     protected readonly selfId: PeerId
-    protected readonly stunUrls: ReadonlyArray<string>
+    protected readonly iceServers: ReadonlyArray<IceServer>
     protected readonly bufferThresholdHigh: number
     protected readonly bufferThresholdLow: number
 
     constructor({
         selfId,
         targetPeerId,
-        stunUrls,
+        iceServers,
         messageQueue,
         deferredConnectionAttempt,
         pingInterval,
@@ -130,7 +137,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         this.id = `Connection${ID}`
         this.selfId = selfId
         this.peerInfo = PeerInfo.newUnknown(targetPeerId)
-        this.stunUrls = stunUrls
+        this.iceServers = iceServers
         this.bufferThresholdHigh = bufferThresholdHigh
         this.bufferThresholdLow = bufferThresholdLow
         this.maxMessageSize = maxMessageSize

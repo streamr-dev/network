@@ -218,10 +218,29 @@
                 "webrtcDatachannelBufferThresholdHigh": {
                     "type": "number"
                 },
-                "stunUrls": {
+                "iceServers": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "type": "object",
+                        "required": [
+                            "host",
+                            "port"
+                        ],
+                        "additionalProperties": false,
+                        "properties": {
+                            "host": {
+                                "type": "string"
+                            },
+                            "port": {
+                                "type": "number"
+                            },
+                            "username": {
+                                "type": "string"
+                            },
+                            "credential": {
+                                "type": "string"
+                            }
+                        }
                     }
                 },
                 "rttUpdateTimeout": {
