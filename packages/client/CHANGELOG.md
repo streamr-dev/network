@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rename classes `GroupKey` and `GroupKeyId` to `EncryptionKey` and `EncryptionKeyId`
 - Change interface of `MessageStream` from `AsyncGenerator` to `AsyncIterable`
 - Change return type of `getStreamPublishers`, `getStreamSubscribers` and `searchStreams` from `AsyncGenerator` to `AsyncIterable`
+- Config property `auth` must be non-empty (if given)
 
 ### Deprecated
 
