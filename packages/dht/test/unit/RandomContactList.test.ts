@@ -44,7 +44,7 @@ class MockRpcClient implements IDhtRpcServiceClient, ServiceInfo {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    leaveNotice(input: LeaveNotice, options?: RpcOptions): UnaryCall<LeaveNotice, Empty> {
+    leaveNotice(_input: LeaveNotice, _options?: RpcOptions): UnaryCall<LeaveNotice, Empty> {
         return {} as UnaryCall<LeaveNotice, Empty>
     }
 }

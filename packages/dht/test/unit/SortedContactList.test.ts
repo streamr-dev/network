@@ -38,7 +38,7 @@ class MockRpcClient implements IDhtRpcServiceClient, ServiceInfo {
         return {} as UnaryCall<RouteMessageWrapper, RouteMessageAck>
     }
 
-    leaveNotice(input: LeaveNotice, options?: RpcOptions): UnaryCall<LeaveNotice, Empty> {
+    leaveNotice(_input: LeaveNotice, _options?: RpcOptions): UnaryCall<LeaveNotice, Empty> {
         return {} as UnaryCall<LeaveNotice, Empty>
     }
 }
