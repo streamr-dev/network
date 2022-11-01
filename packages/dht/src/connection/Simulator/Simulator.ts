@@ -52,11 +52,10 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     }
 
     connect(sourceConnection: SimulatorConnection, targetDescriptor: PeerDescriptor): Promise<void> {
-        const target = this.connectors.get(PeerID.fromValue(targetDescriptor.peerId).toKey())
-
         return new Promise((resolve, _reject) => {
             setTimeout(() => {
-                target!.handleIncomingConnection(sourceConnection)
+                const target = this.connectors.get(PeerID.fromValue(targetDescriptor.peerId).toKey())
+                target?.handleIncomingConnection(sourceConnection)
                 resolve()
             }, 5 * this.getLatency(sourceConnection.ownPeerDescriptor.region, targetDescriptor.region))
         })
