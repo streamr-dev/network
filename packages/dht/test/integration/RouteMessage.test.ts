@@ -201,6 +201,7 @@ describe('Route Message With Mock Connections', () => {
                 }, 30000)
             )
         )
+        await Promise.all(routers.map((router) => router.stop()))
     }, 60000)
 
     describe('forwarding', () => {

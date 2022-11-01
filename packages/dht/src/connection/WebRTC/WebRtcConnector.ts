@@ -28,6 +28,7 @@ const logger = new Logger(module)
 export interface WebRtcConnectorConfig {
     rpcTransport: ITransport
     protocolVersion: string
+    stunUrls?: string[]
 }
 
 export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> implements IWebRtcConnectorService {
@@ -39,6 +40,7 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
     private stopped = false
     private static objectCounter = 0
     private objectId = 0
+    private stunUrls: string[]
 
     constructor(private config: WebRtcConnectorConfig) {
         super()
@@ -46,6 +48,7 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
         this.objectId = WebRtcConnector.objectCounter
 
         this.rpcTransport = config.rpcTransport
+        this.stunUrls = config.stunUrls || []
 
         this.rpcCommunicator = new ListeningRpcCommunicator(WebRtcConnector.WEBRTC_CONNECTOR_SERVICE_ID, this.rpcTransport, {
             rpcRequestTimeout: 15000
@@ -71,7 +74,7 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
                 return existingConnection
             }
 
-            const connection = new NodeWebRtcConnection({ remotePeerDescriptor: targetPeerDescriptor })
+            const connection = new NodeWebRtcConnection({ remotePeerDescriptor: targetPeerDescriptor, stunUrls: this.stunUrls })
             const managedConnection = new ManagedWebRtcConnection(this.ownPeerDescriptor!, this.config.protocolVersion, connection)
 
             managedConnection.setPeerDescriptor(targetPeerDescriptor)

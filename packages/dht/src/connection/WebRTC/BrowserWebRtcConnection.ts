@@ -23,7 +23,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
 
     private lastState: RTCPeerConnectionState = 'connecting'
 
-    private stunUrls = ['stun:stun.l.google.com:19302']
+    private stunUrls = []
     private peerConnection?: RTCPeerConnection
     private dataChannel?: RTCDataChannel
     private makingOffer = false
