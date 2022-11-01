@@ -223,12 +223,12 @@
                     "items": {
                         "type": "object",
                         "required": [
-                            "host",
+                            "url",
                             "port"
                         ],
                         "additionalProperties": false,
                         "properties": {
-                            "host": {
+                            "url": {
                                 "type": "string"
                             },
                             "port": {
