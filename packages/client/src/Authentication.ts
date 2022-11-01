@@ -24,9 +24,7 @@ export interface PrivateKeyAuthConfig {
     address?: string
 }
 
-export type UnauthenticatedAuthConfig = {}
-export type AuthenticatedConfig = XOR<ProviderAuthConfig, PrivateKeyAuthConfig>
-export type AuthConfig = XOR<AuthenticatedConfig, UnauthenticatedAuthConfig>
+export type AuthConfig = XOR<PrivateKeyAuthConfig, ProviderAuthConfig>
 
 export const AuthenticationInjectionToken = Symbol('Authentication')
 
@@ -46,10 +44,10 @@ const createPrivateKeyAuthentication = (key: string, ethereumConfig: EthereumCon
     }
 }
 
-export const createAuthentication = (authConfig: AuthConfig, ethereumConfig: EthereumConfig): Authentication => {
-    if (authConfig.privateKey !== undefined) {
+export const createAuthentication = (authConfig: AuthConfig | undefined, ethereumConfig: EthereumConfig): Authentication => {
+    if (authConfig?.privateKey !== undefined) {
         return createPrivateKeyAuthentication(authConfig.privateKey, ethereumConfig)
-    } else if (authConfig.ethereum !== undefined) {
+    } else if (authConfig?.ethereum !== undefined) {
         const { ethereum } = authConfig
         const metamaskProvider = new Web3Provider(ethereum)
         const signer = metamaskProvider.getSigner()

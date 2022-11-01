@@ -58,7 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove client configuration option `client.network.name`
 - Remove client configuration option `client.debug`
 - Remove (non-functional) client configuration options `autoConnect`, `autoDisconnect`, and `maxRetries`
-- Remove `UnauthenticatedAuthConfig` interface
+- Remove `AuthenticatedAuthConfig` and `UnauthenticatedAuthConfig` interfaces
 
 ### Fixed
 
