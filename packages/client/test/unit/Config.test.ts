@@ -3,6 +3,7 @@ import { fastPrivateKey } from 'streamr-test-utils'
 import { createStrictConfig, STREAM_CLIENT_DEFAULTS } from '../../src/Config'
 import { ConfigTest } from '../../src/ConfigTest'
 import { generateEthereumAccount } from '../../src/Ethereum'
+import { PRODUCTION_STUN_URLS } from 'streamr-network'
 import { StreamrClient } from '../../src/StreamrClient'
 
 describe('Config', () => {
@@ -69,6 +70,11 @@ describe('Config', () => {
                 }).toThrow('/auth/privateKey must match format "ethereum-private-key"')
             })
         })
+    })
+
+    it('uses PRODUCTION_STUN_URLS by default', () => {
+        const clientDefaults = createStrictConfig()
+        expect(clientDefaults.network.stunUrls).toEqual(PRODUCTION_STUN_URLS)
     })
 
     describe('ignorable properties', () => {

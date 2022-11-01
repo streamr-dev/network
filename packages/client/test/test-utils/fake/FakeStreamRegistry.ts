@@ -42,9 +42,6 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
     }
 
     async createStream(propsOrStreamIdOrPath: StreamProperties | string): Promise<Stream> {
-        if (!this.authentication.isAuthenticated()) {
-            throw new Error('Not authenticated')
-        }
         const props = typeof propsOrStreamIdOrPath === 'object' ? propsOrStreamIdOrPath : { id: propsOrStreamIdOrPath }
         props.partitions ??= 1
         const streamId = await this.streamIdBuilder.toStreamID(props.id)
