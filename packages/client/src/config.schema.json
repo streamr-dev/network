@@ -34,9 +34,6 @@
                 },
                 "ethereum": {
                     "type": "object"
-                },
-                "sessionToken": {
-                    "type": "string"
                 }
             }
         },
