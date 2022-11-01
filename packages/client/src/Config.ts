@@ -206,6 +206,28 @@ export const createStrictConfig = (inputOptions: StreamrClientConfig = {}): Stri
     const opts = cloneDeep(inputOptions)
     const defaults = cloneDeep(STREAM_CLIENT_DEFAULTS)
 
+    const getMetricsConfig = () => {
+        if (opts.metrics === true) {
+            return defaults.metrics
+        } else if (opts.metrics === false) {
+            return {
+                ...defaults.metrics,
+                periods: []
+            }
+        } else if (opts.metrics !== undefined) {
+            return {
+                ...defaults.metrics,
+                ...opts.metrics
+            }
+        } else {
+            const isEthereumAuth = (opts.auth?.ethereum !== undefined)
+            return {
+                ...defaults.metrics,
+                periods: isEthereumAuth ? [] : defaults.metrics.periods
+            }
+        }
+    }
+
     const options: StrictStreamrClientConfig = {
         id: generateClientId(),
         ...defaults,
@@ -215,17 +237,7 @@ export const createStrictConfig = (inputOptions: StreamrClientConfig = {}): Stri
             trackers: opts.network?.trackers ?? defaults.network.trackers,
         },
         decryption: merge(defaults.decryption || {}, opts.decryption),
-        metrics: (opts.metrics === true)
-            ? defaults.metrics
-            : (opts.metrics === false)
-                ? {
-                    ...defaults.metrics,
-                    periods: []
-                }
-                : {
-                    ...defaults.metrics,
-                    ...opts.metrics
-                },
+        metrics: getMetricsConfig(),
         cache: {
             ...defaults.cache,
             ...opts.cache,
