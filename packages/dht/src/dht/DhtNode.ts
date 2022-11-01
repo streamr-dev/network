@@ -510,6 +510,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
     }
 
     private setGetClosestPeersInterval(): void {
+        if (!this.started || this.stopped) {
+            return
+        }
         this.getClosestPeersInterval = setTimeout(async () => {
             logger.trace(`getClosestPeersInterval`)
             await Promise.allSettled(this.bucket!.toArray().map(async (peer: DhtPeer) => {
