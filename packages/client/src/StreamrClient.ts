@@ -129,9 +129,13 @@ export class StreamrClient {
     ): Promise<Subscription<T>> {
         let result
         if (options.resend !== undefined) {
-            result = await this.resendSubscribe<T>(options, options.resend, onMessage)
+            result = await this.resendSubscribe<T>(options, options.resend)
         } else {
-            result = await this.subscriber.subscribe<T>(options, onMessage)
+            const streamPartId = await this.streamIdBuilder.toStreamPartID(options)
+            result = await this.subscriber.add<T>(streamPartId)
+        }
+        if (onMessage !== undefined) {
+            result.useLegacyOnMessageHandler(onMessage)
         }
         this.eventEmitter.emit('subscribe', undefined)
         return result
@@ -139,8 +143,7 @@ export class StreamrClient {
 
     private async resendSubscribe<T>(
         streamDefinition: StreamDefinition,
-        resendOptions: ResendOptions,
-        onMessage?: MessageListener<T>
+        resendOptions: ResendOptions
     ): Promise<ResendSubscription<T>> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         const sub = new ResendSubscription<T>(
@@ -151,9 +154,6 @@ export class StreamrClient {
             this.loggerFactory,
             this.config
         )
-        if (onMessage) {
-            sub.useLegacyOnMessageHandler(onMessage)
-        }
         await this.subscriber.addSubscription<T>(sub)
         return sub
     }
@@ -181,12 +181,17 @@ export class StreamrClient {
      * Call last/from/range as appropriate based on arguments
      * @category Important
      */
-    resend<T>(
+    async resend<T>(
         streamDefinition: StreamDefinition,
         options: ResendOptions,
         onMessage?: MessageListener<T>
     ): Promise<MessageStream<T>> {
-        return this.resends.resend(streamDefinition, options, onMessage)
+        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
+        const messageStream = await this.resends.resend<T>(streamPartId, options)
+        if (onMessage !== undefined) {
+            messageStream.useLegacyOnMessageHandler(onMessage)
+        }
+        return messageStream
     }
 
     waitForStorage(streamMessage: StreamMessage, options?: {

@@ -24,14 +24,10 @@ export class MessageStream<T = unknown> implements AsyncIterable<StreamMessage<T
      * onMessage is passed parsed content as first arument, and streamMessage as second argument.
      * @internal
      */
-    useLegacyOnMessageHandler(onMessage?: MessageListener<T>): this {
-        if (onMessage) {
-            this.pipeline.onMessage.listen(async (streamMessage) => {
-                if (streamMessage instanceof StreamMessage) {
-                    await onMessage(streamMessage.getParsedContent(), streamMessage)
-                }
-            })
-        }
+    useLegacyOnMessageHandler(onMessage: MessageListener<T>): this {
+        this.pipeline.onMessage.listen(async (streamMessage) => {
+            await onMessage(streamMessage.getParsedContent(), streamMessage)
+        })
         this.pipeline.flow()
 
         return this
