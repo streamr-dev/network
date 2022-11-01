@@ -117,7 +117,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
     private started = false
     private stopped = false
 
-    private getClosestPeersInterval?: NodeJS.Timeout
+    private getClosestPeersFromBucketIntervalRef?: NodeJS.Timeout
 
     constructor(conf: Partial<DhtNodeConfig>) {
         super()
@@ -473,8 +473,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         this.findMoreContacts()
         try {
             await waitForEvent3<Events>(this, 'joinCompleted', this.config.dhtJoinTimeout)
-            this.setGetClosestPeersInterval()
-            // console.log(this.config.serviceId, this.ownPeerId!.toKey(), this.neighborList!.getSize(), this.bucket!.count())
+            if (!this.stopped) {
+                this.getClosestPeersFromBucketIntervalRef = setTimeout(async () => await this.getClosestPeersFromBucket(), 30 * 1000)
+            }
         } catch (_e) {
             throw (new Err.DhtJoinTimeout('join timed out'))
         } finally {
@@ -509,20 +510,19 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         }
     }
 
-    private setGetClosestPeersInterval(): void {
+    private async getClosestPeersFromBucket(): Promise<void> {
         if (!this.started || this.stopped) {
             return
         }
-        this.getClosestPeersInterval = setTimeout(async () => {
-            logger.trace(`getClosestPeersInterval`)
-            await Promise.allSettled(this.bucket!.toArray().map(async (peer: DhtPeer) => {
-                const contacts = await peer.getClosestPeers(this.ownPeerDescriptor!)
-                contacts.forEach((contact) => {
-                    this.addNewContact(contact)
-                })
-            }))
-            this.setGetClosestPeersInterval()
-        }, 30 * 1000)
+        await Promise.allSettled(this.bucket!.toArray().map(async (peer: DhtPeer) => {
+            const contacts = await peer.getClosestPeers(this.ownPeerDescriptor!)
+            contacts.forEach((contact) => {
+                this.addNewContact(contact)
+            })
+        }))
+        this.getClosestPeersFromBucketIntervalRef = setTimeout(async () =>
+            await this.getClosestPeersFromBucket()
+        , 30 * 1000)
     }
 
     public getBucketSize(): number {
@@ -652,17 +652,17 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         if (!this.started) {
             throw new Err.CouldNotStop('Cannot not stop() before start()')
         }
+        this.stopped = true
         this.bucket!.toArray().map((peer) => {
             peer.leaveNotice(this.getPeerDescriptor())
         })
         if (this.joinTimeoutRef) {
             clearTimeout(this.joinTimeoutRef)
         }
-        if (this.getClosestPeersInterval) {
-            clearTimeout(this.getClosestPeersInterval)
-            this.getClosestPeersInterval = undefined
+        if (this.getClosestPeersFromBucketIntervalRef) {
+            clearTimeout(this.getClosestPeersFromBucketIntervalRef)
+            this.getClosestPeersFromBucketIntervalRef = undefined
         }
-        this.stopped = true
         this.ongoingJoinOperation = false
         this.bucket!.removeAllListeners()
         this.rpcCommunicator?.stop()
