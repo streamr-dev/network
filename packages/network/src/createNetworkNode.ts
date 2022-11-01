@@ -13,7 +13,7 @@ import { WebRtcEndpoint } from './connection/webrtc/WebRtcEndpoint'
 import { webRtcConnectionFactory } from './connection/webrtc/NodeWebRtcConnection'
 import { SmartContractRecord } from 'streamr-client-protocol'
 
-export const PRODUCTION_STUN_URLS = [
+export const PRODUCTION_STUN_URLS: string[] = [
     'stun:stun.streamr.network:5349',
     'turn:BrubeckTurn1:MIlbgtMw4nhpmbgqRrht1Q==@turn.streamr.network:5349'
 ]
