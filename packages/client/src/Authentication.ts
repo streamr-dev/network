@@ -37,15 +37,18 @@ export interface Authentication {
     getStreamRegistryChainSigner: () => Promise<Signer>
 }
 
+const createPrivateKeyAuthentication = (key: string, ethereumConfig: EthereumConfig): Authentication => {
+    const address = toEthereumAddress(computeAddress(key))
+    return {
+        getAddress: async () => address,
+        createMessageSignature: async (payload: string) => sign(payload, key),
+        getStreamRegistryChainSigner: async () => new Wallet(key, getStreamRegistryChainProvider(ethereumConfig))
+    }
+}
+
 export const createAuthentication = (authConfig: AuthConfig, ethereumConfig: EthereumConfig): Authentication => {
     if (authConfig.privateKey !== undefined) {
-        const key = authConfig.privateKey
-        const address = toEthereumAddress(computeAddress(key))
-        return {
-            getAddress: async () => address,
-            createMessageSignature: async (payload: string) => sign(payload, key),
-            getStreamRegistryChainSigner: async () => new Wallet(key, getStreamRegistryChainProvider(ethereumConfig))
-        }
+        return createPrivateKeyAuthentication(authConfig.privateKey, ethereumConfig)
     } else if (authConfig.ethereum !== undefined) {
         const { ethereum } = authConfig
         const metamaskProvider = new Web3Provider(ethereum)
@@ -90,16 +93,6 @@ export const createAuthentication = (authConfig: AuthConfig, ethereumConfig: Eth
             }
         }
     } else {
-        return {
-            getAddress: async () => {
-                throw new Error('StreamrClient is not authenticated with private key')
-            },
-            createMessageSignature: async () => {
-                throw new Error('Need either "privateKey" or "ethereum"')
-            },
-            getStreamRegistryChainSigner: async () => {
-                throw new Error('StreamrClient not authenticated! Can\'t send transactions or sign messages')
-            }
-        }
+        return createPrivateKeyAuthentication(Wallet.createRandom().privateKey, ethereumConfig)
     }
 }
