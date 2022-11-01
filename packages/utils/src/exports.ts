@@ -5,7 +5,7 @@ import { ENSName, toENSName } from './ENSName'
 import { EthereumAddress, toEthereumAddress } from './EthereumAddress'
 import { isENSName } from './isENSName'
 import { keyToArrayIndex } from './keyToArrayIndex'
-import { Logger } from './Logger'
+import { Logger, LogLevel } from './Logger'
 import {
     CountMetric,
     Metric,
@@ -31,6 +31,7 @@ export {
     EthereumAddress,
     Defer,
     Logger,
+    LogLevel,
     Multimap,
     AbortError,
     TimeoutError,

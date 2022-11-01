@@ -7,6 +7,7 @@ import { ResendOptions, Resends } from './Resends'
 import { DestroySignal } from '../DestroySignal'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { SubscribeConfig } from './../Config'
+import { MessageStream } from './MessageStream'
 
 export class ResendSubscription<T> extends Subscription<T> {
     private orderMessages: OrderMessages<T>
@@ -38,12 +39,8 @@ export class ResendSubscription<T> extends Subscription<T> {
         })
     }
 
-    private async getResent() {
-        const [id, partition] = StreamPartIDUtils.getStreamIDAndPartition(this.streamPartId)
-        const resentMsgs = await this.resends.resend<T>({
-            id,
-            partition,
-        }, this.resendOptions)
+    private async getResent(): Promise<MessageStream<T>> {
+        const resentMsgs = await this.resends.resend<T>(this.streamPartId, this.resendOptions)
 
         this.onBeforeFinally.listen(async () => {
             resentMsgs.end()
@@ -53,13 +50,14 @@ export class ResendSubscription<T> extends Subscription<T> {
         return resentMsgs
     }
 
-    /** @internal */
-    async* resendThenRealtime(src: AsyncGenerator<StreamMessage<T>>): AsyncGenerator<StreamMessage<T>, void, unknown> {
+    private async* resendThenRealtime(src: AsyncGenerator<StreamMessage<T>>): AsyncGenerator<StreamMessage<T>, void, any> {
         try {
             yield* await this.getResent()
         } catch (err) {
-            if (err.code !== 'NO_STORAGE_NODES') {
-                // ignore NO_STORAGE_NODES errors
+            if (err.code === 'NO_STORAGE_NODES') {
+                const streamId = StreamPartIDUtils.getStreamID(this.streamPartId)
+                this.logger.warn(`no storage assigned: ${streamId}`)
+            } else {
                 await this.handleError(err)
             }
         }

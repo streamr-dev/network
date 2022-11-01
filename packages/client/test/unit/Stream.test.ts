@@ -1,9 +1,10 @@
 import 'reflect-metadata'
-import { container as rootContainer } from 'tsyringe'
+
 import { toStreamID } from 'streamr-client-protocol'
+import { container as rootContainer } from 'tsyringe'
+import { createStrictConfig } from '../../src/Config'
 import { initContainer } from '../../src/Container'
 import { StreamRegistry } from '../../src/registry/StreamRegistry'
-import { createStrictConfig } from '../../src/Config'
 import { StreamFactory } from './../../src/StreamFactory'
 
 describe('Stream', () => {

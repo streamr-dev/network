@@ -1,4 +1,5 @@
 import 'reflect-metadata'
+
 import { StreamPartIDUtils } from 'streamr-client-protocol'
 import { fastWallet } from 'streamr-test-utils'
 import { DestroySignal } from '../../src/DestroySignal'

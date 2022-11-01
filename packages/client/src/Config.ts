@@ -10,6 +10,7 @@ import type { EthereumConfig } from './Ethereum'
 
 import CONFIG_SCHEMA from './config.schema.json'
 import { SmartContractRecord } from 'streamr-client-protocol'
+import { LogLevel } from '@streamr/utils'
 import { PRODUCTION_STUN_URLS } from 'streamr-client'
 
 import type { NetworkNodeOptions } from 'streamr-network'
@@ -81,7 +82,7 @@ export interface MetricsConfig {
 export type StrictStreamrClientConfig = {
     /** Custom human-readable debug id for client. Used in logging. */
     id: string
-    logLevel: 'silent' | 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace'
+    logLevel: LogLevel
     /**
     * Authentication: identity used by this StreamrClient instance.
     * Can contain member privateKey or (window.)ethereum
@@ -150,7 +151,6 @@ export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id'> = {
         trackers: {
             contractAddress: '0xab9BEb0e8B106078c953CcAB4D6bF9142BeF854d'
         },
-        stunUrls: PRODUCTION_STUN_URLS,
         acceptProxyConnections: false
     },
     ethereumNetworks: {
