@@ -27,7 +27,7 @@ async function retryFlakyTestNET918(
             await it(name, fn, timeout)
             break
         } catch (e) {
-            if (e instanceof RangeError && e.message.includes('The value of "offset" is out of range')) {
+            if (e.message?.includes('The value of "offset" is out of range')) {
                 logger.warn('Flaky test run (NET-918) detected! %d/%d', i, MAX_RUNS)
                 if (i === MAX_RUNS) {
                     throw e
