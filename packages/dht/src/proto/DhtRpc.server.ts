@@ -7,10 +7,11 @@ import { LockRequest } from "./DhtRpc";
 import { IceCandidate } from "./DhtRpc";
 import { RtcAnswer } from "./DhtRpc";
 import { RtcOffer } from "./DhtRpc";
-import { Empty } from "./google/protobuf/empty";
 import { WebRtcConnectionRequest } from "./DhtRpc";
 import { WebSocketConnectionResponse } from "./DhtRpc";
 import { WebSocketConnectionRequest } from "./DhtRpc";
+import { Empty } from "./google/protobuf/empty";
+import { LeaveNotice } from "./DhtRpc";
 import { RouteMessageAck } from "./DhtRpc";
 import { RouteMessageWrapper } from "./DhtRpc";
 import { PingResponse } from "./DhtRpc";
@@ -38,6 +39,10 @@ export interface IDhtRpcService<T = ServerCallContext> {
      * @generated from protobuf rpc: forwardMessage(RouteMessageWrapper) returns (RouteMessageAck);
      */
     forwardMessage(request: RouteMessageWrapper, context: T): Promise<RouteMessageAck>;
+    /**
+     * @generated from protobuf rpc: leaveNotice(LeaveNotice) returns (google.protobuf.Empty);
+     */
+    leaveNotice(request: LeaveNotice, context: T): Promise<Empty>;
 }
 /**
  * @generated from protobuf service WebSocketConnectorService

@@ -17,7 +17,8 @@ import {
     PingRequest,
     PingResponse,
     RouteMessageAck,
-    RouteMessageWrapper
+    RouteMessageWrapper,
+    LeaveNotice
 } from '../proto/DhtRpc'
 import { DuplicateDetector } from './DuplicateDetector'
 import * as Err from '../helpers/errors'
@@ -31,6 +32,8 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { runAndRaceEvents3, waitForEvent3 } from '../helpers/waitForEvent3'
 import { RoutingSession, RoutingSessionEvents } from './RoutingSession'
 import { RandomContactList } from './contact/RandomContactList'
+import { Empty } from '../proto/google/protobuf/empty'
+import { clearTimeout } from 'timers'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -54,6 +57,7 @@ export class DhtNodeConfig {
     peerIdString?: string
     nodeName?: string
     rpcRequestTimeout?: number
+    stunUrls?: string[]
 
     serviceId = 'layer0'
     parallelism = 3
@@ -114,7 +118,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
     private started = false
     private stopped = false
 
-    private ongoingRoutingSessions: Map<string, RoutingSession> = new Map()
+    private getClosestPeersInterval?: NodeJS.Timeout
 
     constructor(conf: Partial<DhtNodeConfig>) {
         super()
@@ -139,7 +143,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         } else {
             const connectionManagerConfig: ConnectionManagerConfig = {
                 transportLayer: this,
-                entryPoints: this.config.entryPoints
+                entryPoints: this.config.entryPoints,
+                stunUrls: this.config.stunUrls
             }
             // If own PeerDescriptor is given in config, create a ConnectionManager with ws server
             if (this.config.peerDescriptor && this.config.peerDescriptor.websocket) {
@@ -274,7 +279,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         this.neighborList.on('contactRemoved', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) => {
             this.emit('contactRemoved', peerDescriptor, activeContacts)
             this.randomPeers!.addContact(
-                new DhtPeer(peerDescriptor, toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())))
+                new DhtPeer(
+                    peerDescriptor,
+                    toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
+                    this.config.serviceId
+                )
             )
         })
         this.neighborList.on('newContact', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
@@ -290,7 +299,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         )
 
         this.transportLayer!.on('connected', (peerDescriptor: PeerDescriptor) => {
-            const dhtPeer = new DhtPeer(peerDescriptor, toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())))
+            const dhtPeer = new DhtPeer(
+                peerDescriptor,
+                toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
+                this.config.serviceId
+            )
             if (!this.connections.has(PeerID.fromValue(dhtPeer.id).toKey())) {
                 this.connections.set(PeerID.fromValue(dhtPeer.id).toKey(), dhtPeer)
             }
@@ -390,7 +403,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         if (this.ongoingClosestPeersRequests.has(peerId.toKey())) {
             this.ongoingClosestPeersRequests.delete(peerId.toKey())
             const dhtPeers = contacts.map((peer) => {
-                return new DhtPeer(peer, toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())))
+                return new DhtPeer(
+                    peer,
+                    toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
+                    this.config.serviceId
+                )
             })
 
             const oldClosestContact = this.neighborList!.getClosestContactId()
@@ -436,7 +453,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             `Joining ${this.config.serviceId === 'layer0' ? 'The Streamr Network' : `Control Layer for ${this.config.serviceId}`}`
             + ` via entrypoint ${entryPointDescriptor.peerId.toString()}`
         )
-        const entryPoint = new DhtPeer(entryPointDescriptor, toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())))
+        const entryPoint = new DhtPeer(
+            entryPointDescriptor,
+            toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
+            this.config.serviceId
+        )
 
         if (this.ownPeerId!.equals(entryPoint.peerId)) {
             return
@@ -453,6 +474,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         this.findMoreContacts()
         try {
             await waitForEvent3<Events>(this, 'joinCompleted', this.config.dhtJoinTimeout)
+            this.setGetClosestPeersInterval()
             // console.log(this.config.serviceId, this.ownPeerId!.toKey(), this.neighborList!.getSize(), this.bucket!.count())
         } catch (_e) {
             throw (new Err.DhtJoinTimeout('join timed out'))
@@ -488,6 +510,19 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         }
     }
 
+    private setGetClosestPeersInterval(): void {
+        this.getClosestPeersInterval = setTimeout(async () => {
+            logger.trace(`getClosestPeersInterval`)
+            await Promise.allSettled(this.bucket!.toArray().map(async (peer: DhtPeer) => {
+                const contacts = await peer.getClosestPeers(this.ownPeerDescriptor!)
+                contacts.forEach((contact) => {
+                    this.addNewContact(contact)
+                })
+            }))
+            this.setGetClosestPeersInterval()
+        }, 30 * 1000)
+    }
+
     public getBucketSize(): number {
         return this.bucket!.count()
     }
@@ -500,7 +535,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         const peerId = PeerID.fromValue(contact.peerId)
         if (!peerId.equals(this.ownPeerId!)) {
             logger.trace(`Adding new contact ${contact.peerId.toString()}`)
-            const dhtPeer = new DhtPeer(contact, toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())))
+            const dhtPeer = new DhtPeer(
+                contact,
+                toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
+                this.config.serviceId
+            )
             if (!this.bucket!.get(contact.peerId) && !this.neighborList!.getContact(PeerID.fromValue(contact.peerId))) {
                 this.neighborList!.addContact(dhtPeer)
                 if (contact.openInternet) {
@@ -525,6 +564,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         const peerId = PeerID.fromValue(contact.peerId)
         this.bucket!.remove(peerId.value)
         this.neighborList!.removeContact(peerId)
+        this.randomPeers!.removeContact(peerId)
         if (removeFromOpenInternetPeers) {
             this.openInternetPeers!.removeContact(peerId)
         }
@@ -610,8 +650,15 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         if (!this.started) {
             throw new Err.CouldNotStop('Cannot not stop() before start()')
         }
+        this.bucket!.toArray().map((peer) => {
+            peer.leaveNotice(this.getPeerDescriptor())
+        })
         if (this.joinTimeoutRef) {
             clearTimeout(this.joinTimeoutRef)
+        }
+        if (this.getClosestPeersInterval) {
+            clearTimeout(this.getClosestPeersInterval)
+            this.getClosestPeersInterval = undefined
         }
         this.stopped = true
         this.ongoingJoinOperation = false
@@ -648,6 +695,14 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             requestId: request.requestId
         }
         return response
+    }
+
+    public async leaveNotice(request: LeaveNotice, _context: ServerCallContext): Promise<Empty> {
+        // TODO check signature??
+        if (request.serviceId === this.config.serviceId) {
+            this.removeContact(request.peerDescriptor!)
+        }
+        return {}
     }
 
     private createRouteMessageAck(routedMessage: RouteMessageWrapper, error?: string): RouteMessageAck {

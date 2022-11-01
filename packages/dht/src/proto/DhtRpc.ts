@@ -51,6 +51,19 @@ export interface PingResponse {
     requestId: string;
 }
 /**
+ * @generated from protobuf message LeaveNotice
+ */
+export interface LeaveNotice {
+    /**
+     * @generated from protobuf field: PeerDescriptor peerDescriptor = 1;
+     */
+    peerDescriptor?: PeerDescriptor;
+    /**
+     * @generated from protobuf field: string serviceId = 2;
+     */
+    serviceId: string;
+}
+/**
  * @generated from protobuf message PeerDescriptor
  */
 export interface PeerDescriptor {
@@ -576,6 +589,19 @@ class PingResponse$Type extends MessageType$<PingResponse> {
  */
 export const PingResponse = new PingResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class LeaveNotice$Type extends MessageType$<LeaveNotice> {
+    constructor() {
+        super("LeaveNotice", [
+            { no: 1, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor },
+            { no: 2, name: "serviceId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message LeaveNotice
+ */
+export const LeaveNotice = new LeaveNotice$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class PeerDescriptor$Type extends MessageType$<PeerDescriptor> {
     constructor() {
         super("PeerDescriptor", [
@@ -877,7 +903,8 @@ export const DhtRpcService = new ServiceType("DhtRpcService", [
     { name: "getClosestPeers", options: {}, I: ClosestPeersRequest, O: ClosestPeersResponse },
     { name: "ping", options: {}, I: PingRequest, O: PingResponse },
     { name: "routeMessage", options: {}, I: RouteMessageWrapper, O: RouteMessageAck },
-    { name: "forwardMessage", options: {}, I: RouteMessageWrapper, O: RouteMessageAck }
+    { name: "forwardMessage", options: {}, I: RouteMessageWrapper, O: RouteMessageAck },
+    { name: "leaveNotice", options: {}, I: LeaveNotice, O: Empty }
 ]);
 /**
  * @generated ServiceType for protobuf service WebSocketConnectorService

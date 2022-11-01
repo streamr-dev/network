@@ -63,7 +63,7 @@ export class RemoteRandomGraphNode {
                 interleaveTarget: response.interleaveTarget
             }
         } catch (err: any) {
-            logger.debug(err)
+            logger.debug(`handshake to ${PeerID.fromValue(this.getPeerDescriptor().peerId).toKey()} failed: ${err}`)
             return {
                 accepted: false
             }
@@ -132,7 +132,7 @@ export class RemoteRandomGraphNode {
                 removeMe: response.removeMe
             }
         } catch (err: any) {
-            logger.debug(err)
+            logger.debug(`updateNeighbors to ${PeerID.fromValue(this.getPeerDescriptor().peerId).toKey()} failed: ${err}`)
             return {
                 peers: [],
                 removeMe: true

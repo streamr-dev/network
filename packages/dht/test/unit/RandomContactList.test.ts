@@ -3,7 +3,7 @@ import type { ServiceInfo, MethodInfo } from "@protobuf-ts/runtime-rpc"
 import { PeerID } from '../../src/helpers/PeerID'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { IDhtRpcServiceClient } from '../../src/proto/DhtRpc.client'
-import { NodeType, PeerDescriptor, RouteMessageAck, RouteMessageWrapper } from "../../src/proto/DhtRpc"
+import { LeaveNotice, NodeType, PeerDescriptor, RouteMessageAck, RouteMessageWrapper } from "../../src/proto/DhtRpc"
 import type { PingResponse } from "../../src/proto//DhtRpc"
 import type { PingRequest } from "../../src/proto//DhtRpc"
 import type { ClosestPeersResponse } from "../../src/proto//DhtRpc"
@@ -12,6 +12,7 @@ import { UnaryCall } from "@protobuf-ts/runtime-rpc"
 import type { RpcOptions } from "@protobuf-ts/runtime-rpc"
 import { DhtPeer } from '../../src/dht/DhtPeer'
 import { IMessageType } from '@protobuf-ts/runtime'
+import { Empty } from '../../src/proto/google/protobuf/empty'
 
 class MockRpcClient implements IDhtRpcServiceClient, ServiceInfo {
     typeName = 'MockRpcClient'
@@ -41,9 +42,15 @@ class MockRpcClient implements IDhtRpcServiceClient, ServiceInfo {
     forwardMessage(_input: RouteMessageWrapper, _options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck> {
         return {} as UnaryCall<RouteMessageWrapper, RouteMessageAck>
     }
+
+    // eslint-disable-next-line class-methods-use-this
+    leaveNotice(input: LeaveNotice, options?: RpcOptions): UnaryCall<LeaveNotice, Empty> {
+        return {} as UnaryCall<LeaveNotice, Empty>
+    }
 }
 
 describe('RandomContactList', () => {
+    const serviceId = 'random'
     const id0 = PeerID.fromValue(Buffer.from([0, 0, 0, 0]))
     const id1 = PeerID.fromValue(Buffer.from([0, 0, 0, 1]))
     const id2 = PeerID.fromValue(Buffer.from([0, 0, 0, 2]))
@@ -55,10 +62,10 @@ describe('RandomContactList', () => {
     const descriptor3: PeerDescriptor = { peerId: id3.value, type: NodeType.NODEJS }
     const descriptor4: PeerDescriptor = { peerId: id4.value, type: NodeType.NODEJS }
 
-    const peer1 = new DhtPeer(descriptor1, toProtoRpcClient(new MockRpcClient()))
-    const peer2 = new DhtPeer(descriptor2, toProtoRpcClient(new MockRpcClient()))
-    const peer3 = new DhtPeer(descriptor3, toProtoRpcClient(new MockRpcClient()))
-    const peer4 = new DhtPeer(descriptor4, toProtoRpcClient(new MockRpcClient()))
+    const peer1 = new DhtPeer(descriptor1, toProtoRpcClient(new MockRpcClient()), serviceId)
+    const peer2 = new DhtPeer(descriptor2, toProtoRpcClient(new MockRpcClient()), serviceId)
+    const peer3 = new DhtPeer(descriptor3, toProtoRpcClient(new MockRpcClient()), serviceId)
+    const peer4 = new DhtPeer(descriptor4, toProtoRpcClient(new MockRpcClient()), serviceId)
 
     it('adds contacts correctly', () => {
         const list = new RandomContactList(id0, 5, 1)

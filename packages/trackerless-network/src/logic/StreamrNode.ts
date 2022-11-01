@@ -19,11 +19,13 @@ export interface StreamrNode {
 
 const logger = new Logger(module)
 
+let cleanUp: () => Promise<void> = async () => {}
+
 export class StreamrNode extends EventEmitter {
     private readonly streams: Map<string, StreamObject>
     private layer0: DhtNode | null = null
     private started = false
-    private stopped = false
+    private destroyed = false
     private P2PTransport: ITransport | null = null
     private connectionLocker: ConnectionLocker | null = null
     constructor() {
@@ -32,7 +34,7 @@ export class StreamrNode extends EventEmitter {
     }
 
     async start(startedAndJoinedLayer0: DhtNode, transport: ITransport, connectionLocker: ConnectionLocker): Promise<void> {
-        if (this.started || this.stopped) {
+        if (this.started || this.destroyed) {
             return
         }
         logger.info(`Starting new StreamrNode with id ${startedAndJoinedLayer0.getPeerDescriptor().peerId}`)
@@ -40,19 +42,22 @@ export class StreamrNode extends EventEmitter {
         this.layer0 = startedAndJoinedLayer0
         this.P2PTransport = transport
         this.connectionLocker = connectionLocker
+        cleanUp = this.destroy.bind(this)
     }
 
-    destroy(): void {
-        if (!this.started) {
+    async destroy(): Promise<void> {
+        if (!this.started || this.destroyed) {
             return
         }
-        this.stopped = true
-        this.layer0!.stop()
+        logger.trace('Destroying StreamrNode...')
+        this.destroyed = true
         this.streams.forEach((stream) => {
             stream.layer2.stop()
             stream.layer1.stop()
         })
         this.streams.clear()
+        await this.layer0!.stop()
+        await this.P2PTransport!.stop()
     }
 
     subscribeToStream(streamPartID: string, entryPointDescriptor: PeerDescriptor): void {
@@ -141,4 +146,12 @@ export class StreamrNode extends EventEmitter {
     getPeerDescriptor(): PeerDescriptor {
         return this.layer0!.getPeerDescriptor()
     }
+
 }
+
+[`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `SIGTERM`].forEach((term) => {
+    process.on(term, async () => {
+        await cleanUp()
+        process.exit()
+    })
+})

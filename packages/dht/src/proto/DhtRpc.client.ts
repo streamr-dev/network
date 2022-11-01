@@ -9,7 +9,6 @@ import { WebRtcConnectorService } from "./DhtRpc";
 import type { IceCandidate } from "./DhtRpc";
 import type { RtcAnswer } from "./DhtRpc";
 import type { RtcOffer } from "./DhtRpc";
-import type { Empty } from "./google/protobuf/empty";
 import type { WebRtcConnectionRequest } from "./DhtRpc";
 import { WebSocketConnectorService } from "./DhtRpc";
 import type { WebSocketConnectionResponse } from "./DhtRpc";
@@ -17,6 +16,8 @@ import type { WebSocketConnectionRequest } from "./DhtRpc";
 import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
 import { DhtRpcService } from "./DhtRpc";
+import type { Empty } from "./google/protobuf/empty";
+import type { LeaveNotice } from "./DhtRpc";
 import type { RouteMessageAck } from "./DhtRpc";
 import type { RouteMessageWrapper } from "./DhtRpc";
 import type { PingResponse } from "./DhtRpc";
@@ -46,6 +47,10 @@ export interface IDhtRpcServiceClient {
      * @generated from protobuf rpc: forwardMessage(RouteMessageWrapper) returns (RouteMessageAck);
      */
     forwardMessage(input: RouteMessageWrapper, options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck>;
+    /**
+     * @generated from protobuf rpc: leaveNotice(LeaveNotice) returns (google.protobuf.Empty);
+     */
+    leaveNotice(input: LeaveNotice, options?: RpcOptions): UnaryCall<LeaveNotice, Empty>;
 }
 /**
  * @generated from protobuf service DhtRpcService
@@ -83,6 +88,13 @@ export class DhtRpcServiceClient implements IDhtRpcServiceClient, ServiceInfo {
     forwardMessage(input: RouteMessageWrapper, options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck> {
         const method = this.methods[3], opt = this._transport.mergeOptions(options);
         return stackIntercept<RouteMessageWrapper, RouteMessageAck>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: leaveNotice(LeaveNotice) returns (google.protobuf.Empty);
+     */
+    leaveNotice(input: LeaveNotice, options?: RpcOptions): UnaryCall<LeaveNotice, Empty> {
+        const method = this.methods[4], opt = this._transport.mergeOptions(options);
+        return stackIntercept<LeaveNotice, Empty>("unary", this._transport, method, opt, input);
     }
 }
 /**
