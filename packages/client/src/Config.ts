@@ -11,9 +11,8 @@ import type { EthereumConfig } from './Ethereum'
 import CONFIG_SCHEMA from './config.schema.json'
 import { SmartContractRecord } from 'streamr-client-protocol'
 import { LogLevel } from '@streamr/utils'
-import { PRODUCTION_STUN_URLS } from 'streamr-client'
 
-import type { NetworkNodeOptions } from 'streamr-network'
+import { PRODUCTION_STUN_URLS, NetworkNodeOptions } from 'streamr-network'
 import type { ConnectionInfo } from '@ethersproject/web'
 import { generateClientId } from './utils/utils'
 
