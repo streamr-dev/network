@@ -12,9 +12,8 @@ describe('anonymous client', () => {
 
         const publisher = environment.createClient({
             auth: {
-                unauthenticated: true
             }
         })
-        await expect(() => publisher.publish(stream, { foo: 'bar' })).rejects.toThrow('not authenticated with private key')
+        await expect(() => publisher.publish(stream, { foo: 'bar' })).rejects.toThrow()
     })
 })

@@ -24,9 +24,7 @@ export interface PrivateKeyAuthConfig {
     address?: string
 }
 
-// eslint-disable-next-line @typescript-eslint/ban-types
-export type UnauthenticatedAuthConfig = XOR<{}, { unauthenticated: true }>
-
+export type UnauthenticatedAuthConfig = {}
 export type AuthenticatedConfig = XOR<ProviderAuthConfig, PrivateKeyAuthConfig>
 export type AuthConfig = XOR<AuthenticatedConfig, UnauthenticatedAuthConfig>
 

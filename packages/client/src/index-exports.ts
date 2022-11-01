@@ -36,7 +36,6 @@ export {
 export {
     AuthConfig,
     AuthenticatedConfig,
-    UnauthenticatedAuthConfig,
     ProviderAuthConfig,
     ProviderConfig,
     PrivateKeyAuthConfig
