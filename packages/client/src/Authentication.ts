@@ -33,7 +33,6 @@ export type AuthConfig = XOR<AuthenticatedConfig, UnauthenticatedAuthConfig>
 export const AuthenticationInjectionToken = Symbol('Authentication')
 
 export interface Authentication {
-    isAuthenticated: () => boolean
     // always in lowercase
     getAddress: () => Promise<EthereumAddress>
     createMessageSignature: (payload: string) => Promise<string>
@@ -45,7 +44,6 @@ export const createAuthentication = (authConfig: AuthConfig, ethereumConfig: Eth
         const key = authConfig.privateKey
         const address = toEthereumAddress(computeAddress(key))
         return {
-            isAuthenticated: () => true,
             getAddress: async () => address,
             createMessageSignature: async (payload: string) => sign(payload, key),
             getStreamRegistryChainSigner: async () => new Wallet(key, getStreamRegistryChainProvider(ethereumConfig))
@@ -55,7 +53,6 @@ export const createAuthentication = (authConfig: AuthConfig, ethereumConfig: Eth
         const metamaskProvider = new Web3Provider(ethereum)
         const signer = metamaskProvider.getSigner()
         return {
-            isAuthenticated: () => true,
             getAddress: pMemoize(async () => {
                 try {
                     if (!(ethereumConfig && 'request' in ethereum && typeof ethereum.request === 'function')) {
@@ -96,8 +93,7 @@ export const createAuthentication = (authConfig: AuthConfig, ethereumConfig: Eth
         }
     } else {
         return {
-            isAuthenticated: () => false,
-            getAddress: async () => { 
+            getAddress: async () => {
                 throw new Error('StreamrClient is not authenticated with private key')
             },
             createMessageSignature: async () => {

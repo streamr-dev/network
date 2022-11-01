@@ -114,8 +114,6 @@ export class NetworkNodeFacade {
         let id = this.networkConfig.id
         if (id == null || id === '') {
             id = await this.generateId()
-        } else if (!this.authentication.isAuthenticated()) {
-            throw new Error(`cannot set explicit nodeId ${id} without authentication`)
         } else {
             const ethereumAddress = await this.authentication.getAddress()
             if (!id.toLowerCase().startsWith(ethereumAddress)) {
@@ -139,12 +137,8 @@ export class NetworkNodeFacade {
     }
 
     private async generateId(): Promise<string> {
-        if (this.authentication.isAuthenticated()) {
-            const address = await this.authentication.getAddress()
-            return `${address}#${uuid()}`
-        } else {
-            return generateEthereumAccount().address
-        }
+        const address = await this.authentication.getAddress()
+        return `${address}#${uuid()}`
     }
 
     /**

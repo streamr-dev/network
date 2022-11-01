@@ -80,21 +80,6 @@ describe('NetworkNodeFacade', () => {
                 await client.getNode()
             }).rejects.toThrow(/not compatible with authenticated wallet/)
         })
-
-        it('throws error if supplied network id whilst unauthenticated', async () => {
-            const nodeId = '0xafafafafafafafafafafafafafafafafafafafaf#my-custom-id'
-            const client = environment.createClient({
-                auth: {
-                    unauthenticated: true
-                },
-                network: {
-                    id: nodeId,
-                }
-            })
-            await expect(async () => {
-                await client.getNode()
-            }).rejects.toThrow(/without authentication/)
-        })
     })
 
     describe('create/destroy', () => {

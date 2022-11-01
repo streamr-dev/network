@@ -42,7 +42,7 @@ export class StreamIDBuilder {
 
     async toStreamID(streamIdOrPath: string): Promise<StreamID> {
         let address: EthereumAddress | undefined
-        if (StreamIDUtils.isPathOnlyFormat(streamIdOrPath) && this.authentication.isAuthenticated()) {
+        if (StreamIDUtils.isPathOnlyFormat(streamIdOrPath)) {
             address = await this.authentication.getAddress()
         }
         return toStreamID(streamIdOrPath, address)
