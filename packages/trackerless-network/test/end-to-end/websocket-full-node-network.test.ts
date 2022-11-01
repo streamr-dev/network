@@ -49,7 +49,7 @@ describe('Full node network with WebSocket connections only', () => {
                 webSocketPort: 15556 + i,
                 webSocketHost: 'localhost',
                 peerIdString: `${i}`,
-                numberOfNodesPerKBucket: 4
+                numberOfNodesPerKBucket: 2
             })
 
             layer0DhtNodes.push(layer0)
