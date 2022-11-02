@@ -5,7 +5,7 @@ import { inject, Lifecycle, scoped, delay } from 'tsyringe'
 import { MessageRef, StreamPartID, StreamPartIDUtils, StreamMessage } from 'streamr-client-protocol'
 
 import { MessageStream } from './MessageStream'
-import { createSubscribePipeline } from './SubscribePipeline'
+import { createSubscribePipeline } from './subscribePipeline'
 
 import { StorageNodeRegistry } from '../registry/StorageNodeRegistry'
 import { StreamIDBuilder } from '../StreamIDBuilder'
@@ -145,7 +145,6 @@ export class Resends {
         const nodeUrl = (await this.storageNodeRegistry.getStorageNodeMetadata(nodeAddress)).http
         const url = this.createUrl(nodeUrl, endpointSuffix, streamPartId, query)
         const messageStream = createSubscribePipeline<T>({
-            messageStream: new MessageStream<T>(),
             streamPartId,
             resends: this,
             groupKeyStore: this.groupKeyStore,
