@@ -2,6 +2,7 @@ import 'reflect-metadata'
 
 import { StreamMessage } from 'streamr-client-protocol'
 import { fastPrivateKey, waitForCondition } from 'streamr-test-utils'
+import { Message } from '../../src/Message'
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -19,7 +20,7 @@ import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
 const MAX_MESSAGES = 10
 
 const waitMessagesReceived = async (
-    received: Record<string, StreamMessage[]>,
+    received: Record<string, Message[]>,
     published: Record<string, StreamMessage[]>
 ) => {
     await waitForCondition(() => {
@@ -85,7 +86,7 @@ describe('PubSub with multiple clients', () => {
         return client
     }
 
-    function checkMessages(published: Record<string, StreamMessage[]>, received: Record<string, StreamMessage[]>) {
+    function checkMessages(published: Record<string, StreamMessage[]>, received: Record<string, Message[]>) {
         for (const [key, msgs] of Object.entries(published)) {
             expect(received[key].map((m) => m.signature)).toEqual(msgs.map((m) => m.signature))
         }
@@ -128,24 +129,24 @@ describe('PubSub with multiple clients', () => {
 
             otherClient = await createSubscriber()
 
-            const receivedMessagesOther: Record<string, StreamMessage[]> = {}
-            const receivedMessagesMain: Record<string, StreamMessage[]> = {}
+            const receivedMessagesOther: Record<string, Message[]> = {}
+            const receivedMessagesMain: Record<string, Message[]> = {}
             // subscribe to stream from other client instance
             await otherClient.subscribe({
                 stream: stream.id,
-            }, (_content, streamMessage) => {
-                const msgs = receivedMessagesOther[streamMessage.getPublisherId()] || []
-                msgs.push(streamMessage)
-                receivedMessagesOther[streamMessage.getPublisherId()] = msgs
+            }, (_content, msg) => {
+                const msgs = receivedMessagesOther[msg.publisherId] || []
+                msgs.push(msg)
+                receivedMessagesOther[msg.publisherId] = msgs
             })
 
             // subscribe to stream from main client instance
             await mainClient.subscribe({
                 stream: stream.id,
-            }, (_content, streamMessage) => {
-                const msgs = receivedMessagesMain[streamMessage.getPublisherId()] || []
-                msgs.push(streamMessage)
-                receivedMessagesMain[streamMessage.getPublisherId()] = msgs
+            }, (_content, msg) => {
+                const msgs = receivedMessagesMain[msg.publisherId] || []
+                msgs.push(msg)
+                receivedMessagesMain[msg.publisherId] = msgs
             })
 
             const publishers: StreamrClient[] = []
@@ -182,16 +183,16 @@ describe('PubSub with multiple clients', () => {
             // the otherClient subscribes after the 3rd message hits storage
             otherClient = await createSubscriber()
 
-            const receivedMessagesOther: Record<string, StreamMessage[]> = {}
-            const receivedMessagesMain: Record<string, StreamMessage[]> = {}
+            const receivedMessagesOther: Record<string, Message[]> = {}
+            const receivedMessagesMain: Record<string, Message[]> = {}
 
             // subscribe to stream from main client instance
             const mainSub = await mainClient.subscribe({
                 stream: stream.id,
-            }, (_content, streamMessage) => {
-                const key = streamMessage.getPublisherId()
+            }, (_content, msg) => {
+                const key = msg.publisherId
                 const msgs = receivedMessagesMain[key] || []
-                msgs.push(streamMessage)
+                msgs.push(msg)
                 receivedMessagesMain[key] = msgs
                 if (Object.values(receivedMessagesMain).every((m) => m.length === MAX_MESSAGES)) {
                     mainSub.unsubscribe()
@@ -231,10 +232,10 @@ describe('PubSub with multiple clients', () => {
                         resend: {
                             from: lastMessage.getMessageRef()
                         }
-                    }, (_content, streamMessage) => {
-                        const key = streamMessage.getPublisherId()
+                    }, (_content, msg) => {
+                        const key = msg.publisherId
                         const msgs = receivedMessagesOther[key] || []
-                        msgs.push(streamMessage)
+                        msgs.push(msg)
                         receivedMessagesOther[key] = msgs
                     })
 
@@ -275,25 +276,25 @@ describe('PubSub with multiple clients', () => {
         otherClient = await createSubscriber()
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
 
-        const receivedMessagesOther: Record<string, StreamMessage[]> = {}
-        const receivedMessagesMain: Record<string, StreamMessage[]> = {}
+        const receivedMessagesOther: Record<string, Message[]> = {}
+        const receivedMessagesMain: Record<string, Message[]> = {}
         // subscribe to stream from other client instance
         await otherClient.subscribe({
             stream: stream.id,
-        }, (_content, streamMessage) => {
-            const key = streamMessage.getPublisherId()
+        }, (_content, msg) => {
+            const key = msg.publisherId
             const msgs = receivedMessagesOther[key] || []
-            msgs.push(streamMessage)
+            msgs.push(msg)
             receivedMessagesOther[key] = msgs
         })
 
         // subscribe to stream from main client instance
         await mainClient.subscribe({
             stream: stream.id,
-        }, (_content, streamMessage) => {
-            const key = streamMessage.getPublisherId()
+        }, (_content, msg) => {
+            const key = msg.publisherId
             const msgs = receivedMessagesMain[key] || []
-            msgs.push(streamMessage)
+            msgs.push(msg)
             receivedMessagesMain[key] = msgs
         })
 
@@ -336,16 +337,16 @@ describe('PubSub with multiple clients', () => {
 
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user: otherUser })
 
-        const receivedMessagesOther: Record<string, StreamMessage[]> = {}
-        const receivedMessagesMain: Record<string, StreamMessage[]> = {}
+        const receivedMessagesOther: Record<string, Message[]> = {}
+        const receivedMessagesMain: Record<string, Message[]> = {}
 
         // subscribe to stream from main client instance
         const mainSub = await mainClient.subscribe({
             stream: stream.id,
-        }, (_content, streamMessage) => {
-            const key = streamMessage.getPublisherId()
+        }, (_content, msg) => {
+            const key = msg.publisherId
             const msgs = receivedMessagesMain[key] || []
-            msgs.push(streamMessage)
+            msgs.push(msg)
             receivedMessagesMain[key] = msgs
             if (Object.values(receivedMessagesMain).every((m) => m.length === MAX_MESSAGES)) {
                 mainSub.unsubscribe()
@@ -374,10 +375,10 @@ describe('PubSub with multiple clients', () => {
                     resend: {
                         from: lastMessage.getMessageRef()
                     }
-                }, (_content, streamMessage) => {
-                    const key = streamMessage.getPublisherId()
+                }, (_content, msg) => {
+                    const key = msg.publisherId
                     const msgs = receivedMessagesOther[key] || []
-                    msgs.push(streamMessage)
+                    msgs.push(msg)
                     receivedMessagesOther[key] = msgs
                 })
 

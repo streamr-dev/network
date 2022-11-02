@@ -11,6 +11,7 @@ import { collect } from '../../src/utils/iterators'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { createTestStream } from '../test-utils/utils'
+import { Message } from '../../src/Message'
 
 const MAX_ITEMS = 3
 const NUM_MESSAGES = 8
@@ -248,7 +249,7 @@ describe('Subscriber', () => {
             it('errors subscription onMessage callback do trigger onError', async () => {
                 const err = new Error('expected')
                 let count = 0
-                const received1: StreamMessage[] = []
+                const received1: Message[] = []
                 const sub1 = await client.subscribe(streamDefinition, (_content, msg) => {
                     if (count === MAX_ITEMS) {
                         throw err

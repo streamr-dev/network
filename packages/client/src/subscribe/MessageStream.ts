@@ -7,8 +7,9 @@ import { Pipeline, PipelineTransform } from '../utils/Pipeline'
 import { PushPipeline } from '../utils/PushPipeline'
 import { StreamMessage } from 'streamr-client-protocol'
 import * as G from '../utils/GeneratorUtils'
+import { convertStreamMessageToMessage, Message } from './../Message'
 
-export type MessageListener<T, R = unknown> = (msg: T, streamMessage: StreamMessage<T>) => R | Promise<R>
+export type MessageListener<T, R = unknown> = (content: T, msg: Message) => R | Promise<R>
 
 export class MessageStream<T = unknown> implements AsyncIterable<StreamMessage<T>> {
 
@@ -26,7 +27,8 @@ export class MessageStream<T = unknown> implements AsyncIterable<StreamMessage<T
      */
     useLegacyOnMessageHandler(onMessage: MessageListener<T>): this {
         this.pipeline.onMessage.listen(async (streamMessage) => {
-            await onMessage(streamMessage.getParsedContent(), streamMessage)
+            const msg = convertStreamMessageToMessage(streamMessage)
+            await onMessage(msg.content as T, msg)
         })
         this.pipeline.flow()
 
