@@ -92,7 +92,8 @@ describe('DataMetadataEndpoints', () => {
         const lastItem = await client1.publish(stream.id, {
             key: 4
         })
-        await client1.waitForStorage(lastItem)
+        // @ts-expect-error årobaye
+        await client1.waitForStorage(lastItem.streamMessage)
 
         const url = `http://localhost:${httpPort1}/streams/${encodeURIComponent(stream.id)}/metadata/partitions/0`
         const [status, json] = await httpGet(url)

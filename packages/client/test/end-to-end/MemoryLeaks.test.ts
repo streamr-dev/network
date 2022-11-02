@@ -20,7 +20,7 @@ import { Publisher } from '../../src/publish/Publisher'
 import { Subscriber } from '../../src/subscribe/Subscriber'
 import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
 import { DestroySignal } from '../../src/DestroySignal'
-import { Message } from '../../src/Message'
+import { MessageMetadata } from '../../src/Message'
 
 const Dependencies = {
     NetworkNodeFacade,
@@ -216,11 +216,11 @@ describe('MemoryLeaks', () => {
                     const publishTestMessages = getPublishTestStreamMessages(client, stream, {
                         retainMessages: false,
                     })
-                    const received: any[] = []
-                    const sub = await client.subscribe(stream, (content: any, msg: Message) => {
-                        received.push(msg)
+                    const received: MessageMetadata[] = []
+                    const sub = await client.subscribe(stream, (content: any, metadata: MessageMetadata) => {
+                        received.push(metadata)
                         leaksDetector.add('content', content)
-                        leaksDetector.add('message', msg)
+                        leaksDetector.add('metadata', metadata)
                         if (received.length === MAX_MESSAGES) {
                             sub.unsubscribe()
                         }
