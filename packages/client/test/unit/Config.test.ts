@@ -3,7 +3,7 @@ import { fastPrivateKey } from 'streamr-test-utils'
 import { createStrictConfig, STREAM_CLIENT_DEFAULTS } from '../../src/Config'
 import { ConfigTest } from '../../src/ConfigTest'
 import { generateEthereumAccount } from '../../src/Ethereum'
-import { PRODUCTION_STUN_URLS } from 'streamr-network'
+import { STREAMR_ICE_SERVERS } from 'streamr-network'
 import { StreamrClient } from '../../src/StreamrClient'
 
 describe('Config', () => {
@@ -74,7 +74,7 @@ describe('Config', () => {
 
     it('uses PRODUCTION_STUN_URLS by default', () => {
         const clientDefaults = createStrictConfig()
-        expect(clientDefaults.network.stunUrls).toEqual(PRODUCTION_STUN_URLS)
+        expect(clientDefaults.network.iceServers).toEqual(STREAMR_ICE_SERVERS)
     })
 
     describe('ignorable properties', () => {

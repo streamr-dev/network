@@ -39,7 +39,7 @@ describe('GroupKey exchange via proxy connections', () => {
         proxy = createNetworkNode({
             id: 'proxy-node',
             trackers: [trackerInfo],
-            stunUrls: [],
+            iceServers: [],
             acceptProxyConnections: true,
             webrtcDisallowPrivateAddresses: false
         })
@@ -48,7 +48,7 @@ describe('GroupKey exchange via proxy connections', () => {
         publisher = createNetworkNode({
             id: 'publisher',
             trackers: [trackerInfo],
-            stunUrls: [],
+            iceServers: [],
             webrtcDisallowPrivateAddresses: false
         })
         await publisher.start()
@@ -56,7 +56,7 @@ describe('GroupKey exchange via proxy connections', () => {
         subscriber = createNetworkNode({
             id: 'subscriber',
             trackers: [trackerInfo],
-            stunUrls: [],
+            iceServers: [],
             webrtcDisallowPrivateAddresses: false
         })
         await subscriber.start()

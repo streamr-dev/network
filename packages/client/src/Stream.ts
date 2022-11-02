@@ -24,6 +24,8 @@ import { StreamMetadata } from './StreamMessageValidator'
 import { StreamrClientEventEmitter } from './events'
 import { collect } from './utils/iterators'
 import { DEFAULT_PARTITION } from './StreamIDBuilder'
+import { Subscription } from './subscribe/Subscription'
+import { LoggerFactory } from './utils/LoggerFactory'
 
 export interface StreamProperties {
     id: string
@@ -86,6 +88,7 @@ class StreamrStream implements StreamMetadata {
     private readonly _streamRegistry: StreamRegistry
     private readonly _streamRegistryCached: StreamRegistryCached
     private readonly _streamStorageRegistry: StreamStorageRegistry
+    private readonly _loggerFactory: LoggerFactory
     private readonly _eventEmitter: StreamrClientEventEmitter
     private readonly _timeoutsConfig: TimeoutsConfig
 
@@ -98,6 +101,7 @@ class StreamrStream implements StreamMetadata {
         streamRegistryCached: StreamRegistryCached,
         streamRegistry: StreamRegistry,
         streamStorageRegistry: StreamStorageRegistry,
+        loggerFactory: LoggerFactory,
         eventEmitter: StreamrClientEventEmitter,
         timeoutsConfig: TimeoutsConfig
     ) {
@@ -110,6 +114,7 @@ class StreamrStream implements StreamMetadata {
         this._streamRegistryCached = streamRegistryCached
         this._streamRegistry = streamRegistry
         this._streamStorageRegistry = streamStorageRegistry
+        this._loggerFactory = loggerFactory
         this._eventEmitter = eventEmitter
         this._timeoutsConfig = timeoutsConfig
     }
@@ -192,7 +197,8 @@ class StreamrStream implements StreamMetadata {
         const normalizedNodeAddress = toEthereumAddress(nodeAddress)
         try {
             const streamPartId = toStreamPartID(formStorageNodeAssignmentStreamId(normalizedNodeAddress), DEFAULT_PARTITION)
-            assignmentSubscription = await this._subscriber.add(streamPartId)
+            assignmentSubscription = new Subscription<any>(streamPartId, this._loggerFactory)
+            await this._subscriber.add(assignmentSubscription)
             const propagationPromise = waitForAssignmentsToPropagate(assignmentSubscription, this)
             await this._streamStorageRegistry.addStreamToStorageNode(this.id, normalizedNodeAddress)
             await withTimeout(
