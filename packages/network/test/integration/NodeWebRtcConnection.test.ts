@@ -50,7 +50,7 @@ describe('Connection', () => {
             targetPeerId: 'two',
             routerId: 'routerId',
             pingInterval: 5000,
-            stunUrls: [],
+            iceServers: [],
             messageQueue: messageQueueOne,
             deferredConnectionAttempt: deferredConnectionAttemptOne
         })
@@ -62,7 +62,7 @@ describe('Connection', () => {
             targetPeerId: 'one',
             routerId: 'routerId',
             pingInterval: 5000,
-            stunUrls: [],
+            iceServers: [],
             messageQueue: messageQueueTwo,
             deferredConnectionAttempt: deferredConnectionAttemptTwo
         })

@@ -128,34 +128,22 @@ export class StreamrClient {
         options: StreamDefinition & { resend?: ResendOptions },
         onMessage?: MessageListener<T>
     ): Promise<Subscription<T>> {
-        let result
-        if (options.resend !== undefined) {
-            result = await this.resendSubscribe<T>(options, options.resend)
-        } else {
-            const streamPartId = await this.streamIdBuilder.toStreamPartID(options)
-            result = await this.subscriber.add<T>(streamPartId)
-        }
+        const streamPartId = await this.streamIdBuilder.toStreamPartID(options)
+        const sub = (options.resend !== undefined)
+            ? new ResendSubscription<T>(
+                streamPartId,
+                options.resend,
+                this.resends,
+                this.destroySignal,
+                this.loggerFactory,
+                this.config
+            )
+            : new Subscription<T>(streamPartId, this.loggerFactory)
+        await this.subscriber.add<T>(sub)
         if (onMessage !== undefined) {
-            result.useLegacyOnMessageHandler(onMessage)
+            sub.useLegacyOnMessageHandler(onMessage)
         }
         this.eventEmitter.emit('subscribe', undefined)
-        return result
-    }
-
-    private async resendSubscribe<T>(
-        streamDefinition: StreamDefinition,
-        resendOptions: ResendOptions
-    ): Promise<ResendSubscription<T>> {
-        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        const sub = new ResendSubscription<T>(
-            streamPartId,
-            resendOptions,
-            this.resends,
-            this.destroySignal,
-            this.loggerFactory,
-            this.config
-        )
-        await this.subscriber.addSubscription<T>(sub)
         return sub
     }
 

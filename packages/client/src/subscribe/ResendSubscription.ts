@@ -22,14 +22,13 @@ export class ResendSubscription<T> extends Subscription<T> {
         @inject(ConfigInjectionToken.Subscribe) subscibreConfig: SubscribeConfig
     ) {
         super(streamPartId, loggerFactory)
-        this.resendThenRealtime = this.resendThenRealtime.bind(this)
         this.orderMessages = new OrderMessages<T>(
             subscibreConfig,
             resends,
             streamPartId,
             loggerFactory
         )
-        this.pipe(this.resendThenRealtime)
+        this.pipe(this.resendThenRealtime.bind(this))
         this.pipe(this.orderMessages.transform())
         this.onBeforeFinally.listen(async () => {
             this.orderMessages.stop()
