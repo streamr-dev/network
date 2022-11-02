@@ -34,12 +34,6 @@
                 },
                 "ethereum": {
                     "type": "object"
-                },
-                "sessionToken": {
-                    "type": "string"
-                },
-                "unauthenticated": {
-                    "type": "boolean"
                 }
             }
         },
@@ -296,7 +290,7 @@
                                     "duration": {
                                         "type": "number"
                                     }
-                                } 
+                                }
                             }
                         },
                         "maxPublishDelay": {

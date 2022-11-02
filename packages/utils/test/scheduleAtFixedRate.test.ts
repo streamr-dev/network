@@ -3,7 +3,7 @@ import { wait } from '../src/wait'
 
 const INTERVAL = 100
 
-describe(scheduleAtFixedRate, () => {
+describe('scheduleAtFixedRate', () => {
     let task: jest.Mock<Promise<void>, [number]>
     let ref: { stop: () => void }
 

@@ -1,7 +1,8 @@
 import 'reflect-metadata'
-import { StreamrClient } from '../../src/StreamrClient'
-import { ConfigTest } from '../../src/ConfigTest'
+
 import { fastPrivateKey, fastWallet } from 'streamr-test-utils'
+import { ConfigTest } from '../../src/ConfigTest'
+import { StreamrClient } from '../../src/StreamrClient'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 
 describe('NetworkNodeFacade', () => {
@@ -78,21 +79,6 @@ describe('NetworkNodeFacade', () => {
             await expect(async () => {
                 await client.getNode()
             }).rejects.toThrow(/not compatible with authenticated wallet/)
-        })
-
-        it('throws error if supplied network id whilst unauthenticated', async () => {
-            const nodeId = '0xafafafafafafafafafafafafafafafafafafafaf#my-custom-id'
-            const client = environment.createClient({
-                auth: {
-                    unauthenticated: true
-                },
-                network: {
-                    id: nodeId,
-                }
-            })
-            await expect(async () => {
-                await client.getNode()
-            }).rejects.toThrow(/without authentication/)
         })
     })
 

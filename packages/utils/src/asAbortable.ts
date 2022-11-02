@@ -22,23 +22,20 @@ export function asAbortable<T>(
     abortSignal?: AbortSignal,
     customErrorContext?: string
 ): Promise<T> {
-    if (abortSignal?.aborted === true) {
+    if (abortSignal === undefined) {
+        return promise
+    }
+    if (abortSignal.aborted) {
         return Promise.reject(new AbortError(customErrorContext))
     }
     let abortListener: () => void
     return new Promise<T>((resolve, reject) => {
-        if (abortSignal !== undefined) {
-            abortListener = () => {
-                reject(new AbortError(customErrorContext))
-            }
-            // TODO remove the type casting when type definition for abortController has been updated to include addEventListener
-            (abortSignal as any).addEventListener('abort', abortListener)
+        abortListener = () => {
+            reject(new AbortError(customErrorContext))
         }
+        abortSignal.addEventListener('abort', abortListener)
         promise.then(resolve, reject)
     }).finally(() => {
-        if (abortListener !== undefined) {
-            // TODO remove the type casting when type definition for abortController has been updated to include removeEventListener
-            (abortSignal as any).removeEventListener('abort', abortListener)
-        }
+        abortSignal.removeEventListener('abort', abortListener)
     })
 }

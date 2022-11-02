@@ -1,14 +1,14 @@
+import { keyToArrayIndex, toEthereumAddress } from '@streamr/utils'
 import { random } from 'lodash'
 import { MAX_PARTITION_COUNT, StreamMessage, toStreamID } from 'streamr-client-protocol'
 import { fastWallet } from 'streamr-test-utils'
-import { keyToArrayIndex, toEthereumAddress } from '@streamr/utils'
-import { GroupKey } from '../../src/encryption/GroupKey'
-import { MessageFactory } from '../../src/publish/MessageFactory'
-import { MessageMetadata } from '../../src'
 import { createAuthentication } from '../../src/Authentication'
+import { GroupKey } from '../../src/encryption/GroupKey'
+import { MessageMetadata } from '../../src/index-exports'
 import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
-import { createGroupKeyQueue, createStreamRegistryCached } from '../test-utils/utils'
+import { MessageFactory } from '../../src/publish/MessageFactory'
 import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
+import { createGroupKeyQueue, createStreamRegistryCached } from '../test-utils/utils'
 
 const WALLET = fastWallet()
 const STREAM_ID = toStreamID('/path', toEthereumAddress(WALLET.address))

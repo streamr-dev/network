@@ -16,23 +16,16 @@ function createAbortableTimerFn(
     removeListenerOnCb: boolean
 ): (cb: () => void, ms: number, abortSignal: AbortSignal) => void {
     return (callback, ms, abortSignal): void => {
-        if (abortSignal?.aborted) {
+        if (abortSignal.aborted) {
             return
         }
-        let abortListener: () => void
-        if (abortSignal !== undefined) {
-            abortListener = () => {
-                clearFn(timeoutRef)
-                // TODO remove the type casting when type definition for abortController has been updated to include addEventListener
-                ;(abortSignal as any).removeEventListener('abort', abortListener)
-            }
-            // TODO remove the type casting when type definition for abortController has been updated to include addEventListener
-            (abortSignal as any).addEventListener('abort', abortListener)
+        const abortListener = () => {
+            clearFn(timeoutRef)
         }
+        abortSignal.addEventListener('abort', abortListener, { once: true })
         const timeoutRef = setupTimerFn(() => {
-            if (abortListener !== undefined && removeListenerOnCb) {
-                // TODO remove the type casting when type definition for abortController has been updated to include removeEventListener
-                (abortSignal as any).removeEventListener('abort', abortListener)
+            if (removeListenerOnCb) {
+                abortSignal.removeEventListener('abort', abortListener)
             }
             callback()
         }, ms)
