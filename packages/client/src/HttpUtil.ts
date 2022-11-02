@@ -80,25 +80,23 @@ export class HttpUtil {
         this.logger = loggerFactory.createLogger(module)
     }
 
-    async fetchHttpStream(
+    async* fetchHttpStream<T>(
         url: string,
-        opts = {}, // eslint-disable-line @typescript-eslint/explicit-module-boundary-types
         abortController = new AbortController()
-    ): Promise<Readable> {
-        const startTime = Date.now()
+    ): AsyncIterable<StreamMessage<T>> {
         const response = await fetchResponse(url, this.logger, {
-            signal: abortController.signal,
-            ...opts,
+            signal: abortController.signal
         })
         if (!response.body) {
             throw new Error('No Response Body')
         }
 
+        let stream: Readable | undefined
         try {
             // in the browser, response.body will be a web stream. Convert this into a node stream.
             const source: Readable = WebStreamToNodeStream(response.body as unknown as (ReadableStream | Readable))
 
-            const stream = source.pipe(split2((message: string) => {
+            stream = source.pipe(split2((message: string) => {
                 return StreamMessage.deserialize(message)
             }))
 
@@ -106,12 +104,12 @@ export class HttpUtil {
                 abortController.abort()
             })
 
-            return Object.assign(stream, {
-                startTime,
-            })
+            yield* stream
         } catch (err) {
             abortController.abort()
             throw err
+        } finally {
+            stream?.destroy()
         }
     }
 

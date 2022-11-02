@@ -1,9 +1,11 @@
 import { fastPrivateKey, fetchPrivateKeyWithGas, waitForCondition } from 'streamr-test-utils'
 import { createTestStream } from '../test-utils/utils'
-import { ConfigTest, Stream, StreamPermission, StreamrClient } from '../../src'
 import { range } from 'lodash'
-import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { ConfigTest, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { wait } from '@streamr/utils'
+import { StreamrClient } from '../../src/StreamrClient'
+import { StreamPermission } from '../../src/permission'
+import { Stream } from '../../src/Stream'
 
 const NUM_OF_MESSAGES = 20
 const MESSAGE_STORE_TIMEOUT = 9 * 1000
@@ -62,7 +64,7 @@ describe('resend', () => {
             await resendClient.resend({
                 streamId: stream.id,
                 partition: 0
-            }, { last: NUM_OF_MESSAGES }, (msg) => {
+            }, { last: NUM_OF_MESSAGES }, (msg: any) => {
                 messages.push(msg)
             })
             await waitForCondition(

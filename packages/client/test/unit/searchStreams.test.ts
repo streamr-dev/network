@@ -1,11 +1,12 @@
 import 'reflect-metadata'
+
 import { BigNumber } from '@ethersproject/bignumber'
 import { StreamID, toStreamID } from 'streamr-client-protocol'
-import { searchStreams, SearchStreamsResultItem } from '../../src/registry/searchStreams'
-import { collect } from '../../src/utils/GeneratorUtils'
-import { Stream } from '../../src/Stream'
-import { SynchronizedGraphQLClient } from '../../src/utils/SynchronizedGraphQLClient'
 import { randomEthereumAddress } from 'streamr-test-utils'
+import { searchStreams, SearchStreamsResultItem } from '../../src/registry/searchStreams'
+import { Stream } from '../../src/Stream'
+import { collect } from '../../src/utils/iterators'
+import { SynchronizedGraphQLClient } from '../../src/utils/SynchronizedGraphQLClient'
 import { mockLoggerFactory } from '../test-utils/utils'
 
 const MOCK_USER = randomEthereumAddress()
@@ -31,7 +32,7 @@ const createMockGraphQLClient = (resultItems: SearchStreamsResultItem[]): Pick<S
         fetchPaginatedResults: async function* () {
             yield* resultItems
         } as any
-    } 
+    }
 }
 
 describe('searchStreams', () => {

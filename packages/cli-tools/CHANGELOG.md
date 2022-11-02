@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added command `governance vote` for casting votes on Streamr governance proposals
+
 ### Changed
 
 - Replace command `storage-node list-stream-parts` with `storage-node list-streams` and change the output format

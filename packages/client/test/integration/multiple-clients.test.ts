@@ -1,17 +1,18 @@
 import 'reflect-metadata'
-import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
+
+import { StreamMessage } from 'streamr-client-protocol'
 import { fastPrivateKey, waitForCondition } from 'streamr-test-utils'
-import {
-    createTestStream,
-    uid,
-} from '../test-utils/utils'
-import { getPublishTestStreamMessages } from '../test-utils/publish'
-import { addAfterFn } from '../test-utils/jest-utils'
+import { StreamPermission } from '../../src/permission'
+import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils/utils'
-import { Stream } from '../../src/Stream'
-import { StreamPermission } from '../../src/permission'
-import { StreamMessage } from 'streamr-client-protocol'
+import { addAfterFn } from '../test-utils/jest-utils'
+import { getPublishTestStreamMessages } from '../test-utils/publish'
+import {
+    createTestStream,
+    uid
+} from '../test-utils/utils'
+import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
 
 // this number should be at least 10, otherwise late subscribers might not join
 // in time to see any realtime messages

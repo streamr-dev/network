@@ -1,15 +1,16 @@
 import 'reflect-metadata'
+
+import { toEthereumAddress } from '@streamr/utils'
 import { MessageID } from 'streamr-client-protocol'
 import { Authentication } from '../../src/Authentication'
 import { StreamPermission } from '../../src/permission'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
+import { StreamrClientError } from '../../src/StreamrClientError'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 import { createRandomAuthentication, createRelativeTestStreamId } from '../test-utils/utils'
-import { toEthereumAddress } from '@streamr/utils'
-import { StreamrClientError } from '../../src/StreamrClientError'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 

@@ -216,7 +216,7 @@ describe('MemoryLeaks', () => {
                         retainMessages: false,
                     })
                     const received: any[] = []
-                    const sub = await client.subscribe(stream, (msg, streamMessage) => {
+                    const sub = await client.subscribe(stream, (msg: any, streamMessage: any) => {
                         received.push(msg)
                         leaksDetector.add('messageContent', msg)
                         leaksDetector.add('streamMessage', streamMessage)
@@ -242,7 +242,7 @@ describe('MemoryLeaks', () => {
                     const sub1Done = new Defer<undefined>()
                     const received1: any[] = []
                     const SOME_MESSAGES = Math.floor(MAX_MESSAGES / 2)
-                    let sub1: Subscription<any> | undefined = await client.subscribe(stream, async (msg) => {
+                    let sub1: Subscription<any> | undefined = await client.subscribe(stream, async (msg: any) => {
                         received1.push(msg)
                         if (received1.length === SOME_MESSAGES) {
                             if (!sub1) { return }
@@ -256,7 +256,7 @@ describe('MemoryLeaks', () => {
 
                     const sub2Done = new Defer<undefined>()
                     const received2: any[] = []
-                    const sub2 = await client.subscribe(stream, (msg) => {
+                    const sub2 = await client.subscribe(stream, (msg: any) => {
                         received2.push(msg)
                         if (received2.length === MAX_MESSAGES) {
                             // don't unsubscribe yet, this shouldn't affect sub1 from being collected

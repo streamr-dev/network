@@ -38,6 +38,10 @@ jobs:
     uses: ./.github/workflows/test-setup.yml
     with:
       package: utils
+      command: |
+        npm run test
+        sudo apt-get install xvfb
+        xvfb-run --auto-servernum npm run test-browser
   protocol:
     needs: build
     uses: ./.github/workflows/test-setup.yml
