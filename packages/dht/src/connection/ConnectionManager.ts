@@ -3,7 +3,8 @@
 import { EventEmitter } from 'eventemitter3'
 import {
     ConnectivityResponseMessage,
-    LockRequest, LockResponse,
+    LockRequest,
+    LockResponse,
     Message,
     MessageType,
     PeerDescriptor,
@@ -36,6 +37,7 @@ export interface ConnectionManagerConfig {
     simulator?: Simulator
     ownPeerDescriptor?: PeerDescriptor
     serviceIdPrefix?: string
+    stunUrls?: string[]
 }
 
 export enum NatType {
@@ -105,7 +107,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             logger.trace(`Creating WebRTCConnector`)
             this.webrtcConnector = new WebRtcConnector({
                 rpcTransport: this.config.transportLayer!,
-                protocolVersion: ConnectionManager.PROTOCOL_VERSION
+                protocolVersion: ConnectionManager.PROTOCOL_VERSION,
+                stunUrls: this.config.stunUrls
             })
         }
 

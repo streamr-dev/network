@@ -1,7 +1,7 @@
 import { INetworkRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { PeerDescriptor, UUID, PeerID, DhtRpcOptions } from '@streamr/dht'
 import {
-    DataMessage,
+    StreamMessage,
     HandshakeRequest,
     InterleaveNotice,
     LeaveNotice,
@@ -63,21 +63,21 @@ export class RemoteRandomGraphNode {
                 interleaveTarget: response.interleaveTarget
             }
         } catch (err: any) {
-            logger.debug(err)
+            logger.debug(`handshake to ${PeerID.fromValue(this.getPeerDescriptor().peerId).toKey()} failed: ${err}`)
             return {
                 accepted: false
             }
         }
     }
 
-    async sendData(ownPeerDescriptor: PeerDescriptor, dataMessage: DataMessage): Promise<void> {
+    async sendData(ownPeerDescriptor: PeerDescriptor, msg: StreamMessage): Promise<void> {
         const options: DhtRpcOptions = {
             sourceDescriptor: ownPeerDescriptor as PeerDescriptor,
             targetDescriptor: this.remotePeerDescriptor as PeerDescriptor,
             notification: true
         }
         try {
-            this.client.sendData(dataMessage, options)
+            this.client.sendData(msg, options)
         } catch (err: any) {
             logger.warn(err)
         }
@@ -132,7 +132,7 @@ export class RemoteRandomGraphNode {
                 removeMe: response.removeMe
             }
         } catch (err: any) {
-            logger.debug(err)
+            logger.debug(`updateNeighbors to ${PeerID.fromValue(this.getPeerDescriptor().peerId).toKey()} failed: ${err}`)
             return {
                 peers: [],
                 removeMe: true

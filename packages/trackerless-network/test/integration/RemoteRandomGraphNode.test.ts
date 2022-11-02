@@ -2,17 +2,17 @@ import { ListeningRpcCommunicator, Simulator, PeerDescriptor, PeerID, SimulatorT
 import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
 import { NetworkRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import {
-    DataMessage,
+    ContentMessage,
     HandshakeRequest,
     HandshakeResponse,
     LeaveNotice,
-    MessageRef,
-    NeighborUpdate
+    NeighborUpdate, StreamMessage
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { Empty } from '../../src/proto/google/protobuf/empty'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { waitForCondition } from 'streamr-test-utils'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
+import { createStreamMessage } from '../utils'
 
 describe('RemoteRandomGraphNode', () => {
     let mockServerRpc: ListeningRpcCommunicator
@@ -40,9 +40,9 @@ describe('RemoteRandomGraphNode', () => {
         clientRpc = new ListeningRpcCommunicator('test', mockConnectionManager2)
 
         mockServerRpc.registerRpcNotification(
-            DataMessage,
+            StreamMessage,
             'sendData',
-            async (_msg: DataMessage, _context: ServerCallContext): Promise<Empty> => {
+            async (_msg: StreamMessage, _context: ServerCallContext): Promise<Empty> => {
                 recvCounter += 1
                 return Empty
             }
@@ -104,17 +104,17 @@ describe('RemoteRandomGraphNode', () => {
     })
 
     it('sendData', async  () => {
-        const messageRef: MessageRef = {
-            sequenceNumber: 0,
-            timestamp: BigInt(0)
+
+        const content: ContentMessage = {
+            body: JSON.stringify({ hello: "WORLD" })
         }
-        const dataMessage: DataMessage = {
-            content: JSON.stringify({ hello: 'WORLD' }),
-            senderId: PeerID.fromValue(clientPeer.peerId).toString(),
-            streamPartId: 'test-stream',
-            messageRef
-        }
-        await remoteRandomGraphNode.sendData(clientPeer, dataMessage)
+        const msg = createStreamMessage(
+            content,
+            'test-stream',
+            PeerID.fromValue(clientPeer.peerId).toString()
+        )
+
+        await remoteRandomGraphNode.sendData(clientPeer, msg)
         await waitForCondition(() => recvCounter === 1)
     })
 

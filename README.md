@@ -4,9 +4,9 @@
   </a>
 </p>
 
-# Network Monorepo
+# Network
 
-Monorepo for Streamr Network packages.
+Monorepo containing all the main components of Streamr Network.
 
 ## Packages
 
@@ -19,27 +19,18 @@ Monorepo for Streamr Network packages.
 * [cli-tools](packages/cli-tools/README.md) (@streamr/cli-tools)
 * [tracker](packages/network-tracker/README.md)(@streamr/network-tracker)
 
-## CI Status
-
-[![Client – Lint, Unit, Integration Tests](https://github.com/streamr-dev/monorepo/actions/workflows/client-code.yml/badge.svg)](https://github.com/streamr-dev/monorepo/actions/workflows/client-code.yml)
-[![Client – Test Build](https://github.com/streamr-dev/monorepo/actions/workflows/client-build.yml/badge.svg)](https://github.com/streamr-dev/monorepo/actions/workflows/client-build.yml)
-[![Protocol – Lint, Test and Publish](https://github.com/streamr-dev/monorepo/actions/workflows/protocol.yml/badge.svg)](https://github.com/streamr-dev/monorepo/actions/workflows/protocol.yml)
-[![Broker – Lint, Test and Publish](https://github.com/streamr-dev/monorepo/actions/workflows/broker.yml/badge.svg)](https://github.com/streamr-dev/monorepo/actions/workflows/broker.yml)
-[![Network – Lint, Test and Publish](https://github.com/streamr-dev/monorepo/actions/workflows/network.yml/badge.svg)](https://github.com/streamr-dev/monorepo/actions/workflows/network.yml)
-[![Tracker – Lint, Test and Publish](https://github.com/streamr-dev/monorepo/actions/workflows/tracker.yml/badge.svg)](https://github.com/streamr-dev/monorepo/actions/workflows/tracker.yml)
-
 ## NPM scripts
-| NodeJS version `16.13.x` and NPM version `8.x` is required |
-| --- |
+| NodeJS version `18.13.x` and NPM version `8.x` is required |
+|------------------------------------------------------------|
 
 Monorepo is managed using [npm workspaces](https://docs.npmjs.com/cli/v7/using-npm/workspaces).
 
-Installation on an Apple Silicon Mac requires additional steps, see [install-on-apple-silicon.md](/install-on-apple-silicon)
+Installation on an Apple Silicon Mac requires additional steps, see [install-on-apple-silicon.md](/install-on-apple-silicon).
 
 **Important:** Do not use `npm ci` or `npm install` directly in the sub-package directories.
 
 ### Bootstrap all sub-packages
-The go to command for most use cases.
+The go-to command for most use cases.
 
 To install all required dependencies and build all sub-packages (linking sub-packages together as needed):
 
@@ -111,7 +102,7 @@ npm run install-git-hooks
 Manually add the entry to the `package.json` of the sub-package and 
 run `npm run bootstrap-pkg $PACKAGE_NAME`.
 
-Alternatively:
+Alternatively, run:
 ```bash
 npm install some-dependency --workspace=$PACKAGE_NAME
 ```

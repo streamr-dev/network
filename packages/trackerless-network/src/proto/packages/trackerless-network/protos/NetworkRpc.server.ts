@@ -7,16 +7,16 @@ import { LeaveNotice } from "./NetworkRpc";
 import { HandshakeResponse } from "./NetworkRpc";
 import { HandshakeRequest } from "./NetworkRpc";
 import { Empty } from "../../../google/protobuf/empty";
-import { DataMessage } from "./NetworkRpc";
+import { StreamMessage } from "./NetworkRpc";
 import { ServerCallContext } from "@protobuf-ts/runtime-rpc";
 /**
  * @generated from protobuf service NetworkRpc
  */
 export interface INetworkRpc<T = ServerCallContext> {
     /**
-     * @generated from protobuf rpc: sendData(DataMessage) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: sendData(StreamMessage) returns (google.protobuf.Empty);
      */
-    sendData(request: DataMessage, context: T): Promise<Empty>;
+    sendData(request: StreamMessage, context: T): Promise<Empty>;
     /**
      * @generated from protobuf rpc: handshake(HandshakeRequest) returns (HandshakeResponse);
      */

@@ -8,6 +8,7 @@ service DhtRpcService {
   rpc ping (PingRequest) returns (PingResponse);
   rpc routeMessage (RouteMessageWrapper) returns (RouteMessageAck);
   rpc forwardMessage (RouteMessageWrapper) returns (RouteMessageAck);
+  rpc leaveNotice (LeaveNotice) returns (google.protobuf.Empty);
 }
 
 service WebSocketConnectorService {
@@ -44,6 +45,11 @@ message PingRequest {
 
 message PingResponse {
   string requestId = 1;
+}
+
+message LeaveNotice {
+  PeerDescriptor peerDescriptor = 1;
+  string serviceId = 2;
 }
 
 message PeerDescriptor {

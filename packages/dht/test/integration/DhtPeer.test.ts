@@ -46,7 +46,7 @@ describe('DhtPeer', () => {
         })
 
         const client = toProtoRpcClient(new DhtRpcServiceClient(clientRpcCommunicator.getRpcClientTransport()))
-        dhtPeer = new DhtPeer(serverPeerDescriptor, client)
+        dhtPeer = new DhtPeer(serverPeerDescriptor, client, serviceId)
     })
 
     afterEach(() => {

@@ -1,5 +1,5 @@
 import { IDhtRpcServiceClient } from '../proto/DhtRpc.client'
-import { ClosestPeersRequest, PeerDescriptor, PingRequest, RouteMessageWrapper } from '../proto/DhtRpc'
+import { ClosestPeersRequest, LeaveNotice, PeerDescriptor, PingRequest, RouteMessageWrapper } from '../proto/DhtRpc'
 import { v4 } from 'uuid'
 import { PeerID } from '../helpers/PeerID'
 import { DhtRpcOptions } from '../rpc-protocol/DhtRpcOptions'
@@ -36,17 +36,20 @@ export class DhtPeer implements KBucketContact {
     private peerDescriptor: PeerDescriptor
     public vectorClock: number
     private readonly dhtClient: ProtoRpcClient<IDhtRpcServiceClient>
-    
-    constructor(peerDescriptor: PeerDescriptor, client: ProtoRpcClient<IDhtRpcServiceClient>) {
+    private readonly serviceId: string
+
+    constructor(peerDescriptor: PeerDescriptor, client: ProtoRpcClient<IDhtRpcServiceClient>, serviceId: string) {
         this.peerId = PeerID.fromValue(peerDescriptor.peerId)
         this.peerDescriptor = peerDescriptor
         this.vectorClock = DhtPeer.counter++
         this.dhtClient = client
+        this.serviceId = serviceId
         this.getClosestPeers = this.getClosestPeers.bind(this)
         this.ping = this.ping.bind(this)
     }
 
     async getClosestPeers(sourceDescriptor: PeerDescriptor): Promise<PeerDescriptor[]> {
+        logger.trace(`Requesting getClosestPeers on ${this.serviceId} from ${this.peerId.toKey()}`)
         const request: ClosestPeersRequest = {
             peerDescriptor: sourceDescriptor,
             requestId: v4()
@@ -60,13 +63,13 @@ export class DhtPeer implements KBucketContact {
             const peers = await this.dhtClient.getClosestPeers(request, options)
             return peers.peers
         } catch (err) {
-            logger.debug(err)
-            // logger.warn(PeerID.fromValue(sourceDescriptor.peerId).toKey() + ", " +  PeerID.fromValue(this.peerDescriptor.peerId).toKey())
+            logger.debug(`getClosestPeers failed on ${this.serviceId} to ${this.peerId.toKey()}: ${err}`)
             return []
         }
     }
 
     async ping(sourceDescriptor: PeerDescriptor): Promise<boolean> {
+        logger.trace(`Requesting ping on ${this.serviceId} from ${this.peerId.toKey()}`)
         const request: PingRequest = {
             requestId: v4()
         }
@@ -80,7 +83,7 @@ export class DhtPeer implements KBucketContact {
                 return true
             }
         } catch (err) {
-            logger.debug(err)
+            logger.debug(`ping failed on ${this.serviceId} to ${this.peerId.toKey()}: ${err}`)
         }
         return false
     }
@@ -145,6 +148,20 @@ export class DhtPeer implements KBucketContact {
             return false
         }
         return true
+    }
+
+    leaveNotice(sourceDescriptor: PeerDescriptor): void {
+        logger.trace(`Sending leaveNotice on ${this.serviceId} from ${this.peerId.toKey()}`)
+        const request: LeaveNotice = {
+            serviceId: this.serviceId,
+            peerDescriptor: sourceDescriptor
+        }
+        const options: DhtRpcOptions = {
+            sourceDescriptor: sourceDescriptor as PeerDescriptor,
+            targetDescriptor: this.peerDescriptor as PeerDescriptor,
+            notification: true
+        }
+        this.dhtClient.leaveNotice(request, options)
     }
 
     getPeerDescriptor(): PeerDescriptor {

@@ -17,35 +17,127 @@ export interface MessageRef {
      * @generated from protobuf field: int32 sequenceNumber = 2;
      */
     sequenceNumber: number;
+    /**
+     * @generated from protobuf field: string messageChainId = 3;
+     */
+    messageChainId: string;
+    /**
+     * @generated from protobuf field: string streamId = 4;
+     */
+    streamId: string;
+    /**
+     * @generated from protobuf field: int32 streamPartition = 5;
+     */
+    streamPartition: number;
+    /**
+     * @generated from protobuf field: string publisherId = 6;
+     */
+    publisherId: string;
 }
 /**
- * @generated from protobuf message DataMessage
+ * @generated from protobuf message ContentMessage
  */
-export interface DataMessage {
+export interface ContentMessage {
     /**
-     * @generated from protobuf field: string content = 1;
+     * @generated from protobuf field: string body = 1;
      */
-    content: string;
+    body: string;
+}
+/**
+ * @generated from protobuf message EncryptedGroupKey
+ */
+export interface EncryptedGroupKey {
     /**
-     * @generated from protobuf field: string senderId = 2;
+     * @generated from protobuf field: string groupKeyId = 1;
      */
-    senderId: string;
+    groupKeyId: string;
     /**
-     * @generated from protobuf field: string streamPartId = 3;
+     * @generated from protobuf field: string encryptedGroupKeyHex = 2;
      */
-    streamPartId: string;
+    encryptedGroupKeyHex: string;
     /**
-     * @generated from protobuf field: MessageRef messageRef = 4;
+     * @generated from protobuf field: optional string serialized = 3;
+     */
+    serialized?: string;
+}
+/**
+ * @generated from protobuf message StreamMessage
+ */
+export interface StreamMessage {
+    /**
+     * @generated from protobuf field: StreamMessageType messageType = 1;
+     */
+    messageType: StreamMessageType;
+    /**
+     * @generated from protobuf field: optional EncryptionType encryptionType = 2;
+     */
+    encryptionType?: EncryptionType;
+    /**
+     * @generated from protobuf field: bytes content = 3;
+     */
+    content: Uint8Array;
+    /**
+     * @generated from protobuf field: string signature = 4;
+     */
+    signature: string;
+    /**
+     * @generated from protobuf field: MessageRef messageRef = 5;
      */
     messageRef?: MessageRef;
     /**
-     * @generated from protobuf field: optional MessageRef previousMessageRef = 5;
+     * @generated from protobuf field: optional MessageRef previousMessageRef = 6;
      */
     previousMessageRef?: MessageRef;
     /**
-     * @generated from protobuf field: optional string previousPeer = 6;
+     * @generated from protobuf field: optional string previousPeer = 7;
      */
     previousPeer?: string;
+    /**
+     * @generated from protobuf field: optional string groupKeyId = 8;
+     */
+    groupKeyId?: string;
+    /**
+     * @generated from protobuf field: optional EncryptedGroupKey newGroupKey = 9;
+     */
+    newGroupKey?: EncryptedGroupKey;
+}
+/**
+ * @generated from protobuf message GroupKeyRequest
+ */
+export interface GroupKeyRequest {
+    /**
+     * @generated from protobuf field: string requestId = 1;
+     */
+    requestId: string;
+    /**
+     * @generated from protobuf field: string recipient = 2;
+     */
+    recipient: string;
+    /**
+     * @generated from protobuf field: string rsaPublicKey = 3;
+     */
+    rsaPublicKey: string;
+    /**
+     * @generated from protobuf field: repeated string groupKeyIds = 4;
+     */
+    groupKeyIds: string[];
+}
+/**
+ * @generated from protobuf message GroupKeyResponse
+ */
+export interface GroupKeyResponse {
+    /**
+     * @generated from protobuf field: string requestId = 1;
+     */
+    requestId: string;
+    /**
+     * @generated from protobuf field: string recipient = 2;
+     */
+    recipient: string;
+    /**
+     * @generated from protobuf field: repeated EncryptedGroupKey encryptedGroupKeys = 3;
+     */
+    encryptedGroupKeys: EncryptedGroupKey[];
 }
 /**
  * @generated from protobuf message Layer2Message
@@ -162,6 +254,40 @@ export interface NeighborUpdate {
     neighborDescriptors: PeerDescriptor[];
 }
 /**
+ * @generated from protobuf enum StreamMessageType
+ */
+export enum StreamMessageType {
+    /**
+     * @generated from protobuf enum value: MESSAGE = 0;
+     */
+    MESSAGE = 0,
+    /**
+     * @generated from protobuf enum value: GROUP_KEY_REQUEST = 1;
+     */
+    GROUP_KEY_REQUEST = 1,
+    /**
+     * @generated from protobuf enum value: GROUP_KEY_RESPONSE = 2;
+     */
+    GROUP_KEY_RESPONSE = 2
+}
+/**
+ * @generated from protobuf enum EncryptionType
+ */
+export enum EncryptionType {
+    /**
+     * @generated from protobuf enum value: NONE = 0;
+     */
+    NONE = 0,
+    /**
+     * @generated from protobuf enum value: RSA = 1;
+     */
+    RSA = 1,
+    /**
+     * @generated from protobuf enum value: AES = 2;
+     */
+    AES = 2
+}
+/**
  * @generated from protobuf enum Layer2Type
  */
 export enum Layer2Type {
@@ -175,7 +301,11 @@ class MessageRef$Type extends MessageType<MessageRef> {
     constructor() {
         super("MessageRef", [
             { no: 1, name: "timestamp", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
-            { no: 2, name: "sequenceNumber", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
+            { no: 2, name: "sequenceNumber", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 3, name: "messageChainId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "streamId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "streamPartition", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 6, name: "publisherId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -184,22 +314,80 @@ class MessageRef$Type extends MessageType<MessageRef> {
  */
 export const MessageRef = new MessageRef$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class DataMessage$Type extends MessageType<DataMessage> {
+class ContentMessage$Type extends MessageType<ContentMessage> {
     constructor() {
-        super("DataMessage", [
-            { no: 1, name: "content", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "senderId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "streamPartId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "messageRef", kind: "message", T: () => MessageRef },
-            { no: 5, name: "previousMessageRef", kind: "message", T: () => MessageRef },
-            { no: 6, name: "previousPeer", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
+        super("ContentMessage", [
+            { no: 1, name: "body", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message DataMessage
+ * @generated MessageType for protobuf message ContentMessage
  */
-export const DataMessage = new DataMessage$Type();
+export const ContentMessage = new ContentMessage$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class EncryptedGroupKey$Type extends MessageType<EncryptedGroupKey> {
+    constructor() {
+        super("EncryptedGroupKey", [
+            { no: 1, name: "groupKeyId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "encryptedGroupKeyHex", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "serialized", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message EncryptedGroupKey
+ */
+export const EncryptedGroupKey = new EncryptedGroupKey$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class StreamMessage$Type extends MessageType<StreamMessage> {
+    constructor() {
+        super("StreamMessage", [
+            { no: 1, name: "messageType", kind: "enum", T: () => ["StreamMessageType", StreamMessageType] },
+            { no: 2, name: "encryptionType", kind: "enum", opt: true, T: () => ["EncryptionType", EncryptionType] },
+            { no: 3, name: "content", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 4, name: "signature", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "messageRef", kind: "message", T: () => MessageRef },
+            { no: 6, name: "previousMessageRef", kind: "message", T: () => MessageRef },
+            { no: 7, name: "previousPeer", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
+            { no: 8, name: "groupKeyId", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
+            { no: 9, name: "newGroupKey", kind: "message", T: () => EncryptedGroupKey }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message StreamMessage
+ */
+export const StreamMessage = new StreamMessage$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GroupKeyRequest$Type extends MessageType<GroupKeyRequest> {
+    constructor() {
+        super("GroupKeyRequest", [
+            { no: 1, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "recipient", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "rsaPublicKey", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "groupKeyIds", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GroupKeyRequest
+ */
+export const GroupKeyRequest = new GroupKeyRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GroupKeyResponse$Type extends MessageType<GroupKeyResponse> {
+    constructor() {
+        super("GroupKeyResponse", [
+            { no: 1, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "recipient", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "encryptedGroupKeys", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => EncryptedGroupKey }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GroupKeyResponse
+ */
+export const GroupKeyResponse = new GroupKeyResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class Layer2Message$Type extends MessageType<Layer2Message> {
     constructor() {
@@ -291,7 +479,7 @@ export const NeighborUpdate = new NeighborUpdate$Type();
  * @generated ServiceType for protobuf service NetworkRpc
  */
 export const NetworkRpc = new ServiceType("NetworkRpc", [
-    { name: "sendData", options: {}, I: DataMessage, O: Empty },
+    { name: "sendData", options: {}, I: StreamMessage, O: Empty },
     { name: "handshake", options: {}, I: HandshakeRequest, O: HandshakeResponse },
     { name: "leaveNotice", options: {}, I: LeaveNotice, O: Empty },
     { name: "interleaveNotice", options: {}, I: InterleaveNotice, O: Empty },

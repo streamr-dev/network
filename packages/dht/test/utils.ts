@@ -1,6 +1,6 @@
 import { DhtNode } from '../src/dht/DhtNode'
 import {
-    ClosestPeersRequest, ClosestPeersResponse,
+    ClosestPeersRequest, ClosestPeersResponse, LeaveNotice,
     NodeType,
     PeerDescriptor, PingRequest, PingResponse, RouteMessageAck, RouteMessageWrapper,
     RpcMessage, WebSocketConnectionRequest, WebSocketConnectionResponse
@@ -12,6 +12,7 @@ import { Simulator } from '../src/connection/Simulator/Simulator'
 import { ConnectionManager } from '../src/connection/ConnectionManager'
 import { v4 } from 'uuid'
 import { getRandomRegion } from './data/pings'
+import { Empty } from '../src/proto/google/protobuf/empty'
 
 export const generateId = (stringId: string): Uint8Array => {
     return PeerID.fromString(stringId).value
@@ -110,6 +111,9 @@ export const MockDhtRpc: IDhtRpcWithError = {
             error: ''
         }
         return response
+    },
+    async leaveNotice(_request: LeaveNotice, _context: ServerCallContext): Promise<Empty> {
+        return {}
     },
     async throwPingError(_urequest: PingRequest, _context: ServerCallContext): Promise<PingResponse> {
         throw new Error()

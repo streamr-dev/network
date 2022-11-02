@@ -210,7 +210,7 @@ describe('Route Message With Mock Connections', () => {
                 }, 30000)
             )
         )
-        //await wait(10000)
+       
     }, 60000)
 
     describe('forwarding', () => {

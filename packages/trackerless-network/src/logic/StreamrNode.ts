@@ -1,6 +1,6 @@
 import { RandomGraphNode, Event as RandomGraphEvent } from './RandomGraphNode'
 import { PeerDescriptor, ConnectionLocker, DhtNode, ITransport } from '@streamr/dht'
-import { DataMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
+import { StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { EventEmitter } from 'events'
 import { Logger } from '@streamr/utils'
 
@@ -14,16 +14,18 @@ export enum Event {
 }
 
 export interface StreamrNode {
-    on(event: Event.NEW_MESSAGE, listener: (msg: DataMessage, nodeId: string) => void): this
+    on(event: Event.NEW_MESSAGE, listener: (msg: StreamMessage) => void): this
 }
 
 const logger = new Logger(module)
+
+let cleanUp: () => Promise<void> = async () => {}
 
 export class StreamrNode extends EventEmitter {
     private readonly streams: Map<string, StreamObject>
     private layer0: DhtNode | null = null
     private started = false
-    private stopped = false
+    private destroyed = false
     private P2PTransport: ITransport | null = null
     private connectionLocker: ConnectionLocker | null = null
     constructor() {
@@ -32,7 +34,7 @@ export class StreamrNode extends EventEmitter {
     }
 
     async start(startedAndJoinedLayer0: DhtNode, transport: ITransport, connectionLocker: ConnectionLocker): Promise<void> {
-        if (this.started || this.stopped) {
+        if (this.started || this.destroyed) {
             return
         }
         logger.info(`Starting new StreamrNode with id ${startedAndJoinedLayer0.getPeerDescriptor().peerId}`)
@@ -40,34 +42,35 @@ export class StreamrNode extends EventEmitter {
         this.layer0 = startedAndJoinedLayer0
         this.P2PTransport = transport
         this.connectionLocker = connectionLocker
+        cleanUp = this.destroy.bind(this)
     }
 
-    destroy(): void {
-        if (!this.started) {
+    async destroy(): Promise<void> {
+        if (!this.started || this.destroyed) {
             return
         }
-        this.stopped = true
-        this.layer0!.stop()
+        logger.trace('Destroying StreamrNode...')
+        this.destroyed = true
         this.streams.forEach((stream) => {
             stream.layer2.stop()
             stream.layer1.stop()
         })
         this.streams.clear()
+        await this.layer0!.stop()
+        await this.P2PTransport!.stop()
     }
 
     subscribeToStream(streamPartID: string, entryPointDescriptor: PeerDescriptor): void {
         if (this.streams.has(streamPartID)) {
             this.streams.get(streamPartID)!.layer2.on(
                 RandomGraphEvent.MESSAGE,
-                (message: DataMessage) =>
-                    this.emit(Event.NEW_MESSAGE, message, message.senderId))
+                (message: StreamMessage) =>
+                    this.emit(Event.NEW_MESSAGE, message))
         } else {
             this.joinStream(streamPartID, entryPointDescriptor)
                 .then(() => this.streams.get(streamPartID)?.layer2.on(
-                    RandomGraphEvent.MESSAGE,
-                    (message: DataMessage) =>
-                        this.emit(Event.NEW_MESSAGE, message, message.senderId))
-                )
+                    RandomGraphEvent.MESSAGE, (message: StreamMessage) => this.emit(Event.NEW_MESSAGE, message)
+                ))
                 .catch((err) => {
                     logger.warn(`Failed to subscribe to stream ${streamPartID} with error: ${err}`)
                     this.subscribeToStream(streamPartID, entryPointDescriptor)
@@ -75,7 +78,7 @@ export class StreamrNode extends EventEmitter {
         }
     }
 
-    publishToStream(streamPartID: string, entryPointDescriptor: PeerDescriptor, msg: DataMessage): void {
+    publishToStream(streamPartID: string, entryPointDescriptor: PeerDescriptor, msg: StreamMessage): void {
         if (this.streams.has(streamPartID)) {
             this.streams.get(streamPartID)!.layer2.broadcast(msg)
         } else {
@@ -132,11 +135,23 @@ export class StreamrNode extends EventEmitter {
         await layer1.joinDht(entryPoint)
     }
 
-    getStream(streamPartID: string): StreamObject | undefined {
-        return this.streams.get(streamPartID)
+    getStream(streamPartId: string): StreamObject | undefined {
+        return this.streams.get(streamPartId)
+    }
+
+    hasStream(streamPartId: string): boolean {
+        return this.streams.has(streamPartId)
     }
 
     getPeerDescriptor(): PeerDescriptor {
         return this.layer0!.getPeerDescriptor()
     }
+
 }
+
+[`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `SIGTERM`].forEach((term) => {
+    process.on(term, async () => {
+        await cleanUp()
+        process.exit()
+    })
+})
