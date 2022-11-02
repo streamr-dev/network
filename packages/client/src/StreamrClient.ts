@@ -129,7 +129,16 @@ export class StreamrClient {
     ): Promise<Subscription<T>> {
         let result
         if (options.resend !== undefined) {
-            result = await this.resendSubscribe<T>(options, options.resend)
+            const streamPartId = await this.streamIdBuilder.toStreamPartID(options)
+            const sub = new ResendSubscription<T>(
+                streamPartId,
+                options.resend,
+                this.resends,
+                this.destroySignal,
+                this.loggerFactory,
+                this.config
+            )
+            result = await this.subscriber.add<T>(sub)
         } else {
             const streamPartId = await this.streamIdBuilder.toStreamPartID(options)
             result = await this.subscriber.add<T>(new Subscription<T>(streamPartId, this.loggerFactory))
@@ -139,23 +148,6 @@ export class StreamrClient {
         }
         this.eventEmitter.emit('subscribe', undefined)
         return result
-    }
-
-    private async resendSubscribe<T>(
-        streamDefinition: StreamDefinition,
-        resendOptions: ResendOptions
-    ): Promise<ResendSubscription<T>> {
-        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        const sub = new ResendSubscription<T>(
-            streamPartId,
-            resendOptions,
-            this.resends,
-            this.destroySignal,
-            this.loggerFactory,
-            this.config
-        )
-        await this.subscriber.add<T>(sub)
-        return sub
     }
 
     /**
