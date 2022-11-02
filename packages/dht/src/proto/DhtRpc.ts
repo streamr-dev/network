@@ -474,6 +474,19 @@ export interface LockResponse {
     reason?: boolean; // if accepted = false
 }
 /**
+ * @generated from protobuf message DisconnectNotice
+ */
+export interface DisconnectNotice {
+    /**
+     * @generated from protobuf field: string protocolVersion = 1;
+     */
+    protocolVersion: string;
+    /**
+     * @generated from protobuf field: PeerDescriptor peerDescriptor = 2;
+     */
+    peerDescriptor?: PeerDescriptor;
+}
+/**
  * @generated from protobuf enum NodeType
  */
 export enum NodeType {
@@ -896,6 +909,19 @@ class LockResponse$Type extends MessageType$<LockResponse> {
  * @generated MessageType for protobuf message LockResponse
  */
 export const LockResponse = new LockResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class DisconnectNotice$Type extends MessageType$<DisconnectNotice> {
+    constructor() {
+        super("DisconnectNotice", [
+            { no: 1, name: "protocolVersion", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message DisconnectNotice
+ */
+export const DisconnectNotice = new DisconnectNotice$Type();
 /**
  * @generated ServiceType for protobuf service DhtRpcService
  */
@@ -926,5 +952,6 @@ export const WebRtcConnectorService = new ServiceType("WebRtcConnectorService", 
  */
 export const ConnectionLocker = new ServiceType("ConnectionLocker", [
     { name: "lockRequest", options: {}, I: LockRequest, O: LockResponse },
-    { name: "unlockRequest", options: {}, I: UnlockRequest, O: Empty }
+    { name: "unlockRequest", options: {}, I: UnlockRequest, O: Empty },
+    { name: "gracefulDisconnect", options: {}, I: DisconnectNotice, O: Empty }
 ]);
