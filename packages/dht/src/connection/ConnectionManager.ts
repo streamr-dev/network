@@ -180,16 +180,11 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         this.connections.forEach((connection: ManagedConnection) => {
             const targetDescriptor = connection.getPeerDescriptor()
             if (targetDescriptor) {
-                const remoteConnectionLocker = new RemoteConnectionLocker(
-                    targetDescriptor,
-                    ConnectionManager.PROTOCOL_VERSION,
-                    toProtoRpcClient(new ConnectionLockerClient(this.rpcCommunicator!.getRpcClientTransport()))
-                )
-                remoteConnectionLocker.gracefulDisconnect(this.ownPeerDescriptor!)
+                this.gracefullyDisconnect(targetDescriptor)
+            } else {
+                connection.close()
             }
         })
-        this.connections.forEach((connection: ManagedConnection) => connection.close())
-
     }
 
     public send = async (message: Message): Promise<void> => {
@@ -457,6 +452,19 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         }
     }
 
+    public gracefullyDisconnect(targetDescriptor: PeerDescriptor): void {
+        const hexKey = PeerID.fromValue(targetDescriptor.peerId).toKey()
+        const remoteConnectionLocker = new RemoteConnectionLocker(
+            targetDescriptor,
+            ConnectionManager.PROTOCOL_VERSION,
+            toProtoRpcClient(new ConnectionLockerClient(this.rpcCommunicator!.getRpcClientTransport()))
+        )
+        this.remoteLockedConnections.delete(hexKey)
+        this.localLockedConnections.delete(hexKey)
+        remoteConnectionLocker.gracefulDisconnect(this.ownPeerDescriptor!)
+        this.closeConnection(hexKey, 'gracefully disconnecting')
+    }
+
     public getAllConnectionPeerDescriptors(): PeerDescriptor[] {
         return [...this.connections.values()]
             .filter((managedConnection: ManagedConnection) => managedConnection.isHandshakeCompleted())
@@ -504,7 +512,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     private async gracefulDisconnect(disconnectNotice: DisconnectNotice, _context: ServerCallContext): Promise<Empty> {
         const hexKey = PeerID.fromValue(disconnectNotice.peerDescriptor!.peerId).toKey()
         this.remoteLockedConnections.delete(hexKey)
-        this.disconnect(disconnectNotice.peerDescriptor!, 'graceful disconnect notified')
+        this.localLockedConnections.delete(hexKey)
+        this.closeConnection(hexKey, 'graceful disconnect notified')
         return {}
     }
 }
