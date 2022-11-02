@@ -29,7 +29,7 @@ describe('Network RPC', () => {
     beforeEach(() => {
         rpcCommunicator1 = new RpcCommunicator()
         rpcCommunicator2 = new RpcCommunicator()
-        rpcCommunicator1.on('outgoingMessage', (message: Uint8Array, _ucallContext?: ProtoCallContext) => {
+        rpcCommunicator1.on('outgoingMessage', (message: Uint8Array, requestId: string, _ucallContext?: ProtoCallContext) => {
             rpcCommunicator2.handleIncomingMessage(message)
         })
         client = toProtoRpcClient(new NetworkRpcClient(rpcCommunicator1.getRpcClientTransport()))

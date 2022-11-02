@@ -43,10 +43,10 @@ describe('toProtoRpcClient', () => {
         const helloClient = toProtoRpcClient(new HelloRpcServiceClient(communicator2.getRpcClientTransport()))
 
         // Simulate a network connection, in real life the message blobs would be transferred over a network
-        communicator1.on('outgoingMessage', (msgBody: Uint8Array, _callContext?: ProtoCallContext) => {
+        communicator1.on('outgoingMessage', (msgBody: Uint8Array, requestId: string, _callContext?: ProtoCallContext) => {
             communicator2.handleIncomingMessage(msgBody)
         })
-        communicator2.on('outgoingMessage', (msgBody: Uint8Array, _callContext?: ProtoCallContext) => {
+        communicator2.on('outgoingMessage', (msgBody: Uint8Array, requestId: string, _callContext?: ProtoCallContext) => {
             communicator1.handleIncomingMessage(msgBody)
         })
 
@@ -68,10 +68,10 @@ describe('toProtoRpcClient', () => {
         const wakeUpClient = toProtoRpcClient(new WakeUpRpcServiceClient(communicator2.getRpcClientTransport()))
 
         // Simulate a network connection, in real life the message blobs would be transferred over a network
-        communicator1.on('outgoingMessage', (msgBody: Uint8Array, _callContext?: ProtoCallContext) => {
+        communicator1.on('outgoingMessage', (msgBody: Uint8Array, requestId: string, _callContext?: ProtoCallContext) => {
             communicator2.handleIncomingMessage(msgBody)
         })
-        communicator2.on('outgoingMessage', (msgBody: Uint8Array, _callContext?: ProtoCallContext) => {
+        communicator2.on('outgoingMessage', (msgBody: Uint8Array, requestId: string, _callContext?: ProtoCallContext) => {
             communicator1.handleIncomingMessage(msgBody)
         })
 
@@ -96,10 +96,10 @@ describe('toProtoRpcClient', () => {
         const helloClient = new HelloRpcServiceClient(communicator2.getRpcClientTransport())
 
         // Simulate a network connection, in real life the message blobs would be transferred over a network
-        communicator1.on('outgoingMessage', (msgBody: Uint8Array, _callContext?: ProtoCallContext) => {
+        communicator1.on('outgoingMessage', (msgBody: Uint8Array, requestId: string, _callContext?: ProtoCallContext) => {
             communicator2.handleIncomingMessage(msgBody)
         })
-        communicator2.on('outgoingMessage', (msgBody: Uint8Array, _callContext?: ProtoCallContext) => {
+        communicator2.on('outgoingMessage', (msgBody: Uint8Array, requestId: string, _callContext?: ProtoCallContext) => {
             communicator1.handleIncomingMessage(msgBody)
         })
 
@@ -125,10 +125,10 @@ describe('toProtoRpcClient', () => {
         const wakeUpClient = new WakeUpRpcServiceClient(communicator2.getRpcClientTransport())
 
         // Simulate a network connection, in real life the message blobs would be transferred over a network
-        communicator1.on('outgoingMessage', (msgBody: Uint8Array, _callContext?: ProtoCallContext) => {
+        communicator1.on('outgoingMessage', (msgBody: Uint8Array, requestId: string, _callContext?: ProtoCallContext) => {
             communicator2.handleIncomingMessage(msgBody)
         })
-        communicator2.on('outgoingMessage', (msgBody: Uint8Array, _callContext?: ProtoCallContext) => {
+        communicator2.on('outgoingMessage', (msgBody: Uint8Array, requestId: string, _callContext?: ProtoCallContext) => {
             communicator1.handleIncomingMessage(msgBody)
         })
 
