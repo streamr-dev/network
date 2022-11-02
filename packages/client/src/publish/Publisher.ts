@@ -34,13 +34,13 @@ export class PublishError extends Error {
     }
 }
 
-export interface MessageMetadata {
+export interface PublishMetadata {
     timestamp?: string | number | Date
     partitionKey?: string | number
     msgChainId?: string
 }
 
-const parseTimestamp = (metadata?: MessageMetadata): number => {
+const parseTimestamp = (metadata?: PublishMetadata): number => {
     if (metadata?.timestamp === undefined) {
         return Date.now()
     } else {
@@ -85,7 +85,7 @@ export class Publisher {
     async publish<T>(
         streamDefinition: StreamDefinition,
         content: T,
-        metadata?: MessageMetadata
+        metadata?: PublishMetadata
     ): Promise<StreamMessage<T>> {
         const timestamp = parseTimestamp(metadata)
         /*
@@ -135,5 +135,5 @@ export class Publisher {
             streamRegistry: this.streamRegistryCached,
             groupKeyQueue: await this.groupKeyQueues.get(streamId)
         })
-    } 
+    }
 }

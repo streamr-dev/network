@@ -3,7 +3,7 @@ import { StreamMessage } from 'streamr-client-protocol'
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils/utils'
 import { StreamDefinition } from '../../src/types'
-import { MessageMetadata } from '../../src/publish/Publisher'
+import { PublishMetadata } from '../../src/publish/Publisher'
 import { uid } from './utils'
 import { Message } from './../../src/Message'
 
@@ -24,7 +24,7 @@ type TestMessageOptions = Partial<{
 export async function* createTestMessages(
     total: number = 5,
     opts: TestMessageOptions = {}
-): AsyncGenerator<MessageMetadata & { content: any }> {
+): AsyncGenerator<PublishMetadata & { content: any }> {
     const { delay = 10, timestamp, partitionKey, createMessage = Msg } = opts
     const batchId = counterId('createTestMessages')
     for (let i = 0; i < total; i++) {

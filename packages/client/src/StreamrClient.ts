@@ -23,7 +23,7 @@ import { Stream, StreamProperties } from './Stream'
 import { SearchStreamsPermissionFilter } from './registry/searchStreams'
 import { PermissionAssignment, PermissionQuery } from './permission'
 import { MetricsPublisher } from './MetricsPublisher'
-import { MessageMetadata } from '../src/publish/Publisher'
+import { PublishMetadata } from '../src/publish/Publisher'
 import { initContainer } from './Container'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
 import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
@@ -90,7 +90,7 @@ export class StreamrClient {
     async publish<T>(
         streamDefinition: StreamDefinition,
         content: T,
-        metadata?: MessageMetadata
+        metadata?: PublishMetadata
     ): Promise<Message> {
         const result = await this.publisher.publish(streamDefinition, content, metadata)
         this.eventEmitter.emit('publish', undefined)

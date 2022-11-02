@@ -16,7 +16,7 @@ import { PermissionAssignment, PublicPermissionQuery, UserPermissionQuery } from
 import { Subscriber } from './subscribe/Subscriber'
 import { formStorageNodeAssignmentStreamId } from './utils/utils'
 import { waitForAssignmentsToPropagate } from './utils/waitForAssignmentsToPropagate'
-import { MessageMetadata } from '../src/publish/Publisher'
+import { PublishMetadata } from '../src/publish/Publisher'
 import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
 import { toEthereumAddress, withTimeout } from '@streamr/utils'
 import { StreamMetadata } from './StreamMessageValidator'
@@ -226,7 +226,7 @@ class StreamrStream implements StreamMetadata {
     /**
      * @category Important
      */
-    async publish<T>(content: T, metadata?: MessageMetadata): Promise<Message> {
+    async publish<T>(content: T, metadata?: PublishMetadata): Promise<Message> {
         const result = await this._publisher.publish(this.id, content, metadata)
         this._eventEmitter.emit('publish', undefined)
         return convertStreamMessageToMessage(result)
