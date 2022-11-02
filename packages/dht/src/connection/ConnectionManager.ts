@@ -177,14 +177,13 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             WEB_RTC_CLEANUP.cleanUp()
         }
 
-        this.connections.forEach((connection: ManagedConnection) => {
+        await Promise.allSettled([...this.connections.values()].map(async (connection: ManagedConnection) => {
             const targetDescriptor = connection.getPeerDescriptor()
             if (targetDescriptor) {
-                this.gracefullyDisconnect(targetDescriptor)
-            } else {
-                connection.close()
+                await this.gracefullyDisconnect(targetDescriptor)
             }
-        })
+            connection.close()
+        }))
     }
 
     public send = async (message: Message): Promise<void> => {
@@ -452,7 +451,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         }
     }
 
-    public gracefullyDisconnect(targetDescriptor: PeerDescriptor): void {
+    public async gracefullyDisconnect(targetDescriptor: PeerDescriptor): Promise<void> {
         const hexKey = PeerID.fromValue(targetDescriptor.peerId).toKey()
         const remoteConnectionLocker = new RemoteConnectionLocker(
             targetDescriptor,
@@ -461,8 +460,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         )
         this.remoteLockedConnections.delete(hexKey)
         this.localLockedConnections.delete(hexKey)
-        remoteConnectionLocker.gracefulDisconnect(this.ownPeerDescriptor!)
-        this.closeConnection(hexKey, 'gracefully disconnecting')
+        await remoteConnectionLocker.gracefulDisconnect(this.ownPeerDescriptor!)
     }
 
     public getAllConnectionPeerDescriptors(): PeerDescriptor[] {
