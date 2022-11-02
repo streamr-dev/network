@@ -23,7 +23,6 @@ const CONTENT = {
 describe('SubscribePipeline', () => {
 
     let pipeline: MessageStream
-    let input: MessageStream
     let streamPartId: StreamPartID
     let publisher: Wallet
 
@@ -68,9 +67,7 @@ describe('SubscribePipeline', () => {
             undefined as any,
             undefined as any
         )
-        input = new MessageStream()
         pipeline = createSubscribePipeline({
-            messageStream: input,
             streamPartId,
             loggerFactory: mockLoggerFactory(),
             resends: undefined as any,
@@ -97,8 +94,8 @@ describe('SubscribePipeline', () => {
 
     it('happy path', async () => {
         const msg = await createMessage()
-        await input.push(msg)
-        input.endWrite()
+        await pipeline.push(msg)
+        pipeline.endWrite()
         const output = await collect(pipeline)
         expect(output).toHaveLength(1)
         expect(output[0].getParsedContent()).toEqual(CONTENT)
@@ -107,8 +104,8 @@ describe('SubscribePipeline', () => {
     it('error: invalid signature', async () => {
         const msg = await createMessage()
         msg.signature = 'invalid-signature'
-        await input.push(msg)
-        input.endWrite()
+        await pipeline.push(msg)
+        pipeline.endWrite()
         const onError = jest.fn()
         pipeline.onError.listen(onError)
         const output = await collect(pipeline)
@@ -122,8 +119,8 @@ describe('SubscribePipeline', () => {
         const msg = await createMessage({
             serializedContent: '{ invalid-json',
         })
-        await input.push(msg)
-        input.endWrite()
+        await pipeline.push(msg)
+        pipeline.endWrite()
         const onError = jest.fn()
         pipeline.onError.listen(onError)
         const output = await collect(pipeline)
@@ -136,12 +133,12 @@ describe('SubscribePipeline', () => {
     it('error: no encryption key available', async () => {
         const encryptionKey = GroupKey.generate()
         const serializedContent = EncryptionUtil.encryptWithAES(Buffer.from(JSON.stringify(CONTENT), 'utf8'), encryptionKey.data)
-        await input.push(await createMessage({
+        await pipeline.push(await createMessage({
             serializedContent,
             encryptionType: EncryptionType.AES,
             groupKeyId: encryptionKey.id
         }))
-        input.endWrite()
+        pipeline.endWrite()
         const onError = jest.fn()
         pipeline.onError.listen(onError)
         const output = await collect(pipeline)
