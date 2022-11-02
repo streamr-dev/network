@@ -522,7 +522,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         }))
         this.getClosestPeersFromBucketIntervalRef = setTimeout(async () =>
             await this.getClosestPeersFromBucket()
-        , 30 * 1000)
+        , 90 * 1000)
     }
 
     public getBucketSize(): number {
@@ -582,11 +582,13 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         this.ping = this.ping.bind(this)
         this.routeMessage = this.routeMessage.bind(this)
         this.forwardMessage = this.forwardMessage.bind(this)
+        this.leaveNotice = this.leaveNotice.bind(this)
 
         this.rpcCommunicator!.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', this.getClosestPeers)
         this.rpcCommunicator!.registerRpcMethod(PingRequest, PingResponse, 'ping', this.ping)
         this.rpcCommunicator!.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'routeMessage', this.routeMessage)
         this.rpcCommunicator!.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'forwardMessage', this.forwardMessage)
+        this.rpcCommunicator!.registerRpcNotification(LeaveNotice, 'leaveNotice', this.leaveNotice)
     }
 
     public getRpcCommunicator(): RoutingRpcCommunicator {
