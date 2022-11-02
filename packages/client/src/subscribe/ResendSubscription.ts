@@ -4,7 +4,6 @@ import { StreamMessage, StreamPartID, StreamPartIDUtils } from 'streamr-client-p
 import { ConfigInjectionToken } from '../Config'
 import { OrderMessages } from './OrderMessages'
 import { ResendOptions, Resends } from './Resends'
-import { DestroySignal } from '../DestroySignal'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { SubscribeConfig } from './../Config'
 import { MessageStream } from './MessageStream'

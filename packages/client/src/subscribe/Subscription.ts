@@ -7,7 +7,6 @@ import { MessageStream } from './MessageStream'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
-import { DestroySignal } from '../DestroySignal'
 
 export interface SubscriptionEvents {
     error: (err: Error) => void
