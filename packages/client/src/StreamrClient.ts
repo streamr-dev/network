@@ -132,7 +132,7 @@ export class StreamrClient {
             result = await this.resendSubscribe<T>(options, options.resend)
         } else {
             const streamPartId = await this.streamIdBuilder.toStreamPartID(options)
-            result = await this.subscriber.add<T>(streamPartId)
+            result = await this.subscriber.add<T>(new Subscription<T>(streamPartId, this.loggerFactory))
         }
         if (onMessage !== undefined) {
             result.useLegacyOnMessageHandler(onMessage)
@@ -154,7 +154,7 @@ export class StreamrClient {
             this.loggerFactory,
             this.config
         )
-        await this.subscriber.addSubscription<T>(sub)
+        await this.subscriber.add<T>(sub)
         return sub
     }
 
