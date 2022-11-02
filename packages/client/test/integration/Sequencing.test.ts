@@ -157,7 +157,7 @@ describe('Sequencing', () => {
             stream,
             timeout: 6000,
         })
-        await waitForStorage(lastRequest.streamMessage)
+        await waitForStorage(lastRequest)
         const sub = await client.resend(
             stream.id,
             {
@@ -224,7 +224,7 @@ describe('Sequencing', () => {
             stream,
             timeout: 6000,
         })
-        await waitForStorage(lastRequest.streamMessage)
+        await waitForStorage(lastRequest)
 
         const sub = await client.resend(
             stream.id,

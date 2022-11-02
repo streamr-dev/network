@@ -1,5 +1,4 @@
 import { wait } from '@streamr/utils'
-import { StreamMessage } from 'streamr-client-protocol'
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils/utils'
 import { StreamDefinition } from '../../src/types'
@@ -107,20 +106,20 @@ export function getPublishTestStreamMessages(
             await getWaitForStorage(client, {
                 count: waitForLastCount,
                 timeout: waitForLastTimeout,
-            })(streamMessages[streamMessages.length - 1].streamMessage)
+            })(streamMessages[streamMessages.length - 1])
         }
 
         return streamMessages
     }
 }
 
-export function getWaitForStorage(client: StreamrClient, defaultOpts = {}): (lastPublished: StreamMessage, opts?: {
+export function getWaitForStorage(client: StreamrClient, defaultOpts = {}): (lastPublished: Message, opts?: {
     interval?: number
     timeout?: number
     count?: number
-    messageMatchFn?: (msgTarget: StreamMessage, msgGot: StreamMessage) => boolean
+    messageMatchFn?: (msgTarget: Message, msgGot: Message) => boolean
 }) => Promise<void> {
-    return async (lastPublished: StreamMessage, opts = {}) => {
+    return async (lastPublished: Message, opts = {}) => {
         return client.waitForStorage(lastPublished, {
             ...defaultOpts,
             ...opts,

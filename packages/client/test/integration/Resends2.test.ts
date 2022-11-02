@@ -226,7 +226,7 @@ describe('Resends2', () => {
         beforeEach(async () => {
             published = await publishTestMessages(MAX_MESSAGES)
             // ensure last message is in storage
-            await client.waitForStorage(published[published.length - 1].streamMessage)
+            await client.waitForStorage(published[published.length - 1])
         })
 
         it('gives zero results for last 0', async () => {
@@ -529,7 +529,7 @@ describe('Resends2', () => {
         })
         const publishReq = await client.publish(stream, publishedMessage)
 
-        await getWaitForStorage(client)(publishReq.streamMessage)
+        await getWaitForStorage(client)(publishReq)
         const sub = await client.resend(stream.id,
             {
                 last: 1
