@@ -18,7 +18,7 @@
             const testNode = StreamrNetwork.createNetworkNode({
                 id,
                 trackers: [ { id: 'tracker', ws: 'ws://127.0.0.1:27777' } ],
-                stunUrls: []
+                iceServers: []
             })
             await testNode.start(streamId)
             testNode.subscribe(streamId, 0)
