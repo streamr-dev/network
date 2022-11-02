@@ -9,7 +9,7 @@ import { toProtoRpcClient } from '../../src/toProtoRpcClient'
 describe('DhtClientRpcTransport', () => {
     it('Happy Path getClosestNeighbors', async () => {
         const rpcCommunicator = new RpcCommunicator()
-        rpcCommunicator.on('outgoingMessage', (message: Uint8Array, requestId: string, _ucallContext?: ProtoCallContext) => {
+        rpcCommunicator.on('outgoingMessage', (message: Uint8Array, _requestId: string, _ucallContext?: ProtoCallContext) => {
             const request = RpcMessage.fromBinary(message)
             const responseBody: ClosestPeersResponse = {
                 peers: getMockPeers(),
