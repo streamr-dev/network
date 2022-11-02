@@ -8,7 +8,7 @@ export const GOOGLE_STUN_SERVER: IceServer = {
     port: 19302
 }
 
-export const PRODUCTION_ICE_SERVERS: ReadonlyArray<IceServer> = Object.freeze([
+export const STREAMR_ICE_SERVERS: ReadonlyArray<IceServer> = Object.freeze([
     {
         url: 'stun:stun.streamr.network',
         port: 5349

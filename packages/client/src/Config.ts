@@ -12,7 +12,7 @@ import CONFIG_SCHEMA from './config.schema.json'
 import { SmartContractRecord } from 'streamr-client-protocol'
 import { LogLevel } from '@streamr/utils'
 
-import { PRODUCTION_ICE_SERVERS, NetworkNodeOptions } from 'streamr-network'
+import { NetworkNodeOptions, STREAMR_ICE_SERVERS } from 'streamr-network'
 import type { ConnectionInfo } from '@ethersproject/web'
 import { generateClientId } from './utils/utils'
 
@@ -240,7 +240,7 @@ export const createStrictConfig = (inputOptions: StreamrClientConfig = {}): Stri
     }
 
     if (options.network.iceServers === undefined) {
-        options.network.iceServers = PRODUCTION_ICE_SERVERS
+        options.network.iceServers = STREAMR_ICE_SERVERS
     }
 
     return options
