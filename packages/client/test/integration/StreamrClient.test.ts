@@ -203,7 +203,7 @@ describe('StreamrClient', () => {
             const sub = await client.subscribe(streamDefinition)
             await client.publish(streamDefinition, publishedMessage)
             const messages = await collect(sub, 1)
-            expect(messages.map((s) => s.getParsedContent())).toEqual([publishedMessage])
+            expect(messages.map((s) => s.content)).toEqual([publishedMessage])
         })
     })
 })

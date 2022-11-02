@@ -31,6 +31,7 @@ import { GroupKey } from './encryption/GroupKey'
 import { PublisherKeyExchange } from './encryption/PublisherKeyExchange'
 import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 import { LoggerFactory } from './utils/LoggerFactory'
+import { convertStreamMessageToMessage, Message } from './Message'
 
 /**
  * @category Important
@@ -90,10 +91,10 @@ export class StreamrClient {
         streamDefinition: StreamDefinition,
         content: T,
         metadata?: MessageMetadata
-    ): Promise<StreamMessage<T>> {
+    ): Promise<Message> {
         const result = await this.publisher.publish(streamDefinition, content, metadata)
         this.eventEmitter.emit('publish', undefined)
-        return result
+        return convertStreamMessageToMessage(result)
     }
 
     async updateEncryptionKey(opts: UpdateEncryptionKeyOptions): Promise<void> {
@@ -198,6 +199,7 @@ export class StreamrClient {
         interval?: number
         timeout?: number
         count?: number
+        // TODO would it make sense to annotate this parameter as internal (if this is the only place where public API refers StreamMessage)
         messageMatchFn?: (msgTarget: StreamMessage, msgGot: StreamMessage) => boolean
     }): Promise<void> {
         return this.resends.waitForStorage(streamMessage, options)

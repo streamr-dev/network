@@ -40,7 +40,7 @@ describe('Resends', () => {
                 foo: Date.now()
             }
             const publishedMsg = await client.publish(stream.id, content)
-            await client.waitForStorage(publishedMsg)
+            await client.waitForStorage(publishedMsg.streamMessage)
         })
 
         it('no match', async () => {
@@ -50,7 +50,7 @@ describe('Resends', () => {
             }
             const publishedMsg = await client.publish(stream.id, content)
             const messageMatchFn = jest.fn().mockReturnValue(false)
-            await expect(() => client.waitForStorage(publishedMsg, {
+            await expect(() => client.waitForStorage(publishedMsg.streamMessage, {
                 interval: 50,
                 timeout: 100,
                 count: 1,

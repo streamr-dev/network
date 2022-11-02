@@ -16,14 +16,14 @@ import { Message } from '../../src/Message'
 const MAX_ITEMS = 3
 const NUM_MESSAGES = 8
 
-const collect2 = async <T>(
-    iterator: AsyncIterable<StreamMessage<T>>,
+const collect2 = async (
+    iterator: AsyncIterable<Message>,
     fn: (item: {
-        msg: StreamMessage<T>
-        received: StreamMessage<T>[]
+        msg: Message
+        received: Message[]
     }) => Promise<void>
-): Promise<StreamMessage[]> => {
-    const received: StreamMessage<T>[] = []
+): Promise<Message[]> => {
+    const received: Message[] = []
     for await (const msg of iterator) {
         received.push(msg)
         await fn({
@@ -231,7 +231,7 @@ describe('Subscriber', () => {
                 const published = await publishTestMessages(NUM_MESSAGES, {
                     timestamp: 111111,
                 })
-                const received1: StreamMessage[] = []
+                const received1: Message[] = []
                 await expect(async () => {
                     for await (const msg of sub1) {
                         if (count === MAX_ITEMS) {
@@ -319,7 +319,7 @@ describe('Subscriber', () => {
                     timestamp: 111111,
                 })
 
-                const received: StreamMessage[] = []
+                const received: Message[] = []
                 let t!: ReturnType<typeof setTimeout>
                 for await (const m of sub) {
                     received.push(m)
@@ -353,7 +353,7 @@ describe('Subscriber', () => {
                     }
                 })
 
-                const received: StreamMessage[] = []
+                const received: Message[] = []
                 const onSubscriptionError = jest.fn((error: Error) => {
                     throw error
                 })
@@ -387,7 +387,7 @@ describe('Subscriber', () => {
             let unsubscribeTask!: Promise<any>
             let t!: ReturnType<typeof setTimeout>
             let expectedLength = -1
-            const received: StreamMessage[] = []
+            const received: Message[] = []
             try {
                 for await (const m of sub) {
                     received.push(m)
@@ -417,7 +417,7 @@ describe('Subscriber', () => {
             await publishTestMessages()
 
             const err = new Error('expected error')
-            const received: StreamMessage[] = []
+            const received: Message[] = []
             await expect(async () => {
                 for await (const m of sub) {
                     received.push(m)
@@ -488,7 +488,7 @@ describe('Subscriber', () => {
 
             const published = await publishTestMessages()
 
-            const received: StreamMessage[] = []
+            const received: Message[] = []
             for await (const m of sub) {
                 received.push(m)
                 if (received.length === 1) {
@@ -505,7 +505,7 @@ describe('Subscriber', () => {
 
             const published = await publishTestMessages()
 
-            const received: StreamMessage[] = []
+            const received: Message[] = []
             for await (const m of sub) {
                 received.push(m)
                 if (received.length === MAX_ITEMS) {
@@ -522,7 +522,7 @@ describe('Subscriber', () => {
 
             const published = await publishTestMessages()
 
-            const received: StreamMessage[] = []
+            const received: Message[] = []
             for await (const m of sub) {
                 received.push(m)
                 if (received.length === MAX_ITEMS) {
@@ -539,7 +539,7 @@ describe('Subscriber', () => {
 
             const published = await publishTestMessages()
 
-            const received: StreamMessage[] = []
+            const received: Message[] = []
             for await (const m of sub) {
                 received.push(m)
                 if (received.length === MAX_ITEMS) {
@@ -559,7 +559,7 @@ describe('Subscriber', () => {
 
             const published = await publishTestMessages()
 
-            const received: StreamMessage[] = []
+            const received: Message[] = []
             for await (const m of sub) {
                 received.push(m)
                 if (received.length === MAX_ITEMS) {
@@ -584,7 +584,7 @@ describe('Subscriber', () => {
 
             await publishTestMessages()
 
-            const received: StreamMessage[] = []
+            const received: Message[] = []
             for await (const m of sub) {
                 received.push(m)
             }
@@ -629,7 +629,7 @@ describe('Subscriber', () => {
     describe('mid-stream stop methods', () => {
         let sub1: Subscription<unknown>
         let sub2: Subscription<unknown>
-        let published: StreamMessage[]
+        let published: Message[]
 
         beforeEach(async () => {
             sub1 = await client.subscribe(streamDefinition)

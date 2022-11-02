@@ -5,6 +5,7 @@ import { counterId } from '../../src/utils/utils'
 import { StreamDefinition } from '../../src/types'
 import { MessageMetadata } from '../../src/publish/Publisher'
 import { uid } from './utils'
+import { Message } from './../../src/Message'
 
 export function Msg<T extends object = object>(opts?: T): any {
     return {
@@ -49,7 +50,7 @@ type PublishTestMessageOptions = TestMessageOptions & {
     waitForLastCount?: number
     waitForLastTimeout?: number
     retainMessages?: boolean
-    afterEach?: (msg: StreamMessage) => Promise<void> | void
+    afterEach?: (msg: Message) => Promise<void> | void
 }
 
 export async function* publishTestMessagesGenerator(
@@ -57,7 +58,7 @@ export async function* publishTestMessagesGenerator(
     streamDefinition: StreamDefinition,
     maxMessages = 5,
     opts: PublishTestMessageOptions = {}
-): AsyncGenerator<StreamMessage<unknown>> {
+): AsyncGenerator<Message> {
     const source = createTestMessages(maxMessages, opts)
     for await (const msg of source) {
         const published = await client.publish(streamDefinition, msg.content, {
@@ -75,7 +76,7 @@ export function getPublishTestStreamMessages(
     client: StreamrClient,
     streamDefinition: StreamDefinition,
     defaultOpts: PublishTestMessageOptions = {}
-): (maxMessages?: number, opts?: PublishTestMessageOptions) => Promise<StreamMessage<unknown>[]> {
+): (maxMessages?: number, opts?: PublishTestMessageOptions) => Promise<Message[]> {
     return async (maxMessages: number = 5, opts: PublishTestMessageOptions = {}) => {
         const {
             waitForLast,
@@ -106,7 +107,7 @@ export function getPublishTestStreamMessages(
             await getWaitForStorage(client, {
                 count: waitForLastCount,
                 timeout: waitForLastTimeout,
-            })(streamMessages[streamMessages.length - 1])
+            })(streamMessages[streamMessages.length - 1].streamMessage)
         }
 
         return streamMessages

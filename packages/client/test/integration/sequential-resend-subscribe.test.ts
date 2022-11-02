@@ -1,4 +1,6 @@
 import 'reflect-metadata'
+import { StreamMessage } from 'streamr-client-protocol'
+import { Message } from '../../src/Message'
 
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
@@ -17,9 +19,9 @@ describe('sequential resend subscribe', () => {
     let stream: Stream
 
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
-    let waitForStorage: (...args: any[]) => Promise<void> = async () => {}
+    let waitForStorage: (msg: StreamMessage) => Promise<void> = async () => {}
 
-    let published: any[] = [] // keeps track of stream message data so we can verify they were resent
+    let published: Message[] = [] // keeps track of stream message data so we can verify they were resent
     let environment: FakeEnvironment
 
     beforeAll(async () => {
@@ -52,7 +54,7 @@ describe('sequential resend subscribe', () => {
 
     afterEach(async () => {
         // ensure last message is in storage
-        const last = published[published.length - 1]
+        const last = published[published.length - 1].streamMessage
         await waitForStorage(last)
     })
 

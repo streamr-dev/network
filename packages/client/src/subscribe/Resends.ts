@@ -252,7 +252,7 @@ export class Resends {
             }
 
             const resendStream = await this.resend(streamMessage.getStreamPartID(), { last: count })
-            last = await collect(resendStream)
+            last = await collect(resendStream.getStreamMessages())
             for (const lastMsg of last) {
                 if (messageMatchFn(streamMessage, lastMsg)) {
                     found = true

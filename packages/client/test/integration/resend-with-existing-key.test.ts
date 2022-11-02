@@ -60,7 +60,7 @@ describe('resend with existing key', () => {
         const messages = await collect(messageStream)
         expect(onError).not.toBeCalled()
         const expectedTimestamps = allMessages.map((m) => m.timestamp).filter((ts) => ts >= fromTimestamp && ts <= toTimestamp)
-        expect(messages.map((m) => m.getTimestamp())).toEqual(expectedTimestamps)
+        expect(messages.map((m) => m.timestamp)).toEqual(expectedTimestamps)
     }
 
     const assertNonDecryptable = async (fromTimestamp: number, toTimestamp: number) => {

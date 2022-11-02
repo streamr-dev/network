@@ -72,7 +72,7 @@ describe('Stream', () => {
                 array: [1, 2, 3],
                 string: 'test'
             })
-            await client.waitForStorage(msg)
+            await client.waitForStorage(msg.streamMessage)
 
             await stream.detectFields()
 
@@ -112,7 +112,7 @@ describe('Stream', () => {
                 symbol: Symbol('test'),
                 // TODO: bigint: 10n,
             })
-            await client.waitForStorage(msg)
+            await client.waitForStorage(msg.streamMessage)
 
             await stream.detectFields()
 

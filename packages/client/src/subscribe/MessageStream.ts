@@ -11,7 +11,7 @@ import { convertStreamMessageToMessage, Message } from './../Message'
 
 export type MessageListener<T, R = unknown> = (content: T, msg: Message) => R | Promise<R>
 
-export class MessageStream<T = unknown> implements AsyncIterable<StreamMessage<T>> {
+export class MessageStream<T = unknown> implements AsyncIterable<Message> {
 
     private readonly pipeline: PushPipeline<StreamMessage<T>, StreamMessage<T>> = new PushPipeline()
 
@@ -35,8 +35,15 @@ export class MessageStream<T = unknown> implements AsyncIterable<StreamMessage<T
         return this
     }
 
-    [Symbol.asyncIterator](): AsyncIterator<StreamMessage<T>> {
-        return this.pipeline[Symbol.asyncIterator]()
+    /** @internal */
+    getStreamMessages(): AsyncIterableIterator<StreamMessage<T>> {
+        return this.pipeline
+    }
+
+    async* [Symbol.asyncIterator](): AsyncIterator<Message> {
+        for await (const msg of this.pipeline) {
+            yield convertStreamMessageToMessage(msg)
+        }
     }
 
     /*

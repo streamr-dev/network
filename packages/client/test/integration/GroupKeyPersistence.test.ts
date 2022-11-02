@@ -13,6 +13,7 @@ import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { createTestStream, startPublisherKeyExchangeSubscription } from '../test-utils/utils'
 import { DEFAULT_PARTITION } from './../../src/StreamIDBuilder'
 import { collect } from '../../src/utils/iterators'
+import { Message } from '../../src/Message'
 
 describe('Group Key Persistence', () => {
     let publisherPrivateKey: string
@@ -99,7 +100,7 @@ describe('Group Key Persistence', () => {
             it('works', async () => {
                 await startPublisherKeyExchangeSubscription(publisher2, stream.getStreamParts()[0])
 
-                const received: StreamMessage[] = []
+                const received: Message[] = []
                 const sub = await subscriber.resend(
                     stream.id,
                     {
@@ -238,7 +239,7 @@ describe('Group Key Persistence', () => {
             const received1 = []
             const received2 = []
             for await (const m of sub) {
-                const content = m.getParsedContent()
+                const content = m.content
                 // 'n of MAX_MESSAGES' messages belong to publisher2
                 if ((content as any).value.endsWith(`of ${MAX_MESSAGES}`)) {
                     received2.push(m)
