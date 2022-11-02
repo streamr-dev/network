@@ -342,10 +342,12 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                         await connection.send(buffer[i])
                     } catch (e) {
                         logger.error('Moving outputbuffer to new connection failed ' + e)
+                        oldConnection!.reportBufferSendingByOtherConnectionFailed()
                         connection.close()
                         return
                     }
                 }
+                oldConnection!.reportBufferSentByOtherConnection()
                 oldConnection!.removeAllListeners()
                 oldConnection!.close()
             } else {

@@ -9,6 +9,7 @@ import { raceEvents3 } from "../helpers/waitForEvent3"
 export interface ManagedConnectionEvents {
     managedData: (bytes: Uint8Array, remotePeerDescriptor: PeerDescriptor) => void
     handshakeCompleted: (peerDescriptor: PeerDescriptor) => void
+    bufferSentByOtherConnection: () => void
 }
 
 const logger = new Logger(module)
@@ -182,13 +183,21 @@ export class ManagedConnection extends EventEmitter<Events> {
             logger.trace('adding data to outputBuffer objectId: ' + this.objectId)
             this.outputBuffer.push(data)
             
-            const result = await raceEvents3<Events>(this, ['handshakeCompleted', 'disconnected'])
+            const result = await raceEvents3<Events>(this, ['handshakeCompleted', 'bufferSentByOtherConnection', 'disconnected'])
             if (result.winnerName == 'disconnected') {
                 throw new Err.ConnectionFailed()
             }
         }
     }
 
+    public reportBufferSentByOtherConnection(): void  {
+        this.emit('bufferSentByOtherConnection')
+    }
+
+    public reportBufferSendingByOtherConnectionFailed(): void  {
+        this.emit('disconnected')
+    }
+    
     close(): void {
         if (this.implementation) {
             this.implementation?.close()
