@@ -20,16 +20,16 @@ export function composeAbortSignals(...signals: AbortSignal[]): AbortSignal {
         return preAbortedSignal
     }
 
-    const compositeAbortController = new AbortController()
+    const abortController = new AbortController()
     const abort = () => {
         for (const signal of signals) {
             signal.removeEventListener('abort', abort)
         }
         signals = [] // allow gc
-        compositeAbortController.abort()
+        abortController.abort()
     }
     for (const signal of signals) {
         signal.addEventListener('abort', abort)
     }
-    return compositeAbortController.signal
+    return abortController.signal
 }
