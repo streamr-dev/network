@@ -3,7 +3,7 @@
  */
 export * from './StreamrClient'
 export * from './Stream'
-export { Message } from './Message'
+export { Message, MessageMetadata } from './Message'
 export { DecryptError } from './encryption/EncryptionUtil'
 export { StreamrClientEvents } from './events'
 export { PublishMetadata } from './publish/Publisher'
