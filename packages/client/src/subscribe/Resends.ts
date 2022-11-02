@@ -1,6 +1,3 @@
-/**
- * Public Resends API
- */
 import { inject, Lifecycle, scoped, delay } from 'tsyringe'
 import { MessageRef, StreamPartID, StreamPartIDUtils, StreamMessage } from 'streamr-client-protocol'
 

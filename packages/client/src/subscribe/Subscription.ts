@@ -1,7 +1,3 @@
-/**
- * The client.subscribe() return value.
- * Primary interface for consuming StreamMessages.
- */
 import { StreamPartID } from 'streamr-client-protocol'
 import { MessageStream } from './MessageStream'
 import { LoggerFactory } from '../utils/LoggerFactory'
