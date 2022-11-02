@@ -1,7 +1,7 @@
 import { RpcCommunicator } from '../../src/RpcCommunicator'
 import {
     RpcMessage,
-    RpcResponseError
+    RpcErrorType
 } from '../../src/proto/ProtoRpc'
 import { PingRequest, PingResponse } from '../proto/TestProtos' 
 import { ResultParts } from '../../src/ClientTransport'
@@ -81,7 +81,8 @@ describe('RpcCommunicator', () => {
     it('Rejects on error response', async () => {
         const errorResponse: RpcMessage = {
             ...responseRpcMessage,
-            responseError: RpcResponseError.SERVER_ERROR
+            errorType: RpcErrorType.SERVER_ERROR,
+            errorMessage: 'Server error on request'
         }
         //response.body = RpcMessage.toBinary(errorResponse)
         // @ts-expect-error private 
@@ -89,13 +90,13 @@ describe('RpcCommunicator', () => {
         rpcCommunicator.handleIncomingMessage(RpcMessage.toBinary(errorResponse))
         await expect(promises.message.promise)
             .rejects
-            .toEqual(new Err.RpcRequest('Server error on request'))
+            .toEqual(new Err.RpcServerError('Server error on request'))
     })
 
     it('Rejects on server timeout response', async () => {
         const errorResponse: RpcMessage = {
             ...responseRpcMessage,
-            responseError: RpcResponseError.SERVER_TIMOUT
+            errorType: RpcErrorType.SERVER_TIMEOUT
         }
         //response.body = RpcMessage.toBinary(errorResponse)
         // @ts-expect-error private 
@@ -103,13 +104,13 @@ describe('RpcCommunicator', () => {
         rpcCommunicator.handleIncomingMessage(RpcMessage.toBinary(errorResponse))
         await expect(promises.message.promise)
             .rejects
-            .toEqual(new Err.RpcRequest('Server timed out on request'))
+            .toEqual(new Err.RpcTimeout('Server timed out on request'))
     })
 
     it('Rejects on unknown method', async () => {
         const errorResponse: RpcMessage = {
             ...responseRpcMessage,
-            responseError: RpcResponseError.UNKNOWN_RPC_METHOD
+            errorType: RpcErrorType.UNKNOWN_RPC_METHOD
         }
         //response.body = RpcMessage.toBinary(errorResponse)
         // @ts-expect-error private 
@@ -125,7 +126,7 @@ describe('RpcCommunicator', () => {
         rpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', MockDhtRpc.ping)
         rpcCommunicator.on('outgoingMessage', (message: Uint8Array, _ucallContext?: ProtoCallContext) => {
             const pongWrapper = RpcMessage.fromBinary(message)
-            if (!pongWrapper.responseError) {
+            if (!pongWrapper.errorType) {
                 successCounter += 1
             }
         })
@@ -139,7 +140,7 @@ describe('RpcCommunicator', () => {
         rpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', MockDhtRpc.ping)
         rpcCommunicator.on('outgoingMessage', (message: Uint8Array, _ucallContext?: ProtoCallContext) => {
             const pongWrapper = RpcMessage.fromBinary(message)
-            if (!pongWrapper.responseError) {
+            if (!pongWrapper.errorType) {
                 successCounter += 1
             }
         })
@@ -152,7 +153,7 @@ describe('RpcCommunicator', () => {
         let errorCounter = 0
         rpcCommunicator.on('outgoingMessage', (message: Uint8Array, _ucallContext?: ProtoCallContext) => {
             const pongWrapper = RpcMessage.fromBinary(message)
-            if (pongWrapper.responseError && pongWrapper.responseError === RpcResponseError.UNKNOWN_RPC_METHOD) {
+            if (pongWrapper.errorType && pongWrapper.errorType === RpcErrorType.UNKNOWN_RPC_METHOD) {
                 errorCounter += 1
             }
         })
@@ -167,7 +168,7 @@ describe('RpcCommunicator', () => {
         rpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', MockDhtRpc.respondPingWithTimeout)
         rpcCommunicator.on('outgoingMessage', (message: Uint8Array, _ucallContext?: ProtoCallContext) => {
             const pongWrapper = RpcMessage.fromBinary(message)
-            if (pongWrapper.responseError !== undefined && pongWrapper.responseError === RpcResponseError.SERVER_TIMOUT as RpcResponseError) {
+            if (pongWrapper.errorType !== undefined && pongWrapper.errorType === RpcErrorType.SERVER_TIMEOUT as RpcErrorType) {
                 errorCounter += 1
             }
         })
@@ -181,7 +182,7 @@ describe('RpcCommunicator', () => {
         rpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', MockDhtRpc.throwPingError)
         rpcCommunicator.on('outgoingMessage', (message: Uint8Array, _ucallContext?: ProtoCallContext) => {
             const pongWrapper = RpcMessage.fromBinary(message)
-            if (pongWrapper.responseError !== undefined && pongWrapper.responseError === RpcResponseError.SERVER_ERROR) {
+            if (pongWrapper.errorType !== undefined && pongWrapper.errorType === RpcErrorType.SERVER_ERROR) {
                 errorCounter += 1
             }
         })

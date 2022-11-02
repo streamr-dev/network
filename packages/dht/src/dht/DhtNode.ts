@@ -615,17 +615,18 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         }
         this.stopped = true
         this.ongoingJoinOperation = false
+        this.ongoingRoutingSessions.forEach((session, _id)=> {
+            session.stop()
+        })
         this.bucket!.removeAllListeners()
-        this.rpcCommunicator?.stop()
+        this.rpcCommunicator!.stop()
         this.forwardingTable.forEach((entry) => {
             clearTimeout(entry.timeout)
         })
         this.forwardingTable.clear()
         this.removeAllListeners()
-        this.ongoingRoutingSessions.forEach((session, _id)=> {
-            session.stop()
-        })
-        if (this.connectionManager && !this.config.transportLayer) {
+        
+        if (this.connectionManager) {
             await this.connectionManager.stop()
         }
     }

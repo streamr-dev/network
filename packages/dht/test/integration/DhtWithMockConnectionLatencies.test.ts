@@ -6,12 +6,12 @@ import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator
 describe('Mock connection Dht joining with latencies', () => {
     let entryPoint: DhtNode
     let nodes: DhtNode[]
-    const simulator = new Simulator(LatencyType.RANDOM)
+    let simulator: Simulator
     let entrypointDescriptor: PeerDescriptor
     
     beforeEach(async () => {
         nodes = []
-
+        simulator = new Simulator(LatencyType.RANDOM)
         const entryPointId = '0'
         entryPoint = await createMockConnectionDhtNode(entryPointId, simulator)
        
@@ -32,6 +32,7 @@ describe('Mock connection Dht joining with latencies', () => {
             entryPoint.stop(),
             ...nodes.map(async (node) => await node.stop())
         ])
+        simulator.stop()
     })
 
     it('Happy path', async () => {

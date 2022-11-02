@@ -129,10 +129,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
         while (this.outputBuffer.length > 0) {
             logger.trace('emptying outputBuffer objectId: ' + this.objectId)
-            if (!this.implementation) {
-                logger.info('this.connectingConnection: ' + this.connectingConnection)
-                logger.info('this.connectedConnection: ' + this.connectedConnection)
-            }
+            
             this.implementation!.send(this.outputBuffer.shift()!)
         }
 
@@ -187,7 +184,7 @@ export class ManagedConnection extends EventEmitter<Events> {
             
             const result = await raceEvents3<Events>(this, ['handshakeCompleted', 'disconnected'])
             if (result.winnerName == 'disconnected') {
-                throw 'disconnected'
+                throw new Err.ConnectionFailed()
             }
         }
     }

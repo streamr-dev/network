@@ -155,7 +155,11 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             return
         }
         this.stopped = true
+
         logger.trace(`Stopping ConnectionManager`)
+
+        this.rpcCommunicator!.stop()
+
         this.removeAllListeners();
         [...this.disconnectionTimeouts.values()].map(async (timeout) => {
             clearTimeout(timeout)
@@ -165,10 +169,11 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         if (!this.config.simulator) {
             await this.webSocketConnector!.stop()
             this.webrtcConnector!.stop()
+            WEB_RTC_CLEANUP.cleanUp()
         }
 
         this.connections.forEach((connection) => connection.close())
-        WEB_RTC_CLEANUP.cleanUp()
+
     }
 
     public send = async (message: Message): Promise<void> => {
@@ -191,12 +196,11 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             message = ({ ...message, sourceDescriptor: this.ownPeerDescriptor })
         }
 
+        let connection: ManagedConnection | undefined
+
         if (this.connections.has(hexId)) {
-            this.connections.get(hexId)!.send(Message.toBinary(message)).catch((_e) => {
-                throw 'juupas'
-            })
+            connection = this.connections.get(hexId)
         } else {
-            let connection: ManagedConnection | undefined
 
             if (this.simulatorConnector) {
                 connection = this.simulatorConnector!.connect(peerDescriptor)
@@ -206,11 +210,10 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 connection = this.webrtcConnector!.connect(peerDescriptor)
             }
 
-            this.onNewConnection(connection)
-            connection.send(Message.toBinary(message)).catch((_e) => { 
-                throw 'kiva'
-            })
+            await this.onNewConnection(connection)
         }
+
+        await connection!.send(Message.toBinary(message))
     }
 
     public disconnect(peerDescriptor: PeerDescriptor, reason?: string, timeout = DEFAULT_DISCONNECTION_TIMEOUT): void {
@@ -319,7 +322,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         this.emit('disconnected', connection.getPeerDescriptor()!)
     }
 
-    private onNewConnection = (connection: ManagedConnection) => {
+    private onNewConnection = async (connection: ManagedConnection) => {
         if (!this.started || this.stopped) {
             return
         }
@@ -335,10 +338,15 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 const buffer = oldConnection!.getOutputBuffer()
 
                 for (let i = 0; i < buffer.length; i++) {
-                    connection.send(buffer[i]).catch((_e) => {
-                        logger.info('fwoijefw')
-                    })
+                    try {
+                        await connection.send(buffer[i])
+                    } catch (e) {
+                        logger.error('Moving outputbuffer to new connection failed ' + e)
+                        connection.close()
+                        return
+                    }
                 }
+                oldConnection!.removeAllListeners()
                 oldConnection!.close()
             } else {
                 connection.close()

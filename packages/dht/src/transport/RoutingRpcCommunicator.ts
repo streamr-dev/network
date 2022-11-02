@@ -2,16 +2,13 @@ import { Message, MessageType, PeerDescriptor } from "../proto/DhtRpc"
 import { v4 } from "uuid"
 import { RpcCommunicator, RpcCommunicatorConfig } from "@streamr/proto-rpc"
 import { DhtCallContext } from "../rpc-protocol/DhtCallContext"
-import { Logger } from "@streamr/utils"
-
-const logger = new Logger(module)
 
 export class RoutingRpcCommunicator extends RpcCommunicator {
 
     constructor(private ownServiceId: string, private sendFn: (msg: Message) => Promise<void>, config?: RpcCommunicatorConfig) {
         super(config)
 
-        this.on('outgoingMessage', async (msgBody: Uint8Array, callContext?: DhtCallContext) => {
+        this.on('outgoingMessage', async (msgBody: Uint8Array, requestId: string, callContext?: DhtCallContext) => {
 
             let targetDescriptor: PeerDescriptor
             // rpc call message
@@ -27,8 +24,8 @@ export class RoutingRpcCommunicator extends RpcCommunicator {
                 messageType: MessageType.RPC, targetDescriptor: targetDescriptor
             }
 
-            this.sendFn(message).catch((_e) => {
-                logger.info('jaa')
+            this.sendFn(message).catch((e) => {
+                this.handleClientError(requestId, e)
             })
         })
     }

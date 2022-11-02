@@ -7,12 +7,12 @@ import { getRandomRegion } from '../data/pings'
 describe('Mock connection Dht joining with real latencies', () => {
     let entryPoint: DhtNode
     let nodes: DhtNode[]
-    const simulator = new Simulator(LatencyType.REAL)
+    let simulator: Simulator
     let entrypointDescriptor: PeerDescriptor
     
     beforeEach(async () => {
         nodes = []
-
+        simulator = new Simulator(LatencyType.REAL)
         const entryPointId = '0'
         entryPoint = await createMockConnectionDhtNode(entryPointId, simulator)
        
@@ -34,6 +34,7 @@ describe('Mock connection Dht joining with real latencies', () => {
             entryPoint.stop(),
             ...nodes.map(async (node) => await node.stop())
         ])
+        simulator.stop()
     })
 
     it('Happy path', async () => {

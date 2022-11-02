@@ -106,6 +106,6 @@ export class SimulatorConnector extends EventEmitter<ManagedConnectionSourceEven
 
     public async stop(): Promise<void> {
         this.stopped = true
-        this.removeAllListeners()
+        //this.removeAllListeners()
     }
 }

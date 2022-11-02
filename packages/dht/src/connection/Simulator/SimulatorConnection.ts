@@ -25,10 +25,9 @@ export class SimulatorConnection extends Connection implements IConnection {
         this.simulator.disconnect(this)
             .then(() => {
                 this.emit('disconnected')
+                this.removeAllListeners()
                 return
             }).catch((_e) => { })
-
-        this.removeAllListeners()
     }
 
     connect(): void {
