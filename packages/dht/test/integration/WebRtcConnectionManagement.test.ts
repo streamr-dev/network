@@ -1,5 +1,5 @@
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
-import { Simulator } from '../../src/connection/Simulator/Simulator'
+import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator'
 import { Message, MessageType, NodeType, PeerDescriptor, RpcMessage } from '../../src/proto/DhtRpc'
 import { PeerID } from '../../src/helpers/PeerID'
 import { ConnectionType } from '../../src/connection/IConnection'
@@ -13,7 +13,7 @@ describe('WebRTC Connection Management', () => {
     let manager1: ConnectionManager
     let manager2: ConnectionManager
 
-    const simulator = new Simulator()
+    let simulator: Simulator
 
     const peerDescriptor1: PeerDescriptor = {
         peerId: PeerID.fromString("peer1").value,
@@ -30,6 +30,8 @@ describe('WebRTC Connection Management', () => {
 
     beforeEach(async () => {
 
+        simulator = new Simulator(LatencyType.FIXED, 500)
+
         connectorTransport1 = new SimulatorTransport(peerDescriptor1, simulator)
         manager1 = new ConnectionManager({ transportLayer: connectorTransport1 })
 
@@ -44,12 +46,13 @@ describe('WebRTC Connection Management', () => {
     afterEach(async () => {
         await manager1.stop()
         await manager2.stop()
+        simulator.stop()
     })
 
     const serviceId = 'dummy'
 
     // TODO: fix flaky test, ticket NET-911
-    /*it('Peer1 can open WebRTC Datachannels', (done) => {
+    it('Peer1 can open WebRTC Datachannels', (done) => {
         const dummyMessage: Message = {
             serviceId: 'unknown',
             body: new Uint8Array(),
@@ -65,10 +68,11 @@ describe('WebRTC Connection Management', () => {
             done()
         })
         dummyMessage.targetDescriptor = peerDescriptor2
-        manager1.send(dummyMessage)
+        manager1.send(dummyMessage).catch((e) => { 
+            throw e
+        })
     }, 60000)
 
-     */
     it('Peer2 can open WebRTC Datachannel', (done) => {
         const dummyMessage: Message = {
             serviceId: serviceId,
@@ -151,7 +155,7 @@ describe('WebRTC Connection Management', () => {
         })
 
         msg.targetDescriptor = peerDescriptor2
-        manager1.send(msg)
+        manager1.send(msg).catch((_e) => {})
         
         await Promise.all([dataPromise, connectedPromise1, connectedPromise2])
         

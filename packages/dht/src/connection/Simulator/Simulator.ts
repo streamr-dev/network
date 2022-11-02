@@ -11,7 +11,7 @@ import { v4 } from "uuid"
 
 const logger = new Logger(module)
 
-export enum LatencyType { NONE = 'NONE', RANDOM = 'RANDOM', REAL = 'REAL' }
+export enum LatencyType { NONE = 'NONE', RANDOM = 'RANDOM', REAL = 'REAL', FIXED = 'FIXED' }
 
 export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     private connectors: Map<PeerIDKey, SimulatorConnector> = new Map()
@@ -21,15 +21,24 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     private disconnectAbortControllers: Map<string, AbortController> = new Map()
     private sendAbortControllers: Map<string, AbortController> = new Map()
 
-    constructor(private latencyType: LatencyType = LatencyType.NONE) {
+    constructor(private latencyType: LatencyType = LatencyType.NONE, private fixedLatency?: number) {
         super()
         if (this.latencyType == LatencyType.REAL) {
             this.latencyTable = getRegionDelayMatrix()
+        }
+
+        if (this.latencyType == LatencyType.FIXED && !this.fixedLatency) {
+            throw new Error('LatencyType.FIXED requires the desired latency to be given as second parameter')
         }
     }
 
     private getLatency(sourceRegion: number | undefined, targetRegion: number | undefined): number {
         let latency: number = 0
+
+        if (this.latencyType == LatencyType.FIXED) {
+            latency = this.fixedLatency!
+        }
+
         if (this.latencyType == LatencyType.REAL) {
 
             if (sourceRegion == undefined || targetRegion == undefined || sourceRegion > 15 || targetRegion > 15) {
