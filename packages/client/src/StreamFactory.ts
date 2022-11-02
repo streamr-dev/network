@@ -8,6 +8,8 @@ import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
 import { Stream, StreamrStreamConstructorOptions } from './Stream'
 import { Resends } from './subscribe/Resends'
 import { Subscriber } from './subscribe/Subscriber'
+import { LoggerFactory } from './utils/LoggerFactory'
+import { DestroySignal } from './DestroySignal'
 
 @scoped(Lifecycle.ContainerScoped)
 export class StreamFactory {
@@ -18,6 +20,8 @@ export class StreamFactory {
     private readonly streamRegistryCached: StreamRegistryCached
     private readonly streamRegistry: StreamRegistry
     private readonly streamStorageRegistry: StreamStorageRegistry
+    private readonly destroySignal: DestroySignal
+    private readonly loggerFactory: LoggerFactory
     private readonly eventEmitter: StreamrClientEventEmitter
     private readonly timeoutsConfig: TimeoutsConfig
 
@@ -28,6 +32,8 @@ export class StreamFactory {
         @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
         @inject(delay(() => StreamRegistry)) streamRegistry: StreamRegistry,
         streamStorageRegistry: StreamStorageRegistry,
+        destroySignal: DestroySignal,
+        loggerFactory: LoggerFactory,
         eventEmitter: StreamrClientEventEmitter,
         @inject(ConfigInjectionToken.Timeouts) timeoutsConfig: TimeoutsConfig
     ) {
@@ -37,6 +43,8 @@ export class StreamFactory {
         this.streamRegistryCached = streamRegistryCached
         this.streamRegistry = streamRegistry
         this.streamStorageRegistry = streamStorageRegistry
+        this.destroySignal = destroySignal
+        this.loggerFactory = loggerFactory
         this.eventEmitter = eventEmitter
         this.timeoutsConfig = timeoutsConfig
     }
@@ -50,6 +58,8 @@ export class StreamFactory {
             this.streamRegistryCached,
             this.streamRegistry,
             this.streamStorageRegistry,
+            this.destroySignal,
+            this.loggerFactory,
             this.eventEmitter,
             this.timeoutsConfig
         )

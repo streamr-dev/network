@@ -3,13 +3,11 @@
  * Primary interface for consuming StreamMessages.
  */
 import { StreamPartID } from 'streamr-client-protocol'
-import { MessageStream, MessageStreamOnMessage } from './MessageStream'
+import { MessageStream } from './MessageStream'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { composeAbortSignals, Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { DestroySignal } from '../DestroySignal'
-
-export { MessageStreamOnMessage as SubscriptionOnMessage }
 
 export interface SubscriptionEvents {
     error: (err: Error) => void
@@ -20,7 +18,7 @@ export interface SubscriptionEvents {
  * @category Important
  */
 export class Subscription<T = unknown> extends MessageStream<T> {
-    private readonly logger: Logger
+    protected readonly logger: Logger
     readonly streamPartId: StreamPartID
     protected eventEmitter: EventEmitter<SubscriptionEvents>
     private unsubscribeAbortController = new AbortController()

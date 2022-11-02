@@ -3,6 +3,8 @@ import path from 'path'
 import _ from 'lodash'
 import pinoPretty from 'pino-pretty'
 
+export type LogLevel = 'silent' | 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace'
+
 const parseBoolean = (value: string | undefined) => {
     switch (value) {
         case 'true':
@@ -37,7 +39,7 @@ export class Logger {
     constructor(
         module: NodeJS.Module,
         context?: string,
-        defaultLogLevel = 'info',
+        defaultLogLevel: LogLevel = 'info',
         destinationStream?: { write(msg: string): void }
     ) {
         const options: pino.LoggerOptions = {
