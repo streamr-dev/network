@@ -138,12 +138,12 @@ export class StreamrClient {
                 this.config
             )
             : new Subscription<T>(streamPartId, this.loggerFactory)
-        const result = await this.subscriber.add<T>(sub)
+        await this.subscriber.add<T>(sub)
         if (onMessage !== undefined) {
-            result.useLegacyOnMessageHandler(onMessage)
+            sub.useLegacyOnMessageHandler(onMessage)
         }
         this.eventEmitter.emit('subscribe', undefined)
-        return result
+        return sub
     }
 
     /**
