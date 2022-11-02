@@ -10,7 +10,7 @@ import { DestroySignal } from '../../src/DestroySignal'
 import { DecryptError, EncryptionUtil } from '../../src/encryption/EncryptionUtil'
 import { StreamrClientEventEmitter } from '../../src/events'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
-import { createSubscribePipeline } from "../../src/subscribe/SubscribePipeline"
+import { createSubscribePipeline } from "../../src/subscribe/subscribePipeline"
 import { collect } from '../../src/utils/iterators'
 import { mockLoggerFactory } from '../test-utils/utils'
 import { GroupKey, GroupKeyId } from './../../src/encryption/GroupKey'
@@ -20,7 +20,7 @@ const CONTENT = {
     foo: 'bar'
 }
 
-describe('SubscribePipeline', () => {
+describe('subscribePipeline', () => {
 
     let pipeline: MessageStream
     let streamPartId: StreamPartID

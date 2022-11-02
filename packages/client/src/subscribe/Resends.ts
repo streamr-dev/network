@@ -5,7 +5,7 @@ import { inject, Lifecycle, scoped, delay } from 'tsyringe'
 import { MessageRef, StreamPartID, StreamPartIDUtils, StreamMessage } from 'streamr-client-protocol'
 
 import { MessageStream } from './MessageStream'
-import { createSubscribePipeline } from './SubscribePipeline'
+import { createSubscribePipeline } from './subscribePipeline'
 
 import { StorageNodeRegistry } from '../registry/StorageNodeRegistry'
 import { StreamIDBuilder } from '../StreamIDBuilder'

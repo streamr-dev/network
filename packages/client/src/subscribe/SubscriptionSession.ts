@@ -7,7 +7,7 @@ import { Signal } from '../utils/Signal'
 import { MessageStream } from './MessageStream'
 
 import { Subscription } from './Subscription'
-import { createSubscribePipeline } from './SubscribePipeline'
+import { createSubscribePipeline } from './subscribePipeline'
 import { NetworkNodeFacade, NetworkNodeStub } from '../NetworkNodeFacade'
 import { Resends } from './Resends'
 import { GroupKeyStore } from '../encryption/GroupKeyStore'
