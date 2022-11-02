@@ -133,11 +133,10 @@ export class StreamrClient {
                 streamPartId,
                 options.resend,
                 this.resends,
-                this.destroySignal,
                 this.loggerFactory,
                 this.config
             )
-            : new Subscription<T>(streamPartId, this.destroySignal, this.loggerFactory)
+            : new Subscription<T>(streamPartId, this.loggerFactory)
         await this.subscriber.add<T>(sub)
         if (onMessage !== undefined) {
             sub.useLegacyOnMessageHandler(onMessage)

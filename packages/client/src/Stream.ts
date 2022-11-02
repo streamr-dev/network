@@ -201,7 +201,7 @@ class StreamrStream implements StreamMetadata {
         const normalizedNodeAddress = toEthereumAddress(nodeAddress)
         try {
             const streamPartId = toStreamPartID(formStorageNodeAssignmentStreamId(normalizedNodeAddress), DEFAULT_PARTITION)
-            assignmentSubscription = new Subscription<any>(streamPartId, this._destroySignal, this._loggerFactory)
+            assignmentSubscription = new Subscription<any>(streamPartId, this._loggerFactory)
             await this._subscriber.add(assignmentSubscription)
             const propagationPromise = waitForAssignmentsToPropagate(assignmentSubscription, this)
             await this._streamStorageRegistry.addStreamToStorageNode(this.id, normalizedNodeAddress)

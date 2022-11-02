@@ -17,11 +17,10 @@ export class ResendSubscription<T> extends Subscription<T> {
         streamPartId: StreamPartID,
         private resendOptions: ResendOptions,
         private resends: Resends,
-        destroySignal: DestroySignal,
         loggerFactory: LoggerFactory,
         @inject(ConfigInjectionToken.Subscribe) subscibreConfig: SubscribeConfig
     ) {
-        super(streamPartId, destroySignal, loggerFactory)
+        super(streamPartId, loggerFactory)
         this.orderMessages = new OrderMessages<T>(
             subscibreConfig,
             resends,
