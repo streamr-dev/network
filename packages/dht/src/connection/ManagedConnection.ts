@@ -4,10 +4,12 @@ import { Handshaker } from "./Handshaker"
 import { PeerDescriptor } from "../proto/DhtRpc"
 import { Logger } from "@streamr/utils"
 import EventEmitter from "eventemitter3"
+import { raceEvents3 } from "../helpers/waitForEvent3"
 
 export interface ManagedConnectionEvents {
     managedData: (bytes: Uint8Array, remotePeerDescriptor: PeerDescriptor) => void
     handshakeCompleted: (peerDescriptor: PeerDescriptor) => void
+    bufferSentByOtherConnection: () => void
 }
 
 const logger = new Logger(module)
@@ -128,10 +130,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
         while (this.outputBuffer.length > 0) {
             logger.trace('emptying outputBuffer objectId: ' + this.objectId)
-            if (!this.implementation) {
-                logger.info('this.connectingConnection: ' + this.connectingConnection)
-                logger.info('this.connectedConnection: ' + this.connectedConnection)
-            }
+            
             this.implementation!.send(this.outputBuffer.shift()!)
         }
 
@@ -177,15 +176,28 @@ export class ManagedConnection extends EventEmitter<Events> {
         }
     }
 
-    send(data: Uint8Array): void {
+    async send(data: Uint8Array): Promise<void> {
         if (this.implementation) {
             this.implementation.send(data)
         } else {
             logger.trace('adding data to outputBuffer objectId: ' + this.objectId)
             this.outputBuffer.push(data)
+            
+            const result = await raceEvents3<Events>(this, ['handshakeCompleted', 'bufferSentByOtherConnection', 'disconnected'])
+            if (result.winnerName == 'disconnected') {
+                throw new Err.ConnectionFailed()
+            }
         }
     }
 
+    public reportBufferSentByOtherConnection(): void  {
+        this.emit('bufferSentByOtherConnection')
+    }
+
+    public reportBufferSendingByOtherConnectionFailed(): void  {
+        this.emit('disconnected')
+    }
+    
     close(): void {
         if (this.implementation) {
             this.implementation?.close()

@@ -184,7 +184,9 @@ describe('WebRTC Connection Management', () => {
         })
 
         msg.targetDescriptor = peerDescriptor2
-        manager1.send(msg)
+        manager1.send(msg).catch((e) => {
+            expect(e.code).toEqual('CONNECTION_FAILED')
+        })
         
         manager1.disconnect(peerDescriptor2!, undefined, 100)
         await disconnectedPromise1

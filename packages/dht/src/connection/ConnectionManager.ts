@@ -113,6 +113,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         }
 
         this.serviceId = (this.config.serviceIdPrefix ? this.config.serviceIdPrefix : '') + 'ConnectionManager'
+        this.send = this.send.bind(this)
         this.rpcCommunicator = new RoutingRpcCommunicator(this.serviceId, this.send, {
             rpcRequestTimeout: 10000
         })
@@ -157,7 +158,11 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             return
         }
         this.stopped = true
+
         logger.trace(`Stopping ConnectionManager`)
+
+        this.rpcCommunicator!.stop()
+
         this.removeAllListeners();
         [...this.disconnectionTimeouts.values()].map(async (timeout) => {
             clearTimeout(timeout)
@@ -167,10 +172,11 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         if (!this.config.simulator) {
             await this.webSocketConnector!.stop()
             this.webrtcConnector!.stop()
+            WEB_RTC_CLEANUP.cleanUp()
         }
 
         this.connections.forEach((connection) => connection.close())
-        WEB_RTC_CLEANUP.cleanUp()
+
     }
 
     public send = async (message: Message): Promise<void> => {
@@ -193,10 +199,11 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             message = ({ ...message, sourceDescriptor: this.ownPeerDescriptor })
         }
 
+        let connection: ManagedConnection | undefined
+
         if (this.connections.has(hexId)) {
-            this.connections.get(hexId)!.send(Message.toBinary(message))
+            connection = this.connections.get(hexId)
         } else {
-            let connection: ManagedConnection | undefined
 
             if (this.simulatorConnector) {
                 connection = this.simulatorConnector!.connect(peerDescriptor)
@@ -206,9 +213,10 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 connection = this.webrtcConnector!.connect(peerDescriptor)
             }
 
-            this.onNewConnection(connection)
-            connection.send(Message.toBinary(message))
+            await this.onNewConnection(connection)
         }
+
+        await connection!.send(Message.toBinary(message))
     }
 
     public disconnect(peerDescriptor: PeerDescriptor, reason?: string, timeout = DEFAULT_DISCONNECTION_TIMEOUT): void {
@@ -317,7 +325,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         this.emit('disconnected', connection.getPeerDescriptor()!)
     }
 
-    private onNewConnection = (connection: ManagedConnection) => {
+    private onNewConnection = async (connection: ManagedConnection) => {
         if (!this.started || this.stopped) {
             return
         }
@@ -333,8 +341,17 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 const buffer = oldConnection!.getOutputBuffer()
 
                 for (let i = 0; i < buffer.length; i++) {
-                    connection.send(buffer[i])
+                    try {
+                        await connection.send(buffer[i])
+                    } catch (e) {
+                        logger.error('Moving outputbuffer to new connection failed ' + e)
+                        oldConnection!.reportBufferSendingByOtherConnectionFailed()
+                        connection.close()
+                        return
+                    }
                 }
+                oldConnection!.reportBufferSentByOtherConnection()
+                oldConnection!.removeAllListeners()
                 oldConnection!.close()
             } else {
                 connection.close()

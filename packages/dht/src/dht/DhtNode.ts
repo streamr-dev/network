@@ -101,6 +101,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
     private noProgressCounter = 0
     private joinTimeoutRef?: NodeJS.Timeout
     private ongoingJoinOperation = false
+    private ongoingRoutingSessions: Map<string, RoutingSession> = new Map()
 
     private bucket?: KBucket<DhtPeer>
     private connections: Map<PeerIDKey, DhtPeer> = new Map()
@@ -344,7 +345,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         return ret
     }
 
-    public send = (msg: Message): void => {
+    public send = async (msg: Message): Promise<void> => {
         if (!this.started || this.stopped) {
             return
         }
@@ -666,14 +667,18 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             this.getClosestPeersFromBucketIntervalRef = undefined
         }
         this.ongoingJoinOperation = false
+        this.ongoingRoutingSessions.forEach((session, _id)=> {
+            session.stop()
+        })
         this.bucket!.removeAllListeners()
-        this.rpcCommunicator?.stop()
+        this.rpcCommunicator!.stop()
         this.forwardingTable.forEach((entry) => {
             clearTimeout(entry.timeout)
         })
         this.forwardingTable.clear()
         this.removeAllListeners()
-        if (this.connectionManager && !this.config.transportLayer) {
+        
+        if (this.connectionManager) {
             await this.connectionManager.stop()
         }
     }
@@ -731,12 +736,20 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             1000,
             forwarding
         )
+        
+        this.ongoingRoutingSessions.set(session.sessionId, session)
 
         const result = await runAndRaceEvents3<RoutingSessionEvents>([() => {
             session.start()
         }], session, ['noCandidatesFound', 'candidatesFound'], 1000)
 
-        if (result.winnerName === 'noCandidatesFound' || result.winnerName === 'routingFailed') {
+        if (this.ongoingRoutingSessions.has(session.sessionId)) {
+            this.ongoingRoutingSessions.delete(session.sessionId)
+        }
+
+        if (this.stopped) {
+            return this.createRouteMessageAck(routedMessage, 'DhtNode Stopped')
+        } else if (result.winnerName === 'noCandidatesFound' || result.winnerName === 'routingFailed') {
             if (PeerID.fromValue(routedMessage.sourcePeer!.peerId).equals(this.ownPeerId!)) {
                 throw new Error(`Could not perform initial routing`)
             }

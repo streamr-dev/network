@@ -16,7 +16,7 @@ export interface ITransport {
     off<T extends keyof TransportEvents>(eventName: T, listener: (message: Message) => void): void
     off<T extends keyof TransportEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor) => void): void
 
-    send(msg: Message): void
+    send(msg: Message): Promise<void>
     getPeerDescriptor(): PeerDescriptor
     stop(): void | Promise<void>
 }

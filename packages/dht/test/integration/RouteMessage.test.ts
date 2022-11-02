@@ -46,13 +46,19 @@ describe('Route Message With Mock Connections', () => {
         await entryPoint.joinDht(entryPointDescriptor)
     })
 
-    afterEach(() => {
-        entryPoint.stop()
-        destinationNode.stop()
-        sourceNode.stop()
-        routerNodes.map((node) => {
-            node.stop()
-        })
+    afterEach(async () => {
+
+        for (let i = 0; i < routerNodes.length; i++) {
+            await routerNodes[i].stop()
+        }
+
+        await Promise.all([
+            entryPoint.stop(),
+            destinationNode.stop(),
+            sourceNode.stop()
+        ])
+
+        await simulator.stop()
     })
 
     it('Happy path', async () => {
@@ -136,7 +142,10 @@ describe('Route Message With Mock Connections', () => {
     })
 
     it('From all to all', async () => {
-        const routers = routerNodes.splice(0, 30)
+        const routers: DhtNode[] = []
+        for (let i = 0; i < routerNodes.length; i++) { 
+            routers.push(routerNodes[i])
+        }
 
         for (let i = 0; i < routers.length; i++) {
             const arr: Array<number> = []
@@ -201,7 +210,7 @@ describe('Route Message With Mock Connections', () => {
                 }, 30000)
             )
         )
-        await Promise.all(routers.map((router) => router.stop()))
+       
     }, 60000)
 
     describe('forwarding', () => {
