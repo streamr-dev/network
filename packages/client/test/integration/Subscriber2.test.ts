@@ -11,7 +11,7 @@ import { collect } from '../../src/utils/iterators'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { createTestStream } from '../test-utils/utils'
-import { Message } from '../../src/Message'
+import { Message, MessageMetadata } from '../../src/Message'
 
 const MAX_ITEMS = 3
 const NUM_MESSAGES = 8
@@ -249,13 +249,13 @@ describe('Subscriber', () => {
             it('errors subscription onMessage callback do trigger onError', async () => {
                 const err = new Error('expected')
                 let count = 0
-                const received1: Message[] = []
-                const sub1 = await client.subscribe(streamDefinition, (_content, msg) => {
+                const received1: MessageMetadata[] = []
+                const sub1 = await client.subscribe(streamDefinition, (_content, metadata) => {
                     if (count === MAX_ITEMS) {
                         throw err
                     }
                     count += 1
-                    received1.push(msg)
+                    received1.push(metadata)
                 })
 
                 const onError1 = jest.fn()

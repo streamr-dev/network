@@ -13,7 +13,7 @@ import {
 } from '../test-utils/publish'
 import { createTestStream } from '../test-utils/utils'
 import { collect } from '../../src/utils/iterators'
-import { Message } from '../../src/Message'
+import { MessageMetadata } from '../../src/Message'
 
 // TODO rename this test to something more specific (and maybe divide to multiple test files?)
 
@@ -127,10 +127,10 @@ describe('StreamrClient', () => {
         it('client.subscribe (realtime) with onMessage callback', async () => {
             const done = new Defer<void>()
             const mockMessage = Msg()
-            await client.subscribe<typeof mockMessage>(streamDefinition, done.wrap(async (content, msg) => {
+            await client.subscribe<typeof mockMessage>(streamDefinition, done.wrap(async (content, metadata) => {
                 expect(content).toEqual(mockMessage)
-                expect(msg.publisherId).toBeTruthy()
-                expect(msg.signature).toBeTruthy()
+                expect(metadata.publisherId).toBeTruthy()
+                expect(metadata.signature).toBeTruthy()
             }))
 
             // Publish after subscribed
@@ -139,10 +139,10 @@ describe('StreamrClient', () => {
         })
 
         it('client.subscribe with onMessage & collect', async () => {
-            const onMessageMsgs: Message[] = []
+            const onMessageMsgs: MessageMetadata[] = []
             const done = new Defer<undefined>()
-            const sub = await client.subscribe(streamDefinition, async (_content, msg) => {
-                onMessageMsgs.push(msg)
+            const sub = await client.subscribe(streamDefinition, async (_content, metadata) => {
+                onMessageMsgs.push(metadata)
                 if (onMessageMsgs.length === MAX_MESSAGES) {
                     done.resolve(undefined)
                 }
@@ -155,10 +155,10 @@ describe('StreamrClient', () => {
         })
 
         it('client.subscribe with onMessage callback that throws', async () => {
-            const onMessageMsgs: Message[] = []
+            const onMessageMsgs: MessageMetadata[] = []
             const err = new Error('expected error')
-            const sub = await client.subscribe(streamDefinition, async (_content, msg) => {
-                onMessageMsgs.push(msg)
+            const sub = await client.subscribe(streamDefinition, async (_content, metadata) => {
+                onMessageMsgs.push(metadata)
                 if (onMessageMsgs.length === MAX_MESSAGES) {
                     sub.return()
                 }
@@ -177,11 +177,11 @@ describe('StreamrClient', () => {
 
         it('publish and subscribe a sequence of messages', async () => {
             const done = new Defer<unknown>()
-            const received: Message[] = []
-            const sub = await client.subscribe<any>(streamDefinition, (_content, msg) => {
-                received.push(msg)
-                expect(msg.publisherId).toBeTruthy()
-                expect(msg.signature).toBeTruthy()
+            const received: MessageMetadata[] = []
+            const sub = await client.subscribe<any>(streamDefinition, (_content, metadata) => {
+                received.push(metadata)
+                expect(metadata.publisherId).toBeTruthy()
+                expect(metadata.signature).toBeTruthy()
                 if (received.length === MAX_MESSAGES) {
                     done.resolve(client.unsubscribe(sub))
                 }

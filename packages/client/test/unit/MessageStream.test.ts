@@ -7,6 +7,7 @@ import { MessageStream } from '../../src/subscribe/MessageStream'
 import { Msg } from '../test-utils/publish'
 import { createRandomAuthentication } from '../test-utils/utils'
 import { convertStreamMessageToMessage } from './../../src/Message'
+import { omit } from 'lodash'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
@@ -44,7 +45,7 @@ describe('MessageStream', () => {
         await waitForCalls(onMessage, 2)
         // TODO could implement test so that it doesn't call convertStreamMessageToMessage?
         // (if we don't test the convertStreamMessageToMessage logic elsewhere)
-        expect(onMessage).toHaveBeenNthCalledWith(1, msg1.getParsedContent(), convertStreamMessageToMessage(msg1))
-        expect(onMessage).toHaveBeenNthCalledWith(2, msg2.getParsedContent(), convertStreamMessageToMessage(msg2))
+        expect(onMessage).toHaveBeenNthCalledWith(1, msg1.getParsedContent(), omit(convertStreamMessageToMessage(msg1), 'content'))
+        expect(onMessage).toHaveBeenNthCalledWith(2, msg2.getParsedContent(), omit(convertStreamMessageToMessage(msg2), 'content'))
     })
 })

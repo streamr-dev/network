@@ -14,7 +14,7 @@ import { createTestStream } from '../test-utils/utils'
 import { StreamPermission } from './../../src/permission'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from './../test-utils/fake/FakeStorageNode'
-import { Message } from '../../src/Message'
+import { Message, MessageMetadata } from '../../src/Message'
 
 const MAX_MESSAGES = 5
 
@@ -339,7 +339,7 @@ describe('Resends2', () => {
         })
 
         it('can resend with onMessage callback', async () => {
-            const receivedMsgs: any[] = []
+            const receivedMsgs: MessageMetadata[] = []
             const sub = await client.resend({
                 streamId: stream.id,
                 partition: 0,
@@ -347,8 +347,8 @@ describe('Resends2', () => {
                 from: {
                     timestamp: published[0].timestamp,
                 }
-            }, (_msg, streamMessage) => {
-                receivedMsgs.push(streamMessage)
+            }, (_msg, metadata) => {
+                receivedMsgs.push(metadata)
             })
 
             await sub.onFinally.listen()

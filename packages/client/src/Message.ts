@@ -11,6 +11,8 @@ export interface Message {
     streamMessage: StreamMessage // TODO remove this field if possible
 }
 
+export type MessageMetadata = Omit<Message, 'content'>
+
 export const convertStreamMessageToMessage = (msg: StreamMessage<any>): Message => {
     return {
         content: msg.getParsedContent(),
