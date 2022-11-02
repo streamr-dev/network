@@ -54,36 +54,6 @@ test('test', async () => {
     const [message] = await waitForEvent(node, events.MESSAGE_PROPAGATED)
     expect(message).toEqual('something')
 })
-``` 
-
-#### waitForCondition
-```
-waitForCondition(conditionFn, timeout = 5000, retryInterval = 100, onTimeoutContext? () => string) => Promise
-```
-
-Wait for a condition to become true by re-evaluating it every `retryInterval` milliseconds.
-
-Example:
-```js
-test('test', async () => {
-    ...
-    await waitForCondition(() => messages.length >= 4)
-    expect(messages).toEqual([
-        ...
-    ])
-})
-``` 
-
-Example:
-```js
-test('test', async () => {
-    ...
-    await waitForCondition(async () => {
-        const rows = await sqlQuery("SELECT * FROM streams")
-        return rows.length >= 10
-    })
-    ...
-})
 ```
 
 #### wait
