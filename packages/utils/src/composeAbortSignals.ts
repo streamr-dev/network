@@ -1,35 +1,10 @@
-function findPreAbortedSignal(signals: Iterable<AbortSignal>): AbortSignal | undefined {
+function findFirstPreAbortedSignal(signals: Iterable<AbortSignal>): AbortSignal | undefined {
     for (const signal of signals) {
         if (signal.aborted) {
             return signal
         }
     }
     return undefined
-}
-
-class CompositeAbortSignal extends EventTarget implements AbortSignal {
-    aborted = false
-    onabort?: (event: Event) => void
-    private signals?: ReadonlyArray<AbortSignal>
-
-    constructor(signals: AbortSignal[]) {
-        super()
-        this.signals = [...signals]
-        for (const signal of this.signals) {
-            signal.addEventListener('abort', this.abort)
-        }
-    }
-
-    private abort = () => {
-        for (const signal of this.signals!) {
-            signal.removeEventListener('abort', this.abort)
-        }
-        delete this.signals // optimization: allow gc
-        this.aborted = true
-        const event = new Event('abort')
-        this.dispatchEvent(event)
-        this.onabort?.(event)
-    }
 }
 
 /**
@@ -39,10 +14,22 @@ export function composeAbortSignals(...signals: AbortSignal[]): AbortSignal {
     if (signals.length === 0) {
         throw new Error('must provide at least one AbortSignal')
     }
-    const preAbortedSignal = findPreAbortedSignal(signals)
+
+    const preAbortedSignal = findFirstPreAbortedSignal(signals)
     if (preAbortedSignal !== undefined) {
         return preAbortedSignal
-    } else {
-        return new CompositeAbortSignal(signals)
     }
+
+    const compositeAbortController = new AbortController()
+    const abort = () => {
+        for (const signal of signals) {
+            signal.removeEventListener('abort', abort)
+        }
+        signals = [] // allow gc
+        compositeAbortController.abort()
+    }
+    for (const signal of signals) {
+        signal.addEventListener('abort', abort)
+    }
+    return compositeAbortController.signal
 }
