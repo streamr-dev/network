@@ -116,11 +116,11 @@ export class NodeWebRtcConnection extends WebRtcConnection {
 
     protected doConnect(): void {
         this.connection = new nodeDataChannel.PeerConnection(this.selfId, {
-            iceServers: this.iceServers.map(({ url, port, username, credential }) => ({
+            iceServers: this.iceServers.map(({ url, port, username, password }) => ({
                 hostname: url,
                 port,
                 username,
-                password: credential
+                password
             })),
             maxMessageSize: this.maxMessageSize
         })

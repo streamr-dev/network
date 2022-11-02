@@ -11,7 +11,7 @@ export interface IceServer {
     url: string
     port: number
     username?: string
-    credential?: string
+    password?: string
 }
 
 export interface ConstructorOptions {

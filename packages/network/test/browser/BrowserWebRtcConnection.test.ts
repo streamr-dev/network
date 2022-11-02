@@ -66,7 +66,7 @@ describe('BrowserWebRtcConnection', () => {
                 url: 'turn:turn.streamr.network',
                 port: 5349,
                 username: 'BrubeckTurn1',
-                credential: 'MIlbgtMw4nhpmbgqRrht1Q=='
+                password: 'MIlbgtMw4nhpmbgqRrht1Q=='
             }]
         })
         expect(() => conn3.connect()).not.toThrowError()

@@ -237,7 +237,7 @@
                             "username": {
                                 "type": "string"
                             },
-                            "credential": {
+                            "password": {
                                 "type": "string"
                             }
                         }

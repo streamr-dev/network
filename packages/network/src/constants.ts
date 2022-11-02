@@ -17,6 +17,6 @@ export const STREAMR_ICE_SERVERS: ReadonlyArray<IceServer> = Object.freeze([
         url: 'turn:turn.streamr.network',
         port: 5349,
         username: 'BrubeckTurn1',
-        credential: 'MIlbgtMw4nhpmbgqRrht1Q=='
+        password: 'MIlbgtMw4nhpmbgqRrht1Q=='
     }
 ])
