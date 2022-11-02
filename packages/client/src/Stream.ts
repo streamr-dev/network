@@ -26,7 +26,6 @@ import { collect } from './utils/iterators'
 import { DEFAULT_PARTITION } from './StreamIDBuilder'
 import { Subscription } from './subscribe/Subscription'
 import { LoggerFactory } from './utils/LoggerFactory'
-import { DestroySignal } from './DestroySignal'
 
 export interface StreamProperties {
     id: string
@@ -89,7 +88,6 @@ class StreamrStream implements StreamMetadata {
     private readonly _streamRegistry: StreamRegistry
     private readonly _streamRegistryCached: StreamRegistryCached
     private readonly _streamStorageRegistry: StreamStorageRegistry
-    private readonly _destroySignal: DestroySignal
     private readonly _loggerFactory: LoggerFactory
     private readonly _eventEmitter: StreamrClientEventEmitter
     private readonly _timeoutsConfig: TimeoutsConfig
@@ -103,7 +101,6 @@ class StreamrStream implements StreamMetadata {
         streamRegistryCached: StreamRegistryCached,
         streamRegistry: StreamRegistry,
         streamStorageRegistry: StreamStorageRegistry,
-        destroySignal: DestroySignal,
         loggerFactory: LoggerFactory,
         eventEmitter: StreamrClientEventEmitter,
         timeoutsConfig: TimeoutsConfig
@@ -117,7 +114,6 @@ class StreamrStream implements StreamMetadata {
         this._streamRegistryCached = streamRegistryCached
         this._streamRegistry = streamRegistry
         this._streamStorageRegistry = streamStorageRegistry
-        this._destroySignal = destroySignal
         this._loggerFactory = loggerFactory
         this._eventEmitter = eventEmitter
         this._timeoutsConfig = timeoutsConfig

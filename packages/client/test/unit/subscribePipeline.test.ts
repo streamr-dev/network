@@ -65,7 +65,6 @@ describe('subscribePipeline', () => {
             undefined as any,
             undefined as any,
             undefined as any,
-            undefined as any,
             undefined as any
         )
         pipeline = createSubscribePipeline({
