@@ -225,7 +225,6 @@ class StreamrStream {
         const result = this._publisher.publish(this.id, content, metadata)
         this._eventEmitter.emit('publish', undefined)
         return result
-
     }
 
     /** @internal */
