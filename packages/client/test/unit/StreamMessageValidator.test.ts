@@ -46,15 +46,7 @@ describe('StreamMessageValidator', () => {
     let groupKeyRequest: StreamMessage
     let groupKeyResponse: StreamMessage
 
-    const getValidator = (customConfig?: any) => {
-        if (customConfig) {
-            return new StreamMessageValidator(customConfig)
-        } else {
-            return new StreamMessageValidator({
-                getPartitionCount, isPublisher, isSubscriber, verify
-            })
-        }
-    }
+    const getValidator = () => new StreamMessageValidator({ getPartitionCount, isPublisher, isSubscriber, verify })
 
     beforeEach(async () => {
         const publisher = await publisherAuthentication.getAddress()
