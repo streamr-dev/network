@@ -68,7 +68,7 @@ function getFieldType(value: any): (Field['type'] | undefined) {
  */
 /* eslint-disable no-underscore-dangle */
 class StreamrStream {
-    id: StreamID
+    readonly id: StreamID
     private metadata: StreamMetadata
     private readonly _resends: Resends
     private readonly _publisher: Publisher
