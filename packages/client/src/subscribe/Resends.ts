@@ -2,7 +2,7 @@
  * Public Resends API
  */
 import { inject, Lifecycle, scoped, delay } from 'tsyringe'
-import { MessageRef, StreamPartID, StreamPartIDUtils, StreamMessage } from 'streamr-client-protocol'
+import { StreamPartID, StreamPartIDUtils, StreamMessage } from 'streamr-client-protocol'
 
 import { instanceId, counterId } from '../utils/utils'
 import { Context, ContextError } from '../utils/Context'
@@ -28,7 +28,7 @@ const MIN_SEQUENCE_NUMBER_VALUE = 0
 
 type QueryDict = Record<string, string | number | boolean | null | undefined>
 
-export type ResendRef = MessageRef | {
+export type ResendRef = {
     timestamp: number | Date | string
     sequenceNumber?: number
 }
