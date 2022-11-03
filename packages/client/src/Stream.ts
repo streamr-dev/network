@@ -36,8 +36,6 @@ export interface StreamMetadata {
     inactivityThresholdHours?: number
 }
 
-export type StreamProperties = StreamMetadata & { id: string }
-
 export const VALID_FIELD_TYPES = ['number', 'string', 'boolean', 'list', 'map'] as const
 
 export interface Field {
