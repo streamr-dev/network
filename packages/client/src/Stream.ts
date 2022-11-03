@@ -121,10 +121,7 @@ class StreamrStream {
             ...metadata
         }
         try {
-            await this._streamRegistry.updateStream({
-                ...merged,
-                id: this.id
-            })
+            await this._streamRegistry.updateStream(this.id, merged)
         } finally {
             this._streamRegistryCached.clearStream(this.id)
         }

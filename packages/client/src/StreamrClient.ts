@@ -31,6 +31,8 @@ import { GroupKey } from './encryption/GroupKey'
 import { PublisherKeyExchange } from './encryption/PublisherKeyExchange'
 import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 import { LoggerFactory } from './utils/LoggerFactory'
+import { ErrorCode } from './HttpUtil'
+import { omit } from 'lodash'
 
 /**
  * @category Important
@@ -205,19 +207,30 @@ export class StreamrClient {
     /**
      * @category Important
      */
-    createStream(propsOrStreamIdOrPath: Partial<StreamMetadata> & { id: string } | string): Promise<Stream> {
-        return this.streamRegistry.createStream(propsOrStreamIdOrPath)
+    async createStream(propsOrStreamIdOrPath: Partial<StreamMetadata> & { id: string } | string): Promise<Stream> {
+        const props = typeof propsOrStreamIdOrPath === 'object' ? propsOrStreamIdOrPath : { id: propsOrStreamIdOrPath }
+        props.partitions ??= 1
+        const streamId = await this.streamIdBuilder.toStreamID(props.id)
+        return this.streamRegistry.createStream(streamId, omit(props, 'id'))
     }
 
     /**
      * @category Important
      */
-    getOrCreateStream(props: { id: string, partitions?: number }): Promise<Stream> {
-        return this.streamRegistry.getOrCreateStream(props)
+    async getOrCreateStream(props: { id: string, partitions?: number }): Promise<Stream> {
+        try {
+            return await this.getStream(props.id)
+        } catch (err: any) {
+            if (err.errorCode === ErrorCode.NOT_FOUND) {
+                return this.createStream(props)
+            }
+            throw err
+        }
     }
 
-    updateStream(props: Partial<StreamMetadata> & { id: string }): Promise<Stream> {
-        return this.streamRegistry.updateStream(props)
+    async updateStream(props: Partial<StreamMetadata> & { id: string }): Promise<Stream> {
+        const streamId = await this.streamIdBuilder.toStreamID(props.id)
+        return this.streamRegistry.updateStream(streamId, omit(props, 'id'))
     }
 
     deleteStream(streamIdOrPath: string): Promise<void> {

@@ -41,10 +41,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         this.streamRegistryCached = streamRegistryCached
     }
 
-    async createStream(propsOrStreamIdOrPath: Partial<StreamMetadata> & { id: string } | string): Promise<Stream> {
-        const props = typeof propsOrStreamIdOrPath === 'object' ? propsOrStreamIdOrPath : { id: propsOrStreamIdOrPath }
-        props.partitions ??= 1
-        const streamId = await this.streamIdBuilder.toStreamID(props.id)
+    async createStream(streamId: StreamID, metadata: StreamMetadata): Promise<Stream> {
         if (this.chain.streams.has(streamId)) {
             throw new Error(`Stream already exists: ${streamId}`)
         }
@@ -52,11 +49,11 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         const permissions = new Multimap<EthereumAddress, StreamPermission>()
         permissions.addAll(authenticatedUser, Object.values(StreamPermission))
         const registryItem: StreamRegistryItem = {
-            metadata: props,
+            metadata,
             permissions
         }
         this.chain.streams.set(streamId, registryItem)
-        return this.streamFactory.createStream(streamId, props)
+        return this.streamFactory.createStream(streamId, metadata)
     }
 
     async getStream(id: StreamID): Promise<Stream> {
@@ -69,15 +66,14 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async updateStream(props: Partial<StreamMetadata> & { id: string }): Promise<Stream> {
-        const streamId = await this.streamIdBuilder.toStreamID(props.id)
+    async updateStream(streamId: StreamID, metadata: StreamMetadata): Promise<Stream> {
         const registryItem = this.chain.streams.get(streamId)
         if (registryItem === undefined) {
             throw new Error('Stream not found')
         } else {
-            registryItem.metadata = props
+            registryItem.metadata = metadata
         }
-        return this.streamFactory.createStream(streamId, props)
+        return this.streamFactory.createStream(streamId, metadata)
     }
 
     async hasPermission(query: PermissionQuery): Promise<boolean> {
