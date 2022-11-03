@@ -141,13 +141,6 @@ class StreamrStream {
         return this.metadata
     }
 
-    toObject(): StreamProperties {
-        return {
-            ...this.metadata,
-            id: this.id
-        }
-    }
-
     async delete(): Promise<void> {
         try {
             await this._streamRegistry.deleteStream(this.id)

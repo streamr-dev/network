@@ -17,7 +17,7 @@ describe('Stream', () => {
         expect(stream.getMetadata().config?.fields).toEqual([])
     })
 
-    it('toObject', () => {
+    it('getMetadata', () => {
         const mockContainer = rootContainer.createChildContainer()
         initContainer(createStrictConfig({}), mockContainer)
         const factory = mockContainer.resolve(StreamFactory)
@@ -25,8 +25,7 @@ describe('Stream', () => {
             partitions: 10,
             storageDays: 20
         })
-        expect(stream.toObject()).toEqual({
-            id: 'mock-id',
+        expect(stream.getMetadata()).toEqual({
             partitions: 10,
             storageDays: 20,
             // currently we get also this field, which was not set by the user
