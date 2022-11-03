@@ -29,7 +29,7 @@ const MIN_SEQUENCE_NUMBER_VALUE = 0
 
 type QueryDict = Record<string, string | number | boolean | null | undefined>
 
-export type ResendRef = {
+export interface ResendRef {
     timestamp: number | Date | string
     sequenceNumber?: number
 }
