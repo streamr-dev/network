@@ -1,7 +1,3 @@
-/**
- * The client.subscribe() return value.
- * Primary interface for consuming StreamMessages.
- */
 import { StreamPartID } from 'streamr-client-protocol'
 import { MessageStream } from './MessageStream'
 import { LoggerFactory } from '../utils/LoggerFactory'
@@ -39,6 +35,7 @@ export class Subscription<T = unknown> extends MessageStream<T> {
     async unsubscribe(): Promise<void> {
         this.end()
         await this.return()
+        this.eventEmitter.removeAllListeners()
     }
 
     on<E extends keyof SubscriptionEvents>(eventName: E, listener: SubscriptionEvents[E]): void {

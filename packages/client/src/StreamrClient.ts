@@ -17,13 +17,13 @@ import { StreamDefinition } from './types'
 import { Subscription } from './subscribe/Subscription'
 import { StreamIDBuilder } from './StreamIDBuilder'
 import { StreamrClientEventEmitter, StreamrClientEvents } from './events'
-import { ProxyDirection, StreamMessage } from 'streamr-client-protocol'
+import { ProxyDirection } from 'streamr-client-protocol'
 import { MessageStream, MessageListener } from './subscribe/MessageStream'
 import { Stream, StreamProperties } from './Stream'
 import { SearchStreamsPermissionFilter } from './registry/searchStreams'
 import { PermissionAssignment, PermissionQuery } from './permission'
 import { MetricsPublisher } from './MetricsPublisher'
-import { MessageMetadata } from '../src/publish/Publisher'
+import { PublishMetadata } from '../src/publish/Publisher'
 import { initContainer } from './Container'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
 import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
@@ -31,6 +31,7 @@ import { GroupKey } from './encryption/GroupKey'
 import { PublisherKeyExchange } from './encryption/PublisherKeyExchange'
 import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 import { LoggerFactory } from './utils/LoggerFactory'
+import { convertStreamMessageToMessage, Message } from './Message'
 
 /**
  * @category Important
@@ -89,11 +90,11 @@ export class StreamrClient {
     async publish<T>(
         streamDefinition: StreamDefinition,
         content: T,
-        metadata?: MessageMetadata
-    ): Promise<StreamMessage<T>> {
+        metadata?: PublishMetadata
+    ): Promise<Message> {
         const result = await this.publisher.publish(streamDefinition, content, metadata)
         this.eventEmitter.emit('publish', undefined)
-        return result
+        return convertStreamMessageToMessage(result)
     }
 
     async updateEncryptionKey(opts: UpdateEncryptionKeyOptions): Promise<void> {
@@ -127,34 +128,21 @@ export class StreamrClient {
         options: StreamDefinition & { resend?: ResendOptions },
         onMessage?: MessageListener<T>
     ): Promise<Subscription<T>> {
-        let result
-        if (options.resend !== undefined) {
-            result = await this.resendSubscribe<T>(options, options.resend)
-        } else {
-            const streamPartId = await this.streamIdBuilder.toStreamPartID(options)
-            result = await this.subscriber.add<T>(streamPartId)
-        }
+        const streamPartId = await this.streamIdBuilder.toStreamPartID(options)
+        const sub = (options.resend !== undefined)
+            ? new ResendSubscription<T>(
+                streamPartId,
+                options.resend,
+                this.resends,
+                this.loggerFactory,
+                this.config
+            )
+            : new Subscription<T>(streamPartId, this.loggerFactory)
+        await this.subscriber.add<T>(sub)
         if (onMessage !== undefined) {
-            result.useLegacyOnMessageHandler(onMessage)
+            sub.useLegacyOnMessageHandler(onMessage)
         }
         this.eventEmitter.emit('subscribe', undefined)
-        return result
-    }
-
-    private async resendSubscribe<T>(
-        streamDefinition: StreamDefinition,
-        resendOptions: ResendOptions
-    ): Promise<ResendSubscription<T>> {
-        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        const sub = new ResendSubscription<T>(
-            streamPartId,
-            resendOptions,
-            this.resends,
-            this.destroySignal,
-            this.loggerFactory,
-            this.config
-        )
-        await this.subscriber.addSubscription<T>(sub)
         return sub
     }
 
@@ -194,13 +182,13 @@ export class StreamrClient {
         return messageStream
     }
 
-    waitForStorage(streamMessage: StreamMessage, options?: {
+    waitForStorage(message: Message, options?: {
         interval?: number
         timeout?: number
         count?: number
-        messageMatchFn?: (msgTarget: StreamMessage, msgGot: StreamMessage) => boolean
+        messageMatchFn?: (msgTarget: Message, msgGot: Message) => boolean
     }): Promise<void> {
-        return this.resends.waitForStorage(streamMessage, options)
+        return this.resends.waitForStorage(message, options)
     }
 
     // --------------------------------------------------------------------------------------------
@@ -329,6 +317,7 @@ export class StreamrClient {
 
     /**
      * Get started network node
+     * @deprecated This in an internal method
      */
     getNode(): Promise<NetworkNodeStub> {
         return this.node.getNode()
@@ -355,7 +344,7 @@ export class StreamrClient {
         this.connect.reset() // reset connect (will error on next call)
         const tasks = [
             this.destroySignal.destroy().then(() => undefined),
-            this.subscriber.stop(),
+            this.subscriber.unsubscribe(),
             this.groupKeyStore.stop()
         ]
 

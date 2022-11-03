@@ -16,10 +16,6 @@ import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { Logger } from '@streamr/utils'
 
-/**
- * Public Subscribe APIs
- */
-
 @scoped(Lifecycle.ContainerScoped)
 export class Subscriber {
     private readonly subSessions: Map<StreamPartID, SubscriptionSession<unknown>> = new Map()
@@ -85,7 +81,7 @@ export class Subscriber {
         return subSession
     }
 
-    async addSubscription<T>(sub: Subscription<T>): Promise<Subscription<T>> {
+    async add<T>(sub: Subscription<T>): Promise<void> {
         const subSession = this.getOrCreateSubscriptionSession<T>(sub.streamPartId)
 
         // add subscription to subSession
@@ -97,13 +93,6 @@ export class Subscriber {
             await this.remove(sub)
             throw err
         }
-
-        return sub
-    }
-
-    async add<T>(streamPartId: StreamPartID): Promise<Subscription<T>> {
-        const sub = new Subscription<T>(streamPartId, this.loggerFactory)
-        return this.addSubscription(sub)
     }
 
     private async remove(sub: Subscription<any>): Promise<void> {
@@ -199,9 +188,5 @@ export class Subscriber {
             // @ts-expect-error private
             ...subSession.subscriptions
         ]))
-    }
-
-    async stop(): Promise<void> {
-        await this.removeAll()
     }
 }
