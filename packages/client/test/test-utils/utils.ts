@@ -6,7 +6,7 @@ import { Wallet } from 'ethers'
 import { StreamMessage, StreamPartID, StreamPartIDUtils, MAX_PARTITION_COUNT } from 'streamr-client-protocol'
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils/utils'
-import { Stream, StreamProperties } from '../../src/Stream'
+import { Stream, StreamMetadata } from '../../src/Stream'
 import { ConfigTest } from '../../src/ConfigTest'
 import { STREAM_CLIENT_DEFAULTS, StreamrClientConfig } from '../../src/Config'
 import { GroupKey } from '../../src/encryption/GroupKey'
@@ -42,7 +42,7 @@ export const createRelativeTestStreamId = (module: NodeModule, suffix?: string):
     return counterId(`/test/${randomTestRunId}/${getTestName(module)}${(suffix !== undefined) ? '-' + suffix : ''}`, '-')
 }
 
-export const createTestStream = async (streamrClient: StreamrClient, module: NodeModule, props?: Partial<StreamProperties>): Promise<Stream> => {
+export const createTestStream = async (streamrClient: StreamrClient, module: NodeModule, props?: Partial<StreamMetadata>): Promise<Stream> => {
     const stream = await streamrClient.createStream({
         id: createRelativeTestStreamId(module),
         ...props

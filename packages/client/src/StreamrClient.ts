@@ -19,7 +19,7 @@ import { StreamIDBuilder } from './StreamIDBuilder'
 import { StreamrClientEventEmitter, StreamrClientEvents } from './events'
 import { ProxyDirection, StreamMessage } from 'streamr-client-protocol'
 import { MessageStream, MessageListener } from './subscribe/MessageStream'
-import { Stream, StreamProperties } from './Stream'
+import { Stream, StreamMetadata } from './Stream'
 import { SearchStreamsPermissionFilter } from './registry/searchStreams'
 import { PermissionAssignment, PermissionQuery } from './permission'
 import { MetricsPublisher } from './MetricsPublisher'
@@ -205,7 +205,7 @@ export class StreamrClient {
     /**
      * @category Important
      */
-    createStream(propsOrStreamIdOrPath: StreamProperties | string): Promise<Stream> {
+    createStream(propsOrStreamIdOrPath: StreamMetadata & { id: string } | string): Promise<Stream> {
         return this.streamRegistry.createStream(propsOrStreamIdOrPath)
     }
 
@@ -216,7 +216,7 @@ export class StreamrClient {
         return this.streamRegistry.getOrCreateStream(props)
     }
 
-    updateStream(props: StreamProperties): Promise<Stream> {
+    updateStream(props: StreamMetadata & { id: string }): Promise<Stream> {
         return this.streamRegistry.updateStream(props)
     }
 

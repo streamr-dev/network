@@ -7,7 +7,7 @@ import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 import { EthereumConfig, getAllStreamRegistryChainProviders, getStreamRegistryOverrides } from '../Ethereum'
 import { until } from '../utils/promises'
 import { ConfigInjectionToken, TimeoutsConfig } from '../Config'
-import { Stream, StreamProperties } from '../Stream'
+import { Stream, StreamMetadata } from '../Stream'
 import { ErrorCode, NotFoundError } from '../HttpUtil'
 import { StreamID, StreamIDUtils } from 'streamr-client-protocol'
 import { StreamIDBuilder } from '../StreamIDBuilder'
@@ -95,7 +95,7 @@ export class StreamRegistry {
     }
 
     private parseStream(id: StreamID, metadata: string): Stream {
-        const props: StreamProperties = Stream.parsePropertiesFromMetadata(metadata)
+        const props = Stream.parsePropertiesFromMetadata(metadata)
         return this.streamFactory.createStream(id, props)
     }
 
@@ -122,7 +122,7 @@ export class StreamRegistry {
         }
     }
 
-    async createStream(propsOrStreamIdOrPath: StreamProperties | string): Promise<Stream> {
+    async createStream(propsOrStreamIdOrPath: StreamMetadata & { id: string } | string): Promise<Stream> {
         const props = typeof propsOrStreamIdOrPath === 'object' ? propsOrStreamIdOrPath : { id: propsOrStreamIdOrPath }
         props.partitions ??= 1
 
@@ -170,7 +170,7 @@ export class StreamRegistry {
         }
     }
 
-    async updateStream(props: StreamProperties): Promise<Stream> {
+    async updateStream(props: StreamMetadata & { id: string }): Promise<Stream> {
         const streamId = await this.streamIdBuilder.toStreamID(props.id)
         await this.connectToContract()
         const ethersOverrides = getStreamRegistryOverrides(this.ethereumConfig)
@@ -270,7 +270,7 @@ export class StreamRegistry {
         return JSON.stringify({ query })
     }
 
-    private static formMetadata(props: StreamProperties): string {
+    private static formMetadata(props: StreamMetadata & { id: string }): string {
         return JSON.stringify(omit(props, 'id'))
     }
 

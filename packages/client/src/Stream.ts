@@ -233,7 +233,7 @@ class StreamrStream {
     }
 
     /** @internal */
-    static parsePropertiesFromMetadata(propsString: string): StreamProperties {
+    static parsePropertiesFromMetadata(propsString: string): StreamMetadata & { id: string } {
         try {
             return JSON.parse(propsString)
         } catch (error) {
