@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events'
 
-import { SmartContractRecord, StatusMessage, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
+import { TrackerRegistryRecord, StatusMessage, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
 import { Event as TrackerServerEvent, TrackerServer } from '../protocol/TrackerServer'
 import { OverlayTopology } from './OverlayTopology'
 import { InstructionCounter } from './InstructionCounter'
@@ -329,7 +329,7 @@ export class Tracker extends EventEmitter {
         return this.overlayPerStreamPart
     }
 
-    getConfigRecord(): SmartContractRecord {
+    getConfigRecord(): TrackerRegistryRecord {
         return {
             id: this.peerInfo.peerId,
             http: this.getUrl().replace(/^ws/, 'http'),

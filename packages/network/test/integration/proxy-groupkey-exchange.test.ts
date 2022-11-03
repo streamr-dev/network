@@ -6,7 +6,7 @@ import {
     GroupKeyResponse,
     MessageID,
     ProxyDirection,
-    SmartContractRecord,
+    TrackerRegistryRecord,
     StreamMessage,
     StreamMessageType,
     StreamPartIDUtils,
@@ -19,7 +19,7 @@ describe('GroupKey exchange via proxy connections', () => {
     let subscriber: NetworkNode
     let proxy: NetworkNode
     let tracker: Tracker
-    let trackerInfo: SmartContractRecord
+    let trackerInfo: TrackerRegistryRecord
 
     const publisherUserId = toEthereumAddress('0x823A026e226EB47980c88616e01E1D3305Ef8Ecb')
     const subscriberUserId = toEthereumAddress('0x73E6183bf9b79D30533bEC7B28e982e9Af649B23')

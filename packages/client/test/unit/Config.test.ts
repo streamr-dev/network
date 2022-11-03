@@ -1,4 +1,4 @@
-import { SmartContractRecord } from 'streamr-client-protocol'
+import { TrackerRegistryRecord } from 'streamr-client-protocol'
 import { fastPrivateKey } from 'streamr-test-utils'
 import { createStrictConfig, STREAM_CLIENT_DEFAULTS } from '../../src/Config'
 import { ConfigTest } from '../../src/ConfigTest'
@@ -122,7 +122,7 @@ describe('Config', () => {
             })
             expect(clientOverrides.network.trackers).toEqual(trackers)
             expect(clientOverrides.network.trackers).not.toBe(trackers)
-            expect((clientOverrides.network.trackers as SmartContractRecord[])[0]).not.toBe(trackers[0])
+            expect((clientOverrides.network.trackers as TrackerRegistryRecord[])[0]).not.toBe(trackers[0])
         })
 
         describe('metrics', () => {

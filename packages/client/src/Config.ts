@@ -9,7 +9,7 @@ import type { AuthConfig } from './Authentication'
 import type { EthereumConfig } from './Ethereum'
 
 import CONFIG_SCHEMA from './config.schema.json'
-import { SmartContractRecord } from 'streamr-client-protocol'
+import { TrackerRegistryRecord } from 'streamr-client-protocol'
 import { LogLevel } from '@streamr/utils'
 
 import { NetworkNodeOptions, STREAMR_ICE_SERVERS } from 'streamr-network'
@@ -57,7 +57,7 @@ export interface TrackerRegistrySmartContract {
 }
 
 export type NetworkConfig = Omit<NetworkNodeOptions, 'trackers' | 'metricsContext'> & {
-    trackers: SmartContractRecord[] | TrackerRegistrySmartContract
+    trackers: TrackerRegistryRecord[] | TrackerRegistrySmartContract
 }
 
 export interface DecryptionConfig {

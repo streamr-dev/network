@@ -1,5 +1,5 @@
 import { wait } from '@streamr/utils'
-import { SmartContractRecord, StreamPartID, StreamPartIDUtils, TrackerRegistry } from 'streamr-client-protocol'
+import { TrackerRegistryRecord, StreamPartID, StreamPartIDUtils, TrackerRegistry } from 'streamr-client-protocol'
 import { TrackerConnector } from '../../src/logic/TrackerConnector'
 import { TrackerId } from '../../../network-tracker/src/logic/Tracker'
 
@@ -40,8 +40,8 @@ describe(TrackerConnector, () => {
 
     beforeAll(() => {
         // sanity check stream hash assignments
-        const trackerRegistry = new TrackerRegistry<SmartContractRecord>(TRACKERS)
-        function checkTrackerAssignment(streamPartId: StreamPartID, expectedTracker: SmartContractRecord): void {
+        const trackerRegistry = new TrackerRegistry<TrackerRegistryRecord>(TRACKERS)
+        function checkTrackerAssignment(streamPartId: StreamPartID, expectedTracker: TrackerRegistryRecord): void {
             expect(trackerRegistry.getTracker(streamPartId)).toEqual(expectedTracker)
         }
         checkTrackerAssignment(T1_STREAM, TRACKERS[0])
@@ -62,7 +62,7 @@ describe(TrackerConnector, () => {
             (trackerId) => {
                 activeConnections.delete(trackerId)
             },
-            new TrackerRegistry<SmartContractRecord>(TRACKERS),
+            new TrackerRegistry<TrackerRegistryRecord>(TRACKERS),
             intervalInMs
         )
     }

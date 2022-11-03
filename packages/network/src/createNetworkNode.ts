@@ -11,11 +11,11 @@ import { PeerInfo } from './connection/PeerInfo'
 import NodeClientWsEndpoint from './connection/ws/NodeClientWsEndpoint'
 import { WebRtcEndpoint } from './connection/webrtc/WebRtcEndpoint'
 import { webRtcConnectionFactory } from './connection/webrtc/NodeWebRtcConnection'
-import { SmartContractRecord } from 'streamr-client-protocol'
+import { TrackerRegistryRecord } from 'streamr-client-protocol'
 import { IceServer } from './connection/webrtc/WebRtcConnection'
 
 export interface NetworkNodeOptions extends AbstractNodeOptions {
-    trackers: SmartContractRecord[]
+    trackers: TrackerRegistryRecord[]
     disconnectionWaitTime?: number
     peerPingInterval?: number
     newWebrtcConnectionTimeout?: number

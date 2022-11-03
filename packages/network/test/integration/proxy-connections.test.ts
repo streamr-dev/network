@@ -3,7 +3,7 @@ import { Tracker, startTracker } from '@streamr/network-tracker'
 import {
     MessageID,
     ProxyDirection,
-    SmartContractRecord,
+    TrackerRegistryRecord,
     StreamMessage,
     StreamPartIDUtils,
     toStreamID
@@ -22,7 +22,7 @@ describe('Proxy connection tests', () => {
     let contactNode: NetworkNode
     let contactNode2: NetworkNode
     let onewayNode: NetworkNode
-    let trackerInfo: SmartContractRecord
+    let trackerInfo: TrackerRegistryRecord
 
     beforeEach(async () => {
         tracker = await startTracker({
