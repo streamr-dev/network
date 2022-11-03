@@ -51,13 +51,13 @@ export interface ConnectionConfig {
     theGraphUrl: string
 }
 
-export interface TrackerRegistrySmartContract {
+export interface TrackerRegistryContract {
     jsonRpcProvider?: ConnectionInfo
     contractAddress: string
 }
 
 export type NetworkConfig = Omit<NetworkNodeOptions, 'trackers' | 'metricsContext'> & {
-    trackers: TrackerRegistryRecord[] | TrackerRegistrySmartContract
+    trackers: TrackerRegistryRecord[] | TrackerRegistryContract
 }
 
 export interface DecryptionConfig {

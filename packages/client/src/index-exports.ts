@@ -27,7 +27,7 @@ export {
     StrictStreamrClientConfig,
     SubscribeConfig,
     ConnectionConfig,
-    TrackerRegistrySmartContract,
+    TrackerRegistryContract,
     NetworkConfig,
     DecryptionConfig,
     CacheConfig,
