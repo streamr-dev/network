@@ -2,6 +2,7 @@ import { StreamrNode, Event as NodeEvent } from './StreamrNode'
 import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
 import { PeerDescriptor } from '@streamr/dht'
 import { StreamMessageTranslator } from './protocol-integration/stream-message/StreamMessageTranslator'
+import { waitForCondition } from 'streamr-test-utils'
 
 /*
 Convenience wrapper for building client-facing functionality. Used by client.
@@ -67,6 +68,9 @@ export class NetworkNode extends StreamrNode {
         //     throw new Error(`Cannot publish to ${streamPartId} as proxy subscribe connections have been set`)
         // }
         await this.joinStream(streamPartId, entrypointDescriptor)
+        if (this.getStream(streamPartId)!.layer1.getBucketSize() > 0) {
+            await waitForCondition(() => this.getStream(streamPartId)!.layer2.getTargetNeighborStringIds().length > 0)
+        }
         const msg = StreamMessageTranslator.toProtobuf(streamMessage)
         this.publishToStream(streamPartId, entrypointDescriptor, msg)
         return this.getStream(streamPartId)?.layer2.getTargetNeighborStringIds().length || 0
