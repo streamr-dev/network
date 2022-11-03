@@ -58,7 +58,7 @@ export * from './types'
 export { formStorageNodeAssignmentStreamId } from './utils/utils'
 
 export type { ProxyDirection, StreamID, StreamPartID } from 'streamr-client-protocol'
-export type { BrandedString, EthereumAddress, LogLevel } from '@streamr/utils'
+export type { BrandedString, EthereumAddress, LogLevel, Metric, MetricsContext, MetricsDefinition, MetricsReport } from '@streamr/utils'
 export type { IceServer, NetworkNodeOptions, Location } from 'streamr-network'
 
 export { BigNumber } from '@ethersproject/bignumber'
