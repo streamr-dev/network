@@ -47,7 +47,7 @@ describe('searchStreams', () => {
             createMockResultItem(stream3, JSON.stringify({ partitions: 33 }))
         ])
         const parseStream = (id: StreamID, metadata: string): Stream => {
-            const props = Stream.parsePropertiesFromMetadata(metadata)
+            const props = Stream.parseMetadata(metadata)
             return {
                 id,
                 getMetadata: () => ({

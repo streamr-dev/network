@@ -150,7 +150,7 @@ export class StreamStorageRegistry {
         this.logger.debug('getting stored streams of node %s', nodeAddress)
         const res = await this.graphQLClient.sendQuery(query) as StorageNodeQueryResult
         const streams = res.node.storedStreams.map((stream) => {
-            const props = Stream.parsePropertiesFromMetadata(stream.metadata)
+            const props = Stream.parseMetadata(stream.metadata)
             return this.streamFactory.createStream(toStreamID(stream.id), props) // toStreamID() not strictly necessary
         })
         return {

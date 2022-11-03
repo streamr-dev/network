@@ -94,7 +94,7 @@ export class StreamRegistry {
     }
 
     private parseStream(id: StreamID, metadata: string): Stream {
-        const props = Stream.parsePropertiesFromMetadata(metadata)
+        const props = Stream.parseMetadata(metadata)
         return this.streamFactory.createStream(id, props)
     }
 

@@ -228,11 +228,14 @@ class StreamrStream {
     }
 
     /** @internal */
-    static parsePropertiesFromMetadata(propsString: string): StreamMetadata & { id: string } {
+    static parseMetadata(metadata: string): StreamMetadata {
         try {
-            return JSON.parse(propsString)
+            // TODO we could pick the fields of StreamMetadata explicitly, so that this
+            // object can't contain extra fields and maybe check that partitions field
+            // is available
+            return JSON.parse(metadata)
         } catch (error) {
-            throw new Error(`Could not parse properties from onchain metadata: ${propsString}`)
+            throw new Error(`Could not parse properties from onchain metadata: ${metadata}`)
         }
     }
 
