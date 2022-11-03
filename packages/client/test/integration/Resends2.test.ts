@@ -3,7 +3,7 @@ import 'reflect-metadata'
 import { Wallet } from '@ethersproject/wallet'
 import fs from 'fs'
 import path from 'path'
-import { StreamID, StreamMessage } from 'streamr-client-protocol'
+import { StreamID } from 'streamr-client-protocol'
 import { fastWallet } from 'streamr-test-utils'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -14,6 +14,7 @@ import { createTestStream } from '../test-utils/utils'
 import { StreamPermission } from './../../src/permission'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from './../test-utils/fake/FakeStorageNode'
+import { Message, MessageMetadata } from '../../src/Message'
 
 const MAX_MESSAGES = 5
 
@@ -25,7 +26,7 @@ describe('Resends2', () => {
     let stream: Stream
     let storageNode: FakeStorageNode
 
-    const publishTestMessages = (count: number, streamId?: StreamID): Promise<StreamMessage<unknown>[]> => {
+    const publishTestMessages = (count: number, streamId?: StreamID): Promise<Message[]> => {
         const task = getPublishTestStreamMessages(environment.createClient({
             auth: {
                 privateKey: publisherWallet.privateKey
@@ -220,7 +221,7 @@ describe('Resends2', () => {
     })
 
     describe('historical messages available', () => {
-        let published: StreamMessage[]
+        let published: Message[]
 
         beforeEach(async () => {
             published = await publishTestMessages(MAX_MESSAGES)
@@ -274,7 +275,7 @@ describe('Resends2', () => {
                     partition: 0,
                 }, {
                     from: {
-                        timestamp: published[0].getTimestamp(),
+                        timestamp: published[0].timestamp,
                     }
                 })
 
@@ -289,7 +290,7 @@ describe('Resends2', () => {
                     partition: 0,
                 }, {
                     from: {
-                        timestamp: published[2].getTimestamp(),
+                        timestamp: published[2].timestamp,
                     }
                 })
 
@@ -306,10 +307,10 @@ describe('Resends2', () => {
                     partition: 0,
                 }, {
                     from: {
-                        timestamp: published[0].getTimestamp(),
+                        timestamp: published[0].timestamp,
                     },
                     to: {
-                        timestamp: published[published.length - 1].getTimestamp(),
+                        timestamp: published[published.length - 1].timestamp,
                     }
                 })
 
@@ -324,10 +325,10 @@ describe('Resends2', () => {
                     partition: 0,
                 }, {
                     from: {
-                        timestamp: published[2].getTimestamp(),
+                        timestamp: published[2].timestamp,
                     },
                     to: {
-                        timestamp: published[3].getTimestamp(),
+                        timestamp: published[3].timestamp,
                     }
                 })
 
@@ -338,16 +339,16 @@ describe('Resends2', () => {
         })
 
         it('can resend with onMessage callback', async () => {
-            const receivedMsgs: any[] = []
+            const receivedMsgs: MessageMetadata[] = []
             const sub = await client.resend({
                 streamId: stream.id,
                 partition: 0,
             }, {
                 from: {
-                    timestamp: published[0].getTimestamp(),
+                    timestamp: published[0].timestamp,
                 }
-            }, (_msg, streamMessage) => {
-                receivedMsgs.push(streamMessage)
+            }, (_msg, metadata) => {
+                receivedMsgs.push(metadata)
             })
 
             await sub.onFinally.listen()
@@ -534,6 +535,6 @@ describe('Resends2', () => {
                 last: 1
             })
         const messages = await collect(sub)
-        expect(messages[0].getParsedContent()).toEqual(publishedMessage)
+        expect(messages[0].content).toEqual(publishedMessage)
     })
 })

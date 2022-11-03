@@ -6,6 +6,8 @@ import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { MessageStream } from '../../src/subscribe/MessageStream'
 import { Msg } from '../test-utils/publish'
 import { createRandomAuthentication } from '../test-utils/utils'
+import { convertStreamMessageToMessage } from './../../src/Message'
+import { omit } from 'lodash'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
@@ -41,7 +43,9 @@ describe('MessageStream', () => {
         stream.push(msg1)
         stream.push(msg2)
         await waitForCalls(onMessage, 2)
-        expect(onMessage).toHaveBeenNthCalledWith(1, msg1.getParsedContent(), msg1)
-        expect(onMessage).toHaveBeenNthCalledWith(2, msg2.getParsedContent(), msg2)
+        // TODO could implement test so that it doesn't call convertStreamMessageToMessage?
+        // (if we don't test the convertStreamMessageToMessage logic elsewhere)
+        expect(onMessage).toHaveBeenNthCalledWith(1, msg1.getParsedContent(), omit(convertStreamMessageToMessage(msg1), 'content'))
+        expect(onMessage).toHaveBeenNthCalledWith(2, msg2.getParsedContent(), omit(convertStreamMessageToMessage(msg2), 'content'))
     })
 })

@@ -98,7 +98,7 @@ describe('subscribePipeline', () => {
         pipeline.endWrite()
         const output = await collect(pipeline)
         expect(output).toHaveLength(1)
-        expect(output[0].getParsedContent()).toEqual(CONTENT)
+        expect(output[0].content).toEqual(CONTENT)
     })
 
     it('error: invalid signature', async () => {
