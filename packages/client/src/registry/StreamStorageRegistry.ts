@@ -3,7 +3,7 @@ import StreamStorageRegistryArtifact from '../ethereumArtifacts/StreamStorageReg
 import { StreamQueryResult } from './StreamRegistry'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 import { ConfigInjectionToken } from '../Config'
-import { Stream, StreamProperties } from '../Stream'
+import { Stream } from '../Stream'
 import { EthereumConfig, getStreamRegistryChainProvider, getStreamRegistryOverrides } from '../Ethereum'
 import { StreamID, toStreamID } from 'streamr-client-protocol'
 import { StreamIDBuilder } from '../StreamIDBuilder'
@@ -150,8 +150,8 @@ export class StreamStorageRegistry {
         this.logger.debug('getting stored streams of node %s', nodeAddress)
         const res = await this.graphQLClient.sendQuery(query) as StorageNodeQueryResult
         const streams = res.node.storedStreams.map((stream) => {
-            const props: StreamProperties = Stream.parsePropertiesFromMetadata(stream.metadata)
-            return this.streamFactory.createStream({ ...props, id: toStreamID(stream.id) }) // toStreamID() not strictly necessary
+            const props = Stream.parseMetadata(stream.metadata)
+            return this.streamFactory.createStream(toStreamID(stream.id), props) // toStreamID() not strictly necessary
         })
         return {
             streams,

@@ -12,7 +12,7 @@ createClientCommand(async (client: StreamrClient, streamIdOrPath: string, option
         partitions: options.partitions
     }
     const stream = await client.createStream(body)
-    console.info(JSON.stringify(stream.toObject(), null, 2))
+    console.info({ id: stream.id, ...stream.getMetadata() }, null, 2)
 })
     .arguments('<streamId>')
     .description('create a new stream')

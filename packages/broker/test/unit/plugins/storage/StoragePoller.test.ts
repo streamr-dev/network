@@ -6,8 +6,8 @@ const POLL_TIME = 5
 
 const POLL_RESULT = Object.freeze({
     streams: [
-        { id: 'stream-1', partitions: 1 },
-        { id: 'stream-2', partitions: 5 },
+        { id: 'stream-1', getMetadata: () => ({ partitions: 1 }) },
+        { id: 'stream-2', getMetadata: () => ({ partitions: 5 }) },
     ] as Stream[],
     blockNumber: 13
 })

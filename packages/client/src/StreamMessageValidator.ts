@@ -10,12 +10,8 @@ import {
 } from "streamr-client-protocol"
 import { verify as verifyImpl } from './utils/signingUtils'
 
-export interface StreamMetadata {
-    partitions: number
-}
-
 export interface Options {
-    getStream: (streamId: StreamID) => Promise<StreamMetadata>
+    getPartitionCount: (streamId: StreamID) => Promise<number>
     isPublisher: (address: EthereumAddress, streamId: StreamID) => Promise<boolean>
     isSubscriber: (address: EthereumAddress, streamId: StreamID) => Promise<boolean>
     verify?: (address: EthereumAddress, payload: string, signature: string) => boolean
@@ -34,7 +30,7 @@ export interface Options {
  * TODO later: support for unsigned messages can be removed when deprecated system-wide.
  */
 export default class StreamMessageValidator {
-    readonly getStream: (streamId: StreamID) => Promise<StreamMetadata>
+    readonly getPartitionCount: (streamId: StreamID) => Promise<number>
     readonly isPublisher: (address: EthereumAddress, streamId: StreamID) => Promise<boolean>
     readonly isSubscriber: (address: EthereumAddress, streamId: StreamID) => Promise<boolean>
     readonly verify: (address: EthereumAddress, payload: string, signature: string) => boolean
@@ -47,35 +43,11 @@ export default class StreamMessageValidator {
      * @param verify function(address, payload, signature): returns true if the address and payload match the signature.
      * The default implementation uses the native secp256k1 library on node.js and falls back to the elliptic library on browsers.
      */
-    constructor({ getStream, isPublisher, isSubscriber, verify = verifyImpl }: Options) {
-        StreamMessageValidator.checkInjectedFunctions(getStream, isPublisher, isSubscriber, verify)
-        this.getStream = getStream
+    constructor({ getPartitionCount, isPublisher, isSubscriber, verify = verifyImpl }: Options) {
+        this.getPartitionCount = getPartitionCount
         this.isPublisher = isPublisher
         this.isSubscriber = isSubscriber
         this.verify = verify
-    }
-
-    static checkInjectedFunctions(
-        getStream: (streamId: StreamID) => Promise<StreamMetadata>,
-        isPublisher: (address: EthereumAddress, streamId: StreamID) => Promise<boolean>,
-        isSubscriber: (address: EthereumAddress, streamId: StreamID) => Promise<boolean>,
-        verify: (address: EthereumAddress, payload: string, signature: string) => boolean
-    ): void | never {
-        if (typeof getStream !== 'function') {
-            throw new Error('getStream must be: async function(streamId): returns the validation metadata object for streamId')
-        }
-
-        if (typeof isPublisher !== 'function') {
-            throw new Error('isPublisher must be: async function(address, streamId): returns true if address is a permitted publisher on streamId')
-        }
-
-        if (typeof isSubscriber !== 'function') {
-            throw new Error('isSubscriber must be: async function(address, streamId): returns true if address is a permitted subscriber on streamId')
-        }
-
-        if (typeof verify !== 'function') {
-            throw new Error('verify must be: function(address, payload, signature): returns true if the address and payload match the signature')
-        }
     }
 
     /**
@@ -121,7 +93,7 @@ export default class StreamMessageValidator {
             serializedContent: streamMessage.getSerializedContent(),
             prevMsgRef: streamMessage.prevMsgRef ?? undefined,
             newGroupKey: streamMessage.newGroupKey ?? undefined
-        }) 
+        })
         let success
         try {
             success = this.verify(streamMessage.getPublisherId(), payload, streamMessage.signature!)
@@ -134,11 +106,11 @@ export default class StreamMessageValidator {
     }
 
     private async validateMessage(streamMessage: StreamMessage): Promise<void> {
-        const stream = await this.getStream(streamMessage.getStreamId())
+        const partitionCount  = await this.getPartitionCount(streamMessage.getStreamId())
 
-        if (streamMessage.getStreamPartition() < 0 || streamMessage.getStreamPartition() >= stream.partitions) {
+        if (streamMessage.getStreamPartition() < 0 || streamMessage.getStreamPartition() >= partitionCount) {
             throw new StreamMessageError(
-                `Partition ${streamMessage.getStreamPartition()} is out of range (0..${stream.partitions - 1})`,
+                `Partition ${streamMessage.getStreamPartition()} is out of range (0..${partitionCount - 1})`,
                 streamMessage
             )
         }

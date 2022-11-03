@@ -1,11 +1,12 @@
 import { delay, inject, Lifecycle, scoped } from 'tsyringe'
+import { StreamID } from 'streamr-client-protocol'
 import { ConfigInjectionToken, TimeoutsConfig } from './Config'
 import { StreamrClientEventEmitter } from './events'
 import { Publisher } from './publish/Publisher'
 import { StreamRegistry } from './registry/StreamRegistry'
 import { StreamRegistryCached } from './registry/StreamRegistryCached'
 import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
-import { Stream, StreamrStreamConstructorOptions } from './Stream'
+import { Stream, StreamMetadata } from './Stream'
 import { Resends } from './subscribe/Resends'
 import { Subscriber } from './subscribe/Subscriber'
 import { LoggerFactory } from './utils/LoggerFactory'
@@ -45,9 +46,10 @@ export class StreamFactory {
         this.timeoutsConfig = timeoutsConfig
     }
 
-    createStream(props: StreamrStreamConstructorOptions): Stream {
+    createStream(id: StreamID, metadata: Partial<StreamMetadata>): Stream {
         return new Stream(
-            props,
+            id,
+            metadata,
             this.resends,
             this.publisher,
             this.subscriber,

@@ -46,26 +46,28 @@ describe('searchStreams', () => {
             createMockResultItem(stream2, 'invalid-json'),
             createMockResultItem(stream3, JSON.stringify({ partitions: 33 }))
         ])
-        const parseStream = (id: StreamID, metadata: string): Pick<Stream, 'id' | 'partitions'> => {
-            const props = Stream.parsePropertiesFromMetadata(metadata)
+        const parseStream = (id: StreamID, metadata: string): Stream => {
+            const props = Stream.parseMetadata(metadata)
             return {
                 id,
-                partitions: props.partitions!
-            }
+                getMetadata: () => ({
+                    partitions: props.partitions
+                })
+            } as any
         }
 
         const streams = await collect(searchStreams(
             '/',
             undefined,
             graphQLClient as any,
-            parseStream as any,
+            parseStream,
             mockLoggerFactory().createLogger(module)
         ))
 
         expect(streams).toHaveLength(2)
         expect(streams[0].id).toBe(stream1)
-        expect(streams[0].partitions).toBe(11)
+        expect(streams[0].getMetadata().partitions).toBe(11)
         expect(streams[1].id).toBe(stream3)
-        expect(streams[1].partitions).toBe(33)
+        expect(streams[1].getMetadata().partitions).toBe(33)
     })
 })
