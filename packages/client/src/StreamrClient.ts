@@ -17,13 +17,13 @@ import { StreamDefinition } from './types'
 import { Subscription } from './subscribe/Subscription'
 import { StreamIDBuilder } from './StreamIDBuilder'
 import { StreamrClientEventEmitter, StreamrClientEvents } from './events'
-import { ProxyDirection, StreamMessage } from 'streamr-client-protocol'
+import { ProxyDirection } from 'streamr-client-protocol'
 import { MessageStream, MessageListener } from './subscribe/MessageStream'
 import { Stream, StreamProperties } from './Stream'
 import { SearchStreamsPermissionFilter } from './registry/searchStreams'
 import { PermissionAssignment, PermissionQuery } from './permission'
 import { MetricsPublisher } from './MetricsPublisher'
-import { MessageMetadata } from '../src/publish/Publisher'
+import { PublishMetadata } from '../src/publish/Publisher'
 import { initContainer } from './Container'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
 import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
@@ -31,6 +31,7 @@ import { GroupKey } from './encryption/GroupKey'
 import { PublisherKeyExchange } from './encryption/PublisherKeyExchange'
 import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 import { LoggerFactory } from './utils/LoggerFactory'
+import { convertStreamMessageToMessage, Message } from './Message'
 
 /**
  * @category Important
@@ -89,11 +90,11 @@ export class StreamrClient {
     async publish<T>(
         streamDefinition: StreamDefinition,
         content: T,
-        metadata?: MessageMetadata
-    ): Promise<StreamMessage<T>> {
+        metadata?: PublishMetadata
+    ): Promise<Message> {
         const result = await this.publisher.publish(streamDefinition, content, metadata)
         this.eventEmitter.emit('publish', undefined)
-        return result
+        return convertStreamMessageToMessage(result)
     }
 
     async updateEncryptionKey(opts: UpdateEncryptionKeyOptions): Promise<void> {
@@ -181,13 +182,13 @@ export class StreamrClient {
         return messageStream
     }
 
-    waitForStorage(streamMessage: StreamMessage, options?: {
+    waitForStorage(message: Message, options?: {
         interval?: number
         timeout?: number
         count?: number
-        messageMatchFn?: (msgTarget: StreamMessage, msgGot: StreamMessage) => boolean
+        messageMatchFn?: (msgTarget: Message, msgGot: Message) => boolean
     }): Promise<void> {
-        return this.resends.waitForStorage(streamMessage, options)
+        return this.resends.waitForStorage(message, options)
     }
 
     // --------------------------------------------------------------------------------------------
@@ -316,6 +317,7 @@ export class StreamrClient {
 
     /**
      * Get started network node
+     * @deprecated This in an internal method
      */
     getNode(): Promise<NetworkNodeStub> {
         return this.node.getNode()

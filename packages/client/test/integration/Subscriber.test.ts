@@ -52,7 +52,7 @@ describe('Subscriber', () => {
         }))
 
         const receivedMessage = await nextValue(sub[Symbol.asyncIterator]())
-        expect(receivedMessage!.getParsedContent()).toEqual(MOCK_CONTENT)
+        expect(receivedMessage!.content).toEqual(MOCK_CONTENT)
     })
 
     it('with encryption', async () => {
@@ -80,7 +80,7 @@ describe('Subscriber', () => {
         }))
 
         const receivedMessage = await nextValue(sub[Symbol.asyncIterator]())
-        expect(receivedMessage!.getParsedContent()).toEqual(MOCK_CONTENT)
-        expect(receivedMessage!.groupKeyId).toEqual(groupKey.id)
+        expect(receivedMessage!.content).toEqual(MOCK_CONTENT)
+        expect(receivedMessage!.streamMessage.groupKeyId).toEqual(groupKey.id)
     })
 })

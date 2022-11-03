@@ -46,7 +46,7 @@ export class ResendSubscription<T> extends Subscription<T> {
 
     private async* resendThenRealtime(src: AsyncGenerator<StreamMessage<T>>): AsyncGenerator<StreamMessage<T>, void, any> {
         try {
-            yield* await this.getResent()
+            yield* (await this.getResent()).getStreamMessages()
         } catch (err) {
             if (err.code === 'NO_STORAGE_NODES') {
                 const streamId = StreamPartIDUtils.getStreamID(this.streamPartId)
