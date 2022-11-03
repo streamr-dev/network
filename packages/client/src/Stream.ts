@@ -115,7 +115,7 @@ class StreamrStream {
     /**
      * Persist stream metadata updates.
      */
-    async update(metadata: StreamMetadata): Promise<void> {
+    async update(metadata: Partial<StreamMetadata>): Promise<void> {
         const merged = {
             ...this.getMetadata(),
             ...metadata

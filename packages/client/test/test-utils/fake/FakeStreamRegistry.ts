@@ -41,7 +41,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         this.streamRegistryCached = streamRegistryCached
     }
 
-    async createStream(propsOrStreamIdOrPath: StreamMetadata & { id: string } | string): Promise<Stream> {
+    async createStream(propsOrStreamIdOrPath: Partial<StreamMetadata> & { id: string } | string): Promise<Stream> {
         const props = typeof propsOrStreamIdOrPath === 'object' ? propsOrStreamIdOrPath : { id: propsOrStreamIdOrPath }
         props.partitions ??= 1
         const streamId = await this.streamIdBuilder.toStreamID(props.id)
@@ -69,7 +69,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async updateStream(props: StreamMetadata & { id: string }): Promise<Stream> {
+    async updateStream(props: Partial<StreamMetadata> & { id: string }): Promise<Stream> {
         const streamId = await this.streamIdBuilder.toStreamID(props.id)
         const registryItem = this.chain.streams.get(streamId)
         if (registryItem === undefined) {

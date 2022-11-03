@@ -205,7 +205,7 @@ export class StreamrClient {
     /**
      * @category Important
      */
-    createStream(propsOrStreamIdOrPath: StreamMetadata & { id: string } | string): Promise<Stream> {
+    createStream(propsOrStreamIdOrPath: Partial<StreamMetadata> & { id: string } | string): Promise<Stream> {
         return this.streamRegistry.createStream(propsOrStreamIdOrPath)
     }
 
@@ -216,7 +216,7 @@ export class StreamrClient {
         return this.streamRegistry.getOrCreateStream(props)
     }
 
-    updateStream(props: StreamMetadata & { id: string }): Promise<Stream> {
+    updateStream(props: Partial<StreamMetadata> & { id: string }): Promise<Stream> {
         return this.streamRegistry.updateStream(props)
     }
 

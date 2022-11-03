@@ -122,7 +122,7 @@ export class StreamRegistry {
         }
     }
 
-    async createStream(propsOrStreamIdOrPath: StreamMetadata & { id: string } | string): Promise<Stream> {
+    async createStream(propsOrStreamIdOrPath: Partial<StreamMetadata> & { id: string } | string): Promise<Stream> {
         const props = typeof propsOrStreamIdOrPath === 'object' ? propsOrStreamIdOrPath : { id: propsOrStreamIdOrPath }
         props.partitions ??= 1
 
@@ -170,7 +170,7 @@ export class StreamRegistry {
         }
     }
 
-    async updateStream(props: StreamMetadata & { id: string }): Promise<Stream> {
+    async updateStream(props: Partial<StreamMetadata> & { id: string }): Promise<Stream> {
         const streamId = await this.streamIdBuilder.toStreamID(props.id)
         await this.connectToContract()
         const ethersOverrides = getStreamRegistryOverrides(this.ethereumConfig)
@@ -270,7 +270,7 @@ export class StreamRegistry {
         return JSON.stringify({ query })
     }
 
-    private static formMetadata(props: StreamMetadata & { id: string }): string {
+    private static formMetadata(props: Partial<StreamMetadata> & { id: string }): string {
         return JSON.stringify(omit(props, 'id'))
     }
 
