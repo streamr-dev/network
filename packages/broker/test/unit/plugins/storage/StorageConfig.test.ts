@@ -17,11 +17,14 @@ const PARTITION_COUNT_LOOKUP: Record<string, number> = Object.freeze({
 })
 
 function makeStubStream(streamId: string): Stream {
+    const partitions = PARTITION_COUNT_LOOKUP[streamId]
     return {
         id: toStreamID(streamId),
-        partitions: PARTITION_COUNT_LOOKUP[streamId],
+        getMetadata: () => ({
+            partitions
+        }),
         getStreamParts(): StreamPartID[] { // TODO: duplicated code from client
-            return range(0, this.partitions).map((p) => toStreamPartID(this.id, p))
+            return range(0, partitions).map((p) => toStreamPartID(this.id, p))
         }
     } as Stream
 }

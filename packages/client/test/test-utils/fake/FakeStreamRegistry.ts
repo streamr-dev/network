@@ -12,7 +12,7 @@ import {
 import { SearchStreamsPermissionFilter } from '../../../src/registry/searchStreams'
 import { StreamRegistry } from '../../../src/registry/StreamRegistry'
 import { StreamRegistryCached } from '../../../src/registry/StreamRegistryCached'
-import { Stream, StreamProperties } from '../../../src/Stream'
+import { Stream, StreamMetadata } from '../../../src/Stream'
 import { StreamFactory } from '../../../src/StreamFactory'
 import { StreamIDBuilder } from '../../../src/StreamIDBuilder'
 import { Methods } from '../types'
@@ -41,10 +41,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         this.streamRegistryCached = streamRegistryCached
     }
 
-    async createStream(propsOrStreamIdOrPath: StreamProperties | string): Promise<Stream> {
-        const props = typeof propsOrStreamIdOrPath === 'object' ? propsOrStreamIdOrPath : { id: propsOrStreamIdOrPath }
-        props.partitions ??= 1
-        const streamId = await this.streamIdBuilder.toStreamID(props.id)
+    async createStream(streamId: StreamID, metadata: StreamMetadata): Promise<Stream> {
         if (this.chain.streams.has(streamId)) {
             throw new Error(`Stream already exists: ${streamId}`)
         }
@@ -52,38 +49,31 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         const permissions = new Multimap<EthereumAddress, StreamPermission>()
         permissions.addAll(authenticatedUser, Object.values(StreamPermission))
         const registryItem: StreamRegistryItem = {
-            metadata: props,
+            metadata,
             permissions
         }
         this.chain.streams.set(streamId, registryItem)
-        return this.streamFactory.createStream({
-            ...props,
-            id: streamId
-        })
+        return this.streamFactory.createStream(streamId, metadata)
     }
 
     async getStream(id: StreamID): Promise<Stream> {
         const registryItem = this.chain.streams.get(id)
         if (registryItem !== undefined) {
-            return this.streamFactory.createStream({ ...registryItem.metadata, id })
+            return this.streamFactory.createStream(id, registryItem.metadata)
         } else {
             throw new NotFoundError('Stream not found: id=' + id)
         }
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async updateStream(props: StreamProperties): Promise<Stream> {
-        const streamId = await this.streamIdBuilder.toStreamID(props.id)
+    async updateStream(streamId: StreamID, metadata: StreamMetadata): Promise<Stream> {
         const registryItem = this.chain.streams.get(streamId)
         if (registryItem === undefined) {
             throw new Error('Stream not found')
         } else {
-            registryItem.metadata = props
+            registryItem.metadata = metadata
         }
-        return this.streamFactory.createStream({
-            ...props,
-            id: streamId
-        })
+        return this.streamFactory.createStream(streamId, metadata)
     }
 
     async hasPermission(query: PermissionQuery): Promise<boolean> {

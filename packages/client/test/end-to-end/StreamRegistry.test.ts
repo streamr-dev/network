@@ -226,14 +226,14 @@ describe('StreamRegistry', () => {
             })
             await until(async () => {
                 try {
-                    return (await client.getStream(createdStream.id)).description === createdStream.description
+                    return (await client.getStream(createdStream.id)).getMetadata().description === createdStream.getMetadata().description
                 } catch (err) {
                     return false
                 }
             }, 100000, 1000)
             // check that other fields not overwritten
             const updatedStream = await client.getStream(createdStream.id)
-            expect(updatedStream.partitions).toBe(PARTITION_COUNT)
+            expect(updatedStream.getMetadata().partitions).toBe(PARTITION_COUNT)
         })
     })
 

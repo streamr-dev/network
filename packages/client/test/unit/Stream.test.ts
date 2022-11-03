@@ -13,23 +13,19 @@ describe('Stream', () => {
         const mockContainer = rootContainer.createChildContainer()
         initContainer(createStrictConfig({}), mockContainer)
         const factory = mockContainer.resolve(StreamFactory)
-        const stream = factory.createStream({
-            id: toStreamID('mock-id')
-        })
-        expect(stream.config.fields).toEqual([])
+        const stream = factory.createStream(toStreamID('mock-id'), {})
+        expect(stream.getMetadata().config?.fields).toEqual([])
     })
 
-    it('toObject', () => {
+    it('getMetadata', () => {
         const mockContainer = rootContainer.createChildContainer()
         initContainer(createStrictConfig({}), mockContainer)
         const factory = mockContainer.resolve(StreamFactory)
-        const stream = factory.createStream({
-            id: toStreamID('mock-id'),
+        const stream = factory.createStream(toStreamID('mock-id'), {
             partitions: 10,
             storageDays: 20
         })
-        expect(stream.toObject()).toEqual({
-            id: 'mock-id',
+        expect(stream.getMetadata()).toEqual({
             partitions: 10,
             storageDays: 20,
             // currently we get also this field, which was not set by the user
@@ -49,8 +45,7 @@ describe('Stream', () => {
                 updateStream: jest.fn().mockRejectedValue(new Error('mock-error'))
             } as any)
             const factory = mockContainer.resolve(StreamFactory)
-            const stream = factory.createStream({
-                id: toStreamID('mock-id'),
+            const stream = factory.createStream(toStreamID('mock-id'), {
                 description: 'original-description'
             })
 
@@ -59,7 +54,7 @@ describe('Stream', () => {
                     description: 'updated-description'
                 })
             }).rejects.toThrow('mock-error')
-            expect(stream.description).toBe('original-description')
+            expect(stream.getMetadata().description).toBe('original-description')
         })
     })
 })
