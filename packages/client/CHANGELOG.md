@@ -15,9 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Methods related to publishing and subscribing operate on new interfaces `Message` and `MessageMetadata` instead of `StreamMessage`
-  - in `StreamrClient#subscribe` and`StreamrClient#resend` the data type of 2nd parameter of `onMessage` callback is `MessageMetadata` instead of `StreamMessage`
-  - in `client.subscribe`, `client.resend` and `client.resendSubscription` the async iterator type is `Message` instead of `StreamMessage`
-  - in `stream.publish` and `client.publish` the return type is `Message` instead of `StreamMessage`
+  - in `client.subscribe` and `client.resend` the data type of 2nd parameter of `onMessage` callback is `MessageMetadata` instead of `StreamMessage`
+  - in `client.subscribe`, `client.resend` and `client.resendSubscribe` the async iterator type is `Message` instead of `StreamMessage`
+  - in `client.publish` and `stream.publish` the return type is `Message` instead of `StreamMessage`
   - in `client.waitForStorage` parameter type is `Message` instead of `StreamMessage`
 - Encryption keys are delivered in-stream, not in a separate key exchange stream
   - new optional config options `decryption.keyRequestTimeout` and `decryption.maxKeyRequestsPerSecond`
