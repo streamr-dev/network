@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enforce concurrency limit for smart contract calls (per contract, configurable with `maxConcurrentContractCalls` config option)
 - Enforce presence of message signatures
   - all non-signed messages received by client are simply ignored
+- Stream metadata (e.g. `partitions`) is no longer stored as fields of `Stream` object
+  - query the data by calling `stream.getMetadata()`
 - Method `stream.update()` parameter `props` is no longer optional
 - Rename method `getStorageNodesOf()` to `getStorageNodes()`
 - Rename method `getStoredStreamsOf()` to `getStoredStreams()`
@@ -52,6 +54,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - use `destroy()` instead
 - Remove method `unsubscribeAll()`
   - use `unsubscribe()` without arguments to same effect
+- Remove method `stream.toObject()`
+  - use `stream.getMetadata()` to get metadata (doesn't contain stream id)
 - Remove properties `subscription.onMessage`, `onStart`, and `onError`
   - use `subscription.on('error', cb)` to add an error listener
 - Remove configuration option `groupKeys`
