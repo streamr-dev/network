@@ -56,16 +56,13 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
             permissions
         }
         this.chain.streams.set(streamId, registryItem)
-        return this.streamFactory.createStream({
-            ...props,
-            id: streamId
-        })
+        return this.streamFactory.createStream(streamId, props)
     }
 
     async getStream(id: StreamID): Promise<Stream> {
         const registryItem = this.chain.streams.get(id)
         if (registryItem !== undefined) {
-            return this.streamFactory.createStream({ ...registryItem.metadata, id })
+            return this.streamFactory.createStream(id, registryItem.metadata)
         } else {
             throw new NotFoundError('Stream not found: id=' + id)
         }
@@ -80,10 +77,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         } else {
             registryItem.metadata = props
         }
-        return this.streamFactory.createStream({
-            ...props,
-            id: streamId
-        })
+        return this.streamFactory.createStream(streamId, props)
     }
 
     async hasPermission(query: PermissionQuery): Promise<boolean> {

@@ -53,8 +53,8 @@ describe('subscribePipeline', () => {
         streamPartId = StreamPartIDUtils.parse(`${randomEthereumAddress()}/path#0`)
         publisher = fastWallet()
         const stream = new Stream(
+            toStreamID(streamPartId),
             {
-                id: toStreamID(streamPartId),
                 partitions: 1,
             },
             undefined as any,

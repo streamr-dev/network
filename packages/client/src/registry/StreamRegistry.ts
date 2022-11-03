@@ -96,7 +96,7 @@ export class StreamRegistry {
 
     private parseStream(id: StreamID, metadata: string): Stream {
         const props: StreamProperties = Stream.parsePropertiesFromMetadata(metadata)
-        return this.streamFactory.createStream({ ...props, id })
+        return this.streamFactory.createStream(id, props)
     }
 
     private async connectToContract(): Promise<void> {
@@ -160,10 +160,7 @@ export class StreamRegistry {
             await this.ensureStreamIdInNamespaceOfAuthenticatedUser(domain, streamId)
             await waitForTx(this.streamRegistryContract!.createStream(path, metadata, ethersOverrides))
         }
-        return this.streamFactory.createStream({
-            ...props,
-            id: streamId
-        })
+        return this.streamFactory.createStream(streamId,  props)
     }
 
     private async ensureStreamIdInNamespaceOfAuthenticatedUser(address: EthereumAddress, streamId: StreamID): Promise<void> {
@@ -182,10 +179,7 @@ export class StreamRegistry {
             StreamRegistry.formMetadata(props),
             ethersOverrides
         ))
-        return this.streamFactory.createStream({
-            ...props,
-            id: streamId
-        })
+        return this.streamFactory.createStream(streamId, props)
     }
 
     async deleteStream(streamIdOrPath: string): Promise<void> {

@@ -26,21 +26,17 @@ import { DEFAULT_PARTITION } from './StreamIDBuilder'
 import { Subscription } from './subscribe/Subscription'
 import { LoggerFactory } from './utils/LoggerFactory'
 
-export interface StreamProperties {
-    id: string
+export interface StreamMetadata {
+    partitions?: number
     description?: string
     config?: {
         fields: Field[]
     }
-    partitions?: number
     storageDays?: number
     inactivityThresholdHours?: number
 }
 
-/** @internal */
-export interface StreamrStreamConstructorOptions extends StreamProperties {
-    id: StreamID
-}
+export type StreamProperties = StreamMetadata & { id: string }
 
 export const VALID_FIELD_TYPES = ['number', 'string', 'boolean', 'list', 'map'] as const
 
@@ -93,7 +89,8 @@ class StreamrStream {
 
     /** @internal */
     constructor(
-        props: StreamrStreamConstructorOptions,
+        id: StreamID,
+        metadata: StreamMetadata,
         resends: Resends,
         publisher: Publisher,
         subscriber: Subscriber,
@@ -104,9 +101,9 @@ class StreamrStream {
         eventEmitter: StreamrClientEventEmitter,
         timeoutsConfig: TimeoutsConfig
     ) {
-        Object.assign(this, props)
-        this.id = props.id
-        this.partitions = props.partitions ? props.partitions : 1
+        Object.assign(this, metadata)
+        this.id = id
+        this.partitions = metadata.partitions ? metadata.partitions : 1
         this._resends = resends
         this._publisher = publisher
         this._subscriber = subscriber
