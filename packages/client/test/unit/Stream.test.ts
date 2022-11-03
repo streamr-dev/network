@@ -14,7 +14,7 @@ describe('Stream', () => {
         initContainer(createStrictConfig({}), mockContainer)
         const factory = mockContainer.resolve(StreamFactory)
         const stream = factory.createStream(toStreamID('mock-id'), {})
-        expect(stream.config.fields).toEqual([])
+        expect(stream.getMetadata().config?.fields).toEqual([])
     })
 
     it('toObject', () => {
@@ -55,7 +55,7 @@ describe('Stream', () => {
                     description: 'updated-description'
                 })
             }).rejects.toThrow('mock-error')
-            expect(stream.description).toBe('original-description')
+            expect(stream.getMetadata().description).toBe('original-description')
         })
     })
 })

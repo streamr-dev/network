@@ -76,7 +76,7 @@ export class MessageFactory {
             throw new Error(`${publisherId} is not a publisher on stream ${this.streamId}`)
         }
 
-        const partitionCount = (await this.streamRegistry.getStream(this.streamId)).partitions
+        const partitionCount = (await this.streamRegistry.getStream(this.streamId)).getMetadata().partitions!
         let partition
         if (explicitPartition !== undefined) {
             if ((explicitPartition < 0 || explicitPartition >= partitionCount)) {

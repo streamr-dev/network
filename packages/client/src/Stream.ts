@@ -70,13 +70,7 @@ function getFieldType(value: any): (Field['type'] | undefined) {
 /* eslint-disable no-underscore-dangle */
 class StreamrStream {
     id: StreamID
-    description?: string
-    config: {
-        fields: Field[]
-    } = { fields: [] }
-    partitions!: number
-    storageDays?: number
-    inactivityThresholdHours?: number
+    private metadata: StreamMetadata
     private readonly _resends: Resends
     private readonly _publisher: Publisher
     private readonly _subscriber: Subscriber
@@ -101,9 +95,14 @@ class StreamrStream {
         eventEmitter: StreamrClientEventEmitter,
         timeoutsConfig: TimeoutsConfig
     ) {
-        Object.assign(this, metadata)
         this.id = id
-        this.partitions = metadata.partitions ? metadata.partitions : 1
+        this.metadata = {
+            partitions: 1,
+            config: {
+                fields: []
+            },
+            ...metadata
+        }
         this._resends = resends
         this._publisher = publisher
         this._subscriber = subscriber
@@ -118,32 +117,35 @@ class StreamrStream {
     /**
      * Persist stream metadata updates.
      */
-    async update(props: Omit<StreamProperties, 'id'>): Promise<void> {
+    async update(metadata: StreamMetadata): Promise<void> {
+        const merged = {
+            ...this.getMetadata(),
+            ...metadata
+        }
         try {
             await this._streamRegistry.updateStream({
-                ...this.toObject(),
-                ...props,
+                ...merged,
                 id: this.id
             })
         } finally {
             this._streamRegistryCached.clearStream(this.id)
         }
-        for (const key of Object.keys(props)) {
-            (this as any)[key] = (props as any)[key]
-        }
+        this.metadata = merged
     }
 
     getStreamParts(): StreamPartID[] {
-        return range(0, this.partitions).map((p) => toStreamPartID(this.id, p))
+        return range(0, this.getMetadata().partitions).map((p) => toStreamPartID(this.id, p))
+    }
+
+    getMetadata(): StreamMetadata {
+        return this.metadata
     }
 
     toObject(): StreamProperties {
-        const result: any = {}
-        Object.keys(this).forEach((key) => {
-            if (key.startsWith('_') || typeof key === 'function') { return }
-            result[key] = (this as any)[key]
-        })
-        return result as StreamProperties
+        return {
+            ...this.metadata,
+            id: this.id
+        }
     }
 
     async delete(): Promise<void> {
@@ -195,7 +197,10 @@ class StreamrStream {
             const streamPartId = toStreamPartID(formStorageNodeAssignmentStreamId(normalizedNodeAddress), DEFAULT_PARTITION)
             assignmentSubscription = new Subscription<any>(streamPartId, this._loggerFactory)
             await this._subscriber.add(assignmentSubscription)
-            const propagationPromise = waitForAssignmentsToPropagate(assignmentSubscription, this)
+            const propagationPromise = waitForAssignmentsToPropagate(assignmentSubscription, {
+                id: this.id,
+                partitions: this.getMetadata().partitions!
+            })
             await this._streamStorageRegistry.addStreamToStorageNode(this.id, normalizedNodeAddress)
             await withTimeout(
                 propagationPromise,

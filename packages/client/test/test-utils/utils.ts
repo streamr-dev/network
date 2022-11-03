@@ -149,11 +149,11 @@ export const createStreamRegistryCached = (opts: {
     isStreamSubscriber?: boolean
 }): StreamRegistryCached => {
     return {
-        getStream: async () => {
-            return {
+        getStream: async () => ({
+            getMetadata: () => ({
                 partitions: opts?.partitionCount ?? 1
-            } as any
-        },
+            })
+        }),
         isPublic: async () => {
             return opts.isPublicStream ?? false
         },
