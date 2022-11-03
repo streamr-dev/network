@@ -505,7 +505,7 @@ const streamr = new StreamrClient({
 })
 ```
 
-        
+
 
 ### Stream partitioning
 
@@ -537,7 +537,7 @@ const stream = await streamr.createStream({
     id: `/foo/bar`,
     partitions: 10,
 })
-console.log(`Stream created: ${stream.id}. It has ${stream.partitions} partitions.`)
+console.log(`Stream created: ${stream.id}. It has ${stream.getMetadata().partitions} partitions.`)
 ```
 
 #### Publishing to partitioned streams
