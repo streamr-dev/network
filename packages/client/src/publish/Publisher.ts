@@ -17,8 +17,8 @@ import { Debugger } from '../utils/log'
 
 export class PublishError extends Error {
 
-    public streamId: StreamID
-    public timestamp: number
+    public readonly streamId: StreamID
+    public readonly timestamp: number
 
     constructor(streamId: StreamID, timestamp: number, cause: Error) {
         // Currently Node and Firefox show the full error chain (this error and
@@ -77,7 +77,7 @@ export class Publisher {
     ) {
         this.debug = context.debug.extend(instanceId(this))
         this.streamIdBuilder = streamIdBuilder
-    
+
         this.streamIdBuilder = streamIdBuilder
         this.authentication = authentication
         this.streamRegistryCached = streamRegistryCached
@@ -144,5 +144,5 @@ export class Publisher {
             streamRegistry: this.streamRegistryCached,
             groupKeyQueue: await this.groupKeyQueues.get(streamId)
         })
-    } 
+    }
 }
