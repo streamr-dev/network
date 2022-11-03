@@ -4,7 +4,7 @@ import { MAX_PARTITION_COUNT, StreamMessage, toStreamID } from 'streamr-client-p
 import { fastWallet } from 'streamr-test-utils'
 import { createAuthentication } from '../../src/Authentication'
 import { GroupKey } from '../../src/encryption/GroupKey'
-import { MessageMetadata } from '../../src/index-exports'
+import { PublishMetadata } from '../../src/publish/Publisher'
 import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
 import { MessageFactory } from '../../src/publish/MessageFactory'
 import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
@@ -37,7 +37,7 @@ const createMessageFactory = async (opts?: {
 }
 
 const createMessage = async (
-    opts: Omit<MessageMetadata, 'timestamp'> & { timestamp?: number, explicitPartition?: number }, 
+    opts: Omit<PublishMetadata, 'timestamp'> & { timestamp?: number, explicitPartition?: number },
     messageFactory: MessageFactory
 ): Promise<StreamMessage<any>> => {
     return messageFactory.createMessage(CONTENT, {
@@ -121,7 +121,7 @@ describe('MessageFactory', () => {
                 isStreamPublisher: false
             })
         })
-        return expect(() => 
+        return expect(() =>
             createMessage({}, messageFactory)
         ).rejects.toThrow(/is not a publisher on stream/)
     })
@@ -130,17 +130,17 @@ describe('MessageFactory', () => {
 
         it('out of range', async () => {
             const messageFactory = await createMessageFactory()
-            await expect(() => 
+            await expect(() =>
                 createMessage({ explicitPartition: -1 }, messageFactory)
             ).rejects.toThrow(/out of range/)
-            await expect(() => 
+            await expect(() =>
                 createMessage({ explicitPartition: PARTITION_COUNT }, messageFactory)
             ).rejects.toThrow(/out of range/)
         })
 
         it('partition and partitionKey', async () => {
             const messageFactory = await createMessageFactory()
-            return expect(() => 
+            return expect(() =>
                 createMessage({ partitionKey: 'mockPartitionKey', explicitPartition: 0 }, messageFactory)
             ).rejects.toThrow('Invalid combination of "partition" and "partitionKey"')
         })

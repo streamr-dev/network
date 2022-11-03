@@ -7,7 +7,6 @@ import { StreamRegistry } from './registry/StreamRegistry'
 import { StreamRegistryCached } from './registry/StreamRegistryCached'
 import {
     StreamID,
-    StreamMessage,
     StreamPartID,
     toStreamPartID
 } from 'streamr-client-protocol'
@@ -17,7 +16,7 @@ import { PermissionAssignment, PublicPermissionQuery, UserPermissionQuery } from
 import { Subscriber } from './subscribe/Subscriber'
 import { formStorageNodeAssignmentStreamId } from './utils/utils'
 import { waitForAssignmentsToPropagate } from './utils/waitForAssignmentsToPropagate'
-import { MessageMetadata } from '../src/publish/Publisher'
+import { PublishMetadata } from '../src/publish/Publisher'
 import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
 import { toEthereumAddress, withTimeout } from '@streamr/utils'
 import { StreamrClientEventEmitter } from './events'
@@ -25,6 +24,8 @@ import { collect } from './utils/iterators'
 import { DEFAULT_PARTITION } from './StreamIDBuilder'
 import { Subscription } from './subscribe/Subscription'
 import { LoggerFactory } from './utils/LoggerFactory'
+import { Message } from './Message'
+import { convertStreamMessageToMessage } from './Message'
 
 export interface StreamMetadata {
     partitions: number
@@ -158,9 +159,9 @@ class StreamrStream {
 
         if (!receivedMsgs.length) { return }
 
-        const lastMessage = receivedMsgs[0].getParsedContent()
+        const lastMessage = receivedMsgs[0].content
 
-        const fields = Object.entries(lastMessage).map(([name, value]) => {
+        const fields = Object.entries(lastMessage as any).map(([name, value]) => {
             const type = getFieldType(value)
             return !!type && {
                 name,
@@ -221,10 +222,10 @@ class StreamrStream {
     /**
      * @category Important
      */
-    async publish<T>(content: T, metadata?: MessageMetadata): Promise<StreamMessage<T>> {
-        const result = this._publisher.publish(this.id, content, metadata)
+    async publish<T>(content: T, metadata?: PublishMetadata): Promise<Message> {
+        const result = await this._publisher.publish(this.id, content, metadata)
         this._eventEmitter.emit('publish', undefined)
-        return result
+        return convertStreamMessageToMessage(result)
     }
 
     /** @internal */

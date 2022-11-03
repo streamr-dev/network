@@ -84,7 +84,7 @@ describe('parallel key exchange', () => {
         const expectedMessageCount = PUBLISHER_COUNT * MESSAGE_COUNT_PER_PUBLISHER
         const messages = await collect(sub, expectedMessageCount)
         expect(messages).toHaveLength(expectedMessageCount)
-        expect(messages.filter((msg) => !((msg.getParsedContent() as any).foo === 'bar'))).toEqual([])
+        expect(messages.filter((msg) => !((msg.content as any).foo === 'bar'))).toEqual([])
         expect(environment.getNetwork().getSentMessages({
             messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST
         })).toHaveLength(PUBLISHER_COUNT)

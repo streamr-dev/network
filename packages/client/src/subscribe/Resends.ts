@@ -1,8 +1,5 @@
-/**
- * Public Resends API
- */
 import { inject, Lifecycle, scoped, delay } from 'tsyringe'
-import { MessageRef, StreamPartID, StreamPartIDUtils, StreamMessage } from 'streamr-client-protocol'
+import { MessageRef, StreamPartID, StreamPartIDUtils, toStreamPartID } from 'streamr-client-protocol'
 
 import { MessageStream } from './MessageStream'
 import { createSubscribePipeline } from './subscribePipeline'
@@ -24,6 +21,7 @@ import { counterId } from '../utils/utils'
 import { StreamrClientError } from '../StreamrClientError'
 import { collect } from '../utils/iterators'
 import { counting } from '../utils/GeneratorUtils'
+import { Message } from '../Message'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 
@@ -216,44 +214,42 @@ export class Resends {
         })
     }
 
-    async waitForStorage(streamMessage: StreamMessage, {
+    async waitForStorage(message: Message, {
         // eslint-disable-next-line no-underscore-dangle
         interval = this.rootConfig._timeouts.storageNode.retryInterval,
         // eslint-disable-next-line no-underscore-dangle
         timeout = this.rootConfig._timeouts.storageNode.timeout,
         count = 100,
-        messageMatchFn = (msgTarget: StreamMessage, msgGot: StreamMessage) => {
+        messageMatchFn = (msgTarget: Message, msgGot: Message) => {
             return msgTarget.signature === msgGot.signature
         }
     }: {
         interval?: number
         timeout?: number
         count?: number
-        messageMatchFn?: (msgTarget: StreamMessage, msgGot: StreamMessage) => boolean
+        messageMatchFn?: (msgTarget: Message, msgGot: Message) => boolean
     } = {}): Promise<void> {
-        if (!streamMessage) {
-            throw new StreamrClientError('waitForStorage requires a StreamMessage', 'INVALID_ARGUMENT')
+        if (!message) {
+            throw new StreamrClientError('waitForStorage requires a Message', 'INVALID_ARGUMENT')
         }
 
         const start = Date.now()
-        let last: StreamMessage[] | undefined
+        let last: Message[] | undefined
         let found = false
         while (!found) {
             const duration = Date.now() - start
             if (duration > timeout) {
                 this.logger.debug('timed out waiting for storage to have message %j', {
-                    expected: streamMessage.getMessageID(),
-                    lastReceived: last?.map((l) => l.getMessageID()),
+                    expected: message.streamMessage.getMessageID(),
+                    lastReceived: last?.map((l) => l.streamMessage.getMessageID()),
                 })
-                const err: any = new Error(`timed out after ${duration}ms waiting for message`)
-                err.streamMessage = streamMessage
-                throw err
+                throw new Error(`timed out after ${duration}ms waiting for message`)
             }
 
-            const resendStream = await this.resend(streamMessage.getStreamPartID(), { last: count })
+            const resendStream = await this.resend(toStreamPartID(message.streamId, message.streamPartition), { last: count })
             last = await collect(resendStream)
             for (const lastMsg of last) {
-                if (messageMatchFn(streamMessage, lastMsg)) {
+                if (messageMatchFn(message, lastMsg)) {
                     found = true
                     this.logger.debug('message found')
                     return
@@ -261,8 +257,8 @@ export class Resends {
             }
 
             this.logger.debug('message not found, retrying... %j', {
-                msg: streamMessage.getMessageID(),
-                'last 3': last.slice(-3).map((l) => l.getMessageID())
+                msg: message.streamMessage.getMessageID(),
+                'last 3': last.slice(-3).map((l) => l.streamMessage.getMessageID())
             })
 
             await wait(interval)

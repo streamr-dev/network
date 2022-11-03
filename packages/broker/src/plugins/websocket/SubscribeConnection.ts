@@ -1,5 +1,5 @@
 import WebSocket from 'ws'
-import { StreamrClient } from 'streamr-client'
+import { MessageMetadata, StreamrClient } from 'streamr-client'
 import { Connection } from './Connection'
 import { parsePositiveInteger, parseQueryParameterArray } from '../../helpers/parser'
 import { ParsedQs } from 'qs'
@@ -20,8 +20,8 @@ export class SubscribeConnection implements Connection {
             ? this.partitions.map((partition: number) => ({ id: this.streamId, partition }))
             : [{ id: this.streamId }]
         streamPartDefitions.forEach((streamDefinition) => {
-            streamrClient.subscribe(streamDefinition, (content: any, metadata: any) => {
-                const payload = payloadFormat.createPayload(content, metadata.messageId)
+            streamrClient.subscribe(streamDefinition, (content: any, metadata: MessageMetadata) => {
+                const payload = payloadFormat.createPayload(content, metadata)
                 ws.send(payload)
             })
         })
