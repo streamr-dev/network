@@ -209,9 +209,11 @@ export class StreamrClient {
      */
     async createStream(propsOrStreamIdOrPath: Partial<StreamMetadata> & { id: string } | string): Promise<Stream> {
         const props = typeof propsOrStreamIdOrPath === 'object' ? propsOrStreamIdOrPath : { id: propsOrStreamIdOrPath }
-        props.partitions ??= 1
         const streamId = await this.streamIdBuilder.toStreamID(props.id)
-        return this.streamRegistry.createStream(streamId, omit(props, 'id'))
+        return this.streamRegistry.createStream(streamId, {
+            partitions: 1,
+            ...omit(props, 'id')
+        })
     }
 
     /**

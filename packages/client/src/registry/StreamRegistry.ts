@@ -152,7 +152,9 @@ export class StreamRegistry {
         }
     }
 
-    async updateStream(streamId: StreamID, metadata: StreamMetadata): Promise<Stream> {
+    // TODO maybe we should require metadata to be StreamMetadata instead of Partial<StreamMetadata>
+    // Most likely the contract doesn't make any merging (like we do in Stream#update)?
+    async updateStream(streamId: StreamID, metadata: Partial<StreamMetadata>): Promise<Stream> {
         await this.connectToContract()
         const ethersOverrides = getStreamRegistryOverrides(this.ethereumConfig)
         await waitForTx(this.streamRegistryContract!.updateStreamMetadata(

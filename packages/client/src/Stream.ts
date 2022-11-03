@@ -27,7 +27,7 @@ import { Subscription } from './subscribe/Subscription'
 import { LoggerFactory } from './utils/LoggerFactory'
 
 export interface StreamMetadata {
-    partitions?: number
+    partitions: number
     description?: string
     config?: {
         fields: Field[]
@@ -82,7 +82,7 @@ class StreamrStream {
     /** @internal */
     constructor(
         id: StreamID,
-        metadata: StreamMetadata,
+        metadata: Partial<StreamMetadata>,
         resends: Resends,
         publisher: Publisher,
         subscriber: Subscriber,
@@ -96,6 +96,7 @@ class StreamrStream {
         this.id = id
         this.metadata = {
             partitions: 1,
+            // TODO should we remove this default or make config as a required StreamMetadata field?
             config: {
                 fields: []
             },
@@ -187,7 +188,7 @@ class StreamrStream {
             await this._subscriber.add(assignmentSubscription)
             const propagationPromise = waitForAssignmentsToPropagate(assignmentSubscription, {
                 id: this.id,
-                partitions: this.getMetadata().partitions!
+                partitions: this.getMetadata().partitions
             })
             await this._streamStorageRegistry.addStreamToStorageNode(this.id, normalizedNodeAddress)
             await withTimeout(
@@ -228,11 +229,12 @@ class StreamrStream {
     }
 
     /** @internal */
-    static parseMetadata(metadata: string): StreamMetadata {
+    static parseMetadata(metadata: string): Partial<StreamMetadata> {
         try {
             // TODO we could pick the fields of StreamMetadata explicitly, so that this
-            // object can't contain extra fields and maybe check that partitions field
-            // is available
+            // object can't contain extra fields
+            // TODO we should maybe also check that partitions field is available
+            // (if we do that we can return StreamMetadata instead of Partial<StreamMetadata>)
             return JSON.parse(metadata)
         } catch (error) {
             throw new Error(`Could not parse properties from onchain metadata: ${metadata}`)

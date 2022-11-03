@@ -51,7 +51,7 @@ describe('searchStreams', () => {
             return {
                 id,
                 getMetadata: () => ({
-                    partitions: props.partitions!
+                    partitions: props.partitions
                 })
             } as any
         }

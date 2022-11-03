@@ -52,7 +52,9 @@ export class FakeStorageNode extends FakeNetworkNode {
         const storageNodeAssignmentStreamPermissions = new Multimap<EthereumAddress, StreamPermission>()
         storageNodeAssignmentStreamPermissions.add(address, StreamPermission.PUBLISH)
         this.chain.streams.set(formStorageNodeAssignmentStreamId(address), {
-            metadata: {},
+            metadata: {
+                partitions: 1
+            },
             permissions: storageNodeAssignmentStreamPermissions
         })
     }

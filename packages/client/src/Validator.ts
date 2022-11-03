@@ -25,7 +25,7 @@ export class Validator extends StreamMessageValidator {
         super({
             getPartitionCount: async (streamId: StreamID) => {
                 const stream = await streamRegistryCached.getStream(streamId)
-                return stream.getMetadata().partitions!
+                return stream.getMetadata().partitions
             },
             isPublisher: (publisherId: EthereumAddress, streamId: StreamID) => {
                 return streamRegistryCached.isStreamPublisher(streamId, publisherId)

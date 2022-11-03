@@ -46,7 +46,7 @@ export class StreamFactory {
         this.timeoutsConfig = timeoutsConfig
     }
 
-    createStream(id: StreamID, metadata: StreamMetadata): Stream {
+    createStream(id: StreamID, metadata: Partial<StreamMetadata>): Stream {
         return new Stream(
             id,
             metadata,
