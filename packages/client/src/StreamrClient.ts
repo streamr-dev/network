@@ -318,6 +318,7 @@ export class StreamrClient {
 
     /**
      * Get started network node
+     * @deprecated This in an internal method
      */
     getNode(): Promise<NetworkNodeStub> {
         return this.node.getNode()
