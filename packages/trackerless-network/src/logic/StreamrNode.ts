@@ -56,6 +56,7 @@ export class StreamrNode extends EventEmitter {
             stream.layer1.stop()
         })
         this.streams.clear()
+        this.removeAllListeners()
         await this.layer0!.stop()
         await this.P2PTransport!.stop()
     }
