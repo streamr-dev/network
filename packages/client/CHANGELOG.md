@@ -54,8 +54,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - use `destroy()` instead
 - Remove method `unsubscribeAll()`
   - use `unsubscribe()` without arguments to same effect
-- Remove method `stream.toObject()`
+- Remove method `stream.toObject()` and interface `StreamProperties`
   - use `stream.getMetadata()` to get metadata (doesn't contain stream id)
+  - use interface `StreamMetadata` instead
 - Remove properties `subscription.onMessage`, `onStart`, and `onError`
   - use `subscription.on('error', cb)` to add an error listener
 - Remove configuration option `groupKeys`
