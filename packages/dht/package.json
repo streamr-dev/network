@@ -19,7 +19,7 @@
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "prepublishOnly": "npm run clean && NODE_ENV=production tsc -b tsconfig.node.json",
-    "test": "jest test/unit test/integration test/end-to-end",
+    "test": "jest test/unit test/integration test/end-to-end --forceExit",
     "test-browser": "npm run build-browser && karma start karma.config.js",
     "test-unit": "jest test/unit",
     "test-integration": "jest test/integration",
@@ -32,7 +32,7 @@
   "dependencies": {
     "@protobuf-ts/runtime": "^2.8.0",
     "@protobuf-ts/runtime-rpc": "^2.8.0",
-    "@streamr/proto-rpc": "^1.1.1",
+    "@streamr/proto-rpc": "^1.2.0",
     "@streamr/utils": "^1.0.0",
     "bloomfilter": "^0.0.18",
     "k-bucket": "^5.1.0",

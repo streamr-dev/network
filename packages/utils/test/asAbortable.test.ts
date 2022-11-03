@@ -4,7 +4,7 @@ const sleep = (ms: number) => new Promise<string>((resolve) => setTimeout(() => 
 
 const TIME_UNIT = 10
 
-describe(asAbortable, () => {
+describe('asAbortable', () => {
     it('works without abortController', async () => {
         const actual = await asAbortable(
             sleep(TIME_UNIT)

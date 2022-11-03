@@ -1,21 +1,25 @@
-import { waitForCondition } from 'streamr-test-utils'
+import 'reflect-metadata'
+
 import { wait } from '@streamr/utils'
-import { uid, createTestStream } from '../test-utils/utils'
-import { getWaitForStorage } from '../test-utils/publish'
-import { StreamrClient } from '../../src/StreamrClient'
+import { waitForCondition } from 'streamr-test-utils'
 import { Stream } from '../../src/Stream'
+import { StreamrClient } from '../../src/StreamrClient'
+import { collect } from '../../src/utils/iterators'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
+import { getWaitForStorage } from '../test-utils/publish'
+import { createTestStream, uid } from '../test-utils/utils'
+import { Message } from '../../src/Message'
 
 const Msg = (opts?: any) => ({
     value: uid('msg'),
     ...opts,
 })
 
-function toSeq(requests: any[], ts = Date.now()) {
-    return requests.map((streamMessage) => {
-        const { prevMsgRef } = streamMessage
+function toSeq(requests: Message[], ts = Date.now()) {
+    return requests.map((msg) => {
+        const { prevMsgRef } = msg.streamMessage
         return [
-            [streamMessage.getTimestamp() - ts, streamMessage.getSequenceNumber()],
+            [msg.timestamp - ts, msg.sequenceNumber],
             prevMsgRef ? [prevMsgRef.timestamp - ts, prevMsgRef.sequenceNumber] : null
         ]
     })
@@ -162,7 +166,7 @@ describe('Sequencing', () => {
                 }
             }
         )
-        const msgsResent = await sub.collectContent()
+        const msgsResent = (await collect(sub)).map((m) => m.content)
 
         expect(msgsReceieved).toEqual(msgsResent)
         // backdated messages disappear
@@ -230,7 +234,7 @@ describe('Sequencing', () => {
                 }
             }
         )
-        const msgsResent = await sub.collectContent()
+        const msgsResent = (await collect(sub)).map((m) => m.content)
 
         expect(msgsReceieved).toEqual(msgsResent)
         // backdated messages disappear

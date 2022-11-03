@@ -53,10 +53,8 @@ describe('Full node network with WebRTC connections', () => {
                 region: getRandomRegion()
             }
 
-            // console.log(i, peerId.toKey())
-
             const layer0 = new DhtNode({
-                numberOfNodesPerKBucket: 4,
+                numberOfNodesPerKBucket: 2,
                 peerDescriptor,
                 routeMessageTimeout: 2000,
                 entryPoints: [epPeerDescriptor]

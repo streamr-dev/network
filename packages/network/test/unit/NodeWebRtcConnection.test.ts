@@ -8,7 +8,7 @@ const connectionOpts1: ConstructorOptions = {
     selfId: 'peer1',
     targetPeerId: 'peer2',
     routerId: 'tracker',
-    stunUrls: [],
+    iceServers: [],
     pingInterval: 5000,
     messageQueue: new MessageQueue<string>(),
     deferredConnectionAttempt: new DeferredConnectionAttempt()
@@ -18,7 +18,7 @@ const connectionOpts2: ConstructorOptions = {
     selfId: 'peer2',
     targetPeerId: 'peer1',
     routerId: 'tracker',
-    stunUrls: [],
+    iceServers: [],
     pingInterval: 5000,
     messageQueue: new MessageQueue<string>(),
     deferredConnectionAttempt: new DeferredConnectionAttempt()

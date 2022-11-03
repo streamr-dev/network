@@ -1,4 +1,5 @@
 import 'reflect-metadata'
+
 import { wait } from '@streamr/utils'
 import { SynchronizedGraphQLClient } from '../../src/utils/SynchronizedGraphQLClient'
 import { mockLoggerFactory } from '../test-utils/utils'

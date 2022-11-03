@@ -4,9 +4,9 @@ import { StreamMessage, StreamPartID, StreamPartIDUtils } from 'streamr-client-p
 import { ConfigInjectionToken } from '../Config'
 import { OrderMessages } from './OrderMessages'
 import { ResendOptions, Resends } from './Resends'
-import { DestroySignal } from '../DestroySignal'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { SubscribeConfig } from './../Config'
+import { MessageStream } from './MessageStream'
 
 export class ResendSubscription<T> extends Subscription<T> {
     private orderMessages: OrderMessages<T>
@@ -16,34 +16,25 @@ export class ResendSubscription<T> extends Subscription<T> {
         streamPartId: StreamPartID,
         private resendOptions: ResendOptions,
         private resends: Resends,
-        destroySignal: DestroySignal,
         loggerFactory: LoggerFactory,
         @inject(ConfigInjectionToken.Subscribe) subscibreConfig: SubscribeConfig
     ) {
         super(streamPartId, loggerFactory)
-        this.resendThenRealtime = this.resendThenRealtime.bind(this)
         this.orderMessages = new OrderMessages<T>(
             subscibreConfig,
             resends,
             streamPartId,
             loggerFactory
         )
-        this.pipe(this.resendThenRealtime)
+        this.pipe(this.resendThenRealtime.bind(this))
         this.pipe(this.orderMessages.transform())
         this.onBeforeFinally.listen(async () => {
             this.orderMessages.stop()
         })
-        destroySignal.onDestroy.listen(() => {
-            this.eventEmitter.removeAllListeners()
-        })
     }
 
-    private async getResent() {
-        const [id, partition] = StreamPartIDUtils.getStreamIDAndPartition(this.streamPartId)
-        const resentMsgs = await this.resends.resend<T>({
-            id,
-            partition,
-        }, this.resendOptions)
+    private async getResent(): Promise<MessageStream<T>> {
+        const resentMsgs = await this.resends.resend<T>(this.streamPartId, this.resendOptions)
 
         this.onBeforeFinally.listen(async () => {
             resentMsgs.end()
@@ -53,13 +44,14 @@ export class ResendSubscription<T> extends Subscription<T> {
         return resentMsgs
     }
 
-    /** @internal */
-    async* resendThenRealtime(src: AsyncGenerator<StreamMessage<T>>): AsyncGenerator<StreamMessage<T>, void, unknown> {
+    private async* resendThenRealtime(src: AsyncGenerator<StreamMessage<T>>): AsyncGenerator<StreamMessage<T>, void, any> {
         try {
-            yield* await this.getResent()
+            yield* (await this.getResent()).getStreamMessages()
         } catch (err) {
-            if (err.code !== 'NO_STORAGE_NODES') {
-                // ignore NO_STORAGE_NODES errors
+            if (err.code === 'NO_STORAGE_NODES') {
+                const streamId = StreamPartIDUtils.getStreamID(this.streamPartId)
+                this.logger.warn(`no storage assigned: ${streamId}`)
+            } else {
                 await this.handleError(err)
             }
         }

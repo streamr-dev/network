@@ -1,7 +1,7 @@
 import { Logger } from '@streamr/utils'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
 import { IConnectionLockerClient } from '../proto/DhtRpc.client'
-import { LockRequest, UnlockRequest, PeerDescriptor } from '../proto/DhtRpc'
+import { LockRequest, UnlockRequest, PeerDescriptor, DisconnectNotice } from '../proto/DhtRpc'
 import { DhtRpcOptions } from '../rpc-protocol/DhtRpcOptions'
 import { PeerID } from '../helpers/PeerID'
 
@@ -42,7 +42,6 @@ export class RemoteConnectionLocker {
 
     public unlockRequest(sourceDescriptor: PeerDescriptor, serviceId: string): void {
         logger.trace(`Requesting connection to be unlocked from ${this.peerDescriptor.peerId.toString()}`)
-        logger.trace(`Requesting locked connection to ${this.peerDescriptor.peerId.toString()}`)
         const request: UnlockRequest = {
             peerDescriptor: sourceDescriptor,
             protocolVersion: this.protocolVersion,
@@ -50,9 +49,25 @@ export class RemoteConnectionLocker {
         }
         const options: DhtRpcOptions = {
             sourceDescriptor: sourceDescriptor as PeerDescriptor,
-            targetDescriptor: this.peerDescriptor as PeerDescriptor
+            targetDescriptor: this.peerDescriptor as PeerDescriptor,
+            notification: true
         }
 
         this.client.unlockRequest(request, options)
+    }
+
+    public async gracefulDisconnect(sourceDescriptor: PeerDescriptor): Promise<void> {
+        logger.trace(`Notifying a graceful disconnect to ${this.peerDescriptor.peerId.toString()}`)
+        const request: DisconnectNotice = {
+            peerDescriptor: sourceDescriptor,
+            protocolVersion: this.protocolVersion
+        }
+        const options: DhtRpcOptions = {
+            sourceDescriptor: sourceDescriptor as PeerDescriptor,
+            targetDescriptor: this.peerDescriptor as PeerDescriptor,
+            notification: true
+        }
+
+        await this.client.gracefulDisconnect(request, options)
     }
 }

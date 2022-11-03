@@ -1,6 +1,6 @@
 import { Defer } from '../src/Defer'
 
-describe(Defer, () => {
+describe('Defer', () => {
     it('can be constructed', () => {
         expect(() => new Defer()).not.toThrow()
     })

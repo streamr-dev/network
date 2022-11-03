@@ -6,7 +6,7 @@ import {
 } from './ClientTransport'
 import {
     RpcMessage,
-    RpcResponseError
+    RpcErrorType
 } from './proto/ProtoRpc'
 import { Empty } from './proto/google/protobuf/empty'
 import { Parser, Serializer, ServerRegistry } from './ServerRegistry'
@@ -24,7 +24,7 @@ export enum StatusCode {
 }
 
 interface RpcCommunicatorEvents {
-    outgoingMessage: (message: Uint8Array, callContext?: ProtoCallContext) => void
+    outgoingMessage: (message: Uint8Array, requestId: string, callContext?: ProtoCallContext) => void
 }
 
 export interface RpcCommunicatorConfig {
@@ -81,6 +81,15 @@ class OngoingRequest {
 }
 
 const logger = new Logger(module)
+
+interface RpcResponseParams {
+    request: RpcMessage 
+    body?: Uint8Array
+    errorType?: RpcErrorType 
+    errorClassName?: string
+    errorCode?: string
+    errorMessage?: string
+}
 
 export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvents> implements IRpcIo {
     private stopped = false
@@ -150,6 +159,10 @@ export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvents> impleme
 
     private onOutgoingMessage(rpcMessage: RpcMessage, deferredPromises?: ResultParts, callContext?: ProtoCallContext): void {
         if (this.stopped) {
+            if (deferredPromises) {
+                const ongoingRequest = new OngoingRequest(deferredPromises, 1000)
+                ongoingRequest.rejectRequest(new Error('stopped'), StatusCode.STOPPED)
+            }
             return
         }
         const requestOptions = this.rpcClientTransport.mergeOptions(callContext)
@@ -160,14 +173,14 @@ export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvents> impleme
 
         logger.trace(`onOutGoingMessage, messageId: ${rpcMessage.requestId}`)
 
-        this.emit('outgoingMessage', msg, callContext)
+        this.emit('outgoingMessage', msg, rpcMessage.requestId, callContext)
     }
 
     private async onIncomingMessage(rpcMessage: RpcMessage, callContext?: ProtoCallContext): Promise<void> {
         logger.trace(`onIncomingMessage, requestId: ${rpcMessage.requestId}`)
 
         if (rpcMessage.header.response && this.ongoingRequests.has(rpcMessage.requestId)) {
-            if (rpcMessage.responseError !== undefined) {
+            if (rpcMessage.errorType !== undefined) {
                 this.rejectOngoingRequest(rpcMessage)
             } else {
                 this.resolveOngoingRequest(rpcMessage)
@@ -193,18 +206,24 @@ export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvents> impleme
                 body: bytes
             })
         } catch (err) {
-            let responseError
+            const errorParams: RpcResponseParams = { request: rpcMessage }
             if (err.code === ErrorCode.UNKNOWN_RPC_METHOD) {
-                responseError = RpcResponseError.UNKNOWN_RPC_METHOD
+                errorParams.errorType = RpcErrorType.UNKNOWN_RPC_METHOD
             } else if (err.code === ErrorCode.RPC_TIMEOUT) {
-                responseError = RpcResponseError.SERVER_TIMOUT
+                errorParams.errorType = RpcErrorType.SERVER_TIMEOUT
             } else {
-                responseError = RpcResponseError.SERVER_ERROR
+                errorParams.errorType = RpcErrorType.SERVER_ERROR
+                if (err.className) {
+                    errorParams.errorClassName = err.className
+                }
+                if (err.code) {
+                    errorParams.errorCode = err.code
+                }
+                if (err.message) {
+                    errorParams.errorMessage = err.message
+                }
             }
-            response = this.createResponseRpcMessage({
-                request: rpcMessage,
-                responseError
-            })
+            response = this.createResponseRpcMessage(errorParams)
         }
         this.onOutgoingMessage(response, undefined, callContext)
     }
@@ -248,20 +267,37 @@ export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvents> impleme
         const ongoingRequest = this.ongoingRequests.get(response.requestId)!
 
         let error
-        if (response.responseError === RpcResponseError.SERVER_TIMOUT) {
+        if (response.errorType === RpcErrorType.SERVER_TIMEOUT) {
             error = new Err.RpcTimeout('Server timed out on request')
-        } else if (response.responseError === RpcResponseError.UNKNOWN_RPC_METHOD) {
-            error = new Err.RpcRequest(`Server does not implement method ${response.header.method}`)
+        } else if (response.errorType === RpcErrorType.UNKNOWN_RPC_METHOD) {
+            error = new Err.UnknownRpcMethod(`Server does not implement method ${response.header.method}`)
+        } else if (response.errorType === RpcErrorType.SERVER_ERROR) {
+            error = new Err.RpcServerError(response.errorMessage, response.errorClassName, response.errorCode)
         } else {
-            error = new Err.RpcRequest('Server error on request')
+            error = new Err.RpcRequest('Unknown RPC Error')
         }
         ongoingRequest.rejectRequest(error, StatusCode.SERVER_ERROR)
         this.ongoingRequests.delete(response.requestId)
     }
 
+    public handleClientError(requestId: string, error: Error): void {
+        if (this.stopped) {
+            return
+        }
+
+        const ongoingRequest = this.ongoingRequests.get(requestId)
+
+        if (ongoingRequest) {
+            error = new Err.RpcClientError('Rpc client error', error)
+            ongoingRequest.rejectRequest(error, StatusCode.SERVER_ERROR)
+            this.ongoingRequests.delete(requestId)
+        }
+    }
+
     // eslint-disable-next-line class-methods-use-this
     private createResponseRpcMessage(
-        { request, body, responseError }: { request: RpcMessage, body?: Uint8Array, responseError?: RpcResponseError }
+        { request, body, errorType, errorClassName, errorCode, errorMessage }:
+            RpcResponseParams
     ): RpcMessage {
         return {
             body: body ? body : new Uint8Array(),
@@ -270,7 +306,10 @@ export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvents> impleme
                 method: request.header.method
             },
             requestId: request.requestId,
-            responseError
+            errorType,
+            errorClassName,
+            errorCode,
+            errorMessage
         }
     }
 }

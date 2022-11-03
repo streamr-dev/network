@@ -1,3 +1,5 @@
+import { MessageMetadata } from 'streamr-client'
+
 export interface PayloadFormat {
     createMessage: (payload: string) => Message | never
     createPayload: (content: Record<string, unknown>, metadata?: Metadata) => string | never
@@ -8,12 +10,7 @@ export interface Message {
     metadata: Metadata
 }
 
-export interface Metadata {
-    timestamp?: number
-    sequenceNumber?: number
-    publisherId?: string
-    msgChainId?: string
-}
+export type Metadata = Partial<Pick<MessageMetadata, 'timestamp' | 'sequenceNumber' | 'publisherId' | 'msgChainId'>>
 
 const METADATA_FIELDS = [ 'timestamp', 'sequenceNumber', 'publisherId', 'msgChainId' ]
 

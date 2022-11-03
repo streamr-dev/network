@@ -36,17 +36,17 @@ describe('DhtPeer', () => {
         serverRpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', MockDhtRpc.ping)
         serverRpcCommunicator.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'routeMessage', MockDhtRpc.routeMessage)
 
-        clientRpcCommunicator.on('outgoingMessage', (message: Uint8Array, _ucallContext?: DhtCallContext) => {
+        clientRpcCommunicator.on('outgoingMessage', (message: Uint8Array, _requestId: string, _ucallContext?: DhtCallContext) => {
        
             serverRpcCommunicator.handleIncomingMessage(message)
         })
 
-        serverRpcCommunicator.on('outgoingMessage', (message: Uint8Array, _ucallContext?: DhtCallContext) => {
+        serverRpcCommunicator.on('outgoingMessage', (message: Uint8Array, _requestId: string, _ucallContext?: DhtCallContext) => {
             clientRpcCommunicator.handleIncomingMessage(message)
         })
 
         const client = toProtoRpcClient(new DhtRpcServiceClient(clientRpcCommunicator.getRpcClientTransport()))
-        dhtPeer = new DhtPeer(serverPeerDescriptor, client)
+        dhtPeer = new DhtPeer(serverPeerDescriptor, client, serviceId)
     })
 
     afterEach(() => {

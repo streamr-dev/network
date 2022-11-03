@@ -31,7 +31,7 @@ async function run(): Promise<void> {
         websocket: { ip: program.opts().entrypointIp, port: 23123 }
     }
 
-    const layer0 = new DhtNode({ webSocketPort: port, webSocketHost: ip, peerIdString: program.opts().id })
+    const layer0 = new DhtNode({ webSocketPort: port, webSocketHost: ip, peerIdString: program.opts().id, numberOfNodesPerKBucket: 2 })
     await layer0.start()
 
     await layer0.joinDht(epPeerDescriptor)
@@ -49,6 +49,26 @@ async function run(): Promise<void> {
 
     let sequenceNumber = 0
     setInterval(() => {
+        // eslint-disable-next-line no-console
+        console.log(
+            `Number of connected stream neighbors ${streamrNode.getStream(streamPartId)?.layer2.getTargetNeighborStringIds().length || 0}, `
+            + `targets: ${streamrNode.getStream(streamPartId)?.layer2.getTargetNeighborStringIds() || []}`
+        )
+        // eslint-disable-next-line no-console
+        console.log(
+            `Layer2: Nearby Contacts ${streamrNode.getStream(streamPartId)?.layer2.getNearbyContactPoolIds().length || 0}, `,
+            `Random Contacts ${streamrNode.getStream(streamPartId)?.layer2.getRandomContactPoolIds().length || 0}, `
+        )
+        // eslint-disable-next-line no-console
+        console.log(
+            `Layer1: Kbucket size ${streamrNode.getStream(streamPartId)?.layer1.getBucketSize() || 0} `,
+            `DHT contacts ${streamrNode.getStream(streamPartId)?.layer1.getNeighborList().getSize() || 0} `,
+        )
+        // eslint-disable-next-line no-console
+        console.log(
+            `Layer0: Kbucket size ${layer0.getBucketSize() || 0} `,
+            `DHT contacts ${layer0.getNeighborList().getSize()  || 0}`
+        )
         const messageRef: MessageRef = {
             sequenceNumber,
             timestamp: BigInt(Date.now()),

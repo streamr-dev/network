@@ -45,7 +45,7 @@ const run = async () => {
 
     const nodes: Record<string, Node> = {}
 
-    const emulateNetwork = (msgBody: Uint8Array, callContext?: ProtoCallContext) => {
+    const emulateNetwork = (msgBody: Uint8Array, _requestId: string, callContext?: ProtoCallContext) => {
 
         // Pass the message to the right based on targetNodeId passed in the context
         if (callContext!.targetNodeId) {

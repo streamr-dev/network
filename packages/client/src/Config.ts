@@ -10,8 +10,9 @@ import type { EthereumConfig } from './Ethereum'
 
 import CONFIG_SCHEMA from './config.schema.json'
 import { SmartContractRecord } from 'streamr-client-protocol'
+import { LogLevel } from '@streamr/utils'
 
-import type { NetworkNodeOptions } from 'streamr-network'
+import { NetworkNodeOptions, STREAMR_ICE_SERVERS } from 'streamr-network'
 import type { ConnectionInfo } from '@ethersproject/web'
 import { generateClientId } from './utils/utils'
 
@@ -80,12 +81,12 @@ export interface MetricsConfig {
 export type StrictStreamrClientConfig = {
     /** Custom human-readable debug id for client. Used in logging. */
     id: string
-    logLevel: 'silent' | 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace'
+    logLevel: LogLevel
     /**
     * Authentication: identity used by this StreamrClient instance.
     * Can contain member privateKey or (window.)ethereum
     */
-    auth: AuthConfig
+    auth?: AuthConfig
     network: NetworkConfig
     decryption: DecryptionConfig
     cache: CacheConfig
@@ -109,9 +110,8 @@ export const STREAMR_STORAGE_NODE_GERMANY = '0x31546eEA76F2B2b3C5cC06B1c93601dc3
 /**
  * @category Important
  */
-export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id'> = {
+export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id' | 'auth'> = {
     logLevel: 'info',
-    auth: {},
 
     // Streamr Core options
     theGraphUrl: 'https://api.thegraph.com/subgraphs/name/streamr-dev/streams',
@@ -205,6 +205,28 @@ export const createStrictConfig = (inputOptions: StreamrClientConfig = {}): Stri
     const opts = cloneDeep(inputOptions)
     const defaults = cloneDeep(STREAM_CLIENT_DEFAULTS)
 
+    const getMetricsConfig = () => {
+        if (opts.metrics === true) {
+            return defaults.metrics
+        } else if (opts.metrics === false) {
+            return {
+                ...defaults.metrics,
+                periods: []
+            }
+        } else if (opts.metrics !== undefined) {
+            return {
+                ...defaults.metrics,
+                ...opts.metrics
+            }
+        } else {
+            const isEthereumAuth = (opts.auth?.ethereum !== undefined)
+            return {
+                ...defaults.metrics,
+                periods: isEthereumAuth ? [] : defaults.metrics.periods
+            }
+        }
+    }
+
     const options: StrictStreamrClientConfig = {
         id: generateClientId(),
         ...defaults,
@@ -214,17 +236,7 @@ export const createStrictConfig = (inputOptions: StreamrClientConfig = {}): Stri
             trackers: opts.network?.trackers ?? defaults.network.trackers,
         },
         decryption: merge(defaults.decryption || {}, opts.decryption),
-        metrics: (opts.metrics === true)
-            ? defaults.metrics
-            : (opts.metrics === false)
-                ? {
-                    ...defaults.metrics,
-                    periods: []
-                }
-                : {
-                    ...defaults.metrics,
-                    ...opts.metrics
-                },
+        metrics: getMetricsConfig(),
         cache: {
             ...defaults.cache,
             ...opts.cache,
@@ -232,13 +244,15 @@ export const createStrictConfig = (inputOptions: StreamrClientConfig = {}): Stri
         // NOTE: sidechain and storageNode settings are not merged with the defaults
     }
 
-    options.auth = options.auth || {}
-
-    if ('privateKey' in options.auth) {
+    if (options.auth?.privateKey !== undefined) {
         const { privateKey } = options.auth
         if (typeof privateKey === 'string' && !privateKey.startsWith('0x')) {
             options.auth.privateKey = `0x${options.auth!.privateKey}`
         }
+    }
+
+    if (options.network.iceServers === undefined) {
+        options.network.iceServers = STREAMR_ICE_SERVERS
     }
 
     return options

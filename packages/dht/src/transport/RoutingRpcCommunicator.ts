@@ -5,10 +5,10 @@ import { DhtCallContext } from "../rpc-protocol/DhtCallContext"
 
 export class RoutingRpcCommunicator extends RpcCommunicator {
 
-    constructor(private ownServiceId: string, private sendFn: (msg: Message) => void, config?: RpcCommunicatorConfig) {
+    constructor(private ownServiceId: string, private sendFn: (msg: Message) => Promise<void>, config?: RpcCommunicatorConfig) {
         super(config)
 
-        this.on('outgoingMessage', (msgBody: Uint8Array, callContext?: DhtCallContext) => {
+        this.on('outgoingMessage', async (msgBody: Uint8Array, requestId: string, callContext?: DhtCallContext) => {
 
             let targetDescriptor: PeerDescriptor
             // rpc call message
@@ -23,7 +23,10 @@ export class RoutingRpcCommunicator extends RpcCommunicator {
                 messageId: v4(), serviceId: this.ownServiceId, body: msgBody,
                 messageType: MessageType.RPC, targetDescriptor: targetDescriptor
             }
-            this.sendFn(message)
+
+            this.sendFn(message).catch((e) => {
+                this.handleClientError(requestId, e)
+            })
         })
     }
 

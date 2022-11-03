@@ -7,11 +7,11 @@ describe('Mock IConnection DHT Joining', () => {
     let entryPoint: DhtNode
     let nodes: DhtNode[]
     let entrypointDescriptor: PeerDescriptor
-    const simulator = new Simulator()
+    let simulator: Simulator
 
     beforeEach(async () => {
-       
         nodes = []
+        simulator = new Simulator()
         const entryPointId = '0'
         entryPoint = await createMockConnectionDhtNode(entryPointId, simulator)
         
@@ -32,6 +32,7 @@ describe('Mock IConnection DHT Joining', () => {
             entryPoint.stop(),
             ...nodes.map(async (node) => await node.stop())
         ])
+        simulator.stop()
     })
 
     it('Happy path', async () => {

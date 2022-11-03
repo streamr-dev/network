@@ -5,21 +5,29 @@ import { Connection } from "../Connection"
 
 export class SimulatorConnection extends Connection implements IConnection {
 
-    constructor(public ownPeerDescriptor: PeerDescriptor, private targetPeerDescriptor: PeerDescriptor, 
+    constructor(public ownPeerDescriptor: PeerDescriptor, private targetPeerDescriptor: PeerDescriptor,
         connectionType: ConnectionType,
         private simulator: Simulator) {
         super(connectionType)
-        this.close = this.close.bind(this)  
+        this.close = this.close.bind(this)
     }
 
     send(data: Uint8Array): void {
         this.simulator.send(this, data)
+            .then(() => {
+                return
+            }).catch((_e) => {
+                this.emit('disconnected')
+            })
     }
 
     close(): void {
         this.simulator.disconnect(this)
-        this.emit('disconnected')
-        this.removeAllListeners()
+            .then(() => {
+                this.emit('disconnected')
+                this.removeAllListeners()
+                return
+            }).catch((_e) => { })
     }
 
     connect(): void {
@@ -27,7 +35,9 @@ export class SimulatorConnection extends Connection implements IConnection {
             .then(() => {
                 this.emit('connected')
                 return
-            }).catch((_e) => { })
+            }).catch((_e) => { 
+                this.emit('disconnected')
+            })
     }
 
     handleIncomingData(data: Uint8Array): void {
