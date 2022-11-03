@@ -1,12 +1,13 @@
 import fetch, { Response } from 'node-fetch'
-import { Debug, Debugger } from './utils/log'
 
-import { getVersionString, counterId } from './utils/utils'
+import { getVersionString } from './utils/utils'
 import { Readable } from 'stream'
 import { WebStreamToNodeStream } from './utils/WebStreamToNodeStream'
 import split2 from 'split2'
 import { StreamMessage } from 'streamr-client-protocol'
-import { Lifecycle, scoped } from 'tsyringe'
+import { inject, Lifecycle, scoped } from 'tsyringe'
+import { Logger } from '@streamr/utils'
+import { LoggerFactory } from './utils/LoggerFactory'
 
 export enum ErrorCode {
     NOT_FOUND = 'NOT_FOUND',
@@ -71,28 +72,31 @@ const parseErrorCode = (body: string) => {
     return code in ErrorCode ? code : ErrorCode.UNKNOWN
 }
 
-/* eslint-disable class-methods-use-this */
 @scoped(Lifecycle.ContainerScoped)
 export class HttpUtil {
-    async fetchHttpStream(
+    private readonly logger: Logger
+
+    constructor(@inject(LoggerFactory) loggerFactory: LoggerFactory) {
+        this.logger = loggerFactory.createLogger(module)
+    }
+
+    async* fetchHttpStream<T>(
         url: string,
-        opts = {}, // eslint-disable-line @typescript-eslint/explicit-module-boundary-types
         abortController = new AbortController()
-    ): Promise<Readable> {
-        const startTime = Date.now()
-        const response = await fetchResponse(url, {
-            signal: abortController.signal,
-            ...opts,
+    ): AsyncIterable<StreamMessage<T>> {
+        const response = await fetchResponse(url, this.logger, {
+            signal: abortController.signal
         })
         if (!response.body) {
             throw new Error('No Response Body')
         }
 
+        let stream: Readable | undefined
         try {
             // in the browser, response.body will be a web stream. Convert this into a node stream.
             const source: Readable = WebStreamToNodeStream(response.body as unknown as (ReadableStream | Readable))
 
-            const stream = source.pipe(split2((message: string) => {
+            stream = source.pipe(split2((message: string) => {
                 return StreamMessage.deserialize(message)
             }))
 
@@ -100,15 +104,16 @@ export class HttpUtil {
                 abortController.abort()
             })
 
-            return Object.assign(stream, {
-                startTime,
-            })
+            yield* stream
         } catch (err) {
             abortController.abort()
             throw err
+        } finally {
+            stream?.destroy()
         }
     }
 
+    // eslint-disable-next-line class-methods-use-this
     createQueryString(query: Record<string, any>): string {
         const withoutEmpty = Object.fromEntries(Object.entries(query).filter(([_k, v]) => v != null))
         return new URLSearchParams(withoutEmpty).toString()
@@ -117,15 +122,10 @@ export class HttpUtil {
 
 async function fetchResponse(
     url: string,
+    logger: Logger,
     opts?: any, // eslint-disable-line @typescript-eslint/explicit-module-boundary-types
-    debug?: Debugger,
     fetchFn: typeof fetch = fetch
 ): Promise<Response> {
-    if (!debug) {
-        const id = counterId('httpResponse')
-        debug = Debug('utils').extend(id)
-    }
-
     const timeStart = Date.now()
 
     const options = {
@@ -140,19 +140,18 @@ async function fetchResponse(
         options.headers['Content-Type'] = 'application/json'
     }
 
-    debug('%s >> %o', url, opts)
+    logger.debug('fetching %s with options %j', url, opts)
 
     const response: Response = await fetchFn(url, opts)
     const timeEnd = Date.now()
-    debug('%s << %d %s %s %s', url, response.status, response.statusText, Debug.humanize(timeEnd - timeStart))
+    logger.debug('%s responded with %d %s %s in %d ms', url, response.status, response.statusText, timeEnd - timeStart)
 
     if (response.ok) {
         return response
     }
 
-    debug('%s – failed %s', url, response.statusText)
     const body = await response.text()
     const errorCode = parseErrorCode(body)
     const ErrorClass = ERROR_TYPES.get(errorCode)!
-    throw new ErrorClass(`Request ${debug.namespace} to ${url} returned with error code ${response.status}.`, response, body, errorCode)
+    throw new ErrorClass(`Request to ${url} returned with error code ${response.status}.`, response, body, errorCode)
 }

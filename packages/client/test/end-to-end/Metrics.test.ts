@@ -1,5 +1,4 @@
-import { keyToArrayIndex } from '@streamr/utils'
-import { MetricsReport } from 'streamr-network'
+import { keyToArrayIndex, MetricsReport } from '@streamr/utils'
 import { fetchPrivateKeyWithGas, waitForCondition } from 'streamr-test-utils'
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
@@ -27,7 +26,8 @@ describe('NodeMetrics', () => {
                         duration: 100,
                         streamId: streamPath
                     }
-                ]
+                ],
+                maxPublishDelay: 50
             }
         })
         stream = await generatorClient.createStream({
@@ -48,7 +48,7 @@ describe('NodeMetrics', () => {
     it('should retrieve a metrics report', async () => {
         let report: MetricsReport | undefined
 
-        const nodeAddress = (await generatorClient.getAddress()).toLowerCase()
+        const nodeAddress = await generatorClient.getAddress()
         const partition = keyToArrayIndex(NUM_OF_PARTITIONS, nodeAddress)
 
         await subscriberClient.subscribe({ id: stream.id, partition }, (content: any) => {

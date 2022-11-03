@@ -1,12 +1,9 @@
 /**
  * Wrapper for Stream metadata and (some) methods.
  */
-import { DependencyContainer, inject } from 'tsyringe'
-
 import { Resends } from './subscribe/Resends'
 import { Publisher } from './publish/Publisher'
 import { StreamRegistry } from './registry/StreamRegistry'
-import { BrubeckContainer } from './Container'
 import { StreamRegistryCached } from './registry/StreamRegistryCached'
 import {
     StreamID,
@@ -15,7 +12,7 @@ import {
     toStreamPartID
 } from 'streamr-client-protocol'
 import { range } from 'lodash'
-import { ConfigInjectionToken, TimeoutsConfig } from './Config'
+import { TimeoutsConfig } from './Config'
 import { PermissionAssignment, PublicPermissionQuery, UserPermissionQuery } from './permission'
 import { Subscriber } from './subscribe/Subscriber'
 import { formStorageNodeAssignmentStreamId } from './utils/utils'
@@ -24,6 +21,11 @@ import { MessageMetadata } from '../src/publish/Publisher'
 import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
 import { toEthereumAddress, withTimeout } from '@streamr/utils'
 import { StreamMetadata } from './StreamMessageValidator'
+import { StreamrClientEventEmitter } from './events'
+import { collect } from './utils/iterators'
+import { DEFAULT_PARTITION } from './StreamIDBuilder'
+import { Subscription } from './subscribe/Subscription'
+import { LoggerFactory } from './utils/LoggerFactory'
 
 export interface StreamProperties {
     id: string
@@ -80,29 +82,41 @@ class StreamrStream implements StreamMetadata {
     partitions!: number
     storageDays?: number
     inactivityThresholdHours?: number
-    protected _resends: Resends
-    protected _publisher: Publisher
-    protected _subscriber: Subscriber
-    protected _streamRegistry: StreamRegistry
-    protected _streamRegistryCached: StreamRegistryCached
-    protected _streamStorageRegistry: StreamStorageRegistry
-    private _timeoutsConfig: TimeoutsConfig
+    private readonly _resends: Resends
+    private readonly _publisher: Publisher
+    private readonly _subscriber: Subscriber
+    private readonly _streamRegistry: StreamRegistry
+    private readonly _streamRegistryCached: StreamRegistryCached
+    private readonly _streamStorageRegistry: StreamStorageRegistry
+    private readonly _loggerFactory: LoggerFactory
+    private readonly _eventEmitter: StreamrClientEventEmitter
+    private readonly _timeoutsConfig: TimeoutsConfig
 
     /** @internal */
     constructor(
         props: StreamrStreamConstructorOptions,
-        @inject(BrubeckContainer) _container: DependencyContainer
+        resends: Resends,
+        publisher: Publisher,
+        subscriber: Subscriber,
+        streamRegistryCached: StreamRegistryCached,
+        streamRegistry: StreamRegistry,
+        streamStorageRegistry: StreamStorageRegistry,
+        loggerFactory: LoggerFactory,
+        eventEmitter: StreamrClientEventEmitter,
+        timeoutsConfig: TimeoutsConfig
     ) {
         Object.assign(this, props)
         this.id = props.id
         this.partitions = props.partitions ? props.partitions : 1
-        this._resends = _container.resolve<Resends>(Resends)
-        this._publisher = _container.resolve<Publisher>(Publisher)
-        this._subscriber = _container.resolve<Subscriber>(Subscriber)
-        this._streamRegistryCached = _container.resolve<StreamRegistryCached>(StreamRegistryCached)
-        this._streamRegistry = _container.resolve<StreamRegistry>(StreamRegistry)
-        this._streamStorageRegistry = _container.resolve<StreamStorageRegistry>(StreamStorageRegistry)
-        this._timeoutsConfig = _container.resolve<TimeoutsConfig>(ConfigInjectionToken.Timeouts)
+        this._resends = resends
+        this._publisher = publisher
+        this._subscriber = subscriber
+        this._streamRegistryCached = streamRegistryCached
+        this._streamRegistry = streamRegistry
+        this._streamStorageRegistry = streamStorageRegistry
+        this._loggerFactory = loggerFactory
+        this._eventEmitter = eventEmitter
+        this._timeoutsConfig = timeoutsConfig
     }
 
     /**
@@ -146,18 +160,18 @@ class StreamrStream implements StreamMetadata {
 
     async detectFields(): Promise<void> {
         // Get last message of the stream to be used for field detecting
-        const sub = await this._resends.resend(
-            this.id,
+        const sub = await this._resends.last<any>(
+            toStreamPartID(this.id, DEFAULT_PARTITION),
             {
-                last: 1,
+                count: 1,
             }
         )
 
-        const receivedMsgs = await sub.collectContent()
+        const receivedMsgs = await collect(sub)
 
         if (!receivedMsgs.length) { return }
 
-        const [lastMessage] = receivedMsgs
+        const lastMessage = receivedMsgs[0].getParsedContent()
 
         const fields = Object.entries(lastMessage).map(([name, value]) => {
             const type = getFieldType(value)
@@ -182,7 +196,9 @@ class StreamrStream implements StreamMetadata {
         let assignmentSubscription
         const normalizedNodeAddress = toEthereumAddress(nodeAddress)
         try {
-            assignmentSubscription = await this._subscriber.subscribe(formStorageNodeAssignmentStreamId(normalizedNodeAddress))
+            const streamPartId = toStreamPartID(formStorageNodeAssignmentStreamId(normalizedNodeAddress), DEFAULT_PARTITION)
+            assignmentSubscription = new Subscription<any>(streamPartId, this._loggerFactory)
+            await this._subscriber.add(assignmentSubscription)
             const propagationPromise = waitForAssignmentsToPropagate(assignmentSubscription, this)
             await this._streamStorageRegistry.addStreamToStorageNode(this.id, normalizedNodeAddress)
             await withTimeout(
@@ -216,7 +232,10 @@ class StreamrStream implements StreamMetadata {
      * @category Important
      */
     async publish<T>(content: T, metadata?: MessageMetadata): Promise<StreamMessage<T>> {
-        return this._publisher.publish(this.id, content, metadata)
+        const result = this._publisher.publish(this.id, content, metadata)
+        this._eventEmitter.emit('publish', undefined)
+        return result
+
     }
 
     /** @internal */

@@ -35,7 +35,7 @@ describe('Proxy connection tests', () => {
         contactNode = createNetworkNode({
             id: 'contact-node',
             trackers: [trackerInfo],
-            stunUrls: [],
+            iceServers: [],
             acceptProxyConnections: true,
             webrtcDisallowPrivateAddresses: false
         })
@@ -44,7 +44,7 @@ describe('Proxy connection tests', () => {
         contactNode2 = createNetworkNode({
             id: 'contact-node-2',
             trackers: [trackerInfo],
-            stunUrls: [],
+            iceServers: [],
             acceptProxyConnections: true,
             webrtcDisallowPrivateAddresses: false
         })
@@ -60,7 +60,7 @@ describe('Proxy connection tests', () => {
         onewayNode = createNetworkNode({
             id: 'publisher',
             trackers: [trackerInfo],
-            stunUrls: [],
+            iceServers: [],
             webrtcDisallowPrivateAddresses: false
         })
         await onewayNode.start()
@@ -164,7 +164,7 @@ describe('Proxy connection tests', () => {
         const nonContactNode = createNetworkNode({
             id: 'non-contact-node',
             trackers: [trackerInfo],
-            stunUrls: [],
+            iceServers: [],
             webrtcDisallowPrivateAddresses: false
         })
         await nonContactNode.start()

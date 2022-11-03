@@ -1,8 +1,6 @@
 .DS_Store
 node_modules
 dist
-google
-src/proto
 coverage
 test/data/nodeids.json
 test/data/orderedneighbors.json

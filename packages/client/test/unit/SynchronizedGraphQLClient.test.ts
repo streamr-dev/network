@@ -1,7 +1,8 @@
 import 'reflect-metadata'
+
 import { wait } from '@streamr/utils'
 import { SynchronizedGraphQLClient } from '../../src/utils/SynchronizedGraphQLClient'
-import { mockContext } from '../test-utils/utils'
+import { mockLoggerFactory } from '../test-utils/utils'
 
 const POLL_INTERVAL = 50
 const INDEXING_INTERVAL = 100
@@ -80,7 +81,7 @@ describe('SynchronizedGraphQLClient', () => {
             return theGraphIndex.getState().blockNumber
         })
         client = new SynchronizedGraphQLClient(
-            mockContext(),
+            mockLoggerFactory(),
             {
                 sendQuery,
                 getIndexBlockNumber

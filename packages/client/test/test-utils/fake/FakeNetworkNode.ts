@@ -1,8 +1,8 @@
 import { Lifecycle, scoped } from 'tsyringe'
 import { pull } from 'lodash'
 import { ProxyDirection, StreamMessage, StreamPartID } from 'streamr-client-protocol'
-import { MetricsContext, NodeId } from 'streamr-network'
-import { NetworkNodeOptions } from 'streamr-network'
+import { MetricsContext } from '@streamr/utils'
+import { NodeId, NetworkNodeOptions } from 'streamr-network'
 import { NetworkNodeFactory, NetworkNodeStub } from '../../../src/NetworkNodeFacade'
 import { FakeNetwork } from './FakeNetwork'
 

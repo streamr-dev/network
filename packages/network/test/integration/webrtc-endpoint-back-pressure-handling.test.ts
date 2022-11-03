@@ -1,6 +1,6 @@
 import { Event } from '../../src/connection/webrtc/IWebRtcEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
-import { MetricsContext } from '../../src/helpers/Metric'
+import { MetricsContext } from '@streamr/utils'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
 import { startTracker, Tracker } from '@streamr/network-tracker'
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
@@ -9,6 +9,7 @@ import { wait } from '@streamr/utils'
 import { NegotiatedProtocolVersions } from '../../src/connection/NegotiatedProtocolVersions'
 import { WebRtcEndpoint } from '../../src/connection/webrtc/WebRtcEndpoint'
 import { webRtcConnectionFactory } from '../../src/connection/webrtc/NodeWebRtcConnection'
+import { GOOGLE_STUN_SERVER } from '../../src/constants'
 
 describe('WebRtcEndpoint: back pressure handling', () => {
     let tracker: Tracker
@@ -39,7 +40,7 @@ describe('WebRtcEndpoint: back pressure handling', () => {
         // Set up WebRTC endpoints
         ep1 = new WebRtcEndpoint(
             peerInfo1,
-            ['stun:stun.l.google.com:19302'],
+            [GOOGLE_STUN_SERVER],
             new RtcSignaller(peerInfo1, nodeToTracker1),
             new MetricsContext(),
             new NegotiatedProtocolVersions(peerInfo1),
@@ -47,7 +48,7 @@ describe('WebRtcEndpoint: back pressure handling', () => {
         )
         ep2 = new WebRtcEndpoint(
             peerInfo2,
-            ['stun:stun.l.google.com:19302'],
+            [GOOGLE_STUN_SERVER],
             new RtcSignaller(peerInfo2, nodeToTracker2),
             new MetricsContext(),
             new NegotiatedProtocolVersions(peerInfo2),

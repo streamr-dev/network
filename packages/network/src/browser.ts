@@ -1,9 +1,8 @@
 import 'setimmediate'
+export { STREAMR_ICE_SERVERS } from './constants'
+export { IceServer } from './connection/webrtc/WebRtcConnection'
 export { NameDirectory } from './NameDirectory'
-export { Logger } from '@streamr/utils'
-export { 
-    MetricsContext
-} from './helpers/Metric'
+export { Logger, MetricsContext } from '@streamr/utils'
 export { Location, AbstractNodeOptions } from './identifiers'
 export { createNetworkNode, NetworkNodeOptions } from './createNetworkNode'
 export { NetworkNode } from './logic/NetworkNode'

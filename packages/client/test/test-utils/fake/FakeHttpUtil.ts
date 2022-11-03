@@ -1,10 +1,10 @@
 import { EthereumAddress } from '@streamr/utils'
-import { Readable } from 'stream'
 import { StreamID, StreamMessage, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
 import { URLSearchParams } from 'url'
 import { HttpUtil } from '../../../src/HttpUtil'
 import { FakeNetwork } from './FakeNetwork'
 import { FakeStorageNode, parseNodeIdFromStorageNodeUrl } from './FakeStorageNode'
+import { mockLoggerFactory } from '../utils'
 
 const MAX_TIMESTAMP_VALUE = 8640000000000000 // https://262.ecma-international.org/5.1/#sec-15.9.1.1
 const MAX_SEQUENCE_NUMBER_VALUE = 2147483647
@@ -16,25 +16,24 @@ interface ResendRequest {
     query?: URLSearchParams
 }
 
-export class FakeHttpUtil implements HttpUtil {
+export class FakeHttpUtil extends HttpUtil {
     private readonly network: FakeNetwork
     private readonly realHttpUtil: HttpUtil
 
-    constructor(
-        network: FakeNetwork
-    ) {
+    constructor(network: FakeNetwork) {
+        super(mockLoggerFactory())
         this.network = network
-        this.realHttpUtil = new HttpUtil()
+        this.realHttpUtil = new HttpUtil(mockLoggerFactory())
     }
 
-    async fetchHttpStream(url: string): Promise<Readable> {
+    override async* fetchHttpStream<T>(url: string): AsyncIterable<StreamMessage<T>> {
         const request = FakeHttpUtil.getResendRequest(url)
         if (request !== undefined) {
             const storageNode = this.network.getNode(request.nodeId) as FakeStorageNode
             const format = request.query!.get('format')
             if (format === 'raw') {
                 const count = Number(request.query!.get('count'))
-                let msgs: StreamMessage<unknown>[]
+                let msgs: StreamMessage<any>[]
                 if (request.resendType === 'last') {
                     msgs = await storageNode.getLast(request.streamPartId, count)
                 } else if (request.resendType === 'range') {
@@ -58,13 +57,16 @@ export class FakeHttpUtil implements HttpUtil {
                 } else {
                     throw new Error(`assertion failed: resendType=${request.resendType}`)
                 }
-                return Readable.from(msgs)
+                yield* msgs
+            } else {
+                throw new Error(`not implemented: format=${format} ${url}`)
             }
+        } else {
+            throw new Error(`not implemented: ${url}`)
         }
-        throw new Error('not implemented: ' + url)
     }
 
-    createQueryString(query: Record<string, any>): string {
+    override createQueryString(query: Record<string, any>): string {
         return this.realHttpUtil.createQueryString(query)
     }
 

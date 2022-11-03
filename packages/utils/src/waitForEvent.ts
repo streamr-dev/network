@@ -8,7 +8,7 @@ import { withTimeout } from './withTimeout'
  * @param eventName event to wait for
  * @param timeout amount of time in milliseconds to wait for
  * @param predicate function that gets passed the event arguments, should return true if event accepted
- * @param abortController
+ * @param abortSignal
  * @returns {Promise<unknown[]>} resolves with event arguments if event occurred within timeout else rejects
  */
 export async function waitForEvent(
@@ -16,7 +16,7 @@ export async function waitForEvent(
     eventName: string,
     timeout = 5000,
     predicate: (...eventArgs: any[]) => boolean = () => true,
-    abortController?: AbortController
+    abortSignal?: AbortSignal
 ): Promise<unknown[]> {
     let listener: (eventArgs: any[]) => void
     // eslint-disable-next-line no-async-promise-executor
@@ -32,7 +32,7 @@ export async function waitForEvent(
         task,
         timeout,
         'waitForEvent',
-        abortController
+        abortSignal
     ).finally(() => {
         emitter.off(eventName, listener)
     })

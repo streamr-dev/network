@@ -13,8 +13,10 @@ import { StreamStorageRegistry } from '../../../src/registry/StreamStorageRegist
 import { FakeStreamStorageRegistry } from './FakeStreamStorageRegistry'
 import { FakeNetworkNodeFactory, FakeNetworkNode } from './FakeNetworkNode'
 import { NetworkNodeFactory } from '../../../src/NetworkNodeFacade'
+import { LoggerFactory } from './../../../src/utils/LoggerFactory'
 import { FakeNetwork } from './FakeNetwork'
 import { FakeChain } from './FakeChain'
+import { FakeLogger } from './FakeLogger'
 import { FakeStorageNode } from './FakeStorageNode'
 import { NodeId } from 'streamr-network'
 
@@ -28,23 +30,29 @@ const DEFAULT_CLIENT_OPTIONS: StreamrClientConfig = {
 export class FakeEnvironment {
     private network: FakeNetwork
     private chain: FakeChain
+    private logger: FakeLogger
     private dependencyContainer: DependencyContainer
     private clients: StreamrClient[] = []
 
     constructor() {
         this.network = new FakeNetwork()
         this.chain = new FakeChain()
+        this.logger = new FakeLogger()
         this.dependencyContainer = container.createChildContainer()
         const httpUtil = new FakeHttpUtil(this.network)
+        const loggerFactory = {
+            createLogger: () => this.logger
+        }
         this.dependencyContainer.register(FakeNetwork, { useValue: this.network })
         this.dependencyContainer.register(FakeChain, { useValue: this.chain })
-        this.dependencyContainer.register(HttpUtil, { useValue: httpUtil })
+        this.dependencyContainer.register(LoggerFactory, { useValue: loggerFactory } as any)
+        this.dependencyContainer.register(HttpUtil, { useValue: httpUtil as any })
         this.dependencyContainer.register(NetworkNodeFactory, FakeNetworkNodeFactory)
         this.dependencyContainer.register(StreamRegistry, FakeStreamRegistry as any)
         this.dependencyContainer.register(StreamStorageRegistry, FakeStreamStorageRegistry as any)
         this.dependencyContainer.register(StorageNodeRegistry, FakeStorageNodeRegistry as any)
     }
-    
+
     createClient(opts?: StreamrClientConfig): StreamrClient {
         let authOpts
         if (opts?.auth === undefined) {
@@ -77,6 +85,10 @@ export class FakeEnvironment {
 
     getNetwork(): FakeNetwork {
         return this.network
+    }
+
+    getLogger(): FakeLogger {
+        return this.logger
     }
 
     destroy(): Promise<unknown> {

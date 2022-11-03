@@ -4,10 +4,7 @@ import { MaybeAsync } from '../types'
 
 import { AggregatedError } from './AggregatedError'
 import { pTimeout } from './promises'
-import { Defer } from './Defer'
-import { Debug } from './log'
-
-export const debug = Debug('iterators')
+import { Defer } from '@streamr/utils'
 
 export interface ICancelable {
     cancel(err?: Error): Promise<void>
@@ -184,7 +181,7 @@ export function CancelableGenerator<T>(
     let error: Error | AggregatedError | undefined
 
     const cancelSignal = new Emitter()
-    const onDone = Defer()
+    const onDone = new Defer<undefined>()
 
     let iterator: AsyncIterator<T>
 
@@ -250,7 +247,7 @@ export function CancelableGenerator<T>(
                     // Using a shared promise with Promise.race
                     // between loop iterations prevents data from being GC'ed.
                     // Create new per-loop promise and resolve using an event emitter.
-                    const cancelPromise = Defer<{ value: undefined, done: true }>()
+                    const cancelPromise = new Defer<{ value: undefined, done: true }>()
                     const onCancel = (v?: Error) => {
                         if (v instanceof Error) {
                             cancelPromise.reject(v)
@@ -330,7 +327,7 @@ export const nextValue = async <T>(source: AsyncIterator<T>): Promise<T | undefi
     return (await item).value
 }
 
-export const collect = async <T>(source: AsyncIterableIterator<T>, maxCount?: number): Promise<T[]> => {
+export const collect = async <T>(source: AsyncIterable<T>, maxCount?: number): Promise<T[]> => {
     const items: T[] = []
     for await (const item of source) {
         items.push(item)

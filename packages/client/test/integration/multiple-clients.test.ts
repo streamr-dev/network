@@ -1,17 +1,18 @@
 import 'reflect-metadata'
-import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
+
+import { StreamMessage } from 'streamr-client-protocol'
 import { fastPrivateKey, waitForCondition } from 'streamr-test-utils'
-import {
-    createTestStream,
-    uid,
-} from '../test-utils/utils'
-import { getPublishTestStreamMessages } from '../test-utils/publish'
-import { addAfterFn } from '../test-utils/jest-utils'
+import { StreamPermission } from '../../src/permission'
+import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils/utils'
-import { Stream } from '../../src/Stream'
-import { StreamPermission } from '../../src/permission'
-import { StreamMessage } from 'streamr-client-protocol'
+import { addAfterFn } from '../test-utils/jest-utils'
+import { getPublishTestStreamMessages } from '../test-utils/publish'
+import {
+    createTestStream,
+    uid
+} from '../test-utils/utils'
+import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
 
 // this number should be at least 10, otherwise late subscribers might not join
 // in time to see any realtime messages
@@ -58,7 +59,7 @@ describe('PubSub with multiple clients', () => {
         const pubClient = environment.createClient({
             id: `publisher${id}`
         })
-        const publisherId = (await pubClient.getAddress()).toLowerCase()
+        const publisherId = await pubClient.getAddress()
 
         addAfter(async () => {
             counterId.clear(publisherId) // prevent overflows in counter
@@ -133,18 +134,18 @@ describe('PubSub with multiple clients', () => {
             await otherClient.subscribe({
                 stream: stream.id,
             }, (_content, streamMessage) => {
-                const msgs = receivedMessagesOther[streamMessage.getPublisherId().toLowerCase()] || []
+                const msgs = receivedMessagesOther[streamMessage.getPublisherId()] || []
                 msgs.push(streamMessage)
-                receivedMessagesOther[streamMessage.getPublisherId().toLowerCase()] = msgs
+                receivedMessagesOther[streamMessage.getPublisherId()] = msgs
             })
 
             // subscribe to stream from main client instance
             await mainClient.subscribe({
                 stream: stream.id,
             }, (_content, streamMessage) => {
-                const msgs = receivedMessagesMain[streamMessage.getPublisherId().toLowerCase()] || []
+                const msgs = receivedMessagesMain[streamMessage.getPublisherId()] || []
                 msgs.push(streamMessage)
-                receivedMessagesMain[streamMessage.getPublisherId().toLowerCase()] = msgs
+                receivedMessagesMain[streamMessage.getPublisherId()] = msgs
             })
 
             const publishers: StreamrClient[] = []
@@ -153,7 +154,7 @@ describe('PubSub with multiple clients', () => {
             }
             const published: Record<string, StreamMessage[]> = {}
             await Promise.all(publishers.map(async (pubClient) => {
-                const publisherId = (await pubClient.getAddress()).toLowerCase()
+                const publisherId = await pubClient.getAddress()
                 addAfter(() => {
                     counterId.clear(publisherId) // prevent overflows in counter
                 })
@@ -188,7 +189,7 @@ describe('PubSub with multiple clients', () => {
             const mainSub = await mainClient.subscribe({
                 stream: stream.id,
             }, (_content, streamMessage) => {
-                const key = streamMessage.getPublisherId().toLowerCase()
+                const key = streamMessage.getPublisherId()
                 const msgs = receivedMessagesMain[key] || []
                 msgs.push(streamMessage)
                 receivedMessagesMain[key] = msgs
@@ -207,7 +208,7 @@ describe('PubSub with multiple clients', () => {
             let counter = 0
             const published: Record<string, StreamMessage[]> = {}
             await Promise.all(publishers.map(async (pubClient) => {
-                const publisherId = (await pubClient.getAddress()).toLowerCase()
+                const publisherId = await pubClient.getAddress()
                 addAfter(() => {
                     counterId.clear(publisherId) // prevent overflows in counter
                 })
@@ -231,7 +232,7 @@ describe('PubSub with multiple clients', () => {
                             from: lastMessage.getMessageRef()
                         }
                     }, (_content, streamMessage) => {
-                        const key = streamMessage.getPublisherId().toLowerCase()
+                        const key = streamMessage.getPublisherId()
                         const msgs = receivedMessagesOther[key] || []
                         msgs.push(streamMessage)
                         receivedMessagesOther[key] = msgs
@@ -280,7 +281,7 @@ describe('PubSub with multiple clients', () => {
         await otherClient.subscribe({
             stream: stream.id,
         }, (_content, streamMessage) => {
-            const key = streamMessage.getPublisherId().toLowerCase()
+            const key = streamMessage.getPublisherId()
             const msgs = receivedMessagesOther[key] || []
             msgs.push(streamMessage)
             receivedMessagesOther[key] = msgs
@@ -290,7 +291,7 @@ describe('PubSub with multiple clients', () => {
         await mainClient.subscribe({
             stream: stream.id,
         }, (_content, streamMessage) => {
-            const key = streamMessage.getPublisherId().toLowerCase()
+            const key = streamMessage.getPublisherId()
             const msgs = receivedMessagesMain[key] || []
             msgs.push(streamMessage)
             receivedMessagesMain[key] = msgs
@@ -303,7 +304,7 @@ describe('PubSub with multiple clients', () => {
 
         const published: Record<string, StreamMessage[]> = {}
         await Promise.all(publishers.map(async (pubClient) => {
-            const publisherId = (await pubClient.getAddress()).toLowerCase()
+            const publisherId = await pubClient.getAddress()
             const publishTestMessages = getPublishTestStreamMessages(pubClient, stream, {
                 waitForLast: true,
                 waitForLastTimeout: 35000,
@@ -342,7 +343,7 @@ describe('PubSub with multiple clients', () => {
         const mainSub = await mainClient.subscribe({
             stream: stream.id,
         }, (_content, streamMessage) => {
-            const key = streamMessage.getPublisherId().toLowerCase()
+            const key = streamMessage.getPublisherId()
             const msgs = receivedMessagesMain[key] || []
             msgs.push(streamMessage)
             receivedMessagesMain[key] = msgs
@@ -358,7 +359,7 @@ describe('PubSub with multiple clients', () => {
 
         let counter = 0
         await Promise.all(publishers.map(async (pubClient) => {
-            const publisherId = (await pubClient.getAddress()).toString().toLowerCase()
+            const publisherId = await pubClient.getAddress()
             const publishTestMessages = getPublishTestStreamMessages(pubClient, stream, {
                 waitForLast: true,
                 waitForLastTimeout: 35000,
@@ -374,7 +375,7 @@ describe('PubSub with multiple clients', () => {
                         from: lastMessage.getMessageRef()
                     }
                 }, (_content, streamMessage) => {
-                    const key = streamMessage.getPublisherId().toLowerCase()
+                    const key = streamMessage.getPublisherId()
                     const msgs = receivedMessagesOther[key] || []
                     msgs.push(streamMessage)
                     receivedMessagesOther[key] = msgs

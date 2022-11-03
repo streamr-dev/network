@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@streamr/slackbot": "^1.1.0",
-    "@streamr/utils": "^0.0.1",
+    "@streamr/utils": "^1.0.0",
     "ajv": "^8.8.2",
     "commander": "^8.3.0",
     "compression": "^1.7.4",
@@ -37,8 +37,8 @@
     "geoip-lite": "^1.4.2",
     "lodash": "^4.17.21",
     "morgan": "^1.10.0",
-    "streamr-client-protocol": "^12.0.0",
-    "streamr-network": "35.0.0",
+    "streamr-client-protocol": "^13.0.0",
+    "streamr-network": "36.0.0",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
@@ -48,7 +48,6 @@
     "@types/geoip-lite": "^1.4.1",
     "@types/lodash": "^4.14.175",
     "@types/morgan": "^1.9.3",
-    "@types/node": "^16.10.6",
     "@types/uuid": "^8.3.1",
     "streamr-test-utils": "^2.0.0"
   },

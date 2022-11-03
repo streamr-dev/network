@@ -1,6 +1,50 @@
-import { waitForCondition } from 'streamr-test-utils'
-import { wait } from '@streamr/utils'
-import { AverageMetric, CountMetric, LevelMetric, MetricsContext, MetricsReport, RateMetric } from '../../src/helpers/Metric'
+import { wait } from '../src/wait'
+import { AverageMetric, CountMetric, LevelMetric, MetricsContext, MetricsReport, RateMetric } from '../src/Metric'
+
+// this is inlined version of stream-test-utils as we get this error if we'd import this from the library:
+// "Can't resolve '@streamr/utils' in '/Users/teogeb/workspace/streamr/network-monorepo/packages/test-utils/dist/src'"
+// will be fixed in NET-920
+const waitForCondition = async (
+    conditionFn: () => (boolean | Promise<boolean>),
+    timeout = 5000,
+    retryInterval = 100,
+    onTimeoutContext?: () => string
+): Promise<void> => {
+    // create error beforehand to capture more usable stack
+    const err = new Error(`waitForCondition: timed out before "${conditionFn.toString()}" became true`)
+    return new Promise((resolve, reject) => {
+        let poller: NodeJS.Timeout | undefined = undefined
+        const clearPoller = () => {
+            if (poller !== undefined) {
+                clearInterval(poller)
+            }
+        }
+        const maxTime = Date.now() + timeout
+        const poll = async () => {
+            if (Date.now() < maxTime) {
+                let result
+                try {
+                    result = await conditionFn()
+                } catch (err) {
+                    clearPoller()
+                    reject(err)
+                }
+                if (result) {
+                    clearPoller()
+                    resolve()
+                }
+            } else {
+                clearPoller()
+                if (onTimeoutContext) {
+                    err.message += `\n${onTimeoutContext()}`
+                }
+                reject(err)
+            }
+        }
+        setTimeout(poll, 0)
+        poller = setInterval(poll, retryInterval)
+    })
+}
 
 const REPORT_INTERVAL = 100
 const ONE_SECOND = 1000
@@ -12,11 +56,11 @@ describe('metrics', () => {
         let context: MetricsContext
         let reports: (MetricsReport & { generationTime: number })[]
         let producer: { stop: () => void }
-    
+
         const getReport = (timestamp: number) => {
             return reports.find((report) => (timestamp <= report.generationTime))
         }
-    
+
         beforeEach(() => {
             context = new MetricsContext()
             reports = []
@@ -27,11 +71,11 @@ describe('metrics', () => {
                 })
             }, REPORT_INTERVAL)
         })
-    
+
         afterEach(() => {
             producer.stop()
         })
-    
+
         it('happy path', async () => {
             const metricOne = {
                 count: new CountMetric(),
@@ -45,7 +89,7 @@ describe('metrics', () => {
             }
             context.addMetrics('metricThree', metricThree)
             metricThree.level.record(30)
-    
+
             // wait until the initial values have been seen by the producer
             await wait(REPORT_INTERVAL)
             const inputTime1 = Date.now()
@@ -57,7 +101,7 @@ describe('metrics', () => {
             metricThree.level.record(35)
             metricThree.rate.record(2000)
             metricThree.rate.record(4000)
-    
+
             await waitForCondition(() => getReport(inputTime1) !== undefined)
             expect(getReport(inputTime1)).toMatchObject({
                 metricOne: {
@@ -73,12 +117,12 @@ describe('metrics', () => {
                     end: expect.anything()
                 }
             })
-    
+
             const inputTime2 = Date.now()
             metricOne.count.record(3)
             metricThree.level.record(39)
             metricThree.rate.record(1000)
-    
+
             await waitForCondition(() => getReport(inputTime2) !== undefined)
             expect(getReport(inputTime2)).toMatchObject({
                 metricOne: {
@@ -94,7 +138,7 @@ describe('metrics', () => {
                 }
             })
         })
-    
+
         it('no data', async () => {
             context.addMetrics('foo', {
                 bar: new CountMetric()
@@ -138,7 +182,7 @@ describe('metrics', () => {
                 sampler.stop(Date.now())
                 expect(sampler.getAggregatedValue()).toBe(8)
             })
-            
+
             it('no data', () => {
                 const metric = new AverageMetric()
                 const sampler = metric.createSampler()
@@ -159,7 +203,7 @@ describe('metrics', () => {
                 sampler.stop(Date.now())
                 expect(sampler.getAggregatedValue()).toBe(11)
             })
-    
+
             it('include latest before start', () => {
                 const metric = new LevelMetric()
                 const sampler = metric.createSampler()
@@ -191,7 +235,7 @@ describe('metrics', () => {
                 sampler.stop(14000)
                 expect(sampler.getAggregatedValue()).toBe(25)
             })
-            
+
             it('no data', () => {
                 const metric = new RateMetric()
                 const sampler = metric.createSampler()

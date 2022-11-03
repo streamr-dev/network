@@ -3,4 +3,7 @@
 /test
 jest.config.js
 tsconfig.json
+tsconfig.*.json
 *.tsbuildinfo
+.eslintignore
+.eslintrc

@@ -1,15 +1,11 @@
 import { instanceId } from './utils'
 import { pOnce } from './promises'
-import { Debug } from './log'
 import { iteratorFinally } from './iterators'
-import { ContextError, Context } from './Context'
 import * as G from './GeneratorUtils'
 import { ErrorSignal, Signal } from './Signal'
+import { StreamrClientError } from '../StreamrClientError'
 
 export type PipelineTransform<InType = any, OutType = any> = (src: AsyncGenerator<InType>) => AsyncGenerator<OutType>
-export type FinallyFn = ((err?: Error) => void | Promise<void>)
-
-class PipelineError extends ContextError {}
 
 type AsyncGeneratorWithId<T> = AsyncGenerator<T> & {
     id: string
@@ -30,21 +26,15 @@ export type IPipeline<InType, OutType = InType> = {
     collect(n?: number): Promise<OutType[]>
     consume(): Promise<void>
     pipeBefore(fn: PipelineTransform<InType, InType>): IPipeline<InType, OutType>
-} & AsyncGenerator<OutType> & Context
+} & AsyncGenerator<OutType>
 
 class PipelineDefinition<InType, OutType = InType> {
-    id
-    debug
     public source: AsyncGeneratorWithId<InType>
     constructor(
-        context: Context,
         source: AsyncGenerator<InType>,
         protected transforms: PipelineTransform[] = [],
         protected transformsBefore: PipelineTransform[] = []
     ) {
-        this.id = instanceId(this)
-        this.debug = context.debug.extend(this.id)
-        // this.debug('create')
         this.source = this.setSource(source)
     }
 
@@ -86,21 +76,13 @@ class PipelineDefinition<InType, OutType = InType> {
 }
 
 export class Pipeline<InType, OutType = InType> implements IPipeline<InType, OutType> {
-    /** @internal */
-    id
-    /** @internal */
-    debug
     protected iterator: AsyncGenerator<OutType>
     private isIterating = false
-    /** @internal */
     public isCleaningUp = false
     private definition: PipelineDefinition<InType, OutType>
 
-    /** @internal */
     constructor(public source: AsyncGenerator<InType>, definition?: PipelineDefinition<InType, OutType>) {
-        this.id = instanceId(this)
-        this.debug = Debug(this.id)
-        this.definition = definition || new PipelineDefinition<InType, OutType>(this, source)
+        this.definition = definition || new PipelineDefinition<InType, OutType>(source)
         this.cleanup = pOnce(this.cleanup.bind(this))
         this.iterator = iteratorFinally(this.iterate(), this.cleanup)
         this.handleError = this.handleError.bind(this)
@@ -109,11 +91,10 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
     /**
      * Append a transformation step to this pipeline.
      * Changes the pipeline's output type to output type of this generator.
-     * @internal
      */
     pipe<NewOutType>(fn: PipelineTransform<OutType, NewOutType>): Pipeline<InType, NewOutType> {
         if (this.isIterating) {
-            throw new PipelineError(this, `cannot pipe after already iterating: ${this.isIterating}`)
+            throw new StreamrClientError(`cannot pipe after already iterating: ${this.isIterating}`, 'PIPELINE_ERROR')
         }
         this.definition.pipe(fn)
         // this allows .pipe chaining to be type aware
@@ -124,11 +105,10 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
     /**
      * Inject pipeline step before other transforms.
      * Note must return same type as source, otherwise we can't be type-safe.
-     * @internal
      */
     pipeBefore(fn: PipelineTransform<InType, InType>): Pipeline<InType, OutType> {
         if (this.isIterating) {
-            throw new PipelineError(this, `cannot pipe after already iterating: ${this.isIterating}`)
+            throw new StreamrClientError(`cannot pipe after already iterating: ${this.isIterating}`, 'PIPELINE_ERROR')
         }
 
         this.definition.pipeBefore(fn)
@@ -137,7 +117,6 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
 
     /**
      * Fires this callback the moment this part of the pipeline starts returning.
-     * @internal
      */
     onConsumed(fn: () => void | Promise<void>): Pipeline<InType, Awaited<OutType>> {
         return this.pipe(async function* onConsumed(src) {
@@ -152,75 +131,60 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
     /**
      * Triggers once when pipeline ends.
      * Usage: `pipeline.onFinally(callback)`
-     * @internal
      */
     onFinally = Signal.once<[Error | undefined]>()
 
     /**
      * Triggers once when pipeline is about to end.
-     * @internal
      */
     onBeforeFinally = Signal.once()
 
     /**
      * Triggers once when pipeline starts flowing.
      * Usage: `pipeline.onStart(callback)`
-     * @internal
      */
     onStart = Signal.once()
 
-    /** @internal */
     onMessage = Signal.create<[OutType]>()
 
-    /** @internal */
     onError = ErrorSignal.create<[Error, (InType | OutType)?, number?]>()
 
-    /** @internal */
     map<NewOutType>(fn: G.GeneratorMap<OutType, NewOutType>): Pipeline<InType, NewOutType> {
         return this.pipe((src) => G.map(src, fn, this.onError.trigger))
     }
 
-    /** @internal */
     mapBefore(fn: G.GeneratorMap<InType, InType>): Pipeline<InType, OutType> {
         return this.pipeBefore((src) => G.map(src, fn, this.onError.trigger))
     }
 
-    /** @internal */
     forEach(fn: G.GeneratorForEach<OutType>): Pipeline<InType, OutType> {
         return this.pipe((src) => G.forEach(src, fn, this.onError.trigger))
     }
 
-    /** @internal */
     filter(fn: G.GeneratorFilter<OutType>): Pipeline<InType, OutType> {
         return this.pipe((src) => G.filter(src, fn, this.onError.trigger))
     }
 
-    /** @internal */
     reduce<NewOutType>(fn: G.GeneratorReduce<OutType, NewOutType>, initialValue: NewOutType): Pipeline<InType, NewOutType> {
         return this.pipe((src) => G.reduce(src, fn, initialValue, this.onError.trigger))
     }
 
-    /** @internal */
     forEachBefore(fn: G.GeneratorForEach<InType>): Pipeline<InType, OutType> {
         return this.pipeBefore((src) => G.forEach(src, fn, this.onError.trigger))
     }
 
-    /** @internal */
     filterBefore(fn: G.GeneratorFilter<InType>): Pipeline<InType, OutType> {
         return this.pipeBefore((src) => G.filter(src, fn, this.onError.trigger))
     }
 
-    /** @internal */
     async consume(fn?: G.GeneratorForEach<OutType>): Promise<void> {
         return G.consume(this, fn, this.handleError)
     }
 
-    /** @internal */
     collect(n?: number): Promise<OutType[]> {
         return G.collect(this, n, this.handleError)
     }
 
-    /** @internal */
     flow(): this {
         setImmediate(() => {
             // consume if not already doing so
@@ -232,7 +196,6 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
         return this
     }
 
-    /** @internal */
     private async cleanup(error?: Error): Promise<void> {
         this.isCleaningUp = true
         try {
@@ -250,7 +213,6 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
         }
     }
 
-    /** @internal */
     async handleError(err: Error): Promise<void> {
         await this.onError.trigger(err)
     }
@@ -261,7 +223,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
 
         // this.debug('iterate', this.definition.source)
         if (!this.definition.source) {
-            throw new PipelineError(this, 'no source')
+            throw new StreamrClientError('no source', 'PIPELINE_ERROR')
         }
 
         const transforms = this.definition.getTransforms()
@@ -293,7 +255,6 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
 
     // AsyncGenerator implementation
 
-    /** @internal */
     async throw(err: Error): Promise<IteratorResult<OutType, any>> {
         if (this.isCleaningUp) {
             throw err
@@ -308,7 +269,6 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
         return this.iterator.throw(err)
     }
 
-    /** @internal */
     async return(v?: OutType): Promise<IteratorResult<OutType, any>> {
         if (this.isCleaningUp) {
             return Promise.resolve({ done: true, value: v } as IteratorReturnResult<OutType>)
@@ -322,7 +282,6 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
         return this.iterator.return(v)
     }
 
-    /** @internal */
     async next(): Promise<IteratorResult<OutType, any>> {
         return this.iterator.next()
     }
@@ -335,7 +294,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
 
     [Symbol.asyncIterator](): this {
         if (this.isIterating) {
-            throw new PipelineError(this, 'already iterating')
+            throw new StreamrClientError('already iterating', 'PIPELINE_ERROR')
         }
 
         return this

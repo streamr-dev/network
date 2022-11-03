@@ -1,11 +1,11 @@
 import 'reflect-metadata'
-import { StreamrClient } from '../../src/StreamrClient'
 import { Wallet } from 'ethers'
-import { createTestStream } from '../test-utils/utils'
-import { until } from '../../src/utils/promises'
-import { Stream } from '../../src'
-import { ConfigTest, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { fetchPrivateKeyWithGas } from 'streamr-test-utils'
+import { ConfigTest, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { Stream } from '../../src/Stream'
+import { StreamrClient } from '../../src/StreamrClient'
+import { until } from '../../src/utils/promises'
+import { createTestStream } from '../test-utils/utils'
 
 const TEST_TIMEOUT = 30 * 1000
 
@@ -46,7 +46,7 @@ describe('StorageNodeRegistry', () => {
         await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
         let storageNodes = await stream.getStorageNodes()
         expect(storageNodes.length).toBe(1)
-        expect(storageNodes[0]).toStrictEqual(DOCKER_DEV_STORAGE_NODE.toLowerCase())
+        expect(storageNodes[0]).toStrictEqual(DOCKER_DEV_STORAGE_NODE)
         let stored = await creatorClient.getStoredStreams(DOCKER_DEV_STORAGE_NODE)
         expect(stored.streams.some((s) => s.id === stream.id)).toBe(true)
 

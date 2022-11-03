@@ -3,44 +3,54 @@
  * Primary interface for consuming StreamMessages.
  */
 import { StreamPartID } from 'streamr-client-protocol'
-import { MessageStream, MessageStreamOnMessage } from './MessageStream'
-import { SubscriptionSession } from './SubscriptionSession'
+import { MessageStream } from './MessageStream'
+import { LoggerFactory } from '../utils/LoggerFactory'
+import { Logger } from '@streamr/utils'
+import EventEmitter from 'eventemitter3'
 
-export { MessageStreamOnMessage as SubscriptionOnMessage }
+export interface SubscriptionEvents {
+    error: (err: Error) => void
+    resendComplete: () => void
+}
 
 /**
  * @category Important
  */
 export class Subscription<T = unknown> extends MessageStream<T> {
-    /** @internal */
-    private context: SubscriptionSession<T>
+    protected readonly logger: Logger
     readonly streamPartId: StreamPartID
+    protected eventEmitter: EventEmitter<SubscriptionEvents>
 
     /** @internal */
-    constructor(subSession: SubscriptionSession<T>) {
-        super(subSession)
-        this.context = subSession
-        this.streamPartId = subSession.streamPartId
+    constructor(streamPartId: StreamPartID, loggerFactory: LoggerFactory) {
+        super()
+        this.streamPartId = streamPartId
+        this.eventEmitter = new EventEmitter<SubscriptionEvents>()
+        this.logger = loggerFactory.createLogger(module)
         this.onMessage.listen((msg) => {
-            this.debug('<< %o', msg)
+            this.logger.debug('onMessage %j', msg.serializedContent)
         })
         this.onError.listen((err) => {
-            this.debug('<< onError: %o', err)
+            this.eventEmitter.emit('error', err)
+            this.logger.debug('onError %s', err)
         })
-        // this.debug('create', this.key, new Error('Subscription').stack)
     }
 
     async unsubscribe(): Promise<void> {
         this.end()
         await this.return()
+        this.eventEmitter.removeAllListeners()
     }
 
-    /** @internal */
-    waitForNeighbours(numNeighbours?: number, timeout?: number): Promise<boolean> {
-        return this.context.waitForNeighbours(numNeighbours, timeout)
+    on<E extends keyof SubscriptionEvents>(eventName: E, listener: SubscriptionEvents[E]): void {
+        this.eventEmitter.on(eventName, listener as any)
     }
 
-    on(_eventName: 'error', cb: (err: Error) => void): void {
-        this.onError.listen(cb)
+    once<E extends keyof SubscriptionEvents>(eventName: E, listener: SubscriptionEvents[E]): void {
+        this.eventEmitter.once(eventName, listener as any)
+    }
+
+    off<E extends keyof SubscriptionEvents>(eventName: E, listener: SubscriptionEvents[E]): void {
+        this.eventEmitter.off(eventName, listener as any)
     }
 }

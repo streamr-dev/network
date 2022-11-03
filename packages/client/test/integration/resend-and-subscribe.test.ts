@@ -1,13 +1,14 @@
 import 'reflect-metadata'
+
 import { GroupKeyMessage, GroupKeyRequest, StreamMessage } from 'streamr-client-protocol'
-import { GroupKey } from '../../src/encryption/GroupKey'
-import { createMockMessage, startPublisherKeyExchangeSubscription } from '../test-utils/utils'
-import { Stream } from '../../src/Stream'
 import { fastWallet } from 'streamr-test-utils'
+import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'
-import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
+import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
+import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
+import { createMockMessage, startPublisherKeyExchangeSubscription } from '../test-utils/utils'
 import { nextValue } from './../../src/utils/iterators'
 
 /*
@@ -75,12 +76,13 @@ describe('resend and subscribe', () => {
                 last: 1
             }
         })
+        const messageIterator = sub[Symbol.asyncIterator]()
 
-        const receivedMessage1 = await nextValue(sub)
+        const receivedMessage1 = await nextValue(messageIterator)
 
         await publisher.publish(stream.id, { mockId: 2 }, { timestamp: 2000 })
 
-        const receivedMessage2 = await nextValue(sub)
+        const receivedMessage2 = await nextValue(messageIterator)
         expect(receivedMessage1!.getParsedContent()).toEqual({
             mockId: 1
         })

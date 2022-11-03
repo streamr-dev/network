@@ -2,10 +2,9 @@
  * Client-wide destroy signal.
  */
 import { scoped, Lifecycle } from 'tsyringe'
-import { instanceId } from './utils/utils'
 
-import { Context, ContextError } from './utils/Context'
 import { Signal } from './utils/Signal'
+import { StreamrClientError } from './StreamrClientError'
 
 /**
  * Listen to onDestroy to fire cleanup code on destroy.
@@ -13,16 +12,16 @@ import { Signal } from './utils/Signal'
  * Trigger this to destroy the client.
  */
 @scoped(Lifecycle.ContainerScoped)
-export class DestroySignal implements Context {
-    public onDestroy = Signal.once()
-    public trigger = this.destroy
-    readonly id = instanceId(this)
-    readonly debug
+export class DestroySignal {
+    public readonly onDestroy = Signal.once()
+    public readonly trigger = this.destroy
+    public readonly abortSignal: AbortSignal
 
-    constructor(context: Context) {
-        this.debug = context.debug.extend(this.id)
+    constructor() {
+        const controller = new AbortController()
+        this.abortSignal = controller.signal
         this.onDestroy.listen(() => {
-            this.debug('triggered')
+            controller.abort()
         })
     }
 
@@ -30,22 +29,13 @@ export class DestroySignal implements Context {
         return this.onDestroy.trigger()
     }
 
-    assertNotDestroyed(context: Context, msg = 'Client is destroyed. Create a new instance'): void {
+    assertNotDestroyed(): void {
         if (this.isDestroyed()) {
-            throw new ContextError(context, msg)
+            throw new StreamrClientError('Client is destroyed. Create a new instance', 'CLIENT_DESTROYED')
         }
     }
 
     isDestroyed(): boolean {
         return this.onDestroy.triggerCount() > 0
-    }
-
-    createAbortController(): AbortController {
-        const controller = new AbortController()
-        if (this.isDestroyed()) {
-            controller.abort()
-        }
-        this.onDestroy.listen(async () => controller.abort())
-        return controller
     }
 }

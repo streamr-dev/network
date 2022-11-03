@@ -1,11 +1,13 @@
 import { expected, MAX_ITEMS, IteratorTest } from './IteratorTest'
-import { wait } from '@streamr/utils'
+import { Logger, wait } from '@streamr/utils'
 
 import { Pipeline } from '../../src/utils/Pipeline'
 import { PushPipeline } from '../../src/utils/PushPipeline'
 import { PushBuffer } from '../../src/utils/PushBuffer'
 import { PullBuffer } from '../../src/utils/PullBuffer'
 import { iteratorFinally } from '../../src/utils/iterators'
+
+const logger = new Logger(module)
 
 const WAIT = 20
 
@@ -474,9 +476,9 @@ describe('Pipeline', () => {
                 let count = 0
                 const onError = jest.fn((error) => {
                     count += 1
-                    p.debug('onError', count)
+                    logger.debug('onError %d', count)
                     if (count === 3) {
-                        p.debug('throwing last')
+                        logger.debug('throwing last')
                         throw error
                     }
                 })

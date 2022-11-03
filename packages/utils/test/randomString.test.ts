@@ -6,7 +6,7 @@ function assertStringConsistsOfCharset(actual: string, expectedCharset: string):
     })
 }
 
-describe(randomString, () => {
+describe('randomString', () => {
     it('generates a random string of given length', () => {
         const str = randomString(61)
         expect(str).toHaveLength(61)

@@ -1,4 +1,5 @@
 import 'reflect-metadata'
+
 import { finished } from 'stream/promises'
 import { WebStreamToNodeStream } from '../../src/utils/WebStreamToNodeStream'
 import { Msg } from '../test-utils/publish'
@@ -85,6 +86,7 @@ describe('WebStreamToNodeStream', () => {
             }
         })
 
+        const err = new Error('expected')
         const received: any[] = []
         const nodeStream = WebStreamToNodeStream(webStream, {
             objectMode: true,
@@ -99,13 +101,12 @@ describe('WebStreamToNodeStream', () => {
             }
         })
         expect(typeof nodeStream.pipe).toBe('function')
-        const err = new Error('expected')
         await expect(async () => {
             for await (const msg of nodeStream) {
                 received.push(msg)
             }
         }).rejects.toThrow(err)
-        await finished(nodeStream)
+        await expect(finished(nodeStream)).rejects.toThrow(err)
         expect(received).toEqual(published.slice(0, 3))
         expect(nodeStream.readable).not.toBeTruthy()
         expect(nodeStream.destroyed).toBeTruthy()

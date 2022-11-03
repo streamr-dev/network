@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The client publishes telemetry metrics to the network at regular intervals (enabled by default, configurable with `metrics` config option)
 - You can manually update a stream encryption key with method `updateEncryptionKey`
+- Add optional client configuration option `logLevel` to set desired logging level.
 
 ### Changed
 
@@ -29,10 +30,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rename method `getStoredStreamsOf()` to `getStoredStreams()`
 - Rename method `isStreamStoredInStorageNode()` to `isStoredStream()`
 - Replaced methods `createOrUpdateNodeInStorageNodeRegistry()` and `removeNodeFromStorageNodeRegistry()` with single method `setStorageNodeMetadata()`
+- Change configuration option `network.stunUrls` to `network.iceServers` with new format
 - Change storage node assignment event handlers
   - replace method `registerStorageEventListeners(listener)` with `on('addToStorageNode', listener)` and `on('removeFromStorageNode', listener)`
   - replace method `unRegisterStorageEventListeners()` with `off('addToStorageNode', listener)` and `off('removeFromStorageNode', listener)`
-- Rename class `GroupKey` to `EncryptionKey`
+- Rename interface `SubscriptionOnMessage`/`MessageStreamOnMessage` to `MessageListener`
+- Rename classes `GroupKey` to `EncryptionKey`
+- Change interface of `MessageStream` from `AsyncGenerator` to `AsyncIterable`
+- Change return type of `getStreamPublishers`, `getStreamSubscribers` and `searchStreams` from `AsyncGenerator` to `AsyncIterable`
+- Config property `auth` must be non-empty (if given)
 
 ### Deprecated
 
@@ -54,6 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove client configuration option `client.network.name`
 - Remove client configuration option `client.debug`
 - Remove (non-functional) client configuration options `autoConnect`, `autoDisconnect`, and `maxRetries`
+- Remove `AuthenticatedAuthConfig` and `UnauthenticatedAuthConfig` interfaces
 
 ### Fixed
 

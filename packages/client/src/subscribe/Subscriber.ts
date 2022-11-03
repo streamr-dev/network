@@ -1,9 +1,7 @@
 import { inject, scoped, Lifecycle, delay } from 'tsyringe'
-import { instanceId } from '../utils/utils'
 import { allSettledValues } from '../utils/promises'
-import { Context } from '../utils/Context'
 import { SubscriptionSession } from './SubscriptionSession'
-import { Subscription, SubscriptionOnMessage } from './Subscription'
+import { Subscription } from './Subscription'
 import { StreamPartID } from 'streamr-client-protocol'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamDefinition } from '../types'
@@ -15,29 +13,29 @@ import { StreamrClientEventEmitter } from '../events'
 import { DestroySignal } from '../DestroySignal'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
+import { LoggerFactory } from '../utils/LoggerFactory'
+import { Logger } from '@streamr/utils'
 
 /**
  * Public Subscribe APIs
  */
 
 @scoped(Lifecycle.ContainerScoped)
-export class Subscriber implements Context {
-
-    readonly id
-    readonly debug
+export class Subscriber {
     private readonly subSessions: Map<StreamPartID, SubscriptionSession<unknown>> = new Map()
-    private streamIdBuilder: StreamIDBuilder
-    private resends: Resends
-    private groupKeyStore: GroupKeyStore
-    private subscriberKeyExchange: SubscriberKeyExchange
-    private streamRegistryCached: StreamRegistryCached
-    private node: NetworkNodeFacade
-    private streamrClientEventEmitter: StreamrClientEventEmitter
-    private destroySignal: DestroySignal
-    private rootConfig: StrictStreamrClientConfig
+    private readonly streamIdBuilder: StreamIDBuilder
+    private readonly resends: Resends
+    private readonly groupKeyStore: GroupKeyStore
+    private readonly subscriberKeyExchange: SubscriberKeyExchange
+    private readonly streamRegistryCached: StreamRegistryCached
+    private readonly node: NetworkNodeFacade
+    private readonly streamrClientEventEmitter: StreamrClientEventEmitter
+    private readonly destroySignal: DestroySignal
+    private readonly rootConfig: StrictStreamrClientConfig
+    private readonly loggerFactory: LoggerFactory
+    private readonly logger: Logger
 
     constructor(
-        context: Context,
         streamIdBuilder: StreamIDBuilder,
         resends: Resends,
         groupKeyStore: GroupKeyStore,
@@ -46,10 +44,9 @@ export class Subscriber implements Context {
         node: NetworkNodeFacade,
         streamrClientEventEmitter: StreamrClientEventEmitter,
         destroySignal: DestroySignal,
-        @inject(ConfigInjectionToken.Root) rootConfig: StrictStreamrClientConfig
+        @inject(ConfigInjectionToken.Root) rootConfig: StrictStreamrClientConfig,
+        @inject(LoggerFactory) loggerFactory: LoggerFactory,
     ) {
-        this.id = instanceId(this)
-        this.debug = context.debug.extend(this.id)
         this.streamIdBuilder = streamIdBuilder
         this.resends = resends
         this.groupKeyStore = groupKeyStore
@@ -59,31 +56,15 @@ export class Subscriber implements Context {
         this.streamrClientEventEmitter = streamrClientEventEmitter
         this.destroySignal = destroySignal
         this.rootConfig = rootConfig
-    }
-
-    async subscribe<T>(
-        streamDefinition: StreamDefinition,
-        onMessage?: SubscriptionOnMessage<T>
-    ): Promise<Subscription<T>> {
-        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        return this.subscribeTo(streamPartId, onMessage)
-    }
-
-    private async subscribeTo<T>(streamPartId: StreamPartID, onMessage?: SubscriptionOnMessage<T>): Promise<Subscription<T>> {
-        const sub: Subscription<T> = await this.add(streamPartId)
-        if (onMessage) {
-            sub.useLegacyOnMessageHandler(onMessage)
-        }
-        return sub
+        this.loggerFactory = loggerFactory
+        this.logger = loggerFactory.createLogger(module)
     }
 
     getOrCreateSubscriptionSession<T>(streamPartId: StreamPartID): SubscriptionSession<T> {
         if (this.subSessions.has(streamPartId)) {
             return this.getSubscriptionSession<T>(streamPartId)!
         }
-        this.debug('creating new SubscriptionSession: %s', streamPartId)
         const subSession = new SubscriptionSession<T>(
-            this,
             streamPartId,
             this.resends,
             this.groupKeyStore,
@@ -92,38 +73,30 @@ export class Subscriber implements Context {
             this.node,
             this.streamrClientEventEmitter,
             this.destroySignal,
+            this.loggerFactory,
             this.rootConfig
         )
-        
+
         this.subSessions.set(streamPartId, subSession as SubscriptionSession<unknown>)
         subSession.onRetired.listen(() => {
             this.subSessions.delete(streamPartId)
         })
+        this.logger.debug('created new SubscriptionSession for stream part %s', streamPartId)
         return subSession
     }
 
-    async addSubscription<T>(sub: Subscription<T>): Promise<Subscription<T>> {
+    async add<T>(sub: Subscription<T>): Promise<void> {
         const subSession = this.getOrCreateSubscriptionSession<T>(sub.streamPartId)
 
         // add subscription to subSession
         try {
             await subSession.add(sub)
         } catch (err) {
-            this.debug('failed to add', sub.id, err)
+            this.logger.debug('failed to add Subscription to SubscriptionSession, reason: %s', err)
             // clean up if fail
             await this.remove(sub)
             throw err
         }
-
-        return sub
-    }
-
-    private async add<T>(streamPartId: StreamPartID): Promise<Subscription<T>> {
-        const subSession = this.getOrCreateSubscriptionSession<T>(streamPartId)
-
-        // create subscription
-        const sub = new Subscription<T>(subSession)
-        return this.addSubscription(sub)
     }
 
     private async remove(sub: Subscription<any>): Promise<void> {
@@ -219,9 +192,5 @@ export class Subscriber implements Context {
             // @ts-expect-error private
             ...subSession.subscriptions
         ]))
-    }
-
-    async stop(): Promise<void> {
-        await this.removeAll()
     }
 }

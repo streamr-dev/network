@@ -1,28 +1,28 @@
 import 'reflect-metadata'
-import { GroupKey } from './../../src/encryption/GroupKey'
-import { EncryptionType, MessageID, StreamMessage, StreamPartID, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
+
 import { Wallet } from '@ethersproject/wallet'
-import { MessageStream } from './../../src/subscribe/MessageStream'
-import { fastWallet, randomEthereumAddress } from "streamr-test-utils"
-import { createSubscribePipeline } from "../../src/subscribe/SubscribePipeline"
-import { mockContext } from '../test-utils/utils'
-import { collect } from '../../src/utils/GeneratorUtils'
-import { DecryptError, EncryptionUtil } from '../../src/encryption/EncryptionUtil'
-import { Stream } from '../../src'
-import { DestroySignal } from '../../src/DestroySignal'
-import { createSignedMessage } from '../../src/publish/MessageFactory'
-import { createAuthentication } from '../../src/Authentication'
-import { StreamrClientEventEmitter } from '../../src/events'
 import { toEthereumAddress } from '@streamr/utils'
+import { EncryptionType, MessageID, StreamMessage, StreamPartID, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
+import { fastWallet, randomEthereumAddress } from "streamr-test-utils"
+import { Stream } from '../../src/Stream'
+import { createAuthentication } from '../../src/Authentication'
+import { DestroySignal } from '../../src/DestroySignal'
+import { DecryptError, EncryptionUtil } from '../../src/encryption/EncryptionUtil'
+import { StreamrClientEventEmitter } from '../../src/events'
+import { createSignedMessage } from '../../src/publish/MessageFactory'
+import { createSubscribePipeline } from "../../src/subscribe/subscribePipeline"
+import { collect } from '../../src/utils/iterators'
+import { mockLoggerFactory } from '../test-utils/utils'
+import { GroupKey } from './../../src/encryption/GroupKey'
+import { MessageStream } from './../../src/subscribe/MessageStream'
 
 const CONTENT = {
     foo: 'bar'
 }
 
-describe('SubscribePipeline', () => {
+describe('subscribePipeline', () => {
 
     let pipeline: MessageStream
-    let input: MessageStream
     let streamPartId: StreamPartID
     let publisher: Wallet
 
@@ -52,18 +52,24 @@ describe('SubscribePipeline', () => {
     beforeEach(async () => {
         streamPartId = StreamPartIDUtils.parse(`${randomEthereumAddress()}/path#0`)
         publisher = fastWallet()
-        const stream = new Stream({
-            id: toStreamID(streamPartId),
-            partitions: 1
-        }, {
-            resolve: () => {}
-        } as any)
-        const context = mockContext()
-        input = new MessageStream(context)
+        const stream = new Stream(
+            {
+                id: toStreamID(streamPartId),
+                partitions: 1,
+            },
+            undefined as any,
+            undefined as any,
+            undefined as any,
+            undefined as any,
+            undefined as any,
+            undefined as any,
+            undefined as any,
+            undefined as any,
+            undefined as any
+        )
         pipeline = createSubscribePipeline({
-            messageStream: input,
             streamPartId,
-            context,
+            loggerFactory: mockLoggerFactory(),
             resends: undefined as any,
             groupKeyStore: {
                 get: async () => undefined
@@ -77,7 +83,7 @@ describe('SubscribePipeline', () => {
                 clearStream: () => {}
             } as any,
             streamrClientEventEmitter: new StreamrClientEventEmitter(),
-            destroySignal: new DestroySignal(context),
+            destroySignal: new DestroySignal(),
             rootConfig: {
                 decryption: {
                     keyRequestTimeout: 50
@@ -88,8 +94,8 @@ describe('SubscribePipeline', () => {
 
     it('happy path', async () => {
         const msg = await createMessage()
-        await input.push(msg)
-        input.endWrite()
+        await pipeline.push(msg)
+        pipeline.endWrite()
         const output = await collect(pipeline)
         expect(output).toHaveLength(1)
         expect(output[0].getParsedContent()).toEqual(CONTENT)
@@ -98,8 +104,8 @@ describe('SubscribePipeline', () => {
     it('error: invalid signature', async () => {
         const msg = await createMessage()
         msg.signature = 'invalid-signature'
-        await input.push(msg)
-        input.endWrite()
+        await pipeline.push(msg)
+        pipeline.endWrite()
         const onError = jest.fn()
         pipeline.onError.listen(onError)
         const output = await collect(pipeline)
@@ -113,8 +119,8 @@ describe('SubscribePipeline', () => {
         const msg = await createMessage({
             serializedContent: '{ invalid-json',
         })
-        await input.push(msg)
-        input.endWrite()
+        await pipeline.push(msg)
+        pipeline.endWrite()
         const onError = jest.fn()
         pipeline.onError.listen(onError)
         const output = await collect(pipeline)
@@ -127,12 +133,12 @@ describe('SubscribePipeline', () => {
     it('error: no encryption key available', async () => {
         const encryptionKey = GroupKey.generate()
         const serializedContent = EncryptionUtil.encryptWithAES(Buffer.from(JSON.stringify(CONTENT), 'utf8'), encryptionKey.data)
-        await input.push(await createMessage({
+        await pipeline.push(await createMessage({
             serializedContent,
             encryptionType: EncryptionType.AES,
             groupKeyId: encryptionKey.id
         }))
-        input.endWrite()
+        pipeline.endWrite()
         const onError = jest.fn()
         pipeline.onError.listen(onError)
         const output = await collect(pipeline)

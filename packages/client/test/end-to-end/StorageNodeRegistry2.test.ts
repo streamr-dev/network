@@ -1,10 +1,10 @@
+import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 import { Wallet } from 'ethers'
-import { ConfigTest, Stream } from '../../src'
+import { fetchPrivateKeyWithGas, randomEthereumAddress } from 'streamr-test-utils'
+import { ConfigTest, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { createTestStream } from '../test-utils/utils'
-import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
-import { fetchPrivateKeyWithGas, randomEthereumAddress } from 'streamr-test-utils'
-import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 
 jest.setTimeout(30000)
 
@@ -60,12 +60,12 @@ describe('StorageNodeRegistry2', () => {
     describe('getStorageNodes', () => {
         it('id', async () => {
             const storageNodeUrls = await client.getStorageNodes(createdStream.id)
-            expect(storageNodeUrls).toEqual([storageNodeAddress.toLowerCase()])
+            expect(storageNodeUrls).toEqual([storageNodeAddress])
         })
 
         it('all', async () => {
             const storageNodeUrls = await client.getStorageNodes()
-            return expect(storageNodeUrls).toContain(storageNodeAddress.toLowerCase())
+            return expect(storageNodeUrls).toContain(storageNodeAddress)
         })
     })
 

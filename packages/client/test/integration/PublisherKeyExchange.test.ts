@@ -1,20 +1,22 @@
 import 'reflect-metadata'
+
+import { toEthereumAddress } from '@streamr/utils'
+import { Wallet } from 'ethers'
 import {
     GroupKeyResponse,
     StreamMessage,
     StreamPartID,
-    StreamPartIDUtils,
+    StreamPartIDUtils
 } from 'streamr-client-protocol'
+import { fastWallet } from 'streamr-test-utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
-import { Wallet } from 'ethers'
 import { StreamPermission } from '../../src/permission'
+import { StreamrClient } from '../../src/StreamrClient'
+import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import {
     createRelativeTestStreamId,
     startPublisherKeyExchangeSubscription
 } from '../test-utils/utils'
-import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
-import { fastWallet } from 'streamr-test-utils'
-import { StreamrClient } from '../../src/StreamrClient'
 
 describe('PublisherKeyExchange', () => {
 
@@ -48,7 +50,7 @@ describe('PublisherKeyExchange', () => {
             messageId: {
                 streamId: StreamPartIDUtils.getStreamID(streamPartId),
                 streamPartition: StreamPartIDUtils.getStreamPartition(streamPartId),
-                publisherId: publisherWallet.address.toLowerCase(),
+                publisherId: toEthereumAddress(publisherWallet.address),
             },
             messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE,
             contentType: StreamMessage.CONTENT_TYPES.JSON,

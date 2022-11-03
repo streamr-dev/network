@@ -1,7 +1,8 @@
 import 'reflect-metadata'
-import { StreamrClient } from '../../src/StreamrClient'
-import { ConfigTest } from '../../src/ConfigTest'
+
 import { fastPrivateKey, fastWallet } from 'streamr-test-utils'
+import { ConfigTest } from '../../src/ConfigTest'
+import { StreamrClient } from '../../src/StreamrClient'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 
 describe('NetworkNodeFacade', () => {
@@ -79,21 +80,6 @@ describe('NetworkNodeFacade', () => {
                 await client.getNode()
             }).rejects.toThrow(/not compatible with authenticated wallet/)
         })
-
-        it('throws error if supplied network id whilst unauthenticated', async () => {
-            const nodeId = '0xafafafafafafafafafafafafafafafafafafafaf#my-custom-id'
-            const client = environment.createClient({
-                auth: {
-                    unauthenticated: true
-                },
-                network: {
-                    id: nodeId,
-                }
-            })
-            await expect(async () => {
-                await client.getNode()
-            }).rejects.toThrow(/without authentication/)
-        })
     })
 
     describe('create/destroy', () => {
@@ -127,7 +113,7 @@ describe('NetworkNodeFacade', () => {
                 await client.destroy()
                 await expect(async () => {
                     await client.getNode()
-                }).rejects.toThrow('destroy')
+                }).rejects.toThrowStreamError({ code: 'CLIENT_DESTROYED' })
             })
 
             it('can call destroy multiple times', async () => {
@@ -139,14 +125,14 @@ describe('NetworkNodeFacade', () => {
                 await client.destroy()
                 await expect(async () => {
                     await client.getNode()
-                }).rejects.toThrow('destroy')
+                }).rejects.toThrowStreamError({ code: 'CLIENT_DESTROYED' })
             })
 
             it('can destroy before start', async () => {
                 await client.destroy()
                 await expect(async () => {
                     await client.getNode()
-                }).rejects.toThrow('destroy')
+                }).rejects.toThrowStreamError({ code: 'CLIENT_DESTROYED' })
             })
 
             it('can destroy during start', async () => {
@@ -157,7 +143,7 @@ describe('NetworkNodeFacade', () => {
                     ]
                     await Promise.allSettled(tasks)
                     await Promise.all(tasks)
-                }).rejects.toThrow('destroy')
+                }).rejects.toThrowStreamError({ code: 'CLIENT_DESTROYED' })
             })
         })
     })

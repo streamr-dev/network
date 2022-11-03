@@ -1,9 +1,12 @@
-import { createTestStream } from '../test-utils/utils'
-import { getPublishTestStreamMessages, getWaitForStorage, Msg } from '../test-utils/publish'
-import { StreamrClient } from '../../src/StreamrClient'
-import { Stream } from '../../src/Stream'
+import 'reflect-metadata'
+
 import { StreamPermission } from '../../src/permission'
+import { Stream } from '../../src/Stream'
+import { StreamrClient } from '../../src/StreamrClient'
+import { collect } from '../../src/utils/iterators'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
+import { getPublishTestStreamMessages, getWaitForStorage, Msg } from '../test-utils/publish'
+import { createTestStream } from '../test-utils/utils'
 
 const MAX_MESSAGES = 5
 const ITERATIONS = 4
@@ -79,7 +82,7 @@ describe('sequential resend subscribe', () => {
                 // keep track of published messages so we can check they are resent in next test(s)
                 published.push(streamMessage)
             })
-            const msgs = await sub.collect(expectedMessageCount)
+            const msgs = await collect(sub, expectedMessageCount)
             expect(msgs).toHaveLength(expectedMessageCount)
             expect(msgs.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
         })

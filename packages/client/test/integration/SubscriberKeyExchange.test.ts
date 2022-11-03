@@ -1,22 +1,23 @@
 import 'reflect-metadata'
+
+import { toEthereumAddress } from '@streamr/utils'
+import { Wallet } from 'ethers'
 import {
     StreamMessage,
     StreamPartID,
     StreamPartIDUtils
 } from 'streamr-client-protocol'
-import { GroupKey } from '../../src/encryption/GroupKey'
-import { Wallet } from 'ethers'
-import { Stream } from '../../src/Stream'
-import { StreamPermission } from '../../src/permission'
-import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { fastWallet, waitForCondition } from 'streamr-test-utils'
+import { GroupKey } from '../../src/encryption/GroupKey'
+import { StreamPermission } from '../../src/permission'
+import { Stream } from '../../src/Stream'
+import { StreamrClient } from '../../src/StreamrClient'
+import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import {
     createMockMessage,
     createRelativeTestStreamId,
     getGroupKeyStore
 } from '../test-utils/utils'
-import { StreamrClient } from '../../src/StreamrClient'
-import { toEthereumAddress } from '@streamr/utils'
 
 describe('SubscriberKeyExchange', () => {
 
@@ -49,7 +50,7 @@ describe('SubscriberKeyExchange', () => {
             messageId: {
                 streamId: StreamPartIDUtils.getStreamID(streamPartId),
                 streamPartition:  StreamPartIDUtils.getStreamPartition(streamPartId),
-                publisherId: subscriberWallet.address.toLowerCase()
+                publisherId: toEthereumAddress(subscriberWallet.address)
             },
             messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST,
             contentType: StreamMessage.CONTENT_TYPES.JSON,

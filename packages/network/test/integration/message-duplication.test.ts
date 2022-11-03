@@ -30,7 +30,7 @@ describe('duplicate message detection and avoidance', () => {
         contactNode = createNetworkNode({
             id: 'node-0',
             trackers: [trackerInfo],
-            stunUrls: []
+            iceServers: []
         })
         contactNode.start()
 
@@ -38,31 +38,31 @@ describe('duplicate message detection and avoidance', () => {
             createNetworkNode({
                 id: 'node-1',
                 trackers: [trackerInfo],
-                stunUrls: [],
+                iceServers: [],
                 webrtcDisallowPrivateAddresses: false
             }),
             createNetworkNode({
                 id: 'node-2',
                 trackers: [trackerInfo],
-                stunUrls: [],
+                iceServers: [],
                 webrtcDisallowPrivateAddresses: false
             }),
             createNetworkNode({
                 id: 'node-3',
                 trackers: [trackerInfo],
-                stunUrls: [],
+                iceServers: [],
                 webrtcDisallowPrivateAddresses: false
             }),
             createNetworkNode({
                 id: 'node-4',
                 trackers: [trackerInfo],
-                stunUrls: [],
+                iceServers: [],
                 webrtcDisallowPrivateAddresses: false
             }),
             createNetworkNode({
                 id: 'node-5',
                 trackers: [trackerInfo],
-                stunUrls: [],
+                iceServers: [],
                 webrtcDisallowPrivateAddresses: false
             }),
         ]
