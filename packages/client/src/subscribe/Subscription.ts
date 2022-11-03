@@ -39,6 +39,7 @@ export class Subscription<T = unknown> extends MessageStream<T> {
     async unsubscribe(): Promise<void> {
         this.end()
         await this.return()
+        this.eventEmitter.removeAllListeners()
     }
 
     on<E extends keyof SubscriptionEvents>(eventName: E, listener: SubscriptionEvents[E]): void {

@@ -17,6 +17,13 @@ describe('client destroy', () => {
         stream = await createTestStream(client, module)
     })
 
+    it('unsubscribes', async () => {
+        const sub = await client.subscribe(stream.id)
+        jest.spyOn(sub, 'unsubscribe')
+        await client.destroy()
+        expect(sub.unsubscribe).toBeCalled()
+    })
+
     it('ongoing subscribe pipeline ends', async () => {
         const sub = await client.subscribe(stream.id)
         const onError: any = jest.fn()

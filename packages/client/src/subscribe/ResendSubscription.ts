@@ -4,7 +4,6 @@ import { StreamMessage, StreamPartID, StreamPartIDUtils } from 'streamr-client-p
 import { ConfigInjectionToken } from '../Config'
 import { OrderMessages } from './OrderMessages'
 import { ResendOptions, Resends } from './Resends'
-import { DestroySignal } from '../DestroySignal'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { SubscribeConfig } from './../Config'
 import { MessageStream } from './MessageStream'
@@ -17,7 +16,6 @@ export class ResendSubscription<T> extends Subscription<T> {
         streamPartId: StreamPartID,
         private resendOptions: ResendOptions,
         private resends: Resends,
-        destroySignal: DestroySignal,
         loggerFactory: LoggerFactory,
         @inject(ConfigInjectionToken.Subscribe) subscibreConfig: SubscribeConfig
     ) {
@@ -32,9 +30,6 @@ export class ResendSubscription<T> extends Subscription<T> {
         this.pipe(this.orderMessages.transform())
         this.onBeforeFinally.listen(async () => {
             this.orderMessages.stop()
-        })
-        destroySignal.onDestroy.listen(() => {
-            this.eventEmitter.removeAllListeners()
         })
     }
 
