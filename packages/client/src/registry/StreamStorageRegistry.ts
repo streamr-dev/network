@@ -17,7 +17,7 @@ import { LoggerFactory } from '../utils/LoggerFactory'
 import { StreamFactory } from '../StreamFactory'
 
 export interface StorageNodeAssignmentEvent {
-    streamId: string
+    streamId: StreamID
     nodeAddress: EthereumAddress
     blockNumber: number
 }
@@ -96,7 +96,7 @@ export class StreamStorageRegistry {
             (emit: (payload: StorageNodeAssignmentEvent) => void) => {
                 const listener = (streamId: string, nodeAddress: string, extra: any) => {
                     emit({
-                        streamId,
+                        streamId: toStreamID(streamId),
                         nodeAddress: toEthereumAddress(nodeAddress),
                         blockNumber: extra.blockNumber
                     })
