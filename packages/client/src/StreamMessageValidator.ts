@@ -48,34 +48,10 @@ export default class StreamMessageValidator {
      * The default implementation uses the native secp256k1 library on node.js and falls back to the elliptic library on browsers.
      */
     constructor({ getStream, isPublisher, isSubscriber, verify = verifyImpl }: Options) {
-        StreamMessageValidator.checkInjectedFunctions(getStream, isPublisher, isSubscriber, verify)
         this.getStream = getStream
         this.isPublisher = isPublisher
         this.isSubscriber = isSubscriber
         this.verify = verify
-    }
-
-    static checkInjectedFunctions(
-        getStream: (streamId: StreamID) => Promise<StreamMetadata>,
-        isPublisher: (address: EthereumAddress, streamId: StreamID) => Promise<boolean>,
-        isSubscriber: (address: EthereumAddress, streamId: StreamID) => Promise<boolean>,
-        verify: (address: EthereumAddress, payload: string, signature: string) => boolean
-    ): void | never {
-        if (typeof getStream !== 'function') {
-            throw new Error('getStream must be: async function(streamId): returns the validation metadata object for streamId')
-        }
-
-        if (typeof isPublisher !== 'function') {
-            throw new Error('isPublisher must be: async function(address, streamId): returns true if address is a permitted publisher on streamId')
-        }
-
-        if (typeof isSubscriber !== 'function') {
-            throw new Error('isSubscriber must be: async function(address, streamId): returns true if address is a permitted subscriber on streamId')
-        }
-
-        if (typeof verify !== 'function') {
-            throw new Error('verify must be: function(address, payload, signature): returns true if the address and payload match the signature')
-        }
     }
 
     /**
