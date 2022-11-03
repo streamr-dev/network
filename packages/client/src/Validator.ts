@@ -23,8 +23,9 @@ export class Validator extends StreamMessageValidator {
         @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached
     ) {
         super({
-            getStream: (streamId: StreamID) => {
-                return streamRegistryCached.getStream(streamId)
+            getPartitionCount: async (streamId: StreamID) => {
+                const stream = await streamRegistryCached.getStream(streamId)
+                return stream.partitions
             },
             isPublisher: (publisherId: EthereumAddress, streamId: StreamID) => {
                 return streamRegistryCached.isStreamPublisher(streamId, publisherId)

@@ -20,7 +20,6 @@ import { waitForAssignmentsToPropagate } from './utils/waitForAssignmentsToPropa
 import { MessageMetadata } from '../src/publish/Publisher'
 import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
 import { toEthereumAddress, withTimeout } from '@streamr/utils'
-import { StreamMetadata } from './StreamMessageValidator'
 import { StreamrClientEventEmitter } from './events'
 import { collect } from './utils/iterators'
 import { DEFAULT_PARTITION } from './StreamIDBuilder'
@@ -73,7 +72,7 @@ function getFieldType(value: any): (Field['type'] | undefined) {
  * @category Important
  */
 /* eslint-disable no-underscore-dangle */
-class StreamrStream implements StreamMetadata {
+class StreamrStream {
     id: StreamID
     description?: string
     config: {

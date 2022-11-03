@@ -13,7 +13,7 @@ import {
 } from 'streamr-client-protocol'
 import { Authentication } from '../../src/Authentication'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
-import StreamMessageValidator, { StreamMetadata } from '../../src/StreamMessageValidator'
+import StreamMessageValidator from '../../src/StreamMessageValidator'
 import { createRandomAuthentication } from '../test-utils/utils'
 import { EthereumAddress } from '@streamr/utils'
 
@@ -36,7 +36,7 @@ const publisherAuthentication = createRandomAuthentication()
 const subscriberAuthentication = createRandomAuthentication()
 
 describe('StreamMessageValidator', () => {
-    let getStream: (streamId: string) => Promise<StreamMetadata>
+    let getPartitionCount: (streamId: string) => Promise<number>
     let isPublisher: (address: EthereumAddress, streamId: string) => Promise<boolean>
     let isSubscriber: (address: EthereumAddress, streamId: string) => Promise<boolean>
     let verify: ((address: EthereumAddress, payload: string, signature: string) => boolean) | undefined
@@ -46,16 +46,12 @@ describe('StreamMessageValidator', () => {
     let groupKeyRequest: StreamMessage
     let groupKeyResponse: StreamMessage
 
-    const defaultGetStreamResponse = {
-        partitions: 10
-    }
-
     const getValidator = (customConfig?: any) => {
         if (customConfig) {
             return new StreamMessageValidator(customConfig)
         } else {
             return new StreamMessageValidator({
-                getStream, isPublisher, isSubscriber, verify
+                getPartitionCount, isPublisher, isSubscriber, verify
             })
         }
     }
@@ -64,7 +60,7 @@ describe('StreamMessageValidator', () => {
         const publisher = await publisherAuthentication.getAddress()
         const subscriber = await subscriberAuthentication.getAddress()
         // Default stubs
-        getStream = jest.fn().mockResolvedValue(defaultGetStreamResponse)
+        getPartitionCount = jest.fn().mockResolvedValue(10)
         isPublisher = async (address: EthereumAddress, streamId: string) => {
             return address === publisher && streamId === 'streamId'
         }
@@ -174,7 +170,7 @@ describe('StreamMessageValidator', () => {
 
         it('rejects if getStream rejects', async () => {
             const testError = new Error('test error')
-            getStream = jest.fn().mockRejectedValue(testError)
+            getPartitionCount = jest.fn().mockRejectedValue(testError)
 
             await assert.rejects(getValidator().validate(msg), (err: Error) => {
                 assert(err === testError)
