@@ -43,7 +43,7 @@ export interface StreamMessageOptions<T> {
     signature: string
 }
 
-export interface ObjectType<T> { 
+export interface ObjectType<T> {
     streamId: string
     streamPartition: number
     timestamp: number
@@ -76,18 +76,9 @@ export type StreamMessageUnencrypted<T> = StreamMessage<T> & {
 export default class StreamMessage<T = unknown> {
     static LATEST_VERSION = LATEST_VERSION
 
-    // TODO can we remove these static field and use the enum object directly?
-    static MESSAGE_TYPES = StreamMessageType
-
-    static VALID_MESSAGE_TYPES = new Set(Object.values(StreamMessage.MESSAGE_TYPES))
-
-    static CONTENT_TYPES = ContentType
-
-    static VALID_CONTENT_TYPES = new Set(Object.values(StreamMessage.CONTENT_TYPES))
-
-    static ENCRYPTION_TYPES = EncryptionType
-
-    static VALID_ENCRYPTIONS = new Set(Object.values(StreamMessage.ENCRYPTION_TYPES))
+    static VALID_MESSAGE_TYPES = new Set(Object.values(StreamMessageType))
+    static VALID_CONTENT_TYPES = new Set(Object.values(ContentType))
+    static VALID_ENCRYPTIONS = new Set(Object.values(EncryptionType))
 
     messageId: MessageID
     prevMsgRef: MessageRef | null
