@@ -60,6 +60,34 @@ describe('StorageNodeRegistry', () => {
         stored.streams.forEach((s) => expect(s).toBeInstanceOf(Stream))
     }, TEST_TIMEOUT)
 
+    it('no storage node', async () => {
+        stream = await createTestStream(creatorClient, module)
+        const id = randomEthereumAddress()
+        const stored = await creatorClient.getStoredStreams(id)
+        expect(stored.streams).toEqual([])
+        expect(stored.blockNumber).toBeNumber()
+    }, TEST_TIMEOUT)
+
+    it('no assignments', async () => {
+        const storageNodeWallet = new Wallet(await fetchPrivateKeyWithGas())
+        const storageNodeManager = new StreamrClient({
+            ...ConfigTest,
+            auth: {
+                privateKey: storageNodeWallet.privateKey
+            },
+            network: {
+                ...ConfigTest.network,
+                id: storageNodeWallet.address
+            }
+        })
+        await storageNodeManager.setStorageNodeMetadata({ http: 'mock-url' })
+        stream = await createTestStream(creatorClient, module)
+        const stored = await creatorClient.getStoredStreams(storageNodeWallet.address)
+        expect(stored.streams).toEqual([])
+        expect(stored.blockNumber).toBeNumber()
+        await storageNodeManager.destroy()
+    }, TEST_TIMEOUT)
+
     it('event listener: picks up add and remove events', async () => {
         stream = await createTestStream(creatorClient, module)
 
