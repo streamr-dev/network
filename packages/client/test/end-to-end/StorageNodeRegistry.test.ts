@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 import { Wallet } from 'ethers'
-import { fetchPrivateKeyWithGas } from 'streamr-test-utils'
+import { fetchPrivateKeyWithGas, randomEthereumAddress } from 'streamr-test-utils'
 import { ConfigTest, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -56,6 +56,8 @@ describe('StorageNodeRegistry', () => {
         expect(storageNodes).toHaveLength(0)
         stored = await creatorClient.getStoredStreams(DOCKER_DEV_STORAGE_NODE)
         expect(stored.streams.some((s) => s.id === stream.id)).toBe(false)
+        expect(stored.streams.length).toBeGreaterThanOrEqual(0)
+        stored.streams.forEach((s) => expect(s).toBeInstanceOf(Stream))
     }, TEST_TIMEOUT)
 
     it('event listener: picks up add and remove events', async () => {
@@ -88,12 +90,5 @@ describe('StorageNodeRegistry', () => {
             nodeAddress: DOCKER_DEV_STORAGE_NODE,
             streamId: stream.id,
         })
-    }, TEST_TIMEOUT)
-
-    it('getStoredStreams', async () => {
-        const result = await listenerClient.getStoredStreams(DOCKER_DEV_STORAGE_NODE)
-        expect(result.blockNumber).toBeGreaterThanOrEqual(0)
-        expect(result.streams.length).toBeGreaterThanOrEqual(0)
-        result.streams.forEach((s) => expect(s).toBeInstanceOf(Stream))
     }, TEST_TIMEOUT)
 })
