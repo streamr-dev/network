@@ -76,9 +76,9 @@ export type StreamMessageUnencrypted<T> = StreamMessage<T> & {
 export default class StreamMessage<T = unknown> {
     static LATEST_VERSION = LATEST_VERSION
 
-    static VALID_MESSAGE_TYPES = new Set(Object.values(StreamMessageType))
-    static VALID_CONTENT_TYPES = new Set(Object.values(ContentType))
-    static VALID_ENCRYPTIONS = new Set(Object.values(EncryptionType))
+    private static VALID_MESSAGE_TYPES = new Set(Object.values(StreamMessageType))
+    private static VALID_CONTENT_TYPES = new Set(Object.values(ContentType))
+    private static VALID_ENCRYPTIONS = new Set(Object.values(EncryptionType))
 
     messageId: MessageID
     prevMsgRef: MessageRef | null
