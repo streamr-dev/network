@@ -36,7 +36,8 @@ async function run(): Promise<void> {
         peerDescriptor,
         numberOfNodesPerKBucket: 2,
         rpcRequestTimeout: 15000,
-        stunUrls: ['stun:stun.l.google.com:19302', 'turn:BrubeckTurn1:MIlbgtMw4nhpmbgqRrht1Q==@turn.streamr.network:5349']
+        stunUrls: ['stun:stun.l.google.com:19302', 'turn:BrubeckTurn1:MIlbgtMw4nhpmbgqRrht1Q==@turn.streamr.network:5349'],
+        entryPoints: [epPeerDescriptor]
     })
     await layer0.start()
 
