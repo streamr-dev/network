@@ -19,9 +19,9 @@ import { collect } from '../utils/iterators'
 import { min } from 'lodash'
 
 export interface StorageNodeAssignmentEvent {
-    streamId: StreamID
-    nodeAddress: EthereumAddress
-    blockNumber: number
+    readonly streamId: StreamID
+    readonly nodeAddress: EthereumAddress
+    readonly blockNumber: number
 }
 
 interface NodeQueryResult {
