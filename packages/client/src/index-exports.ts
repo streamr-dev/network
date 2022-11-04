@@ -59,6 +59,19 @@ export type { ProxyDirection, StreamID, StreamPartID, TrackerRegistryRecord } fr
 export type { BrandedString, EthereumAddress, LogLevel, Metric, MetricsContext, MetricsDefinition, MetricsReport } from '@streamr/utils'
 export type { IceServer, NetworkNodeOptions as NetworkNodeConfig, Location } from 'streamr-network'
 
+// These are currently exported because NetworkNodeStub uses methods which operate on StreamMessage.
+// If we remove that semi-public class we can maybe remove these exports.
+export type {
+    ContentType,
+    EncryptedGroupKey,
+    EncryptionType,
+    MessageID,
+    MessageRef,
+    StreamMessage,
+    StreamMessageOptions,
+    StreamMessageType
+} from 'streamr-client-protocol'
+
 export { BigNumber } from '@ethersproject/bignumber'
 export type { ConnectionInfo } from '@ethersproject/web'
 export { Contract } from '@ethersproject/contracts'
