@@ -159,7 +159,7 @@ export class StreamStorageRegistry {
             (response: any) => {
                 // eslint-disable-next-line no-underscore-dangle
                 blockNumbers.push(response._meta.block.number)
-                return response.node.storedStreams
+                return (response.node !== null) ? response.node.storedStreams : []
             }
         ))
         const streams = res.map((stream: any) => {
