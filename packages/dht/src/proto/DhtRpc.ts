@@ -474,6 +474,11 @@ export interface LockResponse {
     reason?: boolean; // if accepted = false
 }
 /**
+ * @generated from protobuf message Confirmation
+ */
+export interface Confirmation {
+}
+/**
  * @generated from protobuf enum NodeType
  */
 export enum NodeType {
@@ -896,6 +901,16 @@ class LockResponse$Type extends MessageType$<LockResponse> {
  * @generated MessageType for protobuf message LockResponse
  */
 export const LockResponse = new LockResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Confirmation$Type extends MessageType$<Confirmation> {
+    constructor() {
+        super("Confirmation", []);
+    }
+}
+/**
+ * @generated MessageType for protobuf message Confirmation
+ */
+export const Confirmation = new Confirmation$Type();
 /**
  * @generated ServiceType for protobuf service DhtRpcService
  */

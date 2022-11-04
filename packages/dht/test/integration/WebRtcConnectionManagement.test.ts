@@ -89,7 +89,7 @@ describe('WebRTC Connection Management', () => {
         })
         dummyMessage.targetDescriptor = peerDescriptor1
         manager2.send(dummyMessage)
-    })
+    }, 60000)
 
     it('Connecting to self throws', async () => {
         const dummyMessage: Message = {

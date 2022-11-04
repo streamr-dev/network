@@ -24,7 +24,14 @@ export class RoutingRpcCommunicator extends RpcCommunicator {
                 messageType: MessageType.RPC, targetDescriptor: targetDescriptor
             }
 
-            this.sendFn(message).catch((e) => {
+            this.sendFn(message)
+            .then(()=> {
+                if (callContext?.waitConfirmation) {
+                    const confirmation = {}
+                    this.handleIncomingMessage(confirmation)
+                }
+            })
+            .catch((e) => {
                 this.handleClientError(requestId, e)
             })
         })

@@ -37,7 +37,6 @@ describe('DhtPeer', () => {
         serverRpcCommunicator.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'routeMessage', MockDhtRpc.routeMessage)
 
         clientRpcCommunicator.on('outgoingMessage', (message: Uint8Array, _requestId: string, _ucallContext?: DhtCallContext) => {
-       
             serverRpcCommunicator.handleIncomingMessage(message)
         })
 

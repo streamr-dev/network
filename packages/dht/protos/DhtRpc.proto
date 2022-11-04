@@ -215,3 +215,6 @@ message LockResponse {
   bool accepted = 1;
   optional bool reason = 2; // if accepted = false
 }
+
+message Confirmation {
+}
