@@ -74,7 +74,4 @@ export type {
 
 export { BigNumber } from '@ethersproject/bignumber'
 export type { ConnectionInfo } from '@ethersproject/web'
-export { Contract } from '@ethersproject/contracts'
-export type { BytesLike, Bytes } from '@ethersproject/bytes'
-export type { ContractReceipt, ContractTransaction } from '@ethersproject/contracts'
 export type { ExternalProvider } from '@ethersproject/providers'
