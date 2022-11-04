@@ -192,14 +192,12 @@ class StreamrStream {
                 partitions: this.getMetadata().partitions
             })
             await this._streamStorageRegistry.addStreamToStorageNode(this.id, normalizedNodeAddress)
-            if (waitOptions?.timeout !== -1) {
-                await withTimeout(
-                    propagationPromise,
-                    // eslint-disable-next-line no-underscore-dangle
-                    waitOptions.timeout ?? this._timeoutsConfig.storageNode.timeout,
-                    'storage node did not respond'
-                )
-            }
+            await withTimeout(
+                propagationPromise,
+                // eslint-disable-next-line no-underscore-dangle
+                waitOptions.timeout ?? this._timeoutsConfig.storageNode.timeout,
+                'storage node did not respond'
+            )
         } finally {
             this._streamRegistryCached.clearStream(this.id)
             await assignmentSubscription?.unsubscribe() // should never reject...
