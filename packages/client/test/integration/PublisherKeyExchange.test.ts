@@ -52,9 +52,9 @@ describe('PublisherKeyExchange', () => {
                 streamPartition: StreamPartIDUtils.getStreamPartition(streamPartId),
                 publisherId: toEthereumAddress(publisherWallet.address),
             },
-            messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE,
-            contentType: StreamMessage.CONTENT_TYPES.JSON,
-            encryptionType: StreamMessage.ENCRYPTION_TYPES.RSA,
+            messageType: StreamMessageType.GROUP_KEY_RESPONSE,
+            contentType: ContentTypes.JSON,
+            encryptionType: EncryptionType.RSA,
             signature: expect.any(String)
         })
         const encryptedGroupKeys = (GroupKeyResponse.fromStreamMessage(actualResponse) as GroupKeyResponse).encryptedGroupKeys
@@ -99,7 +99,7 @@ describe('PublisherKeyExchange', () => {
             await triggerGroupKeyRequest()
 
             const response = await environment.getNetwork().waitForSentMessage({
-                messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE
+                messageType: StreamMessageType.GROUP_KEY_RESPONSE
             })
             await assertValidResponse(response!, key)
         })

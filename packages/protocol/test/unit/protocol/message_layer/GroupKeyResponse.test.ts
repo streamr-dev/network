@@ -1,8 +1,8 @@
 import assert from 'assert'
 
 import {
-    StreamMessage,
-    GroupKeyResponse
+    GroupKeyResponse,
+    StreamMessageType
 } from '../../../../src/index'
 import EncryptedGroupKey from '../../../../src/protocol/message_layer/EncryptedGroupKey'
 import GroupKeyMessage from '../../../../src/protocol/message_layer/GroupKeyMessage'
@@ -25,7 +25,7 @@ const serializedMessage = JSON.stringify(['requestId', recipient, [['groupKeyId1
 describe('GroupKeyResponse', () => {
     describe('deserialize', () => {
         it('correctly parses messages', () => {
-            assert.deepStrictEqual(GroupKeyMessage.deserialize(serializedMessage, StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE), message)
+            assert.deepStrictEqual(GroupKeyMessage.deserialize(serializedMessage, StreamMessageType.GROUP_KEY_RESPONSE), message)
         })
     })
     describe('serialize', () => {

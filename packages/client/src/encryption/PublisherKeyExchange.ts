@@ -1,6 +1,7 @@
 import { without } from 'lodash'
 import {
     EncryptedGroupKey,
+    EncryptionType,
     GroupKeyRequest,
     GroupKeyResponse,
     GroupKeyResponseSerialized,
@@ -66,10 +67,10 @@ export class PublisherKeyExchange {
                         undefined) as GroupKey[]
                     if (keys.length > 0) {
                         const response = await this.createResponse(
-                            keys, 
+                            keys,
                             request.getStreamPartID(),
-                            rsaPublicKey, 
-                            request.getPublisherId(), 
+                            rsaPublicKey,
+                            request.getPublisherId(),
                             requestId)
                         const node = await this.networkNodeFacade.getNode()
                         node.publish(response)
@@ -111,7 +112,7 @@ export class PublisherKeyExchange {
             ),
             serializedContent: JSON.stringify(responseContent.toArray()),
             messageType: StreamMessageType.GROUP_KEY_RESPONSE,
-            encryptionType: StreamMessage.ENCRYPTION_TYPES.RSA,
+            encryptionType: EncryptionType.RSA,
             authentication: this.authentication
         })
         return response

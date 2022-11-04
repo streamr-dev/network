@@ -104,7 +104,7 @@ export default class StreamMessage<T = unknown> {
      * Create a new StreamMessage identical to the passed-in streamMessage.
      */
     clone(): StreamMessage<T> {
-        const content = this.encryptionType === StreamMessage.ENCRYPTION_TYPES.NONE
+        const content = this.encryptionType === EncryptionType.NONE
             ? this.getParsedContent()
             : this.getSerializedContent()
 
@@ -125,9 +125,9 @@ export default class StreamMessage<T = unknown> {
         messageId,
         prevMsgRef = null,
         content,
-        messageType = StreamMessage.MESSAGE_TYPES.MESSAGE,
-        contentType = StreamMessage.CONTENT_TYPES.JSON,
-        encryptionType = StreamMessage.ENCRYPTION_TYPES.NONE,
+        messageType = StreamMessageType.MESSAGE,
+        contentType = ContentType.JSON,
+        encryptionType = EncryptionType.NONE,
         groupKeyId = null,
         newGroupKey = null,
         signature,
@@ -219,12 +219,12 @@ export default class StreamMessage<T = unknown> {
     getParsedContent(): T {
         if (this.parsedContent == null) {
             // Don't try to parse encrypted messages
-            if (this.messageType === StreamMessage.MESSAGE_TYPES.MESSAGE && this.encryptionType !== StreamMessage.ENCRYPTION_TYPES.NONE) {
+            if (this.messageType === StreamMessageType.MESSAGE && this.encryptionType !== EncryptionType.NONE) {
                 // @ts-expect-error need type narrowing for encrypted vs unencrypted
                 return this.serializedContent
             }
 
-            if (this.contentType === StreamMessage.CONTENT_TYPES.JSON) {
+            if (this.contentType === ContentType.JSON) {
                 try {
                     this.parsedContent = JSON.parse(this.serializedContent!)
                 } catch (err: any) {
@@ -371,7 +371,7 @@ export default class StreamMessage<T = unknown> {
             contentType: this.contentType,
             encryptionType: this.encryptionType,
             groupKeyId: this.groupKeyId,
-            content: (this.encryptionType === StreamMessage.ENCRYPTION_TYPES.NONE ? this.getParsedContent() : this.getSerializedContent()),
+            content: (this.encryptionType === EncryptionType.NONE ? this.getParsedContent() : this.getSerializedContent()),
             signature: this.signature,
         }
     }

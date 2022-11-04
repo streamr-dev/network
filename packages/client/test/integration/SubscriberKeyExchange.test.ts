@@ -52,9 +52,9 @@ describe('SubscriberKeyExchange', () => {
                 streamPartition:  StreamPartIDUtils.getStreamPartition(streamPartId),
                 publisherId: toEthereumAddress(subscriberWallet.address)
             },
-            messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST,
-            contentType: StreamMessage.CONTENT_TYPES.JSON,
-            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+            messageType: StreamMessageType.GROUP_KEY_REQUEST,
+            contentType: ContentTypes.JSON,
+            encryptionType: EncryptionType.NONE,
             signature: expect.any(String)
         })
         expect(request!.getParsedContent()).toEqual([
@@ -102,7 +102,7 @@ describe('SubscriberKeyExchange', () => {
             await triggerGroupKeyRequest(groupKey, publisher)
 
             const request = await environment.getNetwork().waitForSentMessage({
-                messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST
+                messageType: StreamMessageType.GROUP_KEY_REQUEST
             })
             await assertGroupKeyRequest(request!, [groupKey.id])
             const keyStore = getGroupKeyStore(toEthereumAddress(subscriberWallet.address))

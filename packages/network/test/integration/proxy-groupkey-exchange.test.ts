@@ -95,7 +95,7 @@ describe('GroupKey exchange via proxy connections', () => {
                 '0'
             ),
             messageType: StreamMessageType.GROUP_KEY_REQUEST,
-            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+            encryptionType: EncryptionType.NONE,
             content: requestContent,
             signature: 'signature'
         })
@@ -126,7 +126,7 @@ describe('GroupKey exchange via proxy connections', () => {
                 '0'
             ),
             messageType: StreamMessageType.GROUP_KEY_RESPONSE,
-            encryptionType: StreamMessage.ENCRYPTION_TYPES.RSA,
+            encryptionType: EncryptionType.RSA,
             content: responseContent,
             signature: 'signature'
         })

@@ -1,8 +1,8 @@
 import assert from 'assert'
 
 import {
-    StreamMessage,
-    GroupKeyRequest
+    GroupKeyRequest,
+    StreamMessageType
 } from '../../../../src/index'
 import GroupKeyMessage from '../../../../src/protocol/message_layer/GroupKeyMessage'
 import { toEthereumAddress } from '@streamr/utils'
@@ -21,7 +21,7 @@ const serializedMessage = JSON.stringify(['requestId', recipient, 'rsaPublicKey'
 describe('GroupKeyRequest', () => {
     describe('deserialize', () => {
         it('correctly parses messages', () => {
-            assert.deepStrictEqual(GroupKeyMessage.deserialize(serializedMessage, StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST), message)
+            assert.deepStrictEqual(GroupKeyMessage.deserialize(serializedMessage, StreamMessageType.GROUP_KEY_REQUEST), message)
         })
     })
     describe('serialize', () => {

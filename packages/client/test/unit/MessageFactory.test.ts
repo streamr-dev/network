@@ -61,12 +61,12 @@ describe('MessageFactory', () => {
                 timestamp: TIMESTAMP
             },
             prevMsgRef: null,
-            messageType: StreamMessage.MESSAGE_TYPES.MESSAGE,
-            encryptionType: StreamMessage.ENCRYPTION_TYPES.AES,
+            messageType: StreamMessageType.MESSAGE,
+            encryptionType: EncryptionType.AES,
             groupKeyId: GROUP_KEY.id,
             newGroupKey: null,
             signature: expect.stringMatching(/^0x[0-9a-f]+$/),
-            contentType: StreamMessage.CONTENT_TYPES.JSON,
+            contentType: ContentTypes.JSON,
             serializedContent: expect.stringMatching(/^[0-9a-f]+$/)
         })
     })
@@ -79,7 +79,7 @@ describe('MessageFactory', () => {
         })
         const msg = await createMessage({}, messageFactory)
         expect(msg).toMatchObject({
-            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+            encryptionType: EncryptionType.NONE,
             groupKeyId: null,
             serializedContent: JSON.stringify(CONTENT)
         })
