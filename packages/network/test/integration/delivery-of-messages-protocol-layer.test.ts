@@ -9,6 +9,7 @@ import {
     StatusAckMessage,
     StatusMessage,
     StreamMessage,
+    StreamMessageType,
     StreamPartIDUtils,
     toStreamID
 } from 'streamr-client-protocol'

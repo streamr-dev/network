@@ -3,7 +3,10 @@ import 'reflect-metadata'
 import { toEthereumAddress } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import {
+    ContentType,
+    EncryptionType,
     StreamMessage,
+    StreamMessageType,
     StreamPartID,
     StreamPartIDUtils
 } from 'streamr-client-protocol'
@@ -53,7 +56,7 @@ describe('SubscriberKeyExchange', () => {
                 publisherId: toEthereumAddress(subscriberWallet.address)
             },
             messageType: StreamMessageType.GROUP_KEY_REQUEST,
-            contentType: ContentTypes.JSON,
+            contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
             signature: expect.any(String)
         })

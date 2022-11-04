@@ -2,6 +2,7 @@ import { NetworkNode } from '../../src/logic/NetworkNode'
 import { startTracker, Tracker } from '@streamr/network-tracker'
 import { createNetworkNode } from '../../src/createNetworkNode'
 import {
+    EncryptionType,
     GroupKeyRequest,
     GroupKeyResponse,
     MessageID,
