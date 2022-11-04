@@ -1,3 +1,4 @@
+import { toStreamID } from 'streamr-client-protocol'
 import { StorageEventListener } from '../../../../src/plugins/storage/StorageEventListener'
 import { StorageNodeAssignmentEvent, Stream, StreamrClient, StreamrClientEvents } from 'streamr-client'
 import { EthereumAddress, toEthereumAddress, wait } from '@streamr/utils'
@@ -50,7 +51,7 @@ describe(StorageEventListener, () => {
     function addToStorageNode(recipient: EthereumAddress) {
         storageEventListeners.get('addToStorageNode')!({
             nodeAddress: recipient,
-            streamId: 'streamId',
+            streamId: toStreamID('streamId'),
             blockNumber: 1234
         })
     }
