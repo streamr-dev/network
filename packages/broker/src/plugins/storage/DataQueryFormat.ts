@@ -1,4 +1,4 @@
-import { StreamMessage } from 'streamr-client-protocol'
+import { EncryptionType, StreamMessage } from 'streamr-client-protocol'
 
 export interface Format {
     getMessageAsString: (streamMessage: StreamMessage, version: number | undefined) => string
@@ -40,7 +40,7 @@ export const toObject = (msg: StreamMessage<any>): any => {
         contentType: msg.contentType,
         encryptionType: msg.encryptionType,
         groupKeyId: msg.groupKeyId,
-        content: (msg.encryptionType === StreamMessage.ENCRYPTION_TYPES.NONE ? msg.getParsedContent() : msg.getSerializedContent()),
+        content: (msg.encryptionType === EncryptionType.NONE ? msg.getParsedContent() : msg.getSerializedContent()),
         signature: msg.signature,
     }
 }
