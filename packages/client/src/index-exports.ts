@@ -52,7 +52,7 @@ export { UpdateEncryptionKeyOptions } from './encryption/GroupKeyStore'
 
 export { ConfigTest } from './ConfigTest'
 export { NetworkNodeStub } from './NetworkNodeFacade'
-export * from './types'
+export { StreamDefinition, MaybeAsync, Without, XOR } from './types'
 export { formStorageNodeAssignmentStreamId } from './utils/utils'
 
 export type { ProxyDirection, StreamID, StreamPartID, TrackerRegistryRecord } from 'streamr-client-protocol'
