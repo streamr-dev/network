@@ -16,6 +16,8 @@ import { EthereumAddress, Logger, toEthereumAddress } from '@streamr/utils'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { StreamFactory } from '../StreamFactory'
 import { GraphQLQuery } from '../utils/GraphQLClient'
+import { collect } from '../utils/iterators'
+import { min } from 'lodash'
 
 export interface StorageNodeAssignmentEvent {
     streamId: string
@@ -39,20 +41,6 @@ interface StoredStreamQueryResult {
 
 interface AllNodesQueryResult {
     nodes: NodeQueryResult[]
-}
-
-interface StorageNodeQueryResult {
-    node: {
-        id: string
-        metadata: string
-        lastSeen: string
-        storedStreams: StreamQueryResult[]
-    }
-    _meta: {
-        block: {
-            number: number
-        }
-    }
 }
 
 /**
@@ -147,17 +135,41 @@ export class StreamStorageRegistry {
     }
 
     async getStoredStreams(nodeAddress: EthereumAddress): Promise<{ streams: Stream[], blockNumber: number }> {
-        const query = StreamStorageRegistry.buildStorageNodeQuery(nodeAddress)
         this.logger.debug('getting stored streams of node %s', nodeAddress)
-        const res = await this.graphQLClient.sendQuery({ query }) as StorageNodeQueryResult
-        const streams = res.node.storedStreams.map((stream) => {
+        const blockNumbers: number[] = []
+        const res = await collect(this.graphQLClient.fetchPaginatedResults(
+            (lastId: string, pageSize: number) => {
+                const query = `{
+                    node (id: "${nodeAddress}") {
+                        id
+                        metadata
+                        lastSeen
+                        storedStreams (first: ${pageSize} orderBy: "id" where: { id_gt: "${lastId}"}) {
+                            id,
+                            metadata
+                        }
+                    }
+                    _meta {
+                        block {
+                            number
+                        }
+                    }
+                }`
+                return { query }
+            },
+            (response: any) => {
+                // eslint-disable-next-line no-underscore-dangle
+                blockNumbers.push(response._meta.block.number)
+                return response.node.storedStreams
+            }
+        ))
+        const streams = res.map((stream: any) => {
             const props = Stream.parseMetadata(stream.metadata)
             return this.streamFactory.createStream(toStreamID(stream.id), props) // toStreamID() not strictly necessary
         })
         return {
             streams,
-            // eslint-disable-next-line no-underscore-dangle
-            blockNumber: res._meta.block.number
+            blockNumber: min(blockNumbers)!
         }
     }
 
@@ -207,25 +219,5 @@ export class StreamStorageRegistry {
             }
         }`
         return { query }
-    }
-
-    private static buildStorageNodeQuery(nodeAddress: EthereumAddress): string {
-        const query = `{
-            node (id: "${nodeAddress}") {
-                id,
-                metadata,
-                lastSeen,
-                storedStreams (first:1000) {
-                    id,
-                    metadata,
-                }
-            }
-            _meta {
-                block {
-                    number
-                }
-            }
-        }`
-        return JSON.stringify({ query })
     }
 }

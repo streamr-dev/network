@@ -51,6 +51,16 @@ export class GraphQLClient {
 
     async* fetchPaginatedResults<T extends { id: string }>(
         createQuery: (lastId: string, pageSize: number) => GraphQLQuery,
+        /*
+         * For simple queries there is one root level property, e.g. "streams" or "permissions"
+         * which contain array of items. If the query contains more than one root level property
+         * or we want to return non-root elements as items, the caller must pass a custom 
+         * function to parse the items.
+         */
+        parseItems: ((root: any) => T[]) = (response: any) =>  {
+            const rootKey = Object.keys(response)[0]
+            return (response as any)[rootKey]
+        },
         pageSize = 1000
     ): AsyncGenerator<T, void, undefined> {
         let lastResultSet: T[] | undefined
@@ -58,8 +68,7 @@ export class GraphQLClient {
             const lastId = (lastResultSet !== undefined) ? lastResultSet[lastResultSet.length - 1].id : ''
             const query = createQuery(lastId, pageSize)
             const response = await this.sendQuery(query)
-            const rootKey = Object.keys(response)[0] // there is a always a one root level property, e.g. "streams" or "permissions"
-            const items: T[] = (response as any)[rootKey] as T[]
+            const items: T[] = parseItems(response)
             yield* items
             lastResultSet = items
         } while (lastResultSet.length === pageSize)
