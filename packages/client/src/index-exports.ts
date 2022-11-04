@@ -72,6 +72,6 @@ export type {
     StreamMessageType
 } from 'streamr-client-protocol'
 
-export { BigNumber } from '@ethersproject/bignumber'
+export type { BigNumber } from '@ethersproject/bignumber'
 export type { ConnectionInfo } from '@ethersproject/web'
 export type { ExternalProvider } from '@ethersproject/providers'
