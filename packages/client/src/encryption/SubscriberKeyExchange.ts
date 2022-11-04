@@ -1,4 +1,5 @@
 import {
+    EncryptionType,
     GroupKeyRequest,
     GroupKeyRequestSerialized,
     GroupKeyResponse,
@@ -105,7 +106,7 @@ export class SubscriberKeyExchange {
             ),
             serializedContent: JSON.stringify(requestContent),
             messageType: StreamMessageType.GROUP_KEY_REQUEST,
-            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+            encryptionType: EncryptionType.NONE,
             authentication: this.authentication
         })
     }

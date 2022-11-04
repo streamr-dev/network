@@ -1,6 +1,7 @@
 import { without } from 'lodash'
 import {
     EncryptedGroupKey,
+    EncryptionType,
     GroupKeyRequest,
     GroupKeyResponse,
     GroupKeyResponseSerialized,
@@ -111,7 +112,7 @@ export class PublisherKeyExchange {
             ),
             serializedContent: JSON.stringify(responseContent.toArray()),
             messageType: StreamMessageType.GROUP_KEY_RESPONSE,
-            encryptionType: StreamMessage.ENCRYPTION_TYPES.RSA,
+            encryptionType: EncryptionType.RSA,
             authentication: this.authentication
         })
         return response

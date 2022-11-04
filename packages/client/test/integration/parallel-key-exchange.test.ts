@@ -3,7 +3,7 @@ import 'reflect-metadata'
 import { Wallet } from '@ethersproject/wallet'
 import { wait } from '@streamr/utils'
 import { range } from 'lodash'
-import { StreamMessage } from 'streamr-client-protocol'
+import { StreamMessageType } from 'streamr-client-protocol'
 import { fastWallet } from 'streamr-test-utils'
 import { createAuthentication } from '../../src/Authentication'
 import { GroupKey } from '../../src/encryption/GroupKey'
@@ -86,7 +86,7 @@ describe('parallel key exchange', () => {
         expect(messages).toHaveLength(expectedMessageCount)
         expect(messages.filter((msg) => !((msg.content as any).foo === 'bar'))).toEqual([])
         expect(environment.getNetwork().getSentMessages({
-            messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST
+            messageType: StreamMessageType.GROUP_KEY_REQUEST
         })).toHaveLength(PUBLISHER_COUNT)
     }, 30 * 1000)
 })

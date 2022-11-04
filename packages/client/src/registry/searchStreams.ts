@@ -2,7 +2,7 @@
 import { StreamID, toStreamID } from 'streamr-client-protocol'
 import { StreamQueryResult } from './StreamRegistry'
 import { StreamPermission, ChainPermissions, convertChainPermissionsToStreamPermissions, PUBLIC_PERMISSION_ADDRESS } from '../permission'
-import { GraphQLClient } from '../utils/GraphQLClient'
+import { GraphQLClient, GraphQLQuery } from '../utils/GraphQLClient'
 import { filter, map, unique } from '../utils/GeneratorUtils'
 import { SynchronizedGraphQLClient } from '../utils/SynchronizedGraphQLClient'
 import { Stream } from '../Stream'
@@ -98,7 +98,7 @@ const buildQuery = (
     permissionFilter: SearchStreamsPermissionFilter | undefined,
     lastId: string,
     pageSize: number
-): string => {
+): GraphQLQuery => {
     const variables: Record<string, any> = {
         stream_contains: term,
         id_gt: lastId
@@ -128,7 +128,7 @@ const buildQuery = (
             $canGrant: Boolean
             $id_gt: String
         ) {
-            permissions (first: ${pageSize} ${GraphQLClient.createWhereClause(variables)}) {
+            permissions (first: ${pageSize} orderBy: "id" ${GraphQLClient.createWhereClause(variables)}) {
                 id
                 stream {
                     id
@@ -142,5 +142,5 @@ const buildQuery = (
                 canGrant
             }
         }`
-    return JSON.stringify({ query, variables })
+    return { query, variables }
 }

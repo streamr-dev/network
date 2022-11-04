@@ -12,7 +12,7 @@ import {
 import ValidationError from '../../../../src/errors/ValidationError'
 import UnsupportedVersionError from '../../../../src/errors/UnsupportedVersionError'
 import { Serializer } from '../../../../src/Serializer'
-import StreamMessage from '../../../../src/protocol/message_layer/StreamMessage'
+import StreamMessage, { ContentType, EncryptionType, StreamMessageType } from '../../../../src/protocol/message_layer/StreamMessage'
 import { toEthereumAddress } from '@streamr/utils'
 
 const content = {
@@ -26,8 +26,8 @@ const msg = ({ timestamp = 1564046332168, sequenceNumber = 10, ...overrides } = 
         messageId: new MessageID(toStreamID('streamId'), 0, timestamp, sequenceNumber, PUBLISHER_ID, 'msgChainId'),
         prevMsgRef: new MessageRef(timestamp, 5),
         content: JSON.stringify(content),
-        messageType: StreamMessage.MESSAGE_TYPES.MESSAGE,
-        encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+        messageType: StreamMessageType.MESSAGE,
+        encryptionType: EncryptionType.NONE,
         signature: 'signature',
         newGroupKey,
         ...overrides
@@ -47,9 +47,9 @@ describe('StreamMessage', () => {
             assert.strictEqual(streamMessage.getPublisherId(), PUBLISHER_ID)
             assert.strictEqual(streamMessage.getMsgChainId(), 'msgChainId')
             assert.deepStrictEqual(streamMessage.prevMsgRef, new MessageRef(1564046332168, 5))
-            assert.strictEqual(streamMessage.messageType, StreamMessage.MESSAGE_TYPES.MESSAGE)
-            assert.strictEqual(streamMessage.contentType, StreamMessage.CONTENT_TYPES.JSON)
-            assert.strictEqual(streamMessage.encryptionType, StreamMessage.ENCRYPTION_TYPES.NONE)
+            assert.strictEqual(streamMessage.messageType, StreamMessageType.MESSAGE)
+            assert.strictEqual(streamMessage.contentType, ContentType.JSON)
+            assert.strictEqual(streamMessage.encryptionType, EncryptionType.NONE)
             assert.strictEqual(streamMessage.groupKeyId, null)
             assert.deepStrictEqual(streamMessage.getContent(), content)
             assert.strictEqual(streamMessage.getSerializedContent(), JSON.stringify(content))
@@ -71,9 +71,9 @@ describe('StreamMessage', () => {
             assert.strictEqual(streamMessage.getPublisherId(), PUBLISHER_ID)
             assert.strictEqual(streamMessage.getMsgChainId(), 'msgChainId')
             assert.deepStrictEqual(streamMessage.prevMsgRef, null)
-            assert.strictEqual(streamMessage.messageType, StreamMessage.MESSAGE_TYPES.MESSAGE)
-            assert.strictEqual(streamMessage.contentType, StreamMessage.CONTENT_TYPES.JSON)
-            assert.strictEqual(streamMessage.encryptionType, StreamMessage.ENCRYPTION_TYPES.NONE)
+            assert.strictEqual(streamMessage.messageType, StreamMessageType.MESSAGE)
+            assert.strictEqual(streamMessage.contentType, ContentType.JSON)
+            assert.strictEqual(streamMessage.encryptionType, EncryptionType.NONE)
             assert.strictEqual(streamMessage.groupKeyId, null)
             assert.deepStrictEqual(streamMessage.getContent(), content)
             assert.strictEqual(streamMessage.getSerializedContent(), JSON.stringify(content))
@@ -103,7 +103,7 @@ describe('StreamMessage', () => {
                 messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
                 content: JSON.stringify(content),
                 signature: 'something',
-                encryptionType: StreamMessage.ENCRYPTION_TYPES.RSA,
+                encryptionType: EncryptionType.RSA,
             })
 
             expect(StreamMessage.isEncrypted(encryptedMessage)).toBe(true)
@@ -128,7 +128,7 @@ describe('StreamMessage', () => {
             assert.doesNotThrow(() => msg({
                 // @ts-expect-error TODO
                 content: 'encrypted content',
-                encryptionType: StreamMessage.ENCRYPTION_TYPES.AES,
+                encryptionType: EncryptionType.AES,
             }))
         })
 
@@ -235,15 +235,15 @@ describe('StreamMessage', () => {
                 messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
                 content: JSON.stringify(content),
                 signature: 'something',
-                encryptionType: StreamMessage.ENCRYPTION_TYPES.RSA,
+                encryptionType: EncryptionType.RSA,
                 prevMsgRef: new MessageRef(1564046332168, 5),
             })
             const streamMessageClone = encryptedMessage.clone()
             expect(streamMessageClone).not.toBe(encryptedMessage)
             expect(streamMessageClone.messageId).not.toBe(encryptedMessage.messageId)
             expect(streamMessageClone.prevMsgRef).not.toBe(encryptedMessage.prevMsgRef)
-            expect(encryptedMessage.encryptionType).toEqual(StreamMessage.ENCRYPTION_TYPES.RSA)
-            expect(streamMessageClone.encryptionType).toEqual(StreamMessage.ENCRYPTION_TYPES.RSA)
+            expect(encryptedMessage.encryptionType).toEqual(EncryptionType.RSA)
+            expect(streamMessageClone.encryptionType).toEqual(EncryptionType.RSA)
             expect(streamMessageClone.encryptionType).toEqual(encryptedMessage.encryptionType)
             expect(streamMessageClone.serialize()).toEqual(encryptedMessage.serialize())
         })

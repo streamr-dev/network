@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { StreamMessage, toStreamPartID } from 'streamr-client-protocol'
+import { StreamMessageType, toStreamPartID } from 'streamr-client-protocol'
 import { fastPrivateKey } from 'streamr-test-utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'
@@ -158,7 +158,7 @@ describe('Group Key Persistence', () => {
             ])
 
             const groupKeyRequests = environment.getNetwork().getSentMessages({
-                messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST
+                messageType: StreamMessageType.GROUP_KEY_REQUEST
             })
             expect(groupKeyRequests.length).toBe(1)
             expect(received.map((m) => m.signature)).toEqual(published.slice(0, 1).map((m) => m.signature))

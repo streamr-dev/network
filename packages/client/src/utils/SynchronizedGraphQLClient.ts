@@ -1,5 +1,5 @@
 import { scoped, Lifecycle, inject } from 'tsyringe'
-import { GraphQLClient } from './GraphQLClient'
+import { GraphQLClient, GraphQLQuery } from './GraphQLClient'
 import { ConfigInjectionToken, TimeoutsConfig } from '../Config'
 import { Gate } from './Gate'
 import { Logger, TimeoutError, withTimeout } from '@streamr/utils'
@@ -129,16 +129,17 @@ export class SynchronizedGraphQLClient {
         this.requiredBlockNumber = Math.max(blockNumber, this.requiredBlockNumber)
     }
 
-    async sendQuery(gqlQuery: string): Promise<any> {
+    async sendQuery(query: GraphQLQuery): Promise<any> {
         await this.indexingState.waitUntilIndexed(this.requiredBlockNumber)
-        return this.delegate.sendQuery(gqlQuery)
+        return this.delegate.sendQuery(query)
     }
 
     async* fetchPaginatedResults<T extends { id: string }>(
-        createQuery: (lastId: string, pageSize: number) => string,
+        createQuery: (lastId: string, pageSize: number) => GraphQLQuery,
+        parseItems?: (root: any) => T[],
         pageSize?: number
     ): AsyncGenerator<T, void, undefined> {
         await this.indexingState.waitUntilIndexed(this.requiredBlockNumber)
-        yield* this.delegate.fetchPaginatedResults(createQuery, pageSize)
+        yield* this.delegate.fetchPaginatedResults(createQuery, parseItems, pageSize)
     }
 }

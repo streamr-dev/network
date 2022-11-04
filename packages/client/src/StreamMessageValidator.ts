@@ -6,7 +6,8 @@ import {
     StreamMessage,
     StreamMessageError,
     ValidationError,
-    createSignaturePayload
+    createSignaturePayload,
+    StreamMessageType
 } from "streamr-client-protocol"
 import { verify as verifyImpl } from './utils/signingUtils'
 
@@ -67,11 +68,11 @@ export default class StreamMessageValidator {
         await this.assertSignatureIsValid(streamMessage)
 
         switch (streamMessage.messageType) {
-            case StreamMessage.MESSAGE_TYPES.MESSAGE:
+            case StreamMessageType.MESSAGE:
                 return this.validateMessage(streamMessage)
-            case StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST:
+            case StreamMessageType.GROUP_KEY_REQUEST:
                 return this.validateGroupKeyRequest(streamMessage)
-            case StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE:
+            case StreamMessageType.GROUP_KEY_RESPONSE:
                 return this.validateGroupKeyResponse(streamMessage)
             default:
                 throw new StreamMessageError(`Unknown message type: ${streamMessage.messageType}!`, streamMessage)
