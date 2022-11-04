@@ -1,6 +1,5 @@
 import type { StreamStorageRegistry as StreamStorageRegistryContract } from '../ethereumArtifacts/StreamStorageRegistry'
 import StreamStorageRegistryArtifact from '../ethereumArtifacts/StreamStorageRegistry.json'
-import { StreamQueryResult } from './StreamRegistry'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 import { ConfigInjectionToken } from '../Config'
 import { Stream } from '../Stream'
