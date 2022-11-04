@@ -1,4 +1,4 @@
-import { StreamMessage } from 'streamr-client-protocol'
+import { EncryptionType, StreamMessage } from 'streamr-client-protocol'
 import { EncryptionUtil, DecryptError } from '../encryption/EncryptionUtil'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { DestroySignal } from '../DestroySignal'
@@ -39,7 +39,7 @@ export class Decrypt<T> {
             return streamMessage
         }
 
-        if (streamMessage.encryptionType !== StreamMessage.ENCRYPTION_TYPES.AES) {
+        if (streamMessage.encryptionType !== EncryptionType.AES) {
             return streamMessage
         }
 

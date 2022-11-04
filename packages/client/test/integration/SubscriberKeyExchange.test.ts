@@ -3,7 +3,10 @@ import 'reflect-metadata'
 import { toEthereumAddress } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import {
+    ContentType,
+    EncryptionType,
     StreamMessage,
+    StreamMessageType,
     StreamPartID,
     StreamPartIDUtils
 } from 'streamr-client-protocol'
@@ -52,9 +55,9 @@ describe('SubscriberKeyExchange', () => {
                 streamPartition:  StreamPartIDUtils.getStreamPartition(streamPartId),
                 publisherId: toEthereumAddress(subscriberWallet.address)
             },
-            messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST,
-            contentType: StreamMessage.CONTENT_TYPES.JSON,
-            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+            messageType: StreamMessageType.GROUP_KEY_REQUEST,
+            contentType: ContentType.JSON,
+            encryptionType: EncryptionType.NONE,
             signature: expect.any(String)
         })
         expect(request!.getParsedContent()).toEqual([
@@ -102,7 +105,7 @@ describe('SubscriberKeyExchange', () => {
             await triggerGroupKeyRequest(groupKey, publisher)
 
             const request = await environment.getNetwork().waitForSentMessage({
-                messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST
+                messageType: StreamMessageType.GROUP_KEY_REQUEST
             })
             await assertGroupKeyRequest(request!, [groupKey.id])
             const keyStore = getGroupKeyStore(toEthereumAddress(subscriberWallet.address))

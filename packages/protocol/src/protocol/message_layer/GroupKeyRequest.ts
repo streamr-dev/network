@@ -20,7 +20,7 @@ export default class GroupKeyRequest extends GroupKeyMessage {
     groupKeyIds: string[]
 
     constructor({ requestId, recipient, rsaPublicKey, groupKeyIds }: Options) {
-        super(recipient, StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST)
+        super(recipient, StreamMessageType.GROUP_KEY_REQUEST)
 
         validateIsString('requestId', requestId)
         this.requestId = requestId
