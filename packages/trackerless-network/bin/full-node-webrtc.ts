@@ -32,7 +32,7 @@ async function run(): Promise<void> {
         peerId: PeerID.fromString(program.opts().id).value,
         type: NodeType.NODEJS
     }
-    const layer0 = new DhtNode({ peerDescriptor, numberOfNodesPerKBucket: 2, rpcRequestTimeout: 10000, stunUrls: ['stun:stun.l.google.com:19302'] })
+    const layer0 = new DhtNode({ peerDescriptor, numberOfNodesPerKBucket: 2, rpcRequestTimeout: 15000, stunUrls: ['stun:stun.l.google.com:19302', 'turn:BrubeckTurn1:MIlbgtMw4nhpmbgqRrht1Q==@turn.streamr.network:5349'] })
     await layer0.start()
 
     await layer0.joinDht(epPeerDescriptor)
