@@ -242,7 +242,7 @@ export class StreamRegistry {
     ): string {
         const query = `
         {
-            permissions (first: ${pageSize}, where: {stream: "${streamId}" ${fieldName}_gt: "${Math.round(Date.now() / 1000)}" id_gt: "${lastId}"}) {
+            permissions (first: ${pageSize}, orderBy: "id" where: {id_gt: "${lastId}", stream: "${streamId}" ${fieldName}_gt: "${Math.round(Date.now() / 1000)}"}) {
                 id
                 userAddress
                 stream {

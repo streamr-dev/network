@@ -128,7 +128,7 @@ const buildQuery = (
             $canGrant: Boolean
             $id_gt: String
         ) {
-            permissions (first: ${pageSize} ${GraphQLClient.createWhereClause(variables)}) {
+            permissions (first: ${pageSize} ordeBy: "id" ${GraphQLClient.createWhereClause(variables)}) {
                 id
                 stream {
                     id
