@@ -67,7 +67,7 @@ function getFieldType(value: any): (Field['type'] | undefined) {
  * @category Important
  */
 /* eslint-disable no-underscore-dangle */
-class StreamrStream {
+export class Stream {
     readonly id: StreamID
     private metadata: StreamMetadata
     private readonly _resends: Resends
@@ -272,8 +272,4 @@ class StreamrStream {
         return this._streamRegistry.revokePermissions(this.id, ...assignments)
     }
 
-}
-
-export {
-    StreamrStream as Stream
 }
