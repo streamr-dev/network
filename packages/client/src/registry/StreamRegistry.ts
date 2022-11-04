@@ -35,6 +35,7 @@ import { ContractFactory } from '../ContractFactory'
 import { EthereumAddress, isENSName, Logger, toEthereumAddress } from '@streamr/utils'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { StreamFactory } from './../StreamFactory'
+import { GraphQLQuery } from '../utils/GraphQLClient'
 
 /*
  * On-chain registry of stream metadata and permissions.
@@ -239,10 +240,18 @@ export class StreamRegistry {
         fieldName: string,
         lastId: string,
         pageSize: number
-    ): string {
+    ): GraphQLQuery {
         const query = `
         {
-            permissions (first: ${pageSize}, orderBy: "id" where: {id_gt: "${lastId}", stream: "${streamId}" ${fieldName}_gt: "${Math.round(Date.now() / 1000)}"}) {
+            permissions (
+                first: ${pageSize}
+                orderBy: "id"
+                where: {
+                    id_gt: "${lastId}"
+                    stream: "${streamId}"
+                    ${fieldName}_gt: "${Math.round(Date.now() / 1000)}"
+                }
+            ) {
                 id
                 userAddress
                 stream {
@@ -250,10 +259,10 @@ export class StreamRegistry {
                 }
             }
         }`
-        return JSON.stringify({ query })
+        return { query }
     }
 
-    private static buildGetStreamWithPermissionsQuery(streamId: StreamID): string {
+    private static buildGetStreamWithPermissionsQuery(streamId: StreamID): GraphQLQuery {
         const query = `
         {
             stream (id: "${streamId}") {
@@ -270,7 +279,7 @@ export class StreamRegistry {
                 }
             }
         }`
-        return JSON.stringify({ query })
+        return { query }
     }
 
     // --------------------------------------------------------------------------------------------

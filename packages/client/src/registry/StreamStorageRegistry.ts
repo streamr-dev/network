@@ -15,6 +15,7 @@ import { ContractFactory } from '../ContractFactory'
 import { EthereumAddress, Logger, toEthereumAddress } from '@streamr/utils'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { StreamFactory } from '../StreamFactory'
+import { GraphQLQuery } from '../utils/GraphQLClient'
 
 export interface StorageNodeAssignmentEvent {
     streamId: string
@@ -148,7 +149,7 @@ export class StreamStorageRegistry {
     async getStoredStreams(nodeAddress: EthereumAddress): Promise<{ streams: Stream[], blockNumber: number }> {
         const query = StreamStorageRegistry.buildStorageNodeQuery(nodeAddress)
         this.logger.debug('getting stored streams of node %s', nodeAddress)
-        const res = await this.graphQLClient.sendQuery(query) as StorageNodeQueryResult
+        const res = await this.graphQLClient.sendQuery({ query }) as StorageNodeQueryResult
         const streams = res.node.storedStreams.map((stream) => {
             const props = Stream.parseMetadata(stream.metadata)
             return this.streamFactory.createStream(toStreamID(stream.id), props) // toStreamID() not strictly necessary
@@ -182,7 +183,7 @@ export class StreamStorageRegistry {
     // GraphQL queries
     // --------------------------------------------------------------------------------------------
 
-    private static buildAllNodesQuery(): string {
+    private static buildAllNodesQuery(): GraphQLQuery {
         const query = `{
             nodes {
                 id,
@@ -190,10 +191,10 @@ export class StreamStorageRegistry {
                 lastSeen
             }
         }`
-        return JSON.stringify({ query })
+        return { query }
     }
 
-    private static buildStoredStreamQuery(streamId: StreamID): string {
+    private static buildStoredStreamQuery(streamId: StreamID): GraphQLQuery {
         const query = `{
             stream (id: "${streamId}") {
                 id,
@@ -205,7 +206,7 @@ export class StreamStorageRegistry {
                 }
             }
         }`
-        return JSON.stringify({ query })
+        return { query }
     }
 
     private static buildStorageNodeQuery(nodeAddress: EthereumAddress): string {

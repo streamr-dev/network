@@ -4,6 +4,11 @@ import { HttpFetcher } from './HttpFetcher'
 import { LoggerFactory } from './LoggerFactory'
 import { Logger } from '@streamr/utils'
 
+export interface GraphQLQuery {
+    query: string
+    variables?: Record<string, any>
+}
+
 @scoped(Lifecycle.ContainerScoped)
 export class GraphQLClient {
     private readonly logger: Logger
@@ -16,15 +21,15 @@ export class GraphQLClient {
         this.logger = loggerFactory.createLogger(module)
     }
 
-    async sendQuery(gqlQuery: string): Promise<any> {
-        this.logger.debug('GraphQL query: %s', gqlQuery)
+    async sendQuery(query: GraphQLQuery): Promise<any> {
+        this.logger.debug('GraphQL query: %s', query)
         const res = await this.httpFetcher.fetch(this.config.theGraphUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 accept: '*/*',
             },
-            body: gqlQuery
+            body: JSON.stringify(query)
         })
         const resText = await res.text()
         let resJson
@@ -45,7 +50,7 @@ export class GraphQLClient {
     }
 
     async* fetchPaginatedResults<T extends { id: string }>(
-        createQuery: (lastId: string, pageSize: number) => string,
+        createQuery: (lastId: string, pageSize: number) => GraphQLQuery,
         pageSize = 1000
     ): AsyncGenerator<T, void, undefined> {
         let lastResultSet: T[] | undefined
@@ -61,10 +66,7 @@ export class GraphQLClient {
     }
 
     async getIndexBlockNumber(): Promise<number> {
-        const gqlQuery = JSON.stringify({
-            query: '{ _meta { block { number } } }'
-        })
-        const response: any = await this.sendQuery(gqlQuery)
+        const response: any = await this.sendQuery({ query: '{ _meta { block { number } } }' } )
         // eslint-disable-next-line no-underscore-dangle
         return response._meta.block.number
     }
