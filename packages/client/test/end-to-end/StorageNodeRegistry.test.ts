@@ -61,7 +61,6 @@ describe('StorageNodeRegistry', () => {
     }, TEST_TIMEOUT)
 
     it('no storage node', async () => {
-        stream = await createTestStream(creatorClient, module)
         const id = randomEthereumAddress()
         const stored = await creatorClient.getStoredStreams(id)
         expect(stored.streams).toEqual([])
@@ -81,7 +80,6 @@ describe('StorageNodeRegistry', () => {
             }
         })
         await storageNodeManager.setStorageNodeMetadata({ http: 'mock-url' })
-        stream = await createTestStream(creatorClient, module)
         const stored = await creatorClient.getStoredStreams(storageNodeWallet.address)
         expect(stored.streams).toEqual([])
         expect(stored.blockNumber).toBeNumber()
