@@ -70,6 +70,11 @@ describe('Subscriber', () => {
         expect(await getSubscriptionCount(streamId)).toBe(0)
         // @ts-expect-error private
         expect(client.subscriber.countSubscriptionSessions()).toBe(0)
+        await client.destroy()
+    })
+
+    afterAll(async () => {
+        await publisher?.destroy()
     })
 
     describe('basics', () => {
