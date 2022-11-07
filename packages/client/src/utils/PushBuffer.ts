@@ -23,7 +23,6 @@ export type IPushBuffer<InType, OutType = InType> = {
     end(error?: Error): void
     endWrite(error?: Error): void
     length: number
-    isFull(): boolean
     isDone(): boolean
     clear(): void
     collect(n?: number): Promise<OutType[]>
@@ -156,7 +155,7 @@ export class PushBuffer<T> implements IPushBuffer<T> {
      * True if buffered at least bufferSize items.
      * After this point, push will block until buffer is emptied again.
      */
-    isFull(): boolean {
+    private isFull(): boolean {
         return this.buffer.length >= this.bufferSize
     }
 
