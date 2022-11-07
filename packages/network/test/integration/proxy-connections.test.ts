@@ -3,11 +3,11 @@ import { Tracker, startTracker } from '@streamr/network-tracker'
 import {
     MessageID,
     ProxyDirection,
-    SmartContractRecord,
+    TrackerRegistryRecord,
     StreamMessage,
     StreamPartIDUtils,
     toStreamID
-} from 'streamr-client-protocol'
+} from '@streamr/protocol'
 import { toEthereumAddress, waitForEvent } from '@streamr/utils'
 
 import { createNetworkNode } from '../../src/composition'
@@ -22,7 +22,7 @@ describe('Proxy connection tests', () => {
     let contactNode: NetworkNode
     let contactNode2: NetworkNode
     let onewayNode: NetworkNode
-    let trackerInfo: SmartContractRecord
+    let trackerInfo: TrackerRegistryRecord
 
     beforeEach(async () => {
         tracker = await startTracker({
@@ -35,7 +35,7 @@ describe('Proxy connection tests', () => {
         contactNode = createNetworkNode({
             id: 'contact-node',
             trackers: [trackerInfo],
-            stunUrls: [],
+            iceServers: [],
             acceptProxyConnections: true,
             webrtcDisallowPrivateAddresses: false
         })
@@ -44,7 +44,7 @@ describe('Proxy connection tests', () => {
         contactNode2 = createNetworkNode({
             id: 'contact-node-2',
             trackers: [trackerInfo],
-            stunUrls: [],
+            iceServers: [],
             acceptProxyConnections: true,
             webrtcDisallowPrivateAddresses: false
         })
@@ -60,7 +60,7 @@ describe('Proxy connection tests', () => {
         onewayNode = createNetworkNode({
             id: 'publisher',
             trackers: [trackerInfo],
-            stunUrls: [],
+            iceServers: [],
             webrtcDisallowPrivateAddresses: false
         })
         await onewayNode.start()
@@ -164,7 +164,7 @@ describe('Proxy connection tests', () => {
         const nonContactNode = createNetworkNode({
             id: 'non-contact-node',
             trackers: [trackerInfo],
-            stunUrls: [],
+            iceServers: [],
             webrtcDisallowPrivateAddresses: false
         })
         await nonContactNode.start()

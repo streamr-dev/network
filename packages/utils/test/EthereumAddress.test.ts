@@ -1,6 +1,6 @@
 import { toEthereumAddress } from '../src/EthereumAddress'
 
-describe(toEthereumAddress, () => {
+describe('toEthereumAddress', () => {
     it('invalid addresses', () => {
         expect(() => toEthereumAddress('')).toThrowError()
         expect(() => toEthereumAddress('0x')).toThrowError()

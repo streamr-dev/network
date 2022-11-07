@@ -3,7 +3,7 @@ import { SEPARATOR } from './uuid'
 
 import pkg from '../../package.json'
 
-import { StreamID, toStreamID } from 'streamr-client-protocol'
+import { StreamID, toStreamID } from '@streamr/protocol'
 import { randomString, toEthereumAddress } from '@streamr/utils'
 
 /**

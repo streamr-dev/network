@@ -1,5 +1,5 @@
 import { wait } from '@streamr/utils'
-import { toStreamID, StreamPartID, InstructionMessage } from 'streamr-client-protocol'
+import { toStreamID, StreamPartID, InstructionMessage } from '@streamr/protocol'
 
 import { InstructionRetryManager } from '../../src/logic/InstructionRetryManager'
 

@@ -4,9 +4,9 @@ import { WebSocketServer } from "../../src/connection/WebSocket/WebSocketServer"
 
 describe('WebSocketServer', () => {
 
-    it('starts and stops with host "localhost"', async () => {
+    it('starts and stops with host "127.0.0.1"', async () => {
         const server = new WebSocketServer()
-        await server.start(19792, 'localhost')
+        await server.start(19792, '127.0.0.1')
         await server.stop()
     })
 

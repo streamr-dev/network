@@ -1,24 +1,25 @@
 import 'reflect-metadata'
+
 import { Wallet } from '@ethersproject/wallet'
-import { toStreamID, toStreamPartID } from 'streamr-client-protocol'
-import { Stream } from '../../src/Stream'
+import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
+import { toStreamID, toStreamPartID } from '@streamr/protocol'
+import { fastWallet } from '@streamr/test-utils'
 import { StreamRegistry } from '../../src/registry/StreamRegistry'
 import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
+import { Stream } from '../../src/Stream'
 import { Validator } from '../../src/Validator'
 import { createMockMessage, mockLoggerFactory } from '../test-utils/utils'
-import { fastWallet } from 'streamr-test-utils'
-import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 
 const publisherWallet = fastWallet()
 const PARTITION_COUNT = 3
 
 const createMockValidator = () => {
     const streamRegistry: Pick<StreamRegistry, 'getStream' | 'isStreamPublisher'> = {
-        getStream: async (): Promise<Stream> => {
-            return {
+        getStream: async (): Promise<Stream> => ({
+            getMetadata: () => ({
                 partitions: PARTITION_COUNT
-            } as any
-        },
+            })
+        } as any),
         isStreamPublisher: async (_streamIdOrPath: string, userAddress: EthereumAddress) => {
             return userAddress === toEthereumAddress(publisherWallet.address)
         }
@@ -51,7 +52,7 @@ const validate = async (messageOptions: MessageOptions) => {
 }
 
 describe('Validator', () => {
-    
+
     describe('StreamMessage', () => {
 
         it('happy path', async () => {
@@ -63,7 +64,7 @@ describe('Validator', () => {
                 partition: PARTITION_COUNT
             })).rejects.toThrow(`Partition ${PARTITION_COUNT} is out of range`)
         })
-    
+
         it('invalid signature', async () => {
             await expect(() => validate({
                 signature: 'invalid-signature'

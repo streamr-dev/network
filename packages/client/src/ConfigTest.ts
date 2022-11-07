@@ -39,7 +39,7 @@ export const ConfigTest: StreamrClientConfig = {
             }
         ],
         webrtcDisallowPrivateAddresses: false,
-        stunUrls: []
+        iceServers: []
     },
     mainChainRPCs: {
         name: 'dev_ethereum',

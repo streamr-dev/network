@@ -162,9 +162,9 @@ const subscription = await streamr.subscribe(
     (content, metadata) => { ... }
 )
 ```
-The callback's first parameter, `content`, will contain the value given to the `publish` method.
+The callback's first parameter, `content`, contains the value given to the `publish` method.
 
-The second parameter `metadata` is of type `StreamMessage`. It contains metadata about the message, e.g. timestamp.
+The second parameter `metadata` contains metadata about the message, e.g. timestamp.
 
 Unsubscribing from an existent subscription:
 ```js
@@ -505,7 +505,7 @@ const streamr = new StreamrClient({
 })
 ```
 
-        
+
 
 ### Stream partitioning
 
@@ -537,7 +537,7 @@ const stream = await streamr.createStream({
     id: `/foo/bar`,
     partitions: 10,
 })
-console.log(`Stream created: ${stream.id}. It has ${stream.partitions} partitions.`)
+console.log(`Stream created: ${stream.id}. It has ${stream.getMetadata().partitions} partitions.`)
 ```
 
 #### Publishing to partitioned streams

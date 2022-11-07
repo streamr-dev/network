@@ -1,6 +1,6 @@
 import { StorageConfig } from '../../../../src/plugins/storage/StorageConfig'
 import { StorageNodeAssignmentEvent, Stream, StreamrClient, StreamrClientEvents } from 'streamr-client'
-import { StreamPartID, StreamPartIDUtils, toStreamID, toStreamPartID } from 'streamr-client-protocol'
+import { StreamPartID, StreamPartIDUtils, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { EthereumAddress, toEthereumAddress, wait } from '@streamr/utils'
 import { range } from 'lodash'
 
@@ -17,11 +17,14 @@ const PARTITION_COUNT_LOOKUP: Record<string, number> = Object.freeze({
 })
 
 function makeStubStream(streamId: string): Stream {
+    const partitions = PARTITION_COUNT_LOOKUP[streamId]
     return {
         id: toStreamID(streamId),
-        partitions: PARTITION_COUNT_LOOKUP[streamId],
+        getMetadata: () => ({
+            partitions
+        }),
         getStreamParts(): StreamPartID[] { // TODO: duplicated code from client
-            return range(0, this.partitions).map((p) => toStreamPartID(this.id, p))
+            return range(0, partitions).map((p) => toStreamPartID(this.id, p))
         }
     } as Stream
 }
@@ -103,19 +106,19 @@ describe(StorageConfig, () => {
             const addToStorageNodeListener = storageEventListeners.get('addToStorageNode')!
             const removeFromStorageNodeListener = storageEventListeners.get('removeFromStorageNode')!
             addToStorageNodeListener({
-                streamId: 'stream-1',
+                streamId: toStreamID('stream-1'),
                 nodeAddress: CLUSTER_ID,
                 blockNumber: 10,
             })
             await wait(0)
             addToStorageNodeListener({
-                streamId: 'stream-3',
+                streamId: toStreamID('stream-3'),
                 nodeAddress: CLUSTER_ID,
                 blockNumber: 15,
             })
             await wait(0)
             removeFromStorageNodeListener({
-                streamId: 'stream-1',
+                streamId: toStreamID('stream-1'),
                 nodeAddress: CLUSTER_ID,
                 blockNumber: 13,
             })

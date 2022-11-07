@@ -1,10 +1,12 @@
-import { StreamrClient } from '../../src/StreamrClient'
-import { StreamPermission } from '../../src/permission'
-import { createMockMessage, createTestStream } from '../test-utils/utils'
-import { fastWallet } from 'streamr-test-utils'
+import 'reflect-metadata'
+
 import { wait } from '@streamr/utils'
-import { StreamID, toStreamPartID } from 'streamr-client-protocol'
+import { StreamID, toStreamPartID } from '@streamr/protocol'
+import { fastWallet } from '@streamr/test-utils'
+import { StreamPermission } from '../../src/permission'
+import { StreamrClient } from '../../src/StreamrClient'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
+import { createMockMessage, createTestStream } from '../test-utils/utils'
 
 const PROPAGATION_WAIT_TIME = 2000
 

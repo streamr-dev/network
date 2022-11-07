@@ -1,6 +1,6 @@
 import { convertTestNet3Status } from '../../src/logic/Tracker'
 import { StatusValidator } from '../../src/helpers/SchemaValidators'
-import { StatusMessage } from 'streamr-client-protocol'
+import { StatusMessage } from '@streamr/protocol'
 
 describe(convertTestNet3Status, () => {
     it('converts tn3 status into a valid format', () => {

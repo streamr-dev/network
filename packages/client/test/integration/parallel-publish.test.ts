@@ -1,9 +1,10 @@
 import 'reflect-metadata'
-import { random, uniq } from 'lodash'
-import { fastWallet } from 'streamr-test-utils'
+
 import { wait } from '@streamr/utils'
-import { StreamrClient } from '../../src/StreamrClient'
+import { random, uniq } from 'lodash'
+import { fastWallet } from '@streamr/test-utils'
 import { Stream } from '../../src/Stream'
+import { StreamrClient } from '../../src/StreamrClient'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
 
 const MESSAGE_COUNT = 100

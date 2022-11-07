@@ -1,4 +1,4 @@
-import { StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
+import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import {
     Instruction,
     InstructionAndStatusAckSender,

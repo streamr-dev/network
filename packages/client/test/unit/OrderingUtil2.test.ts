@@ -3,10 +3,9 @@ import {
     MessageRef,
     StreamMessage,
     toStreamID
-} from 'streamr-client-protocol'
+} from '@streamr/protocol'
 import shuffle from 'array-shuffle'
-import { waitForCondition } from 'streamr-test-utils'
-import { EthereumAddress, toEthereumAddress, wait } from '@streamr/utils'
+import { EthereumAddress, toEthereumAddress, wait, waitForCondition } from '@streamr/utils'
 import OrderingUtil from '../../src/subscribe/ordering/OrderingUtil'
 
 const MESSAGES_PER_PUBLISHER = 1000

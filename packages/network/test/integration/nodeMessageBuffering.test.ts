@@ -1,5 +1,5 @@
 import { NetworkNode } from '../../src/logic/NetworkNode'
-import { MessageID, StreamMessage, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
+import { MessageID, StreamMessage, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
 import { startTracker, Tracker } from '@streamr/network-tracker'
 import { createNetworkNode } from '../../src/composition'
 import { toEthereumAddress } from '@streamr/utils'

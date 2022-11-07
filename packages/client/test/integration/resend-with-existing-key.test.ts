@@ -1,16 +1,17 @@
 import 'reflect-metadata'
-import { toStreamID } from 'streamr-client-protocol'
-import { GroupKey } from '../../src/encryption/GroupKey'
-import { createMockMessage, createRelativeTestStreamId, getGroupKeyStore } from '../test-utils/utils'
-import { Stream } from '../../src/Stream'
-import { fastWallet } from 'streamr-test-utils'
-import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
-import { StreamPermission } from '../../src/permission'
-import { DecryptError } from '../../src/encryption/EncryptionUtil'
-import { collect } from '../../src/utils/GeneratorUtils'
-import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
-import { StreamrClient } from '../../src/StreamrClient'
+
 import { toEthereumAddress } from '@streamr/utils'
+import { toStreamID } from '@streamr/protocol'
+import { fastWallet } from '@streamr/test-utils'
+import { DecryptError } from '../../src/encryption/EncryptionUtil'
+import { GroupKey } from '../../src/encryption/GroupKey'
+import { StreamPermission } from '../../src/permission'
+import { Stream } from '../../src/Stream'
+import { StreamrClient } from '../../src/StreamrClient'
+import { collect } from '../../src/utils/iterators'
+import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
+import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
+import { createMockMessage, createRelativeTestStreamId, getGroupKeyStore } from '../test-utils/utils'
 
 /*
  * A subscriber has some GroupKeys in the local store and reads historical data
@@ -59,7 +60,7 @@ describe('resend with existing key', () => {
         const messages = await collect(messageStream)
         expect(onError).not.toBeCalled()
         const expectedTimestamps = allMessages.map((m) => m.timestamp).filter((ts) => ts >= fromTimestamp && ts <= toTimestamp)
-        expect(messages.map((m) => m.getTimestamp())).toEqual(expectedTimestamps)
+        expect(messages.map((m) => m.timestamp)).toEqual(expectedTimestamps)
     }
 
     const assertNonDecryptable = async (fromTimestamp: number, toTimestamp: number) => {

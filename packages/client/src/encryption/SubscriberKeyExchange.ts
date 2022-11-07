@@ -1,4 +1,5 @@
 import {
+    EncryptionType,
     GroupKeyRequest,
     GroupKeyRequestSerialized,
     GroupKeyResponse,
@@ -7,7 +8,7 @@ import {
     StreamMessageType,
     StreamPartID,
     StreamPartIDUtils
-} from 'streamr-client-protocol'
+} from '@streamr/protocol'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { v4 as uuidv4 } from 'uuid'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -18,13 +19,13 @@ import { createSignedMessage } from '../publish/MessageFactory'
 import { withThrottling, pOnce } from '../utils/promises'
 import { MaxSizedSet } from '../utils/utils'
 import { Validator } from '../Validator'
-import { GroupKey, GroupKeyId } from './GroupKey'
+import { GroupKey } from './GroupKey'
 import { GroupKeyStore } from './GroupKeyStore'
 import { RSAKeyPair } from './RSAKeyPair'
 import { EthereumAddress, Logger } from '@streamr/utils'
 import { LoggerFactory } from '../utils/LoggerFactory'
 
-const MAX_PENDING_REQUEST_COUNT = 50000 // just some limit, we can tweak the number if needed 
+const MAX_PENDING_REQUEST_COUNT = 50000 // just some limit, we can tweak the number if needed
 
 /*
  * Sends group key requests and receives group key responses
@@ -40,8 +41,8 @@ export class SubscriberKeyExchange {
     private readonly validator: Validator
     private readonly pendingRequests: MaxSizedSet<string> = new MaxSizedSet(MAX_PENDING_REQUEST_COUNT)
     private readonly ensureStarted: () => Promise<void>
-    requestGroupKey: (groupKeyId: GroupKeyId, publisherId: EthereumAddress, streamPartId: StreamPartID) => Promise<void>
-    
+    requestGroupKey: (groupKeyId: string, publisherId: EthereumAddress, streamPartId: StreamPartID) => Promise<void>
+
     constructor(
         networkNodeFacade: NetworkNodeFacade,
         store: GroupKeyStore,
@@ -61,12 +62,12 @@ export class SubscriberKeyExchange {
             node.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
             this.logger.debug('started')
         })
-        this.requestGroupKey = withThrottling((groupKeyId: GroupKeyId, publisherId: EthereumAddress, streamPartId: StreamPartID) => { 
+        this.requestGroupKey = withThrottling((groupKeyId: string, publisherId: EthereumAddress, streamPartId: StreamPartID) => {
             return this.doRequestGroupKey(groupKeyId, publisherId, streamPartId)
         }, decryptionConfig.maxKeyRequestsPerSecond)
     }
 
-    private async doRequestGroupKey(groupKeyId: GroupKeyId, publisherId: EthereumAddress, streamPartId: StreamPartID): Promise<void> {
+    private async doRequestGroupKey(groupKeyId: string, publisherId: EthereumAddress, streamPartId: StreamPartID): Promise<void> {
         await this.ensureStarted()
         const requestId = uuidv4()
         const request = await this.createRequest(
@@ -82,7 +83,7 @@ export class SubscriberKeyExchange {
     }
 
     private async createRequest(
-        groupKeyId: GroupKeyId,
+        groupKeyId: string,
         streamPartId: StreamPartID,
         publisherId: EthereumAddress,
         rsaPublicKey: string,
@@ -105,7 +106,7 @@ export class SubscriberKeyExchange {
             ),
             serializedContent: JSON.stringify(requestContent),
             messageType: StreamMessageType.GROUP_KEY_REQUEST,
-            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+            encryptionType: EncryptionType.NONE,
             authentication: this.authentication
         })
     }

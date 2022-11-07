@@ -7,7 +7,7 @@ import {
     Protocol,
     Tracker,
     NetworkNode
-} from 'streamr-network'
+} from '@streamr/network-node'
 
 /**
  * Run a tracker that assist nodes in peer discovery.

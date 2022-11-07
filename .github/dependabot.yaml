@@ -17,8 +17,6 @@ updates:
       include: scope
     labels:
       - ci
-    reviewers:
-      - kare
     assignees:
       - DaisyDomergue
   - package-ecosystem: docker
@@ -32,7 +30,3 @@ updates:
       prefix: build
     labels:
       - build
-    reviewers:
-      - kare
-    assignees:
-      - kare

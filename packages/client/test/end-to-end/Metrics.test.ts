@@ -1,5 +1,5 @@
-import { keyToArrayIndex, MetricsReport } from '@streamr/utils'
-import { fetchPrivateKeyWithGas, waitForCondition } from 'streamr-test-utils'
+import { waitForCondition, keyToArrayIndex, MetricsReport } from '@streamr/utils'
+import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'

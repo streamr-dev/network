@@ -5,10 +5,10 @@ import { Simulator } from '../../src/connection/Simulator'
 import { SimulatorTransport } from '../../src/connection/SimulatorTransport'
 import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { PeerID } from '../../src/helpers/PeerID'
-import { waitForCondition } from 'streamr-test-utils'
 import { ConnectionType } from '../../src/connection/IConnection'
 import { ITransport } from '../../src/transport/ITransport'
 import * as Err from '../../src/helpers/errors'
+import { waitForCondition } from '@streamr/utils'
 
 describe('WebSocket Connection Management', () => {
 
@@ -22,7 +22,7 @@ describe('WebSocket Connection Management', () => {
         peerId: PeerID.fromString("peerWithServer").value,
         type: NodeType.NODEJS,
         websocket: {
-            ip: 'localhost',
+            ip: '127.0.0.1',
             port: 12223
         }
     }
@@ -42,7 +42,7 @@ describe('WebSocket Connection Management', () => {
 
         const config1 = {
             transportLayer: connectorTransport1,
-            webSocketHost: 'localhost',
+            webSocketHost: '127.0.0.1',
             webSocketPort: 12223,
         }
         const config2 = {

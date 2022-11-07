@@ -1,14 +1,13 @@
 import { inject } from 'tsyringe'
 
-import { StreamMessage, StreamMessageType, StreamPartID } from 'streamr-client-protocol'
+import { StreamMessage, StreamMessageType, StreamPartID } from '@streamr/protocol'
 
 import { Scaffold } from '../utils/Scaffold'
-import { until } from '../utils/promises'
 import { Signal } from '../utils/Signal'
 import { MessageStream } from './MessageStream'
 
 import { Subscription } from './Subscription'
-import { createSubscribePipeline } from './SubscribePipeline'
+import { createSubscribePipeline } from './subscribePipeline'
 import { NetworkNodeFacade, NetworkNodeStub } from '../NetworkNodeFacade'
 import { Resends } from './Resends'
 import { GroupKeyStore } from '../encryption/GroupKeyStore'
@@ -51,7 +50,6 @@ export class SubscriptionSession<T> {
         this.node = node
         this.onError = this.onError.bind(this)
         this.pipeline = createSubscribePipeline<T>({
-            messageStream: new MessageStream<T>(),
             streamPartId,
             resends,
             groupKeyStore,
@@ -163,15 +161,6 @@ export class SubscriptionSession<T> {
 
     has(sub: Subscription<T>): boolean {
         return this.subscriptions.has(sub)
-    }
-
-    async waitForNeighbours(numNeighbours = 1, timeout = 10000): Promise<boolean> {
-        return until(async () => {
-            if (!this.shouldBeSubscribed()) { return true } // abort
-            const node = await this.node.getNode()
-            if (!this.shouldBeSubscribed()) { return true } // abort
-            return node.getNeighborsForStreamPart(this.streamPartId).length >= numNeighbours
-        }, timeout)
     }
 
     /**

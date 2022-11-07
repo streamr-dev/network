@@ -1,8 +1,8 @@
 import { Client, types as cassandraTypes } from 'cassandra-driver'
-import { waitForCondition } from 'streamr-test-utils'
 const { TimeUuid } = cassandraTypes
 import { BucketManager } from '../../../../src/plugins/storage/BucketManager'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
+import { waitForCondition } from '@streamr/utils'
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'

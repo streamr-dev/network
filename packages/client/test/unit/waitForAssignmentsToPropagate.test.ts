@@ -6,12 +6,12 @@ import {
     StreamPartID,
     toStreamID,
     toStreamPartID
-} from 'streamr-client-protocol'
-import { PushPipeline } from '../../src/utils/PushPipeline'
+} from '@streamr/protocol'
 import { range, shuffle } from 'lodash'
 import { wait } from '@streamr/utils'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { createRandomAuthentication } from '../test-utils/utils'
+import { MessageStream } from '../../src/subscribe/MessageStream'
 
 const authentication = createRandomAuthentication()
 
@@ -42,14 +42,14 @@ const TARGET_STREAM = Object.freeze({
 })
 
 describe(waitForAssignmentsToPropagate, () => {
-    let pushPipeline: PushPipeline<StreamMessage<any>>
+    let messageStream: MessageStream<any>
     let propagatePromiseState: 'rejected' | 'resolved' | 'pending'
     let propagatePromise: Promise<any>
 
     beforeEach(() => {
-        pushPipeline = new PushPipeline<StreamMessage<any>>()
+        messageStream = new MessageStream<any>()
         propagatePromiseState = 'pending'
-        propagatePromise = waitForAssignmentsToPropagate(pushPipeline, TARGET_STREAM)
+        propagatePromise = waitForAssignmentsToPropagate(messageStream, TARGET_STREAM)
             .then((retValue) => {
                 propagatePromiseState = 'resolved'
                 return retValue
@@ -61,10 +61,10 @@ describe(waitForAssignmentsToPropagate, () => {
 
     describe('ignore cases', () => {
         it('invalid payloads are ignored', async () => {
-            await pushPipeline.push(await makeMsg(1000, {
+            await messageStream.push(await makeMsg(1000, {
                 something: 'unexpected'
             }))
-            await pushPipeline.push(await makeMsg(1200, {}))
+            await messageStream.push(await makeMsg(1200, {}))
             await Promise.race([propagatePromise, wait(RACE_TIMEOUT_IN_MS)])
             expect(propagatePromiseState).toEqual('pending') // would be rejected if error instead of ignore
         })
@@ -75,7 +75,7 @@ describe(waitForAssignmentsToPropagate, () => {
                 partitions: TARGET_STREAM.partitions
             }
             for (const message of await createAssignmentMessagesFor(otherStream)) {
-                await pushPipeline.push(message)
+                await messageStream.push(message)
             }
             await Promise.race([propagatePromise, wait(RACE_TIMEOUT_IN_MS)])
             expect(propagatePromiseState).toEqual('pending') // would be resolved if counted towards valid
@@ -84,10 +84,10 @@ describe(waitForAssignmentsToPropagate, () => {
         it('duplicate assignments are ignored', async () => {
             const messagesButMissingOne = (await createAssignmentMessagesFor(TARGET_STREAM)).slice(0, -1)
             for (const message of messagesButMissingOne) {
-                await pushPipeline.push(message)
+                await messageStream.push(message)
             }
             for (const message of messagesButMissingOne) {
-                await pushPipeline.push(message)
+                await messageStream.push(message)
             }
             await Promise.race([propagatePromise, wait(RACE_TIMEOUT_IN_MS)])
             expect(propagatePromiseState).toEqual('pending') // would be resolved if counted towards valid
@@ -96,12 +96,12 @@ describe(waitForAssignmentsToPropagate, () => {
         it('non-existing partition assignments are ignored', async () => {
             const messagesButMissingOne = (await createAssignmentMessagesFor(TARGET_STREAM)).slice(0, -1)
             for (const message of messagesButMissingOne) {
-                await pushPipeline.push(message)
+                await messageStream.push(message)
             }
-            await pushPipeline.push(await makeMsg(8000, {
+            await messageStream.push(await makeMsg(8000, {
                 streamPart: toStreamPartID(TARGET_STREAM.id, TARGET_STREAM.partitions)
             }))
-            await pushPipeline.push(await makeMsg(9000, {
+            await messageStream.push(await makeMsg(9000, {
                 streamPart: toStreamPartID(TARGET_STREAM.id, TARGET_STREAM.partitions + 1)
             }))
             await Promise.race([propagatePromise, wait(RACE_TIMEOUT_IN_MS)])
@@ -112,7 +112,7 @@ describe(waitForAssignmentsToPropagate, () => {
     it('resolves if all assignments received one-by-one', async () => {
         for (const message of await createAssignmentMessagesFor(TARGET_STREAM)) {
             expect(propagatePromiseState).toEqual('pending')
-            await pushPipeline.push(message)
+            await messageStream.push(message)
         }
         await Promise.race([propagatePromise, wait(RACE_TIMEOUT_IN_MS)])
         expect(propagatePromiseState).toEqual('resolved')
@@ -143,7 +143,7 @@ describe(waitForAssignmentsToPropagate, () => {
         ])
 
         for (const message of messagesToPush) {
-            await pushPipeline.push(message)
+            await messageStream.push(message)
         }
         await Promise.race([propagatePromise, wait(RACE_TIMEOUT_IN_MS)])
         expect(propagatePromiseState).toEqual('resolved')

@@ -1,13 +1,19 @@
-import { createTestStream, startPublisherKeyExchangeSubscription } from '../test-utils/utils'
-import { getPublishTestStreamMessages } from '../test-utils/publish'
-import { StreamrClient } from '../../src/StreamrClient'
-import { Stream } from '../../src/Stream'
-import { StreamPermission } from '../../src/permission'
+import 'reflect-metadata'
+
+import { StreamMessageType, toStreamPartID } from '@streamr/protocol'
+import { fastPrivateKey } from '@streamr/test-utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
+import { StreamPermission } from '../../src/permission'
+import { Stream } from '../../src/Stream'
+import { StreamrClient } from '../../src/StreamrClient'
+import { until } from '../../src/utils/promises'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
-import { fastPrivateKey } from 'streamr-test-utils'
-import { StreamMessage } from 'streamr-client-protocol'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
+import { getPublishTestStreamMessages } from '../test-utils/publish'
+import { createTestStream, startPublisherKeyExchangeSubscription } from '../test-utils/utils'
+import { DEFAULT_PARTITION } from './../../src/StreamIDBuilder'
+import { collect } from '../../src/utils/iterators'
+import { Message } from '../../src/Message'
 
 describe('Group Key Persistence', () => {
     let publisherPrivateKey: string
@@ -94,7 +100,7 @@ describe('Group Key Persistence', () => {
             it('works', async () => {
                 await startPublisherKeyExchangeSubscription(publisher2, stream.getStreamParts()[0])
 
-                const received: StreamMessage[] = []
+                const received: Message[] = []
                 const sub = await subscriber.resend(
                     stream.id,
                     {
@@ -128,7 +134,7 @@ describe('Group Key Persistence', () => {
             // this should set up group key
             const published = await publishTestMessages(1)
 
-            const received = await sub.collect(1)
+            const received = await collect(sub, 1)
             await subscriber.destroy()
 
             const subscriber2 = environment.createClient({
@@ -141,15 +147,18 @@ describe('Group Key Persistence', () => {
             const sub2 = await subscriber2.subscribe({
                 stream: stream.id,
             })
-            await sub2.waitForNeighbours()
+            const node2 = await subscriber2.getNode()
+            await until(async () => {
+                return node2.getNeighborsForStreamPart(toStreamPartID(stream.id, DEFAULT_PARTITION)).length >= 1
+            })
 
             await Promise.all([
-                sub2.collect(3),
+                collect(sub2, 3),
                 published.push(...await publishTestMessages(3)),
             ])
 
             const groupKeyRequests = environment.getNetwork().getSentMessages({
-                messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST
+                messageType: StreamMessageType.GROUP_KEY_REQUEST
             })
             expect(groupKeyRequests.length).toBe(1)
             expect(received.map((m) => m.signature)).toEqual(published.slice(0, 1).map((m) => m.signature))
@@ -230,7 +239,7 @@ describe('Group Key Persistence', () => {
             const received1 = []
             const received2 = []
             for await (const m of sub) {
-                const content = m.getParsedContent()
+                const content = m.content
                 // 'n of MAX_MESSAGES' messages belong to publisher2
                 if ((content as any).value.endsWith(`of ${MAX_MESSAGES}`)) {
                     received2.push(m)

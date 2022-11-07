@@ -5,7 +5,7 @@ import toArray from 'stream-to-array'
 import { Storage } from '../../../../src/plugins/storage/Storage'
 import { startCassandraStorage } from '../../../../src/plugins/storage/Storage'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
-import { toStreamID, StreamMessage, MessageID } from "streamr-client-protocol"
+import { toStreamID, StreamMessage, MessageID, EncryptionType } from "@streamr/protocol"
 import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
@@ -62,7 +62,7 @@ function buildEncryptedMsg({
     return new StreamMessage({
         messageId: new MessageID(toStreamID(streamId), streamPartition, timestamp, sequenceNumber, publisherId, msgChainId),
         content,
-        encryptionType: StreamMessage.ENCRYPTION_TYPES.AES,
+        encryptionType: EncryptionType.AES,
         signature: 'signature'
     })
 }

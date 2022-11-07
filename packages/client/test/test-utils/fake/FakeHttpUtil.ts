@@ -1,6 +1,5 @@
 import { EthereumAddress } from '@streamr/utils'
-import { Readable } from 'stream'
-import { StreamID, StreamMessage, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
+import { StreamID, StreamMessage, StreamPartID, toStreamPartID } from '@streamr/protocol'
 import { URLSearchParams } from 'url'
 import { HttpUtil } from '../../../src/HttpUtil'
 import { FakeNetwork } from './FakeNetwork'
@@ -27,14 +26,14 @@ export class FakeHttpUtil extends HttpUtil {
         this.realHttpUtil = new HttpUtil(mockLoggerFactory())
     }
 
-    override async fetchHttpStream(url: string): Promise<Readable> {
+    override async* fetchHttpStream<T>(url: string): AsyncIterable<StreamMessage<T>> {
         const request = FakeHttpUtil.getResendRequest(url)
         if (request !== undefined) {
             const storageNode = this.network.getNode(request.nodeId) as FakeStorageNode
             const format = request.query!.get('format')
             if (format === 'raw') {
                 const count = Number(request.query!.get('count'))
-                let msgs: StreamMessage<unknown>[]
+                let msgs: StreamMessage<any>[]
                 if (request.resendType === 'last') {
                     msgs = await storageNode.getLast(request.streamPartId, count)
                 } else if (request.resendType === 'range') {
@@ -58,10 +57,13 @@ export class FakeHttpUtil extends HttpUtil {
                 } else {
                     throw new Error(`assertion failed: resendType=${request.resendType}`)
                 }
-                return Readable.from(msgs)
+                yield* msgs
+            } else {
+                throw new Error(`not implemented: format=${format} ${url}`)
             }
+        } else {
+            throw new Error(`not implemented: ${url}`)
         }
-        throw new Error('not implemented: ' + url)
     }
 
     override createQueryString(query: Record<string, any>): string {

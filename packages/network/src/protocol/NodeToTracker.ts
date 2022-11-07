@@ -8,7 +8,7 @@ import {
     StatusAckMessage,
     StatusMessage,
     TrackerMessage
-} from 'streamr-client-protocol'
+} from '@streamr/protocol'
 import { Logger } from "@streamr/utils"
 import { decode } from './utils'
 import { Status, NodeId, TrackerId } from '../identifiers'

@@ -2,7 +2,7 @@ import { StreamDefinition } from './types'
 import { StreamIDBuilder } from './StreamIDBuilder'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { NetworkNodeFacade } from './NetworkNodeFacade'
-import { ProxyDirection } from 'streamr-client-protocol'
+import { ProxyDirection } from '@streamr/protocol'
 
 @scoped(Lifecycle.ContainerScoped)
 export class ProxyPublishSubscribe {

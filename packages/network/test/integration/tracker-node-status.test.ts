@@ -1,12 +1,12 @@
 import { Tracker, startTracker, TrackerServerEvent } from '@streamr/network-tracker'
 import { NetworkNode } from '../../src/logic/NetworkNode'
 
-import { runAndWaitForEvents } from 'streamr-test-utils'
+import { runAndWaitForEvents } from '@streamr/test-utils'
 import { wait } from '@streamr/utils'
 
 import { createNetworkNode } from '../../src/composition'
 import { Event as NodeEvent } from '../../src/logic/Node'
-import { StreamPartIDUtils } from 'streamr-client-protocol'
+import { StreamPartIDUtils } from '@streamr/protocol'
 
 /**
  * This test verifies that tracker receives status messages from nodes with list of neighbor connections

@@ -8,11 +8,10 @@ import {
     StreamID,
     StreamMessage,
     StreamMessageOptions
-} from 'streamr-client-protocol'
+} from '@streamr/protocol'
 import { EncryptionUtil } from '../encryption/EncryptionUtil'
-import { GroupKeyId } from '../encryption/GroupKey'
 import { createMessageRef, createRandomMsgChainId } from './messageChain'
-import { MessageMetadata } from './Publisher'
+import { PublishMetadata } from './Publisher'
 import { keyToArrayIndex } from '@streamr/utils'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { Mapping } from '../utils/Mapping'
@@ -67,7 +66,7 @@ export class MessageFactory {
     /* eslint-disable padding-line-between-statements */
     async createMessage<T>(
         content: T,
-        metadata: MessageMetadata & { timestamp: number },
+        metadata: PublishMetadata & { timestamp: number },
         explicitPartition?: number
     ): Promise<StreamMessage<T>> {
         const publisherId = await this.authentication.getAddress()
@@ -76,7 +75,7 @@ export class MessageFactory {
             throw new Error(`${publisherId} is not a publisher on stream ${this.streamId}`)
         }
 
-        const partitionCount = (await this.streamRegistry.getStream(this.streamId)).partitions
+        const partitionCount = (await this.streamRegistry.getStream(this.streamId)).getMetadata().partitions
         let partition
         if (explicitPartition !== undefined) {
             if ((explicitPartition < 0 || explicitPartition >= partitionCount)) {
@@ -100,7 +99,7 @@ export class MessageFactory {
         const messageId = new MessageID(this.streamId, partition, msgRef.timestamp, msgRef.sequenceNumber, publisherId, msgChainId)
 
         const encryptionType = (await this.streamRegistry.isPublic(this.streamId)) ? EncryptionType.NONE : EncryptionType.AES
-        let groupKeyId: GroupKeyId | undefined
+        let groupKeyId: string | undefined
         let newGroupKey: EncryptedGroupKey | undefined
         let serializedContent = JSON.stringify(content)
         if (encryptionType === EncryptionType.AES) {

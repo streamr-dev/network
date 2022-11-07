@@ -1,5 +1,6 @@
 import { validateIsString } from '../../utils/validations'
 
+/** @internal */
 export type EncryptedGroupKeySerialized = [string, string]
 export default class EncryptedGroupKey {
 

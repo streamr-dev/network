@@ -1,4 +1,4 @@
-import { StreamID } from 'streamr-client-protocol'
+import { StreamID } from '@streamr/protocol'
 import { MetricsContext } from '@streamr/utils'
 
 export type NodeId = string

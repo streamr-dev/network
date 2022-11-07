@@ -3,7 +3,7 @@
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { ServerWsEndpoint, startHttpServer } from '../../src/connection/ws/ServerWsEndpoint'
 import NodeClientWsEndpoint from "../../src/connection/ws/NodeClientWsEndpoint"
-import { runAndWaitForEvents } from 'streamr-test-utils'
+import { runAndWaitForEvents } from '@streamr/test-utils'
 import { DisconnectionCode, DisconnectionReason, Event } from '../../src/connection/ws/AbstractWsEndpoint'
 
 const wssPort1 = 7777

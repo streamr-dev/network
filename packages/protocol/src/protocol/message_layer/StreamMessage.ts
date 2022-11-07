@@ -43,23 +43,9 @@ export interface StreamMessageOptions<T> {
     signature: string
 }
 
-export interface ObjectType<T> { 
-    streamId: string
-    streamPartition: number
-    timestamp: number
-    sequenceNumber: number
-    publisherId: string
-    msgChainId: string
-    messageType: StreamMessageType
-    contentType: ContentType
-    encryptionType: EncryptionType
-    groupKeyId: string | null
-    content: string | T
-    signature: string
-}
-
 /**
- *  Encrypted StreamMessage.
+ * Encrypted StreamMessage.
+ * @internal
  */
 export type StreamMessageEncrypted<T> = StreamMessage<T> & {
     encryptionType: EncryptionType.RSA | EncryptionType.AES
@@ -68,6 +54,7 @@ export type StreamMessageEncrypted<T> = StreamMessage<T> & {
 }
 /**
  * Unencrypted StreamMessage.
+ * @internal
  */
 export type StreamMessageUnencrypted<T> = StreamMessage<T> & {
     encryptionType: EncryptionType.NONE
@@ -76,18 +63,9 @@ export type StreamMessageUnencrypted<T> = StreamMessage<T> & {
 export default class StreamMessage<T = unknown> {
     static LATEST_VERSION = LATEST_VERSION
 
-    // TODO can we remove these static field and use the enum object directly?
-    static MESSAGE_TYPES = StreamMessageType
-
-    static VALID_MESSAGE_TYPES = new Set(Object.values(StreamMessage.MESSAGE_TYPES))
-
-    static CONTENT_TYPES = ContentType
-
-    static VALID_CONTENT_TYPES = new Set(Object.values(StreamMessage.CONTENT_TYPES))
-
-    static ENCRYPTION_TYPES = EncryptionType
-
-    static VALID_ENCRYPTIONS = new Set(Object.values(StreamMessage.ENCRYPTION_TYPES))
+    private static VALID_MESSAGE_TYPES = new Set(Object.values(StreamMessageType))
+    private static VALID_CONTENT_TYPES = new Set(Object.values(ContentType))
+    private static VALID_ENCRYPTIONS = new Set(Object.values(EncryptionType))
 
     messageId: MessageID
     prevMsgRef: MessageRef | null
@@ -104,7 +82,7 @@ export default class StreamMessage<T = unknown> {
      * Create a new StreamMessage identical to the passed-in streamMessage.
      */
     clone(): StreamMessage<T> {
-        const content = this.encryptionType === StreamMessage.ENCRYPTION_TYPES.NONE
+        const content = this.encryptionType === EncryptionType.NONE
             ? this.getParsedContent()
             : this.getSerializedContent()
 
@@ -125,9 +103,9 @@ export default class StreamMessage<T = unknown> {
         messageId,
         prevMsgRef = null,
         content,
-        messageType = StreamMessage.MESSAGE_TYPES.MESSAGE,
-        contentType = StreamMessage.CONTENT_TYPES.JSON,
-        encryptionType = StreamMessage.ENCRYPTION_TYPES.NONE,
+        messageType = StreamMessageType.MESSAGE,
+        contentType = ContentType.JSON,
+        encryptionType = EncryptionType.NONE,
         groupKeyId = null,
         newGroupKey = null,
         signature,
@@ -219,12 +197,12 @@ export default class StreamMessage<T = unknown> {
     getParsedContent(): T {
         if (this.parsedContent == null) {
             // Don't try to parse encrypted messages
-            if (this.messageType === StreamMessage.MESSAGE_TYPES.MESSAGE && this.encryptionType !== StreamMessage.ENCRYPTION_TYPES.NONE) {
+            if (this.messageType === StreamMessageType.MESSAGE && this.encryptionType !== EncryptionType.NONE) {
                 // @ts-expect-error need type narrowing for encrypted vs unencrypted
                 return this.serializedContent
             }
 
-            if (this.contentType === StreamMessage.CONTENT_TYPES.JSON) {
+            if (this.contentType === ContentType.JSON) {
                 try {
                     this.parsedContent = JSON.parse(this.serializedContent!)
                 } catch (err: any) {
@@ -257,6 +235,7 @@ export default class StreamMessage<T = unknown> {
         return this.newGroupKey
     }
 
+    /** @internal */
     static registerSerializer(version: number, serializer: Serializer<StreamMessage<unknown>>): void {
         // Check the serializer interface
         if (!serializer.fromArray) {
@@ -274,10 +253,12 @@ export default class StreamMessage<T = unknown> {
         serializerByVersion[version] = serializer
     }
 
+    /** @internal */
     static unregisterSerializer(version: number): void {
         delete serializerByVersion[version]
     }
 
+    /** @internal */
     static getSerializer(version: number): Serializer<StreamMessage<unknown>> {
         const clazz = serializerByVersion[version]
         if (!clazz) {
@@ -357,22 +338,5 @@ export default class StreamMessage<T = unknown> {
 
     static isUnencrypted<T = unknown>(msg: StreamMessage<T>): msg is StreamMessageUnencrypted<T> {
         return !this.isEncrypted(msg)
-    }
-
-    toObject(): ObjectType<T> {
-        return {
-            streamId: this.getStreamId(),
-            streamPartition: this.getStreamPartition(),
-            timestamp: this.getTimestamp(),
-            sequenceNumber: this.getSequenceNumber(),
-            publisherId: this.getPublisherId(),
-            msgChainId: this.getMsgChainId(),
-            messageType: this.messageType,
-            contentType: this.contentType,
-            encryptionType: this.encryptionType,
-            groupKeyId: this.groupKeyId,
-            content: (this.encryptionType === StreamMessage.ENCRYPTION_TYPES.NONE ? this.getParsedContent() : this.getSerializedContent()),
-            signature: this.signature,
-        }
     }
 }

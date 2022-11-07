@@ -1,10 +1,10 @@
 import { collect, unique } from './GeneratorUtils'
-import { StreamID, StreamMessage, StreamPartIDUtils } from 'streamr-client-protocol'
+import { StreamID, StreamMessage, StreamPartIDUtils } from '@streamr/protocol'
 import { identity } from 'lodash'
-import { PushPipeline } from './PushPipeline'
+import { MessageStream } from '../subscribe/MessageStream'
 
 export function waitForAssignmentsToPropagate(
-    pushPipeline: PushPipeline<any>,
+    messageStream: MessageStream<any>,
     targetStream: {
         id: StreamID
         partitions: number
@@ -12,7 +12,7 @@ export function waitForAssignmentsToPropagate(
 ): Promise<string[]> {
     return collect(
         unique<string>(
-            pushPipeline
+            messageStream
                 .map((msg: StreamMessage) => (msg.getParsedContent() as any).streamPart)
                 .filter((input: any) => {
                     try {

@@ -9,10 +9,11 @@ import {
     StatusAckMessage,
     StatusMessage,
     StreamMessage,
+    StreamMessageType,
     StreamPartIDUtils,
     toStreamID
-} from 'streamr-client-protocol'
-import { runAndWaitForEvents } from 'streamr-test-utils'
+} from '@streamr/protocol'
+import { runAndWaitForEvents } from '@streamr/test-utils'
 import { toEthereumAddress, waitForEvent } from '@streamr/utils'
 import { startTracker, Tracker, TrackerServer, TrackerServerEvent } from '@streamr/network-tracker'
 import { Event as NodeToNodeEvent, NodeToNode } from '../../src/protocol/NodeToNode'
@@ -124,7 +125,7 @@ describe('delivery of messages in protocol layer', () => {
             content: {
                 hello: 'world'
             },
-            messageType: StreamMessage.MESSAGE_TYPES.MESSAGE,
+            messageType: StreamMessageType.MESSAGE,
             signature: 'signature',
         })
         const messagePromise = waitForEvent(nodeToNode1, NodeToNodeEvent.DATA_RECEIVED)
@@ -211,7 +212,7 @@ describe('delivery of messages in protocol layer', () => {
 
         })
         trackerServer.send('node1', sentMessage)
-        
+
         const [msg, source] = await messagePromise
 
         expect(msg).toBeInstanceOf(RelayMessage)
@@ -318,5 +319,5 @@ describe('delivery of messages in protocol layer', () => {
         expect(msg.subType).toEqual('rtcConnect')
         expect(msg.data).toEqual({})
     })
-    
+
 })

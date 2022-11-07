@@ -1,8 +1,7 @@
 import { NetworkNode } from '../../src/logic/NetworkNode'
 import { Tracker, startTracker } from '@streamr/network-tracker'
-import { MessageID, StreamMessage, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
-import { waitForCondition } from 'streamr-test-utils'
-import { toEthereumAddress, waitForEvent } from '@streamr/utils'
+import { MessageID, StreamMessage, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
+import { toEthereumAddress, waitForEvent, waitForCondition } from '@streamr/utils'
 
 import { createNetworkNode } from '../../src/composition'
 import { Event as NodeEvent } from '../../src/logic/Node'
@@ -30,7 +29,7 @@ describe('duplicate message detection and avoidance', () => {
         contactNode = createNetworkNode({
             id: 'node-0',
             trackers: [trackerInfo],
-            stunUrls: []
+            iceServers: []
         })
         contactNode.start()
 
@@ -38,31 +37,31 @@ describe('duplicate message detection and avoidance', () => {
             createNetworkNode({
                 id: 'node-1',
                 trackers: [trackerInfo],
-                stunUrls: [],
+                iceServers: [],
                 webrtcDisallowPrivateAddresses: false
             }),
             createNetworkNode({
                 id: 'node-2',
                 trackers: [trackerInfo],
-                stunUrls: [],
+                iceServers: [],
                 webrtcDisallowPrivateAddresses: false
             }),
             createNetworkNode({
                 id: 'node-3',
                 trackers: [trackerInfo],
-                stunUrls: [],
+                iceServers: [],
                 webrtcDisallowPrivateAddresses: false
             }),
             createNetworkNode({
                 id: 'node-4',
                 trackers: [trackerInfo],
-                stunUrls: [],
+                iceServers: [],
                 webrtcDisallowPrivateAddresses: false
             }),
             createNetworkNode({
                 id: 'node-5',
                 trackers: [trackerInfo],
-                stunUrls: [],
+                iceServers: [],
                 webrtcDisallowPrivateAddresses: false
             }),
         ]

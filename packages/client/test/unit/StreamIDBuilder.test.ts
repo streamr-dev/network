@@ -1,23 +1,21 @@
 import 'reflect-metadata'
-import { StreamIDBuilder } from '../../src/StreamIDBuilder'
-import { StreamPartIDUtils } from 'streamr-client-protocol'
-import { StreamDefinition } from '../../src'
-import { Authentication } from '../../src/Authentication'
+
 import { toEthereumAddress } from '@streamr/utils'
+import { StreamPartIDUtils } from '@streamr/protocol'
+import { Authentication } from '../../src/Authentication'
+import { StreamIDBuilder } from '../../src/StreamIDBuilder'
+import { StreamDefinition } from '../../src/types'
 
 const address = '0xf5B45CC4cc510C31Cd6B64B8F4f341C283894086'
 const normalizedAddress = address.toLowerCase()
 
 describe('StreamIDBuilder', () => {
-    let isAuthenticated: jest.Mock<boolean, []>
     let getAddress: jest.Mock<Promise<string>, []>
     let streamIdBuilder: StreamIDBuilder
 
     beforeEach(() => {
-        isAuthenticated = jest.fn()
         getAddress = jest.fn()
         streamIdBuilder = new StreamIDBuilder({
-            isAuthenticated,
             getAddress
         } as unknown as Authentication)
     })
@@ -35,23 +33,14 @@ describe('StreamIDBuilder', () => {
                 .toEqual(`${normalizedAddress}/foo/bar`)
         })
 
-        it('throws if given path-only format but user not authenticated', () => {
-            isAuthenticated.mockReturnValue(false)
-            return expect(streamIdBuilder.toStreamID('/foo/bar'))
-                .rejects
-                .toThrow('path-only format "/foo/bar" provided without domain')
-        })
-
         it('throws if given path-only format but ethereum address fetching rejects', () => {
-            isAuthenticated.mockReturnValue(true)
             getAddress.mockRejectedValue(new Error('random error for getAddress'))
             return expect(streamIdBuilder.toStreamID('/foo/bar'))
                 .rejects
                 .toThrow('random error for getAddress')
         })
 
-        it('returns full stream id given path-only format if authenticated', () => {
-            isAuthenticated.mockReturnValue(true)
+        it('returns full stream id given path-only format', () => {
             getAddress.mockResolvedValue(toEthereumAddress(address))
             return expect(streamIdBuilder.toStreamID('/foo/bar'))
                 .resolves

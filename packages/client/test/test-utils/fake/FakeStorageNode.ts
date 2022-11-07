@@ -5,7 +5,7 @@ import {
     StreamMessageType,
     StreamPartID,
     toStreamPartID
-} from 'streamr-client-protocol'
+} from '@streamr/protocol'
 import { FakeNetworkNode } from './FakeNetworkNode'
 import { FakeNetwork } from './FakeNetwork'
 import { formStorageNodeAssignmentStreamId } from '../../../src/utils/utils'
@@ -52,7 +52,9 @@ export class FakeStorageNode extends FakeNetworkNode {
         const storageNodeAssignmentStreamPermissions = new Multimap<EthereumAddress, StreamPermission>()
         storageNodeAssignmentStreamPermissions.add(address, StreamPermission.PUBLISH)
         this.chain.streams.set(formStorageNodeAssignmentStreamId(address), {
-            metadata: {},
+            metadata: {
+                partitions: 1
+            },
             permissions: storageNodeAssignmentStreamPermissions
         })
     }

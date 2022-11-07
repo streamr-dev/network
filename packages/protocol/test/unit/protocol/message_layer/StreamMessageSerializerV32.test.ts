@@ -6,7 +6,10 @@ import {
     MessageID,
     EncryptedGroupKey,
     toStreamID,
-    ValidationError
+    ValidationError,
+    StreamMessageType,
+    ContentType,
+    EncryptionType
 } from '../../../../src/index'
 import { toEthereumAddress } from '@streamr/utils'
 import { SIGNATURE_TYPE_ETH } from '../../../../src/protocol/message_layer/StreamMessageSerializerV32'
@@ -20,10 +23,10 @@ const message = new StreamMessage({
     messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
     prevMsgRef: new MessageRef(1564046132168, 5),
     content: 'encrypted-content',
-    messageType: StreamMessage.MESSAGE_TYPES.MESSAGE,
-    contentType: StreamMessage.CONTENT_TYPES.JSON,
+    messageType: StreamMessageType.MESSAGE,
+    contentType: ContentType.JSON,
     groupKeyId: 'groupKeyId',
-    encryptionType: StreamMessage.ENCRYPTION_TYPES.AES,
+    encryptionType: EncryptionType.AES,
     newGroupKey: new EncryptedGroupKey('groupKeyId', 'encryptedGroupKeyHex', '["groupKeyId","encryptedGroupKeyHex"]'),
     signature: 'signature',
 })
@@ -31,9 +34,9 @@ const serializedMessage = JSON.stringify([
     VERSION,
     ['streamId', 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'],
     [1564046132168, 5],
-    StreamMessage.MESSAGE_TYPES.MESSAGE,
-    StreamMessage.CONTENT_TYPES.JSON,
-    StreamMessage.ENCRYPTION_TYPES.AES,
+    StreamMessageType.MESSAGE,
+    ContentType.JSON,
+    EncryptionType.AES,
     'groupKeyId',
     'encrypted-content',
     '["groupKeyId","encryptedGroupKeyHex"]',
@@ -44,7 +47,7 @@ const serializedMessage = JSON.stringify([
 describe('StreamMessageSerializerV32', () => {
 
     describe('deserialize', () => {
-    
+
         it('correctly parses messages', () => {
             assert.deepStrictEqual(StreamMessage.deserialize(serializedMessage), message)
         })
@@ -54,9 +57,9 @@ describe('StreamMessageSerializerV32', () => {
                 VERSION,
                 ['streamId', 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'],
                 [1564046132168, 5],
-                StreamMessage.MESSAGE_TYPES.MESSAGE,
-                StreamMessage.CONTENT_TYPES.JSON,
-                StreamMessage.ENCRYPTION_TYPES.AES,
+                StreamMessageType.MESSAGE,
+                ContentType.JSON,
+                EncryptionType.AES,
                 'groupKeyId',
                 'encrypted-content',
                 '["groupKeyId","encryptedGroupKeyHex"]',

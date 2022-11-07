@@ -10,4 +10,5 @@ program
     .command('storage-node', 'storage node subcommands')
     .command('mock-data', 'mock data subcommands')
     .command('wallet', 'wallet subcommands')
+    .command('governance', 'governance subcommands')
     .parse()

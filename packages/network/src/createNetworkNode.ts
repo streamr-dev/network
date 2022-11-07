@@ -11,16 +11,17 @@ import { PeerInfo } from './connection/PeerInfo'
 import NodeClientWsEndpoint from './connection/ws/NodeClientWsEndpoint'
 import { WebRtcEndpoint } from './connection/webrtc/WebRtcEndpoint'
 import { webRtcConnectionFactory } from './connection/webrtc/NodeWebRtcConnection'
-import { SmartContractRecord } from 'streamr-client-protocol'
+import { TrackerRegistryRecord } from '@streamr/protocol'
+import { IceServer } from './connection/webrtc/WebRtcConnection'
 
 export interface NetworkNodeOptions extends AbstractNodeOptions {
-    trackers: SmartContractRecord[]
+    trackers: TrackerRegistryRecord[]
     disconnectionWaitTime?: number
     peerPingInterval?: number
     newWebrtcConnectionTimeout?: number
     webrtcDatachannelBufferThresholdLow?: number
     webrtcDatachannelBufferThresholdHigh?: number
-    stunUrls?: string[]
+    iceServers?: ReadonlyArray<IceServer>
     rttUpdateTimeout?: number
     trackerConnectionMaintenanceInterval?: number
     webrtcDisallowPrivateAddresses?: boolean
@@ -39,7 +40,7 @@ export const createNetworkNode = ({
     rttUpdateTimeout,
     webrtcDatachannelBufferThresholdLow,
     webrtcDatachannelBufferThresholdHigh,
-    stunUrls = ['stun:stun.streamr.network:5349'],
+    iceServers = [],
     trackerConnectionMaintenanceInterval,
     webrtcDisallowPrivateAddresses = true,
     acceptProxyConnections
@@ -52,7 +53,7 @@ export const createNetworkNode = ({
     const negotiatedProtocolVersions = new NegotiatedProtocolVersions(peerInfo)
     const nodeToNode = new NodeToNode(new WebRtcEndpoint(
         peerInfo,
-        stunUrls,
+        iceServers,
         webRtcSignaller,
         metricsContext,
         negotiatedProtocolVersions,

@@ -2,7 +2,7 @@
  * Endpoints for RESTful data requests
  */
 import express, { Request, Response, Router } from 'express'
-import { StreamMessage } from 'streamr-client-protocol'
+import { StreamMessage } from '@streamr/protocol'
 import { Logger, Metric, MetricsContext, RateMetric } from '@streamr/utils'
 import { Readable, Transform, pipeline } from 'stream'
 import { Storage } from './Storage'

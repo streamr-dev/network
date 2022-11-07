@@ -3,8 +3,8 @@ import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
 import { getGroupKeyStore, uid } from '../test-utils/utils'
 import { addAfterFn } from '../test-utils/jest-utils'
 import LeakDetector from 'jest-leak-detector' // requires weak-napi
-import { StreamID, toStreamID } from 'streamr-client-protocol'
-import { randomEthereumAddress } from 'streamr-test-utils'
+import { StreamID, toStreamID } from '@streamr/protocol'
+import { randomEthereumAddress } from '@streamr/test-utils'
 import { range } from 'lodash'
 import { EthereumAddress } from '@streamr/utils'
 

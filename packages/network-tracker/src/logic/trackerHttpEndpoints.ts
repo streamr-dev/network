@@ -14,7 +14,7 @@ import http from 'http'
 import https from 'https'
 import morgan from 'morgan'
 import compression from 'compression'
-import { StreamID, toStreamID } from 'streamr-client-protocol'
+import { StreamID, toStreamID } from '@streamr/protocol'
 
 const staticLogger = new Logger(module)
 

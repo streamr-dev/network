@@ -1,6 +1,6 @@
 import crypto, { CipherKey } from 'crypto'
 import { arrayify, hexlify } from '@ethersproject/bytes'
-import { StreamMessage, StreamMessageError } from 'streamr-client-protocol'
+import { EncryptionType, StreamMessage, StreamMessageError } from '@streamr/protocol'
 import { GroupKey } from './GroupKey'
 
 export class DecryptError extends StreamMessageError {
@@ -60,17 +60,17 @@ export class EncryptionUtil {
     }
 
     static decryptStreamMessage(streamMessage: StreamMessage, groupKey: GroupKey): void | never {
-        if ((streamMessage.encryptionType !== StreamMessage.ENCRYPTION_TYPES.AES)) {
+        if ((streamMessage.encryptionType !== EncryptionType.AES)) {
             return
         }
 
         try {
-            streamMessage.encryptionType = StreamMessage.ENCRYPTION_TYPES.NONE
+            streamMessage.encryptionType = EncryptionType.NONE
             const serializedContent = this.decryptWithAES(streamMessage.getSerializedContent(), groupKey.data).toString()
             streamMessage.parsedContent = JSON.parse(serializedContent)
             streamMessage.serializedContent = serializedContent
         } catch (err) {
-            streamMessage.encryptionType = StreamMessage.ENCRYPTION_TYPES.AES
+            streamMessage.encryptionType = EncryptionType.AES
             throw new DecryptError(streamMessage, err.stack)
         }
 
@@ -82,7 +82,7 @@ export class EncryptionUtil {
                 streamMessage.newGroupKey = groupKey.decryptNextGroupKey(newGroupKey)
             }
         } catch (err) {
-            streamMessage.encryptionType = StreamMessage.ENCRYPTION_TYPES.AES
+            streamMessage.encryptionType = EncryptionType.AES
             throw new DecryptError(streamMessage, 'Could not decrypt new group key: ' + err.stack)
         }
         /* eslint-enable no-param-reassign */

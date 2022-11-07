@@ -6,7 +6,7 @@ import { getPermissionId } from '../src/permission'
 
 createClientCommand(async (client: StreamrClient, streamId: string, options: any) => {
     const stream = await client.getStream(streamId)
-    const obj: any = stream.toObject()
+    const obj: any = { id: stream.id, ...stream.getMetadata() }
     if (options.includePermissions) {
         const assigments = await stream.getPermissions()
         obj.permissions = assigments.map((assignment) => {

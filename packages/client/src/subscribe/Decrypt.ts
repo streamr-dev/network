@@ -1,7 +1,4 @@
-/**
- * Decrypt StreamMessages in-place.
- */
-import { StreamMessage } from 'streamr-client-protocol'
+import { EncryptionType, StreamMessage } from '@streamr/protocol'
 import { EncryptionUtil, DecryptError } from '../encryption/EncryptionUtil'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { DestroySignal } from '../DestroySignal'
@@ -42,7 +39,7 @@ export class Decrypt<T> {
             return streamMessage
         }
 
-        if (streamMessage.encryptionType !== StreamMessage.ENCRYPTION_TYPES.AES) {
+        if (streamMessage.encryptionType !== EncryptionType.AES) {
             return streamMessage
         }
 
@@ -63,7 +60,7 @@ export class Decrypt<T> {
                         'addGroupKey',
                         this.decryptionConfig.keyRequestTimeout,
                         (storedGroupKey: GroupKey) => storedGroupKey.id === groupKeyId,
-                        this.destroySignal.createAbortController())
+                        this.destroySignal.abortSignal)
                     groupKey = groupKeys[0] as GroupKey
                 } catch (e: any) {
                     if (this.destroySignal.isDestroyed()) {

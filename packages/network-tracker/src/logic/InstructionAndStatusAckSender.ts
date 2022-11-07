@@ -1,6 +1,6 @@
 import _ from 'lodash'
-import { StreamPartID } from 'streamr-client-protocol'
-import { NodeId } from 'streamr-network'
+import { StreamPartID } from '@streamr/protocol'
+import { NodeId } from '@streamr/network-node'
 import { Logger, MetricsContext, MetricsDefinition, Metric, RateMetric } from '@streamr/utils'
 import { TopologyStabilizationOptions } from './Tracker'
 

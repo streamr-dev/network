@@ -1,5 +1,5 @@
 import { webRtcConnectionFactory } from "../../src/connection/webrtc/BrowserWebRtcConnection"
-import { runAndWaitForEvents } from "streamr-test-utils"
+import { runAndWaitForEvents } from '@streamr/test-utils'
 import { MessageQueue } from "../../src/connection/MessageQueue"
 import { ConstructorOptions } from "../../src/connection/webrtc/WebRtcConnection"
 import { DeferredConnectionAttempt } from "../../src/connection/webrtc/DeferredConnectionAttempt"
@@ -8,7 +8,7 @@ const connectionOpts1: ConstructorOptions = {
     selfId: 'peer1',
     targetPeerId: 'peer2',
     routerId: 'tracker',
-    stunUrls: [],
+    iceServers: [],
     pingInterval: 5000,
     messageQueue: new MessageQueue<string>(),
     deferredConnectionAttempt: new DeferredConnectionAttempt()
@@ -18,7 +18,7 @@ const connectionOpts2: ConstructorOptions = {
     selfId: 'peer2',
     targetPeerId: 'peer1',
     routerId: 'tracker',
-    stunUrls: [],
+    iceServers: [],
     pingInterval: 5000,
     messageQueue: new MessageQueue<string>(),
     deferredConnectionAttempt: new DeferredConnectionAttempt()
@@ -57,6 +57,19 @@ describe('BrowserWebRtcConnection', () => {
     afterAll(() => {
         conn1.close()
         conn2.close()
+    })
+
+    it('configuring a turn server does not cause error ', () => {
+        const conn3 = webRtcConnectionFactory.createConnection({
+            ...connectionOpts1,
+            iceServers: [{
+                url: 'turn:turn.streamr.network',
+                port: 5349,
+                username: 'BrubeckTurn1',
+                password: 'MIlbgtMw4nhpmbgqRrht1Q=='
+            }]
+        })
+        expect(() => conn3.connect()).not.toThrowError()
     })
 
     it('can connect', async () => {

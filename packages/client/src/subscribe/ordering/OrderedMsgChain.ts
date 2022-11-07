@@ -3,7 +3,7 @@ import { EventEmitter } from 'events'
 import Heap from 'heap'
 import StrictEventEmitter from 'strict-event-emitter-types'
 
-import { StreamMessage, MessageRef } from 'streamr-client-protocol'
+import { StreamMessage, MessageRef } from '@streamr/protocol'
 import GapFillFailedError from './GapFillFailedError'
 import { EthereumAddress, Logger } from '@streamr/utils'
 

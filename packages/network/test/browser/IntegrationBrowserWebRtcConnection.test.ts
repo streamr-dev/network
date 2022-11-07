@@ -1,6 +1,5 @@
 import { once } from 'events'
-import { waitForCondition } from 'streamr-test-utils'
-import { wait } from '@streamr/utils'
+import { wait, waitForCondition } from '@streamr/utils'
 import { MessageQueue } from '../../src/connection/MessageQueue'
 import { BrowserWebRtcConnection } from '../../src/connection/webrtc/BrowserWebRtcConnection'
 import { DeferredConnectionAttempt } from '../../src/connection/webrtc/DeferredConnectionAttempt'
@@ -22,7 +21,7 @@ describe('Connection', () => {
             selfId: 'peer1',
             targetPeerId: 'peer2',
             routerId: 'tracker',
-            stunUrls: [],
+            iceServers: [],
             pingInterval: 5000,
             messageQueue: new MessageQueue<string>(),
             deferredConnectionAttempt: new DeferredConnectionAttempt()
@@ -32,7 +31,7 @@ describe('Connection', () => {
             selfId: 'peer2',
             targetPeerId: 'peer1',
             routerId: 'tracker',
-            stunUrls: [],
+            iceServers: [],
             pingInterval: 5000,
             messageQueue: new MessageQueue<string>(),
             deferredConnectionAttempt: new DeferredConnectionAttempt()

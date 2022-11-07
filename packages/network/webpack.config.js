@@ -73,7 +73,7 @@ module.exports = (env, argv) => {
             rules: [
                 {
                     test: /\.ts?$/,
-                    exclude: /(node_modules|streamr-client-protocol)/,
+                    exclude: /(node_modules|@streamr\/protocol)/,
                     use: [{
                         loader: 'ts-loader',
                         options: { configFile: 'tsconfig.browser.json' },

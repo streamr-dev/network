@@ -3,11 +3,11 @@ import WebSocket from 'ws'
 import fetch from 'node-fetch'
 import { StreamPermission } from 'streamr-client'
 import { Tracker } from '@streamr/network-tracker'
-import { fetchPrivateKeyWithGas, Queue } from 'streamr-test-utils'
+import { fetchPrivateKeyWithGas, Queue } from '@streamr/test-utils'
 import { Broker } from '../../src/broker'
 import { startBroker, createClient, createTestStream, startTestTracker } from '../utils'
-import { fastPrivateKey, waitForCondition } from 'streamr-test-utils'
-import { waitForEvent } from '@streamr/utils'
+import { fastPrivateKey } from '@streamr/test-utils'
+import { wait, waitForEvent, waitForCondition } from '@streamr/utils'
 import { range, sample } from 'lodash'
 
 const MESSAGE_COUNT = 120
@@ -85,8 +85,13 @@ const publishMessages = async (streamId: string): Promise<any[]> => {
             publisher: sample(Object.keys(publishers)) as any
         })
     }
+    let firstMessage = true
     for await (const msg of messages) {
         await publishers[msg.publisher].publish(msg, streamId)
+        if (firstMessage) {
+            firstMessage = false
+            await wait(2000) // TODO: Remove after NET-919, where we can grow Propagation.ts buffer size
+        }
     }
     await Promise.all(Object.values(publishers).map((publisher) => publisher.close()))
     return messages
@@ -110,7 +115,7 @@ describe('multiple publisher plugins', () => {
             public: true
         })
         await client.destroy()
-    })
+    }, 30 * 1000)
 
     afterAll(async () => {
         await tracker?.stop()
@@ -134,7 +139,7 @@ describe('multiple publisher plugins', () => {
     })
 
     afterEach(async () => {
-        await broker.stop()
+        await broker?.stop()
     })
 
     it('subscribe by StreamrClient', async () => {

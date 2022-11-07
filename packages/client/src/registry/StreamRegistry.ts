@@ -7,11 +7,10 @@ import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 import { EthereumConfig, getAllStreamRegistryChainProviders, getStreamRegistryOverrides } from '../Ethereum'
 import { until } from '../utils/promises'
 import { ConfigInjectionToken, TimeoutsConfig } from '../Config'
-import { Stream, StreamProperties } from '../Stream'
-import { ErrorCode, NotFoundError } from '../HttpUtil'
-import { StreamID, StreamIDUtils } from 'streamr-client-protocol'
+import { Stream, StreamMetadata } from '../Stream'
+import { NotFoundError } from '../HttpUtil'
+import { StreamID, StreamIDUtils } from '@streamr/protocol'
 import { StreamIDBuilder } from '../StreamIDBuilder'
-import { omit } from 'lodash'
 import { SynchronizedGraphQLClient } from '../utils/SynchronizedGraphQLClient'
 import { searchStreams as _searchStreams, SearchStreamsPermissionFilter } from './searchStreams'
 import { filter, map } from '../utils/GeneratorUtils'
@@ -36,6 +35,7 @@ import { ContractFactory } from '../ContractFactory'
 import { EthereumAddress, isENSName, Logger, toEthereumAddress } from '@streamr/utils'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { StreamFactory } from './../StreamFactory'
+import { GraphQLQuery } from '../utils/GraphQLClient'
 
 /*
  * On-chain registry of stream metadata and permissions.
@@ -95,8 +95,8 @@ export class StreamRegistry {
     }
 
     private parseStream(id: StreamID, metadata: string): Stream {
-        const props: StreamProperties = Stream.parsePropertiesFromMetadata(metadata)
-        return this.streamFactory.createStream({ ...props, id })
+        const props = Stream.parseMetadata(metadata)
+        return this.streamFactory.createStream(id, props)
     }
 
     private async connectToContract(): Promise<void> {
@@ -111,25 +111,8 @@ export class StreamRegistry {
         }
     }
 
-    async getOrCreateStream(props: { id: string, partitions?: number }): Promise<Stream> {
-        try {
-            return await this.getStream(props.id)
-        } catch (err: any) {
-            if (err.errorCode === ErrorCode.NOT_FOUND) {
-                return this.createStream(props)
-            }
-            throw err
-        }
-    }
-
-    async createStream(propsOrStreamIdOrPath: StreamProperties | string): Promise<Stream> {
-        const props = typeof propsOrStreamIdOrPath === 'object' ? propsOrStreamIdOrPath : { id: propsOrStreamIdOrPath }
-        props.partitions ??= 1
-
+    async createStream(streamId: StreamID, metadata: StreamMetadata): Promise<Stream> {
         const ethersOverrides = getStreamRegistryOverrides(this.ethereumConfig)
-
-        const streamId = await this.streamIdBuilder.toStreamID(props.id)
-        const metadata = StreamRegistry.formMetadata(props)
 
         const domainAndPath = StreamIDUtils.getDomainAndPath(streamId)
         if (domainAndPath === undefined) {
@@ -146,7 +129,7 @@ export class StreamRegistry {
                 know what the actual error was. (Most likely it has nothing to do with timeout
                 -> we don't use the error from until(), but throw an explicit error instead.)
             */
-            await waitForTx(this.streamRegistryContract!.createStreamWithENS(domain, path, metadata, ethersOverrides))
+            await waitForTx(this.streamRegistryContract!.createStreamWithENS(domain, path, JSON.stringify(metadata), ethersOverrides))
             try {
                 await until(
                     async () => this.streamExistsOnChain(streamId),
@@ -158,12 +141,9 @@ export class StreamRegistry {
             }
         } else {
             await this.ensureStreamIdInNamespaceOfAuthenticatedUser(domain, streamId)
-            await waitForTx(this.streamRegistryContract!.createStream(path, metadata, ethersOverrides))
+            await waitForTx(this.streamRegistryContract!.createStream(path, JSON.stringify(metadata), ethersOverrides))
         }
-        return this.streamFactory.createStream({
-            ...props,
-            id: streamId
-        })
+        return this.streamFactory.createStream(streamId, metadata)
     }
 
     private async ensureStreamIdInNamespaceOfAuthenticatedUser(address: EthereumAddress, streamId: StreamID): Promise<void> {
@@ -173,19 +153,17 @@ export class StreamRegistry {
         }
     }
 
-    async updateStream(props: StreamProperties): Promise<Stream> {
-        const streamId = await this.streamIdBuilder.toStreamID(props.id)
+    // TODO maybe we should require metadata to be StreamMetadata instead of Partial<StreamMetadata>
+    // Most likely the contract doesn't make any merging (like we do in Stream#update)?
+    async updateStream(streamId: StreamID, metadata: Partial<StreamMetadata>): Promise<Stream> {
         await this.connectToContract()
         const ethersOverrides = getStreamRegistryOverrides(this.ethereumConfig)
         await waitForTx(this.streamRegistryContract!.updateStreamMetadata(
             streamId,
-            StreamRegistry.formMetadata(props),
+            JSON.stringify(metadata),
             ethersOverrides
         ))
-        return this.streamFactory.createStream({
-            ...props,
-            id: streamId
-        })
+        return this.streamFactory.createStream(streamId, metadata)
     }
 
     async deleteStream(streamIdOrPath: string): Promise<void> {
@@ -221,7 +199,7 @@ export class StreamRegistry {
         return this.parseStream(streamId, metadata)
     }
 
-    searchStreams(term: string | undefined, permissionFilter: SearchStreamsPermissionFilter | undefined): AsyncGenerator<Stream> {
+    searchStreams(term: string | undefined, permissionFilter: SearchStreamsPermissionFilter | undefined): AsyncIterable<Stream> {
         return _searchStreams(
             term,
             permissionFilter,
@@ -230,15 +208,15 @@ export class StreamRegistry {
             this.logger)
     }
 
-    getStreamPublishers(streamIdOrPath: string): AsyncGenerator<EthereumAddress> {
+    getStreamPublishers(streamIdOrPath: string): AsyncIterable<EthereumAddress> {
         return this.getStreamPublishersOrSubscribersList(streamIdOrPath, 'publishExpiration')
     }
 
-    getStreamSubscribers(streamIdOrPath: string): AsyncGenerator<EthereumAddress> {
+    getStreamSubscribers(streamIdOrPath: string): AsyncIterable<EthereumAddress> {
         return this.getStreamPublishersOrSubscribersList(streamIdOrPath, 'subscribeExpiration')
     }
 
-    private async* getStreamPublishersOrSubscribersList(streamIdOrPath: string, fieldName: string): AsyncGenerator<EthereumAddress> {
+    private async* getStreamPublishersOrSubscribersList(streamIdOrPath: string, fieldName: string): AsyncIterable<EthereumAddress> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         const backendResults = this.graphQLClient.fetchPaginatedResults<StreamPublisherOrSubscriberItem>(
             (lastId: string, pageSize: number) => StreamRegistry.buildStreamPublishersOrSubscribersQuery(streamId, fieldName, lastId, pageSize)
@@ -262,10 +240,18 @@ export class StreamRegistry {
         fieldName: string,
         lastId: string,
         pageSize: number
-    ): string {
+    ): GraphQLQuery {
         const query = `
         {
-            permissions (first: ${pageSize}, where: {stream: "${streamId}" ${fieldName}_gt: "${Math.round(Date.now() / 1000)}" id_gt: "${lastId}"}) {
+            permissions (
+                first: ${pageSize}
+                orderBy: "id"
+                where: {
+                    id_gt: "${lastId}"
+                    stream: "${streamId}"
+                    ${fieldName}_gt: "${Math.round(Date.now() / 1000)}"
+                }
+            ) {
                 id
                 userAddress
                 stream {
@@ -273,14 +259,10 @@ export class StreamRegistry {
                 }
             }
         }`
-        return JSON.stringify({ query })
+        return { query }
     }
 
-    private static formMetadata(props: StreamProperties): string {
-        return JSON.stringify(omit(props, 'id'))
-    }
-
-    private static buildGetStreamWithPermissionsQuery(streamId: StreamID): string {
+    private static buildGetStreamWithPermissionsQuery(streamId: StreamID): GraphQLQuery {
         const query = `
         {
             stream (id: "${streamId}") {
@@ -297,7 +279,7 @@ export class StreamRegistry {
                 }
             }
         }`
-        return JSON.stringify({ query })
+        return { query }
     }
 
     // --------------------------------------------------------------------------------------------

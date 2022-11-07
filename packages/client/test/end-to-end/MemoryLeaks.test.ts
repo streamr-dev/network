@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-import { fetchPrivateKeyWithGas } from 'streamr-test-utils'
+import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { Defer, wait } from '@streamr/utils'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { LeaksDetector } from '../test-utils/LeaksDetector'
@@ -20,6 +20,7 @@ import { Publisher } from '../../src/publish/Publisher'
 import { Subscriber } from '../../src/subscribe/Subscriber'
 import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
 import { DestroySignal } from '../../src/DestroySignal'
+import { MessageMetadata } from '../../src/Message'
 
 const Dependencies = {
     NetworkNodeFacade,
@@ -215,11 +216,11 @@ describe('MemoryLeaks', () => {
                     const publishTestMessages = getPublishTestStreamMessages(client, stream, {
                         retainMessages: false,
                     })
-                    const received: any[] = []
-                    const sub = await client.subscribe(stream, (msg, streamMessage) => {
-                        received.push(msg)
-                        leaksDetector.add('messageContent', msg)
-                        leaksDetector.add('streamMessage', streamMessage)
+                    const received: MessageMetadata[] = []
+                    const sub = await client.subscribe(stream, (content: any, metadata: MessageMetadata) => {
+                        received.push(metadata)
+                        leaksDetector.add('content', content)
+                        leaksDetector.add('metadata', metadata)
                         if (received.length === MAX_MESSAGES) {
                             sub.unsubscribe()
                         }
@@ -242,7 +243,7 @@ describe('MemoryLeaks', () => {
                     const sub1Done = new Defer<undefined>()
                     const received1: any[] = []
                     const SOME_MESSAGES = Math.floor(MAX_MESSAGES / 2)
-                    let sub1: Subscription<any> | undefined = await client.subscribe(stream, async (msg) => {
+                    let sub1: Subscription<any> | undefined = await client.subscribe(stream, async (msg: any) => {
                         received1.push(msg)
                         if (received1.length === SOME_MESSAGES) {
                             if (!sub1) { return }
@@ -256,7 +257,7 @@ describe('MemoryLeaks', () => {
 
                     const sub2Done = new Defer<undefined>()
                     const received2: any[] = []
-                    const sub2 = await client.subscribe(stream, (msg) => {
+                    const sub2 = await client.subscribe(stream, (msg: any) => {
                         received2.push(msg)
                         if (received2.length === MAX_MESSAGES) {
                             // don't unsubscribe yet, this shouldn't affect sub1 from being collected

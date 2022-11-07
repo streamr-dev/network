@@ -1,4 +1,4 @@
-import { StreamPartID, StreamMessage } from 'streamr-client-protocol'
+import { StreamPartID, StreamMessage } from '@streamr/protocol'
 import { NodeId } from '../../identifiers'
 import { PropagationTask, PropagationTaskStore } from './PropagationTaskStore'
 
@@ -11,7 +11,7 @@ interface ConstructorOptions {
     maxMessages?: number
 }
 
-const DEFAULT_MAX_MESSAGES = 10000
+const DEFAULT_MAX_MESSAGES = 30
 const DEFAULT_TTL = 30 * 1000
 
 /**

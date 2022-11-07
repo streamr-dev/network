@@ -1,6 +1,6 @@
 import { keyToArrayIndex } from '../src/keyToArrayIndex'
 
-describe(keyToArrayIndex, () => {
+describe('keyToArrayIndex', () => {
     it('always returns 0 if there is only one item', () => {
         expect(keyToArrayIndex(1, 'foo')).toBe(0)
         expect(keyToArrayIndex(1, 'bar')).toBe(0)

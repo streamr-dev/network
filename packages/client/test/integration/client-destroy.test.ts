@@ -1,6 +1,7 @@
 import 'reflect-metadata'
-import StreamrClient from '../../src'
+
 import { Stream } from '../../src/Stream'
+import { StreamrClient } from '../../src/StreamrClient'
 import { collect } from '../../src/utils/iterators'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { createTestStream } from '../test-utils/utils'
@@ -14,6 +15,13 @@ describe('client destroy', () => {
         const environment = new FakeEnvironment()
         client = environment.createClient()
         stream = await createTestStream(client, module)
+    })
+
+    it('unsubscribes', async () => {
+        const sub = await client.subscribe(stream.id)
+        jest.spyOn(sub, 'unsubscribe')
+        await client.destroy()
+        expect(sub.unsubscribe).toBeCalled()
     })
 
     it('ongoing subscribe pipeline ends', async () => {
@@ -30,7 +38,7 @@ describe('client destroy', () => {
         await client.destroy()
         await expect(async () => {
             await client.subscribe(stream.id)
-        }).rejects.toThrow('Client is destroyed')
+        }).rejects.toThrowStreamError({ code: 'CLIENT_DESTROYED' })
     })
 
     it('unable to publish after destroy called', async () => {
