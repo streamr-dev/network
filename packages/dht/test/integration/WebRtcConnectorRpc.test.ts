@@ -9,10 +9,10 @@ import {
 } from '../../src/proto/DhtRpc'
 import { Empty } from '../../src/proto/google/protobuf/empty'
 import { generateId } from '../utils'
-import { waitForCondition } from '@streamr/test-utils'
 import { IWebRtcConnectorService } from '../../src/proto/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
+import { waitForCondition } from '@streamr/utils'
 
 describe('WebRTC rpc messages', () => {
     let rpcCommunicator1: RpcCommunicator

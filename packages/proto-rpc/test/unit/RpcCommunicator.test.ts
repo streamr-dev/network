@@ -7,9 +7,9 @@ import { PingRequest, PingResponse } from '../proto/TestProtos'
 import { ResultParts } from '../../src/ClientTransport'
 import { Deferred, RpcMetadata, RpcStatus } from '@protobuf-ts/runtime-rpc'
 import * as Err from '../../src/errors'
-import { waitForCondition } from '@streamr/test-utils'
 import { MockDhtRpc, clearMockTimeouts } from '../utils'
 import { ProtoCallContext } from '../../src/ProtoCallContext'
+import { waitForCondition } from '@streamr/utils'
 
 describe('RpcCommunicator', () => {
     let rpcCommunicator: RpcCommunicator

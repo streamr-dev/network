@@ -1,7 +1,6 @@
 import 'reflect-metadata'
 
-import { wait } from '@streamr/utils'
-import { waitForCondition } from '@streamr/test-utils'
+import { wait, waitForCondition } from '@streamr/utils'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { collect } from '../../src/utils/iterators'
