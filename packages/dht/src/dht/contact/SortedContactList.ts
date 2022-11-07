@@ -154,7 +154,7 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
         return this.maxSize
     }
 
-    public setAllAsUncontacted(): void{
+    public setAllAsUncontacted(): void {
         this.contactsById.forEach((contact) => contact.contacted = false)
     }
 
