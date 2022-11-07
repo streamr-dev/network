@@ -6,7 +6,6 @@ import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Subscriber } from '../../src/subscribe/Subscriber'
-import { Subscription } from '../../src/subscribe/Subscription'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 import { getPublishTestStreamMessages, Msg } from '../test-utils/publish'
@@ -56,7 +55,6 @@ describe('GapFill', () => {
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
         await stream.addToStorageNode(storageNode.id)
         publishTestMessages = getPublishTestStreamMessages(client, stream.id, { waitForLast: true })
-        return client
     }
 
     beforeEach(async () => {
@@ -70,16 +68,6 @@ describe('GapFill', () => {
         if (!client) { return }
         const subscriptions = await subscriber.getSubscriptions()
         expect(subscriptions).toHaveLength(0)
-    })
-
-    let subs: Subscription<any>[] = []
-
-    beforeEach(async () => {
-        const existingSubs = subs
-        subs = []
-        await Promise.all(existingSubs.map((sub) => (
-            sub.return()
-        )))
     })
 
     describe('filling gaps', () => {
