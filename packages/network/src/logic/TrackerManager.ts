@@ -1,7 +1,7 @@
 import {
     createTrackerRegistry,
     InstructionMessage,
-    SmartContractRecord,
+    TrackerRegistryRecord,
     StreamPartID,
     TrackerRegistry
 } from '@streamr/protocol'
@@ -39,7 +39,7 @@ interface Subscriber {
 type GetNodeDescriptor = (includeRtt: boolean) => NodeDescriptor
 
 export interface TrackerManagerOptions {
-    trackers: Array<SmartContractRecord>
+    trackers: Array<TrackerRegistryRecord>
     rttUpdateTimeout?: number
     trackerConnectionMaintenanceInterval?: number
     instructionRetryInterval?: number
@@ -47,7 +47,7 @@ export interface TrackerManagerOptions {
 
 export class TrackerManager {
     private readonly rttUpdateTimeoutsOnTrackers: Record<TrackerId, NodeJS.Timeout> = {}
-    private readonly trackerRegistry: TrackerRegistry<SmartContractRecord>
+    private readonly trackerRegistry: TrackerRegistry<TrackerRegistryRecord>
     private readonly trackerConnector: TrackerConnector
     private readonly nodeToTracker: NodeToTracker
     private readonly streamPartManager: StreamPartManager
@@ -66,7 +66,7 @@ export class TrackerManager {
     ) {
         this.nodeToTracker =  nodeToTracker
         this.streamPartManager = streamPartManager
-        this.trackerRegistry = createTrackerRegistry<SmartContractRecord>(opts.trackers)
+        this.trackerRegistry = createTrackerRegistry<TrackerRegistryRecord>(opts.trackers)
         this.getNodeDescriptor = getNodeDescriptor
         this.subscriber = subscriber
         this.rttUpdateInterval = opts.rttUpdateTimeout || 15000

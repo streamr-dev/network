@@ -18,7 +18,7 @@ import { createRandomMsgChainId } from '../publish/messageChain'
 import { createSignedMessage } from '../publish/MessageFactory'
 import { Validator } from '../Validator'
 import { EncryptionUtil } from './EncryptionUtil'
-import { GroupKey, GroupKeyId } from './GroupKey'
+import { GroupKey } from './GroupKey'
 import { GroupKeyStore } from './GroupKeyStore'
 import { EthereumAddress, Logger } from '@streamr/utils'
 import { LoggerFactory } from '../utils/LoggerFactory'
@@ -63,7 +63,7 @@ export class PublisherKeyExchange {
                     this.logger.debug('handling group key request %s', requestId)
                     await this.validator.validate(request)
                     const keys = without(
-                        await Promise.all(groupKeyIds.map((id: GroupKeyId) => this.store.get(id, request.getStreamId()))),
+                        await Promise.all(groupKeyIds.map((id: string) => this.store.get(id, request.getStreamId()))),
                         undefined) as GroupKey[]
                     if (keys.length > 0) {
                         const response = await this.createResponse(

@@ -1,13 +1,13 @@
 import { StreamPartID } from "./StreamPartID"
 import { keyToArrayIndex } from '@streamr/utils'
 
-export interface SmartContractRecord {
+export interface TrackerRegistryRecord {
     id: string
     http: string
     ws: string
 }
 
-export type TrackerInfo = SmartContractRecord | string
+export type TrackerInfo = TrackerRegistryRecord | string
 
 export class TrackerRegistry<T extends TrackerInfo> {
     private readonly records: T[]
