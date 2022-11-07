@@ -1,4 +1,4 @@
-import { MessageID, StreamPartID, StreamMessage } from 'streamr-client-protocol'
+import { MessageID, StreamPartID, StreamMessage } from '@streamr/protocol'
 import { FifoMapWithTtl } from './FifoMapWithTtl'
 import { NodeId } from '../../identifiers'
 

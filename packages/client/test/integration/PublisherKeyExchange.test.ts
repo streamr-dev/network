@@ -10,8 +10,8 @@ import {
     StreamMessageType,
     StreamPartID,
     StreamPartIDUtils
-} from 'streamr-client-protocol'
-import { fastWallet } from 'streamr-test-utils'
+} from '@streamr/protocol'
+import { fastWallet } from '@streamr/test-utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'
 import { StreamrClient } from '../../src/StreamrClient'

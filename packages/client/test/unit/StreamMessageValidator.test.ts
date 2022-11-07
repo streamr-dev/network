@@ -10,7 +10,7 @@ import {
     GroupKeyRequest,
     GroupKeyResponse,
     ValidationError
-} from 'streamr-client-protocol'
+} from '@streamr/protocol'
 import { Authentication } from '../../src/Authentication'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
 import StreamMessageValidator from '../../src/StreamMessageValidator'

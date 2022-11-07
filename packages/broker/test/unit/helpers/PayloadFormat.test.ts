@@ -1,5 +1,5 @@
 import { toEthereumAddress } from '@streamr/utils'
-import { randomEthereumAddress } from 'streamr-test-utils'
+import { randomEthereumAddress } from '@streamr/test-utils'
 import { MetadataPayloadFormat, PlainPayloadFormat } from '../../../src/helpers/PayloadFormat'
 
 const MOCK_CONTENT = {

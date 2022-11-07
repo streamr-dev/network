@@ -1,5 +1,5 @@
 import crypto from 'crypto'
-import { EncryptedGroupKey } from 'streamr-client-protocol'
+import { EncryptedGroupKey } from '@streamr/protocol'
 import { uuid } from '../utils/uuid'
 import { EncryptionUtil } from './EncryptionUtil'
 

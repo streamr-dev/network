@@ -8,7 +8,7 @@ import {
     StreamID,
     StreamMessage,
     StreamMessageOptions
-} from 'streamr-client-protocol'
+} from '@streamr/protocol'
 import { EncryptionUtil } from '../encryption/EncryptionUtil'
 import { createMessageRef, createRandomMsgChainId } from './messageChain'
 import { PublishMetadata } from './Publisher'

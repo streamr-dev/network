@@ -10,7 +10,7 @@ import {
     StreamMessageType,
     StreamPartID,
     StreamPartIDUtils
-} from 'streamr-client-protocol'
+} from '@streamr/protocol'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'

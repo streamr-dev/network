@@ -10,7 +10,7 @@ import { Wallet } from 'ethers'
 import { Tracker, startTracker } from '@streamr/network-tracker'
 import { Broker, createBroker } from '../src/broker'
 import { ApiAuthenticationConfig, Config } from '../src/config/config'
-import { StreamPartID } from 'streamr-client-protocol'
+import { StreamPartID } from '@streamr/protocol'
 import { CURRENT_CONFIGURATION_VERSION, formSchemaUrl } from '../src/config/migration'
 import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 

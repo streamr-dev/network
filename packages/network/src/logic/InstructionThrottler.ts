@@ -1,4 +1,4 @@
-import { InstructionMessage, StreamPartID } from 'streamr-client-protocol'
+import { InstructionMessage, StreamPartID } from '@streamr/protocol'
 import { cancelable, CancelablePromiseType } from 'cancelable-promise'
 import { Logger } from "@streamr/utils"
 import { TrackerId } from '../identifiers'

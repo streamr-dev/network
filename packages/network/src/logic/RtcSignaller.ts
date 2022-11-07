@@ -1,7 +1,7 @@
 import { NodeToTracker, Event as NodeToTrackerEvent } from '../protocol/NodeToTracker'
 import { PeerId, PeerInfo } from '../connection/PeerInfo'
 import { RtcErrorMessage, TrackerId } from '../identifiers'
-import { RelayMessage, Originator } from 'streamr-client-protocol'
+import { RelayMessage, Originator } from '@streamr/protocol'
 import { Logger } from "@streamr/utils"
 import { NodeId } from '../identifiers'
 

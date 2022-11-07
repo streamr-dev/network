@@ -4,7 +4,7 @@ import {
     TrackerRegistryRecord,
     StreamPartID,
     TrackerRegistry
-} from 'streamr-client-protocol'
+} from '@streamr/protocol'
 import { Location, Rtts, NodeId, TrackerId } from '../identifiers'
 import { TrackerConnector } from './TrackerConnector'
 import { NodeToTracker, Event as NodeToTrackerEvent } from '../protocol/NodeToTracker'

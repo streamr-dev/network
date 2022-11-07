@@ -2,8 +2,8 @@ import 'reflect-metadata'
 
 import { Wallet } from '@ethersproject/wallet'
 import { toEthereumAddress } from '@streamr/utils'
-import { EncryptionType, MessageID, StreamMessage, StreamPartID, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
-import { fastWallet, randomEthereumAddress } from "streamr-test-utils"
+import { EncryptionType, MessageID, StreamMessage, StreamPartID, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
+import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
 import { Stream } from '../../src/Stream'
 import { createAuthentication } from '../../src/Authentication'
 import { DestroySignal } from '../../src/DestroySignal'

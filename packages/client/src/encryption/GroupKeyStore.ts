@@ -1,7 +1,7 @@
 import { scoped, Lifecycle, inject } from 'tsyringe'
 import { join } from 'path'
 import { GroupKey } from './GroupKey'
-import { StreamID } from 'streamr-client-protocol'
+import { StreamID } from '@streamr/protocol'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { StreamrClientEventEmitter } from '../events'
 import { Persistence } from '../utils/persistence/Persistence'

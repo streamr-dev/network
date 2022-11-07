@@ -2,7 +2,7 @@ import 'reflect-metadata'
 
 import { wait } from '@streamr/utils'
 import { random, uniq } from 'lodash'
-import { fastWallet } from 'streamr-test-utils'
+import { fastWallet } from '@streamr/test-utils'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'

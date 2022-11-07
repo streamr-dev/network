@@ -1,6 +1,6 @@
 import express from 'express'
 import request from 'supertest'
-import { toReadableStream } from 'streamr-test-utils'
+import { toReadableStream } from '@streamr/test-utils'
 import {
     router as restEndpointRouter,
     MIN_SEQUENCE_NUMBER_VALUE,
@@ -9,7 +9,7 @@ import {
 import { toObject } from '../../../../src/plugins/storage/DataQueryFormat'
 import { Storage } from '../../../../src/plugins/storage/Storage'
 import { PassThrough } from 'stream'
-import { MessageID, StreamMessage, toStreamID } from 'streamr-client-protocol'
+import { MessageID, StreamMessage, toStreamID } from '@streamr/protocol'
 import { MetricsContext, toEthereumAddress } from '@streamr/utils'
 
 const createEmptyStream = () => {

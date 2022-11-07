@@ -1,4 +1,4 @@
-import { StreamMessage } from 'streamr-client-protocol'
+import { StreamMessage } from '@streamr/protocol'
 import OrderedMsgChain, { GapHandler, MessageHandler, MsgChainEmitter } from './OrderedMsgChain'
 import { EthereumAddress } from '@streamr/utils'
 

@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
+import { StreamMessage, StreamPartID } from '@streamr/protocol'
 import { StreamrClientConfig } from '../../src/Config'
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'

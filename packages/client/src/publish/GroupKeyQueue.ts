@@ -1,4 +1,4 @@
-import { StreamID } from 'streamr-client-protocol'
+import { StreamID } from '@streamr/protocol'
 import { GroupKey } from '../encryption/GroupKey'
 import { GroupKeyStore } from '../encryption/GroupKeyStore'
 

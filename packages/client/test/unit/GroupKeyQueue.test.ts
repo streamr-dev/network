@@ -1,4 +1,4 @@
-import { toStreamID } from 'streamr-client-protocol'
+import { toStreamID } from '@streamr/protocol'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
 import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'

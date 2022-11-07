@@ -1,4 +1,4 @@
-import { MessageRef } from 'streamr-client-protocol'
+import { MessageRef } from '@streamr/protocol'
 import { randomString } from '@streamr/utils'
 
 export const createRandomMsgChainId = (): string => randomString(20)

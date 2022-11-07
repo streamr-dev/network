@@ -2,8 +2,8 @@ import { Tracker, startTracker } from '@streamr/network-tracker'
 import { NetworkNode } from '../../src/logic/NetworkNode'
 
 import { createNetworkNode } from '../../src/composition'
-import { StreamPartIDUtils } from 'streamr-client-protocol'
-import { waitForCondition } from 'streamr-test-utils'
+import { StreamPartIDUtils } from '@streamr/protocol'
+import { waitForCondition } from '@streamr/utils'
 
 const STREAM_PART_A = StreamPartIDUtils.parse('STREAM_PART_A#0')
 const STREAM_PART_B = StreamPartIDUtils.parse('STREAM_PART_B#0')

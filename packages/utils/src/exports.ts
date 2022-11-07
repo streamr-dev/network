@@ -24,6 +24,7 @@ import { BrandedString } from './types'
 import { wait } from './wait'
 import { waitForEvent } from './waitForEvent'
 import { TimeoutError, withTimeout } from './withTimeout'
+import { waitForCondition } from './waitForCondition'
 
 export {
     BrandedString,
@@ -47,6 +48,7 @@ export {
     toEthereumAddress,
     toEthereumAddressOrENSName,
     wait,
+    waitForCondition,
     waitForEvent,
     withTimeout,
 }

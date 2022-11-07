@@ -1,5 +1,5 @@
 import express from 'express'
-import { StreamPartIDUtils } from 'streamr-client-protocol'
+import { StreamPartIDUtils } from '@streamr/protocol'
 import request from 'supertest'
 import { router } from '../../../../src/plugins/storage/StorageConfigEndpoints'
 import { createMockStorageConfig } from '../../../integration/plugins/storage/MockStorageConfig'

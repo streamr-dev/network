@@ -1,5 +1,5 @@
 import { inject, Lifecycle, scoped, delay } from 'tsyringe'
-import { StreamPartID, StreamPartIDUtils, toStreamPartID } from 'streamr-client-protocol'
+import { StreamPartID, StreamPartIDUtils, toStreamPartID } from '@streamr/protocol'
 
 import { MessageStream } from './MessageStream'
 import { createSubscribePipeline } from './subscribePipeline'

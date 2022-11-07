@@ -6,8 +6,8 @@ import { Tracker, startTracker } from '@streamr/network-tracker'
 import { NodeToTracker } from '../../src/protocol/NodeToTracker'
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
 import { Event as ntnEvent, NodeToNode } from "../../src/protocol/NodeToNode"
-import { MessageID, StreamMessage, toStreamID } from "streamr-client-protocol"
-import { runAndWaitForEvents } from "streamr-test-utils"
+import { MessageID, StreamMessage, toStreamID } from "@streamr/protocol"
+import { runAndWaitForEvents } from '@streamr/test-utils'
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { WebRtcEndpoint } from '../../src/connection/webrtc/WebRtcEndpoint'
 import { webRtcConnectionFactory } from '../../src/connection/webrtc/NodeWebRtcConnection'

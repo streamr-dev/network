@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { toStreamID } from 'streamr-client-protocol'
+import { toStreamID } from '@streamr/protocol'
 import { container as rootContainer } from 'tsyringe'
 import { createStrictConfig } from '../../src/Config'
 import { initContainer } from '../../src/Container'

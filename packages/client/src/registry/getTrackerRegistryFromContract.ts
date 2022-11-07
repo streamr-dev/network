@@ -1,7 +1,7 @@
 import { Contract } from '@ethersproject/contracts'
 import type { Provider } from '@ethersproject/providers'
 
-import { createTrackerRegistry, TrackerRegistryRecord, TrackerRegistry } from 'streamr-client-protocol'
+import { createTrackerRegistry, TrackerRegistryRecord, TrackerRegistry } from '@streamr/protocol'
 import * as trackerRegistryConfig from '../../contracts/TrackerRegistry.json'
 import { EthereumAddress } from '@streamr/utils'
 

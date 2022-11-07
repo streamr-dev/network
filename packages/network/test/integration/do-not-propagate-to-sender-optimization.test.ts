@@ -6,11 +6,10 @@ import {
     StreamMessage,
     StreamPartIDUtils,
     toStreamID
-} from 'streamr-client-protocol'
-import { waitForCondition } from 'streamr-test-utils'
+} from '@streamr/protocol'
 
 import { createNetworkNode, NodeEvent } from '../../src/composition'
-import { toEthereumAddress } from '@streamr/utils'
+import { waitForCondition, toEthereumAddress } from '@streamr/utils'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 

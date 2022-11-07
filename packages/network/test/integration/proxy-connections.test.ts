@@ -7,7 +7,7 @@ import {
     StreamMessage,
     StreamPartIDUtils,
     toStreamID
-} from 'streamr-client-protocol'
+} from '@streamr/protocol'
 import { toEthereumAddress, waitForEvent } from '@streamr/utils'
 
 import { createNetworkNode } from '../../src/composition'

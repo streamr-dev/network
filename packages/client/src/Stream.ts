@@ -9,7 +9,7 @@ import {
     StreamID,
     StreamPartID,
     toStreamPartID
-} from 'streamr-client-protocol'
+} from '@streamr/protocol'
 import { range } from 'lodash'
 import { TimeoutsConfig } from './Config'
 import { PermissionAssignment, PublicPermissionQuery, UserPermissionQuery } from './permission'

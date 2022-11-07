@@ -1,4 +1,4 @@
-import { EncryptionType, StreamMessage } from 'streamr-client-protocol'
+import { EncryptionType, StreamMessage } from '@streamr/protocol'
 
 export interface Format {
     getMessageAsString: (streamMessage: StreamMessage, version: number | undefined) => string

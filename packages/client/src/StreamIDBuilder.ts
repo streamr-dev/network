@@ -5,7 +5,7 @@ import {
     StreamPartIDUtils,
     toStreamID,
     toStreamPartID
-} from 'streamr-client-protocol'
+} from '@streamr/protocol'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { StreamDefinition } from './types'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'

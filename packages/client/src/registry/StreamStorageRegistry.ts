@@ -4,7 +4,7 @@ import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 import { ConfigInjectionToken } from '../Config'
 import { Stream } from '../Stream'
 import { EthereumConfig, getStreamRegistryChainProvider, getStreamRegistryOverrides } from '../Ethereum'
-import { StreamID, toStreamID } from 'streamr-client-protocol'
+import { StreamID, toStreamID } from '@streamr/protocol'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { waitForTx } from '../utils/contract'
 import { SynchronizedGraphQLClient } from '../utils/SynchronizedGraphQLClient'
@@ -159,7 +159,7 @@ export class StreamStorageRegistry {
             (response: any) => {
                 // eslint-disable-next-line no-underscore-dangle
                 blockNumbers.push(response._meta.block.number)
-                return response.node.storedStreams
+                return (response.node !== null) ? response.node.storedStreams : []
             }
         ))
         const streams = res.map((stream: any) => {

@@ -1,4 +1,4 @@
-# streamr-test-utils
+# @streamr/test-utils
 A collection of Node.js utilities for dealing with asynchronous behavior in jest/mocha tests.
 
 ## Table of Contents
@@ -10,7 +10,7 @@ A collection of Node.js utilities for dealing with asynchronous behavior in jest
 ## Install
 In your Node.js project run
 ```
-npm install --save-dev streamr-test-utils
+npm install --save-dev @streamr/test-utils
 ```
 to add this npm package as a development dependency.
 
@@ -53,36 +53,6 @@ Example:
 test('test', async () => {
     const [message] = await waitForEvent(node, events.MESSAGE_PROPAGATED)
     expect(message).toEqual('something')
-})
-``` 
-
-#### waitForCondition
-```
-waitForCondition(conditionFn, timeout = 5000, retryInterval = 100, onTimeoutContext? () => string) => Promise
-```
-
-Wait for a condition to become true by re-evaluating it every `retryInterval` milliseconds.
-
-Example:
-```js
-test('test', async () => {
-    ...
-    await waitForCondition(() => messages.length >= 4)
-    expect(messages).toEqual([
-        ...
-    ])
-})
-``` 
-
-Example:
-```js
-test('test', async () => {
-    ...
-    await waitForCondition(async () => {
-        const rows = await sqlQuery("SELECT * FROM streams")
-        return rows.length >= 10
-    })
-    ...
 })
 ```
 
@@ -204,16 +174,3 @@ It would seem like the best order in which to use the control flow utilities is 
 stream to be closed.
     - In some use cases you may only be interested in waiting for the stream to end. You don't have to examine the
     contents of the stream.
-
-
-## Release
-
-Publishing to NPM is automated via Travis CI. Follow the steps below to publish stable (`latest`) or `beta`.
-
-### Publishing stable (latest)
-1. `git checkout master && git pull`
-2. Update version with either `npm version [patch|minor|major]`. Use semantic versioning
-https://semver.org/. Files package.json and package-lock.json will be automatically updated, and an appropriate git commit and tag created.
-3. `git push --follow-tags`
-4. Wait for Travis CI to run tests
-5. If tests passed, Travis CI will publish the new version to NPM

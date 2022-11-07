@@ -1,4 +1,4 @@
-import { StreamID, StreamMessage } from 'streamr-client-protocol'
+import { StreamID, StreamMessage } from '@streamr/protocol'
 import { scoped, Lifecycle, inject } from 'tsyringe'
 import pLimit from 'p-limit'
 import { StreamDefinition } from '../types'
