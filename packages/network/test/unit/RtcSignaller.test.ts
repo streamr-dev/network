@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events'
-import { ErrorMessage, RelayMessage, RelayMessageSubType } from 'streamr-client-protocol'
+import { ErrorMessage, RelayMessage, RelayMessageSubType } from '@streamr/protocol'
 
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'

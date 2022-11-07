@@ -1,6 +1,6 @@
 import { verifyMessage, Wallet } from '@ethersproject/wallet'
 import { randomString, toEthereumAddress } from '@streamr/utils'
-import { fastWallet } from 'streamr-test-utils'
+import { fastWallet } from '@streamr/test-utils'
 import { sign, verify } from '../../src/utils/signingUtils'
 
 /*

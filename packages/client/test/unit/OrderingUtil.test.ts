@@ -1,7 +1,7 @@
 import assert from 'assert'
 
 import shuffle from 'array-shuffle'
-import { MessageID, MessageRef, StreamMessage, toStreamID } from 'streamr-client-protocol'
+import { MessageID, MessageRef, StreamMessage, toStreamID } from '@streamr/protocol'
 import OrderingUtil from '../../src/subscribe/ordering/OrderingUtil'
 import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 

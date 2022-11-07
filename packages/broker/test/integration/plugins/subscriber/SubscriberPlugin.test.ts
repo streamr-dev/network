@@ -2,7 +2,7 @@ import { Tracker } from '@streamr/network-tracker'
 import { createClient, startTestTracker } from '../../../utils'
 import { SubscriberPlugin } from '../../../../src/plugins/subscriber/SubscriberPlugin'
 import StreamrClient from 'streamr-client'
-import { fastWallet } from 'streamr-test-utils'
+import { fastWallet } from '@streamr/test-utils'
 import { waitForCondition } from '@streamr/utils'
 
 const TRACKER_PORT = 12465

@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 import { Wallet } from 'ethers'
-import { fetchPrivateKeyWithGas, randomEthereumAddress } from 'streamr-test-utils'
+import { fetchPrivateKeyWithGas, randomEthereumAddress } from '@streamr/test-utils'
 import { ConfigTest, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'

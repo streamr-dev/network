@@ -1,5 +1,5 @@
 import { EthereumAddress, Multimap, toEthereumAddress } from '@streamr/utils'
-import { StreamID } from 'streamr-client-protocol'
+import { StreamID } from '@streamr/protocol'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../../../src/Authentication'
 import { NotFoundError } from '../../../src/HttpUtil'

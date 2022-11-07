@@ -1,8 +1,8 @@
 import 'reflect-metadata'
 
 import { toEthereumAddress } from '@streamr/utils'
-import { toStreamID } from 'streamr-client-protocol'
-import { fastWallet } from 'streamr-test-utils'
+import { toStreamID } from '@streamr/protocol'
+import { fastWallet } from '@streamr/test-utils'
 import { DecryptError } from '../../src/encryption/EncryptionUtil'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'

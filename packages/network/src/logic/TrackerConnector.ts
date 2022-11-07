@@ -1,4 +1,4 @@
-import { SmartContractRecord, StreamPartID, TrackerRegistry } from 'streamr-client-protocol'
+import { SmartContractRecord, StreamPartID, TrackerRegistry } from '@streamr/protocol'
 import { TrackerId } from '../identifiers'
 import { Logger } from "@streamr/utils"
 import { PeerInfo } from '../connection/PeerInfo'

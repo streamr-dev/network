@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events'
 
-import { SmartContractRecord, StatusMessage, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
+import { SmartContractRecord, StatusMessage, StreamPartID, toStreamPartID } from '@streamr/protocol'
 import { Event as TrackerServerEvent, TrackerServer } from '../protocol/TrackerServer'
 import { OverlayTopology } from './OverlayTopology'
 import { InstructionCounter } from './InstructionCounter'
@@ -16,7 +16,7 @@ import {
     DisconnectionCode,
     DisconnectionReason,
     COUNTER_UNSUBSCRIBE,
-} from 'streamr-network'
+} from '@streamr/network-node'
 import { Logger, MetricsContext, MetricsDefinition, Metric, RateMetric } from '@streamr/utils'
 import { InstructionAndStatusAckSender } from './InstructionAndStatusAckSender'
 import { StatusValidator } from '../helpers/SchemaValidators'

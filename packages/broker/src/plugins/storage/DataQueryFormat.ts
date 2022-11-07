@@ -1,4 +1,4 @@
-import type { StreamMessage } from 'streamr-client-protocol'
+import type { StreamMessage } from '@streamr/protocol'
 
 export interface Format {
     getMessageAsString: (streamMessage: StreamMessage, version: number | undefined) => string

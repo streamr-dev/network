@@ -1,5 +1,5 @@
 import { EthereumAddress, keyToArrayIndex, Logger } from '@streamr/utils'
-import { StreamPartID } from 'streamr-client-protocol'
+import { StreamPartID } from '@streamr/protocol'
 import { Stream, StreamrClient } from 'streamr-client'
 import { Diff, SetMembershipSynchronizer } from './SetMembershipSynchronizer'
 import { StoragePoller } from './StoragePoller'

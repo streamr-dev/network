@@ -5,7 +5,7 @@ import assert from 'assert'
 import { wait } from '@streamr/utils'
 
 import { createNetworkNode } from '../../src/composition'
-import { StreamPartIDUtils } from 'streamr-client-protocol'
+import { StreamPartIDUtils } from '@streamr/protocol'
 
 function areEqual(a: any, b: any) {
     try {

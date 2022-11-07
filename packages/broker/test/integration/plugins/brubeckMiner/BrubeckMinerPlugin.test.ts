@@ -5,7 +5,7 @@ import express, { Request, Response } from 'express'
 import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
 import { Tracker } from '@streamr/network-tracker'
 import { Stream, StreamPermission, StreamrClient } from 'streamr-client'
-import { fastWallet } from 'streamr-test-utils'
+import { fastWallet } from '@streamr/test-utils'
 
 import { Broker } from '../../../../src/broker'
 import { createClient, createTestStream, startBroker, startTestTracker } from '../../../utils'

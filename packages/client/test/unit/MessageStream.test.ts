@@ -1,5 +1,5 @@
 import { toEthereumAddress, waitForCondition } from '@streamr/utils'
-import { MessageID, toStreamID } from 'streamr-client-protocol'
+import { MessageID, toStreamID } from '@streamr/protocol'
 import { Authentication } from '../../src/Authentication'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { MessageStream } from '../../src/subscribe/MessageStream'

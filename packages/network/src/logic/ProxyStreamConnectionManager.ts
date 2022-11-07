@@ -9,7 +9,7 @@ import {
     ProxyDirection,
     StreamPartID,
     UnsubscribeRequest
-} from 'streamr-client-protocol'
+} from '@streamr/protocol'
 import { Logger, withTimeout } from "@streamr/utils"
 import { Propagation } from './propagation/Propagation'
 

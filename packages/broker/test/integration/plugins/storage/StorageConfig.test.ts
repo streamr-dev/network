@@ -3,7 +3,7 @@ import StreamrClient, { Stream } from 'streamr-client'
 import { Tracker } from '@streamr/network-tracker'
 import cassandra from 'cassandra-driver'
 import { Wallet } from 'ethers'
-import { fastWallet, fetchPrivateKeyWithGas } from 'streamr-test-utils'
+import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import {
     startBroker,
     createClient,
@@ -13,7 +13,7 @@ import {
     startStorageNode
 } from '../../../utils'
 import { Broker } from '../../../../src/broker'
-import { StreamMessage } from 'streamr-client-protocol'
+import { StreamMessage } from '@streamr/protocol'
 import { waitForCondition } from '@streamr/utils'
 
 jest.setTimeout(30000)

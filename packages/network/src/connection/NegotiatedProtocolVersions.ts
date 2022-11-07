@@ -1,5 +1,5 @@
 import { PeerId, PeerInfo } from "./PeerInfo"
-import { ControlMessage, StreamMessage } from 'streamr-client-protocol'
+import { ControlMessage, StreamMessage } from '@streamr/protocol'
 
 const defaultControlLayerVersions = ControlMessage.getSupportedVersions()
 const defaultMessageLayerVersions = StreamMessage.getSupportedVersions()

@@ -1,4 +1,4 @@
-import { fastPrivateKey, fetchPrivateKeyWithGas } from 'streamr-test-utils'
+import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { createTestStream } from '../test-utils/utils'
 import { range } from 'lodash'
 import { ConfigTest, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'

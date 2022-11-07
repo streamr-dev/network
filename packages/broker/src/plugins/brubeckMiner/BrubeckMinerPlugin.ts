@@ -7,7 +7,7 @@ import { Response } from 'node-fetch'
 import { fetchOrThrow } from '../../helpers/fetchOrThrow'
 import { version as CURRENT_VERSION } from '../../../package.json'
 import { Schema } from 'ajv'
-import { StreamID, toStreamID, toStreamPartID } from 'streamr-client-protocol'
+import { StreamID, toStreamID, toStreamPartID } from '@streamr/protocol'
 
 const REWARD_STREAM_PARTITION = 0
 const LATENCY_POLL_INTERVAL = 30 * 60 * 1000

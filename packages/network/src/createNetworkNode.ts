@@ -11,7 +11,7 @@ import { PeerInfo } from './connection/PeerInfo'
 import NodeClientWsEndpoint from './connection/ws/NodeClientWsEndpoint'
 import { WebRtcEndpoint } from './connection/webrtc/WebRtcEndpoint'
 import { webRtcConnectionFactory } from './connection/webrtc/NodeWebRtcConnection'
-import { SmartContractRecord } from 'streamr-client-protocol'
+import { SmartContractRecord } from '@streamr/protocol'
 import { IceServer } from './connection/webrtc/WebRtcConnection'
 
 export interface NetworkNodeOptions extends AbstractNodeOptions {

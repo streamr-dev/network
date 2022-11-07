@@ -1,5 +1,5 @@
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import { StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
+import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { StreamIDBuilder } from '../../../src/StreamIDBuilder'
 import { FakeStorageNode } from './FakeStorageNode'
 import { FakeNetwork } from './FakeNetwork'

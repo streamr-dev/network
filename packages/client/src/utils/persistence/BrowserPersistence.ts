@@ -1,6 +1,6 @@
 import { get, set, createStore, UseStore } from 'idb-keyval'
 import { Persistence } from './Persistence'
-import { StreamID } from 'streamr-client-protocol'
+import { StreamID } from '@streamr/protocol'
 import { memoize } from 'lodash'
 
 export default class BrowserPersistence implements Persistence<string, string> {
