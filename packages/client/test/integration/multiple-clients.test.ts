@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { fastPrivateKey, waitForCondition } from 'streamr-test-utils'
+import { fastPrivateKey } from 'streamr-test-utils'
 import { Message, MessageMetadata } from '../../src/Message'
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
@@ -13,6 +13,7 @@ import {
     uid
 } from '../test-utils/utils'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
+import { waitForCondition } from '@streamr/utils'
 
 // this number should be at least 10, otherwise late subscribers might not join
 // in time to see any realtime messages
