@@ -17,7 +17,7 @@ export class GraphQLClient {
     constructor(
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
         @inject(HttpFetcher) private httpFetcher: HttpFetcher,
-        @inject(ConfigInjectionToken.Connection) private config: EthereumConfig,
+        @inject(ConfigInjectionToken.Ethereum) private config: EthereumConfig,
     ) {
         this.logger = loggerFactory.createLogger(module)
     }
