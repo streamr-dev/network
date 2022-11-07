@@ -114,11 +114,8 @@ export const STREAMR_STORAGE_NODE_GERMANY = '0x31546eEA76F2B2b3C5cC06B1c93601dc3
 export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id' | 'auth'> = {
     logLevel: 'info',
 
-    // Streamr Core options
     theGraphUrl: 'https://api.thegraph.com/subgraphs/name/streamr-dev/streams',
-    // storageNodeAddressDev = new StorageNode('0xde1112f631486CfC759A50196853011528bC5FA0', '')
 
-    // P2P Streamr Network options
     orderMessages: true,
     retryResendAfter: 5000,
     gapFillTimeout: 5000,
