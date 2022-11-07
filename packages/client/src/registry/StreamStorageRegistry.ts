@@ -19,9 +19,9 @@ import { collect } from '../utils/iterators'
 import { min } from 'lodash'
 
 export interface StorageNodeAssignmentEvent {
-    streamId: string
-    nodeAddress: EthereumAddress
-    blockNumber: number
+    readonly streamId: StreamID
+    readonly nodeAddress: EthereumAddress
+    readonly blockNumber: number
 }
 
 interface NodeQueryResult {
@@ -84,7 +84,7 @@ export class StreamStorageRegistry {
             (emit: (payload: StorageNodeAssignmentEvent) => void) => {
                 const listener = (streamId: string, nodeAddress: string, extra: any) => {
                     emit({
-                        streamId,
+                        streamId: toStreamID(streamId),
                         nodeAddress: toEthereumAddress(nodeAddress),
                         blockNumber: extra.blockNumber
                     })
