@@ -13,7 +13,7 @@ import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { createSubscribePipeline } from "../../src/subscribe/subscribePipeline"
 import { collect } from '../../src/utils/iterators'
 import { mockLoggerFactory } from '../test-utils/utils'
-import { GroupKey, GroupKeyId } from './../../src/encryption/GroupKey'
+import { GroupKey } from './../../src/encryption/GroupKey'
 import { MessageStream } from './../../src/subscribe/MessageStream'
 
 const CONTENT = {
@@ -29,7 +29,7 @@ describe('subscribePipeline', () => {
     const createMessage = async (opts: {
         serializedContent?: string
         encryptionType?: EncryptionType
-        groupKeyId?: GroupKeyId
+        groupKeyId?: string
     } = {}): Promise<StreamMessage<unknown>> => {
         const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
         return createSignedMessage({

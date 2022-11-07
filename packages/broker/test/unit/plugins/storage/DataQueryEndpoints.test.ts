@@ -6,6 +6,7 @@ import {
     MIN_SEQUENCE_NUMBER_VALUE,
     MAX_SEQUENCE_NUMBER_VALUE
 } from '../../../../src/plugins/storage/DataQueryEndpoints'
+import { toObject } from '../../../../src/plugins/storage/DataQueryFormat'
 import { Storage } from '../../../../src/plugins/storage/Storage'
 import { PassThrough } from 'stream'
 import { MessageID, StreamMessage, toStreamID } from '@streamr/protocol'
@@ -113,7 +114,7 @@ describe('DataQueryEndpoints', () => {
 
             it('responds with object representation of messages by default', (done) => {
                 testGetRequest('/streams/streamId/data/partitions/0/last')
-                    .expect(streamMessages.map((m) => m.toObject()), done)
+                    .expect(streamMessages.map((m) => toObject(m)), done)
             })
 
             it('responds with latest version protocol serialization of messages given format=protocol', (done) => {
@@ -187,7 +188,7 @@ describe('DataQueryEndpoints', () => {
 
             it('responds with data points as body', (done) => {
                 testGetRequest('/streams/streamId/data/partitions/0/from?fromTimestamp=1496408255672')
-                    .expect(streamMessages.map((msg) => msg.toObject()), done)
+                    .expect(streamMessages.map((msg) => toObject(msg)), done)
             })
 
             it('invokes storage#requestFrom once with correct arguments', async () => {
@@ -227,7 +228,7 @@ describe('DataQueryEndpoints', () => {
 
             it('responds with data points as body', (done) => {
                 testGetRequest(`/streams/streamId/data/partitions/0/from?${query}`)
-                    .expect(streamMessages.map((msg) => msg.toObject()), done)
+                    .expect(streamMessages.map((msg) => toObject(msg)), done)
             })
 
             it('invokes storage#requestFrom once with correct arguments', async () => {
@@ -320,7 +321,7 @@ describe('DataQueryEndpoints', () => {
             it('responds with data points as body', (done) => {
                 // eslint-disable-next-line max-len
                 testGetRequest('/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672&toTimestamp=1496415670909')
-                    .expect(streamMessages.map((msg) => msg.toObject()), done)
+                    .expect(streamMessages.map((msg) => toObject(msg)), done)
             })
 
             it('invokes storage#requestRange once with correct arguments', async () => {
@@ -400,7 +401,7 @@ describe('DataQueryEndpoints', () => {
 
             it('responds with data points as body', (done) => {
                 testGetRequest(`/streams/streamId/data/partitions/0/range?${query}`)
-                    .expect(streamMessages.map((msg) => msg.toObject()), done)
+                    .expect(streamMessages.map((msg) => toObject(msg)), done)
             })
 
             it('invokes storage#requestRange once with correct arguments', async () => {

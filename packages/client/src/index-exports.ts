@@ -1,10 +1,9 @@
 /**
  * This file captures named exports so we can manipulate them for cjs/browser builds.
  */
-export * from './StreamrClient'
-export * from './Stream'
+export { StreamrClient } from './StreamrClient'
+export { Stream, StreamMetadata, Field, VALID_FIELD_TYPES } from './Stream'
 export { Message, MessageMetadata } from './Message'
-export { DecryptError } from './encryption/EncryptionUtil'
 export { StreamrClientEvents } from './events'
 export { PublishMetadata } from './publish/Publisher'
 export { Subscription, SubscriptionEvents, } from './subscribe/Subscription'
@@ -27,9 +26,12 @@ export {
     StrictStreamrClientConfig,
     SubscribeConfig,
     ConnectionConfig,
-    TrackerRegistrySmartContract,
+    TrackerRegistryContract,
     NetworkConfig,
+    DecryptionConfig,
     CacheConfig,
+    MetricsConfig,
+    MetricsPeriodConfig,
     STREAMR_STORAGE_NODE_GERMANY,
     STREAM_CLIENT_DEFAULTS,
     validateConfig
@@ -45,20 +47,31 @@ export {
     ChainConnectionInfo,
     EthereumNetworkConfig,
 } from './Ethereum'
-export { GroupKey as EncryptionKey, GroupKeyId as EncryptionKeyId } from './encryption/GroupKey'
+export { GroupKey as EncryptionKey } from './encryption/GroupKey'
 export { UpdateEncryptionKeyOptions } from './encryption/GroupKeyStore'
 
 export { ConfigTest } from './ConfigTest'
 export { NetworkNodeStub } from './NetworkNodeFacade'
-export { NotFoundError, ErrorCode } from './HttpUtil'
-export * from './types'
+export { StreamDefinition, Without, XOR } from './types'
 export { formStorageNodeAssignmentStreamId } from './utils/utils'
 
-export { StreamPartID } from '@streamr/protocol'
+export type { ProxyDirection, StreamID, StreamPartID, TrackerRegistryRecord } from '@streamr/protocol'
+export type { BrandedString, EthereumAddress, LogLevel, Metric, MetricsContext, MetricsDefinition, MetricsReport } from '@streamr/utils'
+export type { IceServer, NetworkNodeOptions as NetworkNodeConfig, Location } from '@streamr/network-node'
 
-export { BigNumber } from '@ethersproject/bignumber'
+// These are currently exported because NetworkNodeStub uses methods which operate on StreamMessage.
+// If we remove that semi-public class we can maybe remove these exports.
+export type {
+    ContentType,
+    EncryptedGroupKey,
+    EncryptionType,
+    MessageID,
+    MessageRef,
+    StreamMessage,
+    StreamMessageOptions,
+    StreamMessageType
+} from '@streamr/protocol'
+
+export type { BigNumber } from '@ethersproject/bignumber'
 export type { ConnectionInfo } from '@ethersproject/web'
-export { Contract } from '@ethersproject/contracts'
-export type { BytesLike, Bytes } from '@ethersproject/bytes'
-export type { ContractReceipt, ContractTransaction } from '@ethersproject/contracts'
 export type { ExternalProvider } from '@ethersproject/providers'

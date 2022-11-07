@@ -43,23 +43,9 @@ export interface StreamMessageOptions<T> {
     signature: string
 }
 
-export interface ObjectType<T> {
-    streamId: string
-    streamPartition: number
-    timestamp: number
-    sequenceNumber: number
-    publisherId: string
-    msgChainId: string
-    messageType: StreamMessageType
-    contentType: ContentType
-    encryptionType: EncryptionType
-    groupKeyId: string | null
-    content: string | T
-    signature: string
-}
-
 /**
- *  Encrypted StreamMessage.
+ * Encrypted StreamMessage.
+ * @internal
  */
 export type StreamMessageEncrypted<T> = StreamMessage<T> & {
     encryptionType: EncryptionType.RSA | EncryptionType.AES
@@ -68,6 +54,7 @@ export type StreamMessageEncrypted<T> = StreamMessage<T> & {
 }
 /**
  * Unencrypted StreamMessage.
+ * @internal
  */
 export type StreamMessageUnencrypted<T> = StreamMessage<T> & {
     encryptionType: EncryptionType.NONE
@@ -248,6 +235,7 @@ export default class StreamMessage<T = unknown> {
         return this.newGroupKey
     }
 
+    /** @internal */
     static registerSerializer(version: number, serializer: Serializer<StreamMessage<unknown>>): void {
         // Check the serializer interface
         if (!serializer.fromArray) {
@@ -265,10 +253,12 @@ export default class StreamMessage<T = unknown> {
         serializerByVersion[version] = serializer
     }
 
+    /** @internal */
     static unregisterSerializer(version: number): void {
         delete serializerByVersion[version]
     }
 
+    /** @internal */
     static getSerializer(version: number): Serializer<StreamMessage<unknown>> {
         const clazz = serializerByVersion[version]
         if (!clazz) {
@@ -348,22 +338,5 @@ export default class StreamMessage<T = unknown> {
 
     static isUnencrypted<T = unknown>(msg: StreamMessage<T>): msg is StreamMessageUnencrypted<T> {
         return !this.isEncrypted(msg)
-    }
-
-    toObject(): ObjectType<T> {
-        return {
-            streamId: this.getStreamId(),
-            streamPartition: this.getStreamPartition(),
-            timestamp: this.getTimestamp(),
-            sequenceNumber: this.getSequenceNumber(),
-            publisherId: this.getPublisherId(),
-            msgChainId: this.getMsgChainId(),
-            messageType: this.messageType,
-            contentType: this.contentType,
-            encryptionType: this.encryptionType,
-            groupKeyId: this.groupKeyId,
-            content: (this.encryptionType === EncryptionType.NONE ? this.getParsedContent() : this.getSerializedContent()),
-            signature: this.signature,
-        }
     }
 }

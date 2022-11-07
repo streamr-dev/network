@@ -106,19 +106,19 @@ describe(StorageConfig, () => {
             const addToStorageNodeListener = storageEventListeners.get('addToStorageNode')!
             const removeFromStorageNodeListener = storageEventListeners.get('removeFromStorageNode')!
             addToStorageNodeListener({
-                streamId: 'stream-1',
+                streamId: toStreamID('stream-1'),
                 nodeAddress: CLUSTER_ID,
                 blockNumber: 10,
             })
             await wait(0)
             addToStorageNodeListener({
-                streamId: 'stream-3',
+                streamId: toStreamID('stream-3'),
                 nodeAddress: CLUSTER_ID,
                 blockNumber: 15,
             })
             await wait(0)
             removeFromStorageNodeListener({
-                streamId: 'stream-1',
+                streamId: toStreamID('stream-1'),
                 nodeAddress: CLUSTER_ID,
                 blockNumber: 13,
             })
