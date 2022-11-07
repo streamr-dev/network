@@ -55,14 +55,14 @@ describe('Subscriber', () => {
     })
 
     beforeEach(async () => {
-        client = environment.createClient()
         const stream = await createTestStream(publisher, module)
         streamId = stream.id
         await publisher.grantPermissions(streamId, {
-            user: await client.getAddress(),
+            public: true,
             permissions: [StreamPermission.SUBSCRIBE]
         })
         publishTestMessages = getPublishTestStreamMessages(publisher, streamId)
+        client = environment.createClient()
     })
 
     afterEach(async () => {
