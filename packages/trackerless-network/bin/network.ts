@@ -15,7 +15,7 @@ async function run(): Promise<void> {
 
     const args = [
         path.resolve('./bin/bootstrap-node.ts'),
-        '--ip=' + program.opts().ip
+        '--ip=' + program.opts().entrypointIp
     ]
 
     spawn('ts-node', args, {

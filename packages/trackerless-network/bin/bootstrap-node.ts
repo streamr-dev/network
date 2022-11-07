@@ -12,7 +12,7 @@ program
     .option('--id <id>', 'Ethereum address / node id', 'bootstrap')
     .option('--name <name>', 'Name in published messages', 'bootstrap')
     .option('--streamIds <streamIds>', 'streamId to publish',  (value: string) => value.split(','), ['stream-0'])
-    .option('--ip <ip>', 'Ip addres to use', '0.0.0.0')
+    .option('--ip <ip>', 'Ip address to use', '0.0.0.0')
     .option('--port <port>', 'Name in published messages', '23123')
     .description('Run bootstrap node')
     .parse(process.argv)
@@ -28,6 +28,8 @@ async function run(): Promise<void> {
         type: NodeType.NODEJS,
         websocket: { ip, port }
     }
+
+    console.log(epPeerDescriptor.websocket)
 
     const layer0 = new DhtNode({ peerDescriptor: epPeerDescriptor, numberOfNodesPerKBucket: 8 })
     await layer0.start()
