@@ -108,10 +108,10 @@ module.exports = (env, argv) => {
                 buffer: require.resolve('buffer/'),
                 'node-fetch': path.resolve('./src/shim/node-fetch.ts'),
                 '@streamr/protocol': path.resolve('../protocol/src'),
-                'streamr-network': path.resolve('../network/src/browser.ts'),
-                [path.join(__dirname, '../network/src/connection/webrtc/NodeWebRtcConnection.ts$')]: require.resolve('streamr-network/src/connection/webrtc/BrowserWebRtcConnection.ts'),
-                [path.join(__dirname, '../network/src/connection/ws/NodeClientWsEndpoint.ts$')]: require.resolve('streamr-network/src/connection/ws/BrowserClientWsEndpoint.ts'),
-                [path.join(__dirname, '../network/src/connection/ws/NodeClientWsConnection.ts$')]: require.resolve('streamr-network/src/connection/ws/BrowserClientWsConnection.ts'),
+                '@streamr/network-node': path.resolve('../network/src/browser.ts'),
+                [path.join(__dirname, '../network/src/connection/webrtc/NodeWebRtcConnection.ts$')]: require.resolve('@streamr/network-node/src/connection/webrtc/BrowserWebRtcConnection.ts'),
+                [path.join(__dirname, '../network/src/connection/ws/NodeClientWsEndpoint.ts$')]: require.resolve('@streamr/network-node/src/connection/ws/BrowserClientWsEndpoint.ts'),
+                [path.join(__dirname, '../network/src/connection/ws/NodeClientWsConnection.ts$')]: require.resolve('@streamr/network-node/src/connection/ws/BrowserClientWsConnection.ts'),
                 // swap out ServerPersistence for BrowserPersistence
                 [path.resolve('./src/utils/persistence/ServerPersistence.ts')]: (
                     path.resolve('./src/utils/persistence/BrowserPersistence.ts')

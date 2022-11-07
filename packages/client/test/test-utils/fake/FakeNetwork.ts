@@ -1,5 +1,5 @@
 import { StreamMessage, StreamMessageType } from '@streamr/protocol'
-import { NodeId } from 'streamr-network'
+import { NodeId } from '@streamr/network-node'
 import { waitForCondition } from '@streamr/test-utils'
 import { FakeNetworkNode } from './FakeNetworkNode'
 

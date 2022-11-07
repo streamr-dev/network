@@ -18,7 +18,7 @@ import { FakeNetwork } from './FakeNetwork'
 import { FakeChain } from './FakeChain'
 import { FakeLogger } from './FakeLogger'
 import { FakeStorageNode } from './FakeStorageNode'
-import { NodeId } from 'streamr-network'
+import { NodeId } from '@streamr/network-node'
 
 const DEFAULT_CLIENT_OPTIONS: StreamrClientConfig = {
     network: {

@@ -16,7 +16,7 @@ import {
     DisconnectionCode,
     DisconnectionReason,
     COUNTER_UNSUBSCRIBE,
-} from 'streamr-network'
+} from '@streamr/network-node'
 import { Logger, MetricsContext, MetricsDefinition, Metric, RateMetric } from '@streamr/utils'
 import { InstructionAndStatusAckSender } from './InstructionAndStatusAckSender'
 import { StatusValidator } from '../helpers/SchemaValidators'

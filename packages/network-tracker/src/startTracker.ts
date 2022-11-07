@@ -9,7 +9,7 @@ import {
     ServerWsEndpoint,
     startHttpServer,
     DEFAULT_MAX_NEIGHBOR_COUNT
-} from 'streamr-network'
+} from '@streamr/network-node'
 import { MetricsContext } from '@streamr/utils'
 
 export interface TrackerOptions extends AbstractNodeOptions {

@@ -18,8 +18,8 @@ import {
     PeerId,
     PeerInfo,
     WsEndpointEvent
-} from 'streamr-network'
-import type { ServerWsEndpoint } from 'streamr-network'
+} from '@streamr/network-node'
+import type { ServerWsEndpoint } from '@streamr/network-node'
 import { Logger } from '@streamr/utils'
 
 export enum Event {

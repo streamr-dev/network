@@ -3,7 +3,7 @@ import { wait } from '@streamr/utils'
 import { Tracker } from '../../src/logic/Tracker'
 import { startTracker } from '../../src/startTracker'
 
-import { NodeToTracker, NodeToTrackerEvent, PeerInfo, NodeClientWsEndpoint, Status, NodeId } from 'streamr-network'
+import { NodeToTracker, NodeToTrackerEvent, PeerInfo, NodeClientWsEndpoint, Status, NodeId } from '@streamr/network-node'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { getTopology } from '../../src/logic/trackerSummaryUtils'
 import { toStreamID } from '@streamr/protocol'

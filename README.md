@@ -165,7 +165,7 @@ npm publish
 git checkout main
 cd packages/network
 npm version <SEMVER_OPTION>
-# Go thru other packages' package.json and update streamr-network entry (if present) to newly generated version
+# Go thru other packages' package.json and update @streamr/network-node entry (if present) to newly generated version
 git add package.json
 git commit -m "release(network): vX.Y.Z"
 git tag network/vX.Y.Z

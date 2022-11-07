@@ -1,5 +1,5 @@
 import { TrackerServer, Event as TrackerServerEvent } from '../protocol/TrackerServer'
-import { UnknownPeerError } from 'streamr-network'
+import { UnknownPeerError } from '@streamr/network-node'
 import { Logger } from '@streamr/utils'
 import { RelayMessage } from '@streamr/protocol'
 

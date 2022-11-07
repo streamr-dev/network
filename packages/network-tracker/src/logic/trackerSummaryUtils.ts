@@ -1,6 +1,6 @@
 import { StreamPartID, StreamID, StreamPartIDUtils, toStreamPartID } from '@streamr/protocol'
 import { OverlayPerStreamPart, OverlayConnectionRtts } from './Tracker'
-import { Location, NodeId } from 'streamr-network'
+import { Location, NodeId } from '@streamr/network-node'
 
 type OverLayWithRtts = Record<StreamPartID, Record<NodeId, { neighborId: NodeId, rtt: number | null }[] >>
 type OverlaySizes = { streamId: string, partition: number, nodeCount: number }[]

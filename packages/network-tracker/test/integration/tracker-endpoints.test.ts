@@ -3,7 +3,7 @@ import http from 'http'
 import { startTracker } from '../../src/startTracker'
 import { waitForCondition } from '@streamr/test-utils'
 import 'jest-extended'
-import { createNetworkNode, NetworkNode } from 'streamr-network'
+import { createNetworkNode, NetworkNode } from '@streamr/network-node'
 import { StreamPartIDUtils } from '@streamr/protocol'
 
 function getHttp(url: string) {

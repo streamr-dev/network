@@ -1,4 +1,4 @@
-import { Status } from 'streamr-network'
+import { Status } from '@streamr/network-node'
 import { InstructionCounter } from '../../src/logic/InstructionCounter'
 import { StreamPartID, toStreamID } from '@streamr/protocol'
 
