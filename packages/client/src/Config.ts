@@ -239,7 +239,7 @@ export const createStrictConfig = (inputOptions: StreamrClientConfig = {}): Stri
             ...merge(defaults.network || {}, opts.network),
             trackers: opts.network?.trackers ?? defaults.network.trackers,
         },
-        contracts: merge(defaults.contracts || {}, opts.decryption),
+        contracts: merge(defaults.contracts || {}, opts.contracts),
         decryption: merge(defaults.decryption || {}, opts.decryption),
         metrics: getMetricsConfig(),
         cache: {
