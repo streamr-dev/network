@@ -89,7 +89,6 @@ export class PushPipeline<InType, OutType = InType> extends Pipeline<InType, Out
         return this.source.length || 0
     }
 
-    /** @internal */
     clear(): void {
         return this.source.clear()
     }
