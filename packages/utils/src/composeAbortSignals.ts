@@ -1,12 +1,3 @@
-function findFirstPreAbortedSignal(signals: Iterable<AbortSignal>): AbortSignal | undefined {
-    for (const signal of signals) {
-        if (signal.aborted) {
-            return signal
-        }
-    }
-    return undefined
-}
-
 /**
  * Compose a single AbortSignal from multiple AbortSignals with "OR" logic.
  */
@@ -15,7 +6,7 @@ export function composeAbortSignals(...signals: AbortSignal[]): AbortSignal {
         throw new Error('must provide at least one AbortSignal')
     }
 
-    const preAbortedSignal = findFirstPreAbortedSignal(signals)
+    const preAbortedSignal = signals.find((s) => s.aborted)
     if (preAbortedSignal !== undefined) {
         return preAbortedSignal
     }
