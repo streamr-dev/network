@@ -7,7 +7,7 @@ import {
     StreamPartIDUtils,
     toStreamID
 } from 'streamr-client-protocol'
-import { waitForCondition } from 'streamr-test-utils'
+import { waitForCondition } from '@streamr/test-utils'
 
 import { createNetworkNode, NodeEvent } from '../../src/composition'
 import { toEthereumAddress } from '@streamr/utils'

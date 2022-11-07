@@ -1,7 +1,7 @@
 import { DhtNode, Events as DhtNodeEvents } from '../../src/dht/DhtNode'
 import { Message, MessageType, PeerDescriptor, RpcMessage } from '../../src/proto/DhtRpc'
 import { waitForEvent3 } from '../../src/helpers/waitForEvent3'
-import { waitForCondition } from 'streamr-test-utils'
+import { waitForCondition } from '@streamr/test-utils'
 import { createMockConnectionDhtNode, createWrappedClosestPeersRequest } from '../utils'
 import { PeerID } from '../../src/helpers/PeerID'
 import { Simulator } from '../../src/connection/Simulator'

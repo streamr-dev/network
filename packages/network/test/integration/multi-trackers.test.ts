@@ -1,6 +1,6 @@
 import { Tracker, startTracker } from '@streamr/network-tracker'
 import { NetworkNode } from '../../src/logic/NetworkNode'
-import { eventsWithArgsToArray } from 'streamr-test-utils'
+import { eventsWithArgsToArray } from '@streamr/test-utils'
 import { waitForEvent } from '@streamr/utils'
 import { wait } from '@streamr/utils'
 import { InstructionMessage, toStreamID, toStreamPartID } from 'streamr-client-protocol'

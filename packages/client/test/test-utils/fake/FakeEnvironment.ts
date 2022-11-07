@@ -1,6 +1,6 @@
 import { container, DependencyContainer } from 'tsyringe'
 import { merge } from 'lodash'
-import { fastPrivateKey, fastWallet } from 'streamr-test-utils'
+import { fastPrivateKey, fastWallet } from '@streamr/test-utils'
 import { StreamrClientConfig } from '../../../src/Config'
 import { StorageNodeRegistry } from '../../../src/registry/StorageNodeRegistry'
 import { StreamrClient } from '../../../src/StreamrClient'

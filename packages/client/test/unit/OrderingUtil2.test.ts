@@ -5,7 +5,7 @@ import {
     toStreamID
 } from 'streamr-client-protocol'
 import shuffle from 'array-shuffle'
-import { waitForCondition } from 'streamr-test-utils'
+import { waitForCondition } from '@streamr/test-utils'
 import { EthereumAddress, toEthereumAddress, wait } from '@streamr/utils'
 import OrderingUtil from '../../src/subscribe/ordering/OrderingUtil'
 

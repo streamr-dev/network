@@ -3,7 +3,7 @@ import StreamrClient, { Stream } from 'streamr-client'
 import { Tracker } from '@streamr/network-tracker'
 import cassandra from 'cassandra-driver'
 import { Wallet } from 'ethers'
-import { fastWallet, fetchPrivateKeyWithGas, waitForCondition } from 'streamr-test-utils'
+import { fastWallet, fetchPrivateKeyWithGas, waitForCondition } from '@streamr/test-utils'
 import {
     startBroker,
     createClient,

@@ -1,5 +1,5 @@
 import { Client, types as cassandraTypes } from 'cassandra-driver'
-import { waitForCondition } from 'streamr-test-utils'
+import { waitForCondition } from '@streamr/test-utils'
 const { TimeUuid } = cassandraTypes
 import { BucketManager } from '../../../../src/plugins/storage/BucketManager'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'

@@ -1,6 +1,6 @@
 import crypto from 'crypto'
 import { DependencyContainer } from 'tsyringe'
-import { fastPrivateKey, fetchPrivateKeyWithGas } from 'streamr-test-utils'
+import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { EthereumAddress, Logger, wait } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { StreamMessage, StreamPartID, StreamPartIDUtils, MAX_PARTITION_COUNT } from 'streamr-client-protocol'

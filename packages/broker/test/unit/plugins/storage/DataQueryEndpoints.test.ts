@@ -1,6 +1,6 @@
 import express from 'express'
 import request from 'supertest'
-import { toReadableStream } from 'streamr-test-utils'
+import { toReadableStream } from '@streamr/test-utils'
 import {
     router as restEndpointRouter,
     MIN_SEQUENCE_NUMBER_VALUE,

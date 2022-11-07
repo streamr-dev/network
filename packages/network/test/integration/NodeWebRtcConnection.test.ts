@@ -3,7 +3,7 @@ import { DescriptionType } from 'node-datachannel'
 import { MessageQueue } from '../../src/connection/MessageQueue'
 import { NodeWebRtcConnection } from '../../src/connection/webrtc/NodeWebRtcConnection'
 import { DeferredConnectionAttempt } from '../../src/connection/webrtc/DeferredConnectionAttempt'
-import { runAndWaitForEvents, waitForCondition } from 'streamr-test-utils'
+import { runAndWaitForEvents, waitForCondition } from '@streamr/test-utils'
 import { wait } from '@streamr/utils'
 
 /**

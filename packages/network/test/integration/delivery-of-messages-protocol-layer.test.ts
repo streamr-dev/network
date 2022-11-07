@@ -13,7 +13,7 @@ import {
     StreamPartIDUtils,
     toStreamID
 } from 'streamr-client-protocol'
-import { runAndWaitForEvents } from 'streamr-test-utils'
+import { runAndWaitForEvents } from '@streamr/test-utils'
 import { toEthereumAddress, waitForEvent } from '@streamr/utils'
 import { startTracker, Tracker, TrackerServer, TrackerServerEvent } from '@streamr/network-tracker'
 import { Event as NodeToNodeEvent, NodeToNode } from '../../src/protocol/NodeToNode'

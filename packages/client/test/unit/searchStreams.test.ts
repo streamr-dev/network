@@ -2,7 +2,7 @@ import 'reflect-metadata'
 
 import { BigNumber } from '@ethersproject/bignumber'
 import { StreamID, toStreamID } from 'streamr-client-protocol'
-import { randomEthereumAddress } from 'streamr-test-utils'
+import { randomEthereumAddress } from '@streamr/test-utils'
 import { searchStreams, SearchStreamsResultItem } from '../../src/registry/searchStreams'
 import { Stream } from '../../src/Stream'
 import { collect } from '../../src/utils/iterators'

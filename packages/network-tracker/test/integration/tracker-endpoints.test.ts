@@ -1,7 +1,7 @@
 import { Tracker } from '../../src/logic/Tracker'
 import http from 'http'
 import { startTracker } from '../../src/startTracker'
-import { waitForCondition } from 'streamr-test-utils'
+import { waitForCondition } from '@streamr/test-utils'
 import 'jest-extended'
 import { createNetworkNode, NetworkNode } from 'streamr-network'
 import { StreamPartIDUtils } from 'streamr-client-protocol'

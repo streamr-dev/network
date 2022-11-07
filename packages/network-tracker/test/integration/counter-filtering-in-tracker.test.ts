@@ -1,4 +1,4 @@
-import { runAndWaitForEvents } from 'streamr-test-utils'
+import { runAndWaitForEvents } from '@streamr/test-utils'
 import { wait } from '@streamr/utils'
 import { Tracker } from '../../src/logic/Tracker'
 import { startTracker } from '../../src/startTracker'

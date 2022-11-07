@@ -1,7 +1,7 @@
 import WebSocket from 'ws'
 import qs from 'qs'
 import StreamrClient from 'streamr-client'
-import { waitForCondition } from 'streamr-test-utils'
+import { waitForCondition } from '@streamr/test-utils'
 import { waitForEvent } from '@streamr/utils'
 import { WebsocketServer } from '../../../../src/plugins/websocket/WebsocketServer'
 import { PlainPayloadFormat } from '../../../../src/helpers/PayloadFormat'

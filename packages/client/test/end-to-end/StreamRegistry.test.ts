@@ -7,7 +7,7 @@ import { Stream } from '../../src/Stream'
 import { ConfigTest } from '../../src/ConfigTest'
 import { toStreamID } from 'streamr-client-protocol'
 import { collect } from '../../src/utils/iterators'
-import { fetchPrivateKeyWithGas, randomEthereumAddress } from 'streamr-test-utils'
+import { fetchPrivateKeyWithGas, randomEthereumAddress } from '@streamr/test-utils'
 import { TimeoutsConfig } from '../../src/Config'
 import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 

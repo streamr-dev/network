@@ -1,7 +1,7 @@
 import { Wallet } from 'ethers'
 import { StreamID, toStreamPartID } from 'streamr-client-protocol'
 import { createNetworkNode } from 'streamr-network'
-import { fastWallet, fetchPrivateKeyWithGas, waitForCondition } from 'streamr-test-utils'
+import { fastWallet, fetchPrivateKeyWithGas, waitForCondition } from '@streamr/test-utils'
 import { ConfigTest } from '../../src/ConfigTest'
 import { PermissionAssignment, StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'

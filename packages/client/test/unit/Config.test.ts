@@ -1,5 +1,5 @@
 import { SmartContractRecord } from 'streamr-client-protocol'
-import { fastPrivateKey } from 'streamr-test-utils'
+import { fastPrivateKey } from '@streamr/test-utils'
 import { createStrictConfig, STREAM_CLIENT_DEFAULTS } from '../../src/Config'
 import { ConfigTest } from '../../src/ConfigTest'
 import { generateEthereumAccount } from '../../src/Ethereum'

@@ -1,4 +1,4 @@
-import { waitForCondition } from 'streamr-test-utils'
+import { waitForCondition } from '@streamr/test-utils'
 import { InstructionMessage, toStreamID } from 'streamr-client-protocol'
 
 import { InstructionThrottler } from '../../src/logic/InstructionThrottler'
