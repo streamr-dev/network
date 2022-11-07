@@ -96,7 +96,7 @@ describe(composeAbortSignals, () => {
     it('throws error if composing empty list', () => {
         expect(() => {
             composeAbortSignals()
-        }).toThrowError(new Error('must provide at least one AbortSignal'))
+        }).toThrow('must provide at least one AbortSignal')
     })
 
     it('works with "fetch"', async () => {
@@ -104,6 +104,6 @@ describe(composeAbortSignals, () => {
         const composedSignal = composeAbortSignals(controller.signal)
         const response = fetch(`https://www.google.com`, { signal: composedSignal as any })
         controller.abort()
-        return expect(response).rejects.toThrowError('The user aborted a request.')
+        return expect(response).rejects.toThrow('The user aborted a request.')
     })
 })
