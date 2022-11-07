@@ -1,9 +1,12 @@
-import { fastWallet, fetchPrivateKeyWithGas, waitForCondition } from 'streamr-test-utils'
-import { createTestStream } from '../test-utils/utils'
-import { ConfigTest, PermissionAssignment, Stream, StreamPermission, StreamrClient } from '../../src'
-import { createNetworkNode } from 'streamr-network'
-import { StreamID, toStreamPartID } from 'streamr-client-protocol'
 import { Wallet } from 'ethers'
+import { StreamID, toStreamPartID } from 'streamr-client-protocol'
+import { createNetworkNode } from 'streamr-network'
+import { fastWallet, fetchPrivateKeyWithGas, waitForCondition } from 'streamr-test-utils'
+import { ConfigTest } from '../../src/ConfigTest'
+import { PermissionAssignment, StreamPermission } from '../../src/permission'
+import { Stream } from '../../src/Stream'
+import { StreamrClient } from '../../src/StreamrClient'
+import { createTestStream } from '../test-utils/utils'
 
 const TIMEOUT = 20 * 1000
 
@@ -101,8 +104,8 @@ describe('publish-subscribe', () => {
         }, TIMEOUT)
 
         it('subscriber is able to receive and decrypt messages', async () => {
-            const messages: unknown[] = []
-            await subscriberClient.subscribe(stream.id, (msg) => {
+            const messages: any[] = []
+            await subscriberClient.subscribe(stream.id, (msg: any) => {
                 messages.push(msg)
             })
             await publisherClient.publish(stream.id, PAYLOAD)
@@ -129,7 +132,7 @@ describe('publish-subscribe', () => {
 
         it('subscriber is able to receive messages', async () => {
             const messages: unknown[] = []
-            await subscriberClient.subscribe(stream.id, (msg) => {
+            await subscriberClient.subscribe(stream.id, (msg: any) => {
                 messages.push(msg)
             })
             await publisherClient.publish(stream.id, PAYLOAD)

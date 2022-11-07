@@ -1,22 +1,22 @@
-import { inject, scoped, Lifecycle } from 'tsyringe'
+import { EthereumAddress, Multimap, toEthereumAddress } from '@streamr/utils'
 import { StreamID } from 'streamr-client-protocol'
-import { Stream, StreamProperties } from '../../../src/Stream'
+import { inject, Lifecycle, scoped } from 'tsyringe'
+import { Authentication, AuthenticationInjectionToken } from '../../../src/Authentication'
+import { NotFoundError } from '../../../src/HttpUtil'
 import {
-    StreamPermission,
     isPublicPermissionAssignment,
     isPublicPermissionQuery,
     PermissionAssignment,
-    PermissionQuery
+    PermissionQuery, StreamPermission
 } from '../../../src/permission'
-import { StreamIDBuilder } from '../../../src/StreamIDBuilder'
+import { SearchStreamsPermissionFilter } from '../../../src/registry/searchStreams'
 import { StreamRegistry } from '../../../src/registry/StreamRegistry'
-import { NotFoundError, SearchStreamsPermissionFilter } from '../../../src'
 import { StreamRegistryCached } from '../../../src/registry/StreamRegistryCached'
-import { Authentication, AuthenticationInjectionToken } from '../../../src/Authentication'
-import { Methods } from '../types'
-import { EthereumAddress, Multimap, toEthereumAddress } from '@streamr/utils'
-import { FakeChain, PUBLIC_PERMISSION_TARGET, PublicPermissionTarget, StreamRegistryItem } from './FakeChain'
+import { Stream, StreamMetadata } from '../../../src/Stream'
 import { StreamFactory } from '../../../src/StreamFactory'
+import { StreamIDBuilder } from '../../../src/StreamIDBuilder'
+import { Methods } from '../types'
+import { FakeChain, PublicPermissionTarget, PUBLIC_PERMISSION_TARGET, StreamRegistryItem } from './FakeChain'
 
 @scoped(Lifecycle.ContainerScoped)
 export class FakeStreamRegistry implements Methods<StreamRegistry> {
@@ -41,13 +41,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         this.streamRegistryCached = streamRegistryCached
     }
 
-    async createStream(propsOrStreamIdOrPath: StreamProperties | string): Promise<Stream> {
-        if (!this.authentication.isAuthenticated()) {
-            throw new Error('Not authenticated')
-        }
-        const props = typeof propsOrStreamIdOrPath === 'object' ? propsOrStreamIdOrPath : { id: propsOrStreamIdOrPath }
-        props.partitions ??= 1
-        const streamId = await this.streamIdBuilder.toStreamID(props.id)
+    async createStream(streamId: StreamID, metadata: StreamMetadata): Promise<Stream> {
         if (this.chain.streams.has(streamId)) {
             throw new Error(`Stream already exists: ${streamId}`)
         }
@@ -55,38 +49,31 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         const permissions = new Multimap<EthereumAddress, StreamPermission>()
         permissions.addAll(authenticatedUser, Object.values(StreamPermission))
         const registryItem: StreamRegistryItem = {
-            metadata: props,
+            metadata,
             permissions
         }
         this.chain.streams.set(streamId, registryItem)
-        return this.streamFactory.createStream({
-            ...props,
-            id: streamId
-        })
+        return this.streamFactory.createStream(streamId, metadata)
     }
 
     async getStream(id: StreamID): Promise<Stream> {
         const registryItem = this.chain.streams.get(id)
         if (registryItem !== undefined) {
-            return this.streamFactory.createStream({ ...registryItem.metadata, id })
+            return this.streamFactory.createStream(id, registryItem.metadata)
         } else {
             throw new NotFoundError('Stream not found: id=' + id)
         }
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async updateStream(props: StreamProperties): Promise<Stream> {
-        const streamId = await this.streamIdBuilder.toStreamID(props.id)
+    async updateStream(streamId: StreamID, metadata: StreamMetadata): Promise<Stream> {
         const registryItem = this.chain.streams.get(streamId)
         if (registryItem === undefined) {
             throw new Error('Stream not found')
         } else {
-            registryItem.metadata = props
+            registryItem.metadata = metadata
         }
-        return this.streamFactory.createStream({
-            ...props,
-            id: streamId
-        })
+        return this.streamFactory.createStream(streamId, metadata)
     }
 
     async hasPermission(query: PermissionQuery): Promise<boolean> {
@@ -207,17 +194,17 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    searchStreams(_term: string | undefined, _permissionFilter: SearchStreamsPermissionFilter | undefined): AsyncGenerator<Stream, any, unknown> {
+    searchStreams(_term: string | undefined, _permissionFilter: SearchStreamsPermissionFilter | undefined): AsyncIterable<Stream> {
         throw new Error('not implemented')
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getStreamPublishers(_streamIdOrPath: string): AsyncGenerator<EthereumAddress, any, unknown> {
+    getStreamPublishers(_streamIdOrPath: string): AsyncIterable<EthereumAddress> {
         throw new Error('not implemented')
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getStreamSubscribers(_streamIdOrPath: string): AsyncGenerator<EthereumAddress, any, unknown> {
+    getStreamSubscribers(_streamIdOrPath: string): AsyncIterable<EthereumAddress> {
         throw new Error('not implemented')
     }
 }

@@ -2,6 +2,12 @@ import { StorageEventListener } from '../../../../src/plugins/storage/StorageEve
 import { StorageNodeAssignmentEvent, Stream, StreamrClient, StreamrClientEvents } from 'streamr-client'
 import { EthereumAddress, toEthereumAddress, wait } from '@streamr/utils'
 
+const MOCK_STREAM = {
+    id: 'streamId',
+    getMetadata: () => ({
+        partitions: 3
+    })
+} as Stream
 const clusterId = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 const otherClusterId = toEthereumAddress('0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb')
 
@@ -14,10 +20,7 @@ describe(StorageEventListener, () => {
     beforeEach(() => {
         stubClient = {
             async getStream() {
-                return {
-                    id: 'streamId',
-                    partitions: 3
-                } as Stream
+                return MOCK_STREAM
             },
             on(eventName: keyof StreamrClientEvents, listener: any) {
                 storageEventListeners.set(eventName, listener)
@@ -58,7 +61,7 @@ describe(StorageEventListener, () => {
         await wait(0)
         expect(onEvent).toHaveBeenCalledTimes(1)
         expect(onEvent).toHaveBeenCalledWith(
-            { id: 'streamId', partitions: 3 },
+            MOCK_STREAM,
             'added',
             1234
         )

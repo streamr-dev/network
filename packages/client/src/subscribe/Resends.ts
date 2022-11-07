@@ -1,15 +1,11 @@
-/**
- * Public Resends API
- */
 import { inject, Lifecycle, scoped, delay } from 'tsyringe'
-import { MessageRef, StreamPartID, StreamPartIDUtils, StreamMessage } from 'streamr-client-protocol'
+import { MessageRef, StreamPartID, StreamPartIDUtils, toStreamPartID } from 'streamr-client-protocol'
 
-import { MessageStream, MessageStreamOnMessage } from './MessageStream'
-import { createSubscribePipeline } from './SubscribePipeline'
+import { MessageStream } from './MessageStream'
+import { createSubscribePipeline } from './subscribePipeline'
 
 import { StorageNodeRegistry } from '../registry/StorageNodeRegistry'
 import { StreamIDBuilder } from '../StreamIDBuilder'
-import { StreamDefinition } from '../types'
 import { random } from 'lodash'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { HttpUtil } from '../HttpUtil'
@@ -23,6 +19,9 @@ import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { counterId } from '../utils/utils'
 import { StreamrClientError } from '../StreamrClientError'
+import { collect } from '../utils/iterators'
+import { counting } from '../utils/GeneratorUtils'
+import { Message } from '../Message'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 
@@ -95,23 +94,7 @@ export class Resends {
         this.logger = loggerFactory.createLogger(module)
     }
 
-    async resend<T>(
-        streamDefinition: StreamDefinition,
-        options: ResendOptions,
-        onMessage?: MessageStreamOnMessage<T>
-    ): Promise<MessageStream<T>> {
-        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-
-        const sub = await this.resendMessages<T>(streamPartId, options)
-
-        if (onMessage) {
-            sub.useLegacyOnMessageHandler(onMessage)
-        }
-
-        return sub
-    }
-
-    private resendMessages<T>(streamPartId: StreamPartID, options: ResendOptions): Promise<MessageStream<T>> {
+    resend<T>(streamPartId: StreamPartID, options: ResendOptions): Promise<MessageStream<T>> {
         if (isResendLast(options)) {
             return this.last<T>(streamPartId, {
                 count: options.last,
@@ -147,7 +130,7 @@ export class Resends {
         endpointSuffix: 'last' | 'range' | 'from',
         streamPartId: StreamPartID,
         query: QueryDict = {}
-    ) {
+    ): Promise<MessageStream<T>> {
         const loggerIdx = counterId('fetchStream')
         this.logger.debug('[%s] fetching resend %s for %s with options %o', loggerIdx, endpointSuffix, streamPartId, query)
         const streamId = StreamPartIDUtils.getStreamID(streamPartId)
@@ -160,7 +143,6 @@ export class Resends {
         const nodeUrl = (await this.storageNodeRegistry.getStorageNodeMetadata(nodeAddress)).http
         const url = this.createUrl(nodeUrl, endpointSuffix, streamPartId, query)
         const messageStream = createSubscribePipeline<T>({
-            messageStream: new MessageStream<T>(),
             streamPartId,
             resends: this,
             groupKeyStore: this.groupKeyStore,
@@ -172,25 +154,14 @@ export class Resends {
             loggerFactory: this.loggerFactory
         })
 
-        let count = 0
-        messageStream.forEach(() => {
-            count += 1
-        })
-
-        const logger = this.logger
-        const dataStream = await this.httpUtil.fetchHttpStream(url)
-        messageStream.pull((async function* readStream() {
-            try {
-                yield* dataStream
-            } finally {
-                logger.debug('[%s] total of %d messages received for resend fetch', loggerIdx, count)
-                dataStream.destroy()
-            }
-        }()))
+        const dataStream = this.httpUtil.fetchHttpStream<T>(url)
+        messageStream.pull(counting(dataStream, (count: number) => {
+            this.logger.debug('[%s] total of %d messages received for resend fetch', loggerIdx, count)
+        }))
         return messageStream
     }
 
-    private async last<T>(streamPartId: StreamPartID, { count }: { count: number }): Promise<MessageStream<T>> {
+    async last<T>(streamPartId: StreamPartID, { count }: { count: number }): Promise<MessageStream<T>> {
         if (count <= 0) {
             const emptyStream = new MessageStream<T>()
             emptyStream.endWrite()
@@ -243,47 +214,42 @@ export class Resends {
         })
     }
 
-    async waitForStorage(streamMessage: StreamMessage, {
+    async waitForStorage(message: Message, {
         // eslint-disable-next-line no-underscore-dangle
         interval = this.rootConfig._timeouts.storageNode.retryInterval,
         // eslint-disable-next-line no-underscore-dangle
         timeout = this.rootConfig._timeouts.storageNode.timeout,
         count = 100,
-        messageMatchFn = (msgTarget: StreamMessage, msgGot: StreamMessage) => {
+        messageMatchFn = (msgTarget: Message, msgGot: Message) => {
             return msgTarget.signature === msgGot.signature
         }
     }: {
         interval?: number
         timeout?: number
         count?: number
-        messageMatchFn?: (msgTarget: StreamMessage, msgGot: StreamMessage) => boolean
+        messageMatchFn?: (msgTarget: Message, msgGot: Message) => boolean
     } = {}): Promise<void> {
-        if (!streamMessage) {
-            throw new StreamrClientError('waitForStorage requires a StreamMessage', 'INVALID_ARGUMENT')
+        if (!message) {
+            throw new StreamrClientError('waitForStorage requires a Message', 'INVALID_ARGUMENT')
         }
 
-        const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamMessage.getStreamPartID())
-        const streamDefinition = { streamId, partition }
-
         const start = Date.now()
-        let last: StreamMessage[] | undefined
+        let last: Message[] | undefined
         let found = false
         while (!found) {
             const duration = Date.now() - start
             if (duration > timeout) {
                 this.logger.debug('timed out waiting for storage to have message %j', {
-                    expected: streamMessage.getMessageID(),
-                    lastReceived: last?.map((l) => l.getMessageID()),
+                    expected: message.streamMessage.getMessageID(),
+                    lastReceived: last?.map((l) => l.streamMessage.getMessageID()),
                 })
-                const err: any = new Error(`timed out after ${duration}ms waiting for message`)
-                err.streamMessage = streamMessage
-                throw err
+                throw new Error(`timed out after ${duration}ms waiting for message`)
             }
 
-            const resendStream = await this.resend(streamDefinition, { last: count })
-            last = await resendStream.collect()
+            const resendStream = await this.resend(toStreamPartID(message.streamId, message.streamPartition), { last: count })
+            last = await collect(resendStream)
             for (const lastMsg of last) {
-                if (messageMatchFn(streamMessage, lastMsg)) {
+                if (messageMatchFn(message, lastMsg)) {
                     found = true
                     this.logger.debug('message found')
                     return
@@ -291,8 +257,8 @@ export class Resends {
             }
 
             this.logger.debug('message not found, retrying... %j', {
-                msg: streamMessage.getMessageID(),
-                'last 3': last.slice(-3).map((l) => l.getMessageID())
+                msg: message.streamMessage.getMessageID(),
+                'last 3': last.slice(-3).map((l) => l.streamMessage.getMessageID())
             })
 
             await wait(interval)

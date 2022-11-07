@@ -1,4 +1,5 @@
 import {
+    EncryptionType,
     GroupKeyRequest,
     GroupKeyRequestSerialized,
     GroupKeyResponse,
@@ -24,7 +25,7 @@ import { RSAKeyPair } from './RSAKeyPair'
 import { EthereumAddress, Logger } from '@streamr/utils'
 import { LoggerFactory } from '../utils/LoggerFactory'
 
-const MAX_PENDING_REQUEST_COUNT = 50000 // just some limit, we can tweak the number if needed 
+const MAX_PENDING_REQUEST_COUNT = 50000 // just some limit, we can tweak the number if needed
 
 /*
  * Sends group key requests and receives group key responses
@@ -41,7 +42,7 @@ export class SubscriberKeyExchange {
     private readonly pendingRequests: MaxSizedSet<string> = new MaxSizedSet(MAX_PENDING_REQUEST_COUNT)
     private readonly ensureStarted: () => Promise<void>
     requestGroupKey: (groupKeyId: GroupKeyId, publisherId: EthereumAddress, streamPartId: StreamPartID) => Promise<void>
-    
+
     constructor(
         networkNodeFacade: NetworkNodeFacade,
         store: GroupKeyStore,
@@ -61,7 +62,7 @@ export class SubscriberKeyExchange {
             node.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
             this.logger.debug('started')
         })
-        this.requestGroupKey = withThrottling((groupKeyId: GroupKeyId, publisherId: EthereumAddress, streamPartId: StreamPartID) => { 
+        this.requestGroupKey = withThrottling((groupKeyId: GroupKeyId, publisherId: EthereumAddress, streamPartId: StreamPartID) => {
             return this.doRequestGroupKey(groupKeyId, publisherId, streamPartId)
         }, decryptionConfig.maxKeyRequestsPerSecond)
     }
@@ -105,7 +106,7 @@ export class SubscriberKeyExchange {
             ),
             serializedContent: JSON.stringify(requestContent),
             messageType: StreamMessageType.GROUP_KEY_REQUEST,
-            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+            encryptionType: EncryptionType.NONE,
             authentication: this.authentication
         })
     }

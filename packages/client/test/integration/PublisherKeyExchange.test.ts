@@ -1,21 +1,25 @@
 import 'reflect-metadata'
+
+import { toEthereumAddress } from '@streamr/utils'
+import { Wallet } from 'ethers'
 import {
+    ContentType,
+    EncryptionType,
     GroupKeyResponse,
     StreamMessage,
+    StreamMessageType,
     StreamPartID,
-    StreamPartIDUtils,
+    StreamPartIDUtils
 } from 'streamr-client-protocol'
+import { fastWallet } from 'streamr-test-utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
-import { Wallet } from 'ethers'
 import { StreamPermission } from '../../src/permission'
+import { StreamrClient } from '../../src/StreamrClient'
+import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import {
     createRelativeTestStreamId,
     startPublisherKeyExchangeSubscription
 } from '../test-utils/utils'
-import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
-import { fastWallet } from 'streamr-test-utils'
-import { StreamrClient } from '../../src/StreamrClient'
-import { toEthereumAddress } from '@streamr/utils'
 
 describe('PublisherKeyExchange', () => {
 
@@ -51,9 +55,9 @@ describe('PublisherKeyExchange', () => {
                 streamPartition: StreamPartIDUtils.getStreamPartition(streamPartId),
                 publisherId: toEthereumAddress(publisherWallet.address),
             },
-            messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE,
-            contentType: StreamMessage.CONTENT_TYPES.JSON,
-            encryptionType: StreamMessage.ENCRYPTION_TYPES.RSA,
+            messageType: StreamMessageType.GROUP_KEY_RESPONSE,
+            contentType: ContentType.JSON,
+            encryptionType: EncryptionType.RSA,
             signature: expect.any(String)
         })
         const encryptedGroupKeys = (GroupKeyResponse.fromStreamMessage(actualResponse) as GroupKeyResponse).encryptedGroupKeys
@@ -98,7 +102,7 @@ describe('PublisherKeyExchange', () => {
             await triggerGroupKeyRequest()
 
             const response = await environment.getNetwork().waitForSentMessage({
-                messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE
+                messageType: StreamMessageType.GROUP_KEY_RESPONSE
             })
             await assertValidResponse(response!, key)
         })

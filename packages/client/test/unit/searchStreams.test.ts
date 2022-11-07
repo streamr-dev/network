@@ -1,11 +1,12 @@
 import 'reflect-metadata'
+
 import { BigNumber } from '@ethersproject/bignumber'
 import { StreamID, toStreamID } from 'streamr-client-protocol'
-import { searchStreams, SearchStreamsResultItem } from '../../src/registry/searchStreams'
-import { collect } from '../../src/utils/GeneratorUtils'
-import { Stream } from '../../src/Stream'
-import { SynchronizedGraphQLClient } from '../../src/utils/SynchronizedGraphQLClient'
 import { randomEthereumAddress } from 'streamr-test-utils'
+import { searchStreams, SearchStreamsResultItem } from '../../src/registry/searchStreams'
+import { Stream } from '../../src/Stream'
+import { collect } from '../../src/utils/iterators'
+import { SynchronizedGraphQLClient } from '../../src/utils/SynchronizedGraphQLClient'
 import { mockLoggerFactory } from '../test-utils/utils'
 
 const MOCK_USER = randomEthereumAddress()
@@ -31,7 +32,7 @@ const createMockGraphQLClient = (resultItems: SearchStreamsResultItem[]): Pick<S
         fetchPaginatedResults: async function* () {
             yield* resultItems
         } as any
-    } 
+    }
 }
 
 describe('searchStreams', () => {
@@ -45,26 +46,28 @@ describe('searchStreams', () => {
             createMockResultItem(stream2, 'invalid-json'),
             createMockResultItem(stream3, JSON.stringify({ partitions: 33 }))
         ])
-        const parseStream = (id: StreamID, metadata: string): Pick<Stream, 'id' | 'partitions'> => {
-            const props = Stream.parsePropertiesFromMetadata(metadata)
+        const parseStream = (id: StreamID, metadata: string): Stream => {
+            const props = Stream.parseMetadata(metadata)
             return {
                 id,
-                partitions: props.partitions!
-            }
+                getMetadata: () => ({
+                    partitions: props.partitions
+                })
+            } as any
         }
 
         const streams = await collect(searchStreams(
             '/',
             undefined,
             graphQLClient as any,
-            parseStream as any,
+            parseStream,
             mockLoggerFactory().createLogger(module)
         ))
 
         expect(streams).toHaveLength(2)
         expect(streams[0].id).toBe(stream1)
-        expect(streams[0].partitions).toBe(11)
+        expect(streams[0].getMetadata().partitions).toBe(11)
         expect(streams[1].id).toBe(stream3)
-        expect(streams[1].partitions).toBe(33)
+        expect(streams[1].getMetadata().partitions).toBe(33)
     })
 })

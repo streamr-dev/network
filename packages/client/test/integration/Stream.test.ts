@@ -1,8 +1,10 @@
+import 'reflect-metadata'
+
+import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
-import { createTestStream } from '../test-utils/utils'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
-import { Stream } from '../../src/Stream'
+import { createTestStream } from '../test-utils/utils'
 
 const DUMMY_ADDRESS = '0x1230000000000000000000000000000000000000'
 
@@ -96,9 +98,9 @@ describe('Stream', () => {
                     type: 'string',
                 },
             ]
-            expect(stream.config.fields).toEqual(expectedFields)
+            expect(stream.getMetadata().config?.fields).toEqual(expectedFields)
             const loadedStream = await client.getStream(stream.id)
-            expect(loadedStream.config.fields).toEqual(expectedFields)
+            expect(loadedStream.getMetadata().config?.fields).toEqual(expectedFields)
         })
 
         it('skips unsupported types', async () => {
@@ -124,9 +126,9 @@ describe('Stream', () => {
                     type: 'map',
                 },
             ]
-            expect(stream.config.fields).toEqual(expectedFields)
+            expect(stream.getMetadata().config?.fields).toEqual(expectedFields)
             const loadedStream = await client.getStream(stream.id)
-            expect(loadedStream.config.fields).toEqual(expectedFields)
+            expect(loadedStream.getMetadata().config?.fields).toEqual(expectedFields)
         })
     })
 })

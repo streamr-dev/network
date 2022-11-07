@@ -1,14 +1,14 @@
-import { random } from 'lodash'
-import { MAX_PARTITION_COUNT, StreamMessage, toStreamID } from 'streamr-client-protocol'
-import { fastWallet } from 'streamr-test-utils'
 import { keyToArrayIndex, toEthereumAddress } from '@streamr/utils'
-import { GroupKey } from '../../src/encryption/GroupKey'
-import { MessageFactory } from '../../src/publish/MessageFactory'
-import { MessageMetadata } from '../../src'
+import { random } from 'lodash'
+import { ContentType, EncryptionType, MAX_PARTITION_COUNT, StreamMessage, StreamMessageType, toStreamID } from 'streamr-client-protocol'
+import { fastWallet } from 'streamr-test-utils'
 import { createAuthentication } from '../../src/Authentication'
+import { GroupKey } from '../../src/encryption/GroupKey'
+import { PublishMetadata } from '../../src/publish/Publisher'
 import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
-import { createGroupKeyQueue, createStreamRegistryCached } from '../test-utils/utils'
+import { MessageFactory } from '../../src/publish/MessageFactory'
 import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
+import { createGroupKeyQueue, createStreamRegistryCached } from '../test-utils/utils'
 
 const WALLET = fastWallet()
 const STREAM_ID = toStreamID('/path', toEthereumAddress(WALLET.address))
@@ -37,7 +37,7 @@ const createMessageFactory = async (opts?: {
 }
 
 const createMessage = async (
-    opts: Omit<MessageMetadata, 'timestamp'> & { timestamp?: number, explicitPartition?: number }, 
+    opts: Omit<PublishMetadata, 'timestamp'> & { timestamp?: number, explicitPartition?: number },
     messageFactory: MessageFactory
 ): Promise<StreamMessage<any>> => {
     return messageFactory.createMessage(CONTENT, {
@@ -61,12 +61,12 @@ describe('MessageFactory', () => {
                 timestamp: TIMESTAMP
             },
             prevMsgRef: null,
-            messageType: StreamMessage.MESSAGE_TYPES.MESSAGE,
-            encryptionType: StreamMessage.ENCRYPTION_TYPES.AES,
+            messageType: StreamMessageType.MESSAGE,
+            encryptionType: EncryptionType.AES,
             groupKeyId: GROUP_KEY.id,
             newGroupKey: null,
             signature: expect.stringMatching(/^0x[0-9a-f]+$/),
-            contentType: StreamMessage.CONTENT_TYPES.JSON,
+            contentType: ContentType.JSON,
             serializedContent: expect.stringMatching(/^[0-9a-f]+$/)
         })
     })
@@ -79,7 +79,7 @@ describe('MessageFactory', () => {
         })
         const msg = await createMessage({}, messageFactory)
         expect(msg).toMatchObject({
-            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+            encryptionType: EncryptionType.NONE,
             groupKeyId: null,
             serializedContent: JSON.stringify(CONTENT)
         })
@@ -121,7 +121,7 @@ describe('MessageFactory', () => {
                 isStreamPublisher: false
             })
         })
-        return expect(() => 
+        return expect(() =>
             createMessage({}, messageFactory)
         ).rejects.toThrow(/is not a publisher on stream/)
     })
@@ -130,17 +130,17 @@ describe('MessageFactory', () => {
 
         it('out of range', async () => {
             const messageFactory = await createMessageFactory()
-            await expect(() => 
+            await expect(() =>
                 createMessage({ explicitPartition: -1 }, messageFactory)
             ).rejects.toThrow(/out of range/)
-            await expect(() => 
+            await expect(() =>
                 createMessage({ explicitPartition: PARTITION_COUNT }, messageFactory)
             ).rejects.toThrow(/out of range/)
         })
 
         it('partition and partitionKey', async () => {
             const messageFactory = await createMessageFactory()
-            return expect(() => 
+            return expect(() =>
                 createMessage({ partitionKey: 'mockPartitionKey', explicitPartition: 0 }, messageFactory)
             ).rejects.toThrow('Invalid combination of "partition" and "partitionKey"')
         })

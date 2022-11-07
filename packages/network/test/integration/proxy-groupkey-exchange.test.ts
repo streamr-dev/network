@@ -2,6 +2,7 @@ import { NetworkNode } from '../../src/logic/NetworkNode'
 import { startTracker, Tracker } from '@streamr/network-tracker'
 import { createNetworkNode } from '../../src/createNetworkNode'
 import {
+    EncryptionType,
     GroupKeyRequest,
     GroupKeyResponse,
     MessageID,
@@ -39,7 +40,7 @@ describe('GroupKey exchange via proxy connections', () => {
         proxy = createNetworkNode({
             id: 'proxy-node',
             trackers: [trackerInfo],
-            stunUrls: [],
+            iceServers: [],
             acceptProxyConnections: true,
             webrtcDisallowPrivateAddresses: false
         })
@@ -48,7 +49,7 @@ describe('GroupKey exchange via proxy connections', () => {
         publisher = createNetworkNode({
             id: 'publisher',
             trackers: [trackerInfo],
-            stunUrls: [],
+            iceServers: [],
             webrtcDisallowPrivateAddresses: false
         })
         await publisher.start()
@@ -56,7 +57,7 @@ describe('GroupKey exchange via proxy connections', () => {
         subscriber = createNetworkNode({
             id: 'subscriber',
             trackers: [trackerInfo],
-            stunUrls: [],
+            iceServers: [],
             webrtcDisallowPrivateAddresses: false
         })
         await subscriber.start()
@@ -95,7 +96,7 @@ describe('GroupKey exchange via proxy connections', () => {
                 '0'
             ),
             messageType: StreamMessageType.GROUP_KEY_REQUEST,
-            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+            encryptionType: EncryptionType.NONE,
             content: requestContent,
             signature: 'signature'
         })
@@ -126,7 +127,7 @@ describe('GroupKey exchange via proxy connections', () => {
                 '0'
             ),
             messageType: StreamMessageType.GROUP_KEY_RESPONSE,
-            encryptionType: StreamMessage.ENCRYPTION_TYPES.RSA,
+            encryptionType: EncryptionType.RSA,
             content: responseContent,
             signature: 'signature'
         })

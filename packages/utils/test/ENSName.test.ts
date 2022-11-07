@@ -1,6 +1,6 @@
 import { toENSName } from '../src/exports'
 
-describe(toENSName, () => {
+describe('toENSName', () => {
     it.each(['noperiod', '.domain'])('throws on invalid ENS name "%s"', (str) => {
         expect(() => toENSName(str)).toThrowError()
     })

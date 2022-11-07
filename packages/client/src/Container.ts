@@ -12,7 +12,6 @@ export function initContainer(config: StrictStreamrClientConfig, c: DependencyCo
     // associate values to config tokens
     const configTokens: [symbol, object][] = [
         [ConfigInjectionToken.Root, config],
-        [ConfigInjectionToken.Auth, config.auth],
         [ConfigInjectionToken.Ethereum, config],
         [ConfigInjectionToken.Network, config.network],
         [ConfigInjectionToken.Connection, config],

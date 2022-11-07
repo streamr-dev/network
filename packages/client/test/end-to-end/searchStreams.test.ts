@@ -4,7 +4,7 @@ import { Stream } from '../../src/Stream'
 import { PermissionAssignment, StreamPermission } from '../../src/permission'
 import { ConfigTest } from '../../src/ConfigTest'
 import { SearchStreamsPermissionFilter } from '../../src/registry/searchStreams'
-import { collect } from '../../src/utils/GeneratorUtils'
+import { collect } from '../../src/utils/iterators'
 
 jest.setTimeout(2 * 60 * 1000)
 

@@ -1,7 +1,7 @@
 import { wait } from '../src/wait'
 import { AbortError } from '../src/asAbortable'
 
-describe(wait, () => {
+describe('wait', () => {
     // https://stackoverflow.com/questions/21097421/what-is-the-reason-javascript-settimeout-is-so-inaccurate
     const JITTER_FACTOR = 4
 

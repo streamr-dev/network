@@ -1,17 +1,19 @@
 import 'reflect-metadata'
-import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
-import { range } from 'lodash'
-import { fastWallet } from 'streamr-test-utils'
-import { StreamPermission } from '../../src/permission'
-import { Stream } from '../../src/Stream'
-import { GroupKey } from '../../src/encryption/GroupKey'
+
 import { Wallet } from '@ethersproject/wallet'
-import { StreamMessage } from 'streamr-client-protocol'
 import { wait } from '@streamr/utils'
-import { StreamrClient } from '../../src/StreamrClient'
-import { MessageFactory } from '../../src/publish/MessageFactory'
+import { range } from 'lodash'
+import { StreamMessageType } from 'streamr-client-protocol'
+import { fastWallet } from 'streamr-test-utils'
 import { createAuthentication } from '../../src/Authentication'
+import { GroupKey } from '../../src/encryption/GroupKey'
+import { StreamPermission } from '../../src/permission'
+import { MessageFactory } from '../../src/publish/MessageFactory'
+import { Stream } from '../../src/Stream'
+import { StreamrClient } from '../../src/StreamrClient'
+import { collect } from '../../src/utils/iterators'
 import { createGroupKeyQueue, createStreamRegistryCached } from '../test-utils/utils'
+import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
 
 const PUBLISHER_COUNT = 50
 const MESSAGE_COUNT_PER_PUBLISHER = 3
@@ -80,11 +82,11 @@ describe('parallel key exchange', () => {
         }
 
         const expectedMessageCount = PUBLISHER_COUNT * MESSAGE_COUNT_PER_PUBLISHER
-        const messages = await sub.collect(expectedMessageCount)
+        const messages = await collect(sub, expectedMessageCount)
         expect(messages).toHaveLength(expectedMessageCount)
-        expect(messages.filter((msg) => !((msg.getParsedContent() as any).foo === 'bar'))).toEqual([])
+        expect(messages.filter((msg) => !((msg.content as any).foo === 'bar'))).toEqual([])
         expect(environment.getNetwork().getSentMessages({
-            messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST
+            messageType: StreamMessageType.GROUP_KEY_REQUEST
         })).toHaveLength(PUBLISHER_COUNT)
     }, 30 * 1000)
 })

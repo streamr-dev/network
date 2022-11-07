@@ -10,6 +10,7 @@ import { NegotiatedProtocolVersions } from '../../src/connection/NegotiatedProto
 import { WebRtcEndpoint } from '../../src/connection/webrtc/WebRtcEndpoint'
 import { webRtcConnectionFactory } from '../../src/connection/webrtc/NodeWebRtcConnection'
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
+import { GOOGLE_STUN_SERVER } from '../../src/constants'
 
 describe('WebRtcEndpoint', () => {
     let tracker: Tracker
@@ -47,7 +48,7 @@ describe('WebRtcEndpoint', () => {
             const peerInfo2 = PeerInfo.newNode('node-2')
             endpoint1 = new WebRtcEndpoint(
                 peerInfo1,
-                ["stun:stun.l.google.com:19302"],
+                [GOOGLE_STUN_SERVER],
                 new RtcSignaller(peerInfo1, nodeToTracker1),
                 new MetricsContext(),
                 new NegotiatedProtocolVersions(peerInfo1),
@@ -55,7 +56,7 @@ describe('WebRtcEndpoint', () => {
             )
             endpoint2 = new WebRtcEndpoint(
                 peerInfo2,
-                ["stun:stun.l.google.com:19302"],
+                [GOOGLE_STUN_SERVER],
                 new RtcSignaller(peerInfo2, nodeToTracker2),
                 new MetricsContext(),
                 new NegotiatedProtocolVersions(peerInfo2),

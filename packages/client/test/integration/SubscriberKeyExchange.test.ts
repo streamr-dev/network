@@ -1,22 +1,26 @@
 import 'reflect-metadata'
+
+import { toEthereumAddress } from '@streamr/utils'
+import { Wallet } from 'ethers'
 import {
+    ContentType,
+    EncryptionType,
     StreamMessage,
+    StreamMessageType,
     StreamPartID,
     StreamPartIDUtils
 } from 'streamr-client-protocol'
-import { GroupKey } from '../../src/encryption/GroupKey'
-import { Wallet } from 'ethers'
-import { Stream } from '../../src/Stream'
-import { StreamPermission } from '../../src/permission'
-import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { fastWallet, waitForCondition } from 'streamr-test-utils'
+import { GroupKey } from '../../src/encryption/GroupKey'
+import { StreamPermission } from '../../src/permission'
+import { Stream } from '../../src/Stream'
+import { StreamrClient } from '../../src/StreamrClient'
+import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import {
     createMockMessage,
     createRelativeTestStreamId,
     getGroupKeyStore
 } from '../test-utils/utils'
-import { StreamrClient } from '../../src/StreamrClient'
-import { toEthereumAddress } from '@streamr/utils'
 
 describe('SubscriberKeyExchange', () => {
 
@@ -51,9 +55,9 @@ describe('SubscriberKeyExchange', () => {
                 streamPartition:  StreamPartIDUtils.getStreamPartition(streamPartId),
                 publisherId: toEthereumAddress(subscriberWallet.address)
             },
-            messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST,
-            contentType: StreamMessage.CONTENT_TYPES.JSON,
-            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+            messageType: StreamMessageType.GROUP_KEY_REQUEST,
+            contentType: ContentType.JSON,
+            encryptionType: EncryptionType.NONE,
             signature: expect.any(String)
         })
         expect(request!.getParsedContent()).toEqual([
@@ -101,7 +105,7 @@ describe('SubscriberKeyExchange', () => {
             await triggerGroupKeyRequest(groupKey, publisher)
 
             const request = await environment.getNetwork().waitForSentMessage({
-                messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST
+                messageType: StreamMessageType.GROUP_KEY_REQUEST
             })
             await assertGroupKeyRequest(request!, [groupKey.id])
             const keyStore = getGroupKeyStore(toEthereumAddress(subscriberWallet.address))

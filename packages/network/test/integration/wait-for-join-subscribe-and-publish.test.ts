@@ -32,31 +32,31 @@ describe('subscribe and wait for the node to join the stream', () => {
             createNetworkNode({
                 id: 'node-0',
                 trackers: [trackerInfo],
-                stunUrls: [],
+                iceServers: [],
                 webrtcDisallowPrivateAddresses: false
             }),
             createNetworkNode({
                 id: 'node-1',
                 trackers: [trackerInfo],
-                stunUrls: [],
+                iceServers: [],
                 webrtcDisallowPrivateAddresses: false
             }),
             createNetworkNode({
                 id: 'node-2',
                 trackers: [trackerInfo],
-                stunUrls: [],
+                iceServers: [],
                 webrtcDisallowPrivateAddresses: false
             }),
             createNetworkNode({
                 id: 'node-3',
                 trackers: [trackerInfo],
-                stunUrls: [],
+                iceServers: [],
                 webrtcDisallowPrivateAddresses: false
             }),
             createNetworkNode({
                 id: 'node-4',
                 trackers: [trackerInfo],
-                stunUrls: [],
+                iceServers: [],
                 webrtcDisallowPrivateAddresses: false
             })
         ]
@@ -135,7 +135,7 @@ describe('subscribe and wait for the node to join the stream', () => {
                 http: '',
                 ws: ''
             }],
-            stunUrls: [],
+            iceServers: [],
             webrtcDisallowPrivateAddresses: false
         })
         invalidNode.start()
@@ -147,7 +147,7 @@ describe('subscribe and wait for the node to join the stream', () => {
         const connectNode = createNetworkNode({
             id: 'node-0',
             trackers: [tracker.getConfigRecord()],
-            stunUrls: [],
+            iceServers: [],
             webrtcDisallowPrivateAddresses: false,
             newWebrtcConnectionTimeout: 500
         })
@@ -155,7 +155,7 @@ describe('subscribe and wait for the node to join the stream', () => {
         const targetNode = createNetworkNode({
             id: 'target',
             trackers: [tracker.getConfigRecord()],
-            stunUrls: [],
+            iceServers: [],
             webrtcDisallowPrivateAddresses: false,
         })
         targetNode.start()

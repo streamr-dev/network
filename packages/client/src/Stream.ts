@@ -7,7 +7,6 @@ import { StreamRegistry } from './registry/StreamRegistry'
 import { StreamRegistryCached } from './registry/StreamRegistryCached'
 import {
     StreamID,
-    StreamMessage,
     StreamPartID,
     toStreamPartID
 } from 'streamr-client-protocol'
@@ -17,26 +16,25 @@ import { PermissionAssignment, PublicPermissionQuery, UserPermissionQuery } from
 import { Subscriber } from './subscribe/Subscriber'
 import { formStorageNodeAssignmentStreamId } from './utils/utils'
 import { waitForAssignmentsToPropagate } from './utils/waitForAssignmentsToPropagate'
-import { MessageMetadata } from '../src/publish/Publisher'
+import { PublishMetadata } from '../src/publish/Publisher'
 import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
 import { toEthereumAddress, withTimeout } from '@streamr/utils'
-import { StreamMetadata } from './StreamMessageValidator'
 import { StreamrClientEventEmitter } from './events'
+import { collect } from './utils/iterators'
+import { DEFAULT_PARTITION } from './StreamIDBuilder'
+import { Subscription } from './subscribe/Subscription'
+import { LoggerFactory } from './utils/LoggerFactory'
+import { Message } from './Message'
+import { convertStreamMessageToMessage } from './Message'
 
-export interface StreamProperties {
-    id: string
+export interface StreamMetadata {
+    partitions: number
     description?: string
     config?: {
         fields: Field[]
     }
-    partitions?: number
     storageDays?: number
     inactivityThresholdHours?: number
-}
-
-/** @internal */
-export interface StreamrStreamConstructorOptions extends StreamProperties {
-    id: StreamID
 }
 
 export const VALID_FIELD_TYPES = ['number', 'string', 'boolean', 'list', 'map'] as const
@@ -69,45 +67,49 @@ function getFieldType(value: any): (Field['type'] | undefined) {
  * @category Important
  */
 /* eslint-disable no-underscore-dangle */
-class StreamrStream implements StreamMetadata {
+class StreamrStream {
     id: StreamID
-    description?: string
-    config: {
-        fields: Field[]
-    } = { fields: [] }
-    partitions!: number
-    storageDays?: number
-    inactivityThresholdHours?: number
+    private metadata: StreamMetadata
     private readonly _resends: Resends
     private readonly _publisher: Publisher
     private readonly _subscriber: Subscriber
     private readonly _streamRegistry: StreamRegistry
     private readonly _streamRegistryCached: StreamRegistryCached
     private readonly _streamStorageRegistry: StreamStorageRegistry
+    private readonly _loggerFactory: LoggerFactory
     private readonly _eventEmitter: StreamrClientEventEmitter
     private readonly _timeoutsConfig: TimeoutsConfig
 
     /** @internal */
     constructor(
-        props: StreamrStreamConstructorOptions,
+        id: StreamID,
+        metadata: Partial<StreamMetadata>,
         resends: Resends,
         publisher: Publisher,
         subscriber: Subscriber,
         streamRegistryCached: StreamRegistryCached,
         streamRegistry: StreamRegistry,
         streamStorageRegistry: StreamStorageRegistry,
+        loggerFactory: LoggerFactory,
         eventEmitter: StreamrClientEventEmitter,
         timeoutsConfig: TimeoutsConfig
     ) {
-        Object.assign(this, props)
-        this.id = props.id
-        this.partitions = props.partitions ? props.partitions : 1
+        this.id = id
+        this.metadata = {
+            partitions: 1,
+            // TODO should we remove this default or make config as a required StreamMetadata field?
+            config: {
+                fields: []
+            },
+            ...metadata
+        }
         this._resends = resends
         this._publisher = publisher
         this._subscriber = subscriber
         this._streamRegistryCached = streamRegistryCached
         this._streamRegistry = streamRegistry
         this._streamStorageRegistry = streamStorageRegistry
+        this._loggerFactory = loggerFactory
         this._eventEmitter = eventEmitter
         this._timeoutsConfig = timeoutsConfig
     }
@@ -115,32 +117,25 @@ class StreamrStream implements StreamMetadata {
     /**
      * Persist stream metadata updates.
      */
-    async update(props: Omit<StreamProperties, 'id'>): Promise<void> {
+    async update(metadata: Partial<StreamMetadata>): Promise<void> {
+        const merged = {
+            ...this.getMetadata(),
+            ...metadata
+        }
         try {
-            await this._streamRegistry.updateStream({
-                ...this.toObject(),
-                ...props,
-                id: this.id
-            })
+            await this._streamRegistry.updateStream(this.id, merged)
         } finally {
             this._streamRegistryCached.clearStream(this.id)
         }
-        for (const key of Object.keys(props)) {
-            (this as any)[key] = (props as any)[key]
-        }
+        this.metadata = merged
     }
 
     getStreamParts(): StreamPartID[] {
-        return range(0, this.partitions).map((p) => toStreamPartID(this.id, p))
+        return range(0, this.getMetadata().partitions).map((p) => toStreamPartID(this.id, p))
     }
 
-    toObject(): StreamProperties {
-        const result: any = {}
-        Object.keys(this).forEach((key) => {
-            if (key.startsWith('_') || typeof key === 'function') { return }
-            result[key] = (this as any)[key]
-        })
-        return result as StreamProperties
+    getMetadata(): StreamMetadata {
+        return this.metadata
     }
 
     async delete(): Promise<void> {
@@ -153,20 +148,20 @@ class StreamrStream implements StreamMetadata {
 
     async detectFields(): Promise<void> {
         // Get last message of the stream to be used for field detecting
-        const sub = await this._resends.resend(
-            this.id,
+        const sub = await this._resends.last<any>(
+            toStreamPartID(this.id, DEFAULT_PARTITION),
             {
-                last: 1,
+                count: 1,
             }
         )
 
-        const receivedMsgs = await sub.collectContent()
+        const receivedMsgs = await collect(sub)
 
         if (!receivedMsgs.length) { return }
 
-        const [lastMessage] = receivedMsgs
+        const lastMessage = receivedMsgs[0].content
 
-        const fields = Object.entries(lastMessage).map(([name, value]) => {
+        const fields = Object.entries(lastMessage as any).map(([name, value]) => {
             const type = getFieldType(value)
             return !!type && {
                 name,
@@ -189,8 +184,13 @@ class StreamrStream implements StreamMetadata {
         let assignmentSubscription
         const normalizedNodeAddress = toEthereumAddress(nodeAddress)
         try {
-            assignmentSubscription = await this._subscriber.subscribe(formStorageNodeAssignmentStreamId(normalizedNodeAddress))
-            const propagationPromise = waitForAssignmentsToPropagate(assignmentSubscription, this)
+            const streamPartId = toStreamPartID(formStorageNodeAssignmentStreamId(normalizedNodeAddress), DEFAULT_PARTITION)
+            assignmentSubscription = new Subscription<any>(streamPartId, this._loggerFactory)
+            await this._subscriber.add(assignmentSubscription)
+            const propagationPromise = waitForAssignmentsToPropagate(assignmentSubscription, {
+                id: this.id,
+                partitions: this.getMetadata().partitions
+            })
             await this._streamStorageRegistry.addStreamToStorageNode(this.id, normalizedNodeAddress)
             await withTimeout(
                 propagationPromise,
@@ -222,19 +222,22 @@ class StreamrStream implements StreamMetadata {
     /**
      * @category Important
      */
-    async publish<T>(content: T, metadata?: MessageMetadata): Promise<StreamMessage<T>> {
-        const result = this._publisher.publish(this.id, content, metadata)
+    async publish<T>(content: T, metadata?: PublishMetadata): Promise<Message> {
+        const result = await this._publisher.publish(this.id, content, metadata)
         this._eventEmitter.emit('publish', undefined)
-        return result
-
+        return convertStreamMessageToMessage(result)
     }
 
     /** @internal */
-    static parsePropertiesFromMetadata(propsString: string): StreamProperties {
+    static parseMetadata(metadata: string): Partial<StreamMetadata> {
         try {
-            return JSON.parse(propsString)
+            // TODO we could pick the fields of StreamMetadata explicitly, so that this
+            // object can't contain extra fields
+            // TODO we should maybe also check that partitions field is available
+            // (if we do that we can return StreamMetadata instead of Partial<StreamMetadata>)
+            return JSON.parse(metadata)
         } catch (error) {
-            throw new Error(`Could not parse properties from onchain metadata: ${propsString}`)
+            throw new Error(`Could not parse properties from onchain metadata: ${metadata}`)
         }
     }
 
