@@ -150,7 +150,7 @@ npm publish --access public
 git checkout main
 cd packages/protocol
 npm version <SEMVER_OPTION>
-# Go thru other packages' package.json and update streamr-client-protocol entry (if present) to newly generated version
+# Go thru other packages' package.json and update "@streamr/protocol" entry (if present) to newly generated version
 git add package.json
 git commit -m "release(protocol): vX.Y.Z"
 git tag protocol/vX.Y.Z

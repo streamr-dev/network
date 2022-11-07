@@ -1,5 +1,5 @@
 import { StreamrClient, Subscription } from 'streamr-client'
-import { toStreamID, toStreamPartID } from 'streamr-client-protocol'
+import { toStreamID, toStreamPartID } from '@streamr/protocol'
 import { Bridge } from '../../../../src/plugins/mqtt/Bridge'
 import { PlainPayloadFormat } from '../../../../src/helpers/PayloadFormat'
 

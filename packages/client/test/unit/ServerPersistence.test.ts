@@ -1,5 +1,5 @@
 import { Database } from 'sqlite'
-import { toStreamID } from 'streamr-client-protocol'
+import { toStreamID } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import ServerPersistence from '../../src/utils/persistence/ServerPersistence'
 import { mockLoggerFactory } from '../test-utils/utils'

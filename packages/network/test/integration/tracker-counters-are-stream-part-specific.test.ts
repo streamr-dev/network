@@ -2,7 +2,7 @@ import { Tracker, startTracker } from '@streamr/network-tracker'
 import { NetworkNode } from '../../src/logic/NetworkNode'
 
 import { createNetworkNode } from '../../src/composition'
-import { StreamPartIDUtils } from 'streamr-client-protocol'
+import { StreamPartIDUtils } from '@streamr/protocol'
 import { waitForCondition } from '@streamr/test-utils'
 
 const STREAM_PART_A = StreamPartIDUtils.parse('STREAM_PART_A#0')

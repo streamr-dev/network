@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
+import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { waitForCondition } from '@streamr/test-utils'
 import { DecryptError } from '../../src/encryption/EncryptionUtil'
 import { GroupKey } from '../../src/encryption/GroupKey'

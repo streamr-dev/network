@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { StreamMessageType, toStreamPartID } from 'streamr-client-protocol'
+import { StreamMessageType, toStreamPartID } from '@streamr/protocol'
 import { fastPrivateKey } from '@streamr/test-utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'

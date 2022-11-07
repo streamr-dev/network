@@ -1,4 +1,4 @@
-import { MessageID, StreamMessage, toStreamID } from 'streamr-client-protocol'
+import { MessageID, StreamMessage, toStreamID } from '@streamr/protocol'
 import { NodeId } from '../../src/identifiers'
 import { toEthereumAddress, wait } from '@streamr/utils'
 import {

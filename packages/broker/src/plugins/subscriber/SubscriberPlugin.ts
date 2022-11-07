@@ -1,6 +1,6 @@
 import { Plugin, PluginOptions } from '../../Plugin'
 import { Logger } from '@streamr/utils'
-import { StreamPartID, toStreamID, toStreamPartID } from 'streamr-client-protocol'
+import { StreamPartID, toStreamID, toStreamPartID } from '@streamr/protocol'
 
 interface ConfigStream {
     streamId: string

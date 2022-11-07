@@ -1,4 +1,4 @@
-import { StreamPartID, StreamID, StreamPartIDUtils, toStreamPartID } from 'streamr-client-protocol'
+import { StreamPartID, StreamID, StreamPartIDUtils, toStreamPartID } from '@streamr/protocol'
 import { OverlayPerStreamPart, OverlayConnectionRtts } from './Tracker'
 import { Location, NodeId } from 'streamr-network'
 

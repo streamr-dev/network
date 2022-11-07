@@ -3,7 +3,7 @@ import {
     MessageRef,
     StreamMessage,
     toStreamID
-} from 'streamr-client-protocol'
+} from '@streamr/protocol'
 import shuffle from 'array-shuffle'
 import { waitForCondition } from '@streamr/test-utils'
 import { EthereumAddress, toEthereumAddress, wait } from '@streamr/utils'

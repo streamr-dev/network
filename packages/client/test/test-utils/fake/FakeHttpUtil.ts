@@ -1,5 +1,5 @@
 import { EthereumAddress } from '@streamr/utils'
-import { StreamID, StreamMessage, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
+import { StreamID, StreamMessage, StreamPartID, toStreamPartID } from '@streamr/protocol'
 import { URLSearchParams } from 'url'
 import { HttpUtil } from '../../../src/HttpUtil'
 import { FakeNetwork } from './FakeNetwork'

@@ -13,7 +13,7 @@ import {
     startStorageNode
 } from '../../../utils'
 import { Broker } from '../../../../src/broker'
-import { StreamMessage } from 'streamr-client-protocol'
+import { StreamMessage } from '@streamr/protocol'
 
 jest.setTimeout(30000)
 

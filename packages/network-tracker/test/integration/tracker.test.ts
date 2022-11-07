@@ -6,7 +6,7 @@ import { runAndWaitForEvents, runAndWaitForConditions } from '@streamr/test-util
 import { createNetworkNode, NodeEvent, NetworkNode } from 'streamr-network'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { getTopology } from '../../src/logic/trackerSummaryUtils'
-import { StreamPartIDUtils } from 'streamr-client-protocol'
+import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('check tracker, nodes and statuses from nodes', () => {
     let tracker: Tracker

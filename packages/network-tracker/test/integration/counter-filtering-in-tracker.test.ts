@@ -6,7 +6,7 @@ import { startTracker } from '../../src/startTracker'
 import { NodeToTracker, NodeToTrackerEvent, PeerInfo, NodeClientWsEndpoint, Status, NodeId } from 'streamr-network'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { getTopology } from '../../src/logic/trackerSummaryUtils'
-import { toStreamID } from 'streamr-client-protocol'
+import { toStreamID } from '@streamr/protocol'
 
 const WAIT_TIME = 2000
 

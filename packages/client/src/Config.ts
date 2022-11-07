@@ -9,7 +9,7 @@ import type { AuthConfig } from './Authentication'
 import type { EthereumConfig } from './Ethereum'
 
 import CONFIG_SCHEMA from './config.schema.json'
-import { SmartContractRecord } from 'streamr-client-protocol'
+import { SmartContractRecord } from '@streamr/protocol'
 import { LogLevel } from '@streamr/utils'
 
 import { NetworkNodeOptions, STREAMR_ICE_SERVERS } from 'streamr-network'

@@ -1,5 +1,5 @@
 /* eslint-disable padding-line-between-statements */
-import { StreamID, toStreamID } from 'streamr-client-protocol'
+import { StreamID, toStreamID } from '@streamr/protocol'
 import { StreamQueryResult } from './StreamRegistry'
 import { StreamPermission, ChainPermissions, convertChainPermissionsToStreamPermissions, PUBLIC_PERMISSION_ADDRESS } from '../permission'
 import { GraphQLClient, GraphQLQuery } from '../utils/GraphQLClient'

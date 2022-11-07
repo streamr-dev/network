@@ -1,5 +1,5 @@
 import { collect, unique } from './GeneratorUtils'
-import { StreamID, StreamMessage, StreamPartIDUtils } from 'streamr-client-protocol'
+import { StreamID, StreamMessage, StreamPartIDUtils } from '@streamr/protocol'
 import { identity } from 'lodash'
 import { MessageStream } from '../subscribe/MessageStream'
 

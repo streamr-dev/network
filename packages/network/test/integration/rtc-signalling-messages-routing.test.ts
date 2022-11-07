@@ -1,6 +1,6 @@
 import { Tracker, startTracker, TrackerServerEvent } from '@streamr/network-tracker'
 import { runAndWaitForEvents } from '@streamr/test-utils'
-import { ErrorMessage, RelayMessage, RelayMessageSubType } from 'streamr-client-protocol'
+import { ErrorMessage, RelayMessage, RelayMessageSubType } from '@streamr/protocol'
 
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { NodeToTracker, Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'

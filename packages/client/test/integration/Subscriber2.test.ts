@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { Defer } from '@streamr/utils'
-import { StreamMessage } from 'streamr-client-protocol'
+import { StreamMessage } from '@streamr/protocol'
 import { fastWallet, waitForCondition } from '@streamr/test-utils'
 import { StreamPermission } from '../../src/permission'
 import { StreamrClient } from '../../src/StreamrClient'

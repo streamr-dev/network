@@ -1,4 +1,4 @@
-import { MessageID, MessageRef, toStreamID, toStreamPartID } from 'streamr-client-protocol'
+import { MessageID, MessageRef, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { StreamPartManager } from '../../src/logic/StreamPartManager'
 import { toEthereumAddress } from '@streamr/utils'
 

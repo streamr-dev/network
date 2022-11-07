@@ -8,7 +8,7 @@ import {
     StreamPartIDUtils,
     TrackerMessage,
     TrackerMessageType
-} from 'streamr-client-protocol'
+} from '@streamr/protocol'
 import {
     decode,
     DisconnectionCode,

@@ -4,7 +4,7 @@ import {
     StreamMessage,
     StreamPartIDUtils,
     toStreamID
-} from 'streamr-client-protocol'
+} from '@streamr/protocol'
 import { Propagation } from '../../src/logic/propagation/Propagation'
 import { NodeId } from '../../src/identifiers'
 import { toEthereumAddress, wait } from '@streamr/utils'

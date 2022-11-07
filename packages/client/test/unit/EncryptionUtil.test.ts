@@ -5,7 +5,7 @@ import {
     StreamPartIDUtils,
     toStreamID,
     toStreamPartID
-} from 'streamr-client-protocol'
+} from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'

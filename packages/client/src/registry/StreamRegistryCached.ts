@@ -1,4 +1,4 @@
-import { StreamID } from 'streamr-client-protocol'
+import { StreamID } from '@streamr/protocol'
 import { Lifecycle, scoped, inject, delay } from 'tsyringe'
 import { CacheAsyncFn } from '../utils/caches'
 import { CacheConfig, ConfigInjectionToken } from '../Config'

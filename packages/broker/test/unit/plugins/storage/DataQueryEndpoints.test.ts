@@ -8,7 +8,7 @@ import {
 } from '../../../../src/plugins/storage/DataQueryEndpoints'
 import { Storage } from '../../../../src/plugins/storage/Storage'
 import { PassThrough } from 'stream'
-import { MessageID, StreamMessage, toStreamID } from 'streamr-client-protocol'
+import { MessageID, StreamMessage, toStreamID } from '@streamr/protocol'
 import { MetricsContext, toEthereumAddress } from '@streamr/utils'
 
 const createEmptyStream = () => {

@@ -12,7 +12,7 @@ import {
     StreamMessageType,
     StreamPartIDUtils,
     toStreamID
-} from 'streamr-client-protocol'
+} from '@streamr/protocol'
 import { runAndWaitForEvents } from '@streamr/test-utils'
 import { toEthereumAddress, waitForEvent } from '@streamr/utils'
 import { startTracker, Tracker, TrackerServer, TrackerServerEvent } from '@streamr/network-tracker'

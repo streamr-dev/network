@@ -1,4 +1,4 @@
-import { StreamPartID, toStreamPartID } from 'streamr-client-protocol'
+import { StreamPartID, toStreamPartID } from '@streamr/protocol'
 import { Status, NodeId, COUNTER_UNSUBSCRIBE } from 'streamr-network'
 
 type Counters = Record<NodeId, Record<StreamPartID, number>>

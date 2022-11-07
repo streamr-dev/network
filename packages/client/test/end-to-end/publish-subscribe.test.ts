@@ -1,5 +1,5 @@
 import { Wallet } from 'ethers'
-import { StreamID, toStreamPartID } from 'streamr-client-protocol'
+import { StreamID, toStreamPartID } from '@streamr/protocol'
 import { createNetworkNode } from 'streamr-network'
 import { fastWallet, fetchPrivateKeyWithGas, waitForCondition } from '@streamr/test-utils'
 import { ConfigTest } from '../../src/ConfigTest'

@@ -3,7 +3,7 @@ import toArray from 'stream-to-array'
 import { BucketId } from '../../../../src/plugins/storage/Bucket'
 import { STREAMR_DOCKER_DEV_HOST } from "../../../utils"
 import { startCassandraStorage, Storage } from '../../../../src/plugins/storage/Storage'
-import { MessageID, StreamMessage, toStreamID } from 'streamr-client-protocol'
+import { MessageID, StreamMessage, toStreamID } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { toEthereumAddress } from '@streamr/utils'
 

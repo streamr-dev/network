@@ -1,4 +1,4 @@
-import { StreamID } from 'streamr-client-protocol'
+import { StreamID } from '@streamr/protocol'
 import { StreamMetadata } from '../../../src/Stream'
 import { StreamPermission } from '../../../src/permission'
 import { EthereumAddress, Multimap } from '@streamr/utils'

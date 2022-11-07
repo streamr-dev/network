@@ -1,5 +1,5 @@
 import { Defer } from '@streamr/utils'
-import { StreamMessage } from 'streamr-client-protocol'
+import { StreamMessage } from '@streamr/protocol'
 
 import { DestroySignal } from '../DestroySignal'
 

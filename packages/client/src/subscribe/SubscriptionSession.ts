@@ -1,6 +1,6 @@
 import { inject } from 'tsyringe'
 
-import { StreamMessage, StreamMessageType, StreamPartID } from 'streamr-client-protocol'
+import { StreamMessage, StreamMessageType, StreamPartID } from '@streamr/protocol'
 
 import { Scaffold } from '../utils/Scaffold'
 import { Signal } from '../utils/Signal'

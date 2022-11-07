@@ -9,7 +9,7 @@ import {
     StreamMessageType,
     StreamPartID,
     StreamPartIDUtils
-} from 'streamr-client-protocol'
+} from '@streamr/protocol'
 import { fastWallet, waitForCondition } from '@streamr/test-utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'

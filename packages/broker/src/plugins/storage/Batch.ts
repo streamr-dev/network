@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events'
 import { Logger } from '@streamr/utils'
-import type { StreamMessage } from 'streamr-client-protocol'
+import type { StreamMessage } from '@streamr/protocol'
 import { v4 as uuidv4 } from 'uuid'
 import { BucketId } from './Bucket'
 

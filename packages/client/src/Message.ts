@@ -1,5 +1,5 @@
 import { EthereumAddress } from '@streamr/utils'
-import { StreamID, StreamMessage } from 'streamr-client-protocol'
+import { StreamID, StreamMessage } from '@streamr/protocol'
 
 export interface Message {
     content: unknown

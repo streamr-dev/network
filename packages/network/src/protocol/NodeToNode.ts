@@ -8,7 +8,7 @@ import {
     StreamPartID,
     StreamPartIDUtils,
     UnsubscribeRequest
-} from 'streamr-client-protocol'
+} from '@streamr/protocol'
 import { Logger } from "@streamr/utils"
 import { decode } from './utils'
 import { IWebRtcEndpoint, Event as WebRtcEndpointEvent } from '../connection/webrtc/IWebRtcEndpoint'

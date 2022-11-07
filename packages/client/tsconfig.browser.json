@@ -20,11 +20,11 @@
             "crypto": ["crypto-browserify"],
             "buffer": ["buffer/"],
             "node-fetch": ["./src/shim/node-fetch.ts"],
-            "streamr-client-protocol/dist/contracts/NodeRegistry.json": [
-                "streamr-client-protocol/dist/contracts/NodeRegistry.json"
+            "@streamr/protocol/dist/contracts/NodeRegistry.json": [
+                "@streamr/protocol/dist/contracts/NodeRegistry.json"
             ],
-            "streamr-client-protocol/*": ["streamr-client-protocol/src/*"],
-            "streamr-client-protocol": ["streamr-client-protocol/src/index.ts"],
+            "@streamr/protocol/*": ["@streamr/protocol/src/*"],
+            "@streamr/protocol": ["@streamr/protocol/src/index.ts"],
             "streamr-network": ["streamr-network/src/browser.ts"],
             "streamr-network/src/connection/NodeWebRtcConnection.ts": [
                 "streamr-network/src/connection/BrowserWebRtcConnection.ts"

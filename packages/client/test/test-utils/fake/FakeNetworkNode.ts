@@ -1,6 +1,6 @@
 import { Lifecycle, scoped } from 'tsyringe'
 import { pull } from 'lodash'
-import { ProxyDirection, StreamMessage, StreamPartID } from 'streamr-client-protocol'
+import { ProxyDirection, StreamMessage, StreamPartID } from '@streamr/protocol'
 import { MetricsContext } from '@streamr/utils'
 import { NodeId, NetworkNodeOptions } from 'streamr-network'
 import { NetworkNodeFactory, NetworkNodeStub } from '../../../src/NetworkNodeFacade'

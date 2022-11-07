@@ -2,7 +2,7 @@ import 'reflect-metadata'
 
 import { Wallet } from '@ethersproject/wallet'
 import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
-import { toStreamID, toStreamPartID } from 'streamr-client-protocol'
+import { toStreamID, toStreamPartID } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
 import { StreamRegistry } from '../../src/registry/StreamRegistry'
 import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'

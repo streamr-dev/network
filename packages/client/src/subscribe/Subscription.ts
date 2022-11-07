@@ -1,4 +1,4 @@
-import { StreamPartID } from 'streamr-client-protocol'
+import { StreamPartID } from '@streamr/protocol'
 import { MessageStream } from './MessageStream'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { Logger } from '@streamr/utils'

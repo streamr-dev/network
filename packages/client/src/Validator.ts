@@ -2,7 +2,7 @@
  * Validation Wrapper
  */
 import { inject, Lifecycle, scoped, delay } from 'tsyringe'
-import { StreamMessage, StreamID } from 'streamr-client-protocol'
+import { StreamMessage, StreamID } from '@streamr/protocol'
 import { pOrderedResolve } from './utils/promises'
 import { StreamRegistryCached } from './registry/StreamRegistryCached'
 import StreamMessageValidator from './StreamMessageValidator'

@@ -5,7 +5,7 @@ import {
     StreamMessage,
     StreamMessageError,
     StreamPartID
-} from 'streamr-client-protocol'
+} from '@streamr/protocol'
 import { OrderMessages } from './OrderMessages'
 import { MessageStream } from './MessageStream'
 import { Validator } from '../Validator'

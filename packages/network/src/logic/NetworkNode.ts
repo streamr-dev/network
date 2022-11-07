@@ -1,4 +1,4 @@
-import { StreamMessage, StreamPartID, ProxyDirection, StreamMessageType } from 'streamr-client-protocol'
+import { StreamMessage, StreamPartID, ProxyDirection, StreamMessageType } from '@streamr/protocol'
 import { Event as NodeEvent, Node, NodeOptions } from './Node'
 import { NodeId } from '../identifiers'
 

@@ -4,7 +4,7 @@ import { startTracker } from '../../src/startTracker'
 import { waitForCondition } from '@streamr/test-utils'
 import 'jest-extended'
 import { createNetworkNode, NetworkNode } from 'streamr-network'
-import { StreamPartIDUtils } from 'streamr-client-protocol'
+import { StreamPartIDUtils } from '@streamr/protocol'
 
 function getHttp(url: string) {
     return new Promise((resolve, reject) => {

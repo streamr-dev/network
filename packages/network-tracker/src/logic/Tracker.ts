@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events'
 
-import { SmartContractRecord, StatusMessage, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
+import { SmartContractRecord, StatusMessage, StreamPartID, toStreamPartID } from '@streamr/protocol'
 import { Event as TrackerServerEvent, TrackerServer } from '../protocol/TrackerServer'
 import { OverlayTopology } from './OverlayTopology'
 import { InstructionCounter } from './InstructionCounter'

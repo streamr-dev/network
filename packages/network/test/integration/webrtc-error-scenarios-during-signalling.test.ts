@@ -5,7 +5,7 @@ import { NetworkNode } from '../../src/logic/NetworkNode'
 import { createNetworkNode } from '../../src/composition'
 import { Event as NodeEvent } from '../../src/logic/Node'
 import { Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
-import { toStreamID, toStreamPartID } from 'streamr-client-protocol'
+import { toStreamID, toStreamPartID } from '@streamr/protocol'
 
 /**
  * Tests for error scenarios during signalling

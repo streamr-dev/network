@@ -1,6 +1,6 @@
 import { keyToArrayIndex, toEthereumAddress } from '@streamr/utils'
 import { random } from 'lodash'
-import { ContentType, EncryptionType, MAX_PARTITION_COUNT, StreamMessage, StreamMessageType, toStreamID } from 'streamr-client-protocol'
+import { ContentType, EncryptionType, MAX_PARTITION_COUNT, StreamMessage, StreamMessageType, toStreamID } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
 import { createAuthentication } from '../../src/Authentication'
 import { GroupKey } from '../../src/encryption/GroupKey'

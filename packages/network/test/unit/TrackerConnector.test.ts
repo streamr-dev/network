@@ -1,5 +1,5 @@
 import { wait } from '@streamr/utils'
-import { SmartContractRecord, StreamPartID, StreamPartIDUtils, TrackerRegistry } from 'streamr-client-protocol'
+import { SmartContractRecord, StreamPartID, StreamPartIDUtils, TrackerRegistry } from '@streamr/protocol'
 import { TrackerConnector } from '../../src/logic/TrackerConnector'
 import { TrackerId } from '../../../network-tracker/src/logic/Tracker'
 

@@ -6,7 +6,7 @@ import {
     StreamPartID,
     toStreamID,
     toStreamPartID
-} from 'streamr-client-protocol'
+} from '@streamr/protocol'
 import { range, shuffle } from 'lodash'
 import { wait } from '@streamr/utils'
 import { createSignedMessage } from '../../src/publish/MessageFactory'

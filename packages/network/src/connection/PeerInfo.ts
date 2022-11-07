@@ -1,5 +1,5 @@
 import { Location, NodeId, TrackerId } from '../identifiers'
-import { ControlMessage, StreamMessage } from 'streamr-client-protocol'
+import { ControlMessage, StreamMessage } from '@streamr/protocol'
 
 export type PeerId = NodeId | TrackerId | string
 
