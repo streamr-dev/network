@@ -117,8 +117,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
     private connectionManager?: ConnectionManager
     private started = false
     private stopped = false
+    private rejoinOngoing = false
 
     private getClosestPeersFromBucketIntervalRef?: NodeJS.Timeout
+    private rejoinTimeoutRef?: NodeJS.Timeout
 
     constructor(conf: Partial<DhtNodeConfig>) {
         super()
@@ -254,6 +256,16 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
                 'kbucketContactRemoved',
                 contact.getPeerDescriptor()
             )
+            if (
+                this.bucket!.count() === 0
+                && !this.isJoinOngoing()
+                && this.config.entryPoints
+                && this.config.entryPoints.length > 0
+            ) {
+                setImmediate(async () => {
+                    await this.rejoinDht(this.config.entryPoints![0])
+                })
+            }
         })
         this.bucket.on('added', async (contact: DhtPeer) => {
             if (!this.stopped && !contact.peerId.equals(this.ownPeerId!)) {
@@ -475,7 +487,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         try {
             await waitForEvent3<Events>(this, 'joinCompleted', this.config.dhtJoinTimeout)
             if (!this.stopped) {
-                this.getClosestPeersFromBucketIntervalRef = setTimeout(async () => await this.getClosestPeersFromBucket(), 30 * 1000)
+                if (this.bucket!.count() === 0) {
+                    this.rejoinDht(entryPointDescriptor).catch(() => {})
+                } else {
+                    this.getClosestPeersFromBucketIntervalRef = setTimeout(async () => await this.getClosestPeersFromBucket(), 30 * 1000)
+                }
             }
         } catch (_e) {
             throw (new Err.DhtJoinTimeout('join timed out'))
@@ -483,6 +499,34 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             if (this.connectionManager) {
                 this.connectionManager.unlockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
             }
+        }
+    }
+
+    private async rejoinDht(entryPoint: PeerDescriptor): Promise<void> {
+        if (!this.started || this.stopped || this.rejoinOngoing) {
+            return
+        }
+        this.rejoinOngoing = true
+        logger.info(`Attempting to rejoin DHT ${this.config.serviceId}...`)
+        try {
+            this.neighborList!.clear()
+            await this.joinDht(entryPoint)
+            this.rejoinOngoing = false
+            if (this.connections.size === 0 || this.bucket!.count() === 0) {
+                this.rejoinTimeoutRef = setTimeout(async () => {
+                    await this.rejoinDht(entryPoint)
+                    this.rejoinTimeoutRef = undefined
+                }, 5000)
+            } else {
+                logger.info(`Rejoined DHT successfully ${this.config.serviceId}!`)
+            }
+        } catch (err) {
+            logger.warn(`rejoining DHT ${this.config.serviceId} failed`)
+            this.rejoinOngoing = false
+            this.rejoinTimeoutRef = setTimeout(async () => {
+                await this.rejoinDht(entryPoint)
+                this.rejoinTimeoutRef = undefined
+            }, 5000)
         }
     }
 
@@ -665,6 +709,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         if (this.getClosestPeersFromBucketIntervalRef) {
             clearTimeout(this.getClosestPeersFromBucketIntervalRef)
             this.getClosestPeersFromBucketIntervalRef = undefined
+        }
+        if (this.rejoinTimeoutRef) {
+            clearTimeout(this.rejoinTimeoutRef)
+            this.rejoinTimeoutRef = undefined
         }
         this.ongoingJoinOperation = false
         this.ongoingRoutingSessions.forEach((session, _id)=> {
