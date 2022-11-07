@@ -13,14 +13,14 @@ Monorepo containing all the main components of Streamr Network.
 ### User-Facing
 * [broker](packages/broker/README.md) (streamr-broker)
 * [client](packages/client/README.md) (streamr-client)
+* [cli-tools](packages/cli-tools/README.md) (@streamr/cli-tools)
 
 ### Internal
-* [network](packages/network/README.md) (@streamr/network-node)
+* [network-node](packages/network/README.md) (@streamr/network-node)
+* [network-tracker](packages/network-tracker/README.md) (@streamr/network-tracker)
 * [protocol](packages/protocol/README.md) (@streamr/protocol)
-* [test-utils](packages/test-utils/README.md) (@streamr/test-utils)
 * [utils](packages/utils/README.md) (@streamr/utils)
-* [cli-tools](packages/cli-tools/README.md) (@streamr/cli-tools)
-* [tracker](packages/network-tracker/README.md) (@streamr/network-tracker)
+* [test-utils](packages/test-utils/README.md) (@streamr/test-utils)
 
 ## NPM scripts
 | NodeJS version `18.13.x` and NPM version `8.x` is required |
