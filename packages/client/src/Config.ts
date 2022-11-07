@@ -159,7 +159,7 @@ export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id' | 'aut
                 gasPriceStrategy: (estimatedGasPrice: BigNumber) => estimatedGasPrice.add('10000000000'),
             }
         },
-        maxConcurrentContractCalls: 10    
+        maxConcurrentCalls: 10    
     },
 
     decryption: {

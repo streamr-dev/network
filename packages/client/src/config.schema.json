@@ -270,7 +270,7 @@
                 "ethereumNetworks": {
                     "type": "object"
                 },
-                "maxConcurrentContractCalls": {
+                "maxConcurrentCalls": {
                     "type": "number"
                 }
             }
