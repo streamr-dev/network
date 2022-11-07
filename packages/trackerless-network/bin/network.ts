@@ -5,6 +5,7 @@ import * as path from 'path'
 program
     .option('--numOfNodes <id>', 'Number of nodes in the network', '10')
     .option('--streamIds <streamIds>', 'streamId to publish',  (value: string) => value.split(','), ['stream-0'])
+    .option('--ip <ip>', 'public IP of nodes to run', '0.0.0.0')
     .description('Run bootstrap node')
     .parse(process.argv)
 
@@ -13,7 +14,8 @@ async function run(): Promise<void> {
     const numOfNodes = parseInt(program.opts().numOfNodes, 10)
 
     const args = [
-        path.resolve('./bin/bootstrap-node.ts')
+        path.resolve('./bin/bootstrap-node.ts'),
+        '--ip=' + program.opts().ip
     ]
 
     spawn('ts-node', args, {

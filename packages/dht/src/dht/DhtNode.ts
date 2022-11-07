@@ -33,6 +33,7 @@ import { runAndRaceEvents3, waitForEvent3 } from '../helpers/waitForEvent3'
 import { RoutingSession, RoutingSessionEvents } from './RoutingSession'
 import { RandomContactList } from './contact/RandomContactList'
 import { Empty } from '../proto/google/protobuf/empty'
+import { clearTimeout } from 'timers'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -119,6 +120,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
     private stopped = false
 
     private getClosestPeersFromBucketIntervalRef?: NodeJS.Timeout
+    private rejoinTimeoutRef?: NodeJS.Timeout
 
     constructor(conf: Partial<DhtNodeConfig>) {
         super()
@@ -316,6 +318,17 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             this.bucket!.remove(peerDescriptor.peerId)
             this.connectionManager?.unlockConnection(peerDescriptor, this.config.serviceId)
             this.emit('disconnected', peerDescriptor)
+            if (
+                this.bucket!.count() === 0
+                && !this.isJoinOngoing()
+                && this.config.entryPoints
+                && this.config.entryPoints.length > 0
+            ) {
+                setImmediate(async () => {
+                    logger.info(`Rejoining Dht ${this.config.serviceId}...`)
+                    await this.rejoinDht(this.config.entryPoints![0])
+                })
+            }
         })
         this.randomPeers = new RandomContactList(selfId, this.config.maxNeighborListSize)
         this.randomPeers.on('contactRemoved', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
@@ -475,7 +488,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         try {
             await waitForEvent3<Events>(this, 'joinCompleted', this.config.dhtJoinTimeout)
             if (!this.stopped) {
-                this.getClosestPeersFromBucketIntervalRef = setTimeout(async () => await this.getClosestPeersFromBucket(), 30 * 1000)
+                if (this.bucket!.count() === 0) {
+                    this.rejoinDht(entryPointDescriptor).catch(() => {})
+                } else {
+                    this.getClosestPeersFromBucketIntervalRef = setTimeout(async () => await this.getClosestPeersFromBucket(), 30 * 1000)
+                }
             }
         } catch (_e) {
             throw (new Err.DhtJoinTimeout('join timed out'))
@@ -483,6 +500,27 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             if (this.connectionManager) {
                 this.connectionManager.unlockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
             }
+        }
+    }
+
+    private async rejoinDht(entryPoint: PeerDescriptor): Promise<void> {
+        if (!this.started || this.stopped || this.rejoinTimeoutRef) {
+            return
+        }
+        try {
+            this.neighborList!.clear()
+            if (this.bucket!.count() < 2  && this.neighborList!.getSize() !== 1) {
+                this.rejoinTimeoutRef = setTimeout(async () => {
+                    await this.rejoinDht(entryPoint)
+                    this.rejoinTimeoutRef = undefined
+                }, 5000)
+            }
+        } catch (err) {
+            logger.warn(`rejoining DHT ${this.config.serviceId} failed`)
+            this.rejoinTimeoutRef = setTimeout(async () => {
+                await this.rejoinDht(entryPoint)
+                this.rejoinTimeoutRef = undefined
+            }, 5000)
         }
     }
 
@@ -665,6 +703,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         if (this.getClosestPeersFromBucketIntervalRef) {
             clearTimeout(this.getClosestPeersFromBucketIntervalRef)
             this.getClosestPeersFromBucketIntervalRef = undefined
+        }
+        if (this.rejoinTimeoutRef) {
+            clearTimeout(this.rejoinTimeoutRef)
+            this.rejoinTimeoutRef = undefined
         }
         this.ongoingJoinOperation = false
         this.ongoingRoutingSessions.forEach((session, _id)=> {

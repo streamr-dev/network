@@ -38,7 +38,7 @@ async function run(): Promise<void> {
         numberOfNodesPerKBucket: 2,
         entryPoints: [epPeerDescriptor]
     })
-    
+
     await layer0.start()
 
     await layer0.joinDht(epPeerDescriptor)
