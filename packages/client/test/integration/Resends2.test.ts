@@ -27,19 +27,23 @@ describe('Resends2', () => {
     let storageNode: FakeStorageNode
 
     const publishTestMessages = (count: number, streamId?: StreamID): Promise<Message[]> => {
-        const task = getPublishTestStreamMessages(environment.createClient({
-            auth: {
-                privateKey: publisherWallet.privateKey
-            }
-        }), streamId ?? stream.id)
+        const task = getPublishTestStreamMessages(publisher, streamId ?? stream.id)
         return task(count)
     }
 
-    beforeEach(async () => {
+    beforeAll(() => {
         environment = new FakeEnvironment()
+        publisherWallet = fastWallet()
+        publisher = environment.createClient({
+            auth: {
+                privateKey: publisherWallet.privateKey
+            }
+        })
+    })
+
+    beforeEach(async () => {
         client = environment.createClient()
         stream = await createTestStream(client, module)
-        publisherWallet = fastWallet()
         await stream.grantPermissions({
             user: publisherWallet.address,
             permissions: [StreamPermission.PUBLISH]
@@ -50,6 +54,9 @@ describe('Resends2', () => {
 
     afterEach(async () => {
         await client?.destroy()
+    })
+
+    afterAll(async () => {
         await publisher?.destroy()
     })
 
