@@ -53,8 +53,8 @@ describe('subscribePipeline', () => {
         streamPartId = StreamPartIDUtils.parse(`${randomEthereumAddress()}/path#0`)
         publisher = fastWallet()
         const stream = new Stream(
+            toStreamID(streamPartId),
             {
-                id: toStreamID(streamPartId),
                 partitions: 1,
             },
             undefined as any,
@@ -98,7 +98,7 @@ describe('subscribePipeline', () => {
         pipeline.endWrite()
         const output = await collect(pipeline)
         expect(output).toHaveLength(1)
-        expect(output[0].getParsedContent()).toEqual(CONTENT)
+        expect(output[0].content).toEqual(CONTENT)
     })
 
     it('error: invalid signature', async () => {

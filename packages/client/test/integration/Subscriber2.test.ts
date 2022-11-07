@@ -1,8 +1,8 @@
 import 'reflect-metadata'
 
-import { Defer } from '@streamr/utils'
+import { Defer, waitForCondition } from '@streamr/utils'
 import { StreamMessage } from 'streamr-client-protocol'
-import { fastWallet, waitForCondition } from 'streamr-test-utils'
+import { fastWallet } from 'streamr-test-utils'
 import { StreamPermission } from '../../src/permission'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Subscription } from '../../src/subscribe/Subscription'
@@ -11,18 +11,19 @@ import { collect } from '../../src/utils/iterators'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { createTestStream } from '../test-utils/utils'
+import { Message, MessageMetadata } from '../../src/Message'
 
 const MAX_ITEMS = 3
 const NUM_MESSAGES = 8
 
-const collect2 = async <T>(
-    iterator: AsyncIterable<StreamMessage<T>>,
+const collect2 = async (
+    iterator: AsyncIterable<Message>,
     fn: (item: {
-        msg: StreamMessage<T>
-        received: StreamMessage<T>[]
+        msg: Message
+        received: Message[]
     }) => Promise<void>
-): Promise<StreamMessage[]> => {
-    const received: StreamMessage<T>[] = []
+): Promise<Message[]> => {
+    const received: Message[] = []
     for await (const msg of iterator) {
         received.push(msg)
         await fn({
@@ -230,7 +231,7 @@ describe('Subscriber', () => {
                 const published = await publishTestMessages(NUM_MESSAGES, {
                     timestamp: 111111,
                 })
-                const received1: StreamMessage[] = []
+                const received1: Message[] = []
                 await expect(async () => {
                     for await (const msg of sub1) {
                         if (count === MAX_ITEMS) {
@@ -248,13 +249,13 @@ describe('Subscriber', () => {
             it('errors subscription onMessage callback do trigger onError', async () => {
                 const err = new Error('expected')
                 let count = 0
-                const received1: StreamMessage[] = []
-                const sub1 = await client.subscribe(streamDefinition, (_content, msg) => {
+                const received1: MessageMetadata[] = []
+                const sub1 = await client.subscribe(streamDefinition, (_content, metadata) => {
                     if (count === MAX_ITEMS) {
                         throw err
                     }
                     count += 1
-                    received1.push(msg)
+                    received1.push(metadata)
                 })
 
                 const onError1 = jest.fn()
@@ -318,7 +319,7 @@ describe('Subscriber', () => {
                     timestamp: 111111,
                 })
 
-                const received: StreamMessage[] = []
+                const received: Message[] = []
                 let t!: ReturnType<typeof setTimeout>
                 for await (const m of sub) {
                     received.push(m)
@@ -352,7 +353,7 @@ describe('Subscriber', () => {
                     }
                 })
 
-                const received: StreamMessage[] = []
+                const received: Message[] = []
                 const onSubscriptionError = jest.fn((error: Error) => {
                     throw error
                 })
@@ -386,7 +387,7 @@ describe('Subscriber', () => {
             let unsubscribeTask!: Promise<any>
             let t!: ReturnType<typeof setTimeout>
             let expectedLength = -1
-            const received: StreamMessage[] = []
+            const received: Message[] = []
             try {
                 for await (const m of sub) {
                     received.push(m)
@@ -416,7 +417,7 @@ describe('Subscriber', () => {
             await publishTestMessages()
 
             const err = new Error('expected error')
-            const received: StreamMessage[] = []
+            const received: Message[] = []
             await expect(async () => {
                 for await (const m of sub) {
                     received.push(m)
@@ -487,7 +488,7 @@ describe('Subscriber', () => {
 
             const published = await publishTestMessages()
 
-            const received: StreamMessage[] = []
+            const received: Message[] = []
             for await (const m of sub) {
                 received.push(m)
                 if (received.length === 1) {
@@ -504,7 +505,7 @@ describe('Subscriber', () => {
 
             const published = await publishTestMessages()
 
-            const received: StreamMessage[] = []
+            const received: Message[] = []
             for await (const m of sub) {
                 received.push(m)
                 if (received.length === MAX_ITEMS) {
@@ -521,7 +522,7 @@ describe('Subscriber', () => {
 
             const published = await publishTestMessages()
 
-            const received: StreamMessage[] = []
+            const received: Message[] = []
             for await (const m of sub) {
                 received.push(m)
                 if (received.length === MAX_ITEMS) {
@@ -538,7 +539,7 @@ describe('Subscriber', () => {
 
             const published = await publishTestMessages()
 
-            const received: StreamMessage[] = []
+            const received: Message[] = []
             for await (const m of sub) {
                 received.push(m)
                 if (received.length === MAX_ITEMS) {
@@ -558,7 +559,7 @@ describe('Subscriber', () => {
 
             const published = await publishTestMessages()
 
-            const received: StreamMessage[] = []
+            const received: Message[] = []
             for await (const m of sub) {
                 received.push(m)
                 if (received.length === MAX_ITEMS) {
@@ -583,7 +584,7 @@ describe('Subscriber', () => {
 
             await publishTestMessages()
 
-            const received: StreamMessage[] = []
+            const received: Message[] = []
             for await (const m of sub) {
                 received.push(m)
             }
@@ -628,7 +629,7 @@ describe('Subscriber', () => {
     describe('mid-stream stop methods', () => {
         let sub1: Subscription<unknown>
         let sub2: Subscription<unknown>
-        let published: StreamMessage[]
+        let published: Message[]
 
         beforeEach(async () => {
             sub1 = await client.subscribe(streamDefinition)

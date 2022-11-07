@@ -1,7 +1,7 @@
 import { validateIsArray, validateIsString } from '../../utils/validations'
 import ValidationError from '../../errors/ValidationError'
 
-import StreamMessage from './StreamMessage'
+import StreamMessage, { StreamMessageType } from './StreamMessage'
 import GroupKeyMessage from './GroupKeyMessage'
 import EncryptedGroupKey, { EncryptedGroupKeySerialized } from './EncryptedGroupKey'
 import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
@@ -20,7 +20,7 @@ export default class GroupKeyResponse extends GroupKeyMessage {
     encryptedGroupKeys: EncryptedGroupKey[]
 
     constructor({ requestId, recipient, encryptedGroupKeys }: Options) {
-        super(recipient, StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE)
+        super(recipient, StreamMessageType.GROUP_KEY_RESPONSE)
 
         validateIsString('requestId', requestId)
         this.requestId = requestId
@@ -52,8 +52,8 @@ export default class GroupKeyResponse extends GroupKeyMessage {
     }
 
     static is(streamMessage: StreamMessage): streamMessage is StreamMessage<GroupKeyResponseSerialized> {
-        return streamMessage.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE
+        return streamMessage.messageType === StreamMessageType.GROUP_KEY_RESPONSE
     }
 }
 
-GroupKeyMessage.classByMessageType[StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE] = GroupKeyResponse
+GroupKeyMessage.classByMessageType[StreamMessageType.GROUP_KEY_RESPONSE] = GroupKeyResponse

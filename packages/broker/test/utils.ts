@@ -3,7 +3,7 @@ import StreamrClient, {
     MaybeAsync,
     Stream,
     StreamPermission,
-    StreamProperties,
+    StreamMetadata,
     StreamrClientConfig
 } from 'streamr-client'
 import _ from 'lodash'
@@ -140,7 +140,7 @@ export const getTestName = (module: NodeModule): string => {
 export const createTestStream = async (
     streamrClient: StreamrClient,
     module: NodeModule,
-    props?: Partial<StreamProperties>
+    props?: Partial<StreamMetadata>
 ): Promise<Stream> => {
     const id = (await streamrClient.getAddress()) + '/test/' + getTestName(module) + '/' + Date.now()
     const stream = await streamrClient.createStream({

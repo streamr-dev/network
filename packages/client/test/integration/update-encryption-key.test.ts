@@ -1,13 +1,14 @@
 import 'reflect-metadata'
 
-import { StreamMessage, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
-import { waitForCondition } from 'streamr-test-utils'
+import { StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
 import { DecryptError } from '../../src/encryption/EncryptionUtil'
 import { GroupKey } from '../../src/encryption/GroupKey'
+import { Message } from '../../src/Message'
 import { StreamPermission } from '../../src/permission'
 import { nextValue } from '../../src/utils/iterators'
 import { StreamrClient } from './../../src/StreamrClient'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
+import { waitForCondition } from '@streamr/utils'
 
 /*
  * Subscriber has subscribed to a stream, and the publisher updates the encryption key for that stream.
@@ -18,7 +19,7 @@ describe('update encryption key', () => {
     let publisher: StreamrClient
     let subscriber: StreamrClient
     let streamPartId: StreamPartID
-    let messageIterator: AsyncIterator<StreamMessage<any>>
+    let messageIterator: AsyncIterator<Message>
     let onError: jest.Mock<(err: Error) => void>
     let environment = new FakeEnvironment()
 
@@ -51,7 +52,7 @@ describe('update encryption key', () => {
             mockId: 1
         })
         const msg1 = await nextValue(messageIterator)
-        expect(msg1!.getParsedContent()).toEqual({
+        expect(msg1!.content).toEqual({
             mockId: 1
         })
 
@@ -66,20 +67,20 @@ describe('update encryption key', () => {
             mockId: 2
         })
         const msg2 = await nextValue(messageIterator)
-        expect(msg2!.getParsedContent()).toEqual({
+        expect(msg2!.content).toEqual({
             mockId: 2
         })
         // @ts-expect-error the type definition defines that newGroupKey EncryptedGroupKey (see EncryptionUtil:82)
-        expect(msg2!.newGroupKey!.id).toBe(rotatedKey.id)
+        expect(msg2!.streamMessage.newGroupKey!.id).toBe(rotatedKey.id)
 
         await publisher.publish(streamPartId, {
             mockId: 3
         })
         const msg3 = await nextValue(messageIterator)
-        expect(msg3!.getParsedContent()).toEqual({
+        expect(msg3!.content).toEqual({
             mockId: 3
         })
-        expect(msg3?.groupKeyId).toBe(rotatedKey.id)
+        expect(msg3?.streamMessage.groupKeyId).toBe(rotatedKey.id)
     })
 
     it('rekey', async () => {
@@ -87,7 +88,7 @@ describe('update encryption key', () => {
             mockId: 1
         })
         const msg1 = await nextValue(messageIterator)
-        expect(msg1!.getParsedContent()).toEqual({
+        expect(msg1!.content).toEqual({
             mockId: 1
         })
 
@@ -102,10 +103,10 @@ describe('update encryption key', () => {
             mockId: 2
         })
         const msg2 = await nextValue(messageIterator)
-        expect(msg2!.getParsedContent()).toEqual({
+        expect(msg2!.content).toEqual({
             mockId: 2
         })
-        expect(msg2?.groupKeyId).toBe(rekeyedKey.id)
+        expect(msg2?.streamMessage.groupKeyId).toBe(rekeyedKey.id)
     })
 
     describe('permission revoked', () => {
@@ -115,7 +116,7 @@ describe('update encryption key', () => {
                 mockId: 1
             })
             const msg1 = await nextValue(messageIterator)
-            expect(msg1!.getParsedContent()).toEqual({
+            expect(msg1!.content).toEqual({
                 mockId: 1
             })
 
@@ -134,7 +135,7 @@ describe('update encryption key', () => {
                 mockId: 2
             })
             const msg2 = await nextValue(messageIterator)
-            expect(msg2!.getParsedContent()).toEqual({
+            expect(msg2!.content).toEqual({
                 mockId: 2
             })
         })
@@ -144,7 +145,7 @@ describe('update encryption key', () => {
                 mockId: 1
             })
             const msg1 = await nextValue(messageIterator)
-            expect(msg1!.getParsedContent()).toEqual({
+            expect(msg1!.content).toEqual({
                 mockId: 1
             })
 

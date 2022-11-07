@@ -25,6 +25,7 @@ import { wait } from './wait'
 import { waitForEvent } from './waitForEvent'
 import { TimeoutError, withTimeout } from './withTimeout'
 import { composeAbortSignals } from './composeAbortSignals'
+import { waitForCondition } from './waitForCondition'
 
 export {
     BrandedString,
@@ -49,6 +50,7 @@ export {
     toEthereumAddress,
     toEthereumAddressOrENSName,
     wait,
+    waitForCondition,
     waitForEvent,
     withTimeout,
 }

@@ -1,7 +1,7 @@
 import { ethers } from 'ethers'
 import {
     EncryptedGroupKey,
-    StreamMessage,
+    EncryptionType,
     StreamPartIDUtils,
     toStreamID,
     toStreamPartID
@@ -53,7 +53,7 @@ describe('EncryptionUtil', () => {
         })
         EncryptionUtil.decryptStreamMessage(streamMessage, key)
         expect(streamMessage.getSerializedContent()).toStrictEqual('{"foo":"bar"}')
-        expect(streamMessage.encryptionType).toStrictEqual(StreamMessage.ENCRYPTION_TYPES.NONE)
+        expect(streamMessage.encryptionType).toStrictEqual(EncryptionType.NONE)
         expect(streamMessage.groupKeyId).toBe(key.id)
         expect(streamMessage.newGroupKey).toEqual(nextKey)
     })

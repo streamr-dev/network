@@ -3,7 +3,7 @@ import StreamrClient, { Stream } from 'streamr-client'
 import { Tracker } from '@streamr/network-tracker'
 import cassandra from 'cassandra-driver'
 import { Wallet } from 'ethers'
-import { fastWallet, fetchPrivateKeyWithGas, waitForCondition } from 'streamr-test-utils'
+import { fastWallet, fetchPrivateKeyWithGas } from 'streamr-test-utils'
 import {
     startBroker,
     createClient,
@@ -14,6 +14,7 @@ import {
 } from '../../../utils'
 import { Broker } from '../../../../src/broker'
 import { StreamMessage } from 'streamr-client-protocol'
+import { waitForCondition } from '@streamr/utils'
 
 jest.setTimeout(30000)
 
@@ -82,6 +83,6 @@ describe('StorageConfig', () => {
         })
         const result = await cassandraClient.execute('SELECT * FROM stream_data WHERE stream_id = ? ALLOW FILTERING', [stream.id])
         const storeMessage = StreamMessage.deserialize(JSON.parse(result.first().payload.toString()))
-        expect(storeMessage.messageId).toEqual(publishMessage.messageId)
+        expect(storeMessage.signature).toEqual(publishMessage.signature)
     })
 })

@@ -6,8 +6,8 @@ import { Tracker } from '@streamr/network-tracker'
 import { fetchPrivateKeyWithGas, Queue } from 'streamr-test-utils'
 import { Broker } from '../../src/broker'
 import { startBroker, createClient, createTestStream, startTestTracker } from '../utils'
-import { fastPrivateKey, waitForCondition } from 'streamr-test-utils'
-import { wait, waitForEvent } from '@streamr/utils'
+import { fastPrivateKey } from 'streamr-test-utils'
+import { wait, waitForEvent, waitForCondition } from '@streamr/utils'
 import { range, sample } from 'lodash'
 
 const MESSAGE_COUNT = 120

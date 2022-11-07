@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { GroupKeyMessage, GroupKeyRequest, StreamMessage } from 'streamr-client-protocol'
+import { GroupKeyMessage, GroupKeyRequest, StreamMessageType } from 'streamr-client-protocol'
 import { fastWallet } from 'streamr-test-utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'
@@ -83,16 +83,16 @@ describe('resend and subscribe', () => {
         await publisher.publish(stream.id, { mockId: 2 }, { timestamp: 2000 })
 
         const receivedMessage2 = await nextValue(messageIterator)
-        expect(receivedMessage1!.getParsedContent()).toEqual({
+        expect(receivedMessage1!.content).toEqual({
             mockId: 1
         })
-        expect(receivedMessage1!.groupKeyId).toBe(groupKey.id)
-        expect(receivedMessage2!.getParsedContent()).toEqual({
+        expect(receivedMessage1!.streamMessage.groupKeyId).toBe(groupKey.id)
+        expect(receivedMessage2!.content).toEqual({
             mockId: 2
         })
-        expect(receivedMessage2!.groupKeyId).toBe(groupKey.id)
+        expect(receivedMessage2!.streamMessage.groupKeyId).toBe(groupKey.id)
         const groupKeyRequests = environment.getNetwork().getSentMessages({
-            messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST
+            messageType: StreamMessageType.GROUP_KEY_REQUEST
         })
         expect(groupKeyRequests.length).toBe(1)
         expect((GroupKeyMessage.fromStreamMessage(groupKeyRequests[0]) as GroupKeyRequest).groupKeyIds).toEqual([groupKey.id])
