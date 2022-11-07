@@ -63,9 +63,6 @@ describe('GapFill', () => {
     })
 
     afterEach(async () => {
-        if (!subscriber || !stream) { return }
-        expect(await subscriber.count(stream.id)).toBe(0)
-        if (!client) { return }
         const subscriptions = await subscriber.getSubscriptions()
         expect(subscriptions).toHaveLength(0)
     })
