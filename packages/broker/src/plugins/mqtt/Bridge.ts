@@ -1,6 +1,6 @@
 import _ from 'lodash'
 import { MessageMetadata, StreamrClient, Subscription } from 'streamr-client'
-import { StreamPartIDUtils } from 'streamr-client-protocol'
+import { StreamPartIDUtils } from '@streamr/protocol'
 import { Logger } from '@streamr/utils'
 import { PayloadFormat } from '../../helpers/PayloadFormat'
 import { MqttServer, MqttServerListener } from './MqttServer'

@@ -4,13 +4,7 @@
   </a>
 </p>
 
-# streamr-network
-
-[![Build Status](https://img.shields.io/github/workflow/status/streamr-dev/network/Eslint,%20Test%20and%20Publish/master)](https://github.com/streamr-dev/network/actions)
-[![npm release](https://img.shields.io/npm/v/streamr-network?style=flat)](https://www.npmjs.com/package/streamr-network)
-[![GitHub stars](https://img.shields.io/github/stars/streamr-dev/network.svg?style=flat&label=Star&maxAge=2592000)](https://github.com/streamr-dev/network/)
-[![Discord Chat](https://img.shields.io/discord/801574432350928907.svg?label=Discord&logo=Discord&colorB=7289da)](https://discord.gg/FVtAph9cvz)
-
+# @streamr/network-node
 
 An extendible implementation of the server-side
 [Streamr Protocol](https://github.com/streamr-dev/streamr-specs/blob/master/PROTOCOL.md) logic written in TypeScript.
@@ -19,7 +13,7 @@ provides a full tracker executable, and a stripped-down network node executable.
 
 
 The primary executable for running a broker node in the Streamr Network resides in the
-[streamr-broker](https://github.com/streamr-dev/network-monorepo/packages/broker) package. Although _streamr-network_ contains a
+[streamr-broker](https://github.com/streamr-dev/network-monorepo/packages/broker) package. Although _@streamr/network-node_ contains a
 fully-operational minimal network node implementation, we recommend running the node executable found in
 _streamr-broker_ as it includes useful client-facing features for interacting with the Streamr Network.
 
@@ -42,15 +36,15 @@ A glossary is also included.
 
 Prerequisites are [Node.js](https://nodejs.org/) `14.x` and npm version `>=6.14`.
 
-You can install streamr-network as a library in your project using npm:
+You can install @streamr/network-node as a library in your project using npm:
 
 ```bash
-npm install streamr-network --save
+npm install @streamr/network-node --save
 ```
 
-To install streamr-network system-wide:
+To install @streamr/network-node system-wide:
 ```bash
-npm install streamr-network --global
+npm install @streamr/network-node --global
 ```
 
 ## Run
@@ -107,22 +101,3 @@ To regenerate self signed certificate in `./test/fixtures` run:
 ```bash
 openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 36500 -nodes -subj "/CN=localhost"
 ```
-
-## Release
-
-Publishing to NPM is automated via Github Actions. Follow the steps below to publish stable (`latest`) or `beta`.
-
-### Publishing stable (latest)
-1. `git checkout master && git pull`
-2. Update version with either `npm version [patch|minor|major]`. Use semantic versioning
-https://semver.org/. Files package.json and package-lock.json will be automatically updated, and an appropriate git commit and tag created.
-3. `git push --follow-tags`
-4. Wait for Github Actions to run tests
-5. If tests passed, Github Actions will publish the new version to NPM
-
-### Publishing beta
-1. Update version with either `npm version [prepatch|preminor|premajor] --preid=beta`. Use semantic versioning
-https://semver.org/. Files package.json and package-lock.json will be automatically updated, and an appropriate git commit and tag created.
-2. `git push --follow-tags`
-3. Wait for Github Actions to run tests
-4. If tests passed, Github Actions will publish the new version to NPM

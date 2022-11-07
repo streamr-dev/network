@@ -8,7 +8,7 @@ import {
     ValidationError,
     createSignaturePayload,
     StreamMessageType
-} from "streamr-client-protocol"
+} from "@streamr/protocol"
 import { verify as verifyImpl } from './utils/signingUtils'
 
 export interface Options {

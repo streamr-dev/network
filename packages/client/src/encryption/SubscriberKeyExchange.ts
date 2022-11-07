@@ -8,7 +8,7 @@ import {
     StreamMessageType,
     StreamPartID,
     StreamPartIDUtils
-} from 'streamr-client-protocol'
+} from '@streamr/protocol'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { v4 as uuidv4 } from 'uuid'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'

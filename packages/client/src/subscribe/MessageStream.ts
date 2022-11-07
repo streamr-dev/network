@@ -5,7 +5,7 @@
  */
 import { Pipeline, PipelineTransform } from '../utils/Pipeline'
 import { PushPipeline } from '../utils/PushPipeline'
-import { StreamMessage } from 'streamr-client-protocol'
+import { StreamMessage } from '@streamr/protocol'
 import * as G from '../utils/GeneratorUtils'
 import { convertStreamMessageToMessage, Message, MessageMetadata } from './../Message'
 import { omit } from 'lodash'

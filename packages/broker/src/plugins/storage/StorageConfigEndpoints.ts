@@ -1,6 +1,6 @@
 import express, { Request, Response, Router } from 'express'
 import { StorageConfig } from './StorageConfig'
-import { toStreamID, toStreamPartID } from 'streamr-client-protocol'
+import { toStreamID, toStreamPartID } from '@streamr/protocol'
 
 const createHandler = (storageConfig: StorageConfig) => {
     return (req: Request, res: Response) => {

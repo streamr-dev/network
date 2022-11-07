@@ -10,14 +10,17 @@ Monorepo containing all the main components of Streamr Network.
 
 ## Packages
 
+### User-Facing
 * [broker](packages/broker/README.md) (streamr-broker)
 * [client](packages/client/README.md) (streamr-client)
-* [network](packages/network/README.md) (streamr-network)
-* [protocol](packages/protocol/README.md) (streamr-client-protocol)
-* [test-utils](packages/test-utils/README.md) (streamr-test-utils)
-* [utils](packages/utils/README.md) (@streamr/utils)
 * [cli-tools](packages/cli-tools/README.md) (@streamr/cli-tools)
-* [tracker](packages/network-tracker/README.md)(@streamr/network-tracker)
+
+### Internal
+* [network-node](packages/network/README.md) (@streamr/network-node)
+* [network-tracker](packages/network-tracker/README.md) (@streamr/network-tracker)
+* [protocol](packages/protocol/README.md) (@streamr/protocol)
+* [utils](packages/utils/README.md) (@streamr/utils)
+* [test-utils](packages/test-utils/README.md) (@streamr/test-utils)
 
 ## NPM scripts
 | NodeJS version `18.13.x` and NPM version `8.x` is required |
@@ -147,7 +150,7 @@ npm publish --access public
 git checkout main
 cd packages/protocol
 npm version <SEMVER_OPTION>
-# Go thru other packages' package.json and update streamr-client-protocol entry (if present) to newly generated version
+# Go thru other packages' package.json and update "@streamr/protocol" entry (if present) to newly generated version
 git add package.json
 git commit -m "release(protocol): vX.Y.Z"
 git tag protocol/vX.Y.Z
@@ -162,7 +165,7 @@ npm publish
 git checkout main
 cd packages/network
 npm version <SEMVER_OPTION>
-# Go thru other packages' package.json and update streamr-network entry (if present) to newly generated version
+# Go thru other packages' package.json and update @streamr/network-node entry (if present) to newly generated version
 git add package.json
 git commit -m "release(network): vX.Y.Z"
 git tag network/vX.Y.Z

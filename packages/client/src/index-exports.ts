@@ -54,7 +54,7 @@ export { NotFoundError, ErrorCode } from './HttpUtil'
 export * from './types'
 export { formStorageNodeAssignmentStreamId } from './utils/utils'
 
-export { StreamPartID } from 'streamr-client-protocol'
+export { StreamPartID } from '@streamr/protocol'
 
 export { BigNumber } from '@ethersproject/bignumber'
 export type { ConnectionInfo } from '@ethersproject/web'

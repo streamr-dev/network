@@ -1,4 +1,4 @@
-import { NodeId } from 'streamr-network'
+import { NodeId } from '@streamr/network-node'
 import _ from 'lodash'
 
 // From: https://gist.github.com/guilhermepontes/17ae0cc71fa2b13ea8c20c94c5c35dc4

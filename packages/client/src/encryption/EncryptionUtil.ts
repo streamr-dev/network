@@ -1,6 +1,6 @@
 import crypto, { CipherKey } from 'crypto'
 import { arrayify, hexlify } from '@ethersproject/bytes'
-import { EncryptionType, StreamMessage, StreamMessageError } from 'streamr-client-protocol'
+import { EncryptionType, StreamMessage, StreamMessageError } from '@streamr/protocol'
 import { GroupKey } from './GroupKey'
 
 export class DecryptError extends StreamMessageError {

@@ -1,4 +1,4 @@
-import { StreamMessage, StreamMessageType } from 'streamr-client-protocol'
+import { StreamMessage, StreamMessageType } from '@streamr/protocol'
 import { router as dataQueryEndpoints } from './DataQueryEndpoints'
 import { router as dataMetadataEndpoint } from './DataMetadataEndpoints'
 import { router as storageConfigEndpoints } from './StorageConfigEndpoints'

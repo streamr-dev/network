@@ -32,7 +32,7 @@
   "dependencies": {
     "@ethersproject/wallet": "^5.5.0",
     "@snapshot-labs/snapshot.js": "^0.4.43",
-    "@streamr/utils": "^1.0.0",
+    "@streamr/utils": "7.0.0-beta.0",
     "commander": "^8.3.0",
     "easy-table": "^1.1.1",
     "event-stream": "^4.0.1",

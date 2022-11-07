@@ -1,4 +1,4 @@
-import { StreamPartID, StreamMessage } from 'streamr-client-protocol'
+import { StreamPartID, StreamMessage } from '@streamr/protocol'
 import { NodeId } from '../../identifiers'
 import { PropagationTask, PropagationTaskStore } from './PropagationTaskStore'
 

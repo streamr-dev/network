@@ -1,6 +1,6 @@
 import { container, DependencyContainer } from 'tsyringe'
 import { merge } from 'lodash'
-import { fastPrivateKey, fastWallet } from 'streamr-test-utils'
+import { fastPrivateKey, fastWallet } from '@streamr/test-utils'
 import { StreamrClientConfig } from '../../../src/Config'
 import { StorageNodeRegistry } from '../../../src/registry/StorageNodeRegistry'
 import { StreamrClient } from '../../../src/StreamrClient'
@@ -18,7 +18,7 @@ import { FakeNetwork } from './FakeNetwork'
 import { FakeChain } from './FakeChain'
 import { FakeLogger } from './FakeLogger'
 import { FakeStorageNode } from './FakeStorageNode'
-import { NodeId } from 'streamr-network'
+import { NodeId } from '@streamr/network-node'
 
 const DEFAULT_CLIENT_OPTIONS: StreamrClientConfig = {
     network: {

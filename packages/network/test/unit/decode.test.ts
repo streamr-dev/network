@@ -1,4 +1,4 @@
-import { ControlMessage, ErrorCode, ErrorResponse, TrackerMessage, TrackerMessageType } from 'streamr-client-protocol'
+import { ControlMessage, ErrorCode, ErrorResponse, TrackerMessage, TrackerMessageType } from '@streamr/protocol'
 
 import { decode } from '../../src/protocol/utils'
 

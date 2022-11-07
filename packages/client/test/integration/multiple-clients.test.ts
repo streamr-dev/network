@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { fastPrivateKey } from 'streamr-test-utils'
+import { fastPrivateKey } from '@streamr/test-utils'
 import { Message, MessageMetadata } from '../../src/Message'
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'

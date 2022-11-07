@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
-import { GroupKeyMessage, GroupKeyRequest, StreamMessageType } from 'streamr-client-protocol'
-import { fastWallet } from 'streamr-test-utils'
+import { GroupKeyMessage, GroupKeyRequest, StreamMessageType } from '@streamr/protocol'
+import { fastWallet } from '@streamr/test-utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'

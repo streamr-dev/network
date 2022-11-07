@@ -1,4 +1,4 @@
-import { Location, NodeId } from 'streamr-network'
+import { Location, NodeId } from '@streamr/network-node'
 
 function isValidNodeLocation(location: Location | null) {
     return location && (location.country || location.city || location.latitude || location.longitude)

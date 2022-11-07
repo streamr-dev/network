@@ -1,4 +1,4 @@
-import { StreamPartID, toStreamID, toStreamPartID } from 'streamr-client-protocol'
+import { StreamPartID, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { Tracker } from '@streamr/network-tracker'
 import { PeerInfo } from '../src/connection/PeerInfo'
 import { startHttpServer, ServerWsEndpoint } from '../src/connection/ws/ServerWsEndpoint'

@@ -1,5 +1,5 @@
 import { generateMnemonicFromAddress } from '../../../src/helpers/generateMnemonicFromAddress'
-import { randomEthereumAddress } from 'streamr-test-utils'
+import { randomEthereumAddress } from '@streamr/test-utils'
 import { toEthereumAddress } from '@streamr/utils'
 
 describe(generateMnemonicFromAddress, () => {

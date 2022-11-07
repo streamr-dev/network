@@ -2,7 +2,7 @@ import { Client, types as cassandraTypes } from 'cassandra-driver'
 import { BatchManager } from '../../../../src/plugins/storage/BatchManager'
 import { BucketId } from '../../../../src/plugins/storage/Bucket'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
-import { MessageID, StreamMessage, toStreamID } from "streamr-client-protocol"
+import { MessageID, StreamMessage, toStreamID } from "@streamr/protocol"
 import { toEthereumAddress, waitForCondition } from '@streamr/utils'
 const { TimeUuid } = cassandraTypes
 

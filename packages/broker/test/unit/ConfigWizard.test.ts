@@ -16,7 +16,7 @@ import {
 import { readFileSync } from 'fs'
 import { createBroker } from '../../src/broker'
 import { needsMigration } from '../../src/config/migration'
-import { fastPrivateKey } from 'streamr-test-utils'
+import { fastPrivateKey } from '@streamr/test-utils'
 
 const MOCK_PRIVATE_KEY = '0x1234567890123456789012345678901234567890123456789012345678901234'
 
