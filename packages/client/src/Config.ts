@@ -46,11 +46,6 @@ export interface SubscribeConfig {
     gapFillTimeout: number
 }
 
-export interface ConnectionConfig {
-    /** Some TheGraph instance, that indexes the streamr registries */
-    theGraphUrl: string
-}
-
 export interface TrackerRegistryContract {
     jsonRpcProvider?: ConnectionInfo
     contractAddress: string
@@ -94,10 +89,7 @@ export type StrictStreamrClientConfig = {
     metrics: MetricsConfig
     /** @internal */
     _timeouts: TimeoutsConfig
-} & (
-    ConnectionConfig
-    & SubscribeConfig
-)
+} & SubscribeConfig
 
 export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'network' | 'contracts' | 'decryption' | 'metrics'> & {
     network: Partial<StrictStreamrClientConfig['network']>
@@ -113,8 +105,6 @@ export const STREAMR_STORAGE_NODE_GERMANY = '0x31546eEA76F2B2b3C5cC06B1c93601dc3
  */
 export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id' | 'auth'> = {
     logLevel: 'info',
-
-    theGraphUrl: 'https://api.thegraph.com/subgraphs/name/streamr-dev/streams',
 
     orderMessages: true,
     retryResendAfter: 5000,
@@ -156,6 +146,7 @@ export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id' | 'aut
                 gasPriceStrategy: (estimatedGasPrice: BigNumber) => estimatedGasPrice.add('10000000000'),
             }
         },
+        theGraphUrl: 'https://api.thegraph.com/subgraphs/name/streamr-dev/streams',
         maxConcurrentCalls: 10    
     },
 

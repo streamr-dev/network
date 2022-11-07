@@ -45,9 +45,11 @@ describe('Config', () => {
             it('ajv-format', () => {
                 expect(() => {
                     return createStrictConfig({
-                        theGraphUrl: 'foo'
+                        contracts: {
+                            theGraphUrl: 'foo'
+                        }
                     } as any)
-                }).toThrow('/theGraphUrl must match format "uri"')
+                }).toThrow('/contracts/theGraphUrl must match format "uri"')
             })
 
             it('ethereum address', () => {

@@ -18,7 +18,6 @@ const sideChainConfig = {
  * Streamr client constructor options that work in the test environment
  */
 export const ConfigTest: StreamrClientConfig = {
-    theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-contracts`,
     network: {
         trackers: [
             {
@@ -50,7 +49,8 @@ export const ConfigTest: StreamrClientConfig = {
                 timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000
             }]
         },
-        streamRegistryChainRPCs: sideChainConfig
+        streamRegistryChainRPCs: sideChainConfig,
+        theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-contracts`,
     },
     _timeouts: {
         theGraph: {

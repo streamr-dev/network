@@ -270,6 +270,10 @@
                 "ethereumNetworks": {
                     "type": "object"
                 },
+                "theGraphUrl": {
+                    "type": "string",
+                    "format": "uri"
+                },
                 "maxConcurrentCalls": {
                     "type": "number"
                 }
@@ -286,10 +290,6 @@
                     "type": "number"
                 }
             }
-        },
-        "theGraphUrl": {
-            "type": "string",
-            "format": "uri"
         },
         "metrics": {
             "anyOf": [
