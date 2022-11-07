@@ -42,7 +42,7 @@ describe('GapFill', () => {
 
     async function setupClient(opts: StreamrClientConfig) {
         client = environment.createClient({
-            maxGapRequests: 20,
+            maxGapRequests: 2,
             gapFillTimeout: 500,
             retryResendAfter: 1000,
             ...opts
