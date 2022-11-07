@@ -94,26 +94,6 @@
                 }
             }
         },
-        "mainChainRPCs": {
-            "anyOf": [
-                {
-                    "$ref": "#/definitions/chainConnectionInfoList"
-                },
-                {
-                    "type": "string",
-                    "format": "uri"
-                }
-            ]
-        },
-        "streamRegistryChainRPCs": {
-            "$ref": "#/definitions/chainConnectionInfoList"
-        },
-        "ethereumNetworks": {
-            "type": "object"
-        },
-        "maxConcurrentContractCalls": {
-            "type": "number"
-        },
         "orderMessages": {
             "type": "boolean"
         },
@@ -257,6 +237,44 @@
                 }
             }
         },
+        "contracts": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "streamRegistryChainAddress": {
+                    "type": "string",
+                    "format": "ethereum-address"
+                },
+                "streamStorageRegistryChainAddress": {
+                    "type": "string",
+                    "format": "ethereum-address"
+                },
+                "storageNodeRegistryChainAddress": {
+                    "type": "string",
+                    "format": "ethereum-address"
+                },
+                "mainChainRPCs": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/chainConnectionInfoList"
+                        },
+                        {
+                            "type": "string",
+                            "format": "uri"
+                        }
+                    ]
+                },
+                "streamRegistryChainRPCs": {
+                    "$ref": "#/definitions/chainConnectionInfoList"
+                },
+                "ethereumNetworks": {
+                    "type": "object"
+                },
+                "maxConcurrentContractCalls": {
+                    "type": "number"
+                }
+            }
+        },
         "decryption": {
             "type": "object",
             "additionalProperties": false,
@@ -272,18 +290,6 @@
         "theGraphUrl": {
             "type": "string",
             "format": "uri"
-        },
-        "streamRegistryChainAddress": {
-            "type": "string",
-            "format": "ethereum-address"
-        },
-        "storageNodeRegistryChainAddress": {
-            "type": "string",
-            "format": "ethereum-address"
-        },
-        "streamStorageRegistryChainAddress": {
-            "type": "string",
-            "format": "ethereum-address"
         },
         "metrics": {
             "anyOf": [
