@@ -28,9 +28,7 @@ async function run(): Promise<void> {
         type: NodeType.NODEJS,
         websocket: { ip, port }
     }
-
-    console.log(epPeerDescriptor.websocket)
-
+    
     const layer0 = new DhtNode({ peerDescriptor: epPeerDescriptor, numberOfNodesPerKBucket: 8 })
     await layer0.start()
     await layer0.joinDht(epPeerDescriptor)
