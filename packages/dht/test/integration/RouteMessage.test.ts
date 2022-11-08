@@ -10,7 +10,6 @@ import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { v4 } from 'uuid'
 import { UUID } from '../../src/helpers/UUID'
 
-
 describe('Route Message With Mock Connections', () => {
     let entryPoint: DhtNode
     let sourceNode: DhtNode

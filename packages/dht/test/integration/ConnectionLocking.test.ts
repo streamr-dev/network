@@ -1,7 +1,7 @@
 import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
-import { waitForCondition } from 'streamr-test-utils'
+import { waitForCondition } from '@streamr/utils'
 import { PeerID } from '../../src/helpers/PeerID'
 import { SimulatorTransport } from '../../src/exports'
 

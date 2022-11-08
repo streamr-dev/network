@@ -2,7 +2,7 @@ import { NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { PeerID } from '../../src/helpers/PeerID'
-import { waitForCondition } from 'streamr-test-utils'
+import { waitForCondition } from '@streamr/utils'
 
 describe('WebSocket IConnection Requests', () => {
     const epPeerDescriptor: PeerDescriptor = {
