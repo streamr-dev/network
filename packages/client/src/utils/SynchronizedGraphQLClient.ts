@@ -114,7 +114,7 @@ export class SynchronizedGraphQLClient {
     constructor(
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
         @inject(GraphQLClient) delegate: GraphQLClient,
-        @inject(ConfigInjectionToken) config: StrictStreamrClientConfig
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, '_timeouts'>
     ) {
         this.delegate = delegate
         this.indexingState = new IndexingState(

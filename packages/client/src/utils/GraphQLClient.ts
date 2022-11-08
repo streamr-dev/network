@@ -16,7 +16,7 @@ export class GraphQLClient {
     constructor(
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
         @inject(HttpFetcher) private httpFetcher: HttpFetcher,
-        @inject(ConfigInjectionToken) private config: StrictStreamrClientConfig
+        @inject(ConfigInjectionToken) private config: Pick<StrictStreamrClientConfig, 'contracts'>
     ) {
         this.logger = loggerFactory.createLogger(module)
     }

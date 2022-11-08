@@ -24,7 +24,7 @@ export class StorageNodeRegistry {
     constructor(
         private contractFactory: ContractFactory,
         @inject(AuthenticationInjectionToken) private authentication: Authentication,
-        @inject(ConfigInjectionToken) private config: StrictStreamrClientConfig,
+        @inject(ConfigInjectionToken) private config: Pick<StrictStreamrClientConfig, 'contracts'>,
     ) {
         const chainProvider = getStreamRegistryChainProvider(config.contracts)
         this.nodeRegistryContractReadonly = this.contractFactory.createReadContract(

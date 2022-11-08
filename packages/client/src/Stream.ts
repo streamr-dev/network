@@ -78,7 +78,7 @@ export class Stream {
     private readonly _streamStorageRegistry: StreamStorageRegistry
     private readonly _loggerFactory: LoggerFactory
     private readonly _eventEmitter: StreamrClientEventEmitter
-    private readonly _config: StrictStreamrClientConfig
+    private readonly _config: Pick<StrictStreamrClientConfig, '_timeouts'>
 
     /** @internal */
     constructor(
@@ -92,7 +92,7 @@ export class Stream {
         streamStorageRegistry: StreamStorageRegistry,
         loggerFactory: LoggerFactory,
         eventEmitter: StreamrClientEventEmitter,
-        config: StrictStreamrClientConfig
+        config: Pick<StrictStreamrClientConfig, '_timeouts'>
     ) {
         this.id = id
         this.metadata = {

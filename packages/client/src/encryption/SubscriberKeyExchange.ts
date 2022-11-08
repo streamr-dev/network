@@ -49,7 +49,7 @@ export class SubscriberKeyExchange {
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         validator: Validator,
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
-        @inject(ConfigInjectionToken) config: StrictStreamrClientConfig
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'decryption'>
     ) {
         this.logger = loggerFactory.createLogger(module)
         this.networkNodeFacade = networkNodeFacade

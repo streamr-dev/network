@@ -58,8 +58,8 @@ export class StreamStorageRegistry {
         @inject(SynchronizedGraphQLClient) private graphQLClient: SynchronizedGraphQLClient,
         @inject(StreamrClientEventEmitter) eventEmitter: StreamrClientEventEmitter,
         @inject(AuthenticationInjectionToken) private authentication: Authentication,
-        @inject(ConfigInjectionToken) private config: StrictStreamrClientConfig,
-        @inject(LoggerFactory) loggerFactory: LoggerFactory
+        @inject(LoggerFactory) loggerFactory: LoggerFactory,
+        @inject(ConfigInjectionToken) private config: Pick<StrictStreamrClientConfig, 'contracts'>
     ) {
         this.logger = loggerFactory.createLogger(module)
         const chainProvider = getStreamRegistryChainProvider(config.contracts)

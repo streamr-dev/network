@@ -22,7 +22,7 @@ export class StreamFactory {
     private readonly streamStorageRegistry: StreamStorageRegistry
     private readonly loggerFactory: LoggerFactory
     private readonly eventEmitter: StreamrClientEventEmitter
-    private readonly config: StrictStreamrClientConfig
+    private readonly config: Pick<StrictStreamrClientConfig, '_timeouts'>
 
     constructor(
         resends: Resends,
@@ -33,7 +33,7 @@ export class StreamFactory {
         streamStorageRegistry: StreamStorageRegistry,
         loggerFactory: LoggerFactory,
         eventEmitter: StreamrClientEventEmitter,
-        @inject(ConfigInjectionToken) config: StrictStreamrClientConfig
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, '_timeouts'>
     ) {
         this.resends = resends
         this.publisher = publisher

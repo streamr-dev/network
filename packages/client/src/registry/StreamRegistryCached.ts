@@ -18,7 +18,7 @@ export class StreamRegistryCached {
     constructor(
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
         @inject(delay(() => StreamRegistry)) private streamRegistry: StreamRegistry,
-        @inject(ConfigInjectionToken) private config: StrictStreamrClientConfig
+        @inject(ConfigInjectionToken) private config: Pick<StrictStreamrClientConfig, 'cache'>
     ) {
         this.logger = loggerFactory.createLogger(module)
     }

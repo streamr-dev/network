@@ -21,7 +21,7 @@ export class Decrypt<T> {
         private destroySignal: DestroySignal,
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
         @inject(StreamrClientEventEmitter) private eventEmitter: StreamrClientEventEmitter,
-        @inject(ConfigInjectionToken) private config: StrictStreamrClientConfig
+        @inject(ConfigInjectionToken) private config: Pick<StrictStreamrClientConfig, 'decryption'>
     ) {
         this.logger = loggerFactory.createLogger(module)
         this.decrypt = this.decrypt.bind(this)

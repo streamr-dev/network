@@ -73,14 +73,14 @@ export class NetworkNodeFacade {
     private cachedNode?: NetworkNodeStub
     private startNodeCalled = false
     private startNodeComplete = false
-    private readonly config: StrictStreamrClientConfig
+    private readonly config: Pick<StrictStreamrClientConfig, 'network' | 'contracts'>
     private readonly eventEmitter: EventEmitter<Events>
 
     constructor(
         private destroySignal: DestroySignal,
         private networkNodeFactory: NetworkNodeFactory,
         @inject(AuthenticationInjectionToken) private authentication: Authentication,
-        @inject(ConfigInjectionToken) config: StrictStreamrClientConfig,
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'network' | 'contracts'>
     ) {
         this.config = config
         this.eventEmitter = new EventEmitter<Events>()

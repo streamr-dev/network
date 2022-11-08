@@ -79,7 +79,7 @@ export class StreamRegistry {
         @inject(SynchronizedGraphQLClient) private graphQLClient: SynchronizedGraphQLClient,
         @inject(delay(() => StreamRegistryCached)) private streamRegistryCached: StreamRegistryCached,
         @inject(AuthenticationInjectionToken) private authentication: Authentication,
-        @inject(ConfigInjectionToken) private config: StrictStreamrClientConfig,
+        @inject(ConfigInjectionToken) private config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
     ) {
         this.logger = loggerFactory.createLogger(module)
         const chainProviders = getAllStreamRegistryChainProviders(config.contracts)

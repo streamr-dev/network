@@ -11,17 +11,17 @@ import { LoggerFactory } from './utils/LoggerFactory'
 @scoped(Lifecycle.ContainerScoped)
 export class ContractFactory {
     private readonly graphQLClient: SynchronizedGraphQLClient
-    private readonly config: StrictStreamrClientConfig
     private readonly loggerFactory: LoggerFactory
+    private readonly config: Pick<StrictStreamrClientConfig, 'contracts'>
 
     constructor(
         graphQLClient: SynchronizedGraphQLClient,
-        @inject(ConfigInjectionToken) config: StrictStreamrClientConfig,
-        @inject(LoggerFactory) loggerFactory: LoggerFactory
+        @inject(LoggerFactory) loggerFactory: LoggerFactory,
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts'>
     ) {
         this.graphQLClient = graphQLClient
-        this.config = config
         this.loggerFactory = loggerFactory
+        this.config = config
     }
 
     createReadContract<T extends Contract>(
