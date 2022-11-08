@@ -3,12 +3,12 @@
  */
 export * from './StreamrClient'
 export * from './Stream'
+export { Message, MessageMetadata } from './Message'
 export { DecryptError } from './encryption/EncryptionUtil'
 export { StreamrClientEvents } from './events'
-export { MessageMetadata } from './publish/Publisher'
-export { Subscription, SubscriptionEvents, SubscriptionOnMessage } from './subscribe/Subscription'
-export { MessageStreamOnMessage } from './subscribe/MessageStream'
-export type { MessageStream } from './subscribe/MessageStream'
+export { PublishMetadata } from './publish/Publisher'
+export { Subscription, SubscriptionEvents, } from './subscribe/Subscription'
+export type { MessageStream, MessageListener } from './subscribe/MessageStream'
 export { ResendOptions, ResendLastOptions, ResendFromOptions, ResendRangeOptions, ResendRef } from './subscribe/Resends'
 export {
     StreamPermission,
@@ -36,8 +36,6 @@ export {
 } from './Config'
 export {
     AuthConfig,
-    AuthenticatedConfig,
-    UnauthenticatedAuthConfig,
     ProviderAuthConfig,
     ProviderConfig,
     PrivateKeyAuthConfig

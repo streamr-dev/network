@@ -5,7 +5,7 @@ import Mock = jest.Mock
 // eslint-disable-next-line no-underscore-dangle
 declare let _streamr_electron_test: any
 
-describe(Logger, () => {
+describe('Logger', () => {
     let logger: Logger
     let fatalFn: Mock
     let errorFn: Mock

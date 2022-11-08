@@ -1,10 +1,12 @@
-import { createTestStream } from './../test-utils/utils'
-import { Msg, publishTestMessagesGenerator } from '../test-utils/publish'
-import { StreamrClient } from '../../src/StreamrClient'
+import 'reflect-metadata'
+
+import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
-import { StreamPermission } from '../../src'
-import { collect } from '../../src/utils/GeneratorUtils'
+import { StreamrClient } from '../../src/StreamrClient'
+import { collect } from '../../src/utils/iterators'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
+import { Msg, publishTestMessagesGenerator } from '../test-utils/publish'
+import { createTestStream } from './../test-utils/utils'
 
 describe('Basics', () => {
     const MAX_MESSAGES = 10
@@ -31,7 +33,7 @@ describe('Basics', () => {
             await client.publish(stream.id, testMsg)
             const received = []
             for await (const msg of sub) {
-                received.push(msg.getParsedContent())
+                received.push(msg.content)
                 if (received.length === 1) {
                     break
                 }
@@ -53,8 +55,8 @@ describe('Basics', () => {
                 }
             }
 
-            expect(received.map((s) => s.getParsedContent())).toEqual(published.map((s) => s.getParsedContent()))
-            expect(received.map((streamMessage) => streamMessage.getTimestamp())).toEqual(published.map(() => 1111111))
+            expect(received.map((s) => s.content)).toEqual(published.map((s) => s.content))
+            expect(received.map((streamMessage) => streamMessage.timestamp)).toEqual(published.map(() => 1111111))
         })
 
         it('can successfully pub/sub multiple streams', async () => {
@@ -71,8 +73,8 @@ describe('Basics', () => {
                         break
                     }
                 }
-                expect(received.map((s) => s.getParsedContent())).toEqual(published.map((s) => s.getParsedContent()))
-                return expect(received.map((streamMessage) => streamMessage.getTimestamp())).toEqual(published.map(() => 1111111))
+                expect(received.map((s) => s.content)).toEqual(published.map((s) => s.content))
+                return expect(received.map((streamMessage) => streamMessage.timestamp)).toEqual(published.map(() => 1111111))
             }
             const stream2 = await createTestStream(client, module)
             await stream2.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })

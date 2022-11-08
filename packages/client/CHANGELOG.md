@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Methods related to publishing and subscribing operate on new interfaces `Message` and `MessageMetadata` instead of `StreamMessage`
+  - in `client.subscribe` and `client.resend` the data type of 2nd parameter of `onMessage` callback is `MessageMetadata` instead of `StreamMessage`
+  - in `client.subscribe`, `client.resend` and `client.resendSubscribe` the async iterator type is `Message` instead of `StreamMessage`
+  - in `client.publish` and `stream.publish` the return type is `Message` instead of `StreamMessage`
+  - in `client.waitForStorage` parameter type is `Message` instead of `StreamMessage`
 - Encryption keys are delivered in-stream, not in a separate key exchange stream
   - new optional config options `decryption.keyRequestTimeout` and `decryption.maxKeyRequestsPerSecond`
   - notice that key exchange is not backwards compatible with v6 clients
@@ -30,12 +35,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rename method `getStoredStreamsOf()` to `getStoredStreams()`
 - Rename method `isStreamStoredInStorageNode()` to `isStoredStream()`
 - Replaced methods `createOrUpdateNodeInStorageNodeRegistry()` and `removeNodeFromStorageNodeRegistry()` with single method `setStorageNodeMetadata()`
+- Change configuration option `network.stunUrls` to `network.iceServers` with new format
 - Change storage node assignment event handlers
   - replace method `registerStorageEventListeners(listener)` with `on('addToStorageNode', listener)` and `on('removeFromStorageNode', listener)`
   - replace method `unRegisterStorageEventListeners()` with `off('addToStorageNode', listener)` and `off('removeFromStorageNode', listener)`
+- Rename interface `SubscriptionOnMessage`/`MessageStreamOnMessage` to `MessageListener`
 - Rename classes `GroupKey` and `GroupKeyId` to `EncryptionKey` and `EncryptionKeyId`
+- Change interface of `MessageStream` from `AsyncGenerator` to `AsyncIterable`
+- Change return type of `getStreamPublishers`, `getStreamSubscribers` and `searchStreams` from `AsyncGenerator` to `AsyncIterable`
+- Config property `auth` must be non-empty (if given)
 
 ### Deprecated
+
+- Deprecate `client.getNode` method and interface `NetworkNodeStub`
 
 ### Removed
 
@@ -55,6 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove client configuration option `client.network.name`
 - Remove client configuration option `client.debug`
 - Remove (non-functional) client configuration options `autoConnect`, `autoDisconnect`, and `maxRetries`
+- Remove `AuthenticatedAuthConfig` and `UnauthenticatedAuthConfig` interfaces
 
 ### Fixed
 

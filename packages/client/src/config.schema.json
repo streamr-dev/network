@@ -34,12 +34,6 @@
                 },
                 "ethereum": {
                     "type": "object"
-                },
-                "sessionToken": {
-                    "type": "string"
-                },
-                "unauthenticated": {
-                    "type": "boolean"
                 }
             }
         },
@@ -224,10 +218,29 @@
                 "webrtcDatachannelBufferThresholdHigh": {
                     "type": "number"
                 },
-                "stunUrls": {
+                "iceServers": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "type": "object",
+                        "required": [
+                            "url",
+                            "port"
+                        ],
+                        "additionalProperties": false,
+                        "properties": {
+                            "url": {
+                                "type": "string"
+                            },
+                            "port": {
+                                "type": "number"
+                            },
+                            "username": {
+                                "type": "string"
+                            },
+                            "password": {
+                                "type": "string"
+                            }
+                        }
                     }
                 },
                 "rttUpdateTimeout": {
@@ -296,7 +309,7 @@
                                     "duration": {
                                         "type": "number"
                                     }
-                                } 
+                                }
                             }
                         },
                         "maxPublishDelay": {

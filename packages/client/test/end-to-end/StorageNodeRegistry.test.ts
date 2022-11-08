@@ -1,11 +1,11 @@
 import 'reflect-metadata'
-import { StreamrClient } from '../../src/StreamrClient'
 import { Wallet } from 'ethers'
-import { createTestStream } from '../test-utils/utils'
-import { until } from '../../src/utils/promises'
-import { Stream } from '../../src'
-import { ConfigTest, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { fetchPrivateKeyWithGas } from 'streamr-test-utils'
+import { ConfigTest, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { Stream } from '../../src/Stream'
+import { StreamrClient } from '../../src/StreamrClient'
+import { until } from '../../src/utils/promises'
+import { createTestStream } from '../test-utils/utils'
 
 const TEST_TIMEOUT = 30 * 1000
 

@@ -1,4 +1,5 @@
 import 'reflect-metadata'
+
 import { StreamMessage } from 'streamr-client-protocol'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'
@@ -27,9 +28,9 @@ describe('pre-agreed encryption key', () => {
         await subscriber.addEncryptionKey(key, stream.id)
         const sub = await subscriber.subscribe(stream.id)
         await publisher.publish(stream.id, { foo: 'bar' })
-        const receivedMessage = await nextValue(sub)
+        const receivedMessage = await nextValue(sub[Symbol.asyncIterator]())
 
-        expect(receivedMessage?.groupKeyId).toBe(key.id)
+        expect(receivedMessage?.streamMessage.groupKeyId).toBe(key.id)
         const groupKeyRequests = environment.getNetwork().getSentMessages({
             messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST
         })

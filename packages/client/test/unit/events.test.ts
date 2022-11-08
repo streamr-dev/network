@@ -1,4 +1,5 @@
 import 'reflect-metadata'
+
 import { initEventGateway, ObservableEventEmitter } from '../../src/events'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 

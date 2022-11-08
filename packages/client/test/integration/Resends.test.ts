@@ -1,15 +1,17 @@
 import 'reflect-metadata'
+
+import { toEthereumAddress } from '@streamr/utils'
 import { MessageID } from 'streamr-client-protocol'
 import { Authentication } from '../../src/Authentication'
 import { StreamPermission } from '../../src/permission'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
+import { StreamrClientError } from '../../src/StreamrClientError'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 import { createRandomAuthentication, createRelativeTestStreamId } from '../test-utils/utils'
-import { toEthereumAddress } from '@streamr/utils'
-import { StreamrClientError } from '../../src/StreamrClientError'
+import { convertStreamMessageToMessage } from './../../src/Message'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
@@ -56,17 +58,17 @@ describe('Resends', () => {
                 messageMatchFn
             })).rejects.toThrow('timed out')
             expect(messageMatchFn).toHaveBeenCalledWith(expect.anything(), expect.anything())
-            expect(messageMatchFn.mock.calls[0][0].getParsedContent()).toEqual(content)
-            expect(messageMatchFn.mock.calls[0][1].getParsedContent()).toEqual(content)
+            expect(messageMatchFn.mock.calls[0][0].content).toEqual(content)
+            expect(messageMatchFn.mock.calls[0][1].content).toEqual(content)
         })
 
         it('no message', async () => {
             await stream.addToStorageNode(storageNode.id)
-            const msg = await createSignedMessage({
+            const msg = convertStreamMessageToMessage(await createSignedMessage({
                 messageId: new MessageID(stream.id, 0, Date.now(), 0, PUBLISHER_ID, 'msgChainId'),
                 serializedContent: JSON.stringify({}),
                 authentication
-            })
+            }))
             await expect(() => client.waitForStorage(msg, {
                 interval: 50,
                 timeout: 100,
@@ -78,11 +80,11 @@ describe('Resends', () => {
         })
 
         it('no storage assigned', async () => {
-            const msg = await createSignedMessage({
+            const msg = convertStreamMessageToMessage(await createSignedMessage({
                 messageId: new MessageID(stream.id, 0, Date.now(), 0, PUBLISHER_ID, 'msgChainId'),
                 serializedContent: JSON.stringify({}),
                 authentication
-            })
+            }))
             await expect(() => client.waitForStorage(msg, {
                 messageMatchFn: () => {
                     return true

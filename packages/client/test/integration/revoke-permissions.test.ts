@@ -1,16 +1,18 @@
+import 'reflect-metadata'
+
+import { Defer } from '@streamr/utils'
 import { fastPrivateKey } from 'streamr-test-utils'
-import { StreamMessage } from 'streamr-client-protocol'
-import {
-    createTestStream,
-} from '../test-utils/utils'
+import { StreamPermission } from '../../src/permission'
+import { Stream } from '../../src/Stream'
+import { StreamrClient } from '../../src/StreamrClient'
+import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import {
     getPublishTestStreamMessages
 } from '../test-utils/publish'
-import { StreamrClient } from '../../src/StreamrClient'
-import { Stream } from '../../src/Stream'
-import { StreamPermission } from '../../src/permission'
-import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
-import { Defer } from '@streamr/utils'
+import {
+    createTestStream
+} from '../test-utils/utils'
+import { Message } from '../../src/Message'
 
 // this has publisher & subscriber clients
 // publisher begins publishing `maxMessages` messages
@@ -104,7 +106,7 @@ describe('revoke permissions', () => {
         })
         sub.onError.listen(onSubError)
 
-        const received: StreamMessage[] = []
+        const received: Message[] = []
         // Publish after subscribed
         let count = 0
         const gotMessages = new Defer<undefined>()

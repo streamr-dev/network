@@ -34,7 +34,7 @@ export class OrderMessages<T> {
         private options: SubscribeConfig,
         private resends: Resends,
         private readonly streamPartId: StreamPartID,
-        private loggerFactory: LoggerFactory
+        loggerFactory: LoggerFactory
     ) {
         this.logger = loggerFactory.createLogger(module)
         this.stopSignal.listen(() => {
@@ -87,7 +87,7 @@ export class OrderMessages<T> {
             this.resendStreams.add(resendMessageStream)
             if (this.done) { return }
 
-            for await (const streamMessage of resendMessageStream) {
+            for await (const streamMessage of resendMessageStream.getStreamMessages()) {
                 if (this.done) { return }
                 this.orderingUtil.add(streamMessage)
             }
