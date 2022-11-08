@@ -2,7 +2,6 @@
 import { range, padStart } from 'lodash'
 import { StreamrClient } from './StreamrClient'
 import { ConfigTest } from './ConfigTest'
-import { StreamPermission } from './permission'
 
 const createPrivateKey = (i: number): string => {
     return `0x${padStart(String(i + 1), 64, '0')}`
@@ -10,8 +9,7 @@ const createPrivateKey = (i: number): string => {
 
 const main = async () => {
 
-    const GRANTERS = 50
-    const USERS_PER_GRANTER = 50
+    const STORAGE_NODES = 250
 
     const mainClient = new StreamrClient({
         ...ConfigTest,
@@ -24,42 +22,29 @@ const main = async () => {
     const stream = await mainClient.createStream('/test/' + Date.now())
     console.log('Stream: ' + stream.id)
 
-    const grantClients = range(GRANTERS).map((i) => {
-        return new StreamrClient({
+    for await (const i of range(STORAGE_NODES)) {
+        console.log('Create node ' + i)
+        const client = new StreamrClient({
             ...ConfigTest,
             auth: {
                 privateKey: createPrivateKey(i + 100)
             }
         })
-    })
-    const grantClientAddresses = await Promise.all(grantClients.map(c => c.getAddress()))
-    const grantClientAssignments = grantClientAddresses.map(user => {
-        return {
-            user,
-            permissions: [StreamPermission.GRANT]
+        await client.setStorageNodeMetadata({
+            http: 'mock-http'
+        })
+        if (i % 2 === 0) {
+            await mainClient.addStreamToStorageNode(stream.id, await client.getAddress())
         }
-    })
-    console.log('Grant grants')
-    await mainClient.grantPermissions(stream.id, ...grantClientAssignments)
+    }
 
-    await Promise.all(grantClients.map(async (client, j) => {
-        for await (const i of range(USERS_PER_GRANTER)) {
-            console.log('Grant ' + i + ' in ' + j)
-            await client.grantPermissions(stream.id, {
-                user: `0x${padStart(String(j * USERS_PER_GRANTER + i + 1), 40, '0')}`,
-                permissions: [StreamPermission.PUBLISH, StreamPermission.SUBSCRIBE]
-            })
-        }
-    }))
-
-    console.log('Query')
-    const permissions = await mainClient.getPermissions(stream.id)
-    console.log('Permissions: ' + permissions.length)
-    permissions.forEach((p, i) => {
-        console.log(i + ': ' + JSON.stringify(p))
-    })
+    const streamNodes = await mainClient.getStorageNodes(stream.id)
+    console.log(streamNodes.length)
+    const allNodes = await mainClient.getStorageNodes()
+    console.log(allNodes.length)
     try {
-        await mainClient.getPermissions('0x2b5ad5c4795c026514f8317c7a215e218dccd6cf/non-existent')
+        const none = await mainClient.getStorageNodes('0x2b5ad5c4795c026514f8317c7a215e218dccd6cf/non-existent')
+        console.log(none.length)
     } catch (e) {
         console.log(e.constructor.name)
         console.log(e.message)
