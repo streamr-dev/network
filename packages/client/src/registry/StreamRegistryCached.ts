@@ -30,7 +30,7 @@ export class StreamRegistryCached {
             return this.streamRegistry.getStream(streamId)
         }, {
             ...config.cache,
-            cacheKey: ([streamId]: any) => {
+            cacheKey: ([streamId]): string => {
                 // see clearStream
                 return `${streamId}${SEPARATOR}`
             }
@@ -59,7 +59,7 @@ export class StreamRegistryCached {
             })
         }, {
             ...config.cache,
-            cacheKey([streamId]): any {
+            cacheKey([streamId]): string {
                 return ['PublicSubscribe', streamId].join(SEPARATOR)
             }
         })
