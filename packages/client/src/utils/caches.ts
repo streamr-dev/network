@@ -15,6 +15,9 @@ function clearMatching<K>(cache: Collection<K, unknown>, matchFn: (key: K) => bo
     }
 }
 
+export type CacheAsyncFnType<ArgsType extends any[], ReturnType, KeyType = ArgsType[0]> = ((...args: ArgsType) => Promise<ReturnType>) 
+    & { clearMatching: (matchFn: (key: KeyType) => boolean) => void }
+
 /**
  * Returns a cached async fn, cached keyed on first argument passed. See documentation for mem/p-memoize.
  * Caches into a LRU cache capped at options.maxSize
@@ -41,7 +44,7 @@ export function CacheAsyncFn<ArgsType extends any[], ReturnType, KeyType = ArgsT
     cachePromiseRejection?: boolean
     onEviction?: (...args: any[]) => void
     cacheKey?: (args: ArgsType) => KeyType
-} = {}): ((...args: ArgsType) => Promise<ReturnType>) & { clearMatching: (matchFn: (key: KeyType) => boolean) => void } {
+} = {}): CacheAsyncFnType<ArgsType, ReturnType, KeyType> {
     const cache = new LRU<KeyType, { data: ReturnType, maxAge: number }>({
         maxSize,
         maxAge,
