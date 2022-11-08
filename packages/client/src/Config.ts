@@ -5,8 +5,7 @@ import cloneDeep from 'lodash/cloneDeep'
 import Ajv, { ErrorObject } from 'ajv'
 import addFormats from 'ajv-formats'
 import merge from 'lodash/merge'
-
-import type { AuthConfig } from './Authentication'
+import type { ExternalProvider } from '@ethersproject/providers'
 
 import CONFIG_SCHEMA from './config.schema.json'
 import { TrackerRegistryRecord } from '@streamr/protocol'
@@ -15,6 +14,21 @@ import { LogLevel } from '@streamr/utils'
 import { NetworkNodeOptions, STREAMR_ICE_SERVERS } from '@streamr/network-node'
 import type { ConnectionInfo } from '@ethersproject/web'
 import { generateClientId } from './utils/utils'
+import { XOR } from './types'
+
+export type ProviderConfig = ExternalProvider // TODO maybe we could remove this alias and just export ExternalProvider in index-exports?
+
+export interface ProviderAuthConfig {
+    ethereum: ProviderConfig
+}
+
+export interface PrivateKeyAuthConfig {
+    privateKey: string
+    // The address property is not used. It is included to make the object
+    // compatible with StreamrClient.generateEthereumAccount(), as we typically
+    // use that method to generate the client "auth" option.
+    address?: string
+}
 
 export interface TrackerRegistryContract {
     jsonRpcProvider?: ConnectionInfo
@@ -41,7 +55,7 @@ export interface StrictStreamrClientConfig {
     * Authentication: identity used by this StreamrClient instance.
     * Can contain member privateKey or (window.)ethereum
     */
-    auth?: AuthConfig
+    auth?: XOR<PrivateKeyAuthConfig, ProviderAuthConfig>
 
     /** Attempt to order messages */
     orderMessages: boolean
@@ -224,7 +238,7 @@ export const createStrictConfig = (inputOptions: StreamrClientConfig = {}): Stri
                 ...opts.metrics
             }
         } else {
-            const isEthereumAuth = (opts.auth?.ethereum !== undefined)
+            const isEthereumAuth = ((opts.auth as ProviderAuthConfig)?.ethereum !== undefined)
             return {
                 ...defaults.metrics,
                 periods: isEthereumAuth ? [] : defaults.metrics.periods
@@ -250,10 +264,10 @@ export const createStrictConfig = (inputOptions: StreamrClientConfig = {}): Stri
         // NOTE: sidechain and storageNode settings are not merged with the defaults
     }
 
-    if (options.auth?.privateKey !== undefined) {
-        const { privateKey } = options.auth
+    const privateKey = (options.auth as PrivateKeyAuthConfig)?.privateKey
+    if (privateKey !== undefined) {
         if (typeof privateKey === 'string' && !privateKey.startsWith('0x')) {
-            options.auth.privateKey = `0x${options.auth!.privateKey}`
+            (options.auth as PrivateKeyAuthConfig).privateKey = `0x${privateKey}`
         }
     }
 

@@ -27,16 +27,13 @@ export {
     TrackerRegistryContract,
     ChainConnectionInfo,
     EthereumNetworkConfig,
+    ProviderAuthConfig,
+    ProviderConfig,
+    PrivateKeyAuthConfig,
     STREAMR_STORAGE_NODE_GERMANY,
     STREAM_CLIENT_DEFAULTS,
     validateConfig
 } from './Config'
-export {
-    AuthConfig,
-    ProviderAuthConfig,
-    ProviderConfig,
-    PrivateKeyAuthConfig
-} from './Authentication'
 export { GroupKey as EncryptionKey } from './encryption/GroupKey'
 export { UpdateEncryptionKeyOptions } from './encryption/GroupKeyStore'
 

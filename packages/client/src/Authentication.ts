@@ -2,30 +2,13 @@ import { Wallet } from '@ethersproject/wallet'
 import { Web3Provider } from '@ethersproject/providers'
 import type { Signer } from '@ethersproject/abstract-signer'
 import { computeAddress } from '@ethersproject/transactions'
-import type { ExternalProvider } from '@ethersproject/providers'
 import { getStreamRegistryChainProvider } from './Ethereum'
-import { XOR } from './types'
+import { PrivateKeyAuthConfig, ProviderAuthConfig } from './Config'
 import { pLimitFn } from './utils/promises'
 import pMemoize from 'p-memoize'
 import { EthereumAddress, toEthereumAddress, wait } from '@streamr/utils'
 import { sign } from './utils/signingUtils'
 import { StrictStreamrClientConfig } from './Config'
-
-export type ProviderConfig = ExternalProvider
-
-export interface ProviderAuthConfig {
-    ethereum: ProviderConfig
-}
-
-export interface PrivateKeyAuthConfig {
-    privateKey: string
-    // The address property is not used. It is included to make the object
-    // compatible with StreamrClient.generateEthereumAccount(), as we typically
-    // use that method to generate the client "auth" option.
-    address?: string
-}
-
-export type AuthConfig = XOR<PrivateKeyAuthConfig, ProviderAuthConfig>
 
 export const AuthenticationInjectionToken = Symbol('Authentication')
 
@@ -46,10 +29,10 @@ export const createPrivateKeyAuthentication = (key: string, config: Pick<StrictS
 }
 
 export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'auth' | 'contracts'>): Authentication => {
-    if (config.auth?.privateKey !== undefined) {
-        return createPrivateKeyAuthentication(config?.auth?.privateKey, config)
-    } else if (config.auth?.ethereum !== undefined) {
-        const { ethereum } = config.auth
+    if ((config.auth as PrivateKeyAuthConfig)?.privateKey !== undefined) {
+        return createPrivateKeyAuthentication((config.auth as PrivateKeyAuthConfig).privateKey, config)
+    } else if ((config.auth as ProviderAuthConfig)?.ethereum !== undefined) {
+        const ethereum = (config.auth as ProviderAuthConfig)?.ethereum
         const metamaskProvider = new Web3Provider(ethereum)
         const signer = metamaskProvider.getSigner()
         return {
