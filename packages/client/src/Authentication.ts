@@ -54,7 +54,7 @@ export const createAuthentication = (authConfig: AuthConfig | undefined, ethereu
         return {
             getAddress: pMemoize(async () => {
                 try {
-                    if (!(ethereumConfig && 'request' in ethereum && typeof ethereum.request === 'function')) {
+                    if (!('request' in ethereum && typeof ethereum.request === 'function')) {
                         throw new Error(`invalid ethereum provider ${ethereumConfig}`)
                     }
                     const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
