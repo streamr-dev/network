@@ -33,7 +33,11 @@ export interface TrackerRegistryContract {
     contractAddress: string
 }
 
-export interface ChainConnectionInfo { rpcs: ConnectionInfo[], chainId?: number, name?: string }
+export interface ChainConnectionInfo { 
+    rpcs: ConnectionInfo[]
+    chainId?: number
+    name?: string
+}
 
 // these should come from ETH-184 config package when it's ready
 export interface EthereumNetworkConfig {
