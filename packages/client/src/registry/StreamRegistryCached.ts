@@ -77,7 +77,7 @@ export class StreamRegistryCached {
         return this._isStreamSubscriber(streamId, ethAddress)
     }
 
-    async isPublic(streamId: StreamID): Promise<boolean> {
+    isPublic(streamId: StreamID): Promise<boolean> {
         return this._isPublic(streamId)
     }
 
