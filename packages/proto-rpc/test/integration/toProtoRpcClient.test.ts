@@ -85,6 +85,34 @@ describe('toProtoRpcClient', () => {
         wakeUpClient.wakeUp({ reason: 'School' })
     })
 
+    it('Handles client-side exceptions on RPC calls', async () => {
+        // Setup client
+        const communicator2 = new RpcCommunicator()
+        const helloClient = toProtoRpcClient(new HelloRpcServiceClient(communicator2.getRpcClientTransport()))
+
+        communicator2.setOutgoingMessageListener(async (_message: Uint8Array, _requestId: string, _callContext?: ProtoCallContext) => {
+            throw new Error('testException')
+        })
+
+        await expect(helloClient.sayHello({ myName: 'School' }))
+            .rejects.toThrow('testException')
+
+    })
+
+    it('Handles client-side exceptions on RPC notifications', async () => {
+        // Setup client
+        const communicator2 = new RpcCommunicator()
+        const wakeUpClient = toProtoRpcClient(new WakeUpRpcServiceClient(communicator2.getRpcClientTransport()))
+
+        communicator2.setOutgoingMessageListener(async (_message: Uint8Array, _requestId: string, _callContext?: ProtoCallContext) => {
+            throw new Error('test exception')
+        })
+
+        await expect(wakeUpClient.wakeUp({ reason: 'School' }))
+            .rejects.toThrow('test exception')
+
+    })
+
     it('making a rpc call with protobuf-ts client throws', (done) => {
         // Setup server
         const communicator1 = new RpcCommunicator()

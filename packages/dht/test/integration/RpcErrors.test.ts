@@ -1,18 +1,13 @@
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator'
-import { ClosestPeersRequest, ClosestPeersResponse, Message, MessageType, NodeType, PeerDescriptor, PingRequest, PingResponse, RpcMessage } from '../../src/proto/DhtRpc'
 import { PeerID } from '../../src/helpers/PeerID'
-import { ConnectionType } from '../../src/connection/IConnection'
 import { ITransport } from '../../src/transport/ITransport'
-import * as Err from '../../src/helpers/errors'
 import { v4 } from 'uuid'
 import { DhtRpcOptions, ListeningRpcCommunicator, SimulatorTransport } from '../../src/exports'
-import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
-import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
-import { RoutingRpcCommunicator } from '../../src/transport/RoutingRpcCommunicator'
+import { ProtoRpcClient, toProtoRpcClient } from '@streamr/proto-rpc'
 import { DhtRpcServiceClient } from '../../src/proto/DhtRpc.client'
-import { MockDhtRpc } from '../utils'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
+import { NodeType, PeerDescriptor, PingRequest, PingResponse } from '../../src/proto/DhtRpc'
 
 describe('RPC errors', () => {
 
@@ -23,7 +18,7 @@ describe('RPC errors', () => {
     let rpcCommunicator2: ListeningRpcCommunicator
 
     let client1: ProtoRpcClient<DhtRpcServiceClient>
-    let client2: ProtoRpcClient<DhtRpcServiceClient>
+    //let client2: ProtoRpcClient<DhtRpcServiceClient>
 
     let simulator: Simulator
 
@@ -45,7 +40,6 @@ describe('RPC errors', () => {
     beforeEach(async () => {
 
         simulator = new Simulator(LatencyType.FIXED, 500)
-
         connectorTransport1 = new SimulatorTransport(peerDescriptor1, simulator)
         manager1 = new ConnectionManager({ transportLayer: connectorTransport1 })
         rpcCommunicator1 = new ListeningRpcCommunicator(serviceId, manager1)
@@ -54,7 +48,7 @@ describe('RPC errors', () => {
         connectorTransport2 = new SimulatorTransport(peerDescriptor2, simulator)
         manager2 = new ConnectionManager({ transportLayer: connectorTransport2 })
         rpcCommunicator2 = new ListeningRpcCommunicator(serviceId, manager2)
-        client2 = toProtoRpcClient(new DhtRpcServiceClient(rpcCommunicator2.getRpcClientTransport()))
+        //client2 = toProtoRpcClient(new DhtRpcServiceClient(rpcCommunicator2.getRpcClientTransport()))
 
         await manager1.start((_msg) => peerDescriptor1)
         await manager2.start((_msg) => peerDescriptor2)
@@ -67,10 +61,9 @@ describe('RPC errors', () => {
         simulator.stop()
     })
 
-
     it('Can make a RPC call over WebRTC', async () => {
-
-        let ping = async (request: PingRequest, _context: ServerCallContext): Promise<PingResponse> => {
+        const ping = async (request: PingRequest, _context: ServerCallContext):
+            Promise<PingResponse> => {
             const response: PingResponse = {
                 requestId: request.requestId
             }
@@ -106,6 +99,7 @@ describe('RPC errors', () => {
             .rejects.toThrow('Server does not implement method ping')
     }, 60000)
 
+    /*
     it.only('Throws a client-side exception if WebRTC connection fails', async () => {
 
         const request: PingRequest = {
@@ -120,10 +114,8 @@ describe('RPC errors', () => {
         
         const result = await client1.ping(request, options)
         
-
     }, 60000)
 
-    /*
     it('Disconnects WebRtcConnection while being connected', async () => {
         
         const rpcMessage: RpcMessage = {

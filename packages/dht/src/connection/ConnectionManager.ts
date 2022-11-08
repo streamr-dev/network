@@ -216,7 +216,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             await this.onNewConnection(connection)
         }
 
-        await connection!.send(Message.toBinary(message))
+        return connection!.send(Message.toBinary(message))
     }
 
     public disconnect(peerDescriptor: PeerDescriptor, reason?: string, timeout = DEFAULT_DISCONNECTION_TIMEOUT): void {
