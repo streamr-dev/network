@@ -1,7 +1,7 @@
 import { keyToArrayIndex, toEthereumAddress } from '@streamr/utils'
 import { random } from 'lodash'
-import { MAX_PARTITION_COUNT, StreamMessage, toStreamID } from 'streamr-client-protocol'
-import { fastWallet } from 'streamr-test-utils'
+import { ContentType, EncryptionType, MAX_PARTITION_COUNT, StreamMessage, StreamMessageType, toStreamID } from '@streamr/protocol'
+import { fastWallet } from '@streamr/test-utils'
 import { createAuthentication } from '../../src/Authentication'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { PublishMetadata } from '../../src/publish/Publisher'
@@ -61,12 +61,12 @@ describe('MessageFactory', () => {
                 timestamp: TIMESTAMP
             },
             prevMsgRef: null,
-            messageType: StreamMessage.MESSAGE_TYPES.MESSAGE,
-            encryptionType: StreamMessage.ENCRYPTION_TYPES.AES,
+            messageType: StreamMessageType.MESSAGE,
+            encryptionType: EncryptionType.AES,
             groupKeyId: GROUP_KEY.id,
             newGroupKey: null,
             signature: expect.stringMatching(/^0x[0-9a-f]+$/),
-            contentType: StreamMessage.CONTENT_TYPES.JSON,
+            contentType: ContentType.JSON,
             serializedContent: expect.stringMatching(/^[0-9a-f]+$/)
         })
     })
@@ -79,7 +79,7 @@ describe('MessageFactory', () => {
         })
         const msg = await createMessage({}, messageFactory)
         expect(msg).toMatchObject({
-            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+            encryptionType: EncryptionType.NONE,
             groupKeyId: null,
             serializedContent: JSON.stringify(CONTENT)
         })

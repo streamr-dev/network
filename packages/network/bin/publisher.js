@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* eslint-disable @typescript-eslint/no-require-imports */
 const program = require('commander')
-const { MessageLayer } = require('streamr-client-protocol')
+const { MessageLayer } = require('@streamr/protocol')
 
 const { Logger } = require('../dist/src/helpers/Logger')
 const { version: CURRENT_VERSION } = require('../package.json')

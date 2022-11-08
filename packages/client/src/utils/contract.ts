@@ -1,6 +1,6 @@
 import { Contract, ContractReceipt, ContractTransaction } from '@ethersproject/contracts'
 import EventEmitter from 'eventemitter3'
-import { NameDirectory } from 'streamr-network'
+import { NameDirectory } from '@streamr/network-node'
 import pLimit from 'p-limit'
 import { LoggerFactory } from './LoggerFactory'
 

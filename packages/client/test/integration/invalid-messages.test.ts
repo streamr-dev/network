@@ -1,8 +1,8 @@
 import 'reflect-metadata'
 
 import { wait } from '@streamr/utils'
-import { StreamID, toStreamPartID } from 'streamr-client-protocol'
-import { fastWallet } from 'streamr-test-utils'
+import { StreamID, toStreamPartID } from '@streamr/protocol'
+import { fastWallet } from '@streamr/test-utils'
 import { StreamPermission } from '../../src/permission'
 import { StreamrClient } from '../../src/StreamrClient'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'

@@ -17,9 +17,9 @@ import { StreamDefinition } from './types'
 import { Subscription } from './subscribe/Subscription'
 import { StreamIDBuilder } from './StreamIDBuilder'
 import { StreamrClientEventEmitter, StreamrClientEvents } from './events'
-import { ProxyDirection } from 'streamr-client-protocol'
+import { ProxyDirection } from '@streamr/protocol'
 import { MessageStream, MessageListener } from './subscribe/MessageStream'
-import { Stream, StreamProperties } from './Stream'
+import { Stream, StreamMetadata } from './Stream'
 import { SearchStreamsPermissionFilter } from './registry/searchStreams'
 import { PermissionAssignment, PermissionQuery } from './permission'
 import { MetricsPublisher } from './MetricsPublisher'
@@ -32,6 +32,8 @@ import { PublisherKeyExchange } from './encryption/PublisherKeyExchange'
 import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { convertStreamMessageToMessage, Message } from './Message'
+import { ErrorCode } from './HttpUtil'
+import { omit } from 'lodash'
 
 /**
  * @category Important
@@ -205,19 +207,32 @@ export class StreamrClient {
     /**
      * @category Important
      */
-    createStream(propsOrStreamIdOrPath: StreamProperties | string): Promise<Stream> {
-        return this.streamRegistry.createStream(propsOrStreamIdOrPath)
+    async createStream(propsOrStreamIdOrPath: Partial<StreamMetadata> & { id: string } | string): Promise<Stream> {
+        const props = typeof propsOrStreamIdOrPath === 'object' ? propsOrStreamIdOrPath : { id: propsOrStreamIdOrPath }
+        const streamId = await this.streamIdBuilder.toStreamID(props.id)
+        return this.streamRegistry.createStream(streamId, {
+            partitions: 1,
+            ...omit(props, 'id')
+        })
     }
 
     /**
      * @category Important
      */
-    getOrCreateStream(props: { id: string, partitions?: number }): Promise<Stream> {
-        return this.streamRegistry.getOrCreateStream(props)
+    async getOrCreateStream(props: { id: string, partitions?: number }): Promise<Stream> {
+        try {
+            return await this.getStream(props.id)
+        } catch (err: any) {
+            if (err.errorCode === ErrorCode.NOT_FOUND) {
+                return this.createStream(props)
+            }
+            throw err
+        }
     }
 
-    updateStream(props: StreamProperties): Promise<Stream> {
-        return this.streamRegistry.updateStream(props)
+    async updateStream(props: Partial<StreamMetadata> & { id: string }): Promise<Stream> {
+        const streamId = await this.streamIdBuilder.toStreamID(props.id)
+        return this.streamRegistry.updateStream(streamId, omit(props, 'id'))
     }
 
     deleteStream(streamIdOrPath: string): Promise<void> {

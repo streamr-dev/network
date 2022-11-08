@@ -5,9 +5,9 @@ import { NotFoundError } from '../../src/HttpUtil'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { ConfigTest } from '../../src/ConfigTest'
-import { toStreamID } from 'streamr-client-protocol'
+import { toStreamID } from '@streamr/protocol'
 import { collect } from '../../src/utils/iterators'
-import { fetchPrivateKeyWithGas, randomEthereumAddress } from 'streamr-test-utils'
+import { fetchPrivateKeyWithGas, randomEthereumAddress } from '@streamr/test-utils'
 import { TimeoutsConfig } from '../../src/Config'
 import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 
@@ -226,14 +226,14 @@ describe('StreamRegistry', () => {
             })
             await until(async () => {
                 try {
-                    return (await client.getStream(createdStream.id)).description === createdStream.description
+                    return (await client.getStream(createdStream.id)).getMetadata().description === createdStream.getMetadata().description
                 } catch (err) {
                     return false
                 }
             }, 100000, 1000)
             // check that other fields not overwritten
             const updatedStream = await client.getStream(createdStream.id)
-            expect(updatedStream.partitions).toBe(PARTITION_COUNT)
+            expect(updatedStream.getMetadata().partitions).toBe(PARTITION_COUNT)
         })
     })
 

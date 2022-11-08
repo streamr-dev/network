@@ -3,12 +3,12 @@
  */
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import EventEmitter from 'eventemitter3'
-import { NetworkNodeOptions, createNetworkNode as _createNetworkNode } from 'streamr-network'
+import { NetworkNodeOptions, createNetworkNode as _createNetworkNode } from '@streamr/network-node'
 import { MetricsContext } from '@streamr/utils'
 import { uuid } from './utils/uuid'
 import { pOnce } from './utils/promises'
-import { NetworkConfig, ConfigInjectionToken, TrackerRegistrySmartContract } from './Config'
-import { StreamMessage, StreamPartID, ProxyDirection } from 'streamr-client-protocol'
+import { NetworkConfig, ConfigInjectionToken, TrackerRegistryContract } from './Config'
+import { StreamMessage, StreamPartID, ProxyDirection } from '@streamr/protocol'
 import { DestroySignal } from './DestroySignal'
 import { EthereumConfig, getMainnetProvider } from './Ethereum'
 import { getTrackerRegistryFromContract } from './registry/getTrackerRegistryFromContract'
@@ -95,9 +95,9 @@ export class NetworkNodeFacade {
     }
 
     private async getNormalizedNetworkOptions(): Promise<NetworkNodeOptions> {
-        if ((this.networkConfig.trackers as TrackerRegistrySmartContract).contractAddress) {
+        if ((this.networkConfig.trackers as TrackerRegistryContract).contractAddress) {
             const trackerRegistry = await getTrackerRegistryFromContract({
-                contractAddress: toEthereumAddress((this.networkConfig.trackers as TrackerRegistrySmartContract).contractAddress),
+                contractAddress: toEthereumAddress((this.networkConfig.trackers as TrackerRegistryContract).contractAddress),
                 jsonRpcProvider: getMainnetProvider(this.ethereumConfig)
             })
             return {

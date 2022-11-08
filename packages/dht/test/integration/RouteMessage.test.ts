@@ -3,12 +3,13 @@
 import { DhtNode, Events as DhtNodeEvents } from '../../src/dht/DhtNode'
 import { Message, MessageType, PeerDescriptor, RouteMessageWrapper, RpcMessage } from '../../src/proto/DhtRpc'
 import { runAndWaitForEvents3 } from '../../src/helpers/waitForEvent3'
-import { waitForCondition } from 'streamr-test-utils'
+import { waitForCondition } from '@streamr/utils'
 import { createMockConnectionDhtNode, createWrappedClosestPeersRequest } from '../utils'
 import { PeerID } from '../../src/helpers/PeerID'
 import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { v4 } from 'uuid'
 import { UUID } from '../../src/helpers/UUID'
+
 
 describe('Route Message With Mock Connections', () => {
     let entryPoint: DhtNode

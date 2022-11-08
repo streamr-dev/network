@@ -33,7 +33,7 @@
     "@protobuf-ts/runtime": "^2.8.0",
     "@protobuf-ts/runtime-rpc": "^2.8.0",
     "@streamr/proto-rpc": "^1.2.0",
-    "@streamr/utils": "^1.0.0",
+    "@streamr/utils": "7.0.0-beta.1",
     "bloomfilter": "^0.0.18",
     "k-bucket": "^5.1.0",
     "karma-mocha-reporter": "^2.2.5",
@@ -44,6 +44,7 @@
     "websocket": "^1.0.34"
   },
   "devDependencies": {
+    "@streamr/test-utils": "7.0.0-beta.1",
     "@types/bloomfilter": "^0.0.0",
     "@types/express": "^4.17.13",
     "@types/k-bucket": "^5.0.1",
@@ -72,7 +73,6 @@
     "process": "^0.11.10",
     "setimmediate": "^1.0.5",
     "source-map-loader": "^3.0.0",
-    "streamr-test-utils": "^2.0.0",
     "ts-loader": "^9.3.1",
     "ts-node": "^10.9.1",
     "webpack": "^5.64.1",

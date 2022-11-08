@@ -1,7 +1,7 @@
 import { Contract } from '@ethersproject/contracts'
 import type { Provider } from '@ethersproject/providers'
 
-import { createTrackerRegistry, SmartContractRecord, TrackerRegistry } from 'streamr-client-protocol'
+import { createTrackerRegistry, TrackerRegistryRecord, TrackerRegistry } from '@streamr/protocol'
 import * as trackerRegistryConfig from '../../contracts/TrackerRegistry.json'
 import { EthereumAddress } from '@streamr/utils'
 
@@ -26,9 +26,9 @@ export async function getTrackerRegistryFromContract({
 }: {
     contractAddress: EthereumAddress
     jsonRpcProvider: Provider
-}): Promise<TrackerRegistry<SmartContractRecord>> {
+}): Promise<TrackerRegistry<TrackerRegistryRecord>> {
     const trackers = await fetchTrackers(contractAddress, jsonRpcProvider)
-    const records: SmartContractRecord[] = []
+    const records: TrackerRegistryRecord[] = []
     for (let i = 0; i < trackers.length; ++i) {
         const { metadata, url, nodeAddress } = trackers[i]
         try {

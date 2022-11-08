@@ -1,4 +1,4 @@
-import { StreamID, StreamMessage } from 'streamr-client-protocol'
+import { StreamID, StreamMessage } from '@streamr/protocol'
 import { scoped, Lifecycle, inject } from 'tsyringe'
 import pLimit from 'p-limit'
 import { StreamDefinition } from '../types'
@@ -14,8 +14,8 @@ import { Mapping } from '../utils/Mapping'
 
 export class PublishError extends Error {
 
-    public streamId: StreamID
-    public timestamp: number
+    public readonly streamId: StreamID
+    public readonly timestamp: number
 
     constructor(streamId: StreamID, timestamp: number, cause: Error) {
         // Currently Node and Firefox show the full error chain (this error and

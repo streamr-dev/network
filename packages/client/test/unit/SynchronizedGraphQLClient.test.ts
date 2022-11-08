@@ -6,7 +6,7 @@ import { mockLoggerFactory } from '../test-utils/utils'
 
 const POLL_INTERVAL = 50
 const INDEXING_INTERVAL = 100
-const MOCK_QUERY = 'mock-query'
+const MOCK_QUERY = { query: 'mock-query' }
 
 interface IndexState {
     blockNumber: number

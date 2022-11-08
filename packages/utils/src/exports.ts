@@ -25,6 +25,8 @@ import { wait } from './wait'
 import { waitForEvent } from './waitForEvent'
 import { DuplicateMessageDetector, NumberPair, GapMisMatchError, InvalidNumberingError } from './DuplicateMessageDetector'
 import { TimeoutError, withTimeout } from './withTimeout'
+import { composeAbortSignals } from './composeAbortSignals'
+import { waitForCondition } from './waitForCondition'
 
 export {
     BrandedString,
@@ -37,6 +39,7 @@ export {
     AbortError,
     TimeoutError,
     asAbortable,
+    composeAbortSignals,
     isENSName,
     keyToArrayIndex,
     randomString,
@@ -48,6 +51,7 @@ export {
     toEthereumAddress,
     toEthereumAddressOrENSName,
     wait,
+    waitForCondition,
     waitForEvent,
     withTimeout,
     DuplicateMessageDetector,

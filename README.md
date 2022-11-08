@@ -10,14 +10,17 @@ Monorepo containing all the main components of Streamr Network.
 
 ## Packages
 
+### User-Facing
 * [broker](packages/broker/README.md) (streamr-broker)
 * [client](packages/client/README.md) (streamr-client)
-* [network](packages/network/README.md) (streamr-network)
-* [protocol](packages/protocol/README.md) (streamr-client-protocol)
-* [test-utils](packages/test-utils/README.md) (streamr-test-utils)
-* [utils](packages/utils/README.md) (@streamr/utils)
 * [cli-tools](packages/cli-tools/README.md) (@streamr/cli-tools)
-* [tracker](packages/network-tracker/README.md)(@streamr/network-tracker)
+
+### Internal
+* [network-node](packages/network/README.md) (@streamr/network-node)
+* [network-tracker](packages/network-tracker/README.md) (@streamr/network-tracker)
+* [protocol](packages/protocol/README.md) (@streamr/protocol)
+* [utils](packages/utils/README.md) (@streamr/utils)
+* [test-utils](packages/test-utils/README.md) (@streamr/test-utils)
 
 ## NPM scripts
 | NodeJS version `18.13.x` and NPM version `8.x` is required |
@@ -127,66 +130,55 @@ as you expect e.g. `^X.Y.Z` vs `X.Y.Z`
 
 ## Releasing
 
-### Utils
-```
-git checkout main
+### utils, test-utils, protocol, network-tracker, network-node, client, cli-tools
+
+All the above packages should be released at the same time.
+
+1. `git checkout main`
+2. `git pull`
+3. Change all versions from package.json (and interlinked dependencies) to next version.
+4. `npm run clean && npm run bootstrap && npm run versions`
+5. Look at the output of the above and ensure all versions are linked properly (i.e. no yellow or red markers)
+6. Update client and cli-tool CHANGELOG.md
+7. Add relevant files to git staging
+8. `git commit -m "release(client, cli-tools): vX.Y.Z"`
+9. `git tag client/vX.Y.Z`
+10. `git tag cli-tools/vX.Y.Z`
+11. Push to main `git push origin`
+12. Push to tag `git push origin client/vX.Y.Z`
+13. Push to tag `git push origin cli-tools/vX.Y.Z`
+14. At this point we are to do the actual release
+15. Clean and rebuild project with `npm run clean && npm run bootstrap`
+16. Then we do actual publishing of packages:
+
+```bash
 cd packages/utils
-npm version <SEMVER_OPTION>
-# Go thru other packages' package.json and update @streamr/utils entry (if present) to newly generated version
-git add package.json
-git commit -m "release(utils): vX.Y.Z"
-git tag utils/vX.Y.Z
-git push origin
-git push origin utils/vX.Y.Z
-
 npm publish --access public
-```
 
-### Protocol
-```
-git checkout main
+cd ../..
+
+cd packages/test-utils
+npm publish --access public
+
+cd ../..
+
 cd packages/protocol
-npm version <SEMVER_OPTION>
-# Go thru other packages' package.json and update streamr-client-protocol entry (if present) to newly generated version
-git add package.json
-git commit -m "release(protocol): vX.Y.Z"
-git tag protocol/vX.Y.Z
-git push origin
-git push origin protocol/vX.Y.Z
+npm publish --access public
 
-npm publish
-```
+cd ../..
 
-### Network
-```
-git checkout main
 cd packages/network
-npm version <SEMVER_OPTION>
-# Go thru other packages' package.json and update streamr-network entry (if present) to newly generated version
-git add package.json
-git commit -m "release(network): vX.Y.Z"
-git tag network/vX.Y.Z
-git push origin
-git push origin network/vX.Y.Z
+npm publish --access public
 
-npm publish
-```
+cd ../..
 
-### Client
-- Update & Editorialize CHANGELOG.md as necessary 
+cd packages/network-tracker
+npm publish --access public
 
-```
-git checkout main
+cd ../..
+
+# Publishing client is a bit more complicated
 cd packages/client
-npm version <SEMVER_OPTION>
-# Go thru broker's and cli-tools' package.json and update streamr-client entry to newly generated version
-git add package.json
-git commit -m "release(client): vX.Y.Z"
-git tag client/vX.Y.Z
-git push origin
-git push origin client/vX.Y.Z
-
-# If everything above went thru
 npm run build-production
 cd dist
 npm publish
@@ -196,27 +188,18 @@ cd ..
 npm run docs
 aws s3 cp ./docs s3://api-docs.streamr.network/client/vX.Y --recursive --profile streamr-api-docs-upload
 # and update the API reference link in s3://api-docs.streamr.network/index.html
-```
 
-### cli-tools
-- Update & Editorialize CHANGELOG.md as necessary 
+cd ../..
 
-```
-git checkout main
 cd packages/cli-tools
-npm version <SEMVER_OPTION>
-git add package.json
-git commit -m "release(cli-tools): vX.Y.Z"
-git tag cli-tools/vX.Y.Z
-git push origin
-git push origin cli-tools/vX.Y.Z
-
-npm run build
 npm publish --access public
 ```
 
-
 ### broker
+
+Broker is released independently of other packages because it follows its own versioning
+for the time being.
+
 ```
 git checkout main
 cd packages/broker
@@ -230,4 +213,3 @@ git push origin broker/vX.Y.Z
 npm run build
 npm publish
 ```
-

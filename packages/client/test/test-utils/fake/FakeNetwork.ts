@@ -1,7 +1,7 @@
-import { StreamMessage, StreamMessageType } from 'streamr-client-protocol'
-import { NodeId } from 'streamr-network'
-import { waitForCondition } from 'streamr-test-utils'
+import { StreamMessage, StreamMessageType } from '@streamr/protocol'
+import { NodeId } from '@streamr/network-node'
 import { FakeNetworkNode } from './FakeNetworkNode'
+import { waitForCondition } from '@streamr/utils'
 
 interface Send {
     message: StreamMessage

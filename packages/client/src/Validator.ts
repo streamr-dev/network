@@ -2,7 +2,7 @@
  * Validation Wrapper
  */
 import { inject, Lifecycle, scoped, delay } from 'tsyringe'
-import { StreamMessage, StreamID } from 'streamr-client-protocol'
+import { StreamMessage, StreamID } from '@streamr/protocol'
 import { pOrderedResolve } from './utils/promises'
 import { StreamRegistryCached } from './registry/StreamRegistryCached'
 import StreamMessageValidator from './StreamMessageValidator'
@@ -23,8 +23,9 @@ export class Validator extends StreamMessageValidator {
         @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached
     ) {
         super({
-            getStream: (streamId: StreamID) => {
-                return streamRegistryCached.getStream(streamId)
+            getPartitionCount: async (streamId: StreamID) => {
+                const stream = await streamRegistryCached.getStream(streamId)
+                return stream.getMetadata().partitions
             },
             isPublisher: (publisherId: EthereumAddress, streamId: StreamID) => {
                 return streamRegistryCached.isStreamPublisher(streamId, publisherId)

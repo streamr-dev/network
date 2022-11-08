@@ -1,7 +1,7 @@
 import { Stream, StreamrClient } from 'streamr-client'
 import { Tracker } from '@streamr/network-tracker'
 import mqtt from 'async-mqtt'
-import { fetchPrivateKeyWithGas, Queue } from 'streamr-test-utils'
+import { fetchPrivateKeyWithGas, Queue } from '@streamr/test-utils'
 import { Broker } from '../../../../src/broker'
 import { createClient, startBroker, createTestStream, startTestTracker } from '../../../utils'
 import { wait } from '@streamr/utils'

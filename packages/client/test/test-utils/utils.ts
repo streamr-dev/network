@@ -1,12 +1,12 @@
 import crypto from 'crypto'
 import { DependencyContainer } from 'tsyringe'
-import { fastPrivateKey, fetchPrivateKeyWithGas } from 'streamr-test-utils'
+import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { EthereumAddress, Logger, wait } from '@streamr/utils'
 import { Wallet } from 'ethers'
-import { StreamMessage, StreamPartID, StreamPartIDUtils, MAX_PARTITION_COUNT } from 'streamr-client-protocol'
+import { StreamMessage, StreamPartID, StreamPartIDUtils, MAX_PARTITION_COUNT } from '@streamr/protocol'
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils/utils'
-import { Stream, StreamProperties } from '../../src/Stream'
+import { Stream, StreamMetadata } from '../../src/Stream'
 import { ConfigTest } from '../../src/ConfigTest'
 import { STREAM_CLIENT_DEFAULTS, StreamrClientConfig } from '../../src/Config'
 import { GroupKey } from '../../src/encryption/GroupKey'
@@ -42,7 +42,7 @@ export const createRelativeTestStreamId = (module: NodeModule, suffix?: string):
     return counterId(`/test/${randomTestRunId}/${getTestName(module)}${(suffix !== undefined) ? '-' + suffix : ''}`, '-')
 }
 
-export const createTestStream = async (streamrClient: StreamrClient, module: NodeModule, props?: Partial<StreamProperties>): Promise<Stream> => {
+export const createTestStream = async (streamrClient: StreamrClient, module: NodeModule, props?: Partial<StreamMetadata>): Promise<Stream> => {
     const stream = await streamrClient.createStream({
         id: createRelativeTestStreamId(module),
         ...props
@@ -149,11 +149,11 @@ export const createStreamRegistryCached = (opts: {
     isStreamSubscriber?: boolean
 }): StreamRegistryCached => {
     return {
-        getStream: async () => {
-            return {
+        getStream: async () => ({
+            getMetadata: () => ({
                 partitions: opts?.partitionCount ?? 1
-            } as any
-        },
+            })
+        }),
         isPublic: async () => {
             return opts.isPublicStream ?? false
         },

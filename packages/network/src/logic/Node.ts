@@ -6,7 +6,7 @@ import {
     StreamMessage,
     StreamMessageType,
     StreamPartID
-} from 'streamr-client-protocol'
+} from '@streamr/protocol'
 import { Event as NodeToNodeEvent, NodeToNode } from '../protocol/NodeToNode'
 import { NodeToTracker } from '../protocol/NodeToTracker'
 import { Metric, MetricsContext, MetricsDefinition, RateMetric } from '@streamr/utils'

@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
-import { GroupKeyMessage, GroupKeyRequest, StreamMessage } from 'streamr-client-protocol'
-import { fastWallet } from 'streamr-test-utils'
+import { GroupKeyMessage, GroupKeyRequest, StreamMessageType } from '@streamr/protocol'
+import { fastWallet } from '@streamr/test-utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
@@ -92,7 +92,7 @@ describe('resend and subscribe', () => {
         })
         expect(receivedMessage2!.streamMessage.groupKeyId).toBe(groupKey.id)
         const groupKeyRequests = environment.getNetwork().getSentMessages({
-            messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST
+            messageType: StreamMessageType.GROUP_KEY_REQUEST
         })
         expect(groupKeyRequests.length).toBe(1)
         expect((GroupKeyMessage.fromStreamMessage(groupKeyRequests[0]) as GroupKeyRequest).groupKeyIds).toEqual([groupKey.id])

@@ -1,11 +1,10 @@
 import type { StreamStorageRegistry as StreamStorageRegistryContract } from '../ethereumArtifacts/StreamStorageRegistry'
 import StreamStorageRegistryArtifact from '../ethereumArtifacts/StreamStorageRegistry.json'
-import { StreamQueryResult } from './StreamRegistry'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 import { ConfigInjectionToken } from '../Config'
-import { Stream, StreamProperties } from '../Stream'
+import { Stream } from '../Stream'
 import { EthereumConfig, getStreamRegistryChainProvider, getStreamRegistryOverrides } from '../Ethereum'
-import { StreamID, toStreamID } from 'streamr-client-protocol'
+import { StreamID, toStreamID } from '@streamr/protocol'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { waitForTx } from '../utils/contract'
 import { SynchronizedGraphQLClient } from '../utils/SynchronizedGraphQLClient'
@@ -15,11 +14,14 @@ import { ContractFactory } from '../ContractFactory'
 import { EthereumAddress, Logger, toEthereumAddress } from '@streamr/utils'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { StreamFactory } from '../StreamFactory'
+import { GraphQLQuery } from '../utils/GraphQLClient'
+import { collect } from '../utils/iterators'
+import { min } from 'lodash'
 
 export interface StorageNodeAssignmentEvent {
-    streamId: string
-    nodeAddress: EthereumAddress
-    blockNumber: number
+    readonly streamId: StreamID
+    readonly nodeAddress: EthereumAddress
+    readonly blockNumber: number
 }
 
 interface NodeQueryResult {
@@ -38,20 +40,6 @@ interface StoredStreamQueryResult {
 
 interface AllNodesQueryResult {
     nodes: NodeQueryResult[]
-}
-
-interface StorageNodeQueryResult {
-    node: {
-        id: string
-        metadata: string
-        lastSeen: string
-        storedStreams: StreamQueryResult[]
-    }
-    _meta: {
-        block: {
-            number: number
-        }
-    }
 }
 
 /**
@@ -96,7 +84,7 @@ export class StreamStorageRegistry {
             (emit: (payload: StorageNodeAssignmentEvent) => void) => {
                 const listener = (streamId: string, nodeAddress: string, extra: any) => {
                     emit({
-                        streamId,
+                        streamId: toStreamID(streamId),
                         nodeAddress: toEthereumAddress(nodeAddress),
                         blockNumber: extra.blockNumber
                     })
@@ -146,17 +134,41 @@ export class StreamStorageRegistry {
     }
 
     async getStoredStreams(nodeAddress: EthereumAddress): Promise<{ streams: Stream[], blockNumber: number }> {
-        const query = StreamStorageRegistry.buildStorageNodeQuery(nodeAddress)
         this.logger.debug('getting stored streams of node %s', nodeAddress)
-        const res = await this.graphQLClient.sendQuery(query) as StorageNodeQueryResult
-        const streams = res.node.storedStreams.map((stream) => {
-            const props: StreamProperties = Stream.parsePropertiesFromMetadata(stream.metadata)
-            return this.streamFactory.createStream({ ...props, id: toStreamID(stream.id) }) // toStreamID() not strictly necessary
+        const blockNumbers: number[] = []
+        const res = await collect(this.graphQLClient.fetchPaginatedResults(
+            (lastId: string, pageSize: number) => {
+                const query = `{
+                    node (id: "${nodeAddress}") {
+                        id
+                        metadata
+                        lastSeen
+                        storedStreams (first: ${pageSize} orderBy: "id" where: { id_gt: "${lastId}"}) {
+                            id,
+                            metadata
+                        }
+                    }
+                    _meta {
+                        block {
+                            number
+                        }
+                    }
+                }`
+                return { query }
+            },
+            (response: any) => {
+                // eslint-disable-next-line no-underscore-dangle
+                blockNumbers.push(response._meta.block.number)
+                return (response.node !== null) ? response.node.storedStreams : []
+            }
+        ))
+        const streams = res.map((stream: any) => {
+            const props = Stream.parseMetadata(stream.metadata)
+            return this.streamFactory.createStream(toStreamID(stream.id), props) // toStreamID() not strictly necessary
         })
         return {
             streams,
-            // eslint-disable-next-line no-underscore-dangle
-            blockNumber: res._meta.block.number
+            blockNumber: min(blockNumbers)!
         }
     }
 
@@ -182,7 +194,7 @@ export class StreamStorageRegistry {
     // GraphQL queries
     // --------------------------------------------------------------------------------------------
 
-    private static buildAllNodesQuery(): string {
+    private static buildAllNodesQuery(): GraphQLQuery {
         const query = `{
             nodes {
                 id,
@@ -190,10 +202,10 @@ export class StreamStorageRegistry {
                 lastSeen
             }
         }`
-        return JSON.stringify({ query })
+        return { query }
     }
 
-    private static buildStoredStreamQuery(streamId: StreamID): string {
+    private static buildStoredStreamQuery(streamId: StreamID): GraphQLQuery {
         const query = `{
             stream (id: "${streamId}") {
                 id,
@@ -205,26 +217,6 @@ export class StreamStorageRegistry {
                 }
             }
         }`
-        return JSON.stringify({ query })
-    }
-
-    private static buildStorageNodeQuery(nodeAddress: EthereumAddress): string {
-        const query = `{
-            node (id: "${nodeAddress}") {
-                id,
-                metadata,
-                lastSeen,
-                storedStreams (first:1000) {
-                    id,
-                    metadata,
-                }
-            }
-            _meta {
-                block {
-                    number
-                }
-            }
-        }`
-        return JSON.stringify({ query })
+        return { query }
     }
 }

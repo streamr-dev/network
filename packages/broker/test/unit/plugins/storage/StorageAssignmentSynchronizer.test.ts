@@ -3,7 +3,7 @@ import {
     EMPTY_DIFF,
     SetMembershipSynchronizer
 } from '../../../../src/plugins/storage/SetMembershipSynchronizer'
-import { StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
+import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 const { parse } = StreamPartIDUtils
 
 const SP1 = parse('s1#0')

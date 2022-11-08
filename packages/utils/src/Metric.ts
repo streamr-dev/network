@@ -37,6 +37,7 @@ export class Metric {
     private readonly eventEmitter: EventEmitter<MetricEvents> = new EventEmitter()
     private readonly samplerFactory: (metric: Metric) => Sampler
 
+    /** @internal */
     constructor(samplerFactory: (metric: Metric) => Sampler, initialValue?: number) {
         this.samplerFactory = samplerFactory
         this.latestValue = initialValue
@@ -51,21 +52,24 @@ export class Metric {
         return this.latestValue
     }
 
+    /** @internal */
     on<T extends keyof MetricEvents>(eventName: T, listener: MetricEvents[T]): void {
         this.eventEmitter.on(eventName, listener as any)
     }
 
+    /** @internal */
     off<T extends keyof MetricEvents>(eventName: T, listener: MetricEvents[T]): void {
         this.eventEmitter.off(eventName, listener as any)
     }
 
+    /** @internal */
     createSampler(): Sampler {
         return this.samplerFactory(this)
     }
 }
 
 /*
- * Sum of all records within a sampling period. 
+ * Sum of all records within a sampling period.
  *
  * E.g. count of failed connections
  */
@@ -76,7 +80,7 @@ class CountSampler extends Sampler {
     protected onRecord(value: number): void {
         this.sum += value
     }
-    
+
     getAggregatedValue(): number | undefined {
         return this.sum
     }
@@ -122,8 +126,8 @@ export class AverageMetric extends Metric {
 /*
  * Average level of the records during a sampling period. Takes the average of the
  * recorded values, but also includes the current level as a first sample when
- * the sampling starts. 
- * 
+ * the sampling starts.
+ *
  * E.g. average count of currently active connections
  */
 class LevelSampler extends AverageSampler {
@@ -205,9 +209,9 @@ export class MetricsContext {
     getMetric(id: string): Metric | undefined {
         return this.metrics.get(id)
     }
-    
+
     createReportProducer(
-        onReport: (report: MetricsReport) => void, 
+        onReport: (report: MetricsReport) => void,
         interval: number,
         formatNumber?: (value: number) => string
     ): { stop: () => void } {

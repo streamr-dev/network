@@ -3,8 +3,8 @@ import { DescriptionType } from 'node-datachannel'
 import { MessageQueue } from '../../src/connection/MessageQueue'
 import { NodeWebRtcConnection } from '../../src/connection/webrtc/NodeWebRtcConnection'
 import { DeferredConnectionAttempt } from '../../src/connection/webrtc/DeferredConnectionAttempt'
-import { runAndWaitForEvents, waitForCondition } from 'streamr-test-utils'
-import { wait } from '@streamr/utils'
+import { runAndWaitForEvents } from '@streamr/test-utils'
+import { wait, waitForCondition } from '@streamr/utils'
 
 /**
  * Test that Connections can be established and message sent between them successfully. Tracker

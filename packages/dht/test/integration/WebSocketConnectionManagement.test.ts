@@ -4,10 +4,10 @@ import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { PeerID } from '../../src/helpers/PeerID'
-import { waitForCondition } from 'streamr-test-utils'
 import { ConnectionType } from '../../src/connection/IConnection'
 import { ITransport } from '../../src/transport/ITransport'
 import * as Err from '../../src/helpers/errors'
+import { waitForCondition } from '@streamr/utils'
 
 describe('WebSocket Connection Management', () => {
 

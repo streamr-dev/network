@@ -2,8 +2,8 @@ import 'reflect-metadata'
 
 import { Wallet } from '@ethersproject/wallet'
 import { toEthereumAddress } from '@streamr/utils'
-import { EncryptionType, MessageID, StreamMessage, StreamPartID, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
-import { fastWallet, randomEthereumAddress } from "streamr-test-utils"
+import { EncryptionType, MessageID, StreamMessage, StreamPartID, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
+import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
 import { Stream } from '../../src/Stream'
 import { createAuthentication } from '../../src/Authentication'
 import { DestroySignal } from '../../src/DestroySignal'
@@ -13,7 +13,7 @@ import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { createSubscribePipeline } from "../../src/subscribe/subscribePipeline"
 import { collect } from '../../src/utils/iterators'
 import { mockLoggerFactory } from '../test-utils/utils'
-import { GroupKey, GroupKeyId } from './../../src/encryption/GroupKey'
+import { GroupKey } from './../../src/encryption/GroupKey'
 import { MessageStream } from './../../src/subscribe/MessageStream'
 
 const CONTENT = {
@@ -29,7 +29,7 @@ describe('subscribePipeline', () => {
     const createMessage = async (opts: {
         serializedContent?: string
         encryptionType?: EncryptionType
-        groupKeyId?: GroupKeyId
+        groupKeyId?: string
     } = {}): Promise<StreamMessage<unknown>> => {
         const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
         return createSignedMessage({
@@ -53,8 +53,8 @@ describe('subscribePipeline', () => {
         streamPartId = StreamPartIDUtils.parse(`${randomEthereumAddress()}/path#0`)
         publisher = fastWallet()
         const stream = new Stream(
+            toStreamID(streamPartId),
             {
-                id: toStreamID(streamPartId),
                 partitions: 1,
             },
             undefined as any,

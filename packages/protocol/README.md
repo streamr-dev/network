@@ -1,8 +1,8 @@
-# streamr-client-protocol
+# @streamr/protocol
 
 TypeScript implementations of [Streamr Protocol](https://github.com/streamr-dev/streamr-specs/blob/master/PROTOCOL.md) messages and their serialization and deserialization. This is shared code used by other packages in this monorepo.
 
-The package is available on npm as `streamr-client-protocol`.
+The package is available on npm as `@streamr/protocol`.
  
  ## Table of Contents
 - [Use](#use)
@@ -73,22 +73,3 @@ if (controlMessage.type === ControlMessage.TYPES.UnicastMessage) {
     throw new Error(`Unknown type: ${controlMessage.type}`)
 }
 ```
-
-## Release
-
-Publishing to NPM is automated via Github Actions. Follow the steps below to publish stable (`latest`) or `beta`.
-
-### Publishing stable (latest)
-1. `git checkout master && git pull`
-2. Update version with either `npm version [patch|minor|major]`. Use semantic versioning
-https://semver.org/. Files package.json and package-lock.json will be automatically updated, and an appropriate git commit and tag created. 
-3. `git push --follow-tags`
-4. Wait for Github Actions to run tests
-5. If tests passed, Github Actions will publish the new version to NPM
-
-### Publishing beta
-1. Update version with either `npm version [prepatch|preminor|premajor] --preid=beta`. Use semantic versioning
-https://semver.org/. Files package.json and package-lock.json will be automatically updated, and an appropriate git commit and tag created. 
-2. `git push --follow-tags`
-3. Wait for Github Actions to run tests
-4. If tests passed, Github Actions will publish the new version to NPM

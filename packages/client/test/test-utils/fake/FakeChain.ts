@@ -1,5 +1,5 @@
-import { StreamID } from 'streamr-client-protocol'
-import { StreamProperties } from '../../../src/Stream'
+import { StreamID } from '@streamr/protocol'
+import { StreamMetadata } from '../../../src/Stream'
 import { StreamPermission } from '../../../src/permission'
 import { EthereumAddress, Multimap } from '@streamr/utils'
 import { StorageNodeMetadata } from '../../../src/registry/StorageNodeRegistry'
@@ -8,7 +8,7 @@ export type PublicPermissionTarget = 'public'
 export const PUBLIC_PERMISSION_TARGET: PublicPermissionTarget = 'public'
 
 export interface StreamRegistryItem {
-    metadata: Omit<StreamProperties, 'id'>
+    metadata: StreamMetadata
     permissions: Multimap<EthereumAddress | PublicPermissionTarget, StreamPermission>
 }
 

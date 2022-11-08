@@ -1,10 +1,10 @@
 import { Tracker } from '../../src/logic/Tracker'
 import http from 'http'
 import { startTracker } from '../../src/startTracker'
-import { waitForCondition } from 'streamr-test-utils'
 import 'jest-extended'
-import { createNetworkNode, NetworkNode } from 'streamr-network'
-import { StreamPartIDUtils } from 'streamr-client-protocol'
+import { createNetworkNode, NetworkNode } from '@streamr/network-node'
+import { StreamPartIDUtils } from '@streamr/protocol'
+import { waitForCondition } from '@streamr/utils'
 
 function getHttp(url: string) {
     return new Promise((resolve, reject) => {

@@ -2,15 +2,16 @@ import { NetworkNode } from '../../src/logic/NetworkNode'
 import { startTracker, Tracker } from '@streamr/network-tracker'
 import { createNetworkNode } from '../../src/createNetworkNode'
 import {
+    EncryptionType,
     GroupKeyRequest,
     GroupKeyResponse,
     MessageID,
     ProxyDirection,
-    SmartContractRecord,
+    TrackerRegistryRecord,
     StreamMessage,
     StreamMessageType,
     StreamPartIDUtils,
-} from 'streamr-client-protocol'
+} from '@streamr/protocol'
 import { toEthereumAddress, waitForEvent } from '@streamr/utils'
 import { Event as NodeEvent } from '../../src/logic/Node'
 
@@ -19,7 +20,7 @@ describe('GroupKey exchange via proxy connections', () => {
     let subscriber: NetworkNode
     let proxy: NetworkNode
     let tracker: Tracker
-    let trackerInfo: SmartContractRecord
+    let trackerInfo: TrackerRegistryRecord
 
     const publisherUserId = toEthereumAddress('0x823A026e226EB47980c88616e01E1D3305Ef8Ecb')
     const subscriberUserId = toEthereumAddress('0x73E6183bf9b79D30533bEC7B28e982e9Af649B23')
@@ -95,7 +96,7 @@ describe('GroupKey exchange via proxy connections', () => {
                 '0'
             ),
             messageType: StreamMessageType.GROUP_KEY_REQUEST,
-            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+            encryptionType: EncryptionType.NONE,
             content: requestContent,
             signature: 'signature'
         })
@@ -126,7 +127,7 @@ describe('GroupKey exchange via proxy connections', () => {
                 '0'
             ),
             messageType: StreamMessageType.GROUP_KEY_RESPONSE,
-            encryptionType: StreamMessage.ENCRYPTION_TYPES.RSA,
+            encryptionType: EncryptionType.RSA,
             content: responseContent,
             signature: 'signature'
         })

@@ -2,7 +2,7 @@
 const path = require('path')
 
 const express = require('express')
-const { KeyServer } = require('streamr-test-utils')
+const { KeyServer } = require('@streamr/test-utils')
 
 const app = express()
 const keyserver = new KeyServer()

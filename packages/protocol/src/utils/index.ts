@@ -1,10 +1,10 @@
-import { createTrackerRegistry, TrackerRegistry, SmartContractRecord } from "./TrackerRegistry"
+import { createTrackerRegistry, TrackerRegistry, TrackerRegistryRecord } from "./TrackerRegistry"
 import { StreamID, toStreamID, StreamIDUtils } from "./StreamID"
 import { StreamPartID, toStreamPartID, StreamPartIDUtils, MAX_PARTITION_COUNT } from "./StreamPartID"
 import { ProxyDirection } from "./types"
 
 export {
-    SmartContractRecord,
+    TrackerRegistryRecord,
     TrackerRegistry,
     createTrackerRegistry,
     toStreamID,

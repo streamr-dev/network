@@ -1,5 +1,5 @@
 import WebSocket from 'ws'
-import { Queue } from 'streamr-test-utils'
+import { Queue } from '@streamr/test-utils'
 import { waitForEvent } from '@streamr/utils'
 import { Message } from '../../../../src/helpers/PayloadFormat'
 import { createMessagingPluginTest } from '../../createMessagingPluginTest'

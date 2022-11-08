@@ -7,7 +7,7 @@ import sqlite3 from 'sqlite3'
 import { pOnce } from '../promises'
 
 import { Persistence } from './Persistence'
-import { StreamID } from 'streamr-client-protocol'
+import { StreamID } from '@streamr/protocol'
 import { Logger, wait } from '@streamr/utils'
 import { LoggerFactory } from '../LoggerFactory'
 

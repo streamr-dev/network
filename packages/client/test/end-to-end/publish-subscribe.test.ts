@@ -1,12 +1,13 @@
 import { Wallet } from 'ethers'
-import { StreamID, toStreamPartID } from 'streamr-client-protocol'
-import { createNetworkNode } from 'streamr-network'
-import { fastWallet, fetchPrivateKeyWithGas, waitForCondition } from 'streamr-test-utils'
+import { StreamID, toStreamPartID } from '@streamr/protocol'
+import { createNetworkNode } from '@streamr/network-node'
+import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { ConfigTest } from '../../src/ConfigTest'
 import { PermissionAssignment, StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { createTestStream } from '../test-utils/utils'
+import { waitForCondition } from '@streamr/utils'
 
 const TIMEOUT = 20 * 1000
 
