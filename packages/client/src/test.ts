@@ -58,6 +58,12 @@ const main = async () => {
     permissions.forEach((p, i) => {
         console.log(i + ': ' + JSON.stringify(p))
     })
+    try {
+        await mainClient.getPermissions('0x2b5ad5c4795c026514f8317c7a215e218dccd6cf/non-existent')
+    } catch (e) {
+        console.log(e.constructor.name)
+        console.log(e.message)
+    }
 }
 
 main()
