@@ -30,9 +30,11 @@ describe('WebSocket IConnection Requests', () => {
     })
 
     afterEach(async () => {
-        await epDhtNode.stop()
-        await node1.stop()
-        await node2.stop()
+        await Promise.all([
+            epDhtNode.stop(),
+            node1.stop(),
+            node2.stop()
+        ])
     })
 
     it('Happy Path', async () => {

@@ -542,6 +542,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
                     .catch((err) => this.onClosestPeersRequestFailed(nextPeer!.peerId, err))
                     .finally(() => {
                         this.outgoingClosestPeersRequestsCounter--
+                        if (this.stopped) {
+                            this.emit('joinCompleted')
+                            this.ongoingJoinOperation = false
+                        }
                         if (this.outgoingClosestPeersRequestsCounter === 0 && this.ongoingJoinOperation) {
                             if (this.isJoinCompleted()) {
                                 this.emit('joinCompleted')
