@@ -24,13 +24,7 @@ export { SearchStreamsPermissionFilter } from './registry/searchStreams'
 export {
     StreamrClientConfig,
     StrictStreamrClientConfig,
-    SubscribeConfig,
     TrackerRegistryContract,
-    NetworkConfig,
-    DecryptionConfig,
-    CacheConfig,
-    MetricsConfig,
-    MetricsPeriodConfig,
     STREAMR_STORAGE_NODE_GERMANY,
     STREAM_CLIENT_DEFAULTS,
     validateConfig

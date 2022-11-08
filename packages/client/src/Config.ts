@@ -16,64 +16,15 @@ import { NetworkNodeOptions, STREAMR_ICE_SERVERS } from '@streamr/network-node'
 import type { ConnectionInfo } from '@ethersproject/web'
 import { generateClientId } from './utils/utils'
 
-export interface CacheConfig {
-    maxSize: number
-    maxAge: number
-}
-
-export interface TimeoutsConfig {
-    theGraph: {
-        timeout: number
-        retryInterval: number
-    }
-    storageNode: {
-        timeout: number
-        retryInterval: number
-    }
-    jsonRpc: {
-        timeout: number
-        retryInterval: number
-    }
-    httpFetchTimeout: number
-}
-
-export interface SubscribeConfig {
-    /** Attempt to order messages */
-    orderMessages: boolean
-    gapFill: boolean
-    maxGapRequests: number
-    retryResendAfter: number
-    gapFillTimeout: number
-}
-
 export interface TrackerRegistryContract {
     jsonRpcProvider?: ConnectionInfo
     contractAddress: string
 }
 
-export type NetworkConfig = Omit<NetworkNodeOptions, 'trackers' | 'metricsContext'> & {
-    trackers: TrackerRegistryRecord[] | TrackerRegistryContract
-}
-
-export interface DecryptionConfig {
-    keyRequestTimeout: number
-    maxKeyRequestsPerSecond: number
-}
-
-export interface MetricsPeriodConfig {
-    streamId: string
-    duration: number
-}
-
-export interface MetricsConfig {
-    periods: MetricsPeriodConfig[]
-    maxPublishDelay: number
-}
-
 /**
  * @category Important
  */
-export type StrictStreamrClientConfig = {
+export interface StrictStreamrClientConfig {
     /** Custom human-readable debug id for client. Used in logging. */
     id: string
     logLevel: LogLevel
@@ -82,14 +33,55 @@ export type StrictStreamrClientConfig = {
     * Can contain member privateKey or (window.)ethereum
     */
     auth?: AuthConfig
-    network: NetworkConfig
+
+    /** Attempt to order messages */
+    orderMessages: boolean
+    gapFill: boolean
+    maxGapRequests: number
+    retryResendAfter: number
+    gapFillTimeout: number
+
+    network: Omit<NetworkNodeOptions, 'trackers' | 'metricsContext'> & {
+        trackers: TrackerRegistryRecord[] | TrackerRegistryContract
+    }
+
     contracts: EthereumConfig
-    decryption: DecryptionConfig
-    cache: CacheConfig
-    metrics: MetricsConfig
+
+    decryption: {
+        keyRequestTimeout: number
+        maxKeyRequestsPerSecond: number
+    }
+
+    cache: {
+        maxSize: number
+        maxAge: number
+    }
+
+    metrics: {
+        periods: {
+            streamId: string
+            duration: number
+        }[]
+        maxPublishDelay: number
+    }
+
     /** @internal */
-    _timeouts: TimeoutsConfig
-} & SubscribeConfig
+    _timeouts: {
+        theGraph: {
+            timeout: number
+            retryInterval: number
+        }
+        storageNode: {
+            timeout: number
+            retryInterval: number
+        }
+        jsonRpc: {
+            timeout: number
+            retryInterval: number
+        }
+        httpFetchTimeout: number
+    }
+}
 
 export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'network' | 'contracts' | 'decryption' | 'metrics'> & {
     network: Partial<StrictStreamrClientConfig['network']>
