@@ -28,7 +28,6 @@ export {
     ChainConnectionInfo,
     EthereumNetworkConfig,
     ProviderAuthConfig,
-    ProviderConfig,
     PrivateKeyAuthConfig,
     STREAMR_STORAGE_NODE_GERMANY,
     STREAM_CLIENT_DEFAULTS,

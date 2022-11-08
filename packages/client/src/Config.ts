@@ -16,10 +16,8 @@ import type { ConnectionInfo } from '@ethersproject/web'
 import { generateClientId } from './utils/utils'
 import { XOR } from './types'
 
-export type ProviderConfig = ExternalProvider // TODO maybe we could remove this alias and just export ExternalProvider in index-exports?
-
 export interface ProviderAuthConfig {
-    ethereum: ProviderConfig
+    ethereum: ExternalProvider
 }
 
 export interface PrivateKeyAuthConfig {
