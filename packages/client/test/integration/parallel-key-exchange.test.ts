@@ -60,8 +60,10 @@ describe('parallel key exchange', () => {
             const messageFactory = new MessageFactory({
                 streamId: stream.id,
                 authentication: createAuthentication({
-                    privateKey: publisher.wallet.privateKey
-                }, undefined as any),
+                    auth: {
+                        privateKey: publisher.wallet.privateKey
+                    }
+                } as any),
                 streamRegistry: createStreamRegistryCached({
                     partitionCount: 1,
                     isPublicStream: false,

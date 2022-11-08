@@ -49,7 +49,7 @@ export class ContractFactory {
             name,
             this.loggerFactory,
             // The current maxConcurrentCalls value is just a placeholder as we don't support concurrent writes (as we don't use nonces).
-            // When we add the support, we should use this.ethereumConfig.maxConcurrentCalls here.
+            // When we add the support, we should use the maxConcurrentCalls option from client config here.
             // Also note that if we'd use a limit of 1, it wouldn't make the concurrent transactions to a sequence of transactions,
             // because the concurrency limit covers only submits, not tx.wait() calls.
             999999

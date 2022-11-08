@@ -95,7 +95,7 @@ export class NetworkNodeFacade {
         if ((this.config.network.trackers as TrackerRegistryContract).contractAddress) {
             const trackerRegistry = await getTrackerRegistryFromContract({
                 contractAddress: toEthereumAddress((this.config.network.trackers as TrackerRegistryContract).contractAddress),
-                jsonRpcProvider: getMainnetProvider(this.config.contracts)
+                jsonRpcProvider: getMainnetProvider(this.config)
             })
             return {
                 ...this.config.network,

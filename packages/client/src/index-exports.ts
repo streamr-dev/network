@@ -25,6 +25,8 @@ export {
     StreamrClientConfig,
     StrictStreamrClientConfig,
     TrackerRegistryContract,
+    ChainConnectionInfo,
+    EthereumNetworkConfig,
     STREAMR_STORAGE_NODE_GERMANY,
     STREAM_CLIENT_DEFAULTS,
     validateConfig
@@ -35,11 +37,6 @@ export {
     ProviderConfig,
     PrivateKeyAuthConfig
 } from './Authentication'
-export {
-    EthereumConfig,
-    ChainConnectionInfo,
-    EthereumNetworkConfig,
-} from './Ethereum'
 export { GroupKey as EncryptionKey } from './encryption/GroupKey'
 export { UpdateEncryptionKeyOptions } from './encryption/GroupKeyStore'
 

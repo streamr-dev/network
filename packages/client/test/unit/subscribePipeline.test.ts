@@ -43,8 +43,10 @@ describe('subscribePipeline', () => {
             ),
             serializedContent: JSON.stringify(CONTENT),
             authentication: createAuthentication({
-                privateKey: publisher.privateKey
-            }, undefined as any),
+                auth: {
+                    privateKey: publisher.privateKey
+                }
+            } as any),
             ...opts
         })
     }

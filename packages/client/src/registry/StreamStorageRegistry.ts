@@ -62,7 +62,7 @@ export class StreamStorageRegistry {
         @inject(ConfigInjectionToken) private config: Pick<StrictStreamrClientConfig, 'contracts'>
     ) {
         this.logger = loggerFactory.createLogger(module)
-        const chainProvider = getStreamRegistryChainProvider(config.contracts)
+        const chainProvider = getStreamRegistryChainProvider(config)
         this.streamStorageRegistryContractReadonly = this.contractFactory.createReadContract(
             toEthereumAddress(this.config.contracts.streamStorageRegistryChainAddress),
             StreamStorageRegistryArtifact,
@@ -115,7 +115,7 @@ export class StreamStorageRegistry {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.logger.debug('adding stream %s to node %s', streamId, nodeAddress)
         await this.connectToContract()
-        const ethersOverrides = getStreamRegistryOverrides(this.config.contracts)
+        const ethersOverrides = getStreamRegistryOverrides(this.config)
         await waitForTx(this.streamStorageRegistryContract!.addStorageNode(streamId, nodeAddress, ethersOverrides))
     }
 
@@ -123,7 +123,7 @@ export class StreamStorageRegistry {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.logger.debug('removing stream %s from node %s', streamId, nodeAddress)
         await this.connectToContract()
-        const ethersOverrides = getStreamRegistryOverrides(this.config.contracts)
+        const ethersOverrides = getStreamRegistryOverrides(this.config)
         await waitForTx(this.streamStorageRegistryContract!.removeStorageNode(streamId, nodeAddress, ethersOverrides))
     }
 

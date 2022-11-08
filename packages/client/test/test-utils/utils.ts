@@ -102,7 +102,7 @@ export const createMockMessage = async (
     const factory = new MessageFactory({
         authentication: createAuthentication({
             privateKey: opts.publisher.privateKey
-        }, undefined as any),
+        } as any),
         streamId,
         streamRegistry: createStreamRegistryCached({
             partitionCount: MAX_PARTITION_COUNT,
@@ -139,7 +139,7 @@ export const startPublisherKeyExchangeSubscription = async (
 export const createRandomAuthentication = (): Authentication => {
     return createAuthentication({
         privateKey: `0x${fastPrivateKey()}`
-    }, undefined as any)
+    } as any)
 }
 
 export const createStreamRegistryCached = (opts: {

@@ -1,12 +1,12 @@
 import 'reflect-metadata'
 import type { BigNumber } from '@ethersproject/bignumber'
+import type { Overrides } from '@ethersproject/contracts'
 import cloneDeep from 'lodash/cloneDeep'
 import Ajv, { ErrorObject } from 'ajv'
 import addFormats from 'ajv-formats'
 import merge from 'lodash/merge'
 
 import type { AuthConfig } from './Authentication'
-import type { EthereumConfig } from './Ethereum'
 
 import CONFIG_SCHEMA from './config.schema.json'
 import { TrackerRegistryRecord } from '@streamr/protocol'
@@ -19,6 +19,15 @@ import { generateClientId } from './utils/utils'
 export interface TrackerRegistryContract {
     jsonRpcProvider?: ConnectionInfo
     contractAddress: string
+}
+
+export interface ChainConnectionInfo { rpcs: ConnectionInfo[], chainId?: number, name?: string }
+
+// these should come from ETH-184 config package when it's ready
+export interface EthereumNetworkConfig {
+    chainId: number
+    overrides?: Overrides
+    gasPriceStrategy?: (estimatedGasPrice: BigNumber) => BigNumber
 }
 
 /**
@@ -45,7 +54,19 @@ export interface StrictStreamrClientConfig {
         trackers: TrackerRegistryRecord[] | TrackerRegistryContract
     }
 
-    contracts: EthereumConfig
+    contracts: {
+        streamRegistryChainAddress: string
+        streamStorageRegistryChainAddress: string
+        storageNodeRegistryChainAddress: string
+        ensCacheChainAddress: string
+        mainChainRPCs?: ChainConnectionInfo
+        streamRegistryChainRPCs: ChainConnectionInfo
+        // most of the above should go into ethereumNetworks configs once ETH-184 is ready
+        ethereumNetworks?: Record<string, EthereumNetworkConfig>
+        /** Some TheGraph instance, that indexes the streamr registries */
+        theGraphUrl: string
+        maxConcurrentCalls: number
+    }
 
     decryption: {
         keyRequestTimeout: number

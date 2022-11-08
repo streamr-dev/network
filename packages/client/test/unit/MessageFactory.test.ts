@@ -24,8 +24,10 @@ const createMessageFactory = async (opts?: {
     return new MessageFactory({
         streamId: STREAM_ID,
         authentication: createAuthentication({
-            privateKey: WALLET.privateKey
-        }, undefined as any),
+            auth: {
+                privateKey: WALLET.privateKey
+            }
+        } as any),
         streamRegistry: createStreamRegistryCached({
             partitionCount: PARTITION_COUNT,
             isPublicStream: false,

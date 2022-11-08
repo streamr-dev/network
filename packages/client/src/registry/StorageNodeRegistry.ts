@@ -26,7 +26,7 @@ export class StorageNodeRegistry {
         @inject(AuthenticationInjectionToken) private authentication: Authentication,
         @inject(ConfigInjectionToken) private config: Pick<StrictStreamrClientConfig, 'contracts'>,
     ) {
-        const chainProvider = getStreamRegistryChainProvider(config.contracts)
+        const chainProvider = getStreamRegistryChainProvider(config)
         this.nodeRegistryContractReadonly = this.contractFactory.createReadContract(
             toEthereumAddress(this.config.contracts.storageNodeRegistryChainAddress),
             NodeRegistryArtifact,
@@ -49,7 +49,7 @@ export class StorageNodeRegistry {
 
     async setStorageNodeMetadata(metadata: StorageNodeMetadata | undefined): Promise<void> {
         await this.connectToContract()
-        const ethersOverrides = getStreamRegistryOverrides(this.config.contracts)
+        const ethersOverrides = getStreamRegistryOverrides(this.config)
         if (metadata !== undefined) {
             await waitForTx(this.nodeRegistryContract!.createOrUpdateNodeSelf(JSON.stringify(metadata), ethersOverrides))
         } else {

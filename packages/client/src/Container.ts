@@ -6,7 +6,7 @@ import { AuthenticationInjectionToken, createAuthentication } from './Authentica
 
 export function initContainer(config: StrictStreamrClientConfig, c: DependencyContainer): void {
     c.register(AuthenticationInjectionToken, {
-        useValue: createAuthentication(config.auth, config.contracts)
+        useValue: createAuthentication(config)
     })
 
     c.register(ConfigInjectionToken, { useValue: config })
