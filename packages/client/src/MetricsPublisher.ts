@@ -22,7 +22,7 @@ export class MetricsPublisher {
         @inject(NetworkNodeFacade) node: NetworkNodeFacade,
         @inject(StreamrClientEventEmitter) eventEmitter: StreamrClientEventEmitter,
         @inject(DestroySignal) destroySignal: DestroySignal,
-        @inject(ConfigInjectionToken.Root) rootConfig: StrictStreamrClientConfig
+        @inject(ConfigInjectionToken) rootConfig: StrictStreamrClientConfig
     ) {
         this.publisher = publisher
         this.node = node

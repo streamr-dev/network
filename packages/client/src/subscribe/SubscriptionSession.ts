@@ -43,7 +43,7 @@ export class SubscriptionSession<T> {
         streamrClientEventEmitter: StreamrClientEventEmitter,
         destroySignal: DestroySignal,
         loggerFactory: LoggerFactory,
-        @inject(ConfigInjectionToken.Root) rootConfig: StrictStreamrClientConfig
+        @inject(ConfigInjectionToken) rootConfig: StrictStreamrClientConfig
     ) {
         this.streamPartId = streamPartId
         this.distributeMessage = this.distributeMessage.bind(this)
@@ -58,7 +58,7 @@ export class SubscriptionSession<T> {
             streamrClientEventEmitter,
             loggerFactory,
             destroySignal,
-            rootConfig
+            config: rootConfig
         })
         this.pipeline.onError.listen(this.onError)
         this.pipeline

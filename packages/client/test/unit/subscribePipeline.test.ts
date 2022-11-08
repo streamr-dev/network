@@ -84,7 +84,7 @@ describe('subscribePipeline', () => {
             } as any,
             streamrClientEventEmitter: new StreamrClientEventEmitter(),
             destroySignal: new DestroySignal(),
-            rootConfig: {
+            config: {
                 decryption: {
                     keyRequestTimeout: 50
                 } as any

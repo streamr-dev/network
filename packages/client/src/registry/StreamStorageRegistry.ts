@@ -1,9 +1,9 @@
 import type { StreamStorageRegistry as StreamStorageRegistryContract } from '../ethereumArtifacts/StreamStorageRegistry'
 import StreamStorageRegistryArtifact from '../ethereumArtifacts/StreamStorageRegistry.json'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
-import { ConfigInjectionToken } from '../Config'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { Stream } from '../Stream'
-import { EthereumConfig, getStreamRegistryChainProvider, getStreamRegistryOverrides } from '../Ethereum'
+import { getStreamRegistryChainProvider, getStreamRegistryOverrides } from '../Ethereum'
 import { StreamID, toStreamID } from '@streamr/protocol'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { waitForTx } from '../utils/contract'
@@ -58,13 +58,13 @@ export class StreamStorageRegistry {
         @inject(SynchronizedGraphQLClient) private graphQLClient: SynchronizedGraphQLClient,
         @inject(StreamrClientEventEmitter) eventEmitter: StreamrClientEventEmitter,
         @inject(AuthenticationInjectionToken) private authentication: Authentication,
-        @inject(ConfigInjectionToken.Ethereum) private ethereumConfig: EthereumConfig,
+        @inject(ConfigInjectionToken) private config: StrictStreamrClientConfig,
         @inject(LoggerFactory) loggerFactory: LoggerFactory
     ) {
         this.logger = loggerFactory.createLogger(module)
-        const chainProvider = getStreamRegistryChainProvider(ethereumConfig)
+        const chainProvider = getStreamRegistryChainProvider(config.contracts)
         this.streamStorageRegistryContractReadonly = this.contractFactory.createReadContract(
-            toEthereumAddress(this.ethereumConfig.streamStorageRegistryChainAddress),
+            toEthereumAddress(this.config.contracts.streamStorageRegistryChainAddress),
             StreamStorageRegistryArtifact,
             chainProvider,
             'streamStorageRegistry'
@@ -103,7 +103,7 @@ export class StreamStorageRegistry {
         if (!this.streamStorageRegistryContract) {
             const chainSigner = await this.authentication.getStreamRegistryChainSigner()
             this.streamStorageRegistryContract = this.contractFactory.createWriteContract<StreamStorageRegistryContract>(
-                toEthereumAddress(this.ethereumConfig.streamStorageRegistryChainAddress),
+                toEthereumAddress(this.config.contracts.streamStorageRegistryChainAddress),
                 StreamStorageRegistryArtifact,
                 chainSigner,
                 'streamStorageRegistry'
@@ -115,7 +115,7 @@ export class StreamStorageRegistry {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.logger.debug('adding stream %s to node %s', streamId, nodeAddress)
         await this.connectToContract()
-        const ethersOverrides = getStreamRegistryOverrides(this.ethereumConfig)
+        const ethersOverrides = getStreamRegistryOverrides(this.config.contracts)
         await waitForTx(this.streamStorageRegistryContract!.addStorageNode(streamId, nodeAddress, ethersOverrides))
     }
 
@@ -123,7 +123,7 @@ export class StreamStorageRegistry {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.logger.debug('removing stream %s from node %s', streamId, nodeAddress)
         await this.connectToContract()
-        const ethersOverrides = getStreamRegistryOverrides(this.ethereumConfig)
+        const ethersOverrides = getStreamRegistryOverrides(this.config.contracts)
         await waitForTx(this.streamStorageRegistryContract!.removeStorageNode(streamId, nodeAddress, ethersOverrides))
     }
 

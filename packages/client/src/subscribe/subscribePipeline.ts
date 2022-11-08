@@ -29,7 +29,7 @@ export interface SubscriptionPipelineOptions {
     streamRegistryCached: StreamRegistryCached
     streamrClientEventEmitter: StreamrClientEventEmitter
     destroySignal: DestroySignal
-    rootConfig: StrictStreamrClientConfig
+    config: StrictStreamrClientConfig
 }
 
 export const createSubscribePipeline = <T = unknown>(opts: SubscriptionPipelineOptions): MessageStream<T> => {
@@ -38,7 +38,7 @@ export const createSubscribePipeline = <T = unknown>(opts: SubscriptionPipelineO
     )
 
     const gapFillMessages = new OrderMessages<T>(
-        opts.rootConfig,
+        opts.config,
         opts.resends,
         opts.streamPartId,
         opts.loggerFactory
@@ -65,7 +65,7 @@ export const createSubscribePipeline = <T = unknown>(opts: SubscriptionPipelineO
         opts.destroySignal,
         opts.loggerFactory,
         opts.streamrClientEventEmitter,
-        opts.rootConfig.decryption,
+        opts.config,
     )
 
     const messageStream = new MessageStream<T>()

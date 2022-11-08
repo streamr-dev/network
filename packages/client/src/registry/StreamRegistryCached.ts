@@ -1,7 +1,7 @@
 import { StreamID } from '@streamr/protocol'
 import { Lifecycle, scoped, inject, delay } from 'tsyringe'
 import { CacheAsyncFn } from '../utils/caches'
-import { CacheConfig, ConfigInjectionToken } from '../Config'
+import { StrictStreamrClientConfig, ConfigInjectionToken } from '../Config'
 import { StreamRegistry } from './StreamRegistry'
 import { StreamPermission } from '../permission'
 import { Stream } from '../Stream'
@@ -18,7 +18,7 @@ export class StreamRegistryCached {
     constructor(
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
         @inject(delay(() => StreamRegistry)) private streamRegistry: StreamRegistry,
-        @inject(ConfigInjectionToken.Cache) private cacheOptions: CacheConfig
+        @inject(ConfigInjectionToken) private config: StrictStreamrClientConfig
     ) {
         this.logger = loggerFactory.createLogger(module)
     }
@@ -30,7 +30,7 @@ export class StreamRegistryCached {
     private _getStream = CacheAsyncFn((streamId: StreamID) => {
         return this.streamRegistry.getStream(streamId)
     }, {
-        ...this.cacheOptions,
+        ...this.config.cache,
         cacheKey: ([streamId]: any) => {
             // see clearStream
             return `${streamId}${SEPARATOR}`
@@ -44,7 +44,7 @@ export class StreamRegistryCached {
     private _isStreamPublisher = CacheAsyncFn((streamId: StreamID, ethAddress: EthereumAddress) => {
         return this.streamRegistry.isStreamPublisher(streamId, ethAddress)
     }, {
-        ...this.cacheOptions,
+        ...this.config.cache,
         cacheKey([streamId, ethAddress]): string {
             return [streamId, ethAddress].join(SEPARATOR)
         }
@@ -57,7 +57,7 @@ export class StreamRegistryCached {
     private _isStreamSubscriber = CacheAsyncFn((streamId: StreamID, ethAddress: EthereumAddress) => {
         return this.streamRegistry.isStreamSubscriber(streamId, ethAddress)
     }, {
-        ...this.cacheOptions,
+        ...this.config.cache,
         cacheKey([streamId, ethAddress]): string {
             return [streamId, ethAddress].join(SEPARATOR)
         }
@@ -74,7 +74,7 @@ export class StreamRegistryCached {
             permission: StreamPermission.SUBSCRIBE
         })
     }, {
-        ...this.cacheOptions,
+        ...this.config.cache,
         cacheKey([streamId]): any {
             return ['PublicSubscribe', streamId].join(SEPARATOR)
         }

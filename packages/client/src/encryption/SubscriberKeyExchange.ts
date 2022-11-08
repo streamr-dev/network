@@ -12,7 +12,7 @@ import {
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { v4 as uuidv4 } from 'uuid'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
-import { ConfigInjectionToken, DecryptionConfig } from '../Config'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { createRandomMsgChainId } from '../publish/messageChain'
 import { createSignedMessage } from '../publish/MessageFactory'
@@ -49,7 +49,7 @@ export class SubscriberKeyExchange {
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         validator: Validator,
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
-        @inject(ConfigInjectionToken.Decryption) decryptionConfig: DecryptionConfig
+        @inject(ConfigInjectionToken) config: StrictStreamrClientConfig
     ) {
         this.logger = loggerFactory.createLogger(module)
         this.networkNodeFacade = networkNodeFacade
@@ -64,7 +64,7 @@ export class SubscriberKeyExchange {
         })
         this.requestGroupKey = withThrottling((groupKeyId: string, publisherId: EthereumAddress, streamPartId: StreamPartID) => {
             return this.doRequestGroupKey(groupKeyId, publisherId, streamPartId)
-        }, decryptionConfig.maxKeyRequestsPerSecond)
+        }, config.decryption.maxKeyRequestsPerSecond)
     }
 
     private async doRequestGroupKey(groupKeyId: string, publisherId: EthereumAddress, streamPartId: StreamPartID): Promise<void> {

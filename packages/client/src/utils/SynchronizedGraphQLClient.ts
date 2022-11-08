@@ -1,6 +1,6 @@
 import { scoped, Lifecycle, inject } from 'tsyringe'
 import { GraphQLClient, GraphQLQuery } from './GraphQLClient'
-import { ConfigInjectionToken, TimeoutsConfig } from '../Config'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { Gate } from './Gate'
 import { Logger, TimeoutError, withTimeout } from '@streamr/utils'
 import { wait } from '@streamr/utils'
@@ -114,13 +114,15 @@ export class SynchronizedGraphQLClient {
     constructor(
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
         @inject(GraphQLClient) delegate: GraphQLClient,
-        @inject(ConfigInjectionToken.Timeouts) timeoutsConfig: TimeoutsConfig
+        @inject(ConfigInjectionToken) config: StrictStreamrClientConfig
     ) {
         this.delegate = delegate
         this.indexingState = new IndexingState(
             () => this.delegate.getIndexBlockNumber(),
-            timeoutsConfig.theGraph.timeout,
-            timeoutsConfig.theGraph.retryInterval,
+            // eslint-disable-next-line no-underscore-dangle
+            config._timeouts.theGraph.timeout,
+            // eslint-disable-next-line no-underscore-dangle
+            config._timeouts.theGraph.retryInterval,
             loggerFactory
         )
     }

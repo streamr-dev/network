@@ -7,10 +7,10 @@ import { NetworkNodeOptions, createNetworkNode as _createNetworkNode } from '@st
 import { MetricsContext } from '@streamr/utils'
 import { uuid } from './utils/uuid'
 import { pOnce } from './utils/promises'
-import { NetworkConfig, ConfigInjectionToken, TrackerRegistryContract } from './Config'
+import { ConfigInjectionToken, TrackerRegistryContract, StrictStreamrClientConfig } from './Config'
 import { StreamMessage, StreamPartID, ProxyDirection } from '@streamr/protocol'
 import { DestroySignal } from './DestroySignal'
-import { EthereumConfig, getMainnetProvider } from './Ethereum'
+import { getMainnetProvider } from './Ethereum'
 import { getTrackerRegistryFromContract } from './registry/getTrackerRegistryFromContract'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
 import { toEthereumAddress } from '@streamr/utils'
@@ -73,19 +73,16 @@ export class NetworkNodeFacade {
     private cachedNode?: NetworkNodeStub
     private startNodeCalled = false
     private startNodeComplete = false
-    private readonly networkConfig: NetworkConfig
-    private readonly ethereumConfig: EthereumConfig
+    private readonly config: StrictStreamrClientConfig
     private readonly eventEmitter: EventEmitter<Events>
 
     constructor(
         private destroySignal: DestroySignal,
         private networkNodeFactory: NetworkNodeFactory,
         @inject(AuthenticationInjectionToken) private authentication: Authentication,
-        @inject(ConfigInjectionToken.Network) networkConfig: NetworkConfig,
-        @inject(ConfigInjectionToken.Ethereum) ethereumConfig: EthereumConfig
+        @inject(ConfigInjectionToken) config: StrictStreamrClientConfig,
     ) {
-        this.networkConfig = networkConfig
-        this.ethereumConfig = ethereumConfig
+        this.config = config
         this.eventEmitter = new EventEmitter<Events>()
         destroySignal.onDestroy.listen(this.destroy)
     }
@@ -95,24 +92,24 @@ export class NetworkNodeFacade {
     }
 
     private async getNormalizedNetworkOptions(): Promise<NetworkNodeOptions> {
-        if ((this.networkConfig.trackers as TrackerRegistryContract).contractAddress) {
+        if ((this.config.network.trackers as TrackerRegistryContract).contractAddress) {
             const trackerRegistry = await getTrackerRegistryFromContract({
-                contractAddress: toEthereumAddress((this.networkConfig.trackers as TrackerRegistryContract).contractAddress),
-                jsonRpcProvider: getMainnetProvider(this.ethereumConfig)
+                contractAddress: toEthereumAddress((this.config.network.trackers as TrackerRegistryContract).contractAddress),
+                jsonRpcProvider: getMainnetProvider(this.config.contracts)
             })
             return {
-                ...this.networkConfig,
+                ...this.config.network,
                 trackers: trackerRegistry.getAllTrackers()
             }
         }
-        return this.networkConfig as NetworkNodeOptions
+        return this.config.network as NetworkNodeOptions
     }
 
     private async initNode(): Promise<NetworkNodeStub> {
         this.assertNotDestroyed()
         if (this.cachedNode) { return this.cachedNode }
 
-        let id = this.networkConfig.id
+        let id = this.config.network.id
         if (id == null || id === '') {
             id = await this.generateId()
         } else {

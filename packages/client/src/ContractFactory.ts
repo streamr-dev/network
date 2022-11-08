@@ -4,24 +4,23 @@ import { Provider } from '@ethersproject/providers'
 import { Signer } from '@ethersproject/abstract-signer'
 import { ObservableContract, createDecoratedContract } from './utils/contract'
 import { SynchronizedGraphQLClient } from './utils/SynchronizedGraphQLClient'
-import { EthereumConfig } from './Ethereum'
-import { ConfigInjectionToken } from './Config'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
 import { EthereumAddress } from '@streamr/utils'
 import { LoggerFactory } from './utils/LoggerFactory'
 
 @scoped(Lifecycle.ContainerScoped)
 export class ContractFactory {
     private readonly graphQLClient: SynchronizedGraphQLClient
-    private readonly ethereumConfig: EthereumConfig
+    private readonly config: StrictStreamrClientConfig
     private readonly loggerFactory: LoggerFactory
 
     constructor(
         graphQLClient: SynchronizedGraphQLClient,
-        @inject(ConfigInjectionToken.Ethereum) ethereumConfig: EthereumConfig,
+        @inject(ConfigInjectionToken) config: StrictStreamrClientConfig,
         @inject(LoggerFactory) loggerFactory: LoggerFactory
     ) {
         this.graphQLClient = graphQLClient
-        this.ethereumConfig = ethereumConfig
+        this.config = config
         this.loggerFactory = loggerFactory
     }
 
@@ -35,7 +34,7 @@ export class ContractFactory {
             new Contract(address, contractInterface, provider),
             name,
             this.loggerFactory,
-            this.ethereumConfig.maxConcurrentCalls
+            this.config.contracts.maxConcurrentCalls
         )
     }
 

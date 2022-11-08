@@ -5,7 +5,7 @@ import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 @scoped(Lifecycle.ContainerScoped)
 export class LoggerFactory {
     constructor(
-        @inject(ConfigInjectionToken.Root) private readonly rootConfig: Pick<StrictStreamrClientConfig, 'id' | 'logLevel'>
+        @inject(ConfigInjectionToken) private readonly rootConfig: Pick<StrictStreamrClientConfig, 'id' | 'logLevel'>
     ) {}
 
     createLogger(module: NodeJS.Module): Logger {

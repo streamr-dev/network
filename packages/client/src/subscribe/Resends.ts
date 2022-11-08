@@ -82,7 +82,7 @@ export class Resends {
         subscriberKeyExchange: SubscriberKeyExchange,
         streamrClientEventEmitter: StreamrClientEventEmitter,
         destroySignal: DestroySignal,
-        @inject(ConfigInjectionToken.Root) rootConfig: StrictStreamrClientConfig,
+        @inject(ConfigInjectionToken) rootConfig: StrictStreamrClientConfig,
         @inject(LoggerFactory) loggerFactory: LoggerFactory
     ) {
         this.groupKeyStore = groupKeyStore
@@ -150,7 +150,7 @@ export class Resends {
             streamRegistryCached: this.streamRegistryCached,
             streamrClientEventEmitter: this.streamrClientEventEmitter,
             destroySignal: this.destroySignal,
-            rootConfig: this.rootConfig,
+            config: this.rootConfig,
             loggerFactory: this.loggerFactory
         })
 
