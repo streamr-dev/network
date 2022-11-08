@@ -75,8 +75,10 @@ const createWrappedContractMethod = (
     concurrencyLimit: pLimit.Limit
 ) => {
     return async (...args: any) => {
-        eventEmitter.emit('onMethodExecute', methodName)
-        const returnValue = await withErrorHandling(() => concurrencyLimit(() => originalMethod(...args)), methodName)
+        const returnValue = await withErrorHandling(() => concurrencyLimit(() => {
+            eventEmitter.emit('onMethodExecute', methodName)
+            return originalMethod(...args)
+        }), methodName)
         if (isTransaction(returnValue)) {
             const tx = returnValue
             const originalWaitMethod = tx.wait
