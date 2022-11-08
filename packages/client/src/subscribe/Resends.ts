@@ -5,7 +5,6 @@ import { MessageStream } from './MessageStream'
 import { createSubscribePipeline } from './subscribePipeline'
 
 import { StorageNodeRegistry } from '../registry/StorageNodeRegistry'
-import { StreamIDBuilder } from '../StreamIDBuilder'
 import { random } from 'lodash'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { HttpUtil } from '../HttpUtil'
@@ -75,7 +74,6 @@ export class Resends {
     constructor(
         @inject(StreamStorageRegistry) private streamStorageRegistry: StreamStorageRegistry,
         @inject(delay(() => StorageNodeRegistry)) private storageNodeRegistry: StorageNodeRegistry,
-        @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(delay(() => StreamRegistryCached)) private streamRegistryCached: StreamRegistryCached,
         @inject(HttpUtil) private httpUtil: HttpUtil,
         groupKeyStore: GroupKeyStore,
