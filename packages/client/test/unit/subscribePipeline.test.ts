@@ -5,7 +5,7 @@ import { toEthereumAddress } from '@streamr/utils'
 import { EncryptionType, MessageID, StreamMessage, StreamPartID, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
 import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
 import { Stream } from '../../src/Stream'
-import { createAuthentication } from '../../src/Authentication'
+import { createPrivateKeyAuthentication } from '../../src/Authentication'
 import { DestroySignal } from '../../src/DestroySignal'
 import { DecryptError, EncryptionUtil } from '../../src/encryption/EncryptionUtil'
 import { StreamrClientEventEmitter } from '../../src/events'
@@ -42,11 +42,7 @@ describe('subscribePipeline', () => {
                 'mock-msgChainId'
             ),
             serializedContent: JSON.stringify(CONTENT),
-            authentication: createAuthentication({
-                auth: {
-                    privateKey: publisher.privateKey
-                }
-            } as any),
+            authentication: createPrivateKeyAuthentication(publisher.privateKey, undefined as any),
             ...opts
         })
     }
