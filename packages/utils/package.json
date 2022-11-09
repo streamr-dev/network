@@ -1,6 +1,6 @@
 {
   "name": "@streamr/utils",
-  "version": "7.0.0-beta.2",
+  "version": "7.0.0-beta.3",
   "description": "A collection of shared common utilities",
   "main": "./dist/src/exports.js",
   "types": "./dist/src/exports.d.ts",
