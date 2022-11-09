@@ -1,4 +1,4 @@
-import { GroupKeyRequest as OldGroupKeyRequest } from 'streamr-client-protocol'
+import { GroupKeyRequest as OldGroupKeyRequest } from '@streamr/protocol'
 import { GroupKeyRequest } from '../../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { EthereumAddress } from '@streamr/utils'
 

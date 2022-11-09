@@ -10,7 +10,7 @@ import {
     StreamMessage,
     ContentMessage
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { waitForCondition } from 'streamr-test-utils'
+import { waitForCondition } from '@streamr/utils'
 import { Empty } from '../../src/proto/google/protobuf/empty'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { createStreamMessage } from '../utils'

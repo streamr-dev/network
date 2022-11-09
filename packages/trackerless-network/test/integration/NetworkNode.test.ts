@@ -1,8 +1,14 @@
 import { NetworkNode } from '../../src/logic/NetworkNode'
 import { DhtNode, NodeType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
-import { MessageID, MessageRef, StreamMessage, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
-import { waitForCondition } from 'streamr-test-utils'
-import { EthereumAddress } from '@streamr/utils'
+import {
+    MessageID,
+    MessageRef,
+    StreamMessage,
+    StreamMessageType,
+    StreamPartIDUtils,
+    toStreamID
+} from '@streamr/protocol'
+import { EthereumAddress, waitForCondition } from '@streamr/utils'
 
 describe('NetworkNode', () => {
 
@@ -78,7 +84,7 @@ describe('NetworkNode', () => {
             content: {
                 hello: 'world'
             },
-            messageType: StreamMessage.MESSAGE_TYPES.MESSAGE,
+            messageType: StreamMessageType.MESSAGE,
             signature: 'signature',
         })
 

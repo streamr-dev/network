@@ -2,7 +2,7 @@ import { GroupKeyResponseTranslator } from '../../src/logic/protocol-integration
 import {
     GroupKeyResponse as OldGroupKeyResponse,
     EncryptedGroupKey as OldEncryptedGroupKey
-} from 'streamr-client-protocol'
+} from '@streamr/protocol'
 import { EthereumAddress } from '@streamr/utils'
 import { EncryptedGroupKey, GroupKeyResponse } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 

@@ -7,7 +7,7 @@ import {
     StreamID,
     StreamMessage as OldStreamMessage,
     StreamMessageType as OldStreamMessageType
-} from 'streamr-client-protocol'
+} from '@streamr/protocol'
 import { EthereumAddress } from '@streamr/utils'
 
 describe('StreamMessageTranslator', () => {

@@ -1,8 +1,8 @@
 import { StreamrNode, Event as NodeEvent } from './StreamrNode'
-import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
+import { StreamMessage, StreamPartID } from '@streamr/protocol'
 import { PeerDescriptor } from '@streamr/dht'
 import { StreamMessageTranslator } from './protocol-integration/stream-message/StreamMessageTranslator'
-import { waitForCondition } from 'streamr-test-utils'
+import { waitForCondition } from '@streamr/utils'
 
 /*
 Convenience wrapper for building client-facing functionality. Used by client.

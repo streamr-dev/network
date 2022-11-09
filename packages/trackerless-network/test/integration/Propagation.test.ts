@@ -3,7 +3,7 @@ import { Event, RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { createMockRandomGraphNodeAndDhtNode, createStreamMessage } from '../utils'
 import { range } from 'lodash'
 import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { waitForCondition } from 'streamr-test-utils'
+import { waitForCondition } from '@streamr/utils'
 
 describe('Propagation', () => {
     const entryPointDescriptor: PeerDescriptor = {
