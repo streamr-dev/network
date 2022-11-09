@@ -27,29 +27,36 @@ describe('Resends2', () => {
     let storageNode: FakeStorageNode
 
     const publishTestMessages = (count: number, streamId?: StreamID): Promise<Message[]> => {
-        const task = getPublishTestStreamMessages(environment.createClient({
-            auth: {
-                privateKey: publisherWallet.privateKey
-            }
-        }), streamId ?? stream.id)
+        const task = getPublishTestStreamMessages(publisher, streamId ?? stream.id)
         return task(count)
     }
 
-    beforeEach(async () => {
+    beforeAll(() => {
         environment = new FakeEnvironment()
-        client = environment.createClient()
-        stream = await createTestStream(client, module)
         publisherWallet = fastWallet()
-        await stream.grantPermissions({
-            user: publisherWallet.address,
-            permissions: [StreamPermission.PUBLISH]
+        publisher = environment.createClient({
+            auth: {
+                privateKey: publisherWallet.privateKey
+            }
+        })
+    })
+
+    beforeEach(async () => {
+        stream = await createTestStream(publisher, module)
+        await publisher.grantPermissions(stream.id, {
+            public: true,
+            permissions: [StreamPermission.SUBSCRIBE]
         })
         storageNode = environment.startStorageNode()
         await stream.addToStorageNode(storageNode.id)
+        client = environment.createClient()
     })
 
     afterEach(async () => {
         await client?.destroy()
+    })
+
+    afterAll(async () => {
         await publisher?.destroy()
     })
 
@@ -527,7 +534,7 @@ describe('Resends2', () => {
         const publishedMessage = Msg({
             content: fs.readFileSync(path.join(__dirname, '../data/utf8Example.txt'), 'utf8')
         })
-        const publishReq = await client.publish(stream, publishedMessage)
+        const publishReq = await publisher.publish(stream, publishedMessage)
 
         await getWaitForStorage(client)(publishReq)
         const sub = await client.resend(stream.id,

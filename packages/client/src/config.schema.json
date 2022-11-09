@@ -285,6 +285,10 @@
             "type": "string",
             "format": "ethereum-address"
         },
+        "ensCacheChainAddress": {
+            "type": "string",
+            "format": "ethereum-address"
+        },
         "metrics": {
             "anyOf": [
                 {

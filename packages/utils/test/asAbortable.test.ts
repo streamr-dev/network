@@ -2,7 +2,7 @@ import { AbortError, asAbortable } from '../src/asAbortable'
 
 const sleep = (ms: number) => new Promise<string>((resolve) => setTimeout(() => resolve('foobar'), ms))
 
-const TIME_UNIT = 10
+const TIME_UNIT = 50
 
 describe('asAbortable', () => {
     it('works without abortController', async () => {

@@ -165,7 +165,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         routerId: string,
         deferredConnectionAttempt: DeferredConnectionAttempt | null
     ) {
-        const messageQueue = this.messageQueues[targetPeerId] = this.messageQueues[targetPeerId] || new MessageQueue(this.maxMessageSize)
+        const messageQueue = this.messageQueues[targetPeerId] = this.messageQueues[targetPeerId] || new MessageQueue()
         const connectionOptions: ConstructorOptions = {
             selfId: this.peerInfo.peerId,
             targetPeerId,
