@@ -5,8 +5,6 @@ import { StreamrClientConfig } from '../../src/Config'
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
-import { Subscriber } from '../../src/subscribe/Subscriber'
-import { Subscription } from '../../src/subscribe/Subscription'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 import { getPublishTestStreamMessages, Msg } from '../test-utils/publish'
@@ -39,24 +37,20 @@ describe('GapFill', () => {
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
     let client: StreamrClient
     let stream: Stream
-    let subscriber: Subscriber
     let storageNode: FakeStorageNode
     let environment: FakeEnvironment
 
     async function setupClient(opts: StreamrClientConfig) {
         client = environment.createClient({
-            maxGapRequests: 20,
+            maxGapRequests: 2,
             gapFillTimeout: 500,
             retryResendAfter: 1000,
             ...opts
         })
-        // @ts-expect-error private
-        subscriber = client.subscriber
         stream = await createTestStream(client, module)
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
         await stream.addToStorageNode(storageNode.id)
         publishTestMessages = getPublishTestStreamMessages(client, stream.id, { waitForLast: true })
-        return client
     }
 
     beforeEach(async () => {
@@ -65,21 +59,8 @@ describe('GapFill', () => {
     })
 
     afterEach(async () => {
-        if (!subscriber || !stream) { return }
-        expect(await subscriber.count(stream.id)).toBe(0)
-        if (!client) { return }
-        const subscriptions = await subscriber.getSubscriptions()
+        const subscriptions = await client.getSubscriptions()
         expect(subscriptions).toHaveLength(0)
-    })
-
-    let subs: Subscription<any>[] = []
-
-    beforeEach(async () => {
-        const existingSubs = subs
-        subs = []
-        await Promise.all(existingSubs.map((sub) => (
-            sub.return()
-        )))
     })
 
     describe('filling gaps', () => {
@@ -102,7 +83,7 @@ describe('GapFill', () => {
                     return undefined
                 })
 
-                expect(await subscriber.count(stream.id)).toBe(1)
+                expect(await client.getSubscriptions(stream.id)).toHaveLength(1)
 
                 const published = await publishTestMessages(MAX_MESSAGES)
 
@@ -127,7 +108,7 @@ describe('GapFill', () => {
                     return undefined
                 })
 
-                expect(await subscriber.count(stream.id)).toBe(1)
+                expect(await client.getSubscriptions(stream.id)).toHaveLength(1)
 
                 const published = await publishTestMessages(MAX_MESSAGES)
 
@@ -149,7 +130,7 @@ describe('GapFill', () => {
                     return undefined
                 })
 
-                expect(await subscriber.count(stream.id)).toBe(1)
+                expect(await client.getSubscriptions(stream.id)).toHaveLength(1)
 
                 const published = await publishTestMessages(MAX_MESSAGES)
 
