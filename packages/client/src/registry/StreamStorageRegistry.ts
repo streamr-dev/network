@@ -14,7 +14,6 @@ import { ContractFactory } from '../ContractFactory'
 import { EthereumAddress, Logger, toEthereumAddress } from '@streamr/utils'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { StreamFactory } from '../StreamFactory'
-import { GraphQLQuery } from '../utils/GraphQLClient'
 import { collect } from '../utils/iterators'
 import { min } from 'lodash'
 
@@ -28,18 +27,6 @@ interface NodeQueryResult {
     id: string
     metadata: string
     lastseen: string
-}
-
-interface StoredStreamQueryResult {
-    stream: {
-        id: string
-        metadata: string
-        storageNodes: NodeQueryResult[]
-    } | null
-}
-
-interface AllNodesQueryResult {
-    nodes: NodeQueryResult[]
 }
 
 /**
@@ -173,50 +160,44 @@ export class StreamStorageRegistry {
     }
 
     async getStorageNodes(streamIdOrPath?: string): Promise<EthereumAddress[]> {
+        let queryResults: NodeQueryResult[]
         if (streamIdOrPath !== undefined) {
             const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
             this.logger.debug('getting storage nodes of stream %s', streamId)
-            const query = StreamStorageRegistry.buildStoredStreamQuery(streamId)
-            const res = await this.graphQLClient.sendQuery(query) as StoredStreamQueryResult
-            if (res.stream === null) {
-                return []
-            }
-            return res.stream.storageNodes.map((node) => toEthereumAddress(node.id))
+            queryResults = await collect(this.graphQLClient.fetchPaginatedResults<NodeQueryResult>(
+                (lastId: string, pageSize: number) => {
+                    const query = `{
+                        stream (id: "${streamId}") {
+                            id
+                            metadata
+                            storageNodes (first: ${pageSize} orderBy: "id" where: { id_gt: "${lastId}"}) {
+                                id
+                                metadata
+                                lastSeen
+                            }
+                        }
+                    }`
+                    return { query }
+                },
+                (response: any) => {
+                    return (response.stream !== null) ? response.stream.storageNodes : []
+                }
+            ))
         } else {
             this.logger.debug('getting all storage nodes')
-            const query = StreamStorageRegistry.buildAllNodesQuery()
-            const res = await this.graphQLClient.sendQuery(query) as AllNodesQueryResult
-            return res.nodes.map((node) => toEthereumAddress(node.id))
-        }
-    }
-
-    // --------------------------------------------------------------------------------------------
-    // GraphQL queries
-    // --------------------------------------------------------------------------------------------
-
-    private static buildAllNodesQuery(): GraphQLQuery {
-        const query = `{
-            nodes {
-                id,
-                metadata,
-                lastSeen
-            }
-        }`
-        return { query }
-    }
-
-    private static buildStoredStreamQuery(streamId: StreamID): GraphQLQuery {
-        const query = `{
-            stream (id: "${streamId}") {
-                id,
-                metadata,
-                storageNodes {
-                    id,
-                    metadata,
-                    lastSeen,
+            queryResults = await collect(this.graphQLClient.fetchPaginatedResults<NodeQueryResult>(
+                (lastId: string, pageSize: number) => {
+                    const query = `{
+                        nodes (first: ${pageSize} orderBy: "id" where: { id_gt: "${lastId}"}) {
+                            id
+                            metadata
+                            lastSeen
+                        }
+                    }`
+                    return { query }
                 }
-            }
-        }`
-        return { query }
+            ))
+        }
+        return queryResults.map((node) => toEthereumAddress(node.id))
     }
 }

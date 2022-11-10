@@ -224,11 +224,11 @@ export class ProxyStreamConnectionManager {
     }
 
     async reconnect(targetNodeId: NodeId, streamPartId: StreamPartID): Promise<void> {
-        const connection = this.getConnection(targetNodeId, streamPartId)
-        if (!connection) {
+        if (!this.hasConnection(targetNodeId, streamPartId)) {
             logger.trace(`Cannot reconnect to a non-existing proxy connection on ${targetNodeId} ${streamPartId}`)
             return
         }
+        const connection = this.getConnection(targetNodeId, streamPartId)!
         if (connection.state !== State.RENEGOTIATING) {
             connection.state = State.RENEGOTIATING
         }

@@ -253,6 +253,10 @@
                     "type": "string",
                     "format": "ethereum-address"
                 },
+                "ensCacheChainAddress": {
+                    "type": "string",
+                    "format": "ethereum-address"
+                },
                 "mainChainRPCs": {
                     "anyOf": [
                         {

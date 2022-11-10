@@ -49,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Change return type of `getStreamPublishers`, `getStreamSubscribers` and `searchStreams` from `AsyncGenerator` to `AsyncIterable`
 - Config property `auth` must be non-empty (if given)
 - Result set of `getStoredStreams` is no longer capped to 1000 streams
+- Result sets of `getPermissions` and `getStorageNodes` are no longer capped to 100 items
 
 ### Deprecated
 
