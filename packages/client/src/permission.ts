@@ -44,14 +44,6 @@ export type PermissionQueryResult = {
     userAddress: EthereumAddress
 } & ChainPermissions
 
-export interface SingleStreamQueryResult {
-    stream: {
-        id: string
-        metadata: string
-        permissions: PermissionQueryResult[]
-    } | null
-}
-
 export interface ChainPermissions {
     canEdit: boolean
     canDelete: boolean

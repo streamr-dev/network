@@ -137,7 +137,7 @@ All the above packages should be released at the same time.
 1. `git checkout main`
 2. `git pull`
 3. Change all versions from package.json (and interlinked dependencies) to next version.
-4. `npm run clean && npm run bootstrap && npm run versions`
+4. `npm run clean && npm install && npm run build && npm run versions`
 5. Look at the output of the above and ensure all versions are linked properly (i.e. no yellow or red markers)
 6. Update client and cli-tool CHANGELOG.md
 7. Add relevant files to git staging

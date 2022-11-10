@@ -25,7 +25,6 @@ import {
     PermissionQuery,
     PermissionQueryResult,
     PUBLIC_PERMISSION_ADDRESS,
-    SingleStreamQueryResult,
     streamPermissionToSolidityType,
     ChainPermissions
 } from '../permission'
@@ -36,6 +35,7 @@ import { EthereumAddress, isENSName, Logger, toEthereumAddress } from '@streamr/
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { StreamFactory } from './../StreamFactory'
 import { GraphQLQuery } from '../utils/GraphQLClient'
+import { collect } from '../utils/iterators'
 
 /*
  * On-chain registry of stream metadata and permissions.
@@ -263,26 +263,6 @@ export class StreamRegistry {
         return { query }
     }
 
-    private static buildGetStreamWithPermissionsQuery(streamId: StreamID): GraphQLQuery {
-        const query = `
-        {
-            stream (id: "${streamId}") {
-                id
-                metadata
-                permissions {
-                    id
-                    userAddress
-                    canEdit
-                    canDelete
-                    publishExpiration
-                    subscribeExpiration
-                    canGrant
-                }
-            }
-        }`
-        return { query }
-    }
-
     // --------------------------------------------------------------------------------------------
     // Permissions
     // --------------------------------------------------------------------------------------------
@@ -304,34 +284,56 @@ export class StreamRegistry {
 
     async getPermissions(streamIdOrPath: string): Promise<PermissionAssignment[]> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        const response = await this.graphQLClient.sendQuery(StreamRegistry.buildGetStreamWithPermissionsQuery(streamId)) as SingleStreamQueryResult
-        if (!response.stream) {
-            throw new NotFoundError('stream not found: id: ' + streamId)
-        }
-        const assignments: PermissionAssignment[] = []
-        response.stream.permissions
-            .forEach((permissionResult: PermissionQueryResult) => {
-                const permissions = convertChainPermissionsToStreamPermissions(permissionResult)
-                /*
-                 * There can be query results, which don't contain any permissions. That happens if a
-                 * user revokes all permissions from a stream. Currently we don't remove these empty assignments
-                 * from The Graph index. TODO remove the "permission.length > 0" if/when we implement the
-                 * empty assignments cleanup in The Graph.
-                 */
-                if (permissions.length > 0) {
-                    if (permissionResult.userAddress === PUBLIC_PERMISSION_ADDRESS) {
-                        assignments.push({
-                            public: true,
-                            permissions
-                        })
-                    } else {
-                        assignments.push({
-                            user: permissionResult.userAddress,
-                            permissions
-                        })
+        const queryResults = await collect(this.graphQLClient.fetchPaginatedResults<PermissionQueryResult>(
+            (lastId: string, pageSize: number) => {
+                const query = `{
+                    stream (id: "${streamId}") {
+                        id
+                        metadata
+                        permissions(first: ${pageSize} orderBy: "id" where: { id_gt: "${lastId}"}) {
+                            id
+                            userAddress
+                            canEdit
+                            canDelete
+                            publishExpiration
+                            subscribeExpiration
+                            canGrant
+                        }
                     }
+                }`
+                return { query }
+            }, 
+            (response: any) => {
+                if (response.stream !== null) {
+                    return response.stream.permissions
+                } else {
+                    throw new NotFoundError('stream not found: id: ' + streamId)
                 }
-            })
+            }
+        ))
+        const assignments: PermissionAssignment[] = []
+        queryResults.forEach((permissionResult: PermissionQueryResult) => {
+            const permissions = convertChainPermissionsToStreamPermissions(permissionResult)
+            /*
+            * There can be query results, which don't contain any permissions. That happens if a
+            * user revokes all permissions from a stream. Currently we don't remove these empty assignments
+            * from The Graph index. TODO remove the "permission.length > 0" if/when we implement the
+            * empty assignments cleanup in The Graph.
+            */
+            if (permissions.length > 0) {
+                if (permissionResult.userAddress === PUBLIC_PERMISSION_ADDRESS) {
+                    assignments.push({
+                        public: true,
+                        permissions
+                    })
+                } else {
+                    assignments.push({
+                        user: permissionResult.userAddress,
+                        permissions
+                    })
+                }
+            }
+        })
         return assignments
     }
 

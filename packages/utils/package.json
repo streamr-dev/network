@@ -1,6 +1,6 @@
 {
   "name": "@streamr/utils",
-  "version": "7.0.0-beta.1",
+  "version": "7.0.0-beta.3",
   "description": "A collection of shared common utilities",
   "main": "./dist/src/exports.js",
   "types": "./dist/src/exports.d.ts",
@@ -36,6 +36,7 @@
   },
   "devDependencies": {
     "@types/lodash": "^4.14.175",
+    "@types/node-fetch": "^2.5.12",
     "@types/pino": "^6.3.8",
     "@types/pino-pretty": "^4.7.0",
     "electron": "^20.0.3",
@@ -48,6 +49,7 @@
     "karma-sourcemap-loader": "^0.3.8",
     "karma-spec-reporter": "^0.0.34",
     "karma-webpack": "^5.0.0",
+    "node-fetch": "^2.6.6",
     "node-module-polyfill": "^1.0.1",
     "node-polyfill-webpack-plugin": "^1.1.4",
     "typescript": "^4.5.2",

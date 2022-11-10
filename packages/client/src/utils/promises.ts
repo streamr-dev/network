@@ -5,61 +5,6 @@ import { MaybeAsync } from '../types'
 import { AggregatedError } from './AggregatedError'
 
 /**
- * Returns a limit function that limits concurrency per-key.
- *
- * ```js
- * const limit = LimitAsyncFnByKey(1)
- * limit('channel1', fn)
- * limit('channel2', fn)
- * limit('channel2', fn)
- * ```
- */
-type LimitFn = ReturnType<typeof pLimit>
-
-export interface LimitAsyncFnByKeyReturnType<KeyType> {
-    (id: KeyType, fn: () => Promise<any>): Promise<any> 
-    getActiveCount(id: KeyType): number
-    getPendingCount(id: KeyType): number
-    clear(): void 
-}
-
-export function LimitAsyncFnByKey<KeyType>(limit = 1): LimitAsyncFnByKeyReturnType<KeyType> {
-    const pending = new Map<KeyType, LimitFn>()
-    const f = async (id: KeyType, fn: () => Promise<any>) => {
-        const limitFn: LimitFn = (pending.get(id) || pending.set(id, pLimit(limit)).get(id)) as LimitFn
-        try {
-            return await limitFn(fn)
-        } finally {
-            if (!limitFn.activeCount && !limitFn.pendingCount) {
-                if (pending.get(id) === limitFn) {
-                    // clean up if no more active entries (if not cleared)
-                    pending.delete(id)
-                }
-            }
-        }
-    }
-
-    f.getActiveCount = (id: KeyType): number => {
-        const limitFn = pending.get(id)
-        if (!limitFn) { return 0 }
-        return limitFn.activeCount
-    }
-
-    f.getPendingCount = (id: KeyType): number => {
-        const limitFn = pending.get(id)
-        if (!limitFn) { return 0 }
-        return limitFn.pendingCount
-    }
-
-    f.clear = () => {
-        // note: does not cancel promises
-        pending.forEach((p) => p.clearQueue())
-        pending.clear()
-    }
-    return f
-}
-
-/**
  * Execute functions in parallel, but ensure they resolve in the order they were executed
  */
 export function pOrderedResolve<ArgsType extends unknown[], ReturnType>(

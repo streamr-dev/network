@@ -138,7 +138,7 @@ export class SynchronizedGraphQLClient {
 
     async* fetchPaginatedResults<T extends { id: string }>(
         createQuery: (lastId: string, pageSize: number) => GraphQLQuery,
-        parseItems?: (root: any) => T[],
+        parseItems?: (response: any) => T[],
         pageSize?: number
     ): AsyncGenerator<T, void, undefined> {
         await this.indexingState.waitUntilIndexed(this.requiredBlockNumber)

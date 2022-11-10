@@ -24,6 +24,7 @@ import { BrandedString } from './types'
 import { wait } from './wait'
 import { waitForEvent } from './waitForEvent'
 import { TimeoutError, withTimeout } from './withTimeout'
+import { composeAbortSignals } from './composeAbortSignals'
 import { waitForCondition } from './waitForCondition'
 
 export {
@@ -37,6 +38,7 @@ export {
     AbortError,
     TimeoutError,
     asAbortable,
+    composeAbortSignals,
     isENSName,
     keyToArrayIndex,
     randomString,
