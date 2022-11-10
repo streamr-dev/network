@@ -26,7 +26,9 @@ export interface EthereumConfig {
     streamRegistryChainRPCs: ChainConnectionInfo
     // most of the above should go into ethereumNetworks configs once ETH-184 is ready
     ethereumNetworks?: Record<string, EthereumNetworkConfig>
-    maxConcurrentContractCalls: number
+    /** Some TheGraph instance, that indexes the streamr registries */
+    theGraphUrl: string
+    maxConcurrentCalls: number
 }
 
 export const generateEthereumAccount = (): { address: string, privateKey: string } => {

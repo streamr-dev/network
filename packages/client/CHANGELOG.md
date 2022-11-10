@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - new metadata field: `msgChainId`
 - Replace method `subscription.onResent(listener)` with `subscription.once('resendComplete', listener)`
 - Resend supports multiple storage nodes: the data is fetched from a random storage node
-- Enforce concurrency limit for smart contract calls (per contract, configurable with `maxConcurrentContractCalls` config option)
+- Enforce concurrency limit for smart contract calls (per contract, configurable with `contracts.maxConcurrentCalls` config option)
 - Enforce presence of message signatures
   - all non-signed messages received by client are simply ignored
 - Stream metadata now accessed through `stream.getMetadata()`
@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rename method `isStreamStoredInStorageNode()` to `isStoredStream()`
 - Replaced methods `createOrUpdateNodeInStorageNodeRegistry()` and `removeNodeFromStorageNodeRegistry()` with single method `setStorageNodeMetadata()`
 - Change configuration option `network.stunUrls` to `network.iceServers` with new format
+- Move contract configuration options from root level to new `contracts` block
 - Change storage node assignment event handlers
   - replace method `registerStorageEventListeners(listener)` with `on('addToStorageNode', listener)` and `on('removeFromStorageNode', listener)`
   - replace method `unRegisterStorageEventListeners()` with `off('addToStorageNode', listener)` and `off('removeFromStorageNode', listener)`
