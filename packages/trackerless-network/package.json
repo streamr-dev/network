@@ -31,9 +31,9 @@
     "@protobuf-ts/runtime-rpc": "^2.8.0",
     "@streamr/dht": "1.0.0",
     "@streamr/proto-rpc": "1.2.0",
-    "@streamr/utils": "^7.0.0-beta.1",
     "@streamr/protocol": "^7.0.0-beta.1",
     "@streamr/test-utils": "^7.0.0-beta.1",
+    "@streamr/utils": "^7.0.0-beta.1",
     "lodash": "^4.17.21"
   },
   "devDependencies": {
