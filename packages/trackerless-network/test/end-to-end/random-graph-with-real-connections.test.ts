@@ -1,6 +1,6 @@
 import { ConnectionManager, DhtNode, PeerDescriptor, PeerID, NodeType } from '@streamr/dht'
 import { Event, RandomGraphNode } from '../../src/logic/RandomGraphNode'
-import { waitForCondition } from 'streamr-test-utils'
+import { waitForCondition } from '@streamr/utils'
 import { createStreamMessage } from '../utils'
 import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 

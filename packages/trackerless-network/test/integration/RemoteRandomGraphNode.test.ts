@@ -10,7 +10,7 @@ import {
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { Empty } from '../../src/proto/google/protobuf/empty'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { waitForCondition } from 'streamr-test-utils'
+import { waitForCondition } from '@streamr/utils'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { createStreamMessage } from '../utils'
 

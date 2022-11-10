@@ -7,7 +7,7 @@ import {
     GroupKeyResponse as OldGroupKeyResponse,
     EncryptedGroupKey as OldEncryptedGroupKey,
     StreamID,
-} from 'streamr-client-protocol'
+} from '@streamr/protocol'
 import {
     ContentMessage,
     EncryptedGroupKey,
