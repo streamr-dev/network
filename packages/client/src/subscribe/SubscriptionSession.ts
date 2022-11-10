@@ -81,7 +81,7 @@ export class SubscriptionSession<T> {
     }
 
     private async onError(error: Error): Promise<void> {
-        // eslint-disable-next-line  promise/no-promise-in-callback
+        // eslint-disable-next-line promise/no-promise-in-callback
         await Promise.allSettled([...this.subscriptions].map(async (sub) => {
             await sub.handleError(error)
         }))
