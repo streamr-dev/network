@@ -108,9 +108,13 @@ describe('Storage: lots of data', () => {
         5
     ))
 
-    it('can requestFrom again', async () => {
-        const streamingResults = storage.requestFrom(streamId, 0, 1000, 0, undefined)
-        const results = await toArray(streamingResults)
-        expect(results.length).toEqual(NUM_MESSAGES)
-    })
+    // TODO: Determine actual reason for flaky behavior in NET-918, something to do with cassandra-driver?
+    it('can requestFrom again', retryFlakyTest(
+        async () => {
+            const streamingResults = storage.requestFrom(streamId, 0, 1000, 0, undefined)
+            const results = await toArray(streamingResults)
+            expect(results.length).toEqual(NUM_MESSAGES)
+        },
+        (e) => e.message?.includes('The value of "offset" is out of range'),
+        5))
 })
