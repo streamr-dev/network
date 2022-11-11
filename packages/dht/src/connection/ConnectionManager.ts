@@ -180,7 +180,11 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         await Promise.allSettled([...this.connections.values()].map(async (connection: ManagedConnection) => {
             const targetDescriptor = connection.getPeerDescriptor()
             if (targetDescriptor) {
-                await this.gracefullyDisconnect(targetDescriptor)
+                try {
+                    await this.gracefullyDisconnect(targetDescriptor)
+                } catch (e) {
+                    logger.debug(e)
+                }
             }
             connection.close()
         }))
@@ -223,7 +227,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             await this.onNewConnection(connection)
         }
 
-        await connection!.send(Message.toBinary(message))
+        return connection!.send(Message.toBinary(message))
     }
 
     public disconnect(peerDescriptor: PeerDescriptor, reason?: string, timeout = DEFAULT_DISCONNECTION_TIMEOUT): void {
@@ -460,7 +464,9 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         )
         this.remoteLockedConnections.delete(hexKey)
         this.localLockedConnections.delete(hexKey)
-        await remoteConnectionLocker.gracefulDisconnect(this.ownPeerDescriptor!)
+        remoteConnectionLocker.gracefulDisconnect(this.ownPeerDescriptor!).catch((_e) => {
+            logger.trace('gracefulDisconnect failed')
+        })
     }
 
     public getAllConnectionPeerDescriptors(): PeerDescriptor[] {

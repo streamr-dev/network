@@ -37,7 +37,6 @@ describe('DhtPeer', () => {
         serverRpcCommunicator.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'routeMessage', MockDhtRpc.routeMessage)
 
         clientRpcCommunicator.on('outgoingMessage', (message: Uint8Array, _requestId: string, _ucallContext?: DhtCallContext) => {
-       
             serverRpcCommunicator.handleIncomingMessage(message)
         })
 
@@ -90,8 +89,8 @@ describe('DhtPeer', () => {
 
     it('getClosestPeers error path', async () => {
         serverRpcCommunicator.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', MockDhtRpc.throwGetClosestPeersError)
-        const neighborList = await dhtPeer.getClosestPeers(clientPeerDescriptor)
-        expect(neighborList.length).toEqual(0)
+        await expect(dhtPeer.getClosestPeers(clientPeerDescriptor))
+            .rejects.toThrow('Closest peers error')
     })
 
     it('routeMessage error path', async () => {

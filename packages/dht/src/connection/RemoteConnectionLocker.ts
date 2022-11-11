@@ -53,7 +53,9 @@ export class RemoteConnectionLocker {
             notification: true
         }
 
-        this.client.unlockRequest(request, options)
+        this.client.unlockRequest(request, options).catch((_e) => {
+            logger.trace('failed to send unlockRequest')
+        })
     }
 
     public async gracefulDisconnect(sourceDescriptor: PeerDescriptor): Promise<void> {
@@ -68,6 +70,10 @@ export class RemoteConnectionLocker {
             notification: true
         }
 
-        await this.client.gracefulDisconnect(request, options)
+        try {
+            await this.client.gracefulDisconnect(request, options)
+        } catch (_e) {
+            logger.trace('Failed to send gracefulDisconnect')
+        }
     }
 }

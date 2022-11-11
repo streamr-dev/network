@@ -127,7 +127,7 @@ export const MockDhtRpc: IDhtRpcWithError = {
         })
     },
     async throwGetClosestPeersError(_urequest: ClosestPeersRequest, _context: ServerCallContext): Promise<ClosestPeersResponse> {
-        throw new Error()
+        throw new Error('Closest peers error')
     },
     async throwRouteMessageError(_urequest: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
         throw new Error()

@@ -1,5 +1,4 @@
 import { RpcMessage } from './proto/ProtoRpc'
-import EventEmitter from 'eventemitter3'
 import { BinaryReadOptions, BinaryWriteOptions } from '@protobuf-ts/runtime'
 import { promiseTimeout } from './common'
 import * as Err from './errors'
@@ -7,11 +6,6 @@ import UnknownRpcMethod = Err.UnknownRpcMethod
 import { Empty } from './proto/google/protobuf/empty'
 import { Logger } from '@streamr/utils'
 import { ProtoCallContext } from './ProtoCallContext'
-
-interface ServerRegistryEvents {
-    rpcRequest: (rpcMessage: RpcMessage) => void
-    rpcResponse: (rpcMessage: RpcMessage) => void
-}
 
 export interface Parser<Target> { fromBinary: (data: Uint8Array, options?: Partial<BinaryReadOptions>) => Target }
 export interface Serializer<Target> { toBinary: (message: Target, options?: Partial<BinaryWriteOptions>) => Uint8Array }
@@ -37,7 +31,7 @@ export function serializeWrapper(serializerFn: () => Uint8Array): Uint8Array | n
     }
 }
 
-export class ServerRegistry extends EventEmitter<ServerRegistryEvents> {
+export class ServerRegistry {
     private methods = new Map<string, RegisteredMethod>()
     private notifications = new Map<string, RegisteredNotification>()
 

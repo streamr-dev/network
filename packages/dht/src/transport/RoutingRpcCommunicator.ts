@@ -8,7 +8,7 @@ export class RoutingRpcCommunicator extends RpcCommunicator {
     constructor(private ownServiceId: string, private sendFn: (msg: Message) => Promise<void>, config?: RpcCommunicatorConfig) {
         super(config)
 
-        this.on('outgoingMessage', async (msgBody: Uint8Array, requestId: string, callContext?: DhtCallContext) => {
+        this.setOutgoingMessageListener((msgBody: Uint8Array, _requestId: string, callContext?: DhtCallContext) => {
 
             let targetDescriptor: PeerDescriptor
             // rpc call message
@@ -24,9 +24,19 @@ export class RoutingRpcCommunicator extends RpcCommunicator {
                 messageType: MessageType.RPC, targetDescriptor: targetDescriptor
             }
 
-            this.sendFn(message).catch((e) => {
+            return this.sendFn(message)
+            
+            /*
+            .then(()=> {
+                if (callContext?.waitConfirmation) {
+                    const confirmation = {}
+                    this.handleIncomingMessage(confirmation)
+                }
+            })
+            .catch((e) => {
                 this.handleClientError(requestId, e)
             })
+            */
         })
     }
 

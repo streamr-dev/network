@@ -77,7 +77,9 @@ export class RemoteRandomGraphNode {
             notification: true
         }
         try {
-            this.client.sendData(msg, options)
+            this.client.sendData(msg, options).catch(() => {
+                logger.trace('Failed to sendData')
+            })
         } catch (err: any) {
             logger.warn(err)
         }
@@ -94,7 +96,9 @@ export class RemoteRandomGraphNode {
             interleaveTarget: originatorDescriptor,
             senderId: PeerID.fromValue(ownPeerDescriptor.peerId).toKey()
         }
-        this.client.interleaveNotice(notification, options)
+        this.client.interleaveNotice(notification, options).catch(() => {
+            logger.warn('Failed to send interleaveNotice')
+        })
     }
 
     leaveNotice(ownPeerDescriptor: PeerDescriptor): void {
@@ -107,7 +111,9 @@ export class RemoteRandomGraphNode {
             senderId: PeerID.fromValue(ownPeerDescriptor.peerId).toKey(),
             randomGraphId: this.graphId
         }
-        this.client.leaveNotice(notification, options)
+        this.client.leaveNotice(notification, options).catch(() => {
+            logger.warn('Failed to send leaveNotice')
+        })
     }
 
     getPeerDescriptor(): PeerDescriptor {

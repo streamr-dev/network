@@ -1,4 +1,3 @@
-import { PeerDescriptor } from '@streamr/dht'
 import {
     RpcCommunicator,
     ProtoCallContext,
@@ -16,10 +15,6 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { createStreamMessage } from '../utils'
 
 describe('Network RPC', () => {
-    const peer2: PeerDescriptor = {
-        peerId: new Uint8Array([2, 2, 2]),
-        type: 1
-    }
     let rpcCommunicator1: RpcCommunicator
     let rpcCommunicator2: RpcCommunicator
     let client: ProtoRpcClient<NetworkRpcClient>
@@ -38,7 +33,7 @@ describe('Network RPC', () => {
             'sendData',
             async (_msg: StreamMessage, _context: ServerCallContext): Promise<Empty> => {
                 recvCounter += 1
-                return Empty
+                return {}
             }
         )
     })
@@ -57,9 +52,7 @@ describe('Network RPC', () => {
             'testStream',
             'peer1'
         )
-        await client.sendData(msg,
-            { targetDescriptor: peer2, notification: 'notification' }
-        )
+        await client.sendData(msg)
         await waitForCondition(() => recvCounter === 1)
     })
 })

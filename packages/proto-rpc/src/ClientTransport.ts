@@ -74,6 +74,7 @@ export class ClientTransport extends EventEmitter<ClientTransportEvents> impleme
             requestId: v4()
         }
 
+        /*
         if (options.notification) {
             const unary = new UnaryCall<I, O>(
                 method,
@@ -88,34 +89,34 @@ export class ClientTransport extends EventEmitter<ClientTransportEvents> impleme
             this.emit('rpcRequest', request, options, undefined)
             return unary
 
-        } else {
-            const defHeader = new Deferred<RpcMetadata>()
-            const defMessage = new Deferred<O>()
-            const defStatus = new Deferred<RpcStatus>()
-            const defTrailer = new Deferred<RpcMetadata>()
+        } else { */
+        const defHeader = new Deferred<RpcMetadata>()
+        const defMessage = new Deferred<O>()
+        const defStatus = new Deferred<RpcStatus>()
+        const defTrailer = new Deferred<RpcMetadata>()
 
-            const unary = new UnaryCall<I, O>(
-                method,
-                {},
-                input,
-                defHeader.promise,
-                defMessage.promise,
-                defStatus.promise,
-                defTrailer.promise,
-            )
+        const unary = new UnaryCall<I, O>(
+            method,
+            {},
+            input,
+            defHeader.promise,
+            defMessage.promise,
+            defStatus.promise,
+            defTrailer.promise,
+        )
 
-            const deferredParser = (bytes: Uint8Array) => method.O.fromBinary(bytes)
-            const deferred: ResultParts = {
-                message: defMessage,
-                header: defHeader,
-                trailer: defTrailer,
-                status: defStatus,
-                messageParser: deferredParser
-            }
-            logger.trace(`New rpc ${options.notification ? 'notification' : 'request'}, ${request.requestId}`)
-            this.emit('rpcRequest', request, options, deferred)
-            return unary
+        const deferredParser = (bytes: Uint8Array) => method.O.fromBinary(bytes)
+        const deferred: ResultParts = {
+            message: defMessage,
+            header: defHeader,
+            trailer: defTrailer,
+            status: defStatus,
+            messageParser: deferredParser
         }
+        logger.trace(`New rpc ${options.notification ? 'notification' : 'request'}, ${request.requestId}`)
+        this.emit('rpcRequest', request, options, deferred)
+        return unary
+        //}
     }
 
     // eslint-disable-next-line class-methods-use-this

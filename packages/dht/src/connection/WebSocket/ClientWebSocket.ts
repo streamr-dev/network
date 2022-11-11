@@ -8,6 +8,7 @@ const logger = new Logger(module)
 const BINARY_TYPE = 'arraybuffer'
 
 export class ClientWebSocket extends EventEmitter<ConnectionEvents> implements IConnection {
+    public static instances: ClientWebSocket[] = []
     public readonly connectionId: ConnectionID
     private socket?: WebSocket
     public connectionType = ConnectionType.WEBSOCKET_CLIENT
@@ -15,6 +16,7 @@ export class ClientWebSocket extends EventEmitter<ConnectionEvents> implements I
     constructor() {
         super()
         this.connectionId = new ConnectionID()
+        ClientWebSocket.instances.push(this)
     }
 
     connect(address: string): void {
