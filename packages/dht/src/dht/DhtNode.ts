@@ -29,7 +29,7 @@ import { Logger } from '@streamr/utils'
 import { v4 } from 'uuid'
 import { IDhtRpcService } from '../proto/DhtRpc.server'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
-import { runAndRaceEvents3, waitForEvent3 } from '../helpers/waitForEvent3'
+import { runAndRaceEvents3, runAndWaitForEvents3 } from '../helpers/waitForEvent3'
 import { RoutingSession, RoutingSessionEvents } from './RoutingSession'
 import { RandomContactList } from './contact/RandomContactList'
 import { Empty } from '../proto/google/protobuf/empty'
@@ -133,7 +133,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         }
         logger.info(`Starting new Streamr Network DHT Node with serviceId ${this.config.serviceId}`)
         this.started = true
-        
+
         // If transportLayer is given, do not create a ConnectionManager
 
         if (this.config.transportLayer) {
@@ -479,16 +479,20 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             this.connectionManager.lockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
         }
 
+        if (!this.started || this.stopped) {
+            return
+        }
+
         this.addNewContact(entryPointDescriptor)
         const closest = this.bucket!.closest(this.ownPeerId!.value, this.config.parallelism)
         this.neighborList!.addContacts(closest)
 
-        this.findMoreContacts()
         try {
-            await waitForEvent3<Events>(this, 'joinCompleted', this.config.dhtJoinTimeout)
+            await runAndWaitForEvents3<Events>([() => { this.findMoreContacts() }], [
+                [this, 'joinCompleted']], this.config.dhtJoinTimeout)
             if (!this.stopped) {
                 if (this.bucket!.count() === 0) {
-                    this.rejoinDht(entryPointDescriptor).catch(() => {})
+                    this.rejoinDht(entryPointDescriptor).catch(() => { })
                 } else {
                     this.getClosestPeersFromBucketIntervalRef = setTimeout(async () => await this.getClosestPeersFromBucket(), 30 * 1000)
                 }
@@ -507,12 +511,15 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             return
         }
         this.rejoinOngoing = true
-        logger.info(`Attempting to rejoin DHT ${this.config.serviceId}...`)
         try {
             this.neighborList!.clear()
             await this.joinDht(entryPoint)
+
             this.rejoinOngoing = false
             if (this.connections.size === 0 || this.bucket!.count() === 0) {
+                if (!this.started || this.stopped) {
+                    return
+                }
                 this.rejoinTimeoutRef = setTimeout(async () => {
                     await this.rejoinDht(entryPoint)
                     this.rejoinTimeoutRef = undefined
@@ -523,6 +530,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         } catch (err) {
             logger.warn(`rejoining DHT ${this.config.serviceId} failed`)
             this.rejoinOngoing = false
+            if (!this.started || this.stopped) {
+                return
+            }
             this.rejoinTimeoutRef = setTimeout(async () => {
                 await this.rejoinDht(entryPoint)
                 this.rejoinTimeoutRef = undefined
@@ -539,7 +549,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
                 // eslint-disable-next-line promise/catch-or-return
                 this.getClosestPeersFromContact(nextPeer!)
                     .then((contacts) => this.onClosestPeersRequestSucceeded(nextPeer!.peerId, contacts))
-                    .catch((err) => this.onClosestPeersRequestFailed(nextPeer!.peerId, err))
+                    .catch((err) => {
+                        this.onClosestPeersRequestFailed(nextPeer!.peerId, err)
+                    })
                     .finally(() => {
                         this.outgoingClosestPeersRequestsCounter--
                         if (this.stopped) {
@@ -569,6 +581,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
                 this.addNewContact(contact)
             })
         }))
+        if (!this.started || this.stopped) {
+            return
+        }
         this.getClosestPeersFromBucketIntervalRef = setTimeout(async () =>
             await this.getClosestPeersFromBucket()
         , 90 * 1000)
@@ -719,7 +734,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             this.rejoinTimeoutRef = undefined
         }
         this.ongoingJoinOperation = false
-        this.ongoingRoutingSessions.forEach((session, _id)=> {
+        this.ongoingRoutingSessions.forEach((session, _id) => {
             session.stop()
         })
         this.bucket!.removeAllListeners()
@@ -728,8 +743,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             clearTimeout(entry.timeout)
         })
         this.forwardingTable.clear()
-        this.removeAllListeners()
-        
+        //this.removeAllListeners()
+
         if (this.connectionManager) {
             await this.connectionManager.stop()
         }
@@ -788,7 +803,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             1000,
             forwarding
         )
-        
+
         this.ongoingRoutingSessions.set(session.sessionId, session)
 
         const result = await runAndRaceEvents3<RoutingSessionEvents>([() => {

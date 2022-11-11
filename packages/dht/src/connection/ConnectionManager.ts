@@ -180,7 +180,11 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         await Promise.allSettled([...this.connections.values()].map(async (connection: ManagedConnection) => {
             const targetDescriptor = connection.getPeerDescriptor()
             if (targetDescriptor) {
-                await this.gracefullyDisconnect(targetDescriptor)
+                try {
+                    await this.gracefullyDisconnect(targetDescriptor)
+                } catch (e) {
+                    logger.debug(e)
+                }
             }
             connection.close()
         }))

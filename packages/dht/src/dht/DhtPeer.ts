@@ -26,7 +26,7 @@ export interface RouteMessageParams {
 
 export class DhtPeer implements KBucketContact {
     private static counter = 0
-    
+
     public readonly peerId: PeerID
 
     public get id(): Uint8Array {
@@ -59,13 +59,8 @@ export class DhtPeer implements KBucketContact {
             targetDescriptor: this.peerDescriptor as PeerDescriptor
         }
 
-        try {
-            const peers = await this.dhtClient.getClosestPeers(request, options)
-            return peers.peers
-        } catch (err) {
-            logger.debug(`getClosestPeers failed on ${this.serviceId} to ${this.peerId.toKey()}: ${err}`)
-            return []
-        }
+        const peers = await this.dhtClient.getClosestPeers(request, options)
+        return peers.peers
     }
 
     async ping(sourceDescriptor: PeerDescriptor): Promise<boolean> {

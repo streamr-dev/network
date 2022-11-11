@@ -99,6 +99,46 @@ describe('toProtoRpcClient', () => {
 
     })
 
+    it('Awaiting RPC notifications returns when using events', async () => {
+       
+        // Setup server
+        const communicator1 = new RpcCommunicator()
+        const wakeUpService = new WakeUpService()
+        communicator1.registerRpcNotification(WakeUpRequest, 'wakeUp', wakeUpService.wakeUp)
+
+        // Setup client
+        const communicator2 = new RpcCommunicator()
+        const wakeUpClient = toProtoRpcClient(new WakeUpRpcServiceClient(communicator2.getRpcClientTransport()))
+
+        // Simulate a network connection, in real life the message blobs would be transferred over a network
+       
+        communicator2.on('outgoingMessage', (msgBody: Uint8Array, _requestId: string, _callContext?: ProtoCallContext) => {
+            communicator1.handleIncomingMessage(msgBody)
+        })
+
+        await wakeUpClient.wakeUp({ reason: 'School' })
+    })
+
+    it('Awaiting RPC notifications returns when using outgoingMessageListener', async () => {
+       
+        // Setup server
+        const communicator1 = new RpcCommunicator()
+        const wakeUpService = new WakeUpService()
+        communicator1.registerRpcNotification(WakeUpRequest, 'wakeUp', wakeUpService.wakeUp)
+
+        // Setup client
+        const communicator2 = new RpcCommunicator()
+        const wakeUpClient = toProtoRpcClient(new WakeUpRpcServiceClient(communicator2.getRpcClientTransport()))
+
+        // Simulate a network connection, in real life the message blobs would be transferred over a network
+       
+        communicator2.setOutgoingMessageListener(async (msgBody: Uint8Array, _requestId: string, _callContext?: ProtoCallContext) => {
+            communicator1.handleIncomingMessage(msgBody)
+        })
+        
+        await wakeUpClient.wakeUp({ reason: 'School' })
+    })
+
     it('Handles client-side exceptions on RPC notifications', async () => {
         // Setup client
         const communicator2 = new RpcCommunicator()

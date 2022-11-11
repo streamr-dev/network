@@ -203,6 +203,8 @@ export class ManagedConnection extends EventEmitter<Events> {
             this.implementation?.close()
         } else if (this.connectingConnection) {
             this.connectingConnection?.close()
+        } else {
+            this.emit('disconnected')
         }
     }
 

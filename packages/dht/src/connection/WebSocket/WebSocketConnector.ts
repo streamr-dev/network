@@ -38,6 +38,7 @@ export class WebSocketConnector extends EventEmitter<ManagedConnectionSourceEven
     private readonly connectivityChecker: ConnectivityChecker
     private readonly ongoingConnectRequests: Map<PeerIDKey, ManagedConnection> = new Map()
     private ownPeerDescriptor?: PeerDescriptor
+    private connectingConnections: Map<PeerIDKey, ManagedConnection> = new Map()
     private stopped = false
 
     constructor(
@@ -113,6 +114,14 @@ export class WebSocketConnector extends EventEmitter<ManagedConnectionSourceEven
     }
 
     public connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
+        if (this.stopped) {
+            logger.info('connect called on closed websocketconnector')
+        }
+        const peerKey = PeerID.fromValue(targetPeerDescriptor.peerId).toKey()
+        const existingConnection = this.connectingConnections.get(peerKey)
+        if (existingConnection) {
+            return existingConnection
+        }
 
         if (this.ownPeerDescriptor!.websocket && !targetPeerDescriptor.websocket) {
             return this.requestConnectionFromPeer(this.ownPeerDescriptor!, targetPeerDescriptor)
@@ -122,10 +131,22 @@ export class WebSocketConnector extends EventEmitter<ManagedConnectionSourceEven
             const address = 'ws://' + targetPeerDescriptor.websocket!.ip + ':' +
                 targetPeerDescriptor.websocket!.port
 
-            const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, this.protocolVersion, 
+            const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, this.protocolVersion,
                 ConnectionType.WEBSOCKET_CLIENT, socket, undefined)
             managedConnection.setPeerDescriptor(targetPeerDescriptor!)
-            
+
+            this.connectingConnections.set(PeerID.fromValue(targetPeerDescriptor.peerId).toKey(), managedConnection)
+
+            const delFunc = () => {
+                if (this.connectingConnections.has(peerKey)) {
+                    this.connectingConnections.delete(peerKey)
+                }
+                socket.off('disconnected', delFunc)
+                managedConnection.off('handshakeCompleted', delFunc)
+            }
+            socket.on('disconnected', delFunc)
+            managedConnection.on('handshakeCompleted', delFunc)
+
             socket.connect(address)
 
             return managedConnection
@@ -176,7 +197,19 @@ export class WebSocketConnector extends EventEmitter<ManagedConnectionSourceEven
     }
 
     public async stop(): Promise<void> {
+        this.stopped = true
         this.rpcCommunicator.stop()
+
+        this.ongoingConnectRequests.forEach((managedConnection) => {
+            logger.info('closing ongoingConnectRequest')
+            managedConnection.close()
+        })
+
+        this.connectingConnections.forEach((managedConnection) => {
+            logger.info('closing connectingConnection')
+            managedConnection.close()
+        })
+
         await this.webSocketServer?.stop()
     }
 

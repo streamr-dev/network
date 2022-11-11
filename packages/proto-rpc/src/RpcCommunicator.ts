@@ -1,3 +1,5 @@
+/* eslint-disable promise/catch-or-return */
+
 import * as Err from './errors'
 import { ErrorCode } from './errors'
 import {
@@ -53,6 +55,18 @@ class OngoingRequest {
         this.resolveDeferredPromises(response)
     }
 
+    public resolveNotification() {
+        if (this.timeoutRef) {
+            clearTimeout(this.timeoutRef)
+        }
+        if (this.deferredPromises.message.state === DeferredState.PENDING) {
+            this.deferredPromises.message.resolve({})
+            this.deferredPromises.header.resolve({})
+            this.deferredPromises.status.resolve({ code: StatusCode.OK, detail: '' })
+            this.deferredPromises.trailer.resolve({})
+        }
+    }
+
     public rejectRequest(error: Error, code: string) {
         if (this.timeoutRef) {
             clearTimeout(this.timeoutRef)
@@ -83,9 +97,9 @@ class OngoingRequest {
 const logger = new Logger(module)
 
 interface RpcResponseParams {
-    request: RpcMessage 
+    request: RpcMessage
     body?: Uint8Array
-    errorType?: RpcErrorType 
+    errorType?: RpcErrorType
     errorClassName?: string
     errorCode?: string
     errorMessage?: string
@@ -167,7 +181,7 @@ export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvents> impleme
             return
         }
         const requestOptions = this.rpcClientTransport.mergeOptions(callContext)
-        
+
         // do not register a notification
         if (deferredPromises && (!callContext || !callContext.notification)) {
             this.registerRequest(rpcMessage.requestId, deferredPromises, requestOptions!.timeout as number)
@@ -175,19 +189,37 @@ export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvents> impleme
         const msg = RpcMessage.toBinary(rpcMessage)
 
         logger.trace(`onOutGoingMessage, messageId: ${rpcMessage.requestId}`)
+
         this.emit('outgoingMessage', msg, rpcMessage.requestId, callContext)
-    
+
         if (this.outgoingMessageListener) {
-            this.outgoingMessageListener(msg, rpcMessage.requestId, callContext).catch((clientSideException) => {
-                if (deferredPromises) {
-                    if (this.ongoingRequests.has(rpcMessage.requestId)) {
-                        this.handleClientError(rpcMessage.requestId, clientSideException)
-                    } else {
-                        const ongoingRequest = new OngoingRequest(deferredPromises, 1000)
-                        ongoingRequest.rejectRequest(clientSideException, StatusCode.SERVER_ERROR)  
-                    } 
+            this.outgoingMessageListener(msg, rpcMessage.requestId, callContext)
+                .catch((clientSideException) => {
+                    if (deferredPromises) {
+                        if (this.ongoingRequests.has(rpcMessage.requestId)) {
+                            this.handleClientError(rpcMessage.requestId, clientSideException)
+                        } else {
+                            const ongoingRequest = new OngoingRequest(deferredPromises, 1000)
+                            ongoingRequest.rejectRequest(clientSideException, StatusCode.SERVER_ERROR)
+                        }
+                    }
+                })
+                .then(() => {
+                    if (deferredPromises) {
+                        if (!this.ongoingRequests.has(rpcMessage.requestId)) {
+                            const ongoingRequest = new OngoingRequest(deferredPromises, 1000)
+                            ongoingRequest.resolveNotification()
+                        }
+                    }
+                    return
+                })
+        } else {
+            if (deferredPromises) {
+                if (!this.ongoingRequests.has(rpcMessage.requestId)) {
+                    const ongoingRequest = new OngoingRequest(deferredPromises, 1000)
+                    ongoingRequest.resolveNotification()
                 }
-            })
+            }
         }
     }
 
