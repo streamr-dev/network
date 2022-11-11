@@ -23,6 +23,10 @@ export const waitForCondition = async (
     userAbortSignal?: AbortSignal,
     onTimeoutContext?: () => string
 ): Promise<void> => {
+    let userAborted = userAbortSignal?.aborted ?? false
+    if (!userAborted) {
+        userAbortSignal?.addEventListener('abort', () => { userAborted = true }, { once: true })
+    }
     const timeoutAbortSignal: AbortSignal = (AbortSignal as any).timeout(timeout)
     const abortSignal = composeAbortSignals(...compact([timeoutAbortSignal, userAbortSignal]))
     try {
@@ -36,7 +40,8 @@ export const waitForCondition = async (
         }
     } catch (e) {
         if (e.code === 'AbortError') {
-            let msg = `waitForCondition: timed out before "${conditionFn.toString()}" became true`
+            const action = userAborted ? 'aborted' : 'timed out'
+            let msg = `waitForCondition: ${action} before "${conditionFn.toString()}" became true`
             if (onTimeoutContext) {
                 msg += `\n${onTimeoutContext()}`
             }

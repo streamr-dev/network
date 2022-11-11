@@ -23,6 +23,26 @@ describe('waitForCondition', () => {
                 done()
             })
         })
+
+        it('rejects if conditionFn does not return true before abort signalled', (done) => {
+            const abortController = new AbortController()
+            setTimeout(() => {
+                abortController.abort()
+            }, 100)
+            waitForCondition(() => false, 5000, 10, abortController.signal).catch((err) => {
+                expect(err.message).toEqual("waitForCondition: aborted before \"() => false\" became true")
+                done()
+            })
+        })
+
+        it('rejects immediately if given pre-aborted signal', (done) => {
+            const abortController = new AbortController()
+            abortController.abort()
+            waitForCondition(() => true, 5000, 1, abortController.signal).catch((err) => {
+                expect(err.message).toEqual("waitForCondition: aborted before \"() => true\" became true")
+                done()
+            })
+        })
     })
 
     describe('given conditionFn that returns promisified booleans (i.e. Promise<boolean>)', () => {
@@ -56,11 +76,35 @@ describe('waitForCondition', () => {
             const fn = jest.fn()
                 .mockResolvedValueOnce(false)
                 .mockRejectedValueOnce(error)
-            await expect(waitForCondition(fn)).rejects.toThrow(error)
+            await expect(waitForCondition(fn))
+                .rejects
+                .toThrow(error)
         })
 
         it('rejects if conditionFn returns promise that does not settle within timeout', async () => {
-            await expect(waitForCondition(() => new Promise(() => {}), 100, 10)).rejects.toThrow()
+            await expect(waitForCondition(() => new Promise(() => {}), 100, 10))
+                .rejects
+                .toThrow('waitForCondition: timed out before "() => new Promise(() => { })" became true')
+        })
+
+        it('rejects if conditionFn does not return true before abort signalled', (done) => {
+            const abortController = new AbortController()
+            setTimeout(() => {
+                abortController.abort()
+            }, 100)
+            waitForCondition(() => Promise.resolve(false), 5000, 10, abortController.signal).catch((err) => {
+                expect(err.message).toEqual("waitForCondition: aborted before \"() => Promise.resolve(false)\" became true")
+                done()
+            })
+        })
+
+        it('rejects immediately if given pre-aborted signal', (done) => {
+            const abortController = new AbortController()
+            abortController.abort()
+            waitForCondition(() => Promise.resolve(true), 5000, 1, abortController.signal).catch((err) => {
+                expect(err.message).toEqual("waitForCondition: aborted before \"() => Promise.resolve(true)\" became true")
+                done()
+            })
         })
     })
 
