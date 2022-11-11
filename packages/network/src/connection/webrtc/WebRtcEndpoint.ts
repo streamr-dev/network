@@ -24,7 +24,9 @@ class WebRtcError extends Error {
     constructor(msg: string) {
         super(msg)
         // exclude this constructor from stack trace
-        Error.captureStackTrace(this, WebRtcError)
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, WebRtcError)
+        }
     }
 }
 
