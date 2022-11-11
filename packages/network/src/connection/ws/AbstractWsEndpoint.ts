@@ -35,7 +35,9 @@ export class UnknownPeerError extends Error {
 
     constructor(msg: string) {
         super(msg)
-        Error.captureStackTrace(this, UnknownPeerError)
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, UnknownPeerError)
+        }
     }
 }
 
