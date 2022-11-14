@@ -128,33 +128,44 @@ const configWizardFull = {
     }
 }
 
-const validateTargetConfig = async (config: any): Promise<void> | never => {
+const validateTargetConfig = async (abortSignal: AbortSignal, config: any): Promise<void> | never => {
     validateConfig(config, BROKER_CONFIG_SCHEMA)
     validateClientConfig(config.client)
     for (const pluginName of Object.keys(config.plugins)) {
         const pluginConfig = config.plugins[pluginName]
         // validates the config against the schema
-        await createPlugin(pluginName, {
+        createPlugin(pluginName, {
             ...pluginConfig,
             name: pluginName,
             streamrClient: undefined,
             apiAuthenticator: undefined,
-            brokerConfig: config
+            brokerConfig: config,
+            abortSignal
         })
     }
 }
 
-const testMigration = async (source: any, assertTarget: (target: any) => void | never) => {
+const testMigration = async (abortSignal: AbortSignal, source: any, assertTarget: (target: any) => void | never) => {
     expect(needsMigration(source)).toBe(true)
     const target = createMigratedConfig(source)
     assertTarget(target)
-    await validateTargetConfig(target)
+    await validateTargetConfig(abortSignal, target)
 }
 
 describe('Config migration', () => {
+    let abortController: AbortController
+
+    beforeEach(() => {
+        abortController = new AbortController()
+    })
+
+    afterEach(() => {
+        abortController.abort()
+    })
+
     it('config wizard minimal', async () => {
         const source = configWizardMinimal
-        await testMigration(source, (target) => {
+        await testMigration(abortController.signal, source, (target) => {
             expect(target).toStrictEqual({
                 $schema: formSchemaUrl(CURRENT_CONFIGURATION_VERSION),
                 client: {
@@ -174,7 +185,7 @@ describe('Config migration', () => {
 
     it('config wizard full', async () => {
         const source = configWizardFull
-        await testMigration(source, (target) => {
+        await testMigration(abortController.signal, source, (target) => {
             expect(target).toStrictEqual({
                 $schema: formSchemaUrl(CURRENT_CONFIGURATION_VERSION),
                 client: {
@@ -206,7 +217,7 @@ describe('Config migration', () => {
         const source = cloneDeep(configWizardMinimal) as any
         delete source.apiAuthentication
         delete source.httpServer
-        await testMigration(source, (target: any) => {
+        await testMigration(abortController.signal, source, (target: any) => {
             expect(target.apiAuthentication).toBeUndefined()
             expect(target.httpServer).toBeUndefined()
         })    
@@ -215,7 +226,7 @@ describe('Config migration', () => {
     it('plugin port not defined', async () => {
         const source = cloneDeep(configWizardFull) as any
         delete source.plugins.websocket.port
-        await testMigration(source, (target: any) => {
+        await testMigration(abortController.signal, source, (target: any) => {
             expect(target.plugins.websocket.port).toBeUndefined()
         })  
     })
@@ -230,7 +241,7 @@ describe('Config migration', () => {
             city: null
         }
         source.plugins.metrics.consoleAndPM2IntervalInSeconds = 123
-        await testMigration(source, (target: any) => {
+        await testMigration(abortController.signal, source, (target: any) => {
             expect(target.client.network.name).toBeUndefined()
             expect(target.client.network.location).toStrictEqual({
                 latitude: 12.34,
@@ -244,7 +255,7 @@ describe('Config migration', () => {
     it('legacy plugin', async () => {
         const source = cloneDeep(configWizardMinimal) as any
         source.plugins.legacyMqtt = {}
-        await testMigration(source, (target: any) => {
+        await testMigration(abortController.signal, source, (target: any) => {
             expect(target.plugins.legacyMqtt).toBeUndefined()
         })  
     })
@@ -252,7 +263,8 @@ describe('Config migration', () => {
     it('storage plugin', async () => {
         const source = cloneDeep(configWizardMinimal) as any
         source.plugins.storage = {}
-        return expect(async () => testMigration(source, () => {})).rejects.toThrow('Migration not supported for plugin: storage')
+        return expect(async () => testMigration(abortController.signal, source, () => {}))
+            .rejects.toThrow('Migration not supported for plugin: storage')
     })
 
     it('no migration', () => {
@@ -363,7 +375,7 @@ describe('Config migration', () => {
                     foobar: {}
                 }
             })
-            return expect(async () => testMigration(v1, () => {})).rejects.toThrow('Unknown plugin: foobar')
+            return expect(async () => testMigration(abortController.signal, v1, () => {})).rejects.toThrow('Unknown plugin: foobar')
         })
 
         it('invalid plugin config', async () => {
@@ -374,7 +386,8 @@ describe('Config migration', () => {
                     }
                 }
             })
-            return expect(async () => testMigration(v1, () => {})).rejects.toThrow('websocket plugin: must NOT have additional properties (foobar)')
+            return expect(async () => testMigration(abortController.signal, v1, () => {}))
+                .rejects.toThrow('websocket plugin: must NOT have additional properties (foobar)')
         })
     })
 })
