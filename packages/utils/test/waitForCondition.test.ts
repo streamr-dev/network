@@ -34,15 +34,6 @@ describe('waitForCondition', () => {
                 done()
             })
         })
-
-        it('rejects immediately if given pre-aborted signal', (done) => {
-            const abortController = new AbortController()
-            abortController.abort()
-            waitForCondition(() => true, 5000, 1, abortController.signal).catch((err) => {
-                expect(err.message).toEqual("waitForCondition: aborted before \"() => true\" became true")
-                done()
-            })
-        })
     })
 
     describe('given conditionFn that returns promisified booleans (i.e. Promise<boolean>)', () => {
@@ -97,14 +88,14 @@ describe('waitForCondition', () => {
                 done()
             })
         })
+    })
 
-        it('rejects immediately if given pre-aborted signal', (done) => {
-            const abortController = new AbortController()
-            abortController.abort()
-            waitForCondition(() => Promise.resolve(true), 5000, 1, abortController.signal).catch((err) => {
-                expect(err.message).toEqual("waitForCondition: aborted before \"() => Promise.resolve(true)\" became true")
-                done()
-            })
+    it('rejects immediately if given pre-aborted signal', (done) => {
+        const abortController = new AbortController()
+        abortController.abort()
+        waitForCondition(() => true, 5000, 1, abortController.signal).catch((err) => {
+            expect(err.message).toEqual("waitForCondition: aborted before \"() => true\" became true")
+            done()
         })
     })
 
