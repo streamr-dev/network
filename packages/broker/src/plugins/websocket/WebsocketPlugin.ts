@@ -28,7 +28,7 @@ export class WebsocketPlugin extends Plugin<WebsocketPluginConfig> {
         )
     }
 
-    async stop(): Promise<void> {
+    protected override async stop(): Promise<void> {
         await this.server!.stop()
     }
 

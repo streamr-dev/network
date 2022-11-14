@@ -25,9 +25,6 @@ export class ConsoleMetricsPlugin extends Plugin<ConsoleMetricsPluginConfig> {
             logger.info(`Report\n${output}`)
         }, this.pluginConfig.interval * 1000, this.abortSignal, formatNumber)
     }
-    
-    // eslint-disable-next-line class-methods-use-this
-    async stop(): Promise<void> {}
 
     // eslint-disable-next-line class-methods-use-this
     override getConfigSchema(): Schema {

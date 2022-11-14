@@ -1,3 +1,4 @@
+import { Logger } from '@streamr/utils'
 import { Config } from './config/config'
 import express from 'express'
 import { validateConfig } from './config/validateConfig'
@@ -12,6 +13,8 @@ export interface PluginOptions {
     brokerConfig: Config
     abortSignal: AbortSignal
 }
+
+const logger = new Logger(module)
 
 export abstract class Plugin<T> {
 
@@ -34,6 +37,13 @@ export abstract class Plugin<T> {
         if (configSchema !== undefined) {
             validateConfig(this.pluginConfig, configSchema, `${this.name} plugin`)
         }
+        if (this.stop !== undefined) {
+            this.abortSignal.addEventListener('abort', () => {
+                this.stop!().catch((err) => {
+                    logger.error('error while stopping plugin %s: %s', this.name, err)
+                })
+            }, { once: true })
+        }
     }
 
     addHttpServerRouter(router: express.Router): void {
@@ -51,9 +61,9 @@ export abstract class Plugin<T> {
 
     /**
      * This lifecycle method is called once when Broker stops
-     * It is be called only if the plugin was started successfully
+     * It is called only if the plugin was started successfully
      */
-    abstract stop(): Promise<unknown>
+    protected stop?(): Promise<void>
 
     // eslint-disable-next-line class-methods-use-this
     getConfigSchema(): Schema | undefined {

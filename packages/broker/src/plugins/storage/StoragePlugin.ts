@@ -58,7 +58,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
         this.addHttpServerRouter(storageConfigEndpoints(this.storageConfig))
     }
 
-    async stop(): Promise<void> {
+    protected override async stop(): Promise<void> {
         const node = await this.streamrClient.getNode()
         node.removeMessageListener(this.messageListener!)
         this.storageConfig!.getStreamParts().forEach((streamPart) => {

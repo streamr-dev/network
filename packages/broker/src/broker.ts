@@ -86,7 +86,6 @@ export const createBroker = async (config: Config): Promise<Broker> => {
                 await stopServer(httpServer)
             }
             abortController.abort()
-            await Promise.all(plugins.map((plugin) => plugin.stop()))
             await streamrClient.destroy()
         }
     }

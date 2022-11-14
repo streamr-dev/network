@@ -35,7 +35,6 @@ interface Peer {
 export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
 
     latestLatency?: number
-    latencyPoller?: { stop: () => void }
     natType?: string
     dummyMessagesReceived: number
     subscriptionRetryInterval: number
@@ -169,9 +168,6 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
             return NAT_TYPE_UNKNOWN
         }
     }
-
-    // eslint-disable-next-line class-methods-use-this
-    async stop(): Promise<void> {}
 
     // eslint-disable-next-line class-methods-use-this
     override getConfigSchema(): Schema {

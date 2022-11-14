@@ -51,7 +51,4 @@ export class SubscriberPlugin extends Plugin<SubscriberPluginConfig> {
         setAbortableTimeout(() => this.subscriptionIntervalFn(), this.subscriptionRetryInterval, this.abortSignal)
         logger.info('Subscriber plugin started')
     }
-
-    // eslint-disable-next-line class-methods-use-this
-    async stop(): Promise<void> {}
 }

@@ -26,7 +26,7 @@ export class MqttPlugin extends Plugin<MqttPluginConfig> {
         return this.server.start()
     }
 
-    async stop(): Promise<void> {
+    protected override async stop(): Promise<void> {
         await this.server!.stop()
     }
 
