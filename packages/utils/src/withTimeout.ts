@@ -6,7 +6,9 @@ export class TimeoutError extends Error {
         super(customErrorContext === undefined
             ? `timed out after ${timeoutInMs} ms`
             : `${customErrorContext} (timed out after ${timeoutInMs} ms)`)
-        Error.captureStackTrace(this, TimeoutError)
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, TimeoutError)
+        }
     }
 }
 

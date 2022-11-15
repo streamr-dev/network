@@ -71,6 +71,7 @@ describe('resend', () => {
                 () => messages.length >= NUM_OF_MESSAGES,
                 TIMEOUT - 1000,
                 250,
+                undefined,
                 () => `messages array length was ${messages.length}`
             )
             expect(messages).toHaveLength(NUM_OF_MESSAGES)
