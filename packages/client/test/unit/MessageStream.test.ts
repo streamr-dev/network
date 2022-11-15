@@ -11,7 +11,7 @@ import { omit } from 'lodash'
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
 const waitForCalls = async (onMessage: jest.Mock<any>, n: number) => {
-    await waitForCondition(() => onMessage.mock.calls.length >= n, 1000, 100, () => {
+    await waitForCondition(() => onMessage.mock.calls.length >= n, 1000, 100, undefined, () => {
         return `Timeout while waiting for calls: got ${onMessage.mock.calls.length} out of ${n}`
     })
 }
