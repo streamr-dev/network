@@ -21,7 +21,7 @@ export const getMainnetProvider = (config: Pick<StrictStreamrClientConfig, 'cont
 }
 
 const getAllMainnetProviders = (config: Pick<StrictStreamrClientConfig, 'contracts'>): Provider[] => {
-    if (!config.contracts.mainChainRPCs) {
+    if (config.contracts.mainChainRPCs === undefined) {
         return [getDefaultProvider()]
     }
     return config.contracts.mainChainRPCs.rpcs.map((c: ConnectionInfo) => {
@@ -34,16 +34,13 @@ export const getStreamRegistryChainProvider = (config: Pick<StrictStreamrClientC
 }
 
 export const getAllStreamRegistryChainProviders = (config: Pick<StrictStreamrClientConfig, 'contracts'>): Provider[] => {
-    if (!config.contracts.streamRegistryChainRPCs) {
-        throw new Error('client config has no streamRegistryChainRPC configuration.')
-    }
     return config.contracts.streamRegistryChainRPCs.rpcs.map((c: ConnectionInfo) => {
         return new JsonRpcProvider(c)
     })
 }
 
 export const getStreamRegistryOverrides = (config: Pick<StrictStreamrClientConfig, 'contracts'>): Overrides => {
-    return getOverrides(config.contracts.streamRegistryChainRPCs?.name ?? 'polygon', getStreamRegistryChainProvider(config), config)
+    return getOverrides(config.contracts.streamRegistryChainRPCs.name ?? 'polygon', getStreamRegistryChainProvider(config), config)
 }
 
 /**
@@ -51,10 +48,10 @@ export const getStreamRegistryOverrides = (config: Pick<StrictStreamrClientConfi
  * Ethers.js will resolve the gas price promise before sending the tx
  */
 const getOverrides = (chainName: string, provider: Provider, config: Pick<StrictStreamrClientConfig, 'contracts'>): Overrides => {
-    const chainConfig = config.contracts.ethereumNetworks?.[chainName]
-    if (!chainConfig) { return {} }
-    const overrides = chainConfig?.overrides ?? {}
-    if (chainConfig.gasPriceStrategy) {
+    const chainConfig = config.contracts.ethereumNetworks[chainName]
+    if (chainConfig === undefined) { return {} }
+    const overrides = chainConfig.overrides ?? {}
+    if (chainConfig.gasPriceStrategy !== undefined) {
         return {
             ...overrides,
             gasPrice: provider.getGasPrice().then(chainConfig.gasPriceStrategy)
