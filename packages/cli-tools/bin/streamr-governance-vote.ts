@@ -3,6 +3,7 @@ import { createCommand } from '../src/command'
 import { getClientConfig } from '../src/client'
 import snapshot from '@snapshot-labs/snapshot.js'
 import { Wallet } from '@ethersproject/wallet'
+import { PrivateKeyAuthConfig } from 'streamr-client'
 
 const hub = 'https://hub.snapshot.org'
 const snapshotClient = new snapshot.Client712(hub)
@@ -32,7 +33,7 @@ createCommand()
     .option('--config <file>', 'read connection and authentication settings from a config file')
     .action(async (proposalId: string, choiceId: string, options, command) => {
         const config = getClientConfig(options)
-        if (!config.auth || !config.auth.privateKey) {
+        if (!config.auth || !(config.auth as PrivateKeyAuthConfig).privateKey) {
             console.error('You must pass a private key either via --private-key or via a config file using --config')
             command.help()
             process.exit(1)
@@ -45,6 +46,6 @@ createCommand()
             process.exit(1)
         }
 
-        await vote(config.auth.privateKey, proposalId, choiceIdAsNumber)
+        await vote((config.auth as PrivateKeyAuthConfig).privateKey, proposalId, choiceIdAsNumber)
     })
     .parseAsync()

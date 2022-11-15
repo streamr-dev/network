@@ -1,5 +1,5 @@
 import { Logger, toEthereumAddress } from '@streamr/utils'
-import StreamrClient, { validateConfig as validateClientConfig, NetworkNodeStub } from 'streamr-client'
+import StreamrClient, { validateConfig as validateClientConfig, NetworkNodeStub, PrivateKeyAuthConfig } from 'streamr-client'
 import { Wallet } from 'ethers'
 import { Server as HttpServer } from 'http'
 import { Server as HttpsServer } from 'https'
@@ -25,7 +25,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
     validateConfig(config, BROKER_CONFIG_SCHEMA)
     validateClientConfig(config.client)
 
-    const wallet = new Wallet(config.client.auth!.privateKey!)
+    const wallet = new Wallet((config.client.auth! as PrivateKeyAuthConfig).privateKey!)
     const brokerAddress = wallet.address
 
     const streamrClient = new StreamrClient(config.client)
