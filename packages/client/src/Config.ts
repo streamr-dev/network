@@ -14,7 +14,6 @@ import { LogLevel } from '@streamr/utils'
 import { NetworkNodeOptions, STREAMR_ICE_SERVERS } from '@streamr/network-node'
 import type { ConnectionInfo } from '@ethersproject/web'
 import { generateClientId } from './utils/utils'
-import { XOR } from './types'
 
 export interface ProviderAuthConfig {
     ethereum: ExternalProvider
@@ -57,7 +56,7 @@ export interface StrictStreamrClientConfig {
     * Authentication: identity used by this StreamrClient instance.
     * Can contain member privateKey or (window.)ethereum
     */
-    auth?: XOR<PrivateKeyAuthConfig, ProviderAuthConfig>
+    auth?: PrivateKeyAuthConfig | ProviderAuthConfig
 
     /** Attempt to order messages */
     orderMessages: boolean

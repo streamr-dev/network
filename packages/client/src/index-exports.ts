@@ -38,7 +38,7 @@ export { UpdateEncryptionKeyOptions } from './encryption/GroupKeyStore'
 
 export { ConfigTest } from './ConfigTest'
 export { NetworkNodeStub } from './NetworkNodeFacade'
-export { StreamDefinition, Without, XOR } from './types'
+export { StreamDefinition } from './types'
 export { formStorageNodeAssignmentStreamId } from './utils/utils'
 
 export type { StreamID, StreamPartID, TrackerRegistryRecord } from '@streamr/protocol'
