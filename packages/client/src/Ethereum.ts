@@ -21,7 +21,7 @@ export const getMainnetProvider = (config: Pick<StrictStreamrClientConfig, 'cont
 }
 
 const getAllMainnetProviders = (config: Pick<StrictStreamrClientConfig, 'contracts'>): Provider[] => {
-    if (!config.contracts.mainChainRPCs || !config.contracts.mainChainRPCs.rpcs.length) {
+    if (!config.contracts.mainChainRPCs) {
         return [getDefaultProvider()]
     }
     return config.contracts.mainChainRPCs.rpcs.map((c: ConnectionInfo) => {
@@ -34,7 +34,7 @@ export const getStreamRegistryChainProvider = (config: Pick<StrictStreamrClientC
 }
 
 export const getAllStreamRegistryChainProviders = (config: Pick<StrictStreamrClientConfig, 'contracts'>): Provider[] => {
-    if (!config.contracts.streamRegistryChainRPCs || !config.contracts.streamRegistryChainRPCs.rpcs.length) {
+    if (!config.contracts.streamRegistryChainRPCs) {
         throw new Error('client config has no streamRegistryChainRPC configuration.')
     }
     return config.contracts.streamRegistryChainRPCs.rpcs.map((c: ConnectionInfo) => {
