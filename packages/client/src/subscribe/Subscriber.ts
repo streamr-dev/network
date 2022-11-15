@@ -40,7 +40,7 @@ export class Subscriber {
         node: NetworkNodeFacade,
         streamrClientEventEmitter: StreamrClientEventEmitter,
         destroySignal: DestroySignal,
-        @inject(ConfigInjectionToken.Root) rootConfig: StrictStreamrClientConfig,
+        @inject(ConfigInjectionToken) rootConfig: StrictStreamrClientConfig,
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
     ) {
         this.streamIdBuilder = streamIdBuilder

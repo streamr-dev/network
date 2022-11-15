@@ -1,6 +1,5 @@
 import { scoped, Lifecycle, inject } from 'tsyringe'
-import { ConfigInjectionToken } from '../Config'
-import { EthereumConfig } from '../Ethereum'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { HttpFetcher } from './HttpFetcher'
 import { LoggerFactory } from './LoggerFactory'
 import { Logger } from '@streamr/utils'
@@ -17,14 +16,14 @@ export class GraphQLClient {
     constructor(
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
         @inject(HttpFetcher) private httpFetcher: HttpFetcher,
-        @inject(ConfigInjectionToken.Ethereum) private config: EthereumConfig,
+        @inject(ConfigInjectionToken) private config: Pick<StrictStreamrClientConfig, 'contracts'>
     ) {
         this.logger = loggerFactory.createLogger(module)
     }
 
     async sendQuery(query: GraphQLQuery): Promise<any> {
         this.logger.debug('GraphQL query: %s', query)
-        const res = await this.httpFetcher.fetch(this.config.theGraphUrl, {
+        const res = await this.httpFetcher.fetch(this.config.contracts.theGraphUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -37,7 +36,7 @@ export class GraphQLClient {
         try {
             resJson = JSON.parse(resText)
         } catch {
-            throw new Error(`GraphQL query failed with "${resText}", check that your theGraphUrl="${this.config.theGraphUrl}" is correct`)
+            throw new Error(`GraphQL query failed with "${resText}", check that your theGraphUrl="${this.config.contracts.theGraphUrl}" is correct`)
         }
         this.logger.debug('GraphQL response: %j', resJson)
         if (!resJson.data) {

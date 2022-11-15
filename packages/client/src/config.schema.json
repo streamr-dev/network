@@ -379,7 +379,8 @@
                     "items": {
                         "type": "object",
                         "$ref": "#/definitions/rpcProviderConfig"
-                    }
+                    },
+                    "minItems": 1
                 }
             }
         }

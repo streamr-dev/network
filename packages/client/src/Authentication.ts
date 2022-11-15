@@ -2,29 +2,13 @@ import { Wallet } from '@ethersproject/wallet'
 import { Web3Provider } from '@ethersproject/providers'
 import type { Signer } from '@ethersproject/abstract-signer'
 import { computeAddress } from '@ethersproject/transactions'
-import type { ExternalProvider } from '@ethersproject/providers'
-import { EthereumConfig, getStreamRegistryChainProvider } from './Ethereum'
-import { XOR } from './types'
+import { getStreamRegistryChainProvider } from './Ethereum'
+import { PrivateKeyAuthConfig, ProviderAuthConfig } from './Config'
 import { pLimitFn } from './utils/promises'
 import pMemoize from 'p-memoize'
 import { EthereumAddress, toEthereumAddress, wait } from '@streamr/utils'
 import { sign } from './utils/signingUtils'
-
-export type ProviderConfig = ExternalProvider
-
-export interface ProviderAuthConfig {
-    ethereum: ProviderConfig
-}
-
-export interface PrivateKeyAuthConfig {
-    privateKey: string
-    // The address property is not used. It is included to make the object
-    // compatible with StreamrClient.generateEthereumAccount(), as we typically
-    // use that method to generate the client "auth" option.
-    address?: string
-}
-
-export type AuthConfig = XOR<PrivateKeyAuthConfig, ProviderAuthConfig>
+import { StrictStreamrClientConfig } from './Config'
 
 export const AuthenticationInjectionToken = Symbol('Authentication')
 
@@ -35,27 +19,27 @@ export interface Authentication {
     getStreamRegistryChainSigner: () => Promise<Signer>
 }
 
-const createPrivateKeyAuthentication = (key: string, ethereumConfig: EthereumConfig): Authentication => {
+export const createPrivateKeyAuthentication = (key: string, config: Pick<StrictStreamrClientConfig, 'contracts'>): Authentication => {
     const address = toEthereumAddress(computeAddress(key))
     return {
         getAddress: async () => address,
         createMessageSignature: async (payload: string) => sign(payload, key),
-        getStreamRegistryChainSigner: async () => new Wallet(key, getStreamRegistryChainProvider(ethereumConfig))
+        getStreamRegistryChainSigner: async () => new Wallet(key, getStreamRegistryChainProvider(config))
     }
 }
 
-export const createAuthentication = (authConfig: AuthConfig | undefined, ethereumConfig: EthereumConfig): Authentication => {
-    if (authConfig?.privateKey !== undefined) {
-        return createPrivateKeyAuthentication(authConfig.privateKey, ethereumConfig)
-    } else if (authConfig?.ethereum !== undefined) {
-        const { ethereum } = authConfig
+export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'auth' | 'contracts'>): Authentication => {
+    if ((config.auth as PrivateKeyAuthConfig)?.privateKey !== undefined) {
+        return createPrivateKeyAuthentication((config.auth as PrivateKeyAuthConfig).privateKey, config)
+    } else if ((config.auth as ProviderAuthConfig)?.ethereum !== undefined) {
+        const ethereum = (config.auth as ProviderAuthConfig)?.ethereum
         const metamaskProvider = new Web3Provider(ethereum)
         const signer = metamaskProvider.getSigner()
         return {
             getAddress: pMemoize(async () => {
                 try {
-                    if (!(ethereumConfig && 'request' in ethereum && typeof ethereum.request === 'function')) {
-                        throw new Error(`invalid ethereum provider ${ethereumConfig}`)
+                    if (!('request' in ethereum && typeof ethereum.request === 'function')) {
+                        throw new Error(`invalid ethereum provider ${ethereum}`)
                     }
                     const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
                     return toEthereumAddress(accounts[0])
@@ -71,12 +55,12 @@ export const createAuthentication = (authConfig: AuthConfig | undefined, ethereu
                 return sig
             }, 1),
             getStreamRegistryChainSigner: async () => {
-                if (!ethereumConfig.streamRegistryChainRPCs || ethereumConfig.streamRegistryChainRPCs.chainId === undefined) {
+                if (!config.contracts.streamRegistryChainRPCs || config.contracts.streamRegistryChainRPCs.chainId === undefined) {
                     throw new Error('Streamr streamRegistryChainRPC not configured (with chainId) in the StreamrClient options!')
                 }
                 const { chainId } = await metamaskProvider.getNetwork()
-                if (chainId !== ethereumConfig.streamRegistryChainRPCs.chainId) {
-                    const sideChainId = ethereumConfig.streamRegistryChainRPCs.chainId
+                if (chainId !== config.contracts.streamRegistryChainRPCs.chainId) {
+                    const sideChainId = config.contracts.streamRegistryChainRPCs.chainId
                     throw new Error(
                         `Please connect Metamask to Ethereum blockchain with chainId ${sideChainId}: current chainId is ${chainId}`
                     )
@@ -91,6 +75,6 @@ export const createAuthentication = (authConfig: AuthConfig | undefined, ethereu
             }
         }
     } else {
-        return createPrivateKeyAuthentication(Wallet.createRandom().privateKey, ethereumConfig)
+        return createPrivateKeyAuthentication(Wallet.createRandom().privateKey, config)
     }
 }

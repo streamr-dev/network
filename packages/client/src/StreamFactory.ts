@@ -1,6 +1,6 @@
 import { delay, inject, Lifecycle, scoped } from 'tsyringe'
 import { StreamID } from '@streamr/protocol'
-import { ConfigInjectionToken, TimeoutsConfig } from './Config'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
 import { StreamrClientEventEmitter } from './events'
 import { Publisher } from './publish/Publisher'
 import { StreamRegistry } from './registry/StreamRegistry'
@@ -22,7 +22,7 @@ export class StreamFactory {
     private readonly streamStorageRegistry: StreamStorageRegistry
     private readonly loggerFactory: LoggerFactory
     private readonly eventEmitter: StreamrClientEventEmitter
-    private readonly timeoutsConfig: TimeoutsConfig
+    private readonly config: Pick<StrictStreamrClientConfig, '_timeouts'>
 
     constructor(
         resends: Resends,
@@ -33,7 +33,7 @@ export class StreamFactory {
         streamStorageRegistry: StreamStorageRegistry,
         loggerFactory: LoggerFactory,
         eventEmitter: StreamrClientEventEmitter,
-        @inject(ConfigInjectionToken.Timeouts) timeoutsConfig: TimeoutsConfig
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, '_timeouts'>
     ) {
         this.resends = resends
         this.publisher = publisher
@@ -43,7 +43,7 @@ export class StreamFactory {
         this.streamStorageRegistry = streamStorageRegistry
         this.loggerFactory = loggerFactory
         this.eventEmitter = eventEmitter
-        this.timeoutsConfig = timeoutsConfig
+        this.config = config
     }
 
     createStream(id: StreamID, metadata: Partial<StreamMetadata>): Stream {
@@ -58,7 +58,7 @@ export class StreamFactory {
             this.streamStorageRegistry,
             this.loggerFactory,
             this.eventEmitter,
-            this.timeoutsConfig
+            this.config
         )
     }
 }

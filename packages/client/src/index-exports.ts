@@ -24,28 +24,15 @@ export { SearchStreamsPermissionFilter } from './registry/searchStreams'
 export {
     StreamrClientConfig,
     StrictStreamrClientConfig,
-    SubscribeConfig,
     TrackerRegistryContract,
-    NetworkConfig,
-    DecryptionConfig,
-    CacheConfig,
-    MetricsConfig,
-    MetricsPeriodConfig,
+    ChainConnectionInfo,
+    EthereumNetworkConfig,
+    ProviderAuthConfig,
+    PrivateKeyAuthConfig,
     STREAMR_STORAGE_NODE_GERMANY,
     STREAM_CLIENT_DEFAULTS,
     validateConfig
 } from './Config'
-export {
-    AuthConfig,
-    ProviderAuthConfig,
-    ProviderConfig,
-    PrivateKeyAuthConfig
-} from './Authentication'
-export {
-    EthereumConfig,
-    ChainConnectionInfo,
-    EthereumNetworkConfig,
-} from './Ethereum'
 export { GroupKey as EncryptionKey } from './encryption/GroupKey'
 export { UpdateEncryptionKeyOptions } from './encryption/GroupKeyStore'
 

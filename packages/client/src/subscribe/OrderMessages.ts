@@ -9,7 +9,7 @@ import { Signal } from '../utils/Signal'
 
 import { Resends } from './Resends'
 import { MessageStream } from './MessageStream'
-import { SubscribeConfig } from '../Config'
+import { StrictStreamrClientConfig } from '../Config'
 import OrderingUtil from './ordering/OrderingUtil'
 import { EthereumAddress, Logger } from '@streamr/utils'
 import { LoggerFactory } from '../utils/LoggerFactory'
@@ -31,7 +31,7 @@ export class OrderMessages<T> {
     private orderingUtil
 
     constructor(
-        private options: SubscribeConfig,
+        private config: StrictStreamrClientConfig,
         private resends: Resends,
         private readonly streamPartId: StreamPartID,
         loggerFactory: LoggerFactory
@@ -43,7 +43,7 @@ export class OrderMessages<T> {
         this.onOrdered = this.onOrdered.bind(this)
         this.onGap = this.onGap.bind(this)
         this.maybeClose = this.maybeClose.bind(this)
-        const { gapFillTimeout, retryResendAfter, maxGapRequests, orderMessages = true, gapFill = true } = this.options
+        const { gapFillTimeout, retryResendAfter, maxGapRequests, orderMessages = true, gapFill = true } = this.config
         this.enabled = !!(gapFill && maxGapRequests)
         this.orderMessages = orderMessages
         this.orderingUtil = new OrderingUtil(

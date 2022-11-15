@@ -1,12 +1,11 @@
 import 'reflect-metadata'
 import type { BigNumber } from '@ethersproject/bignumber'
+import type { Overrides } from '@ethersproject/contracts'
 import cloneDeep from 'lodash/cloneDeep'
 import Ajv, { ErrorObject } from 'ajv'
 import addFormats from 'ajv-formats'
 import merge from 'lodash/merge'
-
-import type { AuthConfig } from './Authentication'
-import type { EthereumConfig } from './Ethereum'
+import type { ExternalProvider } from '@ethersproject/providers'
 
 import CONFIG_SCHEMA from './config.schema.json'
 import { TrackerRegistryRecord } from '@streamr/protocol'
@@ -15,35 +14,18 @@ import { LogLevel } from '@streamr/utils'
 import { NetworkNodeOptions, STREAMR_ICE_SERVERS } from '@streamr/network-node'
 import type { ConnectionInfo } from '@ethersproject/web'
 import { generateClientId } from './utils/utils'
+import { XOR } from './types'
 
-export interface CacheConfig {
-    maxSize: number
-    maxAge: number
+export interface ProviderAuthConfig {
+    ethereum: ExternalProvider
 }
 
-export interface TimeoutsConfig {
-    theGraph: {
-        timeout: number
-        retryInterval: number
-    }
-    storageNode: {
-        timeout: number
-        retryInterval: number
-    }
-    jsonRpc: {
-        timeout: number
-        retryInterval: number
-    }
-    httpFetchTimeout: number
-}
-
-export interface SubscribeConfig {
-    /** Attempt to order messages */
-    orderMessages: boolean
-    gapFill: boolean
-    maxGapRequests: number
-    retryResendAfter: number
-    gapFillTimeout: number
+export interface PrivateKeyAuthConfig {
+    privateKey: string
+    // The address property is not used. It is included to make the object
+    // compatible with StreamrClient.generateEthereumAccount(), as we typically
+    // use that method to generate the client "auth" option.
+    address?: string
 }
 
 export interface TrackerRegistryContract {
@@ -51,29 +33,23 @@ export interface TrackerRegistryContract {
     contractAddress: string
 }
 
-export type NetworkConfig = Omit<NetworkNodeOptions, 'trackers' | 'metricsContext'> & {
-    trackers: TrackerRegistryRecord[] | TrackerRegistryContract
+export interface ChainConnectionInfo { 
+    rpcs: ConnectionInfo[]
+    chainId?: number
+    name?: string
 }
 
-export interface DecryptionConfig {
-    keyRequestTimeout: number
-    maxKeyRequestsPerSecond: number
-}
-
-export interface MetricsPeriodConfig {
-    streamId: string
-    duration: number
-}
-
-export interface MetricsConfig {
-    periods: MetricsPeriodConfig[]
-    maxPublishDelay: number
+// these should come from ETH-184 config package when it's ready
+export interface EthereumNetworkConfig {
+    chainId: number
+    overrides?: Overrides
+    gasPriceStrategy?: (estimatedGasPrice: BigNumber) => BigNumber
 }
 
 /**
  * @category Important
  */
-export type StrictStreamrClientConfig = {
+export interface StrictStreamrClientConfig {
     /** Custom human-readable debug id for client. Used in logging. */
     id: string
     logLevel: LogLevel
@@ -81,15 +57,68 @@ export type StrictStreamrClientConfig = {
     * Authentication: identity used by this StreamrClient instance.
     * Can contain member privateKey or (window.)ethereum
     */
-    auth?: AuthConfig
-    network: NetworkConfig
-    contracts: EthereumConfig
-    decryption: DecryptionConfig
-    cache: CacheConfig
-    metrics: MetricsConfig
+    auth?: XOR<PrivateKeyAuthConfig, ProviderAuthConfig>
+
+    /** Attempt to order messages */
+    orderMessages: boolean
+    gapFill: boolean
+    maxGapRequests: number
+    retryResendAfter: number
+    gapFillTimeout: number
+
+    network: Omit<NetworkNodeOptions, 'trackers' | 'metricsContext'> & {
+        trackers: TrackerRegistryRecord[] | TrackerRegistryContract
+    }
+
+    contracts: {
+        streamRegistryChainAddress: string
+        streamStorageRegistryChainAddress: string
+        storageNodeRegistryChainAddress: string
+        ensCacheChainAddress: string
+        mainChainRPCs?: ChainConnectionInfo
+        streamRegistryChainRPCs: ChainConnectionInfo
+        // most of the above should go into ethereumNetworks configs once ETH-184 is ready
+        ethereumNetworks: Record<string, EthereumNetworkConfig>
+        /** Some TheGraph instance, that indexes the streamr registries */
+        theGraphUrl: string
+        maxConcurrentCalls: number
+    }
+
+    decryption: {
+        keyRequestTimeout: number
+        maxKeyRequestsPerSecond: number
+    }
+
+    cache: {
+        maxSize: number
+        maxAge: number
+    }
+
+    metrics: {
+        periods: {
+            streamId: string
+            duration: number
+        }[]
+        maxPublishDelay: number
+    }
+
     /** @internal */
-    _timeouts: TimeoutsConfig
-} & SubscribeConfig
+    _timeouts: {
+        theGraph: {
+            timeout: number
+            retryInterval: number
+        }
+        storageNode: {
+            timeout: number
+            retryInterval: number
+        }
+        jsonRpc: {
+            timeout: number
+            retryInterval: number
+        }
+        httpFetchTimeout: number
+    }
+}
 
 export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'network' | 'contracts' | 'decryption' | 'metrics'> & {
     network: Partial<StrictStreamrClientConfig['network']>
@@ -211,7 +240,7 @@ export const createStrictConfig = (inputOptions: StreamrClientConfig = {}): Stri
                 ...opts.metrics
             }
         } else {
-            const isEthereumAuth = (opts.auth?.ethereum !== undefined)
+            const isEthereumAuth = ((opts.auth as ProviderAuthConfig)?.ethereum !== undefined)
             return {
                 ...defaults.metrics,
                 periods: isEthereumAuth ? [] : defaults.metrics.periods
@@ -237,10 +266,10 @@ export const createStrictConfig = (inputOptions: StreamrClientConfig = {}): Stri
         // NOTE: sidechain and storageNode settings are not merged with the defaults
     }
 
-    if (options.auth?.privateKey !== undefined) {
-        const { privateKey } = options.auth
+    const privateKey = (options.auth as PrivateKeyAuthConfig)?.privateKey
+    if (privateKey !== undefined) {
         if (typeof privateKey === 'string' && !privateKey.startsWith('0x')) {
-            options.auth.privateKey = `0x${options.auth!.privateKey}`
+            (options.auth as PrivateKeyAuthConfig).privateKey = `0x${privateKey}`
         }
     }
 
@@ -267,26 +296,4 @@ export const validateConfig = (data: unknown): void | never => {
     }
 }
 
-/**
- * DI Injection tokens for pieces of config.
- * tsyringe needs a concrete value to use as the injection token.
- * In the case of interfaces & types, these have no runtime value
- * so we have to introduce some token to use for their injection.
- * These symbols represent subsections of the full config.
- *
- * For example:
- * config.ethereum can be injected with a token like: @inject(ConfigInjectionToken.Ethereum)
- */
-export const ConfigInjectionToken = {
-    Root: Symbol('Config.Root'),
-    Auth: Symbol('Config.Auth'),
-    Ethereum: Symbol('Config.Ethereum'),
-    Network: Symbol('Config.Network'),
-    Connection: Symbol('Config.Connection'),
-    Subscribe: Symbol('Config.Subscribe'),
-    Publish: Symbol('Config.Publish'),
-    Cache: Symbol('Config.Cache'),
-    StorageNodeRegistry: Symbol('Config.StorageNodeRegistry'),
-    Decryption: Symbol('Config.Decryption'),
-    Timeouts: Symbol('Config.Timeouts')
-}
+export const ConfigInjectionToken = Symbol('Config')

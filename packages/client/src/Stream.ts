@@ -11,7 +11,7 @@ import {
     toStreamPartID
 } from '@streamr/protocol'
 import { range } from 'lodash'
-import { TimeoutsConfig } from './Config'
+import { StrictStreamrClientConfig } from './Config'
 import { PermissionAssignment, PublicPermissionQuery, UserPermissionQuery } from './permission'
 import { Subscriber } from './subscribe/Subscriber'
 import { formStorageNodeAssignmentStreamId } from './utils/utils'
@@ -78,7 +78,7 @@ export class Stream {
     private readonly _streamStorageRegistry: StreamStorageRegistry
     private readonly _loggerFactory: LoggerFactory
     private readonly _eventEmitter: StreamrClientEventEmitter
-    private readonly _timeoutsConfig: TimeoutsConfig
+    private readonly _config: Pick<StrictStreamrClientConfig, '_timeouts'>
 
     /** @internal */
     constructor(
@@ -92,7 +92,7 @@ export class Stream {
         streamStorageRegistry: StreamStorageRegistry,
         loggerFactory: LoggerFactory,
         eventEmitter: StreamrClientEventEmitter,
-        timeoutsConfig: TimeoutsConfig
+        config: Pick<StrictStreamrClientConfig, '_timeouts'>
     ) {
         this.id = id
         this.metadata = {
@@ -111,7 +111,7 @@ export class Stream {
         this._streamStorageRegistry = streamStorageRegistry
         this._loggerFactory = loggerFactory
         this._eventEmitter = eventEmitter
-        this._timeoutsConfig = timeoutsConfig
+        this._config = config
     }
 
     /**
@@ -195,7 +195,7 @@ export class Stream {
             await withTimeout(
                 propagationPromise,
                 // eslint-disable-next-line no-underscore-dangle
-                waitOptions.timeout ?? this._timeoutsConfig.storageNode.timeout,
+                waitOptions.timeout ?? this._config._timeouts.storageNode.timeout,
                 'storage node did not respond'
             )
         } finally {

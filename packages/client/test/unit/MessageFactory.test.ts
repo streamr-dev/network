@@ -2,7 +2,7 @@ import { keyToArrayIndex, toEthereumAddress } from '@streamr/utils'
 import { random } from 'lodash'
 import { ContentType, EncryptionType, MAX_PARTITION_COUNT, StreamMessage, StreamMessageType, toStreamID } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
-import { createAuthentication } from '../../src/Authentication'
+import { createPrivateKeyAuthentication } from '../../src/Authentication'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { PublishMetadata } from '../../src/publish/Publisher'
 import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
@@ -23,9 +23,7 @@ const createMessageFactory = async (opts?: {
 }) => {
     return new MessageFactory({
         streamId: STREAM_ID,
-        authentication: createAuthentication({
-            privateKey: WALLET.privateKey
-        }, undefined as any),
+        authentication: createPrivateKeyAuthentication(WALLET.privateKey, undefined as any),
         streamRegistry: createStreamRegistryCached({
             partitionCount: PARTITION_COUNT,
             isPublicStream: false,

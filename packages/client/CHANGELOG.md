@@ -14,6 +14,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- Remove subconfig interfaces:
+  - `AuthConfig`
+  - `NetworkConfig`
+  - `EthereumConfig`
+  - `SubscriberConfig`
+  - `DecryptionConfig`
+  - `CacheConfig`
+  - `MetricsConfig` and `MetricsPeriodConfig`
+  - `TimeoutsConfig`
+
 ### Fixed
 
 ### Security
