@@ -8,23 +8,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+
+## [7.0.0] - 2022-11-15
+
+### Added
+
 - The client publishes telemetry metrics to the network at regular intervals (enabled by default, configurable with `metrics` config option)
-- You can manually update a stream encryption key with method `updateEncryptionKey`
+- You can manually update a stream encryption key with method `.updateEncryptionKey()`
 - Add optional client configuration option `logLevel` to set desired logging level.
 
 ### Changed
 
 - Methods related to publishing and subscribing operate on new interfaces `Message` and `MessageMetadata` instead of `StreamMessage`
-  - in `client.subscribe` and `client.resend` the data type of 2nd parameter of `onMessage` callback is `MessageMetadata` instead of `StreamMessage`
-  - in `client.subscribe`, `client.resend` and `client.resendSubscribe` the async iterator type is `Message` instead of `StreamMessage`
-  - in `client.publish` and `stream.publish` the return type is `Message` instead of `StreamMessage`
-  - in `client.waitForStorage` parameter type is `Message` instead of `StreamMessage`
+  - in `.subscribe()` and `.resend()` the data type of 2nd parameter of `onMessage` callback is `MessageMetadata` instead of `StreamMessage`
+  - in `.subscribe()`, `.resend()` and `.resendSubscribe()` the async iterator type is `Message` instead of `StreamMessage`
+  - in `.publish()` and `stream.publish()` the return type is `Message` instead of `StreamMessage`
+  - in `.waitForStorage()` parameter type is `Message` instead of `StreamMessage`
+- Change method signatures of `.publish()` and `stream.publish()`
+  - optional metadata is given as an object instead of positional arguments
+  - new metadata field: `msgChainId`
+- Config option `auth` must be non-empty (if given)
 - Encryption keys are delivered in-stream, not in a separate key exchange stream
   - new optional config options `decryption.keyRequestTimeout` and `decryption.maxKeyRequestsPerSecond`
   - notice that key exchange is not backwards compatible with v6 clients
-- Change method signatures of `client.publish` and `stream.publish`
-  - optional metadata is given as an object instead of positional arguments
-  - new metadata field: `msgChainId`
 - Replace method `subscription.onResent(listener)` with `subscription.once('resendComplete', listener)`
 - Resend supports multiple storage nodes: the data is fetched from a random storage node
 - Enforce concurrency limit for smart contract calls (per contract, configurable with `contracts.maxConcurrentCalls` config option)
@@ -33,45 +49,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Stream metadata now accessed through `stream.getMetadata()`
   - e.g. usages of `stream.partitions` has changed to `stream.getMetadata().partitions`
 - Method `stream.update()` parameter `props` is no longer optional
-- Rename method `getStorageNodesOf()` to `getStorageNodes()`
-- Rename method `getStoredStreamsOf()` to `getStoredStreams()`
-- Rename method `isStreamStoredInStorageNode()` to `isStoredStream()`
-- Replaced methods `createOrUpdateNodeInStorageNodeRegistry()` and `removeNodeFromStorageNodeRegistry()` with single method `setStorageNodeMetadata()`
+- Rename method `.getStorageNodesOf()` to `.getStorageNodes()`
+- Rename method `.getStoredStreamsOf()` to `.getStoredStreams()`
+- Rename method `.isStreamStoredInStorageNode()` to `.isStoredStream()`
+- Replaced methods `.createOrUpdateNodeInStorageNodeRegistry()` and `.removeNodeFromStorageNodeRegistry()` with single method `.setStorageNodeMetadata()`
 - Change configuration option `network.stunUrls` to `network.iceServers` with new format
 - Move contract configuration options from root level to new `contracts` block
 - Change storage node assignment event handlers
-  - replace method `registerStorageEventListeners(listener)` with `on('addToStorageNode', listener)` and `on('removeFromStorageNode', listener)`
-  - replace method `unRegisterStorageEventListeners()` with `off('addToStorageNode', listener)` and `off('removeFromStorageNode', listener)`
+  - replace method `.registerStorageEventListeners(listener)` with `.on('addToStorageNode', listener)` and `.on('removeFromStorageNode', listener)`
+  - replace method `.unRegisterStorageEventListeners()` with `.off('addToStorageNode', listener)` and `.off('removeFromStorageNode', listener)`
 - Rename interface `SubscriptionOnMessage`/`MessageStreamOnMessage` to `MessageListener`
 - Rename class `GroupKey` to `EncryptionKey`
 - Rename interface `TrackerRegistrySmartContract` to `TrackerRegistryContract`
 - Change interface of `MessageStream` from `AsyncGenerator` to `AsyncIterable`
-- Change return type of `getStreamPublishers`, `getStreamSubscribers` and `searchStreams` from `AsyncGenerator` to `AsyncIterable`
-- Config property `auth` must be non-empty (if given)
-- Result set of `getStoredStreams` is no longer capped to 1000 streams
-- Result sets of `getPermissions` and `getStorageNodes` are no longer capped to 100 items
+- Change return type of `.getStreamPublishers()`, `.getStreamSubscribers()` and `.searchStreams()` from `AsyncGenerator` to `AsyncIterable`
+- Result set of `.getStoredStreams()` is no longer capped to 1000 streams
+- Result sets of `.getPermissions()` and `.getStorageNodes()` are no longer capped to 100 items
 
 ### Deprecated
 
-- Deprecate `client.getNode` method and interface `NetworkNodeStub`
+- Deprecate `.getNode()` method and interface `NetworkNodeStub`
 
 ### Removed
 
 - Remove Data Union functionality
   - functionality moved to package `@dataunions/client`
-- Remove method `getAllStorageNodes()`
-  - use `getStorageNodes()` without arguments to same effect
-- Remove method `disconnect()`
-  - use `destroy()` instead
-- Remove method `unsubscribeAll()`
-  - use `unsubscribe()` without arguments to same effect
+- Remove method `.getAllStorageNodes()`
+  - use `.getStorageNodes()` without arguments to same effect
+- Remove method `.disconnect()`
+  - use `.destroy()` instead
+- Remove method `.unsubscribeAll()`
+  - use `.unsubscribe()` without arguments to same effect
 - Remove method `stream.toObject()` and interface `StreamProperties`
   - use `stream.getMetadata()` to get metadata (doesn't contain stream id)
   - use interface `StreamMetadata` instead
 - Remove properties `subscription.onMessage`, `onStart`, and `onError`
   - use `subscription.on('error', cb)` to add an error listener
 - Remove configuration option `groupKeys`
-  - use methods `updateEncryptionKey` and `addEncryptionKey` instead
+  - use methods `.updateEncryptionKey()` and `.addEncryptionKey()` instead
 - Remove client configuration option `verifySignatures`
 - Remove client configuration option `client.network.name`
 - Remove client configuration option `client.debug`
@@ -80,11 +95,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Promise `MessageStream` returned from `resend()` does not reject in the case of an encryption key being unavailable
-- Fix timeout issue of method `addToStorageNode` when used with storage node cluster
+- Promise `MessageStream` returned from `.resend()` does not reject in the case of an encryption key being unavailable
+- Fix timeout issue of method `stream.addToStorageNode()` when used with storage node cluster
 - Fix concurrency issue when encryption keys are added in parallel for multiple streams (`SQLITE_ERROR: no such table: GroupKeys`)
-
-### Security
 
 
 ## [6.0.10] - 2022-10-03
@@ -146,14 +159,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fixed an import so that the client successfully loads in a web browser environment (NET-721)
 
-[Unreleased]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.10...HEAD
-[6.0.10]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.9...client/v6.0.10
-[6.0.9]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.8...client/v6.0.9
-[6.0.8]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.7...client/v6.0.8
-[6.0.7]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.6...client/v6.0.7
-[6.0.6]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.5...client/v6.0.6
-[6.0.5]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.4...client/v6.0.5
-[6.0.4]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.3...client/v6.0.4
-[6.0.3]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.2...client/v6.0.3
-[6.0.2]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.1...client/v6.0.2
-[6.0.1]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.0...client/v6.0.1
+[Unreleased]: https://github.com/streamr-dev/network/compare/client/v7.0.0...HEAD
+[7.0.0]: https://github.com/streamr-dev/network/compare/client/v6.0.10...client/v7.0.0
+[6.0.10]: https://github.com/streamr-dev/network/compare/client/v6.0.9...client/v6.0.10
+[6.0.9]: https://github.com/streamr-dev/network/compare/client/v6.0.8...client/v6.0.9
+[6.0.8]: https://github.com/streamr-dev/network/compare/client/v6.0.7...client/v6.0.8
+[6.0.7]: https://github.com/streamr-dev/network/compare/client/v6.0.6...client/v6.0.7
+[6.0.6]: https://github.com/streamr-dev/network/compare/client/v6.0.5...client/v6.0.6
+[6.0.5]: https://github.com/streamr-dev/network/compare/client/v6.0.4...client/v6.0.5
+[6.0.4]: https://github.com/streamr-dev/network/compare/client/v6.0.3...client/v6.0.4
+[6.0.3]: https://github.com/streamr-dev/network/compare/client/v6.0.2...client/v6.0.3
+[6.0.2]: https://github.com/streamr-dev/network/compare/client/v6.0.1...client/v6.0.2
+[6.0.1]: https://github.com/streamr-dev/network/compare/client/v6.0.0...client/v6.0.1
