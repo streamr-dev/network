@@ -31,6 +31,19 @@ describe('Config', () => {
             }).toThrow('/network/trackers/0 must have required property \'http\'')
         })
 
+        it('empty array', () => {
+            expect(() => {
+                return createStrictConfig({
+                    contracts: {
+                        mainChainRPCs: {
+                            chainId: 123,
+                            rpcs: []
+                        }
+                    }
+                } as any)
+            }).toThrow('/contracts/mainChainRPCs/rpcs must NOT have fewer than 1 items')
+        })
+
         describe('invalid property format', () => {
             it('primitive', () => {
                 expect(() => {
@@ -45,9 +58,11 @@ describe('Config', () => {
             it('ajv-format', () => {
                 expect(() => {
                     return createStrictConfig({
-                        theGraphUrl: 'foo'
+                        contracts: {
+                            theGraphUrl: 'foo'
+                        }
                     } as any)
-                }).toThrow('/theGraphUrl must match format "uri"')
+                }).toThrow('/contracts/theGraphUrl must match format "uri"')
             })
 
             it('ethereum address', () => {

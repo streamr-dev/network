@@ -4,30 +4,9 @@
 import { Wallet } from '@ethersproject/wallet'
 import { getDefaultProvider, JsonRpcProvider } from '@ethersproject/providers'
 import type { Provider } from '@ethersproject/providers'
-import type { BigNumber } from '@ethersproject/bignumber'
 import type { ConnectionInfo } from '@ethersproject/web'
 import type { Overrides } from '@ethersproject/contracts'
-
-export interface ChainConnectionInfo { rpcs: ConnectionInfo[], chainId?: number, name?: string }
-
-// these should come from ETH-184 config package when it's ready
-export interface EthereumNetworkConfig {
-    chainId: number
-    overrides?: Overrides
-    gasPriceStrategy?: (estimatedGasPrice: BigNumber) => BigNumber
-}
-
-export interface EthereumConfig {
-    streamRegistryChainAddress: string
-    streamStorageRegistryChainAddress: string
-    storageNodeRegistryChainAddress: string
-    ensCacheChainAddress: string
-    mainChainRPCs?: ChainConnectionInfo
-    streamRegistryChainRPCs: ChainConnectionInfo
-    // most of the above should go into ethereumNetworks configs once ETH-184 is ready
-    ethereumNetworks?: Record<string, EthereumNetworkConfig>
-    maxConcurrentContractCalls: number
-}
+import { StrictStreamrClientConfig } from './Config'
 
 export const generateEthereumAccount = (): { address: string, privateKey: string } => {
     const wallet = Wallet.createRandom()
@@ -37,45 +16,42 @@ export const generateEthereumAccount = (): { address: string, privateKey: string
     }
 }
 
-export const getMainnetProvider = (config: EthereumConfig): Provider => {
+export const getMainnetProvider = (config: Pick<StrictStreamrClientConfig, 'contracts'>): Provider => {
     return getAllMainnetProviders(config)[0]
 }
 
-const getAllMainnetProviders = (config: EthereumConfig): Provider[] => {
-    if (!config.mainChainRPCs || !config.mainChainRPCs.rpcs.length) {
+const getAllMainnetProviders = (config: Pick<StrictStreamrClientConfig, 'contracts'>): Provider[] => {
+    if (config.contracts.mainChainRPCs === undefined) {
         return [getDefaultProvider()]
     }
-    return config.mainChainRPCs.rpcs.map((c: ConnectionInfo) => {
+    return config.contracts.mainChainRPCs.rpcs.map((c: ConnectionInfo) => {
         return new JsonRpcProvider(c)
     })
 }
 
-export const getStreamRegistryChainProvider = (config: EthereumConfig): Provider => {
+export const getStreamRegistryChainProvider = (config: Pick<StrictStreamrClientConfig, 'contracts'>): Provider => {
     return getAllStreamRegistryChainProviders(config)[0]
 }
 
-export const getAllStreamRegistryChainProviders = (config: EthereumConfig): Provider[] => {
-    if (!config.streamRegistryChainRPCs || !config.streamRegistryChainRPCs.rpcs.length) {
-        throw new Error('EthereumConfig has no streamRegistryChainRPC configuration.')
-    }
-    return config.streamRegistryChainRPCs.rpcs.map((c: ConnectionInfo) => {
+export const getAllStreamRegistryChainProviders = (config: Pick<StrictStreamrClientConfig, 'contracts'>): Provider[] => {
+    return config.contracts.streamRegistryChainRPCs.rpcs.map((c: ConnectionInfo) => {
         return new JsonRpcProvider(c)
     })
 }
 
-export const getStreamRegistryOverrides = (config: EthereumConfig): Overrides => {
-    return getOverrides(config.streamRegistryChainRPCs?.name ?? 'polygon', getStreamRegistryChainProvider(config), config)
+export const getStreamRegistryOverrides = (config: Pick<StrictStreamrClientConfig, 'contracts'>): Overrides => {
+    return getOverrides(config.contracts.streamRegistryChainRPCs.name ?? 'polygon', getStreamRegistryChainProvider(config), config)
 }
 
 /**
  * Apply the gasPriceStrategy to the estimated gas price, if given
  * Ethers.js will resolve the gas price promise before sending the tx
  */
-const getOverrides = (chainName: string, provider: Provider, config: EthereumConfig): Overrides => {
-    const chainConfig = config.ethereumNetworks?.[chainName]
-    if (!chainConfig) { return {} }
-    const overrides = chainConfig?.overrides ?? {}
-    if (chainConfig.gasPriceStrategy) {
+const getOverrides = (chainName: string, provider: Provider, config: Pick<StrictStreamrClientConfig, 'contracts'>): Overrides => {
+    const chainConfig = config.contracts.ethereumNetworks[chainName]
+    if (chainConfig === undefined) { return {} }
+    const overrides = chainConfig.overrides ?? {}
+    if (chainConfig.gasPriceStrategy !== undefined) {
         return {
             ...overrides,
             gasPrice: provider.getGasPrice().then(chainConfig.gasPriceStrategy)

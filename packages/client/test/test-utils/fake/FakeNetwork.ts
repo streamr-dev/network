@@ -76,7 +76,7 @@ export class FakeNetwork {
         await waitForCondition(() => {
             found = this.getSentMessages(opts)
             return found.length >= count
-        }, timeout, timeout / 100, () => {
+        }, timeout, timeout / 100, undefined, () => {
             return `waitForSentMessages timed out: ${JSON.stringify(opts)} matches ${found.length}/${count}`
         })
         return found.slice(0, count)

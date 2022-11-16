@@ -5,7 +5,7 @@ import { ConfigInjectionToken } from '../Config'
 import { OrderMessages } from './OrderMessages'
 import { ResendOptions, Resends } from './Resends'
 import { LoggerFactory } from '../utils/LoggerFactory'
-import { SubscribeConfig } from './../Config'
+import { StrictStreamrClientConfig } from './../Config'
 import { MessageStream } from './MessageStream'
 
 export class ResendSubscription<T> extends Subscription<T> {
@@ -17,11 +17,11 @@ export class ResendSubscription<T> extends Subscription<T> {
         private resendOptions: ResendOptions,
         private resends: Resends,
         loggerFactory: LoggerFactory,
-        @inject(ConfigInjectionToken.Subscribe) subscibreConfig: SubscribeConfig
+        @inject(ConfigInjectionToken) config: StrictStreamrClientConfig
     ) {
         super(streamPartId, loggerFactory)
         this.orderMessages = new OrderMessages<T>(
-            subscibreConfig,
+            config,
             resends,
             streamPartId,
             loggerFactory

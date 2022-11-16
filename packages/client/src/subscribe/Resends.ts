@@ -5,7 +5,6 @@ import { MessageStream } from './MessageStream'
 import { createSubscribePipeline } from './subscribePipeline'
 
 import { StorageNodeRegistry } from '../registry/StorageNodeRegistry'
-import { StreamIDBuilder } from '../StreamIDBuilder'
 import { random } from 'lodash'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { HttpUtil } from '../HttpUtil'
@@ -75,14 +74,13 @@ export class Resends {
     constructor(
         @inject(StreamStorageRegistry) private streamStorageRegistry: StreamStorageRegistry,
         @inject(delay(() => StorageNodeRegistry)) private storageNodeRegistry: StorageNodeRegistry,
-        @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(delay(() => StreamRegistryCached)) private streamRegistryCached: StreamRegistryCached,
         @inject(HttpUtil) private httpUtil: HttpUtil,
         groupKeyStore: GroupKeyStore,
         subscriberKeyExchange: SubscriberKeyExchange,
         streamrClientEventEmitter: StreamrClientEventEmitter,
         destroySignal: DestroySignal,
-        @inject(ConfigInjectionToken.Root) rootConfig: StrictStreamrClientConfig,
+        @inject(ConfigInjectionToken) rootConfig: StrictStreamrClientConfig,
         @inject(LoggerFactory) loggerFactory: LoggerFactory
     ) {
         this.groupKeyStore = groupKeyStore
@@ -150,7 +148,7 @@ export class Resends {
             streamRegistryCached: this.streamRegistryCached,
             streamrClientEventEmitter: this.streamrClientEventEmitter,
             destroySignal: this.destroySignal,
-            rootConfig: this.rootConfig,
+            config: this.rootConfig,
             loggerFactory: this.loggerFactory
         })
 

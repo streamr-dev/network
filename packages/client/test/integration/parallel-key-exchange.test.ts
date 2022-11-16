@@ -5,7 +5,7 @@ import { wait } from '@streamr/utils'
 import { range } from 'lodash'
 import { StreamMessageType } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
-import { createAuthentication } from '../../src/Authentication'
+import { createPrivateKeyAuthentication } from '../../src/Authentication'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'
 import { MessageFactory } from '../../src/publish/MessageFactory'
@@ -59,9 +59,7 @@ describe('parallel key exchange', () => {
         for (const publisher of PUBLISHERS) {
             const messageFactory = new MessageFactory({
                 streamId: stream.id,
-                authentication: createAuthentication({
-                    privateKey: publisher.wallet.privateKey
-                }, undefined as any),
+                authentication: createPrivateKeyAuthentication(publisher.wallet.privateKey, undefined as any),
                 streamRegistry: createStreamRegistryCached({
                     partitionCount: 1,
                     isPublicStream: false,

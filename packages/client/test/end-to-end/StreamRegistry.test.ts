@@ -8,13 +8,12 @@ import { ConfigTest } from '../../src/ConfigTest'
 import { toStreamID } from '@streamr/protocol'
 import { collect } from '../../src/utils/iterators'
 import { fetchPrivateKeyWithGas, randomEthereumAddress } from '@streamr/test-utils'
-import { TimeoutsConfig } from '../../src/Config'
 import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 
 jest.setTimeout(20000)
 const PARTITION_COUNT = 3
 
-const TIMEOUT_CONFIG: TimeoutsConfig = {
+const TIMEOUT_CONFIG = {
     // eslint-disable-next-line no-underscore-dangle
     ...ConfigTest._timeouts!,
     jsonRpc: {
