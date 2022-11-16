@@ -5,7 +5,7 @@ import {
     ContentMessage,
     HandshakeRequest,
     HandshakeResponse,
-    LeaveNotice,
+    LeaveStreamNotice,
     NeighborUpdate, StreamMessage
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { Empty } from '../../src/proto/google/protobuf/empty'
@@ -62,9 +62,9 @@ describe('RemoteRandomGraphNode', () => {
         )
 
         mockServerRpc.registerRpcNotification(
-            LeaveNotice,
-            'leaveNotice',
-            async (_msg: LeaveNotice, _context: ServerCallContext): Promise<Empty> => {
+            LeaveStreamNotice,
+            'leaveStreamNotice',
+            async (_msg: LeaveStreamNotice, _context: ServerCallContext): Promise<Empty> => {
                 recvCounter += 1
                 return Empty
             }
@@ -124,7 +124,7 @@ describe('RemoteRandomGraphNode', () => {
     })
 
     it('leaveNotice', async () => {
-        await remoteRandomGraphNode.leaveNotice(clientPeer)
+        await remoteRandomGraphNode.leaveStreamNotice(clientPeer)
         await waitForCondition(() => recvCounter === 1)
     })
 

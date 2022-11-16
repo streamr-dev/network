@@ -4,7 +4,7 @@ import {
     StreamMessage,
     HandshakeRequest,
     InterleaveNotice,
-    LeaveNotice,
+    LeaveStreamNotice,
     NeighborUpdate
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { Logger } from '@streamr/utils'
@@ -101,18 +101,18 @@ export class RemoteRandomGraphNode {
         })
     }
 
-    leaveNotice(ownPeerDescriptor: PeerDescriptor): void {
+    leaveStreamNotice(ownPeerDescriptor: PeerDescriptor): void {
         const options: DhtRpcOptions = {
             sourceDescriptor: ownPeerDescriptor as PeerDescriptor,
             targetDescriptor: this.remotePeerDescriptor as PeerDescriptor,
             notification: true
         }
-        const notification: LeaveNotice = {
+        const notification: LeaveStreamNotice = {
             senderId: PeerID.fromValue(ownPeerDescriptor.peerId).toKey(),
             randomGraphId: this.graphId
         }
-        this.client.leaveNotice(notification, options).catch(() => {
-            logger.warn('Failed to send leaveNotice')
+        this.client.leaveStreamNotice(notification, options).catch(() => {
+            logger.warn('Failed to send leaveStreamNotice')
         })
     }
 

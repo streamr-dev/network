@@ -3,7 +3,7 @@
 // tslint:disable
 import { NeighborUpdate } from "./NetworkRpc";
 import { InterleaveNotice } from "./NetworkRpc";
-import { LeaveNotice } from "./NetworkRpc";
+import { LeaveStreamNotice } from "./NetworkRpc";
 import { HandshakeResponse } from "./NetworkRpc";
 import { HandshakeRequest } from "./NetworkRpc";
 import { Empty } from "../../../google/protobuf/empty";
@@ -22,9 +22,9 @@ export interface INetworkRpc<T = ServerCallContext> {
      */
     handshake(request: HandshakeRequest, context: T): Promise<HandshakeResponse>;
     /**
-     * @generated from protobuf rpc: leaveNotice(LeaveNotice) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: leaveStreamNotice(LeaveStreamNotice) returns (google.protobuf.Empty);
      */
-    leaveNotice(request: LeaveNotice, context: T): Promise<Empty>;
+    leaveStreamNotice(request: LeaveStreamNotice, context: T): Promise<Empty>;
     /**
      * @generated from protobuf rpc: interleaveNotice(InterleaveNotice) returns (google.protobuf.Empty);
      */
