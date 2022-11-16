@@ -34,6 +34,7 @@ import { LoggerFactory } from './utils/LoggerFactory'
 import { convertStreamMessageToMessage, Message } from './Message'
 import { ErrorCode } from './HttpUtil'
 import { omit } from 'lodash'
+import { PeerDescriptor } from '../../trackerless-network'
 
 /**
  * @category Important
@@ -336,6 +337,10 @@ export class StreamrClient {
      */
     getNode(): Promise<NetworkNodeStub> {
         return this.node.getNode()
+    }
+
+    getEntryPoints(): PeerDescriptor[] {
+        return this.node.getEntryPoints()
     }
 
     openProxyConnections(streamDefinition: StreamDefinition, nodeIds: string[], direction: ProxyDirection): Promise<void> {

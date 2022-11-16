@@ -35,7 +35,12 @@ export const ConfigTest: StreamrClientConfig = {
             }
         ],
         webrtcDisallowPrivateAddresses: false,
-        iceServers: []
+        iceServers: [],
+        entryPoints: [{
+            peerId: 'entryPoint',
+            type: 0
+        }],
+        stringKademliaId: 'entryPoint'
     },
     contracts: {
         streamRegistryChainAddress: '0x6cCdd5d866ea766f6DF5965aA98DeCCD629ff222',

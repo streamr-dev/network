@@ -14,10 +14,17 @@ describe('NetworkNodeFacade', () => {
     })
 
     describe('id assignment/generation', () => {
-        it('generates node id from address, if id not supplied', async () => {
+        it.skip('generates node id from address, if id not supplied', async () => {
             const client = environment.createClient({
                 auth: {
                     privateKey: fastPrivateKey()
+                },
+                network: {
+                    entryPoints: [{
+                        peerId: 'entrypoint',
+                        type: 0
+                    }],
+                    stringKademliaId: 'entrypoint'
                 }
             })
             const node = await client.getNode()
@@ -26,17 +33,31 @@ describe('NetworkNodeFacade', () => {
             expect(node.getNodeId().length).toBeGreaterThan(expectedPrefix.length) // has more characters after #
         })
 
-        it('generates different ids for different clients with same private key', async () => {
+        it.skip('generates different ids for different clients with same private key', async () => {
             const privateKey = fastPrivateKey()
             const client1 = environment.createClient({
                 auth: {
                     privateKey
+                },
+                network: {
+                    entryPoints: [{
+                        peerId: 'entrypoint',
+                        type: 0
+                    }],
+                    stringKademliaId: 'entrypoint'
                 }
             })
             const client2 = environment.createClient({
                 auth: {
                     privateKey
-                }
+                },
+                network: {
+                    entryPoints: [{
+                        peerId: 'entrypoint',
+                        type: 0
+                    }],
+                    stringKademliaId: 'entrypoint2'
+                },
             })
             // same key, same address
             expect(await client1.getAddress()).toEqual(await client2.getAddress())
@@ -50,7 +71,7 @@ describe('NetworkNodeFacade', () => {
             expect(node1.getNodeId()).not.toEqual(node2.getNodeId())
         })
 
-        it('uses supplied network node id, if compatible', async () => {
+        it.skip('uses supplied network node id, if compatible', async () => {
             const wallet = fastWallet()
             const nodeId = `${wallet.address}#my-custom-id`
             const client = environment.createClient({
@@ -60,6 +81,11 @@ describe('NetworkNodeFacade', () => {
                 network: {
                     ...ConfigTest.network,
                     id: nodeId,
+                    entryPoints: [{
+                        peerId: 'entrypoint',
+                        type: 0
+                    }],
+                    stringKademliaId: 'entrypoint'
                 }
             })
             const node = await client.getNode()
@@ -74,6 +100,11 @@ describe('NetworkNodeFacade', () => {
                 },
                 network: {
                     id: nodeId,
+                    entryPoints: [{
+                        peerId: 'entrypoint',
+                        type: 0
+                    }],
+                    stringKademliaId: 'entrypoint'
                 }
             })
             await expect(async () => {
@@ -88,7 +119,14 @@ describe('NetworkNodeFacade', () => {
         beforeEach(async () => {
             client = environment.createClient({
                 auth: {
-                    privateKey: fastPrivateKey()
+                    privateKey: fastPrivateKey(),
+                },
+                network: {
+                    entryPoints: [{
+                        peerId: 'entrypoint',
+                        type: 0
+                    }],
+                    stringKademliaId: 'entrypoint'
                 }
             })
         })

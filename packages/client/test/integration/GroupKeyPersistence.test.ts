@@ -49,12 +49,26 @@ describe('Group Key Persistence', () => {
                 id: 'publisher',
                 auth: {
                     privateKey: publisherPrivateKey,
+                },
+                network: {
+                    entryPoints: [{
+                        peerId: 'entrypoint',
+                        type: 0
+                    }],
+                    stringKademliaId: 'entrypoint'
                 }
             })
             subscriber = environment.createClient({
                 id: 'subscriber',
                 auth: {
                     privateKey: subscriberPrivateKey,
+                },
+                network: {
+                    entryPoints: [{
+                        peerId: 'entrypoint',
+                        type: 0
+                    }],
+                    stringKademliaId: 'entrypoint'
                 }
             })
             const otherUser = await subscriber.getAddress()

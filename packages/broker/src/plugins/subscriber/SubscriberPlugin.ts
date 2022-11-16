@@ -33,7 +33,7 @@ export class SubscriberPlugin extends Plugin<SubscriberPluginConfig> {
         const node = await this.streamrClient!.getNode()
         await Promise.all([
             ...this.streamParts.map(async (streamPart) => {
-                node.subscribe(streamPart)
+                node.subscribe(streamPart, this.streamrClient.getEntryPoints()[0])
             })
         ])
     }

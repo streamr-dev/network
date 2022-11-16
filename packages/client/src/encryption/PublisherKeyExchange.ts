@@ -73,7 +73,7 @@ export class PublisherKeyExchange {
                             request.getPublisherId(),
                             requestId)
                         const node = await this.networkNodeFacade.getNode()
-                        node.publish(response)
+                        node.publish(response, this.networkNodeFacade.getEntryPoints()[0])
                         this.logger.debug('sent group keys %s to %s', keys.map((k) => k.id).join(), request.getPublisherId())
                     } else {
                         this.logger.debug('found no group keys to send to %s', request.getPublisherId())

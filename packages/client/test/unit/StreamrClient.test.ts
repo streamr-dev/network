@@ -13,7 +13,8 @@ const createClient = (opts: StreamrClientConfig = {}) => {
         ConfigTest,
         {
             network: {
-                trackers: [] // without this setting NetworkNodeFacade would query the tracker addresses from the contract
+                trackers: [], // without this setting NetworkNodeFacade would query the tracker addresses from the contract
+                entryPoints: []
             }
         },
         opts

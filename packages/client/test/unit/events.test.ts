@@ -144,7 +144,15 @@ describe('events', () => {
     describe('emit', () => {
         it('publish', async () => {
             const environment = new FakeEnvironment()
-            const client = environment.createClient()
+            const client = environment.createClient({
+                network: {
+                    entryPoints: [{
+                        peerId: 'entrypoint',
+                        type: 0
+                    }],
+                    stringKademliaId: 'entrypoint'
+                }
+            })
             const onEmit = jest.fn()
             // @ts-expect-error internal event
             client.on('publish', onEmit)

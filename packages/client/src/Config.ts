@@ -33,7 +33,22 @@ export interface TrackerRegistryContract {
     contractAddress: string
 }
 
-export interface ChainConnectionInfo { 
+export interface JsonPeerDescriptor {
+    peerId: string
+    type: number
+    udp?: ConnectivityMethod
+    tcp?: ConnectivityMethod
+    websocket?: ConnectivityMethod
+    openInternet?: boolean
+    region?: number
+}
+
+export interface ConnectivityMethod {
+    ip: string
+    port: number
+}
+
+export interface ChainConnectionInfo {
     rpcs: ConnectionInfo[]
     chainId?: number
     name?: string
@@ -68,6 +83,8 @@ export interface StrictStreamrClientConfig {
 
     network: Omit<NetworkNodeOptions, 'trackers' | 'metricsContext'> & {
         trackers: TrackerRegistryRecord[] | TrackerRegistryContract
+        entryPoints: JsonPeerDescriptor[]
+        stringKademliaId?: string
     }
 
     contracts: {
@@ -145,7 +162,8 @@ export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id' | 'aut
         trackers: {
             contractAddress: '0xab9BEb0e8B106078c953CcAB4D6bF9142BeF854d'
         },
-        acceptProxyConnections: false
+        acceptProxyConnections: false,
+        entryPoints: []
     },
 
     // For ethers.js provider params, see https://docs.ethers.io/ethers.js/v5-beta/api-providers.html#provider
@@ -255,6 +273,7 @@ export const createStrictConfig = (inputOptions: StreamrClientConfig = {}): Stri
         network: {
             ...merge(defaults.network || {}, opts.network),
             trackers: opts.network?.trackers ?? defaults.network.trackers,
+            entryPoints: opts.network?.entryPoints ?? []
         },
         contracts: { ...defaults.contracts, ...opts.contracts },
         decryption: merge(defaults.decryption || {}, opts.decryption),

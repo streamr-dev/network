@@ -133,6 +133,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         if (!previousPeer) {
             this.markAndCheckDuplicate(msg.messageRef!, msg.previousMessageRef)
         }
+        this.emit(Event.MESSAGE, msg)
         this.targetNeighbors!.getStringIds().forEach((remote) => {
             if (previousPeer !== remote) {
                 this.targetNeighbors!.getNeighborWithId(remote)!.sendData(this.layer1.getPeerDescriptor(), msg).catch((err) => logger.warn(err))
@@ -342,8 +343,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         if (this.markAndCheckDuplicate(message.messageRef!, message.previousMessageRef)) {
             const { previousPeer } = message
             message["previousPeer"] = PeerID.fromValue(this.layer1.getPeerDescriptor().peerId).toKey()
-            this.emit(Event.MESSAGE, message)
-            setImmediate(() => this.broadcast(message, previousPeer))
+            this.broadcast(message, previousPeer)
         }
         return Empty
     }

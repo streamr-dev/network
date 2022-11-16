@@ -22,7 +22,11 @@ import { NodeId } from '@streamr/network-node'
 
 const DEFAULT_CLIENT_OPTIONS: StreamrClientConfig = {
     network: {
-        trackers: [] // without this setting NetworkNodeFacade would query the tracker addresses from the contract
+        trackers: [], // without this setting NetworkNodeFacade would query the tracker addresses from the contract
+        entryPoints: [{
+            peerId: 'Entrypoint',
+            type: 0
+        }]
     },
     metrics: false
 }

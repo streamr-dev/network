@@ -45,6 +45,13 @@ describe('GapFill', () => {
             maxGapRequests: 2,
             gapFillTimeout: 500,
             retryResendAfter: 1000,
+            network: {
+                entryPoints: [{
+                    peerId: 'entrypoint',
+                    type: 0
+                }],
+                stringKademliaId: 'entrypoint'
+            },
             ...opts
         })
         stream = await createTestStream(client, module)
@@ -188,7 +195,7 @@ describe('GapFill', () => {
                         return undefined
                     }
 
-                    return publish(msg)
+                    return publish(msg, client.getEntryPoints()[0])
                 }
 
                 const published = await publishTestMessages(MAX_MESSAGES, {
@@ -239,7 +246,7 @@ describe('GapFill', () => {
                     return undefined
                 }
 
-                return publish(msg)
+                return publish(msg, client.getEntryPoints()[0])
             }
 
             const sub = await client.subscribe({
@@ -278,7 +285,7 @@ describe('GapFill', () => {
                     return undefined
                 }
 
-                return publish(msg)
+                return publish(msg, client.getEntryPoints()[0])
             }
 
             const published = await publishTestMessages(MAX_MESSAGES, {

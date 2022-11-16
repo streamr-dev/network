@@ -3,7 +3,12 @@
  */
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import EventEmitter from 'eventemitter3'
-import { NetworkNodeOptions, createNetworkNode as _createNetworkNode } from '@streamr/network-node'
+import {
+    NetworkNode,
+    NetworkOptions,
+    PeerDescriptor,
+    PeerID
+} from '@streamr/trackerless-network'
 import { MetricsContext } from '@streamr/utils'
 import { uuid } from './utils/uuid'
 import { pOnce } from './utils/promises'
@@ -18,16 +23,17 @@ import { toEthereumAddress } from '@streamr/utils'
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
 /** @deprecated This in an internal interface */
 export interface NetworkNodeStub {
+    stack: any
     getNodeId: () => string
     addMessageListener: (listener: (msg: StreamMessage) => void) => void
     removeMessageListener: (listener: (msg: StreamMessage) => void) => void
-    subscribe: (streamPartId: StreamPartID) => void
-    subscribeAndWaitForJoin: (streamPart: StreamPartID, timeout?: number) => Promise<number>
-    waitForJoinAndPublish: (msg: StreamMessage, timeout?: number) => Promise<number>
+    subscribe: (streamPartId: StreamPartID, entryPointDescriptor: PeerDescriptor) => void
+    subscribeAndWaitForJoin: (streamPart: StreamPartID, entryPointDescriptor: PeerDescriptor, timeout?: number) => Promise<number>
+    waitForJoinAndPublish: (msg: StreamMessage, entryPointDescriptor: PeerDescriptor, timeout?: number) => Promise<number>
     unsubscribe: (streamPartId: StreamPartID) => void
-    publish: (streamMessage: StreamMessage) => void
-    getStreamParts: () => Iterable<StreamPartID>
-    getNeighbors: () => ReadonlyArray<string>
+    publish: (streamMessage: StreamMessage, entryPointDescriptor: PeerDescriptor) => void
+    getStreamParts: () => StreamPartID[]
+    getNeighbors: () => string[]
     getNeighborsForStreamPart: (streamPartId: StreamPartID) => ReadonlyArray<string>
     getRtt: (nodeId: string) => number | undefined
     setExtraMetadata: (metadata: Record<string, unknown>) => void
@@ -35,9 +41,9 @@ export interface NetworkNodeStub {
     hasStreamPart: (streamPartId: StreamPartID) => boolean
     hasProxyConnection: (streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection) => boolean
     /** @internal */
-    start: () => void
+    start: () => Promise<void>
     /** @internal */
-    stop: () => Promise<unknown>
+    stop: () => Promise<void>
     /** @internal */
     openProxyConnection: (streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection, userId: string) => Promise<void>
     /** @internal */
@@ -59,8 +65,8 @@ export interface Events {
 /* eslint-disable class-methods-use-this */
 @scoped(Lifecycle.ContainerScoped)
 export class NetworkNodeFactory {
-    createNetworkNode(opts: NetworkNodeOptions): NetworkNodeStub {
-        return _createNetworkNode(opts)
+    createNetworkNode(opts: NetworkOptions): NetworkNodeStub {
+        return new NetworkNode(opts)
     }
 }
 
@@ -70,12 +76,12 @@ export class NetworkNodeFactory {
  */
 @scoped(Lifecycle.ContainerScoped)
 export class NetworkNodeFacade {
-    private cachedNode?: NetworkNodeStub
+    private cachedNetwork?: NetworkNode
     private startNodeCalled = false
     private startNodeComplete = false
     private readonly config: Pick<StrictStreamrClientConfig, 'network' | 'contracts'>
     private readonly eventEmitter: EventEmitter<Events>
-
+    private entryPoint?: PeerDescriptor // HACK: replace with stream specific entrypoints
     constructor(
         private destroySignal: DestroySignal,
         private networkNodeFactory: NetworkNodeFactory,
@@ -91,7 +97,18 @@ export class NetworkNodeFacade {
         this.destroySignal.assertNotDestroyed()
     }
 
-    private async getNormalizedNetworkOptions(): Promise<NetworkNodeOptions> {
+    private async getNormalizedNetworkOptions(): Promise<NetworkOptions> {
+        const entryPoints = this.config.network.entryPoints.map((ep) => {
+            const peerDescriptor: PeerDescriptor = {
+                peerId: PeerID.fromString(ep.peerId).value,
+                type: ep.type,
+                openInternet: ep.openInternet,
+                udp: ep.udp,
+                tcp: ep.tcp,
+                websocket: ep.websocket,
+            }
+            return peerDescriptor
+        })
         if ((this.config.network.trackers as TrackerRegistryContract).contractAddress) {
             const trackerRegistry = await getTrackerRegistryFromContract({
                 contractAddress: toEthereumAddress((this.config.network.trackers as TrackerRegistryContract).contractAddress),
@@ -99,15 +116,19 @@ export class NetworkNodeFacade {
             })
             return {
                 ...this.config.network,
+                entryPoints: entryPoints,
                 trackers: trackerRegistry.getAllTrackers()
             }
         }
-        return this.config.network as NetworkNodeOptions
+        return {
+            ...this.config.network,
+            entryPoints: entryPoints
+        }
     }
 
-    private async initNode(): Promise<NetworkNodeStub> {
+    private async initNode(): Promise<NetworkNode> {
         this.assertNotDestroyed()
-        if (this.cachedNode) { return this.cachedNode }
+        if (this.cachedNetwork) { return this.cachedNetwork }
 
         let id = this.config.network.id
         if (id == null || id === '') {
@@ -128,7 +149,7 @@ export class NetworkNodeFacade {
         })
 
         if (!this.destroySignal.isDestroyed()) {
-            this.cachedNode = node
+            this.cachedNetwork = node
         }
 
         return node
@@ -144,10 +165,10 @@ export class NetworkNodeFacade {
      * Subsequent calls to getNode/start will fail.
      */
     private destroy = pOnce(async () => {
-        const node = this.cachedNode
-        this.cachedNode = undefined
+        const network = this.cachedNetwork
+        this.cachedNetwork = undefined
         // stop node only if started or in progress
-        if (node && this.startNodeCalled) {
+        if (network && this.startNodeCalled) {
             if (!this.startNodeComplete) {
                 // wait for start to finish before stopping node
                 const startNodeTask = this.startNodeTask()
@@ -155,7 +176,7 @@ export class NetworkNodeFacade {
                 await startNodeTask
             }
 
-            await node.stop()
+            await network.stop()
         }
         this.startNodeTask.reset() // allow subsequent calls to fail
     })
@@ -168,7 +189,7 @@ export class NetworkNodeFacade {
         try {
             const node = await this.initNode()
             if (!this.destroySignal.isDestroyed()) {
-                node.start()
+                await node.start()
             }
 
             if (this.destroySignal.isDestroyed()) {
@@ -207,32 +228,46 @@ export class NetworkNodeFacade {
             // use .then instead of async/await so
             // this.cachedNode.publish call can be sync
             return this.startNodeTask().then((node) => {
-                return node.publish(streamMessage)
+                return node.publish(streamMessage, this.entryPoint!)
             })
         }
-        return this.cachedNode!.publish(streamMessage)
+        return this.cachedNetwork!.publish(streamMessage, this.entryPoint!)
     }
 
     async openProxyConnection(streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection): Promise<void> {
         if (this.isStarting()) {
             await this.startNodeTask()
         }
-        await this.cachedNode!.openProxyConnection(streamPartId, nodeId, direction, (await this.authentication.getAddress()))
+        await this.cachedNetwork!.openProxyConnection(streamPartId, nodeId, direction, (await this.authentication.getAddress()))
     }
 
     async closeProxyConnection(streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection): Promise<void> {
         if (this.isStarting()) {
             return
         }
-        await this.cachedNode!.closeProxyConnection(streamPartId, nodeId, direction)
+        await this.cachedNetwork!.closeProxyConnection(streamPartId, nodeId, direction)
     }
 
     private isStarting(): boolean {
-        return !this.cachedNode || !this.startNodeComplete
+        return !this.cachedNetwork || !this.startNodeComplete
     }
 
     once<E extends keyof Events>(eventName: E, listener: Events[E]): void {
         this.eventEmitter.once(eventName, listener as any)
+    }
+
+    getEntryPoints(): PeerDescriptor[] {
+        return this.config.network.entryPoints.map((ep) => {
+            const peerDescriptor: PeerDescriptor = {
+                peerId: PeerID.fromString(ep.peerId).value,
+                type: ep.type,
+                openInternet: ep.openInternet,
+                udp: ep.udp,
+                tcp: ep.tcp,
+                websocket: ep.websocket
+            }
+            return peerDescriptor
+        })
     }
 }
 

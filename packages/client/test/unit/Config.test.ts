@@ -25,7 +25,8 @@ describe('Config', () => {
                         trackers: [{
                             id: '0x1234567890123456789012345678901234567890',
                             ws: 'http://foo.bar'
-                        }]
+                        }],
+                        entryPoints: []
                     }
                 } as any)
             }).toThrow('/network/trackers/0 must have required property \'http\'')

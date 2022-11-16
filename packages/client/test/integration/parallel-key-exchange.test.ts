@@ -74,7 +74,7 @@ describe('parallel key exchange', () => {
                     timestamp: Date.now()
                 })
                 const node = await publisher.client!.getNode()
-                node.publish(msg)
+                node.publish(msg, publisher.client!.getEntryPoints()[0])
                 await wait(10)
             }
         }

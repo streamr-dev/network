@@ -45,6 +45,13 @@ describe('PubSub with multiple clients', () => {
             id: 'subscriber-main',
             auth: {
                 privateKey
+            },
+            network: {
+                entryPoints: [{
+                    peerId: 'entrypoint',
+                    type: 0
+                }],
+                stringKademliaId: 'entrypoint'
             }
         })
         stream = await createTestStream(mainClient, module)
@@ -58,7 +65,14 @@ describe('PubSub with multiple clients', () => {
 
     async function createPublisher(id: number) {
         const pubClient = environment.createClient({
-            id: `publisher${id}`
+            id: `publisher${id}`,
+            network: {
+                entryPoints: [{
+                    peerId: 'entrypoint',
+                    type: 0
+                }],
+                stringKademliaId: 'publisher' + id
+            }
         })
         const publisherId = await pubClient.getAddress()
 
@@ -79,6 +93,13 @@ describe('PubSub with multiple clients', () => {
             id: 'subscriber-other',
             auth: {
                 privateKey
+            },
+            network: {
+                entryPoints: [{
+                    peerId: 'entrypoint',
+                    type: 0
+                }],
+                stringKademliaId: 'subscriber'
             }
         })
         const user = await client.getAddress()
@@ -93,7 +114,7 @@ describe('PubSub with multiple clients', () => {
     }
 
     describe('can get messages published from other client', () => {
-        test('it works', async () => {
+        test.only('it works', async () => {
             otherClient = await createSubscriber()
 
             const receivedMessagesOther: any[] = []

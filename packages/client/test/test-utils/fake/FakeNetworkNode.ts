@@ -5,6 +5,7 @@ import { MetricsContext } from '@streamr/utils'
 import { NodeId, NetworkNodeOptions } from '@streamr/network-node'
 import { NetworkNodeFactory, NetworkNodeStub } from '../../../src/NetworkNodeFacade'
 import { FakeNetwork } from './FakeNetwork'
+import { PeerDescriptor } from '../../../../trackerless-network'
 
 type MessageListener = (msg: StreamMessage) => void
 
@@ -14,7 +15,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
     readonly subscriptions: Set<StreamPartID> = new Set()
     readonly messageListeners: MessageListener[] = []
     private readonly network: FakeNetwork
-
+    readonly stack: any = null
     constructor(opts: NetworkNodeOptions, network: FakeNetwork) {
         this.id = opts.id!
         this.network = network
@@ -40,12 +41,12 @@ export class FakeNetworkNode implements NetworkNodeStub {
         this.subscriptions.delete(streamPartId)
     }
 
-    async subscribeAndWaitForJoin(streamPartId: StreamPartID, _timeout?: number): Promise<number> {
+    async subscribeAndWaitForJoin(streamPartId: StreamPartID, _entryPointDescriptor: PeerDescriptor, _timeout?: number): Promise<number> {
         this.subscriptions.add(streamPartId)
         return this.getNeighborsForStreamPart(streamPartId).length
     }
 
-    async waitForJoinAndPublish(msg: StreamMessage, _timeout?: number): Promise<number> {
+    async waitForJoinAndPublish(msg: StreamMessage, _entryPointDescriptor: PeerDescriptor, _timeout?: number): Promise<number> {
         const streamPartID = msg.getStreamPartID()
         this.subscriptions.add(streamPartID)
         this.publish(msg)
@@ -60,12 +61,12 @@ export class FakeNetworkNode implements NetworkNodeStub {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getStreamParts(): Iterable<StreamPartID> {
+    getStreamParts(): StreamPartID[] {
         throw new Error('not implemented')
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getNeighbors(): ReadonlyArray<string> {
+    getNeighbors(): string[] {
         throw new Error('not implemented')
     }
 
@@ -101,7 +102,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
         throw new Error('not implemented')
     }
 
-    start(): void {
+    async start(): Promise<void> {
         this.network.addNode(this)
     }
 

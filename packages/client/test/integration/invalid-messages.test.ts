@@ -17,7 +17,15 @@ describe('client behaviour on invalid message', () => {
 
     beforeAll(async () => {
         environment = new FakeEnvironment()
-        const creatorClient = environment.createClient()
+        const creatorClient = environment.createClient({
+            network: {
+                entryPoints: [{
+                    peerId: 'entrypoint',
+                    type: 0
+                }],
+                stringKademliaId: 'entrypoint'
+            }
+        })
         try {
             const stream = await createTestStream(creatorClient, module)
             streamId = stream.id
@@ -31,7 +39,15 @@ describe('client behaviour on invalid message', () => {
     })
 
     beforeEach(async () => {
-        subscriberClient = environment.createClient()
+        subscriberClient = environment.createClient({
+            network: {
+                entryPoints: [{
+                    peerId: 'entrypoint',
+                    type: 0
+                }],
+                stringKademliaId: 'entrypoint'
+            }
+        })
     })
 
     afterEach(async () => {

@@ -234,6 +234,15 @@
                 },
                 "acceptProxyConnections": {
                     "type": "boolean"
+                },
+                "entryPoints": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/peerDescriptor"
+                    }
+                },
+                "stringKademliaId": {
+                    "type": "string"
                 }
             }
         },
@@ -381,6 +390,53 @@
                         "$ref": "#/definitions/rpcProviderConfig"
                     },
                     "minItems": 1
+                }
+            }
+        },
+        "peerDescriptor": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "peerId",
+                "type"
+            ],
+            "properties": {
+                "peerId": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "number"
+                },
+                "udp": {
+                    "$ref": "#/definitions/connectivityMethod"
+                },
+                "tcp": {
+                    "$ref": "#/definitions/connectivityMethod"
+                },
+                "websocket": {
+                    "$ref": "#/definitions/connectivityMethod"
+                },
+                "openInternet": {
+                    "type": "boolean"
+                },
+                "region": {
+                    "type": "number"
+                }
+            }
+        },
+        "connectivityMethod": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "port",
+                "ip"
+            ],
+            "properties": {
+                "port": {
+                    "type": "number"
+                },
+                "ip": {
+                    "type": "string"
                 }
             }
         }
