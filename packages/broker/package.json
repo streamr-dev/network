@@ -13,7 +13,8 @@
     "tracker": "bin/tracker.js",
     "delete-expired-data": "bin/delete-expired-data.js"
   },
-  "main": "bin/broker.js",
+  "main": "./dist/src/exports.js",
+  "types": "./dist/src/exports.d.ts",
   "scripts": {
     "check": "tsc -p ./tsconfig.jest.json --noEmit",
     "prepublishOnly": "npm run clean && NODE_ENV=production tsc -b tsconfig.node.json",

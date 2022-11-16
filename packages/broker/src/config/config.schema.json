@@ -19,14 +19,27 @@
             "additionalProperties": true,
             "properties": {
                 "auth": {
-                    "type": "object",
-                    "properties": {
-                        "privateKey": {
-                            "type": "string",
-                            "pattern": "^(0x)?[a-fA-F0-9]{64}$"
+                    "anyOf": [
+                        {
+                            "type": "object",
+                            "properties": {
+                                "privateKey": {
+                                    "type": "string",
+                                    "pattern": "^(0x)?[a-fA-F0-9]{64}$"
+                                }
+                            },
+                            "required": ["privateKey"]
+                        },
+                        {
+                            "type": "object",
+                            "properties": {
+                                "ethereum": {
+                                    "type": "object"
+                                }
+                            },
+                            "required": ["ethereum"]
                         }
-                    },
-                    "required": ["privateKey"]
+                    ]
                 }
             },
             "required": ["auth"]
