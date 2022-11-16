@@ -45,13 +45,6 @@ describe('GapFill', () => {
             maxGapRequests: 2,
             gapFillTimeout: 500,
             retryResendAfter: 1000,
-            network: {
-                entryPoints: [{
-                    peerId: 'entrypoint',
-                    type: 0
-                }],
-                stringKademliaId: 'entrypoint'
-            },
             ...opts
         })
         stream = await createTestStream(client, module)

@@ -62,13 +62,6 @@ describe('Group Key Persistence', () => {
                 id: 'subscriber',
                 auth: {
                     privateKey: subscriberPrivateKey,
-                },
-                network: {
-                    entryPoints: [{
-                        peerId: 'entrypoint',
-                        type: 0
-                    }],
-                    stringKademliaId: 'entrypoint'
                 }
             })
             const otherUser = await subscriber.getAddress()

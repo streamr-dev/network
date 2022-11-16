@@ -13,15 +13,7 @@ describe('client destroy', () => {
 
     beforeEach(async () => {
         const environment = new FakeEnvironment()
-        client = environment.createClient({
-            network: {
-                entryPoints: [{
-                    peerId: 'entrypoint',
-                    type: 0
-                }],
-                stringKademliaId: 'entrypoint'
-            }
-        })
+        client = environment.createClient()
         stream = await createTestStream(client, module)
     })
 
