@@ -61,14 +61,13 @@
             "type": "object",
             "description": "Storage node cluster config",
             "required": [
-                "clusterAddress",
                 "clusterSize",
                 "myIndexInCluster"
             ],
             "additionalProperties": false,
             "properties": {
                 "clusterAddress": {
-                    "type": ["string", "null"]
+                    "type": "string"
                 },
                 "clusterSize": {
                     "type": "number"
@@ -78,7 +77,6 @@
                 }
             },
             "default": {
-                "clusterAddress": null,
                 "clusterSize": 1,
                 "myIndexInCluster": 0
             }
