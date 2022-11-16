@@ -1,15 +1,13 @@
 import { NetworkStack } from '../../src/NetworkStack'
 import { NodeType, PeerDescriptor, PeerID } from '@streamr/dht'
 import {
-    MessageID,
-    MessageRef,
-    StreamMessage,
     StreamPartIDUtils,
     toStreamID,
-    StreamMessageType
 } from '@streamr/protocol'
 import { Event } from '../../src/logic/StreamrNode'
-import { EthereumAddress, waitForCondition } from '@streamr/utils'
+import { waitForCondition } from '@streamr/utils'
+import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { createStreamMessage } from '../utils'
 
 describe('NetworkStack', () => {
 
@@ -24,7 +22,8 @@ describe('NetworkStack', () => {
 
     beforeEach(async () => {
         stack1 = new NetworkStack({
-            peerDescriptor: epDescriptor
+            peerDescriptor: epDescriptor,
+            entryPoints: [epDescriptor]
         })
         stack2 = new NetworkStack({
             websocketPort: 32223,
@@ -32,42 +31,35 @@ describe('NetworkStack', () => {
             entryPoints: [epDescriptor]
         })
 
-        await stack1.startAll(epDescriptor)
-        await stack2.startAll(epDescriptor)
+        await stack1.start()
+        await stack2.start()
     })
 
     afterEach(async () => {
         await Promise.all([
-            stack1.getNetworkNode().destroy(),
-            stack2.getNetworkNode().destroy()
+            stack1.stop(),
+            stack2.stop()
         ])
     })
 
     it('Can use NetworkNode pub/sub via NetworkStack', async () => {
         let receivedMessages = 0
         const streamPartId = StreamPartIDUtils.parse('stream1#0')
-        await stack1.getNetworkNode().subscribeAndWaitForJoin(streamPartId, epDescriptor)
-        stack1.getNetworkNode().on(Event.NEW_MESSAGE, () => {
+        await stack1.getStreamrNode().subscribeAndWaitForJoin(streamPartId, epDescriptor)
+        stack1.getStreamrNode().on(Event.NEW_MESSAGE, () => {
             receivedMessages += 1
         })
 
-        const streamMessage = new StreamMessage({
-            messageId: new MessageID(
-                toStreamID('stream1'),
-                0,
-                666,
-                0,
-                'peer2' as EthereumAddress,
-                'msgChainId'
-            ),
-            prevMsgRef: new MessageRef(665, 0),
-            content: {
-                hello: 'world'
-            },
-            messageType: StreamMessageType.MESSAGE,
-            signature: 'signature',
-        })
-        await stack2.getNetworkNode().waitForJoinAndPublish(streamMessage, epDescriptor)
+        const content: ContentMessage = {
+            body: JSON.stringify({ hello: "WORLD" })
+        }
+        const msg = createStreamMessage(
+            content,
+            toStreamID(streamPartId),
+            PeerID.fromString('network-stack').toKey()
+        )
+
+        await stack2.getStreamrNode().waitForJoinAndPublish(streamPartId, epDescriptor, msg)
         await waitForCondition(() => receivedMessages === 1)
     })
 
