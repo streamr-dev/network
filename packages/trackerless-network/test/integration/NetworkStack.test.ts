@@ -1,4 +1,3 @@
-
 import { NetworkStack } from '../../src/NetworkStack'
 import { NodeType, PeerDescriptor, PeerID } from '@streamr/dht'
 import {
