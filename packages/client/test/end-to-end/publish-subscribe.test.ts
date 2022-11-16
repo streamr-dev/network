@@ -20,6 +20,13 @@ async function startNetworkNodeAndListenForAtLeastOneMessage(streamId: StreamID)
         // TODO better typing for ConfigTest.network.trackers?
         ...ConfigTest.network as any,
         id: 'networkNode',
+        network: {
+            entryPoints: [{
+                peerId: 'publisher',
+                type: 0
+            }],
+            stringKademliaId: 'node'
+        }
     })
     try {
         networkNode.subscribe(toStreamPartID(streamId, 0))
@@ -69,12 +76,26 @@ describe('publish-subscribe', () => {
             ...ConfigTest,
             auth: {
                 privateKey: publisherPk
+            },
+            network: {
+                entryPoints: [{
+                    peerId: 'publisher',
+                    type: 0
+                }],
+                stringKademliaId: 'publisher'
             }
         })
         subscriberClient = new StreamrClient({
             ...ConfigTest,
             auth: {
                 privateKey: subscriberWallet.privateKey
+            },
+            network: {
+                entryPoints: [{
+                    peerId: 'publisher',
+                    type: 0
+                }],
+                stringKademliaId: 'subscriber'
             }
         })
 
@@ -97,7 +118,7 @@ describe('publish-subscribe', () => {
             })
         }, TIMEOUT)
 
-        it('messages are published encrypted', async () => {
+        it.only('messages are published encrypted', async () => {
             await publisherClient.publish(stream.id, PAYLOAD)
             const messages = await startNetworkNodeAndListenForAtLeastOneMessage(stream.id)
             expect(messages).toHaveLength(1)
