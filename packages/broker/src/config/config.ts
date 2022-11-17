@@ -8,7 +8,9 @@ export interface HttpServerConfig {
     certFileName?: string
 }
 
-export type ApiAuthenticationConfig = { keys: string[] }
+export interface ApiAuthenticationConfig { 
+    keys: string[]
+}
 
 export interface Config {
     $schema: string
