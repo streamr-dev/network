@@ -23,8 +23,6 @@ interface TestConfig {
     extraPlugins?: Record<string, unknown>
     apiAuthentication?: ApiAuthenticationConfig
     enableCassandra?: boolean
-    privateKeyFileName?: null | string
-    certFileName?: null | string
     storageConfigRefreshInterval?: number
 }
 
@@ -81,9 +79,7 @@ export const formConfig = ({
             }
         },
         httpServer: {
-            port: httpPort ? httpPort : 7171,
-            privateKeyFileName: null,
-            certFileName: null
+            port: httpPort ? httpPort : 7171
         },
         apiAuthentication,
         plugins
