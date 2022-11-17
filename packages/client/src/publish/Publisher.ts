@@ -115,7 +115,9 @@ export class Publisher {
                     },
                     partition
                 )
+                console.log("message created")
                 await this.node.publishToNode(message)
+                console.log("message published")
                 return message
             } catch (e) {
                 throw new PublishError(streamId, timestamp, e)

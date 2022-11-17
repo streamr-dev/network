@@ -30,6 +30,7 @@ export class NetworkNode {
         //     throw new Error(`Cannot publish content data to ${streamPartId} as proxy subscribe connections have been set`)
         // }
 
+        console.log("PUBLISHING!!!!")
         const msg = StreamMessageTranslator.toProtobuf(streamMessage)
         this.stack.getStreamrNode().publishToStream(streamPartId, entrypointDescriptor, msg)
     }
