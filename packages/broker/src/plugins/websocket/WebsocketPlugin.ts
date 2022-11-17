@@ -12,7 +12,7 @@ export interface SslCertificateConfig {
 export interface WebsocketPluginConfig {
     port: number
     payloadMetadata: boolean
-    sslCertificate: SslCertificateConfig | null
+    sslCertificate?: SslCertificateConfig
 }
 
 export class WebsocketPlugin extends Plugin<WebsocketPluginConfig> {
@@ -24,7 +24,7 @@ export class WebsocketPlugin extends Plugin<WebsocketPluginConfig> {
             this.pluginConfig.port, 
             getPayloadFormat(this.pluginConfig.payloadMetadata),
             this.apiAuthenticator, 
-            this.pluginConfig.sslCertificate ?? undefined
+            this.pluginConfig.sslCertificate
         )
     }
 

@@ -7,7 +7,7 @@ import { Schema } from 'ajv'
 
 export interface MqttPluginConfig {
     port: number
-    streamIdDomain: string | null
+    streamIdDomain?: string
     payloadMetadata: boolean
 }
 
@@ -20,7 +20,7 @@ export class MqttPlugin extends Plugin<MqttPluginConfig> {
             this.streamrClient!, 
             this.server, 
             getPayloadFormat(this.pluginConfig.payloadMetadata),
-            this.pluginConfig.streamIdDomain ?? undefined
+            this.pluginConfig.streamIdDomain
         )
         this.server.setListener(bridge)
         return this.server.start()

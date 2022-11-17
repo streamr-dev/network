@@ -148,6 +148,30 @@ const convertV1ToV2 = (source: any): Config => {
         target.plugins.http = source.plugins.publishHttp
         delete target.plugins.publishHttp
     }
+    const deleteNullProperties = (obj: any, excludeKeys: string[] = []) => {
+        const keys = Object.keys(obj)
+        for (const key of keys) {
+            if ((obj[key] === null) && (!excludeKeys.includes(key))) {
+                delete obj[key]
+            }
+        }
+    }
+    deleteNullProperties(target)
+    if (target.httpServer !== undefined) {
+        deleteNullProperties(target.httpServer)
+    }
+    if (target.plugins.brubeckMiner !== undefined) {
+        deleteNullProperties(target.plugins.brubeckMiner, ['stunServerHost'])
+    }
+    if (target.plugins.mqtt !== undefined) {
+        deleteNullProperties(target.plugins.mqtt)
+    }
+    if (target.plugins.storage !== undefined) {
+        deleteNullProperties(target.plugins.storage.cluster)
+    }
+    if (target.plugins.websocket !== undefined) {
+        deleteNullProperties(target.plugins.websocket)
+    }
     return target as Config
 }
 

@@ -7,15 +7,13 @@ import { createApiAuthenticator } from '../../src/apiAuthenticator'
 const MOCK_API_KEY = 'mock-api-key'
 const PORT = 18888
 
-const startTestServer = (apiConfig: { keys: string[] } | null) => {
+const startTestServer = (apiConfig?: { keys: string[] }) => {
     const router = express.Router()
     router.get('/foo', (_req: Request, res: Response) => {
         res.send('FOO')
     })
     return startServer([router], {
-        port: PORT,
-        privateKeyFileName: null,
-        certFileName: null
+        port: PORT
     }, createApiAuthenticator({
         apiAuthentication: apiConfig
     } as any))
@@ -41,7 +39,7 @@ describe('HttpServer', () => {
     describe('ApiAuthenticator', () => {
         
         it('no authentication required', async () => {
-            server = await startTestServer(null)
+            server = await startTestServer()
             const response = await createRequest()
             const body = await response.text()
             expect(body).toBe('FOO')
