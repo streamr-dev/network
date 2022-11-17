@@ -4,7 +4,7 @@ import * as os from 'os'
 
 export interface Config {
     client: StreamrClientConfig
-    httpServer: {
+    httpServer?: {
         port: number
         sslCertificate?: {
             privateKeyFileName: string

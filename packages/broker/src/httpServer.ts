@@ -36,7 +36,7 @@ const createAuthenticatorMiddleware = (apiAuthenticator: ApiAuthenticator) => {
 
 export const startServer = async (
     routers: express.Router[],
-    config: Config['httpServer'],
+    config: NonNullable<Config['httpServer']>,
     apiAuthenticator: ApiAuthenticator
 ): Promise<HttpServer | https.Server> => {
     const app = express()
