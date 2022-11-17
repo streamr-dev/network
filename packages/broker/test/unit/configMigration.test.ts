@@ -335,10 +335,6 @@ describe('Config migration', () => {
                     metrics: {
                         periods: [
                             {
-                                duration: 5000,
-                                streamId: 'mock-prefix/sec'
-                            },
-                            {
                                 duration: 60000,
                                 streamId: 'mock-prefix/min'
                             },

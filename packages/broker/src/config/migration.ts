@@ -123,10 +123,6 @@ const convertV1ToV2 = (source: any): Config => {
             target.client.metrics = {
                 periods: [
                     {
-                        duration: 5000,
-                        streamId: `${streamIdPrefix}/sec`
-                    },
-                    {
                         duration: 60000,
                         streamId: `${streamIdPrefix}/min`
                     },
