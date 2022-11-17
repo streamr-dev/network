@@ -1,8 +1,9 @@
 import { fastWallet } from '@streamr/test-utils'
-import { ExternalProvider } from 'streamr-client'
+import { ExternalProvider, StreamrClientConfig } from 'streamr-client'
 import { Broker, createBroker } from '../../src/broker'
+import { Config } from '../../src/config/config'
 
-const formConfig = (auth: any) => {
+const formConfig = (auth: StreamrClientConfig['auth']): Config => {
     return {
         client: {
             auth,
@@ -11,11 +12,8 @@ const formConfig = (auth: any) => {
             }
         },
         httpServer: {
-            port: 7171,
-            privateKeyFileName: null,
-            certFileName: null
+            port: 7171
         },
-        apiAuthentication: null,
         plugins: {},
         $schema: 'dummy'
     }

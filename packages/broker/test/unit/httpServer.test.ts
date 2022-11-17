@@ -13,9 +13,7 @@ const startTestServer = (apiConfig: { keys: string[] } | null) => {
         res.send('FOO')
     })
     return startServer([router], {
-        port: PORT,
-        privateKeyFileName: null,
-        certFileName: null
+        port: PORT
     }, createApiAuthenticator({
         apiAuthentication: apiConfig
     } as any))

@@ -31,7 +31,7 @@ export const formConfig = ({
     privateKey,
     httpPort = null,
     extraPlugins = {},
-    apiAuthentication = null,
+    apiAuthentication,
     enableCassandra = false,
     storageConfigRefreshInterval = 0,
 }: TestConfig): Config => {
