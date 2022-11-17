@@ -13,11 +13,14 @@ export interface ApiAuthenticationConfig {
 }
 
 export interface Config {
-    $schema: string
     client: StreamrClientConfig
     httpServer: HttpServerConfig
     plugins: Record<string, any>
     apiAuthentication?: ApiAuthenticationConfig
+}
+
+export interface ConfigFile extends Config {
+    $schema: string
 }
 
 export const getDefaultFile = (): string => {

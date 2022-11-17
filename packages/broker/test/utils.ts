@@ -11,7 +11,6 @@ import { Tracker, startTracker } from '@streamr/network-tracker'
 import { Broker, createBroker } from '../src/broker'
 import { ApiAuthenticationConfig, Config } from '../src/config/config'
 import { StreamPartID } from '@streamr/protocol'
-import { CURRENT_CONFIGURATION_VERSION, formSchemaUrl } from '../src/config/migration'
 import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 
 export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
@@ -54,7 +53,6 @@ export const formConfig = ({
     }
 
     return {
-        $schema: formSchemaUrl(CURRENT_CONFIGURATION_VERSION),
         client: {
             ...ConfigTest,
             auth: {

@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import { cloneDeep, get, omitBy, set } from 'lodash'
-import { Config, getDefaultFile, getLegacyDefaultFile } from './config'
+import { ConfigFile, getDefaultFile, getLegacyDefaultFile } from './config'
 import { isValidConfig } from './validateConfig'
 import TEST_CONFIG_SCHEMA from './config-testnet.schema.json'
 
@@ -36,7 +36,7 @@ export const needsMigration = (config: any): boolean => {
  * - network.webrtcDisallowPrivateAddresses
  * - subscriber plugin
  */
-const convertTestnet3ToV1 = (source: any): Config => {
+const convertTestnet3ToV1 = (source: any): ConfigFile => {
     const TARGET_VERSION = 1
     const DEFAULT_NAME = 'miner-node'
     const target: any = {
@@ -102,10 +102,10 @@ const convertTestnet3ToV1 = (source: any): Config => {
             throw new Error(`Migration not supported for plugin: ${name}`)
         }
     })
-    return target as Config
+    return target as ConfigFile
 }
 
-const convertV1ToV2 = (source: any): Config => {
+const convertV1ToV2 = (source: any): ConfigFile => {
     const TARGET_VERSION = 2
     const target = cloneDeep(source)
     target.$schema = formSchemaUrl(TARGET_VERSION)
@@ -172,11 +172,11 @@ const convertV1ToV2 = (source: any): Config => {
     if (target.plugins.websocket !== undefined) {
         deleteNullProperties(target.plugins.websocket)
     }
-    return target as Config
+    return target as ConfigFile
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export const createMigratedConfig = (source: any): Config | never => {
+export const createMigratedConfig = (source: any): ConfigFile | never => {
     let config = source
     do {
         const version = getVersion(config)
@@ -214,7 +214,7 @@ const formBackupFileName = (originalFileName: string) => {
     }
 }
 
-export const readConfigAndMigrateIfNeeded = (fileName: string | undefined): Config | never => {
+export const readConfigAndMigrateIfNeeded = (fileName: string | undefined): ConfigFile | never => {
     let explicitTargetFile = undefined
     if (fileName === undefined) {
         const defaultTargetFile = getDefaultFile()
