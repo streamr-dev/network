@@ -55,5 +55,5 @@ describe('Layer0', () => {
         expect(node2.getBucketSize()).toBeGreaterThanOrEqual(2)
         expect(node3.getBucketSize()).toBeGreaterThanOrEqual(2)
         expect(node4.getBucketSize()).toBeGreaterThanOrEqual(2)
-    })
+    }, 10000)
 })
