@@ -8,11 +8,11 @@ import { SimulatorTransport } from '../../src/exports'
 describe('Connection Locking', () => {
 
     const mockPeerDescriptor1: PeerDescriptor = {
-        peerId: PeerID.fromString("mock1").value,
+        kademliaId: PeerID.fromString("mock1").value,
         type: NodeType.NODEJS
     }
     const mockPeerDescriptor2: PeerDescriptor = {
-        peerId: PeerID.fromString("mock2").value,
+        kademliaId: PeerID.fromString("mock2").value,
         type: NodeType.NODEJS
     }
 

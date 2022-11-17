@@ -37,7 +37,7 @@ export class SimulatorConnector extends EventEmitter<ManagedConnectionSourceEven
     }
 
     public connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
-        const peerKey = PeerID.fromValue(targetPeerDescriptor.peerId).toKey()
+        const peerKey = PeerID.fromValue(targetPeerDescriptor.kademliaId).toKey()
         const existingConnection = this.connectingConnections.get(peerKey)
         if (existingConnection) {
             return existingConnection
@@ -49,12 +49,12 @@ export class SimulatorConnector extends EventEmitter<ManagedConnectionSourceEven
             ConnectionType.SIMULATOR_CLIENT, connection, undefined)
         managedConnection.setPeerDescriptor(targetPeerDescriptor!)
 
-        this.connectingConnections.set(PeerID.fromValue(targetPeerDescriptor.peerId).toKey(), managedConnection)
+        this.connectingConnections.set(PeerID.fromValue(targetPeerDescriptor.kademliaId).toKey(), managedConnection)
         connection.once('disconnected', () => {
-            this.connectingConnections.delete(PeerID.fromValue(targetPeerDescriptor.peerId).toKey())
+            this.connectingConnections.delete(PeerID.fromValue(targetPeerDescriptor.kademliaId).toKey())
         })
         connection.once('connected', () => {
-            this.connectingConnections.delete(PeerID.fromValue(targetPeerDescriptor.peerId).toKey())
+            this.connectingConnections.delete(PeerID.fromValue(targetPeerDescriptor.kademliaId).toKey())
         })
 
         connection.connect()

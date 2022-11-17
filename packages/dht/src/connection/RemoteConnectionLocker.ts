@@ -17,11 +17,11 @@ export class RemoteConnectionLocker {
         private protocolVersion: string,
         private client: ProtoRpcClient<IConnectionLockerClient>
     ) {
-        this.peerId = PeerID.fromValue(peerDescriptor.peerId)
+        this.peerId = PeerID.fromValue(peerDescriptor.kademliaId)
     }
 
     public async lockRequest(sourceDescriptor: PeerDescriptor, serviceId: string): Promise<boolean> {
-        logger.trace(`Requesting locked connection to ${this.peerDescriptor.peerId.toString()}`)
+        logger.trace(`Requesting locked connection to ${this.peerDescriptor.kademliaId.toString()}`)
         const request: LockRequest = {
             peerDescriptor: sourceDescriptor,
             protocolVersion: this.protocolVersion,
@@ -41,7 +41,7 @@ export class RemoteConnectionLocker {
     }
 
     public unlockRequest(sourceDescriptor: PeerDescriptor, serviceId: string): void {
-        logger.trace(`Requesting connection to be unlocked from ${this.peerDescriptor.peerId.toString()}`)
+        logger.trace(`Requesting connection to be unlocked from ${this.peerDescriptor.kademliaId.toString()}`)
         const request: UnlockRequest = {
             peerDescriptor: sourceDescriptor,
             protocolVersion: this.protocolVersion,
@@ -59,7 +59,7 @@ export class RemoteConnectionLocker {
     }
 
     public async gracefulDisconnect(sourceDescriptor: PeerDescriptor): Promise<void> {
-        logger.trace(`Notifying a graceful disconnect to ${this.peerDescriptor.peerId.toString()}`)
+        logger.trace(`Notifying a graceful disconnect to ${this.peerDescriptor.kademliaId.toString()}`)
         const request: DisconnectNotice = {
             peerDescriptor: sourceDescriptor,
             protocolVersion: this.protocolVersion

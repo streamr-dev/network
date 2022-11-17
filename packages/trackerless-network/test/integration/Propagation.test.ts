@@ -7,7 +7,7 @@ import { waitForCondition } from '@streamr/utils'
 
 describe('Propagation', () => {
     const entryPointDescriptor: PeerDescriptor = {
-        peerId: PeerID.fromString(`entrypoint`).value,
+        kademliaId: PeerID.fromString(`entrypoint`).value,
         type: 1
     }
 
@@ -34,7 +34,7 @@ describe('Propagation', () => {
 
         await Promise.all(range(NUM_OF_NODES).map(async (_i) => {
             const descriptor: PeerDescriptor = {
-                peerId: PeerID.fromString(new UUID().toString()).value,
+                kademliaId: PeerID.fromString(new UUID().toString()).value,
                 type: 1
             }
             const [dht, graph] = createMockRandomGraphNodeAndDhtNode(
@@ -76,7 +76,7 @@ describe('Propagation', () => {
         const msg = createStreamMessage(
             content,
             STREAM_ID,
-            PeerID.fromValue(dhtNodes[0].getPeerDescriptor().peerId).toString()
+            PeerID.fromValue(dhtNodes[0].getPeerDescriptor().kademliaId).toString()
         )
 
         randomGraphNodes[0].broadcast(msg)

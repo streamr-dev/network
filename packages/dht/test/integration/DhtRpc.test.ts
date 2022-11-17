@@ -14,12 +14,12 @@ describe('DhtRpc', () => {
     let client2: ProtoRpcClient<DhtRpcServiceClient>
 
     const peerDescriptor1: PeerDescriptor = {
-        peerId: generateId('peer1'),
+        kademliaId: generateId('peer1'),
         type: 0
     }
 
     const peerDescriptor2: PeerDescriptor = {
-        peerId: generateId('peer2'),
+        kademliaId: generateId('peer2'),
         type: 0
     }
 
@@ -51,15 +51,21 @@ describe('DhtRpc', () => {
 
     it('Happy path', async () => {
         const response1 = client1.getClosestPeers(
-            { peerDescriptor: peerDescriptor1, requestId: '1' },
-            { targetDescriptor: peerDescriptor2 }
+            { kademliaId: peerDescriptor1.kademliaId, requestId: '1' },
+            {
+                sourceDescriptor: peerDescriptor1,
+                targetDescriptor: peerDescriptor2,
+            }
         )
         const res1 = await response1
         expect(res1.peers).toEqual(getMockPeers())
 
         const response2 = client2.getClosestPeers(
-            { peerDescriptor: peerDescriptor2, requestId: '1' },
-            { targetDescriptor: peerDescriptor1 }
+            { kademliaId: peerDescriptor2.kademliaId, requestId: '1' },
+            {
+                sourceDescriptor: peerDescriptor2,
+                targetDescriptor: peerDescriptor1
+            }
         )
         const res2 = await response2
         expect(res2.peers).toEqual(getMockPeers())
@@ -71,8 +77,11 @@ describe('DhtRpc', () => {
             await wait(3000)
         })
         const response2 = client2.getClosestPeers(
-            { peerDescriptor: peerDescriptor2, requestId: '1' },
-            { targetDescriptor: peerDescriptor1 }
+            { kademliaId: peerDescriptor2.kademliaId, requestId: '1' },
+            {
+                sourceDescriptor: peerDescriptor2,
+                targetDescriptor: peerDescriptor1
+            }
         )
         await expect(response2).rejects.toEqual(
             new RpcError.RpcTimeout('Rpc request timed out')
@@ -81,7 +90,7 @@ describe('DhtRpc', () => {
 
     it('Server side timeout', async () => {
         let timeout: NodeJS.Timeout
-        
+
         function respondGetClosestPeersWithTimeout(_request: ClosestPeersRequest, _context: ServerCallContext): Promise<ClosestPeersResponse> {
             const neighbors = getMockPeers()
             const response: ClosestPeersResponse = {
@@ -94,11 +103,14 @@ describe('DhtRpc', () => {
                 }, 5000)
             })
         }
-        
+
         rpcCommunicator2.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', respondGetClosestPeersWithTimeout)
         const response = client2.getClosestPeers(
-            { peerDescriptor: peerDescriptor2, requestId: '1' },
-            { targetDescriptor: peerDescriptor1 }
+            { kademliaId: peerDescriptor2.kademliaId, requestId: '1' },
+            {
+                sourceDescriptor: peerDescriptor2,
+                targetDescriptor: peerDescriptor1
+            }
         )
         await expect(response).rejects.toEqual(
             new RpcError.RpcTimeout('Server timed out on request')

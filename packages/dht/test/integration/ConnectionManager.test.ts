@@ -9,20 +9,20 @@ describe('ConnectionManager', () => {
     const serviceId = 'demo'
 
     const mockPeerDescriptor1: PeerDescriptor = {
-        peerId: PeerID.fromString("tester1").value,
+        kademliaId: PeerID.fromString("tester1").value,
         type: NodeType.NODEJS
     }
     const mockPeerDescriptor2: PeerDescriptor = {
-        peerId: PeerID.fromString("tester2").value,
+        kademliaId: PeerID.fromString("tester2").value,
         type: NodeType.NODEJS
     }
 
     const mockPeerDescriptor3: PeerDescriptor = {
-        peerId: PeerID.fromString("tester3").value,
+        kademliaId: PeerID.fromString("tester3").value,
         type: NodeType.NODEJS
     }
     const mockPeerDescriptor4: PeerDescriptor = {
-        peerId: PeerID.fromString("tester4").value,
+        kademliaId: PeerID.fromString("tester4").value,
         type: NodeType.NODEJS
     }
     const simulator = new Simulator()
@@ -48,7 +48,7 @@ describe('ConnectionManager', () => {
         const connectionManager = new ConnectionManager({
             transportLayer: mockTransport,
             webSocketPort: 9992, entryPoints: [
-                { peerId: Uint8Array.from([1, 2, 3]), type: NodeType.NODEJS, websocket: { ip: '127.0.0.1', port: 12345 } }
+                { kademliaId: Uint8Array.from([1, 2, 3]), type: NodeType.NODEJS, websocket: { ip: '127.0.0.1', port: 12345 } }
             ]
         })
 
@@ -71,7 +71,7 @@ describe('ConnectionManager', () => {
         const connectionManager2 = new ConnectionManager({
             transportLayer: mockConnectorTransport2,
             webSocketPort: 9994, entryPoints: [
-                { peerId: Uint8Array.from([1, 2, 3]), type: NodeType.NODEJS, websocket: { ip: '127.0.0.1', port: 9993 } }
+                { kademliaId: Uint8Array.from([1, 2, 3]), type: NodeType.NODEJS, websocket: { ip: '127.0.0.1', port: 9993 } }
             ]
         })
 

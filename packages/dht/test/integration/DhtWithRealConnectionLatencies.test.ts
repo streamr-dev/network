@@ -17,7 +17,7 @@ describe('Mock connection Dht joining with real latencies', () => {
         entryPoint = await createMockConnectionDhtNode(entryPointId, simulator)
        
         entrypointDescriptor = {
-            peerId: entryPoint.getNodeId().value,
+            kademliaId: entryPoint.getNodeId().value,
             type: 0,
             region: getRandomRegion()
         }

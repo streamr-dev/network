@@ -6,7 +6,7 @@ import { waitForCondition } from '@streamr/utils'
 
 describe('WebSocket IConnection Requests', () => {
     const epPeerDescriptor: PeerDescriptor = {
-        peerId: PeerID.fromString('3').value, // Uint8Array.from([1, 2, 3]),
+        kademliaId: PeerID.fromString('3').value, // Uint8Array.from([1, 2, 3]),
         type: NodeType.NODEJS,
         websocket: { ip: '127.0.0.1', port: 10021 }
     }
@@ -39,14 +39,14 @@ describe('WebSocket IConnection Requests', () => {
         let connected2 = false
 
         node1.on('connected', (peerDescriptor: PeerDescriptor) => {
-            if (PeerID.fromValue(node2.getPeerDescriptor().peerId)
-                .equals(PeerID.fromValue(peerDescriptor.peerId))) {
+            if (PeerID.fromValue(node2.getPeerDescriptor().kademliaId)
+                .equals(PeerID.fromValue(peerDescriptor.kademliaId))) {
                 connected1 = true
             }
         })
         node2.on('connected', (peerDescriptor: PeerDescriptor) => {
-            if (PeerID.fromValue(node1.getPeerDescriptor().peerId)
-                .equals(PeerID.fromValue(peerDescriptor.peerId))) {
+            if (PeerID.fromValue(node1.getPeerDescriptor().kademliaId)
+                .equals(PeerID.fromValue(peerDescriptor.kademliaId))) {
                 connected2 = true
             }
         })

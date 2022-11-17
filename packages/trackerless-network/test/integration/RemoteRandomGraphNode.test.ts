@@ -5,7 +5,7 @@ import {
     ContentMessage,
     HandshakeRequest,
     HandshakeResponse,
-    LeaveNotice,
+    LeaveNoticeRequest,
     NeighborUpdate, StreamMessage
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { Empty } from '../../src/proto/google/protobuf/empty'
@@ -20,11 +20,11 @@ describe('RemoteRandomGraphNode', () => {
     let remoteRandomGraphNode: RemoteRandomGraphNode
 
     const clientPeer: PeerDescriptor = {
-        peerId: new Uint8Array([1, 1, 1]),
+        kademliaId: new Uint8Array([1, 1, 1]),
         type: 1
     }
     const serverPeer: PeerDescriptor = {
-        peerId: new Uint8Array([2, 2, 2]),
+        kademliaId: new Uint8Array([2, 2, 2]),
         type: 1
     }
 
@@ -62,9 +62,9 @@ describe('RemoteRandomGraphNode', () => {
         )
 
         mockServerRpc.registerRpcNotification(
-            LeaveNotice,
+            LeaveNoticeRequest,
             'leaveNotice',
-            async (_msg: LeaveNotice, _context: ServerCallContext): Promise<Empty> => {
+            async (_msg: LeaveNoticeRequest, _context: ServerCallContext): Promise<Empty> => {
                 recvCounter += 1
                 return Empty
             }
@@ -76,12 +76,12 @@ describe('RemoteRandomGraphNode', () => {
             'neighborUpdate',
             async (_msg: NeighborUpdate, _context: ServerCallContext): Promise<NeighborUpdate> => {
                 const peer: PeerDescriptor = {
-                    peerId: new Uint8Array([4, 2, 4]),
+                    kademliaId: new Uint8Array([4, 2, 4]),
                     type: 0
                 }
 
                 const update: NeighborUpdate = {
-                    senderId: PeerID.fromValue(peer.peerId).toKey(),
+                    senderId: PeerID.fromValue(peer.kademliaId).toKey(),
                     randomGraphId: 'testStream',
                     neighborDescriptors: [
                         peer
@@ -111,7 +111,7 @@ describe('RemoteRandomGraphNode', () => {
         const msg = createStreamMessage(
             content,
             'test-stream',
-            PeerID.fromValue(clientPeer.peerId).toString()
+            PeerID.fromValue(clientPeer.kademliaId).toString()
         )
 
         await remoteRandomGraphNode.sendData(clientPeer, msg)

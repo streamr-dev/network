@@ -14,7 +14,7 @@ export class PeerList {
     }
 
     add(remote: RemoteRandomGraphNode): void {
-        if (!this.ownPeerID.equals(PeerID.fromValue(remote.getPeerDescriptor().peerId)) && this.peers.size < this.limit) {
+        if (!this.ownPeerID.equals(PeerID.fromValue(remote.getPeerDescriptor().kademliaId)) && this.peers.size < this.limit) {
             const stringId = this.toStringId(remote.getPeerDescriptor())
             this.peers.set(stringId, remote)
         }
@@ -56,7 +56,7 @@ export class PeerList {
 
     // eslint-disable-next-line class-methods-use-this
     private toStringId(peerDescriptor: PeerDescriptor): string {
-        return PeerID.fromValue(peerDescriptor.peerId).toKey()
+        return PeerID.fromValue(peerDescriptor.kademliaId).toKey()
     }
 
     size(exclude: string[] = []): number {

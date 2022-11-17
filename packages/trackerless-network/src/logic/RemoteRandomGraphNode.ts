@@ -4,7 +4,7 @@ import {
     StreamMessage,
     HandshakeRequest,
     InterleaveNotice,
-    LeaveNotice,
+    LeaveNoticeRequest,
     NeighborUpdate
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { Logger } from '@streamr/utils'
@@ -45,7 +45,7 @@ export class RemoteRandomGraphNode {
         const request: HandshakeRequest = {
             randomGraphId: this.graphId,
             requestId: new UUID().toString(),
-            senderId: PeerID.fromValue(ownPeerDescriptor.peerId).toKey(),
+            senderId: PeerID.fromValue(ownPeerDescriptor.kademliaId).toKey(),
             neighbors,
             peerView,
             concurrentHandshakeTargetId,
@@ -63,7 +63,7 @@ export class RemoteRandomGraphNode {
                 interleaveTarget: response.interleaveTarget
             }
         } catch (err: any) {
-            logger.debug(`handshake to ${PeerID.fromValue(this.getPeerDescriptor().peerId).toKey()} failed: ${err}`)
+            logger.debug(`handshake to ${PeerID.fromValue(this.getPeerDescriptor().kademliaId).toKey()} failed: ${err}`)
             return {
                 accepted: false
             }
@@ -94,7 +94,7 @@ export class RemoteRandomGraphNode {
         const notification: InterleaveNotice = {
             randomGraphId: this.graphId,
             interleaveTarget: originatorDescriptor,
-            senderId: PeerID.fromValue(ownPeerDescriptor.peerId).toKey()
+            senderId: PeerID.fromValue(ownPeerDescriptor.kademliaId).toKey()
         }
         this.client.interleaveNotice(notification, options).catch(() => {
             logger.warn('Failed to send interleaveNotice')
@@ -107,8 +107,8 @@ export class RemoteRandomGraphNode {
             targetDescriptor: this.remotePeerDescriptor as PeerDescriptor,
             notification: true
         }
-        const notification: LeaveNotice = {
-            senderId: PeerID.fromValue(ownPeerDescriptor.peerId).toKey(),
+        const notification: LeaveNoticeRequest = {
+            senderId: PeerID.fromValue(ownPeerDescriptor.kademliaId).toKey(),
             randomGraphId: this.graphId
         }
         this.client.leaveNotice(notification, options).catch(() => {
@@ -126,7 +126,7 @@ export class RemoteRandomGraphNode {
             targetDescriptor: this.remotePeerDescriptor as PeerDescriptor,
         }
         const request: NeighborUpdate = {
-            senderId: PeerID.fromValue(ownPeerDescriptor.peerId).toKey(),
+            senderId: PeerID.fromValue(ownPeerDescriptor.kademliaId).toKey(),
             randomGraphId: this.graphId,
             neighborDescriptors: neighbors,
             removeMe: false
@@ -138,7 +138,7 @@ export class RemoteRandomGraphNode {
                 removeMe: response.removeMe
             }
         } catch (err: any) {
-            logger.debug(`updateNeighbors to ${PeerID.fromValue(this.getPeerDescriptor().peerId).toKey()} failed: ${err}`)
+            logger.debug(`updateNeighbors to ${PeerID.fromValue(this.getPeerDescriptor().kademliaId).toKey()} failed: ${err}`)
             return {
                 peers: [],
                 removeMe: true

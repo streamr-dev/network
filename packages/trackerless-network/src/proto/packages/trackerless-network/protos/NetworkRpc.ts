@@ -220,9 +220,9 @@ export interface InterleaveNotice {
     interleaveTarget?: PeerDescriptor;
 }
 /**
- * @generated from protobuf message LeaveNotice
+ * @generated from protobuf message LeaveNoticeRequest
  */
-export interface LeaveNotice {
+export interface LeaveNoticeRequest {
     /**
      * @generated from protobuf field: string randomGraphId = 1;
      */
@@ -448,18 +448,18 @@ class InterleaveNotice$Type extends MessageType<InterleaveNotice> {
  */
 export const InterleaveNotice = new InterleaveNotice$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class LeaveNotice$Type extends MessageType<LeaveNotice> {
+class LeaveNoticeRequest$Type extends MessageType<LeaveNoticeRequest> {
     constructor() {
-        super("LeaveNotice", [
+        super("LeaveNoticeRequest", [
             { no: 1, name: "randomGraphId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "senderId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message LeaveNotice
+ * @generated MessageType for protobuf message LeaveNoticeRequest
  */
-export const LeaveNotice = new LeaveNotice$Type();
+export const LeaveNoticeRequest = new LeaveNoticeRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class NeighborUpdate$Type extends MessageType<NeighborUpdate> {
     constructor() {
@@ -481,7 +481,7 @@ export const NeighborUpdate = new NeighborUpdate$Type();
 export const NetworkRpc = new ServiceType("NetworkRpc", [
     { name: "sendData", options: {}, I: StreamMessage, O: Empty },
     { name: "handshake", options: {}, I: HandshakeRequest, O: HandshakeResponse },
-    { name: "leaveNotice", options: {}, I: LeaveNotice, O: Empty },
+    { name: "leaveNotice", options: {}, I: LeaveNoticeRequest, O: Empty },
     { name: "interleaveNotice", options: {}, I: InterleaveNotice, O: Empty },
     { name: "neighborUpdate", options: {}, I: NeighborUpdate, O: NeighborUpdate }
 ]);

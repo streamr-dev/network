@@ -11,9 +11,9 @@ import { MessageType as MessageType$ } from "@protobuf-ts/runtime";
  */
 export interface ClosestPeersRequest {
     /**
-     * @generated from protobuf field: PeerDescriptor peerDescriptor = 1;
+     * @generated from protobuf field: bytes kademliaId = 1;
      */
-    peerDescriptor?: PeerDescriptor;
+    kademliaId: Uint8Array;
     /**
      * @generated from protobuf field: string requestId = 2;
      */
@@ -51,13 +51,22 @@ export interface PingResponse {
     requestId: string;
 }
 /**
+ * @generated from protobuf message LeaveNotice
+ */
+export interface LeaveNotice {
+    /**
+     * @generated from protobuf field: string serviceId = 1;
+     */
+    serviceId: string;
+}
+/**
  * @generated from protobuf message PeerDescriptor
  */
 export interface PeerDescriptor {
     /**
-     * @generated from protobuf field: bytes peerId = 1;
+     * @generated from protobuf field: bytes kademliaId = 1;
      */
-    peerId: Uint8Array;
+    kademliaId: Uint8Array;
     /**
      * @generated from protobuf field: NodeType type = 2;
      */
@@ -461,6 +470,19 @@ export interface LockResponse {
     reason?: boolean; // if accepted = false
 }
 /**
+ * @generated from protobuf message DisconnectNotice
+ */
+export interface DisconnectNotice {
+    /**
+     * @generated from protobuf field: string protocolVersion = 1;
+     */
+    protocolVersion: string;
+    /**
+     * @generated from protobuf field: PeerDescriptor peerDescriptor = 2;
+     */
+    peerDescriptor?: PeerDescriptor;
+}
+/**
  * @generated from protobuf enum NodeType
  */
 export enum NodeType {
@@ -529,7 +551,7 @@ export enum MessageType {
 class ClosestPeersRequest$Type extends MessageType$<ClosestPeersRequest> {
     constructor() {
         super("ClosestPeersRequest", [
-            { no: 1, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor },
+            { no: 1, name: "kademliaId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 2, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
@@ -576,10 +598,22 @@ class PingResponse$Type extends MessageType$<PingResponse> {
  */
 export const PingResponse = new PingResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class LeaveNotice$Type extends MessageType$<LeaveNotice> {
+    constructor() {
+        super("LeaveNotice", [
+            { no: 1, name: "serviceId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message LeaveNotice
+ */
+export const LeaveNotice = new LeaveNotice$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class PeerDescriptor$Type extends MessageType$<PeerDescriptor> {
     constructor() {
         super("PeerDescriptor", [
-            { no: 1, name: "peerId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 1, name: "kademliaId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 2, name: "type", kind: "enum", T: () => ["NodeType", NodeType] },
             { no: 3, name: "udp", kind: "message", T: () => ConnectivityMethod },
             { no: 4, name: "tcp", kind: "message", T: () => ConnectivityMethod },
@@ -870,6 +904,19 @@ class LockResponse$Type extends MessageType$<LockResponse> {
  * @generated MessageType for protobuf message LockResponse
  */
 export const LockResponse = new LockResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class DisconnectNotice$Type extends MessageType$<DisconnectNotice> {
+    constructor() {
+        super("DisconnectNotice", [
+            { no: 1, name: "protocolVersion", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message DisconnectNotice
+ */
+export const DisconnectNotice = new DisconnectNotice$Type();
 /**
  * @generated ServiceType for protobuf service DhtRpcService
  */
@@ -877,7 +924,8 @@ export const DhtRpcService = new ServiceType("DhtRpcService", [
     { name: "getClosestPeers", options: {}, I: ClosestPeersRequest, O: ClosestPeersResponse },
     { name: "ping", options: {}, I: PingRequest, O: PingResponse },
     { name: "routeMessage", options: {}, I: RouteMessageWrapper, O: RouteMessageAck },
-    { name: "forwardMessage", options: {}, I: RouteMessageWrapper, O: RouteMessageAck }
+    { name: "forwardMessage", options: {}, I: RouteMessageWrapper, O: RouteMessageAck },
+    { name: "leaveNotice", options: {}, I: LeaveNotice, O: Empty }
 ]);
 /**
  * @generated ServiceType for protobuf service WebSocketConnectorService
@@ -899,5 +947,6 @@ export const WebRtcConnectorService = new ServiceType("WebRtcConnectorService", 
  */
 export const ConnectionLocker = new ServiceType("ConnectionLocker", [
     { name: "lockRequest", options: {}, I: LockRequest, O: LockResponse },
-    { name: "unlockRequest", options: {}, I: UnlockRequest, O: Empty }
+    { name: "unlockRequest", options: {}, I: UnlockRequest, O: Empty },
+    { name: "gracefulDisconnect", options: {}, I: DisconnectNotice, O: Empty }
 ]);

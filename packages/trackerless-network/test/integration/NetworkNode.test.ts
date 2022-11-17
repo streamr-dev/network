@@ -22,12 +22,12 @@ describe('NetworkNode', () => {
     let node2: NetworkNode
 
     const pd1: PeerDescriptor = {
-        peerId: new Uint8Array([1, 2, 3]),
+        kademliaId: new Uint8Array([1, 2, 3]),
         type: NodeType.NODEJS
     }
 
     const pd2: PeerDescriptor = {
-        peerId: new Uint8Array([1, 1, 1]),
+        kademliaId: new Uint8Array([1, 1, 1]),
         type: NodeType.NODEJS
     }
 

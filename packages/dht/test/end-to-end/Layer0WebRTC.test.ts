@@ -8,7 +8,7 @@ import { waitForEvent } from '@streamr/utils'
 
 describe('Layer0 with WebRTC connections', () => {
     const epPeerDescriptor: PeerDescriptor = {
-        peerId: PeerID.fromString('entrypoint').value,
+        kademliaId: PeerID.fromString('entrypoint').value,
         type: NodeType.NODEJS,
         websocket: { ip: '127.0.0.1', port: 10029 }
     }
@@ -54,7 +54,7 @@ describe('Layer0 with WebRTC connections', () => {
         constructor(nodeToListen: DhtNode) {
             super()
             nodeToListen.on('connected', (peer: PeerDescriptor) => {
-                if (PeerID.fromValue(peer.peerId).equals(PeerID.fromString('Peer0'))) {
+                if (PeerID.fromValue(peer.kademliaId).equals(PeerID.fromString('Peer0'))) {
                     this.emit('peer0connected')
                 }
             })

@@ -44,8 +44,8 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         private forwarding = false
     ) {
         super()
-        this.contactList = new SortedContactList(PeerID.fromValue(this.messageToRoute!.destinationPeer!.peerId),
-            10000, undefined, true, this.messageToRoute!.previousPeer ? PeerID.fromValue(this.messageToRoute!.previousPeer!.peerId) : undefined)
+        this.contactList = new SortedContactList(PeerID.fromValue(this.messageToRoute!.destinationPeer!.kademliaId),
+            10000, undefined, true, this.messageToRoute!.previousPeer ? PeerID.fromValue(this.messageToRoute!.previousPeer!.kademliaId) : undefined)
     }
 
     private onRequestFailed(peerId: PeerID) {
@@ -75,7 +75,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     }
 
     private async sendRouteMessageRequest(contact: DhtPeer): Promise<boolean> {
-        logger.trace(`Sending routeMessage request from ${this.ownPeerDescriptor.peerId} to contact: ${contact.peerId}`)
+        logger.trace(`Sending routeMessage request from ${this.ownPeerDescriptor.kademliaId} to contact: ${contact.peerId}`)
         this.contactList.setContacted(contact.peerId)
         this.ongoingRequests.add(contact.peerId.toKey())
 

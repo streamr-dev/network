@@ -2,6 +2,7 @@
 // @generated from protobuf file "packages/dht/protos/DhtRpc.proto" (syntax proto3)
 // tslint:disable
 import { ConnectionLocker } from "./DhtRpc";
+import type { DisconnectNotice } from "./DhtRpc";
 import type { UnlockRequest } from "./DhtRpc";
 import type { LockResponse } from "./DhtRpc";
 import type { LockRequest } from "./DhtRpc";
@@ -9,7 +10,6 @@ import { WebRtcConnectorService } from "./DhtRpc";
 import type { IceCandidate } from "./DhtRpc";
 import type { RtcAnswer } from "./DhtRpc";
 import type { RtcOffer } from "./DhtRpc";
-import type { Empty } from "../../../google/protobuf/empty";
 import type { WebRtcConnectionRequest } from "./DhtRpc";
 import { WebSocketConnectorService } from "./DhtRpc";
 import type { WebSocketConnectionResponse } from "./DhtRpc";
@@ -17,6 +17,8 @@ import type { WebSocketConnectionRequest } from "./DhtRpc";
 import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
 import { DhtRpcService } from "./DhtRpc";
+import type { Empty } from "../../../google/protobuf/empty";
+import type { LeaveNotice } from "./DhtRpc";
 import type { RouteMessageAck } from "./DhtRpc";
 import type { RouteMessageWrapper } from "./DhtRpc";
 import type { PingResponse } from "./DhtRpc";
@@ -46,6 +48,10 @@ export interface IDhtRpcServiceClient {
      * @generated from protobuf rpc: forwardMessage(RouteMessageWrapper) returns (RouteMessageAck);
      */
     forwardMessage(input: RouteMessageWrapper, options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck>;
+    /**
+     * @generated from protobuf rpc: leaveNotice(LeaveNotice) returns (google.protobuf.Empty);
+     */
+    leaveNotice(input: LeaveNotice, options?: RpcOptions): UnaryCall<LeaveNotice, Empty>;
 }
 /**
  * @generated from protobuf service DhtRpcService
@@ -83,6 +89,13 @@ export class DhtRpcServiceClient implements IDhtRpcServiceClient, ServiceInfo {
     forwardMessage(input: RouteMessageWrapper, options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck> {
         const method = this.methods[3], opt = this._transport.mergeOptions(options);
         return stackIntercept<RouteMessageWrapper, RouteMessageAck>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: leaveNotice(LeaveNotice) returns (google.protobuf.Empty);
+     */
+    leaveNotice(input: LeaveNotice, options?: RpcOptions): UnaryCall<LeaveNotice, Empty> {
+        const method = this.methods[4], opt = this._transport.mergeOptions(options);
+        return stackIntercept<LeaveNotice, Empty>("unary", this._transport, method, opt, input);
     }
 }
 /**
@@ -182,6 +195,10 @@ export interface IConnectionLockerClient {
      * @generated from protobuf rpc: unlockRequest(UnlockRequest) returns (google.protobuf.Empty);
      */
     unlockRequest(input: UnlockRequest, options?: RpcOptions): UnaryCall<UnlockRequest, Empty>;
+    /**
+     * @generated from protobuf rpc: gracefulDisconnect(DisconnectNotice) returns (google.protobuf.Empty);
+     */
+    gracefulDisconnect(input: DisconnectNotice, options?: RpcOptions): UnaryCall<DisconnectNotice, Empty>;
 }
 /**
  * @generated from protobuf service ConnectionLocker
@@ -205,5 +222,12 @@ export class ConnectionLockerClient implements IConnectionLockerClient, ServiceI
     unlockRequest(input: UnlockRequest, options?: RpcOptions): UnaryCall<UnlockRequest, Empty> {
         const method = this.methods[1], opt = this._transport.mergeOptions(options);
         return stackIntercept<UnlockRequest, Empty>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: gracefulDisconnect(DisconnectNotice) returns (google.protobuf.Empty);
+     */
+    gracefulDisconnect(input: DisconnectNotice, options?: RpcOptions): UnaryCall<DisconnectNotice, Empty> {
+        const method = this.methods[2], opt = this._transport.mergeOptions(options);
+        return stackIntercept<DisconnectNotice, Empty>("unary", this._transport, method, opt, input);
     }
 }
