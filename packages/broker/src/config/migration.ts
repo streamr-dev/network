@@ -1,9 +1,7 @@
 import fs from 'fs'
 import path from 'path'
-import { cloneDeep, get, omitBy, set } from 'lodash'
+import { cloneDeep } from 'lodash'
 import { ConfigFile, getDefaultFile, getLegacyDefaultFile } from './config'
-import { isValidConfig } from './validateConfig'
-import TEST_CONFIG_SCHEMA from './config-testnet.schema.json'
 
 export const CURRENT_CONFIGURATION_VERSION = 2
 
@@ -26,83 +24,6 @@ const getVersion = (config: any): number | undefined => {
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const needsMigration = (config: any): boolean => {
     return (getVersion(config) !== undefined) && (getVersion(config) !== CURRENT_CONFIGURATION_VERSION)
-}
-
-/*
- * Migrate a Testnet3 config to the new format used in Brubeck mainnet.
- *
- * Some new features were added between Testnet3 and Brubeck mainnet. The migration assumes
- * that a source config doesn't contain settings for those features. Therefore it ignores:
- * - network.webrtcDisallowPrivateAddresses
- * - subscriber plugin
- */
-const convertTestnet3ToV1 = (source: any): ConfigFile => {
-    const TARGET_VERSION = 1
-    const DEFAULT_NAME = 'miner-node'
-    const target: any = {
-        $schema: formSchemaUrl(TARGET_VERSION)
-    }
-
-    const copyProperty = (sourceName: string, targetName?: string, transform?: (sourceValue: any) => any) => {
-        const sourceValue = get(source, sourceName)
-        const targetValue = (transform !== undefined) ? transform(sourceValue) : sourceValue
-        if (targetValue !== undefined) {
-            set(target, targetName ?? sourceName, targetValue)
-        }
-    }
-
-    /*
-     * Most user-configurable properties are copied. Drop these configurable values:
-     * - client.network.location if null, as the non-defined location is the default value in v1
-     * - network.name if equals to 'miner-node', as all Brubeck mainnet nodes aren't miners
-     * 
-     * Also drop properties, which are settings about the environment (that is, Testnet3 values 
-     * in the source config). As a consequence, the node will apply Brubeck mainnet defaults 
-     * for these properties:
-     * - trackers
-     * - network.stun and network.turn
-     * - generateSessionId (the migrated node will always use session id)
-     * - streamrAddress (not needed in Brubeck mainnet)
-     * - storageNodeConfig (configured as a registry address in Brubeck mainnet)
-     */
-    copyProperty('ethereumPrivateKey', 'client.auth.privateKey')
-    copyProperty('network.name', 'client.network.name', (value) => (value !== DEFAULT_NAME) ? value : undefined)
-    copyProperty('network.location', 'client.network.location', 
-        (value) => (value !== null) ? omitBy(value, (fieldValue: any) => fieldValue === null) : undefined)
-    copyProperty('httpServer')
-    copyProperty('apiAuthentication')
-
-    /*
-     * Copy plugins:
-     * - all API-plugins
-     * - miner plugin renamed (all settings are specific to Brubeck mainnet)
-     * - metrics plugin (nodeMetrics settings are specific to Brubeck mainnet)
-     * 
-     * Legacy plugins are dropped. Migrating a storage plugin is not supported.
-     */
-    target.plugins = {}
-    Object.keys(source.plugins).forEach((name) => {
-        const sourceConfig = source.plugins[name]
-        if (['websocket', 'mqtt', 'publishHttp'].includes(name)) {
-            target.plugins[name] = sourceConfig
-        } else if (name === 'testnetMiner') {
-            target.plugins.brubeckMiner = {}
-        } else if (name === 'metrics') {
-            const targetConfig: any = {}
-            if (sourceConfig.consoleAndPM2IntervalInSeconds !== 0) {
-                targetConfig.consoleAndPM2IntervalInSeconds = sourceConfig.consoleAndPM2IntervalInSeconds
-            }
-            if (sourceConfig.nodeMetrics === null) {
-                targetConfig.nodeMetrics = null
-            }
-            target.plugins.metrics = targetConfig
-        } else if (['legacyWebsocket', 'legacyMqtt'].includes(name)) {
-            // no-op
-        } else {
-            throw new Error(`Migration not supported for plugin: ${name}`)
-        }
-    })
-    return target as ConfigFile
 }
 
 const convertV1ToV2 = (source: any): ConfigFile => {
@@ -188,10 +109,7 @@ export const createMigratedConfig = (source: any): ConfigFile | never => {
     let config = source
     do {
         const version = getVersion(config)
-        const isTestnetConfig = (version === undefined) && (isValidConfig(config, TEST_CONFIG_SCHEMA))
-        if (isTestnetConfig) {
-            config = convertTestnet3ToV1(config)
-        } else if (version === 1) {
+        if (version === 1) {
             config = convertV1ToV2(config)
         } else {
             throw new Error(`Unable to migrate the config: version=${version}`)
