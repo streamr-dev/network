@@ -352,19 +352,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         return this.ownPeerId!
     }
 
-    /*
-    public onGetClosestPeers(kademliaId: Uint8Array): DhtPeer[] {
-        if (!this.started || this.stopped) {
-            return []
-        }
-        logger.trace(`processing getClosestPeersRequest`)
-        const ret = this.bucket!.closest(kademliaId, 5)
-        //this.addNewContact(caller, true)
-        //this.neighborList!.setContacted(PeerID.fromValue(caller.peerId))
-        return ret
-    }
-    */
-
     public send = async (msg: Message): Promise<void> => {
         if (!this.started || this.stopped) {
             return
