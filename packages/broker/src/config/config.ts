@@ -24,7 +24,7 @@ export interface Config {
 }
 
 export interface ConfigFile extends Config {
-    $schema: string
+    $schema?: string
 }
 
 export const getDefaultFile = (): string => {
