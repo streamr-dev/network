@@ -10,7 +10,7 @@ describe('Full node network with WebSocket connections only', () => {
     const NUM_OF_NODES = 48
 
     const epPeerDescriptor: PeerDescriptor = {
-        peerId: PeerID.fromString(`entrypoint`).value,
+        kademliaId: PeerID.fromString(`entrypoint`).value,
         type: NodeType.NODEJS,
         websocket: { ip: 'localhost', port: 15555 }
     }
@@ -103,7 +103,7 @@ describe('Full node network with WebSocket connections only', () => {
         const msg = createStreamMessage(
             content,
             randomGraphId,
-            PeerID.fromValue(epPeerDescriptor.peerId).toString()
+            PeerID.fromValue(epPeerDescriptor.kademliaId).toString()
         )
 
         epStreamrNode.publishToStream(randomGraphId, epPeerDescriptor, msg)

@@ -15,7 +15,7 @@ describe('NetworkStack', () => {
     let stack2: NetworkStack
 
     const epDescriptor: PeerDescriptor = {
-        peerId: PeerID.fromString('entrypoint').value,
+        kademliaId: PeerID.fromString('entrypoint').value,
         type: NodeType.NODEJS,
         websocket: { ip: 'localhost', port: 32222 }
     }

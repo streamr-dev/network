@@ -5,7 +5,7 @@ export interface ApiAuthenticator {
 }
 
 export const createApiAuthenticator = (config: Config): ApiAuthenticator => {
-    if (config.apiAuthentication !== null) {
+    if (config.apiAuthentication !== undefined) {
         return {
             isValidAuthentication: (apiKey?: string) => {
                 if (apiKey === undefined) {

@@ -16,7 +16,7 @@ describe('Mock IConnection DHT Joining', () => {
         entryPoint = await createMockConnectionDhtNode(entryPointId, simulator)
         
         entrypointDescriptor = {
-            peerId: entryPoint.getNodeId().value,
+            kademliaId: entryPoint.getNodeId().value,
             type: 0
         }
        

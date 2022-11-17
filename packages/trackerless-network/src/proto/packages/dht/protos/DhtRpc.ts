@@ -11,9 +11,9 @@ import { MessageType as MessageType$ } from "@protobuf-ts/runtime";
  */
 export interface ClosestPeersRequest {
     /**
-     * @generated from protobuf field: PeerDescriptor peerDescriptor = 1;
+     * @generated from protobuf field: bytes kademliaId = 1;
      */
-    peerDescriptor?: PeerDescriptor;
+    kademliaId: Uint8Array;
     /**
      * @generated from protobuf field: string requestId = 2;
      */
@@ -55,11 +55,7 @@ export interface PingResponse {
  */
 export interface LeaveNotice {
     /**
-     * @generated from protobuf field: PeerDescriptor peerDescriptor = 1;
-     */
-    peerDescriptor?: PeerDescriptor;
-    /**
-     * @generated from protobuf field: string serviceId = 2;
+     * @generated from protobuf field: string serviceId = 1;
      */
     serviceId: string;
 }
@@ -68,9 +64,9 @@ export interface LeaveNotice {
  */
 export interface PeerDescriptor {
     /**
-     * @generated from protobuf field: bytes peerId = 1;
+     * @generated from protobuf field: bytes kademliaId = 1;
      */
-    peerId: Uint8Array;
+    kademliaId: Uint8Array;
     /**
      * @generated from protobuf field: NodeType type = 2;
      */
@@ -555,7 +551,7 @@ export enum MessageType {
 class ClosestPeersRequest$Type extends MessageType$<ClosestPeersRequest> {
     constructor() {
         super("ClosestPeersRequest", [
-            { no: 1, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor },
+            { no: 1, name: "kademliaId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 2, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
@@ -605,8 +601,7 @@ export const PingResponse = new PingResponse$Type();
 class LeaveNotice$Type extends MessageType$<LeaveNotice> {
     constructor() {
         super("LeaveNotice", [
-            { no: 1, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor },
-            { no: 2, name: "serviceId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "serviceId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -618,7 +613,7 @@ export const LeaveNotice = new LeaveNotice$Type();
 class PeerDescriptor$Type extends MessageType$<PeerDescriptor> {
     constructor() {
         super("PeerDescriptor", [
-            { no: 1, name: "peerId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 1, name: "kademliaId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 2, name: "type", kind: "enum", T: () => ["NodeType", NodeType] },
             { no: 3, name: "udp", kind: "message", T: () => ConnectivityMethod },
             { no: 4, name: "tcp", kind: "message", T: () => ConnectivityMethod },

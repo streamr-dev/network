@@ -26,7 +26,7 @@ export const createMockConnectionDhtNode = async (stringId: string, simulator: S
         id = PeerID.fromString(stringId)
     }
     const peerDescriptor: PeerDescriptor = {
-        peerId: id.value,
+        kademliaId: id.value,
         type: NodeType.NODEJS,
         region: getRandomRegion()
     }
@@ -43,7 +43,7 @@ export const createMockConnectionDhtNode = async (stringId: string, simulator: S
 export const createMockConnectionLayer1Node = async (stringId: string, layer0Node: DhtNode): Promise<DhtNode> => {
     const id = PeerID.fromString(stringId)
     const descriptor: PeerDescriptor = {
-        peerId: id.value,
+        kademliaId: id.value,
         type: 0
     }
 
@@ -58,7 +58,7 @@ export const createWrappedClosestPeersRequest = (
 ): RpcMessage => {
 
     const routedMessage: ClosestPeersRequest = {
-        peerDescriptor: sourceDescriptor,
+        kademliaId: sourceDescriptor.kademliaId,
         requestId: v4()
     }
     const rpcWrapper: RpcMessage = {
@@ -147,19 +147,19 @@ export const MockWebSocketConnectorRpc: IWebSocketConnectorService = {
 
 export const getMockPeers = (): PeerDescriptor[] => {
     const n1: PeerDescriptor = {
-        peerId: generateId('Neighbor1'),
+        kademliaId: generateId('Neighbor1'),
         type: NodeType.NODEJS,
     }
     const n2: PeerDescriptor = {
-        peerId: generateId('Neighbor2'),
+        kademliaId: generateId('Neighbor2'),
         type: NodeType.NODEJS,
     }
     const n3: PeerDescriptor = {
-        peerId: generateId('Neighbor3'),
+        kademliaId: generateId('Neighbor3'),
         type: NodeType.NODEJS,
     }
     const n4: PeerDescriptor = {
-        peerId: generateId('Neighbor1'),
+        kademliaId: generateId('Neighbor1'),
         type: NodeType.BROWSER,
     }
     return [

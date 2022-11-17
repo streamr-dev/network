@@ -39,11 +39,7 @@
             "default": "stun.sipgate.net"
         },
         "beneficiaryAddress": {
-            "type": [
-                "string",
-                "null"
-            ],
-            "default": null
+            "type": "string"
         }
     }
 }

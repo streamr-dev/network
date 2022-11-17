@@ -6,7 +6,7 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
     const entryPointId = '00000'
 
     const entrypointDescriptor: PeerDescriptor = {
-        peerId: PeerID.fromString(entryPointId).value,
+        kademliaId: PeerID.fromString(entryPointId).value,
         type: NodeType.NODEJS,
         websocket: {
             ip: 'localhost',

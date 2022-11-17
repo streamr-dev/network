@@ -10,15 +10,15 @@ describe('DhtNode', () => {
 
     const simulator = new Simulator()
     const mockDescriptor = {
-        peerId: PeerID.fromString('UnitNode').value,
+        kademliaId: PeerID.fromString('UnitNode').value,
         type: 0
     }
     const mockDescriptor2 = {
-        peerId: PeerID.fromString('mock').value,
+        kademliaId: PeerID.fromString('mock').value,
         type: 0
     }
     const mockOpenInternetPeerDescriptor = {
-        peerId: PeerID.fromString('openinternet').value,
+        kademliaId: PeerID.fromString('openinternet').value,
         type: 0,
         openInternet: true
     }

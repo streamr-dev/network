@@ -5,13 +5,14 @@ import { waitForCondition } from '@streamr/utils'
 import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { getRandomRegion } from '@streamr/dht/dist/test/data/pings'
 import { createStreamMessage } from '../utils'
+import { PeerIDKey } from '@streamr/dht/dist/src/helpers/PeerID'
 
 describe('Full node network with WebRTC connections', () => {
 
     const NUM_OF_NODES = 32
 
     const epPeerDescriptor: PeerDescriptor = {
-        peerId: PeerID.fromString(`entrypoint`).value,
+        kademliaId: PeerID.fromString(`entrypoint`).value,
         type: NodeType.NODEJS,
         websocket: { ip: 'localhost', port: 14444 },
         region: getRandomRegion()
@@ -48,7 +49,7 @@ describe('Full node network with WebRTC connections', () => {
         await Promise.all(range(NUM_OF_NODES).map(async (i) => {
             const peerId = PeerID.fromString(`${i}`)
             const peerDescriptor: PeerDescriptor = {
-                peerId: peerId.value,
+                kademliaId: peerId.value,
                 type: NodeType.NODEJS,
                 region: getRandomRegion()
             }
@@ -101,10 +102,10 @@ describe('Full node network with WebRTC connections', () => {
 
         let numOfMessagesReceived = 0
 
-        const successIds = []
+        const successIds: PeerIDKey[] = []
         streamrNodes.map((streamrNode) => {
             streamrNode.on(StreamrNodeEvent.NEW_MESSAGE, () => {
-                successIds.push(PeerID.fromValue(streamrNode.getPeerDescriptor().peerId).toKey())
+                successIds.push(PeerID.fromValue(streamrNode.getPeerDescriptor().kademliaId).toKey())
                 numOfMessagesReceived += 1
             })
         })
@@ -115,7 +116,7 @@ describe('Full node network with WebRTC connections', () => {
         const msg = createStreamMessage(
             content,
             randomGraphId,
-            PeerID.fromValue(epPeerDescriptor.peerId).toString()
+            PeerID.fromValue(epPeerDescriptor.kademliaId).toString()
         )
 
         epStreamrNode.publishToStream(randomGraphId, epPeerDescriptor, msg)

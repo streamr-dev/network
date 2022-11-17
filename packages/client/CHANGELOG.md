@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Simplify authentication config type to use union instead of `XOR`
+
 ### Deprecated
 
 ### Removed
@@ -23,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `CacheConfig`
   - `MetricsConfig` and `MetricsPeriodConfig`
   - `TimeoutsConfig`
+- Remove helper types `XOR` and `Without`
 
 ### Fixed
 

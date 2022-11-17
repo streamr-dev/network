@@ -30,8 +30,5 @@ createMessagingPluginTest('websocket',
         plugin: WEBSOCKET_PORT,
         tracker: TRACKER_PORT
     },
-    module,
-    {
-        sslCertificate: null
-    }
+    module
 )

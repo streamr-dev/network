@@ -117,7 +117,7 @@ export class WebSocketConnector extends EventEmitter<ManagedConnectionSourceEven
         if (this.stopped) {
             logger.info('connect called on closed websocketconnector')
         }
-        const peerKey = PeerID.fromValue(targetPeerDescriptor.peerId).toKey()
+        const peerKey = PeerID.fromValue(targetPeerDescriptor.kademliaId).toKey()
         const existingConnection = this.connectingConnections.get(peerKey)
         if (existingConnection) {
             return existingConnection
@@ -135,7 +135,7 @@ export class WebSocketConnector extends EventEmitter<ManagedConnectionSourceEven
                 ConnectionType.WEBSOCKET_CLIENT, socket, undefined)
             managedConnection.setPeerDescriptor(targetPeerDescriptor!)
 
-            this.connectingConnections.set(PeerID.fromValue(targetPeerDescriptor.peerId).toKey(), managedConnection)
+            this.connectingConnections.set(PeerID.fromValue(targetPeerDescriptor.kademliaId).toKey(), managedConnection)
 
             const delFunc = () => {
                 if (this.connectingConnections.has(peerKey)) {
@@ -162,9 +162,9 @@ export class WebSocketConnector extends EventEmitter<ManagedConnectionSourceEven
             remoteConnector.requestConnection(ownPeerDescriptor, ownPeerDescriptor.websocket!.ip, ownPeerDescriptor.websocket!.port)
         })
         const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, this.protocolVersion, ConnectionType.WEBSOCKET_SERVER)
-        managedConnection.on('disconnected', () => this.ongoingConnectRequests.delete(PeerID.fromValue(targetPeerDescriptor.peerId).toKey()))
+        managedConnection.on('disconnected', () => this.ongoingConnectRequests.delete(PeerID.fromValue(targetPeerDescriptor.kademliaId).toKey()))
         managedConnection.setPeerDescriptor(targetPeerDescriptor)
-        this.ongoingConnectRequests.set(PeerID.fromValue(targetPeerDescriptor.peerId).toKey(), managedConnection)
+        this.ongoingConnectRequests.set(PeerID.fromValue(targetPeerDescriptor.kademliaId).toKey(), managedConnection)
         return managedConnection
     }
 
@@ -172,7 +172,7 @@ export class WebSocketConnector extends EventEmitter<ManagedConnectionSourceEven
         serverWebSocket: IConnection, managedConnection: ManagedConnection) => {
 
         logger.trace('serversocket handshake completed')
-        const peerId = PeerID.fromValue(peerDescriptor.peerId)
+        const peerId = PeerID.fromValue(peerDescriptor.kademliaId)
         if (this.ongoingConnectRequests.has(peerId.toKey())) {
             this.ongoingConnectRequests.get(peerId.toKey())?.attachImplementation(serverWebSocket, peerDescriptor)
             this.ongoingConnectRequests.delete(peerId.toKey())

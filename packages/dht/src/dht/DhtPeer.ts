@@ -37,9 +37,11 @@ export class DhtPeer implements KBucketContact {
     public vectorClock: number
     private readonly dhtClient: ProtoRpcClient<IDhtRpcServiceClient>
     private readonly serviceId: string
+    private readonly ownPeerDescriptor: PeerDescriptor
 
-    constructor(peerDescriptor: PeerDescriptor, client: ProtoRpcClient<IDhtRpcServiceClient>, serviceId: string) {
-        this.peerId = PeerID.fromValue(peerDescriptor.peerId)
+    constructor(ownPeerDescriptor: PeerDescriptor, peerDescriptor: PeerDescriptor, client: ProtoRpcClient<IDhtRpcServiceClient>, serviceId: string) {
+        this.ownPeerDescriptor = ownPeerDescriptor
+        this.peerId = PeerID.fromValue(peerDescriptor.kademliaId)
         this.peerDescriptor = peerDescriptor
         this.vectorClock = DhtPeer.counter++
         this.dhtClient = client
@@ -48,29 +50,29 @@ export class DhtPeer implements KBucketContact {
         this.ping = this.ping.bind(this)
     }
 
-    async getClosestPeers(sourceDescriptor: PeerDescriptor): Promise<PeerDescriptor[]> {
+    async getClosestPeers(kademliaId: Uint8Array): Promise<PeerDescriptor[]> {
         logger.trace(`Requesting getClosestPeers on ${this.serviceId} from ${this.peerId.toKey()}`)
         const request: ClosestPeersRequest = {
-            peerDescriptor: sourceDescriptor,
+            kademliaId: kademliaId,
             requestId: v4()
         }
         const options: DhtRpcOptions = {
-            sourceDescriptor: sourceDescriptor as PeerDescriptor,
-            targetDescriptor: this.peerDescriptor as PeerDescriptor
+            sourceDescriptor: this.ownPeerDescriptor,
+            targetDescriptor: this.peerDescriptor
         }
 
         const peers = await this.dhtClient.getClosestPeers(request, options)
         return peers.peers
     }
 
-    async ping(sourceDescriptor: PeerDescriptor): Promise<boolean> {
+    async ping(): Promise<boolean> {
         logger.trace(`Requesting ping on ${this.serviceId} from ${this.peerId.toKey()}`)
         const request: PingRequest = {
             requestId: v4()
         }
         const options: DhtRpcOptions = {
-            sourceDescriptor: sourceDescriptor as PeerDescriptor,
-            targetDescriptor: this.peerDescriptor as PeerDescriptor
+            sourceDescriptor: this.ownPeerDescriptor,
+            targetDescriptor: this.peerDescriptor
         }
         try {
             const pong = await this.dhtClient.ping(request, options)
@@ -104,7 +106,7 @@ export class DhtPeer implements KBucketContact {
             }
         } catch (err) {
             const fromNode = params.previousPeer ?
-                PeerID.fromValue(params.previousPeer!.peerId).toKey() : PeerID.fromValue(params.sourcePeer!.peerId).toKey()
+                PeerID.fromValue(params.previousPeer!.kademliaId).toKey() : PeerID.fromValue(params.sourcePeer!.kademliaId).toKey()
 
             logger.debug(
                 `Failed to send routeMessage from ${fromNode} to ${this.peerId.toKey()} with: ${err}`
@@ -135,7 +137,7 @@ export class DhtPeer implements KBucketContact {
             }
         } catch (err) {
             const fromNode = params.previousPeer ?
-                PeerID.fromValue(params.previousPeer!.peerId).toKey() : PeerID.fromValue(params.sourcePeer!.peerId).toKey()
+                PeerID.fromValue(params.previousPeer!.kademliaId).toKey() : PeerID.fromValue(params.sourcePeer!.kademliaId).toKey()
 
             logger.debug(
                 `Failed to send forwardMessage from ${fromNode} to ${this.peerId.toKey()} with: ${err}`
@@ -145,15 +147,14 @@ export class DhtPeer implements KBucketContact {
         return true
     }
 
-    leaveNotice(sourceDescriptor: PeerDescriptor): void {
+    leaveNotice(): void {
         logger.trace(`Sending leaveNotice on ${this.serviceId} from ${this.peerId.toKey()}`)
         const request: LeaveNotice = {
-            serviceId: this.serviceId,
-            peerDescriptor: sourceDescriptor
+            serviceId: this.serviceId
         }
         const options: DhtRpcOptions = {
-            sourceDescriptor: sourceDescriptor as PeerDescriptor,
-            targetDescriptor: this.peerDescriptor as PeerDescriptor,
+            sourceDescriptor: this.ownPeerDescriptor,
+            targetDescriptor: this.peerDescriptor,
             notification: true
         }
         this.dhtClient.leaveNotice(request, options).catch((_e) => {

@@ -61,11 +61,11 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     }
 
     addConnector(connector: SimulatorConnector): void {
-        this.connectors.set(PeerID.fromValue(connector.getPeerDescriptor().peerId).toKey(), connector)
+        this.connectors.set(PeerID.fromValue(connector.getPeerDescriptor().kademliaId).toKey(), connector)
     }
 
     async connect(sourceConnection: SimulatorConnection, targetDescriptor: PeerDescriptor): Promise<void> {
-        const target = this.connectors.get(PeerID.fromValue(targetDescriptor.peerId).toKey())
+        const target = this.connectors.get(PeerID.fromValue(targetDescriptor.kademliaId).toKey())
 
         const abortId = v4()
         const abortController = new AbortController()

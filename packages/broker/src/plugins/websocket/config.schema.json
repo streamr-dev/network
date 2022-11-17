@@ -17,11 +17,7 @@
         },
         "sslCertificate": {
             "description": "Files to use for SSL",
-            "type": [
-                "object",
-                "null"
-            ],
-            "default": null,
+            "type": "object",
             "required": [
                 "certFileName",
                 "privateKeyFileName"
