@@ -62,13 +62,24 @@
                     "description": "Port to start HTTP server on",
                     "default": 7171
                 },
-                "certFileName": {
-                    "type": "string",
-                    "description": "Path of certificate file to use for SSL"
-                },
-                "privateKeyFileName": {
-                    "type": "string",
-                    "description": "Path of private key file to use for SSL"
+                "sslCertificate": {
+                    "description": "Files to use for SSL",
+                    "type": "object",
+                    "required": [
+                        "certFileName",
+                        "privateKeyFileName"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                        "certFileName": {
+                            "type": "string",
+                            "description": "Path of certificate file"
+                        },
+                        "privateKeyFileName": {
+                            "type": "string",
+                            "description": "Path of private key file"
+                        }
+                    }
                 }
             }
         },

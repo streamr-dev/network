@@ -47,10 +47,10 @@ export const startServer = async (
     app.use(createAuthenticatorMiddleware(apiAuthenticator))
     routers.forEach((router) => app.use(router))
     let serverFactory: { listen: (port: number) => HttpServer | HttpsServer }
-    if ((config.privateKeyFileName !== undefined) && (config.certFileName !== undefined)) {
+    if (config.sslCertificate !== undefined) {
         serverFactory = https.createServer({
-            cert: fs.readFileSync(config.certFileName),
-            key: fs.readFileSync(config.privateKeyFileName)
+            cert: fs.readFileSync(config.sslCertificate.certFileName),
+            key: fs.readFileSync(config.sslCertificate.privateKeyFileName)
         }, app)
     } else {
         serverFactory = app
