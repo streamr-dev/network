@@ -19,7 +19,7 @@ export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '1
 interface TestConfig {
     trackerPort: number
     privateKey: string
-    httpPort?: null | number
+    httpPort?: number
     extraPlugins?: Record<string, unknown>
     apiAuthentication?: ApiAuthenticationConfig
     enableCassandra?: boolean
@@ -29,7 +29,7 @@ interface TestConfig {
 export const formConfig = ({
     trackerPort,
     privateKey,
-    httpPort = null,
+    httpPort,
     extraPlugins = {},
     apiAuthentication,
     enableCassandra = false,
