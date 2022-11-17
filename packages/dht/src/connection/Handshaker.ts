@@ -46,7 +46,7 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
     private sendHandshakeMessage() {
        
         const outgoingHandshake: HandshakeMessage = {
-            sourceId: this.ownPeerDescriptor.peerId,
+            sourceId: this.ownPeerDescriptor.kademliaId,
             protocolVersion: this.protocolVersion,
             peerDescriptor: this.ownPeerDescriptor
         }

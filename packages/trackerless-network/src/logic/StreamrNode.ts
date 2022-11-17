@@ -41,7 +41,7 @@ export class StreamrNode extends EventEmitter {
         if (this.started || this.destroyed) {
             return
         }
-        logger.info(`Starting new StreamrNode with id ${startedAndJoinedLayer0.getPeerDescriptor().peerId}`)
+        logger.info(`Starting new StreamrNode with id ${startedAndJoinedLayer0.getPeerDescriptor().kademliaId}`)
         this.started = true
         this.layer0 = startedAndJoinedLayer0
         this.P2PTransport = transport

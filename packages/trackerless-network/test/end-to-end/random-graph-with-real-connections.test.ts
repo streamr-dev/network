@@ -7,7 +7,7 @@ import { ContentMessage } from '../../src/proto/packages/trackerless-network/pro
 describe('random graph with real connections', () => {
 
     const epPeerDescriptor: PeerDescriptor = {
-        peerId: Uint8Array.from([1, 2, 3]),
+        kademliaId: Uint8Array.from([1, 2, 3]),
         type: NodeType.NODEJS,
         websocket: { ip: 'localhost', port: 12221 }
     }
@@ -158,7 +158,7 @@ describe('random graph with real connections', () => {
         const msg = createStreamMessage(
             content,
             randomGraphId,
-            PeerID.fromValue(epDhtNode.getPeerDescriptor().peerId).toString()
+            PeerID.fromValue(epDhtNode.getPeerDescriptor().kademliaId).toString()
         )
 
         randomGraphNode1.broadcast(msg)

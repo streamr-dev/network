@@ -43,21 +43,21 @@ export class Handshaker {
             const random = this.randomContactPool.getRandom(exclude)
             if (random) {
                 targetNeighbors.push(random)
-                const id = PeerID.fromValue(random!.getPeerDescriptor().peerId).toKey()
+                const id = PeerID.fromValue(random!.getPeerDescriptor().kademliaId).toKey()
                 exclude.push(id)
             }
         }
-        targetNeighbors.forEach((contact) => this.ongoingHandshakes.add(PeerID.fromValue(contact.getPeerDescriptor().peerId).toKey()))
+        targetNeighbors.forEach((contact) => this.ongoingHandshakes.add(PeerID.fromValue(contact.getPeerDescriptor().kademliaId).toKey()))
 
         const promises = [...targetNeighbors.values()].map(async (target: RemoteRandomGraphNode, i) => {
             const otherPeer = i === 0 ? targetNeighbors[1] : targetNeighbors[0]
-            const otherPeerStringId = targetNeighbors.length > 1 ? PeerID.fromValue(otherPeer.getPeerDescriptor().peerId).toKey() : undefined
+            const otherPeerStringId = targetNeighbors.length > 1 ? PeerID.fromValue(otherPeer.getPeerDescriptor().kademliaId).toKey() : undefined
             return this.handshakeWithTarget(target, otherPeerStringId)
         })
         const results = await Promise.allSettled(promises)
         results.map((res, i) => {
             if (res.status !== 'fulfilled' || !res.value) {
-                excludedIds.push(PeerID.fromValue(targetNeighbors[i].getPeerDescriptor().peerId).toKey())
+                excludedIds.push(PeerID.fromValue(targetNeighbors[i].getPeerDescriptor().kademliaId).toKey())
             }
         })
         return excludedIds
@@ -72,14 +72,14 @@ export class Handshaker {
         if (targetNeighbor) {
             const accepted = await this.handshakeWithTarget(targetNeighbor)
             if (!accepted) {
-                excludedIds.push(PeerID.fromValue(targetNeighbor.getPeerDescriptor()!.peerId).toKey())
+                excludedIds.push(PeerID.fromValue(targetNeighbor.getPeerDescriptor()!.kademliaId).toKey())
             }
         }
         return excludedIds
     }
 
     public async handshakeWithTarget(targetNeighbor: RemoteRandomGraphNode, concurrentStringId?: string): Promise<boolean> {
-        const targetStringId = PeerID.fromValue(targetNeighbor.getPeerDescriptor()!.peerId).toKey()
+        const targetStringId = PeerID.fromValue(targetNeighbor.getPeerDescriptor()!.kademliaId).toKey()
 
         this.ongoingHandshakes.add(targetStringId)
         const result = await targetNeighbor.handshake(
@@ -106,7 +106,7 @@ export class Handshaker {
     }
 
     public async interleaveHandshake(targetNeighbor: RemoteRandomGraphNode): Promise<boolean> {
-        const targetStringId = PeerID.fromValue(targetNeighbor.getPeerDescriptor()!.peerId).toKey()
+        const targetStringId = PeerID.fromValue(targetNeighbor.getPeerDescriptor()!.kademliaId).toKey()
         this.ongoingHandshakes.add(targetStringId)
         const result = await targetNeighbor.handshake(
             this.ownPeerDescriptor,

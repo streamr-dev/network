@@ -30,7 +30,7 @@ describe('PeerList', () => {
 
         ids.forEach((peerId) => {
             const peerDescriptor: PeerDescriptor = {
-                peerId,
+                kademliaId: peerId,
                 type: 0
             }
             peerList.add(createRemoteGraphNode(peerDescriptor))
@@ -40,7 +40,7 @@ describe('PeerList', () => {
 
     it('add', () => {
         const newDescriptor = {
-            peerId: new Uint8Array([1, 2, 3]),
+            kademliaId: new Uint8Array([1, 2, 3]),
             type: 0
         }
         const newNode = createRemoteGraphNode(newDescriptor)
@@ -48,7 +48,7 @@ describe('PeerList', () => {
         expect(peerList.hasPeer(newDescriptor)).toEqual(true)
 
         const newDescriptor2 = {
-            peerId: new Uint8Array([1, 2, 4]),
+            kademliaId: new Uint8Array([1, 2, 4]),
             type: 0
         }
         const newNode2 = createRemoteGraphNode(newDescriptor2)
@@ -64,7 +64,7 @@ describe('PeerList', () => {
 
     it('removeById', () => {
         const toRemove = peerList.getClosest([])
-        const stringId = PeerID.fromValue(toRemove!.getPeerDescriptor().peerId).toKey()
+        const stringId = PeerID.fromValue(toRemove!.getPeerDescriptor().kademliaId).toKey()
         peerList.removeById(stringId)
         expect(peerList.hasPeer(toRemove!.getPeerDescriptor())).toEqual(false)
     })

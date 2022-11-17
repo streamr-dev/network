@@ -26,7 +26,7 @@ async function run(): Promise<void> {
     const ip = program.opts().ip
 
     const epPeerDescriptor: PeerDescriptor = {
-        peerId: PeerID.fromString(program.opts().entrypointId).value,
+        kademliaId: PeerID.fromString(program.opts().entrypointId).value,
         type: NodeType.NODEJS,
         websocket: { ip: program.opts().entrypointIp, port: 23123 }
     }
@@ -79,7 +79,7 @@ async function run(): Promise<void> {
         const messageRef: MessageRef = {
             sequenceNumber,
             timestamp: BigInt(Date.now()),
-            publisherId: PeerID.fromValue(layer0.getPeerDescriptor().peerId).toString(),
+            publisherId: PeerID.fromValue(layer0.getPeerDescriptor().kademliaId).toString(),
             streamPartition: 0,
             streamId: streamPartId,
             messageChainId: 'network'

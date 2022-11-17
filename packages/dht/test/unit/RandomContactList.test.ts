@@ -57,15 +57,16 @@ describe('RandomContactList', () => {
     const id3 = PeerID.fromValue(Buffer.from([0, 0, 0, 3]))
     const id4 = PeerID.fromValue(Buffer.from([0, 0, 0, 4]))
 
-    const descriptor1: PeerDescriptor = { peerId: id1.value, type: NodeType.NODEJS }
-    const descriptor2: PeerDescriptor = { peerId: id2.value, type: NodeType.NODEJS }
-    const descriptor3: PeerDescriptor = { peerId: id3.value, type: NodeType.NODEJS }
-    const descriptor4: PeerDescriptor = { peerId: id4.value, type: NodeType.NODEJS }
+    const descriptor0: PeerDescriptor = { kademliaId: id0.value, type: NodeType.NODEJS }
+    const descriptor1: PeerDescriptor = { kademliaId: id1.value, type: NodeType.NODEJS }
+    const descriptor2: PeerDescriptor = { kademliaId: id2.value, type: NodeType.NODEJS }
+    const descriptor3: PeerDescriptor = { kademliaId: id3.value, type: NodeType.NODEJS }
+    const descriptor4: PeerDescriptor = { kademliaId: id4.value, type: NodeType.NODEJS }
 
-    const peer1 = new DhtPeer(descriptor1, toProtoRpcClient(new MockRpcClient()), serviceId)
-    const peer2 = new DhtPeer(descriptor2, toProtoRpcClient(new MockRpcClient()), serviceId)
-    const peer3 = new DhtPeer(descriptor3, toProtoRpcClient(new MockRpcClient()), serviceId)
-    const peer4 = new DhtPeer(descriptor4, toProtoRpcClient(new MockRpcClient()), serviceId)
+    const peer1 = new DhtPeer(descriptor0, descriptor1, toProtoRpcClient(new MockRpcClient()), serviceId)
+    const peer2 = new DhtPeer(descriptor0, descriptor2, toProtoRpcClient(new MockRpcClient()), serviceId)
+    const peer3 = new DhtPeer(descriptor0, descriptor3, toProtoRpcClient(new MockRpcClient()), serviceId)
+    const peer4 = new DhtPeer(descriptor0, descriptor4, toProtoRpcClient(new MockRpcClient()), serviceId)
 
     it('adds contacts correctly', () => {
         const list = new RandomContactList(id0, 5, 1)

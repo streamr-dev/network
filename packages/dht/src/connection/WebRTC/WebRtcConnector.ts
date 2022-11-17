@@ -66,9 +66,9 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
     }
 
     connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
-        const peerKey = PeerID.fromValue(targetPeerDescriptor.peerId).toKey()
-        if (!PeerID.fromValue(this.ownPeerDescriptor!.peerId).equals(PeerID.fromValue(targetPeerDescriptor.peerId))) {
-            logger.trace(`Opening WebRTC connection to ${targetPeerDescriptor.peerId.toString()}`)
+        const peerKey = PeerID.fromValue(targetPeerDescriptor.kademliaId).toKey()
+        if (!PeerID.fromValue(this.ownPeerDescriptor!.kademliaId).equals(PeerID.fromValue(targetPeerDescriptor.kademliaId))) {
+            logger.trace(`Opening WebRTC connection to ${targetPeerDescriptor.kademliaId.toString()}`)
             const existingConnection = this.ongoingConnectAttempts.get(peerKey)
             if (existingConnection) {
                 return existingConnection
@@ -104,10 +104,10 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
         description: string,
         connectionId: string
     ): void {
-        if (this.stopped || !PeerID.fromValue(this.ownPeerDescriptor!.peerId).equals(PeerID.fromValue(targetPeer.peerId))) {
+        if (this.stopped || !PeerID.fromValue(this.ownPeerDescriptor!.kademliaId).equals(PeerID.fromValue(targetPeer.kademliaId))) {
             return
         }
-        const peerKey = PeerID.fromValue(remotePeer.peerId).toKey()
+        const peerKey = PeerID.fromValue(remotePeer.kademliaId).toKey()
         let connection = this.ongoingConnectAttempts.get(peerKey)?.getWebRtcConnection()
         if (!connection) {
             connection = new NodeWebRtcConnection({ remotePeerDescriptor: remotePeer })
@@ -129,10 +129,10 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
         description: string,
         connectionId: string
     ): void {
-        if (this.stopped || !PeerID.fromValue(this.ownPeerDescriptor!.peerId).equals(PeerID.fromValue(targetPeerDescriptor.peerId))) {
+        if (this.stopped || !PeerID.fromValue(this.ownPeerDescriptor!.kademliaId).equals(PeerID.fromValue(targetPeerDescriptor.kademliaId))) {
             return
         }
-        const peerKey = PeerID.fromValue(remotePeerDescriptor.peerId).toKey()
+        const peerKey = PeerID.fromValue(remotePeerDescriptor.kademliaId).toKey()
         const connection = this.ongoingConnectAttempts.get(peerKey)?.getWebRtcConnection()
         if (!connection) {
             return
@@ -144,7 +144,7 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
     }
 
     private onConnectionRequest(targetPeerDescriptor: PeerDescriptor): void {
-        if (this.stopped || this.ongoingConnectAttempts.has(PeerID.fromValue(targetPeerDescriptor.peerId).toKey())) {
+        if (this.stopped || this.ongoingConnectAttempts.has(PeerID.fromValue(targetPeerDescriptor.kademliaId).toKey())) {
             return
         }
         const managedConnection = this.connect(targetPeerDescriptor)
@@ -158,10 +158,10 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
         mid: string,
         connectionId: string
     ): void {
-        if (this.stopped || !PeerID.fromValue(this.ownPeerDescriptor!.peerId).equals(PeerID.fromValue(targetPeerDescriptor.peerId))) {
+        if (this.stopped || !PeerID.fromValue(this.ownPeerDescriptor!.kademliaId).equals(PeerID.fromValue(targetPeerDescriptor.kademliaId))) {
             return
         }
-        const peerKey = PeerID.fromValue(remotePeerDescriptor.peerId).toKey()
+        const peerKey = PeerID.fromValue(remotePeerDescriptor.kademliaId).toKey()
         const connection = this.ongoingConnectAttempts.get(peerKey)?.getWebRtcConnection()
 
         if (!connection) {
@@ -180,7 +180,7 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
     }
 
     bindListenersAndStartConnection(targetPeerDescriptor: PeerDescriptor, connection: NodeWebRtcConnection, sendRequest = true): void {
-        if (PeerID.fromValue(this.ownPeerDescriptor!.peerId).equals(PeerID.fromValue(targetPeerDescriptor.peerId))) {
+        if (PeerID.fromValue(this.ownPeerDescriptor!.kademliaId).equals(PeerID.fromValue(targetPeerDescriptor.kademliaId))) {
             return
         }
         const offering = this.isOffering(targetPeerDescriptor)
@@ -202,11 +202,11 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
         })
 
         connection.on('disconnected', () => {
-            this.ongoingConnectAttempts.delete(PeerID.fromValue(targetPeerDescriptor.peerId).toKey())
+            this.ongoingConnectAttempts.delete(PeerID.fromValue(targetPeerDescriptor.kademliaId).toKey())
         })
 
         connection.on('connected', () => {
-            this.ongoingConnectAttempts.delete(PeerID.fromValue(targetPeerDescriptor.peerId).toKey())
+            this.ongoingConnectAttempts.delete(PeerID.fromValue(targetPeerDescriptor.kademliaId).toKey())
         })
 
         connection.start(offering)
@@ -217,8 +217,8 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
 
     public isOffering(targetPeerDescriptor: PeerDescriptor): boolean {
 
-        const myId = PeerID.fromValue(this.ownPeerDescriptor!.peerId)
-        const theirId = PeerID.fromValue(targetPeerDescriptor.peerId)
+        const myId = PeerID.fromValue(this.ownPeerDescriptor!.kademliaId)
+        const theirId = PeerID.fromValue(targetPeerDescriptor.kademliaId)
         return myId.hasSmallerHashThan(theirId)
         
     }

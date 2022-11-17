@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { PeerDescriptor } from '../../src/proto/DhtRpc'
+import { NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils'
 import { execSync } from 'child_process'
 import fs from 'fs'
@@ -32,8 +32,8 @@ describe('Kademlia correctness', () => {
         nodes.push(entryPoint)
         nodeIndicesById[entryPoint.getNodeId().toKey()] = 0
         entrypointDescriptor = {
-            peerId: entryPoint.getNodeId().value,
-            type: 0
+            kademliaId: entryPoint.getNodeId().value,
+            type: NodeType.NODEJS
         }
 
         for (let i = 1; i < NUM_NODES; i++) {

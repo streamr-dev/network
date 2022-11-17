@@ -14,11 +14,11 @@ describe('StreamrNode', () => {
     let node2: StreamrNode
 
     const peer1: PeerDescriptor = {
-        peerId: new Uint8Array([1, 2, 3]),
+        kademliaId: new Uint8Array([1, 2, 3]),
         type: NodeType.NODEJS
     }
     const peer2: PeerDescriptor = {
-        peerId: new Uint8Array([1, 1, 1]),
+        kademliaId: new Uint8Array([1, 1, 1]),
         type: NodeType.NODEJS
     }
     const STREAM_ID = 'test'
@@ -29,7 +29,7 @@ describe('StreamrNode', () => {
     const msg = createStreamMessage(
         content,
         STREAM_ID,
-        PeerID.fromValue(peer2.peerId).toKey()
+        PeerID.fromValue(peer2.kademliaId).toKey()
     )
 
     afterEach(async () => {
@@ -117,7 +117,7 @@ describe('StreamrNode', () => {
         const msg2 = createStreamMessage(
             content,
             stream2,
-            PeerID.fromValue(peer1.peerId).toKey()
+            PeerID.fromValue(peer1.kademliaId).toKey()
         )
 
         await Promise.all([

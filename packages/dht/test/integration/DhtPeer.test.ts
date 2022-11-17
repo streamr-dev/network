@@ -20,11 +20,11 @@ describe('DhtPeer', () => {
     const serviceId = 'test'
 
     const clientPeerDescriptor: PeerDescriptor = {
-        peerId: generateId('dhtPeer'),
+        kademliaId: generateId('dhtPeer'),
         type: 0
     }
     const serverPeerDescriptor: PeerDescriptor = {
-        peerId: generateId('server'),
+        kademliaId: generateId('server'),
         type: 0
     }
 
@@ -45,7 +45,7 @@ describe('DhtPeer', () => {
         })
 
         const client = toProtoRpcClient(new DhtRpcServiceClient(clientRpcCommunicator.getRpcClientTransport()))
-        dhtPeer = new DhtPeer(serverPeerDescriptor, client, serviceId)
+        dhtPeer = new DhtPeer(clientPeerDescriptor, serverPeerDescriptor, client, serviceId)
     })
 
     afterEach(() => {
@@ -54,12 +54,12 @@ describe('DhtPeer', () => {
     })
 
     it('Ping happy path', async () => {
-        const active = await dhtPeer.ping(clientPeerDescriptor)
+        const active = await dhtPeer.ping()
         expect(active).toEqual(true)
     })
 
     it('getClosestPeers happy path', async () => {
-        const neighbors = await dhtPeer.getClosestPeers(clientPeerDescriptor)
+        const neighbors = await dhtPeer.getClosestPeers(clientPeerDescriptor.kademliaId)
         expect(neighbors.length).toEqual(getMockPeers().length)
     })
 
@@ -83,13 +83,13 @@ describe('DhtPeer', () => {
 
     it('ping error path', async () => {
         serverRpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', MockDhtRpc.throwPingError)
-        const active = await dhtPeer.ping(clientPeerDescriptor)
+        const active = await dhtPeer.ping()
         expect(active).toEqual(false)
     })
 
     it('getClosestPeers error path', async () => {
         serverRpcCommunicator.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', MockDhtRpc.throwGetClosestPeersError)
-        await expect(dhtPeer.getClosestPeers(clientPeerDescriptor))
+        await expect(dhtPeer.getClosestPeers(clientPeerDescriptor.kademliaId))
             .rejects.toThrow('Closest peers error')
     })
 

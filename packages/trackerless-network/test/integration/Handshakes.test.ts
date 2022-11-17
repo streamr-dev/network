@@ -11,17 +11,17 @@ import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
 describe('Handshakes', () => {
 
     const peerDescriptor1: PeerDescriptor = {
-        peerId: new Uint8Array([1, 1, 1]),
+        kademliaId: new Uint8Array([1, 1, 1]),
         type: NodeType.NODEJS
     }
 
     const peerDescriptor2: PeerDescriptor = {
-        peerId: new Uint8Array([2, 1, 1]),
+        kademliaId: new Uint8Array([2, 1, 1]),
         type: NodeType.NODEJS
     }
 
     const peerDescriptor3: PeerDescriptor = {
-        peerId: new Uint8Array([3, 1, 1]),
+        kademliaId: new Uint8Array([3, 1, 1]),
         type: NodeType.NODEJS
     }
 
@@ -73,7 +73,7 @@ describe('Handshakes', () => {
         rpcCommunicator2 = new ListeningRpcCommunicator(randomGraphId, simulatorTransport2)
         rpcCommunicator3 = new ListeningRpcCommunicator(randomGraphId, simulatorTransport3)
 
-        const handshakerPeerId = PeerID.fromValue(peerDescriptor2.peerId)
+        const handshakerPeerId = PeerID.fromValue(peerDescriptor2.kademliaId)
         contactPool = new PeerList(handshakerPeerId, 10)
 
         targetNeighbors = new PeerList(handshakerPeerId, 4)

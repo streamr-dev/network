@@ -15,13 +15,13 @@ describe('RandomGraphNode-DhtNode', () => {
 
     const streamId = 'Stream1'
     const entrypointDescriptor: PeerDescriptor = {
-        peerId: PeerID.fromString('entrypoint').value,
+        kademliaId: PeerID.fromString('entrypoint').value,
         type: 0
     }
 
     const peerDescriptors: PeerDescriptor[] = range(numOfNodes).map((i) => {
         return {
-            peerId: PeerID.fromString(`${i}`).value,
+            kademliaId: PeerID.fromString(`${i}`).value,
             type: 0
         }
     })

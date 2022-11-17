@@ -16,12 +16,12 @@ describe('WebRTC Connection Management', () => {
     let simulator: Simulator
 
     const peerDescriptor1: PeerDescriptor = {
-        peerId: PeerID.fromString("peer1").value,
+        kademliaId: PeerID.fromString("peer1").value,
         type: NodeType.NODEJS,
     }
 
     const peerDescriptor2: PeerDescriptor = {
-        peerId: PeerID.fromString("peer2").value,
+        kademliaId: PeerID.fromString("peer2").value,
         type: NodeType.NODEJS,
     }
 

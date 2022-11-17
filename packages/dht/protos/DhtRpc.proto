@@ -31,7 +31,7 @@ service ConnectionLocker {
 // Used inside RpcMessage
 
 message ClosestPeersRequest {
-  PeerDescriptor peerDescriptor = 1;
+  bytes kademliaId = 1;
   string requestId = 2;
 }
 
@@ -49,12 +49,11 @@ message PingResponse {
 }
 
 message LeaveNotice {
-  PeerDescriptor peerDescriptor = 1;
-  string serviceId = 2;
+  string serviceId = 1;
 }
 
 message PeerDescriptor {
-  bytes peerId = 1;
+  bytes kademliaId = 1;
   NodeType type = 2;
   ConnectivityMethod udp = 3;
   ConnectivityMethod tcp = 4;
