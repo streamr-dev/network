@@ -24,8 +24,8 @@ export interface StoragePluginConfig {
         refreshInterval: number
     }
     cluster: {
-        // If clusterAddress is null, the broker's address will be used
-        clusterAddress: EthereumAddress | null
+        // If clusterAddress is undefined, the broker's address will be used
+        clusterAddress?: EthereumAddress
         clusterSize: number
         myIndexInCluster: number
     }
@@ -41,7 +41,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
     private messageListener?: (msg: StreamMessage) => void
 
     async start(): Promise<void> {
-        const clusterId = this.pluginConfig.cluster.clusterAddress || await this.streamrClient.getAddress()
+        const clusterId = this.pluginConfig.cluster.clusterAddress ?? await this.streamrClient.getAddress()
         const assignmentStream = await this.streamrClient.getStream(formStorageNodeAssignmentStreamId(clusterId))
         const metricsContext = (await (this.streamrClient!.getNode())).getMetricsContext()
         this.cassandra = await this.startCassandraStorage(metricsContext)

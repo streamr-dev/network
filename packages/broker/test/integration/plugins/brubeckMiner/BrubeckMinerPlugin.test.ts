@@ -112,6 +112,7 @@ describe('BrubeckMinerPlugin', () => {
         expect(claimServer.claimRequestBody.waitTime).toBeGreaterThanOrEqual(0)
         // will have broker as peer
         expect(claimServer.claimRequestBody.peers).toHaveLength(1)
+        expect(claimServer.claimRequestBody.beneficiaryAddress).toBeNull()
     })
 
     it('tracker is supplied metadata about broker version and nat type', async () => {
