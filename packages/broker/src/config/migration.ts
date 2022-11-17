@@ -25,7 +25,7 @@ const getVersion = (config: any): number | undefined => {
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const needsMigration = (config: any): boolean => {
-    return getVersion(config) !== CURRENT_CONFIGURATION_VERSION
+    return (getVersion(config) !== undefined) && (getVersion(config) !== CURRENT_CONFIGURATION_VERSION)
 }
 
 /*

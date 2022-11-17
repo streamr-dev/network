@@ -4,7 +4,6 @@
     "description": "Broker configuration format",
     "type": "object",
     "required": [
-        "$schema",
         "client",
         "plugins"
     ],
