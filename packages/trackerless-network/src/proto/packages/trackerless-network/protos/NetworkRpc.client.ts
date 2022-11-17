@@ -6,7 +6,7 @@ import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
 import { NetworkRpc } from "./NetworkRpc";
 import type { NeighborUpdate } from "./NetworkRpc";
 import type { InterleaveNotice } from "./NetworkRpc";
-import type { LeaveNoticeRequest } from "./NetworkRpc";
+import type { LeaveStreamNotice } from "./NetworkRpc";
 import type { HandshakeResponse } from "./NetworkRpc";
 import type { HandshakeRequest } from "./NetworkRpc";
 import { stackIntercept } from "@protobuf-ts/runtime-rpc";
@@ -27,9 +27,9 @@ export interface INetworkRpcClient {
      */
     handshake(input: HandshakeRequest, options?: RpcOptions): UnaryCall<HandshakeRequest, HandshakeResponse>;
     /**
-     * @generated from protobuf rpc: leaveNotice(LeaveNoticeRequest) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: leaveStreamNotice(LeaveStreamNotice) returns (google.protobuf.Empty);
      */
-    leaveNotice(input: LeaveNoticeRequest, options?: RpcOptions): UnaryCall<LeaveNoticeRequest, Empty>;
+    leaveStreamNotice(input: LeaveStreamNotice, options?: RpcOptions): UnaryCall<LeaveStreamNotice, Empty>;
     /**
      * @generated from protobuf rpc: interleaveNotice(InterleaveNotice) returns (google.protobuf.Empty);
      */
@@ -63,11 +63,11 @@ export class NetworkRpcClient implements INetworkRpcClient, ServiceInfo {
         return stackIntercept<HandshakeRequest, HandshakeResponse>("unary", this._transport, method, opt, input);
     }
     /**
-     * @generated from protobuf rpc: leaveNotice(LeaveNoticeRequest) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: leaveStreamNotice(LeaveStreamNotice) returns (google.protobuf.Empty);
      */
-    leaveNotice(input: LeaveNoticeRequest, options?: RpcOptions): UnaryCall<LeaveNoticeRequest, Empty> {
+    leaveStreamNotice(input: LeaveStreamNotice, options?: RpcOptions): UnaryCall<LeaveStreamNotice, Empty> {
         const method = this.methods[2], opt = this._transport.mergeOptions(options);
-        return stackIntercept<LeaveNoticeRequest, Empty>("unary", this._transport, method, opt, input);
+        return stackIntercept<LeaveStreamNotice, Empty>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: interleaveNotice(InterleaveNotice) returns (google.protobuf.Empty);

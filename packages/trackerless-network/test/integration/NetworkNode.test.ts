@@ -1,5 +1,5 @@
-import { NetworkNode } from '../../src/logic/NetworkNode'
-import { DhtNode, NodeType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
+import { NetworkNode } from '../../src/NetworkNode'
+import { NodeType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
 import {
     MessageID,
     MessageRef,
@@ -11,9 +11,6 @@ import {
 import { EthereumAddress, waitForCondition } from '@streamr/utils'
 
 describe('NetworkNode', () => {
-
-    let layer01: DhtNode
-    let layer02: DhtNode
 
     let transport1: SimulatorTransport
     let transport2: SimulatorTransport
@@ -37,36 +34,26 @@ describe('NetworkNode', () => {
         const simulator = new Simulator()
         transport1 = new SimulatorTransport(pd1, simulator)
         transport2 = new SimulatorTransport(pd2, simulator)
-        layer01 = new DhtNode({
-            transportLayer: transport1,
+
+        node1 = new NetworkNode({
+            entryPoints: [pd1],
             peerDescriptor: pd1,
-            entryPoints: [pd1]
+            transportLayer: transport1
         })
-        layer02 = new DhtNode({
-            transportLayer: transport2,
+        node2 = new NetworkNode({
+            entryPoints: [pd1],
             peerDescriptor: pd2,
-            entryPoints: [pd1]
+            transportLayer: transport2
         })
-        await Promise.all([
-            layer01.start(),
-            layer02.start()
-        ])
-        await Promise.all([
-            layer01.joinDht(pd1),
-            layer02.joinDht(pd1)
-        ])
 
-        node1 = new NetworkNode()
-        node2 = new NetworkNode()
-
-        await node1.start(layer01, transport1, transport1)
-        await node2.start(layer02, transport2, transport2)
+        await node1.start()
+        await node2.start()
     })
 
     afterEach(async () => {
         await Promise.all([
-            node1.destroy(),
-            node2.destroy()
+            node1.stop(),
+            node2.stop()
         ])
     })
 

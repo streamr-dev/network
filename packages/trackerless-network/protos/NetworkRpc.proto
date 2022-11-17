@@ -8,7 +8,7 @@ import "packages/dht/protos/DhtRpc.proto";
 service NetworkRpc {
   rpc sendData (StreamMessage) returns (google.protobuf.Empty);
   rpc handshake (HandshakeRequest) returns (HandshakeResponse);
-  rpc leaveNotice (LeaveNoticeRequest) returns (google.protobuf.Empty);
+  rpc leaveStreamNotice (LeaveStreamNotice) returns (google.protobuf.Empty);
   rpc interleaveNotice (InterleaveNotice) returns (google.protobuf.Empty);
   rpc neighborUpdate (NeighborUpdate) returns (NeighborUpdate);
 }
@@ -100,7 +100,7 @@ message InterleaveNotice {
   PeerDescriptor interleaveTarget = 3;
 }
 
-message LeaveNoticeRequest {
+message LeaveStreamNotice {
   string randomGraphId = 1;
   string senderId = 2;
 }

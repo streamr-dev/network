@@ -388,7 +388,7 @@ describe('WebRtcEndpoint', () => {
             await onReconnect
             await waitForCondition(() => (
                 ep2NumOfReceivedMessages === 6
-            ), 30000, 500, () => `ep2NumOfReceivedMessages = ${ep2NumOfReceivedMessages}`)
+            ), 30000, 500, undefined, () => `ep2NumOfReceivedMessages = ${ep2NumOfReceivedMessages}`)
             // all send tasks completed
             await Promise.allSettled(sendTasks)
             await Promise.all(sendTasks)

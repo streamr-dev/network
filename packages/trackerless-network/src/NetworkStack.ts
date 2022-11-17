@@ -1,5 +1,5 @@
-import { ConnectionManager, DhtNode, PeerDescriptor } from '@streamr/dht'
-import { NetworkNode } from './logic/NetworkNode'
+import { ConnectionManager, DhtNode } from '@streamr/dht'
+import { StreamrNode } from './logic/StreamrNode'
 
 export type NetworkOptions = any
 
@@ -7,31 +7,32 @@ export class NetworkStack {
 
     private connectionManager?: ConnectionManager
     private readonly layer0DhtNode: DhtNode
-    private readonly networkNode: NetworkNode
+    private readonly streamrNode: StreamrNode
 
-    constructor(options: NetworkOptions) {
+    constructor(private readonly options: NetworkOptions) {
 
         this.layer0DhtNode = new DhtNode({
             webSocketPort: options.websocketPort,
             numberOfNodesPerKBucket: options.numberOfNodesPerKBucket,
             entryPoints: options.entryPoints || [],
             peerDescriptor: options.peerDescriptor,
-            peerIdString: options.peerIdString
+            peerIdString: options.stringKademliaId,
+            transportLayer: options.transportLayer
         })
-        this.networkNode = new NetworkNode()
+        this.streamrNode = new StreamrNode()
     }
 
-    async startAll(entryPoint: PeerDescriptor): Promise<void> {
+    async start(): Promise<void> {
         await this.layer0DhtNode.start()
         this.connectionManager = this.layer0DhtNode.getTransport() as ConnectionManager
         await Promise.all([
-            this.layer0DhtNode.joinDht(entryPoint),
-            this.networkNode.start(this.layer0DhtNode, this.connectionManager, this.connectionManager)
+            this.layer0DhtNode.joinDht(this.options.entryPoints[0]),
+            this.streamrNode.start(this.layer0DhtNode, this.connectionManager, this.connectionManager)
         ])
     }
 
-    getNetworkNode(): NetworkNode {
-        return this.networkNode
+    getStreamrNode(): StreamrNode {
+        return this.streamrNode
     }
 
     getConnectionManager(): ConnectionManager | undefined {
@@ -40,6 +41,10 @@ export class NetworkStack {
 
     getLayer0DhtNode(): DhtNode {
         return this.layer0DhtNode
+    }
+
+    async stop(): Promise<void> {
+        await this.streamrNode.destroy()
     }
 
 }

@@ -14,7 +14,7 @@ import { addAfterFn } from './jest-utils'
 import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
 import { StreamrClientEventEmitter } from '../../src/events'
 import { MessageFactory } from '../../src/publish/MessageFactory'
-import { Authentication, createAuthentication } from '../../src/Authentication'
+import { Authentication, createPrivateKeyAuthentication } from '../../src/Authentication'
 import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
 import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
 import { LoggerFactory } from '../../src/utils/LoggerFactory'
@@ -100,9 +100,7 @@ export const createMockMessage = async (
         opts.streamPartId ?? opts.stream.getStreamParts()[0]
     )
     const factory = new MessageFactory({
-        authentication: createAuthentication({
-            privateKey: opts.publisher.privateKey
-        }, undefined as any),
+        authentication: createPrivateKeyAuthentication(opts.publisher.privateKey, undefined as any),
         streamId,
         streamRegistry: createStreamRegistryCached({
             partitionCount: MAX_PARTITION_COUNT,
@@ -137,9 +135,7 @@ export const startPublisherKeyExchangeSubscription = async (
 }
 
 export const createRandomAuthentication = (): Authentication => {
-    return createAuthentication({
-        privateKey: `0x${fastPrivateKey()}`
-    }, undefined as any)
+    return createPrivateKeyAuthentication(`0x${fastPrivateKey()}`, undefined as any)
 }
 
 export const createStreamRegistryCached = (opts: {

@@ -2,7 +2,9 @@ import { RandomGraphNode, Event as RandomGraphEvent } from './RandomGraphNode'
 import { PeerDescriptor, ConnectionLocker, DhtNode, ITransport } from '@streamr/dht'
 import { StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { EventEmitter } from 'events'
-import { Logger } from '@streamr/utils'
+import { Logger, waitForCondition } from '@streamr/utils'
+import { uniq } from 'lodash'
+import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 
 interface StreamObject {
     layer1: DhtNode
@@ -28,6 +30,8 @@ export class StreamrNode extends EventEmitter {
     private destroyed = false
     private P2PTransport: ITransport | null = null
     private connectionLocker: ConnectionLocker | null = null
+    protected extraMetadata: Record<string, unknown> = {}
+
     constructor() {
         super()
         this.streams = new Map()
@@ -136,6 +140,21 @@ export class StreamrNode extends EventEmitter {
         await layer1.joinDht(entryPoint)
     }
 
+    async waitForJoinAndPublish(streamPartId: string, entrypointDescriptor: PeerDescriptor, msg: StreamMessage): Promise<number> {
+        await this.joinStream(streamPartId, entrypointDescriptor)
+        if (this.getStream(streamPartId)!.layer1.getBucketSize() > 0) {
+            await waitForCondition(() => this.getStream(streamPartId)!.layer2.getTargetNeighborStringIds().length > 0)
+        }
+        this.publishToStream(streamPartId, entrypointDescriptor, msg)
+        return this.getStream(streamPartId)?.layer2.getTargetNeighborStringIds().length || 0
+    }
+
+    async subscribeAndWaitForJoin(streamPartId: string, entryPointDescriptor: PeerDescriptor): Promise<number> {
+        await this.joinStream(streamPartId, entryPointDescriptor)
+        this.subscribeToStream(streamPartId, entryPointDescriptor)
+        return this.getStream(streamPartId)?.layer2.getTargetNeighborStringIds().length || 0
+    }
+
     getStream(streamPartId: string): StreamObject | undefined {
         return this.streams.get(streamPartId)
     }
@@ -148,6 +167,25 @@ export class StreamrNode extends EventEmitter {
         return this.layer0!.getPeerDescriptor()
     }
 
+    getNodeId(): string {
+        return this.layer0!.getNodeId().toKey()
+    }
+
+    getNeighbors(): string[] {
+        const neighbors: string[] = []
+        this.streams.forEach((stream) =>
+            stream.layer2.getTargetNeighborStringIds().forEach((neighbor) => neighbors.push(neighbor))
+        )
+        return uniq(neighbors)
+    }
+
+    getStreamParts(): StreamPartID[] {
+        return [...this.streams.keys()].map((stringId) => StreamPartIDUtils.parse(stringId))
+    }
+
+    setExtraMetadata(metadata: Record<string, unknown>): void {
+        this.extraMetadata = metadata
+    }
 }
 
 [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `SIGTERM`].forEach((term) => {

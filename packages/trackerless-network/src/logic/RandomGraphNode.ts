@@ -5,7 +5,7 @@ import {
     HandshakeRequest,
     HandshakeResponse,
     InterleaveNotice,
-    LeaveNoticeRequest,
+    LeaveStreamNotice,
     MessageRef,
     NeighborUpdate
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
@@ -110,7 +110,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
             return
         }
         this.stopped = true
-        this.targetNeighbors!.values().map((remote) => remote.leaveNotice(this.layer1.getPeerDescriptor()))
+        this.targetNeighbors!.values().map((remote) => remote.leaveStreamNotice(this.layer1.getPeerDescriptor()))
         this.rpcCommunicator!.stop()
         this.removeAllListeners()
         this.layer1.off('newContact', (peerDescriptor, closestTen) => this.newContact(peerDescriptor, closestTen))
@@ -302,11 +302,11 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         this.handshake = this.handshake.bind(this)
         this.sendData = this.sendData.bind(this)
         this.interleaveNotice = this.interleaveNotice.bind(this)
-        this.leaveNotice = this.leaveNotice.bind(this)
+        this.leaveStreamNotice = this.leaveStreamNotice.bind(this)
         this.neighborUpdate = this.neighborUpdate.bind(this)
 
         this.rpcCommunicator!.registerRpcNotification(StreamMessage, 'sendData', this.sendData)
-        this.rpcCommunicator!.registerRpcNotification(LeaveNoticeRequest, 'leaveNotice', this.leaveNotice)
+        this.rpcCommunicator!.registerRpcNotification(LeaveStreamNotice, 'leaveStreamNotice', this.leaveStreamNotice)
         this.rpcCommunicator!.registerRpcNotification(InterleaveNotice, 'interleaveNotice', this.interleaveNotice)
         this.rpcCommunicator!.registerRpcMethod(HandshakeRequest, HandshakeResponse, 'handshake', this.handshake)
         this.rpcCommunicator!.registerRpcMethod(NeighborUpdate, NeighborUpdate, 'neighborUpdate', this.neighborUpdate)
@@ -349,7 +349,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     }
 
     // INetworkRpc server method
-    async leaveNotice(message: LeaveNoticeRequest, _context: ServerCallContext): Promise<Empty> {
+    async leaveStreamNotice(message: LeaveStreamNotice, _context: ServerCallContext): Promise<Empty> {
         if (message.randomGraphId === this.randomGraphId) {
             const contact = this.nearbyContactPool!.getNeighborWithId(message.senderId)
                 || this.randomContactPool!.getNeighborWithId(message.senderId)
