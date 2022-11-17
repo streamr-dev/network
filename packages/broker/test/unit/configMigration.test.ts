@@ -371,6 +371,30 @@ describe('Config migration', () => {
             validateTargetConfig(v2)
         })
 
+        it('ssl certificate', () => {
+            const v1 = createConfig(1, {
+                httpServer: {
+                    port: 1234,
+                    certFileName: 'mock-cert',
+                    privateKeyFileName: 'mock-private-key'
+                }
+            })
+            const v2 = createConfig(2, {
+                client: {
+                    metrics: false
+                },
+                httpServer: {
+                    port: 1234,
+                    sslCertificate: {
+                        certFileName: 'mock-cert',
+                        privateKeyFileName: 'mock-private-key'
+                    }
+                }
+            })
+            expect(createMigratedConfig(v1)).toEqual(v2)
+            validateTargetConfig(v2)
+        })
+
         it('metrics: default', () => {
             const v1 = createConfig(1, {
                 plugins: {

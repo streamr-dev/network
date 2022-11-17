@@ -172,6 +172,14 @@ const convertV1ToV2 = (source: any): ConfigFile => {
     if (target.plugins.websocket !== undefined) {
         deleteNullProperties(target.plugins.websocket)
     }
+    if ((target.httpServer?.certFileName !== undefined) || (target.httpServer?.privateKeyFileName !== undefined)) {
+        target.httpServer.sslCertificate = {
+            certFileName: target.httpServer.certFileName,
+            privateKeyFileName: target.httpServer.privateKeyFileName
+        }
+        delete target.httpServer.certFileName
+        delete target.httpServer.privateKeyFileName
+    }
     return target as ConfigFile
 }
 
