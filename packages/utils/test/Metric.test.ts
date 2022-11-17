@@ -12,6 +12,7 @@ describe('metrics', () => {
         let context: MetricsContext
         let reports: (MetricsReport & { generationTime: number })[]
         let abortController: AbortController
+
         const getReport = (timestamp: number) => {
             return reports.find((report) => (timestamp <= report.generationTime))
         }

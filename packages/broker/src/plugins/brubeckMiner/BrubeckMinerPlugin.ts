@@ -64,10 +64,10 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
 
         await this.subscribe()
 
-        setAbortableTimeout(
+        await scheduleAtInterval(
             () => this.subscriptionIntervalFn(),
             this.subscriptionRetryInterval,
-            this.abortController.signal
+            false, this.abortController.signal
         )
 
         logger.info('Brubeck miner plugin started')
@@ -90,11 +90,6 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
                 logger.warn(`Subscription retry failed, retrying in ${this.subscriptionRetryInterval / 1000} seconds`)
             }
         }
-        setAbortableTimeout(
-            () => this.subscriptionIntervalFn(),
-            this.subscriptionRetryInterval,
-            this.abortController.signal
-        )
     }
 
     private async subscribe(): Promise<void> {
