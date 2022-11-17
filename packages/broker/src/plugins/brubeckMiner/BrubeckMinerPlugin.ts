@@ -67,7 +67,8 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
         await scheduleAtInterval(
             () => this.subscriptionIntervalFn(),
             this.subscriptionRetryInterval,
-            false, this.abortController.signal
+            false,
+            this.abortController.signal
         )
 
         logger.info('Brubeck miner plugin started')
