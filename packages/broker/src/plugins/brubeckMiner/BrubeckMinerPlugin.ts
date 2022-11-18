@@ -1,5 +1,5 @@
 import fetchNatType from 'nat-type-identifier'
-import { Logger, scheduleAtInterval, setAbortableTimeout, withTimeout } from '@streamr/utils'
+import { Logger, scheduleAtInterval, withTimeout } from '@streamr/utils'
 import { wait } from '@streamr/utils'
 import { Plugin, PluginOptions } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
