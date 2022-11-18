@@ -14,8 +14,7 @@ const formConfig = (auth: StreamrClientConfig['auth']): Config => {
         httpServer: {
             port: 7171
         },
-        plugins: {},
-        $schema: 'dummy'
+        plugins: {}
     }
 }
 
