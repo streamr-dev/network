@@ -22,7 +22,7 @@ async function startNetworkNodeAndListenForAtLeastOneMessage(streamId: StreamID)
         id: 'networkNode',
         network: {
             entryPoints: [{
-                peerId: 'publisher',
+                kademliaId: 'publisher',
                 type: 0
             }],
             stringKademliaId: 'node'
@@ -69,7 +69,6 @@ describe('publish-subscribe', () => {
     beforeAll(async () => {
         subscriberWallet = fastWallet()
         publisherPk = await fetchPrivateKeyWithGas()
-        console.log("FETCHED")
     })
 
     beforeEach(async () => {
@@ -80,7 +79,7 @@ describe('publish-subscribe', () => {
             },
             network: {
                 entryPoints: [{
-                    peerId: 'publisher',
+                    kademliaId: 'publisher',
                     type: 0
                 }],
                 stringKademliaId: 'publisher'
@@ -93,13 +92,12 @@ describe('publish-subscribe', () => {
             },
             network: {
                 entryPoints: [{
-                    peerId: 'publisher',
+                    kademliaId: 'publisher',
                     type: 0
                 }],
                 stringKademliaId: 'subscriber'
             }
         })
-        console.log("CLIENTS CREATED")
 
     }, TIMEOUT)
 
@@ -114,14 +112,10 @@ describe('publish-subscribe', () => {
         let stream: Stream
 
         beforeAll(async () => {
-            console.log("CREATING STREAM")
-
             stream = await createStreamWithPermissions(publisherPk, {
                 permissions: [StreamPermission.SUBSCRIBE],
                 user: subscriberWallet.address
             })
-            console.log("STREAM CREATED")
-
         }, TIMEOUT)
 
         it.only('messages are published encrypted', async () => {

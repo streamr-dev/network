@@ -33,7 +33,7 @@ export interface TrackerRegistryContract {
 }
 
 export interface JsonPeerDescriptor {
-    peerId: string
+    kademliaId: string
     type: number
     udp?: ConnectivityMethod
     tcp?: ConnectivityMethod

@@ -81,7 +81,7 @@ export class NetworkNodeFacade {
     private startNodeComplete = false
     private readonly config: Pick<StrictStreamrClientConfig, 'network' | 'contracts'>
     private readonly eventEmitter: EventEmitter<Events>
-    private entryPoint?: PeerDescriptor // HACK: replace with stream specific entrypoints
+
     constructor(
         private destroySignal: DestroySignal,
         private networkNodeFactory: NetworkNodeFactory,
@@ -100,7 +100,7 @@ export class NetworkNodeFacade {
     private async getNormalizedNetworkOptions(): Promise<NetworkOptions> {
         const entryPoints = this.config.network.entryPoints.map((ep) => {
             const peerDescriptor: PeerDescriptor = {
-                peerId: PeerID.fromString(ep.peerId).value,
+                kademliaId: PeerID.fromString(ep.kademliaId).value,
                 type: ep.type,
                 openInternet: ep.openInternet,
                 udp: ep.udp,
@@ -224,14 +224,15 @@ export class NetworkNodeFacade {
         // Will call cachedNode.publish immediately if cachedNode is set.
         // Otherwise will wait for node to start.
         this.destroySignal.assertNotDestroyed()
+        const entryPoint = this.getEntryPoints()[0]
         if (this.isStarting()) {
             // use .then instead of async/await so
             // this.cachedNode.publish call can be sync
             return this.startNodeTask().then((node) => {
-                return node.publish(streamMessage, this.entryPoint!)
+                return node.publish(streamMessage, entryPoint)
             })
         }
-        return this.cachedNetwork!.publish(streamMessage, this.entryPoint!)
+        return this.cachedNetwork!.publish(streamMessage, entryPoint)
     }
 
     async openProxyConnection(streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection): Promise<void> {
@@ -259,7 +260,7 @@ export class NetworkNodeFacade {
     getEntryPoints(): PeerDescriptor[] {
         return this.config.network.entryPoints.map((ep) => {
             const peerDescriptor: PeerDescriptor = {
-                peerId: PeerID.fromString(ep.peerId).value,
+                kademliaId: PeerID.fromString(ep.kademliaId).value,
                 type: ep.type,
                 openInternet: ep.openInternet,
                 udp: ep.udp,

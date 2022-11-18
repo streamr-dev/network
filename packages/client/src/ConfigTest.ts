@@ -37,7 +37,7 @@ export const ConfigTest: StreamrClientConfig = {
         webrtcDisallowPrivateAddresses: false,
         iceServers: [],
         entryPoints: [{
-            peerId: 'entryPoint',
+            kademliaId: 'entryPoint',
             type: 0
         }],
         stringKademliaId: 'entryPoint'

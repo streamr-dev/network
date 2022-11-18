@@ -397,11 +397,11 @@
             "type": "object",
             "additionalProperties": false,
             "required": [
-                "peerId",
+                "kademliaId",
                 "type"
             ],
             "properties": {
-                "peerId": {
+                "kademliaId": {
                     "type": "string"
                 },
                 "type": {

@@ -16,7 +16,6 @@ async function fetchTrackers(contractAddress: EthereumAddress, jsonRpcProvider: 
     if (typeof contract.getNodes !== 'function') {
         throw Error(`getNodes function is not defined in smart contract (${contractAddress})`)
     }
-
     return contract.getNodes()
 }
 
@@ -27,7 +26,10 @@ export async function getTrackerRegistryFromContract({
     contractAddress: EthereumAddress
     jsonRpcProvider: Provider
 }): Promise<TrackerRegistry<TrackerRegistryRecord>> {
-    const trackers = await fetchTrackers(contractAddress, jsonRpcProvider)
+
+    // const trackers = await fetchTrackers(contractAddress, jsonRpcProvider)
+    const trackers: any[] = []
+
     const records: TrackerRegistryRecord[] = []
     for (let i = 0; i < trackers.length; ++i) {
         const { metadata, url, nodeAddress } = trackers[i]
