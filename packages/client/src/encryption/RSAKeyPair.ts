@@ -42,8 +42,8 @@ async function exportCryptoKey(key: CryptoKey, { isPrivate = false } = {}): Prom
 
 export class RSAKeyPair {
     // the keys are in PEM format
-    public privateKey: string
-    public publicKey: string
+    private readonly privateKey: string
+    private readonly publicKey: string
 
     private constructor(privateKey: string, publicKey: string) {
         this.privateKey = privateKey
