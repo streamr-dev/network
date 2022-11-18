@@ -2,19 +2,24 @@
  * @param {number} interval - number of milliseconds to wait after a task is completed
  */
 import { repeatScheduleTask } from './scheduleAtFixedRate'
+import { setAbortableTimeout } from './abortableTimers'
 
 export const scheduleAtInterval = async (
     task: () => Promise<void>,
     interval: number,
-    executeAtStart: boolean
-): Promise<{ stop: () => void }> => {
+    executeAtStart: boolean,
+    abortSignal: AbortSignal
+): Promise<void> => {
+    if (abortSignal?.aborted) {
+        return
+    }
     if (executeAtStart) {
         await task()
     }
-    return repeatScheduleTask((doneCb) => {
-        return setTimeout(async () => {
+    repeatScheduleTask((doneCb) => {
+        setAbortableTimeout(async () => {
             await task()
             doneCb()
-        }, interval)
-    })
+        }, interval, abortSignal)
+    }, abortSignal)
 }

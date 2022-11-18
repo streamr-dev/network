@@ -21,6 +21,10 @@ export interface ConfigFile extends Config {
     $schema?: string
 }
 
+export interface ConfigFile extends Config {
+    $schema?: string
+}
+
 export const getDefaultFile = (): string => {
     const relativePath = '.streamr/config/default.json'
     return path.join(os.homedir(), relativePath)
