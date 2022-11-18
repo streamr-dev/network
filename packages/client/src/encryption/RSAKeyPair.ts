@@ -3,7 +3,7 @@ import { promisify } from 'util'
 
 const { webcrypto } = crypto
 
-function getSubtle(): any {
+function getSubtle(): SubtleCrypto {
     const subtle = typeof window !== 'undefined' ? window?.crypto?.subtle : webcrypto.subtle
     if (!subtle) {
         const url = 'https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto'
@@ -89,10 +89,6 @@ export class RSAKeyPair {
             publicExponent: new Uint8Array([1, 0, 1]), // 65537
             hash: 'SHA-256'
         }, true, ['encrypt', 'decrypt'])
-        if (!(publicKey && privateKey)) {
-            // TS says this is possible.
-            throw new Error('could not generate keys')
-        }
 
         const [exportedPrivate, exportedPublic] = await Promise.all([
             exportCryptoKey(privateKey, {
