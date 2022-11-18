@@ -62,12 +62,12 @@ export class RSAKeyPair {
     public publicKey: string | undefined
     private _generateKeyPairPromise: Promise<void> | undefined
 
-    async onReady(): Promise<void> {
+    private async onReady(): Promise<void> {
         if (this.isReady()) { return undefined }
         return this.generateKeyPair()
     }
 
-    isReady(this: RSAKeyPair): this is InitializedRSAKeyPair {
+    private isReady(this: RSAKeyPair): this is InitializedRSAKeyPair {
         return (this.privateKey !== undefined && this.publicKey !== undefined)
     }
 
