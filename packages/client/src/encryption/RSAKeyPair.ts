@@ -49,12 +49,6 @@ export class RSAKeyPair {
         this.publicKey = publicKey
     }
 
-    static async create(): Promise<RSAKeyPair> {
-        return (typeof window !== 'undefined')
-            ? RSAKeyPair.keyPairBrowser()
-            : RSAKeyPair.keyPairServer()
-    }
-
     // Returns a String (base64 encoding)
     getPublicKey(): string {
         return this.publicKey
@@ -63,6 +57,12 @@ export class RSAKeyPair {
     // Returns a String (base64 encoding)
     getPrivateKey(): string {
         return this.privateKey
+    }
+
+    static async create(): Promise<RSAKeyPair> {
+        return (typeof window !== 'undefined')
+            ? RSAKeyPair.keyPairBrowser()
+            : RSAKeyPair.keyPairServer()
     }
 
     private static async keyPairServer(): Promise<RSAKeyPair> {
