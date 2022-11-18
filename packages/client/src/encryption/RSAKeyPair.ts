@@ -60,11 +60,11 @@ export class RSAKeyPair {
 
     static async create(): Promise<RSAKeyPair> {
         return (typeof window !== 'undefined')
-            ? RSAKeyPair.keyPairBrowser()
-            : RSAKeyPair.keyPairServer()
+            ? RSAKeyPair.create_browserEnvironment()
+            : RSAKeyPair.create_serverEnvironment()
     }
 
-    private static async keyPairServer(): Promise<RSAKeyPair> {
+    private static async create_serverEnvironment(): Promise<RSAKeyPair> {
         // promisify here to work around browser/server packaging
         const generateKeyPair = promisify(crypto.generateKeyPair)
         const { publicKey, privateKey } = await generateKeyPair('rsa', {
@@ -82,7 +82,7 @@ export class RSAKeyPair {
         return new RSAKeyPair(privateKey, publicKey)
     }
 
-    private static async keyPairBrowser(): Promise<RSAKeyPair> {
+    private static async create_browserEnvironment(): Promise<RSAKeyPair> {
         const { publicKey, privateKey } = await getSubtle().generateKey({
             name: 'RSA-OAEP',
             modulusLength: 4096,
