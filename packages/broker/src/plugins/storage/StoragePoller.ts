@@ -11,7 +11,6 @@ export class StoragePoller {
     private readonly pollInterval: number
     private readonly streamrClient: StreamrClient
     private readonly onNewSnapshot: (streams: Stream[], block: number) => void
-    private stopPolling?: () => void
 
     constructor(
         clusterId: string,
@@ -25,10 +24,9 @@ export class StoragePoller {
         this.onNewSnapshot = onNewSnapshot
     }
 
-    async start(): Promise<void> {
+    async start(abortSignal: AbortSignal): Promise<void> {
         if (this.pollInterval > 0) {
-            const { stop } = await scheduleAtInterval(() => this.tryPoll(), this.pollInterval, true)
-            this.stopPolling = stop
+            await scheduleAtInterval(() => this.tryPoll(), this.pollInterval, true, abortSignal)
         } else {
             await this.tryPoll()
         }
@@ -39,10 +37,6 @@ export class StoragePoller {
         const { streams, blockNumber } = await this.streamrClient.getStoredStreams(this.clusterId)
         logger.info('found %d streams at block %d', streams.length, blockNumber)
         this.onNewSnapshot(streams, blockNumber)
-    }
-
-    destroy(): void {
-        this.stopPolling?.()
     }
 
     private async tryPoll(): Promise<void> {

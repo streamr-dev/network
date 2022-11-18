@@ -5,20 +5,28 @@ const INTERVAL = 100
 
 describe('scheduleAtFixedRate', () => {
     let task: jest.Mock<Promise<void>, [number]>
-    let ref: { stop: () => void }
+    let abortController: AbortController
 
     beforeEach(() => {
         task = jest.fn()
+        abortController = new AbortController()
     })
 
     afterEach(() => {
-        ref.stop()
+        abortController?.abort()
     })
 
-    it('repeats every `interval`', async () => {
-        ref = scheduleAtFixedRate(task, INTERVAL)
+    it('repeats task every `interval`', async () => {
+        scheduleAtFixedRate(task, INTERVAL, abortController.signal)
         await wait(4 * INTERVAL)
         expect(task.mock.calls.length).toBeGreaterThanOrEqual(4)
         expect(task.mock.calls.every(([now]) => now % 100 === 0)).toEqual(true)
+    })
+
+    it('task never invoked if initially aborted', async () => {
+        abortController.abort()
+        scheduleAtFixedRate(task, INTERVAL, abortController.signal)
+        await wait(4 * INTERVAL)
+        expect(task).not.toHaveBeenCalled()
     })
 })
