@@ -1,6 +1,6 @@
 {
   "name": "@streamr/protocol",
-  "version": "7.0.0",
+  "version": "7.0.1",
   "description": "JavaScript classes implementing the Streamr client-to-node protocol",
   "repository": {
     "type": "git",
@@ -25,11 +25,11 @@
   "author": "Streamr",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@streamr/test-utils": "7.0.0",
+    "@streamr/test-utils": "7.0.1",
     "@types/sinon": "^10.0.4",
     "sinon": "^11.1.2"
   },
   "dependencies": {
-    "@streamr/utils": "7.0.0"
+    "@streamr/utils": "7.0.1"
   }
 }
