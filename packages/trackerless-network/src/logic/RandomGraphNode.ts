@@ -100,7 +100,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         this.layer1.on('randomContactRemoved', (peerDescriptor, randomPeers) => this.removedRandomContact(peerDescriptor, randomPeers))
         this.P2PTransport.on('disconnected', (peerDescriptor: PeerDescriptor) => this.onPeerDisconnected(peerDescriptor))
 
-        this.targetNeighbors.on(PeerListEvent.PEER_ADDED, (id, remote) => {
+        this.targetNeighbors.on(PeerListEvent.PEER_ADDED, (id, _remote) => {
             this.propagation.onNeighborJoined(id)
         })
 

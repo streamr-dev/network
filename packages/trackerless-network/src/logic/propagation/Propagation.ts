@@ -29,12 +29,12 @@ export class Propagation {
     private readonly randomGraphId: string
 
     constructor({
-                    sendToNeighbor,
-                    minPropagationTargets,
-                    randomGraphId,
-                    ttl = DEFAULT_TTL,
-                    maxMessages = DEFAULT_MAX_MESSAGES
-                }: ConstructorOptions) {
+        sendToNeighbor,
+        minPropagationTargets,
+        randomGraphId,
+        ttl = DEFAULT_TTL,
+        maxMessages = DEFAULT_MAX_MESSAGES
+    }: ConstructorOptions) {
         this.sendToNeighbor = sendToNeighbor
         this.randomGraphId = randomGraphId
         this.minPropagationTargets = minPropagationTargets
