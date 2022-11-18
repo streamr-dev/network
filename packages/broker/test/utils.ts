@@ -9,7 +9,7 @@ import _ from 'lodash'
 import { Wallet } from 'ethers'
 import { Tracker, startTracker } from '@streamr/network-tracker'
 import { Broker, createBroker } from '../src/broker'
-import { ApiAuthenticationConfig, Config } from '../src/config/config'
+import { Config } from '../src/config/config'
 import { StreamPartID } from '@streamr/protocol'
 import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 
@@ -20,7 +20,7 @@ interface TestConfig {
     privateKey: string
     httpPort?: number
     extraPlugins?: Record<string, unknown>
-    apiAuthentication?: ApiAuthenticationConfig
+    apiAuthentication?: Config['apiAuthentication']
     enableCassandra?: boolean
     storageConfigRefreshInterval?: number
 }

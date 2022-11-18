@@ -11,9 +11,6 @@ const formConfig = (auth: StreamrClientConfig['auth']): Config => {
                 trackers: []
             }
         },
-        httpServer: {
-            port: 7171
-        },
         plugins: {}
     }
 }

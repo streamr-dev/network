@@ -10,10 +10,10 @@ import StreamrClient from 'streamr-client'
 import { Logger } from '@streamr/utils'
 import { Connection } from './Connection'
 import { ApiAuthenticator } from '../../apiAuthenticator'
-import { SslCertificateConfig } from '../../config/config'
 import { PublishConnection } from './PublishConnection'
 import { SubscribeConnection } from './SubscribeConnection'
 import { PayloadFormat } from '../../helpers/PayloadFormat'
+import { WebsocketPluginConfig } from './WebsocketPlugin'
 
 const logger = new Logger(module)
 
@@ -47,7 +47,7 @@ export class WebsocketServer {
         port: number, 
         payloadFormat: PayloadFormat,
         apiAuthenticator: ApiAuthenticator, 
-        sslCertificateConfig?: SslCertificateConfig
+        sslCertificateConfig?: WebsocketPluginConfig['sslCertificate']
     ): Promise<void> {
         this.httpServer = (sslCertificateConfig !== undefined) 
             ? https.createServer({
