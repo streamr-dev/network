@@ -1,5 +1,4 @@
 import crypto from 'crypto'
-import { O } from 'ts-toolbelt'
 import { promisify } from 'util'
 
 const { webcrypto } = crypto
@@ -41,59 +40,32 @@ async function exportCryptoKey(key: CryptoKey, { isPrivate = false } = {}): Prom
     return `-----BEGIN ${TYPE} KEY-----\n${exportedAsBase64}\n-----END ${TYPE} KEY-----\n`
 }
 
-// after RSAKeyPair is ready
-type InitializedRSAKeyPair = O.Overwrite<RSAKeyPair, {
-    privateKey: string
-    publicKey: string
-}>
-
 export class RSAKeyPair {
-    /**
-     * Creates a new instance + waits for ready.
-     * Convenience.
-     */
+    public privateKey: string
+    public publicKey: string
+
+    private constructor(privateKey: string, publicKey: string) {
+        this.privateKey = privateKey
+        this.publicKey = publicKey
+    }
+
     static async create(): Promise<RSAKeyPair> {
-        const pair = new RSAKeyPair()
-        await pair.onReady()
-        return pair
-    }
-
-    public privateKey: string | undefined
-    public publicKey: string | undefined
-    private _generateKeyPairPromise: Promise<void> | undefined
-
-    private async onReady(): Promise<void> {
-        if (this.isReady()) { return undefined }
-        return this.generateKeyPair()
-    }
-
-    private isReady(this: RSAKeyPair): this is InitializedRSAKeyPair {
-        return (this.privateKey !== undefined && this.publicKey !== undefined)
+        return (typeof window !== 'undefined')
+            ? RSAKeyPair.keyPairBrowser()
+            : RSAKeyPair.keyPairServer()
     }
 
     // Returns a String (base64 encoding)
     getPublicKey(): string {
-        if (!this.isReady()) { throw new Error('RSAKeyPair not ready.') }
         return this.publicKey
     }
 
     // Returns a String (base64 encoding)
     getPrivateKey(): string {
-        if (!this.isReady()) { throw new Error('RSAKeyPair not ready.') }
         return this.privateKey
     }
 
-    /* eslint-disable no-underscore-dangle */
-    private async generateKeyPair(): Promise<void> {
-        if (!this._generateKeyPairPromise) {
-            this._generateKeyPairPromise = (typeof window !== 'undefined')
-                ? this.keyPairBrowser()
-                : this.keyPairServer()
-        }
-        return this._generateKeyPairPromise
-    }
-
-    private async keyPairServer(): Promise<void> {
+    private static async keyPairServer(): Promise<RSAKeyPair> {
         // promisify here to work around browser/server packaging
         const generateKeyPair = promisify(crypto.generateKeyPair)
         const { publicKey, privateKey } = await generateKeyPair('rsa', {
@@ -108,11 +80,10 @@ export class RSAKeyPair {
             },
         })
 
-        this.privateKey = privateKey
-        this.publicKey = publicKey
+        return new RSAKeyPair(privateKey, publicKey)
     }
 
-    private async keyPairBrowser(): Promise<void> {
+    private static async keyPairBrowser(): Promise<RSAKeyPair> {
         const { publicKey, privateKey } = await getSubtle().generateKey({
             name: 'RSA-OAEP',
             modulusLength: 4096,
@@ -132,7 +103,6 @@ export class RSAKeyPair {
                 isPrivate: false,
             })
         ])
-        this.privateKey = exportedPrivate
-        this.publicKey = exportedPublic
+        return new RSAKeyPair(exportedPrivate, exportedPublic)
     }
 }
