@@ -11,12 +11,8 @@
             "default": 1883
         },
         "streamIdDomain": {
-            "type": [
-                "string",
-                "null"
-            ],
-            "description": "All topics are mapped to streamIds by prepending the domain to the topic: streamIdDomain + '/' + topic",
-            "default": null
+            "type": "string",
+            "description": "All topics are mapped to streamIds by prepending the domain to the topic: streamIdDomain + '/' + topic"
         },
         "payloadMetadata": {
             "type": "boolean",

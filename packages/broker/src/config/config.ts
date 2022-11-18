@@ -2,20 +2,26 @@ import { StreamrClientConfig } from 'streamr-client'
 import path from 'path'
 import * as os from 'os'
 
-export interface HttpServerConfig {
-    port: number
-    privateKeyFileName: string | null
-    certFileName: string | null
+export interface SslCertificateConfig {
+    privateKeyFileName: string
+    certFileName: string
 }
 
-export type ApiAuthenticationConfig = { keys: string[] } | null
+export interface HttpServerConfig {
+    port: number
+    sslCertificate?: SslCertificateConfig
+}
+
+export interface ApiAuthenticationConfig { 
+    keys: string[]
+}
 
 export interface Config {
     $schema: string
     client: StreamrClientConfig
     httpServer: HttpServerConfig
     plugins: Record<string, any>
-    apiAuthentication: ApiAuthenticationConfig
+    apiAuthentication?: ApiAuthenticationConfig
 }
 
 export const getDefaultFile = (): string => {

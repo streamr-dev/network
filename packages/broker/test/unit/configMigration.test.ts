@@ -292,6 +292,107 @@ describe('Config migration', () => {
                 }
             })
             expect(createMigratedConfig(v1)).toEqual(v2)
+            validateTargetConfig(v2)
+        })
+
+        it('null values', () => {
+            const v1 = createConfig(1, {
+                client: {},
+                httpServer: {
+                    port: 1111,
+                    privateKeyFileName: null,
+                    certFileName: null
+                },
+                apiAuthentication: null,
+                plugins: {
+                    brubeckMiner: {
+                        rewardStreamIds: ['mock-id'],
+                        stunServerHost: null,
+                        beneficiaryAddress: null
+                    },
+                    mqtt: {
+                        port: 2222,
+                        streamIdDomain: null
+                    },
+                    storage: {
+                        cassandra: {
+                            hosts: ['mock-host'],
+                            username: '',
+                            password: '',
+                            keyspace: '',
+                            datacenter: ''
+                        },
+                        cluster: {
+                            clusterAddress: null,
+                            clusterSize: 123,
+                            myIndexInCluster: 0
+                        }
+                    },
+                    websocket: {
+                        port: 3333,
+                        sslCertificate: null
+                    }
+                }
+            })
+            const v2 = createConfig(2, {
+                client: {
+                    metrics: false
+                },
+                httpServer: {
+                    port: 1111
+                },
+                plugins: {
+                    brubeckMiner: {
+                        rewardStreamIds: ['mock-id'],
+                        stunServerHost: null
+                    },
+                    mqtt: {
+                        port: 2222
+                    },
+                    storage: {
+                        cassandra: {
+                            hosts: ['mock-host'],
+                            username: '',
+                            password: '',
+                            keyspace: '',
+                            datacenter: ''
+                        },
+                        cluster: {
+                            clusterSize: 123,
+                            myIndexInCluster: 0
+                        }
+                    },
+                    websocket: {
+                        port: 3333
+                    }
+                }
+            })
+            expect(createMigratedConfig(v1)).toEqual(v2)
+            validateTargetConfig(v2)
+        })
+
+        it('ssl certificate', () => {
+            const v1 = createConfig(1, {
+                httpServer: {
+                    port: 1234,
+                    certFileName: 'mock-cert',
+                    privateKeyFileName: 'mock-private-key'
+                }
+            })
+            const v2 = createConfig(2, {
+                client: {
+                    metrics: false
+                },
+                httpServer: {
+                    port: 1234,
+                    sslCertificate: {
+                        certFileName: 'mock-cert',
+                        privateKeyFileName: 'mock-private-key'
+                    }
+                }
+            })
+            expect(createMigratedConfig(v1)).toEqual(v2)
+            validateTargetConfig(v2)
         })
 
         it('metrics: default', () => {
@@ -334,10 +435,6 @@ describe('Config migration', () => {
                 client: {
                     metrics: {
                         periods: [
-                            {
-                                duration: 5000,
-                                streamId: 'mock-prefix/sec'
-                            },
                             {
                                 duration: 60000,
                                 streamId: 'mock-prefix/min'
