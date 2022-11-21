@@ -23,7 +23,7 @@ export interface FifoMapWithTtlOptions<K> {
  * not returned when querying.
  *
  */
-export class FifoMapWithTtl<K, V> {
+export class FifoMapWithTTL<K, V> {
     // class invariant: the keys present in `items` and `dropQueue` are the same set.
     private readonly items = new Map<K, Item<K, V>>()
     private readonly dropQueue = create<K>() // queue is used to determine deletion order when full
@@ -33,11 +33,11 @@ export class FifoMapWithTtl<K, V> {
     private readonly timeProvider: () => number
 
     constructor({
-                    ttlInMs,
-                    maxSize,
-                    onItemDropped = () => {},
-                    timeProvider = Date.now
-                }: FifoMapWithTtlOptions<K>) {
+        ttlInMs,
+        maxSize,
+        onItemDropped = () => {},
+        timeProvider = Date.now
+    }: FifoMapWithTtlOptions<K>) {
         if (ttlInMs < 0) {
             throw new Error(`ttlInMs (${ttlInMs}) cannot be < 0`)
         }

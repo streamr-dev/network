@@ -100,7 +100,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         this.layer1.on('randomContactRemoved', (peerDescriptor, randomPeers) => this.removedRandomContact(peerDescriptor, randomPeers))
         this.P2PTransport.on('disconnected', (peerDescriptor: PeerDescriptor) => this.onPeerDisconnected(peerDescriptor))
 
-        this.targetNeighbors.on(PeerListEvent.PEER_ADDED, (id, remote) => {
+        this.targetNeighbors.on(PeerListEvent.PEER_ADDED, (id, _remote) => {
             this.propagation.onNeighborJoined(id)
         })
 
@@ -155,11 +155,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
             this.markAndCheckDuplicate(msg.messageRef!, msg.previousMessageRef)
         }
         this.emit(Event.MESSAGE, msg)
-        this.targetNeighbors!.getStringIds().forEach((remote) => {
-            if (previousPeer !== remote) {
-                this.targetNeighbors!.getNeighborWithId(remote)!.sendData(this.layer1.getPeerDescriptor(), msg).catch((err) => logger.warn(err))
-            }
-        })
+        this.propagation.feedUnseenMessage(msg, this.targetNeighbors!.getStringIds(), previousPeer || null)
     }
 
     private async findNeighbors(excluded: string[]): Promise<void> {

@@ -1,5 +1,5 @@
 import { MessageRef, StreamMessage } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { FifoMapWithTtl } from './FifoMapWithTTL'
+import { FifoMapWithTTL } from './FifoMapWithTTL'
 
 export interface PropagationTask {
     message: StreamMessage
@@ -16,10 +16,10 @@ export interface PropagationTask {
  * - Items have a TTL, after which they are considered stale and not returned when querying
 **/
 export class PropagationTaskStore {
-    private readonly tasks: FifoMapWithTtl<MessageRef, PropagationTask>
+    private readonly tasks: FifoMapWithTTL<MessageRef, PropagationTask>
 
     constructor(ttlInMs: number, maxTasks: number) {
-        this.tasks = new FifoMapWithTtl<MessageRef, PropagationTask>({
+        this.tasks = new FifoMapWithTTL<MessageRef, PropagationTask>({
             ttlInMs,
             maxSize: maxTasks
         })
