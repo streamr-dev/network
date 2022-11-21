@@ -155,11 +155,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
             this.markAndCheckDuplicate(msg.messageRef!, msg.previousMessageRef)
         }
         this.emit(Event.MESSAGE, msg)
-        this.targetNeighbors!.getStringIds().forEach((remote) => {
-            if (previousPeer !== remote) {
-                this.targetNeighbors!.getNeighborWithId(remote)!.sendData(this.layer1.getPeerDescriptor(), msg).catch((err) => logger.warn(err))
-            }
-        })
+        this.propagation.feedUnseenMessage(msg, this.targetNeighbors!.getStringIds(), previousPeer || null)
     }
 
     private async findNeighbors(excluded: string[]): Promise<void> {
