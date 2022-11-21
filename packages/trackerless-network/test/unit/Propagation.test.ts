@@ -131,7 +131,7 @@ describe(Propagation, () => {
             expect(sendToNeighbor).toHaveBeenCalledTimes(0)
         })
 
-        it.only('no-op if TTL expires', async () => {
+        it('no-op if TTL expires', async () => {
             await setUpAndFeed(['n1', 'n2', 'n3'])
             await wait(200)
             propagation.onNeighborJoined('n3')
