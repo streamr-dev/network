@@ -73,7 +73,6 @@ export interface StrictStreamrClientConfig {
         streamRegistryChainAddress: string
         streamStorageRegistryChainAddress: string
         storageNodeRegistryChainAddress: string
-        ensCacheChainAddress: string
         mainChainRPCs?: ChainConnectionInfo
         streamRegistryChainRPCs: ChainConnectionInfo
         // most of the above should go into ethereumNetworks configs once ETH-184 is ready
@@ -152,7 +151,6 @@ export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id' | 'aut
         streamRegistryChainAddress: '0x0D483E10612F327FC11965Fc82E90dC19b141641',
         streamStorageRegistryChainAddress: '0xe8e2660CeDf2a59C917a5ED05B72df4146b58399',
         storageNodeRegistryChainAddress: '0x080F34fec2bc33928999Ea9e39ADc798bEF3E0d6',
-        ensCacheChainAddress: '0x870528c1aDe8f5eB4676AA2d15FC0B034E276A1A',
         mainChainRPCs: undefined, // Default to ethers.js default provider settings
         streamRegistryChainRPCs: {
             name: 'polygon',
