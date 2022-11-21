@@ -10,7 +10,6 @@
   "bin": {
     "streamr-broker": "bin/broker.js",
     "streamr-broker-init": "bin/config-wizard.js",
-    "tracker": "bin/tracker.js",
     "delete-expired-data": "bin/delete-expired-data.js"
   },
   "main": "./dist/src/exports.js",
