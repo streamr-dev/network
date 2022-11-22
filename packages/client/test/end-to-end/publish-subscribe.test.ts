@@ -1,6 +1,5 @@
 import { Wallet } from 'ethers'
 import { StreamID, toStreamPartID } from '@streamr/protocol'
-import { createNetworkNode } from '@streamr/network-node'
 import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { ConfigTest } from '../../src/ConfigTest'
 import { PermissionAssignment, StreamPermission } from '../../src/permission'
@@ -8,6 +7,8 @@ import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { createTestStream } from '../test-utils/utils'
 import { waitForCondition } from '@streamr/utils'
+import { NetworkNode, PeerDescriptor, PeerID } from '../../../trackerless-network'
+import { JsonPeerDescriptor } from '../../src/Config'
 
 const TIMEOUT = 20 * 1000
 
@@ -15,21 +16,21 @@ const PAYLOAD = { hello: 'world' }
 
 const ENCRYPTED_MESSSAGE_FORMAT = /^[0-9A-Fa-f]+$/
 
-async function startNetworkNodeAndListenForAtLeastOneMessage(streamId: StreamID): Promise<unknown[]> {
-    const networkNode = await createNetworkNode({
+async function startNetworkNodeAndListenForAtLeastOneMessage(streamId: StreamID, entryPoint: JsonPeerDescriptor): Promise<unknown[]> {
+    const epDescriptor: PeerDescriptor = {
+        kademliaId: PeerID.fromString(entryPoint.kademliaId).value,
+        type: entryPoint.type,
+        websocket: entryPoint.websocket
+    }
+    const networkNode = new NetworkNode({
         // TODO better typing for ConfigTest.network.trackers?
         ...ConfigTest.network as any,
-        id: 'networkNode',
-        network: {
-            entryPoints: [{
-                kademliaId: 'publisher',
-                type: 0
-            }],
-            stringKademliaId: 'node'
-        }
+        entryPoints: [epDescriptor],
+        stringKademliaId: 'node'
     })
     try {
-        networkNode.subscribe(toStreamPartID(streamId, 0))
+        await networkNode.start()
+        networkNode.subscribe(toStreamPartID(streamId, 0), epDescriptor)
         const messages: unknown[] = []
         networkNode.addMessageListener((msg) => {
             messages.push(msg.getContent())
@@ -72,17 +73,22 @@ describe('publish-subscribe', () => {
     })
 
     beforeEach(async () => {
+        const publisherDescriptor = {
+            kademliaId: PeerID.fromString('publisher').toString(),
+            type: 0,
+            websocket: {
+                ip: 'localhost',
+                port: 15656
+            }
+        }
         publisherClient = new StreamrClient({
             ...ConfigTest,
             auth: {
                 privateKey: publisherPk
             },
             network: {
-                entryPoints: [{
-                    kademliaId: 'publisher',
-                    type: 0
-                }],
-                stringKademliaId: 'publisher'
+                entryPoints: [publisherDescriptor],
+                peerDescriptor: publisherDescriptor
             }
         })
         subscriberClient = new StreamrClient({
@@ -91,10 +97,7 @@ describe('publish-subscribe', () => {
                 privateKey: subscriberWallet.privateKey
             },
             network: {
-                entryPoints: [{
-                    kademliaId: 'publisher',
-                    type: 0
-                }],
+                entryPoints: [publisherDescriptor],
                 stringKademliaId: 'subscriber'
             }
         })
@@ -118,19 +121,30 @@ describe('publish-subscribe', () => {
             })
         }, TIMEOUT)
 
-        it.only('messages are published encrypted', async () => {
+        it('messages are published encrypted', async () => {
             await publisherClient.publish(stream.id, PAYLOAD)
-            const messages = await startNetworkNodeAndListenForAtLeastOneMessage(stream.id)
+            const messages = await startNetworkNodeAndListenForAtLeastOneMessage(
+                stream.id,
+                {
+                    kademliaId: PeerID.fromString('publisher').toString(),
+                    type: 0,
+                    websocket: {
+                        ip: 'localhost',
+                        port: 15656
+                    }
+                }
+            )
             expect(messages).toHaveLength(1)
             expect(messages[0]).toMatch(ENCRYPTED_MESSSAGE_FORMAT)
         }, TIMEOUT)
 
         it('subscriber is able to receive and decrypt messages', async () => {
             const messages: any[] = []
-            await subscriberClient.subscribe(stream.id, (msg: any) => {
+            await publisherClient.publish(stream.id, PAYLOAD)
+            const sub = await subscriberClient.subscribe(stream.id, (msg: any) => {
                 messages.push(msg)
             })
-            await publisherClient.publish(stream.id, PAYLOAD)
+            sub.on('error', (e) =>  console.error(e))
             await waitForCondition(() => messages.length > 0)
             expect(messages).toEqual([PAYLOAD])
         }, TIMEOUT)
@@ -148,16 +162,26 @@ describe('publish-subscribe', () => {
 
         it('messages are published unencrypted', async () => {
             await publisherClient.publish(stream.id, PAYLOAD)
-            const messages = await startNetworkNodeAndListenForAtLeastOneMessage(stream.id)
+            const messages = await startNetworkNodeAndListenForAtLeastOneMessage(
+                stream.id,
+                {
+                    kademliaId: PeerID.fromString('publisher').toString(),
+                    type: 0,
+                    websocket: {
+                        ip: 'localhost',
+                        port: 15656
+                    }
+                }
+            )
             expect(messages).toEqual([PAYLOAD])
         }, TIMEOUT)
 
         it('subscriber is able to receive messages', async () => {
             const messages: unknown[] = []
+            await publisherClient.publish(stream.id, PAYLOAD)
             await subscriberClient.subscribe(stream.id, (msg: any) => {
                 messages.push(msg)
             })
-            await publisherClient.publish(stream.id, PAYLOAD)
             await waitForCondition(() => messages.length > 0)
             expect(messages).toEqual([PAYLOAD])
         }, TIMEOUT)

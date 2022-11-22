@@ -243,6 +243,12 @@
                 },
                 "stringKademliaId": {
                     "type": "string"
+                },
+                "webSocketPort": {
+                    "type": "number"
+                },
+                "peerDescriptor": {
+                    "$ref": "#/definitions/peerDescriptor"
                 }
             }
         },

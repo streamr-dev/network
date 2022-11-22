@@ -4,6 +4,7 @@ import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { getCreateClient } from '../test-utils/utils'
+import { PeerID } from '../../../trackerless-network'
 
 const NUM_OF_PARTITIONS = 10
 
@@ -16,6 +17,14 @@ describe('NodeMetrics', () => {
     beforeAll(async () => {
         const streamPath = `/metrics/${Date.now()}`
         const generatorClientPrivateKey = await fetchPrivateKeyWithGas()
+        const subscriberDescriptor = {
+            kademliaId: PeerID.fromString('subscriber').toString(),
+            type: 0,
+            websocket: {
+                ip: 'localhost',
+                port: 15653
+            }
+        }
         generatorClient = await createClient({
             auth: {
                 privateKey: generatorClientPrivateKey
@@ -28,6 +37,10 @@ describe('NodeMetrics', () => {
                     }
                 ],
                 maxPublishDelay: 50
+            },
+            network: {
+                entryPoints: [subscriberDescriptor],
+                stringKademliaId: 'generator'
             }
         })
         stream = await generatorClient.createStream({
@@ -35,7 +48,12 @@ describe('NodeMetrics', () => {
             partitions: NUM_OF_PARTITIONS
         })
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
-        subscriberClient = await createClient()
+        subscriberClient = await createClient({
+            network: {
+                entryPoints: [subscriberDescriptor],
+                peerDescriptor: subscriberDescriptor
+            }
+        })
     }, 20 * 1000)
 
     afterAll(async () => {
@@ -58,7 +76,7 @@ describe('NodeMetrics', () => {
             }
         })
 
-        // trigger metrics generation start by subcribing to some stream
+        // trigger metrics generation start by subscribing to some stream
         const dummyStream = await generatorClient.createStream(`/${Date.now()}`)
         await generatorClient.subscribe(dummyStream, () => {})
 

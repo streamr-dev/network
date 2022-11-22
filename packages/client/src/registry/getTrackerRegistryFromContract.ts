@@ -1,30 +1,30 @@
-import { Contract } from '@ethersproject/contracts'
+// import { Contract } from '@ethersproject/contracts'
 import type { Provider } from '@ethersproject/providers'
 
 import { createTrackerRegistry, TrackerRegistryRecord, TrackerRegistry } from '@streamr/protocol'
-import * as trackerRegistryConfig from '../../contracts/TrackerRegistry.json'
+// import * as trackerRegistryConfig from '../../contracts/TrackerRegistry.json'
 import { EthereumAddress } from '@streamr/utils'
 
-async function fetchTrackers(contractAddress: EthereumAddress, jsonRpcProvider: Provider) {
-    // check that provider is connected and has some valid blockNumber
-    await jsonRpcProvider.getBlockNumber()
-
-    const contract = new Contract(contractAddress, trackerRegistryConfig.abi, jsonRpcProvider)
-    // check that contract is connected
-    await contract.addressPromise
-
-    if (typeof contract.getNodes !== 'function') {
-        throw Error(`getNodes function is not defined in smart contract (${contractAddress})`)
-    }
-    return contract.getNodes()
-}
+// async function fetchTrackers(contractAddress: EthereumAddress, jsonRpcProvider: Provider) {
+//     // check that provider is connected and has some valid blockNumber
+//     await jsonRpcProvider.getBlockNumber()
+//
+//     const contract = new Contract(contractAddress, trackerRegistryConfig.abi, jsonRpcProvider)
+//     // check that contract is connected
+//     await contract.addressPromise
+//
+//     if (typeof contract.getNodes !== 'function') {
+//         throw Error(`getNodes function is not defined in smart contract (${contractAddress})`)
+//     }
+//     return contract.getNodes()
+// }
 
 export async function getTrackerRegistryFromContract({
-    contractAddress,
-    jsonRpcProvider
+    _contractAddress,
+    _jsonRpcProvider
 }: {
-    contractAddress: EthereumAddress
-    jsonRpcProvider: Provider
+    _contractAddress: EthereumAddress
+    _jsonRpcProvider: Provider
 }): Promise<TrackerRegistry<TrackerRegistryRecord>> {
 
     // const trackers = await fetchTrackers(contractAddress, jsonRpcProvider)

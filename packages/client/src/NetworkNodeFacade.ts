@@ -109,20 +109,32 @@ export class NetworkNodeFacade {
             }
             return peerDescriptor
         })
+
+        const ownPeerDescriptor: PeerDescriptor | undefined = this.config.network.peerDescriptor ? {
+            kademliaId: PeerID.fromString(this.config.network.peerDescriptor.kademliaId).value,
+            type: this.config.network.peerDescriptor.type,
+            openInternet: this.config.network.peerDescriptor.openInternet,
+            udp: this.config.network.peerDescriptor.udp,
+            tcp: this.config.network.peerDescriptor.tcp,
+            websocket: this.config.network.peerDescriptor.websocket,
+        } : undefined
+
         if ((this.config.network.trackers as TrackerRegistryContract).contractAddress) {
             const trackerRegistry = await getTrackerRegistryFromContract({
-                contractAddress: toEthereumAddress((this.config.network.trackers as TrackerRegistryContract).contractAddress),
-                jsonRpcProvider: getMainnetProvider(this.config)
+                _contractAddress: toEthereumAddress((this.config.network.trackers as TrackerRegistryContract).contractAddress),
+                _jsonRpcProvider: getMainnetProvider(this.config)
             })
             return {
                 ...this.config.network,
                 entryPoints: entryPoints,
-                trackers: trackerRegistry.getAllTrackers()
+                trackers: trackerRegistry.getAllTrackers(),
+                peerDescriptor: ownPeerDescriptor
             }
         }
         return {
             ...this.config.network,
-            entryPoints: entryPoints
+            entryPoints: entryPoints,
+            peerDescriptor: ownPeerDescriptor
         }
     }
 

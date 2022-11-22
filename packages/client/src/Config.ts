@@ -84,6 +84,8 @@ export interface StrictStreamrClientConfig {
         trackers: TrackerRegistryRecord[] | TrackerRegistryContract
         entryPoints: JsonPeerDescriptor[]
         stringKademliaId?: string
+        webSocketPort?: number
+        peerDescriptor?: JsonPeerDescriptor
     }
 
     contracts: {
