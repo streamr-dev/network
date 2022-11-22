@@ -224,13 +224,6 @@ export const createStrictConfig = (inputOptions: StreamrClientConfig = {}): Stri
         // NOTE: sidechain and storageNode settings are not merged with the defaults
     }
 
-    const privateKey = (options.auth as PrivateKeyAuthConfig)?.privateKey
-    if (privateKey !== undefined) {
-        if (typeof privateKey === 'string' && !privateKey.startsWith('0x')) {
-            (options.auth as PrivateKeyAuthConfig).privateKey = `0x${privateKey}`
-        }
-    }
-
     if (options.network.iceServers === undefined) {
         options.network.iceServers = STREAMR_ICE_SERVERS
     }
