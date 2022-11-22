@@ -64,8 +64,8 @@ describe('StreamrNode', () => {
             layer02.joinDht(peer1)
         ])
 
-        node1 = new StreamrNode()
-        node2 = new StreamrNode()
+        node1 = new StreamrNode({})
+        node2 = new StreamrNode({})
         await node1.start(layer01, transport1, transport1)
         await node2.start(layer02, transport2, transport2)
     })

@@ -281,7 +281,6 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         if (!this.started && this.stopped) {
             return []
         }
-        // console.log(this.getOwnStringId(), this.nearbyContactPool, this.targetNeighbors.size())
         return this.nearbyContactPool!.getStringIds()
     }
 
