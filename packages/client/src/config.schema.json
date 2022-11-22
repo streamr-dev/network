@@ -1,7 +1,7 @@
 {
     "$id": "config.schema.json",
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "description": "Broker configuration format",
+    "description": "Client configuration format",
     "type": "object",
     "additionalProperties": false,
     "properties": {
