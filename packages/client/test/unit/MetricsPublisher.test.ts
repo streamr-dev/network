@@ -38,7 +38,7 @@ describe('MetricsPublisher', () => {
             config
         )
 
-        // trigger publisher to start
+        // trigger metric publisher to start
         eventEmitter.emit('subscribe', undefined)
     }
 
@@ -90,7 +90,7 @@ describe('MetricsPublisher', () => {
         
         await waitForCalls(publishReportMessage, 1)
 
-        const [ streamId, reportContent, publishMetadata ] = publishReportMessage.mock.calls[0]
+        const [streamId, reportContent, publishMetadata] = publishReportMessage.mock.calls[0]
         expect(streamId).toBe('mock-stream-id')
         expect(reportContent).toMatchObject({
             mockNamespace: {
