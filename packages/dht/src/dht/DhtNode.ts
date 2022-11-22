@@ -25,7 +25,7 @@ import * as Err from '../helpers/errors'
 import { ITransport, TransportEvents } from '../transport/ITransport'
 import { ConnectionManager, ConnectionManagerConfig } from '../connection/ConnectionManager'
 import { DhtRpcServiceClient } from '../proto/DhtRpc.client'
-import { Logger } from '@streamr/utils'
+import { Logger, MetricsContext } from '@streamr/utils'
 import { v4 } from 'uuid'
 import { IDhtRpcService } from '../proto/DhtRpc.server'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
@@ -67,6 +67,7 @@ export class DhtNodeConfig {
     joinNoProgressLimit = 4
     routeMessageTimeout = 4000
     dhtJoinTimeout = 60000
+    metricsContext = new MetricsContext()
 
     constructor(conf: Partial<DhtNodeConfig>) {
         // assign given non-undefined config vars over defaults
@@ -150,7 +151,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             const connectionManagerConfig: ConnectionManagerConfig = {
                 transportLayer: this,
                 entryPoints: this.config.entryPoints,
-                stunUrls: this.config.stunUrls
+                stunUrls: this.config.stunUrls,
+                metricsContext: this.config.metricsContext
             }
             // If own PeerDescriptor is given in config, create a ConnectionManager with ws server
             if (this.config.peerDescriptor && this.config.peerDescriptor.websocket) {
@@ -404,7 +406,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
         logger.info(
             `Joining ${this.config.serviceId === 'layer0' ? 'The Streamr Network' : `Control Layer for ${this.config.serviceId}`}`
-            + ` via entrypoint ${entryPointDescriptor.kademliaId.toString()}`
+            + ` via entrypoint ${PeerID.fromValue(entryPointDescriptor.kademliaId).toKey()}`
         )
         const entryPoint = new DhtPeer(
             this.ownPeerDescriptor!,

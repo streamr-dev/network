@@ -3,6 +3,7 @@ import { ProxyDirection, StreamMessage, StreamPartID } from '@streamr/protocol'
 import { PeerDescriptor } from '@streamr/dht'
 import { StreamMessageTranslator } from './logic/protocol-integration/stream-message/StreamMessageTranslator'
 import { NetworkOptions, NetworkStack } from './NetworkStack'
+import { MetricsContext } from '@streamr/utils'
 
 /*
 Convenience wrapper for building client-facing functionality. Used by client.
@@ -119,8 +120,8 @@ export class NetworkNode {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getMetricsContext(): any {
-        throw new Error('Not implemented')
+    getMetricsContext(): MetricsContext {
+        return this.stack.getMetricsContext()
     }
 
     getNodeId(): string {
