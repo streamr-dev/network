@@ -7,8 +7,8 @@ import { StreamMessage, StreamPartID, StreamPartIDUtils, MAX_PARTITION_COUNT } f
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils/utils'
 import { Stream, StreamMetadata } from '../../src/Stream'
-import { ConfigTest } from '../../src/ConfigTest'
-import { STREAM_CLIENT_DEFAULTS, StreamrClientConfig } from '../../src/Config'
+import { CONFIG_TEST } from '../../src/ConfigTest'
+import { StreamrClientConfig } from '../../src/Config'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { addAfterFn } from './jest-utils'
 import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
@@ -18,13 +18,14 @@ import { Authentication, createPrivateKeyAuthentication } from '../../src/Authen
 import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
 import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
 import { LoggerFactory } from '../../src/utils/LoggerFactory'
+import { waitForCondition } from '@streamr/utils'
 
 const logger = new Logger(module)
 
 export function mockLoggerFactory(clientId?: string): LoggerFactory {
     return new LoggerFactory({
         id: clientId ?? counterId('TestCtx'),
-        logLevel: STREAM_CLIENT_DEFAULTS.logLevel
+        logLevel: 'info'
     })
 }
 
@@ -64,7 +65,7 @@ export const getCreateClient = (
             key = await fetchPrivateKeyWithGas()
         }
         const client = new StreamrClient({
-            ...ConfigTest,
+            ...CONFIG_TEST,
             auth: {
                 privateKey: key,
             },
@@ -171,4 +172,10 @@ export const createGroupKeyQueue = async (current?: GroupKey, next?: GroupKey): 
         await queue.rotate(next)
     }
     return queue
+}
+
+export const waitForCalls = async (mockFunction: jest.Mock<any>, n: number): Promise<void> => {
+    await waitForCondition(() => mockFunction.mock.calls.length >= n, 1000, 10, undefined, () => {
+        return `Timeout while waiting for calls: got ${mockFunction.mock.calls.length} out of ${n}`
+    })
 }

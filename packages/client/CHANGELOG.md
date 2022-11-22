@@ -10,26 +10,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Simplify authentication config type to use union instead of `XOR`
-
 ### Deprecated
 
 ### Removed
 
-- Remove subconfig interfaces:
+### Fixed
+
+### Security
+
+
+## [7.0.2] -- 2022-11-22
+
+### Added
+
+### Changed
+
+### Deprecated
+
+- Deprecate `STREAM_CLIENT_DEFAULTS` constant
+- Deprecate `ConfigTest` constant, use `CONFIG_TEST` instead
+
+### Removed
+
+- Remove (non-functional) client configuration option `contracts.ensCacheChainAddress`
+
+### Fixed
+
+- Fix CORS issue in browser when interacting with smart contracts
+  - Remove https://rpc-mainnet.matic.network/ from default list of Polygon RPCs
+
+### Security
+
+
+## [7.0.1] - 2022-11-18
+
+### Changed
+
+- Simplify authentication config type to use union instead of `XOR`
+
+### Removed
+
+- Remove TypeScript interfaces and types:
   - `AuthConfig`
   - `NetworkConfig`
   - `EthereumConfig`
   - `SubscriberConfig`
   - `DecryptionConfig`
   - `CacheConfig`
-  - `MetricsConfig` and `MetricsPeriodConfig`
+  - `MetricsConfig`
+  - `MetricsPeriodConfig`
   - `TimeoutsConfig`
-- Remove helper types `XOR` and `Without`
-
-### Fixed
-
-### Security
+  - `XOR`
+  - `Without`
 
 
 ## [7.0.0] - 2022-11-15
@@ -172,7 +204,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fixed an import so that the client successfully loads in a web browser environment (NET-721)
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/client/v7.0.0...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/client/v7.0.2...HEAD
+[7.0.2]: https://github.com/streamr-dev/network/compare/client/v7.0.1...client/v7.0.2
+[7.0.1]: https://github.com/streamr-dev/network/compare/client/v7.0.0...client/v7.0.1
 [7.0.0]: https://github.com/streamr-dev/network/compare/client/v6.0.10...client/v7.0.0
 [6.0.10]: https://github.com/streamr-dev/network/compare/client/v6.0.9...client/v6.0.10
 [6.0.9]: https://github.com/streamr-dev/network/compare/client/v6.0.8...client/v6.0.9

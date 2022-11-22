@@ -1,6 +1,6 @@
 {
   "name": "@streamr/test-utils",
-  "version": "7.0.0",
+  "version": "7.0.2",
   "description": "a collection of Node.js utilities for dealing with asynchronous behavior in jest/mocha tests",
   "main": "./dist/src/utils.js",
   "types": "./dist/src/utils.d.ts",
@@ -30,7 +30,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@ethersproject/wallet": "^5.5.0",
-    "@streamr/utils": "7.0.0",
+    "@streamr/utils": "7.0.2",
     "cors": "^2.8.5",
     "express": "^4.17.1"
   },

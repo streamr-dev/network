@@ -1,7 +1,6 @@
 import { TrackerRegistryRecord } from '@streamr/protocol'
-import { fastPrivateKey } from '@streamr/test-utils'
 import { createStrictConfig, STREAM_CLIENT_DEFAULTS } from '../../src/Config'
-import { ConfigTest } from '../../src/ConfigTest'
+import { CONFIG_TEST } from '../../src/ConfigTest'
 import { generateEthereumAccount } from '../../src/Ethereum'
 import { STREAMR_ICE_SERVERS } from '@streamr/network-node'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -108,9 +107,9 @@ describe('Config', () => {
 
         it('can override network.trackers arrays', () => {
             const clientDefaults = createStrictConfig()
-            const clientOverrides = createStrictConfig(ConfigTest)
+            const clientOverrides = createStrictConfig(CONFIG_TEST)
             expect(clientOverrides.network.trackers).not.toEqual(clientDefaults.network.trackers)
-            expect(clientOverrides.network.trackers).toEqual(ConfigTest.network!.trackers)
+            expect(clientOverrides.network.trackers).toEqual(CONFIG_TEST.network!.trackers)
         })
 
         it('network can be empty', () => {
@@ -138,66 +137,6 @@ describe('Config', () => {
             expect(clientOverrides.network.trackers).toEqual(trackers)
             expect(clientOverrides.network.trackers).not.toBe(trackers)
             expect((clientOverrides.network.trackers as TrackerRegistryRecord[])[0]).not.toBe(trackers[0])
-        })
-
-        describe('metrics', () => {
-            describe('default', () => {
-                it('private key auth', () => {
-                    const config = createStrictConfig({
-                        auth: {
-                            privateKey: fastPrivateKey()
-                        }
-                    })
-                    expect(config.metrics.periods).toEqual(STREAM_CLIENT_DEFAULTS.metrics.periods)
-                    expect(config.metrics.maxPublishDelay).toEqual(STREAM_CLIENT_DEFAULTS.metrics.maxPublishDelay)
-                })
-                it('ethereum auth', () => {
-                    const config = createStrictConfig({
-                        auth: {
-                            ethereum: {}
-                        }
-                    })
-                    expect(config.metrics.periods).toEqual([])
-                    expect(config.metrics.maxPublishDelay).toEqual(STREAM_CLIENT_DEFAULTS.metrics.maxPublishDelay)
-                })
-                it('unauthenticated', () => {
-                    const config = createStrictConfig({})
-                    expect(config.metrics.periods).toEqual(STREAM_CLIENT_DEFAULTS.metrics.periods)
-                    expect(config.metrics.maxPublishDelay).toEqual(STREAM_CLIENT_DEFAULTS.metrics.maxPublishDelay)
-                })
-            })
-            it('periods overrided', () => {
-                const config = createStrictConfig({
-                    metrics: {
-                        periods: [{ duration: 10, streamId: 'foo' }]
-                    }
-                })
-                expect(config.metrics.periods).toEqual([{ duration: 10, streamId: 'foo' }])
-                expect(config.metrics.maxPublishDelay).toEqual(STREAM_CLIENT_DEFAULTS.metrics.maxPublishDelay)
-            })
-            it('maxPublishDelay overrided', () => {
-                const config = createStrictConfig({
-                    metrics: {
-                        maxPublishDelay: 123
-                    }
-                })
-                expect(config.metrics.periods).toEqual(STREAM_CLIENT_DEFAULTS.metrics.periods)
-                expect(config.metrics.maxPublishDelay).toEqual(123)
-            })
-            it('enabled', () => {
-                const config = createStrictConfig({
-                    metrics: true
-                })
-                expect(config.metrics.periods).toEqual(STREAM_CLIENT_DEFAULTS.metrics.periods)
-                expect(config.metrics.maxPublishDelay).toEqual(STREAM_CLIENT_DEFAULTS.metrics.maxPublishDelay)
-            })
-            it('disabled', () => {
-                const config = createStrictConfig({
-                    metrics: false
-                })
-                expect(config.metrics.periods).toEqual([])
-                expect(config.metrics.maxPublishDelay).toEqual(STREAM_CLIENT_DEFAULTS.metrics.maxPublishDelay)
-            })
         })
     })
 })

@@ -1,10 +1,9 @@
 import crypto from 'crypto'
-import { O } from 'ts-toolbelt'
 import { promisify } from 'util'
 
 const { webcrypto } = crypto
 
-function getSubtle(): any {
+function getSubtle(): SubtleCrypto {
     const subtle = typeof window !== 'undefined' ? window?.crypto?.subtle : webcrypto.subtle
     if (!subtle) {
         const url = 'https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto'
@@ -41,59 +40,31 @@ async function exportCryptoKey(key: CryptoKey, { isPrivate = false } = {}): Prom
     return `-----BEGIN ${TYPE} KEY-----\n${exportedAsBase64}\n-----END ${TYPE} KEY-----\n`
 }
 
-// after RSAKeyPair is ready
-type InitializedRSAKeyPair = O.Overwrite<RSAKeyPair, {
-    privateKey: string
-    publicKey: string
-}>
-
 export class RSAKeyPair {
-    /**
-     * Creates a new instance + waits for ready.
-     * Convenience.
-     */
-    static async create(): Promise<RSAKeyPair> {
-        const pair = new RSAKeyPair()
-        await pair.onReady()
-        return pair
+    // the keys are in PEM format
+    private readonly privateKey: string
+    private readonly publicKey: string
+
+    private constructor(privateKey: string, publicKey: string) {
+        this.privateKey = privateKey
+        this.publicKey = publicKey
     }
 
-    public privateKey: string | undefined
-    public publicKey: string | undefined
-    private _generateKeyPairPromise: Promise<void> | undefined
-
-    async onReady(): Promise<void> {
-        if (this.isReady()) { return undefined }
-        return this.generateKeyPair()
-    }
-
-    isReady(this: RSAKeyPair): this is InitializedRSAKeyPair {
-        return (this.privateKey !== undefined && this.publicKey !== undefined)
-    }
-
-    // Returns a String (base64 encoding)
     getPublicKey(): string {
-        if (!this.isReady()) { throw new Error('RSAKeyPair not ready.') }
         return this.publicKey
     }
 
-    // Returns a String (base64 encoding)
     getPrivateKey(): string {
-        if (!this.isReady()) { throw new Error('RSAKeyPair not ready.') }
         return this.privateKey
     }
 
-    /* eslint-disable no-underscore-dangle */
-    private async generateKeyPair(): Promise<void> {
-        if (!this._generateKeyPairPromise) {
-            this._generateKeyPairPromise = (typeof window !== 'undefined')
-                ? this.keyPairBrowser()
-                : this.keyPairServer()
-        }
-        return this._generateKeyPairPromise
+    static async create(): Promise<RSAKeyPair> {
+        return (typeof window !== 'undefined')
+            ? RSAKeyPair.create_browserEnvironment()
+            : RSAKeyPair.create_serverEnvironment()
     }
 
-    private async keyPairServer(): Promise<void> {
+    private static async create_serverEnvironment(): Promise<RSAKeyPair> {
         // promisify here to work around browser/server packaging
         const generateKeyPair = promisify(crypto.generateKeyPair)
         const { publicKey, privateKey } = await generateKeyPair('rsa', {
@@ -108,21 +79,16 @@ export class RSAKeyPair {
             },
         })
 
-        this.privateKey = privateKey
-        this.publicKey = publicKey
+        return new RSAKeyPair(privateKey, publicKey)
     }
 
-    private async keyPairBrowser(): Promise<void> {
+    private static async create_browserEnvironment(): Promise<RSAKeyPair> {
         const { publicKey, privateKey } = await getSubtle().generateKey({
             name: 'RSA-OAEP',
             modulusLength: 4096,
             publicExponent: new Uint8Array([1, 0, 1]), // 65537
             hash: 'SHA-256'
         }, true, ['encrypt', 'decrypt'])
-        if (!(publicKey && privateKey)) {
-            // TS says this is possible.
-            throw new Error('could not generate keys')
-        }
 
         const [exportedPrivate, exportedPublic] = await Promise.all([
             exportCryptoKey(privateKey, {
@@ -132,7 +98,6 @@ export class RSAKeyPair {
                 isPrivate: false,
             })
         ])
-        this.privateKey = exportedPrivate
-        this.publicKey = exportedPublic
+        return new RSAKeyPair(exportedPrivate, exportedPublic)
     }
 }

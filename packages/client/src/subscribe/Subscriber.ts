@@ -27,7 +27,7 @@ export class Subscriber {
     private readonly node: NetworkNodeFacade
     private readonly streamrClientEventEmitter: StreamrClientEventEmitter
     private readonly destroySignal: DestroySignal
-    private readonly rootConfig: StrictStreamrClientConfig
+    private readonly config: StrictStreamrClientConfig
     private readonly loggerFactory: LoggerFactory
     private readonly logger: Logger
 
@@ -40,7 +40,7 @@ export class Subscriber {
         node: NetworkNodeFacade,
         streamrClientEventEmitter: StreamrClientEventEmitter,
         destroySignal: DestroySignal,
-        @inject(ConfigInjectionToken) rootConfig: StrictStreamrClientConfig,
+        @inject(ConfigInjectionToken) config: StrictStreamrClientConfig,
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
     ) {
         this.streamIdBuilder = streamIdBuilder
@@ -51,7 +51,7 @@ export class Subscriber {
         this.node = node
         this.streamrClientEventEmitter = streamrClientEventEmitter
         this.destroySignal = destroySignal
-        this.rootConfig = rootConfig
+        this.config = config
         this.loggerFactory = loggerFactory
         this.logger = loggerFactory.createLogger(module)
     }
@@ -70,7 +70,7 @@ export class Subscriber {
             this.streamrClientEventEmitter,
             this.destroySignal,
             this.loggerFactory,
-            this.rootConfig
+            this.config
         )
 
         this.subSessions.set(streamPartId, subSession as SubscriptionSession<unknown>)

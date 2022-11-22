@@ -73,7 +73,6 @@ export interface StrictStreamrClientConfig {
         streamRegistryChainAddress: string
         streamStorageRegistryChainAddress: string
         storageNodeRegistryChainAddress: string
-        ensCacheChainAddress: string
         mainChainRPCs?: ChainConnectionInfo
         streamRegistryChainRPCs: ChainConnectionInfo
         // most of the above should go into ethereumNetworks configs once ETH-184 is ready
@@ -88,17 +87,17 @@ export interface StrictStreamrClientConfig {
         maxKeyRequestsPerSecond: number
     }
 
-    cache: {
-        maxSize: number
-        maxAge: number
-    }
-
-    metrics: {
-        periods: {
+    metrics?: {
+        periods?: {
             streamId: string
             duration: number
         }[]
-        maxPublishDelay: number
+        maxPublishDelay?: number
+    } | boolean
+
+    cache: {
+        maxSize: number
+        maxAge: number
     }
 
     /** @internal */
@@ -119,26 +118,23 @@ export interface StrictStreamrClientConfig {
     }
 }
 
-export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'network' | 'contracts' | 'decryption' | 'metrics'> & {
+export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'network' | 'contracts' | 'decryption'> & {
     network: Partial<StrictStreamrClientConfig['network']>
     contracts: Partial<StrictStreamrClientConfig['contracts']>
     decryption: Partial<StrictStreamrClientConfig['decryption']>
-    metrics: Partial<StrictStreamrClientConfig['metrics']> | boolean
 }>
 
 export const STREAMR_STORAGE_NODE_GERMANY = '0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916'
 
-/**
- * @category Important
- */
+/** @deprecated */
 export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id' | 'auth'> = {
     logLevel: 'info',
 
     orderMessages: true,
-    retryResendAfter: 5000,
-    gapFillTimeout: 5000,
     gapFill: true,
     maxGapRequests: 5,
+    retryResendAfter: 5000,
+    gapFillTimeout: 5000,
     
     network: {
         trackers: {
@@ -152,7 +148,6 @@ export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id' | 'aut
         streamRegistryChainAddress: '0x0D483E10612F327FC11965Fc82E90dC19b141641',
         streamStorageRegistryChainAddress: '0xe8e2660CeDf2a59C917a5ED05B72df4146b58399',
         storageNodeRegistryChainAddress: '0x080F34fec2bc33928999Ea9e39ADc798bEF3E0d6',
-        ensCacheChainAddress: '0x870528c1aDe8f5eB4676AA2d15FC0B034E276A1A',
         mainChainRPCs: undefined, // Default to ethers.js default provider settings
         streamRegistryChainRPCs: {
             name: 'polygon',
@@ -162,9 +157,6 @@ export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id' | 'aut
                 timeout: 120 * 1000
             }, {
                 url: 'https://poly-rpc.gateway.pokt.network/',
-                timeout: 120 * 1000
-            }, {
-                url: 'https://rpc-mainnet.matic.network',
                 timeout: 120 * 1000
             }]
         },
@@ -182,10 +174,12 @@ export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id' | 'aut
         keyRequestTimeout: 30 * 1000,
         maxKeyRequestsPerSecond: 20
     },
+
     cache: {
         maxSize: 10000,
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
     },
+
     _timeouts: {
         theGraph: {
             timeout: 60 * 1000,
@@ -200,23 +194,6 @@ export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id' | 'aut
             retryInterval: 1000
         },
         httpFetchTimeout: 30 * 1000
-    },
-    metrics: {
-        periods: [
-            {
-                duration: 60000,
-                streamId: 'streamr.eth/metrics/nodes/firehose/min'
-            },
-            {
-                duration: 3600000,
-                streamId: 'streamr.eth/metrics/nodes/firehose/hour'
-            },
-            {
-                duration: 86400000,
-                streamId: 'streamr.eth/metrics/nodes/firehose/day'
-            }
-        ],
-        maxPublishDelay: 30000
     }
 }
 
@@ -224,28 +201,6 @@ export const createStrictConfig = (inputOptions: StreamrClientConfig = {}): Stri
     validateConfig(inputOptions)
     const opts = cloneDeep(inputOptions)
     const defaults = cloneDeep(STREAM_CLIENT_DEFAULTS)
-
-    const getMetricsConfig = () => {
-        if (opts.metrics === true) {
-            return defaults.metrics
-        } else if (opts.metrics === false) {
-            return {
-                ...defaults.metrics,
-                periods: []
-            }
-        } else if (opts.metrics !== undefined) {
-            return {
-                ...defaults.metrics,
-                ...opts.metrics
-            }
-        } else {
-            const isEthereumAuth = ((opts.auth as ProviderAuthConfig)?.ethereum !== undefined)
-            return {
-                ...defaults.metrics,
-                periods: isEthereumAuth ? [] : defaults.metrics.periods
-            }
-        }
-    }
 
     const options: StrictStreamrClientConfig = {
         id: generateClientId(),
@@ -257,19 +212,11 @@ export const createStrictConfig = (inputOptions: StreamrClientConfig = {}): Stri
         },
         contracts: { ...defaults.contracts, ...opts.contracts },
         decryption: merge(defaults.decryption || {}, opts.decryption),
-        metrics: getMetricsConfig(),
         cache: {
             ...defaults.cache,
             ...opts.cache,
         }
         // NOTE: sidechain and storageNode settings are not merged with the defaults
-    }
-
-    const privateKey = (options.auth as PrivateKeyAuthConfig)?.privateKey
-    if (privateKey !== undefined) {
-        if (typeof privateKey === 'string' && !privateKey.startsWith('0x')) {
-            (options.auth as PrivateKeyAuthConfig).privateKey = `0x${privateKey}`
-        }
     }
 
     if (options.network.iceServers === undefined) {

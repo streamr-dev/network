@@ -1,6 +1,6 @@
 {
   "name": "streamr-broker",
-  "version": "32.0.0-beta.1",
+  "version": "32.0.0-beta.3",
   "description": "A full-featured broker node implementation for the Streamr Network.",
   "repository": {
     "type": "git",
@@ -10,7 +10,6 @@
   "bin": {
     "streamr-broker": "bin/broker.js",
     "streamr-broker-init": "bin/config-wizard.js",
-    "tracker": "bin/tracker.js",
     "delete-expired-data": "bin/delete-expired-data.js"
   },
   "main": "./dist/src/exports.js",
@@ -30,10 +29,10 @@
   "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
   "dependencies": {
     "@ethersproject/hdnode": "^5.4.0",
-    "@streamr/network-tracker": "7.0.0",
-    "@streamr/protocol": "7.0.0",
+    "@streamr/network-tracker": "7.0.2",
+    "@streamr/protocol": "7.0.2",
     "@streamr/slackbot": "^1.1.0",
-    "@streamr/utils": "7.0.0",
+    "@streamr/utils": "7.0.2",
     "aedes": "^0.47.0",
     "ajv": "^8.8.2",
     "ajv-formats": "^2.1.1",
@@ -52,12 +51,12 @@
     "p-limit": "^3.1.0",
     "pino-pretty": "^5.0.2",
     "qs": "^6.10.1",
-    "streamr-client": "7.0.0",
+    "streamr-client": "7.0.2",
     "uuid": "^8.3.2",
     "ws": "^7.5.0"
   },
   "devDependencies": {
-    "@streamr/test-utils": "7.0.0",
+    "@streamr/test-utils": "7.0.2",
     "@types/cors": "^2.8.12",
     "@types/express": "^4.17.13",
     "@types/heap": "^0.2.28",

@@ -1,7 +1,7 @@
 import { Wallet } from 'ethers'
 
 import { createRelativeTestStreamId } from '../test-utils/utils'
-import { ConfigTest } from '../../src/ConfigTest'
+import { CONFIG_TEST } from '../../src/ConfigTest'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
@@ -20,7 +20,7 @@ describe('Stream permissions', () => {
         const wallet = new Wallet(await fetchPrivateKeyWithGas())
         otherUser = fastWallet()
         client = new StreamrClient({
-            ...ConfigTest,
+            ...CONFIG_TEST,
             auth: {
                 privateKey: wallet.privateKey,
             }
@@ -212,7 +212,7 @@ describe('Stream permissions', () => {
 
     it('granting publish permission enables publishing (invalidates isStreamPublisher cache)', async () => {
         const otherUserClient = new StreamrClient({
-            ...ConfigTest,
+            ...CONFIG_TEST,
             auth: {
                 privateKey: otherUser.privateKey,
             }

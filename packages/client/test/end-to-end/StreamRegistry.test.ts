@@ -4,7 +4,7 @@ import { until } from '../../src/utils/promises'
 import { NotFoundError } from '../../src/HttpUtil'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
-import { ConfigTest } from '../../src/ConfigTest'
+import { CONFIG_TEST } from '../../src/ConfigTest'
 import { toStreamID } from '@streamr/protocol'
 import { collect } from '../../src/utils/iterators'
 import { fetchPrivateKeyWithGas, randomEthereumAddress } from '@streamr/test-utils'
@@ -15,7 +15,7 @@ const PARTITION_COUNT = 3
 
 const TIMEOUT_CONFIG = {
     // eslint-disable-next-line no-underscore-dangle
-    ...ConfigTest._timeouts!,
+    ...CONFIG_TEST._timeouts!,
     jsonRpc: {
         timeout: 5000,
         retryInterval: 200
@@ -36,7 +36,7 @@ describe('StreamRegistry', () => {
         wallet = new Wallet(await fetchPrivateKeyWithGas())
         publicAddress = toEthereumAddress(wallet.address)
         client = new StreamrClient({
-            ...ConfigTest,
+            ...CONFIG_TEST,
             auth: {
                 privateKey: wallet.privateKey,
             },
@@ -88,7 +88,7 @@ describe('StreamRegistry', () => {
             it('domain owned by user', async () => {
                 const streamId = 'testdomain1.eth/foobar/' + Date.now()
                 const ensOwnerClient = new StreamrClient({
-                    ...ConfigTest,
+                    ...CONFIG_TEST,
                     auth: {
                         // In dev environment the testdomain1.eth is owned by 0x4178baBE9E5148c6D5fd431cD72884B07Ad855a0.
                         // The ownership is preloaded by docker-dev-chain-init (https://github.com/streamr-dev/network-contracts)
