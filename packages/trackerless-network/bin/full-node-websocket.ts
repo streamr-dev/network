@@ -44,7 +44,7 @@ async function run(): Promise<void> {
     await layer0.joinDht(epPeerDescriptor)
 
     const connectionManager = layer0.getTransport() as ConnectionManager
-    const streamrNode = new StreamrNode()
+    const streamrNode = new StreamrNode({})
     await streamrNode.start(layer0, connectionManager, connectionManager)
 
     streamrNode.subscribeToStream(streamPartId, epPeerDescriptor)

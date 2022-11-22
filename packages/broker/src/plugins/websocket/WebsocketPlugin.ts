@@ -3,12 +3,14 @@ import { getPayloadFormat } from '../../helpers/PayloadFormat'
 import { WebsocketServer } from './WebsocketServer'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { Schema } from 'ajv'
-import { SslCertificateConfig } from '../../config/config'
 
 export interface WebsocketPluginConfig {
     port: number
     payloadMetadata: boolean
-    sslCertificate?: SslCertificateConfig
+    sslCertificate?: {
+        privateKeyFileName: string
+        certFileName: string
+    }
 }
 
 export class WebsocketPlugin extends Plugin<WebsocketPluginConfig> {

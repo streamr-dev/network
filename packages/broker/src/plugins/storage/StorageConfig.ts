@@ -39,6 +39,7 @@ export class StorageConfig {
     private readonly myIndexInCluster: number
     private readonly storagePoller: StoragePoller
     private readonly storageEventListener: StorageEventListener
+    private readonly abortController: AbortController
 
     constructor(
         clusterId: EthereumAddress,
@@ -61,17 +62,18 @@ export class StorageConfig {
             const streamParts = this.createMyStreamParts(stream)
             this.handleDiff(this.synchronizer.ingestPatch(streamParts, type, block))
         })
+        this.abortController = new AbortController()
     }
 
     async start(): Promise<void> {
         await Promise.all([
-            this.storagePoller.start(),
+            this.storagePoller.start(this.abortController.signal),
             this.storageEventListener.start()
         ])
     }
 
     async destroy(): Promise<void> {
-        this.storagePoller.destroy()
+        this.abortController.abort()
         await this.storageEventListener.destroy()
     }
 

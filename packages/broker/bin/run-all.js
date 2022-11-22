@@ -100,11 +100,14 @@ const forkProcess = (processName, filePath, args, color) => {
     })
 }
 
+// TODO better way to access the tracker.js?
+const trackerBin = '../../network-tracker/bin/tracker.js'
 /* eslint-disable max-len */
-forkProcess('T1', './tracker.js', ['0xe5abc5ee43b8830e7b0f98d03efff5d6cae574d52a43204528eab7b52cd6408d', 'T1', '--port=30301'], chalk.hex('#66CC66')) // 0xb9e7cEBF7b03AE26458E32a059488386b05798e8
-forkProcess('T2', './tracker.js', ['0x96de9d06f9e409119a2cd9b57dfc326f66d953a0418f3937b92c8930f930893c', 'T2', '--port=30302'], chalk.hex('#00FF66')) // 0x0540A3e144cdD81F402e7772C76a5808B71d2d30
-forkProcess('T3', './tracker.js', ['0x6117b7a7cb8f3c8d40e3b7e87823c11af7f401515bc4fdf2bfdda70f1b833027', 'T3', '--port=30303'], chalk.hex('#66FFAA')) // 0xf2C195bE194a2C91e93Eacb1d6d55a00552a85E2
+forkProcess('T1', trackerBin, ['0xe5abc5ee43b8830e7b0f98d03efff5d6cae574d52a43204528eab7b52cd6408d', 'T1', '--port=30301'], chalk.hex('#66CC66')) // 0xb9e7cEBF7b03AE26458E32a059488386b05798e8
+forkProcess('T2', trackerBin, ['0x96de9d06f9e409119a2cd9b57dfc326f66d953a0418f3937b92c8930f930893c', 'T2', '--port=30302'], chalk.hex('#00FF66')) // 0x0540A3e144cdD81F402e7772C76a5808B71d2d30
+forkProcess('T3', trackerBin, ['0x6117b7a7cb8f3c8d40e3b7e87823c11af7f401515bc4fdf2bfdda70f1b833027', 'T3', '--port=30303'], chalk.hex('#66FFAA')) // 0xf2C195bE194a2C91e93Eacb1d6d55a00552a85E2
 
-forkProcess('S1', './broker.js', ['../configs/development-1.env.json'], chalk.hex('#8888FF')) // 0xde1112f631486CfC759A50196853011528bC5FA0
-forkProcess('B1', './broker.js', ['../configs/development-2.env.json'], chalk.hex('#0088FF')) // 0xde222E8603FCf641F928E5F66a0CBf4de70d5352
-forkProcess('B2', './broker.js', ['../configs/development-3.env.json'], chalk.hex('#88CCFF')) // 0xde3331cA6B8B636E0b82Bf08E941F727B8927442
+const brokerBin = './broker.js' 
+forkProcess('S1', brokerBin, ['../configs/development-1.env.json'], chalk.hex('#8888FF')) // 0xde1112f631486CfC759A50196853011528bC5FA0
+forkProcess('B1', brokerBin, ['../configs/development-2.env.json'], chalk.hex('#0088FF')) // 0xde222E8603FCf641F928E5F66a0CBf4de70d5352
+forkProcess('B2', brokerBin, ['../configs/development-3.env.json'], chalk.hex('#88CCFF')) // 0xde3331cA6B8B636E0b82Bf08E941F727B8927442
