@@ -67,7 +67,7 @@ export class Resends {
     private readonly subscriberKeyExchange: SubscriberKeyExchange
     private readonly streamrClientEventEmitter: StreamrClientEventEmitter
     private readonly destroySignal: DestroySignal
-    private readonly rootConfig: StrictStreamrClientConfig
+    private readonly config: StrictStreamrClientConfig
     private readonly loggerFactory: LoggerFactory
     private readonly logger: Logger
 
@@ -80,14 +80,14 @@ export class Resends {
         subscriberKeyExchange: SubscriberKeyExchange,
         streamrClientEventEmitter: StreamrClientEventEmitter,
         destroySignal: DestroySignal,
-        @inject(ConfigInjectionToken) rootConfig: StrictStreamrClientConfig,
+        @inject(ConfigInjectionToken) config: StrictStreamrClientConfig,
         @inject(LoggerFactory) loggerFactory: LoggerFactory
     ) {
         this.groupKeyStore = groupKeyStore
         this.subscriberKeyExchange = subscriberKeyExchange
         this.streamrClientEventEmitter = streamrClientEventEmitter
         this.destroySignal = destroySignal
-        this.rootConfig = rootConfig
+        this.config = config
         this.loggerFactory = loggerFactory
         this.logger = loggerFactory.createLogger(module)
     }
@@ -148,7 +148,7 @@ export class Resends {
             streamRegistryCached: this.streamRegistryCached,
             streamrClientEventEmitter: this.streamrClientEventEmitter,
             destroySignal: this.destroySignal,
-            config: this.rootConfig,
+            config: this.config,
             loggerFactory: this.loggerFactory
         })
 
@@ -214,9 +214,9 @@ export class Resends {
 
     async waitForStorage(message: Message, {
         // eslint-disable-next-line no-underscore-dangle
-        interval = this.rootConfig._timeouts.storageNode.retryInterval,
+        interval = this.config._timeouts.storageNode.retryInterval,
         // eslint-disable-next-line no-underscore-dangle
-        timeout = this.rootConfig._timeouts.storageNode.timeout,
+        timeout = this.config._timeouts.storageNode.timeout,
         count = 100,
         messageMatchFn = (msgTarget: Message, msgGot: Message) => {
             return msgTarget.signature === msgGot.signature
