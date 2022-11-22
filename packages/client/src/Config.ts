@@ -45,9 +45,6 @@ export interface EthereumNetworkConfig {
     gasPriceStrategy?: (estimatedGasPrice: BigNumber) => BigNumber
 }
 
-/**
- * @category Important
- */
 export interface StrictStreamrClientConfig {
     /** Custom human-readable debug id for client. Used in logging. */
     id: string
@@ -118,6 +115,9 @@ export interface StrictStreamrClientConfig {
     }
 }
 
+/**
+ * @category Important
+ */
 export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'network' | 'contracts' | 'decryption'> & {
     network: Partial<StrictStreamrClientConfig['network']>
     contracts: Partial<StrictStreamrClientConfig['contracts']>

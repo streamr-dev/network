@@ -9,5 +9,6 @@ module.exports = {
     excludeProtected: true,
     excludeInternal: true,
     includeVersion: true,
-    disableSources: true
+    disableSources: true,
+    categorizeByGroup: false
 }
