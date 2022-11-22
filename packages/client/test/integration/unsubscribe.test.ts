@@ -74,10 +74,9 @@ describe('unsubscribe', () => {
             streamId: stream.id
         })
 
-        let published: Message
         setImmediate(async () => {
             const publisher = environment.createClient()
-            published = await publisher.publish(stream.id, {})
+            await publisher.publish(stream.id, {})
             await publisher.destroy()
         })
 
@@ -90,7 +89,6 @@ describe('unsubscribe', () => {
         }
 
         expect(received).toHaveLength(1)
-        expect(received[0].signature).toEqual(published!.signature)
         expect(await client.getSubscriptions(stream.id)).toHaveLength(0)
     })
 
@@ -133,7 +131,6 @@ describe('unsubscribe', () => {
         }
 
         expect(received).toHaveLength(1)
-        expect(received[0].signature).toEqual(historicalMessages[0]!.signature)
         expect(await client.getSubscriptions(stream.id)).toHaveLength(0)
     })
 })
