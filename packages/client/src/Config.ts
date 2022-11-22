@@ -158,9 +158,6 @@ export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id' | 'aut
             }, {
                 url: 'https://poly-rpc.gateway.pokt.network/',
                 timeout: 120 * 1000
-            }, {
-                url: 'https://rpc-mainnet.matic.network',
-                timeout: 120 * 1000
             }]
         },
         ethereumNetworks: {
