@@ -30,7 +30,11 @@ export const createPrivateKeyAuthentication = (key: string, config: Pick<StrictS
 
 export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'auth' | 'contracts'>): Authentication => {
     if ((config.auth as PrivateKeyAuthConfig)?.privateKey !== undefined) {
-        return createPrivateKeyAuthentication((config.auth as PrivateKeyAuthConfig).privateKey, config)
+        const privateKey = (config.auth as PrivateKeyAuthConfig).privateKey
+        const normalizedPrivateKey = !privateKey.startsWith('0x')
+            ? `0x${privateKey}`
+            : privateKey
+        return createPrivateKeyAuthentication(normalizedPrivateKey, config)
     } else if ((config.auth as ProviderAuthConfig)?.ethereum !== undefined) {
         const ethereum = (config.auth as ProviderAuthConfig)?.ethereum
         const metamaskProvider = new Web3Provider(ethereum)
@@ -55,7 +59,7 @@ export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'au
                 return sig
             }, 1),
             getStreamRegistryChainSigner: async () => {
-                if (!config.contracts.streamRegistryChainRPCs || config.contracts.streamRegistryChainRPCs.chainId === undefined) {
+                if (config.contracts.streamRegistryChainRPCs.chainId === undefined) {
                     throw new Error('Streamr streamRegistryChainRPC not configured (with chainId) in the StreamrClient options!')
                 }
                 const { chainId } = await metamaskProvider.getNetwork()

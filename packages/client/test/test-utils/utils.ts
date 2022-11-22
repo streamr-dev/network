@@ -18,6 +18,7 @@ import { Authentication, createPrivateKeyAuthentication } from '../../src/Authen
 import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
 import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
 import { LoggerFactory } from '../../src/utils/LoggerFactory'
+import { waitForCondition } from '@streamr/utils'
 
 const logger = new Logger(module)
 
@@ -171,4 +172,10 @@ export const createGroupKeyQueue = async (current?: GroupKey, next?: GroupKey): 
         await queue.rotate(next)
     }
     return queue
+}
+
+export const waitForCalls = async (mockFunction: jest.Mock<any>, n: number): Promise<void> => {
+    await waitForCondition(() => mockFunction.mock.calls.length >= n, 1000, 10, undefined, () => {
+        return `Timeout while waiting for calls: got ${mockFunction.mock.calls.length} out of ${n}`
+    })
 }
