@@ -59,7 +59,7 @@ export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'au
                 return sig
             }, 1),
             getStreamRegistryChainSigner: async () => {
-                if (!config.contracts.streamRegistryChainRPCs || config.contracts.streamRegistryChainRPCs.chainId === undefined) {
+                if (config.contracts.streamRegistryChainRPCs.chainId === undefined) {
                     throw new Error('Streamr streamRegistryChainRPC not configured (with chainId) in the StreamrClient options!')
                 }
                 const { chainId } = await metamaskProvider.getNetwork()
