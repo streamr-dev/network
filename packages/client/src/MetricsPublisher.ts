@@ -15,7 +15,6 @@ export class MetricsPublisher {
     private eventEmitter: StreamrClientEventEmitter
     private destroySignal: DestroySignal
     private config: Pick<StrictStreamrClientConfig, 'metrics'>
-    private producers: { stop: () => void }[] = []
 
     constructor(
         @inject(Publisher) publisher: Publisher,
@@ -33,16 +32,15 @@ export class MetricsPublisher {
             const node = await this.node.getNode()
             const metricsContext = node.getMetricsContext()
             const partitionKey = getEthereumAddressFromNodeId(node.getNodeId()).toLowerCase()
-            this.producers = this.config.metrics.periods.map((config) => {
+            this.config.metrics.periods.map((config) => {
                 return metricsContext.createReportProducer(async (report: MetricsReport) => {
                     await this.publish(report, config.streamId, partitionKey)
-                }, config.duration)
+                }, config.duration, this.destroySignal.abortSignal)
             })
         })
         if (this.config.metrics.periods.length > 0) {
             this.eventEmitter.on('publish', () => ensureStarted())
             this.eventEmitter.on('subscribe', () => ensureStarted())
-            this.destroySignal.onDestroy.listen(() => this.destroy())
         }
     }
 
@@ -56,9 +54,5 @@ export class MetricsPublisher {
         } catch (e: any) {
             console.warn(`Unable to publish metrics: ${e.message}`)
         }
-    }
-
-    private destroy(): void {
-        this.producers.forEach((producer) => producer.stop())
     }
 }

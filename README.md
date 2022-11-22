@@ -140,16 +140,17 @@ All the above packages should be released at the same time.
 4. `npm run clean && npm install && npm run build && npm run versions`
 5. Look at the output of the above and ensure all versions are linked properly (i.e. no yellow or red markers)
 6. Update client and cli-tool CHANGELOG.md
-7. Add relevant files to git staging
-8. `git commit -m "release(client, cli-tools): vX.Y.Z"`
-9. `git tag client/vX.Y.Z`
-10. `git tag cli-tools/vX.Y.Z`
-11. Push to main `git push origin`
-12. Push to tag `git push origin client/vX.Y.Z`
-13. Push to tag `git push origin cli-tools/vX.Y.Z`
-14. At this point we are to do the actual release
-15. Clean and rebuild project with `npm run clean && npm run bootstrap`
-16. Then we do actual publishing of packages:
+7. If releasing a major / minor version, update API docs link in *packages/client/README.md*.
+8. Add relevant files to git staging
+9. `git commit -m "release(client, cli-tools): vX.Y.Z"`
+10. `git tag client/vX.Y.Z`
+11. `git tag cli-tools/vX.Y.Z`
+12. Push to main `git push origin`
+13. Push to tag `git push origin client/vX.Y.Z`
+14. Push to tag `git push origin cli-tools/vX.Y.Z`
+15. At this point we are to do the actual release
+16. Clean and rebuild project with `npm run clean && npm run bootstrap`
+17. Then we do actual publishing of packages:
 
 ```bash
 cd packages/utils
@@ -187,7 +188,6 @@ npm publish
 cd ..
 npm run docs
 aws s3 cp ./docs s3://api-docs.streamr.network/client/vX.Y --recursive --profile streamr-api-docs-upload
-# and update the API reference link in s3://api-docs.streamr.network/index.html
 
 cd ../..
 

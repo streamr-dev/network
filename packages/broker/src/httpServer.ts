@@ -5,7 +5,7 @@ import cors from 'cors'
 import express, { Request, Response } from 'express'
 import { Logger } from '@streamr/utils'
 import { once } from 'events'
-import { HttpServerConfig } from './config/config'
+import { Config } from './config/config'
 import { ApiAuthenticator } from './apiAuthenticator'
 
 const logger = new Logger(module)
@@ -36,7 +36,7 @@ const createAuthenticatorMiddleware = (apiAuthenticator: ApiAuthenticator) => {
 
 export const startServer = async (
     routers: express.Router[],
-    config: HttpServerConfig,
+    config: NonNullable<Config['httpServer']>,
     apiAuthenticator: ApiAuthenticator
 ): Promise<HttpServer | https.Server> => {
     const app = express()
