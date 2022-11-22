@@ -8,7 +8,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils/utils'
 import { Stream, StreamMetadata } from '../../src/Stream'
 import { ConfigTest } from '../../src/ConfigTest'
-import { STREAM_CLIENT_DEFAULTS, StreamrClientConfig } from '../../src/Config'
+import { StreamrClientConfig } from '../../src/Config'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { addAfterFn } from './jest-utils'
 import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
@@ -24,7 +24,7 @@ const logger = new Logger(module)
 export function mockLoggerFactory(clientId?: string): LoggerFactory {
     return new LoggerFactory({
         id: clientId ?? counterId('TestCtx'),
-        logLevel: STREAM_CLIENT_DEFAULTS.logLevel
+        logLevel: 'info'
     })
 }
 
