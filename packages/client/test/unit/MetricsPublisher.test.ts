@@ -38,6 +38,7 @@ describe('MetricsPublisher', () => {
             config
         )
 
+        // trigger publisher to start
         eventEmitter.emit('subscribe', undefined)
     }
 
