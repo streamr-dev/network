@@ -1,6 +1,9 @@
 import { EthereumAddress } from '@streamr/utils'
 import { StreamID, StreamMessage } from '@streamr/protocol'
 
+/**
+ * @category Important
+ */
 export interface Message {
     content: unknown
     streamId: StreamID
