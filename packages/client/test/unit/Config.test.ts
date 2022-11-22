@@ -1,6 +1,6 @@
 import { TrackerRegistryRecord } from '@streamr/protocol'
 import { createStrictConfig, STREAM_CLIENT_DEFAULTS } from '../../src/Config'
-import { ConfigTest } from '../../src/ConfigTest'
+import { CONFIG_TEST } from '../../src/ConfigTest'
 import { generateEthereumAccount } from '../../src/Ethereum'
 import { STREAMR_ICE_SERVERS } from '@streamr/network-node'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -107,9 +107,9 @@ describe('Config', () => {
 
         it('can override network.trackers arrays', () => {
             const clientDefaults = createStrictConfig()
-            const clientOverrides = createStrictConfig(ConfigTest)
+            const clientOverrides = createStrictConfig(CONFIG_TEST)
             expect(clientOverrides.network.trackers).not.toEqual(clientDefaults.network.trackers)
-            expect(clientOverrides.network.trackers).toEqual(ConfigTest.network!.trackers)
+            expect(clientOverrides.network.trackers).toEqual(CONFIG_TEST.network!.trackers)
         })
 
         it('network can be empty', () => {
