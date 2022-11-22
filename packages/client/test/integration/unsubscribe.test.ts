@@ -69,7 +69,7 @@ describe('unsubscribe', () => {
         expect(await client.getSubscriptions()).toHaveLength(0)
     })
 
-    it('asynchronously', async () => {
+    it('can unsubscribe inside async iteration', async () => {
         const sub = await client.subscribe({
             streamId: stream.id
         })
