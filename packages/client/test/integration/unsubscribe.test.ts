@@ -38,6 +38,15 @@ describe('unsubscribe', () => {
         await client?.destroy()
     })
 
+    it('Subscription#unsubscribe', async () => {
+        const sub = await client.subscribe(stream.id, () => {})
+        expect(await client.getSubscriptions()).toHaveLength(1)
+
+        await sub.unsubscribe()
+
+        expect(await client.getSubscriptions()).toHaveLength(0)
+    })
+
     it('StreamrClient#unsubscribe', async () => {
         const sub = await client.subscribe(stream.id, () => {})
         jest.spyOn(sub, 'unsubscribe')
@@ -47,15 +56,6 @@ describe('unsubscribe', () => {
 
         expect(await client.getSubscriptions()).toHaveLength(0)
         expect(sub.unsubscribe).toBeCalled()
-    })
-
-    it('Subscription#unsubscribe', async () => {
-        const sub = await client.subscribe(stream.id, () => {})
-        expect(await client.getSubscriptions()).toHaveLength(1)
-
-        await sub.unsubscribe()
-
-        expect(await client.getSubscriptions()).toHaveLength(0)
     })
 
     it('twice', async () => {
