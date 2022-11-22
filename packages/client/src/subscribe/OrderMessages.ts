@@ -43,8 +43,8 @@ export class OrderMessages<T> {
         this.onOrdered = this.onOrdered.bind(this)
         this.onGap = this.onGap.bind(this)
         this.maybeClose = this.maybeClose.bind(this)
-        const { gapFillTimeout, retryResendAfter, maxGapRequests, orderMessages = true, gapFill = true } = this.config
-        this.enabled = !!(gapFill && maxGapRequests)
+        const { gapFillTimeout, retryResendAfter, maxGapRequests, orderMessages, gapFill } = this.config
+        this.enabled = gapFill && (maxGapRequests > 0)
         this.orderMessages = orderMessages
         this.orderingUtil = new OrderingUtil(
             this.onOrdered,
