@@ -2,7 +2,7 @@ import { Wallet } from 'ethers'
 import { StreamID, toStreamPartID } from '@streamr/protocol'
 import { createNetworkNode } from '@streamr/network-node'
 import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { ConfigTest } from '../../src/ConfigTest'
+import { CONFIG_TEST } from '../../src/ConfigTest'
 import { PermissionAssignment, StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -18,7 +18,7 @@ const ENCRYPTED_MESSSAGE_FORMAT = /^[0-9A-Fa-f]+$/
 async function startNetworkNodeAndListenForAtLeastOneMessage(streamId: StreamID): Promise<unknown[]> {
     const networkNode = await createNetworkNode({
         // TODO better typing for ConfigTest.network.trackers?
-        ...ConfigTest.network as any,
+        ...CONFIG_TEST.network as any,
         id: 'networkNode',
     })
     try {
@@ -39,7 +39,7 @@ async function createStreamWithPermissions(
     ...assignments: PermissionAssignment[]
 ): Promise<Stream> {
     const creatorClient = new StreamrClient({
-        ...ConfigTest,
+        ...CONFIG_TEST,
         auth: {
             privateKey
         }
@@ -66,13 +66,13 @@ describe('publish-subscribe', () => {
 
     beforeEach(async () => {
         publisherClient = new StreamrClient({
-            ...ConfigTest,
+            ...CONFIG_TEST,
             auth: {
                 privateKey: publisherPk
             }
         })
         subscriberClient = new StreamrClient({
-            ...ConfigTest,
+            ...CONFIG_TEST,
             auth: {
                 privateKey: subscriberWallet.privateKey
             }

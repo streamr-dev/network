@@ -9,7 +9,7 @@ import { container as rootContainer, DependencyContainer } from 'tsyringe'
 import { writeHeapSnapshot } from 'v8'
 import { Subscription } from '../../src/subscribe/Subscription'
 import { counterId, instanceId } from '../../src/utils/utils'
-import { ConfigTest } from '../../src/ConfigTest'
+import { CONFIG_TEST } from '../../src/ConfigTest'
 import { createStrictConfig, StrictStreamrClientConfig } from '../../src/Config'
 import { ethers } from 'ethers'
 import { NetworkNodeFacade } from '../../src/NetworkNodeFacade'
@@ -73,7 +73,7 @@ describe('MemoryLeaks', () => {
                 childContainer: DependencyContainer
             }> => {
                 const config = createStrictConfig({
-                    ...ConfigTest,
+                    ...CONFIG_TEST,
                     auth: {
                         privateKey: await fetchPrivateKeyWithGas(),
                     },
@@ -113,7 +113,7 @@ describe('MemoryLeaks', () => {
         beforeAll(() => {
             createClient = async (opts: any = {}) => {
                 const c = new StreamrClient({
-                    ...ConfigTest,
+                    ...CONFIG_TEST,
                     auth: {
                         privateKey: await fetchPrivateKeyWithGas(),
                     },

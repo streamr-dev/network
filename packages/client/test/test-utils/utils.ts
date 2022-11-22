@@ -7,7 +7,7 @@ import { StreamMessage, StreamPartID, StreamPartIDUtils, MAX_PARTITION_COUNT } f
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils/utils'
 import { Stream, StreamMetadata } from '../../src/Stream'
-import { ConfigTest } from '../../src/ConfigTest'
+import { CONFIG_TEST } from '../../src/ConfigTest'
 import { StreamrClientConfig } from '../../src/Config'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { addAfterFn } from './jest-utils'
@@ -64,7 +64,7 @@ export const getCreateClient = (
             key = await fetchPrivateKeyWithGas()
         }
         const client = new StreamrClient({
-            ...ConfigTest,
+            ...CONFIG_TEST,
             auth: {
                 privateKey: key,
             },
