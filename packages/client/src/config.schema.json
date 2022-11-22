@@ -37,63 +37,6 @@
                 }
             }
         },
-        "cache": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "maxSize": {
-                    "type": "number"
-                },
-                "maxAge": {
-                    "type": "number"
-                }
-            }
-        },
-        "_timeouts": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "theGraph": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "properties": {
-                        "timeout": {
-                            "type": "number"
-                        },
-                        "retryInterval": {
-                            "type": "number"
-                        }
-                    }
-                },
-                "storageNode": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "properties": {
-                        "timeout": {
-                            "type": "number"
-                        },
-                        "retryInterval": {
-                            "type": "number"
-                        }
-                    }
-                },
-                "jsonRpc": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "properties": {
-                        "timeout": {
-                            "type": "number"
-                        },
-                        "retryInterval": {
-                            "type": "number"
-                        }
-                    }
-                },
-                "httpFetchTimeout": {
-                    "type": "number"
-                }
-            }
-        },
         "orderMessages": {
             "type": "boolean"
         },
@@ -119,26 +62,8 @@
                 "id": {
                     "type": "string"
                 },
-                "location": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "properties": {
-                        "latitude": {
-                            "type": "number"
-                        },
-                        "longitude": {
-                            "type": "number"
-                        },
-                        "country": {
-                            "type": "string"
-                        },
-                        "city": {
-                            "type": "string"
-                        }
-                    }
-                },
-                "trackerPingInterval": {
-                    "type": "number"
+                "acceptProxyConnections": {
+                    "type": "boolean"
                 },
                 "trackers": {
                     "anyOf": [
@@ -183,11 +108,14 @@
                         }
                     ]
                 },
-                "disconnectionWaitTime": {
+                "trackerPingInterval": {
                     "type": "number"
                 },
-                "peerPingInterval": {
+                "trackerConnectionMaintenanceInterval": {
                     "type": "number"
+                },
+                "webrtcDisallowPrivateAddresses": {
+                    "type": "boolean"
                 },
                 "newWebrtcConnectionTimeout": {
                     "type": "number"
@@ -196,6 +124,15 @@
                     "type": "number"
                 },
                 "webrtcDatachannelBufferThresholdHigh": {
+                    "type": "number"
+                },
+                "disconnectionWaitTime": {
+                    "type": "number"
+                },
+                "peerPingInterval": {
+                    "type": "number"
+                },
+                "rttUpdateTimeout": {
                     "type": "number"
                 },
                 "iceServers": {
@@ -223,17 +160,23 @@
                         }
                     }
                 },
-                "rttUpdateTimeout": {
-                    "type": "number"
-                },
-                "trackerConnectionMaintenanceInterval": {
-                    "type": "number"
-                },
-                "webrtcDisallowPrivateAddresses": {
-                    "type": "boolean"
-                },
-                "acceptProxyConnections": {
-                    "type": "boolean"
+                "location": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "latitude": {
+                            "type": "number"
+                        },
+                        "longitude": {
+                            "type": "number"
+                        },
+                        "country": {
+                            "type": "string"
+                        },
+                        "city": {
+                            "type": "string"
+                        }
+                    }
                 }
             }
         },
@@ -329,6 +272,63 @@
                 }
             ],
             "default": true
+        },
+        "cache": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "maxSize": {
+                    "type": "number"
+                },
+                "maxAge": {
+                    "type": "number"
+                }
+            }
+        },
+        "_timeouts": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "theGraph": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "timeout": {
+                            "type": "number"
+                        },
+                        "retryInterval": {
+                            "type": "number"
+                        }
+                    }
+                },
+                "storageNode": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "timeout": {
+                            "type": "number"
+                        },
+                        "retryInterval": {
+                            "type": "number"
+                        }
+                    }
+                },
+                "jsonRpc": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "timeout": {
+                            "type": "number"
+                        },
+                        "retryInterval": {
+                            "type": "number"
+                        }
+                    }
+                },
+                "httpFetchTimeout": {
+                    "type": "number"
+                }
+            }
         }
     },
     "definitions": {

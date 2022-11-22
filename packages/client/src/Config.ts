@@ -88,11 +88,6 @@ export interface StrictStreamrClientConfig {
         maxKeyRequestsPerSecond: number
     }
 
-    cache: {
-        maxSize: number
-        maxAge: number
-    }
-
     metrics?: {
         periods?: {
             streamId: string
@@ -100,6 +95,11 @@ export interface StrictStreamrClientConfig {
         }[]
         maxPublishDelay?: number
     } | boolean
+
+    cache: {
+        maxSize: number
+        maxAge: number
+    }
 
     /** @internal */
     _timeouts: {
@@ -134,10 +134,10 @@ export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id' | 'aut
     logLevel: 'info',
 
     orderMessages: true,
-    retryResendAfter: 5000,
-    gapFillTimeout: 5000,
     gapFill: true,
     maxGapRequests: 5,
+    retryResendAfter: 5000,
+    gapFillTimeout: 5000,
     
     network: {
         trackers: {
@@ -181,10 +181,12 @@ export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id' | 'aut
         keyRequestTimeout: 30 * 1000,
         maxKeyRequestsPerSecond: 20
     },
+
     cache: {
         maxSize: 10000,
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
     },
+
     _timeouts: {
         theGraph: {
             timeout: 60 * 1000,
