@@ -93,13 +93,13 @@ export interface StrictStreamrClientConfig {
         maxAge: number
     }
 
-    metrics: {
-        periods: {
+    metrics?: {
+        periods?: {
             streamId: string
             duration: number
         }[]
-        maxPublishDelay: number
-    }
+        maxPublishDelay?: number
+    } | boolean
 
     /** @internal */
     _timeouts: {
@@ -119,11 +119,10 @@ export interface StrictStreamrClientConfig {
     }
 }
 
-export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'network' | 'contracts' | 'decryption' | 'metrics'> & {
+export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'network' | 'contracts' | 'decryption'> & {
     network: Partial<StrictStreamrClientConfig['network']>
     contracts: Partial<StrictStreamrClientConfig['contracts']>
     decryption: Partial<StrictStreamrClientConfig['decryption']>
-    metrics: Partial<StrictStreamrClientConfig['metrics']> | boolean
 }>
 
 export const STREAMR_STORAGE_NODE_GERMANY = '0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916'
@@ -200,23 +199,6 @@ export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id' | 'aut
             retryInterval: 1000
         },
         httpFetchTimeout: 30 * 1000
-    },
-    metrics: {
-        periods: [
-            {
-                duration: 60000,
-                streamId: 'streamr.eth/metrics/nodes/firehose/min'
-            },
-            {
-                duration: 3600000,
-                streamId: 'streamr.eth/metrics/nodes/firehose/hour'
-            },
-            {
-                duration: 86400000,
-                streamId: 'streamr.eth/metrics/nodes/firehose/day'
-            }
-        ],
-        maxPublishDelay: 30000
     }
 }
 
@@ -224,28 +206,6 @@ export const createStrictConfig = (inputOptions: StreamrClientConfig = {}): Stri
     validateConfig(inputOptions)
     const opts = cloneDeep(inputOptions)
     const defaults = cloneDeep(STREAM_CLIENT_DEFAULTS)
-
-    const getMetricsConfig = () => {
-        if (opts.metrics === true) {
-            return defaults.metrics
-        } else if (opts.metrics === false) {
-            return {
-                ...defaults.metrics,
-                periods: []
-            }
-        } else if (opts.metrics !== undefined) {
-            return {
-                ...defaults.metrics,
-                ...opts.metrics
-            }
-        } else {
-            const isEthereumAuth = ((opts.auth as ProviderAuthConfig)?.ethereum !== undefined)
-            return {
-                ...defaults.metrics,
-                periods: isEthereumAuth ? [] : defaults.metrics.periods
-            }
-        }
-    }
 
     const options: StrictStreamrClientConfig = {
         id: generateClientId(),
@@ -257,7 +217,6 @@ export const createStrictConfig = (inputOptions: StreamrClientConfig = {}): Stri
         },
         contracts: { ...defaults.contracts, ...opts.contracts },
         decryption: merge(defaults.decryption || {}, opts.decryption),
-        metrics: getMetricsConfig(),
         cache: {
             ...defaults.cache,
             ...opts.cache,
