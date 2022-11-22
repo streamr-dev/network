@@ -60,7 +60,6 @@ describe('unsubscribe', () => {
 
     it('twice', async () => {
         const sub = await client.subscribe(stream.id, () => {})
-        jest.spyOn(sub, 'unsubscribe')
         expect(await client.getSubscriptions()).toHaveLength(1)
 
         await sub.unsubscribe()
