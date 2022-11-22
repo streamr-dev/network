@@ -132,8 +132,8 @@ describe('MemoryLeaks', () => {
             test('connect + destroy', async () => {
                 const client = await createClient()
                 await client.connect()
-                leaksDetector.addAll(instanceId(client), client)
                 await client.destroy()
+                leaksDetector.addAll(instanceId(client), client) // Should this be moved up by catch leaks?
             })
         })
 
