@@ -1,19 +1,10 @@
 import { TrackerRegistryRecord } from '@streamr/protocol'
-import { createStrictConfig, STREAM_CLIENT_DEFAULTS } from '../../src/Config'
+import { createStrictConfig } from '../../src/Config'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { generateEthereumAccount } from '../../src/Ethereum'
 import { StreamrClient } from '../../src/StreamrClient'
 
 describe('Config', () => {
-
-    it('defaults', () => { // TODO temporary test, do not merge to main 
-        const strictConfig = createStrictConfig({} as any)
-        expect(strictConfig.id).toBeString()
-        expect(strictConfig.contracts.mainChainRPCs).toBeUndefined()
-        delete (strictConfig as any).id
-        strictConfig.contracts.mainChainRPCs = undefined
-        expect(strictConfig).toEqual(STREAM_CLIENT_DEFAULTS)
-    })
 
     describe('validate', () => {
         it('additional property', () => {
