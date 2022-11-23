@@ -247,10 +247,33 @@ export class StreamrClient {
         return messageStream
     }
 
+    /**
+     * Waits for a message to be stored by a storage node.
+     *
+     * @param message - the message to be awaited for
+     * @param options - additional options for controlling waiting and message matching
+     * @returns resolved promise if message was found in storage before timeout, otherwise rejects
+     */
     waitForStorage(message: Message, options?: {
+        /**
+         * Determines how often should storage node should be polled.
+         */
         interval?: number
+        /**
+         * Timeout after which to give up if message was not seen
+         */
         timeout?: number
+
+        /**
+         * Controls size of internal resend used in polling.
+         */
         count?: number
+
+        /**
+         * Used to set a custom message equality operator.
+         * @param msgTarget - message being waited for (i.e. `message`)
+         * @param msgGot - candidate message polled from storage node
+         */
         messageMatchFn?: (msgTarget: Message, msgGot: Message) => boolean
     }): Promise<void> {
         return this.resends.waitForStorage(message, options)
@@ -449,30 +472,78 @@ export class StreamrClient {
     // Storage
     // --------------------------------------------------------------------------------------------
 
+    /**
+     * Adds (or assigns) a stream to a storage node.
+     *
+     * @param streamIdOrPath - the stream id
+     * @param nodeAddress - Ethereum address of the storage node
+     * @returns if successful, a resolved promise
+     */
     async addStreamToStorageNode(streamIdOrPath: string, nodeAddress: string): Promise<void> {
         return this.streamStorageRegistry.addStreamToStorageNode(streamIdOrPath, toEthereumAddress(nodeAddress))
     }
 
+    /**
+     * Removes (or unassigns) a stream from a storage node.
+     *
+     * @param streamIdOrPath - the stream id
+     * @param nodeAddress - Ethereum address of the storage node
+     * @returns if successful, a resolved promise
+     */
     async removeStreamFromStorageNode(streamIdOrPath: string, nodeAddress: string): Promise<void> {
         return this.streamStorageRegistry.removeStreamFromStorageNode(streamIdOrPath, toEthereumAddress(nodeAddress))
     }
 
+    /**
+     * Checks whether a stream is being stored by a storage node.
+     *
+     * @param streamIdOrPath - the stream id
+     * @param nodeAddress - Ethereum address of the storage node
+     * @returns resolves with true/false, rejects if check could not be performed
+     */
     async isStoredStream(streamIdOrPath: string, nodeAddress: string): Promise<boolean> {
         return this.streamStorageRegistry.isStoredStream(streamIdOrPath, toEthereumAddress(nodeAddress))
     }
 
+    /**
+     * Gets the full list of streams being stored by a storage node.
+     *
+     * @param nodeAddress - Ethereum address of the storage node
+     * @returns a list of {@link Stream} being stored as well as `blockNumber` of result (i.e. smart contract state)
+     */
     async getStoredStreams(nodeAddress: string): Promise<{ streams: Stream[], blockNumber: number }> {
         return this.streamStorageRegistry.getStoredStreams(toEthereumAddress(nodeAddress))
     }
 
+    /**
+     * Gets a list of storage nodes.
+     *
+     * @param streamIdOrPath - if given, returns storage nodes storing the stream in question, otherwise returns full
+     * list of all known storage nodes
+     * @returns a list of {@link EthereumAddress} corresponding to storage nodes
+     */
     async getStorageNodes(streamIdOrPath?: string): Promise<EthereumAddress[]> {
         return this.streamStorageRegistry.getStorageNodes(streamIdOrPath)
     }
 
+    /**
+     * Sets the metadata of a storage node in the storage node registry.
+     *
+     * @remarks Acts on behalf of the wallet associated with the current {@link StreamrClient} instance.
+     *
+     * @param metadata - metadata to be set. If left `undefined`, effectively removes the storage node from the
+     * registry
+     */
     setStorageNodeMetadata(metadata: StorageNodeMetadata | undefined): Promise<void> {
         return this.storageNodeRegistry.setStorageNodeMetadata(metadata)
     }
 
+    /**
+     * Gets the metadata of a storage node from the storage node registry.
+     *
+     * @param nodeAddress - Ethereum address of the storage node
+     * @returns the metadata of the storage node, rejects if the storage node is not found
+     */
     async getStorageNodeMetadata(nodeAddress: string): Promise<StorageNodeMetadata> {
         return this.storageNodeRegistry.getStorageNodeMetadata(toEthereumAddress(nodeAddress))
     }
@@ -481,6 +552,9 @@ export class StreamrClient {
     // Authentication
     // --------------------------------------------------------------------------------------------
 
+    /**
+     * Gets the Ethereum address of the wallet associated with the current {@link StreamrClient} instance.
+     */
     getAddress(): Promise<EthereumAddress> {
         return this.authentication.getAddress()
     }
@@ -490,7 +564,7 @@ export class StreamrClient {
     // --------------------------------------------------------------------------------------------
 
     /**
-     * Get started network node
+     * Gets the network node
      * @deprecated This in an internal method
      */
     getNode(): Promise<NetworkNodeStub> {
@@ -509,13 +583,36 @@ export class StreamrClient {
     // Lifecycle
     // --------------------------------------------------------------------------------------------
 
-    connect = pOnce(async () => {
+    /**
+     * Used to manually initialize the network stack and connect to the network.
+     *
+     * @remarks Connecting is handled automatically by the client. Generally this method need not be called by the user.
+     */
+    connect(): Promise<void> {
+        // eslint-disable-next-line no-underscore-dangle
+        return this._connect()
+    }
+
+    private _connect = pOnce(async () => {
         await this.node.startNode()
     })
 
-    destroy = pOnce(async () => {
+    /**
+     * Destroys an instance of a {@link StreamrClient} by disconnecting from peers, clearing any pending tasks, and
+     * freeing up resources. This should be called once a user is done with the instance.
+     *
+     * @remarks As the name implies, the client instance (or any streams or subscriptions returned by it) should _not_
+     * be used after calling this method.
+     */
+    destroy(): Promise<void> {
+        // eslint-disable-next-line no-underscore-dangle
+        return this._destroy()
+    }
+
+    private _destroy = pOnce(async () => {
         this.eventEmitter.removeAllListeners()
-        this.connect.reset() // reset connect (will error on next call)
+        // eslint-disable-next-line no-underscore-dangle
+        this._connect.reset() // reset connect (will error on next call)
         const tasks = [
             this.destroySignal.destroy().then(() => undefined),
             this.subscriber.unsubscribe(),
@@ -530,14 +627,29 @@ export class StreamrClient {
     // Events
     // --------------------------------------------------------------------------------------------
 
+    /**
+     * Adds an event listener to the client.
+     * @param eventName - event name, see {@link StreamrClientEvents} for options
+     * @param listener - the callback function
+     */
     on<T extends keyof StreamrClientEvents>(eventName: T, listener: StreamrClientEvents[T]): void {
         this.eventEmitter.on(eventName, listener as any)
     }
 
+    /**
+     * Adds a "once" event listener to the client.
+     * @param eventName - event name, see {@link StreamrClientEvents} for options
+     * @param listener - the callback function
+     */
     once<T extends keyof StreamrClientEvents>(eventName: T, listener: StreamrClientEvents[T]): void {
         this.eventEmitter.once(eventName, listener as any)
     }
 
+    /**
+     * Removes an event listener from the client.
+     * @param eventName - event name, see {@link StreamrClientEvents} for options
+     * @param listener - the callback function to remove
+     */
     off<T extends keyof StreamrClientEvents>(eventName: T, listener: StreamrClientEvents[T]): void {
         this.eventEmitter.off(eventName, listener as any)
     }
