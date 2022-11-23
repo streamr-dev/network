@@ -31,15 +31,24 @@ export interface ResendRef {
     sequenceNumber?: number
 }
 
+/**
+ * Resend the latest "n" messages.
+ */
 export interface ResendLastOptions {
     last: number
 }
 
+/**
+ * Resend messages starting from a given point in time.
+ */
 export interface ResendFromOptions {
     from: ResendRef
     publisherId?: string
 }
 
+/**
+ * Resend messages between two points in time.
+ */
 export interface ResendRangeOptions {
     from: ResendRef
     to: ResendRef
@@ -47,6 +56,9 @@ export interface ResendRangeOptions {
     publisherId?: string
 }
 
+/**
+ * The supported resend types.
+ */
 export type ResendOptions = ResendLastOptions | ResendFromOptions | ResendRangeOptions
 
 function isResendLast<T extends ResendLastOptions>(options: any): options is T {

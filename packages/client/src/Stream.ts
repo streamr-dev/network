@@ -28,12 +28,34 @@ import { Message } from './Message'
 import { convertStreamMessageToMessage } from './Message'
 
 export interface StreamMetadata {
+    /**
+     * Determines how many (stream) partitions does this stream consist of.
+     */
     partitions: number
+
+    /**
+     * Human-readable description of this stream.
+     */
     description?: string
+
+    /**
+     * Defines the structure of the payloads contained in this stream.
+     *
+     * @remarks Not validated, purely for informational value.
+     */
     config?: {
         fields: Field[]
     }
+
+    /**
+     * If this stream is assigned to storage nodes, how many days (at minimum) should the data be retained for.
+     */
     storageDays?: number
+
+    /**
+     * After how many hours of inactivity (i.e. no messages) should a stream be considered inactive. Purely for
+     * informational purposes.
+     */
     inactivityThresholdHours?: number
 }
 
