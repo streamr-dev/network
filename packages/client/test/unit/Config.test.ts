@@ -118,7 +118,9 @@ describe('Config', () => {
                 network: {}
             })
             expect(clientOverrides.network).toEqual(clientDefaults.network)
-            expect(clientOverrides.network.trackers).toEqual(STREAM_CLIENT_DEFAULTS.network.trackers)
+            expect(clientOverrides.network.trackers).toEqual({
+                contractAddress: '0xab9BEb0e8B106078c953CcAB4D6bF9142BeF854d'
+            })
         })
 
         it('can override trackers', () => {
