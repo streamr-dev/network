@@ -11,7 +11,7 @@ import CONFIG_SCHEMA from './config.schema.json'
 import { TrackerRegistryRecord } from '@streamr/protocol'
 import { LogLevel } from '@streamr/utils'
 
-import { NetworkNodeOptions, STREAMR_ICE_SERVERS } from '@streamr/network-node'
+import { NetworkNodeOptions } from '@streamr/network-node'
 import type { ConnectionInfo } from '@ethersproject/web'
 import { generateClientId } from './utils/utils'
 
@@ -140,7 +140,19 @@ export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id' | 'aut
         trackers: {
             contractAddress: '0xab9BEb0e8B106078c953CcAB4D6bF9142BeF854d'
         },
-        acceptProxyConnections: false
+        acceptProxyConnections: false,
+        iceServers: [
+            {
+                url: 'stun:stun.streamr.network',
+                port: 5349
+            },
+            {
+                url: 'turn:turn.streamr.network',
+                port: 5349,
+                username: 'BrubeckTurn1',
+                password: 'MIlbgtMw4nhpmbgqRrht1Q=='
+            }
+        ]
     },
 
     // For ethers.js provider params, see https://docs.ethers.io/ethers.js/v5-beta/api-providers.html#provider
@@ -218,11 +230,6 @@ export const createStrictConfig = (inputOptions: StreamrClientConfig = {}): Stri
         }
         // NOTE: sidechain and storageNode settings are not merged with the defaults
     }
-
-    if (options.network.iceServers === undefined) {
-        options.network.iceServers = STREAMR_ICE_SERVERS
-    }
-
     return options
 }
 
