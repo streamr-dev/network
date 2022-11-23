@@ -161,7 +161,24 @@ export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id' | 'aut
         streamRegistryChainAddress: '0x0D483E10612F327FC11965Fc82E90dC19b141641',
         streamStorageRegistryChainAddress: '0xe8e2660CeDf2a59C917a5ED05B72df4146b58399',
         storageNodeRegistryChainAddress: '0x080F34fec2bc33928999Ea9e39ADc798bEF3E0d6',
-        mainChainRPCs: undefined, // Default to ethers.js default provider settings
+        mainChainRPCs: {
+            name: 'ethereum',
+            chainId: 1,
+            rpcs: [
+                {
+                    url: 'https://eth-rpc.gateway.pokt.network',
+                    timeout: 120 * 1000
+                },
+                {
+                    url: 'https://ethereum.publicnode.com',
+                    timeout: 120 * 1000
+                },
+                {
+                    url: 'https://rpc.ankr.com/eth',
+                    timeout: 120 * 1000
+                },
+            ]
+        },
         streamRegistryChainRPCs: {
             name: 'polygon',
             chainId: 137,
