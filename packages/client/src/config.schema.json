@@ -38,19 +38,24 @@
             }
         },
         "orderMessages": {
-            "type": "boolean"
+            "type": "boolean",
+            "default": true
         },
         "gapFill": {
-            "type": "boolean"
+            "type": "boolean",
+            "default": true
         },
         "maxGapRequests": {
-            "type": "number"
+            "type": "number",
+            "default": 5
         },
         "retryResendAfter": {
-            "type": "number"
+            "type": "number",
+            "default": 5000
         },
         "gapFillTimeout": {
-            "type": "number"
+            "type": "number",
+            "default": 5000
         },
         "network": {
             "type": "object",
