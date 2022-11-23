@@ -71,7 +71,7 @@ export interface StrictStreamrClientConfig {
         streamRegistryChainAddress: string
         streamStorageRegistryChainAddress: string
         storageNodeRegistryChainAddress: string
-        mainChainRPCs?: ChainConnectionInfo
+        mainChainRPCs: ChainConnectionInfo
         streamRegistryChainRPCs: ChainConnectionInfo
         // most of the above should go into ethereumNetworks configs once ETH-184 is ready
         ethereumNetworks: Record<string, EthereumNetworkConfig>

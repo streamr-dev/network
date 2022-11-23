@@ -22,9 +22,6 @@ export const getMainnetProvider = (config: Pick<StrictStreamrClientConfig, 'cont
 }
 
 const getAllMainnetProviders = (config: Pick<StrictStreamrClientConfig, 'contracts'>): Provider[] => {
-    if (config.contracts.mainChainRPCs === undefined) {
-        return [getDefaultProvider()]
-    }
     return config.contracts.mainChainRPCs.rpcs.map((c: ConnectionInfo) => {
         return new JsonRpcProvider(c)
     })
