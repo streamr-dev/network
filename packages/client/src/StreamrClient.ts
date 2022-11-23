@@ -95,7 +95,7 @@ export class StreamrClient {
     // --------------------------------------------------------------------------------------------
 
     /**
-     * Publishes a message to the network.
+     * Publishes a message to a stream partition in the network.
      *
      * @category Important
      *
@@ -335,7 +335,7 @@ export class StreamrClient {
      *
      * @param term - a search term that should be contained in either the stream id or metadata of a result
      * @param permissionFilter - check that given permissions should be in effect
-     * @returns async iterable of matching {@link Stream} results (automatic paging)
+     * @returns an async iterable collection of matching {@link Stream} results (automatic paging)
      */
     searchStreams(term: string | undefined, permissionFilter: SearchStreamsPermissionFilter | undefined): AsyncIterable<Stream> {
         return this.streamRegistry.searchStreams(term, permissionFilter)
@@ -345,30 +345,77 @@ export class StreamrClient {
     // Permissions
     // --------------------------------------------------------------------------------------------
 
+    /**
+     * Gets all valid publishers of a stream.
+     *
+     * @param streamIdOrPath - the stream id
+     * @returns async iterable collection of {@link EthereumAddress} (automatic paging)
+     */
     getStreamPublishers(streamIdOrPath: string): AsyncIterable<EthereumAddress> {
         return this.streamRegistry.getStreamPublishers(streamIdOrPath)
     }
 
+    /**
+     * Gets all valid subscribers of a stream.
+     *
+     * @param streamIdOrPath - the stream id
+     * @returns async iterable collection of {@link EthereumAddress} (automatic paging)
+     */
     getStreamSubscribers(streamIdOrPath: string): AsyncIterable<EthereumAddress> {
         return this.streamRegistry.getStreamSubscribers(streamIdOrPath)
     }
 
+    /**
+     * Checks whether the given permission is in effect.
+     *
+     * @param query - defines the permission to be checked
+     * @returns resolves with true/false, rejects if the check could not be performed
+     */
     hasPermission(query: PermissionQuery): Promise<boolean> {
         return this.streamRegistry.hasPermission(query)
     }
 
+    /**
+     * Returns a list of all permissions in effect for a given stream.
+     *
+     * @param streamIdOrPath - the stream id
+     */
     getPermissions(streamIdOrPath: string): Promise<PermissionAssignment[]> {
         return this.streamRegistry.getPermissions(streamIdOrPath)
     }
 
+    /**
+     * Grants a permission on a given stream.
+     *
+     * @param streamIdOrPath - the stream id
+     * @param assignments - defines the permission(s) to be granted
+     * @returns if successful, a resolved promise
+     */
     grantPermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
         return this.streamRegistry.grantPermissions(streamIdOrPath, ...assignments)
     }
 
+    /**
+     * Revokes a permission on a given stream.
+     *
+     * @param streamIdOrPath - the stream id
+     * @param assignments - defines the permission(s) to be revoked
+     * @returns if successful, a resolved promise
+     */
     revokePermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
         return this.streamRegistry.revokePermissions(streamIdOrPath, ...assignments)
     }
 
+    /**
+     * Sets a list of permissions to be in effect.
+     *
+     * @remarks Can be used to set the permissions of multiple streams in one transaction. Great for doing bulk
+     * operations and thus saving gas costs. Notice that the behaviour is _set_, therefore any existing permissions not
+     * re-defined will be removed.
+     *
+     * @param items - a list of permissions to be set
+     * @returns if successful, a resolved promise
+     */
     setPermissions(...items: {
         streamId: string
         assignments: PermissionAssignment[]
@@ -376,10 +423,24 @@ export class StreamrClient {
         return this.streamRegistry.setPermissions(...items)
     }
 
+    /**
+     * Checks whether a given (user) address is a valid publisher of a stream.
+     *
+     * @param streamIdOrPath - the stream id
+     * @param userAddress - the Ethereum address of the user
+     * @returns resolves with true/false, rejects if check could not be performed
+     */
     async isStreamPublisher(streamIdOrPath: string, userAddress: string): Promise<boolean> {
         return this.streamRegistry.isStreamPublisher(streamIdOrPath, toEthereumAddress(userAddress))
     }
 
+    /**
+     * Checks whether a given (user) address is a valid subscriber of a stream.
+     *
+     * @param streamIdOrPath - the stream id
+     * @param userAddress - the Ethereum address of the user
+     * @returns resolves with true/false, rejects if check could not be performed
+     */
     async isStreamSubscriber(streamIdOrPath: string, userAddress: string): Promise<boolean> {
         return this.streamRegistry.isStreamSubscriber(streamIdOrPath, toEthereumAddress(userAddress))
     }
