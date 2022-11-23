@@ -18,7 +18,8 @@
                 "info",
                 "debug",
                 "trace"
-            ]
+            ],
+            "default": "info"
         },
         "auth": {
             "type": "object",
