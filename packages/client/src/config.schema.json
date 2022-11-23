@@ -264,12 +264,15 @@
             "additionalProperties": false,
             "properties": {
                 "keyRequestTimeout": {
-                    "type": "number"
+                    "type": "number",
+                    "default": 30000
                 },
                 "maxKeyRequestsPerSecond": {
-                    "type": "number"
+                    "type": "number",
+                    "default": 20
                 }
-            }
+            },
+            "default": {}
         },
         "metrics": {
             "anyOf": [
