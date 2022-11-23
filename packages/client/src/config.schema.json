@@ -196,15 +196,18 @@
             "properties": {
                 "streamRegistryChainAddress": {
                     "type": "string",
-                    "format": "ethereum-address"
+                    "format": "ethereum-address",
+                    "default": "0x0D483E10612F327FC11965Fc82E90dC19b141641"
                 },
                 "streamStorageRegistryChainAddress": {
                     "type": "string",
-                    "format": "ethereum-address"
+                    "format": "ethereum-address",
+                    "default": "0xe8e2660CeDf2a59C917a5ED05B72df4146b58399"
                 },
                 "storageNodeRegistryChainAddress": {
                     "type": "string",
-                    "format": "ethereum-address"
+                    "format": "ethereum-address",
+                    "default": "0x080F34fec2bc33928999Ea9e39ADc798bEF3E0d6"
                 },
                 "mainChainRPCs": {
                     "anyOf": [
@@ -218,7 +221,18 @@
                     ]
                 },
                 "streamRegistryChainRPCs": {
-                    "$ref": "#/definitions/chainConnectionInfoList"
+                    "$ref": "#/definitions/chainConnectionInfoList",
+                    "default": {
+                        "name": "polygon",
+                        "chainId": 137,
+                        "rpcs": [{
+                            "url": "https://polygon-rpc.com",
+                            "timeout": 120000
+                        }, {
+                            "url": "https://poly-rpc.gateway.pokt.network/",
+                            "timeout": 120000
+                        }]
+                    }
                 },
                 "ethereumNetworks": {
                     "type": "object",
@@ -231,10 +245,12 @@
                 },
                 "theGraphUrl": {
                     "type": "string",
-                    "format": "uri"
+                    "format": "uri",
+                    "default": "https://api.thegraph.com/subgraphs/name/streamr-dev/streams"
                 },
                 "maxConcurrentCalls": {
-                    "type": "number"
+                    "type": "number",
+                    "default": 10
                 }
             },
             "default": {}
