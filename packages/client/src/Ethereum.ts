@@ -6,6 +6,7 @@ import { getDefaultProvider, JsonRpcProvider } from '@ethersproject/providers'
 import type { Provider } from '@ethersproject/providers'
 import type { ConnectionInfo } from '@ethersproject/web'
 import type { Overrides } from '@ethersproject/contracts'
+import type { BigNumber } from '@ethersproject/bignumber'
 import { StrictStreamrClientConfig } from './Config'
 
 export const generateEthereumAccount = (): { address: string, privateKey: string } => {
@@ -51,10 +52,13 @@ const getOverrides = (chainName: string, provider: Provider, config: Pick<Strict
     const chainConfig = config.contracts.ethereumNetworks[chainName]
     if (chainConfig === undefined) { return {} }
     const overrides = chainConfig.overrides ?? {}
-    if (chainConfig.gasPriceStrategy !== undefined) {
+    const gasPriceStrategy = (chainConfig.highGasPriceStrategy)
+        ? (estimatedGasPrice: BigNumber) => estimatedGasPrice.add('10000000000') 
+        : chainConfig.gasPriceStrategy
+    if (gasPriceStrategy !== undefined) {
         return {
             ...overrides,
-            gasPrice: provider.getGasPrice().then(chainConfig.gasPriceStrategy)
+            gasPrice: provider.getGasPrice().then(gasPriceStrategy)
         }
     }
     return overrides

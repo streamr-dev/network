@@ -221,7 +221,13 @@
                     "$ref": "#/definitions/chainConnectionInfoList"
                 },
                 "ethereumNetworks": {
-                    "type": "object"
+                    "type": "object",
+                    "default": {
+                        "polygon": {
+                            "chainId": 137,
+                            "highGasPriceStrategy": true
+                        }
+                    }
                 },
                 "theGraphUrl": {
                     "type": "string",
@@ -230,7 +236,8 @@
                 "maxConcurrentCalls": {
                     "type": "number"
                 }
-            }
+            },
+            "default": {}
         },
         "decryption": {
             "type": "object",

@@ -42,6 +42,8 @@ export interface ChainConnectionInfo {
 export interface EthereumNetworkConfig {
     chainId: number
     overrides?: Overrides
+    highGasPriceStrategy?: boolean
+    /** @deprecated */
     gasPriceStrategy?: (estimatedGasPrice: BigNumber) => BigNumber
 }
 
@@ -175,7 +177,7 @@ export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id' | 'aut
         ethereumNetworks: {
             polygon: {
                 chainId: 137,
-                gasPriceStrategy: (estimatedGasPrice: BigNumber) => estimatedGasPrice.add('10000000000'),
+                highGasPriceStrategy: true
             }
         },
         theGraphUrl: 'https://api.thegraph.com/subgraphs/name/streamr-dev/streams',
