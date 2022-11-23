@@ -60,7 +60,8 @@
                     "type": "string"
                 },
                 "acceptProxyConnections": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "default": false
                 },
                 "trackers": {
                     "anyOf": [
@@ -103,7 +104,10 @@
                                 }
                             }
                         }
-                    ]
+                    ],
+                    "default": {
+                        "contractAddress": "0xab9BEb0e8B106078c953CcAB4D6bF9142BeF854d"
+                    }
                 },
                 "trackerPingInterval": {
                     "type": "number"
