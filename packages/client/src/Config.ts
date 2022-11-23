@@ -4,7 +4,6 @@ import type { Overrides } from '@ethersproject/contracts'
 import cloneDeep from 'lodash/cloneDeep'
 import Ajv, { ErrorObject } from 'ajv'
 import addFormats from 'ajv-formats'
-import merge from 'lodash/merge'
 import type { ExternalProvider } from '@ethersproject/providers'
 
 import CONFIG_SCHEMA from './config.schema.json'
@@ -211,37 +210,23 @@ export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id' | 'aut
     }
 }
 
-export const createStrictConfig = (inputOptions: StreamrClientConfig = {}): StrictStreamrClientConfig => {
-    validateConfig(inputOptions)
-    const opts = cloneDeep(inputOptions)
-    const defaults = cloneDeep(STREAM_CLIENT_DEFAULTS)
-
-    const options: StrictStreamrClientConfig = {
-        id: generateClientId(),
-        ...defaults,
-        ...opts,
-        network: {
-            ...merge(defaults.network || {}, opts.network),
-            trackers: opts.network?.trackers ?? defaults.network.trackers,
-        },
-        contracts: { ...defaults.contracts, ...opts.contracts },
-        decryption: merge(defaults.decryption || {}, opts.decryption),
-        cache: {
-            ...defaults.cache,
-            ...opts.cache,
-        }
-        // NOTE: sidechain and storageNode settings are not merged with the defaults
-    }
-    return options
+export const createStrictConfig = (input: StreamrClientConfig = {}): StrictStreamrClientConfig => {
+    // TODO is it good to cloneDeep the input object as it may have object references (e.g. auth.ethereum)?
+    const config: StrictStreamrClientConfig = validateConfig(cloneDeep(input))
+    config.id ??= generateClientId()
+    return config
 }
 
-export const validateConfig = (data: unknown): void | never => {
-    const ajv = new Ajv()
+export const validateConfig = (data: unknown): StrictStreamrClientConfig | never => {
+    const ajv = new Ajv({
+        useDefaults: true
+    })
     addFormats(ajv)
     ajv.addFormat('ethereum-address', /^0x[a-zA-Z0-9]{40}$/)
     ajv.addFormat('ethereum-private-key', /^(0x)?[a-zA-Z0-9]{64}$/)
-    if (!ajv.validate(CONFIG_SCHEMA, data)) {
-        throw new Error(ajv.errors!.map((e: ErrorObject) => {
+    const validate = ajv.compile<StrictStreamrClientConfig>(CONFIG_SCHEMA)
+    if (!validate(data)) {
+        throw new Error(validate.errors!.map((e: ErrorObject) => {
             let text = ajv.errorsText([e], { dataVar: '' }).trim()
             if (e.params.additionalProperty) {
                 text += `: ${e.params.additionalProperty}`
@@ -249,6 +234,7 @@ export const validateConfig = (data: unknown): void | never => {
             return text
         }).join('\n'))
     }
+    return data
 }
 
 export const ConfigInjectionToken = Symbol('Config')
