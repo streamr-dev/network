@@ -307,41 +307,52 @@
                     "additionalProperties": false,
                     "properties": {
                         "timeout": {
-                            "type": "number"
+                            "type": "number",
+                            "default": 60000
                         },
                         "retryInterval": {
-                            "type": "number"
+                            "type": "number",
+                            "default": 1000
                         }
-                    }
+                    },
+                    "default": {}
                 },
                 "storageNode": {
                     "type": "object",
                     "additionalProperties": false,
                     "properties": {
                         "timeout": {
-                            "type": "number"
+                            "type": "number",
+                            "default": 30000
                         },
                         "retryInterval": {
-                            "type": "number"
+                            "type": "number",
+                            "default": 1000
                         }
-                    }
+                    },
+                    "default": {}
                 },
                 "jsonRpc": {
                     "type": "object",
                     "additionalProperties": false,
                     "properties": {
                         "timeout": {
-                            "type": "number"
+                            "type": "number",
+                            "default": 30000
                         },
                         "retryInterval": {
-                            "type": "number"
+                            "type": "number",
+                            "default": 1000
                         }
-                    }
+                    },
+                    "default": {}
                 },
                 "httpFetchTimeout": {
-                    "type": "number"
+                    "type": "number",
+                    "default": 30000
                 }
-            }
+            },
+            "default": {}
         }
     },
     "definitions": {
