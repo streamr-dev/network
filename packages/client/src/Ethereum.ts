@@ -2,12 +2,12 @@
  * Config and utilities for interating with identity & Ethereum chain.
  */
 import { Wallet } from '@ethersproject/wallet'
-import { getDefaultProvider, JsonRpcProvider } from '@ethersproject/providers'
+import { JsonRpcProvider } from '@ethersproject/providers'
 import type { Provider } from '@ethersproject/providers'
 import type { ConnectionInfo } from '@ethersproject/web'
 import type { Overrides } from '@ethersproject/contracts'
 import type { BigNumber } from '@ethersproject/bignumber'
-import { StrictStreamrClientConfig } from './Config'
+import { ChainConnectionInfo, StrictStreamrClientConfig } from './Config'
 
 export const generateEthereumAccount = (): { address: string, privateKey: string } => {
     const wallet = Wallet.createRandom()
@@ -17,14 +17,10 @@ export const generateEthereumAccount = (): { address: string, privateKey: string
     }
 }
 
+// TODO maybe we should use all providers?
 export const getMainnetProvider = (config: Pick<StrictStreamrClientConfig, 'contracts'>): Provider => {
-    return getAllMainnetProviders(config)[0]
-}
-
-const getAllMainnetProviders = (config: Pick<StrictStreamrClientConfig, 'contracts'>): Provider[] => {
-    return config.contracts.mainChainRPCs.rpcs.map((c: ConnectionInfo) => {
-        return new JsonRpcProvider(c)
-    })
+    const providers = getRpcProviders(config.contracts.mainChainRPCs)
+    return providers[0]
 }
 
 export const getStreamRegistryChainProvider = (config: Pick<StrictStreamrClientConfig, 'contracts'>): Provider => {
@@ -32,7 +28,11 @@ export const getStreamRegistryChainProvider = (config: Pick<StrictStreamrClientC
 }
 
 export const getAllStreamRegistryChainProviders = (config: Pick<StrictStreamrClientConfig, 'contracts'>): Provider[] => {
-    return config.contracts.streamRegistryChainRPCs.rpcs.map((c: ConnectionInfo) => {
+    return getRpcProviders(config.contracts.streamRegistryChainRPCs)
+}
+
+const getRpcProviders = (connectionInfo: ChainConnectionInfo): Provider[] => {
+    return connectionInfo.rpcs.map((c: ConnectionInfo) => {
         return new JsonRpcProvider(c)
     })
 }
