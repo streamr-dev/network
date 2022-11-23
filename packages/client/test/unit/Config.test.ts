@@ -2,7 +2,6 @@ import { TrackerRegistryRecord } from '@streamr/protocol'
 import { createStrictConfig, STREAM_CLIENT_DEFAULTS } from '../../src/Config'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { generateEthereumAccount } from '../../src/Ethereum'
-import { STREAMR_ICE_SERVERS } from '@streamr/network-node'
 import { StreamrClient } from '../../src/StreamrClient'
 
 describe('Config', () => {
@@ -94,11 +93,6 @@ describe('Config', () => {
                 }).toThrow('/auth/privateKey must match format "ethereum-private-key"')
             })
         })
-    })
-
-    it('uses PRODUCTION_STUN_URLS by default', () => {
-        const clientDefaults = createStrictConfig()
-        expect(clientDefaults.network.iceServers).toEqual(STREAMR_ICE_SERVERS)
     })
 
     describe('ignorable properties', () => {
