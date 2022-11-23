@@ -291,12 +291,15 @@
             "additionalProperties": false,
             "properties": {
                 "maxSize": {
-                    "type": "number"
+                    "type": "number",
+                    "default": 10000
                 },
                 "maxAge": {
-                    "type": "number"
+                    "type": "number",
+                    "default": 86400000
                 }
-            }
+            },
+            "default": {}
         },
         "_timeouts": {
             "type": "object",
