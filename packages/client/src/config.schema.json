@@ -311,8 +311,7 @@
                         }
                     }
                 }
-            ],
-            "default": true
+            ]
         },
         "cache": {
             "type": "object",
