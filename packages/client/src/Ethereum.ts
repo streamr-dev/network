@@ -49,7 +49,7 @@ const getOverrides = (chainName: string, provider: Provider, config: Pick<Strict
     const chainConfig = config.contracts.ethereumNetworks[chainName]
     if (chainConfig === undefined) { return {} }
     const overrides = chainConfig.overrides ?? {}
-    const gasPriceStrategy = (chainConfig.highGasPriceStrategy)
+    const gasPriceStrategy = chainConfig.highGasPriceStrategy
         ? (estimatedGasPrice: BigNumber) => estimatedGasPrice.add('10000000000') 
         : chainConfig.gasPriceStrategy
     if (gasPriceStrategy !== undefined) {
