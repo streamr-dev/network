@@ -10,8 +10,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Change default list of Ethereum RPC URLs
-
 ### Deprecated
 
 ### Removed
@@ -19,6 +17,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 ### Security
+
+
+## [7.0.3] - 2022-11-23
+
+### Changed
+
+- Change default list of Ethereum RPC URLs
 
 
 ## [7.0.2] - 2022-11-22
@@ -200,7 +205,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fixed an import so that the client successfully loads in a web browser environment (NET-721)
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/client/v7.0.2...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/client/v7.0.3...HEAD
+[7.0.3]: https://github.com/streamr-dev/network/compare/client/v7.0.2...client/v7.0.3
 [7.0.2]: https://github.com/streamr-dev/network/compare/client/v7.0.1...client/v7.0.2
 [7.0.1]: https://github.com/streamr-dev/network/compare/client/v7.0.0...client/v7.0.1
 [7.0.0]: https://github.com/streamr-dev/network/compare/client/v6.0.10...client/v7.0.0
