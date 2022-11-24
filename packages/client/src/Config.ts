@@ -4,14 +4,13 @@ import type { Overrides } from '@ethersproject/contracts'
 import cloneDeep from 'lodash/cloneDeep'
 import Ajv, { ErrorObject } from 'ajv'
 import addFormats from 'ajv-formats'
-import merge from 'lodash/merge'
 import type { ExternalProvider } from '@ethersproject/providers'
 
 import CONFIG_SCHEMA from './config.schema.json'
 import { TrackerRegistryRecord } from '@streamr/protocol'
 import { LogLevel } from '@streamr/utils'
 
-import { NetworkNodeOptions, STREAMR_ICE_SERVERS } from '@streamr/network-node'
+import { NetworkNodeOptions } from '@streamr/network-node'
 import type { ConnectionInfo } from '@ethersproject/web'
 import { generateClientId } from './utils/utils'
 
@@ -42,6 +41,8 @@ export interface ChainConnectionInfo {
 export interface EthereumNetworkConfig {
     chainId: number
     overrides?: Overrides
+    highGasPriceStrategy?: boolean
+    /** @deprecated */
     gasPriceStrategy?: (estimatedGasPrice: BigNumber) => BigNumber
 }
 
@@ -70,7 +71,7 @@ export interface StrictStreamrClientConfig {
         streamRegistryChainAddress: string
         streamStorageRegistryChainAddress: string
         storageNodeRegistryChainAddress: string
-        mainChainRPCs?: ChainConnectionInfo
+        mainChainRPCs: ChainConnectionInfo
         streamRegistryChainRPCs: ChainConnectionInfo
         // most of the above should go into ethereumNetworks configs once ETH-184 is ready
         ethereumNetworks: Record<string, EthereumNetworkConfig>
@@ -140,7 +141,19 @@ export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id' | 'aut
         trackers: {
             contractAddress: '0xab9BEb0e8B106078c953CcAB4D6bF9142BeF854d'
         },
-        acceptProxyConnections: false
+        acceptProxyConnections: false,
+        iceServers: [
+            {
+                url: 'stun:stun.streamr.network',
+                port: 5349
+            },
+            {
+                url: 'turn:turn.streamr.network',
+                port: 5349,
+                username: 'BrubeckTurn1',
+                password: 'MIlbgtMw4nhpmbgqRrht1Q=='
+            }
+        ]
     },
 
     // For ethers.js provider params, see https://docs.ethers.io/ethers.js/v5-beta/api-providers.html#provider
@@ -148,7 +161,24 @@ export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id' | 'aut
         streamRegistryChainAddress: '0x0D483E10612F327FC11965Fc82E90dC19b141641',
         streamStorageRegistryChainAddress: '0xe8e2660CeDf2a59C917a5ED05B72df4146b58399',
         storageNodeRegistryChainAddress: '0x080F34fec2bc33928999Ea9e39ADc798bEF3E0d6',
-        mainChainRPCs: undefined, // Default to ethers.js default provider settings
+        mainChainRPCs: {
+            name: 'ethereum',
+            chainId: 1,
+            rpcs: [
+                {
+                    url: 'https://eth-rpc.gateway.pokt.network',
+                    timeout: 120 * 1000
+                },
+                {
+                    url: 'https://ethereum.publicnode.com',
+                    timeout: 120 * 1000
+                },
+                {
+                    url: 'https://rpc.ankr.com/eth',
+                    timeout: 120 * 1000
+                },
+            ]
+        },
         streamRegistryChainRPCs: {
             name: 'polygon',
             chainId: 137,
@@ -163,7 +193,7 @@ export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id' | 'aut
         ethereumNetworks: {
             polygon: {
                 chainId: 137,
-                gasPriceStrategy: (estimatedGasPrice: BigNumber) => estimatedGasPrice.add('10000000000'),
+                highGasPriceStrategy: true
             }
         },
         theGraphUrl: 'https://api.thegraph.com/subgraphs/name/streamr-dev/streams',
@@ -197,48 +227,36 @@ export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id' | 'aut
     }
 }
 
-export const createStrictConfig = (inputOptions: StreamrClientConfig = {}): StrictStreamrClientConfig => {
-    validateConfig(inputOptions)
-    const opts = cloneDeep(inputOptions)
-    const defaults = cloneDeep(STREAM_CLIENT_DEFAULTS)
-
-    const options: StrictStreamrClientConfig = {
-        id: generateClientId(),
-        ...defaults,
-        ...opts,
-        network: {
-            ...merge(defaults.network || {}, opts.network),
-            trackers: opts.network?.trackers ?? defaults.network.trackers,
-        },
-        contracts: { ...defaults.contracts, ...opts.contracts },
-        decryption: merge(defaults.decryption || {}, opts.decryption),
-        cache: {
-            ...defaults.cache,
-            ...opts.cache,
-        }
-        // NOTE: sidechain and storageNode settings are not merged with the defaults
-    }
-
-    if (options.network.iceServers === undefined) {
-        options.network.iceServers = STREAMR_ICE_SERVERS
-    }
-
-    return options
+export const createStrictConfig = (input: StreamrClientConfig = {}): StrictStreamrClientConfig => {
+    // TODO is it good to cloneDeep the input object as it may have object references (e.g. auth.ethereum)?
+    const config: StrictStreamrClientConfig = validateConfig(cloneDeep(input))
+    config.id ??= generateClientId()
+    return config
 }
 
-export const validateConfig = (data: unknown): void | never => {
-    const ajv = new Ajv()
+export const validateConfig = (data: unknown): StrictStreamrClientConfig | never => {
+    const ajv = new Ajv({
+        useDefaults: true
+    })
     addFormats(ajv)
     ajv.addFormat('ethereum-address', /^0x[a-zA-Z0-9]{40}$/)
     ajv.addFormat('ethereum-private-key', /^(0x)?[a-zA-Z0-9]{64}$/)
-    if (!ajv.validate(CONFIG_SCHEMA, data)) {
-        throw new Error(ajv.errors!.map((e: ErrorObject) => {
+    const validate = ajv.compile<StrictStreamrClientConfig>(CONFIG_SCHEMA)
+    if (!validate(data)) {
+        throw new Error(validate.errors!.map((e: ErrorObject) => {
             let text = ajv.errorsText([e], { dataVar: '' }).trim()
             if (e.params.additionalProperty) {
                 text += `: ${e.params.additionalProperty}`
             }
             return text
         }).join('\n'))
+    }
+    return data
+}
+
+export const redactConfig = (config: StrictStreamrClientConfig): void => {
+    if ((config.auth as PrivateKeyAuthConfig)?.privateKey !== undefined) {
+        (config.auth as PrivateKeyAuthConfig).privateKey = '(redacted)'
     }
 }
 
