@@ -48,7 +48,7 @@ export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'au
                     const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
                     return toEthereumAddress(accounts[0])
                 } catch {
-                    throw new Error('no addresses connected + selected in the custom authentication provider (e.g. MetaMask)')
+                    throw new Error('no addresses connected and selected in the custom authentication provider')
                 }
             }),
             createMessageSignature: pLimitFn(async (payload: string) => {
