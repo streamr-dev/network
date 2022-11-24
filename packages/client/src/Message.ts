@@ -53,7 +53,7 @@ export interface Message {
 
 export type MessageMetadata = Omit<Message, 'content'>
 
-export const convertStreamMessageToMessage = (msg: StreamMessage<any>): Message => {
+export const convertStreamMessageToMessage = (msg: StreamMessage): Message => {
     return {
         content: msg.getParsedContent(),
         streamId: msg.getStreamId(),

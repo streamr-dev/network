@@ -23,14 +23,14 @@ import { LoggerFactory } from '../utils/LoggerFactory'
  * A session contains one or more subscriptions to a single streamId + streamPartition pair.
  */
 
-export class SubscriptionSession<T> {
+export class SubscriptionSession {
     public readonly streamPartId: StreamPartID
     public readonly onRetired = Signal.once()
     private isRetired: boolean = false
     private isStopped = false
-    private readonly subscriptions: Set<Subscription<T>> = new Set()
-    private readonly pendingRemoval: WeakSet<Subscription<T>> = new WeakSet()
-    private readonly pipeline: MessageStream<T>
+    private readonly subscriptions: Set<Subscription> = new Set()
+    private readonly pendingRemoval: WeakSet<Subscription> = new WeakSet()
+    private readonly pipeline: MessageStream
     private readonly node: NetworkNodeFacade
 
     constructor(
@@ -49,7 +49,7 @@ export class SubscriptionSession<T> {
         this.distributeMessage = this.distributeMessage.bind(this)
         this.node = node
         this.onError = this.onError.bind(this)
-        this.pipeline = createSubscribePipeline<T>({
+        this.pipeline = createSubscribePipeline({
             streamPartId,
             resends,
             groupKeyStore,
@@ -86,7 +86,7 @@ export class SubscriptionSession<T> {
         }))
     }
 
-    async* distributeMessage(src: AsyncGenerator<StreamMessage<T>>): AsyncGenerator<StreamMessage<T>, void, unknown> {
+    async* distributeMessage(src: AsyncGenerator<StreamMessage>): AsyncGenerator<StreamMessage, void, unknown> {
         for await (const msg of src) {
             await Promise.all([...this.subscriptions].map(async (sub) => {
                 await sub.push(msg)
@@ -108,7 +108,7 @@ export class SubscriptionSession<T> {
             return
         }
 
-        await this.pipeline.push(msg as StreamMessage<T>)
+        await this.pipeline.push(msg)
     }
 
     private async subscribe(): Promise<NetworkNodeStub> {
@@ -159,7 +159,7 @@ export class SubscriptionSession<T> {
         await this.pipeline.return()
     }
 
-    has(sub: Subscription<T>): boolean {
+    has(sub: Subscription): boolean {
         return this.subscriptions.has(sub)
     }
 
@@ -167,7 +167,7 @@ export class SubscriptionSession<T> {
      * Add subscription & appropriate connection handle.
      */
 
-    async add(sub: Subscription<T>): Promise<void> {
+    async add(sub: Subscription): Promise<void> {
         if (!sub || this.subscriptions.has(sub) || this.pendingRemoval.has(sub)) { return } // already has
         this.subscriptions.add(sub)
 
@@ -182,7 +182,7 @@ export class SubscriptionSession<T> {
      * Remove subscription & appropriate connection handle.
      */
 
-    async remove(sub: Subscription<T>): Promise<void> {
+    async remove(sub: Subscription): Promise<void> {
         if (!sub || this.pendingRemoval.has(sub) || !this.subscriptions.has(sub)) {
             return
         }

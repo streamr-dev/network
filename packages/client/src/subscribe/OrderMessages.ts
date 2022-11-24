@@ -19,12 +19,12 @@ import { LoggerFactory } from '../utils/LoggerFactory'
  * Implements gap filling
  */
 @injectable()
-export class OrderMessages<T> {
+export class OrderMessages {
     private readonly logger: Logger
     private stopSignal = Signal.once()
     private done = false
-    private resendStreams = new Set<MessageStream<T>>() // holds outstanding resends for cleanup
-    private outBuffer = new PushBuffer<StreamMessage<T>>()
+    private resendStreams = new Set<MessageStream>() // holds outstanding resends for cleanup
+    private outBuffer = new PushBuffer<StreamMessage>()
     private inputClosed = false
     private orderMessages: boolean
     private enabled = true
@@ -70,7 +70,7 @@ export class OrderMessages<T> {
             to,
         })
 
-        let resendMessageStream!: MessageStream<T>
+        let resendMessageStream!: MessageStream
 
         try {
             resendMessageStream = await this.resends.range(this.streamPartId, {
@@ -114,7 +114,7 @@ export class OrderMessages<T> {
             return
         }
 
-        this.outBuffer.push(orderedMessage as StreamMessage<T>)
+        this.outBuffer.push(orderedMessage)
     }
 
     stop(): Promise<void> {
@@ -134,7 +134,7 @@ export class OrderMessages<T> {
         }
     }
 
-    async addToOrderingUtil(src: AsyncGenerator<StreamMessage<T>>): Promise<void> {
+    async addToOrderingUtil(src: AsyncGenerator<StreamMessage>): Promise<void> {
         try {
             for await (const msg of src) {
                 this.orderingUtil.add(msg)
@@ -146,8 +146,8 @@ export class OrderMessages<T> {
         }
     }
 
-    transform(): (src: AsyncGenerator<StreamMessage<T>, any, unknown>) => AsyncGenerator<StreamMessage<T>, void, unknown> {
-        return async function* Transform(this: OrderMessages<T>, src: AsyncGenerator<StreamMessage<T>>) {
+    transform(): (src: AsyncGenerator<StreamMessage, any, unknown>) => AsyncGenerator<StreamMessage, void, unknown> {
+        return async function* Transform(this: OrderMessages, src: AsyncGenerator<StreamMessage>) {
             if (!this.orderMessages) {
                 yield* src
                 return

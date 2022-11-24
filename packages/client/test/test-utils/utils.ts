@@ -96,7 +96,7 @@ type CreateMockMessageOptions = {
 
 export const createMockMessage = async (
     opts: CreateMockMessageOptions
-): Promise<StreamMessage<any>> => {
+): Promise<StreamMessage> => {
     const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(
         opts.streamPartId ?? opts.stream.getStreamParts()[0]
     )

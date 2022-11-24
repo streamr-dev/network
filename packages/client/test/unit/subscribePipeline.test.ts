@@ -30,7 +30,7 @@ describe('subscribePipeline', () => {
         serializedContent?: string
         encryptionType?: EncryptionType
         groupKeyId?: string
-    } = {}): Promise<StreamMessage<unknown>> => {
+    } = {}): Promise<StreamMessage> => {
         const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
         return createSignedMessage({
             messageId: new MessageID(

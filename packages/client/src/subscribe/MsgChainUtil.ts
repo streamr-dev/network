@@ -3,25 +3,25 @@ import { StreamMessage } from '@streamr/protocol'
 import { PushBuffer } from './../utils/PushBuffer'
 import { Signal } from './../utils/Signal'
 
-type ProcessMessageFn<T> = (streamMessage: StreamMessage<T>) => Promise<StreamMessage<T>>
+type ProcessMessageFn = (streamMessage: StreamMessage) => Promise<StreamMessage>
 
-type OnError<T> = Signal<[Error, StreamMessage<T>?, number?]>
+type OnError = Signal<[Error, StreamMessage?, number?]>
 
-class MsgChainProcessor<T> {
+class MsgChainProcessor {
 
-    busy: Gate = new Gate()
-    private inputBuffer: StreamMessage<T>[] = []
-    private outputBuffer: PushBuffer<StreamMessage<T>>
-    private processMessageFn: ProcessMessageFn<T>
-    private onError: OnError<T>
+    readonly busy: Gate = new Gate()
+    private readonly inputBuffer: StreamMessage[] = []
+    private readonly outputBuffer: PushBuffer<StreamMessage>
+    private readonly processMessageFn: ProcessMessageFn
+    private readonly onError: OnError
 
-    constructor(outputBuffer: PushBuffer<StreamMessage<T>>, processMessageFn: ProcessMessageFn<T>, onError: OnError<T>) {
+    constructor(outputBuffer: PushBuffer<StreamMessage>, processMessageFn: ProcessMessageFn, onError: OnError) {
         this.outputBuffer = outputBuffer
         this.processMessageFn = processMessageFn
         this.onError = onError
     }
 
-    async addMessage(message: StreamMessage<T>): Promise<void> {
+    async addMessage(message: StreamMessage): Promise<void> {
         this.inputBuffer.push(message)
         if (this.busy.isOpen()) {
             this.busy.close()
@@ -39,19 +39,19 @@ class MsgChainProcessor<T> {
     }
 }
 
-export class MsgChainUtil<T> implements AsyncIterable<StreamMessage<T>> {
+export class MsgChainUtil implements AsyncIterable<StreamMessage> {
 
-    private outputBuffer: PushBuffer<StreamMessage<T>> = new PushBuffer()
-    private processors: Map<string, MsgChainProcessor<T>> = new Map()
-    private processMessageFn: ProcessMessageFn<T>
-    private onError: OnError<T>
+    private readonly outputBuffer: PushBuffer<StreamMessage> = new PushBuffer()
+    private readonly processors: Map<string, MsgChainProcessor> = new Map()
+    private readonly processMessageFn: ProcessMessageFn
+    private readonly onError: OnError
 
-    constructor(processMessageFn: ProcessMessageFn<T>, onError: OnError<T>) {
+    constructor(processMessageFn: ProcessMessageFn, onError: OnError) {
         this.processMessageFn = processMessageFn
         this.onError = onError
     }
 
-    addMessage(message: StreamMessage<T>): void {
+    addMessage(message: StreamMessage): void {
         const id = `${message.getPublisherId()}-${message.getMsgChainId()}`
         let processor = this.processors.get(id)
         if (processor === undefined) {
@@ -69,7 +69,7 @@ export class MsgChainUtil<T> implements AsyncIterable<StreamMessage<T>> {
         this.outputBuffer.endWrite()
     }
 
-    [Symbol.asyncIterator](): AsyncIterator<StreamMessage<T>> {
+    [Symbol.asyncIterator](): AsyncIterator<StreamMessage> {
         return this.outputBuffer
     }
 }

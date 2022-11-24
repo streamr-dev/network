@@ -28,7 +28,7 @@ describe('MessageStream', () => {
     })
 
     it('onMessage', async () => {
-        const stream = new MessageStream<any>()
+        const stream = new MessageStream()
         const onMessage = jest.fn()
         stream.useLegacyOnMessageHandler(onMessage)
         const msg1 = await createMockMessage()
