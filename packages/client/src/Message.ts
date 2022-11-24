@@ -23,7 +23,7 @@ export interface Message {
     streamPartition: number
 
     /**
-     * The timestamp of when the message ws published.
+     * The timestamp of when the message was published.
      */
     timestamp: number
 
