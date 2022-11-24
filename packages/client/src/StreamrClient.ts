@@ -58,7 +58,11 @@ export class StreamrClient {
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly eventEmitter: StreamrClientEventEmitter
 
-    constructor(options: StreamrClientConfig = {}, parentContainer = rootContainer) {
+    constructor(
+        options: StreamrClientConfig = {},
+        /** @internal */
+        parentContainer = rootContainer
+    ) {
         this.config = createStrictConfig(options)
         const container = parentContainer.createChildContainer()
         initContainer(this.config, container)
