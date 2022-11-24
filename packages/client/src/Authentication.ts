@@ -67,7 +67,7 @@ export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'au
                     const sideChainId = config.contracts.streamRegistryChainRPCs.chainId
                     throw new Error(
                         // eslint-disable-next-line max-len
-                        `Please connect the custom authentication provider (e.g. MetaMask) to Ethereum blockchain with chainId ${sideChainId}: current chainId is ${chainId}`
+                        `Please connect the custom authentication provider to Ethereum blockchain with chainId ${sideChainId}: current chainId is ${chainId}`
                     )
                 }
                 return signer
