@@ -139,7 +139,7 @@ export class Stream {
     }
 
     /**
-     * Updates the metadata of the stream.
+     * Updates the metadata of the stream by merging.
      *
      * @param metadata - the new metadata (merged with existing metadata)
      * @returns if successful, a resolved promise
