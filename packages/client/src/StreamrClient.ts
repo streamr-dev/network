@@ -256,7 +256,7 @@ export class StreamrClient {
      */
     waitForStorage(message: Message, options?: {
         /**
-         * Determines how often should storage node should be polled.
+         * Determines how often should storage node be polled.
          */
         interval?: number
         /**
