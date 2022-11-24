@@ -29,7 +29,7 @@ import { convertStreamMessageToMessage } from './Message'
 
 export interface StreamMetadata {
     /**
-     * Determines how many (stream) partitions does this stream consist of.
+     * Determines how many partitions this stream consist of.
      */
     partitions: number
 
