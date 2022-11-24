@@ -254,4 +254,10 @@ export const validateConfig = (data: unknown): StrictStreamrClientConfig | never
     return data
 }
 
+export const redactConfig = (config: StrictStreamrClientConfig): void => {
+    if ((config.auth as PrivateKeyAuthConfig)?.privateKey !== undefined) {
+        (config.auth as PrivateKeyAuthConfig).privateKey = '(redacted)'
+    }
+}
+
 export const ConfigInjectionToken = Symbol('Config')

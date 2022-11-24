@@ -1,5 +1,5 @@
 import { TrackerRegistryRecord } from '@streamr/protocol'
-import { createStrictConfig } from '../../src/Config'
+import { createStrictConfig, redactConfig } from '../../src/Config'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { generateEthereumAccount } from '../../src/Ethereum'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -135,5 +135,15 @@ describe('Config', () => {
             expect(clientOverrides.network.trackers).not.toBe(trackers)
             expect((clientOverrides.network.trackers as TrackerRegistryRecord[])[0]).not.toBe(trackers[0])
         })
+    })
+
+    it('redact', () => {
+        const config: any = {
+            auth: {
+                privateKey: '0x0000000000000000000000000000000000000000000000000000000000000001'
+            }
+        }
+        redactConfig(config)
+        expect(config.auth.privateKey).toBe('(redacted)')
     })
 })
