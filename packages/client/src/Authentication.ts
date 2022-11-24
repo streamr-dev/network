@@ -37,8 +37,8 @@ export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'au
         return createPrivateKeyAuthentication(normalizedPrivateKey, config)
     } else if ((config.auth as ProviderAuthConfig)?.ethereum !== undefined) {
         const ethereum = (config.auth as ProviderAuthConfig)?.ethereum
-        const metamaskProvider = new Web3Provider(ethereum)
-        const signer = metamaskProvider.getSigner()
+        const provider = new Web3Provider(ethereum)
+        const signer = provider.getSigner()
         return {
             getAddress: pMemoize(async () => {
                 try {
@@ -48,12 +48,12 @@ export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'au
                     const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
                     return toEthereumAddress(accounts[0])
                 } catch {
-                    throw new Error('no addresses connected+selected in Metamask')
+                    throw new Error('no addresses connected and selected in the custom authentication provider')
                 }
             }),
             createMessageSignature: pLimitFn(async (payload: string) => {
                 // sign one at a time & wait a moment before asking for next signature
-                // otherwise metamask extension may not show the prompt window
+                // otherwise MetaMask extension may not show the prompt window
                 const sig = await signer.signMessage(payload)
                 await wait(50)
                 return sig
@@ -62,11 +62,12 @@ export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'au
                 if (config.contracts.streamRegistryChainRPCs.chainId === undefined) {
                     throw new Error('Streamr streamRegistryChainRPC not configured (with chainId) in the StreamrClient options!')
                 }
-                const { chainId } = await metamaskProvider.getNetwork()
+                const { chainId } = await provider.getNetwork()
                 if (chainId !== config.contracts.streamRegistryChainRPCs.chainId) {
                     const sideChainId = config.contracts.streamRegistryChainRPCs.chainId
                     throw new Error(
-                        `Please connect Metamask to Ethereum blockchain with chainId ${sideChainId}: current chainId is ${chainId}`
+                        // eslint-disable-next-line max-len
+                        `Please connect the custom authentication provider to Ethereum blockchain with chainId ${sideChainId}: current chainId is ${chainId}`
                     )
                 }
                 return signer
