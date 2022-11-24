@@ -211,7 +211,7 @@ export class ManagedConnection extends EventEmitter<Events> {
                 throw new Err.ConnectionFailed()
             }
             if (result.winnerName == 'handshakeFailed') {
-                logger.error('handshakeFailed received')
+                logger.trace('handshakeFailed received')
                 //throw new Err.ConnectionFailed()
             }
         }
@@ -240,9 +240,9 @@ export class ManagedConnection extends EventEmitter<Events> {
             if (!this.handshaker) {
                 this.handshaker = new Handshaker(this.ownPeerDescriptor, this.protocolVersion, this.implementation)
             }
-        
+
             this.handshaker!.sendHandshakeResponse()
-        
+
         } else {  // This happens to when there is a regular incoming connection
             this.handshaker!.sendHandshakeResponse()
             this.attachImplementation(this.incomingConnection!)
@@ -260,10 +260,11 @@ export class ManagedConnection extends EventEmitter<Events> {
             this.implementation?.close()
         } else if (this.outgoingConnection) {
             this.outgoingConnection?.close()
-        } else {
+        } else if (this.incomingConnection) {
             this.incomingConnection?.close()
+        } else {
+            this.emit('disconnected')
         }
-        this.emit('disconnected')
     }
 
     isHandshakeCompleted(): boolean {
