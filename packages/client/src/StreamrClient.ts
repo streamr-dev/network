@@ -196,7 +196,7 @@ export class StreamrClient {
         interval?: number
         timeout?: number
         count?: number
-        /** @internal */
+        /** @deprecated */
         messageMatchFn?: (msgTarget: Message, msgGot: Message) => boolean
     }): Promise<void> {
         return this.resends.waitForStorage(message, options)
