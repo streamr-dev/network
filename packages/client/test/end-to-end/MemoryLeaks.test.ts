@@ -4,13 +4,12 @@ import { Defer, wait } from '@streamr/utils'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { LeaksDetector } from '../test-utils/LeaksDetector'
 import { StreamrClient } from '../../src/StreamrClient'
-import { initContainer } from '../../src/Container'
 import { container as rootContainer, DependencyContainer } from 'tsyringe'
 import { writeHeapSnapshot } from 'v8'
 import { Subscription } from '../../src/subscribe/Subscription'
 import { counterId, instanceId } from '../../src/utils/utils'
 import { CONFIG_TEST } from '../../src/ConfigTest'
-import { createStrictConfig, StrictStreamrClientConfig } from '../../src/Config'
+import { createStrictConfig, ConfigInjectionToken, StrictStreamrClientConfig } from '../../src/Config'
 import { ethers } from 'ethers'
 import { NetworkNodeFacade } from '../../src/NetworkNodeFacade'
 import { StorageNodeRegistry } from '../../src/registry/StorageNodeRegistry'
@@ -21,6 +20,7 @@ import { Subscriber } from '../../src/subscribe/Subscriber'
 import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
 import { DestroySignal } from '../../src/DestroySignal'
 import { MessageMetadata } from '../../src/Message'
+import { AuthenticationInjectionToken, createAuthentication } from '../../src/Authentication'
 
 const Dependencies = {
     NetworkNodeFacade,
@@ -80,7 +80,8 @@ describe('MemoryLeaks', () => {
                     ...opts,
                 })
                 const childContainer = rootContainer.createChildContainer()
-                initContainer(config, childContainer)
+                childContainer.register(AuthenticationInjectionToken, { useValue: createAuthentication(config) })
+                childContainer.register(ConfigInjectionToken, { useValue: config })
                 return { config, childContainer }
             }
         })

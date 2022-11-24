@@ -1,8 +1,10 @@
 import 'reflect-metadata'
+import './utils/PatchTsyringe'
+
 import { container as rootContainer } from 'tsyringe'
 import { generateEthereumAccount as _generateEthereumAccount } from './Ethereum'
 import { pOnce } from './utils/promises'
-import { StreamrClientConfig, createStrictConfig, StrictStreamrClientConfig } from './Config'
+import { StreamrClientConfig, createStrictConfig, StrictStreamrClientConfig, ConfigInjectionToken } from './Config'
 import { Publisher } from './publish/Publisher'
 import { Subscriber } from './subscribe/Subscriber'
 import { ProxyPublishSubscribe } from './ProxyPublishSubscribe'
@@ -24,8 +26,7 @@ import { SearchStreamsPermissionFilter } from './registry/searchStreams'
 import { PermissionAssignment, PermissionQuery } from './permission'
 import { MetricsPublisher } from './MetricsPublisher'
 import { PublishMetadata } from '../src/publish/Publisher'
-import { initContainer } from './Container'
-import { Authentication, AuthenticationInjectionToken } from './Authentication'
+import { Authentication, AuthenticationInjectionToken, createAuthentication } from './Authentication'
 import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
 import { GroupKey } from './encryption/GroupKey'
 import { PublisherKeyExchange } from './encryption/PublisherKeyExchange'
@@ -59,11 +60,13 @@ export class StreamrClient {
     private readonly eventEmitter: StreamrClientEventEmitter
 
     constructor(options: StreamrClientConfig = {}, parentContainer = rootContainer) {
-        this.config = createStrictConfig(options)
+        const strictConfig = createStrictConfig(options)
+        const authentication = createAuthentication(strictConfig)
         const container = parentContainer.createChildContainer()
-        initContainer(this.config, container)
-
-        this.id = this.config.id
+        container.register(AuthenticationInjectionToken, { useValue: authentication })
+        container.register(ConfigInjectionToken, { useValue: strictConfig })
+        this.id = strictConfig.id
+        this.config = strictConfig
         this.node = container.resolve<NetworkNodeFacade>(NetworkNodeFacade)
         this.authentication = container.resolve<Authentication>(AuthenticationInjectionToken)
         this.resends = container.resolve<Resends>(Resends)
