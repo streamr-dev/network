@@ -4,7 +4,7 @@ import './utils/PatchTsyringe'
 import { container as rootContainer } from 'tsyringe'
 import { generateEthereumAccount as _generateEthereumAccount } from './Ethereum'
 import { pOnce } from './utils/promises'
-import { StreamrClientConfig, createStrictConfig, StrictStreamrClientConfig, ConfigInjectionToken } from './Config'
+import { StreamrClientConfig, createStrictConfig, redactConfig, StrictStreamrClientConfig, ConfigInjectionToken } from './Config'
 import { Publisher } from './publish/Publisher'
 import { Subscriber } from './subscribe/Subscriber'
 import { ProxyPublishSubscribe } from './ProxyPublishSubscribe'
@@ -62,6 +62,7 @@ export class StreamrClient {
     constructor(options: StreamrClientConfig = {}, parentContainer = rootContainer) {
         const strictConfig = createStrictConfig(options)
         const authentication = createAuthentication(strictConfig)
+        redactConfig(strictConfig)
         const container = parentContainer.createChildContainer()
         container.register(AuthenticationInjectionToken, { useValue: authentication })
         container.register(ConfigInjectionToken, { useValue: strictConfig })
