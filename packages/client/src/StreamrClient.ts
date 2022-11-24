@@ -260,7 +260,7 @@ export class StreamrClient {
          */
         interval?: number
         /**
-         * Timeout after which to give up if message was not seen
+         * Timeout after which to give up if message was not seen.
          */
         timeout?: number
 
