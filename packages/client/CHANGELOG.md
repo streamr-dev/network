@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- Deprecate TypeScript interfaces `StrictStreamrClientConfig`
+- Deprecate `gasPriceStrategy` config option in `contracts.ethereumNetworks`, use `highGasPriceStrategy` instead
+
 ### Fixed
 
 ### Security

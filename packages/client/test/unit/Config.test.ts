@@ -1,11 +1,11 @@
 import { TrackerRegistryRecord } from '@streamr/protocol'
-import { createStrictConfig, STREAM_CLIENT_DEFAULTS } from '../../src/Config'
+import { createStrictConfig } from '../../src/Config'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { generateEthereumAccount } from '../../src/Ethereum'
-import { STREAMR_ICE_SERVERS } from '@streamr/network-node'
 import { StreamrClient } from '../../src/StreamrClient'
 
 describe('Config', () => {
+
     describe('validate', () => {
         it('additional property', () => {
             expect(() => {
@@ -86,11 +86,6 @@ describe('Config', () => {
         })
     })
 
-    it('uses PRODUCTION_STUN_URLS by default', () => {
-        const clientDefaults = createStrictConfig()
-        expect(clientDefaults.network.iceServers).toEqual(STREAMR_ICE_SERVERS)
-    })
-
     describe('ignorable properties', () => {
         it('auth address', () => {
             expect(() => {
@@ -118,7 +113,9 @@ describe('Config', () => {
                 network: {}
             })
             expect(clientOverrides.network).toEqual(clientDefaults.network)
-            expect(clientOverrides.network.trackers).toEqual(STREAM_CLIENT_DEFAULTS.network.trackers)
+            expect(clientOverrides.network.trackers).toEqual({
+                contractAddress: '0xab9BEb0e8B106078c953CcAB4D6bF9142BeF854d'
+            })
         })
 
         it('can override trackers', () => {
