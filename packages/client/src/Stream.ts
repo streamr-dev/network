@@ -1,6 +1,3 @@
-/**
- * Wrapper for Stream metadata and (some) methods.
- */
 import { Resends } from './subscribe/Resends'
 import { Publisher } from './publish/Publisher'
 import { StreamRegistry } from './registry/StreamRegistry'
@@ -39,7 +36,7 @@ export interface StreamMetadata {
     description?: string
 
     /**
-     * Defines the structure of the payloads contained in this stream.
+     * Defines the structure of the content (payloads) of messages in this stream.
      *
      * @remarks Not validated, purely for informational value.
      */
@@ -139,10 +136,7 @@ export class Stream {
     }
 
     /**
-     * Updates the metadata of the stream by merging.
-     *
-     * @param metadata - the new metadata (merged with existing metadata)
-     * @returns if successful, a resolved promise
+     * Updates the metadata of the stream by merging with the existing metadata.
      */
     async update(metadata: Partial<StreamMetadata>): Promise<void> {
         const merged = {
@@ -175,8 +169,6 @@ export class Stream {
      * Deletes the stream.
      *
      * @remarks Stream instance should not be used afterwards.
-     *
-     * @returns if successful, a resolved promise
      */
     async delete(): Promise<void> {
         try {
@@ -191,7 +183,8 @@ export class Stream {
      *
      * @remarks Only works on stored streams.
      *
-     * @returns returns resolved promise on success and noop (i.e. no messages received from resend)
+     * @returns be mindful that in the case of there being zero messages stored, the returned promise will resolve even
+     * though fields were not updated
      */
     async detectFields(): Promise<void> {
         // Get last message of the stream to be used for field detecting
@@ -225,19 +218,18 @@ export class Stream {
     }
 
     /**
-     * Add (assign) the stream to a storage node.
+     * Assigns the stream to a storage node.
      *
      * @category Important
      *
-     * @param nodeAddress - the Ethereum address of the storage node
      * @param waitOptions - control how long to wait for storage node to pick up on assignment
      * @returns a resolved promise if (1) stream was assigned to storage node and (2) the storage node acknowledged the
      * assignment within `timeout`, otherwise rejects. Notice that is possible for this promise to reject but for the
      * storage node assignment to go through eventually.
      */
-    async addToStorageNode(nodeAddress: string, waitOptions: { timeout?: number } = {}): Promise<void> {
+    async addToStorageNode(storageNodeAddress: string, waitOptions: { timeout?: number } = {}): Promise<void> {
         let assignmentSubscription
-        const normalizedNodeAddress = toEthereumAddress(nodeAddress)
+        const normalizedNodeAddress = toEthereumAddress(storageNodeAddress)
         try {
             const streamPartId = toStreamPartID(formStorageNodeAssignmentStreamId(normalizedNodeAddress), DEFAULT_PARTITION)
             assignmentSubscription = new Subscription<any>(streamPartId, this._loggerFactory)

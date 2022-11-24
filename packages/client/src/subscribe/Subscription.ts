@@ -10,8 +10,6 @@ import EventEmitter from 'eventemitter3'
 export interface SubscriptionEvents {
     /**
      * Emitted if an error occurred in the subscription.
-     *
-     * @param err - the error that occurred
      */
     error: (err: Error) => void
 
@@ -47,9 +45,9 @@ export class Subscription<T = unknown> extends MessageStream<T> {
     }
 
     /**
-     * Unsubscribes from the stream.
+     * Unsubscribes this subscription.
      *
-     * @returns if successful, a resolved promise
+     * @remarks The instance should not be used after calling this.
      */
     async unsubscribe(): Promise<void> {
         this.end()
@@ -67,7 +65,7 @@ export class Subscription<T = unknown> extends MessageStream<T> {
     }
 
     /**
-     * Adds a "once" event listener to the subscription.
+     * Adds an event listener to the subscription that is invoked only once.
      * @param eventName - event name, see {@link SubscriptionEvents} for options
      * @param listener - the callback function
      */

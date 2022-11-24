@@ -60,14 +60,8 @@ export class StreamrClient {
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly eventEmitter: StreamrClientEventEmitter
 
-    /**
-     * Instantiates a new {@link StreamrClient} instance.
-     *
-     * @param options - configuration options to use
-     * @param parentContainer - provide a custom dependency injection container, used mostly for testing purposes
-     */
-    constructor(options: StreamrClientConfig = {}, parentContainer = rootContainer) {
-        this.config = createStrictConfig(options)
+    constructor(config: StreamrClientConfig = {}, parentContainer = rootContainer) {
+        this.config = createStrictConfig(config)
         const container = parentContainer.createChildContainer()
         initContainer(this.config, container)
 
@@ -100,9 +94,9 @@ export class StreamrClient {
      * @category Important
      *
      * @param streamDefinition - the stream or stream partition to publish the message to
-     * @param content - the content / payload of the message
+     * @param content - the content (the payload) of the message
      * @param metadata - provide additional metadata to be included in the message or to control the publishing process
-     * @returns if successful, the unencrypted published message including metadata
+     * @returns the published message (note: the field {@link Message.content} is encrypted if the stream is private)
      */
     async publish<T>(
         streamDefinition: StreamDefinition,
@@ -115,13 +109,7 @@ export class StreamrClient {
     }
 
     /**
-     * Manually update the current encryption key of a given stream.
-     *
-     * @remarks Only affects the encryption key used when acting as publisher.
-     *
-     * @param opts - provide the options according to which the encryption key is updated, e.g., stream id,
-     * distribution method and so forth.
-     * @returns if successful, a resolved promise
+     * Manually updates the encryption key used when publishing messages to a given stream.
      */
     async updateEncryptionKey(opts: UpdateEncryptionKeyOptions): Promise<void> {
         if (opts.streamId === undefined) {
@@ -139,14 +127,10 @@ export class StreamrClient {
     }
 
     /**
-     * Adds an encryption key to the key store.
+     * Adds an encryption key for a given stream to the key store.
      *
      * @remarks Keys will be added to the store automatically by the client as encountered. This method can be used to
      * manually add some known keys into the store.
-     *
-     * @param key - the key to be added
-     * @param streamIdOrPath - defines which stream this key is for
-     * @returns if successful, a resolved promise
      */
     async addEncryptionKey(key: GroupKey, streamIdOrPath: string): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
@@ -165,7 +149,7 @@ export class StreamrClient {
      * @param options - the stream or stream partition to subscribe to,
      * additionally a resend can be performed by providing resend options
      * @param onMessage - callback will be invoked for each message received in subscription
-     * @returns if successful, a {@link Subscription} that can be used to manage the subscription etc.
+     * @returns a {@link Subscription} that can be used to manage the subscription etc.
      */
     async subscribe<T>(
         options: StreamDefinition & { resend?: ResendOptions },
@@ -190,15 +174,13 @@ export class StreamrClient {
     }
 
     /**
-     * Unsubscribes from a stream or stream partition in the network.
+     * Unsubscribes from streams or stream partitions in the network.
      *
      * @remarks no-op if subscription does not exist
      *
      * @category Important
      *
-     * @param streamDefinitionOrSubscription - the stream or stream partition to unsubscribe from, leave as `undefined`
-     * to unsubscribe from all existing subscriptions.
-     * @returns if successful, a resolved promise
+     * @param streamDefinitionOrSubscription - leave as `undefined` to unsubscribe from all existing subscriptions.
      */
     unsubscribe(streamDefinitionOrSubscription?: StreamDefinition | Subscription): Promise<unknown> {
         return this.subscriber.unsubscribe(streamDefinitionOrSubscription)
@@ -209,8 +191,7 @@ export class StreamrClient {
      *
      * @category Important
      *
-     * @param streamDefinition - the stream or stream partition to look for, leave as `undefined` to get all
-     * subscriptions
+     * @param streamDefinition - leave as `undefined` to get all subscriptions
      */
     getSubscriptions(streamDefinition?: StreamDefinition): Promise<Subscription<unknown>[]> {
         return this.subscriber.getSubscriptions(streamDefinition)
@@ -225,14 +206,11 @@ export class StreamrClient {
      *
      * @category Important
      *
-     * @remarks The given stream needs to be assigned to at least one storage node, otherwise this method will outright
-     * reject.
-     *
      * @param streamDefinition - the stream partition for which data should be resent
      * @param options - defines the kind of resend that should be performed
      * @param onMessage - callback will be invoked for each message retrieved
-     * @returns if successful, a {@link MessageStream} that provides an alternative way of handling messages
-     * (via async iterator)
+     * @returns a {@link MessageStream} that provides an alternative way of iterating messages. Rejects if the stream is
+     * not stored (i.e. is not assigned to a storage node).
      */
     async resend<T>(
         streamDefinition: StreamDefinition,
@@ -252,7 +230,7 @@ export class StreamrClient {
      *
      * @param message - the message to be awaited for
      * @param options - additional options for controlling waiting and message matching
-     * @returns resolved promise if message was found in storage before timeout, otherwise rejects
+     * @returns rejects if message was found in storage before timeout
      */
     waitForStorage(message: Message, options?: {
         /**
@@ -288,8 +266,7 @@ export class StreamrClient {
      *
      * @category Important
      *
-     * @param streamIdOrPath - the stream id to look for
-     * @returns if found, the {@link Stream} object, otherwise rejects
+     * @returns rejects if the stream is not found
      */
     getStream(streamIdOrPath: string): Promise<Stream> {
         return this.streamRegistry.getStream(streamIdOrPath)
@@ -302,7 +279,6 @@ export class StreamrClient {
      *
      * @param propsOrStreamIdOrPath - the stream id to be used for the new stream, and optionally, any
      * associated metadata
-     * @returns if the stream is successfully created, returns an associated {@link Stream} object
      */
     async createStream(propsOrStreamIdOrPath: Partial<StreamMetadata> & { id: string } | string): Promise<Stream> {
         const props = typeof propsOrStreamIdOrPath === 'object' ? propsOrStreamIdOrPath : { id: propsOrStreamIdOrPath }
@@ -314,12 +290,11 @@ export class StreamrClient {
     }
 
     /**
-     * Gets a stream, creating a new one as a side effect if one does not exist.
+     * Gets a stream, creating one if it does not exist.
      *
      * @category Important
      *
-     * @param props - the stream id to get or create. Field `partitions` is only used if creation is necessary.
-     * @returns if successful, the {@link Stream} object associated with the stream
+     * @param props - the stream id to get or create. Field `partitions` is only used if creating the stream.
      */
     async getOrCreateStream(props: { id: string, partitions?: number }): Promise<Stream> {
         try {
@@ -336,7 +311,6 @@ export class StreamrClient {
      * Updates the metadata of a stream.
      *
      * @param props - the stream id and the metadata fields to be updated
-     * @returns if successful, the updated {@link Stream} object
      */
     async updateStream(props: Partial<StreamMetadata> & { id: string }): Promise<Stream> {
         const streamId = await this.streamIdBuilder.toStreamID(props.id)
@@ -345,9 +319,6 @@ export class StreamrClient {
 
     /**
      * Deletes a stream.
-     *
-     * @param streamIdOrPath - the stream id of the stream to be deleted
-     * @returns if successful, a resolved promise
      */
     deleteStream(streamIdOrPath: string): Promise<void> {
         return this.streamRegistry.deleteStream(streamIdOrPath)
@@ -356,9 +327,8 @@ export class StreamrClient {
     /**
      * Searches for streams based on given criteria.
      *
-     * @param term - a search term that should be contained in either the stream id or metadata of a result
+     * @param term - a search term that should be part of the stream id of a result
      * @param permissionFilter - permissions that should be in effect for a result
-     * @returns an async iterable collection of matching {@link Stream} results (automatic paging)
      */
     searchStreams(term: string | undefined, permissionFilter: SearchStreamsPermissionFilter | undefined): AsyncIterable<Stream> {
         return this.streamRegistry.searchStreams(term, permissionFilter)
@@ -369,20 +339,14 @@ export class StreamrClient {
     // --------------------------------------------------------------------------------------------
 
     /**
-     * Gets all valid publishers of a stream.
-     *
-     * @param streamIdOrPath - the stream id
-     * @returns async iterable collection of {@link EthereumAddress} (automatic paging)
+     * Gets all ethereum addresses that have {@link StreamPermission.PUBLISH} permission to the stream.
      */
     getStreamPublishers(streamIdOrPath: string): AsyncIterable<EthereumAddress> {
         return this.streamRegistry.getStreamPublishers(streamIdOrPath)
     }
 
     /**
-     * Gets all valid subscribers of a stream.
-     *
-     * @param streamIdOrPath - the stream id
-     * @returns async iterable collection of {@link EthereumAddress} (automatic paging)
+     * Gets all ethereum addresses that have {@link StreamPermission.SUBSCRIBE} permission to the stream.
      */
     getStreamSubscribers(streamIdOrPath: string): AsyncIterable<EthereumAddress> {
         return this.streamRegistry.getStreamSubscribers(streamIdOrPath)
@@ -390,40 +354,27 @@ export class StreamrClient {
 
     /**
      * Checks whether the given permission is in effect.
-     *
-     * @param query - defines the permission to be checked
-     * @returns resolves with true/false, rejects if the check could not be performed
      */
     hasPermission(query: PermissionQuery): Promise<boolean> {
         return this.streamRegistry.hasPermission(query)
     }
 
     /**
-     * Returns a list of all permissions in effect for a given stream.
-     *
-     * @param streamIdOrPath - the stream id
+     * Returns the list of all permissions in effect for a given stream.
      */
     getPermissions(streamIdOrPath: string): Promise<PermissionAssignment[]> {
         return this.streamRegistry.getPermissions(streamIdOrPath)
     }
 
     /**
-     * Grants a permission on a given stream.
-     *
-     * @param streamIdOrPath - the stream id
-     * @param assignments - defines the permission(s) to be granted
-     * @returns if successful, a resolved promise
+     * Grants permissions on a given stream.
      */
     grantPermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
         return this.streamRegistry.grantPermissions(streamIdOrPath, ...assignments)
     }
 
     /**
-     * Revokes a permission on a given stream.
-     *
-     * @param streamIdOrPath - the stream id
-     * @param assignments - defines the permission(s) to be revoked
-     * @returns if successful, a resolved promise
+     * Revokes permissions on a given stream.
      */
     revokePermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
         return this.streamRegistry.revokePermissions(streamIdOrPath, ...assignments)
@@ -433,11 +384,8 @@ export class StreamrClient {
      * Sets a list of permissions to be in effect.
      *
      * @remarks Can be used to set the permissions of multiple streams in one transaction. Great for doing bulk
-     * operations and thus saving gas costs. Notice that the behaviour is _set_, therefore any existing permissions not
-     * re-defined will be removed.
-     *
-     * @param items - a list of permissions to be set
-     * @returns if successful, a resolved promise
+     * operations and saving gas costs. Notice that the behaviour is overwriting, therefore any existing permissions not
+     * defined will be removed (per stream).
      */
     setPermissions(...items: {
         streamId: string
@@ -447,22 +395,14 @@ export class StreamrClient {
     }
 
     /**
-     * Checks whether a given (user) address is a valid publisher of a stream.
-     *
-     * @param streamIdOrPath - the stream id
-     * @param userAddress - the Ethereum address of the user
-     * @returns resolves with true/false, rejects if check could not be performed
+     * Checks whether a given ethereum address has {@link StreamPermission.PUBLISH} permission to a stream.
      */
     async isStreamPublisher(streamIdOrPath: string, userAddress: string): Promise<boolean> {
         return this.streamRegistry.isStreamPublisher(streamIdOrPath, toEthereumAddress(userAddress))
     }
 
     /**
-     * Checks whether a given (user) address is a valid subscriber of a stream.
-     *
-     * @param streamIdOrPath - the stream id
-     * @param userAddress - the Ethereum address of the user
-     * @returns resolves with true/false, rejects if check could not be performed
+     * Checks whether a given ethereum address has {@link StreamPermission.SUBSCRIBE} permission to a stream.
      */
     async isStreamSubscriber(streamIdOrPath: string, userAddress: string): Promise<boolean> {
         return this.streamRegistry.isStreamSubscriber(streamIdOrPath, toEthereumAddress(userAddress))
@@ -473,54 +413,40 @@ export class StreamrClient {
     // --------------------------------------------------------------------------------------------
 
     /**
-     * Adds (or assigns) a stream to a storage node.
-     *
-     * @param streamIdOrPath - the stream id
-     * @param nodeAddress - Ethereum address of the storage node
-     * @returns if successful, a resolved promise
+     * Assigns a stream to a storage node.
      */
-    async addStreamToStorageNode(streamIdOrPath: string, nodeAddress: string): Promise<void> {
-        return this.streamStorageRegistry.addStreamToStorageNode(streamIdOrPath, toEthereumAddress(nodeAddress))
+    async addStreamToStorageNode(streamIdOrPath: string, storageNodeAddress: string): Promise<void> {
+        return this.streamStorageRegistry.addStreamToStorageNode(streamIdOrPath, toEthereumAddress(storageNodeAddress))
     }
 
     /**
-     * Removes (or unassigns) a stream from a storage node.
-     *
-     * @param streamIdOrPath - the stream id
-     * @param nodeAddress - Ethereum address of the storage node
-     * @returns if successful, a resolved promise
+     * Unassigns a stream from a storage node.
      */
-    async removeStreamFromStorageNode(streamIdOrPath: string, nodeAddress: string): Promise<void> {
-        return this.streamStorageRegistry.removeStreamFromStorageNode(streamIdOrPath, toEthereumAddress(nodeAddress))
+    async removeStreamFromStorageNode(streamIdOrPath: string, storageNodeAddress: string): Promise<void> {
+        return this.streamStorageRegistry.removeStreamFromStorageNode(streamIdOrPath, toEthereumAddress(storageNodeAddress))
     }
 
     /**
-     * Checks whether a stream is being stored by a storage node.
-     *
-     * @param streamIdOrPath - the stream id
-     * @param nodeAddress - Ethereum address of the storage node
-     * @returns resolves with true/false, rejects if check could not be performed
+     * Checks whether a stream is assigned to a storage node.
      */
-    async isStoredStream(streamIdOrPath: string, nodeAddress: string): Promise<boolean> {
-        return this.streamStorageRegistry.isStoredStream(streamIdOrPath, toEthereumAddress(nodeAddress))
+    async isStoredStream(streamIdOrPath: string, storageNodeAddress: string): Promise<boolean> {
+        return this.streamStorageRegistry.isStoredStream(streamIdOrPath, toEthereumAddress(storageNodeAddress))
     }
 
     /**
-     * Gets the full list of streams being stored by a storage node.
+     * Gets all streams assigned to a storage node.
      *
-     * @param nodeAddress - Ethereum address of the storage node
-     * @returns a list of {@link Stream} being stored as well as `blockNumber` of result (i.e. smart contract state)
+     * @returns a list of {@link Stream} as well as `blockNumber` of result (i.e. blockchain state)
      */
-    async getStoredStreams(nodeAddress: string): Promise<{ streams: Stream[], blockNumber: number }> {
-        return this.streamStorageRegistry.getStoredStreams(toEthereumAddress(nodeAddress))
+    async getStoredStreams(storageNodeAddress: string): Promise<{ streams: Stream[], blockNumber: number }> {
+        return this.streamStorageRegistry.getStoredStreams(toEthereumAddress(storageNodeAddress))
     }
 
     /**
      * Gets a list of storage nodes.
      *
-     * @param streamIdOrPath - if given, returns storage nodes storing the stream in question, otherwise returns full
-     * list of all known storage nodes
-     * @returns a list of {@link EthereumAddress} corresponding to storage nodes
+     * @param streamIdOrPath - if a stream is given, returns the list of storage nodes the stream has been assigned to;
+     * leave as `undefined` to return all storage nodes
      */
     async getStorageNodes(streamIdOrPath?: string): Promise<EthereumAddress[]> {
         return this.streamStorageRegistry.getStorageNodes(streamIdOrPath)
@@ -531,8 +457,7 @@ export class StreamrClient {
      *
      * @remarks Acts on behalf of the wallet associated with the current {@link StreamrClient} instance.
      *
-     * @param metadata - metadata to be set. If left `undefined`, effectively removes the storage node from the
-     * registry
+     * @param metadata - if `undefined`, removes the storage node from the registry
      */
     setStorageNodeMetadata(metadata: StorageNodeMetadata | undefined): Promise<void> {
         return this.storageNodeRegistry.setStorageNodeMetadata(metadata)
@@ -541,8 +466,7 @@ export class StreamrClient {
     /**
      * Gets the metadata of a storage node from the storage node registry.
      *
-     * @param nodeAddress - Ethereum address of the storage node
-     * @returns the metadata of the storage node, rejects if the storage node is not found
+     * @returns rejects if the storage node is not found
      */
     async getStorageNodeMetadata(nodeAddress: string): Promise<StorageNodeMetadata> {
         return this.storageNodeRegistry.getStorageNodeMetadata(toEthereumAddress(nodeAddress))
@@ -564,7 +488,6 @@ export class StreamrClient {
     // --------------------------------------------------------------------------------------------
 
     /**
-     * Gets the network node
      * @deprecated This in an internal method
      */
     getNode(): Promise<NetworkNodeStub> {
@@ -637,7 +560,7 @@ export class StreamrClient {
     }
 
     /**
-     * Adds a "once" event listener to the client.
+     * Adds an event listener to the client that is invoked only once.
      * @param eventName - event name, see {@link StreamrClientEvents} for options
      * @param listener - the callback function
      */
