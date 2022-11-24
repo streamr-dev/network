@@ -86,6 +86,8 @@ function getFieldType(value: any): (Field['type'] | undefined) {
 }
 
 /**
+ * A convenience API for managing and accessing an individual stream.
+ *
  * @category Important
  */
 /* eslint-disable no-underscore-dangle */
@@ -137,7 +139,10 @@ export class Stream {
     }
 
     /**
-     * Persist stream metadata updates.
+     * Updates the metadata of the stream.
+     *
+     * @param metadata - the new metadata (merged with existing metadata)
+     * @returns if successful, a resolved promise
      */
     async update(metadata: Partial<StreamMetadata>): Promise<void> {
         const merged = {
@@ -152,14 +157,27 @@ export class Stream {
         this.metadata = merged
     }
 
+    /**
+     * Returns the partitions of the stream.
+     */
     getStreamParts(): StreamPartID[] {
         return range(0, this.getMetadata().partitions).map((p) => toStreamPartID(this.id, p))
     }
 
+    /**
+     * Returns the metadata of the stream.
+     */
     getMetadata(): StreamMetadata {
         return this.metadata
     }
 
+    /**
+     * Deletes the stream.
+     *
+     * @remarks Stream instance should not be used afterwards.
+     *
+     * @returns if successful, a resolved promise
+     */
     async delete(): Promise<void> {
         try {
             await this._streamRegistry.deleteStream(this.id)
@@ -168,6 +186,13 @@ export class Stream {
         }
     }
 
+    /**
+     * Attempts to detect and update the {@link StreamMetadata.config} metadata of the stream by performing a resend.
+     *
+     * @remarks Only works on stored streams.
+     *
+     * @returns returns resolved promise on success and noop (i.e. no messages received from resend)
+     */
     async detectFields(): Promise<void> {
         // Get last message of the stream to be used for field detecting
         const sub = await this._resends.last<any>(
@@ -200,7 +225,15 @@ export class Stream {
     }
 
     /**
+     * Add (assign) the stream to a storage node.
+     *
      * @category Important
+     *
+     * @param nodeAddress - the Ethereum address of the storage node
+     * @param waitOptions - control how long to wait for storage node to pick up on assignment
+     * @returns a resolved promise if (1) stream was assigned to storage node and (2) the storage node acknowledged the
+     * assignment within `timeout`, otherwise rejects. Notice that is possible for this promise to reject but for the
+     * storage node assignment to go through eventually.
      */
     async addToStorageNode(nodeAddress: string, waitOptions: { timeout?: number } = {}): Promise<void> {
         let assignmentSubscription
@@ -227,7 +260,7 @@ export class Stream {
     }
 
     /**
-     * @category Important
+     * See {@link StreamrClient.removeStreamFromStorageNode | StreamrClient.removeStreamFromStorageNode}.
      */
     async removeFromStorageNode(nodeAddress: string): Promise<void> {
         try {
@@ -237,11 +270,16 @@ export class Stream {
         }
     }
 
+    /**
+     * See {@link StreamrClient.getStorageNodes | StreamrClient.getStorageNodes}.
+     */
     async getStorageNodes(): Promise<string[]> {
         return this._streamStorageRegistry.getStorageNodes(this.id)
     }
 
     /**
+     * See {@link StreamrClient.publish | StreamrClient.publish}.
+     *
      * @category Important
      */
     async publish<T>(content: T, metadata?: PublishMetadata): Promise<Message> {
@@ -264,6 +302,8 @@ export class Stream {
     }
 
     /**
+     * See {@link StreamrClient.hasPermission | StreamrClient.hasPermission}.
+     *
      * @category Important
      */
     async hasPermission(query: Omit<UserPermissionQuery, 'streamId'> | Omit<PublicPermissionQuery, 'streamId'>): Promise<boolean> {
@@ -274,6 +314,8 @@ export class Stream {
     }
 
     /**
+     * See {@link StreamrClient.getPermissions | StreamrClient.getPermissions}.
+     *
      * @category Important
      */
     async getPermissions(): Promise<PermissionAssignment[]> {
@@ -281,6 +323,8 @@ export class Stream {
     }
 
     /**
+     * See {@link StreamrClient.grantPermissions | StreamrClient.grantPermissions}.
+     *
      * @category Important
      */
     async grantPermissions(...assignments: PermissionAssignment[]): Promise<void> {
@@ -288,6 +332,8 @@ export class Stream {
     }
 
     /**
+     * See {@link StreamrClient.revokePermissions | StreamrClient.revokePermissions}.
+     *
      * @category Important
      */
     async revokePermissions(...assignments: PermissionAssignment[]): Promise<void> {

@@ -12,6 +12,10 @@ import { omit } from 'lodash'
 
 export type MessageListener<T, R = unknown> = (content: T, metadata: MessageMetadata) => R | Promise<R>
 
+/**
+ * Provides asynchronous iteration with
+ * {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for-await...of | for await .. of}.
+ */
 export class MessageStream<T = unknown> implements AsyncIterable<Message> {
 
     private readonly pipeline: PushPipeline<StreamMessage<T>, StreamMessage<T>> = new PushPipeline()
