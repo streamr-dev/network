@@ -63,7 +63,7 @@ export class DhtNodeConfig {
     serviceId = 'layer0'
     parallelism = 3
     maxNeighborListSize = 100
-    numberOfNodesPerKBucket = 1
+    numberOfNodesPerKBucket = 8
     joinNoProgressLimit = 4
     routeMessageTimeout = 4000
     dhtJoinTimeout = 60000
@@ -470,6 +470,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         if (!this.started || this.stopped || this.rejoinOngoing) {
             return
         }
+        logger.info(`Rejoining DHT ${this.config.serviceId}!`)
         this.rejoinOngoing = true
         try {
             this.neighborList!.clear()

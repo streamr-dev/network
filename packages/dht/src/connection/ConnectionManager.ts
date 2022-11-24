@@ -87,21 +87,29 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     constructor(private config: ConnectionManagerConfig) {
         super()
 
+        this.incomingConnectionCallback = this.incomingConnectionCallback.bind(this)
+
         if (this.config.simulator) {
             logger.trace(`Creating SimulatorConnector`)
             this.simulatorConnector = new SimulatorConnector(ConnectionManager.PROTOCOL_VERSION,
-                this.config.ownPeerDescriptor!, this.config.simulator)
+                this.config.ownPeerDescriptor!, this.config.simulator, this.incomingConnectionCallback)
+
             this.config.simulator.addConnector(this.simulatorConnector)
+
             this.ownPeerDescriptor = this.config.ownPeerDescriptor
+
+            /*
             this.simulatorConnector!.on('newConnection', (connection: ManagedConnection) => {
                 this.onNewConnection(connection)
             })
+            */
+
             this.started = true
 
         } else {
             logger.trace(`Creating WebSocketConnector`)
             this.webSocketConnector = new WebSocketConnector(ConnectionManager.PROTOCOL_VERSION, this.config.transportLayer!,
-                this.canConnect.bind(this), this.config.webSocketPort, this.config.webSocketHost,
+                this.canConnect.bind(this), this.incomingConnectionCallback, this.config.webSocketPort, this.config.webSocketHost,
                 this.config.entryPoints)
 
             logger.trace(`Creating WebRTCConnector`)
@@ -109,7 +117,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 rpcTransport: this.config.transportLayer!,
                 protocolVersion: ConnectionManager.PROTOCOL_VERSION,
                 stunUrls: this.config.stunUrls
-            })
+            }, this.incomingConnectionCallback)
         }
 
         this.serviceId = (this.config.serviceIdPrefix ? this.config.serviceIdPrefix : '') + 'ConnectionManager'
@@ -143,15 +151,20 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             this.ownPeerDescriptor = ownPeerDescriptor
 
             this.webSocketConnector!.setOwnPeerDescriptor(ownPeerDescriptor)
+
+            /*
             this.webSocketConnector!.on('newConnection', (connection: ManagedConnection) => {
                 this.onNewConnection(connection)
             })
+            */
 
             this.webrtcConnector!.setOwnPeerDescriptor(ownPeerDescriptor)
 
+            /*
             this.webrtcConnector!.on('newConnection', (connection: ManagedConnection) => {
                 this.onNewConnection(connection)
             })
+            */
         }
     }
 
@@ -224,7 +237,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 connection = this.webrtcConnector!.connect(peerDescriptor)
             }
 
-            await this.onNewConnection(connection)
+            this.incomingConnectionCallback(connection)
+            //await this.onNewConnection(connection)
         }
 
         return connection!.send(Message.toBinary(message))
@@ -336,11 +350,11 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         this.emit('disconnected', connection.getPeerDescriptor()!)
     }
 
-    private onNewConnection = async (connection: ManagedConnection) => {
+    private incomingConnectionCallback(connection: ManagedConnection): boolean {
         if (!this.started || this.stopped) {
-            return
+            return false
         }
-        logger.trace('onNewConnection() objectId ' + connection.objectId)
+        logger.trace('incomingConnectionCallback() objectId ' + connection.objectId)
 
         const newPeerID = PeerID.fromValue(connection.getPeerDescriptor()!.kademliaId)
 
@@ -348,25 +362,21 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             if (newPeerID.hasSmallerHashThan(
                 PeerID.fromValue(this.ownPeerDescriptor!.kademliaId))) {
                 // replace the current connection
-                const oldConnection = this.connections.get(newPeerID.toKey())
+                const oldConnection = this.connections.get(newPeerID.toKey())!
+                logger.trace('incomingConnectionCallback() replacing old connection objectId ' +
+                    oldConnection.objectId + ' with new connection objectId ' + connection.objectId)
+
                 const buffer = oldConnection!.getOutputBuffer()
 
                 for (let i = 0; i < buffer.length; i++) {
-                    try {
-                        await connection.send(buffer[i])
-                    } catch (e) {
-                        logger.error('Moving outputbuffer to new connection failed ' + e)
-                        oldConnection!.reportBufferSendingByOtherConnectionFailed()
-                        connection.close()
-                        return
-                    }
+                    connection.sendNoWait(buffer[i])
                 }
                 oldConnection!.reportBufferSentByOtherConnection()
                 oldConnection!.removeAllListeners()
                 oldConnection!.close()
             } else {
                 connection.close()
-                return
+                return false
             }
         }
 
@@ -385,6 +395,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         this.connections.set(PeerID.fromValue(connection.getPeerDescriptor()!.kademliaId).toKey(), connection)
 
         this.emit('newConnection', connection)
+        return true
     }
 
     private closeConnection(id: PeerIDKey, reason?: string): void {

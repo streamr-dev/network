@@ -1,10 +1,6 @@
 /* eslint-disable class-methods-use-this */
 
 import 'setimmediate'
-import EventEmitter from 'eventemitter3'
-import {
-    ManagedConnectionSourceEvent
-} from '../IManagedConnectionSource'
 
 import { PeerID } from '../../helpers/PeerID'
 import { ConnectionType } from '../IConnection'
@@ -20,7 +16,7 @@ import { SimulatorConnection } from './SimulatorConnection'
 
 const logger = new Logger(module)
 
-export class SimulatorConnector extends EventEmitter<ManagedConnectionSourceEvent> {
+export class SimulatorConnector {
 
     private connectingConnections: Map<PeerIDKey, ManagedConnection> = new Map()
     private stopped = false
@@ -29,8 +25,8 @@ export class SimulatorConnector extends EventEmitter<ManagedConnectionSourceEven
         private protocolVersion: string,
         private ownPeerDescriptor: PeerDescriptor,
         private simulator: Simulator,
+        private incomingConnectionCallback: (connection: ManagedConnection) => boolean
     ) {
-        super()
     }
 
     public async start(): Promise<void> {
@@ -79,9 +75,17 @@ export class SimulatorConnector extends EventEmitter<ManagedConnectionSourceEven
             ConnectionType.SIMULATOR_SERVER, undefined, connection)
 
         logger.trace('connected, objectId: ' + managedConnection.objectId)
-        managedConnection.once('handshakeCompleted', (_peerDescriptor: PeerDescriptor) => {
-            logger.trace('handshake completed objectId: ' + managedConnection.objectId)
-            this.emit('newConnection', managedConnection)
+        
+        managedConnection.once('handshakeRequest', (_peerDescriptor: PeerDescriptor) => {
+            logger.trace('incoming handshake request objectId: ' + managedConnection.objectId)
+            
+            if (this.incomingConnectionCallback(managedConnection)) {
+                managedConnection.acceptHandshake()
+            } else {
+                managedConnection.rejectHandshake('Duplicate connection')
+                managedConnection.close()
+            }
+            //this.emit('newConnection', managedConnection)
         })
     }
 
