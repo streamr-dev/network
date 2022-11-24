@@ -357,7 +357,7 @@ export class StreamrClient {
      * Searches for streams based on given criteria.
      *
      * @param term - a search term that should be contained in either the stream id or metadata of a result
-     * @param permissionFilter - check that given permissions should be in effect
+     * @param permissionFilter - permissions that should be in effect for a result
      * @returns an async iterable collection of matching {@link Stream} results (automatic paging)
      */
     searchStreams(term: string | undefined, permissionFilter: SearchStreamsPermissionFilter | undefined): AsyncIterable<Stream> {
