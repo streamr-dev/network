@@ -28,7 +28,7 @@ export interface Message {
     timestamp: number
 
     /**
-     * Tiebreaker used to determine order in the case of multiple messages having the same exact timestamp.
+     * Tiebreaker used to determine order in the case of multiple messages within a message chain having the same exact timestamp.
      */
     sequenceNumber: number
 
