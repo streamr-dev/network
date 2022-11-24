@@ -1,5 +1,6 @@
 import { ConnectionManager, DhtNode } from '@streamr/dht'
 import { StreamrNode } from './logic/StreamrNode'
+import { MetricsContext } from '@streamr/utils'
 
 export type NetworkOptions = any
 
@@ -8,18 +9,22 @@ export class NetworkStack {
     private connectionManager?: ConnectionManager
     private readonly layer0DhtNode: DhtNode
     private readonly streamrNode: StreamrNode
+    private readonly metricsContext: MetricsContext
 
     constructor(private readonly options: NetworkOptions) {
-
+        this.metricsContext = options.metricsContext || new MetricsContext()
         this.layer0DhtNode = new DhtNode({
             webSocketPort: options.websocketPort,
             numberOfNodesPerKBucket: options.numberOfNodesPerKBucket,
             entryPoints: options.entryPoints || [],
             peerDescriptor: options.peerDescriptor,
             peerIdString: options.stringKademliaId,
-            transportLayer: options.transportLayer
+            transportLayer: options.transportLayer,
+            metricsContext: this.metricsContext
         })
-        this.streamrNode = new StreamrNode()
+        this.streamrNode = new StreamrNode({
+            metricsContext: this.metricsContext
+        })
     }
 
     async start(): Promise<void> {
@@ -41,6 +46,10 @@ export class NetworkStack {
 
     getLayer0DhtNode(): DhtNode {
         return this.layer0DhtNode
+    }
+
+    getMetricsContext(): MetricsContext {
+        return this.metricsContext
     }
 
     async stop(): Promise<void> {

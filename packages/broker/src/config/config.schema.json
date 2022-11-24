@@ -4,7 +4,6 @@
     "description": "Broker configuration format",
     "type": "object",
     "required": [
-        "$schema",
         "client",
         "plugins"
     ],
@@ -19,14 +18,27 @@
             "additionalProperties": true,
             "properties": {
                 "auth": {
-                    "type": "object",
-                    "properties": {
-                        "privateKey": {
-                            "type": "string",
-                            "pattern": "^(0x)?[a-fA-F0-9]{64}$"
+                    "anyOf": [
+                        {
+                            "type": "object",
+                            "properties": {
+                                "privateKey": {
+                                    "type": "string",
+                                    "pattern": "^(0x)?[a-fA-F0-9]{64}$"
+                                }
+                            },
+                            "required": ["privateKey"]
+                        },
+                        {
+                            "type": "object",
+                            "properties": {
+                                "ethereum": {
+                                    "type": "object"
+                                }
+                            },
+                            "required": ["ethereum"]
                         }
-                    },
-                    "required": ["privateKey"]
+                    ]
                 }
             },
             "required": ["auth"]
@@ -49,31 +61,30 @@
                     "description": "Port to start HTTP server on",
                     "default": 7171
                 },
-                "certFileName": {
-                    "type": [
-                        "string",
-                        "null"
+                "sslCertificate": {
+                    "description": "Files to use for SSL",
+                    "type": "object",
+                    "required": [
+                        "certFileName",
+                        "privateKeyFileName"
                     ],
-                    "description": "Path of certificate file to use for SSL",
-                    "default": null
-                },
-                "privateKeyFileName": {
-                    "type": [
-                        "string",
-                        "null"
-                    ],
-                    "description": "Path of private key file to use for SSL",
-                    "default": null
+                    "additionalProperties": false,
+                    "properties": {
+                        "certFileName": {
+                            "type": "string",
+                            "description": "Path of certificate file"
+                        },
+                        "privateKeyFileName": {
+                            "type": "string",
+                            "description": "Path of private key file"
+                        }
+                    }
                 }
             }
         },
         "apiAuthentication": {
-            "type": [
-                "object",
-                "null"
-            ],
+            "type": "object",
             "description": "Plugins should restrict the API access: if an endpoint requires authentication, the user must provide one of the API keys e.g. in a request header",
-            "default": null,
             "required": [
                 "keys"
             ],

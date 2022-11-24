@@ -134,6 +134,7 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
             const avg = graphNodes.reduce((acc, curr) => {
                 return acc + curr.getTargetNeighborStringIds().length
             }, 0) / numOfNodes
+            //logger.info(`AVG Number of neighbors: ${avg}`)
             return avg >= 3.90
         }, 60000)
 

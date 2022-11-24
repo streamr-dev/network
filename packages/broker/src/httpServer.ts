@@ -5,7 +5,7 @@ import cors from 'cors'
 import express, { Request, Response } from 'express'
 import { Logger } from '@streamr/utils'
 import { once } from 'events'
-import { HttpServerConfig } from './config/config'
+import { Config } from './config/config'
 import { ApiAuthenticator } from './apiAuthenticator'
 
 const logger = new Logger(module)
@@ -36,7 +36,7 @@ const createAuthenticatorMiddleware = (apiAuthenticator: ApiAuthenticator) => {
 
 export const startServer = async (
     routers: express.Router[],
-    config: HttpServerConfig,
+    config: NonNullable<Config['httpServer']>,
     apiAuthenticator: ApiAuthenticator
 ): Promise<HttpServer | https.Server> => {
     const app = express()
@@ -47,10 +47,10 @@ export const startServer = async (
     app.use(createAuthenticatorMiddleware(apiAuthenticator))
     routers.forEach((router) => app.use(router))
     let serverFactory: { listen: (port: number) => HttpServer | HttpsServer }
-    if (config.privateKeyFileName && config.certFileName) {
+    if (config.sslCertificate !== undefined) {
         serverFactory = https.createServer({
-            cert: fs.readFileSync(config.certFileName),
-            key: fs.readFileSync(config.privateKeyFileName)
+            cert: fs.readFileSync(config.sslCertificate.certFileName),
+            key: fs.readFileSync(config.sslCertificate.privateKeyFileName)
         }, app)
     } else {
         serverFactory = app

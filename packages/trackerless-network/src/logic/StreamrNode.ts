@@ -1,8 +1,15 @@
 import { RandomGraphNode, Event as RandomGraphEvent } from './RandomGraphNode'
-import { PeerDescriptor, ConnectionLocker, DhtNode, ITransport } from '@streamr/dht'
+import { PeerDescriptor, ConnectionLocker, DhtNode, ITransport, PeerID } from '@streamr/dht'
 import { StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { EventEmitter } from 'events'
-import { Logger, waitForCondition } from '@streamr/utils'
+import {
+    Logger,
+    waitForCondition,
+    MetricsContext,
+    RateMetric,
+    Metric,
+    MetricsDefinition
+} from '@streamr/utils'
 import { uniq } from 'lodash'
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 
@@ -23,6 +30,15 @@ const logger = new Logger(module)
 
 let cleanUp: () => Promise<void> = async () => {}
 
+interface Metrics extends MetricsDefinition {
+    publishMessagesPerSecond: Metric
+    publishBytesPerSecond: Metric
+}
+
+interface StreamrNodeOpts {
+    metricsContext?: MetricsContext
+}
+
 export class StreamrNode extends EventEmitter {
     private readonly streams: Map<string, StreamObject>
     private layer0: DhtNode | null = null
@@ -31,17 +47,25 @@ export class StreamrNode extends EventEmitter {
     private P2PTransport: ITransport | null = null
     private connectionLocker: ConnectionLocker | null = null
     protected extraMetadata: Record<string, unknown> = {}
+    private readonly metricsContext: MetricsContext
+    private readonly metrics: Metrics
 
-    constructor() {
+    constructor(opts: StreamrNodeOpts) {
         super()
         this.streams = new Map()
+        this.metricsContext = opts.metricsContext || new MetricsContext()
+        this.metrics = {
+            publishMessagesPerSecond: new RateMetric(),
+            publishBytesPerSecond: new RateMetric(),
+        }
+        this.metricsContext.addMetrics('node', this.metrics)
     }
 
     async start(startedAndJoinedLayer0: DhtNode, transport: ITransport, connectionLocker: ConnectionLocker): Promise<void> {
         if (this.started || this.destroyed) {
             return
         }
-        logger.info(`Starting new StreamrNode with id ${startedAndJoinedLayer0.getPeerDescriptor().kademliaId}`)
+        logger.info(`Starting new StreamrNode with id ${PeerID.fromValue(startedAndJoinedLayer0.getPeerDescriptor().kademliaId).toKey()}`)
         this.started = true
         this.layer0 = startedAndJoinedLayer0
         this.P2PTransport = transport
@@ -66,16 +90,8 @@ export class StreamrNode extends EventEmitter {
     }
 
     subscribeToStream(streamPartID: string, entryPointDescriptor: PeerDescriptor): void {
-        if (this.streams.has(streamPartID)) {
-            this.streams.get(streamPartID)!.layer2.on(
-                RandomGraphEvent.MESSAGE,
-                (message: StreamMessage) =>
-                    this.emit(Event.NEW_MESSAGE, message))
-        } else {
+        if (!this.streams.has(streamPartID)) {
             this.joinStream(streamPartID, entryPointDescriptor)
-                .then(() => this.streams.get(streamPartID)?.layer2.on(
-                    RandomGraphEvent.MESSAGE, (message: StreamMessage) => this.emit(Event.NEW_MESSAGE, message)
-                ))
                 .catch((err) => {
                     logger.warn(`Failed to subscribe to stream ${streamPartID} with error: ${err}`)
                     this.subscribeToStream(streamPartID, entryPointDescriptor)
@@ -130,6 +146,7 @@ export class StreamrNode extends EventEmitter {
             connectionLocker: this.connectionLocker!,
             ownPeerDescriptor: this.layer0!.getPeerDescriptor()
         })
+
         this.streams.set(streamPartID, {
             layer1,
             layer2
@@ -137,6 +154,9 @@ export class StreamrNode extends EventEmitter {
 
         await layer1.start()
         layer2.start()
+        layer2.on(RandomGraphEvent.MESSAGE, (message: StreamMessage) => {
+            this.emit(Event.NEW_MESSAGE, message)
+        })
         await layer1.joinDht(entryPoint)
     }
 
@@ -186,6 +206,7 @@ export class StreamrNode extends EventEmitter {
     setExtraMetadata(metadata: Record<string, unknown>): void {
         this.extraMetadata = metadata
     }
+
 }
 
 [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `SIGTERM`].forEach((term) => {

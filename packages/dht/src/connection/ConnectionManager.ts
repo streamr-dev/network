@@ -14,7 +14,7 @@ import { WebSocketConnector } from './WebSocket/WebSocketConnector'
 import { PeerID, PeerIDKey } from '../helpers/PeerID'
 import { ITransport, TransportEvents } from '../transport/ITransport'
 import { WebRtcConnector } from './WebRTC/WebRtcConnector'
-import { Logger } from '@streamr/utils'
+import { CountMetric, LevelMetric, Logger, Metric, MetricsContext, MetricsDefinition, RateMetric } from '@streamr/utils'
 import * as Err from '../helpers/errors'
 import { WEB_RTC_CLEANUP } from './WebRTC/NodeWebRtcConnection'
 import { ManagedConnection } from './ManagedConnection'
@@ -38,11 +38,21 @@ export interface ConnectionManagerConfig {
     ownPeerDescriptor?: PeerDescriptor
     serviceIdPrefix?: string
     stunUrls?: string[]
+    metricsContext?: MetricsContext
 }
 
 export enum NatType {
     OPEN_INTERNET = 'open_internet',
     UNKNOWN = 'unknown'
+}
+
+interface ConnectionManagerMetrics extends MetricsDefinition {
+    sendMessagesPerSecond: Metric
+    sendBytesPerSecond: Metric
+    receiveMessagesPerSecond: Metric
+    receiveBytesPerSecond: Metric
+    connectionAverageCount: Metric
+    connectionTotalFailureCount: Metric
 }
 
 type ServiceId = string
@@ -71,6 +81,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     private ownPeerDescriptor?: PeerDescriptor
     private connections: Map<PeerIDKey, ManagedConnection> = new Map()
     private readonly messageDuplicateDetector: DuplicateDetector = new DuplicateDetector()
+    private readonly metricsContext: MetricsContext
+    private readonly metrics: ConnectionManagerMetrics
 
     private disconnectionTimeouts: Map<PeerIDKey, NodeJS.Timeout> = new Map()
 
@@ -88,6 +100,17 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         super()
 
         this.incomingConnectionCallback = this.incomingConnectionCallback.bind(this)
+        this.metricsContext = config.metricsContext || new MetricsContext()
+
+        this.metrics = {
+            sendMessagesPerSecond: new RateMetric(),
+            sendBytesPerSecond: new RateMetric(),
+            receiveMessagesPerSecond: new RateMetric(),
+            receiveBytesPerSecond: new RateMetric(),
+            connectionAverageCount: new LevelMetric(0),
+            connectionTotalFailureCount: new CountMetric()
+        }
+        this.metricsContext.addMetrics('node', this.metrics)
 
         if (this.config.simulator) {
             logger.trace(`Creating SimulatorConnector`)
@@ -240,8 +263,10 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             this.incomingConnectionCallback(connection)
             //await this.onNewConnection(connection)
         }
-
-        return connection!.send(Message.toBinary(message))
+        const binary = Message.toBinary(message)
+        this.metrics.sendBytesPerSecond.record(binary.byteLength)
+        this.metrics.sendMessagesPerSecond.record(1)
+        return connection!.send(binary)
     }
 
     public disconnect(peerDescriptor: PeerDescriptor, reason?: string, timeout = DEFAULT_DISCONNECTION_TIMEOUT): void {
@@ -321,6 +346,9 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         if (!this.started || this.stopped) {
             return
         }
+        this.metrics.receiveBytesPerSecond.record(data.byteLength)
+        this.metrics.receiveMessagesPerSecond.record(1)
+
         try {
             let message: Message | undefined
             try {
@@ -340,6 +368,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     private onConnected = (connection: ManagedConnection) => {
         this.emit('connected', connection.getPeerDescriptor()!)
         logger.trace('connectedPeerId: ' + connection.getPeerDescriptor()!.kademliaId)
+        this.onConnectionCountChange()
     }
 
     private onDisconnected = (connection: ManagedConnection) => {
@@ -348,6 +377,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         }
         this.closeConnection(PeerID.fromValue(connection.getPeerDescriptor()!.kademliaId).toKey())
         this.emit('disconnected', connection.getPeerDescriptor()!)
+        this.onConnectionCountChange()
     }
 
     private incomingConnectionCallback(connection: ManagedConnection): boolean {
@@ -357,7 +387,6 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         logger.trace('incomingConnectionCallback() objectId ' + connection.objectId)
 
         const newPeerID = PeerID.fromValue(connection.getPeerDescriptor()!.kademliaId)
-
         if (this.connections.has(newPeerID.toKey())) {
             if (newPeerID.hasSmallerHashThan(
                 PeerID.fromValue(this.ownPeerDescriptor!.kademliaId))) {
@@ -530,5 +559,9 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         this.localLockedConnections.delete(hexKey)
         this.closeConnection(hexKey, 'graceful disconnect notified')
         return {}
+    }
+
+    private onConnectionCountChange() {
+        this.metrics.connectionAverageCount.record(this.connections.size)
     }
 }

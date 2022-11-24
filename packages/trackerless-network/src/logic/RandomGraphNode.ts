@@ -9,7 +9,7 @@ import {
     MessageRef,
     NeighborUpdate
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
-import { PeerList } from './PeerList'
+import { PeerList, Event as PeerListEvent } from './PeerList'
 import { NetworkRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { RemoteRandomGraphNode } from './RemoteRandomGraphNode'
 import { INetworkRpc } from '../proto/packages/trackerless-network/protos/NetworkRpc.server'
@@ -19,6 +19,7 @@ import { DuplicateMessageDetector, NumberPair } from '@streamr/utils'
 import { Logger } from '@streamr/utils'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Handshaker } from './Handshaker'
+import { Propagation } from './propagation/Propagation'
 
 export enum Event {
     MESSAGE = 'streamr:layer2:random-graph-node:onmessage'
@@ -57,6 +58,8 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     private handshaker?: Handshaker
     private ownPeerDescriptor: PeerDescriptor
 
+    private readonly propagation: Propagation
+
     constructor(params: RandomGraphNodeParams) {
         super()
         this.randomGraphId = params.randomGraphId
@@ -71,6 +74,19 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         this.nearbyContactPool = new PeerList(peerId, this.PEER_VIEW_SIZE)
         this.randomContactPool = new PeerList(peerId, this.PEER_VIEW_SIZE)
         this.targetNeighbors = new PeerList(peerId, this.N)
+
+        this.propagation = new Propagation({
+            minPropagationTargets: 1,
+            randomGraphId: this.randomGraphId,
+            sendToNeighbor: async (neighborId: string, msg: StreamMessage): Promise<void> => {
+                const remote = this.targetNeighbors.getNeighborWithId(neighborId)
+                if (remote) {
+                    await remote.sendData(this.ownPeerDescriptor, msg)
+                } else {
+                    throw new Error('Propagation target not found')
+                }
+            }
+        })
     }
 
     start(): void {
@@ -83,6 +99,10 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         this.layer1.on('newRandomContact', (peerDescriptor, randomPeers) => this.newRandomContact(peerDescriptor, randomPeers))
         this.layer1.on('randomContactRemoved', (peerDescriptor, randomPeers) => this.removedRandomContact(peerDescriptor, randomPeers))
         this.P2PTransport.on('disconnected', (peerDescriptor: PeerDescriptor) => this.onPeerDisconnected(peerDescriptor))
+
+        this.targetNeighbors.on(PeerListEvent.PEER_ADDED, (id, _remote) => {
+            this.propagation.onNeighborJoined(id)
+        })
 
         this.handshaker = new Handshaker({
             ownPeerDescriptor: this.layer1.getPeerDescriptor(),
@@ -103,6 +123,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         this.neighborUpdateIntervalRef = setTimeout(async () => {
             await this.updateNeighborInfo()
         }, 20)
+
     }
 
     stop(): void {
@@ -133,11 +154,8 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         if (!previousPeer) {
             this.markAndCheckDuplicate(msg.messageRef!, msg.previousMessageRef)
         }
-        this.targetNeighbors!.getStringIds().forEach((remote) => {
-            if (previousPeer !== remote) {
-                this.targetNeighbors!.getNeighborWithId(remote)!.sendData(this.layer1.getPeerDescriptor(), msg).catch((err) => logger.warn(err))
-            }
-        })
+        this.emit(Event.MESSAGE, msg)
+        this.propagation.feedUnseenMessage(msg, this.targetNeighbors!.getStringIds(), previousPeer || null)
     }
 
     private async findNeighbors(excluded: string[]): Promise<void> {
@@ -263,7 +281,6 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         if (!this.started && this.stopped) {
             return []
         }
-        // console.log(this.getOwnStringId(), this.nearbyContactPool, this.targetNeighbors.size())
         return this.nearbyContactPool!.getStringIds()
     }
 
@@ -342,8 +359,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         if (this.markAndCheckDuplicate(message.messageRef!, message.previousMessageRef)) {
             const { previousPeer } = message
             message["previousPeer"] = PeerID.fromValue(this.layer1.getPeerDescriptor().kademliaId).toKey()
-            this.emit(Event.MESSAGE, message)
-            setImmediate(() => this.broadcast(message, previousPeer))
+            this.broadcast(message, previousPeer)
         }
         return Empty
     }

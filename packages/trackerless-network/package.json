@@ -23,7 +23,7 @@
     "test-browser": "npm run build-browser && karma start karma.config.js",
     "test-unit": "jest test/unit",
     "test-integration": "jest test/integration",
-    "test-e2e": "jest --runInBand --forceExit test/end-to-end",
+    "test-e2e": "jest test/end-to-end",
     "network": "ts-node bin/network"
   },
   "dependencies": {
@@ -33,13 +33,15 @@
     "@streamr/proto-rpc": "1.2.0",
     "@streamr/protocol": "^7.0.0",
     "@streamr/test-utils": "^7.0.0",
-    "@streamr/utils": "^7.0.0",
-    "lodash": "^4.17.21"
+    "@streamr/utils": "7.0.1",
+    "lodash": "^4.17.21",
+    "yallist": "^4.0.0"
   },
   "devDependencies": {
     "@streamr/dev-config": "^1.0.0",
     "@types/lodash": "^4.14.175",
     "@types/node": "^18.11.9",
+    "@types/yallist": "^4.0.1",
     "commander": "^8.3.0",
     "electron": "^20.0.3",
     "electron-rebuild": "^3.2.9",

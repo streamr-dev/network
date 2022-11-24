@@ -41,7 +41,7 @@ describe('Full node network with WebRTC connections', () => {
         await layer0Ep.joinDht(epPeerDescriptor)
 
         epConnectionManager = layer0Ep.getTransport() as ConnectionManager
-        epStreamrNode = new StreamrNode()
+        epStreamrNode = new StreamrNode({})
         await epStreamrNode.start(layer0Ep, epConnectionManager, epConnectionManager)
 
         await epStreamrNode.joinStream(randomGraphId, epPeerDescriptor)
@@ -67,7 +67,7 @@ describe('Full node network with WebRTC connections', () => {
             await layer0.joinDht(epPeerDescriptor)
 
             const connectionManager = layer0.getTransport() as ConnectionManager
-            const streamrNode = new StreamrNode()
+            const streamrNode = new StreamrNode({})
             await streamrNode.start(layer0, connectionManager, connectionManager)
 
             return await streamrNode.joinStream(randomGraphId, epPeerDescriptor).then(() => {
