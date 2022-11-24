@@ -21,6 +21,7 @@ Please see the [Streamr project docs](https://streamr.network/docs) for more det
     - [Subscribing](#subscribing)
     - [Publishing](#publishing)
 - [Setup](#setup)
+    - [Environments & frameworks](#environments-and-frameworks)
 - [Usage](#usage)
     - [API reference](#api-reference)
     - [Client creation](#client-creation)
@@ -31,7 +32,7 @@ Please see the [Streamr project docs](https://streamr.network/docs) for more det
     - [Searching for streams](#searching-for-streams)
     - [Interacting with the `Stream` object](#interacting-with-the-stream-object)
      - [Getting existing streams](#getting-existing-streams)
-     - [Stream access control](#stream-access-control)
+    - [Stream access control](#stream-access-control)
     - [Enabling storage](#enabling-storage)
     - [Utility functions](#utility-functions)
 - [Advanced usage](#advanced-usage)
@@ -96,6 +97,15 @@ For usage in the browser include the latest build, e.g. by including a `<script>
 ```html
 <script src="https://unpkg.com/streamr-client@latest/streamr-client.web.js"></script>
 ```
+
+### Environments and frameworks
+
+#### Browser extension
+Due to the stricter security rules inside browser extensions you must use the web build version of the Streamr Client.
+
+#### React Native
+We are actively working on React Native compatibility but currently the Streamr JavaScript Client is not compatible with React Native. To connect, pull or push data into the Streamr Network, use the [Broker integration pattern](https://streamr.network/docs/streamr-network/connecting-applications).
+
 ___
 ## Usage
 
