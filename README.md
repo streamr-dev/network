@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://streamr.network">
-    <img alt="Streamr" src="https://raw.githubusercontent.com/streamr-dev/network-monorepo/main/packages/client/readme-header-img.png" width="1320" />
+    <img alt="Streamr" src="https://raw.githubusercontent.com/streamr-dev/network-monorepo/main/packages/client/readme-header.png" width="1320" />
   </a>
 </p>
 
@@ -23,8 +23,7 @@ Monorepo containing all the main components of Streamr Network.
 * [test-utils](packages/test-utils/README.md) (@streamr/test-utils)
 
 ## NPM scripts
-| NodeJS version `18.13.x` and NPM version `8.x` is required |
-|------------------------------------------------------------|
+NodeJS `16.13.x` is the minimum required version. NodeJS `18.13.x`, NPM `8.x` and later versions are recommended.
 
 Monorepo is managed using [npm workspaces](https://docs.npmjs.com/cli/v7/using-npm/workspaces).
 
