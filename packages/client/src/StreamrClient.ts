@@ -259,6 +259,7 @@ export class StreamrClient {
          * Used to set a custom message equality operator.
          * @param msgTarget - message being waited for (i.e. `message`)
          * @param msgGot - candidate message polled from storage node
+         * @deprecated
          */
         messageMatchFn?: (msgTarget: Message, msgGot: Message) => boolean
     }): Promise<void> {
