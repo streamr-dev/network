@@ -4,7 +4,7 @@ import { MessageID, StreamMessage, toStreamID, toStreamPartID } from '@streamr/p
 import { toEthereumAddress, waitForEvent } from '@streamr/utils'
 
 import { createNetworkNode } from '../../src/createNetworkNode'
-export { Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
+import { Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
 import { Event as NodeEvent } from '../../src/logic/Node'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
