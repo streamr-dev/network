@@ -3,6 +3,7 @@ import assert from 'assert'
 import EncryptedGroupKey from '../../../../src/protocol/message_layer/EncryptedGroupKey'
 import GroupKeyMessage from '../../../../src/protocol/message_layer/GroupKeyMessage'
 import GroupKeyResponse from '../../../../src/protocol/message_layer/GroupKeyResponse'
+import { StreamMessageType } from '../../../../src/protocol/message_layer/StreamMessage'
 
 const recipient = toEthereumAddress('0xaaaaaAAAAA012345678901234567890123456789')
 
