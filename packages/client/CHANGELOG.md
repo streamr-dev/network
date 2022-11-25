@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [7.1.0] - 2022-11-25
 
+### Deprecated
+
 - Deprecate TypeScript interfaces `StrictStreamrClientConfig`
 - Deprecate `gasPriceStrategy` config option in `contracts.ethereumNetworks`, use `highGasPriceStrategy` instead
 - Deprecate method parameter of `.waitForStorage()`
