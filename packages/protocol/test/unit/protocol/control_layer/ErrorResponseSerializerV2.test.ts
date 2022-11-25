@@ -1,6 +1,6 @@
 import assert from 'assert'
-
-import { ErrorResponse, ControlMessage } from '../../../../src/exports'
+import ControlMessage from '../../../../src/protocol/control_layer/ControlMessage'
+import ErrorResponse from '../../../../src/protocol/control_layer/error_response/ErrorResponse'
 
 const VERSION = 2
 

@@ -1,8 +1,7 @@
 import { validateIsNotEmptyString, validateIsNotNegativeInteger } from '../../../utils/validations'
 import TrackerMessage, { TrackerMessageOptions } from '../TrackerMessage'
-import { StreamID } from '../../../utils/exports'
-import { StreamPartID } from "../../../utils/exports"
-import { toStreamPartID } from "../../../utils/StreamPartID"
+import { StreamID } from '../../../utils/StreamID'
+import { StreamPartID, toStreamPartID } from "../../../utils/StreamPartID"
 
 export interface Options extends TrackerMessageOptions {
     streamId: StreamID

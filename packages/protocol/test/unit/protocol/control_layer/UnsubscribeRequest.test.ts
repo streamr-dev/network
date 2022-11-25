@@ -1,9 +1,8 @@
 import assert from 'assert'
-
-import UnsubscribeRequest from '../../../../src/protocol/control_layer/unsubscribe_request/UnsubscribeRequest'
-import ControlMessage from '../../../../src/protocol/control_layer/ControlMessage'
 import ValidationError from '../../../../src/errors/ValidationError'
-import { toStreamID } from '../../../../src/exports'
+import ControlMessage from '../../../../src/protocol/control_layer/ControlMessage'
+import UnsubscribeRequest from '../../../../src/protocol/control_layer/unsubscribe_request/UnsubscribeRequest'
+import { toStreamID } from '../../../../src/utils/StreamID'
 
 describe('UnsubscribeRequest', () => {
     describe('constructor', () => {

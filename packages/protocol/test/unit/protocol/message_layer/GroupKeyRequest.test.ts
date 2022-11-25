@@ -1,11 +1,8 @@
-import assert from 'assert'
-
-import {
-    GroupKeyRequest,
-    StreamMessageType
-} from '../../../../src/exports'
-import GroupKeyMessage from '../../../../src/protocol/message_layer/GroupKeyMessage'
 import { toEthereumAddress } from '@streamr/utils'
+import assert from 'assert'
+import GroupKeyMessage from '../../../../src/protocol/message_layer/GroupKeyMessage'
+import GroupKeyRequest from '../../../../src/protocol/message_layer/GroupKeyRequest'
+import { StreamMessageType } from '../../../../src/protocol/message_layer/StreamMessage'
 
 const recipient = toEthereumAddress('0xaaaaaAAAAA012345678901234567890123456789')
 

@@ -1,6 +1,7 @@
 import assert from 'assert'
-
-import { UnsubscribeRequest, ControlMessage, toStreamID } from '../../../../src/exports'
+import ControlMessage from '../../../../src/protocol/control_layer/ControlMessage'
+import UnsubscribeRequest from '../../../../src/protocol/control_layer/unsubscribe_request/UnsubscribeRequest'
+import { toStreamID } from '../../../../src/utils/StreamID'
 
 const VERSION = 2
 

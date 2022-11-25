@@ -1,9 +1,8 @@
 import assert from 'assert'
-
 import ValidationError from '../../../../src/errors/ValidationError'
-import TrackerMessage from '../../../../src/protocol/tracker_layer/TrackerMessage'
-import { toStreamID } from '../../../../src/exports'
 import StatusAckMessage from '../../../../src/protocol/tracker_layer/status_ack_message/StatusAckMessage'
+import TrackerMessage from '../../../../src/protocol/tracker_layer/TrackerMessage'
+import { toStreamID } from '../../../../src/utils/StreamID'
 
 describe('StatusAckMessage', () => {
     describe('constructor', () => {

@@ -1,14 +1,11 @@
-import assert from 'assert'
-
-import ValidationError from '../../../../src/errors/ValidationError'
-import {
-    StreamMessage,
-    MessageID,
-    BroadcastMessage,
-    ControlMessage,
-    toStreamID
-} from '../../../../src/exports'
 import { toEthereumAddress } from '@streamr/utils'
+import assert from 'assert'
+import ValidationError from '../../../../src/errors/ValidationError'
+import BroadcastMessage from '../../../../src/protocol/control_layer/broadcast_message/BroadcastMessage'
+import ControlMessage from '../../../../src/protocol/control_layer/ControlMessage'
+import MessageID from '../../../../src/protocol/message_layer/MessageID'
+import StreamMessage from '../../../../src/protocol/message_layer/StreamMessage'
+import { toStreamID } from '../../../../src/utils/StreamID'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 

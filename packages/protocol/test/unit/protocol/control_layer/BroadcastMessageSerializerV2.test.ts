@@ -1,14 +1,8 @@
-import assert from 'assert'
-
-import {
-    StreamMessage,
-    BroadcastMessage,
-    ControlMessage,
-    ContentType,
-    EncryptionType,
-    StreamMessageType
-} from '../../../../src/exports'
 import { toEthereumAddress } from '@streamr/utils'
+import assert from 'assert'
+import BroadcastMessage from '../../../../src/protocol/control_layer/broadcast_message/BroadcastMessage'
+import ControlMessage from '../../../../src/protocol/control_layer/ControlMessage'
+import StreamMessage, { ContentType, EncryptionType, StreamMessageType } from '../../../../src/protocol/message_layer/StreamMessage'
 import { SIGNATURE_TYPE_ETH } from '../../../../src/protocol/message_layer/StreamMessageSerializerV32'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')

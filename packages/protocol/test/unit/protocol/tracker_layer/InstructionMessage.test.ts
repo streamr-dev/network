@@ -1,9 +1,8 @@
 import assert from 'assert'
-
-import InstructionMessage from '../../../../src/protocol/tracker_layer/instruction_message/InstructionMessage'
 import ValidationError from '../../../../src/errors/ValidationError'
+import InstructionMessage from '../../../../src/protocol/tracker_layer/instruction_message/InstructionMessage'
 import TrackerMessage from '../../../../src/protocol/tracker_layer/TrackerMessage'
-import { toStreamID } from '../../../../src/exports'
+import { toStreamID } from '../../../../src/utils/StreamID'
 
 describe('InstructionMessage', () => {
     describe('constructor', () => {

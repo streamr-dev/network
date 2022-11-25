@@ -1,6 +1,5 @@
 import assert from 'assert'
-import { ErrorMessage } from '../../../../src/protocol/tracker_layer/exports'
-
+import ErrorMessage from '../../../../src/protocol/tracker_layer/error_message/ErrorMessage'
 import TrackerMessage from '../../../../src/protocol/tracker_layer/TrackerMessage'
 
 const VERSION = 2

@@ -1,7 +1,7 @@
 import assert from 'assert'
-
-import { InstructionMessage, toStreamID } from '../../../../src/exports'
+import InstructionMessage from '../../../../src/protocol/tracker_layer/instruction_message/InstructionMessage'
 import TrackerMessage from '../../../../src/protocol/tracker_layer/TrackerMessage'
+import { toStreamID } from '../../../../src/utils/StreamID'
 
 const VERSION = 2
 
