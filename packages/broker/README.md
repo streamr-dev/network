@@ -9,7 +9,7 @@ Broker nodes are Streamr Network nodes that run external to your application. Yo
 server, and interface with it remotely using one of the supported protocols.
 
 The broker node ships with protocol support for HTTP, WebSocket, and MQTT. As libraries for these common protocols exist
-in  practically every programming language, you can conveniently publish data to and subscribe to streams in the Streamr Network
+in practically every programming language, you can conveniently publish data to and subscribe to streams in the Streamr Network
 using the programming language of your choice.
 
 Broker nodes can also perform other tasks in addition to (or instead of) serving applications, such as mining.
