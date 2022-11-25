@@ -1,10 +1,11 @@
 import { EventEmitter } from 'events'
 import StrictEventEmitter from 'strict-event-emitter-types'
 import nodeDataChannel, { DataChannel, DescriptionType, LogLevel, PeerConnection } from 'node-datachannel'
-import { ConstructorOptions, WebRtcConnection } from './WebRtcConnection'
+import { ConstructorOptions, IceServer, WebRtcConnection } from './WebRtcConnection'
 import { Logger } from "@streamr/utils"
 import { NameDirectory } from "../../NameDirectory"
 import { WebRtcConnectionFactory } from "./WebRtcEndpoint"
+import { iceServerAsString } from './iceServerAsString'
 
 const loggerLevel = process.env.NODE_DATACHANNEL_LOG_LEVEL || 'Fatal'
 nodeDataChannel.initLogger(loggerLevel as LogLevel)
@@ -116,12 +117,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
 
     protected doConnect(): void {
         this.connection = new nodeDataChannel.PeerConnection(this.selfId, {
-            iceServers: this.iceServers.map(({ url, port, username, password }) => ({
-                hostname: url,
-                port,
-                username,
-                password
-            })),
+            iceServers: this.iceServers.map(iceServerAsString),
             maxMessageSize: this.maxMessageSize
         })
 
