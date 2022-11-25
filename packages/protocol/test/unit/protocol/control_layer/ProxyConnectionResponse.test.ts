@@ -1,7 +1,7 @@
 import assert from 'assert'
 
 import ValidationError from '../../../../src/errors/ValidationError'
-import { ProxyConnectionResponse, ControlMessage, toStreamID } from '../../../../src/index'
+import { ProxyConnectionResponse, ControlMessage, toStreamID } from '../../../../src/exports'
 import { ProxyDirection } from '../../../../src/utils/types'
 
 describe('ProxyPublishStreamConnectionResponse', () => {

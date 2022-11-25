@@ -1,6 +1,6 @@
 import assert from 'assert'
 
-import { RelayMessage, RelayMessageSubType } from '../../../../src'
+import { RelayMessage, RelayMessageSubType } from '../../../../src/exports'
 import TrackerMessage from '../../../../src/protocol/tracker_layer/TrackerMessage'
 
 const VERSION = 2

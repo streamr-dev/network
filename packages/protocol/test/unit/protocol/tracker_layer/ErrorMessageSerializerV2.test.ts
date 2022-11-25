@@ -1,5 +1,5 @@
 import assert from 'assert'
-import { ErrorMessage } from '../../../../src/protocol/tracker_layer'
+import { ErrorMessage } from '../../../../src/protocol/tracker_layer/exports'
 
 import TrackerMessage from '../../../../src/protocol/tracker_layer/TrackerMessage'
 

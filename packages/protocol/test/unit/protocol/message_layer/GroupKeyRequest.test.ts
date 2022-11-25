@@ -3,7 +3,7 @@ import assert from 'assert'
 import {
     GroupKeyRequest,
     StreamMessageType
-} from '../../../../src/index'
+} from '../../../../src/exports'
 import GroupKeyMessage from '../../../../src/protocol/message_layer/GroupKeyMessage'
 import { toEthereumAddress } from '@streamr/utils'
 

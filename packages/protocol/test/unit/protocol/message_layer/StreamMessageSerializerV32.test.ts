@@ -10,7 +10,7 @@ import {
     StreamMessageType,
     ContentType,
     EncryptionType
-} from '../../../../src/index'
+} from '../../../../src/exports'
 import { toEthereumAddress } from '@streamr/utils'
 import { SIGNATURE_TYPE_ETH } from '../../../../src/protocol/message_layer/StreamMessageSerializerV32'
 

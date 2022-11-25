@@ -1,6 +1,6 @@
 import assert from 'assert'
 
-import { StatusMessage } from '../../../../src'
+import { StatusMessage } from '../../../../src/exports'
 import TrackerMessage from '../../../../src/protocol/tracker_layer/TrackerMessage'
 
 const VERSION = 2

@@ -7,7 +7,7 @@ import {
     BroadcastMessage,
     ControlMessage,
     toStreamID
-} from '../../../../src/index'
+} from '../../../../src/exports'
 import { toEthereumAddress } from '@streamr/utils'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')

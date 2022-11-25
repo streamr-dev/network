@@ -1,7 +1,7 @@
 import { validateIsNotEmptyString, validateIsNotNegativeInteger } from '../../../utils/validations'
 import ControlMessage, { ControlMessageOptions } from '../ControlMessage'
 import { StreamID } from '../../../utils/StreamID'
-import { StreamPartID } from "../../../utils"
+import { StreamPartID } from "../../../utils/exports"
 import { toStreamPartID } from "../../../utils/StreamPartID"
 
 export interface Options extends ControlMessageOptions {

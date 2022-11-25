@@ -8,7 +8,7 @@ import {
     EncryptedGroupKey,
     toStreamID,
     StreamPartIDUtils
-} from '../../../../src/index'
+} from '../../../../src/exports'
 import ValidationError from '../../../../src/errors/ValidationError'
 import UnsupportedVersionError from '../../../../src/errors/UnsupportedVersionError'
 import { Serializer } from '../../../../src/Serializer'
