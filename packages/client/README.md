@@ -92,13 +92,17 @@ If using Node.js you can import the library with:
 const { StreamrClient } = require('streamr-client')
 ```
 
+### Environments and frameworks
+
+#### NodeJS
+NodeJS `16.13.x` is the minimum required version. NodeJS `18.13.x`, NPM `8.x` and later versions are recommended.
+
+#### Browser (Website/WebApps)
 For usage in the browser include the latest build, e.g. by including a `<script>` tag pointing at a CDN:
 
 ```html
 <script src="https://unpkg.com/streamr-client@latest/streamr-client.web.js"></script>
 ```
-
-### Environments and frameworks
 
 #### Browser extension
 Due to the stricter security rules inside browser extensions you must use the web build version of the Streamr Client.
