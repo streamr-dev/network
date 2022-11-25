@@ -1,7 +1,7 @@
 import { NetworkNode } from '../../src/logic/NetworkNode'
 import { MessageID, StreamMessage, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
 import { startTracker, Tracker } from '@streamr/network-tracker'
-import { createNetworkNode } from '../../src/composition'
+import { createNetworkNode } from '../../src/createNetworkNode'
 import { toEthereumAddress } from '@streamr/utils'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')

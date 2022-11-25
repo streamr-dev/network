@@ -2,7 +2,7 @@ import { Tracker, startTracker, TrackerServerEvent } from '@streamr/network-trac
 import { NetworkNode } from '../../src/logic/NetworkNode'
 import { runAndWaitForEvents } from '@streamr/test-utils'
 import { InstructionMessage, toStreamID, toStreamPartID } from '@streamr/protocol'
-import { createNetworkNode } from '../../src/composition'
+import { createNetworkNode } from '../../src/createNetworkNode'
 import { Event as NodeEvent } from '../../src/logic/Node'
 
 /**
