@@ -18,8 +18,7 @@ See [Changelog](CHANGELOG.md) for version information and changes.
 - [Contribute](#contribute)
 
 ## Install
-| NodeJS version `16.13.x` and NPM version `8.x` is required |
-| --- |
+NodeJS `16.13.x` is the minimum required version. NodeJS `18.13.x`, NPM `8.x` and later versions are recommended.
 
 ```
 npm install -g @streamr/cli-tools
