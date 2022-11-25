@@ -38,9 +38,27 @@ enum RTCPeerConnectionStateEnum {
     new = 'new'
 }
 
+nodeDatachannel.initLogger("Verbose")
+
 type RTCPeerConnectionState = keyof typeof RTCPeerConnectionStateEnum
 
 type Events = WebRtcConnectionEvents & ConnectionEvents
+
+type HandlerParameters<T extends (...args: any[]) => any> = Parameters<Parameters<T>[0]>
+
+function PeerConnectionEmitter(connection: PeerConnection) {
+    const emitter: EventEmitter = new EventEmitter()
+    emitter.on('error', () => {}) // noop to prevent unhandled error event
+    connection.onStateChange((...args: HandlerParameters<PeerConnection['onStateChange']>) => emitter.emit('stateChange', ...args))
+    connection.onGatheringStateChange((...args: HandlerParameters<PeerConnection['onGatheringStateChange']>) => (
+        emitter.emit('gatheringStateChange', ...args)
+    ))
+    connection.onLocalDescription((...args: HandlerParameters<PeerConnection['onLocalDescription']>) => emitter.emit('localDescription', ...args))
+    connection.onLocalCandidate((...args: HandlerParameters<PeerConnection['onLocalCandidate']>) => emitter.emit('localCandidate', ...args))
+    connection.onDataChannel((...args: HandlerParameters<PeerConnection['onDataChannel']>) => emitter.emit('dataChannel', ...args))
+    return emitter
+}
+
 
 export class NodeWebRtcConnection extends EventEmitter<Events> implements IConnection, IWebRtcConnection {
 
@@ -50,6 +68,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
     private lastState: RTCPeerConnectionState = 'connecting'
     private remoteDescriptionSet = false
     private connectingTimeoutRef?: NodeJS.Timeout
+    private connectionEmitter?: EventEmitter
 
     public readonly connectionType: ConnectionType = ConnectionType.WEBRTC
     private readonly stunUrls: string[]
@@ -70,10 +89,10 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
     }
 
     start(isOffering: boolean): void {
-        logger.trace(`Staring new connection for peer: ${this.remotePeerDescriptor.kademliaId.toString()}`)
         const hexId = PeerID.fromValue(this.remotePeerDescriptor.kademliaId).toKey()
+        logger.info(`Staring new connection for peer: ${hexId} offering: ${isOffering}`)
         this.connection = new PeerConnection(hexId, {
-            iceServers: [...this.stunUrls],
+            iceServers: this.stunUrls,
             maxMessageSize: MAX_MESSAGE_SIZE
         })
 
@@ -81,30 +100,42 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
             this.close()
         }, this.connectingTimeout)
 
-        this.connection.onStateChange((state) => this.onStateChange(state))
-        this.connection.onGatheringStateChange((_state) => {})
-        this.connection.onLocalDescription((description: string, type: DescriptionType) => {
-            this.emit('localDescription', description, type.toString())
-        })
-        this.connection.onLocalCandidate((candidate: string, mid: string) => {
-            this.emit('localCandidate', candidate, mid)
-        })
+        // this.connection.onStateChange((state: string) => this.onStateChange(state))
+        // this.connection.onGatheringStateChange((_state: string) => {})
+        // this.connection.onLocalDescription((description: string, type: DescriptionType) => {
+        //     this.emit('localDescription', description, type.toString())
+        // })
+        // this.connection.onLocalCandidate((candidate: string, mid: string) => {
+        //     this.emit('localCandidate', candidate, mid)
+        // })
+
+        this.connectionEmitter = PeerConnectionEmitter(this.connection)
+
+        this.connectionEmitter.on('stateChange', this.onStateChange)
+        this.connectionEmitter.on('gatheringStateChange', this.onGatheringStateChange)
+        this.connectionEmitter.on('localDescription', this.onLocalDescription)
+        this.connectionEmitter.on('localCandidate', this.onLocalCandidate)
+
+        console.log(this.connection.localDescription())
         if (isOffering) {
             const dataChannel = this.connection.createDataChannel('streamrDataChannel')
             this.setupDataChannel(dataChannel)
+            // if (this.connection.localDescription()) {
+            //     this.emit('localDescription', this.connection.localDescription()!.sdp, this.connection.localDescription()!.type)
+            // }
         } else {
-            this.connection.onDataChannel((dataChannel) => this.onDataChannel(dataChannel))
+            this.connectionEmitter.on('dataChannel', this.onDataChannel)
         }
     }
 
     async setRemoteDescription(description: string, type: string): Promise<void> {
         if (this.connection) {
             try {
-                logger.trace(`Setting remote descriptor for peer: ${this.remotePeerDescriptor.kademliaId.toString()}`)
+                logger.trace(`Setting remote descriptor for peer: ${PeerID.fromValue(this.remotePeerDescriptor.kademliaId).toKey()}`)
                 this.connection!.setRemoteDescription(description, type as DescriptionType)
                 this.remoteDescriptionSet = true
             } catch (err) {
-                logger.warn(`Failed to set remote descriptor for peer ${this.remotePeerDescriptor.kademliaId.toString()}`)
+                logger.warn(`Failed to set remote descriptor for peer ${PeerID.fromValue(this.remotePeerDescriptor.kademliaId).toKey()}`)
             }
         } else {
             this.close(`Tried to set description for non-existent connection`)
@@ -115,10 +146,10 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
         if (this.connection) {
             if (this.remoteDescriptionSet) {
                 try {
-                    logger.trace(`Setting remote candidate for peer: ${this.remotePeerDescriptor.kademliaId.toString()}`)
+                    logger.trace(`Setting remote candidate for peer: ${PeerID.fromValue(this.remotePeerDescriptor.kademliaId).toKey()}`)
                     this.connection!.addRemoteCandidate(candidate, mid)
                 } catch (err) {
-                    logger.warn(`Failed to set remote candidate for peer ${this.remotePeerDescriptor.kademliaId.toString()}`)
+                    logger.warn(`Failed to set remote candidate for peer ${PeerID.fromValue(this.remotePeerDescriptor.kademliaId).toKey()}`)
                     this.close()
                 }
             } else {
@@ -132,7 +163,8 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
     send(data: Uint8Array): void {
         if (this.isOpen()) {
             try {
-                this.dataChannel?.sendMessageBinary(data as Buffer)
+                console.log("webrtc sending")
+                this.dataChannel!.sendMessageBinary(data as Buffer)
             } catch (err) {
                 logger.warn('Failed to send binary message to ' + PeerID.fromValue(this.remotePeerDescriptor.kademliaId).toKey())
             }
@@ -140,6 +172,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
     }
 
     close(reason?: string): void {
+        console.log("CLOSING")
         if (this.closed === false) {
             logger.trace(
                 `Closing Node WebRTC Connection to ${PeerID.fromValue(this.remotePeerDescriptor.kademliaId).toKey()}`
@@ -148,6 +181,10 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
             this.closed = true
             if (this.connectingTimeoutRef) {
                 clearTimeout(this.connectingTimeoutRef)
+            }
+
+            if (this.connectionEmitter) {
+                this.connectionEmitter.removeAllListeners()
             }
 
             this.emit('disconnected')
@@ -188,8 +225,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
             this.close('DataChannel closed')
         })
 
-        dataChannel.onError((err) => logger.error(err))
-
+        dataChannel.onError((err) => logger.warn(err))
         dataChannel.onBufferedAmountLow( () => {
             logger.trace(`dc.onBufferedAmountLow`)
         })
@@ -204,6 +240,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
         if (this.connectingTimeoutRef) {
             clearTimeout(this.connectingTimeoutRef)
         }
+        console.log("DC OPENED")
         this.dataChannel = dataChannel
         logger.trace(`DataChannel opened for peer ${this.remotePeerDescriptor.kademliaId.toString()}`)
         this.emit('connected')
@@ -221,6 +258,18 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
         ) {
             this.close()
         }
+    }
+
+    private onGatheringStateChange(state: string): void {
+        logger.trace(`Gathering state changed to ${state}`)
+    }
+
+    private onLocalDescription(description: string, type: DescriptionType): void {
+        this.emit('localDescription', description, type)
+    }
+
+    private onLocalCandidate(candidate: string, mid: string): void {
+        this.emit('localCandidate', candidate, mid)
     }
 
     isOpen(): boolean {

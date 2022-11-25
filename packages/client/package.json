@@ -100,6 +100,7 @@
         "@ethersproject/transactions": "^5.5.0",
         "@ethersproject/wallet": "^5.5.0",
         "@ethersproject/web": "^5.5.0",
+        "@streamr/dht": "^1.0.0",
         "@streamr/network-node": "7.0.1",
         "@streamr/protocol": "7.0.1",
         "@streamr/utils": "7.0.1",

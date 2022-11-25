@@ -5,7 +5,7 @@ import { MetricsContext } from '@streamr/utils'
 import { NodeId, NetworkNodeOptions } from '@streamr/network-node'
 import { NetworkNodeFactory, NetworkNodeStub } from '../../../src/NetworkNodeFacade'
 import { FakeNetwork } from './FakeNetwork'
-import { PeerDescriptor } from '../../../../trackerless-network'
+import { PeerDescriptor } from '@streamr/dht'
 
 type MessageListener = (msg: StreamMessage) => void
 

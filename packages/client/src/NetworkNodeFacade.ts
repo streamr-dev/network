@@ -5,10 +5,12 @@ import { inject, Lifecycle, scoped } from 'tsyringe'
 import EventEmitter from 'eventemitter3'
 import {
     NetworkNode,
-    NetworkOptions,
+    NetworkOptions
+} from '@streamr/trackerless-network'
+import {
     PeerDescriptor,
     PeerID
-} from '@streamr/trackerless-network'
+} from '@streamr/dht'
 import { MetricsContext } from '@streamr/utils'
 import { uuid } from './utils/uuid'
 import { pOnce } from './utils/promises'
@@ -98,17 +100,7 @@ export class NetworkNodeFacade {
     }
 
     private async getNormalizedNetworkOptions(): Promise<NetworkOptions> {
-        const entryPoints = this.config.network.entryPoints.map((ep) => {
-            const peerDescriptor: PeerDescriptor = {
-                kademliaId: PeerID.fromString(ep.kademliaId).value,
-                type: ep.type,
-                openInternet: ep.openInternet,
-                udp: ep.udp,
-                tcp: ep.tcp,
-                websocket: ep.websocket,
-            }
-            return peerDescriptor
-        })
+        const entryPoints = this.getEntryPoints()
 
         const ownPeerDescriptor: PeerDescriptor | undefined = this.config.network.peerDescriptor ? {
             kademliaId: PeerID.fromString(this.config.network.peerDescriptor.kademliaId).value,

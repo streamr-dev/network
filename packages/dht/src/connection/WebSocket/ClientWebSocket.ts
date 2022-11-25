@@ -52,7 +52,7 @@ export class ClientWebSocket extends EventEmitter<ConnectionEvents> implements I
     send(data: Uint8Array): void {
         if (this.socket && this.socket.readyState === this.socket.OPEN) {
             logger.trace(`Sending data with size ${data.byteLength}`)
-            this.socket?.send(data.buffer)
+            this.socket!.send(data.buffer)
         } else {
             logger.warn('Tried to send data on a non-open connection')
         }   

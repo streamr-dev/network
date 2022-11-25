@@ -4,7 +4,7 @@ import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { getCreateClient } from '../test-utils/utils'
-import { PeerID } from '../../../trackerless-network'
+import { PeerID } from '@streamr/dht'
 
 const NUM_OF_PARTITIONS = 10
 

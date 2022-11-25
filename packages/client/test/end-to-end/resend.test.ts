@@ -20,12 +20,49 @@ describe('resend', () => {
             ...ConfigTest,
             auth: {
                 privateKey: await fetchPrivateKeyWithGas()
-            }
+            },
+            network: {
+                entryPoints: [{
+                    kademliaId: "entryPointBroker",
+                    type: 0,
+                    websocket: {
+                        ip: "127.0.0.1",
+                        port: 40401
+                    }
+                }],
+                peerDescriptor: {
+                    kademliaId: "resend-e2e-publisher-client",
+                    type: 0,
+                    // websocket: {
+                    //     ip: '127.0.0.1',
+                    //     port: 43232
+                    // }
+                }
+            },
+
         })
         resendClient = new StreamrClient({
             ...ConfigTest,
             auth: {
                 privateKey: fastPrivateKey()
+            },
+            network: {
+                entryPoints: [{
+                    kademliaId: "entryPointBroker",
+                    type: 0,
+                    websocket: {
+                        ip: "127.0.0.1",
+                        port: 40401
+                    }
+                }],
+                peerDescriptor: {
+                    kademliaId: "resend-e2e-resend-client",
+                    type: 0,
+                    // websocket: {
+                    //     ip: '127.0.0.1',
+                    //     port: 43233
+                    // }
+                }
             }
         })
     }, TIMEOUT)
@@ -47,7 +84,6 @@ describe('resend', () => {
                 user: await resendClient.getAddress()
             })
             await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
-
             for (const idx of range(NUM_OF_MESSAGES)) {
                 await publisherClient.publish({
                     id: stream.id,

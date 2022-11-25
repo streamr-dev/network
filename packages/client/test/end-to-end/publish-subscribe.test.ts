@@ -7,7 +7,8 @@ import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { createTestStream } from '../test-utils/utils'
 import { waitForCondition } from '@streamr/utils'
-import { NetworkNode, PeerDescriptor, PeerID } from '../../../trackerless-network'
+import { NetworkNode } from '@streamr/trackerless-network'
+import { PeerDescriptor, PeerID } from '@streamr/dht'
 import { JsonPeerDescriptor } from '../../src/Config'
 
 const TIMEOUT = 20 * 1000

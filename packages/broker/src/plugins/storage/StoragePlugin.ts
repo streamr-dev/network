@@ -104,12 +104,13 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
                         await node.subscribeAndWaitForJoin(streamPart, this.streamrClient.getEntryPoints()[0]) // best-effort, can time out
                     } catch (_e) {
                         // no-op
+                        console.log(_e)
                     }
                     try {
                         await assignmentStream.publish({
                             streamPart
                         })
-                        logger.debug('published message to assignment stream %s', assignmentStream.id)
+                        logger.info('published message to assignment stream %s', assignmentStream.id)
                     } catch (e) {
                         logger.warn('failed to publish to assignment stream %s, reason: %s', assignmentStream.id, e)
                     }

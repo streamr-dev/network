@@ -18,6 +18,7 @@ export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '1
 interface TestConfig {
     trackerPort: number
     privateKey: string
+    wsServerPort: number
     httpPort?: number
     extraPlugins?: Record<string, unknown>
     apiAuthentication?: Config['apiAuthentication']
@@ -33,6 +34,7 @@ export const formConfig = ({
     apiAuthentication,
     enableCassandra = false,
     storageConfigRefreshInterval = 0,
+    wsServerPort
 }: TestConfig): Config => {
     const plugins: Record<string, any> = { ...extraPlugins }
     if (httpPort) {
@@ -67,6 +69,22 @@ export const formConfig = ({
                         http: `http://127.0.0.1:${trackerPort}`
                     }
                 ],
+                entryPoints: [{
+                    kademliaId: "entryPointBroker",
+                    type: 0,
+                    websocket: {
+                        ip: "127.0.0.1",
+                        port: 40401
+                    }
+                }],
+                peerDescriptor: {
+                    kademliaId: toEthereumAddress(new Wallet(privateKey).address),
+                    type: 0,
+                    websocket: {
+                        ip: '127.0.0.1',
+                        port: wsServerPort
+                    }
+                },
                 location: {
                     latitude: 60.19,
                     longitude: 24.95,
@@ -157,7 +175,8 @@ export async function sleep(ms = 0): Promise<void> {
 export async function startStorageNode(
     storageNodePrivateKey: string,
     httpPort: number,
-    trackerPort: number
+    trackerPort: number,
+    wsServerPort: number
 ): Promise<Broker> {
     const client = new StreamrClient({
         ...ConfigTest,
@@ -178,6 +197,7 @@ export async function startStorageNode(
         trackerPort,
         httpPort,
         enableCassandra: true,
+        wsServerPort
     })
 }
 

@@ -34,7 +34,7 @@ import { LoggerFactory } from './utils/LoggerFactory'
 import { convertStreamMessageToMessage, Message } from './Message'
 import { ErrorCode } from './HttpUtil'
 import { omit } from 'lodash'
-import { PeerDescriptor } from '../../trackerless-network'
+import { PeerDescriptor } from '@streamr/dht'
 
 /**
  * @category Important

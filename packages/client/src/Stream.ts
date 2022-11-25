@@ -187,17 +187,21 @@ export class Stream {
             const streamPartId = toStreamPartID(formStorageNodeAssignmentStreamId(normalizedNodeAddress), DEFAULT_PARTITION)
             assignmentSubscription = new Subscription<any>(streamPartId, this._loggerFactory)
             await this._subscriber.add(assignmentSubscription)
+            console.log("HERE1")
             const propagationPromise = waitForAssignmentsToPropagate(assignmentSubscription, {
                 id: this.id,
                 partitions: this.getMetadata().partitions
             })
+            console.log("HERE2")
             await this._streamStorageRegistry.addStreamToStorageNode(this.id, normalizedNodeAddress)
+            console.log("HERE3")
             await withTimeout(
                 propagationPromise,
                 // eslint-disable-next-line no-underscore-dangle
                 waitOptions.timeout ?? this._config._timeouts.storageNode.timeout,
                 'storage node did not respond'
             )
+            console.log("HERE4")
         } finally {
             this._streamRegistryCached.clearStream(this.id)
             await assignmentSubscription?.unsubscribe() // should never reject...

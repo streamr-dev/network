@@ -24,12 +24,48 @@ describe('StorageNodeRegistry', () => {
             auth: {
                 privateKey: creatorWallet.privateKey,
             },
+            network: {
+                entryPoints: [{
+                    kademliaId: "entryPointBroker",
+                    type: 0,
+                    websocket: {
+                        ip: "127.0.0.1",
+                        port: 40401
+                    }
+                }],
+                peerDescriptor: {
+                    kademliaId: "storage-node-registry-1-creator",
+                    type: 0,
+                    websocket: {
+                        ip: 'localhost',
+                        port: 43235
+                    }
+                }
+            }
         })
         listenerClient = new StreamrClient({
             ...ConfigTest,
             auth: {
                 privateKey: listenerWallet.privateKey,
             },
+            network: {
+                entryPoints: [{
+                    kademliaId: "entryPointBroker",
+                    type: 0,
+                    websocket: {
+                        ip: "127.0.0.1",
+                        port: 40401
+                    }
+                }],
+                peerDescriptor: {
+                    kademliaId: "storage-node-registry-1-listener",
+                    type: 0,
+                    websocket: {
+                        ip: 'localhost',
+                        port: 43234
+                    }
+                }
+            }
         })
     }, TEST_TIMEOUT)
 
@@ -92,13 +128,16 @@ describe('StorageNodeRegistry', () => {
         const onAddPayloads: any[] = []
         const onRemovePayloads: any[] = []
         listenerClient.on('addToStorageNode', (payload: any) => {
+            console.log("addToStorageNode")
             onAddPayloads.push(payload)
         })
         listenerClient.on('removeFromStorageNode', (payload: any) => {
+            console.log("removeFromStorageNode")
             onRemovePayloads.push(payload)
         })
-
+        console.log("AAAAA")
         await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
+        console.log("BBBBB")
         await stream.removeFromStorageNode(DOCKER_DEV_STORAGE_NODE)
 
         await until(() => {
@@ -116,5 +155,5 @@ describe('StorageNodeRegistry', () => {
             nodeAddress: DOCKER_DEV_STORAGE_NODE,
             streamId: stream.id,
         })
-    }, TEST_TIMEOUT)
+    }, TEST_TIMEOUT * 2)
 })

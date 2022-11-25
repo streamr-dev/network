@@ -209,7 +209,10 @@ export class StreamrNode extends EventEmitter {
 }
 
 [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `SIGTERM`].forEach((term) => {
-    process.on(term, async () => {
+    process.on(term, async (e) => {
+        if (term === 'uncaughtException') {
+            logger.warn(e)
+        }
         await cleanUp()
         process.exit()
     })

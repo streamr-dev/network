@@ -23,6 +23,24 @@ describe('StorageNodeRegistry2', () => {
             ...ConfigTest,
             auth: {
                 privateKey: await fetchPrivateKeyWithGas()
+            },
+            network: {
+                entryPoints: [{
+                    kademliaId: "entryPointBroker",
+                    type: 0,
+                    websocket: {
+                        ip: "127.0.0.1",
+                        port: 40401
+                    }
+                }],
+                peerDescriptor: {
+                    kademliaId: "storage-node-registry-2-client",
+                    type: 0,
+                    websocket: {
+                        ip: 'localhost',
+                        port: 43237
+                    }
+                }
             }
         })
         const storageNodeWallet = new Wallet(await fetchPrivateKeyWithGas())
@@ -30,6 +48,24 @@ describe('StorageNodeRegistry2', () => {
             ...ConfigTest,
             auth: {
                 privateKey: storageNodeWallet.privateKey
+            },
+            network: {
+                entryPoints: [{
+                    kademliaId: "entryPointBroker",
+                    type: 0,
+                    websocket: {
+                        ip: "127.0.0.1",
+                        port: 40401
+                    }
+                }],
+                peerDescriptor: {
+                    kademliaId: "storage-node-registry-2-storage-node-client",
+                    type: 0,
+                    websocket: {
+                        ip: 'localhost',
+                        port: 43236
+                    }
+                }
             }
         })
         storageNodeAddress = toEthereumAddress(storageNodeWallet.address)

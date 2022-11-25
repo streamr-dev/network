@@ -48,7 +48,8 @@ describe('broker subscriptions', () => {
                 mqtt: {
                     port: mqttPort1
                 }
-            }
+            },
+            wsServerPort: 44400
         })
         broker2 = await startBroker({
             privateKey: broker2User.privateKey,
@@ -57,7 +58,8 @@ describe('broker subscriptions', () => {
                 mqtt: {
                     port: mqttPort2
                 }
-            }
+            },
+            wsServerPort: 44401
         })
 
         client1 = await createClient(tracker, await fetchPrivateKeyWithGas())
@@ -120,6 +122,7 @@ describe('broker subscriptions', () => {
         await mqttClient1.unsubscribe(freshStream1.id)
 
         await waitForCondition(async () => (await getStreamParts(broker2)).length === 2)
+        await waitForCondition(async () => (await getStreamParts(broker1)).length === 1)
 
         expect((await getStreamParts(broker1))).toIncludeSameMembers([freshStream2.id + '#0'])
         expect((await getStreamParts(broker2))).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])
