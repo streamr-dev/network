@@ -1,3 +1,3 @@
 #!/bin/bash
 mkdir -p dist/src/
-cp -f src/index-esm.mjs dist/src/index-esm.mjs
+cp -f src/exports-esm.mjs dist/src/exports-esm.mjs

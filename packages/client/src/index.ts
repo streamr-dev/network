@@ -9,4 +9,4 @@ import { StreamrClient } from './StreamrClient'
 
 export * from './exports'
 export default StreamrClient
-// Note awful export wrappers in index-commonjs.js & index-esm.mjs
+// Note awful export wrappers in exports-commonjs.js & exports-esm.mjs
