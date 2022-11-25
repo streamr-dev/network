@@ -1,6 +1,6 @@
 module.exports = {
     entryPoints: [
-        'src/composition.ts',
+        'src/exports.ts',
     ],
     tsconfig: 'tsconfig.json',
     excludeInternal: true,

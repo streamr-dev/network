@@ -9,9 +9,9 @@
   },
   "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
   "author": "Streamr Network AG <contact@streamr.network>",
-  "main": "dist/src/composition.js",
+  "main": "dist/src/exports.js",
   "browser": "dist/streamr-network.js",
-  "types": "dist/src/composition.d.ts",
+  "types": "dist/src/exports.d.ts",
   "bin": {
     "network": "bin/network.js",
     "publisher": "bin/publisher.js",

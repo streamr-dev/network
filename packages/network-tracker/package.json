@@ -12,8 +12,8 @@
   "bin": {
     "streamr-tracker": "bin/tracker.js"
   },
-  "main": "dist/src/composition.js",
-  "types": "dist/src/composition.d.ts",
+  "main": "dist/src/exports.js",
+  "types": "dist/src/exports.d.ts",
   "scripts": {
     "build": "tsc -b tsconfig.node.json",
     "check": "tsc -p ./tsconfig.jest.json --noEmit",
