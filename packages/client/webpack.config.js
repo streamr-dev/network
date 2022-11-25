@@ -31,7 +31,7 @@ module.exports = (env, argv) => {
         name: 'streamr-client',
         mode: isProduction ? 'production' : 'development',
         entry: {
-            'streamr-client': path.join(__dirname, 'src', 'index-browser.ts'),
+            'streamr-client': path.join(__dirname, 'src', 'exports-browser.ts'),
         },
         devtool: 'source-map',
         output: {
