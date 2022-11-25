@@ -7,6 +7,7 @@ import EncryptedGroupKey from '../../../../src/protocol/message_layer/EncryptedG
 import MessageID from '../../../../src/protocol/message_layer/MessageID'
 import MessageRef from '../../../../src/protocol/message_layer/MessageRef'
 import StreamMessage, { ContentType, EncryptionType, StreamMessageType } from '../../../../src/protocol/message_layer/StreamMessage'
+import '../../../../src/protocol/message_layer/StreamMessageSerializerV32'
 import { Serializer } from '../../../../src/Serializer'
 import { toStreamID } from '../../../../src/utils/StreamID'
 import { StreamPartIDUtils } from '../../../../src/utils/StreamPartID'

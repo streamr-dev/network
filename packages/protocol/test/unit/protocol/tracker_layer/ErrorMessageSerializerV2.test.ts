@@ -1,5 +1,6 @@
 import assert from 'assert'
 import ErrorMessage from '../../../../src/protocol/tracker_layer/error_message/ErrorMessage'
+import '../../../../src/protocol/tracker_layer/error_message/ErrorMessageSerializerV2'
 import TrackerMessage from '../../../../src/protocol/tracker_layer/TrackerMessage'
 
 const VERSION = 2

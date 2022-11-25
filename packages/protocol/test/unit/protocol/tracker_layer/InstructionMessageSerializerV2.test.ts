@@ -1,5 +1,6 @@
 import assert from 'assert'
 import InstructionMessage from '../../../../src/protocol/tracker_layer/instruction_message/InstructionMessage'
+import '../../../../src/protocol/tracker_layer/instruction_message/InstructionMessageSerializerV2'
 import TrackerMessage from '../../../../src/protocol/tracker_layer/TrackerMessage'
 import { toStreamID } from '../../../../src/utils/StreamID'
 

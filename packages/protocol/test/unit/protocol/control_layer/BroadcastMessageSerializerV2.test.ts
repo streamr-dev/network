@@ -1,6 +1,7 @@
 import { toEthereumAddress } from '@streamr/utils'
 import assert from 'assert'
 import BroadcastMessage from '../../../../src/protocol/control_layer/broadcast_message/BroadcastMessage'
+import '../../../../src/protocol/control_layer/broadcast_message/BroadcastMessageSerializerV2'
 import ControlMessage from '../../../../src/protocol/control_layer/ControlMessage'
 import StreamMessage, { ContentType, EncryptionType, StreamMessageType } from '../../../../src/protocol/message_layer/StreamMessage'
 import { SIGNATURE_TYPE_ETH } from '../../../../src/protocol/message_layer/StreamMessageSerializerV32'

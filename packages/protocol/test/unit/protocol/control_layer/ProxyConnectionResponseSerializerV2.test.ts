@@ -1,6 +1,7 @@
 import assert from 'assert'
 import ControlMessage from '../../../../src/protocol/control_layer/ControlMessage'
 import ProxyConnectionResponse from '../../../../src/protocol/control_layer/proxy_connection_response/ProxyConnectionResponse'
+import '../../../../src/protocol/control_layer/proxy_connection_response/ProxyConnectionResponseSerializerV2'
 import { toStreamID } from '../../../../src/utils/StreamID'
 import { ProxyDirection } from '../../../../src/utils/types'
 

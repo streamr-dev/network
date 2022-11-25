@@ -1,6 +1,7 @@
 import assert from 'assert'
 import ControlMessage from '../../../../src/protocol/control_layer/ControlMessage'
 import UnsubscribeRequest from '../../../../src/protocol/control_layer/unsubscribe_request/UnsubscribeRequest'
+import '../../../../src/protocol/control_layer/unsubscribe_request/UnsubscribeRequestSerializerV2'
 import { toStreamID } from '../../../../src/utils/StreamID'
 
 const VERSION = 2

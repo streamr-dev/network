@@ -1,5 +1,6 @@
 import assert from 'assert'
 import RelayMessage, { RelayMessageSubType } from '../../../../src/protocol/tracker_layer/relay_message/RelayMessage'
+import '../../../../src/protocol/tracker_layer/relay_message/RelayMessageSerializerV2'
 import TrackerMessage from '../../../../src/protocol/tracker_layer/TrackerMessage'
 
 const VERSION = 2

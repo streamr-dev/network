@@ -1,5 +1,6 @@
 import assert from 'assert'
 import StatusAckMessage from '../../../../src/protocol/tracker_layer/status_ack_message/StatusAckMessage'
+import '../../../../src/protocol/tracker_layer/status_ack_message/StatusAckMessageSerializerV2'
 import TrackerMessage from '../../../../src/protocol/tracker_layer/TrackerMessage'
 import { toStreamID } from '../../../../src/utils/StreamID'
 
