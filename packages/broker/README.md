@@ -5,50 +5,47 @@
 </p>
 
 # streamr-broker
-Broker nodes are Streamr nodes that run externally to your application. You start up a node on a server, and interface with it remotely using one of the supported protocols.
+Broker nodes are Streamr Network nodes that run external to your application. You start up a broker node locally or on a
+server,  and interface with it remotely using one of the supported protocols.
 
-The Broker node ships with plugins for HTTP, Websocket, and MQTT protocols. Libraries for these protocols exist in practically every programming language, meaning that you can conveniently publish and subscribe to data from the Streamr Network using any programming language.
+The broker node ships with protocol support for HTTP, WebSocket, and MQTT. As libraries for these common protocols exist
+in  practically every programming language, you can conveniently publish data to and subscribe to streams in the Streamr Network
+using the programming language of your choice.
 
-Broker nodes have a plugin architecture that allows them to perform other tasks in addition to (or instead of) serving applications, such as mining.
+Broker nodes can also perform other tasks in addition to (or instead of) serving applications, such as mining.
 
 ## Table of Contents
 - [Install](#install)
 - [Plugins](#plugins)
 - [Run](#run)
-- [Develop](#develop)
 
 ## Install
-| NodeJS version `16.13.x` and NPM version `8.x` is required |
-| --- |
-
-To install streamr-broker:
-```bash
+```
 npm install -g streamr-broker
 ```
 
-For more information on the different ways to install a Broker node, see [setting up a Broker node](https://streamr.network/docs/streamr-network/installing-broker-node).
+Node.js `16.13.x` is the minimum required version. Node.js `18.12.x`, NPM `8.x` and later versions are recommended.
+
+For more information on the different ways of setting up a broker node, see
+[setting up a Broker node](https://streamr.network/docs/streamr-network/installing-broker-node).
 
 ## Plugins
 
-The Broker node ships with a number of plugins for configuring your Broker node to match your specific needs. For easy data integration from any environment, plugins for HTTP, Websocket, and MQTT are provided. 
+The broker node ships with a number of plugins that can be enabled and configured selectively to match your specific
+needs. For easy data integration from any programming language environment, plugins for HTTP, WebSocket, and MQTT are
+provided. 
 
 Read more about available [plugins](plugins.md).
 
 ## Run
 
-First install the package
-```
-npm install -g streamr-broker
-```
+First [install](#install) the package globally if you have not yet.
+
 Create a configuration file with interactive tool:
 ```
 streamr-broker-init 
 ```
-Then run the command broker with the desired configuration file
+Then run the command broker with the desired configuration file:
 ```
 streamr-broker <configFile>
 ```
-
-## Develop
-
-Check the [Broker dev notes](develop.md) if you're intending to contribute to the codebase.
