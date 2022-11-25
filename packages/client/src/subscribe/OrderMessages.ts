@@ -146,7 +146,7 @@ export class OrderMessages {
         }
     }
 
-    transform(): (src: AsyncGenerator<StreamMessage, any, unknown>) => AsyncGenerator<StreamMessage, void, unknown> {
+    transform(): (src: AsyncGenerator<StreamMessage, any, unknown>) => AsyncGenerator<StreamMessage> {
         return async function* Transform(this: OrderMessages, src: AsyncGenerator<StreamMessage>) {
             if (!this.orderMessages) {
                 yield* src

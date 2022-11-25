@@ -102,7 +102,7 @@ export class StreamrClient {
      * @category Important
      *
      * @param streamDefinition - the stream or stream partition to publish the message to
-     * @param content - the content (the payload) of the message (usually an JSON serializable object)
+     * @param content - the content (the payload) of the message (must be JSON serializable)
      * @param metadata - provide additional metadata to be included in the message or to control the publishing process
      * @returns the published message (note: the field {@link Message.content} is encrypted if the stream is private)
      */
