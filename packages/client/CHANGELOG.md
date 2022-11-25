@@ -12,15 +12,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Deprecated
 
-- Deprecate TypeScript interfaces `StrictStreamrClientConfig`
-- Deprecate `gasPriceStrategy` config option in `contracts.ethereumNetworks`, use `highGasPriceStrategy` instead
-- Deprecate method parameter of `.waitForStorage()`
-
 ### Removed
 
 ### Fixed
 
 ### Security
+
+
+## [7.1.0] - 2022-11-25
+
+- Deprecate TypeScript interfaces `StrictStreamrClientConfig`
+- Deprecate `gasPriceStrategy` config option in `contracts.ethereumNetworks`, use `highGasPriceStrategy` instead
+- Deprecate method parameter of `.waitForStorage()`
+
+### Fixed
+- Networking issue in which connections could not be formed via WebRTC if STUN or TURN were needed
 
 
 ## [7.0.3] - 2022-11-23
@@ -209,7 +215,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fixed an import so that the client successfully loads in a web browser environment (NET-721)
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/client/v7.0.3...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/client/v7.1.0...HEAD
+[7.1.0]: https://github.com/streamr-dev/network/compare/client/v7.0.3...client/v7.1.0
 [7.0.3]: https://github.com/streamr-dev/network/compare/client/v7.0.2...client/v7.0.3
 [7.0.2]: https://github.com/streamr-dev/network/compare/client/v7.0.1...client/v7.0.2
 [7.0.1]: https://github.com/streamr-dev/network/compare/client/v7.0.0...client/v7.0.1
