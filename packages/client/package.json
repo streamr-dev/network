@@ -5,7 +5,7 @@
   "private": true,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/streamr-dev/network-monorepo.git",
+    "url": "git+https://github.com/streamr-dev/network.git",
     "directory": "packages/client"
   },
   "types": "./dist/types/src/index.d.ts",
@@ -36,10 +36,7 @@
     "test-browser": "npm run build-browser-production && concurrently -k --success=first 'node ./test/browser/server.js' 'sleep 5 && nightwatch --headless --verbose --timeout=30000 --config=nightwatch.conf.js ./test/browser/browser.js'",
     "test-exports": "cd test/exports && npm run link && tsc --noEmit --project ./tsconfig.json && npm test"
   },
-  "engines": {
-    "node": ">= 12"
-  },
-  "author": "Streamr",
+  "author": "Streamr Network AG <contact@streamr.network>",
   "license": "Apache-2.0",
   "devDependencies": {
     "@babel/core": "^7.16.0",
@@ -132,9 +129,5 @@
   "optionalDependencies": {
     "bufferutil": "^4.0.5",
     "utf-8-validate": "^5.0.7"
-  },
-  "bugs": {
-    "url": "https://github.com/streamr-dev/streamr-client/issues"
-  },
-  "homepage": "https://github.com/streamr-dev/streamr-client#readme"
+  }
 }

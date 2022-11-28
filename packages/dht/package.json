@@ -4,7 +4,7 @@
   "description": "Streamr Network DHT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/streamr-dev/network-monorepo.git",
+    "url": "git+https://github.com/streamr-dev/network.git",
     "directory": "packages/dht"
   },
   "main": "dist/src/exports.js",

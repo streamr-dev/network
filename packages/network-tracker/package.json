@@ -1,10 +1,10 @@
 {
   "name": "@streamr/network-tracker",
   "version": "7.1.0",
-  "description": "Streamr Network Tracker package",
+  "description": "Streamr Network tracker implementation (Brubeck)",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/streamr-dev/network-monorepo.git",
+    "url": "git+https://github.com/streamr-dev/network.git",
     "directory": "packages/network-tracker"
   },
   "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
@@ -19,7 +19,6 @@
     "check": "tsc -p ./tsconfig.jest.json --noEmit",
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
-    "prepublishOnly": "npm run clean && NODE_ENV=production tsc -b tsconfig.node.json",
     "test": "jest",
     "test-integration": "jest test/integration/",
     "test-unit": "jest test/unit",
