@@ -61,7 +61,7 @@ describe('PushPipeline', () => {
         leaksDetector.add('streamMessage', streamMessage)
         const s = new PushPipeline<StreamMessage>()
         leaksDetector.add(instanceId(s), s)
-        const received: StreamMessage<typeof testMessage>[] = []
+        const received: StreamMessage[] = []
         s.pull((async function* g() {
             yield streamMessage
 
@@ -91,7 +91,7 @@ describe('PushPipeline', () => {
         leaksDetector.add('streamMessage', streamMessage)
         const s = new PushPipeline<StreamMessage>()
         leaksDetector.add(instanceId(s), s)
-        const received: StreamMessage<typeof testMessage>[] = []
+        const received: StreamMessage[] = []
         s.onError.listen((error) => {
             throw error
         })
@@ -119,7 +119,7 @@ describe('PushPipeline', () => {
         const streamMessage = await createMockMessage()
         s.push(streamMessage)
         leaksDetector.add('streamMessage', streamMessage)
-        const received: StreamMessage<typeof testMessage>[] = []
+        const received: StreamMessage[] = []
         await expect(async () => {
             for await (const msg of s) {
                 leaksDetector.add('receivedMessage', msg)
@@ -140,7 +140,7 @@ describe('PushPipeline', () => {
         const streamMessage = await createMockMessage()
         leaksDetector.add('streamMessage', streamMessage)
         s.push(streamMessage)
-        const received: StreamMessage<typeof testMessage>[] = []
+        const received: StreamMessage[] = []
         await expect(async () => {
             for await (const msg of s) {
                 leaksDetector.add('receivedMessage', msg)
@@ -166,7 +166,7 @@ describe('PushPipeline', () => {
         leaksDetector.add('streamMessage', streamMessage)
         s.push(streamMessage)
         s.endWrite(err)
-        const received: StreamMessage<typeof testMessage>[] = []
+        const received: StreamMessage[] = []
         await expect(async () => {
             for await (const msg of s) {
                 leaksDetector.add('receivedMessage', msg)

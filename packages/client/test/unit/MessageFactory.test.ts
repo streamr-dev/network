@@ -37,7 +37,7 @@ const createMessageFactory = async (opts?: {
 const createMessage = async (
     opts: Omit<PublishMetadata, 'timestamp'> & { timestamp?: number, explicitPartition?: number },
     messageFactory: MessageFactory
-): Promise<StreamMessage<any>> => {
+): Promise<StreamMessage> => {
     return messageFactory.createMessage(CONTENT, {
         timestamp: TIMESTAMP,
         ...opts

@@ -78,7 +78,7 @@ describe('StreamrClient', () => {
             const done = new Defer<void>()
             const msg = Msg()
 
-            const sub = await client.subscribe<typeof msg>(streamDefinition)
+            const sub = await client.subscribe(streamDefinition)
 
             sub.onMessage.listen(done.wrap(async (streamMessage) => {
                 sub.unsubscribe()
@@ -97,7 +97,7 @@ describe('StreamrClient', () => {
         it('client.subscribe (realtime) with onMessage callback', async () => {
             const done = new Defer<void>()
             const mockMessage = Msg()
-            await client.subscribe<typeof mockMessage>(streamDefinition, done.wrap(async (content, metadata) => {
+            await client.subscribe(streamDefinition, done.wrap(async (content, metadata) => {
                 expect(content).toEqual(mockMessage)
                 expect(metadata.publisherId).toBeTruthy()
                 expect(metadata.signature).toBeTruthy()
@@ -148,7 +148,7 @@ describe('StreamrClient', () => {
         it('publish and subscribe a sequence of messages', async () => {
             const done = new Defer<unknown>()
             const received: MessageMetadata[] = []
-            const sub = await client.subscribe<any>(streamDefinition, (_content, metadata) => {
+            const sub = await client.subscribe(streamDefinition, (_content, metadata) => {
                 received.push(metadata)
                 expect(metadata.publisherId).toBeTruthy()
                 expect(metadata.signature).toBeTruthy()

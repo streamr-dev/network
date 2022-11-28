@@ -102,13 +102,13 @@ export class StreamrClient {
      * @category Important
      *
      * @param streamDefinition - the stream or stream partition to publish the message to
-     * @param content - the content (the payload) of the message
+     * @param content - the content (the payload) of the message (must be JSON serializable)
      * @param metadata - provide additional metadata to be included in the message or to control the publishing process
      * @returns the published message (note: the field {@link Message.content} is encrypted if the stream is private)
      */
-    async publish<T>(
+    async publish(
         streamDefinition: StreamDefinition,
-        content: T,
+        content: unknown,
         metadata?: PublishMetadata
     ): Promise<Message> {
         const result = await this.publisher.publish(streamDefinition, content, metadata)
@@ -159,21 +159,21 @@ export class StreamrClient {
      * @param onMessage - callback will be invoked for each message received in subscription
      * @returns a {@link Subscription} that can be used to manage the subscription etc.
      */
-    async subscribe<T>(
+    async subscribe(
         options: StreamDefinition & { resend?: ResendOptions },
-        onMessage?: MessageListener<T>
-    ): Promise<Subscription<T>> {
+        onMessage?: MessageListener
+    ): Promise<Subscription> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(options)
         const sub = (options.resend !== undefined)
-            ? new ResendSubscription<T>(
+            ? new ResendSubscription(
                 streamPartId,
                 options.resend,
                 this.resends,
                 this.loggerFactory,
                 this.config
             )
-            : new Subscription<T>(streamPartId, this.loggerFactory)
-        await this.subscriber.add<T>(sub)
+            : new Subscription(streamPartId, this.loggerFactory)
+        await this.subscriber.add(sub)
         if (onMessage !== undefined) {
             sub.useLegacyOnMessageHandler(onMessage)
         }
@@ -201,7 +201,7 @@ export class StreamrClient {
      *
      * @param streamDefinition - leave as `undefined` to get all subscriptions
      */
-    getSubscriptions(streamDefinition?: StreamDefinition): Promise<Subscription<unknown>[]> {
+    getSubscriptions(streamDefinition?: StreamDefinition): Promise<Subscription[]> {
         return this.subscriber.getSubscriptions(streamDefinition)
     }
 
@@ -220,13 +220,13 @@ export class StreamrClient {
      * @returns a {@link MessageStream} that provides an alternative way of iterating messages. Rejects if the stream is
      * not stored (i.e. is not assigned to a storage node).
      */
-    async resend<T>(
+    async resend(
         streamDefinition: StreamDefinition,
         options: ResendOptions,
-        onMessage?: MessageListener<T>
-    ): Promise<MessageStream<T>> {
+        onMessage?: MessageListener
+    ): Promise<MessageStream> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        const messageStream = await this.resends.resend<T>(streamPartId, options)
+        const messageStream = await this.resends.resend(streamPartId, options)
         if (onMessage !== undefined) {
             messageStream.useLegacyOnMessageHandler(onMessage)
         }

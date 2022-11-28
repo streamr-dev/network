@@ -54,7 +54,7 @@ export class PublisherKeyExchange {
         })
     }
 
-    private async onMessage(request: StreamMessage<any>): Promise<void> {
+    private async onMessage(request: StreamMessage): Promise<void> {
         if (GroupKeyRequest.is(request)) {
             try {
                 const authenticatedUser = await this.authentication.getAddress()

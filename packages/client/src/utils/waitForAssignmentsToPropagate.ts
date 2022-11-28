@@ -4,7 +4,7 @@ import { identity } from 'lodash'
 import { MessageStream } from '../subscribe/MessageStream'
 
 export function waitForAssignmentsToPropagate(
-    messageStream: MessageStream<any>,
+    messageStream: MessageStream,
     targetStream: {
         id: StreamID
         partitions: number
