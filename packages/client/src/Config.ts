@@ -10,7 +10,7 @@ import CONFIG_SCHEMA from './config.schema.json'
 import { TrackerRegistryRecord } from '@streamr/protocol'
 import { LogLevel } from '@streamr/utils'
 
-import { NetworkNodeOptions } from '@streamr/network-node'
+import { IceServer, Location } from '@streamr/network-node'
 import type { ConnectionInfo } from '@ethersproject/web'
 import { generateClientId } from './utils/utils'
 
@@ -63,8 +63,21 @@ export interface StrictStreamrClientConfig {
     retryResendAfter: number
     gapFillTimeout: number
 
-    network: Omit<NetworkNodeOptions, 'trackers' | 'metricsContext'> & {
+    network: {
+        id?: string
+        acceptProxyConnections?: boolean
         trackers: TrackerRegistryRecord[] | TrackerRegistryContract
+        trackerPingInterval?: number
+        trackerConnectionMaintenanceInterval?: number
+        webrtcDisallowPrivateAddresses?: boolean
+        newWebrtcConnectionTimeout?: number
+        webrtcDatachannelBufferThresholdLow?: number
+        webrtcDatachannelBufferThresholdHigh?: number
+        disconnectionWaitTime?: number
+        peerPingInterval?: number
+        rttUpdateTimeout?: number
+        iceServers?: ReadonlyArray<IceServer>
+        location?: Location
     }
 
     contracts: {
