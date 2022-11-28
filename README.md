@@ -23,9 +23,10 @@ Monorepo containing all the main components of Streamr Network.
 * [test-utils](packages/test-utils/README.md) (@streamr/test-utils)
 
 ## NPM scripts
-NodeJS `16.13.x` is the minimum required version. NodeJS `18.13.x`, NPM `8.x` and later versions are recommended.
+| Node.js `16.13.x` is the minimum required version. Node.js `18.12.x`, NPM `8.x` and later versions are recommended. |
+|---------------------------------------------------------------------------------------------------------------------|
 
-Monorepo is managed using [npm workspaces](https://docs.npmjs.com/cli/v7/using-npm/workspaces).
+The monorepo is managed using [npm workspaces](https://docs.npmjs.com/cli/v7/using-npm/workspaces).
 
 Installation on an Apple Silicon Mac requires additional steps, see [install-on-apple-silicon.md](/install-on-apple-silicon).
 
