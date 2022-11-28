@@ -2,9 +2,6 @@ const path = require('path')
 const webpack = require('webpack')
 const NodePolyfillPlugin = require('node-polyfill-webpack-plugin')
 
-const pkg = require('./package.json')
-const libraryName = pkg.name
-
 const externals = (env) => {
     const externals = {
         'geoip-lite': 'commonjs geoip-lite',
@@ -93,7 +90,7 @@ module.exports = (env, argv) => {
             fallback: fallbacks(environment)
         },
         output: {
-            filename: `${libraryName}.js`,
+            filename: `streamr-network-node.web.js`,
             sourceMapFilename: `[name].[contenthash].js.map`,
             chunkFilename: '[id].[contenthash].js',
             path: path.resolve(__dirname, 'dist'),
