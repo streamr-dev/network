@@ -65,7 +65,7 @@ export interface StrictStreamrClientConfig {
 
     network: {
         id?: string
-        acceptProxyConnections?: boolean
+        acceptProxyConnections: boolean
         trackers: TrackerRegistryRecord[] | TrackerRegistryContract
         trackerPingInterval?: number
         trackerConnectionMaintenanceInterval?: number
@@ -76,7 +76,7 @@ export interface StrictStreamrClientConfig {
         disconnectionWaitTime?: number
         peerPingInterval?: number
         rttUpdateTimeout?: number
-        iceServers?: ReadonlyArray<IceServer>
+        iceServers: ReadonlyArray<IceServer>
         location?: Location
     }
 
