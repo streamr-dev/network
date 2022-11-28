@@ -104,15 +104,15 @@ export class Resends {
         this.logger = loggerFactory.createLogger(module)
     }
 
-    resend<T>(streamPartId: StreamPartID, options: ResendOptions): Promise<MessageStream<T>> {
+    resend(streamPartId: StreamPartID, options: ResendOptions): Promise<MessageStream> {
         if (isResendLast(options)) {
-            return this.last<T>(streamPartId, {
+            return this.last(streamPartId, {
                 count: options.last,
             })
         }
 
         if (isResendRange(options)) {
-            return this.range<T>(streamPartId, {
+            return this.range(streamPartId, {
                 fromTimestamp: new Date(options.from.timestamp).getTime(),
                 fromSequenceNumber: options.from.sequenceNumber,
                 toTimestamp: new Date(options.to.timestamp).getTime(),
@@ -123,7 +123,7 @@ export class Resends {
         }
 
         if (isResendFrom(options)) {
-            return this.from<T>(streamPartId, {
+            return this.from(streamPartId, {
                 fromTimestamp: new Date(options.from.timestamp).getTime(),
                 fromSequenceNumber: options.from.sequenceNumber,
                 publisherId: options.publisherId !== undefined ? toEthereumAddress(options.publisherId) : undefined,
@@ -136,11 +136,11 @@ export class Resends {
         )
     }
 
-    private async fetchStream<T>(
+    private async fetchStream(
         endpointSuffix: 'last' | 'range' | 'from',
         streamPartId: StreamPartID,
         query: QueryDict = {}
-    ): Promise<MessageStream<T>> {
+    ): Promise<MessageStream> {
         const loggerIdx = counterId('fetchStream')
         this.logger.debug('[%s] fetching resend %s for %s with options %o', loggerIdx, endpointSuffix, streamPartId, query)
         const streamId = StreamPartIDUtils.getStreamID(streamPartId)
@@ -152,7 +152,7 @@ export class Resends {
         const nodeAddress = nodeAddresses[random(0, nodeAddresses.length - 1)]
         const nodeUrl = (await this.storageNodeRegistry.getStorageNodeMetadata(nodeAddress)).http
         const url = this.createUrl(nodeUrl, endpointSuffix, streamPartId, query)
-        const messageStream = createSubscribePipeline<T>({
+        const messageStream = createSubscribePipeline({
             streamPartId,
             resends: this,
             groupKeyStore: this.groupKeyStore,
@@ -164,16 +164,16 @@ export class Resends {
             loggerFactory: this.loggerFactory
         })
 
-        const dataStream = this.httpUtil.fetchHttpStream<T>(url)
+        const dataStream = this.httpUtil.fetchHttpStream(url)
         messageStream.pull(counting(dataStream, (count: number) => {
             this.logger.debug('[%s] total of %d messages received for resend fetch', loggerIdx, count)
         }))
         return messageStream
     }
 
-    async last<T>(streamPartId: StreamPartID, { count }: { count: number }): Promise<MessageStream<T>> {
+    async last(streamPartId: StreamPartID, { count }: { count: number }): Promise<MessageStream> {
         if (count <= 0) {
-            const emptyStream = new MessageStream<T>()
+            const emptyStream = new MessageStream()
             emptyStream.endWrite()
             return emptyStream
         }
@@ -183,7 +183,7 @@ export class Resends {
         })
     }
 
-    private async from<T>(streamPartId: StreamPartID, {
+    private async from(streamPartId: StreamPartID, {
         fromTimestamp,
         fromSequenceNumber = MIN_SEQUENCE_NUMBER_VALUE,
         publisherId
@@ -191,7 +191,7 @@ export class Resends {
         fromTimestamp: number
         fromSequenceNumber?: number
         publisherId?: EthereumAddress
-    }): Promise<MessageStream<T>> {
+    }): Promise<MessageStream> {
         return this.fetchStream('from', streamPartId, {
             fromTimestamp,
             fromSequenceNumber,
@@ -199,7 +199,7 @@ export class Resends {
         })
     }
 
-    async range<T>(streamPartId: StreamPartID, {
+    async range(streamPartId: StreamPartID, {
         fromTimestamp,
         fromSequenceNumber = MIN_SEQUENCE_NUMBER_VALUE,
         toTimestamp,
@@ -213,7 +213,7 @@ export class Resends {
         toSequenceNumber?: number
         publisherId?: EthereumAddress
         msgChainId?: string
-    }): Promise<MessageStream<T>> {
+    }): Promise<MessageStream> {
         return this.fetchStream('range', streamPartId, {
             fromTimestamp,
             fromSequenceNumber,

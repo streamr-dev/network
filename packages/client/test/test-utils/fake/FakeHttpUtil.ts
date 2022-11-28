@@ -26,14 +26,14 @@ export class FakeHttpUtil extends HttpUtil {
         this.realHttpUtil = new HttpUtil(mockLoggerFactory())
     }
 
-    override async* fetchHttpStream<T>(url: string): AsyncIterable<StreamMessage<T>> {
+    override async* fetchHttpStream(url: string): AsyncIterable<StreamMessage> {
         const request = FakeHttpUtil.getResendRequest(url)
         if (request !== undefined) {
             const storageNode = this.network.getNode(request.nodeId) as FakeStorageNode
             const format = request.query!.get('format')
             if (format === 'raw') {
                 const count = Number(request.query!.get('count'))
-                let msgs: StreamMessage<any>[]
+                let msgs: StreamMessage[]
                 if (request.resendType === 'last') {
                     msgs = await storageNode.getLast(request.streamPartId, count)
                 } else if (request.resendType === 'range') {

@@ -80,10 +80,10 @@ export class HttpUtil {
         this.logger = loggerFactory.createLogger(module)
     }
 
-    async* fetchHttpStream<T>(
+    async* fetchHttpStream(
         url: string,
         abortController = new AbortController()
-    ): AsyncIterable<StreamMessage<T>> {
+    ): AsyncIterable<StreamMessage> {
         const response = await fetchResponse(url, this.logger, {
             signal: abortController.signal
         })

@@ -1,18 +1,12 @@
-import assert from 'assert'
-
-import {
-    StreamMessage,
-    MessageRef,
-    MessageID,
-    EncryptedGroupKey,
-    toStreamID,
-    ValidationError,
-    StreamMessageType,
-    ContentType,
-    EncryptionType
-} from '../../../../src/index'
 import { toEthereumAddress } from '@streamr/utils'
+import assert from 'assert'
+import ValidationError from '../../../../src/errors/ValidationError'
+import EncryptedGroupKey from '../../../../src/protocol/message_layer/EncryptedGroupKey'
+import MessageID from '../../../../src/protocol/message_layer/MessageID'
+import MessageRef from '../../../../src/protocol/message_layer/MessageRef'
+import StreamMessage, { ContentType, EncryptionType, StreamMessageType } from '../../../../src/protocol/message_layer/StreamMessage'
 import { SIGNATURE_TYPE_ETH } from '../../../../src/protocol/message_layer/StreamMessageSerializerV32'
+import { toStreamID } from '../../../../src/utils/StreamID'
 
 const VERSION = 32
 

@@ -10,15 +10,15 @@ import * as G from '../utils/GeneratorUtils'
 import { convertStreamMessageToMessage, Message, MessageMetadata } from './../Message'
 import { omit } from 'lodash'
 
-export type MessageListener<T, R = unknown> = (content: T, metadata: MessageMetadata) => R | Promise<R>
+export type MessageListener = (content: unknown, metadata: MessageMetadata) => unknown | Promise<unknown>
 
 /**
  * Provides asynchronous iteration with
  * {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for-await...of | for await .. of}.
  */
-export class MessageStream<T = unknown> implements AsyncIterable<Message> {
+export class MessageStream implements AsyncIterable<Message> {
 
-    private readonly pipeline: PushPipeline<StreamMessage<T>, StreamMessage<T>> = new PushPipeline()
+    private readonly pipeline: PushPipeline<StreamMessage, StreamMessage> = new PushPipeline()
 
     /** @internal */
     // eslint-disable-next-line @typescript-eslint/no-useless-constructor
@@ -30,10 +30,10 @@ export class MessageStream<T = unknown> implements AsyncIterable<Message> {
      * onMessage is passed parsed content as first arument, and streamMessage as second argument.
      * @internal
      */
-    useLegacyOnMessageHandler(onMessage: MessageListener<T>): this {
+    useLegacyOnMessageHandler(onMessage: MessageListener): this {
         this.pipeline.onMessage.listen(async (streamMessage) => {
             const msg = convertStreamMessageToMessage(streamMessage)
-            await onMessage(msg.content as T, omit(msg, 'content'))
+            await onMessage(msg.content, omit(msg, 'content'))
         })
         this.pipeline.flow()
 
@@ -41,7 +41,7 @@ export class MessageStream<T = unknown> implements AsyncIterable<Message> {
     }
 
     /** @internal */
-    getStreamMessages(): AsyncIterableIterator<StreamMessage<T>> {
+    getStreamMessages(): AsyncIterableIterator<StreamMessage> {
         return this.pipeline
     }
 
@@ -79,34 +79,34 @@ export class MessageStream<T = unknown> implements AsyncIterable<Message> {
     }
 
     /** @internal */
-    async push(item: StreamMessage<T>): Promise<void> {
+    async push(item: StreamMessage): Promise<void> {
         await this.pipeline.push(item)
     }
 
     /** @internal */
-    pipe<NewOutType>(fn: PipelineTransform<StreamMessage<T>, NewOutType>): Pipeline<StreamMessage<T>, NewOutType> {
+    pipe<NewOutType>(fn: PipelineTransform<StreamMessage, NewOutType>): Pipeline<StreamMessage, NewOutType> {
         return this.pipeline.pipe(fn)
     }
 
     // used only in tests
     /** @internal */
-    pipeBefore(fn: PipelineTransform<StreamMessage<T>, StreamMessage<T>>): Pipeline<StreamMessage<T>, StreamMessage<T>> {
+    pipeBefore(fn: PipelineTransform<StreamMessage, StreamMessage>): Pipeline<StreamMessage, StreamMessage> {
         return this.pipeline.pipeBefore(fn)
     }
 
     /** @internal */
-    map<NewOutType>(fn: G.GeneratorMap<StreamMessage<T>, NewOutType>): Pipeline<StreamMessage<T>, NewOutType> {
+    map<NewOutType>(fn: G.GeneratorMap<StreamMessage, NewOutType>): Pipeline<StreamMessage, NewOutType> {
         return this.pipeline.map(fn)
     }
 
     /** @internal */
-    forEach(fn: G.GeneratorForEach<StreamMessage<T>>): Pipeline<StreamMessage<T>, StreamMessage<T>> {
+    forEach(fn: G.GeneratorForEach<StreamMessage>): Pipeline<StreamMessage, StreamMessage> {
         return this.pipeline.forEach(fn)
     }
 
     // used only in tests
     /** @internal */
-    async consume(fn?: (streamMessage: StreamMessage<T>) => void): Promise<void> {
+    async consume(fn?: (streamMessage: StreamMessage) => void): Promise<void> {
         await this.pipeline.consume(fn)
     }
 
@@ -117,7 +117,7 @@ export class MessageStream<T = unknown> implements AsyncIterable<Message> {
     }
 
     /** @internal */
-    async pull(source: AsyncGenerator<StreamMessage<T>>): Promise<void> {
+    async pull(source: AsyncGenerator<StreamMessage>): Promise<void> {
         return this.pipeline.pull(source)
     }
 

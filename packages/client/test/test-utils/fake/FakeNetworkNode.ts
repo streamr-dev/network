@@ -24,11 +24,11 @@ export class FakeNetworkNode implements NetworkNodeStub {
         return this.id
     }
 
-    addMessageListener(listener: (msg: StreamMessage<unknown>) => void): void {
+    addMessageListener(listener: (msg: StreamMessage) => void): void {
         this.messageListeners.push(listener)
     }
 
-    removeMessageListener(listener: (msg: StreamMessage<unknown>) => void): void {
+    removeMessageListener(listener: (msg: StreamMessage) => void): void {
         pull(this.messageListeners, listener)
     }
 

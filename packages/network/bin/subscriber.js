@@ -4,7 +4,7 @@ const program = require('commander')
 
 const { Logger } = require('../dist/src/helpers/Logger')
 const { version: CURRENT_VERSION } = require('../package.json')
-const { createNetworkNode } = require('..')
+const { createNetworkNode } = require('../dist/src/createNetworkNode')
 const { MetricsContext } = require('../dist/src/helpers/MetricsContext')
 const { Event: NodeEvent } = require('../dist/src/logic/Node')
 

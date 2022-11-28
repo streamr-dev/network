@@ -16,7 +16,7 @@
         "contracts/**/*.json",
         "src/config.schema.json"
     ],
-    "exclude": ["src/index-esm.mjs"],
+    "exclude": ["src/exports-esm.mjs"],
     "references": [
         { "path": "../test-utils/tsconfig.node.json" },
         { "path": "../protocol/tsconfig.node.json" },

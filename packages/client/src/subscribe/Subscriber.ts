@@ -18,7 +18,7 @@ import { Logger } from '@streamr/utils'
 
 @scoped(Lifecycle.ContainerScoped)
 export class Subscriber {
-    private readonly subSessions: Map<StreamPartID, SubscriptionSession<unknown>> = new Map()
+    private readonly subSessions: Map<StreamPartID, SubscriptionSession> = new Map()
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly resends: Resends
     private readonly groupKeyStore: GroupKeyStore
@@ -56,11 +56,11 @@ export class Subscriber {
         this.logger = loggerFactory.createLogger(module)
     }
 
-    getOrCreateSubscriptionSession<T>(streamPartId: StreamPartID): SubscriptionSession<T> {
+    getOrCreateSubscriptionSession(streamPartId: StreamPartID): SubscriptionSession {
         if (this.subSessions.has(streamPartId)) {
-            return this.getSubscriptionSession<T>(streamPartId)!
+            return this.getSubscriptionSession(streamPartId)!
         }
-        const subSession = new SubscriptionSession<T>(
+        const subSession = new SubscriptionSession(
             streamPartId,
             this.resends,
             this.groupKeyStore,
@@ -73,7 +73,7 @@ export class Subscriber {
             this.config
         )
 
-        this.subSessions.set(streamPartId, subSession as SubscriptionSession<unknown>)
+        this.subSessions.set(streamPartId, subSession)
         subSession.onRetired.listen(() => {
             this.subSessions.delete(streamPartId)
         })
@@ -81,8 +81,8 @@ export class Subscriber {
         return subSession
     }
 
-    async add<T>(sub: Subscription<T>): Promise<void> {
-        const subSession = this.getOrCreateSubscriptionSession<T>(sub.streamPartId)
+    async add(sub: Subscription): Promise<void> {
+        const subSession = this.getOrCreateSubscriptionSession(sub.streamPartId)
 
         // add subscription to subSession
         try {
@@ -95,7 +95,7 @@ export class Subscriber {
         }
     }
 
-    private async remove(sub: Subscription<any>): Promise<void> {
+    private async remove(sub: Subscription): Promise<void> {
         if (!sub) { return }
         const subSession = this.subSessions.get(sub.streamPartId)
         if (!subSession) {
@@ -147,8 +147,8 @@ export class Subscriber {
     /**
      * Get all subscriptions.
      */
-    private getAllSubscriptions(): Subscription<unknown>[] {
-        return [...this.subSessions.values()].reduce((o: Subscription<unknown>[], s: SubscriptionSession<unknown>) => {
+    private getAllSubscriptions(): Subscription[] {
+        return [...this.subSessions.values()].reduce((o: Subscription[], s: SubscriptionSession) => {
             // @ts-expect-error private
             o.push(...s.subscriptions)
             return o
@@ -158,25 +158,20 @@ export class Subscriber {
     /**
      * Get subscription session for matching sub options.
      */
-    getSubscriptionSession<T = unknown>(streamPartId: StreamPartID): SubscriptionSession<T> | undefined {
-        const subSession = this.subSessions.get(streamPartId)
-        if (!subSession) {
-            return undefined
-        }
-
-        return subSession as SubscriptionSession<T>
+    getSubscriptionSession(streamPartId: StreamPartID): SubscriptionSession | undefined {
+        return this.subSessions.get(streamPartId)
     }
 
     countSubscriptionSessions(): number {
         return this.subSessions.size
     }
 
-    async getSubscriptions(streamDefinition?: StreamDefinition): Promise<Subscription<unknown>[]> {
+    async getSubscriptions(streamDefinition?: StreamDefinition): Promise<Subscription[]> {
         if (!streamDefinition) {
             return this.getAllSubscriptions()
         }
 
-        const results: SubscriptionSession<unknown>[] = []
+        const results: SubscriptionSession[] = []
         await Promise.all([...this.subSessions.values()].map(async (subSession) => {
             const isMatch = await this.streamIdBuilder.match(streamDefinition, subSession.streamPartId)
             if (isMatch) {

@@ -188,7 +188,7 @@ export class Stream {
      */
     async detectFields(): Promise<void> {
         // Get last message of the stream to be used for field detecting
-        const sub = await this._resends.last<any>(
+        const sub = await this._resends.last(
             toStreamPartID(this.id, DEFAULT_PARTITION),
             {
                 count: 1,
@@ -232,7 +232,7 @@ export class Stream {
         const normalizedNodeAddress = toEthereumAddress(storageNodeAddress)
         try {
             const streamPartId = toStreamPartID(formStorageNodeAssignmentStreamId(normalizedNodeAddress), DEFAULT_PARTITION)
-            assignmentSubscription = new Subscription<any>(streamPartId, this._loggerFactory)
+            assignmentSubscription = new Subscription(streamPartId, this._loggerFactory)
             await this._subscriber.add(assignmentSubscription)
             const propagationPromise = waitForAssignmentsToPropagate(assignmentSubscription, {
                 id: this.id,
@@ -274,7 +274,7 @@ export class Stream {
      *
      * @category Important
      */
-    async publish<T>(content: T, metadata?: PublishMetadata): Promise<Message> {
+    async publish(content: unknown, metadata?: PublishMetadata): Promise<Message> {
         const result = await this._publisher.publish(this.id, content, metadata)
         this._eventEmitter.emit('publish', undefined)
         return convertStreamMessageToMessage(result)
