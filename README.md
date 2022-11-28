@@ -155,7 +155,8 @@ All the above packages should be released at the same time.
 14. Push to tag `git push origin cli-tools/vX.Y.Z`
 15. At this point we are to do the actual release
 16. Clean and rebuild project with `npm run clean && npm run bootstrap`
-17. Then we do actual publishing of packages with `./release.sh`
+17. Then we do actual publishing of packages with `./release.sh <NPM_TAG>`. Use argument `beta` if publishing a
+beta version. Use `latest` instead when publishing a stable version.
 18. Update client docs if major or minor change:
 ```bash
 
