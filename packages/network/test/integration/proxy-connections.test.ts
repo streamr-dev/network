@@ -10,7 +10,7 @@ import {
 } from '@streamr/protocol'
 import { toEthereumAddress, waitForEvent } from '@streamr/utils'
 
-import { createNetworkNode } from '../../src/composition'
+import { createNetworkNode } from '../../src/createNetworkNode'
 import { Event as NodeEvent } from '../../src/logic/Node'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')

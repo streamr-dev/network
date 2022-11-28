@@ -3,7 +3,7 @@ import { Tracker, startTracker } from '@streamr/network-tracker'
 import { MessageID, StreamMessage, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
 import { toEthereumAddress, waitForEvent, waitForCondition } from '@streamr/utils'
 
-import { createNetworkNode } from '../../src/composition'
+import { createNetworkNode } from '../../src/createNetworkNode'
 import { Event as NodeEvent } from '../../src/logic/Node'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')

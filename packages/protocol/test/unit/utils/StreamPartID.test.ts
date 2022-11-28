@@ -1,5 +1,6 @@
-import { StreamPartIDUtils, toStreamID, toStreamPartID } from '../../../src'
 import { toEthereumAddress } from '@streamr/utils'
+import { toStreamID } from '../../../src/utils/StreamID'
+import { StreamPartIDUtils, toStreamPartID } from '../../../src/utils/StreamPartID'
 
 const INVALID_PARTITIONS = [-1, 100, Math.PI, 'abc' as unknown as number]
 

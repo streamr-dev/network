@@ -2,7 +2,7 @@ import {
     waitForStreamToEnd,
     toReadableStream,
     eventsToArray, eventsWithArgsToArray
-} from "../src/utils"
+} from "../src"
 import { Readable } from "stream"
 import { EventEmitter } from "events"
 

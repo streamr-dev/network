@@ -9,13 +9,13 @@
     "directory": "packages/client"
   },
   "types": "./dist/types/src/index.d.ts",
-  "main": "./dist/src/index-commonjs.js",
+  "main": "./dist/src/exports-commonjs.js",
   "browser": "./dist/streamr-client.web.js",
   "exports": {
     "browser": "./dist/streamr-client.web.js",
     "default": {
-      "import": "./dist/src/index-esm.mjs",
-      "require": "./dist/src/index-commonjs.js"
+      "import": "./dist/src/exports-esm.mjs",
+      "require": "./dist/src/exports-commonjs.js"
     }
   },
   "scripts": {
