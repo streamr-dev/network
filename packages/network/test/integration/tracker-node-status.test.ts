@@ -4,7 +4,7 @@ import { NetworkNode } from '../../src/logic/NetworkNode'
 import { runAndWaitForEvents } from '@streamr/test-utils'
 import { wait } from '@streamr/utils'
 
-import { createNetworkNode } from '../../src/composition'
+import { createNetworkNode } from '../../src/createNetworkNode'
 import { Event as NodeEvent } from '../../src/logic/Node'
 import { StreamPartIDUtils } from '@streamr/protocol'
 

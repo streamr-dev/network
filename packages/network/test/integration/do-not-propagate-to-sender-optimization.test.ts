@@ -8,7 +8,8 @@ import {
     toStreamID
 } from '@streamr/protocol'
 
-import { createNetworkNode, NodeEvent } from '../../src/composition'
+import { createNetworkNode } from '../../src/createNetworkNode'
+import { Event as NodeEvent } from '../../src/logic/Node'
 import { waitForCondition, toEthereumAddress } from '@streamr/utils'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')

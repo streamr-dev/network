@@ -5,7 +5,7 @@ import { waitForEvent } from '@streamr/utils'
 import { wait } from '@streamr/utils'
 import { InstructionMessage, toStreamID, toStreamPartID } from '@streamr/protocol'
 
-import { createNetworkNode } from '../../src/composition'
+import { createNetworkNode } from '../../src/createNetworkNode'
 import { Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
 import { Event as NodeEvent } from '../../src/logic/Node'
 import { getStreamParts } from '../utils'

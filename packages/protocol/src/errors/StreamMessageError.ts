@@ -1,4 +1,4 @@
-import { StreamMessage } from "../protocol/message_layer"
+import StreamMessage from '../protocol/message_layer/StreamMessage'
 import ValidationError from './ValidationError'
 
 export default class StreamMessageError extends ValidationError {
