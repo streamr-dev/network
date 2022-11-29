@@ -28,12 +28,12 @@ export interface NetworkNodeOptions extends AbstractNodeOptions {
 export const TEST_CONFIG: Omit<NetworkNodeOptions, 'id' | 'trackers' | 'metricsContext'> = {
     disconnectionWaitTime: 30 * 1000,
     peerPingInterval: 30 * 1000,
-    newWebrtcConnectionTimeout: 15000,
+    newWebrtcConnectionTimeout: 15 * 1000,
     webrtcDatachannelBufferThresholdLow: 2 ** 15,
     webrtcDatachannelBufferThresholdHigh: 2 ** 17,
     iceServers: [],
-    rttUpdateTimeout: 15000,
-    trackerConnectionMaintenanceInterval: 5000,
+    rttUpdateTimeout: 15 * 1000,
+    trackerConnectionMaintenanceInterval: 5 * 1000,
     webrtcDisallowPrivateAddresses: true,
     acceptProxyConnections: false,
     trackerPingInterval: 60 * 1000
