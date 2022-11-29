@@ -10,7 +10,7 @@ import CONFIG_SCHEMA from './config.schema.json'
 import { TrackerRegistryRecord } from '@streamr/protocol'
 import { LogLevel } from '@streamr/utils'
 
-import { NetworkNodeOptions } from '@streamr/network-node'
+import { IceServer, Location } from '@streamr/network-node'
 import type { ConnectionInfo } from '@ethersproject/web'
 import { generateClientId } from './utils/utils'
 
@@ -63,8 +63,21 @@ export interface StrictStreamrClientConfig {
     retryResendAfter: number
     gapFillTimeout: number
 
-    network: Omit<NetworkNodeOptions, 'trackers' | 'metricsContext'> & {
+    network: {
+        id?: string
+        acceptProxyConnections: boolean
         trackers: TrackerRegistryRecord[] | TrackerRegistryContract
+        trackerPingInterval?: number
+        trackerConnectionMaintenanceInterval?: number
+        webrtcDisallowPrivateAddresses?: boolean
+        newWebrtcConnectionTimeout?: number
+        webrtcDatachannelBufferThresholdLow?: number
+        webrtcDatachannelBufferThresholdHigh?: number
+        disconnectionWaitTime: number
+        peerPingInterval?: number
+        rttUpdateTimeout?: number
+        iceServers: ReadonlyArray<IceServer>
+        location?: Location
     }
 
     contracts: {
@@ -153,7 +166,8 @@ export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id' | 'aut
                 username: 'BrubeckTurn1',
                 password: 'MIlbgtMw4nhpmbgqRrht1Q=='
             }
-        ]
+        ],
+        disconnectionWaitTime: 200
     },
 
     // For ethers.js provider params, see https://docs.ethers.io/ethers.js/v5-beta/api-providers.html#provider
