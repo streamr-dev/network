@@ -13,8 +13,9 @@ import { RtcSignaller } from '../src/logic/RtcSignaller'
 import { MetricsContext } from '@streamr/utils'
 import { NegotiatedProtocolVersions } from '../src/connection/NegotiatedProtocolVersions'
 import NodeClientWsEndpoint from '../src/connection/ws/NodeClientWsEndpoint'
+import { NetworkNode } from '../src/logic/NetworkNode'
 
-export const createTestNetworkNode = (opts: Partial<NetworkNodeOptions> & Pick<NetworkNodeOptions, 'trackers'>) => {
+export const createTestNetworkNode = (opts: Partial<NetworkNodeOptions> & Pick<NetworkNodeOptions, 'trackers'>): NetworkNode => {
     return createNetworkNode({
         ...CONFIG_DEFAULTS,
         id: uuidv4(),
@@ -35,7 +36,7 @@ export const createTestWebRtcEndpoint = (
     webrtcDatachannelBufferThresholdLow?: number,
     webrtcDatachannelBufferThresholdHigh?: number,
     webrtcDisallowPrivateAddresses?: boolean
-) => {
+): WebRtcEndpoint => {
     return new WebRtcEndpoint(
         peerInfo,
         iceServers,
@@ -51,14 +52,15 @@ export const createTestWebRtcEndpoint = (
     )
 }
 
-export const createTestNodeClientWsEndpoint = (peerInfo: PeerInfo) => {
+export const createTestNodeClientWsEndpoint = (peerInfo: PeerInfo): NodeClientWsEndpoint => {
     return new NodeClientWsEndpoint(peerInfo, CONFIG_DEFAULTS.trackerPingInterval)
 }
 
 export const createTestServerWsEndpoint = (listen: HttpServerConfig,
     sslEnabled: boolean,
     httpServer: http.Server | https.Server,
-    peerInfo: PeerInfo,) => {
+    peerInfo: PeerInfo
+): ServerWsEndpoint => {
     return new ServerWsEndpoint(listen, sslEnabled, httpServer, peerInfo, CONFIG_DEFAULTS.trackerPingInterval)
 }
 
@@ -75,7 +77,7 @@ export const startServerWsEndpoint = async (
     return createTestServerWsEndpoint(listen, false, httpServer, peerInfo)
 }
 
-export const startTestTracker = (opts: { port: number, pingInterval?: number }) => {
+export const startTestTracker = (opts: { port: number, pingInterval?: number }): Promise<Tracker> => {
     return startTracker({
         listen: {
             hostname: '127.0.0.1',
