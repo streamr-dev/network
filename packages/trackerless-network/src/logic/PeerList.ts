@@ -67,7 +67,9 @@ export class PeerList extends EventEmitter {
 
     // eslint-disable-next-line class-methods-use-this
     private toStringId(peerDescriptor: PeerDescriptor): string {
-        return PeerID.fromValue(peerDescriptor.kademliaId).toKey()
+        const peerId = PeerID.fromValue(peerDescriptor.kademliaId)
+        const key = peerId.toKey()
+        return key
     }
 
     size(exclude: string[] = []): number {

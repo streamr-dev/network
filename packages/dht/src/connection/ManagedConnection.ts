@@ -81,6 +81,10 @@ export class ManagedConnection extends EventEmitter<Events> {
                     this.emit('handshakeRequest', peerDescriptor)
                 })
 
+                incomingConnection.once('disconnected', () => {
+                    this.emit('disconnected')
+                })
+                
                 /*
                 this.handshaker.on('handshakeCompleted', (peerDescriptor: PeerDescriptor) => {
                     this.attachImplementation(incomingConnection!)

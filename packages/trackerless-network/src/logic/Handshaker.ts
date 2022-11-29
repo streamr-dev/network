@@ -3,7 +3,7 @@ import { PeerList } from './PeerList'
 import { RemoteRandomGraphNode } from './RemoteRandomGraphNode'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
 import { NetworkRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { HandshakeRequest, HandshakeResponse } from '../proto/packages/trackerless-network/protos/NetworkRpc'
+import { StreamHandshakeRequest, StreamHandshakeResponse } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 
 interface HandshakerParams {
     ownPeerDescriptor: PeerDescriptor
@@ -98,14 +98,14 @@ export class Handshaker {
                 this.randomGraphId,
                 this.protoRpcClient
             )
-            await this.interleaveHandshake(interleaveTarget)
+            await this.interleaveHandshake(interleaveTarget, targetStringId)
         }
         this.ongoingHandshakes.delete(targetStringId)
 
         return result.accepted
     }
 
-    public async interleaveHandshake(targetNeighbor: RemoteRandomGraphNode): Promise<boolean> {
+    public async interleaveHandshake(targetNeighbor: RemoteRandomGraphNode, interleavingFrom: string): Promise<boolean> {
         const targetStringId = PeerID.fromValue(targetNeighbor.getPeerDescriptor()!.kademliaId).toKey()
         this.ongoingHandshakes.add(targetStringId)
         const result = await targetNeighbor.handshake(
@@ -113,7 +113,8 @@ export class Handshaker {
             this.targetNeighbors.getStringIds(),
             this.nearbyContactPool.getStringIds(),
             undefined,
-            true
+            true,
+            interleavingFrom
         )
         if (result.accepted) {
             this.targetNeighbors.add(targetNeighbor)
@@ -124,9 +125,10 @@ export class Handshaker {
         return result.accepted
     }
 
-    public interleavingResponse(request: HandshakeRequest, requester: RemoteRandomGraphNode): HandshakeResponse {
+    public interleavingResponse(request: StreamHandshakeRequest, requester: RemoteRandomGraphNode): StreamHandshakeResponse {
         const exclude = request.neighbors
         exclude.push(request.senderId)
+        exclude.push(request.interleavingFrom!)
         const furthest = this.targetNeighbors.getFurthest(exclude)
         const furthestPeerDescriptor = furthest ? furthest.getPeerDescriptor() : undefined
 
@@ -134,9 +136,12 @@ export class Handshaker {
             furthest.interleaveNotice(this.ownPeerDescriptor, request.senderDescriptor!)
             this.targetNeighbors.remove(furthest.getPeerDescriptor())
             this.connectionLocker.unlockConnection(furthestPeerDescriptor!, this.randomGraphId)
+        } else {
+            console.info('furthest was falsy')
         }
+
         this.targetNeighbors.add(requester)
-        const res: HandshakeResponse = {
+        const res: StreamHandshakeResponse = {
             requestId: request.requestId,
             accepted: true,
             interleaveTarget: furthestPeerDescriptor
@@ -146,16 +151,16 @@ export class Handshaker {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    public unacceptedResponse(request: HandshakeRequest): HandshakeResponse {
-        const res: HandshakeResponse = {
+    public unacceptedResponse(request: StreamHandshakeRequest): StreamHandshakeResponse {
+        const res: StreamHandshakeResponse = {
             requestId: request.requestId,
             accepted: false
         }
         return res
     }
 
-    public acceptedResponse(request: HandshakeRequest, requester: RemoteRandomGraphNode): HandshakeResponse {
-        const res: HandshakeResponse = {
+    public acceptedResponse(request: StreamHandshakeRequest, requester: RemoteRandomGraphNode): StreamHandshakeResponse {
+        const res: StreamHandshakeResponse = {
             requestId: request.requestId,
             accepted: true
         }

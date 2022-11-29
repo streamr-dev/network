@@ -1,7 +1,7 @@
 import { DhtNode, Simulator, SimulatorTransport, PeerDescriptor, PeerID } from '@streamr/dht'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { range } from 'lodash'
-import { waitForCondition } from '@streamr/utils'
+import { wait, waitForCondition } from '@streamr/utils'
 import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
@@ -120,8 +120,8 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
 
     it('happy path 64 peers', async () => {
         range(numOfNodes).map((i) => graphNodes[i].start())
-        await Promise.all(range(numOfNodes).map(async (i) => {
-            await dhtNodes[i].joinDht(entrypointDescriptor)
+        await Promise.all(range(numOfNodes).map((i) => {
+            dhtNodes[i].joinDht(entrypointDescriptor)
         }))
         await Promise.all(graphNodes.map((node) =>
             Promise.all([
@@ -134,8 +134,8 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
             const avg = graphNodes.reduce((acc, curr) => {
                 return acc + curr.getTargetNeighborStringIds().length
             }, 0) / numOfNodes
-            //logger.info(`AVG Number of neighbors: ${avg}`)
-            return avg >= 3.80
+            logger.info(`AVG Number of neighbors: ${avg}`)
+            return avg >= 3.90
         }, 60000)
 
         const avg = graphNodes.reduce((acc, curr) => {
@@ -144,6 +144,12 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
 
         logger.info(`AVG Number of neighbors: ${avg}`)
 
+        await Promise.all(graphNodes.map((node) =>
+            waitForCondition(() => node.getNumberOfOutgoingHandshakes() == 0)
+        ))
+
+        await wait(20000)
+        
         let mismatchCounter = 0
         graphNodes.forEach((node) => {
             const nodeId = node.getOwnStringId()
