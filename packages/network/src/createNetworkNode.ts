@@ -36,7 +36,8 @@ export const CONFIG_DEFAULTS: Omit<NetworkNodeOptions, 'trackers'> = {
     webrtcDatachannelBufferThresholdHigh: 2 ** 17,
     iceServers: [],
     rttUpdateTimeout: 15000,
-    trackerConnectionMaintenanceInterval: 5000
+    trackerConnectionMaintenanceInterval: 5000,
+    webrtcDisallowPrivateAddresses: true
 }
 
 export const createNetworkNode = ({
@@ -53,7 +54,7 @@ export const createNetworkNode = ({
     webrtcDatachannelBufferThresholdHigh,
     iceServers,
     trackerConnectionMaintenanceInterval,
-    webrtcDisallowPrivateAddresses = true,
+    webrtcDisallowPrivateAddresses,
     acceptProxyConnections
 }: NetworkNodeOptions): NetworkNode => {
     const peerInfo = PeerInfo.newNode(id, undefined, undefined, location)
