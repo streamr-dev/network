@@ -393,7 +393,7 @@ export class StreamRegistry {
         }
         await this.connectToContract()
         const ethersOverrides = getStreamRegistryOverrides(this.config)
-        const txToSubmit = this.streamRegistryContract!.setPermissionsMultipleStreans(
+        const txToSubmit = this.streamRegistryContract!.setPermissionsMultipleStreams(
             streamIds,
             targets,
             chainPermissions,
