@@ -10,8 +10,8 @@ import {
 } from '@streamr/protocol'
 import { toEthereumAddress, waitForEvent } from '@streamr/utils'
 
-import { createNetworkNode } from '../../src/createNetworkNode'
 import { Event as NodeEvent } from '../../src/logic/Node'
+import { createTestNetworkNode } from '../utils'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
@@ -32,13 +32,13 @@ describe('node unsubscribing from a stream', () => {
         })
         const trackerInfo = tracker.getConfigRecord()
 
-        nodeA = createNetworkNode({
+        nodeA = createTestNetworkNode({
             id: 'a',
             trackers: [trackerInfo],
             disconnectionWaitTime: 200,
             webrtcDisallowPrivateAddresses: false
         })
-        nodeB = createNetworkNode({
+        nodeB = createTestNetworkNode({
             id: 'b',
             trackers: [trackerInfo],
             disconnectionWaitTime: 200,

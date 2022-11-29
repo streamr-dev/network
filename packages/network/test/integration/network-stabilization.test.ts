@@ -4,8 +4,8 @@ import assert from 'assert'
 
 import { wait } from '@streamr/utils'
 
-import { createNetworkNode } from '../../src/createNetworkNode'
 import { StreamPartIDUtils } from '@streamr/protocol'
+import { createTestNetworkNode } from '../utils'
 
 function areEqual(a: any, b: any) {
     try {
@@ -36,7 +36,7 @@ describe('check network stabilization', () => {
         nodes = []
         for (let i = 0; i < MAX_NODES; i++) {
             // eslint-disable-next-line no-await-in-loop
-            const node = createNetworkNode({
+            const node = createTestNetworkNode({
                 id: `node-${i}`,
                 trackers: [trackerInfo]
             })

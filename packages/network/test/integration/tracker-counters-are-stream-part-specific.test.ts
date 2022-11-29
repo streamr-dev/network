@@ -1,9 +1,9 @@
 import { Tracker, startTracker } from '@streamr/network-tracker'
 import { NetworkNode } from '../../src/logic/NetworkNode'
 
-import { createNetworkNode } from '../../src/createNetworkNode'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { waitForCondition } from '@streamr/utils'
+import { createTestNetworkNode } from '../utils'
 
 const STREAM_PART_A = StreamPartIDUtils.parse('STREAM_PART_A#0')
 const STREAM_PART_B = StreamPartIDUtils.parse('STREAM_PART_B#0')
@@ -29,17 +29,17 @@ describe('tracker counters are stream part specific', () => {
                 port: 32401
             }
         })
-        nodeOne = createNetworkNode({
+        nodeOne = createTestNetworkNode({
             id: 'nodeOne',
             trackers: [tracker.getConfigRecord()],
             webrtcDisallowPrivateAddresses: false
         })
-        nodeTwo = createNetworkNode({
+        nodeTwo = createTestNetworkNode({
             id: 'nodeTwo',
             trackers: [tracker.getConfigRecord()],
             webrtcDisallowPrivateAddresses: false
         })
-        nodeThree = createNetworkNode({
+        nodeThree = createTestNetworkNode({
             id: 'nodeThree',
             trackers: [tracker.getConfigRecord()],
             webrtcDisallowPrivateAddresses: false

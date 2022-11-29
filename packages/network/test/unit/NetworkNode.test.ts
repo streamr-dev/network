@@ -1,7 +1,6 @@
 import { NetworkNode } from '../../src/logic/NetworkNode'
 import { Tracker, startTracker } from '@streamr/network-tracker'
-
-import { createNetworkNode } from '../../src/createNetworkNode'
+import { createTestNetworkNode } from '../utils'
 
 describe('NetworkNode', () => {
     let tracker: Tracker
@@ -14,7 +13,7 @@ describe('NetworkNode', () => {
             }
         })
         const trackerInfo = tracker.getConfigRecord()
-        node = createNetworkNode({
+        node = createTestNetworkNode({
             id: 'node-1',
             trackers: [trackerInfo]
         })

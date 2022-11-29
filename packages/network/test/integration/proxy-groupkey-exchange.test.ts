@@ -1,6 +1,5 @@
 import { NetworkNode } from '../../src/logic/NetworkNode'
 import { startTracker, Tracker } from '@streamr/network-tracker'
-import { createNetworkNode } from '../../src/createNetworkNode'
 import {
     EncryptionType,
     GroupKeyRequest,
@@ -14,6 +13,7 @@ import {
 } from '@streamr/protocol'
 import { toEthereumAddress, waitForEvent } from '@streamr/utils'
 import { Event as NodeEvent } from '../../src/logic/Node'
+import { createTestNetworkNode } from '../utils'
 
 describe('GroupKey exchange via proxy connections', () => {
     let publisher: NetworkNode
@@ -37,7 +37,7 @@ describe('GroupKey exchange via proxy connections', () => {
         })
         trackerInfo = tracker.getConfigRecord()
 
-        proxy = createNetworkNode({
+        proxy = createTestNetworkNode({
             id: 'proxy-node',
             trackers: [trackerInfo],
             iceServers: [],
@@ -46,7 +46,7 @@ describe('GroupKey exchange via proxy connections', () => {
         })
         await proxy.start()
 
-        publisher = createNetworkNode({
+        publisher = createTestNetworkNode({
             id: 'publisher',
             trackers: [trackerInfo],
             iceServers: [],
@@ -54,7 +54,7 @@ describe('GroupKey exchange via proxy connections', () => {
         })
         await publisher.start()
 
-        subscriber = createNetworkNode({
+        subscriber = createTestNetworkNode({
             id: 'subscriber',
             trackers: [trackerInfo],
             iceServers: [],

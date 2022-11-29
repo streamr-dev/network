@@ -3,8 +3,8 @@ import { Tracker, startTracker } from '@streamr/network-tracker'
 import { MessageID, StreamMessage, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
 import { toEthereumAddress, waitForEvent, waitForCondition } from '@streamr/utils'
 
-import { createNetworkNode } from '../../src/createNetworkNode'
 import { Event as NodeEvent } from '../../src/logic/Node'
+import { createTestNetworkNode } from '../utils'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
@@ -26,7 +26,7 @@ describe('duplicate message detection and avoidance', () => {
             }
         })
         const trackerInfo = tracker.getConfigRecord()
-        contactNode = createNetworkNode({
+        contactNode = createTestNetworkNode({
             id: 'node-0',
             trackers: [trackerInfo],
             iceServers: []
@@ -34,31 +34,31 @@ describe('duplicate message detection and avoidance', () => {
         contactNode.start()
 
         otherNodes = [
-            createNetworkNode({
+            createTestNetworkNode({
                 id: 'node-1',
                 trackers: [trackerInfo],
                 iceServers: [],
                 webrtcDisallowPrivateAddresses: false
             }),
-            createNetworkNode({
+            createTestNetworkNode({
                 id: 'node-2',
                 trackers: [trackerInfo],
                 iceServers: [],
                 webrtcDisallowPrivateAddresses: false
             }),
-            createNetworkNode({
+            createTestNetworkNode({
                 id: 'node-3',
                 trackers: [trackerInfo],
                 iceServers: [],
                 webrtcDisallowPrivateAddresses: false
             }),
-            createNetworkNode({
+            createTestNetworkNode({
                 id: 'node-4',
                 trackers: [trackerInfo],
                 iceServers: [],
                 webrtcDisallowPrivateAddresses: false
             }),
-            createNetworkNode({
+            createTestNetworkNode({
                 id: 'node-5',
                 trackers: [trackerInfo],
                 iceServers: [],

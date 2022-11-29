@@ -10,7 +10,7 @@ import {
 import { toEthereumAddress, waitForEvent, waitForCondition } from '@streamr/utils'
 
 import { Event as NodeEvent } from '../../src/logic/Node'
-import { createNetworkNode } from '../../src/createNetworkNode'
+import { createTestNetworkNode } from '../utils'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
@@ -30,25 +30,25 @@ describe('message propagation in network', () => {
         })
         const trackerInfo = tracker.getConfigRecord()
 
-        n1 = createNetworkNode({
+        n1 = createTestNetworkNode({
             id: 'node-1',
             trackers: [trackerInfo],
             disconnectionWaitTime: 200,
             webrtcDisallowPrivateAddresses: false
         })
-        n2 = createNetworkNode({
+        n2 = createTestNetworkNode({
             id: 'node-2',
             trackers: [trackerInfo],
             disconnectionWaitTime: 200,
             webrtcDisallowPrivateAddresses: false
         })
-        n3 = createNetworkNode({
+        n3 = createTestNetworkNode({
             id: 'node-3',
             trackers: [trackerInfo],
             disconnectionWaitTime: 200,
             webrtcDisallowPrivateAddresses: false
         })
-        n4 = createNetworkNode({
+        n4 = createTestNetworkNode({
             id: 'node-4',
             trackers: [trackerInfo],
             disconnectionWaitTime: 200,

@@ -8,9 +8,9 @@ import {
     toStreamID
 } from '@streamr/protocol'
 
-import { createNetworkNode } from '../../src/createNetworkNode'
 import { Event as NodeEvent } from '../../src/logic/Node'
 import { waitForCondition, toEthereumAddress } from '@streamr/utils'
+import { createTestNetworkNode } from '../utils'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
@@ -32,17 +32,17 @@ describe('optimization: do not propagate to sender', () => {
             }
         })
         const trackerInfo = tracker.getConfigRecord()
-        n1 = createNetworkNode({
+        n1 = createTestNetworkNode({
             id: 'node-1',
             trackers: [trackerInfo],
             webrtcDisallowPrivateAddresses: false
         })
-        n2 = createNetworkNode({
+        n2 = createTestNetworkNode({
             id: 'node-2',
             trackers: [trackerInfo],
             webrtcDisallowPrivateAddresses: false
         })
-        n3 = createNetworkNode({
+        n3 = createTestNetworkNode({
             id: 'node-3',
             trackers: [trackerInfo],
             webrtcDisallowPrivateAddresses: false

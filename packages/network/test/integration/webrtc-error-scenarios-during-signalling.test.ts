@@ -2,10 +2,10 @@ import { runAndWaitForEvents } from '@streamr/test-utils'
 
 import { Tracker, startTracker } from '@streamr/network-tracker'
 import { NetworkNode } from '../../src/logic/NetworkNode'
-import { createNetworkNode } from '../../src/createNetworkNode'
 import { Event as NodeEvent } from '../../src/logic/Node'
 import { Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
 import { toStreamID, toStreamPartID } from '@streamr/protocol'
+import { createTestNetworkNode } from '../utils'
 
 /**
  * Tests for error scenarios during signalling
@@ -28,7 +28,7 @@ describe('Signalling error scenarios', () => {
         })
         const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
 
-        nodeOne = createNetworkNode({
+        nodeOne = createTestNetworkNode({
             id: 'node-1',
             trackers: [trackerInfo],
             disconnectionWaitTime: 4000,
@@ -36,7 +36,7 @@ describe('Signalling error scenarios', () => {
             trackerPingInterval: 3000,
             webrtcDisallowPrivateAddresses: false
         })
-        nodeTwo = createNetworkNode({
+        nodeTwo = createTestNetworkNode({
             id: 'node-2',
             trackers: [trackerInfo],
             disconnectionWaitTime: 4000,

@@ -10,8 +10,8 @@ import {
 } from '@streamr/protocol'
 import { toEthereumAddress, waitForEvent } from '@streamr/utils'
 
-import { createNetworkNode } from '../../src/createNetworkNode'
 import { Event as NodeEvent } from '../../src/logic/Node'
+import { createTestNetworkNode } from '../utils'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
@@ -32,7 +32,7 @@ describe('Proxy connection tests', () => {
             }
         })
         trackerInfo = tracker.getConfigRecord()
-        contactNode = createNetworkNode({
+        contactNode = createTestNetworkNode({
             id: 'contact-node',
             trackers: [trackerInfo],
             iceServers: [],
@@ -41,7 +41,7 @@ describe('Proxy connection tests', () => {
         })
         await contactNode.start()
 
-        contactNode2 = createNetworkNode({
+        contactNode2 = createTestNetworkNode({
             id: 'contact-node-2',
             trackers: [trackerInfo],
             iceServers: [],
@@ -57,7 +57,7 @@ describe('Proxy connection tests', () => {
             waitForEvent(contactNode2, NodeEvent.NODE_SUBSCRIBED),
         ])
 
-        onewayNode = createNetworkNode({
+        onewayNode = createTestNetworkNode({
             id: 'publisher',
             trackers: [trackerInfo],
             iceServers: [],
@@ -161,7 +161,7 @@ describe('Proxy connection tests', () => {
     })
 
     it('publisher cannot connect to non-contact node', async () => {
-        const nonContactNode = createNetworkNode({
+        const nonContactNode = createTestNetworkNode({
             id: 'non-contact-node',
             trackers: [trackerInfo],
             iceServers: [],

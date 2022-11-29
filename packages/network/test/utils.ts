@@ -3,6 +3,14 @@ import { Tracker } from '@streamr/network-tracker'
 import { PeerInfo } from '../src/connection/PeerInfo'
 import { startHttpServer, ServerWsEndpoint } from '../src/connection/ws/ServerWsEndpoint'
 import { Node } from '../src/logic/Node'
+import { CONFIG_DEFAULTS, createNetworkNode, NetworkNodeOptions } from '../src/createNetworkNode'
+
+export const createTestNetworkNode = (opts: Partial<NetworkNodeOptions> & Pick<NetworkNodeOptions, 'trackers'>) => {
+    return createNetworkNode({
+        ...CONFIG_DEFAULTS,
+        ...opts
+    })
+}
 
 export const startServerWsEndpoint = async (
     host: string,

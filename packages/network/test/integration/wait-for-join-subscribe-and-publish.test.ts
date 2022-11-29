@@ -3,9 +3,9 @@ import { Tracker, startTracker } from '@streamr/network-tracker'
 import { MessageID, StreamMessage, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { toEthereumAddress, waitForEvent } from '@streamr/utils'
 
-import { createNetworkNode } from '../../src/createNetworkNode'
 import { Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
 import { Event as NodeEvent } from '../../src/logic/Node'
+import { createTestNetworkNode } from '../utils'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
@@ -30,31 +30,31 @@ describe('subscribe and wait for the node to join the stream', () => {
         const trackerInfo = tracker.getConfigRecord()
 
         nodes = [
-            createNetworkNode({
+            createTestNetworkNode({
                 id: 'node-0',
                 trackers: [trackerInfo],
                 iceServers: [],
                 webrtcDisallowPrivateAddresses: false
             }),
-            createNetworkNode({
+            createTestNetworkNode({
                 id: 'node-1',
                 trackers: [trackerInfo],
                 iceServers: [],
                 webrtcDisallowPrivateAddresses: false
             }),
-            createNetworkNode({
+            createTestNetworkNode({
                 id: 'node-2',
                 trackers: [trackerInfo],
                 iceServers: [],
                 webrtcDisallowPrivateAddresses: false
             }),
-            createNetworkNode({
+            createTestNetworkNode({
                 id: 'node-3',
                 trackers: [trackerInfo],
                 iceServers: [],
                 webrtcDisallowPrivateAddresses: false
             }),
-            createNetworkNode({
+            createTestNetworkNode({
                 id: 'node-4',
                 trackers: [trackerInfo],
                 iceServers: [],
@@ -129,7 +129,7 @@ describe('subscribe and wait for the node to join the stream', () => {
     })
 
     test('fail: timeout', async () => {
-        const invalidNode = createNetworkNode({
+        const invalidNode = createTestNetworkNode({
             id: 'node-0',
             trackers: [{
                 id: 'mock-id',
@@ -145,7 +145,7 @@ describe('subscribe and wait for the node to join the stream', () => {
     })
 
     test('fail: unable to handle instruction', async () => {
-        const connectNode = createNetworkNode({
+        const connectNode = createTestNetworkNode({
             id: 'node-0',
             trackers: [tracker.getConfigRecord()],
             iceServers: [],
@@ -153,7 +153,7 @@ describe('subscribe and wait for the node to join the stream', () => {
             newWebrtcConnectionTimeout: 500
         })
         connectNode.start()
-        const targetNode = createNetworkNode({
+        const targetNode = createTestNetworkNode({
             id: 'target',
             trackers: [tracker.getConfigRecord()],
             iceServers: [],

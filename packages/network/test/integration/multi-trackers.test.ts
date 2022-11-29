@@ -5,10 +5,9 @@ import { waitForEvent } from '@streamr/utils'
 import { wait } from '@streamr/utils'
 import { InstructionMessage, toStreamID, toStreamPartID } from '@streamr/protocol'
 
-import { createNetworkNode } from '../../src/createNetworkNode'
 import { Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
 import { Event as NodeEvent } from '../../src/logic/Node'
-import { getStreamParts } from '../utils'
+import { createTestNetworkNode, getStreamParts } from '../utils'
 
 // TODO: maybe worth re-designing this in a way that isn't this arbitrary?
 const FIRST_STREAM = toStreamID('stream-7') // assigned to trackerOne (arbitrarily by hashing algo)
@@ -57,13 +56,13 @@ describe('multi trackers', () => {
         const trackerInfo3 = trackerThree.getConfigRecord()
 
         const trackerAddresses = [trackerInfo1, trackerInfo2, trackerInfo3]
-        nodeOne = createNetworkNode({
+        nodeOne = createTestNetworkNode({
             id: 'nodeOne',
             trackers: trackerAddresses,
             trackerConnectionMaintenanceInterval: 100,
             webrtcDisallowPrivateAddresses: false
         })
-        nodeTwo = createNetworkNode({
+        nodeTwo = createTestNetworkNode({
             id: 'nodeTwo',
             trackers: trackerAddresses,
             trackerConnectionMaintenanceInterval: 100,

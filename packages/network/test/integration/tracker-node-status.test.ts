@@ -4,9 +4,9 @@ import { NetworkNode } from '../../src/logic/NetworkNode'
 import { runAndWaitForEvents } from '@streamr/test-utils'
 import { wait } from '@streamr/utils'
 
-import { createNetworkNode } from '../../src/createNetworkNode'
 import { Event as NodeEvent } from '../../src/logic/Node'
 import { StreamPartIDUtils } from '@streamr/protocol'
+import { createTestNetworkNode } from '../utils'
 
 /**
  * This test verifies that tracker receives status messages from nodes with list of neighbor connections
@@ -35,7 +35,7 @@ describe('check status message flow between tracker and two nodes', () => {
         })
         const trackerInfo = tracker.getConfigRecord()
 
-        nodeOne = createNetworkNode({
+        nodeOne = createTestNetworkNode({
             id: 'node-1',
             trackers: [trackerInfo],
             peerPingInterval: 100,
@@ -44,7 +44,7 @@ describe('check status message flow between tracker and two nodes', () => {
             webrtcDisallowPrivateAddresses: false
         })
 
-        nodeTwo = createNetworkNode({
+        nodeTwo = createTestNetworkNode({
             id: 'node-2',
             trackers: [trackerInfo],
             location,

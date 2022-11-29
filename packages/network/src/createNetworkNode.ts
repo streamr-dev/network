@@ -28,6 +28,9 @@ export interface NetworkNodeOptions extends AbstractNodeOptions {
     acceptProxyConnections?: boolean
 }
 
+export const CONFIG_DEFAULTS: Omit<NetworkNodeOptions, 'trackers'> = {
+}
+
 export const createNetworkNode = ({
     id = uuidv4(),
     location,
