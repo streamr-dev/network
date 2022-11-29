@@ -1,4 +1,4 @@
-import { Tracker, startTracker } from '@streamr/network-tracker'
+import { Tracker } from '@streamr/network-tracker'
 import WebSocket from 'ws'
 import { waitForEvent } from '@streamr/utils'
 import { wait } from '@streamr/utils'
@@ -6,7 +6,7 @@ import { wait } from '@streamr/utils'
 import { ServerWsEndpoint } from '../../src/connection/ws/ServerWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { DisconnectionCode, Event } from '../../src/connection/ws/AbstractWsEndpoint'
-import { createTestNodeClientWsEndpoint, startServerWsEndpoint } from '../utils'
+import { createTestNodeClientWsEndpoint, startServerWsEndpoint, startTestTracker } from '../utils'
 
 // eslint-disable-next-line no-underscore-dangle
 declare let _streamr_simulator_test: any
@@ -79,11 +79,8 @@ describe('ws-endpoint', () => {
         let tracker: Tracker
 
         beforeEach(async () => {
-            tracker = await startTracker({
-                listen: {
-                    hostname: '127.0.0.1',
-                    port: trackerPort
-                }
+            tracker = await startTestTracker({
+                port: trackerPort
             })
             // @ts-expect-error private access
             tracker.trackerServer.endpoint.handshakeTimer = 3000

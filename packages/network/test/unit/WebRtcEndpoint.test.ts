@@ -1,6 +1,6 @@
 import { waitForCondition, MetricsContext } from '@streamr/utils'
 import { NodeToTracker } from '../../src/protocol/NodeToTracker'
-import { Tracker, TrackerEvent, startTracker } from '@streamr/network-tracker'
+import { Tracker, TrackerEvent } from '@streamr/network-tracker'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { runAndWaitForEvents } from '@streamr/test-utils'
 import { wait, waitForEvent } from '@streamr/utils'
@@ -10,7 +10,7 @@ import { NegotiatedProtocolVersions } from '../../src/connection/NegotiatedProto
 import { WebRtcEndpoint } from '../../src/connection/webrtc/WebRtcEndpoint'
 import { webRtcConnectionFactory } from '../../src/connection/webrtc/NodeWebRtcConnection'
 import { GOOGLE_STUN_SERVER } from '../../src/constants'
-import { createTestNodeClientWsEndpoint, createTestWebRtcEndpoint } from '../utils'
+import { createTestNodeClientWsEndpoint, createTestWebRtcEndpoint, startTestTracker } from '../utils'
 
 describe('WebRtcEndpoint', () => {
     let tracker: Tracker
@@ -24,11 +24,8 @@ describe('WebRtcEndpoint', () => {
     ])('when configured with %s', (factory) => {
 
         beforeEach(async () => {
-            tracker = await startTracker({
-                listen: {
-                    hostname: '127.0.0.1',
-                    port: 28800
-                }
+            tracker = await startTestTracker({
+                port: 28800
             })
             const trackerPeerInfo = PeerInfo.newTracker(tracker.getTrackerId())
             const ep1 = createTestNodeClientWsEndpoint(PeerInfo.newNode('node-1'))

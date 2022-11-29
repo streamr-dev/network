@@ -15,7 +15,7 @@ import {
 } from '@streamr/protocol'
 import { runAndWaitForEvents } from '@streamr/test-utils'
 import { toEthereumAddress, waitForEvent } from '@streamr/utils'
-import { startTracker, Tracker, TrackerServer, TrackerServerEvent } from '@streamr/network-tracker'
+import { Tracker, TrackerServer, TrackerServerEvent } from '@streamr/network-tracker'
 import { Event as NodeToNodeEvent, NodeToNode } from '../../src/protocol/NodeToNode'
 import { Event as NodeToTrackerEvent, NodeToTracker } from '../../src/protocol/NodeToTracker'
 import { PeerInfo } from '../../src/connection/PeerInfo'
@@ -23,7 +23,7 @@ import { RtcSignaller } from '../../src/logic/RtcSignaller'
 import { NegotiatedProtocolVersions } from '../../src/connection/NegotiatedProtocolVersions'
 import { MetricsContext } from '@streamr/utils'
 import { webRtcConnectionFactory } from '../../src/connection/webrtc/NodeWebRtcConnection'
-import { createTestNodeClientWsEndpoint, createTestWebRtcEndpoint, startServerWsEndpoint } from '../utils'
+import { createTestNodeClientWsEndpoint, createTestWebRtcEndpoint, startServerWsEndpoint, startTestTracker } from '../utils'
 
 const UUID_REGEX = /[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}/
 
@@ -41,11 +41,8 @@ describe('delivery of messages in protocol layer', () => {
     let trackerServer: TrackerServer
 
     beforeAll(async () => {
-        signallingTracker = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: 28515
-            }
+        signallingTracker = await startTestTracker({
+            port: 28515
         })
         const peerInfo1 = PeerInfo.newNode('node1')
         const peerInfo2 = PeerInfo.newNode('node2')

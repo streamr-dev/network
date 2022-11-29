@@ -2,7 +2,7 @@ import https from 'https'
 import http from 'http'
 import { v4 as uuidv4 } from 'uuid'
 import { StreamPartID, toStreamID, toStreamPartID } from '@streamr/protocol'
-import { Tracker } from '@streamr/network-tracker'
+import { startTracker, Tracker } from '@streamr/network-tracker'
 import { PeerInfo } from '../src/connection/PeerInfo'
 import { startHttpServer, ServerWsEndpoint, HttpServerConfig } from '../src/connection/ws/ServerWsEndpoint'
 import { Node } from '../src/logic/Node'
@@ -73,6 +73,18 @@ export const startServerWsEndpoint = async (
     }
     const httpServer = await startHttpServer(listen, undefined, undefined)
     return createTestServerWsEndpoint(listen, false, httpServer, peerInfo)
+}
+
+export const startTestTracker = (opts: { port: number, pingInterval?: number }) => {
+    return startTracker({
+        listen: {
+            hostname: '127.0.0.1',
+            port: opts.port
+        },
+        id: 'tr-' + uuidv4(),
+        trackerPingInterval: opts.pingInterval ?? CONFIG_DEFAULTS.trackerPingInterval,
+        metricsContext: new MetricsContext()
+    })
 }
 
 export const createStreamPartId = (streamIdAsStr: string, streamPartition: number): StreamPartID => {

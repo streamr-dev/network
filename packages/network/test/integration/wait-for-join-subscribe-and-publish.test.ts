@@ -1,11 +1,11 @@
 import { NetworkNode } from '../../src/logic/NetworkNode'
-import { Tracker, startTracker } from '@streamr/network-tracker'
+import { Tracker } from '@streamr/network-tracker'
 import { MessageID, StreamMessage, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { toEthereumAddress, waitForEvent } from '@streamr/utils'
 
 import { Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
 import { Event as NodeEvent } from '../../src/logic/Node'
-import { createTestNetworkNode } from '../utils'
+import { createTestNetworkNode, startTestTracker } from '../utils'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
@@ -21,11 +21,8 @@ describe('subscribe and wait for the node to join the stream', () => {
     const TIMEOUT = 5000
 
     beforeEach(async () => {
-        tracker = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: 30352
-            }
+        tracker = await startTestTracker({
+            port: 30352
         })
         const trackerInfo = tracker.getConfigRecord()
 

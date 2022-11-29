@@ -1,4 +1,4 @@
-import { Tracker, startTracker } from '@streamr/network-tracker'
+import { Tracker } from '@streamr/network-tracker'
 import { NetworkNode } from '../../src/logic/NetworkNode'
 
 import {
@@ -11,7 +11,7 @@ import {
 import { toEthereumAddress, waitForEvent } from '@streamr/utils'
 
 import { Event as NodeEvent } from '../../src/logic/Node'
-import { createTestNetworkNode } from '../utils'
+import { createTestNetworkNode, startTestTracker } from '../utils'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
@@ -24,11 +24,8 @@ describe('node unsubscribing from a stream', () => {
     let nodeB: NetworkNode
 
     beforeEach(async () => {
-        tracker = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: 30450
-            }
+        tracker = await startTestTracker({
+            port: 30450
         })
         const trackerInfo = tracker.getConfigRecord()
 

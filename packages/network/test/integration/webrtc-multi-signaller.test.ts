@@ -1,6 +1,6 @@
 import { MetricsContext } from '@streamr/utils'
 import { NodeToTracker } from '../../src/protocol/NodeToTracker'
-import { Tracker, TrackerEvent, startTracker } from '@streamr/network-tracker'
+import { Tracker, TrackerEvent } from '@streamr/network-tracker'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { runAndWaitForEvents } from '@streamr/test-utils'
 import { Event as EndpointEvent } from '../../src/connection/webrtc/IWebRtcEndpoint'
@@ -9,7 +9,7 @@ import { NegotiatedProtocolVersions } from '../../src/connection/NegotiatedProto
 import { WebRtcEndpoint } from '../../src/connection/webrtc/WebRtcEndpoint'
 import { webRtcConnectionFactory } from '../../src/connection/webrtc/NodeWebRtcConnection'
 import { GOOGLE_STUN_SERVER } from '../../src/constants'
-import { createTestNodeClientWsEndpoint, createTestWebRtcEndpoint } from '../utils'
+import { createTestNodeClientWsEndpoint, createTestWebRtcEndpoint, startTestTracker } from '../utils'
 
 describe('WebRTC multisignaller test', () => {
     let tracker1: Tracker
@@ -20,17 +20,11 @@ describe('WebRTC multisignaller test', () => {
     let endpoint2: WebRtcEndpoint
 
     beforeEach(async () => {
-        tracker1 = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: 28715
-            }
+        tracker1 = await startTestTracker({
+            port: 28715
         })
-        tracker2 = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: 28716
-            }
+        tracker2 = await startTestTracker({
+            port: 28716
         })
 
         const ep1 = createTestNodeClientWsEndpoint(PeerInfo.newNode('node-1'))

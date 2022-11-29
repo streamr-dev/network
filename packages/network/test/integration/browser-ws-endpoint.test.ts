@@ -1,4 +1,4 @@
-import { Tracker, startTracker } from '@streamr/network-tracker'
+import { Tracker } from '@streamr/network-tracker'
 import WebSocket from 'ws'
 import { runAndWaitForEvents } from '@streamr/test-utils'
 import { waitForCondition, waitForEvent } from '@streamr/utils'
@@ -7,7 +7,7 @@ import { ServerWsEndpoint } from '../../src/connection/ws/ServerWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import BrowserClientWsEndpoint from '../../src/connection/ws/BrowserClientWsEndpoint'
 import { DisconnectionCode, Event } from '../../src/connection/ws/AbstractWsEndpoint'
-import { startServerWsEndpoint } from '../utils'
+import { startServerWsEndpoint, startTestTracker } from '../utils'
 import { CONFIG_DEFAULTS } from '../../src/createNetworkNode'
 
 const trackerPort = 38482
@@ -79,11 +79,8 @@ describe('ws-endpoint', () => {
         let tracker: Tracker
 
         beforeEach(async () => {
-            tracker = await startTracker({
-                listen: {
-                    hostname: '127.0.0.1',
-                    port: trackerPort
-                }
+            tracker = await startTestTracker({
+                port: trackerPort
             })
             // @ts-expect-error TODO: do this proper way (pass via constructor)
             tracker.trackerServer.endpoint.handshakeTimer = 3000

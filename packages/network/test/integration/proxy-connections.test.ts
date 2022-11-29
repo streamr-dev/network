@@ -1,5 +1,5 @@
 import { NetworkNode } from '../../src/logic/NetworkNode'
-import { Tracker, startTracker } from '@streamr/network-tracker'
+import { Tracker } from '@streamr/network-tracker'
 import {
     MessageID,
     ProxyDirection,
@@ -11,7 +11,7 @@ import {
 import { toEthereumAddress, waitForEvent } from '@streamr/utils'
 
 import { Event as NodeEvent } from '../../src/logic/Node'
-import { createTestNetworkNode } from '../utils'
+import { createTestNetworkNode, startTestTracker } from '../utils'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
@@ -25,11 +25,8 @@ describe('Proxy connection tests', () => {
     let trackerInfo: TrackerRegistryRecord
 
     beforeEach(async () => {
-        tracker = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: 30353
-            }
+        tracker = await startTestTracker({
+            port: 30353
         })
         trackerInfo = tracker.getConfigRecord()
         contactNode = createTestNetworkNode({

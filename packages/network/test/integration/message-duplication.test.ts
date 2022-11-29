@@ -1,10 +1,10 @@
 import { NetworkNode } from '../../src/logic/NetworkNode'
-import { Tracker, startTracker } from '@streamr/network-tracker'
+import { Tracker } from '@streamr/network-tracker'
 import { MessageID, StreamMessage, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
 import { toEthereumAddress, waitForEvent, waitForCondition } from '@streamr/utils'
 
 import { Event as NodeEvent } from '../../src/logic/Node'
-import { createTestNetworkNode } from '../utils'
+import { createTestNetworkNode, startTestTracker } from '../utils'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
@@ -19,11 +19,8 @@ describe('duplicate message detection and avoidance', () => {
     let numOfDuplicateMessages: number[]
 
     beforeAll(async () => {
-        tracker = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: 30350
-            }
+        tracker = await startTestTracker({
+            port: 30350
         })
         const trackerInfo = tracker.getConfigRecord()
         contactNode = createTestNetworkNode({

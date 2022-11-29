@@ -1,9 +1,9 @@
-import { Tracker, startTracker } from '@streamr/network-tracker'
+import { Tracker } from '@streamr/network-tracker'
 import { NetworkNode } from '../../src/logic/NetworkNode'
 
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { waitForCondition } from '@streamr/utils'
-import { createTestNetworkNode } from '../utils'
+import { createTestNetworkNode, startTestTracker } from '../utils'
 
 const STREAM_PART_A = StreamPartIDUtils.parse('STREAM_PART_A#0')
 const STREAM_PART_B = StreamPartIDUtils.parse('STREAM_PART_B#0')
@@ -22,12 +22,8 @@ describe('tracker counters are stream part specific', () => {
     let nodeThree: NetworkNode
 
     beforeEach(async () => {
-        tracker = await startTracker({
-            id: 'tracker',
-            listen: {
-                hostname: '127.0.0.1',
-                port: 32401
-            }
+        tracker = await startTestTracker({
+            port: 32401
         })
         nodeOne = createTestNetworkNode({
             id: 'nodeOne',

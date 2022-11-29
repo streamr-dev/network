@@ -1,9 +1,9 @@
 import { Tracker } from '../../src/logic/Tracker'
 import { startTracker } from '../../src/startTracker'
 import { runAndWaitForEvents } from '@streamr/test-utils'
-import { waitForCondition, waitForEvent } from '@streamr/utils'
+import { MetricsContext, waitForCondition, waitForEvent } from '@streamr/utils'
 import { InstructionMessage, toStreamID, toStreamPartID } from '@streamr/protocol'
-import { NetworkNode, createNetworkNode, NodeEvent } from '@streamr/network-node'
+import { NetworkNode, createNetworkNode, NodeEvent, CONFIG_DEFAULTS } from '@streamr/network-node'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { getTopology } from '../../src/logic/trackerSummaryUtils'
 
@@ -22,23 +22,30 @@ describe('check tracker, nodes and statuses from nodes', () => {
             listen: {
                 hostname: '127.0.0.1',
                 port: trackerPort
-            }
+            },
+            id: 'test-id',
+            trackerPingInterval: CONFIG_DEFAULTS.trackerPingInterval,
+            metricsContext: new MetricsContext()
         })
         const trackerInfo = tracker.getConfigRecord()
 
         // @ts-expect-error private method
         tracker.formAndSendInstructions = () => {}
         node1 = createNetworkNode({
+            ...CONFIG_DEFAULTS,
             id: 'node1',
             trackers: [trackerInfo],
             disconnectionWaitTime: 200,
-            webrtcDisallowPrivateAddresses: false
+            webrtcDisallowPrivateAddresses: false,
+            metricsContext: new MetricsContext()
         })
         node2 = createNetworkNode({
+            ...CONFIG_DEFAULTS,
             id: 'node2',
             trackers: [trackerInfo],
             disconnectionWaitTime: 200,
-            webrtcDisallowPrivateAddresses: false
+            webrtcDisallowPrivateAddresses: false,
+            metricsContext: new MetricsContext()
         })
 
         await runAndWaitForEvents([

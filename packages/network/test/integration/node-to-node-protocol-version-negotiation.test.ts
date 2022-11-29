@@ -2,7 +2,7 @@ import { Event as wrtcEvent } from '../../src/connection/webrtc/IWebRtcEndpoint'
 import { PeerInfo, PeerType } from '../../src/connection/PeerInfo'
 import { MetricsContext } from '@streamr/utils'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
-import { Tracker, startTracker } from '@streamr/network-tracker'
+import { Tracker } from '@streamr/network-tracker'
 import { NodeToTracker } from '../../src/protocol/NodeToTracker'
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
 import { Event as ntnEvent, NodeToNode } from "../../src/protocol/NodeToNode"
@@ -11,7 +11,7 @@ import { runAndWaitForEvents } from '@streamr/test-utils'
 import { WebRtcEndpoint } from '../../src/connection/webrtc/WebRtcEndpoint'
 import { webRtcConnectionFactory } from '../../src/connection/webrtc/NodeWebRtcConnection'
 import { toEthereumAddress } from '@streamr/utils'
-import { createTestNodeClientWsEndpoint, createTestWebRtcEndpoint } from '../utils'
+import { createTestNodeClientWsEndpoint, createTestWebRtcEndpoint, startTestTracker } from '../utils'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
@@ -27,11 +27,8 @@ describe('Node-to-Node protocol version negotiation', () => {
     let nodeToNode2: NodeToNode
 
     beforeEach(async () => {
-        tracker = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: 28680
-            }
+        tracker = await startTestTracker({
+            port: 28680
         })
 
         const peerInfo1 = new PeerInfo('node-endpoint1', PeerType.Node, [1, 2, 3], [29, 30, 31, 32])

@@ -1,16 +1,13 @@
 import { NetworkNode } from '../../src/logic/NetworkNode'
-import { Tracker, startTracker } from '@streamr/network-tracker'
-import { createTestNetworkNode } from '../utils'
+import { Tracker } from '@streamr/network-tracker'
+import { createTestNetworkNode, startTestTracker } from '../utils'
 
 describe('NetworkNode', () => {
     let tracker: Tracker
     let node: NetworkNode
     beforeEach(async () => {
-        tracker = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: 30410
-            }
+        tracker = await startTestTracker({
+            port: 30410
         })
         const trackerInfo = tracker.getConfigRecord()
         node = createTestNetworkNode({
