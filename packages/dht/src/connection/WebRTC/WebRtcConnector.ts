@@ -1,6 +1,4 @@
 import 'setimmediate'
-import EventEmitter from 'eventemitter3'
-import { ManagedConnectionSourceEvent } from '../IManagedConnectionSource'
 import {
     IceCandidate,
     PeerDescriptor,
@@ -32,7 +30,7 @@ export interface WebRtcConnectorConfig {
     stunUrls?: string[]
 }
 
-export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> implements IWebRtcConnectorService {
+export class WebRtcConnector implements IWebRtcConnectorService {
     private static readonly WEBRTC_CONNECTOR_SERVICE_ID = 'system/webrtc_connector'
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly ongoingConnectAttempts: Map<PeerIDKey, ManagedWebRtcConnection> = new Map()
@@ -43,8 +41,9 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
     private objectId = 0
     private stunUrls: string[]
 
-    constructor(private config: WebRtcConnectorConfig) {
-        super()
+    constructor(private config: WebRtcConnectorConfig,
+        private incomingConnectionCallback: (connection: ManagedConnection) => boolean) {
+
         WebRtcConnector.objectCounter++
         this.objectId = WebRtcConnector.objectCounter
 
@@ -67,32 +66,69 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
     }
 
     connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
-        const peerKey = PeerID.fromValue(targetPeerDescriptor.kademliaId).toKey()
-        if (!PeerID.fromValue(this.ownPeerDescriptor!.kademliaId).equals(PeerID.fromValue(targetPeerDescriptor.kademliaId))) {
-            logger.trace(`Opening WebRTC connection to ${targetPeerDescriptor.kademliaId.toString()}`)
-            const existingConnection = this.ongoingConnectAttempts.get(peerKey)
-            if (existingConnection) {
-                return existingConnection
-            }
-
-            const connection = new NodeWebRtcConnection({ remotePeerDescriptor: targetPeerDescriptor, stunUrls: this.stunUrls })
-            const managedConnection = new ManagedWebRtcConnection(this.ownPeerDescriptor!, this.config.protocolVersion, connection)
-
-            managedConnection.setPeerDescriptor(targetPeerDescriptor)
-            this.ongoingConnectAttempts.set(peerKey, managedConnection)
-            
-            managedConnection.once('connected', () => {
-                this.ongoingConnectAttempts.delete(peerKey)
-            })
-            managedConnection.once('disconnected', () => {
-                this.ongoingConnectAttempts.delete(peerKey)
-            })
-            
-            this.bindListenersAndStartConnection(targetPeerDescriptor, connection)
-
-            return managedConnection
+        if (PeerID.fromValue(this.ownPeerDescriptor!.kademliaId).equals(PeerID.fromValue(targetPeerDescriptor.kademliaId))) {
+            throw new Err.CannotConnectToSelf('Cannot open WebRTC Connection to self')
         }
-        throw new Err.CannotConnectToSelf('Cannot open WebRTC Connection to self')
+
+        logger.trace(`Opening WebRTC connection to ${targetPeerDescriptor.kademliaId.toString()}`)
+
+        const peerKey = PeerID.fromValue(targetPeerDescriptor.kademliaId).toKey()
+        const existingConnection = this.ongoingConnectAttempts.get(peerKey)
+        if (existingConnection) {
+            return existingConnection
+        }
+
+        const connection = new NodeWebRtcConnection({ remotePeerDescriptor: targetPeerDescriptor, stunUrls: this.stunUrls })
+
+        const offering = this.isOffering(targetPeerDescriptor)
+        let managedConnection: ManagedWebRtcConnection
+
+        if (offering) {
+            managedConnection = new ManagedWebRtcConnection(this.ownPeerDescriptor!, this.config.protocolVersion, connection)
+        } else {
+            managedConnection = new ManagedWebRtcConnection(this.ownPeerDescriptor!, this.config.protocolVersion, undefined, connection)
+        }
+
+        managedConnection.setPeerDescriptor(targetPeerDescriptor)
+
+        this.ongoingConnectAttempts.set(PeerID.fromValue(targetPeerDescriptor.kademliaId).toKey(), managedConnection)
+
+        const delFunc = () => {
+            if (this.ongoingConnectAttempts.has(peerKey)) {
+                this.ongoingConnectAttempts.delete(peerKey)
+            }
+            connection.off('disconnected', delFunc)
+            managedConnection.off('handshakeCompleted', delFunc)
+        }
+        connection.on('disconnected', delFunc)
+        managedConnection.on('handshakeCompleted', delFunc)
+
+        const remoteConnector = new RemoteWebrtcConnector(
+            targetPeerDescriptor,
+            toProtoRpcClient(new WebRtcConnectorServiceClient(this.rpcCommunicator.getRpcClientTransport()))
+        )
+
+        connection.on('localCandidate', (candidate: string, mid: string) => {
+            remoteConnector.sendIceCandidate(this.ownPeerDescriptor!, candidate, mid, connection.connectionId.toString())
+        })
+
+        if (offering) {
+            connection.once('localDescription', (description: string, _type: string) => {
+                remoteConnector.sendRtcOffer(this.ownPeerDescriptor!, description, connection.connectionId.toString())
+            })
+        } else {
+            connection.once('localDescription', (description: string, _type: string) => {
+                remoteConnector.sendRtcAnswer(this.ownPeerDescriptor!, description, connection.connectionId.toString())
+            })
+        }
+
+        connection.start(offering)
+
+        if (!offering) {
+            remoteConnector.requestConnection(this.ownPeerDescriptor!, connection.connectionId.toString())
+        }
+
+        return managedConnection
     }
 
     setOwnPeerDescriptor(peerDescriptor: PeerDescriptor): void {
@@ -109,19 +145,67 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
             return
         }
         const peerKey = PeerID.fromValue(remotePeer.kademliaId).toKey()
-        let connection = this.ongoingConnectAttempts.get(peerKey)?.getWebRtcConnection()
-        if (!connection) {
-            connection = new NodeWebRtcConnection({ remotePeerDescriptor: remotePeer })
-            const managedConnection = new ManagedWebRtcConnection(this.ownPeerDescriptor!, this.config.protocolVersion, connection)
-            managedConnection.setPeerDescriptor(remotePeer)
-            this.ongoingConnectAttempts.set(peerKey, managedConnection)
-            this.bindListenersAndStartConnection(remotePeer, connection, false)
+        let managedConnection = this.ongoingConnectAttempts.get(peerKey)
+        let connection = managedConnection?.getWebRtcConnection()
 
-            this.emit('newConnection', managedConnection)
-        }
+        if (!managedConnection) {
+            connection = new NodeWebRtcConnection({ remotePeerDescriptor: remotePeer })
+            managedConnection = new ManagedWebRtcConnection(this.ownPeerDescriptor!, this.config.protocolVersion, undefined, connection)
+            
+            managedConnection.setPeerDescriptor(remotePeer)
+
+            this.ongoingConnectAttempts.set(peerKey, managedConnection)
+            this.incomingConnectionCallback(managedConnection)
+
+            /*
+            managedConnection.on('handshakeRequest', () => {
+                if (this.ongoingConnectAttempts.has(peerKey)) {
+
+                    this.ongoingConnectAttempts.delete(peerKey)
+                }
+                if (this.incomingConnectionCallback(managedConnection)) {
+                    managedConnection.acceptHandshake()
+                } else {
+                    managedConnection.rejectHandshake('Duplicate connection')
+                    managedConnection.close()
+                }
+            })
+            */
+
+            const remoteConnector = new RemoteWebrtcConnector(
+                remotePeer,
+                toProtoRpcClient(new WebRtcConnectorServiceClient(this.rpcCommunicator.getRpcClientTransport()))
+            )
+
+            connection.on('localCandidate', (candidate: string, mid: string) => {
+                remoteConnector.sendIceCandidate(this.ownPeerDescriptor!, candidate, mid, connection!.connectionId.toString())
+            })
+
+            connection.once('localDescription', (description: string, _type: string) => {
+                remoteConnector.sendRtcAnswer(this.ownPeerDescriptor!, description, connection!.connectionId.toString())
+            })
+
+            connection.start(false)
+
+        } /*else {
+            const managedConnection = this.ongoingConnectAttempts.get(peerKey)!
+            managedConnection.on('handshakeRequest', () => {
+                if (this.ongoingConnectAttempts.has(peerKey)) {
+                    this.ongoingConnectAttempts.delete(peerKey)
+                }
+                managedConnection.acceptHandshake()
+            })
+        }*/
         // Always use offerers connectionId
-        connection.setConnectionId(connectionId)
-        connection.setRemoteDescription(description, DescriptionType.Offer)
+        connection!.setConnectionId(connectionId)
+        connection!.setRemoteDescription(description, DescriptionType.Offer)
+        
+        managedConnection!.on('handshakeRequest', () => {
+            if (this.ongoingConnectAttempts.has(peerKey)) {
+                this.ongoingConnectAttempts.delete(peerKey)
+            }
+            managedConnection!.acceptHandshake()
+        })
     }
 
     private onRtcAnswer(
@@ -151,7 +235,9 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
         console.log("iiiiiiiiii")
         const managedConnection = this.connect(targetPeerDescriptor)
         managedConnection.setPeerDescriptor(targetPeerDescriptor)
-        this.emit('newConnection', managedConnection)
+
+        this.incomingConnectionCallback(managedConnection)
+        //this.emit('newConnection', managedConnection)
     }
     private onRemoteCandidate(
         remotePeerDescriptor: PeerDescriptor,
@@ -176,47 +262,15 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
     }
 
     stop(): void {
+        logger.trace('stop()')
         this.stopped = true
+        this.ongoingConnectAttempts.forEach((conn)=> {
+            logger.trace('closing ongoingConnectAttempts')
+            conn.close()
+        })
+
         this.rpcCommunicator.stop()
-        this.removeAllListeners()
-    }
-
-    bindListenersAndStartConnection(targetPeerDescriptor: PeerDescriptor, connection: NodeWebRtcConnection, sendRequest = true): void {
-        if (PeerID.fromValue(this.ownPeerDescriptor!.kademliaId).equals(PeerID.fromValue(targetPeerDescriptor.kademliaId))) {
-            return
-        }
-        const offering = this.isOffering(targetPeerDescriptor)
-        const remoteConnector = new RemoteWebrtcConnector(
-            targetPeerDescriptor,
-            toProtoRpcClient(new WebRtcConnectorServiceClient(this.rpcCommunicator.getRpcClientTransport()))
-        )
-        if (offering) {
-            connection.once('localDescription', (description: string, _type: string) => {
-                console.log("SENDING DESCRIPTOR")
-                remoteConnector.sendRtcOffer(this.ownPeerDescriptor!, description, connection.connectionId.toString())
-            })
-        } else {
-            connection.once('localDescription', (description: string, _type: string) => {
-                console.log("SENDING DESCRIPTOR")
-                remoteConnector.sendRtcAnswer(this.ownPeerDescriptor!, description, connection.connectionId.toString())
-            })
-        }
-        connection.on('localCandidate', (candidate: string, mid: string) => {
-            remoteConnector.sendIceCandidate(this.ownPeerDescriptor!, candidate, mid, connection.connectionId.toString())
-        })
-
-        connection.on('disconnected', () => {
-            this.ongoingConnectAttempts.delete(PeerID.fromValue(targetPeerDescriptor.kademliaId).toKey())
-        })
-
-        connection.on('connected', () => {
-            this.ongoingConnectAttempts.delete(PeerID.fromValue(targetPeerDescriptor.kademliaId).toKey())
-        })
-
-        connection.start(offering)
-        if (offering === false && sendRequest) {
-            remoteConnector.requestConnection(this.ownPeerDescriptor!, connection.connectionId.toString())
-        }
+        // this.removeAllListeners()
     }
 
     public isOffering(targetPeerDescriptor: PeerDescriptor): boolean {
@@ -224,7 +278,7 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
         const myId = PeerID.fromValue(this.ownPeerDescriptor!.kademliaId)
         const theirId = PeerID.fromValue(targetPeerDescriptor.kademliaId)
         return myId.hasSmallerHashThan(theirId)
-        
+
     }
 
     /*

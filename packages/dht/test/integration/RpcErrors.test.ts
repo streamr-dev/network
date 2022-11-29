@@ -39,7 +39,7 @@ describe('RPC errors', () => {
 
     beforeEach(async () => {
 
-        simulator = new Simulator(LatencyType.FIXED, 500)
+        simulator = new Simulator(LatencyType.FIXED, 50)
         connectorTransport1 = new SimulatorTransport(peerDescriptor1, simulator)
         manager1 = new ConnectionManager({ transportLayer: connectorTransport1 })
         rpcCommunicator1 = new ListeningRpcCommunicator(serviceId, manager1)

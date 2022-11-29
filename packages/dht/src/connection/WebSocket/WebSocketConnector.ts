@@ -1,8 +1,4 @@
 import 'setimmediate'
-import EventEmitter from 'eventemitter3'
-import {
-    ManagedConnectionSourceEvent
-} from '../IManagedConnectionSource'
 
 import { PeerID } from '../../helpers/PeerID'
 import { ClientWebSocket } from './ClientWebSocket'
@@ -30,7 +26,7 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 
 const logger = new Logger(module)
 
-export class WebSocketConnector extends EventEmitter<ManagedConnectionSourceEvent> implements IWebSocketConnectorService {
+export class WebSocketConnector implements IWebSocketConnectorService {
     private static readonly WEBSOCKET_CONNECTOR_SERVICE_ID = 'system/websocketconnector'
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly canConnectFunction: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean
@@ -45,12 +41,11 @@ export class WebSocketConnector extends EventEmitter<ManagedConnectionSourceEven
         private protocolVersion: string,
         private rpcTransport: ITransport,
         fnCanConnect: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean,
+        private incomingConnectionCallback: (connection: ManagedConnection) => boolean,
         private webSocketPort?: number,
         private webSocketHost?: string,
-        private entrypoints?: PeerDescriptor[],
+        private entrypoints?: PeerDescriptor[]
     ) {
-        super()
-
         this.webSocketServer = webSocketPort ? new WebSocketServer() : undefined
         this.connectivityChecker = new ConnectivityChecker(webSocketPort)
 
@@ -168,16 +163,22 @@ export class WebSocketConnector extends EventEmitter<ManagedConnectionSourceEven
         return managedConnection
     }
 
-    private onServerSocketHandshakeCompleted = (peerDescriptor: PeerDescriptor,
+    private onServerSocketHandshakeRequest = (peerDescriptor: PeerDescriptor,
         serverWebSocket: IConnection, managedConnection: ManagedConnection) => {
 
-        logger.trace('serversocket handshake completed')
         const peerId = PeerID.fromValue(peerDescriptor.kademliaId)
+        
         if (this.ongoingConnectRequests.has(peerId.toKey())) {
             this.ongoingConnectRequests.get(peerId.toKey())?.attachImplementation(serverWebSocket, peerDescriptor)
+            this.ongoingConnectRequests.get(peerId.toKey())?.acceptHandshake()
             this.ongoingConnectRequests.delete(peerId.toKey())
         } else {
-            this.emit('newConnection', managedConnection)
+            if (this.incomingConnectionCallback(managedConnection)) {
+                managedConnection.acceptHandshake()
+            } else {
+                managedConnection.rejectHandshake('Duplicate connection')
+                managedConnection.close()
+            }
         }
     }
     public setOwnPeerDescriptor(ownPeerDescriptor: PeerDescriptor): void {
@@ -187,10 +188,10 @@ export class WebSocketConnector extends EventEmitter<ManagedConnectionSourceEven
             this.webSocketServer.on('connected', (connection: IConnection) => {
                 const managedConnection = new ManagedConnection(ownPeerDescriptor, this.protocolVersion,
                     ConnectionType.WEBSOCKET_SERVER, undefined, connection)
-                logger.trace('connected, objectId: ' + managedConnection.objectId)
-                managedConnection.once('handshakeCompleted', (peerDescriptor: PeerDescriptor) => {
-                    logger.trace('handshake completed objectId: ' + managedConnection.objectId)
-                    this.onServerSocketHandshakeCompleted(peerDescriptor, connection, managedConnection)
+                logger.trace('incoming connection from WebSocketServer, objectId: ' + managedConnection.objectId)
+                managedConnection.once('handshakeRequest', (peerDescriptor: PeerDescriptor) => {
+                    logger.trace('handshake request from serversocket objectId: ' + managedConnection.objectId)
+                    this.onServerSocketHandshakeRequest(peerDescriptor, connection, managedConnection)
                 })
             })
         }
@@ -218,7 +219,8 @@ export class WebSocketConnector extends EventEmitter<ManagedConnectionSourceEven
         if (this.canConnectFunction(request.requester!, request.ip, request.port)) {
             setImmediate(() => {
                 const connection = this.connect(request.requester!)
-                this.emit('newConnection', connection)
+                this.incomingConnectionCallback(connection)
+                //this.emit('newConnection', connection)
             })
             const res: WebSocketConnectionResponse = {
                 accepted: true

@@ -1,7 +1,7 @@
 import { DhtNode, Simulator, SimulatorTransport, PeerDescriptor, PeerID } from '@streamr/dht'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { range } from 'lodash'
-import { waitForCondition } from '@streamr/utils'
+import { wait, waitForCondition } from '@streamr/utils'
 import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
@@ -134,6 +134,11 @@ describe('RandomGraphNode-DhtNode', () => {
             const avg = graphNodes.reduce((acc, curr) => {
                 return acc + curr.getTargetNeighborStringIds().length
             }, 0) / numOfNodes
+            const avgNearest = graphNodes.reduce((acc, curr) => {
+                return acc + curr.getNearbyContactPoolIds().length
+            }, 0) / numOfNodes
+            console.info('avgTargets: ' + avg)
+            console.info('avgNearest: ' + avgNearest)
             return avg >= 3.90
         }, 60000)
 
@@ -143,6 +148,12 @@ describe('RandomGraphNode-DhtNode', () => {
 
         logger.info(`AVG Number of neighbors: ${avg}`)
 
+        await Promise.all(graphNodes.map((node) =>
+            waitForCondition(() => node.getNumberOfOutgoingHandshakes() == 0)
+        ))
+
+        await wait(20000)
+
         let mismatchCounter = 0
         graphNodes.forEach((node) => {
             const nodeId = node.getOwnStringId()
@@ -150,6 +161,7 @@ describe('RandomGraphNode-DhtNode', () => {
                 if (neighborId !== entryPointRandomGraphNode.getOwnStringId()) {
                     const neighbor = graphNodes.find((n) => n.getOwnStringId() === neighborId)
                     if (!neighbor!.getTargetNeighborStringIds().includes(nodeId)) {
+                        logger.info('mismatching ids length: ' + neighbor!.getTargetNeighborStringIds().length)
                         mismatchCounter += 1
                     }
                 }

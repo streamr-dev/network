@@ -472,6 +472,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         if (!this.started || this.stopped || this.rejoinOngoing) {
             return
         }
+        logger.info(`Rejoining DHT ${this.config.serviceId}!`)
         this.rejoinOngoing = true
         try {
             this.neighborList!.clear()

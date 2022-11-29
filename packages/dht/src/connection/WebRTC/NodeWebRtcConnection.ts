@@ -97,6 +97,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
         })
 
         this.connectingTimeoutRef = setTimeout(() => {
+            logger.error('connectingTimeout, this.closed === ' + this.closed)
             this.close()
         }, this.connectingTimeout)
 
@@ -174,10 +175,12 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
     close(reason?: string): void {
         console.log("CLOSING")
         if (this.closed === false) {
+            const err = new Error()
             logger.trace(
                 `Closing Node WebRTC Connection to ${PeerID.fromValue(this.remotePeerDescriptor.kademliaId).toKey()}`
                 + `${reason ? `, reason: ${reason}` : ''}`
             )
+            logger.trace('' + err.stack)
             this.closed = true
             if (this.connectingTimeoutRef) {
                 clearTimeout(this.connectingTimeoutRef)

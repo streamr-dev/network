@@ -9,7 +9,7 @@ import { PeerIDKey } from '@streamr/dht/dist/src/helpers/PeerID'
 
 describe('Full node network with WebRTC connections', () => {
 
-    const NUM_OF_NODES = 32
+    const NUM_OF_NODES = 24
 
     const epPeerDescriptor: PeerDescriptor = {
         kademliaId: PeerID.fromString(`entrypoint`).value,
