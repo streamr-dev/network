@@ -5,7 +5,7 @@ const { MessageLayer } = require('@streamr/protocol')
 
 const { Logger } = require('../dist/src/helpers/Logger')
 const { version: CURRENT_VERSION } = require('../package.json')
-const { createNetworkNode, CONFIG_DEFAULTS } = require('../dist/src/createNetworkNode')
+const { createNetworkNode, TEST_CONFIG } = require('../dist/src/createNetworkNode')
 const { MetricsContext } = require('../dist/src/helpers/MetricsContext')
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
@@ -48,7 +48,7 @@ function generateString(length) {
 
 const metricsContext = new MetricsContext()
 const publisher = createNetworkNode({
-    ...CONFIG_DEFAULTS,
+    ...TEST_CONFIG,
     id,
     trackers: trackerInfos,
     metricsContext,

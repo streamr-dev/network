@@ -8,12 +8,12 @@ import { PeerInfo } from '../../src/connection/PeerInfo'
 import BrowserClientWsEndpoint from '../../src/connection/ws/BrowserClientWsEndpoint'
 import { DisconnectionCode, Event } from '../../src/connection/ws/AbstractWsEndpoint'
 import { startServerWsEndpoint, startTestTracker } from '../utils'
-import { CONFIG_DEFAULTS } from '../../src/createNetworkNode'
+import { TEST_CONFIG } from '../../src/createNetworkNode'
 
 const trackerPort = 38482
 
 const createClientEndpoint = (peerInfo: PeerInfo) => {
-    return new BrowserClientWsEndpoint(peerInfo, CONFIG_DEFAULTS.trackerPingInterval)
+    return new BrowserClientWsEndpoint(peerInfo, TEST_CONFIG.trackerPingInterval)
 }
 
 describe('ws-endpoint', () => {

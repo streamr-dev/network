@@ -2,7 +2,7 @@ import { Tracker } from '../../src/logic/Tracker'
 import http from 'http'
 import { startTracker } from '../../src/startTracker'
 import 'jest-extended'
-import { createNetworkNode, NetworkNode, CONFIG_DEFAULTS } from '@streamr/network-node'
+import { createNetworkNode, NetworkNode, TEST_CONFIG } from '@streamr/network-node'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { MetricsContext, waitForCondition } from '@streamr/utils'
 
@@ -47,12 +47,12 @@ describe('tracker endpoint', () => {
             },
             attachHttpEndpoints: true,
             id: 'test-id',
-            trackerPingInterval: CONFIG_DEFAULTS.trackerPingInterval,
+            trackerPingInterval: TEST_CONFIG.trackerPingInterval,
             metricsContext: new MetricsContext()
         })
         const trackerInfo = tracker.getConfigRecord()
         nodeOne = createNetworkNode({
-            ...CONFIG_DEFAULTS,
+            ...TEST_CONFIG,
             id: 'node-1',
             trackers: [trackerInfo],
             location: {
@@ -63,7 +63,7 @@ describe('tracker endpoint', () => {
             metricsContext: new MetricsContext()
         })
         nodeTwo = createNetworkNode({
-            ...CONFIG_DEFAULTS,
+            ...TEST_CONFIG,
             id: 'node-2',
             trackers: [trackerInfo],
             location: undefined,

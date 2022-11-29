@@ -25,7 +25,7 @@ export interface NetworkNodeOptions extends AbstractNodeOptions {
     acceptProxyConnections: boolean
 }
 
-export const CONFIG_DEFAULTS: Omit<NetworkNodeOptions, 'id' | 'trackers' | 'metricsContext'> = {
+export const TEST_CONFIG: Omit<NetworkNodeOptions, 'id' | 'trackers' | 'metricsContext'> = {
     disconnectionWaitTime: 30 * 1000,
     peerPingInterval: 30 * 1000,
     newWebrtcConnectionTimeout: 15000,

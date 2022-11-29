@@ -3,7 +3,7 @@ import { startTracker } from '../../src/startTracker'
 import { runAndWaitForEvents } from '@streamr/test-utils'
 import { MetricsContext, waitForCondition, waitForEvent } from '@streamr/utils'
 import { InstructionMessage, toStreamID, toStreamPartID } from '@streamr/protocol'
-import { NetworkNode, createNetworkNode, NodeEvent, CONFIG_DEFAULTS } from '@streamr/network-node'
+import { NetworkNode, createNetworkNode, NodeEvent, TEST_CONFIG } from '@streamr/network-node'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { getTopology } from '../../src/logic/trackerSummaryUtils'
 
@@ -24,7 +24,7 @@ describe('check tracker, nodes and statuses from nodes', () => {
                 port: trackerPort
             },
             id: 'test-id',
-            trackerPingInterval: CONFIG_DEFAULTS.trackerPingInterval,
+            trackerPingInterval: TEST_CONFIG.trackerPingInterval,
             metricsContext: new MetricsContext()
         })
         const trackerInfo = tracker.getConfigRecord()
@@ -32,7 +32,7 @@ describe('check tracker, nodes and statuses from nodes', () => {
         // @ts-expect-error private method
         tracker.formAndSendInstructions = () => {}
         node1 = createNetworkNode({
-            ...CONFIG_DEFAULTS,
+            ...TEST_CONFIG,
             id: 'node1',
             trackers: [trackerInfo],
             disconnectionWaitTime: 200,
@@ -40,7 +40,7 @@ describe('check tracker, nodes and statuses from nodes', () => {
             metricsContext: new MetricsContext()
         })
         node2 = createNetworkNode({
-            ...CONFIG_DEFAULTS,
+            ...TEST_CONFIG,
             id: 'node2',
             trackers: [trackerInfo],
             disconnectionWaitTime: 200,

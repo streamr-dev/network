@@ -3,7 +3,7 @@ import { MetricsContext, wait } from '@streamr/utils'
 import { Tracker } from '../../src/logic/Tracker'
 import { startTracker } from '../../src/startTracker'
 
-import { NodeToTracker, NodeToTrackerEvent, PeerInfo, NodeClientWsEndpoint, Status, NodeId, CONFIG_DEFAULTS } from '@streamr/network-node'
+import { NodeToTracker, NodeToTrackerEvent, PeerInfo, NodeClientWsEndpoint, Status, NodeId, TEST_CONFIG } from '@streamr/network-node'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { getTopology } from '../../src/logic/trackerSummaryUtils'
 import { toStreamID } from '@streamr/protocol'
@@ -31,14 +31,14 @@ describe('tracker: instruction counter filtering', () => {
                 port: 30420
             },
             id: 'test-id',
-            trackerPingInterval: CONFIG_DEFAULTS.trackerPingInterval,
+            trackerPingInterval: TEST_CONFIG.trackerPingInterval,
             metricsContext: new MetricsContext()
         })
         const peerInfo1 = PeerInfo.newNode('nodeToTracker1')
         const peerInfo2 = PeerInfo.newNode('nodeToTracker2')
         const trackerPeerInfo = PeerInfo.newTracker(tracker.getTrackerId())
-        const wsClient1 = new NodeClientWsEndpoint(peerInfo1, CONFIG_DEFAULTS.trackerPingInterval)
-        const wsClient2 = new NodeClientWsEndpoint(peerInfo2, CONFIG_DEFAULTS.trackerPingInterval)
+        const wsClient1 = new NodeClientWsEndpoint(peerInfo1, TEST_CONFIG.trackerPingInterval)
+        const wsClient2 = new NodeClientWsEndpoint(peerInfo2, TEST_CONFIG.trackerPingInterval)
         nodeToTracker1 = new NodeToTracker(wsClient1)
         nodeToTracker2 = new NodeToTracker(wsClient2)
 

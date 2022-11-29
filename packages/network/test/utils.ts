@@ -6,7 +6,7 @@ import { startTracker, Tracker } from '@streamr/network-tracker'
 import { PeerInfo } from '../src/connection/PeerInfo'
 import { startHttpServer, ServerWsEndpoint, HttpServerConfig } from '../src/connection/ws/ServerWsEndpoint'
 import { Node } from '../src/logic/Node'
-import { CONFIG_DEFAULTS, createNetworkNode, NetworkNodeOptions } from '../src/createNetworkNode'
+import { TEST_CONFIG, createNetworkNode, NetworkNodeOptions } from '../src/createNetworkNode'
 import { WebRtcConnectionFactory, WebRtcEndpoint } from '../src/connection/webrtc/WebRtcEndpoint'
 import { IceServer } from '../src/connection/webrtc/WebRtcConnection'
 import { RtcSignaller } from '../src/logic/RtcSignaller'
@@ -17,7 +17,7 @@ import { NetworkNode } from '../src/logic/NetworkNode'
 
 export const createTestNetworkNode = (opts: Partial<NetworkNodeOptions> & Pick<NetworkNodeOptions, 'trackers'>): NetworkNode => {
     return createNetworkNode({
-        ...CONFIG_DEFAULTS,
+        ...TEST_CONFIG,
         id: uuidv4(),
         metricsContext: new MetricsContext(),
         ...opts
@@ -44,16 +44,16 @@ export const createTestWebRtcEndpoint = (
         metricsContext,
         negotiatedProtocolVersions,
         connectionFactory,
-        newConnectionTimeout ?? CONFIG_DEFAULTS.newWebrtcConnectionTimeout,
-        pingInterval ?? CONFIG_DEFAULTS.peerPingInterval,
-        webrtcDatachannelBufferThresholdLow ?? CONFIG_DEFAULTS.webrtcDatachannelBufferThresholdLow,
-        webrtcDatachannelBufferThresholdHigh ?? CONFIG_DEFAULTS.webrtcDatachannelBufferThresholdHigh,
+        newConnectionTimeout ?? TEST_CONFIG.newWebrtcConnectionTimeout,
+        pingInterval ?? TEST_CONFIG.peerPingInterval,
+        webrtcDatachannelBufferThresholdLow ?? TEST_CONFIG.webrtcDatachannelBufferThresholdLow,
+        webrtcDatachannelBufferThresholdHigh ?? TEST_CONFIG.webrtcDatachannelBufferThresholdHigh,
         webrtcDisallowPrivateAddresses
     )
 }
 
 export const createTestNodeClientWsEndpoint = (peerInfo: PeerInfo): NodeClientWsEndpoint => {
-    return new NodeClientWsEndpoint(peerInfo, CONFIG_DEFAULTS.trackerPingInterval)
+    return new NodeClientWsEndpoint(peerInfo, TEST_CONFIG.trackerPingInterval)
 }
 
 export const createTestServerWsEndpoint = (listen: HttpServerConfig,
@@ -61,7 +61,7 @@ export const createTestServerWsEndpoint = (listen: HttpServerConfig,
     httpServer: http.Server | https.Server,
     peerInfo: PeerInfo
 ): ServerWsEndpoint => {
-    return new ServerWsEndpoint(listen, sslEnabled, httpServer, peerInfo, CONFIG_DEFAULTS.trackerPingInterval)
+    return new ServerWsEndpoint(listen, sslEnabled, httpServer, peerInfo, TEST_CONFIG.trackerPingInterval)
 }
 
 export const startServerWsEndpoint = async (
@@ -84,7 +84,7 @@ export const startTestTracker = (opts: { port: number, pingInterval?: number }):
             port: opts.port
         },
         id: 'tr-' + uuidv4(),
-        trackerPingInterval: opts.pingInterval ?? CONFIG_DEFAULTS.trackerPingInterval,
+        trackerPingInterval: opts.pingInterval ?? TEST_CONFIG.trackerPingInterval,
         metricsContext: new MetricsContext()
     })
 }
