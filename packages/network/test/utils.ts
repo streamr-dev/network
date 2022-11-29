@@ -37,7 +37,7 @@ export const createTestWebRtcEndpoint = (
         metricsContext,
         negotiatedProtocolVersions,
         connectionFactory,
-        newConnectionTimeout,
+        newConnectionTimeout ?? CONFIG_DEFAULTS.newWebrtcConnectionTimeout,
         pingInterval ?? CONFIG_DEFAULTS.peerPingInterval,
         webrtcDatachannelBufferThresholdLow,
         webrtcDatachannelBufferThresholdHigh,

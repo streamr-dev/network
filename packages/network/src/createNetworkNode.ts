@@ -18,7 +18,7 @@ export interface NetworkNodeOptions extends AbstractNodeOptions {
     trackers: TrackerRegistryRecord[]
     disconnectionWaitTime: number
     peerPingInterval: number
-    newWebrtcConnectionTimeout?: number
+    newWebrtcConnectionTimeout: number
     webrtcDatachannelBufferThresholdLow?: number
     webrtcDatachannelBufferThresholdHigh?: number
     iceServers?: ReadonlyArray<IceServer>
@@ -30,7 +30,8 @@ export interface NetworkNodeOptions extends AbstractNodeOptions {
 
 export const CONFIG_DEFAULTS: Omit<NetworkNodeOptions, 'trackers'> = {
     disconnectionWaitTime: 30 * 1000,
-    peerPingInterval: 30 * 1000
+    peerPingInterval: 30 * 1000,
+    newWebrtcConnectionTimeout: 15000
 }
 
 export const createNetworkNode = ({

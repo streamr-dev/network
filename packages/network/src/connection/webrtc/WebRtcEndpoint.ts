@@ -72,7 +72,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         metricsContext: MetricsContext,
         negotiatedProtocolVersions: NegotiatedProtocolVersions,
         connectionFactory: WebRtcConnectionFactory,
-        newConnectionTimeout = 15000,
+        newConnectionTimeout: number,
         pingInterval: number,
         webrtcDatachannelBufferThresholdLow = 2 ** 15,
         webrtcDatachannelBufferThresholdHigh = 2 ** 17,
