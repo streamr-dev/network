@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from 'uuid'
 import { MetricsContext } from '@streamr/utils'
 
 import { AbstractNodeOptions } from './identifiers'
@@ -28,7 +27,7 @@ export interface NetworkNodeOptions extends AbstractNodeOptions {
     acceptProxyConnections: boolean
 }
 
-export const CONFIG_DEFAULTS: Omit<NetworkNodeOptions, 'trackers'> = {
+export const CONFIG_DEFAULTS: Omit<NetworkNodeOptions, 'id' | 'trackers'> = {
     disconnectionWaitTime: 30 * 1000,
     peerPingInterval: 30 * 1000,
     newWebrtcConnectionTimeout: 15000,
@@ -42,7 +41,7 @@ export const CONFIG_DEFAULTS: Omit<NetworkNodeOptions, 'trackers'> = {
 }
 
 export const createNetworkNode = ({
-    id = uuidv4(),
+    id,
     location,
     trackers,
     metricsContext = new MetricsContext(),

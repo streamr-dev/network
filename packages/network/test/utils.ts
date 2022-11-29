@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid'
 import { StreamPartID, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { Tracker } from '@streamr/network-tracker'
 import { PeerInfo } from '../src/connection/PeerInfo'
@@ -13,6 +14,7 @@ import { NegotiatedProtocolVersions } from '../src/connection/NegotiatedProtocol
 export const createTestNetworkNode = (opts: Partial<NetworkNodeOptions> & Pick<NetworkNodeOptions, 'trackers'>) => {
     return createNetworkNode({
         ...CONFIG_DEFAULTS,
+        id: uuidv4(),
         ...opts
     })
 }
