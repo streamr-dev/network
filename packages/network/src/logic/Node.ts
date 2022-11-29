@@ -49,7 +49,7 @@ export interface NodeOptions extends TrackerManagerOptions {
     bufferMaxSize?: number
     disconnectionWaitTime: number
     nodeConnectTimeout?: number
-    acceptProxyConnections?: boolean
+    acceptProxyConnections: boolean
 }
 
 interface Metrics extends MetricsDefinition {
@@ -98,7 +98,7 @@ export class Node extends EventEmitter {
         this.nodeConnectTimeout = opts.nodeConnectTimeout || 15000
         this.consecutiveDeliveryFailures = {}
         this.started = new Date().toLocaleString()
-        this.acceptProxyConnections = opts.acceptProxyConnections || false
+        this.acceptProxyConnections = opts.acceptProxyConnections
 
         this.metricsContext = opts.metricsContext || new MetricsContext()
         this.metrics = {

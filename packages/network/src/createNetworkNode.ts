@@ -25,7 +25,7 @@ export interface NetworkNodeOptions extends AbstractNodeOptions {
     rttUpdateTimeout: number
     trackerConnectionMaintenanceInterval: number
     webrtcDisallowPrivateAddresses?: boolean
-    acceptProxyConnections?: boolean
+    acceptProxyConnections: boolean
 }
 
 export const CONFIG_DEFAULTS: Omit<NetworkNodeOptions, 'trackers'> = {
@@ -37,7 +37,8 @@ export const CONFIG_DEFAULTS: Omit<NetworkNodeOptions, 'trackers'> = {
     iceServers: [],
     rttUpdateTimeout: 15000,
     trackerConnectionMaintenanceInterval: 5000,
-    webrtcDisallowPrivateAddresses: true
+    webrtcDisallowPrivateAddresses: true,
+    acceptProxyConnections: false
 }
 
 export const createNetworkNode = ({
