@@ -91,24 +91,7 @@ export class NetworkNodeFacade {
         this.destroySignal.assertNotDestroyed()
     }
 
-    private async getNormalizedNetworkOptions(): Promise<NetworkNodeOptions> {
-        if ((this.config.network.trackers as TrackerRegistryContract).contractAddress) {
-            const trackerRegistry = await getTrackerRegistryFromContract({
-                contractAddress: toEthereumAddress((this.config.network.trackers as TrackerRegistryContract).contractAddress),
-                jsonRpcProvider: getMainnetProvider(this.config)
-            })
-            return {
-                ...this.config.network,
-                trackers: trackerRegistry.getAllTrackers()
-            }
-        }
-        return this.config.network as NetworkNodeOptions
-    }
-
-    private async initNode(): Promise<NetworkNodeStub> {
-        this.assertNotDestroyed()
-        if (this.cachedNode) { return this.cachedNode }
-
+    private async getNetworkOptions(): Promise<NetworkNodeOptions> {
         let id = this.config.network.id
         if (id == null || id === '') {
             id = await this.generateId()
@@ -118,18 +101,28 @@ export class NetworkNodeFacade {
                 throw new Error(`given node id ${id} not compatible with authenticated wallet ${ethereumAddress}`)
             }
         }
-
-        const networkOptions = await this.getNormalizedNetworkOptions()
-        const node = this.networkNodeFactory.createNetworkNode({
-            ...networkOptions,
+        const trackers = ('contractAddress' in this.config.network.trackers)
+            ? (await getTrackerRegistryFromContract({
+                contractAddress: toEthereumAddress((this.config.network.trackers as TrackerRegistryContract).contractAddress),
+                jsonRpcProvider: getMainnetProvider(this.config)
+            })).getAllTrackers()
+            : this.config.network.trackers
+        return {
+            ...this.config.network,
             id,
+            trackers,
             metricsContext: new MetricsContext()
-        })
+        }
+    }
 
+    private async initNode(): Promise<NetworkNodeStub> {
+        this.assertNotDestroyed()
+        if (this.cachedNode) { return this.cachedNode }
+
+        const node = this.networkNodeFactory.createNetworkNode(await this.getNetworkOptions())
         if (!this.destroySignal.isDestroyed()) {
             this.cachedNode = node
         }
-
         return node
     }
 
