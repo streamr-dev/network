@@ -47,7 +47,7 @@ export interface NodeOptions extends TrackerManagerOptions {
     metricsContext?: MetricsContext
     bufferTimeoutInMs?: number
     bufferMaxSize?: number
-    disconnectionWaitTime?: number
+    disconnectionWaitTime: number
     nodeConnectTimeout?: number
     acceptProxyConnections?: boolean
 }
@@ -112,7 +112,7 @@ export class Node extends EventEmitter {
             getAllNodes: this.nodeToNode.getAllConnectionNodeIds,
             hasSharedStreamParts: this.streamPartManager.isNodePresent.bind(this.streamPartManager),
             disconnect: this.nodeToNode.disconnectFromNode.bind(this.nodeToNode),
-            disconnectionDelayInMs: opts.disconnectionWaitTime ?? 30 * 1000,
+            disconnectionDelayInMs: opts.disconnectionWaitTime,
             cleanUpIntervalInMs: 2 * 60 * 1000
         })
         this.propagation = new Propagation({

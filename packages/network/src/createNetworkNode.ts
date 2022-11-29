@@ -16,7 +16,7 @@ import { IceServer } from './connection/webrtc/WebRtcConnection'
 
 export interface NetworkNodeOptions extends AbstractNodeOptions {
     trackers: TrackerRegistryRecord[]
-    disconnectionWaitTime?: number
+    disconnectionWaitTime: number
     peerPingInterval?: number
     newWebrtcConnectionTimeout?: number
     webrtcDatachannelBufferThresholdLow?: number
@@ -29,6 +29,7 @@ export interface NetworkNodeOptions extends AbstractNodeOptions {
 }
 
 export const CONFIG_DEFAULTS: Omit<NetworkNodeOptions, 'trackers'> = {
+    disconnectionWaitTime: 30 * 1000
 }
 
 export const createNetworkNode = ({
