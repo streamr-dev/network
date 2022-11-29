@@ -8,15 +8,19 @@ const formConfig = (auth: StreamrClientConfig['auth']): Config => {
         client: {
             auth,
             network: {
-                trackers: []
+                trackers: [],
+                peerDescriptor: {
+                    kademliaId: 'broker',
+                    type: 0
+                },
+                entryPoints: [{
+                    kademliaId: 'broker',
+                    type: 0
+                }]
             }
         },
         plugins: {}
     }
-}
-
-const getAddress = async (broker: Broker) => {
-    return (await broker.getNode()).getNodeId().split('#')[0]
 }
 
 const createExternalProvider = (address: string): ExternalProvider => {
@@ -40,7 +44,7 @@ describe('authentication', () => {
             privateKey: wallet.privateKey
         }))
         await broker.start()
-        expect(await getAddress(broker)).toEqualCaseInsensitive(wallet.address)
+        expect(await broker.getAddress()).toEqualCaseInsensitive(wallet.address)
         await broker.stop()
     })
 
@@ -49,7 +53,7 @@ describe('authentication', () => {
             ethereum: createExternalProvider(wallet.address)
         }))
         await broker.start()
-        expect(await getAddress(broker)).toEqualCaseInsensitive(wallet.address)
+        expect(await broker.getAddress()).toEqualCaseInsensitive(wallet.address)
         await broker.stop()
     })
 })

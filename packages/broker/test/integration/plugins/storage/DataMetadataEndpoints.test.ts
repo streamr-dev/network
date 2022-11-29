@@ -37,8 +37,39 @@ describe('DataMetadataEndpoints', () => {
     beforeAll(async () => {
         storageNodeAccount = new Wallet(await fetchPrivateKeyWithGas())
         tracker = await startTestTracker(trackerPort)
-        client1 = await createClient(tracker, await fetchPrivateKeyWithGas())
-        storageNode = await startStorageNode(storageNodeAccount.privateKey, httpPort1, trackerPort)
+        client1 = await createClient(tracker, await fetchPrivateKeyWithGas(), {
+            network: {
+                peerDescriptor: {
+                    kademliaId: 'DataMetadataEndpoints-client',
+                    type: 0,
+                    websocket: {
+                        ip: '127.0.0.1',
+                        port: 40413
+                    }
+                },
+                entryPoints: [{
+                    kademliaId: await (storageNodeAccount.getAddress()),
+                    type: 0,
+                    websocket: {
+                        ip: '127.0.0.1',
+                        port: 40412
+                    }
+                }]
+            }
+        })
+        storageNode = await startStorageNode(
+            storageNodeAccount.privateKey,
+            httpPort1,
+            trackerPort,
+            40412,
+            [{
+                kademliaId: await (storageNodeAccount.getAddress()),
+                type: 0,
+                websocket: {
+                    ip: '127.0.0.1',
+                    port: 40412
+                }
+        }])
     })
 
     afterAll(async () => {
@@ -78,21 +109,30 @@ describe('DataMetadataEndpoints', () => {
         return freshStream
     }
 
-    it('returns (non-zero) metadata for existing stream', async () => {
+    it.only('returns (non-zero) metadata for existing stream', async () => {
         const stream = await setUpStream()
+        console.log("here1")
+
         await client1.publish(stream.id, {
             key: 1
         })
+        console.log("here2")
+
         await client1.publish(stream.id, {
             key: 2
         })
+        console.log("here3")
+
         await client1.publish(stream.id, {
             key: 3
         })
+        console.log("here4")
         const lastItem = await client1.publish(stream.id, {
             key: 4
         })
+        console.log("ÄÄÄÄÄ")
         await client1.waitForStorage(lastItem)
+        console.log("ÖÖÖÖÖ")
 
         const url = `http://localhost:${httpPort1}/streams/${encodeURIComponent(stream.id)}/metadata/partitions/0`
         const [status, json] = await httpGet(url)
@@ -106,5 +146,5 @@ describe('DataMetadataEndpoints', () => {
         ).toBeLessThan(
             new Date(res.lastMessage).getTime()
         )
-    })
+    }, 45000)
 })

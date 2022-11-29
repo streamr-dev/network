@@ -7,7 +7,7 @@ import {
     InterleaveNotice,
     LeaveStreamNotice,
     MessageRef,
-    NeighborUpdate
+    NeighborUpdate, ContentMessage
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { PeerList, Event as PeerListEvent } from './PeerList'
 import { NetworkRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
@@ -76,7 +76,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         this.targetNeighbors = new PeerList(peerId, this.N)
 
         this.propagation = new Propagation({
-            minPropagationTargets: 1,
+            minPropagationTargets: 2,
             randomGraphId: this.randomGraphId,
             sendToNeighbor: async (neighborId: string, msg: StreamMessage): Promise<void> => {
                 const remote = this.targetNeighbors.getNeighborWithId(neighborId)
@@ -155,6 +155,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
             this.markAndCheckDuplicate(msg.messageRef!, msg.previousMessageRef)
         }
         this.emit(Event.MESSAGE, msg)
+        // console.log(msg.messageRef!)
         this.propagation.feedUnseenMessage(msg, this.targetNeighbors!.getStringIds(), previousPeer || null)
     }
 
@@ -357,6 +358,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     // INetworkRpc server method
     async sendData(message: StreamMessage, _context: ServerCallContext): Promise<Empty> {
         if (this.markAndCheckDuplicate(message.messageRef!, message.previousMessageRef)) {
+            logger.info(`${message.messageRef!.timestamp} ${message.messageRef!.streamId}`)
             const { previousPeer } = message
             message["previousPeer"] = PeerID.fromValue(this.layer1.getPeerDescriptor().kademliaId).toKey()
             this.broadcast(message, previousPeer)

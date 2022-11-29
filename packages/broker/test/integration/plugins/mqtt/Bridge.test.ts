@@ -9,8 +9,9 @@ import { Wallet } from '@ethersproject/wallet'
 
 const MQTT_PLUGIN_PORT = 12470
 const TRACKER_PORT = 12471
+const BROKER_CONNECTIONMANAGER_PORT = 40415
 
-jest.setTimeout(30000)
+jest.setTimeout(60000)
 
 const createMqttClient = () => {
     return mqtt.connectAsync('mqtt://localhost:' + MQTT_PLUGIN_PORT)
@@ -40,7 +41,16 @@ describe('MQTT Bridge', () => {
                 mqtt: {
                     port: MQTT_PLUGIN_PORT
                 }
-            }
+            },
+            wsServerPort: BROKER_CONNECTIONMANAGER_PORT,
+            entryPoints: [{
+                kademliaId: (await brokerUser.getAddress()),
+                type: 0,
+                websocket: {
+                    ip: '127.0.0.1',
+                    port: BROKER_CONNECTIONMANAGER_PORT
+                }
+            }]
         })
     })
 
@@ -52,7 +62,26 @@ describe('MQTT Bridge', () => {
     })
 
     beforeEach(async () => {
-        streamrClient = await createClient(tracker, brokerUser.privateKey)
+        streamrClient = await createClient(tracker, brokerUser.privateKey, {
+            network: {
+                peerDescriptor: {
+                    kademliaId: 'Bridge-client',
+                    type: 0,
+                    websocket: {
+                        ip: '127.0.0.1',
+                        port: 40416
+                    }
+                },
+                entryPoints: [{
+                    kademliaId: (await brokerUser.getAddress()),
+                    type: 0,
+                    websocket: {
+                        ip: '127.0.0.1',
+                        port: BROKER_CONNECTIONMANAGER_PORT
+                    }
+                }]
+            }
+        })
         stream = await createTestStream(streamrClient, module)
     })
 
@@ -85,9 +114,9 @@ describe('MQTT Bridge', () => {
         }
         const messageQueue = new Queue<any>()
         const subscriber = await createSubscriber(messageQueue)
-        streamrClient.publish(stream.id, expected)
+        await streamrClient.publish(stream.id, expected)
 
-        const actual = await messageQueue.pop()
+        const actual = await messageQueue.pop(45000)
         expect(actual).toEqual(expected)
 
         await subscriber.end(true)
@@ -101,11 +130,12 @@ describe('MQTT Bridge', () => {
         const messageQueue2 = new Queue<any>()
         const subscriber1 = await createSubscriber(messageQueue1)
         const subscriber2 = await createSubscriber(messageQueue2)
-        streamrClient.publish(stream.id, expected)
+        await streamrClient.publish(stream.id, expected)
 
-        await wait(2000)
-        expect(messageQueue1.items).toEqual([expected])
-        expect(messageQueue2.items).toEqual([expected])
+        const actual1 = await messageQueue1.pop(45000)
+        const actual2 = await messageQueue2.pop(45000)
+        expect(actual1).toEqual(expected)
+        expect(actual2).toEqual(expected)
 
         await Promise.allSettled([
             subscriber1.end(true),
@@ -121,10 +151,11 @@ describe('MQTT Bridge', () => {
         const subscriber1 = await createSubscriber(messageQueue)
         const subscriber2 = await createMqttClient()
         subscriber2.unsubscribe(stream.id)
-        streamrClient.publish(stream.id, expected)
+        await streamrClient.publish(stream.id, expected)
 
-        await wait(2000)
-        expect(messageQueue.items).toEqual([expected])
+        const actual = await messageQueue.pop(45000)
+
+        expect(actual).toEqual(expected)
 
         await Promise.allSettled([
             subscriber1.end(true),
@@ -141,10 +172,10 @@ describe('MQTT Bridge', () => {
         const subscriber1 = await createSubscriber(messageQueue1)
         const subscriber2 = await createSubscriber(messageQueue2)
         subscriber2.unsubscribe(stream.id)
-        streamrClient.publish(stream.id, expected)
+        await streamrClient.publish(stream.id, expected)
 
-        await wait(2000)
-        expect(messageQueue1.items).toEqual([expected])
+        const actual1 = await messageQueue1.pop(45000)
+        expect(actual1).toEqual(expected)
         expect(messageQueue2.items).toEqual([])
 
         await Promise.allSettled([

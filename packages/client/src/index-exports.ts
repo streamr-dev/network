@@ -29,6 +29,7 @@ export {
     EthereumNetworkConfig,
     ProviderAuthConfig,
     PrivateKeyAuthConfig,
+    JsonPeerDescriptor,
     STREAMR_STORAGE_NODE_GERMANY,
     STREAM_CLIENT_DEFAULTS,
     validateConfig

@@ -17,6 +17,8 @@ interface MessagingPluginApi<T> {
 interface Ports {
     plugin: number
     tracker: number
+    brokerConnectionManager: number
+    clientConnectionManager: number
 }
 
 const MOCK_MESSAGE = {
@@ -71,7 +73,16 @@ export const createMessagingPluginTest = <T>(
                         payloadMetadata: true,
                         ...pluginConfig
                     }
-                }
+                },
+                wsServerPort: ports.brokerConnectionManager,
+                entryPoints: [{
+                    kademliaId: (await brokerUser.getAddress()),
+                    type: 0,
+                    websocket: {
+                        ip: '127.0.0.1',
+                        port: ports.brokerConnectionManager
+                    }
+                }]
             })
         })
 
@@ -83,7 +94,26 @@ export const createMessagingPluginTest = <T>(
         })
 
         beforeEach(async () => {
-            streamrClient = await createClient(tracker, brokerUser.privateKey)
+            streamrClient = await createClient(tracker, brokerUser.privateKey, {
+                network: {
+                    peerDescriptor: {
+                        kademliaId: 'client',
+                        type: 0,
+                        websocket: {
+                            ip: '127.0.0.1',
+                            port: ports.clientConnectionManager
+                        }
+                    },
+                    entryPoints: [{
+                        kademliaId: (await broker.getAddress()),
+                        type: 0,
+                        websocket: {
+                            ip: '127.0.0.1',
+                            port: ports.brokerConnectionManager
+                        }
+                    }]
+                }
+            })
             stream = await createTestStream(streamrClient, testModule)
             messageQueue = new Queue<Message>()
         })
@@ -96,23 +126,23 @@ export const createMessagingPluginTest = <T>(
         })
 
         describe('happy path', () => {
-            test('publish', async () => {
+            it('publish', async () => {
                 await streamrClient.subscribe(stream.id, (content: any, metadata: MessageMetadata) => {
                     messageQueue.push({ content, metadata })
                 })
                 pluginClient = await api.createClient('publish', stream.id, MOCK_API_KEY)
                 await api.publish(MOCK_MESSAGE, stream.id, pluginClient)
-                const message = await messageQueue.pop()
+                const message = await messageQueue.pop(45000)
                 assertReceivedMessage(message)
             })
 
-            test('subscribe', async () => {
+            it('subscribe', async () => {
                 pluginClient = await api.createClient('subscribe', stream.id, MOCK_API_KEY)
                 await api.subscribe(messageQueue, stream.id, pluginClient)
                 await streamrClient.publish(stream.id, MOCK_MESSAGE.content, {
                     timestamp: MOCK_MESSAGE.metadata.timestamp
                 })
-                const message = await messageQueue.pop()
+                const message = await messageQueue.pop(45000)
                 assertReceivedMessage(message)
             })
         })

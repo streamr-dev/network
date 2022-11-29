@@ -111,6 +111,7 @@ export class StreamrNode extends EventEmitter {
     }
 
     unsubscribeFromStream(streamPartID: string): void {
+        console.log("NetworkNode: unsubscribing")
         this.leaveStream(streamPartID)
     }
 
@@ -119,6 +120,7 @@ export class StreamrNode extends EventEmitter {
         if (stream) {
             stream.layer2.stop()
             stream.layer1.stop()
+            this.streams.delete(streamPartID)
         }
     }
 

@@ -21,7 +21,7 @@ describe('StorageNode', () => {
 
     beforeAll(async () => {
         storageNodeAccount = new Wallet(await fetchPrivateKeyWithGas())
-        storageNode = await startStorageNode(storageNodeAccount.privateKey, 1234, trackerPort)
+        storageNode = await startStorageNode(storageNodeAccount.privateKey, 1234, trackerPort, 44404)
     }, 30 * 1000)
 
     afterAll(async () => {
@@ -30,6 +30,6 @@ describe('StorageNode', () => {
     })
 
     it('has node id same as address', async () => {
-        expect((await storageNode.getNode()).getNodeId()).toEqual(toEthereumAddress(storageNodeAccount.address))
+        expect((await storageNode.getAddress())).toEqual(toEthereumAddress(storageNodeAccount.address))
     })
 })

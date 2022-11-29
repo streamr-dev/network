@@ -63,12 +63,13 @@ describe('Subscriber Plugin', () => {
     })
 
     it('subscribes to the configured list of streams', async () => {
-        const nodeId = (await client.getNode()).getNodeId()
+        const node = (await client.getNode())
         await waitForCondition(() => {
-            const overlays = tracker.getOverlayPerStreamPart() as any
-            return (overlays["stream-0#0"]?.nodes[nodeId] !== undefined)
-                && (overlays["stream-0#1"]?.nodes[nodeId] !== undefined)
-                && (overlays["stream-1#0"]?.nodes[nodeId] !== undefined)
+            const streams = node.getStreamParts().map((stream) => stream.toString())
+            console.log(streams)
+            return streams.includes("stream-0#0")
+                && streams.includes("stream-0#1")
+                && streams.includes("stream-1#0")
         })
         // If waitForCondition succeeds we are okay
         expect(true).toEqual(true)

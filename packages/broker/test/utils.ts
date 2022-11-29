@@ -3,7 +3,8 @@ import StreamrClient, {
     Stream,
     StreamPermission,
     StreamMetadata,
-    StreamrClientConfig
+    StreamrClientConfig,
+    JsonPeerDescriptor
 } from 'streamr-client'
 import _ from 'lodash'
 import { Wallet } from 'ethers'
@@ -24,7 +25,17 @@ interface TestConfig {
     apiAuthentication?: Config['apiAuthentication']
     enableCassandra?: boolean
     storageConfigRefreshInterval?: number
+    entryPoints?: JsonPeerDescriptor[]
 }
+
+const DEFAULT_ENTRYPOINTS = [{
+    kademliaId: "entryPointBroker",
+    type: 0,
+    websocket: {
+        ip: "127.0.0.1",
+        port: 40401
+    }
+}]
 
 export const formConfig = ({
     trackerPort,
@@ -34,7 +45,8 @@ export const formConfig = ({
     apiAuthentication,
     enableCassandra = false,
     storageConfigRefreshInterval = 0,
-    wsServerPort
+    wsServerPort,
+    entryPoints = DEFAULT_ENTRYPOINTS
 }: TestConfig): Config => {
     const plugins: Record<string, any> = { ...extraPlugins }
     if (httpPort) {
@@ -69,14 +81,7 @@ export const formConfig = ({
                         http: `http://127.0.0.1:${trackerPort}`
                     }
                 ],
-                entryPoints: [{
-                    kademliaId: "entryPointBroker",
-                    type: 0,
-                    websocket: {
-                        ip: "127.0.0.1",
-                        port: 40401
-                    }
-                }],
+                entryPoints,
                 peerDescriptor: {
                     kademliaId: toEthereumAddress(new Wallet(privateKey).address),
                     type: 0,
@@ -176,13 +181,14 @@ export async function startStorageNode(
     storageNodePrivateKey: string,
     httpPort: number,
     trackerPort: number,
-    wsServerPort: number
+    wsServerPort: number,
+    entryPoints?: JsonPeerDescriptor[]
 ): Promise<Broker> {
     const client = new StreamrClient({
         ...ConfigTest,
         auth: {
             privateKey: storageNodePrivateKey
-        },
+        }
     })
     try {
         await client.setStorageNodeMetadata({
@@ -197,7 +203,8 @@ export async function startStorageNode(
         trackerPort,
         httpPort,
         enableCassandra: true,
-        wsServerPort
+        wsServerPort,
+        entryPoints
     })
 }
 

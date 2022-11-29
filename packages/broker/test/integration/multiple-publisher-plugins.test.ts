@@ -134,7 +134,8 @@ describe('multiple publisher plugins', () => {
                     port: wsPort
                 },
                 http: {}
-            }
+            },
+            wsServerPort: 44409
         })
     })
 

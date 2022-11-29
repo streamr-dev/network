@@ -4,10 +4,12 @@ import { waitForEvent } from '@streamr/utils'
 import { Message } from '../../../../src/helpers/PayloadFormat'
 import { createMessagingPluginTest } from '../../createMessagingPluginTest'
 
-jest.setTimeout(30000)
+jest.setTimeout(60000)
 
 const WEBSOCKET_PORT = 12400
 const TRACKER_PORT = 12402
+const BROKER_NETWORKNODE_PORT = 44410
+const CLIENT_NETWORKNODE_PORT = 44411
 
 createMessagingPluginTest('websocket', 
     {
@@ -28,7 +30,9 @@ createMessagingPluginTest('websocket',
     },
     {
         plugin: WEBSOCKET_PORT,
-        tracker: TRACKER_PORT
+        tracker: TRACKER_PORT,
+        brokerConnectionManager: BROKER_NETWORKNODE_PORT,
+        clientConnectionManager: CLIENT_NETWORKNODE_PORT
     },
     module
 )
