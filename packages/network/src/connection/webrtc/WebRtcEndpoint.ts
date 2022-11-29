@@ -74,8 +74,8 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         connectionFactory: WebRtcConnectionFactory,
         newConnectionTimeout: number,
         pingInterval: number,
-        webrtcDatachannelBufferThresholdLow = 2 ** 15,
-        webrtcDatachannelBufferThresholdHigh = 2 ** 17,
+        webrtcDatachannelBufferThresholdLow: number,
+        webrtcDatachannelBufferThresholdHigh: number,
         webrtcDisallowPrivateAddresses = false,
         maxMessageSize = 1048576,
     ) {

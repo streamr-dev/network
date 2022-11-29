@@ -39,8 +39,8 @@ export const createTestWebRtcEndpoint = (
         connectionFactory,
         newConnectionTimeout ?? CONFIG_DEFAULTS.newWebrtcConnectionTimeout,
         pingInterval ?? CONFIG_DEFAULTS.peerPingInterval,
-        webrtcDatachannelBufferThresholdLow,
-        webrtcDatachannelBufferThresholdHigh,
+        webrtcDatachannelBufferThresholdLow ?? CONFIG_DEFAULTS.webrtcDatachannelBufferThresholdLow,
+        webrtcDatachannelBufferThresholdHigh ?? CONFIG_DEFAULTS.webrtcDatachannelBufferThresholdHigh,
         webrtcDisallowPrivateAddresses
     )
 }
