@@ -73,7 +73,7 @@ export interface StrictStreamrClientConfig {
         newWebrtcConnectionTimeout?: number
         webrtcDatachannelBufferThresholdLow?: number
         webrtcDatachannelBufferThresholdHigh?: number
-        disconnectionWaitTime?: number
+        disconnectionWaitTime: number
         peerPingInterval?: number
         rttUpdateTimeout?: number
         iceServers: ReadonlyArray<IceServer>
@@ -166,7 +166,8 @@ export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id' | 'aut
                 username: 'BrubeckTurn1',
                 password: 'MIlbgtMw4nhpmbgqRrht1Q=='
             }
-        ]
+        ],
+        disconnectionWaitTime: 200
     },
 
     // For ethers.js provider params, see https://docs.ethers.io/ethers.js/v5-beta/api-providers.html#provider
