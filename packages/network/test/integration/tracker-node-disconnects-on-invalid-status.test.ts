@@ -2,8 +2,8 @@ import { runAndWaitForEvents } from '@streamr/test-utils'
 import { Tracker, startTracker } from '@streamr/network-tracker'
 import { NodeToTracker, Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
 import { PeerInfo } from '../../src/connection/PeerInfo'
-import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { Status } from '../../src/identifiers'
+import { createTestNodeClientWsEndpoint } from '../utils'
 
 describe('Tracker disconnects from node if node sends invalid status data', () => {
     let tracker: Tracker
@@ -20,7 +20,7 @@ describe('Tracker disconnects from node if node sends invalid status data', () =
         })
         const peerInfo1 = PeerInfo.newNode('nodeToTracker1')
         const trackerPeerInfo = PeerInfo.newTracker(TRACKER_ID)
-        const wsClient = new NodeClientWsEndpoint(peerInfo1)
+        const wsClient = createTestNodeClientWsEndpoint(peerInfo1)
         nodeToTracker = new NodeToTracker(wsClient)
 
         await runAndWaitForEvents([

@@ -35,7 +35,8 @@ export const CONFIG_DEFAULTS: Omit<NetworkNodeOptions, 'id' | 'trackers' | 'metr
     rttUpdateTimeout: 15000,
     trackerConnectionMaintenanceInterval: 5000,
     webrtcDisallowPrivateAddresses: true,
-    acceptProxyConnections: false
+    acceptProxyConnections: false,
+    trackerPingInterval: 60 * 1000
 }
 
 export const createNetworkNode = ({

@@ -8,11 +8,10 @@ import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProto
 import { Event as ntnEvent, NodeToNode } from "../../src/protocol/NodeToNode"
 import { MessageID, StreamMessage, toStreamID } from "@streamr/protocol"
 import { runAndWaitForEvents } from '@streamr/test-utils'
-import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { WebRtcEndpoint } from '../../src/connection/webrtc/WebRtcEndpoint'
 import { webRtcConnectionFactory } from '../../src/connection/webrtc/NodeWebRtcConnection'
 import { toEthereumAddress } from '@streamr/utils'
-import { createTestWebRtcEndpoint } from '../utils'
+import { createTestNodeClientWsEndpoint, createTestWebRtcEndpoint } from '../utils'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
@@ -40,9 +39,9 @@ describe('Node-to-Node protocol version negotiation', () => {
         const peerInfo3 = new PeerInfo('node-endpoint3', PeerType.Node, [1, 2], [33])
         const trackerPeerInfo = PeerInfo.newTracker(tracker.getTrackerId())
         // Need to set up NodeToTrackers and WsEndpoint(s) to exchange RelayMessage(s) via tracker
-        const wsEp1 = new NodeClientWsEndpoint(peerInfo1)
-        const wsEp2 = new NodeClientWsEndpoint(peerInfo2)
-        const wsEp3 = new NodeClientWsEndpoint(peerInfo3)
+        const wsEp1 = createTestNodeClientWsEndpoint(peerInfo1)
+        const wsEp2 = createTestNodeClientWsEndpoint(peerInfo2)
+        const wsEp3 = createTestNodeClientWsEndpoint(peerInfo3)
         nodeToTracker1 = new NodeToTracker(wsEp1)
         nodeToTracker2 = new NodeToTracker(wsEp2)
         nodeToTracker3 = new NodeToTracker(wsEp3)

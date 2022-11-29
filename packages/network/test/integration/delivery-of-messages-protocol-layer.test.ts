@@ -23,8 +23,7 @@ import { RtcSignaller } from '../../src/logic/RtcSignaller'
 import { NegotiatedProtocolVersions } from '../../src/connection/NegotiatedProtocolVersions'
 import { MetricsContext } from '@streamr/utils'
 import { webRtcConnectionFactory } from '../../src/connection/webrtc/NodeWebRtcConnection'
-import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
-import { createTestWebRtcEndpoint, startServerWsEndpoint } from '../utils'
+import { createTestNodeClientWsEndpoint, createTestWebRtcEndpoint, startServerWsEndpoint } from '../utils'
 
 const UUID_REGEX = /[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}/
 
@@ -51,8 +50,8 @@ describe('delivery of messages in protocol layer', () => {
         const peerInfo1 = PeerInfo.newNode('node1')
         const peerInfo2 = PeerInfo.newNode('node2')
         const trackerServerPeerInfo = PeerInfo.newTracker('trackerServer')
-        const wsEndpoint1 = new NodeClientWsEndpoint(peerInfo1)
-        const wsEndpoint2 = new NodeClientWsEndpoint(peerInfo2)
+        const wsEndpoint1 = createTestNodeClientWsEndpoint(peerInfo1)
+        const wsEndpoint2 = createTestNodeClientWsEndpoint(peerInfo2)
         const wsEndpoint3 = await startServerWsEndpoint('127.0.0.1', 28516, trackerServerPeerInfo)
         nodeToTracker = new NodeToTracker(wsEndpoint1)
         nodeToTracker2 = new NodeToTracker(wsEndpoint2)

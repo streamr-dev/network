@@ -2,14 +2,14 @@ import { ServerWsEndpoint } from '../../src/connection/ws/ServerWsEndpoint'
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { Event } from '../../src/connection/ws/AbstractWsEndpoint'
-import { startServerWsEndpoint } from '../utils'
+import { createTestNodeClientWsEndpoint, startServerWsEndpoint } from '../utils'
 
 describe('WsEndpoint: back pressure handling', () => {
     let epClient: NodeClientWsEndpoint
     let epServer: ServerWsEndpoint
     const serverPeerInfo = PeerInfo.newTracker('epServer')
     beforeEach(async () => {
-        epClient = new NodeClientWsEndpoint(PeerInfo.newNode('epClient'))
+        epClient = createTestNodeClientWsEndpoint(PeerInfo.newNode('epClient'))
         epServer = await startServerWsEndpoint('127.0.0.1', 43975, serverPeerInfo)
         await epClient.connect('ws://127.0.0.1:43975', serverPeerInfo)
     })

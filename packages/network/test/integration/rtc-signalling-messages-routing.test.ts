@@ -4,7 +4,7 @@ import { ErrorMessage, RelayMessage, RelayMessageSubType } from '@streamr/protoc
 
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { NodeToTracker, Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
-import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
+import { createTestNodeClientWsEndpoint } from '../utils'
 
 /**
  * Validate the relaying logic of tracker's WebRTC signalling messages.
@@ -22,8 +22,8 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
             }
         })
         const trackerPeerInfo = PeerInfo.newTracker(tracker.getTrackerId())
-        const originatorEndpoint = new NodeClientWsEndpoint(PeerInfo.newNode('originator'))
-        const targetEndpoint = new NodeClientWsEndpoint(PeerInfo.newNode('target'))
+        const originatorEndpoint = createTestNodeClientWsEndpoint(PeerInfo.newNode('originator'))
+        const targetEndpoint = createTestNodeClientWsEndpoint(PeerInfo.newNode('target'))
 
         originatorNodeToTracker = new NodeToTracker(originatorEndpoint)
         targetNodeToTracker = new NodeToTracker(targetEndpoint)

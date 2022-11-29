@@ -8,9 +8,8 @@ import { RtcSignaller } from '../../src/logic/RtcSignaller'
 import { NegotiatedProtocolVersions } from '../../src/connection/NegotiatedProtocolVersions'
 import { WebRtcEndpoint } from '../../src/connection/webrtc/WebRtcEndpoint'
 import { webRtcConnectionFactory } from '../../src/connection/webrtc/NodeWebRtcConnection'
-import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { GOOGLE_STUN_SERVER } from '../../src/constants'
-import { createTestWebRtcEndpoint } from '../utils'
+import { createTestNodeClientWsEndpoint, createTestWebRtcEndpoint } from '../utils'
 
 describe('WebRTC multisignaller test', () => {
     let tracker1: Tracker
@@ -34,8 +33,8 @@ describe('WebRTC multisignaller test', () => {
             }
         })
 
-        const ep1 = new NodeClientWsEndpoint(PeerInfo.newNode('node-1'))
-        const ep2 = new NodeClientWsEndpoint(PeerInfo.newNode('node-2'))
+        const ep1 = createTestNodeClientWsEndpoint(PeerInfo.newNode('node-1'))
+        const ep2 = createTestNodeClientWsEndpoint(PeerInfo.newNode('node-2'))
 
         nodeToTracker1 = new NodeToTracker(ep1)
         nodeToTracker2 = new NodeToTracker(ep2)

@@ -3,14 +3,13 @@ import { PeerInfo } from '../../src/connection/PeerInfo'
 import { MetricsContext } from '@streamr/utils'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
 import { startTracker, Tracker } from '@streamr/network-tracker'
-import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { NodeToTracker } from '../../src/protocol/NodeToTracker'
 import { wait } from '@streamr/utils'
 import { NegotiatedProtocolVersions } from '../../src/connection/NegotiatedProtocolVersions'
 import { WebRtcEndpoint } from '../../src/connection/webrtc/WebRtcEndpoint'
 import { webRtcConnectionFactory } from '../../src/connection/webrtc/NodeWebRtcConnection'
 import { GOOGLE_STUN_SERVER } from '../../src/constants'
-import { createTestWebRtcEndpoint } from '../utils'
+import { createTestNodeClientWsEndpoint, createTestWebRtcEndpoint } from '../utils'
 
 describe('WebRtcEndpoint: back pressure handling', () => {
     let tracker: Tracker
@@ -31,8 +30,8 @@ describe('WebRtcEndpoint: back pressure handling', () => {
         const peerInfo2 = PeerInfo.newNode('ep2')
 
         // Need to set up NodeToTrackers and WsEndpoint(s) to exchange RelayMessage(s) via tracker
-        const wsEp1 = new NodeClientWsEndpoint(peerInfo1)
-        const wsEp2 = new NodeClientWsEndpoint(peerInfo2)
+        const wsEp1 = createTestNodeClientWsEndpoint(peerInfo1)
+        const wsEp2 = createTestNodeClientWsEndpoint(peerInfo2)
         nodeToTracker1 = new NodeToTracker(wsEp1)
         nodeToTracker2 = new NodeToTracker(wsEp2)
         await nodeToTracker1.connectToTracker(tracker.getUrl(), PeerInfo.newTracker(tracker.getTrackerId()))
