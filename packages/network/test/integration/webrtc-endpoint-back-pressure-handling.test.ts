@@ -10,6 +10,7 @@ import { NegotiatedProtocolVersions } from '../../src/connection/NegotiatedProto
 import { WebRtcEndpoint } from '../../src/connection/webrtc/WebRtcEndpoint'
 import { webRtcConnectionFactory } from '../../src/connection/webrtc/NodeWebRtcConnection'
 import { GOOGLE_STUN_SERVER } from '../../src/constants'
+import { createTestWebRtcEndpoint } from '../utils'
 
 describe('WebRtcEndpoint: back pressure handling', () => {
     let tracker: Tracker
@@ -38,7 +39,7 @@ describe('WebRtcEndpoint: back pressure handling', () => {
         await nodeToTracker2.connectToTracker(tracker.getUrl(), PeerInfo.newTracker(tracker.getTrackerId()))
 
         // Set up WebRTC endpoints
-        ep1 = new WebRtcEndpoint(
+        ep1 = createTestWebRtcEndpoint(
             peerInfo1,
             [GOOGLE_STUN_SERVER],
             new RtcSignaller(peerInfo1, nodeToTracker1),
@@ -46,7 +47,7 @@ describe('WebRtcEndpoint: back pressure handling', () => {
             new NegotiatedProtocolVersions(peerInfo1),
             webRtcConnectionFactory
         )
-        ep2 = new WebRtcEndpoint(
+        ep2 = createTestWebRtcEndpoint(
             peerInfo2,
             [GOOGLE_STUN_SERVER],
             new RtcSignaller(peerInfo2, nodeToTracker2),

@@ -11,6 +11,7 @@ import { WebRtcEndpoint } from '../../src/connection/webrtc/WebRtcEndpoint'
 import { webRtcConnectionFactory } from '../../src/connection/webrtc/NodeWebRtcConnection'
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { GOOGLE_STUN_SERVER } from '../../src/constants'
+import { createTestWebRtcEndpoint } from '../utils'
 
 describe('WebRtcEndpoint', () => {
     let tracker: Tracker
@@ -46,7 +47,7 @@ describe('WebRtcEndpoint', () => {
 
             const peerInfo1 = PeerInfo.newNode('node-1')
             const peerInfo2 = PeerInfo.newNode('node-2')
-            endpoint1 = new WebRtcEndpoint(
+            endpoint1 = createTestWebRtcEndpoint(
                 peerInfo1,
                 [GOOGLE_STUN_SERVER],
                 new RtcSignaller(peerInfo1, nodeToTracker1),
@@ -54,7 +55,7 @@ describe('WebRtcEndpoint', () => {
                 new NegotiatedProtocolVersions(peerInfo1),
                 factory
             )
-            endpoint2 = new WebRtcEndpoint(
+            endpoint2 = createTestWebRtcEndpoint(
                 peerInfo2,
                 [GOOGLE_STUN_SERVER],
                 new RtcSignaller(peerInfo2, nodeToTracker2),
@@ -451,7 +452,7 @@ describe('WebRtcEndpoint', () => {
             const peerInfo = PeerInfo.newNode('node')
             const ep = new NodeClientWsEndpoint(PeerInfo.newNode('node'))
             const nodeToTracker = new NodeToTracker(ep)
-            const endpoint = new WebRtcEndpoint(
+            const endpoint = createTestWebRtcEndpoint(
                 peerInfo,
                 [],
                 new RtcSignaller(peerInfo, nodeToTracker),

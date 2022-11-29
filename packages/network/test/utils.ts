@@ -4,12 +4,45 @@ import { PeerInfo } from '../src/connection/PeerInfo'
 import { startHttpServer, ServerWsEndpoint } from '../src/connection/ws/ServerWsEndpoint'
 import { Node } from '../src/logic/Node'
 import { CONFIG_DEFAULTS, createNetworkNode, NetworkNodeOptions } from '../src/createNetworkNode'
+import { WebRtcConnectionFactory, WebRtcEndpoint } from '../src/connection/webrtc/WebRtcEndpoint'
+import { IceServer } from '../src/connection/webrtc/WebRtcConnection'
+import { RtcSignaller } from '../src/logic/RtcSignaller'
+import { MetricsContext } from '@streamr/utils'
+import { NegotiatedProtocolVersions } from '../src/connection/NegotiatedProtocolVersions'
 
 export const createTestNetworkNode = (opts: Partial<NetworkNodeOptions> & Pick<NetworkNodeOptions, 'trackers'>) => {
     return createNetworkNode({
         ...CONFIG_DEFAULTS,
         ...opts
     })
+}
+
+export const createTestWebRtcEndpoint = (
+    peerInfo: PeerInfo,
+    iceServers: ReadonlyArray<IceServer>,
+    rtcSignaller: RtcSignaller,
+    metricsContext: MetricsContext,
+    negotiatedProtocolVersions: NegotiatedProtocolVersions,
+    connectionFactory: WebRtcConnectionFactory,
+    newConnectionTimeout?: number,
+    pingInterval?: number,
+    webrtcDatachannelBufferThresholdLow?: number,
+    webrtcDatachannelBufferThresholdHigh?: number,
+    webrtcDisallowPrivateAddresses?: boolean
+) => {
+    return new WebRtcEndpoint(
+        peerInfo,
+        iceServers,
+        rtcSignaller,
+        metricsContext,
+        negotiatedProtocolVersions,
+        connectionFactory,
+        newConnectionTimeout,
+        pingInterval,
+        webrtcDatachannelBufferThresholdLow,
+        webrtcDatachannelBufferThresholdHigh,
+        webrtcDisallowPrivateAddresses
+    )
 }
 
 export const startServerWsEndpoint = async (

@@ -10,6 +10,7 @@ import { WebRtcEndpoint } from '../../src/connection/webrtc/WebRtcEndpoint'
 import { webRtcConnectionFactory } from '../../src/connection/webrtc/NodeWebRtcConnection'
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { GOOGLE_STUN_SERVER } from '../../src/constants'
+import { createTestWebRtcEndpoint } from '../utils'
 
 describe('WebRTC multisignaller test', () => {
     let tracker1: Tracker
@@ -61,7 +62,7 @@ describe('WebRTC multisignaller test', () => {
 
         const peerInfo1 = PeerInfo.newNode('node-1')
         const peerInfo2 = PeerInfo.newNode('node-2')
-        endpoint1 = new WebRtcEndpoint(
+        endpoint1 = createTestWebRtcEndpoint(
             peerInfo1,
             [GOOGLE_STUN_SERVER],
             new RtcSignaller(peerInfo1, nodeToTracker1),
@@ -69,7 +70,7 @@ describe('WebRTC multisignaller test', () => {
             new NegotiatedProtocolVersions(peerInfo1),
             webRtcConnectionFactory
         )
-        endpoint2 = new WebRtcEndpoint(
+        endpoint2 = createTestWebRtcEndpoint(
             peerInfo2,
             [GOOGLE_STUN_SERVER],
             new RtcSignaller(peerInfo2, nodeToTracker2),

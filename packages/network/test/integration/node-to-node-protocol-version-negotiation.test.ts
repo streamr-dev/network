@@ -12,6 +12,7 @@ import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { WebRtcEndpoint } from '../../src/connection/webrtc/WebRtcEndpoint'
 import { webRtcConnectionFactory } from '../../src/connection/webrtc/NodeWebRtcConnection'
 import { toEthereumAddress } from '@streamr/utils'
+import { createTestWebRtcEndpoint } from '../utils'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
@@ -51,7 +52,7 @@ describe('Node-to-Node protocol version negotiation', () => {
         await nodeToTracker3.connectToTracker(tracker.getUrl(), trackerPeerInfo)
 
         // Set up WebRTC endpoints
-        ep1 = new WebRtcEndpoint(
+        ep1 = createTestWebRtcEndpoint(
             peerInfo1,
             [],
             new RtcSignaller(peerInfo1, nodeToTracker1),
@@ -60,7 +61,7 @@ describe('Node-to-Node protocol version negotiation', () => {
             webRtcConnectionFactory,
             5000
         )
-        ep2 = new WebRtcEndpoint(
+        ep2 = createTestWebRtcEndpoint(
             peerInfo2,
             [],
             new RtcSignaller(peerInfo2, nodeToTracker2),
@@ -69,7 +70,7 @@ describe('Node-to-Node protocol version negotiation', () => {
             webRtcConnectionFactory,
             5000
         )
-        ep3 = new WebRtcEndpoint(
+        ep3 = createTestWebRtcEndpoint(
             peerInfo3,
             [],
             new RtcSignaller(peerInfo3, nodeToTracker3),
