@@ -245,11 +245,24 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "forwarder",
+        "type": "address"
+      }
+    ],
+    "name": "setTrustedForwarder",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "streamRegistry",
     "outputs": [
       {
-        "internalType": "contract StreamRegistry",
+        "internalType": "contract StreamRegistryV4",
         "name": "",
         "type": "address"
       }
