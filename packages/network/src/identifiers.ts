@@ -37,6 +37,6 @@ export interface RtcErrorMessage {
 export interface AbstractNodeOptions {
     id: NodeId
     location?: Location
-    metricsContext?: MetricsContext
+    metricsContext: MetricsContext
     trackerPingInterval?: number
 }

@@ -1,5 +1,3 @@
-import { MetricsContext } from '@streamr/utils'
-
 import { AbstractNodeOptions } from './identifiers'
 import { NodeToTracker } from './protocol/NodeToTracker'
 import { NodeToNode } from './protocol/NodeToNode'
@@ -27,7 +25,7 @@ export interface NetworkNodeOptions extends AbstractNodeOptions {
     acceptProxyConnections: boolean
 }
 
-export const CONFIG_DEFAULTS: Omit<NetworkNodeOptions, 'id' | 'trackers'> = {
+export const CONFIG_DEFAULTS: Omit<NetworkNodeOptions, 'id' | 'trackers' | 'metricsContext'> = {
     disconnectionWaitTime: 30 * 1000,
     peerPingInterval: 30 * 1000,
     newWebrtcConnectionTimeout: 15000,
@@ -44,7 +42,7 @@ export const createNetworkNode = ({
     id,
     location,
     trackers,
-    metricsContext = new MetricsContext(),
+    metricsContext,
     peerPingInterval,
     trackerPingInterval,
     disconnectionWaitTime,

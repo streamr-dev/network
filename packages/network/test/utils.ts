@@ -15,6 +15,7 @@ export const createTestNetworkNode = (opts: Partial<NetworkNodeOptions> & Pick<N
     return createNetworkNode({
         ...CONFIG_DEFAULTS,
         id: uuidv4(),
+        metricsContext: new MetricsContext(),
         ...opts
     })
 }
