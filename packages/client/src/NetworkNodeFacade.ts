@@ -121,7 +121,6 @@ export class NetworkNodeFacade {
 
         const networkOptions = await this.getNormalizedNetworkOptions()
         const node = this.networkNodeFactory.createNetworkNode({
-            disconnectionWaitTime: 200,
             ...networkOptions,
             id,
             metricsContext: new MetricsContext()

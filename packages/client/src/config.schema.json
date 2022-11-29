@@ -134,7 +134,8 @@
                     "type": "number"
                 },
                 "disconnectionWaitTime": {
-                    "type": "number"
+                    "type": "number",
+                    "default": 200
                 },
                 "peerPingInterval": {
                     "type": "number"
