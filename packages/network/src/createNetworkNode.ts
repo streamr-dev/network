@@ -21,7 +21,7 @@ export interface NetworkNodeOptions extends AbstractNodeOptions {
     iceServers: ReadonlyArray<IceServer>
     rttUpdateTimeout: number
     trackerConnectionMaintenanceInterval: number
-    webrtcDisallowPrivateAddresses?: boolean
+    webrtcDisallowPrivateAddresses: boolean
     acceptProxyConnections: boolean
 }
 
