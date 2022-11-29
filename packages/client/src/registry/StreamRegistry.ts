@@ -1,6 +1,6 @@
 import { ContractTransaction } from '@ethersproject/contracts'
-import type { StreamRegistryV3 as StreamRegistryContract } from '../ethereumArtifacts/StreamRegistryV3'
-import StreamRegistryArtifact from '../ethereumArtifacts/StreamRegistryV3Abi.json'
+import type { StreamRegistryV4 as StreamRegistryContract } from '../ethereumArtifacts/StreamRegistryV4'
+import StreamRegistryArtifact from '../ethereumArtifacts/StreamRegistryV4Abi.json'
 import { BigNumber } from '@ethersproject/bignumber'
 import { Provider } from '@ethersproject/providers'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
