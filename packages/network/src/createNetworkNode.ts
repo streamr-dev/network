@@ -21,7 +21,7 @@ export interface NetworkNodeOptions extends AbstractNodeOptions {
     newWebrtcConnectionTimeout: number
     webrtcDatachannelBufferThresholdLow: number
     webrtcDatachannelBufferThresholdHigh: number
-    iceServers?: ReadonlyArray<IceServer>
+    iceServers: ReadonlyArray<IceServer>
     rttUpdateTimeout?: number
     trackerConnectionMaintenanceInterval?: number
     webrtcDisallowPrivateAddresses?: boolean
@@ -33,7 +33,8 @@ export const CONFIG_DEFAULTS: Omit<NetworkNodeOptions, 'trackers'> = {
     peerPingInterval: 30 * 1000,
     newWebrtcConnectionTimeout: 15000,
     webrtcDatachannelBufferThresholdLow: 2 ** 15,
-    webrtcDatachannelBufferThresholdHigh: 2 ** 17
+    webrtcDatachannelBufferThresholdHigh: 2 ** 17,
+    iceServers: []
 }
 
 export const createNetworkNode = ({
@@ -48,7 +49,7 @@ export const createNetworkNode = ({
     rttUpdateTimeout,
     webrtcDatachannelBufferThresholdLow,
     webrtcDatachannelBufferThresholdHigh,
-    iceServers = [],
+    iceServers,
     trackerConnectionMaintenanceInterval,
     webrtcDisallowPrivateAddresses = true,
     acceptProxyConnections
