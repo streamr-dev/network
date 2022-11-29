@@ -75,7 +75,7 @@ describe('Layer0 with WebRTC connections', () => {
         expect((node2.getTransport() as ConnectionManager).getConnection(node1.getPeerDescriptor())!.connectionType)
             .toEqual(ConnectionType.WEBRTC)
 
-    }, 10000)
+    })
 
     it('Happy path simultaneous joins', async () => {
         await Promise.all([
@@ -91,5 +91,5 @@ describe('Layer0 with WebRTC connections', () => {
             .toEqual(ConnectionType.WEBRTC)
         expect((node2.getTransport() as ConnectionManager).getConnection(node1.getPeerDescriptor())!.connectionType)
             .toEqual(ConnectionType.WEBRTC)
-    }, 20000)
+    })
 })

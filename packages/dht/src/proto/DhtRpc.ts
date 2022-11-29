@@ -222,9 +222,9 @@ export interface ConnectivityResponseMessage {
     websocket?: ConnectivityMethod;
 }
 /**
- * @generated from protobuf message HandshakeMessage
+ * @generated from protobuf message HandshakeRequest
  */
-export interface HandshakeMessage {
+export interface HandshakeRequest {
     /**
      * @generated from protobuf field: bytes sourceId = 1;
      */
@@ -237,6 +237,27 @@ export interface HandshakeMessage {
      * @generated from protobuf field: PeerDescriptor peerDescriptor = 3;
      */
     peerDescriptor?: PeerDescriptor;
+}
+/**
+ * @generated from protobuf message HandshakeResponse
+ */
+export interface HandshakeResponse {
+    /**
+     * @generated from protobuf field: bytes sourceId = 1;
+     */
+    sourceId: Uint8Array;
+    /**
+     * @generated from protobuf field: string protocolVersion = 2;
+     */
+    protocolVersion: string;
+    /**
+     * @generated from protobuf field: PeerDescriptor peerDescriptor = 3;
+     */
+    peerDescriptor?: PeerDescriptor;
+    /**
+     * @generated from protobuf field: optional string responseError = 4;
+     */
+    responseError?: string;
 }
 /**
  * @generated from protobuf message RpcMessage
@@ -531,21 +552,17 @@ export enum MessageType {
      */
     CONNECTIVITY_RESPONSE = 1,
     /**
-     * @generated from protobuf enum value: HANDSHAKE = 2;
+     * @generated from protobuf enum value: HANDSHAKE_REQUEST = 2;
      */
-    HANDSHAKE = 2,
+    HANDSHAKE_REQUEST = 2,
     /**
-     * @generated from protobuf enum value: RPC = 3;
+     * @generated from protobuf enum value: HANDSHAKE_RESPONSE = 3;
      */
-    RPC = 3,
+    HANDSHAKE_RESPONSE = 3,
     /**
-     * @generated from protobuf enum value: WEBSOCKET_CONNECTOR = 4;
+     * @generated from protobuf enum value: RPC = 4;
      */
-    WEBSOCKET_CONNECTOR = 4,
-    /**
-     * @generated from protobuf enum value: WEBRTC_CONNECTOR = 5;
-     */
-    WEBRTC_CONNECTOR = 5
+    RPC = 4
 }
 // @generated message type with reflection information, may provide speed optimized methods
 class ClosestPeersRequest$Type extends MessageType$<ClosestPeersRequest> {
@@ -728,9 +745,9 @@ class ConnectivityResponseMessage$Type extends MessageType$<ConnectivityResponse
  */
 export const ConnectivityResponseMessage = new ConnectivityResponseMessage$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class HandshakeMessage$Type extends MessageType$<HandshakeMessage> {
+class HandshakeRequest$Type extends MessageType$<HandshakeRequest> {
     constructor() {
-        super("HandshakeMessage", [
+        super("HandshakeRequest", [
             { no: 1, name: "sourceId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 2, name: "protocolVersion", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor }
@@ -738,9 +755,24 @@ class HandshakeMessage$Type extends MessageType$<HandshakeMessage> {
     }
 }
 /**
- * @generated MessageType for protobuf message HandshakeMessage
+ * @generated MessageType for protobuf message HandshakeRequest
  */
-export const HandshakeMessage = new HandshakeMessage$Type();
+export const HandshakeRequest = new HandshakeRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class HandshakeResponse$Type extends MessageType$<HandshakeResponse> {
+    constructor() {
+        super("HandshakeResponse", [
+            { no: 1, name: "sourceId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 2, name: "protocolVersion", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor },
+            { no: 4, name: "responseError", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message HandshakeResponse
+ */
+export const HandshakeResponse = new HandshakeResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class RpcMessage$Type extends MessageType$<RpcMessage> {
     constructor() {

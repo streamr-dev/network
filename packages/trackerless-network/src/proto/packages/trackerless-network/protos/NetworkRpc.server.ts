@@ -4,8 +4,8 @@
 import { NeighborUpdate } from "./NetworkRpc";
 import { InterleaveNotice } from "./NetworkRpc";
 import { LeaveStreamNotice } from "./NetworkRpc";
-import { HandshakeResponse } from "./NetworkRpc";
-import { HandshakeRequest } from "./NetworkRpc";
+import { StreamHandshakeResponse } from "./NetworkRpc";
+import { StreamHandshakeRequest } from "./NetworkRpc";
 import { Empty } from "../../../google/protobuf/empty";
 import { StreamMessage } from "./NetworkRpc";
 import { ServerCallContext } from "@protobuf-ts/runtime-rpc";
@@ -18,9 +18,9 @@ export interface INetworkRpc<T = ServerCallContext> {
      */
     sendData(request: StreamMessage, context: T): Promise<Empty>;
     /**
-     * @generated from protobuf rpc: handshake(HandshakeRequest) returns (HandshakeResponse);
+     * @generated from protobuf rpc: handshake(StreamHandshakeRequest) returns (StreamHandshakeResponse);
      */
-    handshake(request: HandshakeRequest, context: T): Promise<HandshakeResponse>;
+    handshake(request: StreamHandshakeRequest, context: T): Promise<StreamHandshakeResponse>;
     /**
      * @generated from protobuf rpc: leaveStreamNotice(LeaveStreamNotice) returns (google.protobuf.Empty);
      */

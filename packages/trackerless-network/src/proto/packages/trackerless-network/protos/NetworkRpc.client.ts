@@ -7,8 +7,8 @@ import { NetworkRpc } from "./NetworkRpc";
 import type { NeighborUpdate } from "./NetworkRpc";
 import type { InterleaveNotice } from "./NetworkRpc";
 import type { LeaveStreamNotice } from "./NetworkRpc";
-import type { HandshakeResponse } from "./NetworkRpc";
-import type { HandshakeRequest } from "./NetworkRpc";
+import type { StreamHandshakeResponse } from "./NetworkRpc";
+import type { StreamHandshakeRequest } from "./NetworkRpc";
 import { stackIntercept } from "@protobuf-ts/runtime-rpc";
 import type { Empty } from "../../../google/protobuf/empty";
 import type { StreamMessage } from "./NetworkRpc";
@@ -23,9 +23,9 @@ export interface INetworkRpcClient {
      */
     sendData(input: StreamMessage, options?: RpcOptions): UnaryCall<StreamMessage, Empty>;
     /**
-     * @generated from protobuf rpc: handshake(HandshakeRequest) returns (HandshakeResponse);
+     * @generated from protobuf rpc: handshake(StreamHandshakeRequest) returns (StreamHandshakeResponse);
      */
-    handshake(input: HandshakeRequest, options?: RpcOptions): UnaryCall<HandshakeRequest, HandshakeResponse>;
+    handshake(input: StreamHandshakeRequest, options?: RpcOptions): UnaryCall<StreamHandshakeRequest, StreamHandshakeResponse>;
     /**
      * @generated from protobuf rpc: leaveStreamNotice(LeaveStreamNotice) returns (google.protobuf.Empty);
      */
@@ -56,11 +56,11 @@ export class NetworkRpcClient implements INetworkRpcClient, ServiceInfo {
         return stackIntercept<StreamMessage, Empty>("unary", this._transport, method, opt, input);
     }
     /**
-     * @generated from protobuf rpc: handshake(HandshakeRequest) returns (HandshakeResponse);
+     * @generated from protobuf rpc: handshake(StreamHandshakeRequest) returns (StreamHandshakeResponse);
      */
-    handshake(input: HandshakeRequest, options?: RpcOptions): UnaryCall<HandshakeRequest, HandshakeResponse> {
+    handshake(input: StreamHandshakeRequest, options?: RpcOptions): UnaryCall<StreamHandshakeRequest, StreamHandshakeResponse> {
         const method = this.methods[1], opt = this._transport.mergeOptions(options);
-        return stackIntercept<HandshakeRequest, HandshakeResponse>("unary", this._transport, method, opt, input);
+        return stackIntercept<StreamHandshakeRequest, StreamHandshakeResponse>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: leaveStreamNotice(LeaveStreamNotice) returns (google.protobuf.Empty);

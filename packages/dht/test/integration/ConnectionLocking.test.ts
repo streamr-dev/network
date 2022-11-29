@@ -29,14 +29,14 @@ describe('Connection Locking', () => {
 
         connectionManager1 = new ConnectionManager({
             transportLayer: mockConnectorTransport1,
-            webSocketHost: '127.0.0.1',
-            webSocketPort: 12312
+            //webSocketHost: '127.0.0.1',
+            //webSocketPort: 12312
         })
 
         connectionManager2 = new ConnectionManager({
             transportLayer: mockConnectorTransport2,
-            webSocketHost: '127.0.0.1',
-            webSocketPort: 12313
+            //webSocketHost: '127.0.0.1',
+            //webSocketPort: 12313
         })
         await connectionManager1.start(() => mockPeerDescriptor1)
         await connectionManager2.start(() => mockPeerDescriptor2)
@@ -157,5 +157,5 @@ describe('Connection Locking', () => {
 
         expect(connectionManager1.hasConnection(mockPeerDescriptor2)).toEqual(false)
         expect(connectionManager2.hasConnection(mockPeerDescriptor1)).toEqual(false)
-    })
+    }, 10000)
 })

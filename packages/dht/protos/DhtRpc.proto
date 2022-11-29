@@ -120,10 +120,17 @@ message ConnectivityResponseMessage {
   ConnectivityMethod websocket = 4;
 }
 
-message HandshakeMessage {
+message HandshakeRequest {
   bytes sourceId = 1;
   string protocolVersion = 2;
   PeerDescriptor peerDescriptor = 3;
+}
+
+message HandshakeResponse {
+  bytes sourceId = 1;
+  string protocolVersion = 2;
+  PeerDescriptor peerDescriptor = 3;
+  optional string responseError = 4;
 }
 
 message RpcMessage {
@@ -138,10 +145,9 @@ message RpcMessage {
 enum MessageType {
   CONNECTIVITY_REQUEST = 0;
   CONNECTIVITY_RESPONSE = 1;
-  HANDSHAKE = 2;
-  RPC = 3;
-  WEBSOCKET_CONNECTOR = 4;
-  WEBRTC_CONNECTOR = 5;
+  HANDSHAKE_REQUEST = 2;
+  HANDSHAKE_RESPONSE = 3;
+  RPC = 4;
 }
 
 message Message {

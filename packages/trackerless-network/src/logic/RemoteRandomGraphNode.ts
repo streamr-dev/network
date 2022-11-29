@@ -2,7 +2,7 @@ import { INetworkRpcClient } from '../proto/packages/trackerless-network/protos/
 import { PeerDescriptor, UUID, PeerID, DhtRpcOptions } from '@streamr/dht'
 import {
     StreamMessage,
-    HandshakeRequest,
+    StreamHandshakeRequest,
     InterleaveNotice,
     LeaveStreamNotice,
     NeighborUpdate
@@ -39,10 +39,11 @@ export class RemoteRandomGraphNode {
         neighbors: string[],
         peerView: string[],
         concurrentHandshakeTargetId?: string,
-        interleaving = false
+        interleaving = false,
+        interleavingFrom?: string
     ): Promise<HandshakeResponse> {
 
-        const request: HandshakeRequest = {
+        const request: StreamHandshakeRequest = {
             randomGraphId: this.graphId,
             requestId: new UUID().toString(),
             senderId: PeerID.fromValue(ownPeerDescriptor.kademliaId).toKey(),
@@ -50,6 +51,7 @@ export class RemoteRandomGraphNode {
             peerView,
             concurrentHandshakeTargetId,
             interleaving,
+            interleavingFrom,
             senderDescriptor: ownPeerDescriptor
         }
         const options: DhtRpcOptions = {

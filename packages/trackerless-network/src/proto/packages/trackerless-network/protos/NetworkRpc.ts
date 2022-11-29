@@ -149,9 +149,9 @@ export interface Layer2Message {
     type: Layer2Type;
 }
 /**
- * @generated from protobuf message HandshakeRequest
+ * @generated from protobuf message StreamHandshakeRequest
  */
-export interface HandshakeRequest {
+export interface StreamHandshakeRequest {
     /**
      * @generated from protobuf field: string randomGraphId = 1;
      */
@@ -184,11 +184,15 @@ export interface HandshakeRequest {
      * @generated from protobuf field: bool interleaving = 8;
      */
     interleaving: boolean;
+    /**
+     * @generated from protobuf field: optional string interleavingFrom = 9;
+     */
+    interleavingFrom?: string;
 }
 /**
- * @generated from protobuf message HandshakeResponse
+ * @generated from protobuf message StreamHandshakeResponse
  */
-export interface HandshakeResponse {
+export interface StreamHandshakeResponse {
     /**
      * @generated from protobuf field: bool accepted = 1;
      */
@@ -401,9 +405,9 @@ class Layer2Message$Type extends MessageType<Layer2Message> {
  */
 export const Layer2Message = new Layer2Message$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class HandshakeRequest$Type extends MessageType<HandshakeRequest> {
+class StreamHandshakeRequest$Type extends MessageType<StreamHandshakeRequest> {
     constructor() {
-        super("HandshakeRequest", [
+        super("StreamHandshakeRequest", [
             { no: 1, name: "randomGraphId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "senderId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
@@ -411,18 +415,19 @@ class HandshakeRequest$Type extends MessageType<HandshakeRequest> {
             { no: 5, name: "neighbors", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
             { no: 6, name: "peerView", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
             { no: 7, name: "senderDescriptor", kind: "message", T: () => PeerDescriptor },
-            { no: 8, name: "interleaving", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+            { no: 8, name: "interleaving", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 9, name: "interleavingFrom", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message HandshakeRequest
+ * @generated MessageType for protobuf message StreamHandshakeRequest
  */
-export const HandshakeRequest = new HandshakeRequest$Type();
+export const StreamHandshakeRequest = new StreamHandshakeRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class HandshakeResponse$Type extends MessageType<HandshakeResponse> {
+class StreamHandshakeResponse$Type extends MessageType<StreamHandshakeResponse> {
     constructor() {
-        super("HandshakeResponse", [
+        super("StreamHandshakeResponse", [
             { no: 1, name: "accepted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 2, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "interleaveTarget", kind: "message", T: () => PeerDescriptor }
@@ -430,9 +435,9 @@ class HandshakeResponse$Type extends MessageType<HandshakeResponse> {
     }
 }
 /**
- * @generated MessageType for protobuf message HandshakeResponse
+ * @generated MessageType for protobuf message StreamHandshakeResponse
  */
-export const HandshakeResponse = new HandshakeResponse$Type();
+export const StreamHandshakeResponse = new StreamHandshakeResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class InterleaveNotice$Type extends MessageType<InterleaveNotice> {
     constructor() {
@@ -480,7 +485,7 @@ export const NeighborUpdate = new NeighborUpdate$Type();
  */
 export const NetworkRpc = new ServiceType("NetworkRpc", [
     { name: "sendData", options: {}, I: StreamMessage, O: Empty },
-    { name: "handshake", options: {}, I: HandshakeRequest, O: HandshakeResponse },
+    { name: "handshake", options: {}, I: StreamHandshakeRequest, O: StreamHandshakeResponse },
     { name: "leaveStreamNotice", options: {}, I: LeaveStreamNotice, O: Empty },
     { name: "interleaveNotice", options: {}, I: InterleaveNotice, O: Empty },
     { name: "neighborUpdate", options: {}, I: NeighborUpdate, O: NeighborUpdate }

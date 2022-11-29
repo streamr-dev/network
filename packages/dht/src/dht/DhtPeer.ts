@@ -157,8 +157,8 @@ export class DhtPeer implements KBucketContact {
             targetDescriptor: this.peerDescriptor,
             notification: true
         }
-        this.dhtClient.leaveNotice(request, options).catch((_e) => {
-            logger.trace('Failed to send leaveNotice')
+        this.dhtClient.leaveNotice(request, options).catch((e) => {
+            logger.trace('Failed to send leaveNotice' + e)
         })
     }
 

@@ -4,7 +4,7 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { NetworkRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { PeerList } from '../../src/logic/PeerList'
 import { mockConnectionLocker } from '../utils'
-import { HandshakeRequest, HandshakeResponse } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { StreamHandshakeRequest, StreamHandshakeResponse } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
 
@@ -37,24 +37,24 @@ describe('Handshakes', () => {
 
     const randomGraphId = 'handshaker'
 
-    const acceptHandshake = async (request: HandshakeRequest, _context: ServerCallContext): Promise<HandshakeResponse> => {
-        const response: HandshakeResponse = {
+    const acceptHandshake = async (request: StreamHandshakeRequest, _context: ServerCallContext): Promise<StreamHandshakeResponse> => {
+        const response: StreamHandshakeResponse = {
             requestId: request.requestId,
             accepted: true
         }
         return response
     }
 
-    const rejectHandshake = async (request: HandshakeRequest, _context: ServerCallContext): Promise<HandshakeResponse> => {
-        const response: HandshakeResponse = {
+    const rejectHandshake = async (request: StreamHandshakeRequest, _context: ServerCallContext): Promise<StreamHandshakeResponse> => {
+        const response: StreamHandshakeResponse = {
             requestId: request.requestId,
             accepted: false
         }
         return response
     }
 
-    const interleavingHandshake = async (request: HandshakeRequest, _context: ServerCallContext): Promise<HandshakeResponse> => {
-        const response: HandshakeResponse = {
+    const interleavingHandshake = async (request: StreamHandshakeRequest, _context: ServerCallContext): Promise<StreamHandshakeResponse> => {
+        const response: StreamHandshakeResponse = {
             requestId: request.requestId,
             accepted: true,
             interleaveTarget: peerDescriptor3
@@ -97,7 +97,7 @@ describe('Handshakes', () => {
     })
 
     it('Two peers can handshake', async () => {
-        rpcCommunicator1.registerRpcMethod(HandshakeRequest, HandshakeResponse, 'handshake', acceptHandshake)
+        rpcCommunicator1.registerRpcMethod(StreamHandshakeRequest, StreamHandshakeResponse, 'handshake', acceptHandshake)
         const res = await handshaker.handshakeWithTarget(
             new RemoteRandomGraphNode(
                 peerDescriptor1,
@@ -110,7 +110,7 @@ describe('Handshakes', () => {
     })
 
     it('Handshake accepted', async () => {
-        rpcCommunicator1.registerRpcMethod(HandshakeRequest, HandshakeResponse, 'handshake', acceptHandshake)
+        rpcCommunicator1.registerRpcMethod(StreamHandshakeRequest, StreamHandshakeResponse, 'handshake', acceptHandshake)
         const res = await handshaker.handshakeWithTarget(
             new RemoteRandomGraphNode(
                 peerDescriptor1,
@@ -123,7 +123,7 @@ describe('Handshakes', () => {
     })
 
     it('Handshake rejected', async () => {
-        rpcCommunicator1.registerRpcMethod(HandshakeRequest, HandshakeResponse, 'handshake', rejectHandshake)
+        rpcCommunicator1.registerRpcMethod(StreamHandshakeRequest, StreamHandshakeResponse, 'handshake', rejectHandshake)
         const res = await handshaker.handshakeWithTarget(
             new RemoteRandomGraphNode(
                 peerDescriptor1,
@@ -136,8 +136,8 @@ describe('Handshakes', () => {
     })
 
     it('Handshake with Interleaving', async () => {
-        rpcCommunicator1.registerRpcMethod(HandshakeRequest, HandshakeResponse, 'handshake', interleavingHandshake)
-        rpcCommunicator3.registerRpcMethod(HandshakeRequest, HandshakeResponse, 'handshake', acceptHandshake)
+        rpcCommunicator1.registerRpcMethod(StreamHandshakeRequest, StreamHandshakeResponse, 'handshake', interleavingHandshake)
+        rpcCommunicator3.registerRpcMethod(StreamHandshakeRequest, StreamHandshakeResponse, 'handshake', acceptHandshake)
 
         const res = await handshaker.handshakeWithTarget(
             new RemoteRandomGraphNode(
