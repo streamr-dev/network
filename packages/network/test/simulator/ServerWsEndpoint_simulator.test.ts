@@ -1,10 +1,11 @@
 // import WebSocket from 'ws'
 
 import { PeerInfo } from '../../src/connection/PeerInfo'
-import { ServerWsEndpoint, startHttpServer } from '../../src/connection/ws/ServerWsEndpoint'
+import { ServerWsEndpoint } from '../../src/connection/ws/ServerWsEndpoint'
 import NodeClientWsEndpoint from "../../src/connection/ws/NodeClientWsEndpoint"
 import { runAndWaitForEvents } from '@streamr/test-utils'
 import { DisconnectionCode, DisconnectionReason, Event } from '../../src/connection/ws/AbstractWsEndpoint'
+import { createTestNodeClientWsEndpoint, startServerWsEndpoint } from '../utils'
 
 const wssPort1 = 7777
 
@@ -13,33 +14,15 @@ describe('ServerWsEndpoint', () => {
     let clientWsEndpoint: NodeClientWsEndpoint | undefined = undefined
 
     test('starts and stops', async () => {
-        const listen = {
-            hostname: '127.0.0.1',
-            port: wssPort1
-        }
-        const httpServer = await startHttpServer(
-            listen,
-            undefined,
-            undefined
-        )
-        serverWsEndpoint = new ServerWsEndpoint(listen, false, httpServer, PeerInfo.newTracker('tracker'))
+        serverWsEndpoint = await startServerWsEndpoint('127.0.0.1', wssPort1, PeerInfo.newTracker('tracker'))
         await serverWsEndpoint.stop()
     })
 
     test('receives unencrypted connections', async () => {
-        const listen = {
-            hostname: '127.0.0.1',
-            port: wssPort1
-        }
-        const httpServer = await startHttpServer(
-            listen,
-            undefined,
-            undefined
-        )
         const trackerPeerInfo = PeerInfo.newTracker('tracker')
-        serverWsEndpoint = new ServerWsEndpoint(listen, false, httpServer, trackerPeerInfo )
+        serverWsEndpoint = await startServerWsEndpoint('127.0.0.1', wssPort1, trackerPeerInfo)
         
-        clientWsEndpoint = new NodeClientWsEndpoint(PeerInfo.newNode('node1'))
+        clientWsEndpoint = createTestNodeClientWsEndpoint(PeerInfo.newNode('node1'))
         
         const result = await clientWsEndpoint.connect(serverWsEndpoint.getUrl() + '/ws', trackerPeerInfo)
         
@@ -51,19 +34,10 @@ describe('ServerWsEndpoint', () => {
     })
     
     test('can handle unexpected closing of connections', async () => {
-        const listen = {
-            hostname: '127.0.0.1',
-            port: wssPort1
-        }
-        const httpServer = await startHttpServer(
-            listen,
-            undefined,
-            undefined
-        )
         const trackerPeerInfo = PeerInfo.newTracker('tracker')
-        serverWsEndpoint = new ServerWsEndpoint(listen, false, httpServer, trackerPeerInfo )
+        serverWsEndpoint = await startServerWsEndpoint('127.0.0.1', wssPort1, trackerPeerInfo)
         
-        clientWsEndpoint = new NodeClientWsEndpoint(PeerInfo.newNode('node1'))
+        clientWsEndpoint = createTestNodeClientWsEndpoint(PeerInfo.newNode('node1'))
         
         let closedOne = false
         const originalEmitOne = clientWsEndpoint.emit.bind(clientWsEndpoint)

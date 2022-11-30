@@ -1,8 +1,8 @@
 import { NetworkNode } from '../../src/logic/NetworkNode'
 import { MessageID, StreamMessage, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
-import { startTracker, Tracker } from '@streamr/network-tracker'
-import { createNetworkNode } from '../../src/createNetworkNode'
+import { Tracker } from '@streamr/network-tracker'
 import { toEthereumAddress } from '@streamr/utils'
+import { createTestNetworkNode, startTestTracker } from '../utils'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
@@ -18,20 +18,17 @@ describe('message buffering of Node', () => {
     let destinationNode: NetworkNode
 
     beforeAll(async () => {
-        tracker = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: 30320
-            }
+        tracker = await startTestTracker({
+            port: 30320
         })
         const trackerInfo = tracker.getConfigRecord()
 
-        sourceNode = createNetworkNode({
+        sourceNode = createTestNetworkNode({
             id: 'source-node',
             trackers: [trackerInfo],
             webrtcDisallowPrivateAddresses: false
         })
-        destinationNode = createNetworkNode({
+        destinationNode = createTestNetworkNode({
             id: 'destination-node',
             trackers: [trackerInfo],
             webrtcDisallowPrivateAddresses: false

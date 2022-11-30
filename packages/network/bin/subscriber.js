@@ -4,7 +4,7 @@ const program = require('commander')
 
 const { Logger } = require('../dist/src/helpers/Logger')
 const { version: CURRENT_VERSION } = require('../package.json')
-const { createNetworkNode } = require('../dist/src/createNetworkNode')
+const { createNetworkNode, TEST_CONFIG } = require('../dist/src/createNetworkNode')
 const { MetricsContext } = require('../dist/src/helpers/MetricsContext')
 const { Event: NodeEvent } = require('../dist/src/logic/Node')
 
@@ -30,6 +30,7 @@ const trackerInfos = program.opts().trackers.map((ws, i) => {
 })
 
 const subscriber = createNetworkNode({
+    ...TEST_CONFIG,
     id,
     trackers: trackerInfos,
     metricsContext,

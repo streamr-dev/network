@@ -13,7 +13,7 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
 
     constructor(
         peerInfo: PeerInfo,
-        pingInterval?: number
+        pingInterval: number
     ) {
         super(peerInfo, pingInterval)
         Simulator.instance().addClientWsEndpoint(peerInfo, this.ownAddress, this)

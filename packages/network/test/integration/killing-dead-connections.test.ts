@@ -4,7 +4,7 @@ import { ServerWsEndpoint } from '../../src/connection/ws/ServerWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { Event } from '../../src/connection/ws/AbstractWsEndpoint'
-import { startServerWsEndpoint } from '../utils'
+import { createTestNodeClientWsEndpoint, startServerWsEndpoint } from '../utils'
 
 const STATE_OPEN = 1
 
@@ -13,7 +13,7 @@ describe('check and kill dead connections', () => {
     let serverEndpoint: ServerWsEndpoint
     const trackerPeerInfo =  PeerInfo.newTracker('serverEndpoint')
     beforeEach(async () => {
-        clientEndpoint = new NodeClientWsEndpoint(PeerInfo.newNode('clientEndpoint'))
+        clientEndpoint = createTestNodeClientWsEndpoint(PeerInfo.newNode('clientEndpoint'))
         serverEndpoint = await startServerWsEndpoint('127.0.0.1', 43972, trackerPeerInfo)
         await clientEndpoint.connect('ws://127.0.0.1:43972', trackerPeerInfo)
     })

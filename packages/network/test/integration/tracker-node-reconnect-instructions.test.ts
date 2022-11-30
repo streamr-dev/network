@@ -1,9 +1,9 @@
-import { Tracker, startTracker, TrackerServerEvent } from '@streamr/network-tracker'
+import { Tracker, TrackerServerEvent } from '@streamr/network-tracker'
 import { NetworkNode } from '../../src/logic/NetworkNode'
 import { runAndWaitForEvents } from '@streamr/test-utils'
 import { InstructionMessage, toStreamID, toStreamPartID } from '@streamr/protocol'
-import { createNetworkNode } from '../../src/createNetworkNode'
 import { Event as NodeEvent } from '../../src/logic/Node'
+import { createTestNetworkNode, startTestTracker } from '../utils'
 
 /**
  * This test verifies that tracker can send instructions to node and node will connect and disconnect based on the instructions
@@ -16,21 +16,18 @@ describe('Check tracker instructions to node', () => {
     const streamPartId = toStreamPartID(streamId, 0)
 
     beforeAll(async () => {
-        tracker = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: 30950
-            }
+        tracker = await startTestTracker({
+            port: 30950
         })
         const trackerInfo = tracker.getConfigRecord()
 
-        nodeOne = createNetworkNode({
+        nodeOne = createTestNetworkNode({
             id: 'node-1',
             trackers: [trackerInfo],
             disconnectionWaitTime: 200,
             webrtcDisallowPrivateAddresses: false
         })
-        nodeTwo = createNetworkNode({
+        nodeTwo = createTestNetworkNode({
             id: 'node-2',
             trackers: [trackerInfo],
             disconnectionWaitTime: 200,

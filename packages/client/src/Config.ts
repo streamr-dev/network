@@ -67,15 +67,15 @@ export interface StrictStreamrClientConfig {
         id?: string
         acceptProxyConnections: boolean
         trackers: TrackerRegistryRecord[] | TrackerRegistryContract
-        trackerPingInterval?: number
-        trackerConnectionMaintenanceInterval?: number
-        webrtcDisallowPrivateAddresses?: boolean
-        newWebrtcConnectionTimeout?: number
-        webrtcDatachannelBufferThresholdLow?: number
-        webrtcDatachannelBufferThresholdHigh?: number
+        trackerPingInterval: number
+        trackerConnectionMaintenanceInterval: number
+        webrtcDisallowPrivateAddresses: boolean
+        newWebrtcConnectionTimeout: number
+        webrtcDatachannelBufferThresholdLow: number
+        webrtcDatachannelBufferThresholdHigh: number
         disconnectionWaitTime: number
-        peerPingInterval?: number
-        rttUpdateTimeout?: number
+        peerPingInterval: number
+        rttUpdateTimeout: number
         iceServers: ReadonlyArray<IceServer>
         location?: Location
     }
@@ -151,10 +151,19 @@ export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id' | 'aut
     gapFillTimeout: 5000,
     
     network: {
+        acceptProxyConnections: false,
         trackers: {
             contractAddress: '0xab9BEb0e8B106078c953CcAB4D6bF9142BeF854d'
         },
-        acceptProxyConnections: false,
+        trackerPingInterval: 60 * 1000,
+        trackerConnectionMaintenanceInterval: 5 * 1000,
+        webrtcDisallowPrivateAddresses: true,
+        newWebrtcConnectionTimeout: 15 * 1000,
+        webrtcDatachannelBufferThresholdLow: 2 ** 15,
+        webrtcDatachannelBufferThresholdHigh: 2 ** 17,
+        disconnectionWaitTime: 200,
+        peerPingInterval: 30 * 1000,
+        rttUpdateTimeout: 15 * 1000,
         iceServers: [
             {
                 url: 'stun:stun.streamr.network',
@@ -166,8 +175,7 @@ export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id' | 'aut
                 username: 'BrubeckTurn1',
                 password: 'MIlbgtMw4nhpmbgqRrht1Q=='
             }
-        ],
-        disconnectionWaitTime: 200
+        ]
     },
 
     // For ethers.js provider params, see https://docs.ethers.io/ethers.js/v5-beta/api-providers.html#provider
