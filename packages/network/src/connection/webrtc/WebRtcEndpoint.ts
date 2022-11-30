@@ -76,7 +76,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         pingInterval: number,
         webrtcDatachannelBufferThresholdLow: number,
         webrtcDatachannelBufferThresholdHigh: number,
-        webrtcDisallowPrivateAddresses = false,
+        webrtcDisallowPrivateAddresses: boolean,
         maxMessageSize = 1048576,
     ) {
         super()
