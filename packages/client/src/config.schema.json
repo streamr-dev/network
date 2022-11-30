@@ -288,6 +288,10 @@
                 "maxConcurrentCalls": {
                     "type": "number",
                     "default": 10
+                },
+                "enableExperimentalGsn": {
+                    "type": "boolean",
+                    "default": false
                 }
             },
             "default": {}
