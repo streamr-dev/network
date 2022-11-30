@@ -31,14 +31,12 @@ describe('check tracker, nodes and statuses from nodes', () => {
             ...TEST_CONFIG,
             id: 'subscriberOne',
             trackers: [trackerInfo],
-            webrtcDisallowPrivateAddresses: false,
             metricsContext: new MetricsContext()
         })
         subscriberTwo = createNetworkNode({
             ...TEST_CONFIG,
             id: 'subscriberTwo',
             trackers: [trackerInfo],
-            webrtcDisallowPrivateAddresses: false,
             metricsContext: new MetricsContext()
         })
 

@@ -59,7 +59,6 @@ describe('tracker endpoint', () => {
                 country: 'CH',
                 city: 'Zug'
             },
-            webrtcDisallowPrivateAddresses: false,
             metricsContext: new MetricsContext()
         })
         nodeTwo = createNetworkNode({
@@ -67,7 +66,6 @@ describe('tracker endpoint', () => {
             id: 'node-2',
             trackers: [trackerInfo],
             location: undefined,
-            webrtcDisallowPrivateAddresses: false,
             metricsContext: new MetricsContext()
         })
         nodeTwo.setExtraMetadata({
