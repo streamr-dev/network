@@ -121,7 +121,7 @@ describe('BrubeckMinerPlugin', () => {
             {
                 natType: null,
                 brokerVersion: CURRENT_VERSION,
-                nodeJs: process.version
+                nodeJsVersion: process.version
             },
             {}, // broker metadata is empty
         ])
