@@ -18,8 +18,8 @@ const ENCRYPTED_MESSSAGE_FORMAT = /^[0-9A-Fa-f]+$/
 async function startNetworkNodeAndListenForAtLeastOneMessage(streamId: StreamID): Promise<unknown[]> {
     const config: NetworkNodeOptions = {
         ...TEST_CONFIG,
-        ...CONFIG_TEST.network as Partial<NetworkNodeOptions> & { trackers: TrackerRegistryRecord[] },
         id: 'networkNode',
+        trackers: CONFIG_TEST.network!.trackers as TrackerRegistryRecord[],
         metricsContext: new MetricsContext()
     }
     const networkNode = createNetworkNode(config)
