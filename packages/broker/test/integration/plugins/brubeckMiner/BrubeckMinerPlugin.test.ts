@@ -120,7 +120,8 @@ describe('BrubeckMinerPlugin', () => {
         expect(Object.values(tracker.getAllExtraMetadatas())).toEqual([
             {
                 natType: null,
-                brokerVersion: CURRENT_VERSION
+                brokerVersion: CURRENT_VERSION,
+                nodeJs: process.version
             },
             {}, // broker metadata is empty
         ])

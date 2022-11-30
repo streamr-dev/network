@@ -60,6 +60,7 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
         node.setExtraMetadata({
             natType: this.natType || null,
             brokerVersion: CURRENT_VERSION,
+            nodeJs: process.version
         })
 
         await this.subscribe()
