@@ -46,6 +46,7 @@
     "@babel/preset-env": "^7.16.4",
     "@babel/preset-typescript": "^7.16.0",
     "@ethersproject/wordlists": "^5.5.0",
+    "@opengsn/provider": "^2.2.6",
     "@streamr/test-utils": "7.1.0",
     "@types/heap": "^0.2.28",
     "@types/lodash": "^4.14.175",
