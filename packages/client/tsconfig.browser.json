@@ -20,9 +20,6 @@
             "crypto": ["crypto-browserify"],
             "buffer": ["buffer/"],
             "node-fetch": ["./src/shim/node-fetch.ts"],
-            "@streamr/protocol/dist/contracts/NodeRegistry.json": [
-                "@streamr/protocol/dist/contracts/NodeRegistry.json"
-            ],
             "@streamr/protocol/*": ["@streamr/protocol/src/*"],
             "@streamr/protocol": ["@streamr/protocol/src/index.ts"],
             "@streamr/network-node": ["@streamr/network-node/src/browser.ts"],
@@ -45,7 +42,6 @@
         "src/**/*",
         "src/**/*.json",
         "vendor/**/*",
-        "contracts/**/*.json",
         "src/config.schema.json"
     ],
     "exclude": ["src/exports-esm.mjs"],
