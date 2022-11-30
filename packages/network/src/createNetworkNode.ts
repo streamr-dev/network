@@ -34,7 +34,7 @@ export const TEST_CONFIG: Omit<NetworkNodeOptions, 'id' | 'trackers' | 'metricsC
     iceServers: [],
     rttUpdateTimeout: 15 * 1000,
     trackerConnectionMaintenanceInterval: 5 * 1000,
-    webrtcDisallowPrivateAddresses: true,
+    webrtcDisallowPrivateAddresses: false,
     acceptProxyConnections: false,
     trackerPingInterval: 60 * 1000
 }

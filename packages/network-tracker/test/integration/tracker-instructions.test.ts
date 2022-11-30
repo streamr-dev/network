@@ -36,7 +36,6 @@ describe('check tracker, nodes and statuses from nodes', () => {
             id: 'node1',
             trackers: [trackerInfo],
             disconnectionWaitTime: 200,
-            webrtcDisallowPrivateAddresses: false,
             metricsContext: new MetricsContext()
         })
         node2 = createNetworkNode({
@@ -44,7 +43,6 @@ describe('check tracker, nodes and statuses from nodes', () => {
             id: 'node2',
             trackers: [trackerInfo],
             disconnectionWaitTime: 200,
-            webrtcDisallowPrivateAddresses: false,
             metricsContext: new MetricsContext()
         })
 
