@@ -111,8 +111,8 @@ export interface StreamrClientConfig {
     } | boolean
 
     cache?: {
-        maxSize: number
-        maxAge: number
+        maxSize?: number
+        maxAge?: number
     }
 
     /** @internal */
