@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <script src="./dist/streamr-client.web.min.js"></script>
+    <script>
+        setTimeout(() => {
+            ;(async () => {
+                const client = new StreamrClient({
+                    auth: {
+                        ethereum: window.ethereum
+                    },
+                    contracts: {
+                        enableExperimentalGsn: true
+                    }
+                })
+                try {
+                    console.info("client address: %s", await client.getAddress())
+                    const stream = await client.createStream({
+                        id: '/foobar/' + Math.floor(Date.now() / 1000),
+                        partitions: 11
+                    })
+                    console.info("stream created (thru GSN): %s", stream.id)
+                } finally {
+                    await client.destroy()
+                }
+            })()
+        }, 3000)
+
+    </script>
+</head>
+<body>
+</body>
+</html>
