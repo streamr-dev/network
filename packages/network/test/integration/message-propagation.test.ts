@@ -1,4 +1,4 @@
-import { Tracker, startTracker } from '@streamr/network-tracker'
+import { Tracker } from '@streamr/network-tracker'
 import { NetworkNode } from '../../src/logic/NetworkNode'
 import {
     MessageID,
@@ -10,7 +10,7 @@ import {
 import { toEthereumAddress, waitForEvent, waitForCondition } from '@streamr/utils'
 
 import { Event as NodeEvent } from '../../src/logic/Node'
-import { createNetworkNode } from '../../src/createNetworkNode'
+import { createTestNetworkNode, startTestTracker } from '../utils'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
@@ -22,33 +22,30 @@ describe('message propagation in network', () => {
     let n4: NetworkNode
 
     beforeAll(async () => {
-        tracker = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: 33300
-            }
+        tracker = await startTestTracker({
+            port: 33300
         })
         const trackerInfo = tracker.getConfigRecord()
 
-        n1 = createNetworkNode({
+        n1 = createTestNetworkNode({
             id: 'node-1',
             trackers: [trackerInfo],
             disconnectionWaitTime: 200,
             webrtcDisallowPrivateAddresses: false
         })
-        n2 = createNetworkNode({
+        n2 = createTestNetworkNode({
             id: 'node-2',
             trackers: [trackerInfo],
             disconnectionWaitTime: 200,
             webrtcDisallowPrivateAddresses: false
         })
-        n3 = createNetworkNode({
+        n3 = createTestNetworkNode({
             id: 'node-3',
             trackers: [trackerInfo],
             disconnectionWaitTime: 200,
             webrtcDisallowPrivateAddresses: false
         })
-        n4 = createNetworkNode({
+        n4 = createTestNetworkNode({
             id: 'node-4',
             trackers: [trackerInfo],
             disconnectionWaitTime: 200,

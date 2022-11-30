@@ -1,6 +1,6 @@
 import { waitForCondition, MetricsContext } from '@streamr/utils'
 import { NodeToTracker } from '../../src/protocol/NodeToTracker'
-import { Tracker, TrackerEvent, startTracker } from '@streamr/network-tracker'
+import { Tracker, TrackerEvent } from '@streamr/network-tracker'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { runAndWaitForEvents } from '@streamr/test-utils'
 import { wait, waitForEvent } from '@streamr/utils'
@@ -9,8 +9,8 @@ import { RtcSignaller } from '../../src/logic/RtcSignaller'
 import { NegotiatedProtocolVersions } from '../../src/connection/NegotiatedProtocolVersions'
 import { WebRtcEndpoint } from '../../src/connection/webrtc/WebRtcEndpoint'
 import { webRtcConnectionFactory } from '../../src/connection/webrtc/NodeWebRtcConnection'
-import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { GOOGLE_STUN_SERVER } from '../../src/constants'
+import { createTestNodeClientWsEndpoint, createTestWebRtcEndpoint, startTestTracker } from '../utils'
 
 describe('WebRtcEndpoint', () => {
     let tracker: Tracker
@@ -24,15 +24,12 @@ describe('WebRtcEndpoint', () => {
     ])('when configured with %s', (factory) => {
 
         beforeEach(async () => {
-            tracker = await startTracker({
-                listen: {
-                    hostname: '127.0.0.1',
-                    port: 28800
-                }
+            tracker = await startTestTracker({
+                port: 28800
             })
             const trackerPeerInfo = PeerInfo.newTracker(tracker.getTrackerId())
-            const ep1 = await new NodeClientWsEndpoint(PeerInfo.newNode('node-1'))
-            const ep2 = await new NodeClientWsEndpoint(PeerInfo.newNode('node-2'))
+            const ep1 = createTestNodeClientWsEndpoint(PeerInfo.newNode('node-1'))
+            const ep2 = createTestNodeClientWsEndpoint(PeerInfo.newNode('node-2'))
             nodeToTracker1 = new NodeToTracker(ep1)
             nodeToTracker2 = new NodeToTracker(ep2)
             await runAndWaitForEvents(
@@ -46,7 +43,7 @@ describe('WebRtcEndpoint', () => {
 
             const peerInfo1 = PeerInfo.newNode('node-1')
             const peerInfo2 = PeerInfo.newNode('node-2')
-            endpoint1 = new WebRtcEndpoint(
+            endpoint1 = createTestWebRtcEndpoint(
                 peerInfo1,
                 [GOOGLE_STUN_SERVER],
                 new RtcSignaller(peerInfo1, nodeToTracker1),
@@ -54,7 +51,7 @@ describe('WebRtcEndpoint', () => {
                 new NegotiatedProtocolVersions(peerInfo1),
                 factory
             )
-            endpoint2 = new WebRtcEndpoint(
+            endpoint2 = createTestWebRtcEndpoint(
                 peerInfo2,
                 [GOOGLE_STUN_SERVER],
                 new RtcSignaller(peerInfo2, nodeToTracker2),
@@ -449,9 +446,9 @@ describe('WebRtcEndpoint', () => {
     describe('disallow private addresses', () => {
         const createEndpoint = (webrtcDisallowPrivateAddresses: boolean) => {
             const peerInfo = PeerInfo.newNode('node')
-            const ep = new NodeClientWsEndpoint(PeerInfo.newNode('node'))
+            const ep = createTestNodeClientWsEndpoint(PeerInfo.newNode('node'))
             const nodeToTracker = new NodeToTracker(ep)
-            const endpoint = new WebRtcEndpoint(
+            const endpoint = createTestWebRtcEndpoint(
                 peerInfo,
                 [],
                 new RtcSignaller(peerInfo, nodeToTracker),

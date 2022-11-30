@@ -116,32 +116,40 @@
                     }
                 },
                 "trackerPingInterval": {
-                    "type": "number"
+                    "type": "number",
+                    "default": 60000
                 },
                 "trackerConnectionMaintenanceInterval": {
-                    "type": "number"
+                    "type": "number",
+                    "default": 5000
                 },
                 "webrtcDisallowPrivateAddresses": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "default": true
                 },
                 "newWebrtcConnectionTimeout": {
-                    "type": "number"
+                    "type": "number",
+                    "default": 15000
                 },
                 "webrtcDatachannelBufferThresholdLow": {
-                    "type": "number"
+                    "type": "number",
+                    "default": 32768
                 },
                 "webrtcDatachannelBufferThresholdHigh": {
-                    "type": "number"
+                    "type": "number",
+                    "default": 131072
                 },
                 "disconnectionWaitTime": {
                     "type": "number",
                     "default": 200
                 },
                 "peerPingInterval": {
-                    "type": "number"
+                    "type": "number",
+                    "default": 30000
                 },
                 "rttUpdateTimeout": {
-                    "type": "number"
+                    "type": "number",
+                    "default": 15000
                 },
                 "iceServers": {
                     "type": "array",
