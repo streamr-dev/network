@@ -12,12 +12,6 @@
   "main": "dist/src/exports.js",
   "browser": "dist/streamr-network-node.web.js",
   "types": "dist/src/exports.d.ts",
-  "bin": {
-    "network": "bin/network.js",
-    "publisher": "bin/publisher.js",
-    "subscriber": "bin/subscriber.js",
-    "tracker": "bin/tracker.js"
-  },
   "scripts": {
     "build": "tsc -b tsconfig.node.json",
     "build-browser": "webpack --mode=development --progress",
