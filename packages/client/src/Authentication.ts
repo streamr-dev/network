@@ -1,17 +1,15 @@
 import { Wallet } from '@ethersproject/wallet'
-import { ExternalProvider, Provider, Web3Provider } from '@ethersproject/providers'
+import { Web3Provider } from '@ethersproject/providers'
 import type { Signer } from '@ethersproject/abstract-signer'
 import { computeAddress } from '@ethersproject/transactions'
-import { getStreamRegistryChainProvider } from './Ethereum'
+import { getStreamRegistryChainProvider, initGSNBackedSigner } from './Ethereum'
 import { PrivateKeyAuthConfig, ProviderAuthConfig } from './Config'
 import { pLimitFn } from './utils/promises'
 import pMemoize from 'p-memoize'
 import { EthereumAddress, toEthereumAddress, wait } from '@streamr/utils'
 import { sign } from './utils/signingUtils'
 import { StrictStreamrClientConfig } from './Config'
-import { RelayProvider } from '@opengsn/provider'
 import HttpProvider from 'web3-providers-http'
-import { ethers } from 'ethers'
 
 export const AuthenticationInjectionToken = Symbol('Authentication')
 
@@ -20,31 +18,6 @@ export interface Authentication {
     getAddress: () => Promise<EthereumAddress>
     createMessageSignature: (payload: string) => Promise<string>
     getStreamRegistryChainSigner: () => Promise<Signer>
-}
-
-async function initGSNBackedSigner(
-    baseProvider: Provider | ExternalProvider,
-    address: string,
-    privateKey: string | undefined
-): Promise<Signer> {
-    const gsnProvider = await RelayProvider.newProvider({
-        // @ts-expect-error TODO: type issue
-        provider: baseProvider,
-        config: {
-            paymasterAddress: '0x43E69adABC664617EB9C5E19413a335e9cd4A243',
-            preferredRelays: ['https://gsn.streamr.network/gsn1'],
-            relayLookupWindowBlocks: 9000,
-            relayRegistrationLookupBlocks: 9000,
-            pastEventsQueryMaxPageSize: 9000,
-            auditorsCount: 0,
-            loggerConfiguration: { logLevel: 'debug' },
-        }
-    }).init()
-    if (privateKey !== undefined) {
-        gsnProvider.addAccount(privateKey)
-    }
-    const provider = new ethers.providers.Web3Provider(gsnProvider as any) // TODO: why is casting needed here?
-    return provider.getSigner(address)
 }
 
 export const createPrivateKeyAuthentication = (key: string, config: Pick<StrictStreamrClientConfig, 'contracts'>): Authentication => {

@@ -2,12 +2,14 @@
  * Config and utilities for interating with identity & Ethereum chain.
  */
 import { Wallet } from '@ethersproject/wallet'
-import { JsonRpcProvider } from '@ethersproject/providers'
+import { ExternalProvider, JsonRpcProvider, Web3Provider } from '@ethersproject/providers'
 import type { Provider } from '@ethersproject/providers'
 import type { ConnectionInfo } from '@ethersproject/web'
 import type { Overrides } from '@ethersproject/contracts'
 import type { BigNumber } from '@ethersproject/bignumber'
 import { ChainConnectionInfo, StrictStreamrClientConfig } from './Config'
+import { Signer } from '@ethersproject/abstract-signer'
+import { RelayProvider } from '@opengsn/provider'
 
 export const generateEthereumAccount = (): { address: string, privateKey: string } => {
     const wallet = Wallet.createRandom()
@@ -15,6 +17,31 @@ export const generateEthereumAccount = (): { address: string, privateKey: string
         address: wallet.address,
         privateKey: wallet.privateKey,
     }
+}
+
+export async function initGSNBackedSigner(
+    baseProvider: Provider | ExternalProvider,
+    address: string,
+    privateKey: string | undefined
+): Promise<Signer> {
+    const gsnProvider = await RelayProvider.newProvider({
+        // @ts-expect-error TODO: type issue
+        provider: baseProvider,
+        config: {
+            paymasterAddress: '0x43E69adABC664617EB9C5E19413a335e9cd4A243',
+            preferredRelays: ['https://gsn.streamr.network/gsn1'],
+            relayLookupWindowBlocks: 9000,
+            relayRegistrationLookupBlocks: 9000,
+            pastEventsQueryMaxPageSize: 9000,
+            auditorsCount: 0,
+            loggerConfiguration: { logLevel: 'debug' },
+        }
+    }).init()
+    if (privateKey !== undefined) {
+        gsnProvider.addAccount(privateKey)
+    }
+    const provider = new Web3Provider(gsnProvider as any) // TODO: why is casting needed here?
+    return provider.getSigner(address)
 }
 
 // TODO maybe we should use all providers?
