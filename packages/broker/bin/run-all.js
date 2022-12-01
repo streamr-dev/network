@@ -101,7 +101,7 @@ const forkProcess = (processName, filePath, args, color) => {
 }
 
 // TODO better way to access the tracker.js?
-const trackerBin = '../../network-tracker/bin/tracker.js'
+const trackerBin = '../../../network-tracker/dist/bin/tracker.js'
 /* eslint-disable max-len */
 forkProcess('T1', trackerBin, ['0xe5abc5ee43b8830e7b0f98d03efff5d6cae574d52a43204528eab7b52cd6408d', 'T1', '--port=30301'], chalk.hex('#66CC66')) // 0xb9e7cEBF7b03AE26458E32a059488386b05798e8
 forkProcess('T2', trackerBin, ['0x96de9d06f9e409119a2cd9b57dfc326f66d953a0418f3937b92c8930f930893c', 'T2', '--port=30302'], chalk.hex('#00FF66')) // 0x0540A3e144cdD81F402e7772C76a5808B71d2d30

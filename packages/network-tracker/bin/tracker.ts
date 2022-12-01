@@ -1,21 +1,23 @@
 #!/usr/bin/env node
-/* eslint-disable @typescript-eslint/no-require-imports */
-const program = require('commander')
-const { startTracker } = require('../dist/src/startTracker')
-const { MetricsContext, Logger } = require('@streamr/utils')
-const ethers = require('ethers')
-const { SlackBot } = require('@streamr/slackbot')
-
-const CURRENT_VERSION = require('../package.json').version
+import { program } from 'commander'
+import pkg from '../package.json'
+import { startTracker } from '../src/startTracker'
+import { MetricsContext, Logger } from '@streamr/utils'
+import ethers from 'ethers'
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore no declaration file for module
+import { SlackBot } from '@streamr/slackbot'
 
 const logger = new Logger(module)
 
 program
-    .version(CURRENT_VERSION)
+    .version(pkg.version)
     .usage('<ethereumPrivateKey>')
+    // @ts-expect-error TODO fix
     .option('--port <port>', 'port', 30300)
     .option('--ip <ip>', 'ip', '0.0.0.0')
     .option('--unixSocket <unixSocket>', 'unixSocket', undefined)
+    // @ts-expect-error TODO fix
     .option('--maxNeighborsPerNode <maxNeighborsPerNode>', 'maxNeighborsPerNode', 4)
     .option('--attachHttpEndpoints', 'attach http endpoints')
     .option('--privateKeyFileName <privateKeyFileName>', 'private key filename', undefined)
@@ -40,13 +42,13 @@ const listen = program.opts().unixSocket ? program.opts().unixSocket : {
 }
 
 const { slackBotToken, slackChannel } = program.opts()
-let slackbot
+let slackbot: SlackBot
 const slackAlertHeader = `Tracker ${id}`
 if (slackBotToken && slackChannel) {
     slackbot = new SlackBot(slackChannel, slackBotToken)
 }
 
-const logError = (err, errorType) => {
+const logError = (err: any, errorType: string) => {
     logger.getFinalLogger().error(err, errorType)
     if (slackbot !== undefined) {
         const message = `${errorType}: ${err}`
@@ -81,7 +83,7 @@ async function main() {
             trackerPingInterval: 60 * 1000
         })
 
-        const trackerObj = {}
+        const trackerObj: any = {}
         const fields = [
             'ip', 'port', 'maxNeighborsPerNode', 'privateKeyFileName', 'certFileName', 'attachHttpEndpoints', 'unixSocket']
         fields.forEach((prop) => {
