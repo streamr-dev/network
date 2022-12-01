@@ -1,5 +1,5 @@
 import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
-import { Wallet } from 'ethers'
+import { Wallet } from '@ethersproject/wallet'
 import { fetchPrivateKeyWithGas, randomEthereumAddress } from '@streamr/test-utils'
 import { CONFIG_TEST, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
