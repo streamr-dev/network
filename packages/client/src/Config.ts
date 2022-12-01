@@ -216,7 +216,7 @@ export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id' | 'aut
         ethereumNetworks: {
             polygon: {
                 chainId: 137,
-                highGasPriceStrategy: false
+                highGasPriceStrategy: true
             }
         },
         theGraphUrl: 'https://api.thegraph.com/subgraphs/name/streamr-dev/streams',

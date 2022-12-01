@@ -276,7 +276,7 @@
                     "default": {
                         "polygon": {
                             "chainId": 137,
-                            "highGasPriceStrategy": false
+                            "highGasPriceStrategy": true
                         }
                     }
                 },
