@@ -30,4 +30,4 @@ EXPOSE 7171/tcp
 WORKDIR /home/streamr/network/packages/broker
 
 # start broker from default config
-CMD ["./bin/broker.js"]
+CMD ["./dist/bin/broker.js"]
