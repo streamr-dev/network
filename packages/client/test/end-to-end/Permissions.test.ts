@@ -1,4 +1,4 @@
-import { Wallet } from 'ethers'
+import { Wallet } from '@ethersproject/wallet'
 
 import { createRelativeTestStreamId } from '../test-utils/utils'
 import { CONFIG_TEST } from '../../src/ConfigTest'
