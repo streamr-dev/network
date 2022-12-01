@@ -12,7 +12,7 @@ async function runNetwork(currentBenchmark: number, numberOfNodes: number, start
     const processes: ChildProcessWithoutNullStreams[] = []
 
     // create tracker
-    const tracker = path.resolve('../../bin/tracker.js')
+    const tracker = path.resolve('../../dist/bin/tracker.js')
     let args = [
         tracker,
         '--port=' + trackerPort,

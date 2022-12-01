@@ -25,4 +25,4 @@ ENV LOG_LEVEL=info
 WORKDIR /home/streamr/network/packages/network-tracker
 
 # start tracker
-CMD ["./bin/tracker.js"]
+CMD ["./dist/bin/tracker.js"]

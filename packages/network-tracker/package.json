@@ -22,7 +22,7 @@
     "test": "jest",
     "test-integration": "jest test/integration/",
     "test-unit": "jest test/unit",
-    "tracker": "node $NODE_DEBUG_OPTION bin/tracker.js"
+    "tracker": "node $NODE_DEBUG_OPTION dist/bin/tracker.js"
   },
   "dependencies": {
     "@streamr/network-node": "7.1.0",
