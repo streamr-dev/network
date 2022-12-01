@@ -24,7 +24,6 @@ export class PublishError extends Error {
         // TODO: Remove the cause suffix from the error message when Chrome adds the support:
         // https://bugs.chromium.org/p/chromium/issues/detail?id=1211260
         // eslint-disable-next-line max-len
-        // @ts-expect-error typescript definitions don't support error cause
         super(`Failed to publish to stream ${streamId} (timestamp=${timestamp}), cause: ${cause.message}`, { cause })
         this.streamId = streamId
         this.timestamp = timestamp
