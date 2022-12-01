@@ -1,6 +1,6 @@
 import { fastWallet } from '@streamr/test-utils'
 import { ExternalProvider, StreamrClientConfig } from 'streamr-client'
-import { Broker, createBroker } from '../../src/broker'
+import { createBroker } from '../../src/broker'
 import { Config } from '../../src/config/config'
 
 const formConfig = (auth: StreamrClientConfig['auth']): Config => {

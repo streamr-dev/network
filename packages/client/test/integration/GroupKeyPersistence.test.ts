@@ -52,7 +52,7 @@ describe('Group Key Persistence', () => {
                 },
                 network: {
                     entryPoints: [{
-                        peerId: 'entrypoint',
+                        kademliaId: 'entrypoint',
                         type: 0
                     }],
                     stringKademliaId: 'entrypoint'

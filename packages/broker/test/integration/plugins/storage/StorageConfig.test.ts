@@ -52,34 +52,28 @@ describe('StorageConfig', () => {
     })
 
     beforeEach(async () => {
+        const entryPoints = [{
+            kademliaId: (await storageNodeAccount.getAddress()),
+            type: 0,
+            websocket: {
+                ip: '127.0.0.1',
+                port: 44405
+            }
+        }]
         tracker = await startTestTracker(TRACKER_PORT)
-        storageNode = await startStorageNode(storageNodeAccount.privateKey, HTTP_PORT, TRACKER_PORT, 44405)
+        storageNode = await startStorageNode(storageNodeAccount.privateKey, HTTP_PORT, TRACKER_PORT, 44405, entryPoints)
         broker = await startBroker({
             privateKey: brokerAccount.privateKey,
             trackerPort: TRACKER_PORT,
             enableCassandra: false,
             wsServerPort: 44406,
-            entryPoints: [{
-                kademliaId: (await brokerAccount.getAddress()),
-                type: 0,
-                websocket: {
-                    ip: '127.0.0.1',
-                    port: 44406
-                }
-            }]
+            entryPoints
         })
         client = await createClient(tracker, publisherAccount.privateKey, {
             network: {
-                entryPoints: [{
-                    kademliaId: (await broker.getAddress()),
-                    type: 0,
-                    websocket: {
-                        ip: '127.0.0.1',
-                        port: 40401
-                    }
-                }],
+                entryPoints,
                 peerDescriptor: {
-                    kademliaId: 'client',
+                    kademliaId: 'StorageConfig-client',
                     type: 0,
                     websocket: {
                         ip: '127.0.0.1',
@@ -100,16 +94,12 @@ describe('StorageConfig', () => {
     })
 
     it('when client publishes a message, it is written to the store', async () => {
-        console.log("HERE1")
         stream = await createTestStream(client, module)
-        console.log("HERE2")
 
         await stream.addToStorageNode(storageNodeAccount.address)
-        console.log("HERE3")
         const publishMessage = await client.publish(stream.id, {
             foo: 'bar'
         })
-        console.log("HERE4")
 
         await waitForCondition(async () => {
             const result = await cassandraClient.execute('SELECT COUNT(*) FROM stream_data WHERE stream_id = ? ALLOW FILTERING', [stream.id])

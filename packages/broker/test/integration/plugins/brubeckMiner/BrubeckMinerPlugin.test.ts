@@ -89,7 +89,8 @@ describe('BrubeckMinerPlugin', () => {
                     stunServerHost: null,
                     maxClaimDelay: 100
                 }
-            }
+            },
+            wsServerPort: 44499
         })
     })
 

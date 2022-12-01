@@ -69,7 +69,8 @@ describe('DataMetadataEndpoints', () => {
                     ip: '127.0.0.1',
                     port: 40412
                 }
-        }])
+            }]
+        )
     })
 
     afterAll(async () => {
@@ -111,28 +112,23 @@ describe('DataMetadataEndpoints', () => {
 
     it.only('returns (non-zero) metadata for existing stream', async () => {
         const stream = await setUpStream()
-        console.log("here1")
 
         await client1.publish(stream.id, {
             key: 1
         })
-        console.log("here2")
 
         await client1.publish(stream.id, {
             key: 2
         })
-        console.log("here3")
 
         await client1.publish(stream.id, {
             key: 3
         })
-        console.log("here4")
+
         const lastItem = await client1.publish(stream.id, {
             key: 4
         })
-        console.log("ÄÄÄÄÄ")
         await client1.waitForStorage(lastItem)
-        console.log("ÖÖÖÖÖ")
 
         const url = `http://localhost:${httpPort1}/streams/${encodeURIComponent(stream.id)}/metadata/partitions/0`
         const [status, json] = await httpGet(url)

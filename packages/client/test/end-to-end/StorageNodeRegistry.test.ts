@@ -128,16 +128,13 @@ describe('StorageNodeRegistry', () => {
         const onAddPayloads: any[] = []
         const onRemovePayloads: any[] = []
         listenerClient.on('addToStorageNode', (payload: any) => {
-            console.log("addToStorageNode")
             onAddPayloads.push(payload)
         })
         listenerClient.on('removeFromStorageNode', (payload: any) => {
-            console.log("removeFromStorageNode")
             onRemovePayloads.push(payload)
         })
-        console.log("AAAAA")
+
         await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
-        console.log("BBBBB")
         await stream.removeFromStorageNode(DOCKER_DEV_STORAGE_NODE)
 
         await until(() => {

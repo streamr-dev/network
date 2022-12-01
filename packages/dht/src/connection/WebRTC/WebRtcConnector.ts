@@ -20,7 +20,6 @@ import { IWebRtcConnectorService } from "../../proto/DhtRpc.server"
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ManagedConnection } from '../ManagedConnection'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
-import { threadId } from 'worker_threads'
 
 const logger = new Logger(module)
 
@@ -232,7 +231,6 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         if (this.stopped || this.ongoingConnectAttempts.has(PeerID.fromValue(targetPeerDescriptor.kademliaId).toKey())) {
             return
         }
-        console.log("iiiiiiiiii")
         const managedConnection = this.connect(targetPeerDescriptor)
         managedConnection.setPeerDescriptor(targetPeerDescriptor)
 
@@ -270,7 +268,6 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         })
 
         this.rpcCommunicator.stop()
-        // this.removeAllListeners()
     }
 
     public isOffering(targetPeerDescriptor: PeerDescriptor): boolean {

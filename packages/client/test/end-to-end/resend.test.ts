@@ -78,13 +78,12 @@ describe('resend', () => {
         let stream: Stream
 
         beforeEach(async () => {
-            stream = await createTestStream(publisherClient, module, { partitions: 3 })
+            stream = await createTestStream(publisherClient, module, { partitions: 3  })
             await stream.grantPermissions({
                 permissions: [StreamPermission.SUBSCRIBE],
-                user: await resendClient.getAddress()
+                public: true
             })
             await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
-            await wait(2500)
             for (const idx of range(NUM_OF_MESSAGES)) {
                 await publisherClient.publish({
                     id: stream.id,
@@ -92,7 +91,6 @@ describe('resend', () => {
                 }, {
                     messageNo: idx
                 })
-                console.log(idx)
             }
             await wait(MESSAGE_STORE_TIMEOUT)
         }, TIMEOUT)
@@ -104,7 +102,6 @@ describe('resend', () => {
                 partition: 0
             }, { last: NUM_OF_MESSAGES }, (msg: any) => {
                 messages.push(msg)
-                console.log(msg)
             })
             await waitForCondition(
                 () => messages.length >= NUM_OF_MESSAGES,

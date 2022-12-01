@@ -102,16 +102,14 @@ export class StreamrNode extends EventEmitter {
         if (this.streams.has(streamPartID)) {
             this.streams.get(streamPartID)!.layer2.broadcast(msg)
         } else {
-            this.joinStream(streamPartID, entryPointDescriptor)
-                .then(() => this.streams.get(streamPartID)?.layer2.broadcast(msg))
-                .catch((err) => {
-                    logger.warn(`Failed to publish to stream ${streamPartID} with error: ${err}`)
-                })
+            this.joinStream(streamPartID, entryPointDescriptor).catch((err) => {
+                logger.warn(`Failed to publish to stream ${streamPartID} with error: ${err}`)
+            })
+            this.streams.get(streamPartID)!.layer2.broadcast(msg)
         }
     }
 
     unsubscribeFromStream(streamPartID: string): void {
-        console.log("NetworkNode: unsubscribing")
         this.leaveStream(streamPartID)
     }
 
