@@ -22,59 +22,6 @@ export interface Authentication {
     getStreamRegistryChainSigner: () => Promise<Signer>
 }
 
-/**
- *   reason: Error: Failed to relay call. Results:
- *   Ping errors (5):
- *   
- *   https://gsn.streamr.network/gsn1 => Proposed gas price: 0x1238ca8e4b; relay's MinGasPrice: 94321711874
- *
- *   https://matic.relayer.prod.daory.net/gsn1 => Proposed gas price: 0x1238ca8e4b; relay's MinGasPrice: 90218195358
- *
- *   https://digglehopper-delta.com/gsn1 => Proposed gas price: 0x1238ca8e4b; relay's MinGasPrice: 93925357037
- *
- *   https://polygon-relay1.digglehopper-alpha.com/gsn1 => Proposed gas price: 0x1238ca8e4b; relay's MinGasPrice: 90709305594
- *
- *   https://relay-polygon.enzyme.finance/gsn1 => Proposed gas price: 0x1238ca8e4b; relay's MinGasPrice: 90709305594
- *   Relaying errors (1):
- *   https://matic-gsn.treejer.com/gsn1 => Got error response from relay: relayCall reverted in server: Returned error: {"jsonrpc":"2.0","id":20668547,"error":{"code":-32602,"message":""}}
- *       at /home/harbu/work/monorepo/node_modules/@opengsn/provider/src/RelayProvider.ts:142:20
- *       at processTicksAndRejections (node:internal/process/task_queues:96:5)
- *
- *
- * Rejected relayTransaction call with reason: couldn't retrieve latest blockNumber from node. last block: 36258837, got block: 36258831
- * /home/harbu/work/monorepo/packages/client/src/utils/contract.ts:64
- *         const wrappedError = new Error(`Error in contract call "${methodName}"`)
- *                              ^
- * Error: Error in contract call "streamRegistry.createStream"
- *     at withErrorHandling (/home/harbu/work/monorepo/packages/client/src/utils/contract.ts:64:30)
- *     at async Object.createStream (/home/harbu/work/monorepo/packages/client/src/utils/contract.ts:78:29)
- *     at async waitForTx (/home/harbu/work/monorepo/packages/client/src/utils/contract.ts:20:16)
- *     at async StreamRegistry.createStream (/home/harbu/work/monorepo/packages/client/src/registry/StreamRegistry.ts:145:13)
- *     at async /home/harbu/work/monorepo/packages/client/src/sandbox.ts:10:24 {
- *   reason: Error: Rejected relayTransaction call with reason: couldn't retrieve latest blockNumber from node. last block: 36258837, got block: 36258831
- *       at /home/harbu/work/monorepo/node_modules/@opengsn/provider/src/RelayProvider.ts:148:18
- *
- *
- * Relaying errors (1):
- * https://gsn.streamr.network/gsn1 => local view call to 'relayCall()' reverted: view call to 'relayCall' reverted in client: Paymaster balance too low
- * /home/harbu/work/monorepo/packages/client/src/utils/contract.ts:64
- *         const wrappedError = new Error(`Error in contract call "${methodName}"`)
- *                              ^
- * Error: Error in contract call "streamRegistry.createStream"
- *     at withErrorHandling (/home/harbu/work/monorepo/packages/client/src/utils/contract.ts:64:30)
- *     at processTicksAndRejections (node:internal/process/task_queues:96:5)
- *     at async Object.createStream (/home/harbu/work/monorepo/packages/client/src/utils/contract.ts:78:29)
- *     at async waitForTx (/home/harbu/work/monorepo/packages/client/src/utils/contract.ts:20:16)
- *     at async StreamRegistry.createStream (/home/harbu/work/monorepo/packages/client/src/registry/StreamRegistry.ts:145:13)
- *     at async /home/harbu/work/monorepo/packages/client/src/sandbox.ts:10:24 {
- *   reason: Error: Failed to relay call. Results:
- *   Relaying errors (1):
- *   https://gsn.streamr.network/gsn1 => local view call to 'relayCall()' reverted: view call to 'relayCall' reverted in client: Paymaster balance too low
- *       at /home/harbu/work/monorepo/node_modules/@opengsn/provider/src/RelayProvider.ts:142:20
- *       at processTicksAndRejections (node:internal/process/task_queues:96:5)
- * }
- */
-
 export const createPrivateKeyAuthentication = (key: string, config: Pick<StrictStreamrClientConfig, 'contracts'>): Authentication => {
     const address = toEthereumAddress(computeAddress(key))
     return {
