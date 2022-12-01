@@ -26,7 +26,7 @@ export const createPrivateKeyAuthentication = (key: string, config: Pick<StrictS
         getAddress: async () => address,
         createMessageSignature: async (payload: string) => sign(payload, key),
         getStreamRegistryChainSigner: async () => {
-            if (!config.contracts.enableExperimentalGsn) {
+            if (!config.contracts.experimentalGSN) {
                 return new Wallet(key, getStreamRegistryChainProvider(config))
             } else {
                 const firstRPC = config.contracts.streamRegistryChainRPCs.rpcs[0]
@@ -79,7 +79,7 @@ export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'au
                         `Please connect the custom authentication provider to Ethereum blockchain with chainId ${sideChainId}: current chainId is ${chainId}`
                     )
                 }
-                if (!config.contracts.enableExperimentalGsn) {
+                if (!config.contracts.experimentalGSN) {
                     return signer
                 } else {
                     return initGSNBackedSigner(ethereum, await signer.getAddress(), undefined)

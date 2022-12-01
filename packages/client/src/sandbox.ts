@@ -4,7 +4,7 @@ import { Logger } from '@streamr/utils'
 const logger = new Logger(module)
 
 ;(async () => {
-    const client = new StreamrClient({ contracts: { enableExperimentalGsn: true } })
+    const client = new StreamrClient({ contracts: { experimentalGSN: true } })
     try {
         logger.info("client address: %s", await client.getAddress())
         const stream = await client.createStream({

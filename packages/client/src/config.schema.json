@@ -289,7 +289,7 @@
                     "type": "number",
                     "default": 10
                 },
-                "enableExperimentalGsn": {
+                "experimentalGSN": {
                     "type": "boolean",
                     "default": false
                 }

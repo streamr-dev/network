@@ -91,7 +91,7 @@ export interface StrictStreamrClientConfig {
         /** Some TheGraph instance, that indexes the streamr registries */
         theGraphUrl: string
         maxConcurrentCalls: number
-        enableExperimentalGsn: boolean
+        experimentalGSN: boolean
     }
 
     decryption: {
@@ -221,7 +221,7 @@ export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id' | 'aut
         },
         theGraphUrl: 'https://api.thegraph.com/subgraphs/name/streamr-dev/streams',
         maxConcurrentCalls: 10,
-        enableExperimentalGsn: false
+        experimentalGSN: false
     },
 
     decryption: {
