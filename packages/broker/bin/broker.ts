@@ -1,13 +1,12 @@
 #!/usr/bin/env node
-/* eslint-disable @typescript-eslint/no-require-imports */
-const program = require('commander')
+import { program } from 'commander'
+import pkg from '../package.json'
 
-const CURRENT_VERSION = require('../package.json').version
-const { createBroker } = require('../dist/src/broker')
-const { readConfigAndMigrateIfNeeded } = require('../dist/src/config/migration')
+import { createBroker } from '../src/broker'
+import { readConfigAndMigrateIfNeeded } from '../src/config/migration'
 
 program
-    .version(CURRENT_VERSION)
+    .version(pkg.version)
     .name('broker')
     .description('Run broker under environment specified by given configuration file.')
     .arguments('[configFile]')
@@ -17,9 +16,11 @@ program
         try {
             const config = readConfigAndMigrateIfNeeded(configFile)
             if (program.opts().networkId) {
+                // @ts-expect-error TODO fix
                 config.network.id = program.opts().networkId
             }
 
+            // @ts-expect-error TODO fix
             const broker = await createBroker(config, true)
             if (!program.opts().test) {
                 await broker.start()
