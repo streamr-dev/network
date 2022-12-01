@@ -1,9 +1,8 @@
 #!/usr/bin/env node
-/* eslint-disable @typescript-eslint/no-require-imports */
-const { fork } = require('child_process')
-const chalk = require('chalk')
-const { Transform } = require('stream')
-const { Logger } = require('@streamr/utils')
+import { ChildProcess, fork } from 'child_process'
+import chalk, { Chalk } from 'chalk'
+import { Transform } from 'stream'
+import { Logger } from '@streamr/utils'
 
 const processes = new Map()
 
@@ -32,8 +31,8 @@ const createCollectLineTransform = () => {
     })
 }
 
-const createColorizeTransform = (defaultColor) => {
-    const getLevelColor = (id) => {
+const createColorizeTransform = (defaultColor: Chalk) => {
+    const getLevelColor = (id: string) => {
         if (id === 'ERROR') {
             return chalk.hex('#FF0000')
         } else if (id === 'WARN') {
@@ -46,7 +45,7 @@ const createColorizeTransform = (defaultColor) => {
     return new Transform({
         transform: (buf, _encoding, done) => {
             const msg = buf.toString()
-            const lines = msg.split('\n').map((line) => {
+            const lines = msg.split('\n').map((line: string) => {
                 const groups = line.match(META_PATTERN)
                 if (groups !== null) {
                     const match = groups[0]
@@ -70,21 +69,21 @@ const createColorizeTransform = (defaultColor) => {
     })
 }
 
-const pipeOutputStreams = (p, defaultColor) => {
-    p.stdout
+const pipeOutputStreams = (p: ChildProcess, defaultColor: Chalk) => {
+    p.stdout!
         .pipe(createCollectLineTransform())
         .pipe(createColorizeTransform(defaultColor))
         .pipe(process.stdout)
-    p.stderr
+    p.stderr!
         .pipe(process.stderr)
 }
 
-const getProcessLogLevel = (processName) => {
+const getProcessLogLevel = (processName: string) => {
     const key = `LOG_LEVEL_${processName}`
     return process.env[key] || process.env.LOG_LEVEL
 }
 
-const forkProcess = (processName, filePath, args, color) => {
+const forkProcess = (processName: string, filePath: string, args: string[], color: Chalk) => {
     const p = fork(filePath, args, {
         silent: true,
         env: {
