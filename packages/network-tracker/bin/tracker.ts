@@ -3,7 +3,7 @@ import { program } from 'commander'
 import pkg from '../package.json'
 import { startTracker } from '../src/startTracker'
 import { MetricsContext, Logger } from '@streamr/utils'
-import ethers from 'ethers'
+import { Wallet } from 'ethers'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore no declaration file for module
 import { SlackBot } from '@streamr/slackbot'
@@ -34,7 +34,7 @@ if (program.args.length < 1) {
     program.help()
 }
 const privateKey = program.args[0]
-const wallet = new ethers.Wallet(privateKey)
+const wallet = new Wallet(privateKey)
 const id = wallet.address
 const listen = program.opts().unixSocket ? program.opts().unixSocket : {
     hostname: program.opts().ip,
