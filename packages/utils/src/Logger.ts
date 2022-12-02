@@ -50,13 +50,16 @@ export class Logger {
             // which can fail when under jest+typescript, due to some CJS/ESM
             // incompatibility leading to throwing an error like:
             // "prettyFactory is not a function"
-            prettifier: process.env.NODE_ENV === 'production' ? undefined : pinoPretty,
-            prettyPrint: process.env.NODE_ENV === 'production' ? false : {
-                colorize: parseBoolean(process.env.LOG_COLORS) ?? true,
-                translateTime: 'yyyy-mm-dd"T"HH:MM:ss.l',
-                ignore: 'pid,hostname',
-                levelFirst: true,
-            }
+            prettifier: process.env.NODE_ENV !== 'production' ? pinoPretty : undefined,
+            transport: process.env.NODE_ENV !== 'production' ? {
+                target: 'pino-pretty',
+                options: {
+                    colorize: parseBoolean(process.env.LOG_COLORS) ?? true,
+                    translateTime: 'yyyy-mm-dd"T"HH:MM:ss.l',
+                    ignore: 'pid,hostname',
+                    levelFirst: true,
+                }
+            } : undefined
         }
         this.logger = destinationStream !== undefined ? pino(options, destinationStream) : pino(options)
     }
@@ -96,12 +99,5 @@ export class Logger {
 
     trace(msg: string, ...args: any[]): void {
         this.logger.trace(msg, ...args)
-    }
-
-    getFinalLogger(): { error: (error: any, origin?: string) => void } {
-        const finalLogger = pino.final(this.logger)
-        return {
-            error: (error: any, origin?: string) => finalLogger.error(error, origin)
-        }
     }
 }

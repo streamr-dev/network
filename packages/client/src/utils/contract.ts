@@ -1,7 +1,7 @@
 import { Contract, ContractReceipt, ContractTransaction } from '@ethersproject/contracts'
 import EventEmitter from 'eventemitter3'
 import { NameDirectory } from '@streamr/network-node'
-import pLimit from 'p-limit'
+import pLimit, { LimitFunction } from 'p-limit'
 import { LoggerFactory } from './LoggerFactory'
 
 export interface ContractEvent {
@@ -72,7 +72,7 @@ const createWrappedContractMethod = (
     originalMethod: (...args: any) => Promise<any>,
     methodName: string,
     eventEmitter: EventEmitter<ContractEvent>,
-    concurrencyLimit: pLimit.Limit
+    concurrencyLimit: LimitFunction
 ) => {
     return async (...args: any) => {
         const returnValue = await withErrorHandling(() => concurrencyLimit(() => {

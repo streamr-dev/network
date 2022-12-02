@@ -104,6 +104,9 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
         Object.keys(this.handshakeTimeoutRefs).map((id) => {
             this.clearHandshake(id)
         })
+        for (const connection of this.getConnections()) {
+            connection.terminate()
+        }
         this.handshakeTimeoutRefs = {}
         return this.doStop()
     }

@@ -21,7 +21,7 @@
   "devDependencies": {
     "@streamr/test-utils": "7.1.0",
     "@types/sinon": "^10.0.4",
-    "sinon": "^11.1.2"
+    "sinon": "^15.0.0"
   },
   "dependencies": {
     "@streamr/utils": "7.1.0"

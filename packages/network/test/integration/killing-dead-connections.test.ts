@@ -19,9 +19,9 @@ describe('check and kill dead connections', () => {
     })
 
     afterEach(async () => {
-        Promise.allSettled([
-            clientEndpoint.stop(),
-            serverEndpoint.stop()
+        await Promise.allSettled([
+            clientEndpoint?.stop(),
+            serverEndpoint?.stop()
         ])
     })
 
@@ -44,6 +44,6 @@ describe('check and kill dead connections', () => {
         const [peerInfo, reason] = await event
 
         expect(peerInfo).toEqual(PeerInfo.newTracker('serverEndpoint'))
-        expect(reason).toEqual('')
+        expect(reason?.toString()).toEqual('')
     })
 })

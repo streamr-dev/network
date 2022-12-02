@@ -82,7 +82,7 @@ class OngoingRequest {
 
 const logger = new Logger(module)
 
-export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvents> implements IRpcIo {
+export class RpcCommunicator extends EventEmitter<keyof RpcCommunicatorEvents> implements IRpcIo {
     private stopped = false
     private readonly rpcClientTransport: ClientTransport
     private readonly rpcServerRegistry: ServerRegistry

@@ -125,8 +125,8 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
             connection.onPong()
         })
 
-        ws.on('close', (code: number, reason: string) => {
-            this.onClose(connection, code, reason as DisconnectionReason)
+        ws.on('close', (code: number, reason) => {
+            this.onClose(connection, code, reason.toString() as DisconnectionReason)
         })
 
         this.onNewConnection(connection)

@@ -330,9 +330,8 @@ export class Storage extends EventEmitter {
             })
 
             return pipeline(
-                merge2(...streams, {
-                    // @ts-expect-error options not in type
-                    pipeError: true,
+                merge2(...streams as any, { // TODO: catch
+                    pipeError: true
                 }),
                 resultStream,
                 (err: Error | null) => {

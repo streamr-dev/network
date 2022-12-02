@@ -139,7 +139,7 @@ async function endGenerator(gtr: AsyncGenerator, error?: Error) {
         : gtr.return(undefined)
 }
 
-function canCancel<T>(gtr: MaybeCancelable<T>): gtr is Cancelable<T> {
+function canCancel<T extends object>(gtr: MaybeCancelable<T>): gtr is Cancelable<T> {
     return (
         gtr
         && 'cancel' in gtr && typeof gtr.cancel === 'function'
@@ -148,7 +148,7 @@ function canCancel<T>(gtr: MaybeCancelable<T>): gtr is Cancelable<T> {
     )
 }
 
-async function cancelGenerator<T>(gtr: MaybeCancelable<T>, error?: Error) {
+async function cancelGenerator<T extends object>(gtr: MaybeCancelable<T>, error?: Error) {
     if (!canCancel(gtr)) { return }
     await gtr.cancel(error)
 }
@@ -163,8 +163,7 @@ const endGeneratorTimeout = pMemoize(async (gtr, error, timeout = 250) => {
         await cancelGenerator(gtr, error)
     }
 }, {
-    cache: new WeakMap(),
-    cachePromiseRejection: true,
+    cache: new WeakMap() as any, // TODO: fix cast
 })
 
 /**

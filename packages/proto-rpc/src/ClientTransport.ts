@@ -31,7 +31,7 @@ export interface ResultParts {
 
 const logger = new Logger(module)
 
-export class ClientTransport extends EventEmitter<ClientTransportEvents> implements RpcTransport {
+export class ClientTransport extends EventEmitter<keyof ClientTransportEvents> implements RpcTransport {
     private static objectCount = 0
     private readonly objectId: number
     protected readonly defaultOptions: ProtoRpcOptions

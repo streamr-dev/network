@@ -1,4 +1,4 @@
-import inquirer, { Answers } from 'inquirer'
+import inquirer, { Answers, CheckboxQuestion, DistinctQuestion, Question, ListQuestion } from 'inquirer'
 import { Wallet } from 'ethers'
 import path from 'path'
 import { writeFileSync, existsSync, mkdirSync, chmodSync } from 'fs'
@@ -72,7 +72,7 @@ export const CONFIG_TEMPLATE: any = {
     }
 }
 
-const PRIVATE_KEY_PROMPTS: Array<inquirer.Question | inquirer.ListQuestion | inquirer.CheckboxQuestion> = [
+const PRIVATE_KEY_PROMPTS: Array<Question | ListQuestion | CheckboxQuestion> = [
     {
         type: 'list',
         name:'generateOrImportPrivateKey',
@@ -83,7 +83,7 @@ const PRIVATE_KEY_PROMPTS: Array<inquirer.Question | inquirer.ListQuestion | inq
         type: 'password',
         name:'importPrivateKey',
         message: 'Please provide the private key to import',
-        when: (answers: inquirer.Answers): boolean => {
+        when: (answers: Answers): boolean => {
             return answers.generateOrImportPrivateKey === PRIVATE_KEY_SOURCE_IMPORT
         },
         validate: (input: string): string | boolean => {
@@ -101,28 +101,28 @@ const PRIVATE_KEY_PROMPTS: Array<inquirer.Question | inquirer.ListQuestion | inq
         // eslint-disable-next-line max-len
         message: 'We strongly recommend backing up your private key. It will be written into the config file, but would you also like to see this sensitive information on screen now?',
         default: false,
-        when: (answers: inquirer.Answers): boolean => {
+        when: (answers: Answers): boolean => {
             return answers.generateOrImportPrivateKey === PRIVATE_KEY_SOURCE_GENERATE
         }
     }
 ]
 
-const createPluginPrompts = (): Array<inquirer.Question | inquirer.ListQuestion | inquirer.CheckboxQuestion> => {
-    const selectApiPluginsPrompt: inquirer.CheckboxQuestion = {
+const createPluginPrompts = (): Array<Question | ListQuestion | CheckboxQuestion> => {
+    const selectApiPluginsPrompt: CheckboxQuestion = {
         type: 'checkbox',
         name: 'enabledApiPlugins',
         message: 'Select the plugins to enable',
         choices: Object.values(PLUGIN_NAMES)
     }
 
-    const portPrompts: Array<inquirer.Question> = Object.keys(DEFAULT_CONFIG_PORTS).map((key) => {
+    const portPrompts: Array<Question> = Object.keys(DEFAULT_CONFIG_PORTS).map((key) => {
         const name = PLUGIN_NAMES[key]
         const defaultPort = DEFAULT_CONFIG_PORTS[key]
         return {
             type: 'input',
             name: `${name}Port`,
             message: `Provide a port for the ${name} Plugin [Enter for default: ${defaultPort}]`,
-            when: (answers: inquirer.Answers) => {
+            when: (answers: Answers) => {
                 return answers.enabledApiPlugins.includes(name)
             },
             validate: (input: string | number): string | boolean => {
@@ -146,7 +146,7 @@ const createPluginPrompts = (): Array<inquirer.Question | inquirer.ListQuestion 
         }
     })
 
-    const minerPluginPrompt: inquirer.DistinctQuestion = {
+    const minerPluginPrompt: DistinctQuestion = {
         type: 'confirm',
         name: 'enableMinerPlugin',
         message: 'Do you want to participate in mining and staking?',
@@ -170,9 +170,9 @@ export const storagePathPrompts = [{
 {
     type: 'confirm',
     name: 'overwrite',
-    message: (answers: inquirer.Answers): string => `The selected destination ${answers.storagePath} already exists, do you want to overwrite it?`,
+    message: (answers: Answers): string => `The selected destination ${answers.storagePath} already exists, do you want to overwrite it?`,
     default: false,
-    when: (answers: inquirer.Answers): boolean => existsSync(answers.storagePath)
+    when: (answers: Answers): boolean => existsSync(answers.storagePath)
 }]
 
 export const getConfig = (privateKey: string, pluginsAnswers: PluginAnswers): any => {

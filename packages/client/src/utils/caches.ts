@@ -34,7 +34,6 @@ export type CacheAsyncFnType<ArgsType extends any[], ReturnType, KeyType = ArgsT
 export function CacheAsyncFn<ArgsType extends any[], ReturnType, KeyType = ArgsType[0]>(asyncFn: (...args: ArgsType) => PromiseLike<ReturnType>, {
     maxSize = 10000,
     maxAge = 30 * 60 * 1000, // 30 minutes
-    cachePromiseRejection = false,
     onEviction = () => {},
     cacheKey = (args: ArgsType) => args[0], // type+provide default so we can infer KeyType
     ...opts
@@ -51,10 +50,9 @@ export function CacheAsyncFn<ArgsType extends any[], ReturnType, KeyType = ArgsT
         onEviction,
     })
 
-    const cachedFn = Object.assign(pMemoize(asyncFn, {
-        cachePromiseRejection,
+    const cachedFn = Object.assign(pMemoize(asyncFn as any, { // TODO: fix cast
         cache,
-        cacheKey,
+        cacheKey: cacheKey as any, // TODO: fix cast
         ...opts,
     }), {
         clearMatching: (matchFn: ((key: KeyType) => boolean)) => clearMatching(cache, matchFn),

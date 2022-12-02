@@ -37,7 +37,7 @@ export function serializeWrapper(serializerFn: () => Uint8Array): Uint8Array | n
     }
 }
 
-export class ServerRegistry extends EventEmitter<ServerRegistryEvents> {
+export class ServerRegistry extends EventEmitter<keyof ServerRegistryEvents> {
     private methods = new Map<string, RegisteredMethod>()
     private notifications = new Map<string, RegisteredNotification>()
 
