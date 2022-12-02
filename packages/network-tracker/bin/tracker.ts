@@ -27,7 +27,7 @@ program
     .option('--slackBotToken <slackBotToken>', 'slack API token', '')
     .option('--slackChannel <slackChannel>', 'slack channel for alerts', '#network-log')
 
-    .description('Run tracker with reporting')
+    .description('Run Streamr Tracker')
     .parse(process.argv)
 
 if (program.args.length < 1) {
