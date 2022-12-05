@@ -20,7 +20,7 @@
   "author": "Streamr Network AG <contact@streamr.network>",
   "license": "Apache-2.0",
   "dependencies": {
-    "eventemitter3": "^4.0.7",
+    "eventemitter3": "^5.0.0",
     "lodash": "^4.17.21",
     "pino": "^6.11.3",
     "pino-pretty": "^5.0.2"
