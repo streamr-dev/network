@@ -152,7 +152,7 @@ describe('multiple publisher plugins', () => {
 
         const messages = await publishMessages(streamId)
 
-        await waitForCondition(() => receivedMessages.size() >= messages.length)
+        await waitForCondition(() => receivedMessages.size() >= messages.length + 10)
         expect(receivedMessages.items).toIncludeSameMembers(messages)
         await subscriber.destroy()
 

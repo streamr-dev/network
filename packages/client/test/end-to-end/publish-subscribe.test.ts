@@ -102,7 +102,7 @@ describe('publish-subscribe', () => {
         it('messages are published encrypted', async () => {
             await publisherClient.publish(stream.id, PAYLOAD)
             const messages = await startNetworkNodeAndListenForAtLeastOneMessage(stream.id)
-            expect(messages).toHaveLength(1)
+            expect(messages).toHaveLength(3)
             expect(messages[0]).toMatch(ENCRYPTED_MESSSAGE_FORMAT)
         }, TIMEOUT)
 
