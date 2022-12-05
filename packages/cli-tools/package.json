@@ -38,6 +38,6 @@
   "devDependencies": {
     "@types/easy-table": "0.0.32",
     "@types/event-stream": "^3.3.34",
-    "@types/lodash": "^4.14.175"
+    "@types/lodash": "^4.14.191"
   }
 }

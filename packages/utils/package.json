@@ -26,7 +26,7 @@
     "pino-pretty": "^5.0.2"
   },
   "devDependencies": {
-    "@types/lodash": "^4.14.175",
+    "@types/lodash": "^4.14.191",
     "@types/node-fetch": "^2.5.12",
     "@types/pino": "^6.3.8",
     "@types/pino-pretty": "^4.7.0",
