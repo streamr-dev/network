@@ -30,7 +30,7 @@
     "@types/node-fetch": "^2.5.12",
     "@types/pino": "^6.3.8",
     "@types/pino-pretty": "^4.7.0",
-    "electron": "^20.0.3",
+    "electron": "^22.0.0",
     "electron-rebuild": "^3.2.9",
     "express": "^4.17.1",
     "karma": "^6.4.0",

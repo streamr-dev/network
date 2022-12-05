@@ -51,7 +51,7 @@
     "@types/websocket": "^1.0.3",
     "browserify-fs": "^1.0.0",
     "console-browserify": "^1.2.0",
-    "electron": "^20.0.3",
+    "electron": "^22.0.0",
     "electron-rebuild": "^3.2.9",
     "expect": "^28.1.3",
     "express": "^4.17.1",
