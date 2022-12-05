@@ -37,5 +37,5 @@ jobs:
         working-directory: 'packages/${{ inputs.package }}'
         run: ${{ inputs.command }}
       - name: upload logs
-        if: ${{ (success() || failure()) && (inputs.docker-services != '' || inputs.run-brokers-and-trackers) }}
+        if: ${{ (success() || failure()) && ( inputs.docker-services != '' || inputs.run-brokers-and-trackers ) }}
         uses: ./.github/workflows/reusable/collect-and-upload-logs
