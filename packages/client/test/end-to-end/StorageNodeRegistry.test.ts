@@ -7,7 +7,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { until } from '../../src/utils/promises'
 import { createTestStream } from '../test-utils/utils'
 
-const TEST_TIMEOUT = 30 * 1000
+const TEST_TIMEOUT = 30 * 1000 
 
 describe('StorageNodeRegistry', () => {
     let creatorWallet: Wallet
@@ -94,7 +94,7 @@ describe('StorageNodeRegistry', () => {
         expect(stored.streams.some((s) => s.id === stream.id)).toBe(false)
         expect(stored.streams.length).toBeGreaterThanOrEqual(0)
         stored.streams.forEach((s) => expect(s).toBeInstanceOf(Stream))
-    }, TEST_TIMEOUT)
+    }, TEST_TIMEOUT * 2)
 
     it('no storage node', async () => {
         const id = randomEthereumAddress()
