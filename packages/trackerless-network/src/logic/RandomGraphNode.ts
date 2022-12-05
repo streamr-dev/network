@@ -155,9 +155,6 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
             this.markAndCheckDuplicate(msg.messageRef!, msg.previousMessageRef)
         }
         this.emit(Event.MESSAGE, msg)
-        // console.log(msg.messageRef!)
-        logger.info(`broadcasting ${msg.messageRef!.timestamp} ${msg.messageRef!.streamId} ${msg.messageType}`)
-
         this.propagation.feedUnseenMessage(msg, this.targetNeighbors!.getStringIds(), previousPeer || null)
     }
 
@@ -381,7 +378,6 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     // INetworkRpc server method
     async sendData(message: StreamMessage, _context: ServerCallContext): Promise<Empty> {
         if (this.markAndCheckDuplicate(message.messageRef!, message.previousMessageRef)) {
-            logger.info(`received unique message ${message.messageRef!.timestamp} ${message.messageRef!.streamId} ${message.messageType}`)
             const { previousPeer } = message
             message["previousPeer"] = PeerID.fromValue(this.layer1.getPeerDescriptor().kademliaId).toKey()
             this.broadcast(message, previousPeer)
@@ -410,14 +406,11 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     }
 
     async interleaveNotice(message: InterleaveNotice, _context: ServerCallContext): Promise<Empty> {
-        //logger.info('interleaveNotice()')
         if (message.randomGraphId === this.randomGraphId) {
             if (this.targetNeighbors!.hasPeerWithStringId(message.senderId)) {
                 const senderDescriptor = this.targetNeighbors!.getNeighborWithId(message.senderId)!.getPeerDescriptor()
                 this.connectionLocker.unlockConnection(senderDescriptor, this.randomGraphId)
                 this.targetNeighbors!.remove(senderDescriptor)
-            } else {
-                //console.info('interleaveNotice sender was not in targetNeighbors')
             }
 
             const newContact = new RemoteRandomGraphNode(

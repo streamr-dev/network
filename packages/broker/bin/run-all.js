@@ -3,7 +3,7 @@
 const { fork } = require('child_process')
 const chalk = require('chalk')
 const { Transform } = require('stream')
-const { Logger } = require('@streamr/utils')
+const { Logger, wait } = require('@streamr/utils')
 
 const processes = new Map()
 
