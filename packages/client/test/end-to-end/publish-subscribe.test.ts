@@ -146,7 +146,7 @@ describe('publish-subscribe', () => {
                 messages.push(msg)
             })
             sub.on('error', (e) =>  console.error(e))
-            await waitForCondition(() => messages.length > 0)
+            await waitForCondition(() => messages.length > 0, 10000)
             expect(messages).toEqual([PAYLOAD])
         }, TIMEOUT)
     })
@@ -183,7 +183,7 @@ describe('publish-subscribe', () => {
             await subscriberClient.subscribe(stream.id, (msg: any) => {
                 messages.push(msg)
             })
-            await waitForCondition(() => messages.length > 0)
+            await waitForCondition(() => messages.length > 0, 10000)
             expect(messages).toEqual([PAYLOAD])
         }, TIMEOUT)
     })

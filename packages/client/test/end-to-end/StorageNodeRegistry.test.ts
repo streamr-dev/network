@@ -120,7 +120,7 @@ describe('StorageNodeRegistry', () => {
         expect(stored.streams).toEqual([])
         expect(stored.blockNumber).toBeNumber()
         await storageNodeManager.destroy()
-    }, TEST_TIMEOUT)
+    }, TEST_TIMEOUT * 2)
 
     it('event listener: picks up add and remove events', async () => {
         stream = await createTestStream(creatorClient, module)
