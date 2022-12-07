@@ -10,13 +10,15 @@ import { SlackBot } from '@streamr/slackbot'
 
 const logger = new Logger(module)
 
+const parseIntOption = (value: string) => parseInt(value, 10)
+
 program
     .version(pkg.version)
     .usage('<ethereumPrivateKey>')
-    .option('--port <port>', 'port', parseInt, 30300)
+    .option('--port <port>', 'port', parseIntOption, 30300)
     .option('--ip <ip>', 'ip', '0.0.0.0')
     .option('--unixSocket <unixSocket>', 'unixSocket', undefined)
-    .option('--maxNeighborsPerNode <maxNeighborsPerNode>', 'maxNeighborsPerNode', parseInt,     4)
+    .option('--maxNeighborsPerNode <maxNeighborsPerNode>', 'maxNeighborsPerNode', parseIntOption, 4)
     .option('--attachHttpEndpoints', 'attach http endpoints')
     .option('--privateKeyFileName <privateKeyFileName>', 'private key filename', undefined)
     .option('--certFileName <certFileName>', 'cert filename', undefined)
@@ -36,7 +38,7 @@ const wallet = new Wallet(privateKey)
 const id = wallet.address
 const listen = program.opts().unixSocket ? program.opts().unixSocket : {
     hostname: program.opts().ip,
-    port: Number.parseInt(program.opts().port, 10)
+    port: program.opts().port
 }
 
 const { slackBotToken, slackChannel } = program.opts()
@@ -72,7 +74,7 @@ async function main() {
         await startTracker({
             listen,
             id,
-            maxNeighborsPerNode: Number.parseInt(program.opts().maxNeighborsPerNode),
+            maxNeighborsPerNode: program.opts().maxNeighborsPerNode,
             attachHttpEndpoints: program.opts().attachHttpEndpoints,
             privateKeyFileName: program.opts().privateKeyFileName,
             certFileName: program.opts().certFileName,
