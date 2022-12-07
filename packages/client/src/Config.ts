@@ -5,6 +5,7 @@ import cloneDeep from 'lodash/cloneDeep'
 import Ajv, { ErrorObject } from 'ajv'
 import addFormats from 'ajv-formats'
 import type { ExternalProvider } from '@ethersproject/providers'
+import { MarkOptional, DeepRequired } from 'ts-essentials'
 
 import CONFIG_SCHEMA from './config.schema.json'
 import { TrackerRegistryRecord } from '@streamr/protocol'
@@ -46,10 +47,13 @@ export interface EthereumNetworkConfig {
     gasPriceStrategy?: (estimatedGasPrice: BigNumber) => BigNumber
 }
 
-export interface StrictStreamrClientConfig {
+/**
+ * @category Important
+ */
+export interface StreamrClientConfig {
     /** Custom human-readable debug id for client. Used in logging. */
-    id: string
-    logLevel: LogLevel
+    id?: string
+    logLevel?: LogLevel
     /**
     * Authentication: identity used by this StreamrClient instance.
     * Can contain member privateKey or (window.)ethereum
@@ -57,45 +61,45 @@ export interface StrictStreamrClientConfig {
     auth?: PrivateKeyAuthConfig | ProviderAuthConfig
 
     /** Attempt to order messages */
-    orderMessages: boolean
-    gapFill: boolean
-    maxGapRequests: number
-    retryResendAfter: number
-    gapFillTimeout: number
+    orderMessages?: boolean
+    gapFill?: boolean
+    maxGapRequests?: number
+    retryResendAfter?: number
+    gapFillTimeout?: number
 
-    network: {
+    network?: {
         id?: string
-        acceptProxyConnections: boolean
-        trackers: TrackerRegistryRecord[] | TrackerRegistryContract
-        trackerPingInterval: number
-        trackerConnectionMaintenanceInterval: number
-        webrtcDisallowPrivateAddresses: boolean
-        newWebrtcConnectionTimeout: number
-        webrtcDatachannelBufferThresholdLow: number
-        webrtcDatachannelBufferThresholdHigh: number
-        disconnectionWaitTime: number
-        peerPingInterval: number
-        rttUpdateTimeout: number
-        iceServers: ReadonlyArray<IceServer>
+        acceptProxyConnections?: boolean
+        trackers?: TrackerRegistryRecord[] | TrackerRegistryContract
+        trackerPingInterval?: number
+        trackerConnectionMaintenanceInterval?: number
+        webrtcDisallowPrivateAddresses?: boolean
+        newWebrtcConnectionTimeout?: number
+        webrtcDatachannelBufferThresholdLow?: number
+        webrtcDatachannelBufferThresholdHigh?: number
+        disconnectionWaitTime?: number
+        peerPingInterval?: number
+        rttUpdateTimeout?: number
+        iceServers?: ReadonlyArray<IceServer>
         location?: Location
     }
 
-    contracts: {
-        streamRegistryChainAddress: string
-        streamStorageRegistryChainAddress: string
-        storageNodeRegistryChainAddress: string
-        mainChainRPCs: ChainConnectionInfo
-        streamRegistryChainRPCs: ChainConnectionInfo
+    contracts?: {
+        streamRegistryChainAddress?: string
+        streamStorageRegistryChainAddress?: string
+        storageNodeRegistryChainAddress?: string
+        mainChainRPCs?: ChainConnectionInfo
+        streamRegistryChainRPCs?: ChainConnectionInfo
         // most of the above should go into ethereumNetworks configs once ETH-184 is ready
-        ethereumNetworks: Record<string, EthereumNetworkConfig>
+        ethereumNetworks?: Record<string, EthereumNetworkConfig>
         /** Some TheGraph instance, that indexes the streamr registries */
-        theGraphUrl: string
-        maxConcurrentCalls: number
+        theGraphUrl?: string
+        maxConcurrentCalls?: number
     }
 
-    decryption: {
-        keyRequestTimeout: number
-        maxKeyRequestsPerSecond: number
+    decryption?: {
+        keyRequestTimeout?: number
+        maxKeyRequestsPerSecond?: number
     }
 
     metrics?: {
@@ -106,42 +110,43 @@ export interface StrictStreamrClientConfig {
         maxPublishDelay?: number
     } | boolean
 
-    cache: {
-        maxSize: number
-        maxAge: number
+    cache?: {
+        maxSize?: number
+        maxAge?: number
     }
 
     /** @internal */
-    _timeouts: {
-        theGraph: {
-            timeout: number
-            retryInterval: number
+    _timeouts?: {
+        theGraph?: {
+            timeout?: number
+            retryInterval?: number
         }
-        storageNode: {
-            timeout: number
-            retryInterval: number
+        storageNode?: {
+            timeout?: number
+            retryInterval?: number
         }
-        jsonRpc: {
-            timeout: number
-            retryInterval: number
+        jsonRpc?: {
+            timeout?: number
+            retryInterval?: number
         }
-        httpFetchTimeout: number
+        httpFetchTimeout?: number
     }
 }
 
-/**
- * @category Important
- */
-export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'network' | 'contracts' | 'decryption'> & {
-    network: Partial<StrictStreamrClientConfig['network']>
-    contracts: Partial<StrictStreamrClientConfig['contracts']>
-    decryption: Partial<StrictStreamrClientConfig['decryption']>
-}>
+export type StrictStreamrClientConfig = MarkOptional<Required<StreamrClientConfig>, 'auth' | 'metrics'> & {
+    network: MarkOptional<Exclude<Required<StreamrClientConfig['network']>, undefined>, 'location'>
+    contracts: Exclude<Required<StreamrClientConfig['contracts']>, undefined>
+    decryption: Exclude<Required<StreamrClientConfig['decryption']>, undefined>
+    cache: Exclude<Required<StreamrClientConfig['cache']>, undefined>
+    _timeouts: Exclude<DeepRequired<StreamrClientConfig['_timeouts']>, undefined>
+}
 
 export const STREAMR_STORAGE_NODE_GERMANY = '0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916'
 
 /** @deprecated */
-export const STREAM_CLIENT_DEFAULTS: Omit<StrictStreamrClientConfig, 'id' | 'auth'> = {
+export const STREAM_CLIENT_DEFAULTS: 
+    Omit<StrictStreamrClientConfig, 'id' | 'auth' | 'network'> & { network: Omit<StrictStreamrClientConfig['network'], 'id'> }
+= {
     logLevel: 'info',
 
     orderMessages: true,
