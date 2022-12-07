@@ -14,8 +14,7 @@ program
     .action(async (configFile) => {
         try {
             const config = readConfigAndMigrateIfNeeded(configFile)
-            // @ts-expect-error TODO fix
-            const broker = await createBroker(config, true)
+            const broker = await createBroker(config)
             if (!program.opts().test) {
                 await broker.start()
             } else {
