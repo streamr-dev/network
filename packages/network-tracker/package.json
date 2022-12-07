@@ -21,8 +21,7 @@
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "test": "jest",
     "test-integration": "jest test/integration/",
-    "test-unit": "jest test/unit",
-    "tracker": "node $NODE_DEBUG_OPTION bin/tracker.js"
+    "test-unit": "jest test/unit"
   },
   "dependencies": {
     "@streamr/network-node": "7.1.0",
