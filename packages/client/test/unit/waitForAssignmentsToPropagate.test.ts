@@ -42,12 +42,12 @@ const TARGET_STREAM = Object.freeze({
 })
 
 describe(waitForAssignmentsToPropagate, () => {
-    let messageStream: MessageStream<any>
+    let messageStream: MessageStream
     let propagatePromiseState: 'rejected' | 'resolved' | 'pending'
     let propagatePromise: Promise<any>
 
     beforeEach(() => {
-        messageStream = new MessageStream<any>()
+        messageStream = new MessageStream()
         propagatePromiseState = 'pending'
         propagatePromise = waitForAssignmentsToPropagate(messageStream, TARGET_STREAM)
             .then((retValue) => {

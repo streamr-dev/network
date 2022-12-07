@@ -29,11 +29,10 @@
   "dependencies": {
     "@protobuf-ts/runtime": "^2.8.0",
     "@protobuf-ts/runtime-rpc": "^2.8.0",
-    "@streamr/dht": "1.0.0",
-    "@streamr/proto-rpc": "1.2.0",
-    "@streamr/protocol": "^7.0.0",
-    "@streamr/test-utils": "^7.0.0",
-    "@streamr/utils": "7.0.1",
+    "@streamr/dht": "7.1.0",
+    "@streamr/proto-rpc": "7.1.0",
+    "@streamr/utils": "7.1.0",
+    "@streamr/test-utils": "^7.1.0",
     "lodash": "^4.17.21",
     "yallist": "^4.0.0"
   },

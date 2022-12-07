@@ -6,7 +6,7 @@ import {
     validateIsString
 } from '../../../utils/validations'
 import { StreamID } from '../../../utils/StreamID'
-import { StreamPartID, toStreamPartID } from "../../../utils"
+import { StreamPartID, toStreamPartID } from '../../../utils/StreamPartID'
 import { ProxyDirection } from '../../../utils/types'
 
 interface Options extends ControlMessageOptions {

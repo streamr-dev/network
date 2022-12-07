@@ -40,8 +40,8 @@ type GetNodeDescriptor = (includeRtt: boolean) => NodeDescriptor
 
 export interface TrackerManagerOptions {
     trackers: Array<TrackerRegistryRecord>
-    rttUpdateTimeout?: number
-    trackerConnectionMaintenanceInterval?: number
+    rttUpdateTimeout: number
+    trackerConnectionMaintenanceInterval: number
     instructionRetryInterval?: number
 }
 
@@ -69,13 +69,13 @@ export class TrackerManager {
         this.trackerRegistry = createTrackerRegistry<TrackerRegistryRecord>(opts.trackers)
         this.getNodeDescriptor = getNodeDescriptor
         this.subscriber = subscriber
-        this.rttUpdateInterval = opts.rttUpdateTimeout || 15000
+        this.rttUpdateInterval = opts.rttUpdateTimeout
         this.trackerConnector = new TrackerConnector(
             streamPartManager.getStreamParts.bind(streamPartManager),
             this.nodeToTracker.connectToTracker.bind(this.nodeToTracker),
             this.nodeToTracker.disconnectFromTracker.bind(this.nodeToTracker),
             this.trackerRegistry,
-            opts.trackerConnectionMaintenanceInterval ?? 5000
+            opts.trackerConnectionMaintenanceInterval
         )
 
         this.instructionThrottler = new InstructionThrottler(this.handleTrackerInstruction.bind(this))

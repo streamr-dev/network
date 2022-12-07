@@ -13,7 +13,6 @@
         "src/**/*",
         "src/**/*.json",
         "vendor/**/*",
-        "contracts/**/*.json",
         "src/config.schema.json",
         "test/**/*"
     ],
@@ -21,7 +20,7 @@
         "test/legacy/*",
         "test/memory/*",
         "test/exports/*",
-        "src/index-esm.mjs"
+        "src/exports-esm.mjs"
     ],
     "references": [
         { "path": "../test-utils/tsconfig.node.json" },

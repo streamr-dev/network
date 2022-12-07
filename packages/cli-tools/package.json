@@ -1,21 +1,21 @@
 {
   "name": "@streamr/cli-tools",
-  "version": "7.0.1",
-  "description": "Command line tools for Streamr.",
+  "version": "7.1.0",
+  "description": "Command line tools for Streamr",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/streamr-dev/network.git",
+    "directory": "packages/cli-tools"
+  },
   "bin": {
     "streamr": "dist/bin/streamr.js"
   },
   "scripts": {
+    "build": "tsc -b tsconfig.json",
     "check": "tsc -p ./tsconfig.json --noEmit",
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
-    "build": "tsc -b tsconfig.json",
     "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/streamr-dev/network-monorepo.git",
-    "directory": "packages/cli-tools"
   },
   "keywords": [
     "streamr",
@@ -23,21 +23,17 @@
     "tool",
     "utility"
   ],
-  "author": "Streamr <contact@streamr.com>",
+  "author": "Streamr Network AG <contact@streamr.com>",
   "license": "AGPL-3.0",
-  "bugs": {
-    "url": "https://github.com/streamr-dev/cli-tools/issues"
-  },
-  "homepage": "https://github.com/streamr-dev/cli-tools#readme",
   "dependencies": {
     "@ethersproject/wallet": "^5.5.0",
     "@snapshot-labs/snapshot.js": "^0.4.43",
-    "@streamr/utils": "7.0.1",
+    "@streamr/utils": "7.1.0",
     "commander": "^8.3.0",
     "easy-table": "^1.1.1",
     "event-stream": "^4.0.1",
     "lodash": "^4.17.21",
-    "streamr-client": "7.0.1"
+    "streamr-client": "7.1.0"
   },
   "devDependencies": {
     "@types/easy-table": "0.0.32",

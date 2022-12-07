@@ -32,12 +32,12 @@ export interface SubscriptionPipelineOptions {
     config: StrictStreamrClientConfig
 }
 
-export const createSubscribePipeline = <T = unknown>(opts: SubscriptionPipelineOptions): MessageStream<T> => {
+export const createSubscribePipeline = (opts: SubscriptionPipelineOptions): MessageStream => {
     const validate = new Validator(
         opts.streamRegistryCached
     )
 
-    const gapFillMessages = new OrderMessages<T>(
+    const gapFillMessages = new OrderMessages(
         opts.config,
         opts.resends,
         opts.streamPartId,
@@ -58,7 +58,7 @@ export const createSubscribePipeline = <T = unknown>(opts: SubscriptionPipelineO
         throw error
     }
 
-    const decrypt = new Decrypt<T>(
+    const decrypt = new Decrypt(
         opts.groupKeyStore,
         opts.subscriberKeyExchange,
         opts.streamRegistryCached,
@@ -68,8 +68,8 @@ export const createSubscribePipeline = <T = unknown>(opts: SubscriptionPipelineO
         opts.config,
     )
 
-    const messageStream = new MessageStream<T>()
-    const msgChainUtil = new MsgChainUtil<T>(async (msg) => {
+    const messageStream = new MessageStream()
+    const msgChainUtil = new MsgChainUtil(async (msg) => {
         await validate.validate(msg)
         return decrypt.decrypt(msg)
     }, messageStream.onError)
@@ -83,7 +83,7 @@ export const createSubscribePipeline = <T = unknown>(opts: SubscriptionPipelineO
         // order messages (fill gaps)
         .pipe(gapFillMessages.transform())
         // validate & decrypt
-        .pipe(async function* (src: AsyncGenerator<StreamMessage<T>>) {
+        .pipe(async function* (src: AsyncGenerator<StreamMessage>) {
             setImmediate(async () => {
                 for await (const msg of src) {
                     msgChainUtil.addMessage(msg)

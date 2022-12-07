@@ -8,8 +8,8 @@ import { LoggerFactory } from '../utils/LoggerFactory'
 import { StrictStreamrClientConfig } from './../Config'
 import { MessageStream } from './MessageStream'
 
-export class ResendSubscription<T> extends Subscription<T> {
-    private orderMessages: OrderMessages<T>
+export class ResendSubscription extends Subscription {
+    private orderMessages: OrderMessages
 
     /** @internal */
     constructor(
@@ -20,7 +20,7 @@ export class ResendSubscription<T> extends Subscription<T> {
         @inject(ConfigInjectionToken) config: StrictStreamrClientConfig
     ) {
         super(streamPartId, loggerFactory)
-        this.orderMessages = new OrderMessages<T>(
+        this.orderMessages = new OrderMessages(
             config,
             resends,
             streamPartId,
@@ -33,8 +33,8 @@ export class ResendSubscription<T> extends Subscription<T> {
         })
     }
 
-    private async getResent(): Promise<MessageStream<T>> {
-        const resentMsgs = await this.resends.resend<T>(this.streamPartId, this.resendOptions)
+    private async getResent(): Promise<MessageStream> {
+        const resentMsgs = await this.resends.resend(this.streamPartId, this.resendOptions)
 
         this.onBeforeFinally.listen(async () => {
             resentMsgs.end()
@@ -44,7 +44,7 @@ export class ResendSubscription<T> extends Subscription<T> {
         return resentMsgs
     }
 
-    private async* resendThenRealtime(src: AsyncGenerator<StreamMessage<T>>): AsyncGenerator<StreamMessage<T>, void, any> {
+    private async* resendThenRealtime(src: AsyncGenerator<StreamMessage>): AsyncGenerator<StreamMessage, void, any> {
         try {
             yield* (await this.getResent()).getStreamMessages()
         } catch (err) {

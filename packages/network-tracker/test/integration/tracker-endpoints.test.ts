@@ -2,9 +2,9 @@ import { Tracker } from '../../src/logic/Tracker'
 import http from 'http'
 import { startTracker } from '../../src/startTracker'
 import 'jest-extended'
-import { createNetworkNode, NetworkNode } from '@streamr/network-node'
+import { createNetworkNode, NetworkNode, TEST_CONFIG } from '@streamr/network-node'
 import { StreamPartIDUtils } from '@streamr/protocol'
-import { waitForCondition } from '@streamr/utils'
+import { MetricsContext, waitForCondition } from '@streamr/utils'
 
 function getHttp(url: string) {
     return new Promise((resolve, reject) => {
@@ -45,23 +45,28 @@ describe('tracker endpoint', () => {
                 hostname: '127.0.0.1',
                 port: trackerPort
             },
-            attachHttpEndpoints: true
+            attachHttpEndpoints: true,
+            id: 'test-id',
+            trackerPingInterval: TEST_CONFIG.trackerPingInterval,
+            metricsContext: new MetricsContext()
         })
         const trackerInfo = tracker.getConfigRecord()
         nodeOne = createNetworkNode({
+            ...TEST_CONFIG,
             id: 'node-1',
             trackers: [trackerInfo],
             location: {
                 country: 'CH',
                 city: 'Zug'
             },
-            webrtcDisallowPrivateAddresses: false
+            metricsContext: new MetricsContext()
         })
         nodeTwo = createNetworkNode({
+            ...TEST_CONFIG,
             id: 'node-2',
             trackers: [trackerInfo],
             location: undefined,
-            webrtcDisallowPrivateAddresses: false
+            metricsContext: new MetricsContext()
         })
         nodeTwo.setExtraMetadata({
             foo: 'bar'

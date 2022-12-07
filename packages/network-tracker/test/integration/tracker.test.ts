@@ -3,10 +3,11 @@ import { startTracker } from '../../src/startTracker'
 
 import { runAndWaitForEvents, runAndWaitForConditions } from '@streamr/test-utils'
 
-import { createNetworkNode, NodeEvent, NetworkNode } from '@streamr/network-node'
+import { createNetworkNode, NodeEvent, NetworkNode, TEST_CONFIG } from '@streamr/network-node'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { getTopology } from '../../src/logic/trackerSummaryUtils'
 import { StreamPartIDUtils } from '@streamr/protocol'
+import { MetricsContext } from '@streamr/utils'
 
 describe('check tracker, nodes and statuses from nodes', () => {
     let tracker: Tracker
@@ -18,20 +19,25 @@ describe('check tracker, nodes and statuses from nodes', () => {
             listen: {
                 hostname: '127.0.0.1',
                 port: 32400
-            }
+            },
+            id: 'test-id',
+            trackerPingInterval: TEST_CONFIG.trackerPingInterval,
+            metricsContext: new MetricsContext()
         })
 
         const trackerInfo = tracker.getConfigRecord()
 
         subscriberOne = createNetworkNode({
+            ...TEST_CONFIG,
             id: 'subscriberOne',
             trackers: [trackerInfo],
-            webrtcDisallowPrivateAddresses: false
+            metricsContext: new MetricsContext()
         })
         subscriberTwo = createNetworkNode({
+            ...TEST_CONFIG,
             id: 'subscriberTwo',
             trackers: [trackerInfo],
-            webrtcDisallowPrivateAddresses: false
+            metricsContext: new MetricsContext()
         })
 
         subscriberOne.start()

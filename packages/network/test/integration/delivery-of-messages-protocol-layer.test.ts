@@ -15,17 +15,15 @@ import {
 } from '@streamr/protocol'
 import { runAndWaitForEvents } from '@streamr/test-utils'
 import { toEthereumAddress, waitForEvent } from '@streamr/utils'
-import { startTracker, Tracker, TrackerServer, TrackerServerEvent } from '@streamr/network-tracker'
+import { Tracker, TrackerServer, TrackerServerEvent } from '@streamr/network-tracker'
 import { Event as NodeToNodeEvent, NodeToNode } from '../../src/protocol/NodeToNode'
 import { Event as NodeToTrackerEvent, NodeToTracker } from '../../src/protocol/NodeToTracker'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
 import { NegotiatedProtocolVersions } from '../../src/connection/NegotiatedProtocolVersions'
 import { MetricsContext } from '@streamr/utils'
-import { WebRtcEndpoint } from '../../src/connection/webrtc/WebRtcEndpoint'
 import { webRtcConnectionFactory } from '../../src/connection/webrtc/NodeWebRtcConnection'
-import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
-import { startServerWsEndpoint } from '../utils'
+import { createTestNodeClientWsEndpoint, createTestWebRtcEndpoint, startServerWsEndpoint, startTestTracker } from '../utils'
 
 const UUID_REGEX = /[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}/
 
@@ -43,22 +41,19 @@ describe('delivery of messages in protocol layer', () => {
     let trackerServer: TrackerServer
 
     beforeAll(async () => {
-        signallingTracker = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: 28515
-            }
+        signallingTracker = await startTestTracker({
+            port: 28515
         })
         const peerInfo1 = PeerInfo.newNode('node1')
         const peerInfo2 = PeerInfo.newNode('node2')
         const trackerServerPeerInfo = PeerInfo.newTracker('trackerServer')
-        const wsEndpoint1 = new NodeClientWsEndpoint(peerInfo1)
-        const wsEndpoint2 = new NodeClientWsEndpoint(peerInfo2)
+        const wsEndpoint1 = createTestNodeClientWsEndpoint(peerInfo1)
+        const wsEndpoint2 = createTestNodeClientWsEndpoint(peerInfo2)
         const wsEndpoint3 = await startServerWsEndpoint('127.0.0.1', 28516, trackerServerPeerInfo)
         nodeToTracker = new NodeToTracker(wsEndpoint1)
         nodeToTracker2 = new NodeToTracker(wsEndpoint2)
 
-        const wrtcEndpoint1 = new WebRtcEndpoint(
+        const wrtcEndpoint1 = createTestWebRtcEndpoint(
             peerInfo1,
             [],
             new RtcSignaller(peerInfo1, nodeToTracker),
@@ -66,7 +61,7 @@ describe('delivery of messages in protocol layer', () => {
             new NegotiatedProtocolVersions(peerInfo1),
             webRtcConnectionFactory
         )
-        const wrtcEndpoint2 =  new WebRtcEndpoint(
+        const wrtcEndpoint2 =  createTestWebRtcEndpoint(
             peerInfo2,
             [],
             new RtcSignaller(peerInfo2, nodeToTracker2),

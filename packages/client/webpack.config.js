@@ -31,7 +31,7 @@ module.exports = (env, argv) => {
         name: 'streamr-client',
         mode: isProduction ? 'production' : 'development',
         entry: {
-            'streamr-client': path.join(__dirname, 'src', 'index-browser.ts'),
+            'streamr-client': path.join(__dirname, 'src', 'exports-browser.ts'),
         },
         devtool: 'source-map',
         output: {
@@ -107,8 +107,8 @@ module.exports = (env, argv) => {
                 crypto: require.resolve('crypto-browserify'),
                 buffer: require.resolve('buffer/'),
                 'node-fetch': path.resolve('./src/shim/node-fetch.ts'),
-                '@streamr/protocol': path.resolve('../protocol/src'),
-                '@streamr/network-node': path.resolve('../network/src/browser.ts'),
+                '@streamr/protocol': path.resolve('../protocol/src/exports.ts'),
+                '@streamr/network-node': path.resolve('../network/src/exports-browser.ts'),
                 [path.join(__dirname, '../network/src/connection/webrtc/NodeWebRtcConnection.ts$')]: require.resolve('@streamr/network-node/src/connection/webrtc/BrowserWebRtcConnection.ts'),
                 [path.join(__dirname, '../network/src/connection/ws/NodeClientWsEndpoint.ts$')]: require.resolve('@streamr/network-node/src/connection/ws/BrowserClientWsEndpoint.ts'),
                 [path.join(__dirname, '../network/src/connection/ws/NodeClientWsConnection.ts$')]: require.resolve('@streamr/network-node/src/connection/ws/BrowserClientWsConnection.ts'),

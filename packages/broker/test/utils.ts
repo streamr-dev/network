@@ -11,7 +11,8 @@ import { Tracker, startTracker } from '@streamr/network-tracker'
 import { Broker, createBroker } from '../src/broker'
 import { Config } from '../src/config/config'
 import { StreamPartID } from '@streamr/protocol'
-import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
+import { EthereumAddress, MetricsContext, toEthereumAddress } from '@streamr/utils'
+import { TEST_CONFIG } from '@streamr/network-node'
 
 export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
 
@@ -91,6 +92,8 @@ export const startTestTracker = async (port: number): Promise<Tracker> => {
             hostname: '127.0.0.1',
             port
         },
+        metricsContext: new MetricsContext(),
+        trackerPingInterval: TEST_CONFIG.trackerPingInterval
     })
 }
 

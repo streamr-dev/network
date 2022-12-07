@@ -1,13 +1,13 @@
-import { Wallet } from 'ethers'
-import { StreamID, toStreamPartID } from '@streamr/protocol'
-import { createNetworkNode } from '@streamr/network-node'
+import { Wallet } from '@ethersproject/wallet'
+import { StreamID, toStreamPartID, TrackerRegistryRecord } from '@streamr/protocol'
+import { createNetworkNode, NetworkNodeOptions, TEST_CONFIG } from '@streamr/network-node'
 import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { ConfigTest } from '../../src/ConfigTest'
+import { CONFIG_TEST } from '../../src/ConfigTest'
 import { PermissionAssignment, StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { createTestStream } from '../test-utils/utils'
-import { waitForCondition } from '@streamr/utils'
+import { waitForCondition, MetricsContext } from '@streamr/utils'
 
 const TIMEOUT = 20 * 1000
 
@@ -16,11 +16,13 @@ const PAYLOAD = { hello: 'world' }
 const ENCRYPTED_MESSSAGE_FORMAT = /^[0-9A-Fa-f]+$/
 
 async function startNetworkNodeAndListenForAtLeastOneMessage(streamId: StreamID): Promise<unknown[]> {
-    const networkNode = await createNetworkNode({
-        // TODO better typing for ConfigTest.network.trackers?
-        ...ConfigTest.network as any,
+    const config: NetworkNodeOptions = {
+        ...TEST_CONFIG,
         id: 'networkNode',
-    })
+        trackers: CONFIG_TEST.network!.trackers as TrackerRegistryRecord[],
+        metricsContext: new MetricsContext()
+    }
+    const networkNode = createNetworkNode(config)
     try {
         networkNode.subscribe(toStreamPartID(streamId, 0))
         const messages: unknown[] = []
@@ -39,7 +41,7 @@ async function createStreamWithPermissions(
     ...assignments: PermissionAssignment[]
 ): Promise<Stream> {
     const creatorClient = new StreamrClient({
-        ...ConfigTest,
+        ...CONFIG_TEST,
         auth: {
             privateKey
         }
@@ -66,13 +68,13 @@ describe('publish-subscribe', () => {
 
     beforeEach(async () => {
         publisherClient = new StreamrClient({
-            ...ConfigTest,
+            ...CONFIG_TEST,
             auth: {
                 privateKey: publisherPk
             }
         })
         subscriberClient = new StreamrClient({
-            ...ConfigTest,
+            ...CONFIG_TEST,
             auth: {
                 privateKey: subscriberWallet.privateKey
             }

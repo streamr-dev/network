@@ -1,14 +1,13 @@
-import { Tracker, startTracker } from '@streamr/network-tracker'
+import { Tracker } from '@streamr/network-tracker'
 import { NetworkNode } from '../../src/logic/NetworkNode'
 import { eventsWithArgsToArray } from '@streamr/test-utils'
 import { waitForEvent } from '@streamr/utils'
 import { wait } from '@streamr/utils'
 import { InstructionMessage, toStreamID, toStreamPartID } from '@streamr/protocol'
 
-import { createNetworkNode } from '../../src/composition'
 import { Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
 import { Event as NodeEvent } from '../../src/logic/Node'
-import { getStreamParts } from '../utils'
+import { createTestNetworkNode, getStreamParts, startTestTracker } from '../utils'
 
 // TODO: maybe worth re-designing this in a way that isn't this arbitrary?
 const FIRST_STREAM = toStreamID('stream-7') // assigned to trackerOne (arbitrarily by hashing algo)
@@ -34,36 +33,27 @@ describe('multi trackers', () => {
     let nodeTwo: NetworkNode
 
     beforeEach(async () => {
-        trackerOne = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: 49000
-            }
+        trackerOne = await startTestTracker({
+            port: 49000
         })
-        trackerTwo = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: 49001
-            }
+        trackerTwo = await startTestTracker({
+            port: 49001
         })
-        trackerThree = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: 49002
-            }
+        trackerThree = await startTestTracker({
+            port: 49002
         })
         const trackerInfo1 = trackerOne.getConfigRecord()
         const trackerInfo2 = trackerTwo.getConfigRecord()
         const trackerInfo3 = trackerThree.getConfigRecord()
 
         const trackerAddresses = [trackerInfo1, trackerInfo2, trackerInfo3]
-        nodeOne = createNetworkNode({
+        nodeOne = createTestNetworkNode({
             id: 'nodeOne',
             trackers: trackerAddresses,
             trackerConnectionMaintenanceInterval: 100,
             webrtcDisallowPrivateAddresses: false
         })
-        nodeTwo = createNetworkNode({
+        nodeTwo = createTestNetworkNode({
             id: 'nodeTwo',
             trackers: trackerAddresses,
             trackerConnectionMaintenanceInterval: 100,

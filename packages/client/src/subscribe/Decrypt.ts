@@ -11,7 +11,7 @@ import { Logger, waitForEvent } from '@streamr/utils'
 import { StreamrClientEventEmitter } from '../events'
 import { LoggerFactory } from '../utils/LoggerFactory'
 
-export class Decrypt<T> {
+export class Decrypt {
     private readonly logger: Logger
 
     constructor(
@@ -30,7 +30,7 @@ export class Decrypt<T> {
     // TODO if this.destroySignal.isDestroyed() is true, would it make sense to reject the promise
     // and not to return the original encrypted message?
     // - e.g. StoppedError, which is not visible to end-user
-    async decrypt(streamMessage: StreamMessage<T>): Promise<StreamMessage<T>> {
+    async decrypt(streamMessage: StreamMessage): Promise<StreamMessage> {
         if (this.destroySignal.isDestroyed()) {
             return streamMessage
         }
@@ -79,7 +79,7 @@ export class Decrypt<T> {
                 // newGroupKey has been converted into GroupKey
                 await this.groupKeyStore.add(clone.newGroupKey as unknown as GroupKey, streamMessage.getStreamId())
             }
-            return clone as StreamMessage<T>
+            return clone
         } catch (err) {
             this.logger.debug('failed to decrypt message %j, reason: %s', streamMessage.getMessageID(), err)
             // clear cached permissions if cannot decrypt, likely permissions need updating
