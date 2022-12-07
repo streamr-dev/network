@@ -8,10 +8,8 @@ import type { ExternalProvider } from '@ethersproject/providers'
 import { MarkOptional, DeepRequired } from 'ts-essentials'
 
 import CONFIG_SCHEMA from './config.schema.json'
-import { TrackerRegistryRecord } from '@streamr/protocol'
 import { LogLevel } from '@streamr/utils'
 
-import { NetworkNodeOptions, IceServer, Location } from '@streamr/network-node'
 import type { ConnectionInfo } from '@ethersproject/web'
 import { generateClientId } from './utils/utils'
 
