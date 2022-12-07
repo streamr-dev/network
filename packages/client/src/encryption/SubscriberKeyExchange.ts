@@ -111,7 +111,7 @@ export class SubscriberKeyExchange {
         })
     }
 
-    private async onMessage(msg: StreamMessage<any>): Promise<void> {
+    private async onMessage(msg: StreamMessage): Promise<void> {
         if (GroupKeyResponse.is(msg)) {
             try {
                 const authenticatedUser = await this.authentication.getAddress()

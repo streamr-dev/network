@@ -1,10 +1,10 @@
-import { Tracker, startTracker, TrackerServerEvent } from '@streamr/network-tracker'
+import { Tracker, TrackerServerEvent } from '@streamr/network-tracker'
 import { runAndWaitForEvents } from '@streamr/test-utils'
 import { ErrorMessage, RelayMessage, RelayMessageSubType } from '@streamr/protocol'
 
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { NodeToTracker, Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
-import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
+import { createTestNodeClientWsEndpoint, startTestTracker } from '../utils'
 
 /**
  * Validate the relaying logic of tracker's WebRTC signalling messages.
@@ -15,15 +15,12 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
     let targetNodeToTracker: NodeToTracker
 
     beforeAll(async () => {
-        tracker = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: 28660
-            }
+        tracker = await startTestTracker({
+            port: 28660
         })
         const trackerPeerInfo = PeerInfo.newTracker(tracker.getTrackerId())
-        const originatorEndpoint = new NodeClientWsEndpoint(PeerInfo.newNode('originator'))
-        const targetEndpoint = new NodeClientWsEndpoint(PeerInfo.newNode('target'))
+        const originatorEndpoint = createTestNodeClientWsEndpoint(PeerInfo.newNode('originator'))
+        const targetEndpoint = createTestNodeClientWsEndpoint(PeerInfo.newNode('target'))
 
         originatorNodeToTracker = new NodeToTracker(originatorEndpoint)
         targetNodeToTracker = new NodeToTracker(targetEndpoint)

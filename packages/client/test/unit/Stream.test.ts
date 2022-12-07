@@ -1,26 +1,34 @@
 import 'reflect-metadata'
 
 import { toStreamID } from '@streamr/protocol'
-import { container as rootContainer } from 'tsyringe'
-import { createStrictConfig } from '../../src/Config'
-import { initContainer } from '../../src/Container'
 import { StreamRegistry } from '../../src/registry/StreamRegistry'
+import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
 import { StreamFactory } from './../../src/StreamFactory'
+
+const createStreamFactory = (streamRegistry?: StreamRegistry, streamRegistryCached?: StreamRegistryCached) => {
+    return new StreamFactory(
+        undefined as any,
+        undefined as any,
+        undefined as any,
+        streamRegistryCached as any,
+        streamRegistry as any,
+        undefined as any,
+        undefined as any,
+        undefined as any,
+        undefined as any
+    )
+}
 
 describe('Stream', () => {
 
     it('initial fields', () => {
-        const mockContainer = rootContainer.createChildContainer()
-        initContainer(createStrictConfig({}), mockContainer)
-        const factory = mockContainer.resolve(StreamFactory)
+        const factory = createStreamFactory()
         const stream = factory.createStream(toStreamID('mock-id'), {})
         expect(stream.getMetadata().config?.fields).toEqual([])
     })
 
     it('getMetadata', () => {
-        const mockContainer = rootContainer.createChildContainer()
-        initContainer(createStrictConfig({}), mockContainer)
-        const factory = mockContainer.resolve(StreamFactory)
+        const factory = createStreamFactory()
         const stream = factory.createStream(toStreamID('mock-id'), {
             partitions: 10,
             storageDays: 20
@@ -38,13 +46,15 @@ describe('Stream', () => {
 
     describe('update', () => {
         it('fields not updated if transaction fails', async () => {
-            const config = createStrictConfig({})
-            const mockContainer = rootContainer.createChildContainer()
-            initContainer(config, mockContainer)
-            mockContainer.registerInstance(StreamRegistry, {
+            const clearStream = jest.fn()
+            const streamRegistryCached: Partial<StreamRegistryCached> = {
+                clearStream
+            }
+            const streamRegistry: Partial<StreamRegistry> = {
                 updateStream: jest.fn().mockRejectedValue(new Error('mock-error'))
-            } as any)
-            const factory = mockContainer.resolve(StreamFactory)
+            } 
+            const factory = createStreamFactory(streamRegistry as any, streamRegistryCached as any)
+                
             const stream = factory.createStream(toStreamID('mock-id'), {
                 description: 'original-description'
             })
@@ -55,6 +65,7 @@ describe('Stream', () => {
                 })
             }).rejects.toThrow('mock-error')
             expect(stream.getMetadata().description).toBe('original-description')
+            expect(clearStream).toBeCalledWith('mock-id')
         })
     })
 })

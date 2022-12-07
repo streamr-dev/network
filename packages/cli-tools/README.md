@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://streamr.network">
-    <img alt="Streamr" src="https://raw.githubusercontent.com/streamr-dev/network-monorepo/main/packages/client/readme-header-img.png" width="1320" />
+    <img alt="Streamr" src="https://raw.githubusercontent.com/streamr-dev/network-monorepo/main/packages/client/readme-header.png" width="1320" />
   </a>
 </p>
 
@@ -13,17 +13,12 @@ See [Changelog](CHANGELOG.md) for version information and changes.
 ## Table of Contents
 - [Install](#install)
 - [Use](#use)
-- [Develop](#develop)
-- [Release](#release)
-- [Contribute](#contribute)
 
 ## Install
-| NodeJS version `16.13.x` and NPM version `8.x` is required |
-| --- |
-
 ```
 npm install -g @streamr/cli-tools
 ```
+Node.js `16.13.x` is the minimum required version. Node.js `18.12.x`, NPM `8.x` and later versions are recommended.
 
 ## Use
 All commands follow pattern `streamr <command> <subcommand>`, e.g.
@@ -169,7 +164,7 @@ streamr governance vote 0x2109759e060ba5a37d70be00522e00da77397f838c01c12f74c8d8
 
 You must pass either the `--private-key` or `--config` option.
 
-#### Configuration
+### Configuration
 
 User can specify environment and authentication details with the following command line arguments:
 - `--private-key <key>`, e.g. `--private-key 0x1234567890123456789012345678901234567890123456789012345678901234`
@@ -228,16 +223,3 @@ the real-time events.
 ```
 streamr stream subscribe streamr.eth/demos/helsinki-trams | streamr stream publish --dev <streamId> --private-key <key>
 ```
-
-## Develop
-This project is a thin wrapper around [streamr-client-javascript](https://github.com/streamr-dev/network-monorepo/blob/main/packages/client/),
-which does the heavy lifting, while this project concentrates on CLI concerns: parsing and
-passing arguments, stdin/stdout, errors, and so forth.
-
-### Release
-```
-npm publish --access=public
-```
-
-## Contribute
-See issues, especially those tagged with "help wanted". We welcome pull requests and issues.

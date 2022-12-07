@@ -145,9 +145,9 @@ describe('multiple publisher plugins', () => {
 
     it('subscribe by StreamrClient', async () => {
 
-        const receivedMessages: Queue<object> = new Queue()
+        const receivedMessages: Queue<unknown> = new Queue()
         const subscriber = await createClient(tracker, fastPrivateKey())
-        await subscriber.subscribe(streamId, (message: object) => {
+        await subscriber.subscribe(streamId, (message: unknown) => {
             receivedMessages.push(message)
         })
 

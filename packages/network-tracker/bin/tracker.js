@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /* eslint-disable @typescript-eslint/no-require-imports */
 const program = require('commander')
-const { startTracker } = require('..')
-const { Logger } = require('@streamr/utils')
+const { startTracker } = require('../dist/src/startTracker')
+const { MetricsContext, Logger } = require('@streamr/utils')
 const ethers = require('ethers')
 const { SlackBot } = require('@streamr/slackbot')
 
@@ -76,7 +76,9 @@ async function main() {
             attachHttpEndpoints: program.opts().attachHttpEndpoints,
             privateKeyFileName: program.opts().privateKeyFileName,
             certFileName: program.opts().certFileName,
-            topologyStabilization: getTopologyStabilization()
+            topologyStabilization: getTopologyStabilization(),
+            metricsContext: new MetricsContext(),
+            trackerPingInterval: 60 * 1000
         })
 
         const trackerObj = {}

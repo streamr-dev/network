@@ -20,15 +20,17 @@ import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
 import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
 
-interface StreamRegistryV3Interface extends ethers.utils.Interface {
+interface StreamRegistryV4Interface extends ethers.utils.Interface {
   functions: {
     "DEFAULT_ADMIN_ROLE()": FunctionFragment;
     "ENScreateStreamCallback(address,string,string,string)": FunctionFragment;
     "MAX_INT()": FunctionFragment;
     "TRUSTED_ROLE()": FunctionFragment;
     "addressToString(address)": FunctionFragment;
+    "createMultipleStreamsWithPermissions(string[],string[],address[][],tuple[][])": FunctionFragment;
     "createStream(string,string)": FunctionFragment;
     "createStreamWithENS(string,string,string)": FunctionFragment;
+    "createStreamWithPermissions(string,string,address[],tuple[])": FunctionFragment;
     "deleteStream(string)": FunctionFragment;
     "exists(string)": FunctionFragment;
     "getAddressKey(string,address)": FunctionFragment;
@@ -55,8 +57,10 @@ interface StreamRegistryV3Interface extends ethers.utils.Interface {
     "setExpirationTime(string,address,uint8,uint256)": FunctionFragment;
     "setPermissions(string,address[],tuple[])": FunctionFragment;
     "setPermissionsForUser(string,address,bool,bool,uint256,uint256,bool)": FunctionFragment;
+    "setPermissionsMultipleStreams(string[],address[][],tuple[][])": FunctionFragment;
     "setPermissionsMultipleStreans(string[],address[][],tuple[][])": FunctionFragment;
     "setPublicPermission(string,uint256,uint256)": FunctionFragment;
+    "setTrustedForwarder(address)": FunctionFragment;
     "streamIdToMetadata(string)": FunctionFragment;
     "streamIdToPermissions(string,bytes32)": FunctionFragment;
     "supportsInterface(bytes4)": FunctionFragment;
@@ -91,12 +95,42 @@ interface StreamRegistryV3Interface extends ethers.utils.Interface {
     values: [string]
   ): string;
   encodeFunctionData(
+    functionFragment: "createMultipleStreamsWithPermissions",
+    values: [
+      string[],
+      string[],
+      string[][],
+      {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[][]
+    ]
+  ): string;
+  encodeFunctionData(
     functionFragment: "createStream",
     values: [string, string]
   ): string;
   encodeFunctionData(
     functionFragment: "createStreamWithENS",
     values: [string, string, string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "createStreamWithPermissions",
+    values: [
+      string,
+      string,
+      string[],
+      {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[]
+    ]
   ): string;
   encodeFunctionData(
     functionFragment: "deleteStream",
@@ -215,6 +249,20 @@ interface StreamRegistryV3Interface extends ethers.utils.Interface {
     ]
   ): string;
   encodeFunctionData(
+    functionFragment: "setPermissionsMultipleStreams",
+    values: [
+      string[],
+      string[][],
+      {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[][]
+    ]
+  ): string;
+  encodeFunctionData(
     functionFragment: "setPermissionsMultipleStreans",
     values: [
       string[],
@@ -231,6 +279,10 @@ interface StreamRegistryV3Interface extends ethers.utils.Interface {
   encodeFunctionData(
     functionFragment: "setPublicPermission",
     values: [string, BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setTrustedForwarder",
+    values: [string]
   ): string;
   encodeFunctionData(
     functionFragment: "streamIdToMetadata",
@@ -342,11 +394,19 @@ interface StreamRegistryV3Interface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "createMultipleStreamsWithPermissions",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "createStream",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
     functionFragment: "createStreamWithENS",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "createStreamWithPermissions",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -439,11 +499,19 @@ interface StreamRegistryV3Interface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "setPermissionsMultipleStreams",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "setPermissionsMultipleStreans",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
     functionFragment: "setPublicPermission",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setTrustedForwarder",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -525,7 +593,7 @@ interface StreamRegistryV3Interface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "Upgraded"): EventFragment;
 }
 
-export class StreamRegistryV3 extends Contract {
+export class StreamRegistryV4 extends Contract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -566,7 +634,7 @@ export class StreamRegistryV3 extends Contract {
     toBlock?: string | number | undefined
   ): Promise<Array<TypedEvent<EventArgsArray & EventArgsObject>>>;
 
-  interface: StreamRegistryV3Interface;
+  interface: StreamRegistryV4Interface;
 
   functions: {
     DEFAULT_ADMIN_ROLE(overrides?: CallOverrides): Promise<[string]>;
@@ -607,6 +675,34 @@ export class StreamRegistryV3 extends Contract {
       overrides?: CallOverrides
     ): Promise<[string]>;
 
+    createMultipleStreamsWithPermissions(
+      streamIdPaths: string[],
+      metadataJsonStrings: string[],
+      users: string[][],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[][],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "createMultipleStreamsWithPermissions(string[],string[],address[][],tuple[][])"(
+      streamIdPaths: string[],
+      metadataJsonStrings: string[],
+      users: string[][],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[][],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     createStream(
       streamIdPath: string,
       metadataJsonString: string,
@@ -630,6 +726,34 @@ export class StreamRegistryV3 extends Contract {
       ensName: string,
       streamIdPath: string,
       metadataJsonString: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    createStreamWithPermissions(
+      streamIdPath: string,
+      metadataJsonString: string,
+      users: string[],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "createStreamWithPermissions(string,string,address[],tuple[])"(
+      streamIdPath: string,
+      metadataJsonString: string,
+      users: string[],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -1027,6 +1151,32 @@ export class StreamRegistryV3 extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    setPermissionsMultipleStreams(
+      streamIds: string[],
+      users: string[][],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[][],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "setPermissionsMultipleStreams(string[],address[][],tuple[][])"(
+      streamIds: string[],
+      users: string[][],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[][],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     setPermissionsMultipleStreans(
       streamIds: string[],
       users: string[][],
@@ -1064,6 +1214,16 @@ export class StreamRegistryV3 extends Contract {
       streamId: string,
       publishExpiration: BigNumberish,
       subscribeExpiration: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    setTrustedForwarder(
+      forwarder: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "setTrustedForwarder(address)"(
+      forwarder: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -1335,6 +1495,34 @@ export class StreamRegistryV3 extends Contract {
     overrides?: CallOverrides
   ): Promise<string>;
 
+  createMultipleStreamsWithPermissions(
+    streamIdPaths: string[],
+    metadataJsonStrings: string[],
+    users: string[][],
+    permissions: {
+      canEdit: boolean;
+      canDelete: boolean;
+      publishExpiration: BigNumberish;
+      subscribeExpiration: BigNumberish;
+      canGrant: boolean;
+    }[][],
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "createMultipleStreamsWithPermissions(string[],string[],address[][],tuple[][])"(
+    streamIdPaths: string[],
+    metadataJsonStrings: string[],
+    users: string[][],
+    permissions: {
+      canEdit: boolean;
+      canDelete: boolean;
+      publishExpiration: BigNumberish;
+      subscribeExpiration: BigNumberish;
+      canGrant: boolean;
+    }[][],
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   createStream(
     streamIdPath: string,
     metadataJsonString: string,
@@ -1358,6 +1546,34 @@ export class StreamRegistryV3 extends Contract {
     ensName: string,
     streamIdPath: string,
     metadataJsonString: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  createStreamWithPermissions(
+    streamIdPath: string,
+    metadataJsonString: string,
+    users: string[],
+    permissions: {
+      canEdit: boolean;
+      canDelete: boolean;
+      publishExpiration: BigNumberish;
+      subscribeExpiration: BigNumberish;
+      canGrant: boolean;
+    }[],
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "createStreamWithPermissions(string,string,address[],tuple[])"(
+    streamIdPath: string,
+    metadataJsonString: string,
+    users: string[],
+    permissions: {
+      canEdit: boolean;
+      canDelete: boolean;
+      publishExpiration: BigNumberish;
+      subscribeExpiration: BigNumberish;
+      canGrant: boolean;
+    }[],
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -1715,6 +1931,32 @@ export class StreamRegistryV3 extends Contract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  setPermissionsMultipleStreams(
+    streamIds: string[],
+    users: string[][],
+    permissions: {
+      canEdit: boolean;
+      canDelete: boolean;
+      publishExpiration: BigNumberish;
+      subscribeExpiration: BigNumberish;
+      canGrant: boolean;
+    }[][],
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "setPermissionsMultipleStreams(string[],address[][],tuple[][])"(
+    streamIds: string[],
+    users: string[][],
+    permissions: {
+      canEdit: boolean;
+      canDelete: boolean;
+      publishExpiration: BigNumberish;
+      subscribeExpiration: BigNumberish;
+      canGrant: boolean;
+    }[][],
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   setPermissionsMultipleStreans(
     streamIds: string[],
     users: string[][],
@@ -1752,6 +1994,16 @@ export class StreamRegistryV3 extends Contract {
     streamId: string,
     publishExpiration: BigNumberish,
     subscribeExpiration: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  setTrustedForwarder(
+    forwarder: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "setTrustedForwarder(address)"(
+    forwarder: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -2023,6 +2275,34 @@ export class StreamRegistryV3 extends Contract {
       overrides?: CallOverrides
     ): Promise<string>;
 
+    createMultipleStreamsWithPermissions(
+      streamIdPaths: string[],
+      metadataJsonStrings: string[],
+      users: string[][],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[][],
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "createMultipleStreamsWithPermissions(string[],string[],address[][],tuple[][])"(
+      streamIdPaths: string[],
+      metadataJsonStrings: string[],
+      users: string[][],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[][],
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     createStream(
       streamIdPath: string,
       metadataJsonString: string,
@@ -2046,6 +2326,34 @@ export class StreamRegistryV3 extends Contract {
       ensName: string,
       streamIdPath: string,
       metadataJsonString: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    createStreamWithPermissions(
+      streamIdPath: string,
+      metadataJsonString: string,
+      users: string[],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[],
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "createStreamWithPermissions(string,string,address[],tuple[])"(
+      streamIdPath: string,
+      metadataJsonString: string,
+      users: string[],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[],
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -2397,6 +2705,32 @@ export class StreamRegistryV3 extends Contract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    setPermissionsMultipleStreams(
+      streamIds: string[],
+      users: string[][],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[][],
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "setPermissionsMultipleStreams(string[],address[][],tuple[][])"(
+      streamIds: string[],
+      users: string[][],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[][],
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     setPermissionsMultipleStreans(
       streamIds: string[],
       users: string[][],
@@ -2434,6 +2768,16 @@ export class StreamRegistryV3 extends Contract {
       streamId: string,
       publishExpiration: BigNumberish,
       subscribeExpiration: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    setTrustedForwarder(
+      forwarder: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "setTrustedForwarder(address)"(
+      forwarder: string,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -2787,6 +3131,34 @@ export class StreamRegistryV3 extends Contract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    createMultipleStreamsWithPermissions(
+      streamIdPaths: string[],
+      metadataJsonStrings: string[],
+      users: string[][],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[][],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "createMultipleStreamsWithPermissions(string[],string[],address[][],tuple[][])"(
+      streamIdPaths: string[],
+      metadataJsonStrings: string[],
+      users: string[][],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[][],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     createStream(
       streamIdPath: string,
       metadataJsonString: string,
@@ -2810,6 +3182,34 @@ export class StreamRegistryV3 extends Contract {
       ensName: string,
       streamIdPath: string,
       metadataJsonString: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    createStreamWithPermissions(
+      streamIdPath: string,
+      metadataJsonString: string,
+      users: string[],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "createStreamWithPermissions(string,string,address[],tuple[])"(
+      streamIdPath: string,
+      metadataJsonString: string,
+      users: string[],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -3138,6 +3538,32 @@ export class StreamRegistryV3 extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
+    setPermissionsMultipleStreams(
+      streamIds: string[],
+      users: string[][],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[][],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "setPermissionsMultipleStreams(string[],address[][],tuple[][])"(
+      streamIds: string[],
+      users: string[][],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[][],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     setPermissionsMultipleStreans(
       streamIds: string[],
       users: string[][],
@@ -3175,6 +3601,16 @@ export class StreamRegistryV3 extends Contract {
       streamId: string,
       publishExpiration: BigNumberish,
       subscribeExpiration: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    setTrustedForwarder(
+      forwarder: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "setTrustedForwarder(address)"(
+      forwarder: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -3438,6 +3874,34 @@ export class StreamRegistryV3 extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
+    createMultipleStreamsWithPermissions(
+      streamIdPaths: string[],
+      metadataJsonStrings: string[],
+      users: string[][],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[][],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "createMultipleStreamsWithPermissions(string[],string[],address[][],tuple[][])"(
+      streamIdPaths: string[],
+      metadataJsonStrings: string[],
+      users: string[][],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[][],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
     createStream(
       streamIdPath: string,
       metadataJsonString: string,
@@ -3461,6 +3925,34 @@ export class StreamRegistryV3 extends Contract {
       ensName: string,
       streamIdPath: string,
       metadataJsonString: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    createStreamWithPermissions(
+      streamIdPath: string,
+      metadataJsonString: string,
+      users: string[],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "createStreamWithPermissions(string,string,address[],tuple[])"(
+      streamIdPath: string,
+      metadataJsonString: string,
+      users: string[],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -3794,6 +4286,32 @@ export class StreamRegistryV3 extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
+    setPermissionsMultipleStreams(
+      streamIds: string[],
+      users: string[][],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[][],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "setPermissionsMultipleStreams(string[],address[][],tuple[][])"(
+      streamIds: string[],
+      users: string[][],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[][],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
     setPermissionsMultipleStreans(
       streamIds: string[],
       users: string[][],
@@ -3831,6 +4349,16 @@ export class StreamRegistryV3 extends Contract {
       streamId: string,
       publishExpiration: BigNumberish,
       subscribeExpiration: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setTrustedForwarder(
+      forwarder: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "setTrustedForwarder(address)"(
+      forwarder: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

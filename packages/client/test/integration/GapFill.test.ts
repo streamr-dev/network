@@ -7,15 +7,15 @@ import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
-import { getPublishTestStreamMessages, Msg } from '../test-utils/publish'
+import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { createTestStream } from '../test-utils/utils'
 
 const MAX_MESSAGES = 10
 
-function monkeypatchMessageHandler<T = any>(
+function monkeypatchMessageHandler(
     streamPartId: StreamPartID,
     client: StreamrClient,
-    fn: ((msg: StreamMessage<T>, count: number) => undefined | null)
+    fn: ((msg: StreamMessage, count: number) => undefined | null)
 ) {
     let count = 0
     // @ts-expect-error private
@@ -152,7 +152,7 @@ describe('GapFill', () => {
                     waitForLast: true,
                 })
 
-                const sub = await client.resend<typeof Msg>(
+                const sub = await client.resend(
                     stream.id,
                     {
                         last: MAX_MESSAGES

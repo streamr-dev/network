@@ -12,11 +12,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Deprecated
 
+- Deprecate TypeScript interface `NetworkNodeConfig`
+
 ### Removed
 
 ### Fixed
 
 ### Security
+
+
+## [7.1.0] - 2022-11-25
+
+### Deprecated
+
+- Deprecate TypeScript interface `StrictStreamrClientConfig`
+- Deprecate `gasPriceStrategy` config option in `contracts.ethereumNetworks`, use `highGasPriceStrategy` instead
+- Deprecate method parameter of `.waitForStorage()`
+
+### Fixed
+- Networking issue in which connections could not be formed via WebRTC if STUN or TURN were needed
+
+
+## [7.0.3] - 2022-11-23
+
+### Changed
+
+- Change default list of Ethereum RPC URLs
+
+
+## [7.0.2] - 2022-11-22
+
+### Deprecated
+
+- Deprecate `STREAM_CLIENT_DEFAULTS` constant
+- Deprecate `ConfigTest` constant, use `CONFIG_TEST` instead
+
+### Removed
+
+- Remove (non-functional) client configuration option `contracts.ensCacheChainAddress`
+
+### Fixed
+
+- Fix CORS issue in browser when interacting with smart contracts
+  - Remove https://rpc-mainnet.matic.network/ from default list of Polygon RPCs
 
 
 ## [7.0.1] - 2022-11-18
@@ -181,7 +219,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fixed an import so that the client successfully loads in a web browser environment (NET-721)
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/client/v7.0.1...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/client/v7.1.0...HEAD
+[7.1.0]: https://github.com/streamr-dev/network/compare/client/v7.0.3...client/v7.1.0
+[7.0.3]: https://github.com/streamr-dev/network/compare/client/v7.0.2...client/v7.0.3
+[7.0.2]: https://github.com/streamr-dev/network/compare/client/v7.0.1...client/v7.0.2
 [7.0.1]: https://github.com/streamr-dev/network/compare/client/v7.0.0...client/v7.0.1
 [7.0.0]: https://github.com/streamr-dev/network/compare/client/v6.0.10...client/v7.0.0
 [6.0.10]: https://github.com/streamr-dev/network/compare/client/v6.0.9...client/v6.0.10

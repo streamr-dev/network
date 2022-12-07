@@ -1,36 +1,26 @@
 {
   "name": "@streamr/test-utils",
-  "version": "7.0.1",
-  "description": "a collection of Node.js utilities for dealing with asynchronous behavior in jest/mocha tests",
-  "main": "./dist/src/utils.js",
-  "types": "./dist/src/utils.d.ts",
+  "version": "7.1.0",
+  "description": "A collection of shared test utilities",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/streamr-dev/network.git",
+    "directory": "packages/test-utils"
+  },
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
   "scripts": {
+    "build": "tsc --build tsconfig.node.json",
     "check": "tsc -p ./tsconfig.jest.json --noEmit",
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "test": "jest",
-    "test-unit": "npm run test",
-    "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
-    "build": "tsc --build tsconfig.node.json"
+    "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'"
   },
-  "keywords": [
-    "testing",
-    "streamr",
-    "asynchronous"
-  ],
-  "homepage": "https://github.com/streamr-dev/streamr-test-utils",
-  "bugs": {
-    "url": "https://github.com/streamr-dev/streamr-test-utils/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/streamr-dev/network-monorepo.git",
-    "directory": "packages/test-utils"
-  },
-  "author": "Streamr <contact@streamr.com>",
+  "author": "Streamr Network AG <contact@streamr.network>",
   "license": "Apache-2.0",
   "dependencies": {
     "@ethersproject/wallet": "^5.5.0",
-    "@streamr/utils": "7.0.1",
+    "@streamr/utils": "7.1.0",
     "cors": "^2.8.5",
     "express": "^4.17.1"
   },

@@ -33,8 +33,8 @@ describe('HttpUtil', () => {
         const server = app.listen(MOCK_SERVER_PORT)
         await once(server, 'listening')
         const httpUtil = new HttpUtil(mockLoggerFactory())
-        const msgs = await collect(httpUtil.fetchHttpStream<any>(`http://localhost:${MOCK_SERVER_PORT}/endpoint`))
-        expect(msgs.map((m) => m.getParsedContent().mockId)).toEqual([0, 1, 2, 3, 4])
+        const msgs = await collect(httpUtil.fetchHttpStream(`http://localhost:${MOCK_SERVER_PORT}/endpoint`))
+        expect(msgs.map((m) => (m.getParsedContent() as any).mockId)).toEqual([0, 1, 2, 3, 4])
         server.close()
     })
 

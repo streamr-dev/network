@@ -4,14 +4,13 @@ import { Defer, wait } from '@streamr/utils'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { LeaksDetector } from '../test-utils/LeaksDetector'
 import { StreamrClient } from '../../src/StreamrClient'
-import { initContainer } from '../../src/Container'
 import { container as rootContainer, DependencyContainer } from 'tsyringe'
 import { writeHeapSnapshot } from 'v8'
 import { Subscription } from '../../src/subscribe/Subscription'
 import { counterId, instanceId } from '../../src/utils/utils'
-import { ConfigTest } from '../../src/ConfigTest'
-import { createStrictConfig, StrictStreamrClientConfig } from '../../src/Config'
-import { ethers } from 'ethers'
+import { CONFIG_TEST } from '../../src/ConfigTest'
+import { createStrictConfig, ConfigInjectionToken, StrictStreamrClientConfig } from '../../src/Config'
+import * as ethersAbi from '@ethersproject/abi'
 import { NetworkNodeFacade } from '../../src/NetworkNodeFacade'
 import { StorageNodeRegistry } from '../../src/registry/StorageNodeRegistry'
 import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
@@ -21,6 +20,7 @@ import { Subscriber } from '../../src/subscribe/Subscriber'
 import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
 import { DestroySignal } from '../../src/DestroySignal'
 import { MessageMetadata } from '../../src/Message'
+import { AuthenticationInjectionToken, createAuthentication } from '../../src/Authentication'
 
 const Dependencies = {
     NetworkNodeFacade,
@@ -51,7 +51,7 @@ describe('MemoryLeaks', () => {
     beforeEach(() => {
         leaksDetector = new LeaksDetector()
         leaksDetector.ignoreAll(rootContainer)
-        leaksDetector.ignoreAll(ethers)
+        leaksDetector.ignoreAll(ethersAbi)
         snapshot()
     })
 
@@ -73,14 +73,15 @@ describe('MemoryLeaks', () => {
                 childContainer: DependencyContainer
             }> => {
                 const config = createStrictConfig({
-                    ...ConfigTest,
+                    ...CONFIG_TEST,
                     auth: {
                         privateKey: await fetchPrivateKeyWithGas(),
                     },
                     ...opts,
                 })
                 const childContainer = rootContainer.createChildContainer()
-                initContainer(config, childContainer)
+                childContainer.register(AuthenticationInjectionToken, { useValue: createAuthentication(config) })
+                childContainer.register(ConfigInjectionToken, { useValue: config })
                 return { config, childContainer }
             }
         })
@@ -113,7 +114,7 @@ describe('MemoryLeaks', () => {
         beforeAll(() => {
             createClient = async (opts: any = {}) => {
                 const c = new StreamrClient({
-                    ...ConfigTest,
+                    ...CONFIG_TEST,
                     auth: {
                         privateKey: await fetchPrivateKeyWithGas(),
                     },
@@ -243,7 +244,7 @@ describe('MemoryLeaks', () => {
                     const sub1Done = new Defer<undefined>()
                     const received1: any[] = []
                     const SOME_MESSAGES = Math.floor(MAX_MESSAGES / 2)
-                    let sub1: Subscription<any> | undefined = await client.subscribe(stream, async (msg: any) => {
+                    let sub1: Subscription | undefined = await client.subscribe(stream, async (msg: any) => {
                         received1.push(msg)
                         if (received1.length === SOME_MESSAGES) {
                             if (!sub1) { return }

@@ -1,26 +1,21 @@
 import { runAndWaitForEvents } from '@streamr/test-utils'
-import { Tracker, startTracker } from '@streamr/network-tracker'
+import { Tracker } from '@streamr/network-tracker'
 import { NodeToTracker, Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
 import { PeerInfo } from '../../src/connection/PeerInfo'
-import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { Status } from '../../src/identifiers'
+import { createTestNodeClientWsEndpoint, startTestTracker } from '../utils'
 
 describe('Tracker disconnects from node if node sends invalid status data', () => {
     let tracker: Tracker
     let nodeToTracker: NodeToTracker
-    const TRACKER_ID = 'tracker'
 
     beforeEach(async () => {
-        tracker = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: 30436
-            },
-            id: 'tracker'
+        tracker = await startTestTracker({
+            port: 30436
         })
         const peerInfo1 = PeerInfo.newNode('nodeToTracker1')
-        const trackerPeerInfo = PeerInfo.newTracker(TRACKER_ID)
-        const wsClient = new NodeClientWsEndpoint(peerInfo1)
+        const trackerPeerInfo = PeerInfo.newTracker(tracker.getTrackerId())
+        const wsClient = createTestNodeClientWsEndpoint(peerInfo1)
         nodeToTracker = new NodeToTracker(wsClient)
 
         await runAndWaitForEvents([
@@ -46,7 +41,7 @@ describe('Tracker disconnects from node if node sends invalid status data', () =
             }
         }
         await runAndWaitForEvents([() => {
-            nodeToTracker.sendStatus(TRACKER_ID, faultyStatus as Status)
+            nodeToTracker.sendStatus(tracker.getTrackerId(), faultyStatus as Status)
         }], [
             [nodeToTracker, 'streamr:tracker-node:tracker-disconnected']
         ])

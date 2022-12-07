@@ -31,7 +31,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> imp
         sslEnabled: boolean,
         httpServer: http.Server | https.Server | null,
         peerInfo: PeerInfo,
-        pingInterval?: number
+        pingInterval: number
     ) {
         super(peerInfo, pingInterval)
         this.httpServer = httpServer

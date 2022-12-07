@@ -1,6 +1,6 @@
 import { MetricsContext } from '@streamr/utils'
 import { NodeToTracker } from '../../src/protocol/NodeToTracker'
-import { Tracker, TrackerEvent, startTracker } from '@streamr/network-tracker'
+import { Tracker, TrackerEvent } from '@streamr/network-tracker'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { runAndWaitForEvents } from '@streamr/test-utils'
 import { Event as EndpointEvent } from '../../src/connection/webrtc/IWebRtcEndpoint'
@@ -8,8 +8,8 @@ import { RtcSignaller } from '../../src/logic/RtcSignaller'
 import { NegotiatedProtocolVersions } from '../../src/connection/NegotiatedProtocolVersions'
 import { WebRtcEndpoint } from '../../src/connection/webrtc/WebRtcEndpoint'
 import { webRtcConnectionFactory } from '../../src/connection/webrtc/NodeWebRtcConnection'
-import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { GOOGLE_STUN_SERVER } from '../../src/constants'
+import { createTestNodeClientWsEndpoint, createTestWebRtcEndpoint, startTestTracker } from '../utils'
 
 describe('WebRTC multisignaller test', () => {
     let tracker1: Tracker
@@ -20,21 +20,15 @@ describe('WebRTC multisignaller test', () => {
     let endpoint2: WebRtcEndpoint
 
     beforeEach(async () => {
-        tracker1 = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: 28715
-            }
+        tracker1 = await startTestTracker({
+            port: 28715
         })
-        tracker2 = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: 28716
-            }
+        tracker2 = await startTestTracker({
+            port: 28716
         })
 
-        const ep1 = new NodeClientWsEndpoint(PeerInfo.newNode('node-1'))
-        const ep2 = new NodeClientWsEndpoint(PeerInfo.newNode('node-2'))
+        const ep1 = createTestNodeClientWsEndpoint(PeerInfo.newNode('node-1'))
+        const ep2 = createTestNodeClientWsEndpoint(PeerInfo.newNode('node-2'))
 
         nodeToTracker1 = new NodeToTracker(ep1)
         nodeToTracker2 = new NodeToTracker(ep2)
@@ -61,7 +55,7 @@ describe('WebRTC multisignaller test', () => {
 
         const peerInfo1 = PeerInfo.newNode('node-1')
         const peerInfo2 = PeerInfo.newNode('node-2')
-        endpoint1 = new WebRtcEndpoint(
+        endpoint1 = createTestWebRtcEndpoint(
             peerInfo1,
             [GOOGLE_STUN_SERVER],
             new RtcSignaller(peerInfo1, nodeToTracker1),
@@ -69,7 +63,7 @@ describe('WebRTC multisignaller test', () => {
             new NegotiatedProtocolVersions(peerInfo1),
             webRtcConnectionFactory
         )
-        endpoint2 = new WebRtcEndpoint(
+        endpoint2 = createTestWebRtcEndpoint(
             peerInfo2,
             [GOOGLE_STUN_SERVER],
             new RtcSignaller(peerInfo2, nodeToTracker2),

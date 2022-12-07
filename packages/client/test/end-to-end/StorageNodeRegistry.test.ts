@@ -1,7 +1,7 @@
 import 'reflect-metadata'
-import { Wallet } from 'ethers'
+import { Wallet } from '@ethersproject/wallet'
 import { fetchPrivateKeyWithGas, randomEthereumAddress } from '@streamr/test-utils'
-import { ConfigTest, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { CONFIG_TEST, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { until } from '../../src/utils/promises'
@@ -20,7 +20,7 @@ describe('StorageNodeRegistry', () => {
         creatorWallet = new Wallet(await fetchPrivateKeyWithGas())
         listenerWallet = new Wallet(await fetchPrivateKeyWithGas())
         creatorClient = new StreamrClient({
-            ...ConfigTest,
+            ...CONFIG_TEST,
             auth: {
                 privateKey: creatorWallet.privateKey,
             },
@@ -44,7 +44,7 @@ describe('StorageNodeRegistry', () => {
             }
         })
         listenerClient = new StreamrClient({
-            ...ConfigTest,
+            ...CONFIG_TEST,
             auth: {
                 privateKey: listenerWallet.privateKey,
             },
@@ -106,12 +106,12 @@ describe('StorageNodeRegistry', () => {
     it('no assignments', async () => {
         const storageNodeWallet = new Wallet(await fetchPrivateKeyWithGas())
         const storageNodeManager = new StreamrClient({
-            ...ConfigTest,
+            ...CONFIG_TEST,
             auth: {
                 privateKey: storageNodeWallet.privateKey
             },
             network: {
-                ...ConfigTest.network,
+                ...CONFIG_TEST.network,
                 id: storageNodeWallet.address
             }
         })

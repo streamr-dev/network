@@ -14,7 +14,7 @@ import {
 import { MetricsContext } from '@streamr/utils'
 import { uuid } from './utils/uuid'
 import { pOnce } from './utils/promises'
-import { ConfigInjectionToken, TrackerRegistryContract, StrictStreamrClientConfig } from './Config'
+import { ConfigInjectionToken, TrackerRegistryContract, StrictStreamrClientConfig, JsonPeerDescriptor } from './Config'
 import { StreamMessage, StreamPartID, ProxyDirection } from '@streamr/protocol'
 import { DestroySignal } from './DestroySignal'
 import { getMainnetProvider } from './Ethereum'
@@ -78,7 +78,7 @@ export class NetworkNodeFactory {
  */
 @scoped(Lifecycle.ContainerScoped)
 export class NetworkNodeFacade {
-    private cachedNetwork?: NetworkNode
+    private cachedNode?: NetworkNodeStub
     private startNodeCalled = false
     private startNodeComplete = false
     private readonly config: Pick<StrictStreamrClientConfig, 'network' | 'contracts'>
@@ -99,7 +99,40 @@ export class NetworkNodeFacade {
         this.destroySignal.assertNotDestroyed()
     }
 
-    private async getNormalizedNetworkOptions(): Promise<NetworkOptions> {
+    // private async getNetworkOptions(): Promise<NetworkOptions> {
+    //     const entryPoints = this.getEntryPoints()
+    //
+    //     const ownPeerDescriptor: PeerDescriptor | undefined = this.config.network.peerDescriptor ? {
+    //         kademliaId: PeerID.fromString(this.config.network.peerDescriptor.kademliaId).value,
+    //         type: this.config.network.peerDescriptor.type,
+    //         openInternet: this.config.network.peerDescriptor.openInternet,
+    //         udp: this.config.network.peerDescriptor.udp,
+    //         tcp: this.config.network.peerDescriptor.tcp,
+    //         websocket: this.config.network.peerDescriptor.websocket,
+    //     } : undefined
+    //
+    //     if ((this.config.network.trackers as TrackerRegistryContract).contractAddress) {
+    //         const trackerRegistry = await getTrackerRegistryFromContract({
+    //             _contractAddress: toEthereumAddress((this.config.network.trackers as TrackerRegistryContract).contractAddress),
+    //             _jsonRpcProvider: getMainnetProvider(this.config)
+    //         })
+    //         return {
+    //             ...this.config.network,
+    //             entryPoints: entryPoints,
+    //             trackers: trackerRegistry.getAllTrackers(),
+    //             peerDescriptor: ownPeerDescriptor
+    //         }
+    //     }
+    //     return {
+    //         ...this.config.network,
+    //         entryPoints: entryPoints,
+    //         peerDescriptor: ownPeerDescriptor
+    //     }
+    // }
+
+    private async getNetworkOptions(): Promise<NetworkOptions> {
+        let id = this.config.network.id
+
         const entryPoints = this.getEntryPoints()
 
         const ownPeerDescriptor: PeerDescriptor | undefined = this.config.network.peerDescriptor ? {
@@ -111,30 +144,6 @@ export class NetworkNodeFacade {
             websocket: this.config.network.peerDescriptor.websocket,
         } : undefined
 
-        if ((this.config.network.trackers as TrackerRegistryContract).contractAddress) {
-            const trackerRegistry = await getTrackerRegistryFromContract({
-                _contractAddress: toEthereumAddress((this.config.network.trackers as TrackerRegistryContract).contractAddress),
-                _jsonRpcProvider: getMainnetProvider(this.config)
-            })
-            return {
-                ...this.config.network,
-                entryPoints: entryPoints,
-                trackers: trackerRegistry.getAllTrackers(),
-                peerDescriptor: ownPeerDescriptor
-            }
-        }
-        return {
-            ...this.config.network,
-            entryPoints: entryPoints,
-            peerDescriptor: ownPeerDescriptor
-        }
-    }
-
-    private async initNode(): Promise<NetworkNode> {
-        this.assertNotDestroyed()
-        if (this.cachedNetwork) { return this.cachedNetwork }
-
-        let id = this.config.network.id
         if (id == null || id === '') {
             id = await this.generateId()
         } else {
@@ -143,19 +152,30 @@ export class NetworkNodeFacade {
                 throw new Error(`given node id ${id} not compatible with authenticated wallet ${ethereumAddress}`)
             }
         }
-
-        const networkOptions = await this.getNormalizedNetworkOptions()
-        const node = this.networkNodeFactory.createNetworkNode({
-            disconnectionWaitTime: 200,
-            ...networkOptions,
+        const trackers = ('contractAddress' in this.config.network.trackers)
+            ? (await getTrackerRegistryFromContract({
+                _contractAddress: toEthereumAddress((this.config.network.trackers as TrackerRegistryContract).contractAddress),
+                _jsonRpcProvider: getMainnetProvider(this.config)
+            })).getAllTrackers()
+            : this.config.network.trackers
+        return {
+            ...this.config.network,
             id,
+            trackers,
+            entryPoints,
+            peerDescriptor: ownPeerDescriptor,
             metricsContext: new MetricsContext()
-        })
-
-        if (!this.destroySignal.isDestroyed()) {
-            this.cachedNetwork = node
         }
+    }
 
+    private async initNode(): Promise<NetworkNodeStub> {
+        this.assertNotDestroyed()
+        if (this.cachedNode) { return this.cachedNode }
+
+        const node = this.networkNodeFactory.createNetworkNode(await this.getNetworkOptions())
+        if (!this.destroySignal.isDestroyed()) {
+            this.cachedNode = node
+        }
         return node
     }
 
@@ -169,8 +189,8 @@ export class NetworkNodeFacade {
      * Subsequent calls to getNode/start will fail.
      */
     private destroy = pOnce(async () => {
-        const network = this.cachedNetwork
-        this.cachedNetwork = undefined
+        const network = this.cachedNode
+        this.cachedNode = undefined
         // stop node only if started or in progress
         if (network && this.startNodeCalled) {
             if (!this.startNodeComplete) {
@@ -236,25 +256,25 @@ export class NetworkNodeFacade {
                 return node.publish(streamMessage, entryPoint)
             })
         }
-        return this.cachedNetwork!.publish(streamMessage, entryPoint)
+        return this.cachedNode!.publish(streamMessage, entryPoint)
     }
 
     async openProxyConnection(streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection): Promise<void> {
         if (this.isStarting()) {
             await this.startNodeTask()
         }
-        await this.cachedNetwork!.openProxyConnection(streamPartId, nodeId, direction, (await this.authentication.getAddress()))
+        await this.cachedNode!.openProxyConnection(streamPartId, nodeId, direction, (await this.authentication.getAddress()))
     }
 
     async closeProxyConnection(streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection): Promise<void> {
         if (this.isStarting()) {
             return
         }
-        await this.cachedNetwork!.closeProxyConnection(streamPartId, nodeId, direction)
+        await this.cachedNode!.closeProxyConnection(streamPartId, nodeId, direction)
     }
 
     private isStarting(): boolean {
-        return !this.cachedNetwork || !this.startNodeComplete
+        return !this.cachedNode || !this.startNodeComplete
     }
 
     once<E extends keyof Events>(eventName: E, listener: Events[E]): void {
@@ -262,7 +282,7 @@ export class NetworkNodeFacade {
     }
 
     getEntryPoints(): PeerDescriptor[] {
-        return this.config.network.entryPoints.map((ep) => {
+        return this.config.network.entryPoints.map((ep: JsonPeerDescriptor) => {
             const peerDescriptor: PeerDescriptor = {
                 kademliaId: PeerID.fromString(ep.kademliaId).value,
                 type: ep.type,

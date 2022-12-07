@@ -1,6 +1,8 @@
 import assert from 'assert'
-
-import { ProxyConnectionResponse, ControlMessage, toStreamID } from '../../../../src/index'
+import ControlMessage from '../../../../src/protocol/control_layer/ControlMessage'
+import ProxyConnectionResponse from '../../../../src/protocol/control_layer/proxy_connection_response/ProxyConnectionResponse'
+import '../../../../src/protocol/control_layer/proxy_connection_response/ProxyConnectionResponseSerializerV2'
+import { toStreamID } from '../../../../src/utils/StreamID'
 import { ProxyDirection } from '../../../../src/utils/types'
 
 const VERSION = 2

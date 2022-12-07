@@ -17,7 +17,7 @@ const sideChainConfig = {
 /**
  * Streamr client constructor options that work in the test environment
  */
-export const ConfigTest: StreamrClientConfig = {
+export const CONFIG_TEST: StreamrClientConfig = {
     network: {
         trackers: [
             {
@@ -74,5 +74,8 @@ export const ConfigTest: StreamrClientConfig = {
     },
     metrics: false
 }
+
+/** @deprecated Use CONFIG_TEST */
+export const ConfigTest = CONFIG_TEST
 
 export const DOCKER_DEV_STORAGE_NODE = toEthereumAddress('0xde1112f631486CfC759A50196853011528bC5FA0')

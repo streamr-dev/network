@@ -2,6 +2,7 @@ import { ServerWsEndpoint, startHttpServer } from '../../src/connection/ws/Serve
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import WebSocket from 'ws'
 import { waitForCondition } from '@streamr/utils'
+import { createTestServerWsEndpoint } from '../utils'
 
 describe('ServerWsEndpoint', () => {
     let serverWsEndpoint: ServerWsEndpoint | undefined = undefined
@@ -19,7 +20,7 @@ describe('ServerWsEndpoint', () => {
         const httpsServer = await startHttpServer(
             listen,
         )
-        serverWsEndpoint = new ServerWsEndpoint(listen, false, httpsServer, PeerInfo.newTracker('tracker'))
+        serverWsEndpoint = createTestServerWsEndpoint(listen, false, httpsServer, PeerInfo.newTracker('tracker'))
         const webSocketClient = new WebSocket(
             serverWsEndpoint.getUrl(),
             { rejectUnauthorized: false }

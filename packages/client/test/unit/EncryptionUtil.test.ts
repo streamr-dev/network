@@ -1,4 +1,4 @@
-import { ethers } from 'ethers'
+import { arrayify } from '@ethersproject/bytes'
 import {
     EncryptedGroupKey,
     EncryptionType,
@@ -26,7 +26,7 @@ describe('EncryptionUtil', () => {
         const plaintext = 'some random text'
         const plaintextBuffer = Buffer.from(plaintext, 'utf8')
         const ciphertext = EncryptionUtil.encryptWithAES(plaintextBuffer, key.data)
-        const ciphertextBuffer = ethers.utils.arrayify(`0x${ciphertext}`)
+        const ciphertextBuffer = arrayify(`0x${ciphertext}`)
         expect(ciphertextBuffer.length).toStrictEqual(plaintextBuffer.length + 16)
     })
 

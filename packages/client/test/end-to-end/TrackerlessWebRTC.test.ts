@@ -113,7 +113,7 @@ describe('publish-subscribe', () => {
 
         }, TIMEOUT)
 
-        it.skip('subscriber is able to receive and decrypt messages', async () => {
+        it('subscriber is able to receive and decrypt messages', async () => {
             await entryPointClient.subscribe(stream.id, (_msg: any) => {})
 
             const messages: any[] = []

@@ -637,8 +637,8 @@ describe('Subscriber', () => {
     })
 
     describe('mid-stream stop methods', () => {
-        let sub1: Subscription<unknown>
-        let sub2: Subscription<unknown>
+        let sub1: Subscription
+        let sub2: Subscription
         let published: Message[]
 
         beforeEach(async () => {

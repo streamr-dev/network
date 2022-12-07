@@ -7,16 +7,3 @@ export const GOOGLE_STUN_SERVER: IceServer = {
     url: 'stun:stun.l.google.com',
     port: 19302
 }
-
-export const STREAMR_ICE_SERVERS: ReadonlyArray<IceServer> = Object.freeze([
-    {
-        url: 'stun:stun.streamr.network',
-        port: 5349
-    },
-    {
-        url: 'turn:turn.streamr.network',
-        port: 5349,
-        username: 'BrubeckTurn1',
-        password: 'MIlbgtMw4nhpmbgqRrht1Q=='
-    }
-])

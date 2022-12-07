@@ -1,13 +1,12 @@
-import { Tracker, startTracker } from '@streamr/network-tracker'
+import { Tracker } from '@streamr/network-tracker'
 import WebSocket from 'ws'
 import { waitForEvent } from '@streamr/utils'
 import { wait } from '@streamr/utils'
 
 import { ServerWsEndpoint } from '../../src/connection/ws/ServerWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
-import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { DisconnectionCode, Event } from '../../src/connection/ws/AbstractWsEndpoint'
-import { startServerWsEndpoint } from '../utils'
+import { createTestNodeClientWsEndpoint, startServerWsEndpoint, startTestTracker } from '../utils'
 
 // eslint-disable-next-line no-underscore-dangle
 declare let _streamr_simulator_test: any
@@ -31,7 +30,7 @@ describe('ws-endpoint', () => {
         const clients = []
         const promises: Promise<any>[] = []
         for (let i = 0; i < 5; i++) {
-            const client = new NodeClientWsEndpoint(PeerInfo.newNode(`client-${i}`))
+            const client = createTestNodeClientWsEndpoint(PeerInfo.newNode(`client-${i}`))
 
             promises.push(waitForEvent(endpoints[i], Event.PEER_CONNECTED))
 
@@ -57,7 +56,7 @@ describe('ws-endpoint', () => {
     })
     
     it('server and client form correct peerInfo on connection', async () => {
-        const client = new NodeClientWsEndpoint(PeerInfo.newNode('client'))
+        const client = createTestNodeClientWsEndpoint(PeerInfo.newNode('client'))
         const server = await startServerWsEndpoint('127.0.0.1', 30697, PeerInfo.newNode('server'))
 
         const e1 = waitForEvent(client, Event.PEER_CONNECTED)
@@ -80,11 +79,8 @@ describe('ws-endpoint', () => {
         let tracker: Tracker
 
         beforeEach(async () => {
-            tracker = await startTracker({
-                listen: {
-                    hostname: '127.0.0.1',
-                    port: trackerPort
-                }
+            tracker = await startTestTracker({
+                port: trackerPort
             })
             // @ts-expect-error private access
             tracker.trackerServer.endpoint.handshakeTimer = 3000
@@ -107,8 +103,8 @@ describe('ws-endpoint', () => {
     
     describe('Duplicate connections from same nodeId are closed', () => {
         it('Duplicate connection is closed', async () => {
-            const client1 = new NodeClientWsEndpoint(PeerInfo.newNode('client'))
-            const client2 = new NodeClientWsEndpoint(PeerInfo.newNode('client'))
+            const client1 = createTestNodeClientWsEndpoint(PeerInfo.newNode('client'))
+            const client2 = createTestNodeClientWsEndpoint(PeerInfo.newNode('client'))
 
             const server = await startServerWsEndpoint('127.0.0.1', 38483, PeerInfo.newNode('server'))
    

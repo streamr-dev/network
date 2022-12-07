@@ -1,11 +1,11 @@
 import { runAndWaitForEvents } from '@streamr/test-utils'
 
-import { Tracker, startTracker } from '@streamr/network-tracker'
+import { Tracker } from '@streamr/network-tracker'
 import { NetworkNode } from '../../src/logic/NetworkNode'
-import { createNetworkNode } from '../../src/composition'
 import { Event as NodeEvent } from '../../src/logic/Node'
 import { Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
 import { toStreamID, toStreamPartID } from '@streamr/protocol'
+import { createTestNetworkNode, startTestTracker } from '../utils'
 
 /**
  * Tests for error scenarios during signalling
@@ -18,17 +18,13 @@ describe('Signalling error scenarios', () => {
     const otherStreamId = toStreamID('stream-2')
 
     beforeEach(async () => {
-        tracker = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: 35115
-            },
-            id: 'tracker',
-            trackerPingInterval: 3000
+        tracker = await startTestTracker({
+            port: 35115,
+            pingInterval: 3000
         })
-        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
+        const trackerInfo = { id: tracker.getTrackerId(), ws: tracker.getUrl(), http: tracker.getUrl() }
 
-        nodeOne = createNetworkNode({
+        nodeOne = createTestNetworkNode({
             id: 'node-1',
             trackers: [trackerInfo],
             disconnectionWaitTime: 4000,
@@ -36,7 +32,7 @@ describe('Signalling error scenarios', () => {
             trackerPingInterval: 3000,
             webrtcDisallowPrivateAddresses: false
         })
-        nodeTwo = createNetworkNode({
+        nodeTwo = createTestNetworkNode({
             id: 'node-2',
             trackers: [trackerInfo],
             disconnectionWaitTime: 4000,
@@ -170,7 +166,7 @@ describe('Signalling error scenarios', () => {
                     spyOne.mockRestore()
 
                     // @ts-expect-error private field
-                    return nodeOne.trackerManager.nodeToTracker.endpoint.close('tracker')
+                    return nodeOne.trackerManager.nodeToTracker.endpoint.close(tracker.getTrackerId())
                 }
             }
             return originalEmitOne(event, ...args)
@@ -188,7 +184,7 @@ describe('Signalling error scenarios', () => {
                     spyTwo.mockRestore()
 
                     // @ts-expect-error private field
-                    return nodeTwo.trackerManager.nodeToTracker.endpoint.close('tracker')
+                    return nodeTwo.trackerManager.nodeToTracker.endpoint.close(tracker.getTrackerId())
                 }
             }
             return originalEmitTwo(event, ...args)
@@ -231,7 +227,7 @@ describe('Signalling error scenarios', () => {
                     spyOne.mockRestore()
 
                     // @ts-expect-error private field
-                    return nodeOne.trackerManager.nodeToTracker.endpoint.close('tracker')
+                    return nodeOne.trackerManager.nodeToTracker.endpoint.close(tracker.getTrackerId())
                 }
             }
             return originalEmitOne(event, ...args)
