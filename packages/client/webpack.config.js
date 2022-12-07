@@ -108,10 +108,7 @@ module.exports = (env, argv) => {
                 buffer: require.resolve('buffer/'),
                 'node-fetch': path.resolve('./src/shim/node-fetch.ts'),
                 '@streamr/protocol': path.resolve('../protocol/src/exports.ts'),
-                '@streamr/network-node': path.resolve('../network/src/exports-browser.ts'),
-                [path.join(__dirname, '../network/src/connection/webrtc/NodeWebRtcConnection.ts$')]: require.resolve('@streamr/network-node/src/connection/webrtc/BrowserWebRtcConnection.ts'),
-                [path.join(__dirname, '../network/src/connection/ws/NodeClientWsEndpoint.ts$')]: require.resolve('@streamr/network-node/src/connection/ws/BrowserClientWsEndpoint.ts'),
-                [path.join(__dirname, '../network/src/connection/ws/NodeClientWsConnection.ts$')]: require.resolve('@streamr/network-node/src/connection/ws/BrowserClientWsConnection.ts'),
+                [path.join(__dirname, '../dht/src/connection/WebRTC/NodeWebRtcConnection.ts$')]: require.resolve('@streamr/dht/src/connection/WebRTC/BrowserWebRtcConnection.ts'),
                 // swap out ServerPersistence for BrowserPersistence
                 [path.resolve('./src/utils/persistence/ServerPersistence.ts')]: (
                     path.resolve('./src/utils/persistence/BrowserPersistence.ts')
@@ -126,6 +123,9 @@ module.exports = (env, argv) => {
                 express: false,
                 ws: false,
             }
+        },
+        externals: {
+            'node-datachannel': 'commonjs node-datachannel'
         },
         plugins: [
             new NodePolyfillPlugin({
