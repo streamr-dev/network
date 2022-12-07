@@ -7,6 +7,6 @@ runs:
     - name: run brokers and trackers
       run: |
         mkdir -p logs
-        (cd packages/broker/bin && node run-all.js) >logs/broker-tracker-logs.txt 2>&1 &
+        ./bin/run-brokers-and-trackers.sh >logs/broker-tracker-logs.txt 2>&1 &
       shell: bash
       working-directory: './'
