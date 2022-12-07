@@ -31,8 +31,8 @@
     "@protobuf-ts/runtime-rpc": "^2.8.0",
     "@streamr/dht": "7.1.0",
     "@streamr/proto-rpc": "7.1.0",
-    "@streamr/utils": "7.1.0",
     "@streamr/test-utils": "^7.1.0",
+    "@streamr/utils": "7.1.0",
     "lodash": "^4.17.21",
     "yallist": "^4.0.0"
   },
