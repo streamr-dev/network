@@ -13,12 +13,10 @@ const logger = new Logger(module)
 program
     .version(pkg.version)
     .usage('<ethereumPrivateKey>')
-    // @ts-expect-error TODO fix
-    .option('--port <port>', 'port', 30300)
+    .option('--port <port>', 'port', parseInt, 30300)
     .option('--ip <ip>', 'ip', '0.0.0.0')
     .option('--unixSocket <unixSocket>', 'unixSocket', undefined)
-    // @ts-expect-error TODO fix
-    .option('--maxNeighborsPerNode <maxNeighborsPerNode>', 'maxNeighborsPerNode', 4)
+    .option('--maxNeighborsPerNode <maxNeighborsPerNode>', 'maxNeighborsPerNode', parseInt,     4)
     .option('--attachHttpEndpoints', 'attach http endpoints')
     .option('--privateKeyFileName <privateKeyFileName>', 'private key filename', undefined)
     .option('--certFileName <certFileName>', 'cert filename', undefined)
