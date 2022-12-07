@@ -52,7 +52,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     private rpcCommunicator: ListeningRpcCommunicator | null = null
     private readonly P2PTransport: ITransport
     private readonly connectionLocker: ConnectionLocker
-    private readonly duplicateDetector: DuplicateMessageDetector
+    private readonly duplicateDetectors: Map<string, DuplicateMessageDetector>
     private findNeighborsIntervalRef: NodeJS.Timeout | null = null
     private neighborUpdateIntervalRef: NodeJS.Timeout | null = null
     private handshaker?: Handshaker
@@ -67,7 +67,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         this.P2PTransport = params.P2PTransport
         this.connectionLocker = params.connectionLocker
 
-        this.duplicateDetector = new DuplicateMessageDetector(10000)
+        this.duplicateDetectors = new Map()
         this.ownPeerDescriptor = params.ownPeerDescriptor
 
         const peerId = PeerID.fromValue(this.ownPeerDescriptor.kademliaId)
@@ -310,7 +310,11 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
             new NumberPair(Number(previousMessageRef!.timestamp), previousMessageRef!.sequenceNumber)
             : null
         const currentNumberPair = new NumberPair(Number(currentMessageRef.timestamp), currentMessageRef.sequenceNumber)
-        return this.duplicateDetector.markAndCheck(previousNumberPair, currentNumberPair)
+
+        if (!this.duplicateDetectors.has(currentMessageRef.messageChainId)) {
+            this.duplicateDetectors.set(currentMessageRef.messageChainId, new DuplicateMessageDetector(10000))
+        }
+        return this.duplicateDetectors.get(currentMessageRef.messageChainId)!.markAndCheck(previousNumberPair, currentNumberPair)
     }
 
     getOwnStringId(): string {

@@ -33,6 +33,7 @@ describe('DataMetadataEndpoints', () => {
     let storageNode: Broker
     let client1: StreamrClient
     let storageNodeAccount: Wallet
+    let stream: Stream
 
     beforeAll(async () => {
         storageNodeAccount = new Wallet(await fetchPrivateKeyWithGas())
@@ -41,11 +42,7 @@ describe('DataMetadataEndpoints', () => {
             network: {
                 peerDescriptor: {
                     kademliaId: 'DataMetadataEndpoints-client',
-                    type: 0,
-                    websocket: {
-                        ip: '127.0.0.1',
-                        port: 40413
-                    }
+                    type: 0
                 },
                 entryPoints: [{
                     kademliaId: await (storageNodeAccount.getAddress()),
@@ -57,6 +54,9 @@ describe('DataMetadataEndpoints', () => {
                 }]
             }
         })
+
+        stream = await createTestStream(client1, module)
+
         storageNode = await startStorageNode(
             storageNodeAccount.privateKey,
             httpPort1,
@@ -69,7 +69,15 @@ describe('DataMetadataEndpoints', () => {
                     ip: '127.0.0.1',
                     port: 40412
                 }
-            }]
+            }],
+            {
+                subscriber: {
+                    streams: [{
+                        streamId: stream.id,
+                        streamPartition: 0
+                    }]
+                }
+            }
         )
     })
 
@@ -104,14 +112,8 @@ describe('DataMetadataEndpoints', () => {
         expect(res.lastMessage).toEqual(0)
     })
 
-    async function setUpStream(): Promise<Stream> {
-        const freshStream = await createTestStream(client1, module)
-        await freshStream.addToStorageNode(storageNodeAccount.address)
-        return freshStream
-    }
-
-    it.only('returns (non-zero) metadata for existing stream', async () => {
-        const stream = await setUpStream()
+    it('returns (non-zero) metadata for existing stream', async () => {
+        await stream.addToStorageNode(storageNodeAccount.address)
 
         await client1.publish(stream.id, {
             key: 1

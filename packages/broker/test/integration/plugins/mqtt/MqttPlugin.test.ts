@@ -36,7 +36,6 @@ createMessagingPluginTest('mqtt',
         plugin: MQTT_PORT,
         tracker: TRACKER_PORT,
         brokerConnectionManager: 40420,
-        clientConnectionManager: 40421
     },
     module
 )

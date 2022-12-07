@@ -5,7 +5,7 @@ import { PermissionAssignment, StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { createTestStream } from '../test-utils/utils'
-import { waitForCondition, wait } from '@streamr/utils'
+import { waitForCondition } from '@streamr/utils'
 import { PeerID } from '@streamr/dht'
 
 const TIMEOUT = 60 * 1000
@@ -122,7 +122,6 @@ describe('publish-subscribe', () => {
                 messages.push(msg)
             })
             sub.on('error', (e) =>  console.error(e))
-            await wait(30000)
             await waitForCondition(() => messages.length > 0)
             expect(messages).toEqual([PAYLOAD])
 

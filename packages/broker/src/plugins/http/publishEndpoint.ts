@@ -50,6 +50,7 @@ export const createEndpoint = (streamrClient: StreamrClient): express.Router => 
             })
             return res.sendStatus(200)
         } catch (e) {
+            console.error(e)
             logger.error(`Unable to publish to ${streamId}: ${e.message}`)
             return res.sendStatus(500)
         }

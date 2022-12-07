@@ -9,6 +9,7 @@ import { startBroker, createClient, createTestStream, startTestTracker } from '.
 import { fastPrivateKey } from '@streamr/test-utils'
 import { wait, waitForEvent, waitForCondition } from '@streamr/utils'
 import { range, sample } from 'lodash'
+import { Wallet } from 'ethers'
 
 const MESSAGE_COUNT = 120
 const trackerPort = 13610
@@ -135,7 +136,15 @@ describe('multiple publisher plugins', () => {
                 },
                 http: {}
             },
-            wsServerPort: 44409
+            wsServerPort: 44409,
+            entryPoints: [{
+                kademliaId: (await new Wallet(privateKey).getAddress()),
+                type: 0,
+                websocket: {
+                    ip: '127.0.0.1',
+                    port: 44409
+                }
+            }]
         })
     })
 
@@ -146,7 +155,22 @@ describe('multiple publisher plugins', () => {
     it('subscribe by StreamrClient', async () => {
 
         const receivedMessages: Queue<unknown> = new Queue()
-        const subscriber = await createClient(tracker, fastPrivateKey())
+        const subscriber = await createClient(tracker, fastPrivateKey(), {
+            network: {
+                peerDescriptor: {
+                    kademliaId: "multiple-publisher-plugins-subscriber",
+                    type: 0
+                },
+                entryPoints: [{
+                    kademliaId: (await broker.getAddress()),
+                    type: 0,
+                    websocket: {
+                        ip: '127.0.0.1',
+                        port: 44409
+                    }
+                }]
+            }
+        })
         await subscriber.subscribe(streamId, (message: unknown) => {
             receivedMessages.push(message)
         })

@@ -66,11 +66,7 @@ describe('MQTT Bridge', () => {
             network: {
                 peerDescriptor: {
                     kademliaId: 'Bridge-client',
-                    type: 0,
-                    websocket: {
-                        ip: '127.0.0.1',
-                        port: 40416
-                    }
+                    type: 0
                 },
                 entryPoints: [{
                     kademliaId: (await brokerUser.getAddress()),

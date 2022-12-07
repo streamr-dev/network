@@ -18,7 +18,6 @@ interface Ports {
     plugin: number
     tracker: number
     brokerConnectionManager: number
-    clientConnectionManager: number
 }
 
 const MOCK_MESSAGE = {
@@ -98,11 +97,7 @@ export const createMessagingPluginTest = <T>(
                 network: {
                     peerDescriptor: {
                         kademliaId: 'client',
-                        type: 0,
-                        websocket: {
-                            ip: '127.0.0.1',
-                            port: ports.clientConnectionManager
-                        }
+                        type: 0
                     },
                     entryPoints: [{
                         kademliaId: (await broker.getAddress()),
