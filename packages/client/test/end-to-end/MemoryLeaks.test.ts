@@ -10,7 +10,7 @@ import { Subscription } from '../../src/subscribe/Subscription'
 import { counterId, instanceId } from '../../src/utils/utils'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { createStrictConfig, ConfigInjectionToken, StrictStreamrClientConfig } from '../../src/Config'
-import { ethers } from 'ethers'
+import * as ethersAbi from '@ethersproject/abi'
 import { NetworkNodeFacade } from '../../src/NetworkNodeFacade'
 import { StorageNodeRegistry } from '../../src/registry/StorageNodeRegistry'
 import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
@@ -51,7 +51,7 @@ describe('MemoryLeaks', () => {
     beforeEach(() => {
         leaksDetector = new LeaksDetector()
         leaksDetector.ignoreAll(rootContainer)
-        leaksDetector.ignoreAll(ethers)
+        leaksDetector.ignoreAll(ethersAbi)
         snapshot()
     })
 
