@@ -2,7 +2,6 @@ import { createTestStream, getCreateClient } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
-import { CONFIG_TEST } from '../../src/ConfigTest'
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { wait } from '@streamr/utils'
 import { ProxyDirection, toStreamPartID } from '@streamr/protocol'
@@ -39,20 +38,22 @@ describe('PubSub with proxy connections', () => {
             auth: {
                 privateKey: proxyPrivateKey1
             },
-            network: {
-                acceptProxyConnections: true,
-                trackers: CONFIG_TEST.network!.trackers
-            }
+            // network: {
+            //     networkNode: {
+            //         acceptProxyConnections: true
+            //     }
+            // }
         })
         proxyClient2 = await createClient({
             id: 'proxy',
             auth: {
                 privateKey: proxyPrivateKey2
             },
-            network: {
-                acceptProxyConnections: true,
-                trackers: CONFIG_TEST.network!.trackers
-            }
+            // network: {
+            //     networkNode: {
+            //         acceptProxyConnections: true
+            //     }
+            // }
         })
     }, 10000)
 

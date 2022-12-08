@@ -22,20 +22,22 @@ describe('resend', () => {
                 privateKey: await fetchPrivateKeyWithGas()
             },
             network: {
-                entryPoints: [{
-                    kademliaId: "entryPointBroker",
-                    type: 0,
-                    websocket: {
-                        ip: "127.0.0.1",
-                        port: 40401
-                    }
-                }],
-                peerDescriptor: {
-                    kademliaId: "resend-e2e-publisher-client",
-                    type: 0,
-                    websocket: {
-                        ip: '127.0.0.1',
-                        port: 43232
+                layer0: {
+                    entryPoints: [{
+                        kademliaId: "entryPointBroker",
+                        type: 0,
+                        websocket: {
+                            ip: "127.0.0.1",
+                            port: 40401
+                        }
+                    }],
+                    peerDescriptor: {
+                        kademliaId: "resend-e2e-publisher-client",
+                        type: 0,
+                        websocket: {
+                            ip: '127.0.0.1',
+                            port: 43232
+                        }
                     }
                 }
             },
@@ -47,20 +49,22 @@ describe('resend', () => {
                 privateKey: fastPrivateKey()
             },
             network: {
-                entryPoints: [{
-                    kademliaId: "entryPointBroker",
-                    type: 0,
-                    websocket: {
-                        ip: "127.0.0.1",
-                        port: 40401
-                    }
-                }],
-                peerDescriptor: {
-                    kademliaId: "resend-e2e-resend-client",
-                    type: 0,
-                    websocket: {
-                        ip: '127.0.0.1',
-                        port: 43233
+                layer0: {
+                    entryPoints: [{
+                        kademliaId: "entryPointBroker",
+                        type: 0,
+                        websocket: {
+                            ip: "127.0.0.1",
+                            port: 40401
+                        }
+                    }],
+                    peerDescriptor: {
+                        kademliaId: "resend-e2e-resend-client",
+                        type: 0,
+                        websocket: {
+                            ip: '127.0.0.1',
+                            port: 43233
+                        }
                     }
                 }
             }

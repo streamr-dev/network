@@ -1,6 +1,5 @@
-import { TrackerRegistryRecord } from '@streamr/protocol'
 import { omit } from 'lodash'
-import { createStrictConfig, redactConfig, STREAM_CLIENT_DEFAULTS } from '../../src/Config'
+import { createStrictConfig, JsonPeerDescriptor, redactConfig, STREAM_CLIENT_DEFAULTS } from '../../src/Config'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { generateEthereumAccount } from '../../src/Ethereum'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -22,14 +21,14 @@ describe('Config', () => {
             expect(() => {
                 return createStrictConfig({
                     network: {
-                        trackers: [{
-                            id: '0x1234567890123456789012345678901234567890',
-                            ws: 'http://foo.bar'
-                        }],
-                        entryPoints: []
+                        layer0: {
+                            entryPoints: [{
+                                kademliaId: 'test'
+                            }]
+                        }
                     }
                 } as any)
-            }).toThrow('/network/trackers/0 must have required property \'http\'')
+            }).toThrow("/network/layer0/entryPoints/0 must have required property 'type '")
         })
 
         it('empty array', () => {
@@ -50,10 +49,12 @@ describe('Config', () => {
                 expect(() => {
                     return createStrictConfig({
                         network: {
-                            acceptProxyConnections: 123
+                            layer0: {
+                                webSocketPort: 'aaaa'
+                            }
                         }
                     } as any)
-                }).toThrow('/network/acceptProxyConnections must be boolean')
+                }).toThrow('/network/layer0/webSocketPort must be number')
             })
 
             it('ajv-format', () => {
@@ -105,8 +106,8 @@ describe('Config', () => {
         it('can override network.trackers arrays', () => {
             const clientDefaults = createStrictConfig()
             const clientOverrides = createStrictConfig(CONFIG_TEST)
-            expect(clientOverrides.network.trackers).not.toEqual(clientDefaults.network.trackers)
-            expect(clientOverrides.network.trackers).toEqual(CONFIG_TEST.network!.trackers)
+            expect(clientOverrides.network.layer0!.entryPoints).not.toEqual(clientDefaults.network.layer0!.entryPoints)
+            expect(clientOverrides.network.layer0!.entryPoints).toEqual(CONFIG_TEST.network!.layer0!.entryPoints)
         })
 
         it('network can be empty', () => {
@@ -115,27 +116,28 @@ describe('Config', () => {
                 network: {}
             })
             expect(clientOverrides.network).toEqual(clientDefaults.network)
-            expect(clientOverrides.network.trackers).toEqual({
-                contractAddress: '0xab9BEb0e8B106078c953CcAB4D6bF9142BeF854d'
-            })
+            expect(clientOverrides.network.layer0!.entryPoints![0].kademliaId).toEqual('productionEntryPoint1')
         })
 
-        it('can override trackers', () => {
-            const trackers = [
-                {
-                    id: '0xFBB6066c44bc8132bA794C73f58F391273E3bdA1',
-                    ws: 'wss://brubeck3.streamr.network:30401',
-                    http: 'https://brubeck3.streamr.network:30401'
-                },
-            ]
+        it('can override entryPoints', () => {
+            const entryPoints = [{
+                kademliaId: '0xFBB6066c44bc8132bA794C73f58F391273E3bdA1',
+                type: 0,
+                websocket: {
+                    ip: 'brubeck3.streamr.network',
+                    port: 30401
+                }
+            }]
             const clientOverrides = createStrictConfig({
                 network: {
-                    trackers,
+                    layer0: {
+                        entryPoints
+                    }
                 }
             })
-            expect(clientOverrides.network.trackers).toEqual(trackers)
-            expect(clientOverrides.network.trackers).not.toBe(trackers)
-            expect((clientOverrides.network.trackers as TrackerRegistryRecord[])[0]).not.toBe(trackers[0])
+            expect(clientOverrides.network.layer0!.entryPoints!).toEqual(entryPoints)
+            expect(clientOverrides.network.layer0!.entryPoints!).not.toBe(entryPoints)
+            expect((clientOverrides.network.layer0! as JsonPeerDescriptor[])[0]).not.toBe(entryPoints[0])
         })
     })
 

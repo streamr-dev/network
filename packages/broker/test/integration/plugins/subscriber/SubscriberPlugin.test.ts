@@ -1,11 +1,9 @@
-import { Tracker } from '@streamr/network-tracker'
-import { createClient, startTestTracker } from '../../../utils'
+import { createClient } from '../../../utils'
 import { SubscriberPlugin } from '../../../../src/plugins/subscriber/SubscriberPlugin'
 import StreamrClient from 'streamr-client'
 import { fastWallet } from '@streamr/test-utils'
 import { waitForCondition } from '@streamr/utils'
 
-const TRACKER_PORT = 12465
 const wallet = fastWallet()
 
 const createMockPlugin = async (streamrClient: StreamrClient) => {
@@ -43,13 +41,11 @@ const createMockPlugin = async (streamrClient: StreamrClient) => {
 }
 
 describe('Subscriber Plugin', () => {
-    let tracker: Tracker
     let client: StreamrClient
     let plugin: any
 
     beforeAll(async () => {
-        tracker = await startTestTracker(TRACKER_PORT)
-        client = await createClient(tracker, wallet.privateKey)
+        client = await createClient(wallet.privateKey)
         plugin = await createMockPlugin(client)
         await plugin.start()
     })
@@ -58,7 +54,6 @@ describe('Subscriber Plugin', () => {
         await Promise.allSettled([
             client?.destroy(),
             plugin?.stop(),
-            tracker?.stop(),
         ])
     })
 

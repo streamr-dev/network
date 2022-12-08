@@ -26,8 +26,10 @@ async function startNetworkNodeAndListenForAtLeastOneMessage(streamId: StreamID,
     const networkNode = new NetworkNode({
         // TODO better typing for ConfigTest.network.trackers?
         ...CONFIG_TEST.network as any,
-        entryPoints: [epDescriptor],
-        stringKademliaId: 'node'
+        layer0: {
+            entryPoints: [epDescriptor],
+            stringKademliaId: 'node'
+        }
     })
 
     try {
@@ -89,8 +91,10 @@ describe('publish-subscribe', () => {
                 privateKey: publisherPk
             },
             network: {
-                entryPoints: [publisherDescriptor],
-                peerDescriptor: publisherDescriptor
+                layer0: {
+                    entryPoints: [publisherDescriptor],
+                    peerDescriptor: publisherDescriptor
+                }
             }
         })
         subscriberClient = new StreamrClient({
@@ -99,8 +103,10 @@ describe('publish-subscribe', () => {
                 privateKey: subscriberWallet.privateKey
             },
             network: {
-                entryPoints: [publisherDescriptor],
-                stringKademliaId: 'subscriber'
+                layer0: {
+                    entryPoints: [publisherDescriptor],
+                    stringKademliaId: 'subscriber'
+                }
             }
         })
 

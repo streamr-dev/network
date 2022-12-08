@@ -59,7 +59,9 @@ describe('NetworkNodeFacade', () => {
                 },
                 network: {
                     ...CONFIG_TEST.network,
-                    id: nodeId,
+                    networkNode: {
+                        id: nodeId
+                    }
                 }
             })
             const node = await client.getNode()
@@ -73,7 +75,9 @@ describe('NetworkNodeFacade', () => {
                     privateKey: fastPrivateKey()
                 },
                 network: {
-                    id: nodeId
+                    networkNode: {
+                        id: nodeId
+                    }
                 }
             })
             await expect(async () => {

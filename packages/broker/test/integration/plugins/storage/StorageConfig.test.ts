@@ -1,6 +1,5 @@
 import { Client } from 'cassandra-driver'
 import StreamrClient, { Stream } from 'streamr-client'
-import { Tracker } from '@streamr/network-tracker'
 import cassandra from 'cassandra-driver'
 import { Wallet } from 'ethers'
 import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
@@ -9,7 +8,6 @@ import {
     createClient,
     STREAMR_DOCKER_DEV_HOST,
     createTestStream,
-    startTestTracker,
     startStorageNode
 } from '../../../utils'
 import { Broker } from '../../../../src/broker'
@@ -23,11 +21,9 @@ const localDataCenter = 'datacenter1'
 const keyspace = 'streamr_dev_v2'
 
 const HTTP_PORT = 17770
-const TRACKER_PORT = 17772
 
 describe('StorageConfig', () => {
     let cassandraClient: Client
-    let tracker: Tracker
     let storageNode: Broker
     let broker: Broker
     let client: StreamrClient
@@ -60,21 +56,21 @@ describe('StorageConfig', () => {
                 port: 44405
             }
         }]
-        tracker = await startTestTracker(TRACKER_PORT)
-        storageNode = await startStorageNode(storageNodeAccount.privateKey, HTTP_PORT, TRACKER_PORT, 44405, entryPoints)
+        storageNode = await startStorageNode(storageNodeAccount.privateKey, HTTP_PORT, 44405, entryPoints)
         broker = await startBroker({
             privateKey: brokerAccount.privateKey,
-            trackerPort: TRACKER_PORT,
             enableCassandra: false,
             wsServerPort: 44406,
             entryPoints
         })
-        client = await createClient(tracker, publisherAccount.privateKey, {
+        client = await createClient(publisherAccount.privateKey, {
             network: {
-                entryPoints,
-                peerDescriptor: {
-                    kademliaId: 'StorageConfig-client',
-                    type: 0
+                layer0: {
+                    entryPoints,
+                    peerDescriptor: {
+                        kademliaId: 'StorageConfig-client',
+                        type: 0
+                    }
                 }
             }
         })
@@ -85,7 +81,6 @@ describe('StorageConfig', () => {
         await Promise.allSettled([
             storageNode?.stop(),
             broker?.stop(),
-            tracker?.stop()
         ])
     })
 

@@ -39,8 +39,10 @@ describe('NodeMetrics', () => {
                 maxPublishDelay: 50
             },
             network: {
-                entryPoints: [subscriberDescriptor],
-                stringKademliaId: 'generator'
+                layer0: {
+                    entryPoints: [subscriberDescriptor],
+                    stringKademliaId: 'generator'
+                }
             }
         })
         stream = await generatorClient.createStream({
@@ -50,8 +52,10 @@ describe('NodeMetrics', () => {
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
         subscriberClient = await createClient({
             network: {
-                entryPoints: [subscriberDescriptor],
-                peerDescriptor: subscriberDescriptor
+                layer0: {
+                    entryPoints: [subscriberDescriptor],
+                    peerDescriptor: subscriberDescriptor
+                }
             }
         })
     }, 20 * 1000)

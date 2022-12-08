@@ -19,28 +19,20 @@ const sideChainConfig = {
  */
 export const CONFIG_TEST: StreamrClientConfig = {
     network: {
-        trackers: [
-            {
-                id: '0xb9e7cEBF7b03AE26458E32a059488386b05798e8',
-                ws: `ws://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:30301`,
-                http: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:30301`
-            }, {
-                id: '0x0540A3e144cdD81F402e7772C76a5808B71d2d30',
-                ws: `ws://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:30302`,
-                http: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:30302`
-            }, {
-                id: '0xf2C195bE194a2C91e93Eacb1d6d55a00552a85E2',
-                ws: `ws://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:30303`,
-                http: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:30303`
+        layer0: {
+            entryPoints: [{
+                kademliaId: 'entryPointBroker',
+                type: 0,
+                websocket: {
+                    ip: '127.0.0.1',
+                    port: 40401
+                }
+            }],
+            peerDescriptor: {
+                kademliaId: 'local',
+                type: 0
             }
-        ],
-        webrtcDisallowPrivateAddresses: false,
-        iceServers: [],
-        entryPoints: [{
-            kademliaId: 'entryPoint',
-            type: 0
-        }],
-        stringKademliaId: 'entryPoint'
+        }
     },
     contracts: {
         streamRegistryChainAddress: '0x6cCdd5d866ea766f6DF5965aA98DeCCD629ff222',

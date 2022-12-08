@@ -12,8 +12,19 @@ import { LogLevel } from '@streamr/utils'
 
 import type { ConnectionInfo } from '@ethersproject/web'
 import { generateClientId } from './utils/utils'
+import { StreamrNodeOpts } from '@streamr/trackerless-network'
+import { DhtNodeOptions } from '@streamr/dht'
 
-export type TODO = any
+export interface layer0Config extends Omit<DhtNodeOptions, 'entryPoints' | 'peerDescriptor' | 'stringId'> {
+    entryPoints?: JsonPeerDescriptor[]
+    peerDescriptor?: JsonPeerDescriptor
+    stringKademliaId?: string
+}
+
+export interface NetworkConfig {
+    layer0?: layer0Config
+    networkNode?: StreamrNodeOpts
+}
 
 export interface ProviderAuthConfig {
     ethereum: ExternalProvider
@@ -82,7 +93,7 @@ export interface StreamrClientConfig {
     retryResendAfter?: number
     gapFillTimeout?: number
 
-    network?: TODO
+    network?: NetworkConfig
 
     contracts?: {
         streamRegistryChainAddress?: string
@@ -134,7 +145,7 @@ export interface StreamrClientConfig {
 }
 
 export type StrictStreamrClientConfig = MarkOptional<Required<StreamrClientConfig>, 'auth' | 'metrics'> & {
-    network: MarkOptional<Exclude<Required<StreamrClientConfig['network']>, undefined>, 'location'>
+    network: Exclude<Required<StreamrClientConfig['network']>, undefined>
     contracts: Exclude<Required<StreamrClientConfig['contracts']>, undefined>
     decryption: Exclude<Required<StreamrClientConfig['decryption']>, undefined>
     cache: Exclude<Required<StreamrClientConfig['cache']>, undefined>
@@ -154,13 +165,65 @@ export const STREAM_CLIENT_DEFAULTS:
     maxGapRequests: 5,
     retryResendAfter: 5000,
     gapFillTimeout: 5000,
-    
+
     network: {
-        acceptProxyConnections: false,
-        trackers: {
-            contractAddress: '0xab9BEb0e8B106078c953CcAB4D6bF9142BeF854d'
+        layer0: {
+            // acceptProxyConnections: false,
+            // webrtcDisallowPrivateAddresses: true,
+            // webrtcDatachannelBufferThresholdLow: 2 ** 15,
+            // webrtcDatachannelBufferThresholdHigh: 2 ** 17,
+            // newWebrtcConnectionTimeout: 15 * 1000,
+            // iceServers: [
+            //     {
+            //         url: 'stun:stun.streamr.network',
+            //         port: 5349
+            //     },
+            //     {
+            //         url: 'turn:turn.streamr.network',
+            //         port: 5349,
+            //         username: 'BrubeckTurn1',
+            //         password: 'MIlbgtMw4nhpmbgqRrht1Q=='
+            //     }
+            // ]
+            entryPoints: [{
+                kademliaId: 'productionEntryPoint1',
+                type: 0,
+                websocket: {
+                    ip: '127.0.0.1',
+                    port: 40401
+                }
+            }]
         },
-        entryPoints: []
+        networkNode: {
+
+        }
+
+        // acceptProxyConnections: false,
+        // trackers: {
+        //     contractAddress: '0xab9BEb0e8B106078c953CcAB4D6bF9142BeF854d'
+        // },
+        // trackerPingInterval: 60 * 1000,
+        // trackerConnectionMaintenanceInterval: 5 * 1000,
+        // webrtcDisallowPrivateAddresses: true,
+        // newWebrtcConnectionTimeout: 15 * 1000,
+        // webrtcDatachannelBufferThresholdLow: 2 ** 15,
+        // webrtcDatachannelBufferThresholdHigh: 2 ** 17,
+        // disconnectionWaitTime: 200,
+        // peerPingInterval: 30 * 1000,
+        // rttUpdateTimeout: 15 * 1000,
+        // iceServers: [
+        //     {
+        //         url: 'stun:stun.streamr.network',
+        //         port: 5349
+        //     },
+        //     {
+        //         url: 'turn:turn.streamr.network',
+        //         port: 5349,
+        //         username: 'BrubeckTurn1',
+        //         password: 'MIlbgtMw4nhpmbgqRrht1Q=='
+        //     }
+        // ]
+
     },
 
     // For ethers.js provider params, see https://docs.ethers.io/ethers.js/v5-beta/api-providers.html#provider

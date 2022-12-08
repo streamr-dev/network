@@ -35,8 +35,9 @@ interface Metrics extends MetricsDefinition {
     publishBytesPerSecond: Metric
 }
 
-interface StreamrNodeOpts {
+export interface StreamrNodeOpts {
     metricsContext?: MetricsContext
+    id?: string
 }
 
 export class StreamrNode extends EventEmitter {

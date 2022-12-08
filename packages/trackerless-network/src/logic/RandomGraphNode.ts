@@ -35,6 +35,9 @@ export interface RandomGraphNodeParams {
     P2PTransport: ITransport
     connectionLocker: ConnectionLocker
     ownPeerDescriptor: PeerDescriptor
+    numOfTargetNeighbors?: number
+    maxNumberOfContact?: number
+    minPropagationTargets?: number
 }
 
 const logger = new Logger(module)

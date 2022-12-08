@@ -1,10 +1,9 @@
 import { Wallet } from '@ethersproject/wallet'
 import { MessageMetadata, Stream, StreamrClient } from 'streamr-client'
-import { Tracker } from '@streamr/network-tracker'
 import { fetchPrivateKeyWithGas, Queue } from '@streamr/test-utils'
 import { Broker } from '../../src/broker'
 import { Message } from '../../src/helpers/PayloadFormat'
-import { createClient, startBroker, createTestStream, startTestTracker } from '../utils'
+import { createClient, startBroker, createTestStream } from '../utils'
 import { wait } from '@streamr/utils'
 
 interface MessagingPluginApi<T> {
@@ -16,7 +15,6 @@ interface MessagingPluginApi<T> {
 
 interface Ports {
     plugin: number
-    tracker: number
     brokerConnectionManager: number
 }
 
@@ -53,16 +51,13 @@ export const createMessagingPluginTest = <T>(
         let stream: Stream
         let streamrClient: StreamrClient
         let pluginClient: T
-        let tracker: Tracker
         let broker: Broker
         let messageQueue: Queue<Message>
 
         beforeAll(async () => {
             brokerUser = new Wallet(await fetchPrivateKeyWithGas())
-            tracker = await startTestTracker(ports.tracker)
             broker = await startBroker({
                 privateKey: brokerUser.privateKey,
-                trackerPort: ports.tracker,
                 apiAuthentication: {
                     keys: [MOCK_API_KEY]
                 },
@@ -88,25 +83,26 @@ export const createMessagingPluginTest = <T>(
         afterAll(async () => {
             await Promise.allSettled([
                 broker.stop(),
-                tracker.stop()
             ])
         })
 
         beforeEach(async () => {
-            streamrClient = await createClient(tracker, brokerUser.privateKey, {
+            streamrClient = await createClient(brokerUser.privateKey, {
                 network: {
-                    peerDescriptor: {
-                        kademliaId: 'client',
-                        type: 0
-                    },
-                    entryPoints: [{
-                        kademliaId: (await broker.getAddress()),
-                        type: 0,
-                        websocket: {
-                            ip: '127.0.0.1',
-                            port: ports.brokerConnectionManager
-                        }
-                    }]
+                    layer0: {
+                        peerDescriptor: {
+                            kademliaId: 'client',
+                            type: 0
+                        },
+                        entryPoints: [{
+                            kademliaId: (await broker.getAddress()),
+                            type: 0,
+                            websocket: {
+                                ip: '127.0.0.1',
+                                port: ports.brokerConnectionManager
+                            }
+                        }]
+                    }
                 }
             })
             stream = await createTestStream(streamrClient, testModule)

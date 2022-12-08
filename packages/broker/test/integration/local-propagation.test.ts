@@ -1,18 +1,15 @@
 import { Wallet } from '@ethersproject/wallet'
 import StreamrClient, { Stream, StreamPermission } from 'streamr-client'
-import { Tracker } from '@streamr/network-tracker'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { wait, waitForCondition } from '@streamr/utils'
 import { Broker } from '../../src/broker'
-import { startBroker, createClient, createTestStream, startTestTracker } from '../utils'
+import { startBroker, createClient, createTestStream } from '../utils'
 
 jest.setTimeout(30000)
 
-const trackerPort = 17711
 const httpPort = 17712
 
 describe('local propagation', () => {
-    let tracker: Tracker
     let broker: Broker
     let privateKey: string
     let client1: StreamrClient
@@ -23,12 +20,10 @@ describe('local propagation', () => {
 
     beforeAll(async () => {
         privateKey = await fetchPrivateKeyWithGas()
-        tracker = await startTestTracker(trackerPort)
         brokerWallet = new Wallet(await fetchPrivateKeyWithGas())
 
         broker = await startBroker({
             privateKey: brokerWallet.privateKey,
-            trackerPort,
             httpPort,
             wsServerPort: 44402
         })
@@ -42,30 +37,34 @@ describe('local propagation', () => {
             }
         }]
 
-        client1 = await createClient(tracker, privateKey, {
+        client1 = await createClient(privateKey, {
             network: {
-                peerDescriptor: {
-                    kademliaId: 'local-propagation-client-1',
-                    type: 0,
-                    websocket: {
-                        ip: '127.0.0.1',
-                        port: 44403
-                    }
-                },
-                entryPoints
+                layer0: {
+                    peerDescriptor: {
+                        kademliaId: 'local-propagation-client-1',
+                        type: 0,
+                        websocket: {
+                            ip: '127.0.0.1',
+                            port: 44403
+                        }
+                    },
+                    entryPoints
+                }
             }
         })
-        client2 = await createClient(tracker, privateKey, {
+        client2 = await createClient(privateKey, {
             network: {
-                peerDescriptor: {
-                    kademliaId: 'local-propagation-client-2',
-                    type: 0,
-                    websocket: {
-                        ip: '127.0.0.1',
-                        port: 44404
-                    }
-                },
-                entryPoints
+                layer0: {
+                    peerDescriptor: {
+                        kademliaId: 'local-propagation-client-2',
+                        type: 0,
+                        websocket: {
+                            ip: '127.0.0.1',
+                            port: 44404
+                        }
+                    },
+                    entryPoints
+                }
             }
         })
     })
@@ -80,7 +79,6 @@ describe('local propagation', () => {
 
     afterAll(async () => {
         await Promise.all([
-            tracker.stop(),
             client1.destroy(),
             client2.destroy(),
             broker.stop()

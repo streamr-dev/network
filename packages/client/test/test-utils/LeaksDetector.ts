@@ -13,6 +13,7 @@ export class LeaksDetector {
 
     // temporary whitelist leaks in network code
     ignoredKeys = new Set([
+        '/config/network',
         '/cachedNode',
         '/container',
         '/childContainer',

@@ -1,14 +1,12 @@
 import { Stream, StreamrClient } from 'streamr-client'
-import { Tracker } from '@streamr/network-tracker'
 import mqtt from 'async-mqtt'
 import { fetchPrivateKeyWithGas, Queue } from '@streamr/test-utils'
 import { Broker } from '../../../../src/broker'
-import { createClient, startBroker, createTestStream, startTestTracker } from '../../../utils'
+import { createClient, startBroker, createTestStream } from '../../../utils'
 import { wait } from '@streamr/utils'
 import { Wallet } from '@ethersproject/wallet'
 
 const MQTT_PLUGIN_PORT = 12470
-const TRACKER_PORT = 12471
 const BROKER_CONNECTIONMANAGER_PORT = 40415
 
 jest.setTimeout(60000)
@@ -20,7 +18,6 @@ const createMqttClient = () => {
 describe('MQTT Bridge', () => {
     let stream: Stream
     let streamrClient: StreamrClient
-    let tracker: Tracker
     let broker: Broker
     let brokerUser: Wallet
 
@@ -33,10 +30,8 @@ describe('MQTT Bridge', () => {
 
     beforeAll(async () => {
         brokerUser = new Wallet(await fetchPrivateKeyWithGas())
-        tracker = await startTestTracker(TRACKER_PORT)
         broker = await startBroker({
             privateKey: brokerUser.privateKey,
-            trackerPort: TRACKER_PORT,
             extraPlugins: {
                 mqtt: {
                     port: MQTT_PLUGIN_PORT
@@ -56,26 +51,27 @@ describe('MQTT Bridge', () => {
 
     afterAll(async () => {
         await Promise.allSettled([
-            broker.stop(),
-            tracker.stop()
+            broker.stop()
         ])
     })
 
     beforeEach(async () => {
-        streamrClient = await createClient(tracker, brokerUser.privateKey, {
+        streamrClient = await createClient(brokerUser.privateKey, {
             network: {
-                peerDescriptor: {
-                    kademliaId: 'Bridge-client',
-                    type: 0
-                },
-                entryPoints: [{
-                    kademliaId: (await brokerUser.getAddress()),
-                    type: 0,
-                    websocket: {
-                        ip: '127.0.0.1',
-                        port: BROKER_CONNECTIONMANAGER_PORT
-                    }
-                }]
+                layer0: {
+                    peerDescriptor: {
+                        kademliaId: 'Bridge-client',
+                        type: 0
+                    },
+                    entryPoints: [{
+                        kademliaId: (await brokerUser.getAddress()),
+                        type: 0,
+                        websocket: {
+                            ip: '127.0.0.1',
+                            port: BROKER_CONNECTIONMANAGER_PORT
+                        }
+                    }]
+                }
             }
         })
         stream = await createTestStream(streamrClient, module)

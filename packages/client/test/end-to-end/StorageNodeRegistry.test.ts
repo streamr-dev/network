@@ -25,20 +25,22 @@ describe('StorageNodeRegistry', () => {
                 privateKey: creatorWallet.privateKey,
             },
             network: {
-                entryPoints: [{
-                    kademliaId: "entryPointBroker",
-                    type: 0,
-                    websocket: {
-                        ip: "127.0.0.1",
-                        port: 40401
-                    }
-                }],
-                peerDescriptor: {
-                    kademliaId: "storage-node-registry-1-creator",
-                    type: 0,
-                    websocket: {
-                        ip: 'localhost',
-                        port: 43235
+                layer0: {
+                    entryPoints: [{
+                        kademliaId: "entryPointBroker",
+                        type: 0,
+                        websocket: {
+                            ip: "127.0.0.1",
+                            port: 40401
+                        }
+                    }],
+                    peerDescriptor: {
+                        kademliaId: "storage-node-registry-1-creator",
+                        type: 0,
+                        websocket: {
+                            ip: 'localhost',
+                            port: 43235
+                        }
                     }
                 }
             }
@@ -49,20 +51,22 @@ describe('StorageNodeRegistry', () => {
                 privateKey: listenerWallet.privateKey,
             },
             network: {
-                entryPoints: [{
-                    kademliaId: "entryPointBroker",
-                    type: 0,
-                    websocket: {
-                        ip: "127.0.0.1",
-                        port: 40401
-                    }
-                }],
-                peerDescriptor: {
-                    kademliaId: "storage-node-registry-1-listener",
-                    type: 0,
-                    websocket: {
-                        ip: 'localhost',
-                        port: 43234
+                layer0: {
+                    entryPoints: [{
+                        kademliaId: "entryPointBroker",
+                        type: 0,
+                        websocket: {
+                            ip: "127.0.0.1",
+                            port: 40401
+                        }
+                    }],
+                    peerDescriptor: {
+                        kademliaId: "storage-node-registry-1-listener",
+                        type: 0,
+                        websocket: {
+                            ip: 'localhost',
+                            port: 43234
+                        }
                     }
                 }
             }
@@ -112,7 +116,9 @@ describe('StorageNodeRegistry', () => {
             },
             network: {
                 ...CONFIG_TEST.network,
-                id: storageNodeWallet.address
+                networkNode: {
+                    id: storageNodeWallet.address
+                }
             }
         })
         await storageNodeManager.setStorageNodeMetadata({ http: 'mock-url' })

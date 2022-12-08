@@ -1,8 +1,12 @@
-import { ConnectionManager, DhtNode } from '@streamr/dht'
-import { StreamrNode } from './logic/StreamrNode'
+import { ConnectionManager, DhtNode, DhtNodeOptions } from '@streamr/dht'
+import { StreamrNode, StreamrNodeOpts } from './logic/StreamrNode'
 import { MetricsContext } from '@streamr/utils'
 
-export type NetworkOptions = any
+export interface NetworkOptions {
+    layer0: DhtNodeOptions
+    networkNode: StreamrNodeOpts
+    metricsContext?: MetricsContext
+}
 
 export class NetworkStack {
 
@@ -14,15 +18,11 @@ export class NetworkStack {
     constructor(private readonly options: NetworkOptions) {
         this.metricsContext = options.metricsContext || new MetricsContext()
         this.layer0DhtNode = new DhtNode({
-            webSocketPort: options.websocketPort,
-            numberOfNodesPerKBucket: options.numberOfNodesPerKBucket,
-            entryPoints: options.entryPoints || [],
-            peerDescriptor: options.peerDescriptor,
-            peerIdString: options.stringKademliaId,
-            transportLayer: options.transportLayer,
+            ...options.layer0,
             metricsContext: this.metricsContext
         })
         this.streamrNode = new StreamrNode({
+            ...options.networkNode,
             metricsContext: this.metricsContext
         })
     }
@@ -31,7 +31,7 @@ export class NetworkStack {
         await this.layer0DhtNode.start()
         this.connectionManager = this.layer0DhtNode.getTransport() as ConnectionManager
         await Promise.all([
-            this.layer0DhtNode.joinDht(this.options.entryPoints[0]),
+            this.layer0DhtNode.joinDht(this.options.layer0.entryPoints![0]),
             this.streamrNode.start(this.layer0DhtNode, this.connectionManager, this.connectionManager)
         ])
     }

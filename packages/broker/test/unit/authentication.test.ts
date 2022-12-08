@@ -8,15 +8,16 @@ const formConfig = (auth: StreamrClientConfig['auth']): Config => {
         client: {
             auth,
             network: {
-                trackers: [],
-                peerDescriptor: {
-                    kademliaId: 'broker',
-                    type: 0
-                },
-                entryPoints: [{
-                    kademliaId: 'broker',
-                    type: 0
-                }]
+                layer0: {
+                    peerDescriptor: {
+                        kademliaId: 'broker',
+                        type: 0
+                    },
+                    entryPoints: [{
+                        kademliaId: 'broker',
+                        type: 0
+                    }]
+                }
             }
         },
         plugins: {}

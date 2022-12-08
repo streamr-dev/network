@@ -1,11 +1,9 @@
 import http from 'http'
-import { Tracker } from '@streamr/network-tracker'
 import { Wallet } from 'ethers'
 import StreamrClient, { Stream } from 'streamr-client'
 import {
     createClient,
     createTestStream,
-    startTestTracker,
     startStorageNode
 } from '../../../utils'
 import { Broker } from "../../../../src/broker"
@@ -13,7 +11,6 @@ import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 
 jest.setTimeout(30000)
 const httpPort1 = 12371
-const trackerPort = 12375
 
 const httpGet = (url: string): Promise<[number, string]> => { // return tuple is of form [statusCode, body]
     return new Promise((resolve, reject) => {
@@ -29,7 +26,6 @@ const httpGet = (url: string): Promise<[number, string]> => { // return tuple is
 }
 
 describe('DataMetadataEndpoints', () => {
-    let tracker: Tracker
     let storageNode: Broker
     let client1: StreamrClient
     let storageNodeAccount: Wallet
@@ -37,21 +33,22 @@ describe('DataMetadataEndpoints', () => {
 
     beforeAll(async () => {
         storageNodeAccount = new Wallet(await fetchPrivateKeyWithGas())
-        tracker = await startTestTracker(trackerPort)
-        client1 = await createClient(tracker, await fetchPrivateKeyWithGas(), {
+        client1 = await createClient(await fetchPrivateKeyWithGas(), {
             network: {
-                peerDescriptor: {
-                    kademliaId: 'DataMetadataEndpoints-client',
-                    type: 0
-                },
-                entryPoints: [{
-                    kademliaId: await (storageNodeAccount.getAddress()),
-                    type: 0,
-                    websocket: {
-                        ip: '127.0.0.1',
-                        port: 40412
-                    }
-                }]
+                layer0: {
+                    peerDescriptor: {
+                        kademliaId: 'DataMetadataEndpoints-client',
+                        type: 0
+                    },
+                    entryPoints: [{
+                        kademliaId: await (storageNodeAccount.getAddress()),
+                        type: 0,
+                        websocket: {
+                            ip: '127.0.0.1',
+                            port: 40412
+                        }
+                    }]
+                }
             }
         })
 
@@ -60,7 +57,6 @@ describe('DataMetadataEndpoints', () => {
         storageNode = await startStorageNode(
             storageNodeAccount.privateKey,
             httpPort1,
-            trackerPort,
             40412,
             [{
                 kademliaId: await (storageNodeAccount.getAddress()),
@@ -83,7 +79,6 @@ describe('DataMetadataEndpoints', () => {
 
     afterAll(async () => {
         await Promise.allSettled([
-            tracker?.stop(),
             client1?.destroy(),
             storageNode?.stop()
         ])

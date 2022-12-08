@@ -2,22 +2,22 @@ import { Lifecycle, scoped } from 'tsyringe'
 import { pull } from 'lodash'
 import { ProxyDirection, StreamMessage, StreamPartID } from '@streamr/protocol'
 import { MetricsContext } from '@streamr/utils'
-import { NodeId, NetworkNodeOptions } from '@streamr/network-node'
 import { NetworkNodeFactory, NetworkNodeStub } from '../../../src/NetworkNodeFacade'
 import { FakeNetwork } from './FakeNetwork'
 import { PeerDescriptor } from '@streamr/dht'
+import { NetworkOptions } from '@streamr/trackerless-network'
 
 type MessageListener = (msg: StreamMessage) => void
 
 export class FakeNetworkNode implements NetworkNodeStub {
 
-    public readonly id: NodeId
+    public readonly id: string
     readonly subscriptions: Set<StreamPartID> = new Set()
     readonly messageListeners: MessageListener[] = []
     private readonly network: FakeNetwork
     readonly stack: any = null
-    constructor(opts: NetworkNodeOptions, network: FakeNetwork) {
-        this.id = opts.id!
+    constructor(opts: NetworkOptions, network: FakeNetwork) {
+        this.id = opts.networkNode!.id!
         this.network = network
     }
 
@@ -130,7 +130,7 @@ export class FakeNetworkNodeFactory implements NetworkNodeFactory {
         this.network = network
     }
 
-    createNetworkNode(opts: NetworkNodeOptions): FakeNetworkNode {
+    createNetworkNode(opts: NetworkOptions): FakeNetworkNode {
         return new FakeNetworkNode(opts, this.network)
     }
 }

@@ -25,20 +25,22 @@ describe('StorageNodeRegistry2', () => {
                 privateKey: await fetchPrivateKeyWithGas()
             },
             network: {
-                entryPoints: [{
-                    kademliaId: "entryPointBroker",
-                    type: 0,
-                    websocket: {
-                        ip: "127.0.0.1",
-                        port: 40401
-                    }
-                }],
-                peerDescriptor: {
-                    kademliaId: "storage-node-registry-2-client",
-                    type: 0,
-                    websocket: {
-                        ip: 'localhost',
-                        port: 43237
+                layer0: {
+                    entryPoints: [{
+                        kademliaId: "entryPointBroker",
+                        type: 0,
+                        websocket: {
+                            ip: "127.0.0.1",
+                            port: 40401
+                        }
+                    }],
+                    peerDescriptor: {
+                        kademliaId: "storage-node-registry-2-client",
+                        type: 0,
+                        websocket: {
+                            ip: 'localhost',
+                            port: 43237
+                        }
                     }
                 }
             }
@@ -50,20 +52,22 @@ describe('StorageNodeRegistry2', () => {
                 privateKey: storageNodeWallet.privateKey
             },
             network: {
-                entryPoints: [{
-                    kademliaId: "entryPointBroker",
-                    type: 0,
-                    websocket: {
-                        ip: "127.0.0.1",
-                        port: 40401
-                    }
-                }],
-                peerDescriptor: {
-                    kademliaId: "storage-node-registry-2-storage-node-client",
-                    type: 0,
-                    websocket: {
-                        ip: 'localhost',
-                        port: 43236
+                layer0: {
+                    entryPoints: [{
+                        kademliaId: "entryPointBroker",
+                        type: 0,
+                        websocket: {
+                            ip: "127.0.0.1",
+                            port: 40401
+                        }
+                    }],
+                    peerDescriptor: {
+                        kademliaId: "storage-node-registry-2-storage-node-client",
+                        type: 0,
+                        websocket: {
+                            ip: 'localhost',
+                            port: 43236
+                        }
                     }
                 }
             }

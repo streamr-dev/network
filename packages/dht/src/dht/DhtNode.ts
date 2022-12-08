@@ -49,7 +49,37 @@ export interface DhtNodeEvents {
     forwardedMessage: () => void
 }
 
+export interface DhtNodeOptions {
+    serviceId?: string
+    parallelism?: number
+    maxNeighborListSize?: number
+    numberOfNodesPerKBucket?: number
+    joinNoProgressLimit?: number
+    routeMessageTimeout?: number
+    dhtJoinTimeout?: number
+    metricsContext?: MetricsContext
+
+    transportLayer?: ITransport
+    peerDescriptor?: PeerDescriptor
+    entryPoints?: PeerDescriptor[]
+    webSocketHost?: string
+    webSocketPort?: number
+    peerIdString?: string
+    nodeName?: string
+    rpcRequestTimeout?: number
+    stunUrls?: string[]
+}
+
 export class DhtNodeConfig {
+    serviceId = 'layer0'
+    parallelism = 3
+    maxNeighborListSize = 100
+    numberOfNodesPerKBucket = 1
+    joinNoProgressLimit = 4
+    routeMessageTimeout = 4000
+    dhtJoinTimeout = 60000
+    metricsContext = new MetricsContext()
+
     transportLayer?: ITransport
     peerDescriptor?: PeerDescriptor
     entryPoints?: PeerDescriptor[]
@@ -60,16 +90,7 @@ export class DhtNodeConfig {
     rpcRequestTimeout?: number
     stunUrls?: string[]
 
-    serviceId = 'layer0'
-    parallelism = 3
-    maxNeighborListSize = 100
-    numberOfNodesPerKBucket = 1
-    joinNoProgressLimit = 4
-    routeMessageTimeout = 4000
-    dhtJoinTimeout = 60000
-    metricsContext = new MetricsContext()
-
-    constructor(conf: Partial<DhtNodeConfig>) {
+    constructor(conf: Partial<DhtNodeOptions>) {
         // assign given non-undefined config vars over defaults
         let k: keyof typeof conf
         for (k in conf) {

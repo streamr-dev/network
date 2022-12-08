@@ -61,8 +61,10 @@ describe('publish-subscribe', () => {
                 privateKey: entryPointWallet.privateKey
             },
             network: {
-                entryPoints: [entryPoint],
-                peerDescriptor: entryPoint
+                layer0: {
+                    entryPoints: [entryPoint],
+                    peerDescriptor: entryPoint
+                }
             }
         })
 
@@ -72,10 +74,12 @@ describe('publish-subscribe', () => {
                 privateKey: publisherPk
             },
             network: {
-                entryPoints: [entryPoint],
-                peerDescriptor: {
-                    kademliaId: 'publisher',
-                    type: 0
+                layer0: {
+                    entryPoints: [entryPoint],
+                    peerDescriptor: {
+                        kademliaId: 'publisher',
+                        type: 0
+                    }
                 }
             }
         })
@@ -85,10 +89,12 @@ describe('publish-subscribe', () => {
                 privateKey: subscriberWallet.privateKey
             },
             network: {
-                entryPoints: [entryPoint],
-                peerDescriptor: {
-                    kademliaId: 'subscriber',
-                    type: 0
+                layer0: {
+                    entryPoints: [entryPoint],
+                    peerDescriptor: {
+                        kademliaId: 'subscriber',
+                        type: 0
+                    }
                 }
             }
         })

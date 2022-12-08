@@ -1,4 +1,4 @@
-export { DhtNode, DhtNodeEvents } from './dht/DhtNode'
+export { DhtNode, DhtNodeEvents, DhtNodeOptions } from './dht/DhtNode'
 export { ListeningRpcCommunicator } from './transport/ListeningRpcCommunicator'
 export { Simulator } from './connection/Simulator/Simulator'
 export { SimulatorTransport } from './connection/Simulator/SimulatorTransport'

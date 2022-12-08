@@ -22,11 +22,12 @@ import { NodeId } from '@streamr/network-node'
 
 const DEFAULT_CLIENT_OPTIONS: StreamrClientConfig = {
     network: {
-        trackers: [], // without this setting NetworkNodeFacade would query the tracker addresses from the contract
-        entryPoints: [{
-            kademliaId: 'Entrypoint',
-            type: 0
-        }]
+        layer0: {
+            entryPoints: [{
+                kademliaId: 'Entrypoint',
+                type: 0
+            }]
+        }
     },
     metrics: false
 }
@@ -74,7 +75,9 @@ export class FakeEnvironment {
 
     startNode(nodeId: NodeId): FakeNetworkNode {
         const node = new FakeNetworkNode({
-            id: nodeId
+            networkNode: {
+                id: nodeId
+            }
         } as any, this.network)
         node.start()
         return node

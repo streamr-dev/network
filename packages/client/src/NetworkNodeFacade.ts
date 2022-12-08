@@ -14,13 +14,10 @@ import {
 import { MetricsContext } from '@streamr/utils'
 import { uuid } from './utils/uuid'
 import { pOnce } from './utils/promises'
-import { ConfigInjectionToken, TrackerRegistryContract, StrictStreamrClientConfig, JsonPeerDescriptor } from './Config'
+import { ConfigInjectionToken, StrictStreamrClientConfig, JsonPeerDescriptor } from './Config'
 import { StreamMessage, StreamPartID, ProxyDirection } from '@streamr/protocol'
 import { DestroySignal } from './DestroySignal'
-import { getMainnetProvider } from './Ethereum'
-import { getTrackerRegistryFromContract } from './registry/getTrackerRegistryFromContract'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
-import { toEthereumAddress } from '@streamr/utils'
 
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
 /** @deprecated This in an internal interface */
@@ -99,49 +96,18 @@ export class NetworkNodeFacade {
         this.destroySignal.assertNotDestroyed()
     }
 
-    // private async getNetworkOptions(): Promise<NetworkOptions> {
-    //     const entryPoints = this.getEntryPoints()
-    //
-    //     const ownPeerDescriptor: PeerDescriptor | undefined = this.config.network.peerDescriptor ? {
-    //         kademliaId: PeerID.fromString(this.config.network.peerDescriptor.kademliaId).value,
-    //         type: this.config.network.peerDescriptor.type,
-    //         openInternet: this.config.network.peerDescriptor.openInternet,
-    //         udp: this.config.network.peerDescriptor.udp,
-    //         tcp: this.config.network.peerDescriptor.tcp,
-    //         websocket: this.config.network.peerDescriptor.websocket,
-    //     } : undefined
-    //
-    //     if ((this.config.network.trackers as TrackerRegistryContract).contractAddress) {
-    //         const trackerRegistry = await getTrackerRegistryFromContract({
-    //             _contractAddress: toEthereumAddress((this.config.network.trackers as TrackerRegistryContract).contractAddress),
-    //             _jsonRpcProvider: getMainnetProvider(this.config)
-    //         })
-    //         return {
-    //             ...this.config.network,
-    //             entryPoints: entryPoints,
-    //             trackers: trackerRegistry.getAllTrackers(),
-    //             peerDescriptor: ownPeerDescriptor
-    //         }
-    //     }
-    //     return {
-    //         ...this.config.network,
-    //         entryPoints: entryPoints,
-    //         peerDescriptor: ownPeerDescriptor
-    //     }
-    // }
-
     private async getNetworkOptions(): Promise<NetworkOptions> {
-        let id = this.config.network.id
+        let id = this.config.network!.networkNode!.id
 
         const entryPoints = this.getEntryPoints()
 
-        const ownPeerDescriptor: PeerDescriptor | undefined = this.config.network.peerDescriptor ? {
-            kademliaId: PeerID.fromString(this.config.network.peerDescriptor.kademliaId).value,
-            type: this.config.network.peerDescriptor.type,
-            openInternet: this.config.network.peerDescriptor.openInternet,
-            udp: this.config.network.peerDescriptor.udp,
-            tcp: this.config.network.peerDescriptor.tcp,
-            websocket: this.config.network.peerDescriptor.websocket,
+        const ownPeerDescriptor: PeerDescriptor | undefined = this.config.network.layer0!.peerDescriptor ? {
+            kademliaId: PeerID.fromString(this.config.network.layer0!.peerDescriptor!.kademliaId).value,
+            type: this.config.network.layer0!.peerDescriptor!.type,
+            openInternet: this.config.network.layer0!.peerDescriptor!.openInternet,
+            udp: this.config.network.layer0!.peerDescriptor!.udp,
+            tcp: this.config.network.layer0!.peerDescriptor!.tcp,
+            websocket: this.config.network.layer0!.peerDescriptor!.websocket,
         } : undefined
 
         if (id == null || id === '') {
@@ -152,18 +118,16 @@ export class NetworkNodeFacade {
                 throw new Error(`given node id ${id} not compatible with authenticated wallet ${ethereumAddress}`)
             }
         }
-        const trackers = ('contractAddress' in this.config.network.trackers)
-            ? (await getTrackerRegistryFromContract({
-                _contractAddress: toEthereumAddress((this.config.network.trackers as TrackerRegistryContract).contractAddress),
-                _jsonRpcProvider: getMainnetProvider(this.config)
-            })).getAllTrackers()
-            : this.config.network.trackers
+
         return {
-            ...this.config.network,
-            id,
-            trackers,
-            entryPoints,
-            peerDescriptor: ownPeerDescriptor,
+            layer0: {
+                ...this.config.network,
+                entryPoints,
+                peerDescriptor: ownPeerDescriptor,
+            },
+            networkNode: {
+                id
+            },
             metricsContext: new MetricsContext()
         }
     }
@@ -282,7 +246,7 @@ export class NetworkNodeFacade {
     }
 
     getEntryPoints(): PeerDescriptor[] {
-        return this.config.network.entryPoints.map((ep: JsonPeerDescriptor) => {
+        return this.config.network.layer0!.entryPoints!.map((ep: JsonPeerDescriptor) => {
             const peerDescriptor: PeerDescriptor = {
                 kademliaId: PeerID.fromString(ep.kademliaId).value,
                 type: ep.type,

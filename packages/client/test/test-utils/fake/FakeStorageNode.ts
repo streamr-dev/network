@@ -41,7 +41,9 @@ export class FakeStorageNode extends FakeNetworkNode {
 
     constructor(wallet: Wallet, network: FakeNetwork, chain: FakeChain) {
         super({
-            id: toEthereumAddress(wallet.address)
+            networkNode: {
+                id: toEthereumAddress(wallet.address)
+            }
         } as any, network)
         this.wallet = wallet
         this.chain = chain

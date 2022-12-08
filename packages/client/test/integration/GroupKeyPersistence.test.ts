@@ -49,13 +49,6 @@ describe('Group Key Persistence', () => {
                 id: 'publisher',
                 auth: {
                     privateKey: publisherPrivateKey,
-                },
-                network: {
-                    entryPoints: [{
-                        kademliaId: 'entrypoint',
-                        type: 0
-                    }],
-                    stringKademliaId: 'entrypoint'
                 }
             })
             subscriber = environment.createClient({
