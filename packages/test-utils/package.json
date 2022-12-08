@@ -22,7 +22,7 @@
     "@ethersproject/wallet": "^5.5.0",
     "@streamr/utils": "8.1.0",
     "cors": "^2.8.5",
-    "express": "^4.17.1"
+    "express": "^4.18.2"
   },
   "devDependencies": {
     "@types/cors": "^2.8.12",

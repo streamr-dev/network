@@ -65,7 +65,7 @@
     "concurrently": "^6.4.0",
     "crypto-browserify": "^3.12.0",
     "eslint-plugin-import": "^2.25.3",
-    "express": "^4.17.1",
+    "express": "^4.18.2",
     "git-revision-webpack-plugin": "^5.0.0",
     "jest-leak-detector": "^27.3.1",
     "lodash-webpack-plugin": "^0.11.6",
