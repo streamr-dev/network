@@ -1,7 +1,7 @@
 name: "collect and upload logs"
 description: "collect and upload logs (e.g. Docker services, brokers, trackers) on test failure"
 inputs:
-  artifact-prefix:
+  artifact_prefix:
     description: a prefix to use in the filename for the uploaded artifact
     required: true
 runs:
@@ -14,5 +14,5 @@ runs:
     - name: upload logs to GitHub
       uses: actions/upload-artifact@v3
       with:
-        name: logs-${{ matrix.test-name }}-${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt}}
+        name: logs-${{ inputs.artifact_prefix }}-${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt}}
         path: 'logs'
