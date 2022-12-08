@@ -7,7 +7,7 @@ interface LogEntry {
 
 const LOG_LINE_PREFIX_LENGTH = 56 // Logger prefixes each line with level, timestamp and context
 
-export class FakeLogger implements Omit<Logger, 'getFinalLogger'> {
+export class FakeLogger implements Logger {
 
     private readonly entries: LogEntry[] = []
     private readonly format: (pattern: string, args: any[], cb: (message: string) => void) => void
