@@ -11,9 +11,9 @@ export interface ICancelable {
     isCancelled: () => boolean
 }
 
-export type Cancelable<T> = T & ICancelable
+export type Cancelable<T extends object> = T & ICancelable
 
-export type MaybeCancelable<T> = T | Cancelable<T>
+export type MaybeCancelable<T extends object> = T | Cancelable<T>
 
 /**
  * Allows injecting a function to execute after an iterator finishes.
@@ -139,7 +139,7 @@ async function endGenerator(gtr: AsyncGenerator, error?: Error) {
         : gtr.return(undefined)
 }
 
-function canCancel<T>(gtr: MaybeCancelable<T>): gtr is Cancelable<T> {
+function canCancel<T extends object>(gtr: MaybeCancelable<T>): gtr is Cancelable<T> {
     return (
         gtr
         && 'cancel' in gtr && typeof gtr.cancel === 'function'
@@ -148,7 +148,7 @@ function canCancel<T>(gtr: MaybeCancelable<T>): gtr is Cancelable<T> {
     )
 }
 
-async function cancelGenerator<T>(gtr: MaybeCancelable<T>, error?: Error) {
+async function cancelGenerator<T extends object>(gtr: MaybeCancelable<T>, error?: Error) {
     if (!canCancel(gtr)) { return }
     await gtr.cancel(error)
 }
