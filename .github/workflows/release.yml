@@ -1,11 +1,11 @@
 name: release
+on:
+  workflow_dispatch:
   workflow_run:
     branches: [main]
     workflows: [validate]
     types:
       - completed
-  on:
-    workflow_dispatch:
 jobs:
   tracker-docker-image:
     uses: ./.github/workflows/docker-build.yml
