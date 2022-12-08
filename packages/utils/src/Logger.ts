@@ -2,7 +2,6 @@ import pino from 'pino'
 import path from 'path'
 import without from 'lodash/without'
 import padEnd from 'lodash/padEnd'
-import pinoPretty from 'pino-pretty'
 
 export type LogLevel = 'silent' | 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace'
 
@@ -19,16 +18,13 @@ const parseBoolean = (value: string | undefined) => {
     }
 }
 
+declare let window: any
+
 const rootLogger = pino({
     name: 'rootLogger',
     enabled: !process.env.NOLOG,
     level: process.env.LOG_LEVEL ?? 'info',
-    // explicitly pass prettifier, otherwise pino may try to lazy require it,
-    // which can fail when under jest+typescript, due to some CJS/ESM
-    // incompatibility leading to throwing an error like:
-    // "prettyFactory is not a function"
-    prettifier: pinoPretty,
-    transport: {
+    transport: typeof window === 'object' ? undefined : {
         target: 'pino-pretty',
         options: {
             colorize: parseBoolean(process.env.LOG_COLORS) ?? true,
