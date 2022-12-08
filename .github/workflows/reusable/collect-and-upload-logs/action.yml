@@ -8,12 +8,10 @@ runs:
   using: "composite"
   steps:
     - name: collect docker service logs
-      if: failure()
       uses: jwalton/gh-docker-logs@v2.2.1
       with:
         dest: 'logs'
     - name: upload logs to GitHub
-      if: failure()
       uses: actions/upload-artifact@v3
       with:
         name: logs-${{ matrix.test-name }}-${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt}}
