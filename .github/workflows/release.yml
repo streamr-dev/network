@@ -1,5 +1,6 @@
 name: release
 on:
+  workflow_dispatch:
   workflow_run:
     branches: [main]
     workflows: [validate]
@@ -13,7 +14,7 @@ jobs:
       image_name: streamr/tracker
       build_platforms: linux/amd64
       push_image: true
-      test_success: ${{ github.event.workflow_run.conclusion == 'success' }}
+      test_success: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     secrets:
       dockerhub_username: ${{secrets.DOCKERHUB_USERNAME}}
       dockerhub_token: ${{secrets.DOCKERHUB_TOKEN}}
@@ -24,7 +25,7 @@ jobs:
       image_name: streamr/broker-node
       build_platforms: linux/amd64,linux/arm64
       push_image: true
-      test_success: ${{ github.event.workflow_run.conclusion == 'success' }}
+      test_success: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     secrets:
       dockerhub_username: ${{secrets.DOCKERHUB_USERNAME}}
       dockerhub_token: ${{secrets.DOCKERHUB_TOKEN}}

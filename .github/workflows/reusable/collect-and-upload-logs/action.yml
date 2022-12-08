@@ -1,6 +1,9 @@
 name: "collect and upload logs"
 description: "collect and upload logs (e.g. Docker services, brokers, trackers) on test failure"
-
+inputs:
+  artifact-prefix:
+    description: a prefix to use in the filename for the uploaded artifact
+    required: true
 runs:
   using: "composite"
   steps:
