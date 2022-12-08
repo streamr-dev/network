@@ -59,7 +59,7 @@
     "source-map-loader": "^3.0.0",
     "ts-loader": "^9.3.1",
     "ts-node": "^10.9.1",
-    "webpack": "^5.64.1",
+    "webpack": "^5.75.0",
     "webpack-cli": "^4.9.1"
   },
   "optionalDependencies": {
