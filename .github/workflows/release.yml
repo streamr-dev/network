@@ -1,5 +1,8 @@
 name: release
 on:
+  push:
+    branches:
+      - broker_stable
   workflow_run:
     branches: [main]
     workflows: [validate]
