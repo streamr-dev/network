@@ -19,7 +19,7 @@ describe('check and kill dead connections', () => {
     })
 
     afterEach(async () => {
-        Promise.allSettled([
+        await Promise.allSettled([
             clientEndpoint.stop(),
             serverEndpoint.stop()
         ])
