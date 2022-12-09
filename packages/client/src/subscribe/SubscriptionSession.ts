@@ -82,14 +82,14 @@ export class SubscriptionSession {
 
     private async onError(error: Error): Promise<void> {
         // eslint-disable-next-line promise/no-promise-in-callback
-        await Promise.allSettled(Array.from(this.subscriptions).map(async (sub) => {
+        await Promise.allSettled([...this.subscriptions].map(async (sub) => {
             await sub.handleError(error)
         }))
     }
 
     async* distributeMessage(src: AsyncGenerator<StreamMessage>): AsyncGenerator<StreamMessage, void, unknown> {
         for await (const msg of src) {
-            await Promise.all(Array.from(this.subscriptions).map(async (sub) => {
+            await Promise.all([...this.subscriptions].map(async (sub) => {
                 await sub.push(msg)
             }))
             yield msg
