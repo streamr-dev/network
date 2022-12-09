@@ -96,7 +96,7 @@ describe('BrubeckMinerPlugin', () => {
         ])
     })
 
-    it('happy path', async () => {
+    it.skip('happy path', async () => {
         expect(claimServer!.pingEndpointCalled).toBeTruthy()
         await publishRewardCode(rewardStreamId)
         await waitForCondition(() => claimServer.claimRequestBody !== undefined, 30000)

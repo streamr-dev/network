@@ -56,7 +56,12 @@ describe('StorageConfig', () => {
                 port: 44405
             }
         }]
-        storageNode = await startStorageNode(storageNodeAccount.privateKey, HTTP_PORT, 44405, entryPoints)
+        storageNode = await startStorageNode(
+            storageNodeAccount.privateKey,
+            HTTP_PORT,
+            44405,
+            entryPoints
+        )
         broker = await startBroker({
             privateKey: brokerAccount.privateKey,
             enableCassandra: false,

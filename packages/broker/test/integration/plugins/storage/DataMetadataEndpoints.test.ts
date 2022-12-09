@@ -8,7 +8,7 @@ import {
 } from '../../../utils'
 import { Broker } from "../../../../src/broker"
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { toEthereumAddress } from '@streamr/utils'
+import { toEthereumAddress, wait } from '@streamr/utils'
 
 jest.setTimeout(30000)
 const httpPort1 = 12371
@@ -71,6 +71,7 @@ describe('DataMetadataEndpoints', () => {
                 }
             }
         )
+        await wait(2000)
     })
 
     afterAll(async () => {
@@ -104,32 +105,24 @@ describe('DataMetadataEndpoints', () => {
     })
 
     it('returns (non-zero) metadata for existing stream', async () => {
-        console.log("HERE1")
         await stream.addToStorageNode(toEthereumAddress(storageNodeAccount.address))
 
-        console.log("HERE2")
         await client1.publish(stream.id, {
             key: 1
         })
 
-        console.log("HERE3")
         await client1.publish(stream.id, {
             key: 2
         })
 
-        console.log("HERE4")
         await client1.publish(stream.id, {
             key: 3
         })
 
-        console.log("HERE5")
         const lastItem = await client1.publish(stream.id, {
             key: 4
         })
-        console.log("HERE6")
         await client1.waitForStorage(lastItem)
-
-        console.log("HERE7")
 
         const url = `http://localhost:${httpPort1}/streams/${encodeURIComponent(stream.id)}/metadata/partitions/0`
         const [status, json] = await httpGet(url)
