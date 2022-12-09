@@ -29,5 +29,6 @@ EXPOSE 7171/tcp
 
 WORKDIR /home/streamr/network/packages/broker
 
-# start broker from default config
-CMD ["./bin/broker.js"]
+# start broker from default config (needs mounted volume, e.g. docker run -v $(cd ~/.streamr/config;pwd):/home/streamr/.streamr/config IMAGE
+CMD ["/usr/local/bin/npm", "exec", "streamr-broker"]
+

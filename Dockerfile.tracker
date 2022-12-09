@@ -24,5 +24,4 @@ ENV LOG_LEVEL=info
 
 WORKDIR /home/streamr/network/packages/network-tracker
 
-# start tracker
-CMD ["./bin/tracker.js"]
+CMD ["/usr/local/bin/npm", "exec", "streamr-tracker", "--", "0x0000000000000000000000000000000000000000000000000000000000000001"]

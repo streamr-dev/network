@@ -8,9 +8,9 @@
     "directory": "packages/broker"
   },
   "bin": {
-    "streamr-broker": "bin/broker.js",
-    "streamr-broker-init": "bin/config-wizard.js",
-    "delete-expired-data": "bin/delete-expired-data.js"
+    "streamr-broker": "dist/bin/broker.js",
+    "streamr-broker-init": "dist/bin/config-wizard.js",
+    "delete-expired-data": "dist/bin/delete-expired-data.js"
   },
   "main": "./dist/src/exports.js",
   "types": "./dist/src/exports.d.ts",
