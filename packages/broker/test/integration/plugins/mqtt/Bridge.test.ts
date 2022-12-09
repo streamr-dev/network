@@ -3,7 +3,7 @@ import mqtt from 'async-mqtt'
 import { fetchPrivateKeyWithGas, Queue } from '@streamr/test-utils'
 import { Broker } from '../../../../src/broker'
 import { createClient, startBroker, createTestStream } from '../../../utils'
-import { wait } from '@streamr/utils'
+import { toEthereumAddress, wait } from '@streamr/utils'
 import { Wallet } from '@ethersproject/wallet'
 
 const MQTT_PLUGIN_PORT = 12470
@@ -39,7 +39,7 @@ describe('MQTT Bridge', () => {
             },
             wsServerPort: BROKER_CONNECTIONMANAGER_PORT,
             entryPoints: [{
-                kademliaId: (await brokerUser.getAddress()),
+                kademliaId: toEthereumAddress(await brokerUser.getAddress()),
                 type: 0,
                 websocket: {
                     ip: '127.0.0.1',
@@ -64,7 +64,7 @@ describe('MQTT Bridge', () => {
                         type: 0
                     },
                     entryPoints: [{
-                        kademliaId: (await brokerUser.getAddress()),
+                        kademliaId: toEthereumAddress(await brokerUser.getAddress()),
                         type: 0,
                         websocket: {
                             ip: '127.0.0.1',
@@ -108,7 +108,7 @@ describe('MQTT Bridge', () => {
         const subscriber = await createSubscriber(messageQueue)
         await streamrClient.publish(stream.id, expected)
 
-        const actual = await messageQueue.pop(45000)
+        const actual = await messageQueue.pop()
         expect(actual).toEqual(expected)
 
         await subscriber.end(true)
@@ -124,8 +124,8 @@ describe('MQTT Bridge', () => {
         const subscriber2 = await createSubscriber(messageQueue2)
         await streamrClient.publish(stream.id, expected)
 
-        const actual1 = await messageQueue1.pop(45000)
-        const actual2 = await messageQueue2.pop(45000)
+        const actual1 = await messageQueue1.pop()
+        const actual2 = await messageQueue2.pop()
         expect(actual1).toEqual(expected)
         expect(actual2).toEqual(expected)
 
@@ -145,7 +145,7 @@ describe('MQTT Bridge', () => {
         subscriber2.unsubscribe(stream.id)
         await streamrClient.publish(stream.id, expected)
 
-        const actual = await messageQueue.pop(45000)
+        const actual = await messageQueue.pop()
 
         expect(actual).toEqual(expected)
 
@@ -166,7 +166,7 @@ describe('MQTT Bridge', () => {
         subscriber2.unsubscribe(stream.id)
         await streamrClient.publish(stream.id, expected)
 
-        const actual1 = await messageQueue1.pop(45000)
+        const actual1 = await messageQueue1.pop()
         expect(actual1).toEqual(expected)
         expect(messageQueue2.items).toEqual([])
 

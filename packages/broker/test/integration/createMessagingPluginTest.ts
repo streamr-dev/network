@@ -4,7 +4,7 @@ import { fetchPrivateKeyWithGas, Queue } from '@streamr/test-utils'
 import { Broker } from '../../src/broker'
 import { Message } from '../../src/helpers/PayloadFormat'
 import { createClient, startBroker, createTestStream } from '../utils'
-import { wait } from '@streamr/utils'
+import { toEthereumAddress, wait } from '@streamr/utils'
 
 interface MessagingPluginApi<T> {
     createClient: (action: 'publish' | 'subscribe', streamId: string, apiKey: string) => Promise<T>
@@ -70,7 +70,7 @@ export const createMessagingPluginTest = <T>(
                 },
                 wsServerPort: ports.brokerConnectionManager,
                 entryPoints: [{
-                    kademliaId: (await brokerUser.getAddress()),
+                    kademliaId: toEthereumAddress(await brokerUser.getAddress()),
                     type: 0,
                     websocket: {
                         ip: '127.0.0.1',

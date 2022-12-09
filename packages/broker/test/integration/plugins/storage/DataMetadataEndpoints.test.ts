@@ -8,6 +8,7 @@ import {
 } from '../../../utils'
 import { Broker } from "../../../../src/broker"
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { toEthereumAddress } from '@streamr/utils'
 
 jest.setTimeout(30000)
 const httpPort1 = 12371
@@ -33,6 +34,15 @@ describe('DataMetadataEndpoints', () => {
 
     beforeAll(async () => {
         storageNodeAccount = new Wallet(await fetchPrivateKeyWithGas())
+        const entryPoints = [{
+            kademliaId: toEthereumAddress(await storageNodeAccount.getAddress()),
+            type: 0,
+            websocket: {
+                ip: '127.0.0.1',
+                port: 40412
+            }
+        }]
+
         client1 = await createClient(await fetchPrivateKeyWithGas(), {
             network: {
                 layer0: {
@@ -40,14 +50,7 @@ describe('DataMetadataEndpoints', () => {
                         kademliaId: 'DataMetadataEndpoints-client',
                         type: 0
                     },
-                    entryPoints: [{
-                        kademliaId: await (storageNodeAccount.getAddress()),
-                        type: 0,
-                        websocket: {
-                            ip: '127.0.0.1',
-                            port: 40412
-                        }
-                    }]
+                    entryPoints
                 }
             }
         })
@@ -58,14 +61,7 @@ describe('DataMetadataEndpoints', () => {
             storageNodeAccount.privateKey,
             httpPort1,
             40412,
-            [{
-                kademliaId: await (storageNodeAccount.getAddress()),
-                type: 0,
-                websocket: {
-                    ip: '127.0.0.1',
-                    port: 40412
-                }
-            }],
+            entryPoints,
             {
                 subscriber: {
                     streams: [{
@@ -108,7 +104,7 @@ describe('DataMetadataEndpoints', () => {
     })
 
     it('returns (non-zero) metadata for existing stream', async () => {
-        await stream.addToStorageNode(storageNodeAccount.address)
+        await stream.addToStorageNode(toEthereumAddress(storageNodeAccount.address))
 
         await client1.publish(stream.id, {
             key: 1

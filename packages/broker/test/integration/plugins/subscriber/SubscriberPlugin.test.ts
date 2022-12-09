@@ -53,7 +53,7 @@ describe('Subscriber Plugin', () => {
     afterAll(async () => {
         await Promise.allSettled([
             client?.destroy(),
-            plugin?.stop(),
+            plugin?.stop()
         ])
     })
 
