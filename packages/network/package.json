@@ -61,7 +61,7 @@
     "karma-chrome-launcher": "^3.1.1",
     "karma-electron": "^7.3.0",
     "karma-jasmine": "^5.1.0",
-    "karma-spec-reporter": "^0.0.34",
+    "karma-spec-reporter": "^0.0.35",
     "karma-webpack": "^5.0.0",
     "node-polyfill-webpack-plugin": "^1.1.4",
     "ts-loader": "^9.3.1",
