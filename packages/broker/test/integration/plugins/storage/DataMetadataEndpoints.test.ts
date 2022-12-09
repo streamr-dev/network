@@ -71,7 +71,7 @@ describe('DataMetadataEndpoints', () => {
                 }
             }
         )
-        await wait(2000)
+        await wait(4000)
     })
 
     afterAll(async () => {

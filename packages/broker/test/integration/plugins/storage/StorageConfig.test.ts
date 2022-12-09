@@ -12,7 +12,7 @@ import {
 } from '../../../utils'
 import { Broker } from '../../../../src/broker'
 import { StreamMessage } from '@streamr/protocol'
-import { toEthereumAddress, waitForCondition } from '@streamr/utils'
+import { toEthereumAddress, wait, waitForCondition } from '@streamr/utils'
 
 jest.setTimeout(30000)
 
@@ -79,6 +79,7 @@ describe('StorageConfig', () => {
                 }
             }
         })
+        await wait(4000)
     })
 
     afterEach(async () => {
