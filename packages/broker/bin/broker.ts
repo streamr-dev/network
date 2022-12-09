@@ -10,18 +10,11 @@ program
     .name('broker')
     .description('Run broker under environment specified by given configuration file.')
     .arguments('[configFile]')
-    .option('--networkId <id>', 'override networkId with given value')
     .option('--test', 'test the configuration (does not start the broker)')
     .action(async (configFile) => {
         try {
             const config = readConfigAndMigrateIfNeeded(configFile)
-            if (program.opts().networkId) {
-                // @ts-expect-error TODO fix
-                config.network.id = program.opts().networkId
-            }
-
-            // @ts-expect-error TODO fix
-            const broker = await createBroker(config, true)
+            const broker = await createBroker(config)
             if (!program.opts().test) {
                 await broker.start()
             } else {
