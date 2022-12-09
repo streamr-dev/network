@@ -330,8 +330,8 @@ export class Storage extends EventEmitter {
             })
 
             return pipeline(
+                // @ts-expect-error options not in type
                 merge2(...streams, {
-                    // @ts-expect-error options not in type
                     pipeError: true,
                 }),
                 resultStream,
