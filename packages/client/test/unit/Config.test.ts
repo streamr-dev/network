@@ -103,7 +103,7 @@ describe('Config', () => {
             expect(new StreamrClient()).toBeInstanceOf(StreamrClient)
         })
 
-        it('can override network.trackers arrays', () => {
+        it('can override network.entryPoints arrays', () => {
             const clientDefaults = createStrictConfig()
             const clientOverrides = createStrictConfig(CONFIG_TEST)
             expect(clientOverrides.network.layer0!.entryPoints).not.toEqual(clientDefaults.network.layer0!.entryPoints)

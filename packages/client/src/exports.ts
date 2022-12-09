@@ -27,7 +27,6 @@ type StrictStreamrClientConfig = _StrictStreamrClientConfig
 export { StrictStreamrClientConfig }
 export {
     StreamrClientConfig,
-    TrackerRegistryContract,
     ChainConnectionInfo,
     EthereumNetworkConfig,
     ProviderAuthConfig,

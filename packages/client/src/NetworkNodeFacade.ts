@@ -121,11 +121,12 @@ export class NetworkNodeFacade {
 
         return {
             layer0: {
-                ...this.config.network,
+                ...this.config.network.layer0,
                 entryPoints,
                 peerDescriptor: ownPeerDescriptor,
             },
             networkNode: {
+                ...this.config.network.networkNode,
                 id
             },
             metricsContext: new MetricsContext()
