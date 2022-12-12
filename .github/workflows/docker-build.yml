@@ -41,11 +41,6 @@ jobs:
           key: ${{ runner.os }}-buildx-v1-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-buildx-v1-
-      - uses: docker/login-action@v2.1.0
-        if: ${{inputs.push_image}}
-        with:
-          username: ${{ secrets.dockerhub_username }}
-          password: ${{ secrets.dockerhub_token }}
       - name: Setup qemu
         if: contains(inputs.build_platforms, 'arm64')
         uses: docker/setup-qemu-action@v2.1.0
@@ -56,6 +51,11 @@ jobs:
         with:
           driver-opts: |
             network=host
+      - uses: docker/login-action@v2.1.0
+        if: ${{inputs.push_image}}
+        with:
+          username: ${{ secrets.dockerhub_username }}
+          password: ${{ secrets.dockerhub_token }}
 
       - name: Docker meta
         id: docker_meta_success
