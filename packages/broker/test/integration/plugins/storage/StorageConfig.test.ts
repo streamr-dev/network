@@ -62,6 +62,7 @@ describe('StorageConfig', () => {
             44405,
             entryPoints
         )
+        await wait(4000)
         broker = await startBroker({
             privateKey: brokerAccount.privateKey,
             enableCassandra: false,
@@ -79,7 +80,6 @@ describe('StorageConfig', () => {
                 }
             }
         })
-        await wait(4000)
     })
 
     afterEach(async () => {
