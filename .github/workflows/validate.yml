@@ -134,5 +134,5 @@ jobs:
       docker_file: Dockerfile.broker
       image_name: streamr/broker-node
       test_services_to_start: parity-node0 broker-node-no-storage-1
-      build_platforms: linux/amd64
+      build_platforms: linux/amd64,linux/arm64
       test_script: bash ./.github/healthcheck.sh http://localhost:8791/info streamr-dev-broker-node-no-storage-1
