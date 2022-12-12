@@ -108,8 +108,6 @@ jobs:
           platforms: ${{inputs.build_platforms}}
           push: true
           load: false
-          build-args: |
-            NODE_ENV=production
           tags: ${{ steps.docker_meta_success.outputs.tags }}
           labels: ${{ steps.docker_meta.outputs.labels }}
           cache-from: type=local,src=/tmp/.buildx-cache
