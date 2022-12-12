@@ -6,9 +6,6 @@ on:
     workflows: [validate]
     types:
       - completed
-  push:
-    branches:
-      - main
 jobs:
   tracker-docker-image:
     uses: ./.github/workflows/docker-build.yml
