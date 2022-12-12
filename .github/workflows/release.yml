@@ -6,6 +6,9 @@ on:
     workflows: [validate]
     types:
       - completed
+  push:
+    branches:
+      - main
 jobs:
   tracker-docker-image:
     uses: ./.github/workflows/docker-build.yml
@@ -21,7 +24,7 @@ jobs:
   broker-docker-image:
     uses: ./.github/workflows/docker-build.yml
     with:
-      docker_file: Dockerfile.broker
+      docker_file: Dockerfile
       image_name: streamr/broker-node
       build_platforms: linux/amd64,linux/arm64
       push_image: true
