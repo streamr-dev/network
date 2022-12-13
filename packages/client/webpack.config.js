@@ -108,11 +108,13 @@ module.exports = (env, argv) => {
                 buffer: require.resolve('buffer/'),
                 'node-fetch': path.resolve('./src/shim/node-fetch.ts'),
                 '@streamr/protocol': path.resolve('../protocol/src/exports.ts'),
-                [path.join(__dirname, '../dht/src/connection/WebRTC/NodeWebRtcConnection.ts$')]: require.resolve('@streamr/dht/src/connection/WebRTC/BrowserWebRtcConnection.ts'),
+                '@streamr/trackerless-network': path.resolve('../trackerless-network/src/exports.ts'),
+                [path.resolve(__dirname, '../dht/src/connection/WebRTC/NodeWebRtcConnection.ts')]:
+                    path.resolve(__dirname, '../dht/src/connection/WebRTC/BrowserWebRtcConnection.ts'),
                 // swap out ServerPersistence for BrowserPersistence
                 [path.resolve('./src/utils/persistence/ServerPersistence.ts')]: (
                     path.resolve('./src/utils/persistence/BrowserPersistence.ts')
-                ),
+                )
             },
             fallback: {
                 module: false,
@@ -123,9 +125,6 @@ module.exports = (env, argv) => {
                 express: false,
                 ws: false,
             }
-        },
-        externals: {
-            'node-datachannel': 'commonjs node-datachannel'
         },
         plugins: [
             new NodePolyfillPlugin({
@@ -139,7 +138,10 @@ module.exports = (env, argv) => {
                     generateStatsFile: true,
                 })
             ] : [])
-        ]
+        ],
+        externals: {
+            'node-datachannel': 'commonjs node-datachannel',
+        }
     })
 
     let clientMinifiedConfig

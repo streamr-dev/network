@@ -62,7 +62,6 @@ export const formConfig = ({
             }
         }
     }
-
     const peerDescriptor = wsServerPort ? {
         kademliaId: toEthereumAddress(new Wallet(privateKey).address),
         type: 0,

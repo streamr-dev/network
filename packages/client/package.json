@@ -98,7 +98,6 @@
     "@ethersproject/wallet": "^5.5.0",
     "@ethersproject/web": "^5.5.0",
     "@streamr/dht": "7.1.0",
-    "@streamr/network-node": "7.1.0",
     "@streamr/protocol": "7.1.0",
     "@streamr/trackerless-network": "0.0.1",
     "@streamr/utils": "7.1.0",

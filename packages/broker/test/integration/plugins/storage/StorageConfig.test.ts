@@ -2,9 +2,8 @@ import { Client } from 'cassandra-driver'
 import StreamrClient, { Stream } from 'streamr-client'
 import cassandra from 'cassandra-driver'
 import { Wallet } from 'ethers'
-import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import {
-    startBroker,
     createClient,
     STREAMR_DOCKER_DEV_HOST,
     createTestStream,
@@ -25,17 +24,14 @@ const HTTP_PORT = 17770
 describe('StorageConfig', () => {
     let cassandraClient: Client
     let storageNode: Broker
-    let broker: Broker
     let client: StreamrClient
     let stream: Stream
     let publisherAccount: Wallet
     let storageNodeAccount: Wallet
-    let brokerAccount: Wallet
 
     beforeAll(async () => {
         publisherAccount = new Wallet(await fetchPrivateKeyWithGas())
         storageNodeAccount = new Wallet(await fetchPrivateKeyWithGas())
-        brokerAccount = fastWallet()
         cassandraClient = new cassandra.Client({
             contactPoints,
             localDataCenter,
@@ -48,6 +44,7 @@ describe('StorageConfig', () => {
     })
 
     beforeEach(async () => {
+
         const entryPoints = [{
             kademliaId: toEthereumAddress(await storageNodeAccount.getAddress()),
             type: 0,
@@ -56,6 +53,25 @@ describe('StorageConfig', () => {
                 port: 44405
             }
         }]
+
+        client = await createClient(publisherAccount.privateKey, {
+            network: {
+                layer0: {
+                    entryPoints,
+                    peerDescriptor: {
+                        kademliaId: 'StorageConfig-client',
+                        type: 0,
+                        websocket: {
+                            ip: '127.0.0.1',
+                            port: 44406
+                        }
+                    }
+                }
+            }
+        })
+
+        stream = await createTestStream(client, module)
+
         storageNode = await startStorageNode(
             storageNodeAccount.privateKey,
             HTTP_PORT,
@@ -63,36 +79,16 @@ describe('StorageConfig', () => {
             entryPoints
         )
         await wait(4000)
-        broker = await startBroker({
-            privateKey: brokerAccount.privateKey,
-            enableCassandra: false,
-            wsServerPort: 44406,
-            entryPoints
-        })
-        client = await createClient(publisherAccount.privateKey, {
-            network: {
-                layer0: {
-                    entryPoints,
-                    peerDescriptor: {
-                        kademliaId: 'StorageConfig-client',
-                        type: 0
-                    }
-                }
-            }
-        })
     })
 
     afterEach(async () => {
         await client.destroy()
         await Promise.allSettled([
             storageNode?.stop(),
-            broker?.stop(),
         ])
     })
 
     it('when client publishes a message, it is written to the store', async () => {
-        stream = await createTestStream(client, module)
-
         await stream.addToStorageNode(storageNodeAccount.address)
         const publishMessage = await client.publish(stream.id, {
             foo: 'bar'

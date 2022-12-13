@@ -18,7 +18,7 @@ import { FakeNetwork } from './FakeNetwork'
 import { FakeChain } from './FakeChain'
 import { FakeLogger } from './FakeLogger'
 import { FakeStorageNode } from './FakeStorageNode'
-import { NodeId } from '@streamr/network-node'
+import { NodeId } from '@streamr/trackerless-network'
 
 const DEFAULT_CLIENT_OPTIONS: StreamrClientConfig = {
     network: {

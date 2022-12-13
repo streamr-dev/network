@@ -22,19 +22,8 @@
             "node-fetch": ["./src/shim/node-fetch.ts"],
             "@streamr/protocol/*": ["@streamr/protocol/src/*"],
             "@streamr/protocol": ["@streamr/protocol/src/index.ts"],
-            "@streamr/network-node": ["@streamr/network-node/src/browser.ts"],
-            "@streamr/network-node/src/connection/NodeWebRtcConnection.ts": [
-                "@streamr/network-node/src/connection/BrowserWebRtcConnection.ts"
-            ],
-            "@streamr/network-node/src/connection/ws/NodeClientWsEndpoint.ts": [
-                "@streamr/network-node/src/connection/ws/BrowserClientWsEndpoint.ts"
-            ],
-            "@streamr/network-node/src/connection/ws/NodeClientWsConnection.ts": [
-                "@streamr/network-node/src/connection/ws/BrowserClientWsConnection.ts"
-            ],
-            "@streamr/network-node/src/helpers/logger/LoggerNode.ts": [
-                "@streamr/network-node/src/helpers/logger/LoggerBrowser.ts"
-            ]
+            "@streamr/trackerless-network/src/connection/WebRTC/NodeWebRtcConnection.ts": [
+                "@streamr/trackerless-network/src/connection/WebRTC/BrowserWebRtcConnection.ts"]
         }
     },
     "include": [
@@ -48,6 +37,6 @@
     "references": [
         { "path": "../test-utils/tsconfig.node.json" },
         { "path": "../protocol/tsconfig.node.json" },
-        { "path": "../network/tsconfig.node.json" }
+        { "path": "../trackerless-network/tsconfig.browser.json" }
     ]
 }

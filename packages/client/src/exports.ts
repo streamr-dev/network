@@ -47,11 +47,7 @@ export { formStorageNodeAssignmentStreamId } from './utils/utils'
 export type { StreamID, StreamPartID, TrackerRegistryRecord } from '@streamr/protocol'
 export { ProxyDirection } from '@streamr/protocol'
 export type { BrandedString, EthereumAddress, LogLevel, Metric, MetricsContext, MetricsDefinition, MetricsReport } from '@streamr/utils'
-export type { IceServer, Location } from '@streamr/network-node'
-import type { NetworkNodeOptions } from '@streamr/network-node'
 /** @deprecated */
-type NetworkNodeConfig = NetworkNodeOptions
-export { NetworkNodeConfig }
 
 // These are currently exported because NetworkNodeStub uses methods which operate on StreamMessage.
 // If we remove that semi-public class we can maybe remove these exports.

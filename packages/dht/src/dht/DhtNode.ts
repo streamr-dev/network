@@ -365,6 +365,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         this.randomPeers.on('newContact', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
             this.emit('newRandomContact', peerDescriptor, activeContacts)
         )
+
+        if (this.config.serviceId !== 'layer0') {
+            this.connections = (this.transportLayer as DhtNode).getConnections()
+        }
     }
 
     public getNeighborList(): SortedContactList<DhtPeer> {
@@ -373,6 +377,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
     public getNodeId(): PeerID {
         return this.ownPeerId!
+    }
+
+    public getConnections(): Map<PeerIDKey, DhtPeer> {
+        return this.connections
     }
 
     public send = async (msg: Message): Promise<void> => {
@@ -427,7 +435,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
         logger.info(
             `Joining ${this.config.serviceId === 'layer0' ? 'The Streamr Network' : `Control Layer for ${this.config.serviceId}`}`
-            + ` via entrypoint ${PeerID.fromValue(entryPointDescriptor.kademliaId).toKey()}`
+            + ` via entrypoint ${PeerID.fromValue(entryPointDescriptor.kademliaId).toKey()}, ${this.ownPeerId!.toString()}`
         )
         const entryPoint = new DhtPeer(
             this.ownPeerDescriptor!,
@@ -493,7 +501,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         if (!this.started || this.stopped || this.rejoinOngoing) {
             return
         }
-        logger.info(`Rejoining DHT ${this.config.serviceId}!`)
+        logger.info(`Rejoining DHT ${this.config.serviceId}!, ${this.ownPeerId!.toString()}`)
         this.rejoinOngoing = true
         try {
             this.neighborList!.clear()
