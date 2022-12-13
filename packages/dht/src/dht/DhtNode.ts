@@ -11,18 +11,18 @@ import {
     ClosestPeersRequest,
     ClosestPeersResponse,
     ConnectivityResponseMessage,
+    LeaveNotice,
     Message,
     NodeType,
     PeerDescriptor,
     PingRequest,
     PingResponse,
     RouteMessageAck,
-    RouteMessageWrapper,
-    LeaveNotice
+    RouteMessageWrapper
 } from '../proto/DhtRpc'
 import { DuplicateDetector } from './DuplicateDetector'
 import * as Err from '../helpers/errors'
-import { ITransport, TransportEvents } from '../transport/ITransport'
+import { ITransport, TransportEvents, TransportType } from '../transport/ITransport'
 import { ConnectionManager, ConnectionManagerConfig } from '../connection/ConnectionManager'
 import { DhtRpcServiceClient } from '../proto/DhtRpc.client'
 import { Logger, MetricsContext } from '@streamr/utils'
@@ -35,6 +35,7 @@ import { DiscoverySession } from './DiscoverySession'
 import { RandomContactList } from './contact/RandomContactList'
 import { Empty } from '../proto/google/protobuf/empty'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
+import { SimulatorTransport } from '../connection/Simulator/SimulatorTransport'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -367,7 +368,20 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         )
 
         if (this.config.serviceId !== 'layer0') {
-            this.connections = (this.transportLayer as DhtNode).getConnections()
+            if (this.transportLayer!.getTransportType() === TransportType.DHT_NODE) {
+                this.connections = (this.transportLayer as DhtNode).getConnections()
+            } else if (this.transportLayer!.getTransportType() === TransportType.SIMULATOR) {
+                (this.transportLayer as SimulatorTransport).getAllConnectionPeerDescriptors().forEach((peer) => {
+                    const peerId = PeerID.fromValue(peer.kademliaId)
+                    const dhtPeer = new DhtPeer(
+                        this.ownPeerDescriptor!,
+                        peer,
+                        toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
+                        this.config.serviceId
+                    )
+                    this.connections.set(peerId.toKey(), dhtPeer)
+                })
+            }
         }
     }
 
@@ -381,6 +395,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
     public getConnections(): Map<PeerIDKey, DhtPeer> {
         return this.connections
+    }
+
+    public getTransportType(): TransportType {
+        return TransportType.DHT_NODE
     }
 
     public send = async (msg: Message): Promise<void> => {
