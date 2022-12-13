@@ -8,6 +8,7 @@ export class SimulatorTransport extends ConnectionManager {
         super({ ownPeerDescriptor: ownPeerDescriptor, simulator, serviceIdPrefix: 'simulator/' })
     }
 
+    // eslint-disable-next-line class-methods-use-this
     getTransportType(): TransportType {
         return TransportType.SIMULATOR
     }

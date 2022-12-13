@@ -290,6 +290,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         return this.ownPeerDescriptor!
     }
 
+    // eslint-disable-next-line class-methods-use-this
     public getTransportType(): TransportType {
         return TransportType.CONNECTION_MANAGER
     }
