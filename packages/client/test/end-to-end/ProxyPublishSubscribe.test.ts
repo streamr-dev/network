@@ -1,3 +1,5 @@
+// All test skipped as Proxy functionality has not been implemented in the trackerless-network yet
+
 import { createTestStream, getCreateClient } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
@@ -76,7 +78,7 @@ describe('PubSub with proxy connections', () => {
         })
     }, 60000)
 
-    it('Proxy publish connections work', async () => {
+    it.skip('Proxy publish connections work', async () => {
         const receivedMessagesProxy: any[] = []
         await proxyClient1.subscribe(stream, (msg) => {
             receivedMessagesProxy.push(msg)
@@ -105,7 +107,7 @@ describe('PubSub with proxy connections', () => {
             .toEqual(true)
     }, 15000)
 
-    it('Open publish proxies, close publish proxies', async () => {
+    it.skip('Open publish proxies, close publish proxies', async () => {
         const receivedMessagesProxy1: any[] = []
         const receivedMessagesProxy2: any[] = []
         await proxyClient1.subscribe(stream, (msg) => {
@@ -137,7 +139,7 @@ describe('PubSub with proxy connections', () => {
 
     }, 15000)
 
-    it('Proxy subscribe connections work', async () => {
+    it.skip('Proxy subscribe connections work', async () => {
         const receivedMessages: any[] = []
         await proxyClient1.subscribe(stream)
         await wait(SUBSCRIBE_WAIT_TIME)
@@ -167,7 +169,7 @@ describe('PubSub with proxy connections', () => {
             .toEqual(true)
     }, 15000)
 
-    it('open subscribe proxies, close subscribe proxies', async () => {
+    it.skip('open subscribe proxies, close subscribe proxies', async () => {
         await proxyClient1.subscribe(stream)
         await proxyClient2.subscribe(stream)
         await wait(SUBSCRIBE_WAIT_TIME)
