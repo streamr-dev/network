@@ -11,7 +11,7 @@ import {
 } from '../../../utils'
 import { Broker } from '../../../../src/broker'
 import { StreamMessage } from '@streamr/protocol'
-import { toEthereumAddress, wait, waitForCondition } from '@streamr/utils'
+import { toEthereumAddress, waitForCondition } from '@streamr/utils'
 
 jest.setTimeout(60000)
 

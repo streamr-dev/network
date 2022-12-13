@@ -8,7 +8,7 @@ import {
 } from '../../../utils'
 import { Broker } from "../../../../src/broker"
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { toEthereumAddress, wait } from '@streamr/utils'
+import { toEthereumAddress } from '@streamr/utils'
 
 jest.setTimeout(60000)
 const httpPort1 = 12371
