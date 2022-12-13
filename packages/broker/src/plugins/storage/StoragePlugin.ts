@@ -1,4 +1,4 @@
-import { StreamMessage, StreamMessageType } from '@streamr/protocol'
+import { StreamMessage, StreamMessageType, toStreamPartID } from '@streamr/protocol'
 import { router as dataQueryEndpoints } from './DataQueryEndpoints'
 import { router as dataMetadataEndpoint } from './DataMetadataEndpoints'
 import { router as storageConfigEndpoints } from './StorageConfigEndpoints'
@@ -52,6 +52,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
             }
         }
         const node = await this.streamrClient.getNode()
+        await node.subscribeAndWaitForJoin(toStreamPartID(assignmentStream.id, 0), this.streamrClient.getEntryPoints()[0])
         node.addMessageListener(this.messageListener)
         this.addHttpServerRouter(dataQueryEndpoints(this.cassandra, metricsContext))
         this.addHttpServerRouter(dataMetadataEndpoint(this.cassandra))

@@ -60,11 +60,7 @@ describe('StorageConfig', () => {
                     entryPoints,
                     peerDescriptor: {
                         kademliaId: 'StorageConfig-client',
-                        type: 0,
-                        websocket: {
-                            ip: '127.0.0.1',
-                            port: 44406
-                        }
+                        type: 0
                     }
                 }
             }
@@ -78,7 +74,6 @@ describe('StorageConfig', () => {
             44405,
             entryPoints
         )
-        await wait(4000)
     })
 
     afterEach(async () => {

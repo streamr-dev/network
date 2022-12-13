@@ -57,13 +57,14 @@ export const createBroker = async (config: Config): Promise<Broker> => {
         getAddress,
         start: async () => {
             logger.info(`Starting broker version ${CURRENT_VERSION}`)
+            const nodeId = (await streamrClient.getNode()).getNodeId()
+
             await Promise.all(plugins.map((plugin) => plugin.start()))
             const httpServerRoutes = plugins.flatMap((plugin) => plugin.getHttpServerRoutes())
             if (httpServerRoutes.length > 0) {
                 httpServer = await startHttpServer(httpServerRoutes, config.httpServer!, apiAuthenticator)
             }
 
-            const nodeId = (await streamrClient.getNode()).getNodeId()
             const brokerAddress = await streamrClient.getAddress()
             const mnemonic = generateMnemonicFromAddress(toEthereumAddress(brokerAddress))
 
