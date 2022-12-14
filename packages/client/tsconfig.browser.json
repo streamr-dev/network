@@ -22,8 +22,8 @@
             "node-fetch": ["./src/shim/node-fetch.ts"],
             "@streamr/protocol/*": ["@streamr/protocol/src/*"],
             "@streamr/protocol": ["@streamr/protocol/src/index.ts"],
-            "@streamr/trackerless-network/src/connection/WebRTC/NodeWebRtcConnection.ts": [
-                "@streamr/trackerless-network/src/connection/WebRTC/BrowserWebRtcConnection.ts"]
+            "@streamr/dht/src/connection/WebRTC/NodeWebRtcConnection.ts": [
+                "@streamr/dht/src/connection/WebRTC/BrowserWebRtcConnection.ts"]
         }
     },
     "include": [
