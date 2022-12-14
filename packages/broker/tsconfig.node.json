@@ -6,6 +6,7 @@
     "include": [
         "src/**/*",
         "src/**/*.json",
+        "bin/*.ts",
         "package.json"
     ],
     "references": [

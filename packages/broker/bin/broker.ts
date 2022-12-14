@@ -1,26 +1,20 @@
 #!/usr/bin/env node
-/* eslint-disable @typescript-eslint/no-require-imports */
-const program = require('commander')
+import { program } from 'commander'
+import pkg from '../package.json'
 
-const CURRENT_VERSION = require('../package.json').version
-const { createBroker } = require('../dist/src/broker')
-const { readConfigAndMigrateIfNeeded } = require('../dist/src/config/migration')
+import { createBroker } from '../src/broker'
+import { readConfigAndMigrateIfNeeded } from '../src/config/migration'
 
 program
-    .version(CURRENT_VERSION)
+    .version(pkg.version)
     .name('broker')
     .description('Run broker under environment specified by given configuration file.')
     .arguments('[configFile]')
-    .option('--networkId <id>', 'override networkId with given value')
     .option('--test', 'test the configuration (does not start the broker)')
     .action(async (configFile) => {
         try {
             const config = readConfigAndMigrateIfNeeded(configFile)
-            if (program.opts().networkId) {
-                config.network.id = program.opts().networkId
-            }
-
-            const broker = await createBroker(config, true)
+            const broker = await createBroker(config)
             if (!program.opts().test) {
                 await broker.start()
             } else {

@@ -1,12 +1,10 @@
 #!/usr/bin/env node
-/* eslint-disable @typescript-eslint/no-require-imports */
-const program = require('commander')
-
-const { DeleteExpiredCmd } = require('../dist/src/plugins/storage/DeleteExpiredCmd')
-const CURRENT_VERSION = require('../package.json').version
+import { program } from 'commander'
+import pkg from '../package.json'
+import { DeleteExpiredCmd } from '../src/plugins/storage/DeleteExpiredCmd'
 
 program
-    .version(CURRENT_VERSION)
+    .version(pkg.version)
     .requiredOption('--cassandra-username <username>')
     .requiredOption('--cassandra-password <password>')
     .requiredOption('--cassandra-hosts <hosts_delimited_by_comma>')
@@ -31,6 +29,7 @@ const deleteExpiredCommand = new DeleteExpiredCmd({
 
 async function run() {
     try {
+        // @ts-expect-error TODO fix
         await deleteExpiredCommand.run()
         return {}
     } catch (err) {
