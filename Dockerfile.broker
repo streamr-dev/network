@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM node:18.12.1-bullseye as build
+FROM node:18-bullseye as build
 WORKDIR /usr/src/network
 RUN npm config set \
 	unsafe-perm=true \
@@ -9,7 +9,7 @@ RUN --mount=type=cache,target=/root/.npm \
 	npm run bootstrap-pkg --package=streamr-broker && \
 	npm run prune-pkg -- streamr-broker
 
-FROM --platform=$BUILDPLATFORM node:18.12.1-bullseye-slim
+FROM node:18-bullseye-slim
 ARG NODE_ENV
 ENV NODE_ENV=${NODE_ENV:-production}
 RUN apt-get update && apt-get --assume-yes --no-install-recommends install \
@@ -29,5 +29,6 @@ EXPOSE 7171/tcp
 
 WORKDIR /home/streamr/network/packages/broker
 
-# start broker from default config
-CMD ["./bin/broker.js"]
+# start broker from default config (needs mounted volume, e.g. docker run -v $(cd ~/.streamr/config;pwd):/home/streamr/.streamr/config IMAGE
+CMD ["/usr/local/bin/npm", "exec", "streamr-broker"]
+

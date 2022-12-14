@@ -39,3 +39,5 @@ jobs:
       - name: upload logs
         if: ${{ inputs.docker-services != '' || inputs.run-brokers-and-trackers }}
         uses: ./.github/workflows/reusable/collect-and-upload-logs
+        with:
+          artifact_prefix: ${{ inputs.package }}

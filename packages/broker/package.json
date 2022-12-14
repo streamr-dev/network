@@ -1,6 +1,6 @@
 {
   "name": "streamr-broker",
-  "version": "32.0.0-beta.4",
+  "version": "32.0.0",
   "description": "A full-featured broker node implementation for the Streamr Network",
   "repository": {
     "type": "git",
@@ -8,9 +8,9 @@
     "directory": "packages/broker"
   },
   "bin": {
-    "streamr-broker": "bin/broker.js",
-    "streamr-broker-init": "bin/config-wizard.js",
-    "delete-expired-data": "bin/delete-expired-data.js"
+    "streamr-broker": "dist/bin/broker.js",
+    "streamr-broker-init": "dist/bin/config-wizard.js",
+    "delete-expired-data": "dist/bin/delete-expired-data.js"
   },
   "main": "./dist/src/exports.js",
   "types": "./dist/src/exports.d.ts",
