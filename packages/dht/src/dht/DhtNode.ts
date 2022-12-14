@@ -738,10 +738,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
     // IDHTRpcService implementation
 
     public async getClosestPeers(request: ClosestPeersRequest, context: ServerCallContext): Promise<ClosestPeersResponse> {
-        if (this.config.serviceId === 'layer1::webrtc-network' && this.ownPeerId!.toKey() === '656e747279706f696e74') {
-            // logger.info(PeerID.fromValue(request.peerDescriptor!.peerId).toKey() + ", " +  this.ownPeerId!.toKey())
-        }
-
         this.addNewContact((context as DhtCallContext).incomingSourceDescriptor!)
         const closestPeers = this.bucket!.closest(request.kademliaId, 5)
         const peerDescriptors = closestPeers.map((dhtPeer: DhtPeer) => dhtPeer.getPeerDescriptor())
