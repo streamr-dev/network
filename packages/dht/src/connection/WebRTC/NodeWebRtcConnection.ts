@@ -52,7 +52,6 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
     private lastState: RTCPeerConnectionState = 'connecting'
     private remoteDescriptionSet = false
     private connectingTimeoutRef?: NodeJS.Timeout
-    private connectionEmitter?: EventEmitter
 
     public readonly connectionType: ConnectionType = ConnectionType.WEBRTC
     private readonly stunUrls: string[]
@@ -93,12 +92,11 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
         this.connection.onLocalCandidate((candidate: string, mid: string) => {
             this.emit('localCandidate', candidate, mid)
         })
-
         if (isOffering) {
             const dataChannel = this.connection.createDataChannel('streamrDataChannel')
             this.setupDataChannel(dataChannel)
         } else {
-            this.connection.onDataChannel((dc) => this.onDataChannel(dc))
+            this.connection.onDataChannel((dataChannel) => this.onDataChannel(dataChannel))
         }
     }
 
@@ -157,10 +155,6 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
                 clearTimeout(this.connectingTimeoutRef)
             }
 
-            if (this.connectionEmitter) {
-                this.connectionEmitter.removeAllListeners()
-            }
-
             this.emit('disconnected')
 
             if (this.connection) {
@@ -200,6 +194,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
         })
 
         dataChannel.onError((err) => logger.warn(err))
+
         dataChannel.onBufferedAmountLow( () => {
             logger.trace(`dc.onBufferedAmountLow`)
         })

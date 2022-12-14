@@ -13,7 +13,7 @@ import {
 } from '../proto/DhtRpc'
 import { WebSocketConnector } from './WebSocket/WebSocketConnector'
 import { PeerID, PeerIDKey } from '../helpers/PeerID'
-import { ITransport, TransportEvents, TransportType } from '../transport/ITransport'
+import { ITransport, TransportEvents } from '../transport/ITransport'
 import { WebRtcConnector } from './WebRTC/WebRtcConnector'
 import { CountMetric, LevelMetric, Logger, Metric, MetricsContext, MetricsDefinition, RateMetric } from '@streamr/utils'
 import * as Err from '../helpers/errors'
@@ -288,11 +288,6 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
     public getPeerDescriptor(): PeerDescriptor {
         return this.ownPeerDescriptor!
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    public getTransportType(): TransportType {
-        return TransportType.CONNECTION_MANAGER
     }
 
     public hasConnection(peerDescriptor: PeerDescriptor): boolean {

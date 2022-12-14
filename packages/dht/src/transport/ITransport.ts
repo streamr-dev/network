@@ -6,12 +6,6 @@ export interface TransportEvents {
     disconnected: (peerDescriptor: PeerDescriptor) => void
 }
 
-export enum TransportType {
-    CONNECTION_MANAGER = 'connection-manager',
-    SIMULATOR = 'simulator',
-    DHT_NODE = 'dht-node'
-}
-
 export interface ITransport {
     on<T extends keyof TransportEvents>(eventName: T, listener: (message: Message) => void): void 
     on<T extends keyof TransportEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor) => void): void
@@ -25,5 +19,4 @@ export interface ITransport {
     send(msg: Message): Promise<void>
     getPeerDescriptor(): PeerDescriptor
     stop(): void | Promise<void>
-    getTransportType(): TransportType
 }
