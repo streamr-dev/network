@@ -74,7 +74,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
 
     start(isOffering: boolean): void {
         const hexId = PeerID.fromValue(this.remotePeerDescriptor.kademliaId).toKey()
-        logger.info(`Staring new connection for peer: ${hexId} offering: ${isOffering}`)
+        logger.trace(`Staring new connection for peer: ${hexId} offering: ${isOffering}`)
         this.connection = new PeerConnection(hexId, {
             iceServers: this.stunUrls,
             maxMessageSize: MAX_MESSAGE_SIZE

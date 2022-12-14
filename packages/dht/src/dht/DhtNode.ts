@@ -453,7 +453,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
         logger.info(
             `Joining ${this.config.serviceId === 'layer0' ? 'The Streamr Network' : `Control Layer for ${this.config.serviceId}`}`
-            + ` via entrypoint ${PeerID.fromValue(entryPointDescriptor.kademliaId).toKey()}, ${this.ownPeerId!.toString()}`
+            + ` via entrypoint ${PeerID.fromValue(entryPointDescriptor.kademliaId).toKey()}`
         )
         const entryPoint = new DhtPeer(
             this.ownPeerDescriptor!,
@@ -519,7 +519,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         if (!this.started || this.stopped || this.rejoinOngoing) {
             return
         }
-        logger.info(`Rejoining DHT ${this.config.serviceId}!, ${this.ownPeerId!.toString()}`)
+        logger.info(`Rejoining DHT ${this.config.serviceId}!`)
         this.rejoinOngoing = true
         try {
             this.neighborList!.clear()

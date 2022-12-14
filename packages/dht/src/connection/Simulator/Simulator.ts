@@ -6,7 +6,7 @@ import { SimulatorConnector } from "./SimulatorConnector"
 import { SimulatorConnection } from "./SimulatorConnection"
 import { ConnectionID } from "../IConnection"
 import { Logger, wait } from "@streamr/utils"
-import { getRegionDelayMatrix } from "../../../test/data/pings"
+import { getRegionDelayMatrix } from "./pings"
 import { v4 } from "uuid"
 
 const logger = new Logger(module)

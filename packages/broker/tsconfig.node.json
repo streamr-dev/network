@@ -12,7 +12,6 @@
         { "path": "../utils/tsconfig.node.json" },
         { "path": "../test-utils/tsconfig.node.json" },
         { "path": "../protocol/tsconfig.node.json" },
-        { "path": "../network/tsconfig.node.json" },
         { "path": "../client/tsconfig.node.json" }
     ]
 }
