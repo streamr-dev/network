@@ -1,6 +1,6 @@
 {
   "name": "@streamr/dht",
-  "version": "7.1.0",
+  "version": "7.2.0",
   "description": "Streamr Network DHT",
   "repository": {
     "type": "git",
@@ -30,8 +30,8 @@
   },
   "dependencies": {
     "@protobuf-ts/plugin": "^2.8.0",
-    "@streamr/proto-rpc": "7.1.0",
-    "@streamr/utils": "7.1.0",
+    "@streamr/proto-rpc": "7.2.0",
+    "@streamr/utils": "7.2.0",
     "bloomfilter": "^0.0.18",
     "k-bucket": "^5.1.0",
     "karma-mocha-reporter": "^2.2.5",
@@ -42,7 +42,7 @@
     "websocket": "^1.0.34"
   },
   "devDependencies": {
-    "@streamr/test-utils": "7.1.0",
+    "@streamr/test-utils": "7.2.0",
     "@types/bloomfilter": "^0.0.0",
     "@types/express": "^4.17.13",
     "@types/k-bucket": "^5.0.1",

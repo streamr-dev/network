@@ -12,13 +12,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Deprecated
 
-- Deprecate TypeScript interface `NetworkNodeConfig`
-
 ### Removed
 
 ### Fixed
 
 ### Security
+
+
+## [7.2.0] - 2022-12-14
+
+### Deprecated
+
+- Deprecate TypeScript interface `NetworkNodeConfig`
 
 
 ## [7.1.0] - 2022-11-25
@@ -219,7 +224,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fixed an import so that the client successfully loads in a web browser environment (NET-721)
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/client/v7.1.0...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/client/v7.2.0...HEAD
+[7.2.0]: https://github.com/streamr-dev/network/compare/client/v7.1.0...client/v7.2.0
 [7.1.0]: https://github.com/streamr-dev/network/compare/client/v7.0.3...client/v7.1.0
 [7.0.3]: https://github.com/streamr-dev/network/compare/client/v7.0.2...client/v7.0.3
 [7.0.2]: https://github.com/streamr-dev/network/compare/client/v7.0.1...client/v7.0.2
