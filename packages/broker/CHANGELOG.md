@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fixed Docker build for target linux/arm64
+- Log output is always prettified (even when `NODE_ENV=production`)
 
 ### Security
 
