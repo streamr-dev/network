@@ -1,4 +1,4 @@
-import { Wallet } from 'ethers'
+import { Wallet } from '@ethersproject/wallet'
 import { createTestStream, createRelativeTestStreamId } from '../test-utils/utils'
 import { until } from '../../src/utils/promises'
 import { NotFoundError } from '../../src/HttpUtil'

@@ -1,4 +1,4 @@
-import { Wallet } from 'ethers'
+import { Wallet } from '@ethersproject/wallet'
 import { StreamID, toStreamPartID, TrackerRegistryRecord } from '@streamr/protocol'
 import { createNetworkNode, NetworkNodeOptions, TEST_CONFIG } from '@streamr/network-node'
 import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
