@@ -15,6 +15,10 @@ on:
         type: string
       push_image:
         type: boolean
+      host_machine_platform:
+        type: string
+        required: false
+        default: ubuntu-20.04
       build_platforms:
         type: string
         required: true
@@ -31,9 +35,9 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ${{ inputs.host_machine_platform }}
     steps:
-      - uses: actions/checkout@v3.1.0
+      - uses: actions/checkout@v3.2.0
       - name: Cache Docker layers
         uses: actions/cache@v3.0.11
         with:
