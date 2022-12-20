@@ -23,6 +23,7 @@ jobs:
     with:
       docker_file: Dockerfile.broker
       image_name: streamr/broker-node
+      host_machine_platform: self-hosted
       build_platforms: linux/amd64,linux/arm64
       push_image: true
       test_success: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
