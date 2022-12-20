@@ -26,7 +26,14 @@ const logger = new Logger(module)
 export interface WebRtcConnectorConfig {
     rpcTransport: ITransport
     protocolVersion: string
-    stunUrls?: string[]
+    iceServers?: IceServer[]
+}
+
+export interface IceServer {
+    url: string
+    port: number
+    username?: string
+    password?: string
 }
 
 export class WebRtcConnector implements IWebRtcConnectorService {
@@ -38,7 +45,7 @@ export class WebRtcConnector implements IWebRtcConnectorService {
     private stopped = false
     private static objectCounter = 0
     private objectId = 0
-    private stunUrls: string[]
+    private iceServers: IceServer[]
 
     constructor(private config: WebRtcConnectorConfig,
         private incomingConnectionCallback: (connection: ManagedConnection) => boolean) {
@@ -47,7 +54,7 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         this.objectId = WebRtcConnector.objectCounter
 
         this.rpcTransport = config.rpcTransport
-        this.stunUrls = config.stunUrls || []
+        this.iceServers = config.iceServers || []
 
         this.rpcCommunicator = new ListeningRpcCommunicator(WebRtcConnector.WEBRTC_CONNECTOR_SERVICE_ID, this.rpcTransport, {
             rpcRequestTimeout: 15000
@@ -77,7 +84,7 @@ export class WebRtcConnector implements IWebRtcConnectorService {
             return existingConnection
         }
 
-        const connection = new NodeWebRtcConnection({ remotePeerDescriptor: targetPeerDescriptor, stunUrls: this.stunUrls })
+        const connection = new NodeWebRtcConnection({ remotePeerDescriptor: targetPeerDescriptor, iceServers: this.iceServers })
 
         const offering = this.isOffering(targetPeerDescriptor)
         let managedConnection: ManagedWebRtcConnection

@@ -14,7 +14,7 @@ import {
 import { WebSocketConnector } from './WebSocket/WebSocketConnector'
 import { PeerID, PeerIDKey } from '../helpers/PeerID'
 import { ITransport, TransportEvents } from '../transport/ITransport'
-import { WebRtcConnector } from './WebRTC/WebRtcConnector'
+import { IceServer, WebRtcConnector } from './WebRTC/WebRtcConnector'
 import { CountMetric, LevelMetric, Logger, Metric, MetricsContext, MetricsDefinition, RateMetric } from '@streamr/utils'
 import * as Err from '../helpers/errors'
 import { WEB_RTC_CLEANUP } from './WebRTC/NodeWebRtcConnection'
@@ -38,7 +38,7 @@ export interface ConnectionManagerConfig {
     simulator?: Simulator
     ownPeerDescriptor?: PeerDescriptor
     serviceIdPrefix?: string
-    stunUrls?: string[]
+    iceServers?: IceServer[]
     metricsContext?: MetricsContext
 }
 
@@ -140,7 +140,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             this.webrtcConnector = new WebRtcConnector({
                 rpcTransport: this.config.transportLayer!,
                 protocolVersion: ConnectionManager.PROTOCOL_VERSION,
-                stunUrls: this.config.stunUrls
+                iceServers: this.config.iceServers
             }, this.incomingConnectionCallback)
         }
 

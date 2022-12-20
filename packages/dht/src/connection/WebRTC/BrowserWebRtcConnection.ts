@@ -23,7 +23,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
 
     private lastState: RTCPeerConnectionState = 'connecting'
 
-    private stunUrls = []
+    private iceServers = []
     private peerConnection?: RTCPeerConnection
     private dataChannel?: RTCDataChannel
     private makingOffer = false
@@ -31,7 +31,11 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
 
     start(isOffering: boolean): void {
         this.isOffering = isOffering
-        const urls: RTCIceServer[] = this.stunUrls.map((url) => { return { urls: [url] } })
+        const urls: RTCIceServer[] = this.iceServers.map(({ url, port, username, password }) => ({
+            urls: `${url}:${port}`,
+            username,
+            credential: password
+        }))
         this.peerConnection = new RTCPeerConnection({ iceServers: urls })
 
         this.peerConnection.onicecandidate = (event) => {

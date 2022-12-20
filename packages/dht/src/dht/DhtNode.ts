@@ -35,6 +35,7 @@ import { DiscoverySession } from './DiscoverySession'
 import { RandomContactList } from './contact/RandomContactList'
 import { Empty } from '../proto/google/protobuf/empty'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
+import { IceServer } from '../connection/WebRTC/WebRtcConnector'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -67,7 +68,7 @@ export interface DhtNodeOptions {
     peerIdString?: string
     nodeName?: string
     rpcRequestTimeout?: number
-    stunUrls?: string[]
+    iceServers?: IceServer[]
 }
 
 export class DhtNodeConfig {
@@ -88,7 +89,7 @@ export class DhtNodeConfig {
     peerIdString?: string
     nodeName?: string
     rpcRequestTimeout?: number
-    stunUrls?: string[]
+    iceServers?: IceServer[]
 
     constructor(conf: Partial<DhtNodeOptions>) {
         // assign given non-undefined config vars over defaults
@@ -172,7 +173,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             const connectionManagerConfig: ConnectionManagerConfig = {
                 transportLayer: this,
                 entryPoints: this.config.entryPoints,
-                stunUrls: this.config.stunUrls,
+                iceServers: this.config.iceServers,
                 metricsContext: this.config.metricsContext
             }
             // If own PeerDescriptor is given in config, create a ConnectionManager with ws server

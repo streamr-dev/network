@@ -31,7 +31,8 @@ export const CONFIG_TEST: StreamrClientConfig = {
             peerDescriptor: {
                 kademliaId: 'local',
                 type: 0
-            }
+            },
+            iceServers: []
         }
     },
     contracts: {

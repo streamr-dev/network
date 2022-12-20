@@ -6,6 +6,8 @@ import nodeDatachannel, { DataChannel, DescriptionType, PeerConnection } from 'n
 import { PeerID } from '../../helpers/PeerID'
 import { Logger } from '@streamr/utils'
 import { IllegalRTCPeerConnectionState } from '../../helpers/errors'
+import { iceServerAsString } from './iceServerAsString'
+import { IceServer } from './WebRtcConnector'
 
 const logger = new Logger(module)
 
@@ -23,7 +25,7 @@ export interface Params {
     bufferThresholdHigh?: number
     bufferThresholdLow?: number
     connectingTimeout?: number
-    stunUrls?: string[]
+    iceServers?: IceServer[]
 }
 
 // Re-defined accoring to https://github.com/microsoft/TypeScript/blob/main/src/lib/dom.generated.d.ts
@@ -54,7 +56,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
     private connectingTimeoutRef?: NodeJS.Timeout
 
     public readonly connectionType: ConnectionType = ConnectionType.WEBRTC
-    private readonly stunUrls: string[]
+    private readonly iceServers: IceServer[]
     //private readonly bufferThresholdHigh: number // TODO: buffer handling must be implemented before production use
     private readonly bufferThresholdLow: number
     private readonly connectingTimeout: number
@@ -64,7 +66,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
     constructor(params: Params) {
         super()
         this.connectionId = new ConnectionID()
-        this.stunUrls = params.stunUrls || []
+        this.iceServers = params.iceServers || []
         //this.bufferThresholdHigh = params.bufferThresholdHigh || 2 ** 17
         this.bufferThresholdLow = params.bufferThresholdLow || 2 ** 15
         this.connectingTimeout = params.connectingTimeout || 20000
@@ -75,7 +77,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
         const hexId = PeerID.fromValue(this.remotePeerDescriptor.kademliaId).toKey()
         logger.trace(`Staring new connection for peer: ${hexId} offering: ${isOffering}`)
         this.connection = new PeerConnection(hexId, {
-            iceServers: this.stunUrls,
+            iceServers: this.iceServers.map(iceServerAsString),
             maxMessageSize: MAX_MESSAGE_SIZE
         })
 

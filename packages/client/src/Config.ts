@@ -168,18 +168,18 @@ export const STREAM_CLIENT_DEFAULTS:
             // webrtcDatachannelBufferThresholdLow: 2 ** 15,
             // webrtcDatachannelBufferThresholdHigh: 2 ** 17,
             // newWebrtcConnectionTimeout: 15 * 1000,
-            // iceServers: [
-            //     {
-            //         url: 'stun:stun.streamr.network',
-            //         port: 5349
-            //     },
-            //     {
-            //         url: 'turn:turn.streamr.network',
-            //         port: 5349,
-            //         username: 'BrubeckTurn1',
-            //         password: 'MIlbgtMw4nhpmbgqRrht1Q=='
-            //     }
-            // ]
+            iceServers: [
+                {
+                    url: 'stun:stun.streamr.network',
+                    port: 5349
+                },
+                {
+                    url: 'turn:turn.streamr.network',
+                    port: 5349,
+                    username: 'BrubeckTurn1',
+                    password: 'MIlbgtMw4nhpmbgqRrht1Q=='
+                }
+            ],
             entryPoints: [{
                 kademliaId: 'productionEntryPoint1',
                 type: 0,
