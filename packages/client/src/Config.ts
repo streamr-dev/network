@@ -164,10 +164,10 @@ export const STREAM_CLIENT_DEFAULTS:
     network: {
         layer0: {
             // acceptProxyConnections: false,
-            // webrtcDisallowPrivateAddresses: true,
             // webrtcDatachannelBufferThresholdLow: 2 ** 15,
             // webrtcDatachannelBufferThresholdHigh: 2 ** 17,
             // newWebrtcConnectionTimeout: 15 * 1000,
+            webrtcDisallowPrivateAddresses: true,
             iceServers: [
                 {
                     url: 'stun:stun.streamr.network',

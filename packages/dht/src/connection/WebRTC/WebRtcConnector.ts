@@ -20,6 +20,7 @@ import { IWebRtcConnectorService } from "../../proto/DhtRpc.server"
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ManagedConnection } from '../ManagedConnection'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
+import { getAddressFromIceCandidate, isPrivateIPv4 } from '../../helpers/AddressTools'
 
 const logger = new Logger(module)
 
@@ -27,6 +28,7 @@ export interface WebRtcConnectorConfig {
     rpcTransport: ITransport
     protocolVersion: string
     iceServers?: IceServer[]
+    disallowPrivateAddresses?: boolean
 }
 
 export interface IceServer {
@@ -46,6 +48,7 @@ export class WebRtcConnector implements IWebRtcConnectorService {
     private static objectCounter = 0
     private objectId = 0
     private iceServers: IceServer[]
+    private disallowPrivateAddresses: boolean
 
     constructor(private config: WebRtcConnectorConfig,
         private incomingConnectionCallback: (connection: ManagedConnection) => boolean) {
@@ -55,6 +58,7 @@ export class WebRtcConnector implements IWebRtcConnectorService {
 
         this.rpcTransport = config.rpcTransport
         this.iceServers = config.iceServers || []
+        this.disallowPrivateAddresses = config.disallowPrivateAddresses || false
 
         this.rpcCommunicator = new ListeningRpcCommunicator(WebRtcConnector.WEBRTC_CONNECTOR_SERVICE_ID, this.rpcTransport, {
             rpcRequestTimeout: 15000
@@ -139,6 +143,16 @@ export class WebRtcConnector implements IWebRtcConnectorService {
 
     setOwnPeerDescriptor(peerDescriptor: PeerDescriptor): void {
         this.ownPeerDescriptor = peerDescriptor
+    }
+
+    isIceCandidateAllowed(candidate: string): boolean {
+        if (this.disallowPrivateAddresses) {
+            const address = getAddressFromIceCandidate(candidate)
+            if (address && isPrivateIPv4(address)) {
+                return false
+            }
+        }
+        return true
     }
 
     private onRtcOffer(
@@ -262,8 +276,9 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         } else if (connection.connectionId.toString() !== connectionId) {
             logger.trace(`Ignoring remote candidate due to connectionId mismatch`)
             return
+        } else if (this.isIceCandidateAllowed(candidate)) {
+            connection.addRemoteCandidate(candidate, mid)
         }
-        connection.addRemoteCandidate(candidate, mid)
     }
 
     stop(): void {

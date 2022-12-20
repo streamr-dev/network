@@ -32,7 +32,8 @@ export const CONFIG_TEST: StreamrClientConfig = {
                 kademliaId: 'local',
                 type: 0
             },
-            iceServers: []
+            iceServers: [],
+            webrtcDisallowPrivateAddresses: false
         }
     },
     contracts: {

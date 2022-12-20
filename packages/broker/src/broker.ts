@@ -76,11 +76,12 @@ export const createBroker = async (config: Config): Promise<Broker> => {
 
             logger.info(`Plugins: ${JSON.stringify(plugins.map((p) => p.name))}`)
 
-            // if (config.client.network?.webrtcDisallowPrivateAddresses === undefined || config.client.network.webrtcDisallowPrivateAddresses) {
-            //     logger.warn('WebRTC private address probing is disabled. ' +
-            //         'This makes it impossible to create network layer connections directly via local routers ' +
-            //         'More info: https://github.com/streamr-dev/network-monorepo/wiki/WebRTC-private-addresses')
-            // }
+            if (config.client.network?.layer0?.webrtcDisallowPrivateAddresses === undefined
+                || config.client.network?.layer0?.webrtcDisallowPrivateAddresses) {
+                logger.warn('WebRTC private address probing is disabled. ' +
+                    'This makes it impossible to create network layer connections directly via local routers ' +
+                    'More info: https://github.com/streamr-dev/network-monorepo/wiki/WebRTC-private-addresses')
+            }
             started = true
         },
         stop: async () => {

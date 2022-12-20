@@ -40,6 +40,7 @@ export interface ConnectionManagerConfig {
     serviceIdPrefix?: string
     iceServers?: IceServer[]
     metricsContext?: MetricsContext
+    webrtcDisallowPrivateAddresses?: boolean
 }
 
 export enum NatType {
@@ -140,7 +141,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             this.webrtcConnector = new WebRtcConnector({
                 rpcTransport: this.config.transportLayer!,
                 protocolVersion: ConnectionManager.PROTOCOL_VERSION,
-                iceServers: this.config.iceServers
+                iceServers: this.config.iceServers,
+                disallowPrivateAddresses: this.config.webrtcDisallowPrivateAddresses
             }, this.incomingConnectionCallback)
         }
 

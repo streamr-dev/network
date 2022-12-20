@@ -105,6 +105,9 @@
                                     }
                                 }
                             }
+                        },
+                        "webrtcDisallowPrivateAddresses": {
+                            "type": "boolean"
                         }
                     },
                     "default": {
@@ -127,7 +130,8 @@
                                 "username": "BrubeckTurn1",
                                 "password": "MIlbgtMw4nhpmbgqRrht1Q=="
                             }
-                        ]
+                        ],
+                        "webrtcDisallowPrivateAddresses": true
                     }
                 },
                 "networkNode": {

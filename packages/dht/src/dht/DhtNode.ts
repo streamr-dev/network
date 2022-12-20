@@ -69,6 +69,7 @@ export interface DhtNodeOptions {
     nodeName?: string
     rpcRequestTimeout?: number
     iceServers?: IceServer[]
+    webrtcDisallowPrivateAddresses?: boolean
 }
 
 export class DhtNodeConfig {
@@ -90,6 +91,7 @@ export class DhtNodeConfig {
     nodeName?: string
     rpcRequestTimeout?: number
     iceServers?: IceServer[]
+    webrtcDisallowPrivateAddresses?: boolean
 
     constructor(conf: Partial<DhtNodeOptions>) {
         // assign given non-undefined config vars over defaults
@@ -174,7 +176,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
                 transportLayer: this,
                 entryPoints: this.config.entryPoints,
                 iceServers: this.config.iceServers,
-                metricsContext: this.config.metricsContext
+                metricsContext: this.config.metricsContext,
+                webrtcDisallowPrivateAddresses: this.config.webrtcDisallowPrivateAddresses
             }
             // If own PeerDescriptor is given in config, create a ConnectionManager with ws server
             if (this.config.peerDescriptor && this.config.peerDescriptor.websocket) {
