@@ -22,7 +22,6 @@ import { Authentication, AuthenticationInjectionToken } from './Authentication'
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
 /** @deprecated This in an internal interface */
 export interface NetworkNodeStub {
-    stack: any
     getNodeId: () => string
     addMessageListener: (listener: (msg: StreamMessage) => void) => void
     removeMessageListener: (listener: (msg: StreamMessage) => void) => void
@@ -47,11 +46,6 @@ export interface NetworkNodeStub {
     openProxyConnection: (streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection, userId: string) => Promise<void>
     /** @internal */
     closeProxyConnection: (streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection) => Promise<void>
-}
-
-export const getEthereumAddressFromNodeId = (nodeId: string): string => {
-    const ETHERUM_ADDRESS_LENGTH = 42
-    return nodeId.substring(0, ETHERUM_ADDRESS_LENGTH)
 }
 
 export interface Events {
