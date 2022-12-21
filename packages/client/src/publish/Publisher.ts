@@ -11,6 +11,7 @@ import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { GroupKeyStore } from '../encryption/GroupKeyStore'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { Mapping } from '../utils/Mapping'
+import { LitProtocolKeyStore } from '../encryption/LitProtocolKeyStore'
 
 export class PublishError extends Error {
 
@@ -66,6 +67,7 @@ export class Publisher {
     constructor(
         streamIdBuilder: StreamIDBuilder,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
+        @inject(LitProtocolKeyStore) litProtocolKeyStore: LitProtocolKeyStore,
         streamRegistryCached: StreamRegistryCached,
         groupKeyStore: GroupKeyStore,
         node: NetworkNodeFacade
@@ -78,7 +80,7 @@ export class Publisher {
             return this.createMessageFactory(streamId)
         })
         this.groupKeyQueues = new Mapping(async (streamId: StreamID) => {
-            return new GroupKeyQueue(streamId, groupKeyStore)
+            return new GroupKeyQueue(streamId, groupKeyStore, litProtocolKeyStore)
         })
     }
 
