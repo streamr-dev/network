@@ -10,13 +10,11 @@ export default class EncryptedGroupKey {
 
     /**
      * A pair (groupKeyId, encryptedGroupKey) where the encryptedGroupKey is an encrypted, hex-encoded version of the group key.
-     * @param groupKeyId
      * @param encryptedGroupKeyHex
      * @param serialized Optional. If given, this exact string is returned from serialize().
      */
-    constructor(groupKeyId: string, encryptedGroupKeyHex: string, serialized: string | null = null) {
-        validateIsString('groupKeyId', groupKeyId)
-        this.groupKeyId = groupKeyId
+    constructor(encryptedGroupKeyHex: string, serialized: string | null = null) {
+        this.groupKeyId = encryptedGroupKeyHex
 
         validateIsString('encryptedGroupKeyHex', encryptedGroupKeyHex)
         this.encryptedGroupKeyHex = encryptedGroupKeyHex
@@ -38,12 +36,12 @@ export default class EncryptedGroupKey {
     }
 
     static deserialize(json: string): EncryptedGroupKey {
-        const [groupKeyId, encryptedGroupKeyHex] = JSON.parse(json)
-        return new EncryptedGroupKey(groupKeyId, encryptedGroupKeyHex, json)
+        const [groupKeyId] = JSON.parse(json)
+        return new EncryptedGroupKey(groupKeyId, json)
     }
 
     static fromArray(arr: EncryptedGroupKeySerialized): EncryptedGroupKey {
-        const [groupKeyId, encryptedGroupKeyHex] = arr
-        return new EncryptedGroupKey(groupKeyId, encryptedGroupKeyHex)
+        const [groupKeyId] = arr
+        return new EncryptedGroupKey(groupKeyId)
     }
 }

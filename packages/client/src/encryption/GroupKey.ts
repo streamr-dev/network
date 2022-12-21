@@ -57,9 +57,9 @@ export class GroupKey {
         }
     }
 
-    static generate(id = uuid('GroupKey')): GroupKey {
+    static generate(): GroupKey {
         const keyBytes = crypto.randomBytes(32)
-        return new GroupKey(id, keyBytes)
+        return new GroupKey(keyBytes.toString('hex'), keyBytes)
     }
 
     /** @internal */
