@@ -38,6 +38,9 @@ interface Metrics extends MetricsDefinition {
 export interface StreamrNodeOpts {
     metricsContext?: MetricsContext
     id?: string
+    layer2NumOfTargetNeighbors?: number
+    layer2MaxNumberOfContact?: number
+    layer2MinPropagationTargets?: number
 }
 
 export class StreamrNode extends EventEmitter {
@@ -50,6 +53,7 @@ export class StreamrNode extends EventEmitter {
     protected extraMetadata: Record<string, unknown> = {}
     private readonly metricsContext: MetricsContext
     private readonly metrics: Metrics
+    private readonly opts: StreamrNodeOpts
 
     constructor(opts: StreamrNodeOpts) {
         super()
@@ -60,6 +64,7 @@ export class StreamrNode extends EventEmitter {
             publishBytesPerSecond: new RateMetric(),
         }
         this.metricsContext.addMetrics('node', this.metrics)
+        this.opts = opts
     }
 
     async start(startedAndJoinedLayer0: DhtNode, transport: ITransport, connectionLocker: ConnectionLocker): Promise<void> {
@@ -144,7 +149,10 @@ export class StreamrNode extends EventEmitter {
             P2PTransport: this.P2PTransport!,
             layer1: layer1,
             connectionLocker: this.connectionLocker!,
-            ownPeerDescriptor: this.layer0!.getPeerDescriptor()
+            ownPeerDescriptor: this.layer0!.getPeerDescriptor(),
+            minPropagationTargets: this.opts.layer2MinPropagationTargets,
+            numOfTargetNeighbors: this.opts.layer2NumOfTargetNeighbors,
+            maxNumberOfContact: this.opts.layer2MaxNumberOfContact
         })
 
         this.streams.set(streamPartID, {

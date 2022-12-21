@@ -187,11 +187,7 @@ export const STREAM_CLIENT_DEFAULTS:
                     ip: '127.0.0.1',
                     port: 40401
                 }
-            }],
-            dhtJoinTimeout: 60000,
-            parallelism: 3,
-            maxNeighborListSize: 100,
-            numberOfNodesPerKBucket: 4
+            }]
         },
         networkNode: {}
     },

@@ -143,11 +143,7 @@
                         "webrtcDisallowPrivateAddresses": true,
                         "newWebrtcConnectionTimeout": 15000,
                         "webrtcDatachannelBufferThresholdLow": 32768,
-                        "webrtcDatachannelBufferThresholdHigh": 131072,
-                        "dhtJoinTimeout": 60000,
-                        "parallelism": 3,
-                        "maxNeighborListSize": 100,
-                        "numberOfNodesPerKBucket": 4
+                        "webrtcDatachannelBufferThresholdHigh": 131072
                     }
                 },
                 "networkNode": {
@@ -156,6 +152,15 @@
                     "properties": {
                         "id": {
                             "type": "string"
+                        },
+                        "layer2NumOfTargetNeighbors": {
+                            "type": "number"
+                        },
+                        "layer2MaxNumberOfContact": {
+                            "type": "number"
+                        },
+                        "layer2MinPropagationTargets": {
+                            "type": "number"
                         }
                     },
                     "default": {}
