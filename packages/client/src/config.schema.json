@@ -108,6 +108,15 @@
                         },
                         "webrtcDisallowPrivateAddresses": {
                             "type": "boolean"
+                        },
+                        "newWebrtcConnectionTimeout": {
+                            "type": "number"
+                        },
+                        "webrtcDatachannelBufferThresholdLow": {
+                            "type": "number"
+                        },
+                        "webrtcDatachannelBufferThresholdHigh": {
+                            "type": "number"
                         }
                     },
                     "default": {
@@ -131,7 +140,10 @@
                                 "password": "MIlbgtMw4nhpmbgqRrht1Q=="
                             }
                         ],
-                        "webrtcDisallowPrivateAddresses": true
+                        "webrtcDisallowPrivateAddresses": true,
+                        "newWebrtcConnectionTimeout": 15000,
+                        "webrtcDatachannelBufferThresholdLow": 32768,
+                        "webrtcDatachannelBufferThresholdHigh": 131072
                     }
                 },
                 "networkNode": {

@@ -70,6 +70,9 @@ export interface DhtNodeOptions {
     rpcRequestTimeout?: number
     iceServers?: IceServer[]
     webrtcDisallowPrivateAddresses?: boolean
+    webrtcDatachannelBufferThresholdLow?: number
+    webrtcDatachannelBufferThresholdHigh?: number
+    newWebrtcConnectionTimeout?: number
 }
 
 export class DhtNodeConfig {
@@ -92,6 +95,9 @@ export class DhtNodeConfig {
     rpcRequestTimeout?: number
     iceServers?: IceServer[]
     webrtcDisallowPrivateAddresses?: boolean
+    webrtcDatachannelBufferThresholdLow?: number
+    webrtcDatachannelBufferThresholdHigh?: number
+    newWebrtcConnectionTimeout?: number
 
     constructor(conf: Partial<DhtNodeOptions>) {
         // assign given non-undefined config vars over defaults
@@ -177,7 +183,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
                 entryPoints: this.config.entryPoints,
                 iceServers: this.config.iceServers,
                 metricsContext: this.config.metricsContext,
-                webrtcDisallowPrivateAddresses: this.config.webrtcDisallowPrivateAddresses
+                webrtcDisallowPrivateAddresses: this.config.webrtcDisallowPrivateAddresses,
+                webrtcDatachannelBufferThresholdLow: this.config.webrtcDatachannelBufferThresholdLow,
+                webrtcDatachannelBufferThresholdHigh: this.config.webrtcDatachannelBufferThresholdHigh,
+                newWebrtcConnectionTimeout: this.config.newWebrtcConnectionTimeout
             }
             // If own PeerDescriptor is given in config, create a ConnectionManager with ws server
             if (this.config.peerDescriptor && this.config.peerDescriptor.websocket) {

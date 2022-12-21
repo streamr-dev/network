@@ -29,6 +29,9 @@ export interface WebRtcConnectorConfig {
     protocolVersion: string
     iceServers?: IceServer[]
     disallowPrivateAddresses?: boolean
+    bufferThresholdLow?: number
+    bufferThresholdHigh?: number
+    connectionTimeout?: number
 }
 
 export interface IceServer {
@@ -88,7 +91,13 @@ export class WebRtcConnector implements IWebRtcConnectorService {
             return existingConnection
         }
 
-        const connection = new NodeWebRtcConnection({ remotePeerDescriptor: targetPeerDescriptor, iceServers: this.iceServers })
+        const connection = new NodeWebRtcConnection({
+            remotePeerDescriptor: targetPeerDescriptor,
+            iceServers: this.iceServers,
+            bufferThresholdLow: this.config.bufferThresholdLow,
+            bufferThresholdHigh: this.config.bufferThresholdHigh,
+            connectingTimeout: this.config.connectionTimeout
+        })
 
         const offering = this.isOffering(targetPeerDescriptor)
         let managedConnection: ManagedWebRtcConnection

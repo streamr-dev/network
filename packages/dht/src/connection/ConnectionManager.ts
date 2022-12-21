@@ -41,6 +41,9 @@ export interface ConnectionManagerConfig {
     iceServers?: IceServer[]
     metricsContext?: MetricsContext
     webrtcDisallowPrivateAddresses?: boolean
+    webrtcDatachannelBufferThresholdLow?: number
+    webrtcDatachannelBufferThresholdHigh?: number
+    newWebrtcConnectionTimeout?: number
 }
 
 export enum NatType {
@@ -142,7 +145,10 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 rpcTransport: this.config.transportLayer!,
                 protocolVersion: ConnectionManager.PROTOCOL_VERSION,
                 iceServers: this.config.iceServers,
-                disallowPrivateAddresses: this.config.webrtcDisallowPrivateAddresses
+                disallowPrivateAddresses: this.config.webrtcDisallowPrivateAddresses,
+                bufferThresholdLow: this.config.webrtcDatachannelBufferThresholdLow,
+                bufferThresholdHigh: this.config.webrtcDatachannelBufferThresholdHigh,
+                connectionTimeout: this.config.newWebrtcConnectionTimeout,
             }, this.incomingConnectionCallback)
         }
 

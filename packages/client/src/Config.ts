@@ -164,9 +164,9 @@ export const STREAM_CLIENT_DEFAULTS:
     network: {
         layer0: {
             // acceptProxyConnections: false,
-            // webrtcDatachannelBufferThresholdLow: 2 ** 15,
-            // webrtcDatachannelBufferThresholdHigh: 2 ** 17,
-            // newWebrtcConnectionTimeout: 15 * 1000,
+            webrtcDatachannelBufferThresholdLow: 2 ** 15,
+            webrtcDatachannelBufferThresholdHigh: 2 ** 17,
+            newWebrtcConnectionTimeout: 15 * 1000,
             webrtcDisallowPrivateAddresses: true,
             iceServers: [
                 {
