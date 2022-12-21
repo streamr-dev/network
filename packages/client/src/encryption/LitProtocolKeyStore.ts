@@ -13,7 +13,7 @@ const formEvmContractConditions = (streamId: StreamID) => ([
         contractAddress: '0x0D483E10612F327FC11965Fc82E90dC19b141641',
         chain: 'polygon',
         functionName: 'hasPermission',
-        functionParams: ['0x8f4dc5f3ff64f3648e00730fd4f35e3f22c7bbd8/foobar1664353898173', ':userAddress', '2'],
+        functionParams: [streamId, ':userAddress', '2'],
         functionAbi: {
             inputs: [
                 {
@@ -61,14 +61,12 @@ const signAuthMessage = async (authentication: Authentication) => {
         chainId: 1
     })
     const messageToSign = siweMessage.prepareMessage()
-    const signature = await (await authentication.getStreamRegistryChainSigner()).signMessage(messageToSign)
-    const recoveredAddress = ethers.utils.verifyMessage(messageToSign, signature)
-    logger.warn("ADDR CHECK %s === %s", address, recoveredAddress)
+    const signature = await authentication.createMessageSignature(messageToSign)
     return {
         sig: signature,
         derivedVia: "web3.eth.personal.sign",
         signedMessage: messageToSign,
-        address: recoveredAddress
+        address
     }
 }
 
@@ -88,7 +86,7 @@ export class LitProtocolKeyStore {
     async store(streamId: StreamID, symmetricKey: Uint8Array): Promise<void> {
         await this.litNodeClient.connect()
         const authSig = await signAuthMessage(this.authentication)
-        await litNodeClient.saveEncryptionKey({
+        await this.litNodeClient.saveEncryptionKey({
             evmContractConditions: formEvmContractConditions(streamId),
             symmetricKey,
             authSig,
@@ -102,7 +100,7 @@ export class LitProtocolKeyStore {
         const toDecrypt = LitJsSdk.uint8arrayToString(encryptedSymmetricKey, 'base16')
 
         // 3. Decrypt it
-        return litNodeClient.getEncryptionKey({
+        return this.litNodeClient.getEncryptionKey({
             evmContractConditions: formEvmContractConditions(streamId),
             toDecrypt,
             chain,
