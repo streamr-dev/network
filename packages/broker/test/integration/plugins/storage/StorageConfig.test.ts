@@ -13,7 +13,7 @@ import { Broker } from '../../../../src/broker'
 import { StreamMessage } from '@streamr/protocol'
 import { toEthereumAddress, waitForCondition } from '@streamr/utils'
 
-jest.setTimeout(60000)
+jest.setTimeout(30000)
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'

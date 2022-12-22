@@ -10,7 +10,7 @@ import { Broker } from "../../../../src/broker"
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { toEthereumAddress } from '@streamr/utils'
 
-jest.setTimeout(60000)
+jest.setTimeout(30000)
 const httpPort1 = 12371
 
 const httpGet = (url: string): Promise<[number, string]> => { // return tuple is of form [statusCode, body]
@@ -135,5 +135,5 @@ describe('DataMetadataEndpoints', () => {
         ).toBeLessThan(
             new Date(res.lastMessage).getTime()
         )
-    }, 45000)
+    })
 })

@@ -4,7 +4,7 @@ import { waitForEvent } from '@streamr/utils'
 import { Message } from '../../../../src/helpers/PayloadFormat'
 import { createMessagingPluginTest } from '../../createMessagingPluginTest'
 
-jest.setTimeout(60000)
+jest.setTimeout(30000)
 
 const WEBSOCKET_PORT = 12400
 const BROKER_NETWORKNODE_PORT = 44410
