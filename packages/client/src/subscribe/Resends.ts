@@ -21,6 +21,7 @@ import { StreamrClientError } from '../StreamrClientError'
 import { collect } from '../utils/iterators'
 import { counting } from '../utils/GeneratorUtils'
 import { Message } from '../Message'
+import { LitProtocolKeyStore } from '../encryption/LitProtocolKeyStore'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 
@@ -87,6 +88,7 @@ export class Resends {
         @inject(StreamStorageRegistry) private streamStorageRegistry: StreamStorageRegistry,
         @inject(delay(() => StorageNodeRegistry)) private storageNodeRegistry: StorageNodeRegistry,
         @inject(delay(() => StreamRegistryCached)) private streamRegistryCached: StreamRegistryCached,
+        @inject(LitProtocolKeyStore) private litProtocolKeyStore: LitProtocolKeyStore,
         @inject(HttpUtil) private httpUtil: HttpUtil,
         groupKeyStore: GroupKeyStore,
         subscriberKeyExchange: SubscriberKeyExchange,
@@ -161,6 +163,7 @@ export class Resends {
             streamrClientEventEmitter: this.streamrClientEventEmitter,
             destroySignal: this.destroySignal,
             config: this.config,
+            litProtocolKeyStore: this.litProtocolKeyStore,
             loggerFactory: this.loggerFactory
         })
 

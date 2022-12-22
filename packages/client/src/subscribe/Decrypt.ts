@@ -7,9 +7,10 @@ import { GroupKeyStore } from '../encryption/GroupKeyStore'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { inject } from 'tsyringe'
 import { GroupKey } from '../encryption/GroupKey'
-import { Logger, waitForEvent } from '@streamr/utils'
+import { Logger } from '@streamr/utils'
 import { StreamrClientEventEmitter } from '../events'
 import { LoggerFactory } from '../utils/LoggerFactory'
+import { LitProtocolKeyStore } from '../encryption/LitProtocolKeyStore'
 
 export class Decrypt {
     private readonly logger: Logger
@@ -19,6 +20,7 @@ export class Decrypt {
         private keyExchange: SubscriberKeyExchange,
         private streamRegistryCached: StreamRegistryCached,
         private destroySignal: DestroySignal,
+        @inject(LitProtocolKeyStore) private readonly litProtocolKeyStore: LitProtocolKeyStore,
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
         @inject(StreamrClientEventEmitter) private eventEmitter: StreamrClientEventEmitter,
         @inject(ConfigInjectionToken) private config: Pick<StrictStreamrClientConfig, 'decryption'>
@@ -48,7 +50,12 @@ export class Decrypt {
 
             let groupKey = await this.groupKeyStore.get(groupKeyId, streamMessage.getStreamId())
             if (groupKey === undefined) {
-                await this.keyExchange.requestGroupKey(
+                const array = await this.litProtocolKeyStore.get(streamMessage.getStreamId(), groupKeyId)
+                if (array === undefined) {
+                    throw new DecryptError(streamMessage, `Could not get GroupKey ${streamMessage.groupKeyId}`)
+                }
+                groupKey = new GroupKey(groupKeyId, array)
+               /*await this.keyExchange.requestGroupKey(
                     streamMessage.groupKeyId,
                     streamMessage.getPublisherId(),
                     streamMessage.getStreamPartID()
@@ -68,6 +75,7 @@ export class Decrypt {
                     }
                     throw new DecryptError(streamMessage, `Could not get GroupKey ${streamMessage.groupKeyId}: ${e.message}`)
                 }
+                */
                 if (this.destroySignal.isDestroyed()) {
                     return streamMessage
                 }

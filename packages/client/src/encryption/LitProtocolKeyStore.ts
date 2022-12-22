@@ -94,7 +94,7 @@ export class LitProtocolKeyStore {
         })
     }
 
-    async get(streamId: StreamID, encryptedSymmetricKey: Uint8Array): Promise<Uint8Array | undefined> {
+    async get(streamId: StreamID, encryptedSymmetricKey: string): Promise<Uint8Array | undefined> {
         await this.litNodeClient.connect()
         const authSig = await signAuthMessage(this.authentication)
         const toDecrypt = LitJsSdk.uint8arrayToString(encryptedSymmetricKey, 'base16')

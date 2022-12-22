@@ -17,6 +17,7 @@ import { StreamrClientEventEmitter } from '../events'
 import { DestroySignal } from '../DestroySignal'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { LoggerFactory } from '../utils/LoggerFactory'
+import { LitProtocolKeyStore } from '../encryption/LitProtocolKeyStore'
 
 /**
  * Manages adding & removing subscriptions to node as needed.
@@ -43,6 +44,7 @@ export class SubscriptionSession {
         streamrClientEventEmitter: StreamrClientEventEmitter,
         destroySignal: DestroySignal,
         loggerFactory: LoggerFactory,
+        litProtocolKeyStore: LitProtocolKeyStore,
         @inject(ConfigInjectionToken) config: StrictStreamrClientConfig
     ) {
         this.streamPartId = streamPartId
@@ -58,6 +60,7 @@ export class SubscriptionSession {
             streamrClientEventEmitter,
             loggerFactory,
             destroySignal,
+            litProtocolKeyStore,
             config: config
         })
         this.pipeline.onError.listen(this.onError)

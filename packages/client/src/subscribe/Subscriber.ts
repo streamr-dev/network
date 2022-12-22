@@ -15,6 +15,7 @@ import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { Logger } from '@streamr/utils'
+import { LitProtocolKeyStore } from '../encryption/LitProtocolKeyStore'
 
 @scoped(Lifecycle.ContainerScoped)
 export class Subscriber {
@@ -28,6 +29,7 @@ export class Subscriber {
     private readonly streamrClientEventEmitter: StreamrClientEventEmitter
     private readonly destroySignal: DestroySignal
     private readonly config: StrictStreamrClientConfig
+    private readonly litProtocolKeyStore: LitProtocolKeyStore
     private readonly loggerFactory: LoggerFactory
     private readonly logger: Logger
 
@@ -41,6 +43,7 @@ export class Subscriber {
         streamrClientEventEmitter: StreamrClientEventEmitter,
         destroySignal: DestroySignal,
         @inject(ConfigInjectionToken) config: StrictStreamrClientConfig,
+        @inject(LitProtocolKeyStore) litProtocolKeyStore: LitProtocolKeyStore,
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
     ) {
         this.streamIdBuilder = streamIdBuilder
@@ -52,6 +55,7 @@ export class Subscriber {
         this.streamrClientEventEmitter = streamrClientEventEmitter
         this.destroySignal = destroySignal
         this.config = config
+        this.litProtocolKeyStore = litProtocolKeyStore
         this.loggerFactory = loggerFactory
         this.logger = loggerFactory.createLogger(module)
     }
@@ -70,6 +74,7 @@ export class Subscriber {
             this.streamrClientEventEmitter,
             this.destroySignal,
             this.loggerFactory,
+            this.litProtocolKeyStore,
             this.config
         )
 

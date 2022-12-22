@@ -19,6 +19,7 @@ import { GroupKeyStore } from '../encryption/GroupKeyStore'
 import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'
 import { StreamrClientEventEmitter } from '../events'
 import { LoggerFactory } from '../utils/LoggerFactory'
+import { LitProtocolKeyStore } from '../encryption/LitProtocolKeyStore'
 
 export interface SubscriptionPipelineOptions {
     streamPartId: StreamPartID
@@ -29,6 +30,8 @@ export interface SubscriptionPipelineOptions {
     streamRegistryCached: StreamRegistryCached
     streamrClientEventEmitter: StreamrClientEventEmitter
     destroySignal: DestroySignal
+
+    litProtocolKeyStore: LitProtocolKeyStore
     config: StrictStreamrClientConfig
 }
 
@@ -63,6 +66,7 @@ export const createSubscribePipeline = (opts: SubscriptionPipelineOptions): Mess
         opts.subscriberKeyExchange,
         opts.streamRegistryCached,
         opts.destroySignal,
+        opts.litProtocolKeyStore,
         opts.loggerFactory,
         opts.streamrClientEventEmitter,
         opts.config,
