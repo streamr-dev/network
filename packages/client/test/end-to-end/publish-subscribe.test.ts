@@ -149,11 +149,10 @@ describe('publish-subscribe', () => {
         it('subscriber is able to receive and decrypt messages', async () => {
             const messages: any[] = []
             await publisherClient.publish(stream.id, PAYLOAD)
-            const sub = await subscriberClient.subscribe(stream.id, (msg: any) => {
+            await subscriberClient.subscribe(stream.id, (msg: any) => {
                 messages.push(msg)
             })
-            sub.on('error', (e) =>  console.error(e))
-            await waitForCondition(() => messages.length > 0, 10000)
+            await waitForCondition(() => messages.length > 0)
             expect(messages).toEqual([PAYLOAD])
         }, TIMEOUT)
     })
@@ -190,7 +189,7 @@ describe('publish-subscribe', () => {
             await subscriberClient.subscribe(stream.id, (msg: any) => {
                 messages.push(msg)
             })
-            await waitForCondition(() => messages.length > 0, 10000)
+            await waitForCondition(() => messages.length > 0)
             expect(messages).toEqual([PAYLOAD])
         }, TIMEOUT)
     })

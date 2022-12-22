@@ -92,7 +92,7 @@ describe('NetworkNodeFacade', () => {
         beforeEach(async () => {
             client = environment.createClient({
                 auth: {
-                    privateKey: fastPrivateKey(),
+                    privateKey: fastPrivateKey()
                 }
             })
         })

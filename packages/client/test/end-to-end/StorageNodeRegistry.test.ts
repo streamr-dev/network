@@ -7,7 +7,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { until } from '../../src/utils/promises'
 import { createTestStream } from '../test-utils/utils'
 
-const TEST_TIMEOUT = 30 * 1000 
+const TEST_TIMEOUT = 30 * 1000
 
 describe('StorageNodeRegistry', () => {
     let creatorWallet: Wallet
@@ -98,7 +98,7 @@ describe('StorageNodeRegistry', () => {
         expect(stored.streams.some((s) => s.id === stream.id)).toBe(false)
         expect(stored.streams.length).toBeGreaterThanOrEqual(0)
         stored.streams.forEach((s) => expect(s).toBeInstanceOf(Stream))
-    }, TEST_TIMEOUT * 2)
+    }, TEST_TIMEOUT)
 
     it('no storage node', async () => {
         const id = randomEthereumAddress()
@@ -126,7 +126,7 @@ describe('StorageNodeRegistry', () => {
         expect(stored.streams).toEqual([])
         expect(stored.blockNumber).toBeNumber()
         await storageNodeManager.destroy()
-    }, TEST_TIMEOUT * 2)
+    }, TEST_TIMEOUT)
 
     it('event listener: picks up add and remove events', async () => {
         stream = await createTestStream(creatorClient, module)
@@ -158,5 +158,5 @@ describe('StorageNodeRegistry', () => {
             nodeAddress: DOCKER_DEV_STORAGE_NODE,
             streamId: stream.id,
         })
-    }, TEST_TIMEOUT * 2)
+    }, TEST_TIMEOUT)
 })

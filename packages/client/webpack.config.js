@@ -110,8 +110,6 @@ module.exports = (env, argv) => {
                 '@streamr/protocol': path.resolve('../protocol/src/exports.ts'),
                 '@streamr/trackerless-network': path.resolve('../trackerless-network/src/exports.ts'),
                 '@streamr/dht': path.resolve('../dht/src/exports.ts'),
-                // [path.resolve(__dirname, '../trackerless-network/dist/dht/src/connection/WebRTC/NodeWebRtcConnection.ts')]:
-                //     path.resolve(__dirname, '../trackerless-network/dist/dht/src/connection/WebRTC/BrowserWebRtcConnection.ts'),
                 [path.resolve(__dirname, '../dht/src/connection/WebRTC/NodeWebRtcConnection.ts')]:
                     path.resolve(__dirname, '../dht/src/connection/WebRTC/BrowserWebRtcConnection.ts'),
                 // swap out ServerPersistence for BrowserPersistence

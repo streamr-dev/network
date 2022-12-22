@@ -85,7 +85,7 @@ describe('resend', () => {
             stream = await createTestStream(publisherClient, module, { partitions: 3  })
             await stream.grantPermissions({
                 permissions: [StreamPermission.SUBSCRIBE],
-                public: true
+                user: await resendClient.getAddress()
             })
             await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
             for (const idx of range(NUM_OF_MESSAGES)) {
