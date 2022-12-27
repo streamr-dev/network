@@ -5,6 +5,7 @@ import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ethers } from 'ethers'
 import { Logger } from '@streamr/utils'
 import { StreamID } from '@streamr/protocol'
+import { StreamPermission, streamPermissionToSolidityType } from '../permission'
 
 const logger = new Logger(module)
 
@@ -13,7 +14,7 @@ const formEvmContractConditions = (streamId: StreamID) => ([
         contractAddress: '0x0D483E10612F327FC11965Fc82E90dC19b141641',
         chain: 'polygon',
         functionName: 'hasPermission',
-        functionParams: [streamId, ':userAddress', '2'],
+        functionParams: [streamId, ':userAddress', `${streamPermissionToSolidityType(StreamPermission.SUBSCRIBE)}`],
         functionAbi: {
             inputs: [
                 {
