@@ -83,15 +83,19 @@ export class LitProtocolKeyStore {
         @inject(AuthenticationInjectionToken) private readonly authentication: Authentication
     ) {}
 
-    async store(streamId: StreamID, symmetricKey: Uint8Array): Promise<void> {
+    async store(streamId: StreamID, symmetricKey: Uint8Array): Promise<Uint8Array> {
         await this.litNodeClient.connect()
         const authSig = await signAuthMessage(this.authentication)
-        await this.litNodeClient.saveEncryptionKey({
+        const encryptedKey = await this.litNodeClient.saveEncryptionKey({
             evmContractConditions: formEvmContractConditions(streamId),
             symmetricKey,
             authSig,
             chain
         })
+        if (encryptedKey === undefined) {
+            throw new Error('could not store symmetricKey')
+        }
+        return encryptedKey
     }
 
     async get(streamId: StreamID, encryptedSymmetricKey: string): Promise<Uint8Array | undefined> {
