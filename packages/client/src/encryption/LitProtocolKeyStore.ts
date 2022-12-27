@@ -99,14 +99,14 @@ export class LitProtocolKeyStore {
     }
 
     async get(streamId: StreamID, encryptedSymmetricKey: string): Promise<Uint8Array | undefined> {
+        logger.info("GET %s and %s", streamId, encryptedSymmetricKey)
         await this.litNodeClient.connect()
         const authSig = await signAuthMessage(this.authentication)
-        const toDecrypt = LitJsSdk.uint8arrayToString(encryptedSymmetricKey, 'base16')
 
         // 3. Decrypt it
         return this.litNodeClient.getEncryptionKey({
             evmContractConditions: formEvmContractConditions(streamId),
-            toDecrypt,
+            toDecrypt: encryptedSymmetricKey,
             chain,
             authSig
         })
