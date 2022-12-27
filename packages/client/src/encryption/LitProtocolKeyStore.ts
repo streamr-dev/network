@@ -6,12 +6,13 @@ import { ethers } from 'ethers'
 import { Logger } from '@streamr/utils'
 import { StreamID } from '@streamr/protocol'
 import { StreamPermission, streamPermissionToSolidityType } from '../permission'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 
 const logger = new Logger(module)
 
-const formEvmContractConditions = (streamId: StreamID) => ([
+const formEvmContractConditions = (streamRegistryChainAddress: string, streamId: StreamID) => ([
     {
-        contractAddress: '0x0D483E10612F327FC11965Fc82E90dC19b141641',
+        contractAddress: streamRegistryChainAddress,
         chain: 'polygon',
         functionName: 'hasPermission',
         functionParams: [streamId, ':userAddress', `${streamPermissionToSolidityType(StreamPermission.SUBSCRIBE)}`],
@@ -81,14 +82,15 @@ export class LitProtocolKeyStore {
     })
 
     constructor(
-        @inject(AuthenticationInjectionToken) private readonly authentication: Authentication
+        @inject(AuthenticationInjectionToken) private readonly authentication: Authentication,
+        @inject(ConfigInjectionToken) private readonly config: Pick<StrictStreamrClientConfig, 'contracts'>
     ) {}
 
     async store(streamId: StreamID, symmetricKey: Uint8Array): Promise<Uint8Array> {
         await this.litNodeClient.connect()
         const authSig = await signAuthMessage(this.authentication)
         const encryptedKey = await this.litNodeClient.saveEncryptionKey({
-            evmContractConditions: formEvmContractConditions(streamId),
+            evmContractConditions: formEvmContractConditions(this.config.contracts.streamRegistryChainAddress, streamId),
             symmetricKey,
             authSig,
             chain
@@ -106,7 +108,7 @@ export class LitProtocolKeyStore {
 
         // 3. Decrypt it
         return this.litNodeClient.getEncryptionKey({
-            evmContractConditions: formEvmContractConditions(streamId),
+            evmContractConditions: formEvmContractConditions(this.config.contracts.streamRegistryChainAddress, streamId),
             toDecrypt: encryptedSymmetricKey,
             chain,
             authSig
