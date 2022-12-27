@@ -54,7 +54,8 @@ export class Decrypt {
                 if (array === undefined) {
                     throw new DecryptError(streamMessage, `Could not get GroupKey ${streamMessage.groupKeyId}`)
                 }
-                groupKey = new GroupKey(groupKeyId, array)
+                groupKey = new GroupKey(groupKeyId, Buffer.from(array))
+                await this.groupKeyStore.add(groupKey, streamMessage.getStreamId())
                /*await this.keyExchange.requestGroupKey(
                     streamMessage.groupKeyId,
                     streamMessage.getPublisherId(),

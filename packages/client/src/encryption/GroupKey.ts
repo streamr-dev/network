@@ -19,9 +19,9 @@ export class GroupKey {
     /** @internal */
     readonly id: string
     /** @internal */
-    readonly data: Uint8Array
+    readonly data: Buffer
 
-    constructor(groupKeyId: string, data: Uint8Array) {
+    constructor(groupKeyId: string, data: Buffer) {
         this.id = groupKeyId
         if (!groupKeyId) {
             throw new GroupKeyError(`groupKeyId must not be falsey ${groupKeyId}`)
