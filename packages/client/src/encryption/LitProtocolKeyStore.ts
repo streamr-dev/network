@@ -3,17 +3,16 @@ import { inject, Lifecycle, scoped } from 'tsyringe'
 import * as siwe from 'siwe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ethers } from 'ethers'
-import { Logger } from '@streamr/utils'
 import { StreamID } from '@streamr/protocol'
 import { StreamPermission, streamPermissionToSolidityType } from '../permission'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 
-const logger = new Logger(module)
+const chain = 'polygon'
 
 const formEvmContractConditions = (streamRegistryChainAddress: string, streamId: StreamID) => ([
     {
         contractAddress: streamRegistryChainAddress,
-        chain: 'polygon',
+        chain,
         functionName: 'hasPermission',
         functionParams: [streamId, ':userAddress', `${streamPermissionToSolidityType(StreamPermission.SUBSCRIBE)}`],
         functionAbi: {
@@ -72,8 +71,6 @@ const signAuthMessage = async (authentication: Authentication) => {
     }
 }
 
-const chain = 'polygon'
-
 @scoped(Lifecycle.ContainerScoped)
 export class LitProtocolKeyStore {
     private readonly litNodeClient = new LitJsSdk.LitNodeClient({
@@ -86,27 +83,20 @@ export class LitProtocolKeyStore {
         @inject(ConfigInjectionToken) private readonly config: Pick<StrictStreamrClientConfig, 'contracts'>
     ) {}
 
-    async store(streamId: StreamID, symmetricKey: Uint8Array): Promise<Uint8Array> {
+    async store(streamId: StreamID, symmetricKey: Uint8Array): Promise<Uint8Array | undefined> {
         await this.litNodeClient.connect()
         const authSig = await signAuthMessage(this.authentication)
-        const encryptedKey = await this.litNodeClient.saveEncryptionKey({
+        return this.litNodeClient.saveEncryptionKey({
             evmContractConditions: formEvmContractConditions(this.config.contracts.streamRegistryChainAddress, streamId),
             symmetricKey,
             authSig,
             chain
         })
-        if (encryptedKey === undefined) {
-            throw new Error('could not store symmetricKey')
-        }
-        return encryptedKey
     }
 
     async get(streamId: StreamID, encryptedSymmetricKey: string): Promise<Uint8Array | undefined> {
-        logger.info("GET %s and %s", streamId, encryptedSymmetricKey)
         await this.litNodeClient.connect()
         const authSig = await signAuthMessage(this.authentication)
-
-        // 3. Decrypt it
         return this.litNodeClient.getEncryptionKey({
             evmContractConditions: formEvmContractConditions(this.config.contracts.streamRegistryChainAddress, streamId),
             toDecrypt: encryptedSymmetricKey,
