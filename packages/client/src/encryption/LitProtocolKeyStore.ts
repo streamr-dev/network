@@ -88,7 +88,7 @@ export class LitProtocolKeyStore {
     async store(streamId: StreamID, symmetricKey: Uint8Array): Promise<GroupKey | undefined> {
         await this.litNodeClient.connect()
         const authSig = await signAuthMessage(this.authentication)
-        const encryptedSymmetricKey = this.litNodeClient.saveEncryptionKey({
+        const encryptedSymmetricKey = await this.litNodeClient.saveEncryptionKey({
             evmContractConditions: formEvmContractConditions(this.config.contracts.streamRegistryChainAddress, streamId),
             symmetricKey,
             authSig,
