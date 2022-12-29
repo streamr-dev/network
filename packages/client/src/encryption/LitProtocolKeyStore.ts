@@ -100,7 +100,7 @@ export class LitProtocolKeyStore {
         if (encryptedSymmetricKey === undefined) {
             return undefined
         }
-        const groupKeyId = LitJsSdk.uint8arrayToString(encryptedSymmetricKey)
+        const groupKeyId = LitJsSdk.uint8arrayToString(encryptedSymmetricKey, 'base16')
         logger.warn('store %s: %s', groupKeyId, encryptedSymmetricKey)
         return new GroupKey(groupKeyId, Buffer.from(symmetricKey))
     }
