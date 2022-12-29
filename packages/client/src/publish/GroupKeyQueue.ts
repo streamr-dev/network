@@ -2,7 +2,7 @@ import { StreamID } from '@streamr/protocol'
 import { GroupKey } from '../encryption/GroupKey'
 import { GroupKeyStore } from '../encryption/GroupKeyStore'
 import { LitProtocolKeyStore } from '../encryption/LitProtocolKeyStore'
-import * as LitJsSdk from '@lit-protocol/lit-node-client'
+import crypto from 'crypto'
 
 export interface GroupKeySequence {
     current: GroupKey
@@ -42,20 +42,27 @@ export class GroupKeyQueue {
         return result
     }
 
-    async rotate(tempKey = GroupKey.generate()): Promise<GroupKey> {
-        const encryptedKey = await this.litProtocolKeyStore.store(this.streamId, tempKey.data)
-        const newKey = new GroupKey(LitJsSdk.uint8arrayToString(encryptedKey, 'base16'), tempKey.data)
+    async rotate(newKey?: GroupKey): Promise<GroupKey> {
+        if (newKey === undefined) {
+            newKey = await this.generateNewKey()
+        }
         this.queuedGroupKey = newKey
-        //await this.store.add(newKey, this.streamId)
+        await this.store.add(newKey, this.streamId)
         return newKey
     }
 
-    async rekey(tempKey = GroupKey.generate()): Promise<GroupKey> {
-        const encryptedKey = await this.litProtocolKeyStore.store(this.streamId, tempKey.data)
-        const newKey = new GroupKey(LitJsSdk.uint8arrayToString(encryptedKey, 'base16'), tempKey.data)
-        //await this.store.add(newKey, this.streamId)
+    async rekey(newKey?: GroupKey): Promise<GroupKey> {
+        if (newKey === undefined) {
+            newKey = await this.generateNewKey()
+        }
+        await this.store.add(newKey, this.streamId)
         this.currentGroupKey = newKey
         this.queuedGroupKey = undefined
         return newKey
+    }
+
+    private async generateNewKey(): Promise<GroupKey> {
+        const litProtocolGroupKey = await this.litProtocolKeyStore.store(this.streamId, crypto.randomBytes(32))
+        return litProtocolGroupKey !== undefined ? litProtocolGroupKey : GroupKey.generate()
     }
 }

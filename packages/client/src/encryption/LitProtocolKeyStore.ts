@@ -6,6 +6,8 @@ import { ethers } from 'ethers'
 import { StreamID } from '@streamr/protocol'
 import { StreamPermission, streamPermissionToSolidityType } from '../permission'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import crypto from 'crypto'
+import { GroupKey } from './GroupKey'
 
 const chain = 'polygon'
 
@@ -83,15 +85,19 @@ export class LitProtocolKeyStore {
         @inject(ConfigInjectionToken) private readonly config: Pick<StrictStreamrClientConfig, 'contracts'>
     ) {}
 
-    async store(streamId: StreamID, symmetricKey: Uint8Array): Promise<Uint8Array | undefined> {
+    async store(streamId: StreamID, symmetricKey: Uint8Array): Promise<GroupKey | undefined> {
         await this.litNodeClient.connect()
         const authSig = await signAuthMessage(this.authentication)
-        return this.litNodeClient.saveEncryptionKey({
+        const encryptedSymmetricKey = this.litNodeClient.saveEncryptionKey({
             evmContractConditions: formEvmContractConditions(this.config.contracts.streamRegistryChainAddress, streamId),
             symmetricKey,
             authSig,
             chain
         })
+        if (encryptedSymmetricKey === undefined) {
+            return undefined
+        }
+        return new GroupKey(LitJsSdk.uint8arrayToString(encryptedSymmetricKey), Buffer.from(symmetricKey))
     }
 
     async get(streamId: StreamID, encryptedSymmetricKey: string): Promise<Uint8Array | undefined> {
