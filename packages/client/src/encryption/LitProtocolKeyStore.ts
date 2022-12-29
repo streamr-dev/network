@@ -8,6 +8,9 @@ import { StreamPermission, streamPermissionToSolidityType } from '../permission'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import crypto from 'crypto'
 import { GroupKey } from './GroupKey'
+import { Logger } from '@streamr/utils'
+
+const logger = new Logger(module)
 
 const chain = 'polygon'
 
@@ -97,10 +100,13 @@ export class LitProtocolKeyStore {
         if (encryptedSymmetricKey === undefined) {
             return undefined
         }
-        return new GroupKey(LitJsSdk.uint8arrayToString(encryptedSymmetricKey), Buffer.from(symmetricKey))
+        const groupKeyId = LitJsSdk.uint8arrayToString(encryptedSymmetricKey)
+        logger.warn('store %s: %s', groupKeyId, encryptedSymmetricKey)
+        return new GroupKey(groupKeyId, Buffer.from(symmetricKey))
     }
 
     async get(streamId: StreamID, encryptedSymmetricKey: string): Promise<Uint8Array | undefined> {
+        logger.warn("get %s: %s", streamId, encryptedSymmetricKey)
         await this.litNodeClient.connect()
         const authSig = await signAuthMessage(this.authentication)
         return this.litNodeClient.getEncryptionKey({
