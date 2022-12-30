@@ -51,6 +51,9 @@ export class Decrypt {
             let groupKey = await this.groupKeyStore.get(groupKeyId, streamMessage.getStreamId())
             if (groupKey === undefined) {
                 groupKey = await this.litProtocolKeyStore.get(streamMessage.getStreamId(), groupKeyId)
+                if (groupKey !== undefined) {
+                    await this.groupKeyStore.add(groupKey, streamMessage.getStreamId())
+                }
             }
             if (groupKey === undefined) {
                 await this.keyExchange.requestGroupKey(
