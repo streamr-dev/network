@@ -7,7 +7,7 @@ import { GroupKeyStore } from '../encryption/GroupKeyStore'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { inject } from 'tsyringe'
 import { GroupKey } from '../encryption/GroupKey'
-import { Logger } from '@streamr/utils'
+import { Logger, waitForEvent } from '@streamr/utils'
 import { StreamrClientEventEmitter } from '../events'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { LitProtocolKeyStore } from '../encryption/LitProtocolKeyStore'
@@ -50,25 +50,22 @@ export class Decrypt {
 
             let groupKey = await this.groupKeyStore.get(groupKeyId, streamMessage.getStreamId())
             if (groupKey === undefined) {
-                const array = await this.litProtocolKeyStore.get(streamMessage.getStreamId(), groupKeyId)
-                if (array === undefined) {
-                    throw new DecryptError(streamMessage, `Could not get GroupKey ${streamMessage.groupKeyId}`)
-                }
-                groupKey = new GroupKey(groupKeyId, Buffer.from(array))
-                await this.groupKeyStore.add(groupKey, streamMessage.getStreamId())
-               /*await this.keyExchange.requestGroupKey(
+                groupKey = await this.litProtocolKeyStore.get(streamMessage.getStreamId(), groupKeyId)
+            }
+            if (groupKey === undefined) {
+                await this.keyExchange.requestGroupKey(
                     streamMessage.groupKeyId,
                     streamMessage.getPublisherId(),
                     streamMessage.getStreamPartID()
                 )
                 try {
                     const groupKeys = await waitForEvent(
-                        // TODO remove "as any" type casing in NET-889
-                        this.eventEmitter as any,
-                        'addGroupKey',
-                        this.config.decryption.keyRequestTimeout,
-                        (storedGroupKey: GroupKey) => storedGroupKey.id === groupKeyId,
-                        this.destroySignal.abortSignal)
+                                        // TODO remove "as any" type casing in NET-889
+                                        this.eventEmitter as any,
+                                        'addGroupKey',
+                                        this.config.decryption.keyRequestTimeout,
+                                        (storedGroupKey: GroupKey) => storedGroupKey.id === groupKeyId,
+                                        this.destroySignal.abortSignal)
                     groupKey = groupKeys[0] as GroupKey
                 } catch (e: any) {
                     if (this.destroySignal.isDestroyed()) {
@@ -76,10 +73,9 @@ export class Decrypt {
                     }
                     throw new DecryptError(streamMessage, `Could not get GroupKey ${streamMessage.groupKeyId}: ${e.message}`)
                 }
-                */
-                if (this.destroySignal.isDestroyed()) {
-                    return streamMessage
-                }
+            }
+            if (this.destroySignal.isDestroyed()) {
+                return streamMessage
             }
 
             const clone = StreamMessage.deserialize(streamMessage.serialize())

@@ -101,19 +101,21 @@ export class LitProtocolKeyStore {
             return undefined
         }
         const groupKeyId = LitJsSdk.uint8arrayToString(encryptedSymmetricKey, 'base16')
-        logger.warn('store %s: %s', groupKeyId, encryptedSymmetricKey)
         return new GroupKey(groupKeyId, Buffer.from(symmetricKey))
     }
 
-    async get(streamId: StreamID, encryptedSymmetricKey: string): Promise<Uint8Array | undefined> {
-        logger.warn("get %s: %s", streamId, encryptedSymmetricKey)
+    async get(streamId: StreamID, encryptedSymmetricKey: string): Promise<GroupKey | undefined> {
         await this.litNodeClient.connect()
         const authSig = await signAuthMessage(this.authentication)
-        return this.litNodeClient.getEncryptionKey({
+        const symmetricKey = await this.litNodeClient.getEncryptionKey({
             evmContractConditions: formEvmContractConditions(this.config.contracts.streamRegistryChainAddress, streamId),
             toDecrypt: encryptedSymmetricKey,
             chain,
             authSig
         })
+        if (symmetricKey === undefined) {
+            return undefined
+        }
+        return new GroupKey(encryptedSymmetricKey, Buffer.from(symmetricKey))
     }
 }
