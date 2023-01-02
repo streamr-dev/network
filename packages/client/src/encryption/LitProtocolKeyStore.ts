@@ -89,19 +89,24 @@ export class LitProtocolKeyStore {
     ) {}
 
     async store(streamId: StreamID, symmetricKey: Uint8Array): Promise<GroupKey | undefined> {
-        await this.litNodeClient.connect()
-        const authSig = await signAuthMessage(this.authentication)
-        const encryptedSymmetricKey = await this.litNodeClient.saveEncryptionKey({
-            evmContractConditions: formEvmContractConditions(this.config.contracts.streamRegistryChainAddress, streamId),
-            symmetricKey,
-            authSig,
-            chain
-        })
-        if (encryptedSymmetricKey === undefined) {
+        try {
+            await this.litNodeClient.connect()
+            const authSig = await signAuthMessage(this.authentication)
+            const encryptedSymmetricKey = await this.litNodeClient.saveEncryptionKey({
+                evmContractConditions: formEvmContractConditions(this.config.contracts.streamRegistryChainAddress, streamId),
+                symmetricKey,
+                authSig,
+                chain
+            })
+            if (encryptedSymmetricKey === undefined) {
+                return undefined
+            }
+            const groupKeyId = LitJsSdk.uint8arrayToString(encryptedSymmetricKey, 'base16')
+            return new GroupKey(groupKeyId, Buffer.from(symmetricKey))
+        } catch (e) {
+            logger.warn('encountered error when trying to store key on lit-protocol: %s', e)
             return undefined
         }
-        const groupKeyId = LitJsSdk.uint8arrayToString(encryptedSymmetricKey, 'base16')
-        return new GroupKey(groupKeyId, Buffer.from(symmetricKey))
     }
 
     async get(streamId: StreamID, encryptedSymmetricKey: string): Promise<GroupKey | undefined> {
@@ -120,6 +125,7 @@ export class LitProtocolKeyStore {
             return new GroupKey(encryptedSymmetricKey, Buffer.from(symmetricKey))
         } catch (e) {
             logger.warn('encountered error when trying to get key from lit-protocol: %s', e)
+            return undefined
         }
     }
 }
