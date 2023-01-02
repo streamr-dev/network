@@ -22,7 +22,6 @@ import { GroupKey } from './GroupKey'
 import { GroupKeyStore } from './GroupKeyStore'
 import { EthereumAddress, Logger } from '@streamr/utils'
 import { LoggerFactory } from '../utils/LoggerFactory'
-import LitJsSdk from '@lit-protocol/lit-node-client'
 
 /*
  * Sends group key responses
