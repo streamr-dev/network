@@ -62,6 +62,7 @@ export class GroupKeyQueue {
     }
 
     private async generateNewKey(): Promise<GroupKey> {
+        // 1st try lit-protocol, if a key cannot be generated and stored, then generate group key locally
         const litProtocolGroupKey = await this.litProtocolKeyStore.store(this.streamId, crypto.randomBytes(32))
         return litProtocolGroupKey !== undefined ? litProtocolGroupKey : GroupKey.generate()
     }
