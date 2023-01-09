@@ -4,6 +4,7 @@ import pkg from '../package.json'
 
 import { createBroker } from '../src/broker'
 import { readConfigAndMigrateIfNeeded } from '../src/config/migration'
+import { Config, overrideConfigToEnvVarsIfGiven } from '../src/config/config'
 
 program
     .version(pkg.version)
@@ -14,6 +15,7 @@ program
     .action(async (configFile) => {
         try {
             const config = readConfigAndMigrateIfNeeded(configFile)
+            overrideConfigToEnvVarsIfGiven(config)
             const broker = await createBroker(config)
             if (!program.opts().test) {
                 await broker.start()
