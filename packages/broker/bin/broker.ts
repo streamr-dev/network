@@ -4,7 +4,7 @@ import pkg from '../package.json'
 
 import { createBroker } from '../src/broker'
 import { readConfigAndMigrateIfNeeded } from '../src/config/migration'
-import { Config, overrideConfigToEnvVarsIfGiven } from '../src/config/config'
+import { overrideConfigToEnvVarsIfGiven } from '../src/config/config'
 
 program
     .version(pkg.version)
