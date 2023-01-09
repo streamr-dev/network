@@ -56,7 +56,7 @@ export function overrideConfigToEnvVarsIfGiven(config: Pick<Config, 'client' | '
             logger.info('overriding beneficiary address to OVERRIDE_BROKER_BENEFICIARY_ADDRESS')
             config.plugins.brubeckMiner.beneficiaryAddress = ENV_VAR_BENEFICIARY_ADDRESS
         } else {
-            logger.warn('ignoring OVERRIDE_BROKER_BENEFICIARY_ADDRESS due to broker miner plugin not being enabled')
+            logger.warn('ignoring OVERRIDE_BROKER_BENEFICIARY_ADDRESS due to miner plugin not being enabled')
         }
     }
 }
