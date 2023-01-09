@@ -21,7 +21,6 @@ export interface Broker {
 }
 
 export const createBroker = async (config: Config): Promise<Broker> => {
-    overrideConfigToEnvVarsIfGiven(config)
     validateConfig(config, BROKER_CONFIG_SCHEMA)
     validateClientConfig(config.client)
 
@@ -83,29 +82,6 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             }
             await Promise.all(plugins.map((plugin) => plugin.stop()))
             await streamrClient.destroy()
-        }
-    }
-}
-
-// See NET-934, this exists for compatibility with a specific vendor's use case
-function overrideConfigToEnvVarsIfGiven(config: Config): void {
-    const ENV_VAR_PRIVATE_KEY: string | undefined = process.env.OVERRIDE_BROKER_PRIVATE_KEY
-    const ENV_VAR_BENEFICIARY_ADDRESS: string | undefined = process.env.OVERRIDE_BROKER_BENEFICIARY_ADDRESS
-
-    if (ENV_VAR_PRIVATE_KEY !== undefined) {
-        if (config.client?.auth !== undefined && 'privateKey' in config.client.auth) {
-            logger.info('overriding private key to OVERRIDE_BROKER_PRIVATE_KEY')
-            config.client.auth.privateKey = ENV_VAR_PRIVATE_KEY
-        } else {
-            logger.warn('ignoring OVERRIDE_BROKER_PRIVATE_KEY due to authentication using provider')
-        }
-    }
-    if (ENV_VAR_BENEFICIARY_ADDRESS !== undefined) {
-        if ('brubeckMiner' in config.plugins) {
-            logger.info('overriding beneficiary address to OVERRIDE_BROKER_BENEFICIARY_ADDRESS')
-            config.plugins.brubeckMiner.beneficiaryAddress = ENV_VAR_BENEFICIARY_ADDRESS
-        } else {
-            logger.warn('ignoring OVERRIDE_BROKER_BENEFICIARY_ADDRESS due to broker miner plugin not being enabled')
         }
     }
 }
