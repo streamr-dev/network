@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Environment variables can be used to override values from configuration files
+  - `OVERRIDE_BROKER_PRIVATE_KEY` for overriding private key
+  - `OVERRIDE_BROKER_BENEFICIARY_ADDRESS` for overriding beneficiary address (miner plugin must be enabled)
+
 ### Changed
 
 ### Deprecated
