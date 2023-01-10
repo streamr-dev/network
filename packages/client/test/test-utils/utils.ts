@@ -164,7 +164,14 @@ export const createStreamRegistryCached = (opts: {
 }
 
 export const createGroupKeyQueue = async (current?: GroupKey, next?: GroupKey): Promise<GroupKeyQueue> => {
-    const queue = new GroupKeyQueue(undefined as any, { add: async () => {} } as any)
+    const queue = new GroupKeyQueue(
+        undefined as any,
+        { add: async () => {} } as any,
+        {
+            store: async () => undefined,
+            get: async () => undefined
+        } as any
+    )
     if (current !== undefined) {
         await queue.rekey(current)
     }

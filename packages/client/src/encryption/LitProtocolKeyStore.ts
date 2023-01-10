@@ -6,7 +6,6 @@ import { ethers } from 'ethers'
 import { StreamID } from '@streamr/protocol'
 import { StreamPermission, streamPermissionToSolidityType } from '../permission'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
-import crypto from 'crypto'
 import { GroupKey } from './GroupKey'
 import { Logger } from '@streamr/utils'
 

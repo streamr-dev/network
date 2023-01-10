@@ -15,6 +15,8 @@ import { collect } from '../../src/utils/iterators'
 import { mockLoggerFactory } from '../test-utils/utils'
 import { GroupKey } from './../../src/encryption/GroupKey'
 import { MessageStream } from './../../src/subscribe/MessageStream'
+import { LitProtocolKeyStore } from '../../src/encryption/LitProtocolKeyStore'
+import { mock } from 'jest-mock-extended'
 
 const CONTENT = {
     foo: 'bar'
@@ -80,6 +82,7 @@ describe('subscribePipeline', () => {
                 isStreamPublisher: async () => true,
                 clearStream: () => {}
             } as any,
+            litProtocolKeyStore: mock<LitProtocolKeyStore>(),
             streamrClientEventEmitter: new StreamrClientEventEmitter(),
             destroySignal: new DestroySignal(),
             config: {

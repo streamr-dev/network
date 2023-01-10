@@ -7,6 +7,8 @@ import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamrClientEventEmitter } from '../../src/events'
 import { Decrypt } from '../../src/subscribe/Decrypt'
 import { createMockMessage, mockLoggerFactory } from '../test-utils/utils'
+import { LitProtocolKeyStore } from '../../src/encryption/LitProtocolKeyStore'
+import { mock } from 'jest-mock-extended'
 
 describe('Decrypt', () => {
 
@@ -24,6 +26,7 @@ describe('Decrypt', () => {
                 clearStream: jest.fn()
             } as any,
             new DestroySignal(),
+            mock<LitProtocolKeyStore>(),
             mockLoggerFactory(),
             new StreamrClientEventEmitter(),
             {
