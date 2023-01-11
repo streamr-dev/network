@@ -66,6 +66,7 @@ export interface StreamrClientConfig {
     maxGapRequests?: number
     retryResendAfter?: number
     gapFillTimeout?: number
+    litProtocolEnabled?: boolean
 
     network?: {
         id?: string
@@ -154,6 +155,7 @@ export const STREAM_CLIENT_DEFAULTS:
     maxGapRequests: 5,
     retryResendAfter: 5000,
     gapFillTimeout: 5000,
+    litProtocolEnabled: false,
     
     network: {
         acceptProxyConnections: false,

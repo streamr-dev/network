@@ -58,6 +58,10 @@
             "type": "number",
             "default": 5000
         },
+        "litProtocolEnabled": {
+            "type": "boolean",
+            "default": false
+        },
         "network": {
             "type": "object",
             "additionalProperties": false,

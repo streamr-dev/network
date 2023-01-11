@@ -77,17 +77,28 @@ const signAuthMessage = async (authentication: Authentication) => {
 
 @scoped(Lifecycle.ContainerScoped)
 export class LitProtocolKeyStore {
-    private readonly litNodeClient = new LitJsSdk.LitNodeClient({
-        alertWhenUnauthorized: false,
-        debug: true
-    })
+    private readonly litNodeClient: LitJsSdk.LitNodeClient | undefined
 
     constructor(
         @inject(AuthenticationInjectionToken) private readonly authentication: Authentication,
-        @inject(ConfigInjectionToken) private readonly config: Pick<StrictStreamrClientConfig, 'contracts'>
-    ) {}
+        @inject(ConfigInjectionToken) private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | 'litProtocolEnabled'>
+    ) {
+        if (config.litProtocolEnabled) {
+            logger.debug('lit-protocol enabled')
+            this.litNodeClient = new LitJsSdk.LitNodeClient({
+                alertWhenUnauthorized: false,
+                debug: true
+            })
+        } else {
+            logger.debug('lit-protocol disabled')
+            this.litNodeClient = undefined
+        }
+    }
 
     async store(streamId: StreamID, symmetricKey: Uint8Array): Promise<GroupKey | undefined> {
+        if (this.litNodeClient === undefined) {
+            return undefined
+        }
         try {
             await this.litNodeClient.connect()
             const authSig = await signAuthMessage(this.authentication)
@@ -109,6 +120,9 @@ export class LitProtocolKeyStore {
     }
 
     async get(streamId: StreamID, encryptedSymmetricKey: string): Promise<GroupKey | undefined> {
+        if (this.litNodeClient === undefined) {
+            return undefined
+        }
         try {
             await this.litNodeClient.connect()
             const authSig = await signAuthMessage(this.authentication)
