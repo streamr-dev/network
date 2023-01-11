@@ -9,7 +9,7 @@ export class DuplicateDetector {
 
     // False positives at 0.05% at maximum capacity with default values
     constructor(
-        private numOfBits = 2 ** 15,
+        private numOfBits = 2 ** 20,
         private numOfHashFunctions = 16,
         private nextFilterFillingLimit = 1050,
         private resetLimit = 2100

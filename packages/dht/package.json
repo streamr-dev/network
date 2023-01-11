@@ -30,8 +30,8 @@
     "preinstall": "./proto.sh"
   },
   "dependencies": {
-    "@protobuf-ts/runtime": "^2.8.0",
-    "@protobuf-ts/runtime-rpc": "^2.8.0",
+    "@protobuf-ts/runtime": "^2.8.2",
+    "@protobuf-ts/runtime-rpc": "^2.8.2",
     "@streamr/proto-rpc": "^1.2.0",
     "@streamr/utils": "7.0.1",
     "bloomfilter": "^0.0.18",

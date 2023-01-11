@@ -7,14 +7,14 @@ import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { RemoteWebSocketConnector } from './RemoteWebSocketConnector'
 import {
-    ConnectivityResponseMessage,
+    ConnectivityResponse,
     PeerDescriptor,
     WebSocketConnectionRequest,
     WebSocketConnectionResponse
-} from '../../proto/DhtRpc'
-import { WebSocketConnectorServiceClient } from '../../proto/DhtRpc.client'
+} from '../../proto/packages/dht/protos/DhtRpc'
+import { WebSocketConnectorServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { Logger } from '@streamr/utils'
-import { IWebSocketConnectorService } from '../../proto/DhtRpc.server'
+import { IWebSocketConnectorService } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ManagedConnection } from '../ManagedConnection'
 import { WebSocketServer } from './WebSocketServer'
@@ -23,6 +23,7 @@ import { NatType } from '../ConnectionManager'
 import { PeerIDKey } from '../../helpers/PeerID'
 import { ServerWebSocket } from './ServerWebSocket'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
+import { Handshaker } from '../Handshaker'
 
 const logger = new Logger(module)
 
@@ -74,9 +75,9 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         }
     }
 
-    public async checkConnectivity(): Promise<ConnectivityResponseMessage> {
+    public async checkConnectivity(): Promise<ConnectivityResponse> {
 
-        const noServerConnectivityResponse: ConnectivityResponseMessage = {
+        const noServerConnectivityResponse: ConnectivityResponse = {
             openInternet: false,
             ip: '127.0.0.1',
             natType: NatType.UNKNOWN
@@ -89,7 +90,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
             if (!this.entrypoints || this.entrypoints.length < 1) {
                 // return connectivity info given in config
 
-                const preconfiguredConnectivityResponse: ConnectivityResponseMessage = {
+                const preconfiguredConnectivityResponse: ConnectivityResponse = {
                     openInternet: true,
                     ip: this.webSocketHost!,
                     natType: NatType.OPEN_INTERNET,
@@ -164,7 +165,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     }
 
     private onServerSocketHandshakeRequest = (peerDescriptor: PeerDescriptor,
-        serverWebSocket: IConnection, managedConnection: ManagedConnection) => {
+        serverWebSocket: IConnection) => {
 
         const peerId = PeerID.fromValue(peerDescriptor.kademliaId)
         
@@ -173,11 +174,16 @@ export class WebSocketConnector implements IWebSocketConnectorService {
             this.ongoingConnectRequests.get(peerId.toKey())?.acceptHandshake()
             this.ongoingConnectRequests.delete(peerId.toKey())
         } else {
+            const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, this.protocolVersion,
+                ConnectionType.WEBSOCKET_SERVER, undefined, serverWebSocket)
+            
+            managedConnection.setPeerDescriptor(peerDescriptor)
+            
             if (this.incomingConnectionCallback(managedConnection)) {
                 managedConnection.acceptHandshake()
             } else {
                 managedConnection.rejectHandshake('Duplicate connection')
-                managedConnection.close()
+                managedConnection.destroy()
             }
         }
     }
@@ -186,12 +192,15 @@ export class WebSocketConnector implements IWebSocketConnectorService {
 
         if (this.webSocketServer) {
             this.webSocketServer.on('connected', (connection: IConnection) => {
-                const managedConnection = new ManagedConnection(ownPeerDescriptor, this.protocolVersion,
-                    ConnectionType.WEBSOCKET_SERVER, undefined, connection)
-                logger.trace('incoming connection from WebSocketServer, objectId: ' + managedConnection.objectId)
-                managedConnection.once('handshakeRequest', (peerDescriptor: PeerDescriptor) => {
-                    logger.trace('handshake request from serversocket objectId: ' + managedConnection.objectId)
-                    this.onServerSocketHandshakeRequest(peerDescriptor, connection, managedConnection)
+                //const managedConnection = new ManagedConnection(ownPeerDescriptor, this.protocolVersion,
+                //    ConnectionType.WEBSOCKET_SERVER, undefined, connection)
+                //logger.trace('incoming connection from WebSocketServer, objectId: ' + managedConnection.objectId)
+                
+                const handshaker = new Handshaker(this.ownPeerDescriptor!, this.protocolVersion, connection)
+
+                handshaker.once('handshakeRequest', (peerDescriptor: PeerDescriptor) => {
+                    //logger.trace('handshake request from serversocket objectId: ' + managedConnection.objectId)
+                    this.onServerSocketHandshakeRequest(peerDescriptor, connection)
                 })
             })
         }

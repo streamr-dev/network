@@ -1,5 +1,5 @@
 import { DhtNode } from '../../src/dht/DhtNode'
-import { PeerDescriptor } from '../../src/proto/DhtRpc'
+import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils'
 import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator'
 

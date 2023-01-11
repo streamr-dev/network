@@ -1,8 +1,8 @@
 import {
     PeerDescriptor,
     WebSocketConnectionRequest
-} from '../../proto/DhtRpc'
-import { IWebSocketConnectorServiceClient } from '../../proto/DhtRpc.client'
+} from '../../proto/packages/dht/protos/DhtRpc'
+import { IWebSocketConnectorServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { DhtRpcOptions } from '../../rpc-protocol/DhtRpcOptions'
 import { Logger } from '@streamr/utils'
 import * as Err from '../../helpers/errors'

@@ -2,12 +2,13 @@
 
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { Simulator } from '../../src/connection/Simulator/Simulator'
-import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
+import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { PeerID } from '../../src/helpers/PeerID'
 import { ConnectionType } from '../../src/connection/IConnection'
 import { ITransport } from '../../src/transport/ITransport'
 import * as Err from '../../src/helpers/errors'
 import { waitForCondition } from '@streamr/utils'
+import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 
 describe('WebSocket Connection Management', () => {
 
@@ -63,7 +64,10 @@ describe('WebSocket Connection Management', () => {
     it('Can open connections to serverless peer', (done) => {
         const dummyMessage: Message = {
             serviceId: serviceId,
-            body: new Uint8Array(),
+            body: {
+                oneofKind: 'rpcMessage',
+                rpcMessage: RpcMessage.create()
+            },
             messageType: MessageType.RPC,
             messageId: 'mockerer',
             targetDescriptor: noWsServerConnectorPeerDescriptor
@@ -82,7 +86,10 @@ describe('WebSocket Connection Management', () => {
     it('Can open connections to peer with server', async () => {
         const dummyMessage: Message = {
             serviceId: serviceId,
-            body: new Uint8Array(),
+            body: {
+                oneofKind: 'rpcMessage',
+                rpcMessage: RpcMessage.create()
+            },
             messageType: MessageType.RPC,
             messageId: 'mockerer',
             targetDescriptor: wsServerConnectorPeerDescriptor
@@ -102,7 +109,10 @@ describe('WebSocket Connection Management', () => {
     it('Connecting to self throws', async () => {
         const dummyMessage: Message = {
             serviceId: serviceId,
-            body: new Uint8Array(),
+            body: {
+                oneofKind: 'rpcMessage',
+                rpcMessage: RpcMessage.create()
+            },
             messageType: MessageType.RPC,
             messageId: 'mockerer',
             targetDescriptor: noWsServerConnectorPeerDescriptor

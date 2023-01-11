@@ -5,9 +5,9 @@ import { ITransport } from '../../src/transport/ITransport'
 import { v4 } from 'uuid'
 import { DhtRpcOptions, ListeningRpcCommunicator, SimulatorTransport } from '../../src/exports'
 import { ProtoRpcClient, toProtoRpcClient } from '@streamr/proto-rpc'
-import { DhtRpcServiceClient } from '../../src/proto/DhtRpc.client'
+import { DhtRpcServiceClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { NodeType, PeerDescriptor, PingRequest, PingResponse } from '../../src/proto/DhtRpc'
+import { NodeType, PeerDescriptor, PingRequest, PingResponse } from '../../src/proto/packages/dht/protos/DhtRpc'
 
 describe('RPC errors', () => {
 

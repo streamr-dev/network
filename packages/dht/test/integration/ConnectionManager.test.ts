@@ -1,28 +1,32 @@
 import { ConnectionManager } from "../../src/connection/ConnectionManager"
-import { Message, MessageType, NodeType, PeerDescriptor, RpcMessage } from "../../src/proto/DhtRpc"
+import { Message, MessageType, NodeType, PeerDescriptor } from "../../src/proto/packages/dht/protos/DhtRpc"
 import { PeerID } from '../../src/helpers/PeerID'
 import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { DhtNode } from "../../src/dht/DhtNode"
-import { v4 } from "uuid"
+import { RpcMessage } from "../../src/proto/packages/proto-rpc/protos/ProtoRpc"
 
 describe('ConnectionManager', () => {
     const serviceId = 'demo'
 
     const mockPeerDescriptor1: PeerDescriptor = {
         kademliaId: PeerID.fromString("tester1").value,
+        nodeName: "tester1",
         type: NodeType.NODEJS
     }
     const mockPeerDescriptor2: PeerDescriptor = {
         kademliaId: PeerID.fromString("tester2").value,
+        nodeName: "tester2",
         type: NodeType.NODEJS
     }
 
     const mockPeerDescriptor3: PeerDescriptor = {
         kademliaId: PeerID.fromString("tester3").value,
+        nodeName: "tester3",
         type: NodeType.NODEJS
     }
     const mockPeerDescriptor4: PeerDescriptor = {
         kademliaId: PeerID.fromString("tester4").value,
+        nodeName: "tester4",
         type: NodeType.NODEJS
     }
     const simulator = new Simulator()
@@ -112,17 +116,22 @@ describe('ConnectionManager', () => {
             return peerDescriptor2
         })
 
+        /*
         const rpcMessage: RpcMessage = {
             header: {},
             body: new Uint8Array(10),
             requestId: v4()
         }
+        */
 
         const msg: Message = {
             serviceId: serviceId,
             messageType: MessageType.RPC,
             messageId: '1',
-            body: RpcMessage.toBinary(rpcMessage)
+            body: {
+                oneofKind: 'rpcMessage',
+                rpcMessage: RpcMessage.create()
+            } 
         }
 
         const promise = new Promise<void>((resolve, _reject) => {
@@ -179,17 +188,21 @@ describe('ConnectionManager', () => {
             return peerDescriptor2
         })
 
+        /*
         const rpcMessage: RpcMessage = {
             header: {},
             body: new Uint8Array(10),
             requestId: v4()
         }
-
+        */
         const msg: Message = {
             serviceId: serviceId,
             messageType: MessageType.RPC,
             messageId: '1',
-            body: RpcMessage.toBinary(rpcMessage)
+            body: {
+                oneofKind: 'rpcMessage',
+                rpcMessage: RpcMessage.create()
+            } 
         }
 
         const disconnectedPromise1 = new Promise<void>((resolve, _reject) => {
@@ -214,12 +227,14 @@ describe('ConnectionManager', () => {
         })
         msg.targetDescriptor = peerDescriptor2
         connectionManager1.send(msg)
-        
+
         await promise
-        
-        connectionManager1.disconnect(peerDescriptor2!, undefined, 100)
+
+        // @ts-expect-error private field
+        connectionManager1.closeConnection(PeerID.fromValue(peerDescriptor2.kademliaId).toKey())
+
         await Promise.all([disconnectedPromise1, disconnectedPromise2])
-        
+
         await connectionManager1.stop()
         await connectionManager2.stop()
     })
@@ -229,17 +244,22 @@ describe('ConnectionManager', () => {
         const connectionManager3 = new ConnectionManager({ ownPeerDescriptor: mockPeerDescriptor3, simulator: simulator2 })
         const connectionManager4 = new ConnectionManager({ ownPeerDescriptor: mockPeerDescriptor4, simulator: simulator2 })
 
+        /*
         const rpcMessage: RpcMessage = {
             header: {},
             body: new Uint8Array(10),
             requestId: v4()
         }
+        */
 
         const msg: Message = {
             serviceId: serviceId,
             messageType: MessageType.RPC,
             messageId: '1',
-            body: RpcMessage.toBinary(rpcMessage)
+            body: {
+                oneofKind: 'rpcMessage',
+                rpcMessage: RpcMessage.create()
+            } 
         }
 
         const dataPromise = new Promise<void>((resolve, _reject) => {
@@ -279,7 +299,10 @@ describe('ConnectionManager', () => {
         msg.targetDescriptor = mockPeerDescriptor4
         connectionManager3.send(msg)
         await Promise.all([dataPromise, connectedPromise1, connectedPromise2])
-        connectionManager3.disconnect(mockPeerDescriptor4!, undefined, 100)
+
+        // @ts-expect-error private field
+        connectionManager3.closeConnection(PeerID.fromValue(mockPeerDescriptor4.kademliaId).toKey())
+
         await Promise.all([disconnectedPromise1, disconnectedPromise2])
     })
 

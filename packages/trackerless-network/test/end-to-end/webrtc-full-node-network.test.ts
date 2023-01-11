@@ -1,11 +1,13 @@
 import { DhtNode, PeerDescriptor, NodeType, ConnectionManager, PeerID } from '@streamr/dht'
 import { StreamrNode, Event as StreamrNodeEvent } from '../../src/logic/StreamrNode'
 import { range } from 'lodash'
-import { waitForCondition } from '@streamr/utils'
+import { Logger, waitForCondition } from '@streamr/utils'
 import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { getRandomRegion } from '@streamr/dht/dist/test/data/pings'
 import { createStreamMessage } from '../utils'
 import { PeerIDKey } from '@streamr/dht/dist/src/helpers/PeerID'
+
+const logger = new Logger(module)
 
 describe('Full node network with WebRTC connections', () => {
 
@@ -35,7 +37,7 @@ describe('Full node network with WebRTC connections', () => {
         connectionManagers = []
         layer0DhtNodes = []
 
-        layer0Ep = new DhtNode({ peerDescriptor: epPeerDescriptor, numberOfNodesPerKBucket: 4, routeMessageTimeout: 10000 })
+        layer0Ep = new DhtNode({ peerDescriptor: epPeerDescriptor, numberOfNodesPerKBucket: 8, routeMessageTimeout: 10000 })
 
         await layer0Ep.start()
         await layer0Ep.joinDht(epPeerDescriptor)
@@ -55,7 +57,7 @@ describe('Full node network with WebRTC connections', () => {
             }
 
             const layer0 = new DhtNode({
-                numberOfNodesPerKBucket: 2,
+                numberOfNodesPerKBucket: 8,
                 peerDescriptor,
                 routeMessageTimeout: 2000,
                 entryPoints: [epPeerDescriptor]
@@ -74,6 +76,7 @@ describe('Full node network with WebRTC connections', () => {
                 streamrNode.subscribeToStream(randomGraphId, epPeerDescriptor)
                 connectionManagers.push(connectionManager)
                 streamrNodes.push(streamrNode)
+                return
             })
         }))
 
@@ -93,9 +96,15 @@ describe('Full node network with WebRTC connections', () => {
     it('happy path', async () => {
 
         await Promise.all([...streamrNodes.map((streamrNode) =>
-            waitForCondition(() =>
-                streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length >= 3
-                && !streamrNode.getStream(randomGraphId)!.layer1.isJoinOngoing()
+            waitForCondition(() => {
+                logger.info('hajoa getTargetNeighborStringIds().length ' +
+                    streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length)
+                logger.info('hajoa AgetNearbyContactPoolIds().length ' +
+                    streamrNode.getStream(randomGraphId)!.layer2.getNearbyContactPoolIds().length)
+                logger.info('hajoa getNumberOfOutgoingHandshakes ' + streamrNode.getStream(randomGraphId)!.layer2.getNumberOfOutgoingHandshakes())
+                return streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length >= 3
+                    && !streamrNode.getStream(randomGraphId)!.layer1.isJoinOngoing()
+            }
             , 60000
             )
         )])

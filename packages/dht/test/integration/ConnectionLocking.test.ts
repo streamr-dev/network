@@ -1,6 +1,6 @@
 import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
-import { NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
+import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { waitForCondition } from '@streamr/utils'
 import { PeerID } from '../../src/helpers/PeerID'
 import { SimulatorTransport } from '../../src/exports'
@@ -9,10 +9,12 @@ describe('Connection Locking', () => {
 
     const mockPeerDescriptor1: PeerDescriptor = {
         kademliaId: PeerID.fromString("mock1").value,
+        nodeName: "mock1",
         type: NodeType.NODEJS
     }
     const mockPeerDescriptor2: PeerDescriptor = {
         kademliaId: PeerID.fromString("mock2").value,
+        nodeName: "mock2",
         type: NodeType.NODEJS
     }
 
@@ -143,7 +145,9 @@ describe('Connection Locking', () => {
         expect(connectionManager2.hasLocalLockedConnection(mockPeerDescriptor1)).toEqual(true)
         expect(connectionManager2.hasRemoteLockedConnection(mockPeerDescriptor1)).toEqual(true)
 
+        //@ts-expect-error private field
         await connectionManager1.gracefullyDisconnect(mockPeerDescriptor2)
+        
         await waitForCondition(() =>
             !connectionManager1.hasRemoteLockedConnection(mockPeerDescriptor2, 'testLock1')
             && !connectionManager1.hasLocalLockedConnection(mockPeerDescriptor2, 'testLock1')

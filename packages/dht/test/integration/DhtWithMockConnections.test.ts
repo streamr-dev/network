@@ -1,6 +1,6 @@
 import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { PeerDescriptor } from '../../src/proto/DhtRpc'
+import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils'
 
 describe('Mock IConnection DHT Joining', () => {
@@ -37,7 +37,7 @@ describe('Mock IConnection DHT Joining', () => {
 
     it('Happy path', async () => {
         await entryPoint.joinDht(entrypointDescriptor)
-        await Promise.allSettled(
+        await Promise.all(
             nodes.map((node) => node.joinDht(entrypointDescriptor))
         )
         nodes.forEach((node) => {
@@ -45,5 +45,5 @@ describe('Mock IConnection DHT Joining', () => {
             //expect(node.getNeighborList().getSize()).toBeGreaterThanOrEqual(node.getBucketSize())
         })
         expect(entryPoint.getBucketSize()).toBeGreaterThanOrEqual(entryPoint.getK())
-    })
+    }, 10000)
 })

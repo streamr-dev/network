@@ -43,4 +43,5 @@ export interface IConnection {
     
     send(data: Uint8Array): void
     close(): void
+    destroy(): void
 }

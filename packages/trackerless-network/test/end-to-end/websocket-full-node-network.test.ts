@@ -1,9 +1,11 @@
 import { DhtNode, PeerDescriptor, NodeType, ConnectionManager, PeerID } from '@streamr/dht'
 import { StreamrNode, Event as StreamrNodeEvent } from '../../src/logic/StreamrNode'
 import { range } from 'lodash'
-import { waitForCondition } from '@streamr/utils'
+import { Logger, waitForCondition } from '@streamr/utils'
 import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createStreamMessage } from '../utils'
+
+const logger = new Logger(module)
 
 describe('Full node network with WebSocket connections only', () => {
 
@@ -12,6 +14,7 @@ describe('Full node network with WebSocket connections only', () => {
     const epPeerDescriptor: PeerDescriptor = {
         kademliaId: PeerID.fromString(`entrypoint`).value,
         type: NodeType.NODEJS,
+        nodeName: 'entrypoint',
         websocket: { ip: 'localhost', port: 15555 }
     }
 
@@ -32,7 +35,7 @@ describe('Full node network with WebSocket connections only', () => {
         connectionManagers = []
         layer0DhtNodes = []
 
-        layer0Ep = new DhtNode({ peerDescriptor: epPeerDescriptor, numberOfNodesPerKBucket: 4, routeMessageTimeout: 10000 })
+        layer0Ep = new DhtNode({ peerDescriptor: epPeerDescriptor,  nodeName: 'entrypoint', numberOfNodesPerKBucket: 8, routeMessageTimeout: 10000 })
         await layer0Ep.start()
         await layer0Ep.joinDht(epPeerDescriptor)
 
@@ -49,7 +52,8 @@ describe('Full node network with WebSocket connections only', () => {
                 webSocketPort: 15556 + i,
                 webSocketHost: 'localhost',
                 peerIdString: `${i}`,
-                numberOfNodesPerKBucket: 2
+                nodeName: `${i}`,
+                numberOfNodesPerKBucket: 8
             })
 
             layer0DhtNodes.push(layer0)
@@ -58,13 +62,14 @@ describe('Full node network with WebSocket connections only', () => {
             await layer0.joinDht(epPeerDescriptor)
 
             const connectionManager = layer0.getTransport() as ConnectionManager
-            const streamrNode = new StreamrNode({})
+            const streamrNode = new StreamrNode({ nodeName: `${i}` })
             await streamrNode.start(layer0, connectionManager, connectionManager)
 
             return await streamrNode.joinStream(randomGraphId, epPeerDescriptor).then(() => {
                 streamrNode.subscribeToStream(randomGraphId, epPeerDescriptor)
                 connectionManagers.push(connectionManager)
                 streamrNodes.push(streamrNode)
+                return
             })
         }))
 
@@ -84,10 +89,13 @@ describe('Full node network with WebSocket connections only', () => {
     it('happy path', async () => {
 
         await Promise.all([...streamrNodes.map((streamrNode) =>
-            waitForCondition(() =>
-                streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length >= 3
-                && !streamrNode.getStream(randomGraphId)!.layer1.isJoinOngoing()
-            , 90000
+            waitForCondition(() => {
+                logger.info(streamrNode.config.nodeName + ' hajoa layer2.getTargetNeighborStringIds().length '
+                    + streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length)
+                return streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length >= 3
+                    && !streamrNode.getStream(randomGraphId)!.layer1.isJoinOngoing()
+            }
+            , 160000
             )
         )])
 

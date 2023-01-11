@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/prefer-for-of */
+
 import { PeerDescriptor } from "../exports"
 import { DhtPeer } from "./DhtPeer"
 import { SortedContactList } from "./contact/SortedContactList"
@@ -5,7 +7,7 @@ import { PeerID, PeerIDKey } from '../helpers/PeerID'
 import { Logger } from "@streamr/utils"
 import EventEmitter from 'eventemitter3'
 import { v4 } from "uuid"
-import { RouteMessageWrapper } from "../proto/DhtRpc"
+import { RouteMessageWrapper } from "../proto/packages/dht/protos/DhtRpc"
 
 const logger = new Logger(module)
 
@@ -29,6 +31,7 @@ export interface RoutingSessionEvents {
     routingFailed: (sessionId: string) => void
 }
 
+export enum RoutingMode { ROUTE, FORWARD, RECURSIVE_FIND }
 export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     public readonly sessionId = v4()
     private ongoingRequests: Set<PeerIDKey> = new Set()
@@ -41,11 +44,14 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         private connections: Map<PeerIDKey, DhtPeer>,
         private parallelism: number,
         private firstHopTimeout: number,
-        private forwarding = false
+        private mode: RoutingMode = RoutingMode.ROUTE,
+        destinationId?: Uint8Array,
+        excludedPeerIDs?: PeerID[]
     ) {
         super()
-        this.contactList = new SortedContactList(PeerID.fromValue(this.messageToRoute!.destinationPeer!.kademliaId),
-            10000, undefined, true, this.messageToRoute!.previousPeer ? PeerID.fromValue(this.messageToRoute!.previousPeer!.kademliaId) : undefined)
+        this.contactList = new SortedContactList(destinationId ? PeerID.fromValue(destinationId) :
+            PeerID.fromValue(this.messageToRoute!.destinationPeer!.kademliaId),
+        10000, undefined, true, undefined, excludedPeerIDs)
     }
 
     private onRequestFailed(peerId: PeerID) {
@@ -79,16 +85,22 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         this.contactList.setContacted(contact.peerId)
         this.ongoingRequests.add(contact.peerId.toKey())
 
-        if (this.forwarding) {
+        if (this.mode === RoutingMode.FORWARD) {
             return contact.forwardMessage({
                 ...this.messageToRoute,
                 previousPeer: this.ownPeerDescriptor
             })
+        } else if (this.mode === RoutingMode.RECURSIVE_FIND) {
+            return contact.findRecursively({
+                ...this.messageToRoute,
+                previousPeer: this.ownPeerDescriptor
+            })
+        } else {
+            return contact.routeMessage({
+                ...this.messageToRoute,
+                previousPeer: this.ownPeerDescriptor
+            })
         }
-        return contact.routeMessage({
-            ...this.messageToRoute,
-            previousPeer: this.ownPeerDescriptor
-        })
     }
 
     private findMoreContacts(): DhtPeer[] {
@@ -97,6 +109,15 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         this.contactList.addContacts([...this.connections.values()])
 
         return this.contactList.getUncontactedContacts(this.parallelism)
+    }
+
+    public getClosestContacts(limit: number): PeerDescriptor[] {
+        const ret: PeerDescriptor[] = []
+        const contacts = this.contactList.getClosestContacts(limit)
+        for (let i = 0; i < contacts.length; i++) {
+            ret.push(contacts[i].getPeerDescriptor())
+        }
+        return ret
     }
 
     private sendMoreRequests(uncontacted: DhtPeer[]) {

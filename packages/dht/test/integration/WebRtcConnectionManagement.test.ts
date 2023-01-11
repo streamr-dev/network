@@ -1,11 +1,11 @@
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator'
-import { Message, MessageType, NodeType, PeerDescriptor, RpcMessage } from '../../src/proto/DhtRpc'
+import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { PeerID } from '../../src/helpers/PeerID'
 import { ConnectionType } from '../../src/connection/IConnection'
 import { ITransport } from '../../src/transport/ITransport'
 import * as Err from '../../src/helpers/errors'
-import { v4 } from 'uuid'
 import { SimulatorTransport } from '../../src/exports'
 
 describe('WebRTC Connection Management', () => {
@@ -17,11 +17,13 @@ describe('WebRTC Connection Management', () => {
 
     const peerDescriptor1: PeerDescriptor = {
         kademliaId: PeerID.fromString("peer1").value,
+        nodeName: "peer1",
         type: NodeType.NODEJS,
     }
 
     const peerDescriptor2: PeerDescriptor = {
         kademliaId: PeerID.fromString("peer2").value,
+        nodeName: "peer2",
         type: NodeType.NODEJS,
     }
 
@@ -33,10 +35,10 @@ describe('WebRTC Connection Management', () => {
         simulator = new Simulator(LatencyType.FIXED, 500)
 
         connectorTransport1 = new SimulatorTransport(peerDescriptor1, simulator)
-        manager1 = new ConnectionManager({ transportLayer: connectorTransport1 })
+        manager1 = new ConnectionManager({ transportLayer: connectorTransport1, nodeName: peerDescriptor1.nodeName })
 
         connectorTransport2 = new SimulatorTransport(peerDescriptor2, simulator)
-        manager2 = new ConnectionManager({ transportLayer: connectorTransport2 })
+        manager2 = new ConnectionManager({ transportLayer: connectorTransport2, nodeName: peerDescriptor2.nodeName })
 
         await manager1.start((_msg) => peerDescriptor1)
         await manager2.start((_msg) => peerDescriptor2)
@@ -55,7 +57,10 @@ describe('WebRTC Connection Management', () => {
     it('Peer1 can open WebRTC Datachannels', (done) => {
         const dummyMessage: Message = {
             serviceId: 'unknown',
-            body: new Uint8Array(),
+            body: {
+                oneofKind: 'rpcMessage',
+                rpcMessage: RpcMessage.create()
+            },
             messageType: MessageType.RPC,
             messageId: 'mockerer'
         }
@@ -68,7 +73,7 @@ describe('WebRTC Connection Management', () => {
             done()
         })
         dummyMessage.targetDescriptor = peerDescriptor2
-        manager1.send(dummyMessage).catch((e) => { 
+        manager1.send(dummyMessage).catch((e) => {
             throw e
         })
     }, 60000)
@@ -76,7 +81,10 @@ describe('WebRTC Connection Management', () => {
     it('Peer2 can open WebRTC Datachannel', (done) => {
         const dummyMessage: Message = {
             serviceId: serviceId,
-            body: new Uint8Array(),
+            body: {
+                oneofKind: 'rpcMessage',
+                rpcMessage: RpcMessage.create()
+            }, 
             messageType: MessageType.RPC,
             messageId: 'mockerer'
         }
@@ -94,7 +102,10 @@ describe('WebRTC Connection Management', () => {
     it('Connecting to self throws', async () => {
         const dummyMessage: Message = {
             serviceId: serviceId,
-            body: new Uint8Array(),
+            body: {
+                oneofKind: 'rpcMessage',
+                rpcMessage: RpcMessage.create()
+            },
             messageType: MessageType.RPC,
             messageId: 'mockerer'
         }
@@ -105,18 +116,22 @@ describe('WebRTC Connection Management', () => {
     })
 
     it('Connects and disconnects webrtc connections', async () => {
-        
+
+        /*
         const rpcMessage: RpcMessage = {
             header: {},
-            body: new Uint8Array(10),
+            body: Any.pack(Uint8Array(10), ),
             requestId: v4()
-        }
+        }*/
 
         const msg: Message = {
             serviceId: serviceId,
             messageType: MessageType.RPC,
             messageId: '1',
-            body: RpcMessage.toBinary(rpcMessage)
+            body: {
+                oneofKind: 'rpcMessage',
+                rpcMessage: RpcMessage.create()
+            }
         }
 
         const dataPromise = new Promise<void>((resolve, _reject) => {
@@ -155,29 +170,34 @@ describe('WebRTC Connection Management', () => {
         })
 
         msg.targetDescriptor = peerDescriptor2
-        manager1.send(msg).catch((_e) => {})
-        
+        manager1.send(msg).catch((_e) => { })
+
         await Promise.all([dataPromise, connectedPromise1, connectedPromise2])
-        
-        manager1.disconnect(peerDescriptor2!, undefined, 100)
+
+        // @ts-expect-error private field
+        manager1.closeConnection(PeerID.fromValue(peerDescriptor2.kademliaId).toKey())
 
         await Promise.all([disconnectedPromise1, disconnectedPromise2])
 
     }, 20000)
 
     it('Disconnects webrtcconnection while being connected', async () => {
-        
+
+        /*
         const rpcMessage: RpcMessage = {
             header: {},
             body: new Uint8Array(10),
             requestId: v4()
         }
-
+        */
         const msg: Message = {
             serviceId: serviceId,
             messageType: MessageType.RPC,
             messageId: '1',
-            body: RpcMessage.toBinary(rpcMessage)
+            body: {
+                oneofKind: 'rpcMessage',
+                rpcMessage: RpcMessage.create()
+            },
         }
 
         const disconnectedPromise1 = new Promise<void>((resolve, _reject) => {
@@ -191,8 +211,10 @@ describe('WebRTC Connection Management', () => {
         manager1.send(msg).catch((e) => {
             expect(e.code).toEqual('CONNECTION_FAILED')
         })
-        
-        manager1.disconnect(peerDescriptor2!, undefined, 100)
+
+        // @ts-expect-error private field
+        manager1.closeConnection(PeerID.fromValue(peerDescriptor2.kademliaId).toKey())
+
         await disconnectedPromise1
 
     }, 20000)

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/member-delimiter-style */
+
 import { RandomGraphNode, Event as RandomGraphEvent } from './RandomGraphNode'
 import { PeerDescriptor, ConnectionLocker, DhtNode, ITransport, PeerID } from '@streamr/dht'
 import { StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
@@ -36,7 +38,8 @@ interface Metrics extends MetricsDefinition {
 }
 
 interface StreamrNodeOpts {
-    metricsContext?: MetricsContext
+    metricsContext?: MetricsContext,
+    nodeName?: string
 }
 
 export class StreamrNode extends EventEmitter {
@@ -50,10 +53,10 @@ export class StreamrNode extends EventEmitter {
     private readonly metricsContext: MetricsContext
     private readonly metrics: Metrics
 
-    constructor(opts: StreamrNodeOpts) {
+    constructor(public config: StreamrNodeOpts) {
         super()
         this.streams = new Map()
-        this.metricsContext = opts.metricsContext || new MetricsContext()
+        this.metricsContext = config.metricsContext || new MetricsContext()
         this.metrics = {
             publishMessagesPerSecond: new RateMetric(),
             publishBytesPerSecond: new RateMetric(),
@@ -135,16 +138,18 @@ export class StreamrNode extends EventEmitter {
             peerDescriptor: this.layer0!.getPeerDescriptor(),
             routeMessageTimeout: 5000,
             entryPoints: [entryPoint],
-            numberOfNodesPerKBucket: 4,
+            numberOfNodesPerKBucket: 8,
             rpcRequestTimeout: 15000,
-            dhtJoinTimeout: 90000
+            dhtJoinTimeout: 90000,
+            nodeName: this.config.nodeName
         })
         const layer2 = new RandomGraphNode({
             randomGraphId: streamPartID,
             P2PTransport: this.P2PTransport!,
             layer1: layer1,
             connectionLocker: this.connectionLocker!,
-            ownPeerDescriptor: this.layer0!.getPeerDescriptor()
+            ownPeerDescriptor: this.layer0!.getPeerDescriptor(),
+            nodeName: this.config.nodeName
         })
 
         this.streams.set(streamPartID, {
@@ -153,11 +158,19 @@ export class StreamrNode extends EventEmitter {
         })
 
         await layer1.start()
+        await layer1.joinDht(entryPoint)
+
+        /* vars to be shown in debugger
+        const layer0BucketSize = this.layer0.getBucketSize()
+        const layer1BucketSize = layer1.getBucketSize()
+        const layer1ClosestContacts=  layer1.getNeighborList().getClosestContacts(20)
+        */
+
         layer2.start()
         layer2.on(RandomGraphEvent.MESSAGE, (message: StreamMessage) => {
             this.emit(Event.NEW_MESSAGE, message)
         })
-        await layer1.joinDht(entryPoint)
+       
     }
 
     async waitForJoinAndPublish(streamPartId: string, entrypointDescriptor: PeerDescriptor, msg: StreamMessage): Promise<number> {

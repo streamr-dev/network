@@ -1,4 +1,7 @@
-import { ConnectivityRequestMessage, ConnectivityResponseMessage, Message, MessageType, PeerDescriptor } from '../proto/DhtRpc'
+import {
+    ConnectivityRequest, ConnectivityResponse,
+    Message, MessageType, PeerDescriptor
+} from '../proto/packages/dht/protos/DhtRpc'
 import { ConnectionEvents, IConnection } from './IConnection'
 import { Logger } from '@streamr/utils'
 import * as Err from '../helpers/errors'
@@ -23,7 +26,7 @@ export class ConnectivityChecker {
     constructor(private webSocketPort?: number) {
     }
 
-    public async sendConnectivityRequest(entryPoint: PeerDescriptor): Promise<ConnectivityResponseMessage> {
+    public async sendConnectivityRequest(entryPoint: PeerDescriptor): Promise<ConnectivityResponse> {
         let outgoingConnection: IConnection
 
         try {
@@ -36,27 +39,32 @@ export class ConnectivityChecker {
         }
 
         // send connectivity request
-        const connectivityRequestMessage: ConnectivityRequestMessage = { port: this.webSocketPort! }
+        const connectivityRequestMessage: ConnectivityRequest = { port: this.webSocketPort! }
         const msg: Message = {
             serviceId: ConnectivityChecker.CONNECTIVITY_CHECKER_SERVICE_ID,
             messageType: MessageType.CONNECTIVITY_REQUEST, messageId: 'xyz',
-            body: ConnectivityRequestMessage.toBinary(connectivityRequestMessage)
+            body: {
+                oneofKind: 'connectivityRequest',
+                connectivityRequest: connectivityRequestMessage
+            }
         }
 
         const responseAwaiter = () => {
-            return new Promise((resolve: (res: ConnectivityResponseMessage) => void, reject) => {
+            return new Promise((resolve: (res: ConnectivityResponse) => void, reject) => {
                 const timeoutId = setTimeout(() => {
                     reject(new Err.ConnectivityResponseTimeout('timeout'))
                 }, ConnectivityChecker.CONNECTIVITY_CHECKER_TIMEOUT)
                 const listener = (bytes: Uint8Array) => {
                     const message: Message = Message.fromBinary(bytes)
-                    if (message.messageType != MessageType.CONNECTIVITY_RESPONSE) {
+                    if (message.body.oneofKind === 'connectivityResponse') {
+                        const connectivityResponseMessage = message.body.connectivityResponse
+                        outgoingConnection!.off('data', listener)
+                        clearTimeout(timeoutId)
+                        resolve(connectivityResponseMessage)
+                    } else {
                         return
                     }
-                    const connectivityResponseMessage = ConnectivityResponseMessage.fromBinary(message.body)
-                    outgoingConnection!.off('data', listener)
-                    clearTimeout(timeoutId)
-                    resolve(connectivityResponseMessage) //(connectivityResponseMessage)
+                    //(connectivityResponseMessage)
                 }
                 outgoingConnection!.on('data', listener)
             })
@@ -81,22 +89,22 @@ export class ConnectivityChecker {
             logger.trace('server received data')
             const message = Message.fromBinary(data)
 
-            if (message.messageType === MessageType.CONNECTIVITY_REQUEST) {
+            if (message.body.oneofKind === 'connectivityRequest') {
                 logger.trace('received connectivity request')
-                this.handleIncomingConnectivityRequest(connectionToListenTo, ConnectivityRequestMessage.fromBinary(message.body))
+                this.handleIncomingConnectivityRequest(connectionToListenTo, message.body.connectivityRequest)
             }
         })
     }
 
     private async handleIncomingConnectivityRequest(
         connection: ServerWebSocket,
-        connectivityRequest: ConnectivityRequestMessage
+        connectivityRequest: ConnectivityRequest
     ): Promise<void> {
         if (this.stopped) {
             return
         }
         let outgoingConnection: IConnection | undefined
-        let connectivityResponseMessage: ConnectivityResponseMessage | undefined
+        let connectivityResponseMessage: ConnectivityResponse | undefined
         try {
             outgoingConnection = await this.connectAsync({
                 host: connection.getRemoteAddress(),
@@ -129,7 +137,10 @@ export class ConnectivityChecker {
         const msg: Message = {
             serviceId: ConnectivityChecker.CONNECTIVITY_CHECKER_SERVICE_ID,
             messageType: MessageType.CONNECTIVITY_RESPONSE, messageId: v4(),
-            body: ConnectivityResponseMessage.toBinary(connectivityResponseMessage!)
+            body: {
+                oneofKind: 'connectivityResponse',
+                connectivityResponse: connectivityResponseMessage!
+            }
         }
         connection.send(Message.toBinary(msg))
     }

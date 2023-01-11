@@ -10,6 +10,7 @@ import { IHelloRpcService } from '../proto/HelloRpc.server'
 import { WakeUpRequest } from '../proto/WakeUpRpc'
 import { WakeUpRpcServiceClient } from '../proto/WakeUpRpc.client'
 import { IWakeUpRpcService } from '../proto/WakeUpRpc.server'
+import { RpcMessage } from '../../src/proto/ProtoRpc'
 
 // Rpc call service
 /* eslint-disable class-methods-use-this */
@@ -43,11 +44,11 @@ describe('toProtoRpcClient', () => {
         const helloClient = toProtoRpcClient(new HelloRpcServiceClient(communicator2.getRpcClientTransport()))
 
         // Simulate a network connection, in real life the message blobs would be transferred over a network
-        communicator1.on('outgoingMessage', (msgBody: Uint8Array, _requestId: string, _callContext?: ProtoCallContext) => {
-            communicator2.handleIncomingMessage(msgBody)
+        communicator1.on('outgoingMessage', (msg: RpcMessage, _requestId: string, _callContext?: ProtoCallContext) => {
+            communicator2.handleIncomingMessage(msg)
         })
-        communicator2.on('outgoingMessage', (msgBody: Uint8Array, _requestId: string, _callContext?: ProtoCallContext) => {
-            communicator1.handleIncomingMessage(msgBody)
+        communicator2.on('outgoingMessage', (msg: RpcMessage, _requestId: string, _callContext?: ProtoCallContext) => {
+            communicator1.handleIncomingMessage(msg)
         })
 
         const { greeting } = await helloClient.sayHello({ myName: 'Alice' })
@@ -68,11 +69,11 @@ describe('toProtoRpcClient', () => {
         const wakeUpClient = toProtoRpcClient(new WakeUpRpcServiceClient(communicator2.getRpcClientTransport()))
 
         // Simulate a network connection, in real life the message blobs would be transferred over a network
-        communicator1.on('outgoingMessage', (msgBody: Uint8Array, _requestId: string, _callContext?: ProtoCallContext) => {
-            communicator2.handleIncomingMessage(msgBody)
+        communicator1.on('outgoingMessage', (msg: RpcMessage, _requestId: string, _callContext?: ProtoCallContext) => {
+            communicator2.handleIncomingMessage(msg)
         })
-        communicator2.on('outgoingMessage', (msgBody: Uint8Array, _requestId: string, _callContext?: ProtoCallContext) => {
-            communicator1.handleIncomingMessage(msgBody)
+        communicator2.on('outgoingMessage', (msg: RpcMessage, _requestId: string, _callContext?: ProtoCallContext) => {
+            communicator1.handleIncomingMessage(msg)
         })
 
         wakeUpService.on('wakeUpCalled', async (reason) => {
@@ -90,7 +91,7 @@ describe('toProtoRpcClient', () => {
         const communicator2 = new RpcCommunicator()
         const helloClient = toProtoRpcClient(new HelloRpcServiceClient(communicator2.getRpcClientTransport()))
 
-        communicator2.setOutgoingMessageListener(async (_message: Uint8Array, _requestId: string, _callContext?: ProtoCallContext) => {
+        communicator2.setOutgoingMessageListener(async (_message: RpcMessage, _requestId: string, _callContext?: ProtoCallContext) => {
             throw new Error('testException')
         })
 
@@ -112,8 +113,8 @@ describe('toProtoRpcClient', () => {
 
         // Simulate a network connection, in real life the message blobs would be transferred over a network
        
-        communicator2.on('outgoingMessage', (msgBody: Uint8Array, _requestId: string, _callContext?: ProtoCallContext) => {
-            communicator1.handleIncomingMessage(msgBody)
+        communicator2.on('outgoingMessage', (msg: RpcMessage, _requestId: string, _callContext?: ProtoCallContext) => {
+            communicator1.handleIncomingMessage(msg)
         })
 
         await wakeUpClient.wakeUp({ reason: 'School' })
@@ -132,8 +133,8 @@ describe('toProtoRpcClient', () => {
 
         // Simulate a network connection, in real life the message blobs would be transferred over a network
        
-        communicator2.setOutgoingMessageListener(async (msgBody: Uint8Array, _requestId: string, _callContext?: ProtoCallContext) => {
-            communicator1.handleIncomingMessage(msgBody)
+        communicator2.setOutgoingMessageListener(async (msg: RpcMessage, _requestId: string, _callContext?: ProtoCallContext) => {
+            communicator1.handleIncomingMessage(msg)
         })
         
         await wakeUpClient.wakeUp({ reason: 'School' })
@@ -144,7 +145,7 @@ describe('toProtoRpcClient', () => {
         const communicator2 = new RpcCommunicator()
         const wakeUpClient = toProtoRpcClient(new WakeUpRpcServiceClient(communicator2.getRpcClientTransport()))
 
-        communicator2.setOutgoingMessageListener(async (_message: Uint8Array, _requestId: string, _callContext?: ProtoCallContext) => {
+        communicator2.setOutgoingMessageListener(async (_message: RpcMessage, _requestId: string, _callContext?: ProtoCallContext) => {
             throw new Error('test exception')
         })
 
@@ -164,11 +165,11 @@ describe('toProtoRpcClient', () => {
         const helloClient = new HelloRpcServiceClient(communicator2.getRpcClientTransport())
 
         // Simulate a network connection, in real life the message blobs would be transferred over a network
-        communicator1.on('outgoingMessage', (msgBody: Uint8Array, _requestId: string, _callContext?: ProtoCallContext) => {
-            communicator2.handleIncomingMessage(msgBody)
+        communicator1.on('outgoingMessage', (msg: RpcMessage, _requestId: string, _callContext?: ProtoCallContext) => {
+            communicator2.handleIncomingMessage(msg)
         })
-        communicator2.on('outgoingMessage', (msgBody: Uint8Array, _requestId: string, _callContext?: ProtoCallContext) => {
-            communicator1.handleIncomingMessage(msgBody)
+        communicator2.on('outgoingMessage', (msg: RpcMessage, _requestId: string, _callContext?: ProtoCallContext) => {
+            communicator1.handleIncomingMessage(msg)
         })
 
         try {
@@ -193,11 +194,11 @@ describe('toProtoRpcClient', () => {
         const wakeUpClient = new WakeUpRpcServiceClient(communicator2.getRpcClientTransport())
 
         // Simulate a network connection, in real life the message blobs would be transferred over a network
-        communicator1.on('outgoingMessage', (msgBody: Uint8Array, _requestId: string, _callContext?: ProtoCallContext) => {
-            communicator2.handleIncomingMessage(msgBody)
+        communicator1.on('outgoingMessage', (msg: RpcMessage, _requestId: string, _callContext?: ProtoCallContext) => {
+            communicator2.handleIncomingMessage(msg)
         })
-        communicator2.on('outgoingMessage', (msgBody: Uint8Array, _requestId: string, _callContext?: ProtoCallContext) => {
-            communicator1.handleIncomingMessage(msgBody)
+        communicator2.on('outgoingMessage', (msg: RpcMessage, _requestId: string, _callContext?: ProtoCallContext) => {
+            communicator1.handleIncomingMessage(msg)
         })
 
         wakeUpService.on('wakeUpCalled', async (_reason) => {

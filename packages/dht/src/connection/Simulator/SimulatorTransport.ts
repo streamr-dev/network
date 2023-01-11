@@ -1,4 +1,4 @@
-import { PeerDescriptor } from "../../proto/DhtRpc"
+import { PeerDescriptor } from "../../proto/packages/dht/protos/DhtRpc"
 import { ConnectionManager } from "../ConnectionManager"
 import { Simulator } from "./Simulator"
 

@@ -4,7 +4,7 @@ import { RpcMessage } from '../../src/proto/ProtoRpc'
 describe('ConversionWrappers', () => {
     const msg: RpcMessage = {
         header: { test: 'testheader' },
-        body: new Uint8Array(),
+        body: undefined,
         requestId: '1'
     }
 

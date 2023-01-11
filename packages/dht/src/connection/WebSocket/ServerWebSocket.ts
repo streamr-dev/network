@@ -17,10 +17,12 @@ enum MessageType {
 }
 
 export class ServerWebSocket extends EventEmitter<ConnectionEvents> implements IConnection {
-   
+
     public connectionId: ConnectionID
-    private socket: WsConnection
     public connectionType = ConnectionType.WEBSOCKET_SERVER
+
+    private socket?: WsConnection
+    private stopped = false
 
     constructor(socket: WsConnection) {
         super()
@@ -28,48 +30,88 @@ export class ServerWebSocket extends EventEmitter<ConnectionEvents> implements I
         this.connectionId = new ConnectionID()
 
         socket.on('message', (message) => {
-            logger.trace('ServerWebSocket::onMessage')
-            if (message.type === MessageType.UTF8) {
-                logger.debug('Received string Message: ' + message.utf8Data)
-            } else if (message.type === MessageType.BINARY) {
-                logger.trace('Received Binary Message of ' + message.binaryData.length + ' bytes')
-                this.emit('data',
-                    new Uint8Array(message.binaryData.buffer, message.binaryData.byteOffset, 
-                        message.binaryData.byteLength / Uint8Array.BYTES_PER_ELEMENT))
+            if (!this.stopped) {
+                logger.trace('ServerWebSocket::onMessage')
+                if (message.type === MessageType.UTF8) {
+                    logger.debug('Received string Message: ' + message.utf8Data)
+                } else if (message.type === MessageType.BINARY) {
+                    logger.trace('Received Binary Message of ' + message.binaryData.length + ' bytes')
+                    this.emit('data',
+                        new Uint8Array(message.binaryData.buffer, message.binaryData.byteOffset,
+                            message.binaryData.byteLength / Uint8Array.BYTES_PER_ELEMENT))
+                }
             }
         })
         socket.on('close', (reasonCode, description) => {
-            logger.trace(' Peer ' + socket.remoteAddress + ' disconnected.')
-            this.emit('disconnected', reasonCode, description)
+            if (!this.stopped) {
+                logger.trace(' Peer ' + socket.remoteAddress + ' disconnected.')
+                this.doDisconnect(reasonCode, description)
+            }
         })
 
         socket.on('error', (error) => {
-            this.emit('error', error.name)
+            if (!this.stopped) {
+                this.emit('error', error.name)
+            }
         })
 
         this.socket = socket
     }
 
-    send(data: Uint8Array): void {
-        logger.trace('serverwebsocket trying to send ' + JSON.stringify(data))
+    private doDisconnect(reasonCode: number, description: string): void {
+        this.stopped = true
+        this.socket?.removeAllListeners()
+        this.socket = undefined
+
+        this.emit('disconnected', reasonCode, description)
+        this.removeAllListeners()
+    }
+
+    public send(data: Uint8Array): void {
+        //logger.trace('serverwebsocket trying to send ' + JSON.stringify(data))
         // If in an Karma / Electron test, use the NodeJS implementation
         // of Buffer instead of the browser polyfill
-        if (typeof NodeJsBuffer !== 'undefined') {
-            this.socket.sendBytes(NodeJsBuffer.from(data))
+        
+        if (!this.stopped && this.socket) {
+            if (typeof NodeJsBuffer !== 'undefined') {
+                this.socket.sendBytes(NodeJsBuffer.from(data))
+            } else {
+                this.socket.sendBytes(Buffer.from(data))
+            }
         } else {
-            this.socket.sendBytes(Buffer.from(data))
+            logger.error("Tried to call send() on a stopped socket")
+        }
+
+    }
+
+    public close(): void {
+        if (!this.stopped) {
+            this.socket?.close()
+        } else {
+            logger.error("Tried to close a stopped connection")
         }
     }
 
-    close(): void {
-        this.socket.close()
+    public destroy(): void {
+        if (!this.stopped) {
+            if (this.socket) {
+                this.socket.removeAllListeners()
+                this.removeAllListeners()
+                this.socket.close()
+                this.socket = undefined
+            }
+            this.stopped = true
+        } else {
+            logger.error('Tried to destroy() a stopped connection')
+        }
     }
 
     public getRemoteAddress(): string {
-        return this.socket.remoteAddress
-    }
-
-    stop(): void {
-        this.removeAllListeners()
+        if (!this.stopped && this.socket) {
+            return this.socket.remoteAddress
+        } else {
+            logger.error("Tried to get the remoteAddress of a stopped connection")
+            return ""
+        }
     }
 }

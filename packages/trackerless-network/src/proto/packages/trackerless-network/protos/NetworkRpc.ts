@@ -177,7 +177,7 @@ export interface StreamHandshakeRequest {
      */
     peerView: string[];
     /**
-     * @generated from protobuf field: PeerDescriptor senderDescriptor = 7;
+     * @generated from protobuf field: dht.PeerDescriptor senderDescriptor = 7;
      */
     senderDescriptor?: PeerDescriptor;
     /**
@@ -202,7 +202,7 @@ export interface StreamHandshakeResponse {
      */
     requestId: string;
     /**
-     * @generated from protobuf field: optional PeerDescriptor interleaveTarget = 3;
+     * @generated from protobuf field: optional dht.PeerDescriptor interleaveTarget = 3;
      */
     interleaveTarget?: PeerDescriptor;
 }
@@ -219,7 +219,7 @@ export interface InterleaveNotice {
      */
     randomGraphId: string;
     /**
-     * @generated from protobuf field: PeerDescriptor interleaveTarget = 3;
+     * @generated from protobuf field: dht.PeerDescriptor interleaveTarget = 3;
      */
     interleaveTarget?: PeerDescriptor;
 }
@@ -253,7 +253,7 @@ export interface NeighborUpdate {
      */
     removeMe: boolean;
     /**
-     * @generated from protobuf field: repeated PeerDescriptor neighborDescriptors = 4;
+     * @generated from protobuf field: repeated dht.PeerDescriptor neighborDescriptors = 4;
      */
     neighborDescriptors: PeerDescriptor[];
 }

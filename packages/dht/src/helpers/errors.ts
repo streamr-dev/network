@@ -13,7 +13,8 @@ export enum ErrorCode {
     ILLEGAL_ARGUMENTS = 'ILLEGAL_ARGUMENTS',
     CONNECTIVITY_RESPONSE_NOT_RECEIVED_BEFORE_TIMEOUT = 'CONNECTIVITY_RESPONSE_NOT_RECEIVED_BEFORE_TIMEOUT',
     CONNECTION_LOCKER = 'CONNECTION_LOCKER',
-    DHT_JOIN_TIMEOUT = 'DHT_JOIN_TIMEOUT'
+    DHT_JOIN_TIMEOUT = 'DHT_JOIN_TIMEOUT',
+    SEND_FAILED = 'SEND_FAILED'
 }
 
 class Err extends Error {
@@ -35,3 +36,4 @@ export class IllegalArguments extends Err { constructor(message?: string, origin
 export class ConnectivityResponseTimeout extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.CONNECTIVITY_RESPONSE_NOT_RECEIVED_BEFORE_TIMEOUT, message, originalError) } }
 export class ConnectionLocker extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.CONNECTION_LOCKER, message, originalError) } }
 export class DhtJoinTimeout extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.DHT_JOIN_TIMEOUT, message, originalError) } }
+export class SendFailed extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.SEND_FAILED, message, originalError) } }

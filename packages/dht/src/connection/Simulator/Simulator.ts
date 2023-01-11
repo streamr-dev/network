@@ -1,6 +1,6 @@
 import EventEmitter from "eventemitter3"
 import { PeerID, PeerIDKey } from "../../helpers/PeerID"
-import { PeerDescriptor } from "../../proto/DhtRpc"
+import { PeerDescriptor } from "../../proto/packages/dht/protos/DhtRpc"
 import { ConnectionSourceEvents } from "../IConnectionSource"
 import { SimulatorConnector } from "./SimulatorConnector"
 import { SimulatorConnection } from "./SimulatorConnection"

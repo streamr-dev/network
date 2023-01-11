@@ -1,9 +1,12 @@
+/* eslint-disable @typescript-eslint/member-delimiter-style */
+
 import { ConnectionLocker, PeerDescriptor, PeerID } from '@streamr/dht'
 import { PeerList } from './PeerList'
 import { RemoteRandomGraphNode } from './RemoteRandomGraphNode'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
 import { NetworkRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { StreamHandshakeRequest, StreamHandshakeResponse } from '../proto/packages/trackerless-network/protos/NetworkRpc'
+import { Logger } from '@streamr/utils'
 
 interface HandshakerParams {
     ownPeerDescriptor: PeerDescriptor
@@ -12,8 +15,11 @@ interface HandshakerParams {
     targetNeighbors: PeerList
     nearbyContactPool: PeerList
     randomContactPool: PeerList
-    protoRpcClient: ProtoRpcClient<NetworkRpcClient>
+    protoRpcClient: ProtoRpcClient<NetworkRpcClient>,
+    nodeName?: string
 }
+
+const logger = new Logger(module)
 
 export class Handshaker {
 
@@ -26,7 +32,7 @@ export class Handshaker {
     private readonly ongoingHandshakes: Set<string> = new Set()
     private readonly protoRpcClient: ProtoRpcClient<NetworkRpcClient>
 
-    constructor(params: HandshakerParams) {
+    constructor(private params: HandshakerParams) {
         this.nearbyContactPool = params.nearbyContactPool
         this.randomContactPool = params.randomContactPool
         this.targetNeighbors = params.targetNeighbors
@@ -38,7 +44,19 @@ export class Handshaker {
 
     public async findParallelTargetsAndHandshake(excludedIds: string[]): Promise<string[]> {
         const exclude = excludedIds.concat(this.targetNeighbors.getStringIds())
-        const targetNeighbors = this.nearbyContactPool.getClosestAndFurthest(exclude)
+
+        const targetNeighbors: RemoteRandomGraphNode[] = []
+
+        while (targetNeighbors.length < 4 && this.nearbyContactPool.size(exclude) > 0) {
+            const near = this.nearbyContactPool.getRandom(exclude)
+            if (near) {
+                targetNeighbors.push(near)
+                const id = PeerID.fromValue(near!.getPeerDescriptor().kademliaId).toKey()
+                exclude.push(id)
+            }
+        }
+
+        /*const targetNeighbors = this.nearbyContactPool.getClosestAndFurthest(exclude)
         while (targetNeighbors.length < 2 && this.randomContactPool.size(exclude) > 0) {
             const random = this.randomContactPool.getRandom(exclude)
             if (random) {
@@ -47,8 +65,10 @@ export class Handshaker {
                 exclude.push(id)
             }
         }
-        targetNeighbors.forEach((contact) => this.ongoingHandshakes.add(PeerID.fromValue(contact.getPeerDescriptor().kademliaId).toKey()))
+        */
 
+        targetNeighbors.forEach((contact) => this.ongoingHandshakes.add(PeerID.fromValue(contact.getPeerDescriptor().kademliaId).toKey()))
+        logger.info('hajoa findParallerTargets ' + targetNeighbors.length)
         const promises = [...targetNeighbors.values()].map(async (target: RemoteRandomGraphNode, i) => {
             const otherPeer = i === 0 ? targetNeighbors[1] : targetNeighbors[0]
             const otherPeerStringId = targetNeighbors.length > 1 ? PeerID.fromValue(otherPeer.getPeerDescriptor().kademliaId).toKey() : undefined
@@ -89,10 +109,12 @@ export class Handshaker {
             concurrentStringId
         )
         if (result.accepted) {
+            logger.info(this.params.nodeName + ' hajoa handhsake accepted')
             this.targetNeighbors.add(targetNeighbor)
             this.connectionLocker.lockConnection(targetNeighbor.getPeerDescriptor(), this.randomGraphId)
         }
         if (result.interleaveTarget) {
+            //logger.info('hajoa interleave handhsake requested')
             const interleaveTarget = new RemoteRandomGraphNode(
                 result.interleaveTarget,
                 this.randomGraphId,
@@ -117,7 +139,10 @@ export class Handshaker {
             interleavingFrom
         )
         if (result.accepted) {
+
             this.targetNeighbors.add(targetNeighbor)
+            logger.info(this.params.nodeName + ' hajoa interleave handhsake accepted, targetNeighbors.length ' +
+                this.targetNeighbors.getStringIds().length)
             this.connectionLocker.lockConnection(targetNeighbor.getPeerDescriptor(), this.randomGraphId)
         }
         this.ongoingHandshakes.delete(targetStringId)
@@ -137,7 +162,7 @@ export class Handshaker {
             this.targetNeighbors.remove(furthest.getPeerDescriptor())
             this.connectionLocker.unlockConnection(furthestPeerDescriptor!, this.randomGraphId)
         } else {
-            console.info('furthest was falsy')
+            logger.info('furthest was falsy')
         }
 
         this.targetNeighbors.add(requester)

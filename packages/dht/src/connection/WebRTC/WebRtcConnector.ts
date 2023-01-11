@@ -4,19 +4,19 @@ import {
     PeerDescriptor,
     RtcAnswer,
     RtcOffer, WebRtcConnectionRequest
-} from '../../proto/DhtRpc'
+} from '../../proto/packages/dht/protos/DhtRpc'
 import { Empty } from '../../proto/google/protobuf/empty'
 import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { NodeWebRtcConnection } from './NodeWebRtcConnection'
 import { RemoteWebrtcConnector } from './RemoteWebrtcConnector'
-import { WebRtcConnectorServiceClient } from '../../proto/DhtRpc.client'
+import { WebRtcConnectorServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { DescriptionType } from 'node-datachannel'
 import { ManagedWebRtcConnection } from '../ManagedWebRtcConnection'
 import { Logger } from '@streamr/utils'
 import * as Err from '../../helpers/errors'
-import { IWebRtcConnectorService } from "../../proto/DhtRpc.server"
+import { IWebRtcConnectorService } from "../../proto/packages/dht/protos/DhtRpc.server"
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ManagedConnection } from '../ManagedConnection'
 import { toProtoRpcClient } from '@streamr/proto-rpc'

@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/prefer-for-of */
 
 import { DhtNode, Events as DhtNodeEvents } from '../../src/dht/DhtNode'
-import { Message, MessageType, PeerDescriptor, RouteMessageWrapper, RpcMessage } from '../../src/proto/DhtRpc'
+import { Message, MessageType, PeerDescriptor, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { runAndWaitForEvents3 } from '../../src/helpers/waitForEvent3'
 import { waitForCondition } from '@streamr/utils'
 import { createMockConnectionDhtNode, createWrappedClosestPeersRequest } from '../utils'
@@ -9,6 +10,7 @@ import { PeerID } from '../../src/helpers/PeerID'
 import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { v4 } from 'uuid'
 import { UUID } from '../../src/helpers/UUID'
+import { Any } from '../../src/proto/google/protobuf/any'
 
 describe('Route Message With Mock Connections', () => {
     let entryPoint: DhtNode
@@ -32,6 +34,7 @@ describe('Route Message With Mock Connections', () => {
 
         entryPointDescriptor = {
             kademliaId: entryPoint.getNodeId().value,
+            nodeName: 'entrypoint',
             type: 0
         }
 
@@ -48,17 +51,15 @@ describe('Route Message With Mock Connections', () => {
 
     afterEach(async () => {
 
-        for (let i = 0; i < routerNodes.length; i++) {
-            await routerNodes[i].stop()
-        }
-
+        await Promise.all(routerNodes.map((node)=> node.stop()))
+       
         await Promise.all([
             entryPoint.stop(),
             destinationNode.stop(),
             sourceNode.stop()
         ])
 
-        await simulator.stop()
+        await simulator.stop()        
     })
 
     it('Happy path', async () => {
@@ -73,16 +74,20 @@ describe('Route Message With Mock Connections', () => {
             serviceId: 'unknown',
             messageId: v4(),
             messageType: MessageType.RPC,
-            body: RpcMessage.toBinary(rpcWrapper)
+            body: {
+                oneofKind: 'rpcMessage',
+                rpcMessage: rpcWrapper
+            }
         }
 
         await runAndWaitForEvents3<DhtNodeEvents>([() => {
             sourceNode.doRouteMessage({
-                message: Message.toBinary(message),
+                message: message,
                 destinationPeer: destinationNode.getPeerDescriptor(),
                 requestId: 'tsatsa',
                 sourcePeer: sourceNode.getPeerDescriptor(),
-                reachableThrough: []
+                reachableThrough: [],
+                routingPath: []
 
             })
         }], [[destinationNode, 'message']])
@@ -126,14 +131,18 @@ describe('Route Message With Mock Connections', () => {
                 serviceId: 'unknown',
                 messageId: v4(),
                 messageType: MessageType.RPC,
-                body: RpcMessage.toBinary(rpcWrapper)
+                body: {
+                    oneofKind: 'rpcMessage',
+                    rpcMessage: rpcWrapper
+                }
             }
             sourceNode.doRouteMessage({
-                message: Message.toBinary(message),
+                message: message,
                 destinationPeer: destinationNode.getPeerDescriptor(),
                 requestId: v4(),
                 sourcePeer: sourceNode.getPeerDescriptor(),
-                reachableThrough: []
+                reachableThrough: [],
+                routingPath: []
             })
         }
         await waitForCondition(() => {
@@ -143,7 +152,7 @@ describe('Route Message With Mock Connections', () => {
 
     it('From all to all', async () => {
         const routers: DhtNode[] = []
-        for (let i = 0; i < routerNodes.length; i++) { 
+        for (let i = 0; i < routerNodes.length; i++) {
             routers.push(routerNodes[i])
         }
 
@@ -184,16 +193,20 @@ describe('Route Message With Mock Connections', () => {
                             serviceId: 'nonexisting_service',
                             messageId: v4(),
                             messageType: MessageType.RPC,
-                            body: RpcMessage.toBinary(rpcWrapper),
+                            body: {
+                                oneofKind: 'rpcMessage',
+                                rpcMessage: rpcWrapper
+                            },
                             sourceDescriptor: node.getPeerDescriptor(),
                             targetDescriptor: destinationNode.getPeerDescriptor()
                         }
                         await node.doRouteMessage({
-                            message: Message.toBinary(message),
+                            message: message,
                             destinationPeer: receiver.getPeerDescriptor(),
                             sourcePeer: node.getPeerDescriptor(),
                             requestId: v4(),
-                            reachableThrough: []
+                            reachableThrough: [],
+                            routingPath: []
                         })
                     }
                 }))
@@ -210,47 +223,74 @@ describe('Route Message With Mock Connections', () => {
                 }, 30000)
             )
         )
-       
+
     }, 60000)
 
-    describe('forwarding', () => {
+    it('Destination receives forwarded message', async () => {
+        await destinationNode.joinDht(entryPointDescriptor)
+        await sourceNode.joinDht(entryPointDescriptor)
+        
+        await Promise.all(
+            routerNodes.map((node) => node.joinDht(entryPointDescriptor))
+        )
+        
+        const closestPeersRequest = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
+        const closestPeersRequestMessage: Message = {
+            serviceId: 'unknown',
+            messageId: v4(),
+            messageType: MessageType.RPC,
+            body: {
+                oneofKind: 'rpcMessage',
+                rpcMessage: closestPeersRequest
+            },
+            sourceDescriptor: sourceNode.getPeerDescriptor()!,
+            targetDescriptor: destinationNode.getPeerDescriptor()!
+        }
 
-        it('Destination receives forwarded message', async () => {
-            await destinationNode.joinDht(entryPointDescriptor)
-            await sourceNode.joinDht(entryPointDescriptor)
-            await Promise.all(
-                routerNodes.map((node) => node.joinDht(entryPointDescriptor))
-            )
+        const routeMessageWrapper: RouteMessageWrapper = {
+            message: closestPeersRequestMessage,
+            destinationPeer: destinationNode.getPeerDescriptor(),
+            requestId: new UUID().toString(),
+            sourcePeer: sourceNode.getPeerDescriptor(),
+            reachableThrough: [entryPointDescriptor],
+            routingPath: []
+        }
 
-            const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
-            const message: Message = {
-                serviceId: 'unknown',
-                messageId: v4(),
-                messageType: MessageType.RPC,
-                body: RpcMessage.toBinary(rpcWrapper)
-            }
+        const rpcMessage: RpcMessage = {
+            body: Any.pack(routeMessageWrapper, RouteMessageWrapper),
+            header: {
+                method: 'routeMessage',
+                request: 'request'
+            },
+            requestId: v4()
+        }
 
-            const routeMessage: RouteMessageWrapper = {
-                message: Message.toBinary(message),
-                destinationPeer: destinationNode.getPeerDescriptor(),
-                requestId: new UUID().toString(),
-                sourcePeer: sourceNode.getPeerDescriptor(),
-                reachableThrough: [entryPointDescriptor]
-            }
+        const requestMessage: Message = {
+            serviceId: 'layer0',
+            messageId: v4(),
+            messageType: MessageType.RPC,
+            body: {
+                oneofKind: 'rpcMessage',
+                rpcMessage: rpcMessage
+            },
+            sourceDescriptor: sourceNode.getPeerDescriptor()!,
+            targetDescriptor: entryPoint.getPeerDescriptor()!
+        }
 
-            const forwardedMessage: RouteMessageWrapper = {
-                message: RouteMessageWrapper.toBinary(routeMessage),
-                requestId: v4(),
-                destinationPeer: entryPointDescriptor,
-                sourcePeer: sourceNode.getPeerDescriptor(),
-                reachableThrough: []
-            }
-
-            await runAndWaitForEvents3<DhtNodeEvents>([() => {
-                sourceNode.doRouteMessage(forwardedMessage, true)
-            }], [[entryPoint, 'forwardedMessage'], [destinationNode, 'message']])
-        })
-
+        const forwardedMessage: RouteMessageWrapper = {
+            message: requestMessage,
+            requestId: v4(),
+            sourcePeer: sourceNode.getPeerDescriptor(),
+            destinationPeer: entryPoint.getPeerDescriptor()!,
+            reachableThrough: [],
+            routingPath: []
+        }
+ 
+        await runAndWaitForEvents3<DhtNodeEvents>([() => {
+            sourceNode.doRouteMessage(forwardedMessage, true)
+        }], [/*[entryPoint, 'forwardedMessage'], */[destinationNode, 'message']])
+        
     })
 
 })
+

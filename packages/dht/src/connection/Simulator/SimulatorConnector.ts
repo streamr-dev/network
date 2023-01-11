@@ -7,7 +7,7 @@ import { ConnectionType } from '../IConnection'
 
 import {
     PeerDescriptor,
-} from '../../proto/DhtRpc'
+} from '../../proto/packages/dht/protos/DhtRpc'
 import { Logger } from '@streamr/utils'
 import { ManagedConnection } from '../ManagedConnection'
 import { PeerIDKey } from '../../helpers/PeerID'
@@ -83,7 +83,7 @@ export class SimulatorConnector {
                 managedConnection.acceptHandshake()
             } else {
                 managedConnection.rejectHandshake('Duplicate connection')
-                managedConnection.close()
+                managedConnection.destroy()
             }
             //this.emit('newConnection', managedConnection)
         })

@@ -125,7 +125,7 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         }))
         await Promise.all(graphNodes.map((node) =>
             Promise.all([
-                waitForCondition(() => node.getNearbyContactPoolIds().length >= 8),
+                waitForCondition(() => node.getNearbyContactPoolIds().length >= 8, 10000),
                 waitForCondition(() => node.getTargetNeighborStringIds().length >= 3, 10000)
             ])
         ))

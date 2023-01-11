@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/member-delimiter-style */
+
 import { EventEmitter } from 'events'
 import { DhtNode, PeerID, PeerDescriptor, DhtPeer, ListeningRpcCommunicator, ITransport, ConnectionLocker } from '@streamr/dht'
 import {
@@ -34,7 +36,8 @@ export interface RandomGraphNodeParams {
     layer1: DhtNode
     P2PTransport: ITransport
     connectionLocker: ConnectionLocker
-    ownPeerDescriptor: PeerDescriptor
+    ownPeerDescriptor: PeerDescriptor,
+    nodeName?: string
 }
 
 const logger = new Logger(module)
@@ -46,7 +49,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     private readonly PEER_VIEW_SIZE = 20
     private readonly randomGraphId: string // StreamPartID
     private readonly layer1: DhtNode
-    private readonly nearbyContactPool: PeerList
+    public readonly nearbyContactPool: PeerList
     private readonly randomContactPool: PeerList
     private readonly targetNeighbors: PeerList
     private rpcCommunicator: ListeningRpcCommunicator | null = null
@@ -60,15 +63,15 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
 
     private readonly propagation: Propagation
 
-    constructor(params: RandomGraphNodeParams) {
+    constructor(private config: RandomGraphNodeParams) {
         super()
-        this.randomGraphId = params.randomGraphId
-        this.layer1 = params.layer1
-        this.P2PTransport = params.P2PTransport
-        this.connectionLocker = params.connectionLocker
+        this.randomGraphId = config.randomGraphId
+        this.layer1 = config.layer1
+        this.P2PTransport = config.P2PTransport
+        this.connectionLocker = config.connectionLocker
 
         this.duplicateDetector = new DuplicateMessageDetector(10000)
-        this.ownPeerDescriptor = params.ownPeerDescriptor
+        this.ownPeerDescriptor = config.ownPeerDescriptor
 
         const peerId = PeerID.fromValue(this.ownPeerDescriptor.kademliaId)
         this.nearbyContactPool = new PeerList(peerId, this.PEER_VIEW_SIZE)
@@ -111,18 +114,27 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
             randomContactPool: this.randomContactPool!,
             targetNeighbors: this.targetNeighbors!,
             connectionLocker: this.connectionLocker,
-            protoRpcClient: toProtoRpcClient(new NetworkRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
+            protoRpcClient: toProtoRpcClient(new NetworkRpcClient(this.rpcCommunicator!.getRpcClientTransport())),
+            nodeName: this.config.nodeName
 
         })
         this.registerDefaultServerMethods()
         const candidates = this.getNewNeighborCandidates()
         if (candidates.length) {
             this.newContact(candidates[0], candidates)
+        } else {
+            logger.warn('layer1 had no closest contacts in the beginning')
         }
-        this.findNeighbors([]).catch(() => { })
+
+        this.findNeighbors([]).catch((e) => {
+            logger.error('findNeighbors failed ' + e)
+        })
+
+        /*
         this.neighborUpdateIntervalRef = setTimeout(async () => {
             await this.updateNeighborInfo()
         }, 20)
+        */
 
     }
 
@@ -162,7 +174,8 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         if (this.stopped) {
             return
         }
-        logger.trace(`Finding new neighbors...`)
+        logger.info(this.config.nodeName + ' hajoa Finding new neighbors, targetPeers: ' + this.targetNeighbors.size() +
+            ' nearby: ' + this.nearbyContactPool.size() + ' exluded: ' + excluded)
         let newExcludes: string[]
 
         if (this.targetNeighbors!.size() + this.handshaker!.getOngoingHandshakes().size < this.N - 2) {
@@ -173,12 +186,14 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
             newExcludes = excluded
         }
 
-        if (this.targetNeighbors!.size() < this.N && newExcludes.length < this.nearbyContactPool!.size()) {
+        if (this.targetNeighbors!.size() < this.N /* && newExcludes.length < this.nearbyContactPool!.size()*/) {
             this.findNeighborsIntervalRef = setTimeout(() => {
                 if (this.findNeighborsIntervalRef) {
                     clearTimeout(this.findNeighborsIntervalRef)
                 }
-                this.findNeighbors(newExcludes).catch(() => { })
+                this.findNeighbors(newExcludes).catch((e) => {
+                    logger.error(e)
+                })
                 this.findNeighborsIntervalRef = null
             }, 250)
         } else {
@@ -274,6 +289,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
 
     getTargetNeighborStringIds(): string[] {
         if (!this.started && this.stopped) {
+            logger.info('hajoa not started or stopped')
             return []
         }
         return this.targetNeighbors!.getStringIds()
@@ -337,7 +353,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
 
     // INetworkRpc server method
     async handshake(request: StreamHandshakeRequest, _context: ServerCallContext): Promise<StreamHandshakeResponse> {
-        //logger.info('handshake()')
+        //logger.info('hajoa handshake()')
         const requester = new RemoteRandomGraphNode(
             request.senderDescriptor!,
             request.randomGraphId,

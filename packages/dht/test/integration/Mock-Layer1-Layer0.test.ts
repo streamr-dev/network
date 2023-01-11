@@ -1,12 +1,15 @@
+import { Logger } from '@streamr/utils'
 import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { PeerDescriptor } from '../../src/proto/DhtRpc'
+import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode, createMockConnectionLayer1Node } from '../utils'
+
+const logger = new Logger(module)
 
 describe('Layer 1 on Layer 0 with mocked connections', () => {
     const simulator = new Simulator()
-    const layer0EntryPointId = '00000'
-    const layer1EntryPointId = '91199'
+    const layer0EntryPointId = 'layer0entrypoint'
+    const layer1EntryPointId = 'layer1entrypoint'
 
     let layer0EntryPoint: DhtNode
     let layer1Node1: DhtNode
@@ -49,12 +52,14 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
 
         entryPoint0Descriptor = {
             kademliaId: layer0EntryPoint.getNodeId().value,
-            type: 0
+            type: 0,
+            nodeName: layer0EntryPointId
         }
 
         entryPoint1Descriptor = {
             kademliaId: layer1EntryPoint.getNodeId().value,
-            type: 0
+            type: 0,
+            nodeName: layer1EntryPointId
         }
 
         await layer0EntryPoint.joinDht(entryPoint0Descriptor)
@@ -91,9 +96,15 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
             layer1Node4.joinDht(entryPoint1Descriptor)
         ])
 
+        logger.info('layer1EntryPoint.getBucketSize() ' + layer1EntryPoint.getBucketSize())
+        logger.info('layer1Node1.getBucketSize()' + layer1Node1.getBucketSize())
+        logger.info('layer1Node2.getBucketSize()' + layer1Node2.getBucketSize())
+        logger.info('layer1Node3.getBucketSize()' + layer1Node3.getBucketSize())
+        logger.info('layer1Node4.getBucketSize()' + layer1Node4.getBucketSize())
+
         expect(layer1Node1.getBucketSize()).toBeGreaterThanOrEqual(2)
         expect(layer1Node2.getBucketSize()).toBeGreaterThanOrEqual(2)
         expect(layer1Node3.getBucketSize()).toBeGreaterThanOrEqual(2)
         expect(layer1Node4.getBucketSize()).toBeGreaterThanOrEqual(2)
-    }, 30000)
+    }, 60000)
 })

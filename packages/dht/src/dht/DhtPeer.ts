@@ -1,15 +1,16 @@
-import { IDhtRpcServiceClient } from '../proto/DhtRpc.client'
-import { ClosestPeersRequest, LeaveNotice, PeerDescriptor, PingRequest, RouteMessageWrapper } from '../proto/DhtRpc'
+import { IDhtRpcServiceClient } from '../proto/packages/dht/protos/DhtRpc.client'
+import { ClosestPeersRequest, LeaveNotice, PeerDescriptor, PingRequest, RouteMessageWrapper } from '../proto/packages/dht/protos/DhtRpc'
 import { v4 } from 'uuid'
 import { PeerID } from '../helpers/PeerID'
 import { DhtRpcOptions } from '../rpc-protocol/DhtRpcOptions'
 import { Logger } from '@streamr/utils'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
+import { DhtNode } from './DhtNode'
 
 const logger = new Logger(module)
 
 // Fields required by objects stored in the k-bucket library
-interface KBucketContact {
+export interface KBucketContact {
     id: Uint8Array
     vectorClock: number
 }
@@ -39,7 +40,12 @@ export class DhtPeer implements KBucketContact {
     private readonly serviceId: string
     private readonly ownPeerDescriptor: PeerDescriptor
 
-    constructor(ownPeerDescriptor: PeerDescriptor, peerDescriptor: PeerDescriptor, client: ProtoRpcClient<IDhtRpcServiceClient>, serviceId: string) {
+    constructor(ownPeerDescriptor: PeerDescriptor,
+        peerDescriptor: PeerDescriptor,
+        client: ProtoRpcClient<IDhtRpcServiceClient>,
+        serviceId: string,
+        private dhtNode?: DhtNode
+    ) {
         this.ownPeerDescriptor = ownPeerDescriptor
         this.peerId = PeerID.fromValue(peerDescriptor.kademliaId)
         this.peerDescriptor = peerDescriptor
@@ -72,7 +78,8 @@ export class DhtPeer implements KBucketContact {
         }
         const options: DhtRpcOptions = {
             sourceDescriptor: this.ownPeerDescriptor,
-            targetDescriptor: this.peerDescriptor
+            targetDescriptor: this.peerDescriptor,
+            timeout: 10000
         }
         try {
             const pong = await this.dhtClient.ping(request, options)
@@ -81,6 +88,14 @@ export class DhtPeer implements KBucketContact {
             }
         } catch (err) {
             logger.debug(`ping failed on ${this.serviceId} to ${this.peerId.toKey()}: ${err}`)
+            /*
+            if (this.dhtNode) {
+                
+                    let conn = this.dhtNode.connectionManager!.getConnectionTo(this.peerId.toKey())
+                    logger.error('conn got')
+                    conn.send(Uint8Array.from([1,9,7,9]))
+                    logger.error('sent 1979')
+            }*/
         }
         return false
     }
@@ -92,7 +107,8 @@ export class DhtPeer implements KBucketContact {
             previousPeer: params.previousPeer,
             message: params.message,
             requestId: params.requestId || v4(),
-            reachableThrough: params.reachableThrough || []
+            reachableThrough: params.reachableThrough || [],
+            routingPath: params.routingPath
         }
         const options: DhtRpcOptions = {
             sourceDescriptor: params.previousPeer as PeerDescriptor,
@@ -116,6 +132,38 @@ export class DhtPeer implements KBucketContact {
         return true
     }
 
+    async findRecursively(params: RouteMessageWrapper): Promise<boolean> {
+        const message: RouteMessageWrapper = {
+            destinationPeer: params.destinationPeer,
+            sourcePeer: params.sourcePeer,
+            previousPeer: params.previousPeer,
+            message: params.message,
+            requestId: params.requestId || v4(),
+            reachableThrough: params.reachableThrough || [],
+            routingPath: params.routingPath
+        }
+        const options: DhtRpcOptions = {
+            sourceDescriptor: params.previousPeer as PeerDescriptor,
+            targetDescriptor: this.peerDescriptor as PeerDescriptor,
+            timeout: 10000
+        }
+        try {
+            const ack = await this.dhtClient.findRecursively(message, options)
+            if (ack.error!.length > 0) {
+                return false
+            }
+        } catch (err) {
+            const fromNode = params.previousPeer ?
+                PeerID.fromValue(params.previousPeer!.kademliaId).toKey() : PeerID.fromValue(params.sourcePeer!.kademliaId).toKey()
+
+            logger.debug(
+                `Failed to send routeMessage from ${fromNode} to ${this.peerId.toKey()} with: ${err}`
+            )
+            return false
+        }
+        return true
+    }
+
     async forwardMessage(params: RouteMessageWrapper): Promise<boolean> {
         const message: RouteMessageWrapper = {
             destinationPeer: params.destinationPeer,
@@ -123,7 +171,8 @@ export class DhtPeer implements KBucketContact {
             previousPeer: params.previousPeer,
             message: params.message,
             requestId: params.requestId || v4(),
-            reachableThrough: params.reachableThrough || []
+            reachableThrough: params.reachableThrough || [],
+            routingPath: params.routingPath
         }
         const options: DhtRpcOptions = {
             sourceDescriptor: params.previousPeer as PeerDescriptor,

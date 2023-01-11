@@ -49,6 +49,7 @@ describe('Propagation', () => {
                 graph.on(Event.MESSAGE, () => { totalReceived += 1 })
                 dhtNodes.push(dht)
                 randomGraphNodes.push(graph)
+                return
             })
 
         }))
