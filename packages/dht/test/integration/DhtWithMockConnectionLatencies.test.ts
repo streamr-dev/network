@@ -2,6 +2,9 @@ import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils'
 import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator'
+import { Logger } from '@streamr/utils'
+
+const logger = new Logger(module)
 
 describe('Mock connection Dht joining with latencies', () => {
     let entryPoint: DhtNode
@@ -40,6 +43,12 @@ describe('Mock connection Dht joining with latencies', () => {
         await Promise.all(
             nodes.map((node) => node.joinDht(entrypointDescriptor))
         )
+        nodes.forEach((node) => {
+            logger.info('node.getBucketSize() ' + node.getBucketSize())
+            //expect(node.getBucketSize()).toBeGreaterThanOrEqual(node.getK() - 1)
+            //expect(node.getNeighborList().getSize()).toBeGreaterThanOrEqual(node.getBucketSize())
+        })
+
         nodes.forEach((node) => {
             expect(node.getBucketSize()).toBeGreaterThanOrEqual(node.getK() - 1)
             //expect(node.getNeighborList().getSize()).toBeGreaterThanOrEqual(node.getBucketSize())
