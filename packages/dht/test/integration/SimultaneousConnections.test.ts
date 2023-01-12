@@ -81,7 +81,7 @@ describe('SimultaneousConnections', () => {
         await waitForCondition(() => simulatorTransport1.hasConnection(peerDescriptor2))
     })
 
-    describe('Websocket', () => {
+    describe('Websocket 2 servers', () => {
 
         let connectionManager1: ConnectionManager
         let connectionManager2: ConnectionManager
@@ -129,6 +129,82 @@ describe('SimultaneousConnections', () => {
         })
 
         it('Simultaneous Connections', async () => {
+            const msg1: Message = {
+                ...baseMsg,
+                targetDescriptor: wsPeer2
+            }
+            const msg2: Message = {
+                ...baseMsg,
+                targetDescriptor: wsPeer1
+            }
+
+            const promise1 = new Promise<void>((resolve, _reject) => {
+                connectionManager1.on('message', async (message: Message) => {
+                    expect(message.messageType).toBe(MessageType.RPC)
+                    resolve()
+                })
+            })
+            const promise2 = new Promise<void>((resolve, _reject) => {
+                connectionManager2.on('message', async (message: Message) => {
+                    expect(message.messageType).toBe(MessageType.RPC)
+                    resolve()
+                })
+            })
+
+            await Promise.all([
+                promise1,
+                promise2,
+                connectionManager1.send(msg1),
+                connectionManager2.send(msg2)
+            ])
+
+            await waitForCondition(() => connectionManager1.hasConnection(wsPeer2))
+            await waitForCondition(() => connectionManager2.hasConnection(wsPeer1))
+        })
+    })
+
+    describe('Websocket 1 server (ConnectionRequests)', () => {
+
+        let connectionManager1: ConnectionManager
+        let connectionManager2: ConnectionManager
+
+        const wsPeer1: PeerDescriptor = {
+            kademliaId: PeerID.fromString('mock1').value,
+            nodeName: 'mock1WebSocketServer',
+            type: NodeType.NODEJS,
+            websocket: {
+                ip: 'localhost',
+                port: 43432
+            }
+        }
+
+        const wsPeer2: PeerDescriptor = {
+            kademliaId: PeerID.fromString('mock2').value,
+            nodeName: 'mock2WebSocketClient',
+            type: NodeType.NODEJS
+        }
+
+        beforeEach(async () => {
+            connectionManager1 = new ConnectionManager({
+                transportLayer: simulatorTransport1,
+                ownPeerDescriptor: wsPeer1,
+                webSocketPort: 43432,
+                entryPoints: [wsPeer1]
+            })
+            connectionManager2 = new ConnectionManager({
+                transportLayer: simulatorTransport2,
+                ownPeerDescriptor: wsPeer2
+            })
+            await connectionManager1.start(() => wsPeer1)
+            await connectionManager2.start(() => wsPeer2)
+        })
+
+        afterEach(async () => {
+            await connectionManager1.stop()
+            await connectionManager2.stop()
+        })
+
+        it.only('Simultaneous Connections', async () => {
             const msg1: Message = {
                 ...baseMsg,
                 targetDescriptor: wsPeer2
