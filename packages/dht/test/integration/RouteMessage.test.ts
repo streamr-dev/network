@@ -51,18 +51,18 @@ describe('Route Message With Mock Connections', () => {
 
     afterEach(async () => {
 
-        await Promise.all(routerNodes.map((node)=> node.stop()))
-       
+        await Promise.all(routerNodes.map((node) => node.stop()))
+
         await Promise.all([
             entryPoint.stop(),
             destinationNode.stop(),
             sourceNode.stop()
         ])
 
-        await simulator.stop()        
+        await simulator.stop()
     })
 
-    it.only('Happy path', async () => {
+    it('Happy path', async () => {
         await destinationNode.joinDht(entryPointDescriptor)
         await sourceNode.joinDht(entryPointDescriptor)
         await Promise.all(
@@ -77,7 +77,9 @@ describe('Route Message With Mock Connections', () => {
             body: {
                 oneofKind: 'rpcMessage',
                 rpcMessage: rpcWrapper
-            }
+            },
+            sourceDescriptor: sourceNode.getPeerDescriptor(),
+            targetDescriptor: destinationNode.getPeerDescriptor()
         }
 
         await runAndWaitForEvents3<DhtNodeEvents>([() => {
@@ -90,8 +92,8 @@ describe('Route Message With Mock Connections', () => {
                 routingPath: []
 
             })
-        }], [[destinationNode, 'message']])
-    }, 10000)
+        }], [[destinationNode, 'message']], 20000)
+    }, 30000)
     /* ToDo: replace this with a case where no candidates
     can be found 
 
@@ -134,7 +136,9 @@ describe('Route Message With Mock Connections', () => {
                 body: {
                     oneofKind: 'rpcMessage',
                     rpcMessage: rpcWrapper
-                }
+                },
+                sourceDescriptor: sourceNode.getPeerDescriptor(),
+                targetDescriptor: destinationNode.getPeerDescriptor()
             }
             sourceNode.doRouteMessage({
                 message: message,
@@ -229,11 +233,11 @@ describe('Route Message With Mock Connections', () => {
     it('Destination receives forwarded message', async () => {
         await destinationNode.joinDht(entryPointDescriptor)
         await sourceNode.joinDht(entryPointDescriptor)
-        
+
         await Promise.all(
             routerNodes.map((node) => node.joinDht(entryPointDescriptor))
         )
-        
+
         const closestPeersRequest = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
         const closestPeersRequestMessage: Message = {
             serviceId: 'unknown',
@@ -285,11 +289,11 @@ describe('Route Message With Mock Connections', () => {
             reachableThrough: [],
             routingPath: []
         }
- 
+
         await runAndWaitForEvents3<DhtNodeEvents>([() => {
             sourceNode.doRouteMessage(forwardedMessage, true)
         }], [/*[entryPoint, 'forwardedMessage'], */[destinationNode, 'message']])
-        
+
     })
 
 })
