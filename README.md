@@ -161,7 +161,7 @@ beta version. Use `latest` instead when publishing a stable version.
 ```bash
 
 # Generate & upload API docs (if a major/minor version update)
-cd ..
+cd packages/client
 npm run docs
 aws s3 cp ./docs s3://api-docs.streamr.network/client/vX.Y --recursive --profile streamr-api-docs-upload
 ```
