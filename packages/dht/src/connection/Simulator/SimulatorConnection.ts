@@ -35,6 +35,7 @@ export class SimulatorConnection extends Connection implements IConnection {
 
     public close(): void {
         if (!this.stopped) {
+            logger.info(this.ownPeerDescriptor.nodeName + ' close()')
             this.simulator.disconnect(this)
                 .finally(() => {
                     this.doDisconnect()
@@ -69,6 +70,7 @@ export class SimulatorConnection extends Connection implements IConnection {
 
     public handleIncomingDisconnection(): void {
         if (!this.stopped) {
+            logger.info(this.ownPeerDescriptor.nodeName + ' handleIncomingDisconnection()')
             this.doDisconnect()
         } else {
             logger.error('tried to call handleIncomingDisconnection() a stopped connection')
@@ -77,14 +79,16 @@ export class SimulatorConnection extends Connection implements IConnection {
 
     public destroy(): void {
         if (!this.stopped) {
+            logger.info(this.ownPeerDescriptor.nodeName + ' destroy()')
             this.removeAllListeners()
             this.close()
         } else {
-            logger.error('tried to call destroy() a stopped connection')
+            logger.error(this.ownPeerDescriptor.nodeName + ' tried to call destroy() a stopped connection')
         }
     }
 
     private doDisconnect() {
+        logger.info(this.ownPeerDescriptor.nodeName + ' doDisconnect()')
         this.stopped = true
         this.emit('disconnected')
         this.removeAllListeners()
