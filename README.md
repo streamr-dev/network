@@ -184,3 +184,12 @@ git push origin broker/vX.Y.Z
 npm run build
 npm publish
 ```
+
+#### Docker release
+
+1. Go to https://github.com/streamr-dev/network/actions/workflows/release.yml
+2. From "run workflow" dropdown:
+   - select `main` branch
+   - click "Run workflow"
+3. You can manually cancel other queued workflows (triggered by possible previous commits to `main`)
+4. After ~1 hour a new release is ready, annotated with `latest` tag: https://hub.docker.com/r/streamr/broker-node/tags
