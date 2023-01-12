@@ -204,7 +204,7 @@ describe('SimultaneousConnections', () => {
             await connectionManager2.stop()
         })
 
-        it.only('Simultaneous Connections', async () => {
+        it('Simultaneous Connections', async () => {
             const msg1: Message = {
                 ...baseMsg,
                 targetDescriptor: wsPeer2
