@@ -62,7 +62,7 @@ export class ManagedConnection extends EventEmitter<Events> {
             this.handshaker = new Handshaker(this.ownPeerDescriptor, this.protocolVersion, outgoingConnection)
 
             this.handshaker.once('handshakeFailed', (errorMessage) => {
-                logger.error('IL handshake failed for outgoing connection ' + errorMessage + ' ' +
+                logger.info('IL handshake failed for outgoing connection ' + errorMessage + ' ' +
                     this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + ' objectid: ' + this.objectId
                     + ' outputBuffer.length: ' + this.outputBuffer.length)
                 this.emit('handshakeFailed')
@@ -70,7 +70,7 @@ export class ManagedConnection extends EventEmitter<Events> {
             })
 
             this.handshaker.on('handshakeCompleted', (peerDescriptor: PeerDescriptor) => {
-                logger.error('handshake completed for outgoing connection ' + this.ownPeerDescriptor.nodeName +
+                logger.info('handshake completed for outgoing connection ' + this.ownPeerDescriptor.nodeName +
                     ', ' + this.peerDescriptor?.nodeName + ' objectid: ' + this.objectId
                     + ' outputBuffer.length: ' + this.outputBuffer.length)
 
@@ -218,7 +218,7 @@ export class ManagedConnection extends EventEmitter<Events> {
     }
 
     private onDisconnected(code?: number, reason?: string): void {
-        logger.error('IL onDisconnected ' + code + ' ' + reason)
+        logger.info('IL onDisconnected ' + code + ' ' + reason)
         this.doDisconnect()
     }
 
@@ -274,7 +274,7 @@ export class ManagedConnection extends EventEmitter<Events> {
     }
 
     public reportBufferSendingByOtherConnectionFailed(): void {
-        logger.error('IL reportBufferSendingByOtherConnectionFailed')
+        logger.info('IL reportBufferSendingByOtherConnectionFailed')
         this.doDisconnect()
     }
 
@@ -314,7 +314,7 @@ export class ManagedConnection extends EventEmitter<Events> {
         } else if (this.incomingConnection) {
             this.incomingConnection?.close()
         } else {
-            logger.error('IL close')
+            logger.info('IL close')
             this.doDisconnect()
         }
     }

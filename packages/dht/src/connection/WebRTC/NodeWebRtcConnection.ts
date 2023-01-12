@@ -151,7 +151,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
             
             this.closed = true
             
-            this.emit('disconnected')
+            this.emit('disconnected', undefined, reason)
             this.removeAllListeners()
             
             if (this.connectingTimeoutRef) {
