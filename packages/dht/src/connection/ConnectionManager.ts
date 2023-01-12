@@ -31,7 +31,6 @@ import { ConnectionLockHandler } from './ConnectionLockHandler'
 import { SetDuplicateDetector } from '../dht/SetDuplicateDetector'
 import { SortedContactList } from '../dht/contact/SortedContactList'
 import { Contact } from '../dht/contact/Contact'
-import { ConnectionID } from './IConnection'
 
 export interface ConnectionManagerConfig {
     transportLayer?: ITransport
@@ -436,7 +435,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         logger.info(this.config.nodeName + ' onDisconnected()')
         
         const hexKey = PeerID.fromValue(connection.getPeerDescriptor()!.kademliaId).toKey()        
-        const storedConnection= this.connections.get(hexKey)
+        const storedConnection = this.connections.get(hexKey)
 
         if (storedConnection && storedConnection.connectionId.equals(connection.connectionId)) {
             this.locks.clearAllLocks(hexKey)
@@ -491,7 +490,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 this.onConnected(connection)
             })
         }
-        connection.on('disconnected', (connectionId: ConnectionID, _code?: number, _reason?: string) => {
+        connection.on('disconnected', (_code?: number, _reason?: string) => {
             this.onDisconnected(connection)
         })
 
