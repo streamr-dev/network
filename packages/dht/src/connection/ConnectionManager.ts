@@ -432,6 +432,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             return
         }
 
+        logger.info(this.config.nodeName + ' onDisconnected()')
         const hexKey = PeerID.fromValue(connection.getPeerDescriptor()!.kademliaId).toKey()
         this.locks.clearAllLocks(hexKey)
         this.connections.delete(hexKey)
