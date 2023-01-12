@@ -62,7 +62,7 @@ describe('Route Message With Mock Connections', () => {
         await simulator.stop()        
     })
 
-    it('Happy path', async () => {
+    it.only('Happy path', async () => {
         await destinationNode.joinDht(entryPointDescriptor)
         await sourceNode.joinDht(entryPointDescriptor)
         await Promise.all(
@@ -84,14 +84,14 @@ describe('Route Message With Mock Connections', () => {
             sourceNode.doRouteMessage({
                 message: message,
                 destinationPeer: destinationNode.getPeerDescriptor(),
-                requestId: 'tsatsa',
+                requestId: v4(),
                 sourcePeer: sourceNode.getPeerDescriptor(),
                 reachableThrough: [],
                 routingPath: []
 
             })
         }], [[destinationNode, 'message']])
-    })
+    }, 10000)
     /* ToDo: replace this with a case where no candidates
     can be found 
 

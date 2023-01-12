@@ -13,12 +13,14 @@ describe('SimultaneousConnections', () => {
 
     const peerDescriptor1 = {
         kademliaId: PeerID.fromString('mock1').value,
-        type: 0
+        type: 0,
+        nodeName: 'mock1'
     }
 
     const peerDescriptor2 = {
         kademliaId: PeerID.fromString('mock2').value,
-        type: 0
+        type: 0,
+        nodeName: 'mock2'
     }
 
     beforeEach(async () => {

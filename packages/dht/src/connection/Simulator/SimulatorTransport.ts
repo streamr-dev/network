@@ -4,6 +4,6 @@ import { Simulator } from "./Simulator"
 
 export class SimulatorTransport extends ConnectionManager {
     constructor(ownPeerDescriptor: PeerDescriptor, simulator: Simulator) {
-        super({ ownPeerDescriptor: ownPeerDescriptor, simulator, serviceIdPrefix: 'simulator/' })
+        super({ ownPeerDescriptor: ownPeerDescriptor, simulator, serviceIdPrefix: 'simulator/', nodeName: ownPeerDescriptor.nodeName })
     }
 }
