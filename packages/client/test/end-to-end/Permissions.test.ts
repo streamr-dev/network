@@ -220,7 +220,7 @@ describe('Stream permissions', () => {
         const message = {
             foo: Date.now()
         }
-        const errorSnippet = `${toEthereumAddress(otherUser.address)} is not a publisher on stream ${stream.id}`
+        const errorSnippet = `You don't have permission to publish to this stream. Using address: ${toEthereumAddress(otherUser.address)}`
         await expect(() => otherUserClient.publish(stream.id, message)).rejects.toThrow(errorSnippet)
         await client.grantPermissions(stream.id, {
             user: otherUser.address,
