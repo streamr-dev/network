@@ -121,7 +121,7 @@ describe('MessageFactory', () => {
         })
         return expect(() =>
             createMessage({}, messageFactory)
-        ).rejects.toThrow(/is not a publisher on stream/)
+        ).rejects.toThrow(/You don't have permission to publish to this stream/)
     })
 
     describe('partitions', () => {
