@@ -48,10 +48,6 @@ export class NumberPair {
 export class InvalidNumberingError extends Error {
     constructor() {
         super('pre-condition: previousNumber < number')
-        // exclude this constructor from stack trace
-        if (Error.captureStackTrace) {
-            Error.captureStackTrace(this, InvalidNumberingError)
-        }
     }
 }
 
@@ -59,9 +55,6 @@ export class GapMisMatchError extends Error {
     constructor(state: string, previousNumber: NumberPair, number: NumberPair) {
         super('pre-condition: gap overlap in given numbers:'
             + ` previousNumber=${previousNumber}, number=${number}, state=${state}`)
-        if (Error.captureStackTrace) {
-            Error.captureStackTrace(this, GapMisMatchError) // exclude this constructor from stack trace
-        }
     }
 }
 

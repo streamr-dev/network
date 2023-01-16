@@ -21,13 +21,6 @@ import { v4 as uuidv4 } from 'uuid'
 import { getAddressFromIceCandidate, isPrivateIPv4 } from '../../helpers/AddressTools'
 
 class WebRtcError extends Error {
-    constructor(msg: string) {
-        super(msg)
-        // exclude this constructor from stack trace
-        if (Error.captureStackTrace) {
-            Error.captureStackTrace(this, WebRtcError)
-        }
-    }
 }
 
 interface WebRtcEndpointMetrics extends MetricsDefinition {
@@ -391,14 +384,14 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             this.rtcSignaller.sendRtcConnect(routerId, connection.getPeerId())
         }
 
-        const deferredAttempt = connection.getDeferredConnectionAttempt() 
-        
+        const deferredAttempt = connection.getDeferredConnectionAttempt()
+
         if (connection.getLastState() == 'connected') {
             return targetPeerId
         }
         if (deferredAttempt) {
             return deferredAttempt.getPromise()
-        } else { 
+        } else {
             throw new WebRtcError(`disconnected ${connection.getPeerId()}`)
         }
     }
