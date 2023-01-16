@@ -75,6 +75,9 @@ const signAuthMessage = async (authentication: Authentication) => {
     }
 }
 
+/**
+ * This class only operates with Polygon production network and therefore ignores contracts config.
+ */
 @scoped(Lifecycle.ContainerScoped)
 export class LitProtocolKeyStore {
     private readonly litNodeClient: LitJsSdk.LitNodeClient | undefined
