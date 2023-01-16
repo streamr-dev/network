@@ -80,7 +80,7 @@ const signAuthMessage = async (authentication: Authentication) => {
  */
 @scoped(Lifecycle.ContainerScoped)
 export class LitProtocolKeyStore {
-    private readonly litNodeClient: LitJsSdk.LitNodeClient | undefined
+    private readonly litNodeClient?: LitJsSdk.LitNodeClient
 
     constructor(
         @inject(AuthenticationInjectionToken) private readonly authentication: Authentication,
