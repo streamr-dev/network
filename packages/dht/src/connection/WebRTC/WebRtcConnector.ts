@@ -259,14 +259,13 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         connection.addRemoteCandidate(candidate, mid)
     }
 
-    stop(): void {
+    public async stop(): Promise<void> {
         logger.trace('stop()')
         this.stopped = true
-        this.ongoingConnectAttempts.forEach((conn)=> {
-            logger.trace('closing ongoingConnectAttempts')
-            conn.close()
-        })
 
+        const attempts = Array.from(this.ongoingConnectAttempts.values())
+        await Promise.allSettled(attempts.map((conn) => conn.close()))
+       
         this.rpcCommunicator.stop()
         //this.removeAllListeners()
     }

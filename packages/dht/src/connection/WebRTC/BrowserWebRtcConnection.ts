@@ -118,7 +118,12 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
     }
 
     // IConnection implementation
-    public close(): void {
+    
+    public async close(): Promise<void> {
+        this.doClose()
+    }
+    
+    private doClose(): void {
         if (!this.closed) {
             this.closed = true
             this.lastState = 'closed'
@@ -152,7 +157,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
 
     public destroy(): void {
         this.removeAllListeners()
-        this.close()
+        this.doClose()
     }
 
     public send(data: Uint8Array): void {
@@ -171,7 +176,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
 
         dataChannel.onclose = () => {
             logger.trace('dc.onClosed')
-            this.close()
+            this.doClose()
         }
 
         dataChannel.onerror = (err) => {

@@ -46,6 +46,8 @@ describe('Connection Locking', () => {
 
     afterEach(async () => {
         await Promise.all([
+            mockConnectorTransport1.stop(),
+            mockConnectorTransport2.stop(),
             connectionManager1.stop(),
             connectionManager2.stop()
         ])
@@ -146,7 +148,7 @@ describe('Connection Locking', () => {
         expect(connectionManager2.hasRemoteLockedConnection(mockPeerDescriptor1)).toEqual(true)
 
         //@ts-expect-error private field
-        await connectionManager1.gracefullyDisconnect(mockPeerDescriptor2)
+        await connectionManager1.gracefullyDisconnectAsync(mockPeerDescriptor2)
         
         await waitForCondition(() =>
             !connectionManager1.hasRemoteLockedConnection(mockPeerDescriptor2, 'testLock1')

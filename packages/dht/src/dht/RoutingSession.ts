@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/prefer-for-of */
+/* eslint-disable @typescript-eslint/prefer-for-of, promise/catch-or-return */
 
 import { PeerDescriptor } from "../exports"
 import { DhtPeer } from "./DhtPeer"
@@ -29,6 +29,8 @@ export interface RoutingSessionEvents {
     // through, and none of them responds with a success ack
 
     routingFailed: (sessionId: string) => void
+
+    stopped: (sessionId: string) => void
 }
 
 export enum RoutingMode { ROUTE, FORWARD, RECURSIVE_FIND }
@@ -68,6 +70,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
             this.stopped = true
             this.emit('routingFailed', this.sessionId)
         } else {
+            logger.info('routing failed, retrying to route')
             this.sendMoreRequests(contacts)
         }
     }
@@ -121,13 +124,21 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     }
 
     private sendMoreRequests(uncontacted: DhtPeer[]) {
+        if (this.stopped) {
+            return
+        }
+
         if (uncontacted.length < 1) {
             this.emit('routingFailed', this.sessionId)
             return
         }
 
         while (this.ongoingRequests.size < this.parallelism && uncontacted.length > 0) {
+            if (this.stopped) {
+                return
+            }
             const nextPeer = uncontacted.shift()
+            logger.info('sendRouteMessageRequest')
             this.sendRouteMessageRequest(nextPeer!)
                 .then((succeeded) => {
                     if (succeeded) {
@@ -135,8 +146,12 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
                     } else {
                         this.onRequestFailed(nextPeer!.peerId)
                     }
-                    return nextPeer
-                }).catch((_e) => { })
+                    return
+                }).catch((e) => { 
+                    logger.error(e)
+                }).finally(() => {
+                    logger.info('sendRouteMessageRequest returned')
+                })
         }
     }
 
@@ -152,6 +167,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
 
     public stop(): void {
         this.stopped = true
+        this.emit('stopped', this.sessionId)
     }
 
 }

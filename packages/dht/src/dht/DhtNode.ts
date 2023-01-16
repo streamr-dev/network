@@ -33,7 +33,7 @@ import { Logger, MetricsContext } from '@streamr/utils'
 import { v4 } from 'uuid'
 import { IDhtRpcService } from '../proto/packages/dht/protos/DhtRpc.server'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
-import { runAndRaceEvents3, waitForEvent3 } from '../helpers/waitForEvent3'
+import { raceEvents3, runAndRaceEvents3, RunAndRaceEventsReturnType, waitForEvent3 } from '../helpers/waitForEvent3'
 import { RoutingMode, RoutingSession, RoutingSessionEvents } from './RoutingSession'
 import { DiscoverySession } from './DiscoverySession'
 import { RandomContactList } from './contact/RandomContactList'
@@ -69,11 +69,12 @@ export class DhtNodeConfig {
 
     serviceId = 'layer0'
     parallelism = 3
-    maxNeighborListSize = 100
+    maxNeighborListSize = 200
     numberOfNodesPerKBucket = 8
     joinNoProgressLimit = 4
     routeMessageTimeout = 4000
     dhtJoinTimeout = 60000
+    getClosestContactsLimit = 20
     metricsContext = new MetricsContext()
 
     constructor(conf: Partial<DhtNodeConfig>) {
@@ -341,7 +342,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
                 this.emit(
                     'newKbucketContact',
                     contact.getPeerDescriptor(),
-                    this.neighborList!.getClosestContacts(20).map((peer) => peer.getPeerDescriptor())
+                    this.neighborList!.getClosestContacts(this.config.getClosestContactsLimit).map((peer) => peer.getPeerDescriptor())
                 )
             } else {    // open connection by pinging
                 logger.info('starting ping ' + this.config.nodeName + ', ' + contact.getPeerDescriptor().nodeName + ' ')
@@ -351,7 +352,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
                         this.emit(
                             'newKbucketContact',
                             contact.getPeerDescriptor(),
-                            this.neighborList!.getClosestContacts(20).map((peer) => peer.getPeerDescriptor())
+                            this.neighborList!.getClosestContacts(this.config.getClosestContactsLimit).map((peer) => peer.getPeerDescriptor())
                         )
                     } else {
                         logger.error('ping failed ' + this.config.nodeName + ', ' + contact.getPeerDescriptor().nodeName + ' ')
@@ -547,7 +548,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         }
 
         this.addNewContact(entryPointDescriptor)
-        const closest = this.bucket!.closest(this.ownPeerId!.value, this.config.parallelism)
+        const closest = this.bucket!.closest(this.ownPeerId!.value, this.config.getClosestContactsLimit)
         this.neighborList!.addContacts(closest)
 
         const session = new DiscoverySession(this.neighborList!, this.ownPeerId!.value,
@@ -876,7 +877,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         //})
 
         const response = {
-            peers: this.getClosestPeerDescriptors(request.kademliaId, 5),
+            peers: this.getClosestPeerDescriptors(request.kademliaId, this.config.getClosestContactsLimit),
             requestId: request.requestId
         }
         return response
@@ -932,13 +933,27 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
         this.ongoingRoutingSessions.set(session.sessionId, session)
 
-        const result = await runAndRaceEvents3<RoutingSessionEvents>([() => {
-            session.start()
-        }], session, ['noCandidatesFound', 'candidatesFound'], 1000)
+        let result: RunAndRaceEventsReturnType<RoutingSessionEvents>
 
-        if (this.ongoingRoutingSessions.has(session.sessionId)) {
-            this.ongoingRoutingSessions.delete(session.sessionId)
+        try {
+            result = await runAndRaceEvents3<RoutingSessionEvents>([() => {
+                session.start()
+            }], session, ['noCandidatesFound', 'candidatesFound'], 1000)
+        } catch (e) {
+            logger.error(e)
+            throw e
         }
+        raceEvents3<RoutingSessionEvents>(
+            session, ['routingSucceeded', 'routingFailed', 'stopped'], 10000).then(() => {
+            if (this.ongoingRoutingSessions.has(session.sessionId)) {
+                this.ongoingRoutingSessions.delete(session.sessionId)
+            }
+            return
+        }).catch(() => {
+            if (this.ongoingRoutingSessions.has(session.sessionId)) {
+                this.ongoingRoutingSessions.delete(session.sessionId)
+            }
+        })
 
         if (this.stopped) {
             return this.createRouteMessageAck(routedMessage, 'DhtNode Stopped')
@@ -984,7 +999,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         return results
     }
 
-    private reportRecursiveFindResult(targetPeerDescriptor: PeerDescriptor, serviceId: string, 
+    private reportRecursiveFindResult(targetPeerDescriptor: PeerDescriptor, serviceId: string,
         closestNodes: PeerDescriptor[], noCloserNodesFound: boolean = false) {
         const session = new RemoteRecursiveFindSession(this.ownPeerDescriptor!, targetPeerDescriptor, serviceId, this)
         session.reportRecursiveFindResult(closestNodes, noCloserNodesFound)
@@ -1005,7 +1020,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
             // Exact match, they were trying to find our kademliaID
 
-            this.reportRecursiveFindResult(routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId, 
+            this.reportRecursiveFindResult(routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
                 this.getClosestPeerDescriptors(routedMessage.destinationPeer!.kademliaId, 5), true)
             return this.createRouteMessageAck(routedMessage)
         }
@@ -1028,9 +1043,15 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         }
         session.on('routingFailed', logFailure)
 
-        const result = await runAndRaceEvents3<RoutingSessionEvents>([() => {
-            session.start()
-        }], session, ['noCandidatesFound', 'candidatesFound'], 1000)
+        let result: RunAndRaceEventsReturnType<RoutingSessionEvents>
+
+        try {
+            result = await runAndRaceEvents3<RoutingSessionEvents>([() => {
+                session.start()
+            }], session, ['noCandidatesFound', 'candidatesFound'], 1000)
+        } catch (e) {
+            logger.error(e)
+        }
 
         if (this.ongoingRoutingSessions.has(session.sessionId)) {
             this.ongoingRoutingSessions.delete(session.sessionId)
@@ -1038,18 +1059,18 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
         if (this.stopped) {
             return this.createRouteMessageAck(routedMessage, 'DhtNode Stopped')
-        } else if (result.winnerName === 'noCandidatesFound' || result.winnerName === 'routingFailed') {
+        } else if (result!.winnerName === 'noCandidatesFound' || result!.winnerName === 'routingFailed') {
             if (PeerID.fromValue(routedMessage.sourcePeer!.kademliaId).equals(this.ownPeerId!)) {
                 throw new Error(`Could not perform initial routing`)
             }
             logger.trace(`findRecursively Node ${this.getNodeName()} found no candidates`)
-            this.reportRecursiveFindResult(routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId, 
+            this.reportRecursiveFindResult(routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
                 this.getClosestPeerDescriptors(routedMessage.destinationPeer!.kademliaId, 5), true)
             return this.createRouteMessageAck(routedMessage)
         } else {
             logger.trace(`findRecursively Node ${this.getNodeName()} found candidates ` +
-            JSON.stringify((session.getClosestContacts(5).map((desc) => desc.nodeName))))
-            this.reportRecursiveFindResult(routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId, 
+                JSON.stringify((session.getClosestContacts(5).map((desc) => desc.nodeName))))
+            this.reportRecursiveFindResult(routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
                 session.getClosestContacts(5))
             return this.createRouteMessageAck(routedMessage)
         }
@@ -1061,7 +1082,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         } else if (this.routerDuplicateDetector.isMostLikelyDuplicate(routedMessage.requestId, routedMessage.sourcePeer!.nodeName!)) {
             logger.error(`findRecursively Node ${this.getNodeName()} received a DUPLICATE RouteMessageWrapper from 
             ${routedMessage.previousPeer?.nodeName}`)
-            
+
             return this.createRouteMessageAck(routedMessage, 'message given to findRecursively() service is likely a duplicate')
         }
 

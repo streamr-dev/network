@@ -20,7 +20,8 @@ describe('Mock connection Dht joining with latencies', () => {
        
         entrypointDescriptor = {
             kademliaId: entryPoint.getNodeId().value,
-            type: 0
+            type: 0,
+            nodeName: '0'
         }
         
         for (let i = 1; i < 100; i++) {
@@ -33,7 +34,7 @@ describe('Mock connection Dht joining with latencies', () => {
     afterEach(async () => {
         await Promise.all([
             entryPoint.stop(),
-            ...nodes.map(async (node) => await node.stop())
+            ...nodes.map((node) => node.stop())
         ])
         simulator.stop()
     })

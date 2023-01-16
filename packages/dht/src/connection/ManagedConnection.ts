@@ -4,7 +4,7 @@ import { Handshaker } from "./Handshaker"
 import { PeerDescriptor } from "../proto/packages/dht/protos/DhtRpc"
 import { Logger } from "@streamr/utils"
 import EventEmitter from "eventemitter3"
-import { raceEvents3 } from "../helpers/waitForEvent3"
+import { raceEvents3, RunAndRaceEventsReturnType } from "../helpers/waitForEvent3"
 import { PeerID, PeerIDKey } from "../helpers/PeerID"
 
 export interface ManagedConnectionEvents {
@@ -13,6 +13,7 @@ export interface ManagedConnectionEvents {
     handshakeCompleted: (peerDescriptor: PeerDescriptor) => void
     handshakeFailed: () => void
     bufferSentByOtherConnection: () => void
+    closing: () => void
 }
 
 const logger = new Logger(module)
@@ -37,6 +38,10 @@ export class ManagedConnection extends EventEmitter<Events> {
     private lastUsed: number = Date.now()
     private stopped = false
     public offeredAsIncoming = false
+    public rejectedAsIncoming = false
+    private bufferSentbyOtherConnection = false
+    private closing = false
+    public replacedByOtherConnection = false
 
     constructor(private ownPeerDescriptor: PeerDescriptor,
         private protocolVersion: string,
@@ -231,10 +236,17 @@ export class ManagedConnection extends EventEmitter<Events> {
             logger.trace('adding data to outputBuffer objectId: ' + this.objectId)
             this.outputBuffer.push(data)
 
-            const result = await raceEvents3<Events>(this, ['handshakeCompleted', 'handshakeFailed',
-                'bufferSentByOtherConnection', 'disconnected'], 15000)
+            let result: RunAndRaceEventsReturnType<Events>
 
-            if (result.winnerName == 'disconnected') {
+            try {
+                result = await raceEvents3<Events>(this, ['handshakeCompleted', 'handshakeFailed',
+                    'bufferSentByOtherConnection', 'closing', 'disconnected'], 15000)
+            } catch (e) {
+                logger.error('Race error1 ' + e)
+                throw e
+            }
+
+            if (result.winnerName == 'closing' || result.winnerName == 'disconnected') {
                 throw new Err.ConnectionFailed("")
             }
 
@@ -242,21 +254,45 @@ export class ManagedConnection extends EventEmitter<Events> {
 
                 this.outgoingConnection!.off('disconnected', this.onDisconnected)
 
-                const result2 = await raceEvents3<Events>(this, [
-                    'bufferSentByOtherConnection', 'disconnected'], 15000)
-
-                if (result2.winnerName == 'bufferSentByOtherConnection') {
-                    logger.trace('bufferSentByOtherConnection received')
+                if (this.bufferSentbyOtherConnection) {
+                    logger.info('bufferSentByOtherConnection already true')
                     this.destroy()
-                    //throw new Err.ConnectionFailed()
-                } else if (result2.winnerName == 'disconnected') {
-                    throw new Err.ConnectionFailed("")
+                } else {
+
+                    /*
+                    const lis = (code?: number, reason?: string) => {
+                        this.emit('supressedDisconnect')
+                    }
+                    this.outgoingConnection!.on('disconnected', lis)
+                    */
+
+                    let result2: RunAndRaceEventsReturnType<Events>
+
+                    try {
+                        result2 = await raceEvents3<Events>(this, [
+                            'bufferSentByOtherConnection', 'closing'], 15000)
+                    } catch (e) {
+                        logger.error('Race error2 ' + e)
+                        throw e
+                    }
+
+                    if (result2.winnerName == 'bufferSentByOtherConnection') {
+                        logger.info('bufferSentByOtherConnection received')
+                        //this.outgoingConnection!.off('disconnected', lis)
+                        this.destroy()
+                        //throw new Err.ConnectionFailed()
+                    } else if (result2.winnerName == 'closing') {
+                        logger.info('bufferSentByOtherConnection not received, instead received a closing event')
+                        //this.outgoingConnection!.off('disconnected', lis)
+                        //this.destroy()
+                        throw new Err.ConnectionFailed("")
+                    }
                 }
             }
         }
     }
 
-    sendNoWait(data: Uint8Array): void {
+    public sendNoWait(data: Uint8Array): void {
         this.lastUsed = Date.now()
         if (this.implementation) {
             this.implementation.send(data)
@@ -270,6 +306,8 @@ export class ManagedConnection extends EventEmitter<Events> {
         if (this.handshaker) {
             this.handshaker.removeAllListeners()
         }
+        logger.info('bufferSentByOtherConnection reported')
+        this.bufferSentbyOtherConnection = true
         this.emit('bufferSentByOtherConnection')
     }
 
@@ -305,14 +343,17 @@ export class ManagedConnection extends EventEmitter<Events> {
         this.removeAllListeners()
     }
 
-    close(): void {
+    public async close(): Promise<void> {
         //logger.info('close() ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + ' objectid: ' + this.objectId + ' ')
+        this.closing = true
+        this.emit('closing')
+
         if (this.implementation) {
-            this.implementation?.close()
+            await this.implementation?.close()
         } else if (this.outgoingConnection) {
-            this.outgoingConnection?.close()
+            await this.outgoingConnection?.close()
         } else if (this.incomingConnection) {
-            this.incomingConnection?.close()
+            await this.incomingConnection?.close()
         } else {
             logger.info('IL close')
             this.doDisconnect()
@@ -320,6 +361,8 @@ export class ManagedConnection extends EventEmitter<Events> {
     }
 
     public destroy(): void {
+        this.closing = true
+        this.emit('closing')
         if (!this.stopped) {
             //logger.info('destroy() ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + ' objectid: ' + this.objectId + ' ')
             this.stopped = true

@@ -3,6 +3,9 @@
 import { WebSocketServer } from "../../src/connection/WebSocket/WebSocketServer"
 import { IConnection } from "../../src/connection/IConnection"
 import { ClientWebSocket } from "../../src/connection/WebSocket/ClientWebSocket"
+import { Logger } from "@streamr/utils"
+
+const logger = new Logger(module)
 
 describe('WebSocket', () => {
 
@@ -17,37 +20,37 @@ describe('WebSocket', () => {
             
         webSocketServer.on('connected', (serverConnection: IConnection) => {
             const time = Date.now()
-            console.log('server side sendind msg at ' + time)
+            logger.info('server side sendind msg at ' + time)
             serverConnection.send(Uint8Array.from([1, 2, 3, 4]))
         
             const time2 = Date.now()
-            console.log('server side setting listeners at ' + time2)
+            logger.info('server side setting listeners at ' + time2)
             
             serverConnection.on('data', (bytes: Uint8Array) => {
                 const time = Date.now()
-                console.log('server side receiving message at ' + time)
+                logger.info('server side receiving message at ' + time)
 
-                console.log("server received:" + JSON.stringify(bytes))
+                logger.info("server received:" + JSON.stringify(bytes))
                
                 expect(bytes.toString()).toBe('1,2,3,4')
-                console.log('calling done()')
+                logger.info('calling done()')
                 done()
             })
         })
         
         clientWebSocket.on('connected', () => {
             const time = Date.now()
-            console.log('client side setting listeners at ' + time)
+            logger.info('client side setting listeners at ' + time)
             
             clientWebSocket.on('data', (bytes: Uint8Array) => {
                 const time = Date.now()
-                console.log('client side receiving message at ' + time)
+                logger.info('client side receiving message at ' + time)
 
-                console.log("client received: " + JSON.stringify(bytes))
+                logger.info("client received: " + JSON.stringify(bytes))
                 expect(bytes.toString()).toBe('1,2,3,4')
                 
                 const time2 = Date.now()
-                console.log('client side sendind msg at ' + time2)
+                logger.info('client side sendind msg at ' + time2)
                 clientWebSocket.send(Uint8Array.from([1, 2, 3, 4]))
             })
         })

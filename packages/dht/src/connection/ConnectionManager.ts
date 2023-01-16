@@ -170,7 +170,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
         // Garbage collection of connections
         this.disconnectorIntervalRef = setInterval(() => {
-
+            logger.info('disconnectorInterval')
             const MAX_CONNECTIONS = 80
 
             if (this.connections.size > MAX_CONNECTIONS) {
@@ -192,7 +192,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 for (let i = 0; i < sortedCandidates.length && i < targetNum; i++) {
                     logger.info(this.config.nodeName + ' garbageCollecting ' +
                         sortedCandidates[sortedCandidates.length - 1 - i].getPeerDescriptor().nodeName)
-                    this.gracefullyDisconnect(sortedCandidates[sortedCandidates.length - 1 - i].getPeerDescriptor())
+                    this.gracefullyDisconnectAsync(sortedCandidates[sortedCandidates.length - 1 - i].getPeerDescriptor()).catch((_e) => { })
                 }
             }
 
@@ -231,6 +231,11 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             clearInterval(this.disconnectorIntervalRef)
         }
 
+        await Promise.allSettled([...this.connections.values()].map((connection: ManagedConnection) => {
+            return this.gracefullyDisconnectAsync(connection.getPeerDescriptor()!)
+        }))
+
+        /*
         await Promise.allSettled([...this.connections.values()].map(async (connection: ManagedConnection) => {
             const targetDescriptor = connection.getPeerDescriptor()
             if (targetDescriptor) {
@@ -240,12 +245,12 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                     logger.error(e)
                 }
             }
-            //connection.close()
         }))
+        */
 
         this.rpcCommunicator!.stop()
 
-        this.removeAllListeners()
+        //this.removeAllListeners()
         /*
         [...this.disconnectionTimeouts.values()].map(async (timeout) => {
             clearTimeout(timeout)
@@ -254,8 +259,10 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         */
         if (!this.config.simulator) {
             await this.webSocketConnector!.stop()
-            this.webrtcConnector!.stop()
+            await this.webrtcConnector!.stop()
             WEB_RTC_CLEANUP.cleanUp()
+        } else {
+            await this.simulatorConnector!.stop()
         }
     }
 
@@ -412,7 +419,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 logger.error('Parsing incoming data into Message failed' + e1)
                 return
             }
-            
+
             message.sourceDescriptor = peerDescriptor
             this.handleMessage(message)
 
@@ -433,8 +440,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         }
 
         logger.info(this.config.nodeName + ' onDisconnected()')
-        
-        const hexKey = PeerID.fromValue(connection.getPeerDescriptor()!.kademliaId).toKey()        
+
+        const hexKey = PeerID.fromValue(connection.getPeerDescriptor()!.kademliaId).toKey()
         const storedConnection = this.connections.get(hexKey)
 
         if (storedConnection && storedConnection.connectionId.equals(connection.connectionId)) {
@@ -455,6 +462,13 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         logger.trace('incomingConnectionCallback() objectId ' + connection.objectId)
 
         connection.offeredAsIncoming = true
+
+        /*
+        if (connection.connectionType == ConnectionType.SIMULATOR_CLIENT) {
+            logger.info('debug')
+        }
+        */
+
         const newPeerID = PeerID.fromValue(connection.getPeerDescriptor()!.kademliaId)
         if (this.connections.has(newPeerID.toKey())) {
             if (newPeerID.hasSmallerHashThan(
@@ -477,6 +491,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 //oldConnection!.destroy()
             } else {
                 //connection.destroy()
+                connection.rejectedAsIncoming = true
                 return false
             }
         }
@@ -494,16 +509,17 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             this.onDisconnected(connection)
         })
 
+        if (this.connections.has(PeerID.fromValue(connection.getPeerDescriptor()!.kademliaId).toKey())) {
+            this.connections.get(PeerID.fromValue(connection.getPeerDescriptor()!.kademliaId).toKey())!.replacedByOtherConnection = true
+        }
         this.connections.set(PeerID.fromValue(connection.getPeerDescriptor()!.kademliaId).toKey(), connection)
 
         this.emit('newConnection', connection)
         return true
     }
 
-    private closeConnection(id: PeerIDKey, reason?: string): void {
-        if (!this.started || this.stopped) {
-            return
-        }
+    private async closeConnection(id: PeerIDKey, reason?: string): Promise<void> {
+
         this.locks.clearAllLocks(id)
 
         if (this.connections.has(id)) {
@@ -512,7 +528,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             const connectionToClose = this.connections.get(id)!
             logger.info("disconnecting: " + this.config.nodeName + ", " + connectionToClose.getPeerDescriptor()?.nodeName)
 
-            connectionToClose.close()
+            await connectionToClose.close()
         }
     }
 
@@ -532,6 +548,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         const hexKey = PeerID.fromValue(targetDescriptor.kademliaId).toKey()
         //this.clearDisconnectionTimeout(hexKey)
         const remoteConnectionLocker = new RemoteConnectionLocker(
+            this.ownPeerDescriptor!,
             targetDescriptor,
             ConnectionManager.PROTOCOL_VERSION,
             toProtoRpcClient(new ConnectionLockerClient(this.rpcCommunicator!.getRpcClientTransport()))
@@ -539,7 +556,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
         this.locks.addLocalLocked(hexKey, serviceId)
 
-        remoteConnectionLocker.lockRequest(this.ownPeerDescriptor!, serviceId)
+        remoteConnectionLocker.lockRequest(serviceId)
             .then((_accepted) => logger.trace('LockRequest successful'))
             .catch((err) => { logger.error(err) })
     }
@@ -554,17 +571,18 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         this.locks.removeLocalLocked(hexKey, serviceId)
 
         const remoteConnectionLocker = new RemoteConnectionLocker(
+            this.ownPeerDescriptor!,
             targetDescriptor,
             ConnectionManager.PROTOCOL_VERSION,
             toProtoRpcClient(new ConnectionLockerClient(this.rpcCommunicator!.getRpcClientTransport()))
         )
 
         if (this.connections.has(hexKey)) {
-            remoteConnectionLocker.unlockRequest(this.ownPeerDescriptor!, serviceId)
+            remoteConnectionLocker.unlockRequest(serviceId)
         }
 
         if (this.connections.get(hexKey) && !this.locks.isLocked(hexKey)) {
-            this.gracefullyDisconnect(targetDescriptor)
+            this.gracefullyDisconnectAsync(targetDescriptor).catch((_e) => { })
         }
     }
 
@@ -590,28 +608,48 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         //}
     }
 
+    /*
     private gracefullyDisconnect(targetDescriptor: PeerDescriptor): void {
         logger.trace('gracefullyDisconnect()')
         const hexKey = PeerID.fromValue(targetDescriptor.kademliaId).toKey()
         const remoteConnectionLocker = new RemoteConnectionLocker(
+            this.ownPeerDescriptor!,
             targetDescriptor,
             ConnectionManager.PROTOCOL_VERSION,
             toProtoRpcClient(new ConnectionLockerClient(this.rpcCommunicator!.getRpcClientTransport()))
         )
         // this.remoteLockedConnections.delete(hexKey)
         // this.localLockedConnections.delete(hexKey)
-        remoteConnectionLocker.gracefulDisconnect(this.ownPeerDescriptor!).catch((_e) => {
-            logger.trace('gracefulDisconnect failed')
-        }).then(() => {
+        remoteConnectionLocker.gracefulDisconnect().then(() => {
             // logger.info(' '+ this.config.nodeName +', ' + targetDescriptor?.nodeName +
             // ' calling closeConnection after successfully sending  gracefullyDisconnect ')
-            this.closeConnection(hexKey)
+            this.closeConnection(hexKey).catch((_e) => {
+                logger.info('saaa')
+            })
             return
         }).catch(() => {
             // logger.info(' '+ this.config.nodeName + ', ' + targetDescriptor?.nodeName + 
             // ' calling closeConnection after failed sending gracefullyDisconnect')
-            this.closeConnection(hexKey)
+            this.closeConnection(hexKey).catch((_e) => {})
         })
+    }*/
+
+    private async gracefullyDisconnectAsync(targetDescriptor: PeerDescriptor): Promise<void> {
+        logger.trace('gracefullyDisconnectAsync()')
+        const hexKey = PeerID.fromValue(targetDescriptor.kademliaId).toKey()
+        const remoteConnectionLocker = new RemoteConnectionLocker(
+            this.ownPeerDescriptor!,
+            targetDescriptor,
+            ConnectionManager.PROTOCOL_VERSION,
+            toProtoRpcClient(new ConnectionLockerClient(this.rpcCommunicator!.getRpcClientTransport()))
+        )
+
+        await remoteConnectionLocker.gracefulDisconnect()
+        try {
+            await this.closeConnection(hexKey)
+        } catch (e) {
+            logger.trace(e)
+        }
     }
 
     public getAllConnectionPeerDescriptors(): PeerDescriptor[] {
@@ -647,7 +685,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         this.locks.removeRemoteLocked(hexKey, unlockRequest.serviceId)
 
         if (!this.locks.isLocked(hexKey)) {
-            this.gracefullyDisconnect(unlockRequest.peerDescriptor!)
+            await this.gracefullyDisconnectAsync(unlockRequest.peerDescriptor!)
         }
 
         return {}
@@ -662,7 +700,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
         logger.info(' ' + this.config.nodeName + ', ' + disconnectNotice.peerDescriptor?.nodeName +
             ' calling closeConnection after receiving incoming gracefulDisconnect notice')
-        this.closeConnection(hexKey, 'graceful disconnect notified')
+        await this.closeConnection(hexKey, 'graceful disconnect notified')
         return {}
     }
 

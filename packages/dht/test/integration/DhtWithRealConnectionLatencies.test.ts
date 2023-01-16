@@ -1,3 +1,4 @@
+//import wtf from 'wtfnode'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { createMockConnectionDhtNode } from '../utils'
 import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator'
@@ -30,11 +31,12 @@ describe('Mock connection Dht joining with real latencies', () => {
     })
 
     afterEach(async () => {
-        await Promise.all([
+        await Promise.allSettled([
             entryPoint.stop(),
-            ...nodes.map(async (node) => await node.stop())
+            ...nodes.map(async (node) => node.stop())
         ])
         simulator.stop()
+        //wtf.dump()
     })
 
     it('Happy path', async () => {

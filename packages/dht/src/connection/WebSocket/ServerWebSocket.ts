@@ -84,7 +84,7 @@ export class ServerWebSocket extends EventEmitter<ConnectionEvents> implements I
 
     }
 
-    public close(): void {
+    public async close(): Promise<void> {
         if (!this.stopped) {
             this.socket?.close()
         } else {
