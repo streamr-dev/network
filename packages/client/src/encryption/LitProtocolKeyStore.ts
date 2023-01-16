@@ -1,6 +1,6 @@
 import * as LitJsSdk from '@lit-protocol/lit-node-client'
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import * as siwe from 'siwe'
+import * as siwe from 'lit-siwe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ethers } from 'ethers'
 import { StreamID } from '@streamr/protocol'
