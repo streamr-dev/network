@@ -56,12 +56,12 @@ const signAuthMessage = async (authentication: Authentication) => {
     const domain = "localhost"
     const uri = "https://localhost/login"
     const statement = "This is a test statement. You can put anything you want here."
-    const address = ethers.utils.getAddress(await authentication.getAddress())
+    const addressInChecksumCase = ethers.utils.getAddress(await authentication.getAddress())
     const siweMessage = new siwe.SiweMessage({
         domain,
         uri,
         statement,
-        address,
+        address: addressInChecksumCase,
         version: "1",
         chainId: 1
     })
@@ -71,7 +71,7 @@ const signAuthMessage = async (authentication: Authentication) => {
         sig: signature,
         derivedVia: "web3.eth.personal.sign",
         signedMessage: messageToSign,
-        address
+        address: addressInChecksumCase
     }
 }
 
