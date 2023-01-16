@@ -17,7 +17,8 @@ describe('Mock IConnection DHT Joining', () => {
         
         entrypointDescriptor = {
             kademliaId: entryPoint.getNodeId().value,
-            type: 0
+            type: 0,
+            nodeName: '0'
         }
        
         for (let i = 1; i < 100; i++) {
@@ -30,7 +31,7 @@ describe('Mock IConnection DHT Joining', () => {
     afterEach(async () => {
         await Promise.all([
             entryPoint.stop(),
-            ...nodes.map(async (node) => await node.stop())
+            ...nodes.map(async (node) => node.stop())
         ])
         simulator.stop()
     })
@@ -45,5 +46,5 @@ describe('Mock IConnection DHT Joining', () => {
             //expect(node.getNeighborList().getSize()).toBeGreaterThanOrEqual(node.getBucketSize())
         })
         expect(entryPoint.getBucketSize()).toBeGreaterThanOrEqual(entryPoint.getK())
-    }, 10000)
+    }, 60000)
 })

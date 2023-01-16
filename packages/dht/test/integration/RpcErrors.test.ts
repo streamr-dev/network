@@ -56,6 +56,8 @@ describe('RPC errors', () => {
     })
 
     afterEach(async () => {
+        await connectorTransport1.stop()
+        await connectorTransport2.stop()
         await manager1.stop()
         await manager2.stop()
         simulator.stop()

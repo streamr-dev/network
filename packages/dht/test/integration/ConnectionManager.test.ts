@@ -35,6 +35,12 @@ describe('ConnectionManager', () => {
     const mockConnectorTransport1 = new ConnectionManager({ ownPeerDescriptor: mockPeerDescriptor1, simulator })
     const mockConnectorTransport2 = new ConnectionManager({ ownPeerDescriptor: mockPeerDescriptor2, simulator })
 
+    afterAll(async ()=> {
+        await mockTransport.stop()
+        await mockConnectorTransport1.stop()
+        await mockConnectorTransport2.stop()
+    })
+
     it('Can start alone', async () => {
         const connectionManager = new ConnectionManager({ transportLayer: mockTransport, webSocketHost: '127.0.0.1', webSocketPort: 9991 })
 
@@ -304,9 +310,8 @@ describe('ConnectionManager', () => {
         connectionManager3.closeConnection(PeerID.fromValue(mockPeerDescriptor4.kademliaId).toKey())
 
         await Promise.all([disconnectedPromise1, disconnectedPromise2])
-    })
-
-    afterAll(async () => {
+        await connectionManager3.stop()
+        await connectionManager4.stop()
     })
 
 })

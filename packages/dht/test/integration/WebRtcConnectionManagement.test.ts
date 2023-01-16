@@ -48,6 +48,8 @@ describe('WebRTC Connection Management', () => {
     afterEach(async () => {
         await manager1.stop()
         await manager2.stop()
+        await connectorTransport1.stop()
+        await connectorTransport2.stop()
         simulator.stop()
     })
 

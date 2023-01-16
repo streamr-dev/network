@@ -1,16 +1,18 @@
 /* eslint-disable @typescript-eslint/prefer-for-of */
-
+//import wtf from 'wtfnode'
 import { DhtNode, Events as DhtNodeEvents } from '../../src/dht/DhtNode'
 import { Message, MessageType, PeerDescriptor, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { runAndWaitForEvents3 } from '../../src/helpers/waitForEvent3'
-import { waitForCondition } from '@streamr/utils'
+import { Logger, waitForCondition } from '@streamr/utils'
 import { createMockConnectionDhtNode, createWrappedClosestPeersRequest } from '../utils'
 import { PeerID } from '../../src/helpers/PeerID'
 import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { v4 } from 'uuid'
 import { UUID } from '../../src/helpers/UUID'
 import { Any } from '../../src/proto/google/protobuf/any'
+
+const logger = new Logger(module)
 
 describe('Route Message With Mock Connections', () => {
     let entryPoint: DhtNode
@@ -51,18 +53,24 @@ describe('Route Message With Mock Connections', () => {
 
     afterEach(async () => {
 
-        await Promise.all(routerNodes.map((node) => node.stop()))
+        await Promise.allSettled(routerNodes.map((node) => node.stop()))
 
-        await Promise.all([
+        await Promise.allSettled([
             entryPoint.stop(),
             destinationNode.stop(),
             sourceNode.stop()
         ])
 
-        await simulator.stop()
+        logger.info('calling simulator stop')
+        simulator.stop()
+        logger.info('simulator stop called')
+        //await wait(1)
+        //wtf.dump()
+        //await wait(1)
     })
 
     it('Happy path', async () => {
+        
         await destinationNode.joinDht(entryPointDescriptor)
         await sourceNode.joinDht(entryPointDescriptor)
         await Promise.all(
@@ -93,6 +101,7 @@ describe('Route Message With Mock Connections', () => {
 
             })
         }], [[destinationNode, 'message']], 20000)
+        logger.info('jee')
     }, 30000)
     /* ToDo: replace this with a case where no candidates
     can be found 

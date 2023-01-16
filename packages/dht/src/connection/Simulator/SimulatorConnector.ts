@@ -33,6 +33,7 @@ export class SimulatorConnector {
     }
 
     public connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
+        logger.info('connect() ' + this.ownPeerDescriptor.nodeName + ',' + targetPeerDescriptor.nodeName)
         const peerKey = PeerID.fromValue(targetPeerDescriptor.kademliaId).toKey()
         const existingConnection = this.connectingConnections.get(peerKey)
         if (existingConnection) {
@@ -75,10 +76,10 @@ export class SimulatorConnector {
             ConnectionType.SIMULATOR_SERVER, undefined, connection)
 
         logger.trace('connected, objectId: ' + managedConnection.objectId)
-        
+
         managedConnection.once('handshakeRequest', (_peerDescriptor: PeerDescriptor) => {
             logger.trace('incoming handshake request objectId: ' + managedConnection.objectId)
-            
+
             if (this.incomingConnectionCallback(managedConnection)) {
                 managedConnection.acceptHandshake()
             } else {
@@ -110,6 +111,11 @@ export class SimulatorConnector {
 
     public async stop(): Promise<void> {
         this.stopped = true
+        const conns = Array.from(this.connectingConnections.values())
+        logger.info('CONNECTING conns.length in STOP ' + conns.length)
+        await Promise.allSettled(conns.map((conn) =>
+            conn.close()
+        ))
         //this.removeAllListeners()
     }
 }

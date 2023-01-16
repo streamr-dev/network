@@ -59,6 +59,8 @@ describe('WebSocket Connection Management', () => {
     afterEach(async () => {
         await wsServerManager.stop()
         await noWsServerManager.stop()
+        await connectorTransport1.stop()
+        await connectorTransport2.stop()
     })
 
     it('Can open connections to serverless peer', (done) => {

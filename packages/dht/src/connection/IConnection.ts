@@ -42,6 +42,6 @@ export interface IConnection {
     off(event: 'disconnected', listener: (code?: number, reason?: string) => void): void
     
     send(data: Uint8Array): void
-    close(): void
+    close(): Promise<void>
     destroy(): void
 }

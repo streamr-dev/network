@@ -79,7 +79,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
 
         this.connectingTimeoutRef = setTimeout(() => {
             logger.error('connectingTimeout, this.closed === ' + this.closed)
-            this.close()
+            this.doClose()
         }, this.connectingTimeout)
 
         this.connection.onStateChange((state) => this.onStateChange(state))
@@ -108,7 +108,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
                 logger.warn(`Failed to set remote descriptor for peer ${this.remotePeerDescriptor.kademliaId.toString()}`)
             }
         } else {
-            this.close(`Tried to set description for non-existent connection`)
+            this.doClose(`Tried to set description for non-existent connection`)
         }
     }
 
@@ -120,13 +120,13 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
                     this.connection!.addRemoteCandidate(candidate, mid)
                 } catch (err) {
                     logger.warn(`Failed to set remote candidate for peer ${this.remotePeerDescriptor.kademliaId.toString()}`)
-                    this.close()
+                    this.doClose()
                 }
             } else {
-                this.close(`Tried to set candidate before description`)
+                this.doClose(`Tried to set candidate before description`)
             }
         } else {
-            this.close(`Tried to set candidate for non-existent connection`)
+            this.doClose(`Tried to set candidate for non-existent connection`)
         }
     }
 
@@ -140,7 +140,11 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
         }
     }
 
-    public close(reason?: string): void {
+    public async close(reason?: string): Promise<void> {
+        this.doClose(reason)
+    }
+
+    private doClose(reason?: string): void {
         if (!this.closed) {
             //const err = new Error()
             logger.trace(
@@ -178,7 +182,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
 
     public destroy(): void {
         this.removeAllListeners()
-        this.close()
+        this.doClose()
     }
 
     private onDataChannel(dataChannel: DataChannel): void {
@@ -195,7 +199,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
 
         dataChannel.onClosed(() => {
             logger.trace(`dc.closed`)
-            this.close('DataChannel closed')
+            this.doClose('DataChannel closed')
         })
 
         dataChannel.onError((err) => logger.error(err))
@@ -230,7 +234,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
             || state === RTCPeerConnectionStateEnum.disconnected
             || state === RTCPeerConnectionStateEnum.failed
         ) {
-            this.close()
+            this.doClose()
         }
         
     }

@@ -84,7 +84,7 @@ export class ClientWebSocket extends EventEmitter<ConnectionEvents> implements I
         }
     }
 
-    public close(): void {
+    public async close(): Promise<void> {
         if (!this.stopped) {
             logger.trace(`Closing socket for connection ${this.connectionId.toString()}`)
             this.socket?.close()
