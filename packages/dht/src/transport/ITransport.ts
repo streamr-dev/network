@@ -18,5 +18,6 @@ export interface ITransport {
 
     send(msg: Message, doNotConnect?: boolean): Promise<void>
     getPeerDescriptor(): PeerDescriptor
+    getAllConnectionPeerDescriptors(): PeerDescriptor[]
     stop(): void | Promise<void>
 }

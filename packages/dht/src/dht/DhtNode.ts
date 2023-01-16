@@ -423,6 +423,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             }
             //console.info('connected, ' +PeerID.fromValue(dhtPeer.id).toKey() +', '+ dhtPeer.id)
             this.emit('connected', peerDescriptor)
+
         })
 
         this.transportLayer!.on('disconnected', (peerDescriptor: PeerDescriptor) => {
@@ -436,6 +437,17 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             //this.connectionManager?.unlockConnection(peerDescriptor, this.config.serviceId)
 
             this.emit('disconnected', peerDescriptor)
+        })
+
+        this.transportLayer!.getAllConnectionPeerDescriptors().map((peer) => {
+            const peerId = PeerID.fromValue(peer.kademliaId)
+            const dhtPeer = new DhtPeer(
+                this.ownPeerDescriptor!,
+                peer,
+                toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
+                this.config.serviceId
+            )
+            this.connections.set(peerId.toKey(), dhtPeer)
         })
 
         this.randomPeers = new RandomContactList(selfId, this.config.maxNeighborListSize)
@@ -735,6 +747,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
     public getPeerDescriptor(): PeerDescriptor {
         return this.ownPeerDescriptor!
+    }
+
+    public getAllConnectionPeerDescriptors(): PeerDescriptor[] {
+        return [...this.connections.values()].map((peer) => peer.getPeerDescriptor())
     }
 
     public getK(): number {

@@ -46,13 +46,13 @@ export const createMockConnectionDhtNode = async (stringId: string,
     const node = new DhtNode({ peerDescriptor: peerDescriptor, 
         transportLayer: mockConnectionManager, 
         nodeName: nodeName, 
-        numberOfNodesPerKBucket: K ? K : 8 })
+        numberOfNodesPerKBucket: K ? K : 4 })
     await node.start()
 
     return node
 }
 
-export const createMockConnectionLayer1Node = async (stringId: string, layer0Node: DhtNode): Promise<DhtNode> => {
+export const createMockConnectionLayer1Node = async (stringId: string, layer0Node: DhtNode, serviceId?: string): Promise<DhtNode> => {
     const id = PeerID.fromString(stringId)
     const descriptor: PeerDescriptor = {
         kademliaId: id.value,
@@ -61,7 +61,7 @@ export const createMockConnectionLayer1Node = async (stringId: string, layer0Nod
     }
 
     const node = new DhtNode({ peerDescriptor: descriptor, transportLayer: layer0Node, 
-        serviceId: 'layer1', numberOfNodesPerKBucket: 8,  nodeName: stringId })
+        serviceId: serviceId ? serviceId : 'layer1', numberOfNodesPerKBucket: 8,  nodeName: stringId })
     await node.start()
     return node
 }
