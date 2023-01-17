@@ -49,10 +49,10 @@ describe('Propagation', () => {
                 graph.on(Event.MESSAGE, () => { totalReceived += 1 })
                 dhtNodes.push(dht)
                 randomGraphNodes.push(graph)
-                return
             })
 
         }))
+        console.log("HERE")
     }, 30000)
 
     afterEach(async () => {

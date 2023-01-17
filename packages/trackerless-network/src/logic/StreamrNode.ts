@@ -80,7 +80,7 @@ export class StreamrNode extends EventEmitter {
         if (!this.started || this.destroyed) {
             return
         }
-        logger.trace('Destroying StreamrNode...')
+        logger.info('Destroying StreamrNode...')
         this.destroyed = true
         this.streams.forEach((stream) => {
             stream.layer2.stop()
@@ -138,7 +138,7 @@ export class StreamrNode extends EventEmitter {
             peerDescriptor: this.layer0!.getPeerDescriptor(),
             routeMessageTimeout: 5000,
             entryPoints: [entryPoint],
-            numberOfNodesPerKBucket: 8,
+            numberOfNodesPerKBucket: 4,
             rpcRequestTimeout: 15000,
             dhtJoinTimeout: 90000,
             nodeName: this.config.nodeName
@@ -158,7 +158,6 @@ export class StreamrNode extends EventEmitter {
         })
 
         await layer1.start()
-        await layer1.joinDht(entryPoint)
 
         /* vars to be shown in debugger
         const layer0BucketSize = this.layer0.getBucketSize()
@@ -170,7 +169,8 @@ export class StreamrNode extends EventEmitter {
         layer2.on(RandomGraphEvent.MESSAGE, (message: StreamMessage) => {
             this.emit(Event.NEW_MESSAGE, message)
         })
-       
+        await layer1.joinDht(entryPoint)
+
     }
 
     async waitForJoinAndPublish(streamPartId: string, entrypointDescriptor: PeerDescriptor, msg: StreamMessage): Promise<number> {
@@ -220,6 +220,13 @@ export class StreamrNode extends EventEmitter {
         this.extraMetadata = metadata
     }
 
+    getConnectionCount(): number {
+        return this.layer0!.getNumberOfConnections()
+    }
+
+    getLlayer0BucketSize(): number {
+        return this.layer0!.getBucketSize()
+    }
 }
 
 [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `SIGTERM`].forEach((term) => {

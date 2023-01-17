@@ -67,7 +67,7 @@ export class ManagedConnection extends EventEmitter<Events> {
             this.handshaker = new Handshaker(this.ownPeerDescriptor, this.protocolVersion, outgoingConnection)
 
             this.handshaker.once('handshakeFailed', (errorMessage) => {
-                logger.info('IL handshake failed for outgoing connection ' + errorMessage + ' ' +
+                logger.trace('IL handshake failed for outgoing connection ' + errorMessage + ' ' +
                     this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + ' objectid: ' + this.objectId
                     + ' outputBuffer.length: ' + this.outputBuffer.length)
                 this.emit('handshakeFailed')
@@ -75,7 +75,7 @@ export class ManagedConnection extends EventEmitter<Events> {
             })
 
             this.handshaker.on('handshakeCompleted', (peerDescriptor: PeerDescriptor) => {
-                logger.info('handshake completed for outgoing connection ' + this.ownPeerDescriptor.nodeName +
+                logger.trace('handshake completed for outgoing connection ' + this.ownPeerDescriptor.nodeName +
                     ', ' + this.peerDescriptor?.nodeName + ' objectid: ' + this.objectId
                     + ' outputBuffer.length: ' + this.outputBuffer.length)
 
@@ -223,7 +223,7 @@ export class ManagedConnection extends EventEmitter<Events> {
     }
 
     private onDisconnected(code?: number, reason?: string): void {
-        logger.info('IL onDisconnected ' + code + ' ' + reason)
+        logger.trace('IL onDisconnected ' + code + ' ' + reason)
         this.doDisconnect()
     }
 
@@ -255,7 +255,7 @@ export class ManagedConnection extends EventEmitter<Events> {
                 this.outgoingConnection!.off('disconnected', this.onDisconnected)
 
                 if (this.bufferSentbyOtherConnection) {
-                    logger.info('bufferSentByOtherConnection already true')
+                    logger.trace('bufferSentByOtherConnection already true')
                     this.destroy()
                 } else {
 
@@ -277,12 +277,12 @@ export class ManagedConnection extends EventEmitter<Events> {
                     }
 
                     if (result2.winnerName == 'bufferSentByOtherConnection') {
-                        logger.info('bufferSentByOtherConnection received')
+                        logger.trace('bufferSentByOtherConnection received')
                         //this.outgoingConnection!.off('disconnected', lis)
                         this.destroy()
                         //throw new Err.ConnectionFailed()
                     } else if (result2.winnerName == 'closing') {
-                        logger.info('bufferSentByOtherConnection not received, instead received a closing event')
+                        logger.trace('bufferSentByOtherConnection not received, instead received a closing event')
                         //this.outgoingConnection!.off('disconnected', lis)
                         //this.destroy()
                         throw new Err.ConnectionFailed("")
@@ -306,13 +306,13 @@ export class ManagedConnection extends EventEmitter<Events> {
         if (this.handshaker) {
             this.handshaker.removeAllListeners()
         }
-        logger.info('bufferSentByOtherConnection reported')
+        logger.trace('bufferSentByOtherConnection reported')
         this.bufferSentbyOtherConnection = true
         this.emit('bufferSentByOtherConnection')
     }
 
     public reportBufferSendingByOtherConnectionFailed(): void {
-        logger.info('IL reportBufferSendingByOtherConnectionFailed')
+        logger.trace('IL reportBufferSendingByOtherConnectionFailed')
         this.doDisconnect()
     }
 
@@ -355,7 +355,7 @@ export class ManagedConnection extends EventEmitter<Events> {
         } else if (this.incomingConnection) {
             await this.incomingConnection?.close()
         } else {
-            logger.info('IL close')
+            logger.trace('IL close')
             this.doDisconnect()
         }
     }

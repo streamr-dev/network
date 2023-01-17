@@ -65,7 +65,7 @@ export class RemoteRandomGraphNode {
                 interleaveTarget: response.interleaveTarget
             }
         } catch (err: any) {
-            logger.debug(`handshake to ${PeerID.fromValue(this.getPeerDescriptor().kademliaId).toKey()} failed: ${err}`)
+            logger.error(`handshake to ${PeerID.fromValue(this.getPeerDescriptor().kademliaId).toKey()} failed: ${err}`)
             return {
                 accepted: false
             }

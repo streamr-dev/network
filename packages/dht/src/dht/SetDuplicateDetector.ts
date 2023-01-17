@@ -28,7 +28,6 @@ export class SetDuplicateDetector {
 
     public isMostLikelyDuplicate(value: string, senderId: string, message?: Message): boolean {
         if (this.values.has(value)) {
-            logger.error('duplicate')
             let index = -1
             for (let i = 0; i < this.queue.length; i++) {
                 if (this.queue[this.queue.length - 1 - i][1] === value) {
@@ -37,22 +36,21 @@ export class SetDuplicateDetector {
                 }
             }
 
-            if (index != -1 && message) {
-                logger.error('duplicate index ' + index)
-                const time = this.queue[index][0]
-                const prevSender = this.queue[index][2]
-
-                logger.error('duplicate rawmessage ' + value + ' detected at time: ' +
-                    Date.now() + ' from ' + senderId + ' ' + JSON.stringify(message)
-                    + ' previous instance: ' + this.queue[index][1] + ' ' + index + ' messages ago, from ' + prevSender + ' at time ' + time + ' ' +
-                    JSON.stringify(this.queue[index][3]))
-
-                logger.error('duplicate ' + value + ' detected at time: ' + Date.now() + ' from ' + senderId + ' ' + JSON.stringify(message.body)
-                    + ' previous instance: ' + this.queue[index][1] + ' ' + index + ' messages ago, from ' + prevSender + ' at time ' + time + ' ' +
-                    JSON.stringify(this.queue[index][3]))
-            } else {
-                logger.error('collision values.has() was true, but value not found in queue')
-            }
+            // if (index != -1 && message) {
+            //     const time = this.queue[index][0]
+            //     const prevSender = this.queue[index][2]
+            //
+            //     logger.error('duplicate rawmessage ' + value + ' detected at time: ' +
+            //         Date.now() + ' from ' + senderId + ' ' + JSON.stringify(message)
+            //         + ' previous instance: ' + this.queue[index][1] + ' ' + index + ' messages ago, from ' + prevSender + ' at time ' + time + ' ' +
+            //         JSON.stringify(this.queue[index][3]))
+            //
+            //     logger.error('duplicate ' + value + ' detected at time: ' + Date.now() + ' from ' + senderId + ' ' + JSON.stringify(message.body)
+            //         + ' previous instance: ' + this.queue[index][1] + ' ' + index + ' messages ago, from ' + prevSender + ' at time ' + time + ' ' +
+            //         JSON.stringify(this.queue[index][3]))
+            // } else {
+            //     logger.error('collision values.has() was true, but value not found in queue')
+            // }
 
         }
         return this.values.has(value)

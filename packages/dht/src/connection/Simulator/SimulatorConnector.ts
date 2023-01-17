@@ -33,7 +33,7 @@ export class SimulatorConnector {
     }
 
     public connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
-        logger.info('connect() ' + this.ownPeerDescriptor.nodeName + ',' + targetPeerDescriptor.nodeName)
+        logger.trace('connect() ' + this.ownPeerDescriptor.nodeName + ',' + targetPeerDescriptor.nodeName)
         const peerKey = PeerID.fromValue(targetPeerDescriptor.kademliaId).toKey()
         const existingConnection = this.connectingConnections.get(peerKey)
         if (existingConnection) {
@@ -112,7 +112,7 @@ export class SimulatorConnector {
     public async stop(): Promise<void> {
         this.stopped = true
         const conns = Array.from(this.connectingConnections.values())
-        logger.info('CONNECTING conns.length in STOP ' + conns.length)
+        logger.trace('CONNECTING conns.length in STOP ' + conns.length)
         await Promise.allSettled(conns.map((conn) =>
             conn.close()
         ))

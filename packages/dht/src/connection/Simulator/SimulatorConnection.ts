@@ -26,7 +26,7 @@ export class SimulatorConnection extends Connection implements IConnection {
     }
 
     public send(data: Uint8Array): void {
-        logger.info('send()')
+        logger.trace('send()')
         if (!this.stopped) {
             
             this.simulator.send(this, data)
@@ -38,7 +38,7 @@ export class SimulatorConnection extends Connection implements IConnection {
 
     public async close(): Promise<void> {
         if (!this.stopped) {
-            logger.info(this.ownPeerDescriptor.nodeName + ' close()')
+            logger.trace(this.ownPeerDescriptor.nodeName + ' close()')
             this.stopped = true
 
             try {
@@ -50,60 +50,60 @@ export class SimulatorConnection extends Connection implements IConnection {
             }
             
         } else {
-            logger.error('tried to close() a stopped connection')
+            logger.trace('tried to close() a stopped connection')
         }
     }
 
     public connect(): void {
         if (!this.stopped) {
-            logger.info('connect() called')
+            logger.trace('connect() called')
             
             this.simulator.connect(this, this.targetPeerDescriptor, (error?: string) => {
                 if (error) {
-                    logger.error(error)
+                    logger.trace(error)
                     this.doDisconnect()
                 } else {
                     this.emit('connected')
                 } 
             })
         } else {
-            logger.error('tried to connect() a stopped connection')
+            logger.trace('tried to connect() a stopped connection')
         }
     }
 
     public handleIncomingData(data: Uint8Array): void {
         //logger.info('received data: ' + this.ownPeerDescriptor.nodeName + ', ' + this.targetPeerDescriptor.nodeName)
         if (!this.stopped) {
-            logger.info('handleIncomingData()')
-            logger.info(protoToString(Message.fromBinary(data), Message))
+            logger.trace('handleIncomingData()')
+            logger.trace(protoToString(Message.fromBinary(data), Message))
             this.emit('data', data)
         } else {
-            logger.error('tried to call handleIncomingData() a stopped connection')
+            logger.trace('tried to call handleIncomingData() a stopped connection')
         }
     }
 
     public handleIncomingDisconnection(): void {
         if (!this.stopped) {
-            logger.info(this.ownPeerDescriptor.nodeName + ' handleIncomingDisconnection()')
+            logger.trace(this.ownPeerDescriptor.nodeName + ' handleIncomingDisconnection()')
             this.stopped = true
             this.doDisconnect()
         } else {
-            logger.error('tried to call handleIncomingDisconnection() a stopped connection')
+            logger.trace('tried to call handleIncomingDisconnection() a stopped connection')
         }
     }
 
     public destroy(): void {
         if (!this.stopped) {
-            logger.info(this.ownPeerDescriptor.nodeName + ' destroy()')
+            logger.trace(this.ownPeerDescriptor.nodeName + ' destroy()')
             this.removeAllListeners()
             this.close().catch((_e) => { })
         } else {
-            logger.error(this.ownPeerDescriptor.nodeName + ' tried to call destroy() a stopped connection')
+            logger.trace(this.ownPeerDescriptor.nodeName + ' tried to call destroy() a stopped connection')
         }
     }
 
     private doDisconnect() {
-        logger.info(this.ownPeerDescriptor.nodeName + ' doDisconnect()')
+        logger.trace(this.ownPeerDescriptor.nodeName + ' doDisconnect()')
         this.stopped = true
         this.emit('disconnected')
         this.removeAllListeners()

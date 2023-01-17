@@ -110,8 +110,10 @@ export class DiscoverySession {
     private onClosestPeersRequestFailed(peer: DhtPeer, exception: Error) {
         if (this.ongoingClosestPeersRequests.has(peer.peerId.toKey())) {
             this.ongoingClosestPeersRequests.delete(peer.peerId.toKey())
-            logger.error('IL ' + this.nodeName + 'onClosestPeersRequestFailed: ' +
-                JSON.stringify(exception) + ' to ' + JSON.stringify(peer.getPeerDescriptor()))
+            if (this.serviceId.includes('websocket')) {
+                logger.error('IL ' + this.nodeName + 'onClosestPeersRequestFailed: ' +
+                    JSON.stringify(exception) + ' to ' + JSON.stringify(peer.getPeerDescriptor()))
+            }
             this.neighborList!.removeContact(peer.peerId)
             //this.findMoreContacts()
         }
@@ -160,7 +162,7 @@ export class DiscoverySession {
 
     public async findClosestNodes(timeout: number): Promise<SortedContactList<DhtPeer>> {
         if (this.neighborList!.getUncontactedContacts(this.parallelism).length < 1) {
-            logger.error('IL ' + this.nodeName + 'getUncontactedContacts length was 0 in beginning of discovery, this.neighborList.size: ' +
+            logger.trace('IL ' + this.nodeName + 'getUncontactedContacts length was 0 in beginning of discovery, this.neighborList.size: ' +
                 this.neighborList.getSize())
         }
         await runAndWaitForEvents3<DiscoverySessionEvents>([() => { this.findMoreContacts() }], [

@@ -35,7 +35,7 @@ describe('Full node network with WebSocket connections only', () => {
         connectionManagers = []
         layer0DhtNodes = []
 
-        layer0Ep = new DhtNode({ peerDescriptor: epPeerDescriptor,  nodeName: 'entrypoint', numberOfNodesPerKBucket: 8, routeMessageTimeout: 10000 })
+        layer0Ep = new DhtNode({ peerDescriptor: epPeerDescriptor,  nodeName: 'entrypoint', numberOfNodesPerKBucket: 4, routeMessageTimeout: 10000 })
         await layer0Ep.start()
         await layer0Ep.joinDht(epPeerDescriptor)
 
@@ -53,7 +53,7 @@ describe('Full node network with WebSocket connections only', () => {
                 webSocketHost: 'localhost',
                 peerIdString: `${i}`,
                 nodeName: `${i}`,
-                numberOfNodesPerKBucket: 8
+                numberOfNodesPerKBucket: 4
             })
 
             layer0DhtNodes.push(layer0)
@@ -90,8 +90,7 @@ describe('Full node network with WebSocket connections only', () => {
 
         await Promise.all([...streamrNodes.map((streamrNode) =>
             waitForCondition(() => {
-                logger.info(streamrNode.config.nodeName + ' hajoa layer2.getTargetNeighborStringIds().length '
-                    + streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length)
+                logger.info(`name: ${streamrNode.config.nodeName}, stream neighbors: ${streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length}, stream contacts ${streamrNode.getStream(randomGraphId)!.layer2.getNearbyContactPoolIds().length}, layer1 size: ${streamrNode.getStream(randomGraphId)!.layer1.getBucketSize()}, layer1 neighborList: ${streamrNode.getStream(randomGraphId)!.layer1.getNeighborList().getSize()}, layer0 size: ${streamrNode.getLlayer0BucketSize()}, connection count: ${streamrNode.getConnectionCount()}`)
                 return streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length >= 3
                     && !streamrNode.getStream(randomGraphId)!.layer1.isJoinOngoing()
             }

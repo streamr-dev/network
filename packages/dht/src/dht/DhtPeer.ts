@@ -116,9 +116,9 @@ export class DhtPeer implements KBucketContact {
             timeout: 10000
         }
         try {
-            logger.info('calling dhtClient.routeMessage')
+            logger.trace('calling dhtClient.routeMessage')
             const ack = await this.dhtClient.routeMessage(message, options)
-            logger.info('dhtClient.routeMessage returned')
+            logger.trace('dhtClient.routeMessage returned')
             if (ack.error!.length > 0) {
                 return false
             }

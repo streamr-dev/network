@@ -44,19 +44,7 @@ export class Handshaker {
 
     public async findParallelTargetsAndHandshake(excludedIds: string[]): Promise<string[]> {
         const exclude = excludedIds.concat(this.targetNeighbors.getStringIds())
-
-        const targetNeighbors: RemoteRandomGraphNode[] = []
-
-        while (targetNeighbors.length < 4 && this.nearbyContactPool.size(exclude) > 0) {
-            const near = this.nearbyContactPool.getRandom(exclude)
-            if (near) {
-                targetNeighbors.push(near)
-                const id = PeerID.fromValue(near!.getPeerDescriptor().kademliaId).toKey()
-                exclude.push(id)
-            }
-        }
-
-        /*const targetNeighbors = this.nearbyContactPool.getClosestAndFurthest(exclude)
+        const targetNeighbors = this.nearbyContactPool.getClosestAndFurthest(exclude)
         while (targetNeighbors.length < 2 && this.randomContactPool.size(exclude) > 0) {
             const random = this.randomContactPool.getRandom(exclude)
             if (random) {
@@ -65,10 +53,8 @@ export class Handshaker {
                 exclude.push(id)
             }
         }
-        */
-
         targetNeighbors.forEach((contact) => this.ongoingHandshakes.add(PeerID.fromValue(contact.getPeerDescriptor().kademliaId).toKey()))
-        logger.info('hajoa findParallerTargets ' + targetNeighbors.length)
+
         const promises = [...targetNeighbors.values()].map(async (target: RemoteRandomGraphNode, i) => {
             const otherPeer = i === 0 ? targetNeighbors[1] : targetNeighbors[0]
             const otherPeerStringId = targetNeighbors.length > 1 ? PeerID.fromValue(otherPeer.getPeerDescriptor().kademliaId).toKey() : undefined
@@ -109,12 +95,10 @@ export class Handshaker {
             concurrentStringId
         )
         if (result.accepted) {
-            logger.info(this.params.nodeName + ' hajoa handhsake accepted')
             this.targetNeighbors.add(targetNeighbor)
             this.connectionLocker.lockConnection(targetNeighbor.getPeerDescriptor(), this.randomGraphId)
         }
         if (result.interleaveTarget) {
-            //logger.info('hajoa interleave handhsake requested')
             const interleaveTarget = new RemoteRandomGraphNode(
                 result.interleaveTarget,
                 this.randomGraphId,
@@ -139,10 +123,7 @@ export class Handshaker {
             interleavingFrom
         )
         if (result.accepted) {
-
             this.targetNeighbors.add(targetNeighbor)
-            logger.info(this.params.nodeName + ' hajoa interleave handhsake accepted, targetNeighbors.length ' +
-                this.targetNeighbors.getStringIds().length)
             this.connectionLocker.lockConnection(targetNeighbor.getPeerDescriptor(), this.randomGraphId)
         }
         this.ongoingHandshakes.delete(targetStringId)

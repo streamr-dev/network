@@ -70,7 +70,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
             this.stopped = true
             this.emit('routingFailed', this.sessionId)
         } else {
-            logger.info('routing failed, retrying to route')
+            logger.trace('routing failed, retrying to route')
             this.sendMoreRequests(contacts)
         }
     }
@@ -138,7 +138,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
                 return
             }
             const nextPeer = uncontacted.shift()
-            logger.info('sendRouteMessageRequest')
+            logger.trace('sendRouteMessageRequest')
             this.sendRouteMessageRequest(nextPeer!)
                 .then((succeeded) => {
                     if (succeeded) {
@@ -150,7 +150,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
                 }).catch((e) => { 
                     logger.error(e)
                 }).finally(() => {
-                    logger.info('sendRouteMessageRequest returned')
+                    logger.trace('sendRouteMessageRequest returned')
                 })
         }
     }

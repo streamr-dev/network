@@ -74,7 +74,7 @@ export class DhtNodeConfig {
     joinNoProgressLimit = 4
     routeMessageTimeout = 4000
     dhtJoinTimeout = 60000
-    getClosestContactsLimit = 20
+    getClosestContactsLimit = 5
     metricsContext = new MetricsContext()
 
     constructor(conf: Partial<DhtNodeConfig>) {
@@ -86,10 +86,6 @@ export class DhtNodeConfig {
             }
         }
         Object.assign(this, conf)
-
-        if (!conf.nodeName) {
-            logger.error('nodeName was falsy')
-        }
     }
 }
 
@@ -209,11 +205,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
     public handleMessage(message: Message): void {
         if (message.serviceId === this.config.serviceId) {
-            logger.info('callig this.handleMessageFromPeer ' + this.config.nodeName + ', ' +
+            logger.trace('callig this.handleMessageFromPeer ' + this.config.nodeName + ', ' +
                 message.sourceDescriptor?.nodeName + ' ' + message.serviceId + ' ' + message.messageId)
             this.rpcCommunicator?.handleMessageFromPeer(message)
         } else {
-            logger.info('emit "message" ' + this.config.nodeName + ', ' + message.sourceDescriptor?.nodeName +
+            logger.trace('emit "message" ' + this.config.nodeName + ', ' + message.sourceDescriptor?.nodeName +
                 ' ' + message.serviceId + ' ' + message.messageId)
             this.emit('message', message)
         }
@@ -322,7 +318,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
     private onKBucketAdded(contact: DhtPeer): void {
         this.contactOnAddedCounter++
         if (this.config.nodeName == '1') {
-            logger.info('peer1 contactOnAddCounter: ' + this.contactOnAddedCounter)
+            logger.trace('peer1 contactOnAddCounter: ' + this.contactOnAddedCounter)
         }
         if (!this.stopped && !contact.peerId.equals(this.ownPeerId!)) {
 
@@ -345,7 +341,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
                     this.neighborList!.getClosestContacts(this.config.getClosestContactsLimit).map((peer) => peer.getPeerDescriptor())
                 )
             } else {    // open connection by pinging
-                logger.info('starting ping ' + this.config.nodeName + ', ' + contact.getPeerDescriptor().nodeName + ' ')
+                logger.trace('starting ping ' + this.config.nodeName + ', ' + contact.getPeerDescriptor().nodeName + ' ')
                 contact.ping().then((result) => {
                     if (result) {
                         logger.trace(`Added new contact ${contact.peerId.value.toString()}`)
@@ -355,7 +351,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
                             this.neighborList!.getClosestContacts(this.config.getClosestContactsLimit).map((peer) => peer.getPeerDescriptor())
                         )
                     } else {
-                        logger.error('ping failed ' + this.config.nodeName + ', ' + contact.getPeerDescriptor().nodeName + ' ')
+                        logger.trace('ping failed ' + this.config.nodeName + ', ' + contact.getPeerDescriptor().nodeName + ' ')
                         this.connectionManager?.weakUnlockConnection(contact.getPeerDescriptor())
 
                         this.removeContact(contact.getPeerDescriptor())
@@ -411,7 +407,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         )
 
         this.transportLayer!.on('connected', (peerDescriptor: PeerDescriptor) => {
-            logger.info("connected: " + this.config.nodeName + ", " + peerDescriptor.nodeName + ' ')
+            logger.trace("connected: " + this.config.nodeName + ", " + peerDescriptor.nodeName + ' ')
             const dhtPeer = new DhtPeer(
                 this.ownPeerDescriptor!,
                 peerDescriptor,
@@ -428,7 +424,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         })
 
         this.transportLayer!.on('disconnected', (peerDescriptor: PeerDescriptor) => {
-            logger.info('disconnected: ' + this.config.nodeName + ', ' + peerDescriptor.nodeName + ' ')
+            logger.trace('disconnected: ' + this.config.nodeName + ', ' + peerDescriptor.nodeName + ' ')
             this.connections.delete(PeerID.fromValue(peerDescriptor.kademliaId).toKey())
 
             // only remove from bucket if we are on layer 0
@@ -604,8 +600,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             this.ongoingDiscoverySessions.delete(randomSession.sessionId)
 
             if (this.connectionManager) {
-                logger.info('unlocking entryPoint Disconnect')
+                logger.trace('unlocking entryPoint Disconnect')
                 this.connectionManager.unlockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
+            }
+            if (this.config.serviceId.includes('websocket-network')) {
+                console.log(`joinCompleted: ${this.getKBucketPeers().map((peer) => PeerID.fromValue(peer.kademliaId).toString())}`)
             }
         }
 
@@ -616,7 +615,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         if (!this.started || this.stopped || this.rejoinOngoing) {
             return
         }
-        logger.info(`IL Rejoining DHT ${this.config.serviceId} ${this.config.nodeName}!`)
+        logger.info(`Rejoining DHT ${this.config.serviceId} ${this.config.nodeName}!`)
         this.rejoinOngoing = true
         try {
             this.neighborList!.clear()
@@ -818,7 +817,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
     }
 
     public async stop(): Promise<void> {
-        logger.info('stop()')
+        logger.trace('stop()')
         if (!this.started) {
             throw new Err.CouldNotStop('Cannot not stop() before start()')
         }
@@ -884,7 +883,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
     }
 
     public async ping(request: PingRequest, context: ServerCallContext): Promise<PingResponse> {
-        logger.info('received ping request: ' + this.config.nodeName + ', ' + (context as DhtCallContext).incomingSourceDescriptor?.nodeName)
+        logger.trace('received ping request: ' + this.config.nodeName + ', ' + (context as DhtCallContext).incomingSourceDescriptor?.nodeName)
 
         setImmediate(() => {
             this.addNewContact((context as DhtCallContext).incomingSourceDescriptor!)
@@ -995,7 +994,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         await promise
 
         const results = recursiveFindSession.getResults()
-        logger.info("recursive find results: " + JSON.stringify(results))
+        logger.trace("recursive find results: " + JSON.stringify(results))
         return results
     }
 
@@ -1009,7 +1008,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
         routedMessage.routingPath.push(this.ownPeerDescriptor!)
 
-        logger.info('findRecursively recursiveFindPath ' + routedMessage.routingPath.map((descriptor) => descriptor.nodeName))
+        logger.trace('findRecursively recursiveFindPath ' + routedMessage.routingPath.map((descriptor) => descriptor.nodeName))
 
         let recursiveFindRequest: RecursiveFindRequest | undefined
         const msg = routedMessage.message
@@ -1080,7 +1079,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         if (!this.started || this.stopped) {
             return this.createRouteMessageAck(routedMessage, 'findRecursively() service is not running')
         } else if (this.routerDuplicateDetector.isMostLikelyDuplicate(routedMessage.requestId, routedMessage.sourcePeer!.nodeName!)) {
-            logger.error(`findRecursively Node ${this.getNodeName()} received a DUPLICATE RouteMessageWrapper from 
+            logger.trace(`findRecursively Node ${this.getNodeName()} received a DUPLICATE RouteMessageWrapper from 
             ${routedMessage.previousPeer?.nodeName}`)
 
             return this.createRouteMessageAck(routedMessage, 'message given to findRecursively() service is likely a duplicate')
@@ -1098,29 +1097,21 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         if (!this.started || this.stopped) {
             return this.createRouteMessageAck(routedMessage, 'routeMessage() service is not running')
         } else if (this.routerDuplicateDetector.isMostLikelyDuplicate(routedMessage.requestId, routedMessage.sourcePeer!.nodeName!)) {
-            logger.error(`Peer ${this.ownPeerId?.value} routing message ${routedMessage.requestId} 
+            logger.trace(`Peer ${this.ownPeerId?.value} routing message ${routedMessage.requestId} 
                 from ${routedMessage.sourcePeer?.kademliaId} to ${routedMessage.destinationPeer?.kademliaId} is likely a duplicate`)
             return this.createRouteMessageAck(routedMessage, 'message given to routeMessage() service is likely a duplicate')
         }
 
-        logger.info('routeMessage() ' + this.config.nodeName)
         logger.trace(`Processing received routeMessage ${routedMessage.requestId}`)
-        if (this.config.nodeName == 'Peer0') {
-            logger.info('debug')
-        }
+
         this.addNewContact(routedMessage.sourcePeer!, true)
 
-        if (this.config.nodeName == 'Peer0') {
-            logger.info('debug')
-        }
         this.routerDuplicateDetector.add(routedMessage.requestId, routedMessage.sourcePeer!.nodeName!)
 
         if (this.ownPeerId!.equals(PeerID.fromValue(routedMessage.destinationPeer!.kademliaId))) {
 
-            logger.info(`${this.config.nodeName} routing message targeted to self ${routedMessage.requestId}`)
-            if (this.config.nodeName == 'Peer0') {
-                logger.info('debug')
-            }
+            logger.trace(`${this.config.nodeName} routing message targeted to self ${routedMessage.requestId}`)
+
             if (routedMessage.reachableThrough.length > 0) {
                 const sourceKey = PeerID.fromValue(routedMessage.sourcePeer!.kademliaId).toKey()
                 if (this.forwardingTable.has(sourceKey)) {
@@ -1149,7 +1140,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         if (!this.started || this.stopped) {
             return this.createRouteMessageAck(routedMessage, 'forwardMessage() service is not running')
         } else if (this.routerDuplicateDetector.isMostLikelyDuplicate(routedMessage.requestId, routedMessage.sourcePeer!.nodeName!)) {
-            logger.error(`Peer ${this.ownPeerId?.value} forwarding message ${routedMessage.requestId} 
+            logger.trace(`Peer ${this.ownPeerId?.value} forwarding message ${routedMessage.requestId} 
         from ${routedMessage.sourcePeer?.kademliaId} to ${routedMessage.destinationPeer?.kademliaId} is likely a duplicate`)
             return this.createRouteMessageAck(routedMessage, 'message given to forwardMessage() service is likely a duplicate')
         }

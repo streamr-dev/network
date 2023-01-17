@@ -35,7 +35,7 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
     }
 
     public async reportRecursiveFindResult(report: RecursiveFindReport, _context: ServerCallContext): Promise<Empty> {
-        logger.info('recursiveFindReport arrived: ' + JSON.stringify(report))
+        logger.trace('recursiveFindReport arrived: ' + JSON.stringify(report))
         report.nodes.map((descriptor: PeerDescriptor) => {
             this.results.addContact(new Contact(descriptor))
         })

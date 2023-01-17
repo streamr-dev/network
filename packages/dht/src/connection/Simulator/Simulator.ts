@@ -76,7 +76,7 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
         const timeout = setTimeout(() => {
             this.timeouts.delete(timeoutId)
 
-            logger.info('connect() calling hadleIncomingConnection()')
+            logger.trace('connect() calling hadleIncomingConnection()')
 
             target!.handleIncomingConnection(sourceConnection)
         
@@ -96,7 +96,7 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
             const timeout = setTimeout(() => {
                 this.timeouts.delete(timeoutId)
 
-                logger.info('disconnect() calling hadleIncomingDisconnection()')
+                logger.trace('disconnect() calling hadleIncomingDisconnection()')
 
                 this.associations.delete(sourceConnection.connectionId)
                 this.associations.delete(target!.connectionId)
@@ -110,14 +110,14 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     public send(sourceConnection: SimulatorConnection, data: Uint8Array): void {
         const target = this.associations.get(sourceConnection.connectionId)
 
-        logger.info('send()')
+        logger.trace('send()')
 
         if (target) {
             const timeoutId = v4()
             const latency = this.getLatency(sourceConnection.ownPeerDescriptor.region, target!.ownPeerDescriptor.region)
             const timeout = setTimeout(() => {
                 this.timeouts.delete(timeoutId)
-                logger.info('send() calling hadleIncomingData()')
+                logger.trace('send() calling handleIncomingData()')
                 target!.handleIncomingData(data)
             }, latency)
 

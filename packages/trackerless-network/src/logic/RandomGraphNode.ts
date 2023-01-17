@@ -130,11 +130,10 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
             logger.error('findNeighbors failed ' + e)
         })
 
-        /*
         this.neighborUpdateIntervalRef = setTimeout(async () => {
             await this.updateNeighborInfo()
         }, 20)
-        */
+
 
     }
 
@@ -174,8 +173,6 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         if (this.stopped) {
             return
         }
-        logger.info(this.config.nodeName + ' hajoa Finding new neighbors, targetPeers: ' + this.targetNeighbors.size() +
-            ' nearby: ' + this.nearbyContactPool.size() + ' exluded: ' + excluded)
         let newExcludes: string[]
 
         if (this.targetNeighbors!.size() + this.handshaker!.getOngoingHandshakes().size < this.N - 2) {
@@ -186,7 +183,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
             newExcludes = excluded
         }
 
-        if (this.targetNeighbors!.size() < this.N /* && newExcludes.length < this.nearbyContactPool!.size()*/) {
+        if (this.targetNeighbors!.size() < this.N && newExcludes.length < this.nearbyContactPool!.size()) {
             this.findNeighborsIntervalRef = setTimeout(() => {
                 if (this.findNeighborsIntervalRef) {
                     clearTimeout(this.findNeighborsIntervalRef)
@@ -310,6 +307,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     }
 
     private onPeerDisconnected(peerDescriptor: PeerDescriptor): void {
+        logger.info(`PEER DISCONNECTED ${PeerID.fromValue(peerDescriptor.kademliaId).toKey()} ${this.getOwnStringId()}`)
         if (this.targetNeighbors!.hasPeer(peerDescriptor)) {
             this.targetNeighbors!.remove(peerDescriptor)
             // this.randomContactPool.remove(peerDescriptor)
