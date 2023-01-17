@@ -52,7 +52,7 @@ export class GroupKeyManager {
         return groupKeys[0] as GroupKey
     }
 
-    async storeKey(streamId: StreamID, groupKey?: GroupKey): Promise<GroupKey> { // TODO: name
+    async storeKey(groupKey: GroupKey | undefined, streamId: StreamID): Promise<GroupKey> { // TODO: name
         if (groupKey === undefined) {
             const keyData = crypto.randomBytes(32)
             // 1st try lit-protocol, if a key cannot be generated and stored, then generate group key locally

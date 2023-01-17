@@ -39,13 +39,13 @@ export class GroupKeyQueue {
     }
 
     async rotate(newKey?: GroupKey): Promise<GroupKey> {
-        newKey = await this.groupKeyManager.storeKey(this.streamId, newKey)
+        newKey = await this.groupKeyManager.storeKey(newKey, this.streamId)
         this.queuedGroupKey = newKey
         return newKey
     }
 
     async rekey(newKey?: GroupKey): Promise<GroupKey> {
-        newKey = await this.groupKeyManager.storeKey(this.streamId, newKey)
+        newKey = await this.groupKeyManager.storeKey(newKey, this.streamId)
         this.currentGroupKey = newKey
         this.queuedGroupKey = undefined
         return newKey
