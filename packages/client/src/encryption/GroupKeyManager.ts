@@ -2,12 +2,14 @@ import { LitProtocolKeyStore } from './LitProtocolKeyStore'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { GroupKeyStore } from './GroupKeyStore'
 import { GroupKey } from './GroupKey'
-import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
+import { StreamID, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { EthereumAddress, waitForEvent } from '@streamr/utils'
 import { SubscriberKeyExchange } from './SubscriberKeyExchange'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { StreamrClientEventEmitter } from '../events'
 import { DestroySignal } from '../DestroySignal'
+import crypto from 'crypto'
+import { uuid } from '../utils/uuid'
 
 @scoped(Lifecycle.ContainerScoped)
 export class GroupKeyManager {
@@ -48,5 +50,18 @@ export class GroupKeyManager {
             this.destroySignal.abortSignal
         )
         return groupKeys[0] as GroupKey
+    }
+
+    async storeKey(streamId: StreamID, groupKey?: GroupKey): Promise<GroupKey> { // TODO: name
+        if (groupKey === undefined) {
+            const keyData = crypto.randomBytes(32)
+            // 1st try lit-protocol, if a key cannot be generated and stored, then generate group key locally
+            groupKey = await this.litProtocolKeyStore.store(streamId, keyData)
+            if (groupKey === undefined) {
+                groupKey = new GroupKey(uuid('GroupKey'), keyData)
+            }
+        }
+        await this.groupKeyStore.add(groupKey, streamId)
+        return groupKey
     }
 }

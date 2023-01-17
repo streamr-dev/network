@@ -8,11 +8,10 @@ import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { MessageFactory } from './MessageFactory'
 import { isString } from 'lodash'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
-import { GroupKeyStore } from '../encryption/GroupKeyStore'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { Mapping } from '../utils/Mapping'
-import { LitProtocolKeyStore } from '../encryption/LitProtocolKeyStore'
 import { StreamrClientError } from '../StreamrClientError'
+import { GroupKeyManager } from '../encryption/GroupKeyManager'
 
 export interface PublishMetadata {
     timestamp?: string | number | Date
@@ -46,9 +45,8 @@ export class Publisher {
     constructor(
         streamIdBuilder: StreamIDBuilder,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
-        @inject(LitProtocolKeyStore) litProtocolKeyStore: LitProtocolKeyStore,
         streamRegistryCached: StreamRegistryCached,
-        groupKeyStore: GroupKeyStore,
+        groupKeyManager: GroupKeyManager,
         node: NetworkNodeFacade
     ) {
         this.streamIdBuilder = streamIdBuilder
@@ -59,7 +57,7 @@ export class Publisher {
             return this.createMessageFactory(streamId)
         })
         this.groupKeyQueues = new Mapping(async (streamId: StreamID) => {
-            return new GroupKeyQueue(streamId, groupKeyStore, litProtocolKeyStore)
+            return new GroupKeyQueue(streamId, groupKeyManager)
         })
     }
 

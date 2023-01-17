@@ -1,9 +1,6 @@
 import { StreamID } from '@streamr/protocol'
 import { GroupKey } from '../encryption/GroupKey'
-import { GroupKeyStore } from '../encryption/GroupKeyStore'
-import { LitProtocolKeyStore } from '../encryption/LitProtocolKeyStore'
-import crypto from 'crypto'
-import { uuid } from '../utils/uuid'
+import { GroupKeyManager } from '../encryption/GroupKeyManager'
 
 export interface GroupKeySequence {
     current: GroupKey
@@ -15,13 +12,11 @@ export class GroupKeyQueue {
     private currentGroupKey: GroupKey | undefined
     private queuedGroupKey: GroupKey | undefined // a group key queued to be rotated into use after the call to useGroupKey
     private readonly streamId: StreamID
-    private readonly store: GroupKeyStore
-    private readonly litProtocolKeyStore: LitProtocolKeyStore
+    private readonly groupKeyManager: GroupKeyManager
 
-    constructor(streamId: StreamID, store: GroupKeyStore, litProtocolKeyStore: LitProtocolKeyStore) {
+    constructor(streamId: StreamID, groupKeyManager: GroupKeyManager) {
         this.streamId = streamId
-        this.store = store
-        this.litProtocolKeyStore = litProtocolKeyStore
+        this.groupKeyManager = groupKeyManager
     }
 
     async useGroupKey(): Promise<GroupKeySequence> {
@@ -44,28 +39,15 @@ export class GroupKeyQueue {
     }
 
     async rotate(newKey?: GroupKey): Promise<GroupKey> {
-        if (newKey === undefined) {
-            newKey = await this.generateNewKey()
-        }
+        newKey = await this.groupKeyManager.storeKey(this.streamId, newKey)
         this.queuedGroupKey = newKey
-        await this.store.add(newKey, this.streamId)
         return newKey
     }
 
     async rekey(newKey?: GroupKey): Promise<GroupKey> {
-        if (newKey === undefined) {
-            newKey = await this.generateNewKey()
-        }
-        await this.store.add(newKey, this.streamId)
+        newKey = await this.groupKeyManager.storeKey(this.streamId, newKey)
         this.currentGroupKey = newKey
         this.queuedGroupKey = undefined
         return newKey
-    }
-
-    private async generateNewKey(): Promise<GroupKey> {
-        const keyData = crypto.randomBytes(32)
-        // 1st try lit-protocol, if a key cannot be generated and stored, then generate group key locally
-        const litProtocolGroupKey = await this.litProtocolKeyStore.store(this.streamId, keyData)
-        return litProtocolGroupKey !== undefined ? litProtocolGroupKey : new GroupKey(uuid('GroupKey'), keyData)
     }
 }
