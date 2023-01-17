@@ -1,7 +1,7 @@
 import { toStreamID } from '@streamr/protocol'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
-import { mock } from 'jest-mock-extended'
+import { any, mock, MockProxy } from 'jest-mock-extended'
 import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
 
 const streamId = toStreamID('mock-stream')
@@ -9,17 +9,19 @@ const streamId = toStreamID('mock-stream')
 describe('GroupKeyQueue', () => {
 
     let queue: GroupKeyQueue
-    const addToStore = jest.fn().mockResolvedValue(undefined)
+    let groupKeyManager: MockProxy<GroupKeyManager>
 
     beforeEach(() => {
-        queue = new GroupKeyQueue(streamId, mock<GroupKeyManager>())
+        groupKeyManager = mock<GroupKeyManager>()
+        groupKeyManager.storeKey.mockImplementation((gk) => Promise.resolve(gk ?? GroupKey.generate()))
+        queue = new GroupKeyQueue(streamId, groupKeyManager)
     })
 
     it('can rotate and use', async () => {
         const groupKey = GroupKey.generate()
         await queue.rotate(groupKey)
-        expect(addToStore).toBeCalledTimes(1)
-        expect(addToStore).toBeCalledWith(groupKey, streamId)
+        expect(groupKeyManager.storeKey).toBeCalledTimes(1)
+        expect(groupKeyManager.storeKey).toBeCalledWith(groupKey, streamId)
         expect(await queue.useGroupKey()).toEqual({ current: groupKey })
         expect(await queue.useGroupKey()).toEqual({ current: groupKey })
         const groupKey2 = GroupKey.generate()

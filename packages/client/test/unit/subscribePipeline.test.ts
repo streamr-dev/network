@@ -16,6 +16,9 @@ import { GroupKey } from './../../src/encryption/GroupKey'
 import { MessageStream } from './../../src/subscribe/MessageStream'
 import { mock } from 'jest-mock-extended'
 import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
+import { LitProtocolKeyStore } from '../../src/encryption/LitProtocolKeyStore'
+import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
+import { StreamrClientEventEmitter } from '../../src/events'
 
 const CONTENT = {
     foo: 'bar'
@@ -66,11 +69,27 @@ describe('subscribePipeline', () => {
             undefined as any,
             undefined as any
         )
+        const groupKeyStore = {
+            get: async () => undefined
+        } as any
+        const destroySignal = new DestroySignal()
+        const config = {
+            decryption: {
+                keyRequestTimeout: 50
+            }
+        } as any
         pipeline = createSubscribePipeline({
             streamPartId,
             loggerFactory: mockLoggerFactory(),
             resends: undefined as any,
-            groupKeyManager: mock<GroupKeyManager>(),
+            groupKeyManager: new GroupKeyManager(
+                groupKeyStore,
+                mock<LitProtocolKeyStore>(),
+                mock<SubscriberKeyExchange>(),
+                new StreamrClientEventEmitter(),
+                destroySignal,
+                config
+            ),
             groupKeyStore: {
                 get: async () => undefined
             } as any,
@@ -79,12 +98,8 @@ describe('subscribePipeline', () => {
                 isStreamPublisher: async () => true,
                 clearStream: () => {}
             } as any,
-            destroySignal: new DestroySignal(),
-            config: {
-                decryption: {
-                    keyRequestTimeout: 50
-                } as any
-            } as any
+            destroySignal,
+            config
         })
     })
 
