@@ -122,7 +122,7 @@ export class LitProtocolKeyStore {
         }
     }
 
-    async get(streamId: StreamID, encryptedSymmetricKey: string): Promise<GroupKey | undefined> {
+    async get(streamId: StreamID, groupKeyId: string): Promise<GroupKey | undefined> {
         if (this.litNodeClient === undefined) {
             return undefined
         }
@@ -131,14 +131,14 @@ export class LitProtocolKeyStore {
             const authSig = await signAuthMessage(this.authentication)
             const symmetricKey = await this.litNodeClient.getEncryptionKey({
                 evmContractConditions: formEvmContractConditions(this.config.contracts.streamRegistryChainAddress, streamId),
-                toDecrypt: encryptedSymmetricKey,
+                toDecrypt: groupKeyId,
                 chain,
                 authSig
             })
             if (symmetricKey === undefined) {
                 return undefined
             }
-            return new GroupKey(encryptedSymmetricKey, Buffer.from(symmetricKey))
+            return new GroupKey(groupKeyId, Buffer.from(symmetricKey))
         } catch (e) {
             logger.warn('encountered error when trying to get key from lit-protocol: %s', e)
             return undefined
