@@ -17,6 +17,16 @@ describe('iceServerAsString', () => {
         })).toEqual('turn:user:foobar@turn.streamr.network:5349')
     })
 
+    it('with password, username and tcp', () => {
+        expect(iceServerAsString({
+            url: 'turn:turn.streamr.network',
+            port: 5349,
+            username: 'user',
+            password: 'foobar',
+            tcp: true
+        })).toEqual('turn:user:foobar@turn.streamr.network:5349?transport=tcp')
+    })
+
     it('throws if given url without protocol', () => {
         expect(() => {
             iceServerAsString({
