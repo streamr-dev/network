@@ -3,6 +3,7 @@ import { GroupKey } from '../encryption/GroupKey'
 import { GroupKeyStore } from '../encryption/GroupKeyStore'
 import { LitProtocolKeyStore } from '../encryption/LitProtocolKeyStore'
 import crypto from 'crypto'
+import { uuid } from '../utils/uuid'
 
 export interface GroupKeySequence {
     current: GroupKey
@@ -62,8 +63,9 @@ export class GroupKeyQueue {
     }
 
     private async generateNewKey(): Promise<GroupKey> {
+        const keyData = crypto.randomBytes(32)
         // 1st try lit-protocol, if a key cannot be generated and stored, then generate group key locally
-        const litProtocolGroupKey = await this.litProtocolKeyStore.store(this.streamId, crypto.randomBytes(32))
-        return litProtocolGroupKey !== undefined ? litProtocolGroupKey : GroupKey.generate()
+        const litProtocolGroupKey = await this.litProtocolKeyStore.store(this.streamId, keyData)
+        return litProtocolGroupKey !== undefined ? litProtocolGroupKey : new GroupKey(uuid('GroupKey'), keyData)
     }
 }
