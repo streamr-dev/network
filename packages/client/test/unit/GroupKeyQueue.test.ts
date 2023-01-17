@@ -1,27 +1,42 @@
+import 'reflect-metadata'
+
 import { toStreamID } from '@streamr/protocol'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
 import { any, mock, MockProxy } from 'jest-mock-extended'
 import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
+import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
+import { LitProtocolKeyStore } from '../../src/encryption/LitProtocolKeyStore'
+import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
+import { StreamrClientEventEmitter } from '../../src/events'
+import { DestroySignal } from '../../src/DestroySignal'
 
 const streamId = toStreamID('mock-stream')
 
 describe('GroupKeyQueue', () => {
 
+    let groupKeyStore: MockProxy<GroupKeyStore>
     let queue: GroupKeyQueue
-    let groupKeyManager: MockProxy<GroupKeyManager>
+    let groupKeyManager: GroupKeyManager
 
     beforeEach(() => {
-        groupKeyManager = mock<GroupKeyManager>()
-        groupKeyManager.storeKey.mockImplementation((gk) => Promise.resolve(gk ?? GroupKey.generate()))
+        groupKeyStore = mock<GroupKeyStore>()
+        groupKeyManager = new GroupKeyManager(
+            groupKeyStore,
+            mock<LitProtocolKeyStore>(),
+            mock<SubscriberKeyExchange>(),
+            new StreamrClientEventEmitter(),
+            new DestroySignal(),
+            {} as any
+        )
         queue = new GroupKeyQueue(streamId, groupKeyManager)
     })
 
     it('can rotate and use', async () => {
         const groupKey = GroupKey.generate()
         await queue.rotate(groupKey)
-        expect(groupKeyManager.storeKey).toBeCalledTimes(1)
-        expect(groupKeyManager.storeKey).toBeCalledWith(groupKey, streamId)
+        expect(groupKeyStore.add).toBeCalledTimes(1)
+        expect(groupKeyStore.add).toBeCalledWith(groupKey, streamId)
         expect(await queue.useGroupKey()).toEqual({ current: groupKey })
         expect(await queue.useGroupKey()).toEqual({ current: groupKey })
         const groupKey2 = GroupKey.generate()

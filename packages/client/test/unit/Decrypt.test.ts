@@ -5,9 +5,7 @@ import { fastWallet } from '@streamr/test-utils'
 import { DestroySignal } from '../../src/DestroySignal'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { Decrypt } from '../../src/subscribe/Decrypt'
-import { createMockMessage, mockLoggerFactory } from '../test-utils/utils'
-import { mock } from 'jest-mock-extended'
-import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
+import { createGroupKeyManager, createMockMessage, mockLoggerFactory } from '../test-utils/utils'
 
 describe('Decrypt', () => {
 
@@ -17,7 +15,7 @@ describe('Decrypt', () => {
         }
         const decrypt = new Decrypt(
             groupKeyStore as any,
-            mock<GroupKeyManager>(),
+            createGroupKeyManager(),
             {
                 clearStream: jest.fn()
             } as any,
