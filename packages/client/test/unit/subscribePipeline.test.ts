@@ -16,7 +16,7 @@ import { GroupKey } from './../../src/encryption/GroupKey'
 import { MessageStream } from './../../src/subscribe/MessageStream'
 import { mock } from 'jest-mock-extended'
 import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
-import { LitProtocolKeyStore } from '../../src/encryption/LitProtocolKeyStore'
+import { LitProtocolFacade } from '../../src/encryption/LitProtocolFacade'
 import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
 import { StreamrClientEventEmitter } from '../../src/events'
 
@@ -84,7 +84,7 @@ describe('subscribePipeline', () => {
             resends: undefined as any,
             groupKeyManager: new GroupKeyManager(
                 groupKeyStore,
-                mock<LitProtocolKeyStore>(),
+                mock<LitProtocolFacade>(),
                 mock<SubscriberKeyExchange>(),
                 new StreamrClientEventEmitter(),
                 destroySignal,

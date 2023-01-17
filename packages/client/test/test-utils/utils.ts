@@ -21,7 +21,7 @@ import { LoggerFactory } from '../../src/utils/LoggerFactory'
 import { waitForCondition } from '@streamr/utils'
 import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
 import { mock } from 'jest-mock-extended'
-import { LitProtocolKeyStore } from '../../src/encryption/LitProtocolKeyStore'
+import { LitProtocolFacade } from '../../src/encryption/LitProtocolFacade'
 import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
 import { DestroySignal } from '../../src/DestroySignal'
 
@@ -171,7 +171,7 @@ export const createStreamRegistryCached = (opts: {
 export const createGroupKeyManager = (): GroupKeyManager => {
     return new GroupKeyManager(
         mock<GroupKeyStore>(),
-        mock<LitProtocolKeyStore>(),
+        mock<LitProtocolFacade>(),
         mock<SubscriberKeyExchange>(),
         new StreamrClientEventEmitter(),
         new DestroySignal(),

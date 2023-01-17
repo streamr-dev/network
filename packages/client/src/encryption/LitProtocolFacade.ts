@@ -79,33 +79,29 @@ const signAuthMessage = async (authentication: Authentication) => {
  * This class only operates with Polygon production network and therefore ignores contracts config.
  */
 @scoped(Lifecycle.ContainerScoped)
-export class LitProtocolKeyStore {
-    private readonly litNodeClient?: LitJsSdk.LitNodeClient
+export class LitProtocolFacade {
+    private litNodeClient?: LitJsSdk.LitNodeClient
 
     constructor(
         @inject(AuthenticationInjectionToken) private readonly authentication: Authentication,
-        @inject(ConfigInjectionToken) private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | 'litProtocolEnabled'>
-    ) {
-        if (config.litProtocolEnabled) {
-            logger.debug('lit-protocol enabled')
+        @inject(ConfigInjectionToken) private readonly config: Pick<StrictStreamrClientConfig, 'contracts'>
+    ) {}
+
+    getLitNodeClient(): LitJsSdk.LitNodeClient {
+        if (this.litNodeClient === undefined) {
             this.litNodeClient = new LitJsSdk.LitNodeClient({
                 alertWhenUnauthorized: false,
                 debug: true
             })
-        } else {
-            logger.debug('lit-protocol disabled')
-            this.litNodeClient = undefined
         }
+        return this.litNodeClient
     }
 
     async store(streamId: StreamID, symmetricKey: Uint8Array): Promise<GroupKey | undefined> {
-        if (this.litNodeClient === undefined) {
-            return undefined
-        }
         try {
-            await this.litNodeClient.connect()
+            await this.getLitNodeClient().connect()
             const authSig = await signAuthMessage(this.authentication)
-            const encryptedSymmetricKey = await this.litNodeClient.saveEncryptionKey({
+            const encryptedSymmetricKey = await this.getLitNodeClient().saveEncryptionKey({
                 evmContractConditions: formEvmContractConditions(this.config.contracts.streamRegistryChainAddress, streamId),
                 symmetricKey,
                 authSig,
@@ -123,13 +119,10 @@ export class LitProtocolKeyStore {
     }
 
     async get(streamId: StreamID, groupKeyId: string): Promise<GroupKey | undefined> {
-        if (this.litNodeClient === undefined) {
-            return undefined
-        }
         try {
-            await this.litNodeClient.connect()
+            await this.getLitNodeClient().connect()
             const authSig = await signAuthMessage(this.authentication)
-            const symmetricKey = await this.litNodeClient.getEncryptionKey({
+            const symmetricKey = await this.getLitNodeClient().getEncryptionKey({
                 evmContractConditions: formEvmContractConditions(this.config.contracts.streamRegistryChainAddress, streamId),
                 toDecrypt: groupKeyId,
                 chain,

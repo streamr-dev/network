@@ -1,4 +1,4 @@
-import { LitProtocolKeyStore } from './LitProtocolKeyStore'
+import { LitProtocolFacade } from './LitProtocolFacade'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { GroupKeyStore } from './GroupKeyStore'
 import { GroupKey } from './GroupKey'
@@ -15,11 +15,11 @@ import { uuid } from '../utils/uuid'
 export class GroupKeyManager {
     constructor(
         @inject(GroupKeyStore) private readonly groupKeyStore: GroupKeyStore,
-        @inject(LitProtocolKeyStore) private readonly litProtocolKeyStore: LitProtocolKeyStore,
+        @inject(LitProtocolFacade) private readonly litProtocolFacade: LitProtocolFacade,
         @inject(SubscriberKeyExchange) private readonly subscriberKeyExchange: SubscriberKeyExchange,
         @inject(StreamrClientEventEmitter) private readonly eventEmitter: StreamrClientEventEmitter,
         @inject(DestroySignal) private readonly destroySignal: DestroySignal,
-        @inject(ConfigInjectionToken) private readonly config: Pick<StrictStreamrClientConfig, 'decryption'>
+        @inject(ConfigInjectionToken) private readonly config: Pick<StrictStreamrClientConfig, 'decryption' | 'litProtocolEnabled'>
     ) {
     }
 
@@ -33,10 +33,12 @@ export class GroupKeyManager {
         }
 
         // 2nd try: lit-protocol
-        groupKey = await this.litProtocolKeyStore.get(streamId, groupKeyId)
-        if (groupKey !== undefined) {
-            await this.groupKeyStore.add(groupKey, streamId)
-            return groupKey
+        if (this.config.litProtocolEnabled) {
+            groupKey = await this.litProtocolFacade.get(streamId, groupKeyId)
+            if (groupKey !== undefined) {
+                await this.groupKeyStore.add(groupKey, streamId)
+                return groupKey
+            }
         }
 
         // 3rd try: Streamr key-exchange
@@ -56,7 +58,9 @@ export class GroupKeyManager {
         if (groupKey === undefined) {
             const keyData = crypto.randomBytes(32)
             // 1st try lit-protocol, if a key cannot be generated and stored, then generate group key locally
-            groupKey = await this.litProtocolKeyStore.store(streamId, keyData)
+            if (this.config.litProtocolEnabled) {
+                groupKey = await this.litProtocolFacade.store(streamId, keyData)
+            }
             if (groupKey === undefined) {
                 groupKey = new GroupKey(uuid('GroupKey'), keyData)
             }
