@@ -16,22 +16,17 @@ import { DestroySignal } from '../DestroySignal'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { MsgChainUtil } from './MsgChainUtil'
 import { GroupKeyStore } from '../encryption/GroupKeyStore'
-import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'
-import { StreamrClientEventEmitter } from '../events'
 import { LoggerFactory } from '../utils/LoggerFactory'
-import { LitProtocolKeyStore } from '../encryption/LitProtocolKeyStore'
+import { GroupKeyManager } from '../encryption/GroupKeyManager'
 
 export interface SubscriptionPipelineOptions {
     streamPartId: StreamPartID
     loggerFactory: LoggerFactory
     resends: Resends
     groupKeyStore: GroupKeyStore
-    subscriberKeyExchange: SubscriberKeyExchange
+    groupKeyManager: GroupKeyManager
     streamRegistryCached: StreamRegistryCached
-    streamrClientEventEmitter: StreamrClientEventEmitter
     destroySignal: DestroySignal
-
-    litProtocolKeyStore: LitProtocolKeyStore
     config: StrictStreamrClientConfig
 }
 
@@ -63,13 +58,10 @@ export const createSubscribePipeline = (opts: SubscriptionPipelineOptions): Mess
 
     const decrypt = new Decrypt(
         opts.groupKeyStore,
-        opts.subscriberKeyExchange,
+        opts.groupKeyManager,
         opts.streamRegistryCached,
         opts.destroySignal,
-        opts.litProtocolKeyStore,
-        opts.loggerFactory,
-        opts.streamrClientEventEmitter,
-        opts.config,
+        opts.loggerFactory
     )
 
     const messageStream = new MessageStream()

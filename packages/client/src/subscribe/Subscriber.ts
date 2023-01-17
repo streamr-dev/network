@@ -7,15 +7,14 @@ import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamDefinition } from '../types'
 import { Resends } from './Resends'
 import { GroupKeyStore } from '../encryption/GroupKeyStore'
-import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
-import { StreamrClientEventEmitter } from '../events'
 import { DestroySignal } from '../DestroySignal'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { Logger } from '@streamr/utils'
 import { LitProtocolKeyStore } from '../encryption/LitProtocolKeyStore'
+import { GroupKeyManager } from '../encryption/GroupKeyManager'
 
 @scoped(Lifecycle.ContainerScoped)
 export class Subscriber {
@@ -23,10 +22,9 @@ export class Subscriber {
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly resends: Resends
     private readonly groupKeyStore: GroupKeyStore
-    private readonly subscriberKeyExchange: SubscriberKeyExchange
+    private readonly groupKeyManager: GroupKeyManager
     private readonly streamRegistryCached: StreamRegistryCached
     private readonly node: NetworkNodeFacade
-    private readonly streamrClientEventEmitter: StreamrClientEventEmitter
     private readonly destroySignal: DestroySignal
     private readonly config: StrictStreamrClientConfig
     private readonly litProtocolKeyStore: LitProtocolKeyStore
@@ -37,10 +35,9 @@ export class Subscriber {
         streamIdBuilder: StreamIDBuilder,
         resends: Resends,
         groupKeyStore: GroupKeyStore,
-        subscriberKeyExchange: SubscriberKeyExchange,
+        groupKeyManager: GroupKeyManager,
         @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
         node: NetworkNodeFacade,
-        streamrClientEventEmitter: StreamrClientEventEmitter,
         destroySignal: DestroySignal,
         @inject(ConfigInjectionToken) config: StrictStreamrClientConfig,
         @inject(LitProtocolKeyStore) litProtocolKeyStore: LitProtocolKeyStore,
@@ -49,10 +46,9 @@ export class Subscriber {
         this.streamIdBuilder = streamIdBuilder
         this.resends = resends
         this.groupKeyStore = groupKeyStore
-        this.subscriberKeyExchange = subscriberKeyExchange
+        this.groupKeyManager = groupKeyManager
         this.streamRegistryCached = streamRegistryCached
         this.node = node
-        this.streamrClientEventEmitter = streamrClientEventEmitter
         this.destroySignal = destroySignal
         this.config = config
         this.litProtocolKeyStore = litProtocolKeyStore
@@ -68,13 +64,11 @@ export class Subscriber {
             streamPartId,
             this.resends,
             this.groupKeyStore,
-            this.subscriberKeyExchange,
+            this.groupKeyManager,
             this.streamRegistryCached,
             this.node,
-            this.streamrClientEventEmitter,
             this.destroySignal,
             this.loggerFactory,
-            this.litProtocolKeyStore,
             this.config
         )
 

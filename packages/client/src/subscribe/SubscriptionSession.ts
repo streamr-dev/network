@@ -11,13 +11,11 @@ import { createSubscribePipeline } from './subscribePipeline'
 import { NetworkNodeFacade, NetworkNodeStub } from '../NetworkNodeFacade'
 import { Resends } from './Resends'
 import { GroupKeyStore } from '../encryption/GroupKeyStore'
-import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
-import { StreamrClientEventEmitter } from '../events'
 import { DestroySignal } from '../DestroySignal'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { LoggerFactory } from '../utils/LoggerFactory'
-import { LitProtocolKeyStore } from '../encryption/LitProtocolKeyStore'
+import { GroupKeyManager } from '../encryption/GroupKeyManager'
 
 /**
  * Manages adding & removing subscriptions to node as needed.
@@ -38,13 +36,11 @@ export class SubscriptionSession {
         streamPartId: StreamPartID,
         resends: Resends,
         groupKeyStore: GroupKeyStore,
-        subscriberKeyExchange: SubscriberKeyExchange,
+        groupKeyManager: GroupKeyManager,
         streamRegistryCached: StreamRegistryCached,
         node: NetworkNodeFacade,
-        streamrClientEventEmitter: StreamrClientEventEmitter,
         destroySignal: DestroySignal,
         loggerFactory: LoggerFactory,
-        litProtocolKeyStore: LitProtocolKeyStore,
         @inject(ConfigInjectionToken) config: StrictStreamrClientConfig
     ) {
         this.streamPartId = streamPartId
@@ -55,12 +51,10 @@ export class SubscriptionSession {
             streamPartId,
             resends,
             groupKeyStore,
-            subscriberKeyExchange,
+            groupKeyManager,
             streamRegistryCached,
-            streamrClientEventEmitter,
             loggerFactory,
             destroySignal,
-            litProtocolKeyStore,
             config: config
         })
         this.pipeline.onError.listen(this.onError)
