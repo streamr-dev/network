@@ -19,6 +19,8 @@ import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
 import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
 import { LoggerFactory } from '../../src/utils/LoggerFactory'
 import { waitForCondition } from '@streamr/utils'
+import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
+import { mock } from 'jest-mock-extended'
 
 const logger = new Logger(module)
 
@@ -166,11 +168,7 @@ export const createStreamRegistryCached = (opts: {
 export const createGroupKeyQueue = async (current?: GroupKey, next?: GroupKey): Promise<GroupKeyQueue> => {
     const queue = new GroupKeyQueue(
         undefined as any,
-        { add: async () => {} } as any,
-        {
-            store: async () => undefined,
-            get: async () => undefined
-        } as any
+        mock<GroupKeyManager>()
     )
     if (current !== undefined) {
         await queue.rekey(current)

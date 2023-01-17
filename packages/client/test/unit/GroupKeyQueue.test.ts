@@ -1,9 +1,8 @@
 import { toStreamID } from '@streamr/protocol'
 import { GroupKey } from '../../src/encryption/GroupKey'
-import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
 import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
-import { LitProtocolKeyStore } from '../../src/encryption/LitProtocolKeyStore'
 import { mock } from 'jest-mock-extended'
+import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
 
 const streamId = toStreamID('mock-stream')
 
@@ -13,11 +12,7 @@ describe('GroupKeyQueue', () => {
     const addToStore = jest.fn().mockResolvedValue(undefined)
 
     beforeEach(() => {
-        const store: Partial<GroupKeyStore> = {
-            add: addToStore
-        }
-        const litProtocolKeyStore = mock<LitProtocolKeyStore>()
-        queue = new GroupKeyQueue(streamId, store as any, litProtocolKeyStore)
+        queue = new GroupKeyQueue(streamId, mock<GroupKeyManager>())
     })
 
     it('can rotate and use', async () => {

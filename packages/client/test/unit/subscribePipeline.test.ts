@@ -17,6 +17,7 @@ import { GroupKey } from './../../src/encryption/GroupKey'
 import { MessageStream } from './../../src/subscribe/MessageStream'
 import { LitProtocolKeyStore } from '../../src/encryption/LitProtocolKeyStore'
 import { mock } from 'jest-mock-extended'
+import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
 
 const CONTENT = {
     foo: 'bar'
@@ -71,19 +72,15 @@ describe('subscribePipeline', () => {
             streamPartId,
             loggerFactory: mockLoggerFactory(),
             resends: undefined as any,
+            groupKeyManager: mock<GroupKeyManager>(),
             groupKeyStore: {
                 get: async () => undefined
-            } as any,
-            subscriberKeyExchange: {
-                requestGroupKey: async () => {}
             } as any,
             streamRegistryCached: {
                 getStream: async () => stream,
                 isStreamPublisher: async () => true,
                 clearStream: () => {}
             } as any,
-            litProtocolKeyStore: mock<LitProtocolKeyStore>(),
-            streamrClientEventEmitter: new StreamrClientEventEmitter(),
             destroySignal: new DestroySignal(),
             config: {
                 decryption: {

@@ -17,7 +17,6 @@ describe('Publisher', () => {
             streamRegistry as any,
             undefined as any,
             undefined as any,
-            undefined as any
         )
         const streamId = await streamIdBuilder.toStreamID('/test')
         await expect(async () => {
