@@ -33,7 +33,7 @@ export class GroupKeyManager {
         // 2nd try: lit-protocol
         groupKey = await this.litProtocolKeyStore.get(streamId, groupKeyId)
         if (groupKey !== undefined) {
-            await this.groupKeyStore.add(groupKey, streamId) // TODO: move to LitProtocolKeyStore
+            await this.groupKeyStore.add(groupKey, streamId)
             return groupKey
         }
 
@@ -45,7 +45,8 @@ export class GroupKeyManager {
             'addGroupKey',
             this.config.decryption.keyRequestTimeout,
             (storedGroupKey: GroupKey) => storedGroupKey.id === groupKeyId,
-            this.destroySignal.abortSignal)
+            this.destroySignal.abortSignal
+        )
         return groupKeys[0] as GroupKey
     }
 }
