@@ -54,9 +54,9 @@ const formEvmContractConditions = (streamRegistryChainAddress: string, streamId:
 ])
 
 const signAuthMessage = async (authentication: Authentication) => {
-    const domain = "localhost"
-    const uri = "https://localhost/login"
-    const statement = "This is a test statement. You can put anything you want here."
+    const domain = "dummy.com"
+    const uri = "https://dummy.com"
+    const statement = "dummy"
     const addressInChecksumCase = ethers.utils.getAddress(await authentication.getAddress())
     const siweMessage = new siwe.SiweMessage({
         domain,
@@ -120,7 +120,7 @@ export class LitProtocolFacade {
             this.logger.debug('stored key: %j', { groupKeyId, streamId })
             return new GroupKey(groupKeyId, Buffer.from(symmetricKey))
         } catch (e) {
-            logger.warn('encountered error when trying to store key on lit-protocol: %s', e)
+            logger.warn('encountered error when trying to store key on lit-protocol: %s', e?.message)
             return undefined
         }
     }
@@ -142,7 +142,7 @@ export class LitProtocolFacade {
             this.logger.debug('got key: %j', { groupKeyId, streamId })
             return new GroupKey(groupKeyId, Buffer.from(symmetricKey))
         } catch (e) {
-            logger.warn('encountered error when trying to get key from lit-protocol: %s', e)
+            logger.warn('encountered error when trying to get key from lit-protocol: %s', e?.message)
             return undefined
         }
     }
