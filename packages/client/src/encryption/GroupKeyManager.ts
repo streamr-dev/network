@@ -3,14 +3,13 @@ import { inject, Lifecycle, scoped } from 'tsyringe'
 import { GroupKeyStore } from './GroupKeyStore'
 import { GroupKey } from './GroupKey'
 import { StreamID, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
-import { EthereumAddress, Logger, waitForEvent } from '@streamr/utils'
+import { EthereumAddress, waitForEvent } from '@streamr/utils'
 import { SubscriberKeyExchange } from './SubscriberKeyExchange'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { StreamrClientEventEmitter } from '../events'
 import { DestroySignal } from '../DestroySignal'
 import crypto from 'crypto'
 import { uuid } from '../utils/uuid'
-import { LoggerFactory } from '../utils/LoggerFactory'
 
 @scoped(Lifecycle.ContainerScoped)
 export class GroupKeyManager {
