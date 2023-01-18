@@ -7,12 +7,14 @@ import { StreamID } from '@streamr/protocol'
 import { StreamPermission, streamPermissionToSolidityType } from '../permission'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { GroupKey } from './GroupKey'
-import { Logger } from '@streamr/utils'
+import { Logger, withRateLimit } from '@streamr/utils'
 import { LoggerFactory } from '../utils/LoggerFactory'
 
 const logger = new Logger(module)
 
 const chain = 'polygon'
+
+const LIT_PROTOCOL_CONNECT_INTERVAL = 60 * 60 * 1000 // 1h
 
 const formEvmContractConditions = (streamRegistryChainAddress: string, streamId: StreamID) => ([
     {
@@ -83,6 +85,7 @@ const signAuthMessage = async (authentication: Authentication) => {
 export class LitProtocolFacade {
     private readonly logger: Logger
     private litNodeClient?: LitJsSdk.LitNodeClient
+    private connectLitNodeClient?: () => Promise<void>
 
     constructor(
         @inject(AuthenticationInjectionToken) private readonly authentication: Authentication,
@@ -92,22 +95,25 @@ export class LitProtocolFacade {
         this.logger = this.loggerFactory.createLogger(module)
     }
 
-    getLitNodeClient(): LitJsSdk.LitNodeClient {
+    async getLitNodeClient(): Promise<LitJsSdk.LitNodeClient> {
         if (this.litNodeClient === undefined) {
             this.litNodeClient = new LitJsSdk.LitNodeClient({
                 alertWhenUnauthorized: false,
                 debug: this.config.encryption.litProtocolLogging
             })
+            // Add a rate limiter to avoid calling `connect` each time we want to use lit protocol as this would cause an unnecessary handshake.
+            this.connectLitNodeClient = withRateLimit(() => this.litNodeClient!.connect(), LIT_PROTOCOL_CONNECT_INTERVAL)
         }
+        await this.connectLitNodeClient!()
         return this.litNodeClient
     }
 
     async store(streamId: StreamID, symmetricKey: Uint8Array): Promise<GroupKey | undefined> {
         this.logger.debug('storing key: %j', { streamId })
         try {
-            await this.getLitNodeClient().connect()
             const authSig = await signAuthMessage(this.authentication)
-            const encryptedSymmetricKey = await this.getLitNodeClient().saveEncryptionKey({
+            const client = await this.getLitNodeClient()
+            const encryptedSymmetricKey = await client.saveEncryptionKey({
                 evmContractConditions: formEvmContractConditions(this.config.contracts.streamRegistryChainAddress, streamId),
                 symmetricKey,
                 authSig,
@@ -128,9 +134,9 @@ export class LitProtocolFacade {
     async get(streamId: StreamID, groupKeyId: string): Promise<GroupKey | undefined> {
         this.logger.debug('get key: %j', { groupKeyId, streamId })
         try {
-            await this.getLitNodeClient().connect()
             const authSig = await signAuthMessage(this.authentication)
-            const symmetricKey = await this.getLitNodeClient().getEncryptionKey({
+            const client = await this.getLitNodeClient()
+            const symmetricKey = await client.getEncryptionKey({
                 evmContractConditions: formEvmContractConditions(this.config.contracts.streamRegistryChainAddress, streamId),
                 toDecrypt: groupKeyId,
                 chain,
