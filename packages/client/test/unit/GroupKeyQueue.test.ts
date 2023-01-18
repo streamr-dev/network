@@ -6,10 +6,7 @@ import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
 import { mock, MockProxy } from 'jest-mock-extended'
 import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
 import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
-import { LitProtocolFacade } from '../../src/encryption/LitProtocolFacade'
-import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
-import { StreamrClientEventEmitter } from '../../src/events'
-import { DestroySignal } from '../../src/DestroySignal'
+import { createGroupKeyManager } from '../test-utils/utils'
 
 const streamId = toStreamID('mock-stream')
 
@@ -21,14 +18,7 @@ describe('GroupKeyQueue', () => {
 
     beforeEach(() => {
         groupKeyStore = mock<GroupKeyStore>()
-        groupKeyManager = new GroupKeyManager(
-            groupKeyStore,
-            mock<LitProtocolFacade>(),
-            mock<SubscriberKeyExchange>(),
-            new StreamrClientEventEmitter(),
-            new DestroySignal(),
-            {} as any
-        )
+        groupKeyManager = createGroupKeyManager(groupKeyStore)
         queue = new GroupKeyQueue(streamId, groupKeyManager)
     })
 

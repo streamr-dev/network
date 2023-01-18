@@ -168,14 +168,23 @@ export const createStreamRegistryCached = (opts: {
     } as any
 }
 
-export const createGroupKeyManager = (): GroupKeyManager => {
+export const createGroupKeyManager = (groupKeyStore: GroupKeyStore = mock<GroupKeyStore>()): GroupKeyManager => {
     return new GroupKeyManager(
-        mock<GroupKeyStore>(),
+        groupKeyStore,
         mock<LitProtocolFacade>(),
         mock<SubscriberKeyExchange>(),
         new StreamrClientEventEmitter(),
         new DestroySignal(),
-        {} as any
+        {
+            encryption: {
+                litProtocolEnabled: false,
+                litProtocolLogging: false
+            },
+            decryption: {
+                maxKeyRequestsPerSecond: 10,
+                keyRequestTimeout: 0
+            }
+        }
     )
 }
 

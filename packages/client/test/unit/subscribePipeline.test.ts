@@ -19,6 +19,7 @@ import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
 import { LitProtocolFacade } from '../../src/encryption/LitProtocolFacade'
 import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
 import { StreamrClientEventEmitter } from '../../src/events'
+import { StrictStreamrClientConfig } from '../../src/Config'
 
 const CONTENT = {
     foo: 'bar'
@@ -73,11 +74,16 @@ describe('subscribePipeline', () => {
             get: async () => undefined
         } as any
         const destroySignal = new DestroySignal()
-        const config = {
+        const config: Pick<StrictStreamrClientConfig, 'decryption' | 'encryption'> = {
             decryption: {
-                keyRequestTimeout: 50
+                keyRequestTimeout: 50,
+                maxKeyRequestsPerSecond: 0
+            },
+            encryption: {
+                litProtocolEnabled: false,
+                litProtocolLogging: false
             }
-        } as any
+        }
         pipeline = createSubscribePipeline({
             streamPartId,
             loggerFactory: mockLoggerFactory(),
@@ -99,7 +105,7 @@ describe('subscribePipeline', () => {
                 clearStream: () => {}
             } as any,
             destroySignal,
-            config
+            config: config as any
         })
     })
 
