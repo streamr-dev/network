@@ -178,7 +178,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
                 this.connections.forEach((connection) => {
                     if (!this.locks.isLocked(connection.peerIdKey) && Date.now() - connection.getLastUsed() > 30000) {
-                        // logger.info("disconnecting in timeout interval: " + this.config.nodeName + ', ' + 
+                        // logger.info("disconnecting in timeout interval: " + this.config.nodeName + ', ' +
                         // connection.getPeerDescriptor()?.nodeName + ' ')
                         // this.gracefullyDisconnect(connection.getPeerDescriptor()!)
 
@@ -428,7 +428,12 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
     private onConnected = (connection: ManagedConnection) => {
         this.emit('connected', connection.getPeerDescriptor()!)
-        logger.info('connectedPeerId: ' + PeerID.fromValue(connection.getPeerDescriptor()!.kademliaId).toString() + ', ' +  PeerID.fromValue(this.ownPeerDescriptor!.kademliaId).toString() + ', ' + this.connections.size)
+        logger.trace(
+            'connectedPeerId: '
+            + PeerID.fromValue(connection.getPeerDescriptor()!.kademliaId).toString()
+            + ', ' +  PeerID.fromValue(this.ownPeerDescriptor!.kademliaId).toString()
+            + ', ' + this.connections.size
+        )
         this.onConnectionCountChange()
     }
 

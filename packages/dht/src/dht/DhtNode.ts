@@ -603,9 +603,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
                 logger.trace('unlocking entryPoint Disconnect')
                 this.connectionManager.unlockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
             }
-            if (this.config.serviceId.includes('websocket-network')) {
-                console.log(`joinCompleted: ${this.getKBucketPeers().map((peer) => PeerID.fromValue(peer.kademliaId).toString())}`)
-            }
         }
 
         // -- todo, separate into a function, now trying this out
@@ -874,6 +871,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         //setImmediate(()=> {
         this.addNewContact((context as DhtCallContext).incomingSourceDescriptor!)
         //})
+        if (this.config.serviceId.includes('stream')) {
+            logger.info(`getClosestPeers ${this.ownPeerId!.toString()} from ${PeerID.fromValue(request.kademliaId).toString()}`)
+        }
 
         const response = {
             peers: this.getClosestPeerDescriptors(request.kademliaId, this.config.getClosestContactsLimit),

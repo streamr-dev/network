@@ -110,8 +110,8 @@ export class DiscoverySession {
     private onClosestPeersRequestFailed(peer: DhtPeer, exception: Error) {
         if (this.ongoingClosestPeersRequests.has(peer.peerId.toKey())) {
             this.ongoingClosestPeersRequests.delete(peer.peerId.toKey())
-            if (this.serviceId.includes('websocket')) {
-                logger.error('IL ' + this.nodeName + 'onClosestPeersRequestFailed: ' +
+            if (this.serviceId.includes('stream')) {
+                logger.error('IL ' + this.ownPeerDescriptor.nodeName + ' onClosestPeersRequestFailed: ' +
                     JSON.stringify(exception) + ' to ' + JSON.stringify(peer.getPeerDescriptor()))
             }
             this.neighborList!.removeContact(peer.peerId)

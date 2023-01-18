@@ -52,7 +52,6 @@ describe('Propagation', () => {
             })
 
         }))
-        console.log("HERE")
     }, 30000)
 
     afterEach(async () => {

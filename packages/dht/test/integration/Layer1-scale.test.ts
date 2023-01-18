@@ -19,7 +19,7 @@ describe('Layer1', () => {
 
     let layer0EntryPoint: DhtNode
 
-    const NODE_COUNT = 30
+    const NODE_COUNT = 48
     let nodes: DhtNode[]
 
     let layer1CleanUp: DhtNode[]
@@ -49,7 +49,7 @@ describe('Layer1', () => {
 
     })
 
-    it('single layer1 dht', async () => {
+    it.only('single layer1 dht', async () => {
         const layer1EntryPoint = await createMockConnectionLayer1Node(layer0EntryPoint.getNodeId().toString(), layer0EntryPoint)
         await layer1EntryPoint.joinDht(entryPoint0Descriptor)
         layer1CleanUp.push(layer1EntryPoint)
@@ -69,6 +69,7 @@ describe('Layer1', () => {
             const layer1Node = layer1Nodes[i]
             expect(layer1Node.getNodeId().equals(layer0Node.getNodeId())).toEqual(true)
             expect(layer1Node.getNumberOfConnections()).toEqual(layer0Node.getNumberOfConnections())
+            expect(layer1Node.getBucketSize()).toBeGreaterThanOrEqual(8)
             expect(layer1Node.getAllConnectionPeerDescriptors()).toEqual(layer0Node.getAllConnectionPeerDescriptors())
         }
     }, 120000)

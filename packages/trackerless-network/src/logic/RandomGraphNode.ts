@@ -133,8 +133,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         this.neighborUpdateIntervalRef = setTimeout(async () => {
             await this.updateNeighborInfo()
         }, 20)
-
-
+        
     }
 
     stop(): void {

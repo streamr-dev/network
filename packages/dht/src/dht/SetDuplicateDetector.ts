@@ -36,21 +36,21 @@ export class SetDuplicateDetector {
                 }
             }
 
-            // if (index != -1 && message) {
-            //     const time = this.queue[index][0]
-            //     const prevSender = this.queue[index][2]
-            //
-            //     logger.error('duplicate rawmessage ' + value + ' detected at time: ' +
-            //         Date.now() + ' from ' + senderId + ' ' + JSON.stringify(message)
-            //         + ' previous instance: ' + this.queue[index][1] + ' ' + index + ' messages ago, from ' + prevSender + ' at time ' + time + ' ' +
-            //         JSON.stringify(this.queue[index][3]))
-            //
-            //     logger.error('duplicate ' + value + ' detected at time: ' + Date.now() + ' from ' + senderId + ' ' + JSON.stringify(message.body)
-            //         + ' previous instance: ' + this.queue[index][1] + ' ' + index + ' messages ago, from ' + prevSender + ' at time ' + time + ' ' +
-            //         JSON.stringify(this.queue[index][3]))
-            // } else {
-            //     logger.error('collision values.has() was true, but value not found in queue')
-            // }
+            if (index != -1 && message) {
+                const time = this.queue[index][0]
+                const prevSender = this.queue[index][2]
+
+                logger.trace('duplicate rawmessage ' + value + ' detected at time: ' +
+                    Date.now() + ' from ' + senderId + ' ' + JSON.stringify(message)
+                    + ' previous instance: ' + this.queue[index][1] + ' ' + index + ' messages ago, from ' + prevSender + ' at time ' + time + ' ' +
+                    JSON.stringify(this.queue[index][3]))
+
+                logger.trace('duplicate ' + value + ' detected at time: ' + Date.now() + ' from ' + senderId + ' ' + JSON.stringify(message.body)
+                    + ' previous instance: ' + this.queue[index][1] + ' ' + index + ' messages ago, from ' + prevSender + ' at time ' + time + ' ' +
+                    JSON.stringify(this.queue[index][3]))
+            } else {
+                logger.trace('collision values.has() was true, but value not found in queue')
+            }
 
         }
         return this.values.has(value)
