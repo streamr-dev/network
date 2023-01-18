@@ -43,6 +43,9 @@ export interface UpdateEncryptionKeyOptions {
     key?: GroupKey
 }
 
+/**
+ * TODO: rename to e.g. `LocalGroupKeyStore` for clarity
+ */
 @scoped(Lifecycle.ContainerScoped)
 export class GroupKeyStore {
     private readonly logger: Logger

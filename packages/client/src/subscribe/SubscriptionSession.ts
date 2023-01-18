@@ -10,7 +10,6 @@ import { Subscription } from './Subscription'
 import { createSubscribePipeline } from './subscribePipeline'
 import { NetworkNodeFacade, NetworkNodeStub } from '../NetworkNodeFacade'
 import { Resends } from './Resends'
-import { GroupKeyStore } from '../encryption/GroupKeyStore'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { DestroySignal } from '../DestroySignal'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
@@ -35,7 +34,6 @@ export class SubscriptionSession {
     constructor(
         streamPartId: StreamPartID,
         resends: Resends,
-        groupKeyStore: GroupKeyStore,
         groupKeyManager: GroupKeyManager,
         streamRegistryCached: StreamRegistryCached,
         node: NetworkNodeFacade,
@@ -50,7 +48,6 @@ export class SubscriptionSession {
         this.pipeline = createSubscribePipeline({
             streamPartId,
             resends,
-            groupKeyStore,
             groupKeyManager,
             streamRegistryCached,
             loggerFactory,

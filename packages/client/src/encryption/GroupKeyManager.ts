@@ -67,4 +67,8 @@ export class GroupKeyManager {
         await this.groupKeyStore.add(groupKey, streamId)
         return groupKey
     }
+
+    addKeyToLocalStore(groupKey: GroupKey, streamId: StreamID): Promise<void> {
+        return this.groupKeyStore.add(groupKey, streamId)
+    }
 }

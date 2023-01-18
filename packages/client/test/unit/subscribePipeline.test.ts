@@ -96,9 +96,6 @@ describe('subscribePipeline', () => {
                 destroySignal,
                 config
             ),
-            groupKeyStore: {
-                get: async () => undefined
-            } as any,
             streamRegistryCached: {
                 getStream: async () => stream,
                 isStreamPublisher: async () => true,

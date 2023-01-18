@@ -10,11 +10,7 @@ import { createGroupKeyManager, createMockMessage, mockLoggerFactory } from '../
 describe('Decrypt', () => {
 
     it('group key not available: timeout while waiting', async () => {
-        const groupKeyStore = {
-            get: async () => undefined,
-        }
         const decrypt = new Decrypt(
-            groupKeyStore as any,
             createGroupKeyManager(),
             {
                 clearStream: jest.fn()

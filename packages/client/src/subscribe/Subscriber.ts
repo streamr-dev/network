@@ -6,7 +6,6 @@ import { StreamPartID } from '@streamr/protocol'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamDefinition } from '../types'
 import { Resends } from './Resends'
-import { GroupKeyStore } from '../encryption/GroupKeyStore'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { DestroySignal } from '../DestroySignal'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
@@ -20,7 +19,6 @@ export class Subscriber {
     private readonly subSessions: Map<StreamPartID, SubscriptionSession> = new Map()
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly resends: Resends
-    private readonly groupKeyStore: GroupKeyStore
     private readonly groupKeyManager: GroupKeyManager
     private readonly streamRegistryCached: StreamRegistryCached
     private readonly node: NetworkNodeFacade
@@ -32,7 +30,6 @@ export class Subscriber {
     constructor(
         streamIdBuilder: StreamIDBuilder,
         resends: Resends,
-        groupKeyStore: GroupKeyStore,
         groupKeyManager: GroupKeyManager,
         @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
         node: NetworkNodeFacade,
@@ -42,7 +39,6 @@ export class Subscriber {
     ) {
         this.streamIdBuilder = streamIdBuilder
         this.resends = resends
-        this.groupKeyStore = groupKeyStore
         this.groupKeyManager = groupKeyManager
         this.streamRegistryCached = streamRegistryCached
         this.node = node
@@ -59,7 +55,6 @@ export class Subscriber {
         const subSession = new SubscriptionSession(
             streamPartId,
             this.resends,
-            this.groupKeyStore,
             this.groupKeyManager,
             this.streamRegistryCached,
             this.node,

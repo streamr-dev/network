@@ -2,7 +2,6 @@ import { EncryptionType, StreamMessage } from '@streamr/protocol'
 import { EncryptionUtil, DecryptError } from '../encryption/EncryptionUtil'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { DestroySignal } from '../DestroySignal'
-import { GroupKeyStore } from '../encryption/GroupKeyStore'
 import { inject } from 'tsyringe'
 import { GroupKey } from '../encryption/GroupKey'
 import { Logger } from '@streamr/utils'
@@ -13,7 +12,6 @@ export class Decrypt {
     private readonly logger: Logger
 
     constructor(
-        private groupKeyStore: GroupKeyStore,
         private readonly groupKeyManager: GroupKeyManager,
         private streamRegistryCached: StreamRegistryCached,
         private destroySignal: DestroySignal,
@@ -61,7 +59,10 @@ export class Decrypt {
             EncryptionUtil.decryptStreamMessage(clone, groupKey)
             if (streamMessage.newGroupKey) {
                 // newGroupKey has been converted into GroupKey
-                await this.groupKeyStore.add(clone.newGroupKey as unknown as GroupKey, streamMessage.getStreamId())
+                await this.groupKeyManager.addKeyToLocalStore(
+                    clone.newGroupKey as unknown as GroupKey,
+                    streamMessage.getStreamId()
+                )
             }
             return clone
         } catch (err) {

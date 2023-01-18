@@ -10,7 +10,6 @@ import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { HttpUtil } from '../HttpUtil'
 import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
 import { EthereumAddress, Logger, toEthereumAddress, wait } from '@streamr/utils'
-import { GroupKeyStore } from '../encryption/GroupKeyStore'
 import { DestroySignal } from '../DestroySignal'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { LoggerFactory } from '../utils/LoggerFactory'
@@ -74,7 +73,6 @@ function isResendRange<T extends ResendRangeOptions>(options: any): options is T
 
 @scoped(Lifecycle.ContainerScoped)
 export class Resends {
-    private readonly groupKeyStore: GroupKeyStore
     private readonly destroySignal: DestroySignal
     private readonly config: StrictStreamrClientConfig
     private readonly loggerFactory: LoggerFactory
@@ -86,12 +84,10 @@ export class Resends {
         @inject(delay(() => StreamRegistryCached)) private streamRegistryCached: StreamRegistryCached,
         @inject(HttpUtil) private httpUtil: HttpUtil,
         @inject(GroupKeyManager) private groupKeyManager: GroupKeyManager,
-        groupKeyStore: GroupKeyStore,
         destroySignal: DestroySignal,
         @inject(ConfigInjectionToken) config: StrictStreamrClientConfig,
         @inject(LoggerFactory) loggerFactory: LoggerFactory
     ) {
-        this.groupKeyStore = groupKeyStore
         this.destroySignal = destroySignal
         this.config = config
         this.loggerFactory = loggerFactory
@@ -149,7 +145,6 @@ export class Resends {
         const messageStream = createSubscribePipeline({
             streamPartId,
             resends: this,
-            groupKeyStore: this.groupKeyStore,
             groupKeyManager: this.groupKeyManager,
             streamRegistryCached: this.streamRegistryCached,
             destroySignal: this.destroySignal,
