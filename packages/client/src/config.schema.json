@@ -58,10 +58,6 @@
             "type": "number",
             "default": 5000
         },
-        "litProtocolEnabled": {
-            "type": "boolean",
-            "default": false
-        },
         "network": {
             "type": "object",
             "additionalProperties": false,
@@ -292,6 +288,21 @@
                 "maxConcurrentCalls": {
                     "type": "number",
                     "default": 10
+                }
+            },
+            "default": {}
+        },
+        "encryption": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "litProtocolEnabled": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "litProtocolLogging": {
+                    "type": "boolean",
+                    "default": false
                 }
             },
             "default": {}

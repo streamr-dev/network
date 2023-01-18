@@ -8,6 +8,7 @@ import { StreamPermission, streamPermissionToSolidityType } from '../permission'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { GroupKey } from './GroupKey'
 import { Logger } from '@streamr/utils'
+import { LoggerFactory } from '../utils/LoggerFactory'
 
 const logger = new Logger(module)
 
@@ -80,24 +81,29 @@ const signAuthMessage = async (authentication: Authentication) => {
  */
 @scoped(Lifecycle.ContainerScoped)
 export class LitProtocolFacade {
+    private readonly logger: Logger
     private litNodeClient?: LitJsSdk.LitNodeClient
 
     constructor(
         @inject(AuthenticationInjectionToken) private readonly authentication: Authentication,
-        @inject(ConfigInjectionToken) private readonly config: Pick<StrictStreamrClientConfig, 'contracts'>
-    ) {}
+        @inject(ConfigInjectionToken) private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | 'encryption'>,
+        private readonly loggerFactory: LoggerFactory
+    ) {
+        this.logger = this.loggerFactory.createLogger(module)
+    }
 
     getLitNodeClient(): LitJsSdk.LitNodeClient {
         if (this.litNodeClient === undefined) {
             this.litNodeClient = new LitJsSdk.LitNodeClient({
                 alertWhenUnauthorized: false,
-                debug: true
+                debug: this.config.encryption.litProtocolLogging
             })
         }
         return this.litNodeClient
     }
 
     async store(streamId: StreamID, symmetricKey: Uint8Array): Promise<GroupKey | undefined> {
+        this.logger.debug('storing key: %j', { streamId })
         try {
             await this.getLitNodeClient().connect()
             const authSig = await signAuthMessage(this.authentication)
@@ -111,6 +117,7 @@ export class LitProtocolFacade {
                 return undefined
             }
             const groupKeyId = LitJsSdk.uint8arrayToString(encryptedSymmetricKey, 'base16')
+            this.logger.debug('stored key: %j', { groupKeyId, streamId })
             return new GroupKey(groupKeyId, Buffer.from(symmetricKey))
         } catch (e) {
             logger.warn('encountered error when trying to store key on lit-protocol: %s', e)
@@ -119,6 +126,7 @@ export class LitProtocolFacade {
     }
 
     async get(streamId: StreamID, groupKeyId: string): Promise<GroupKey | undefined> {
+        this.logger.debug('get key: %j', { groupKeyId, streamId })
         try {
             await this.getLitNodeClient().connect()
             const authSig = await signAuthMessage(this.authentication)
@@ -131,6 +139,7 @@ export class LitProtocolFacade {
             if (symmetricKey === undefined) {
                 return undefined
             }
+            this.logger.debug('got key: %j', { groupKeyId, streamId })
             return new GroupKey(groupKeyId, Buffer.from(symmetricKey))
         } catch (e) {
             logger.warn('encountered error when trying to get key from lit-protocol: %s', e)

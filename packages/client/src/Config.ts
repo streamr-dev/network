@@ -66,7 +66,11 @@ export interface StreamrClientConfig {
     maxGapRequests?: number
     retryResendAfter?: number
     gapFillTimeout?: number
-    litProtocolEnabled?: boolean
+
+    encryption?: {
+        litProtocolEnabled?: boolean
+        litProtocolLogging?: boolean
+    }
 
     network?: {
         id?: string
@@ -137,6 +141,7 @@ export interface StreamrClientConfig {
 export type StrictStreamrClientConfig = MarkOptional<Required<StreamrClientConfig>, 'auth' | 'metrics'> & {
     network: MarkOptional<Exclude<Required<StreamrClientConfig['network']>, undefined>, 'location'>
     contracts: Exclude<Required<StreamrClientConfig['contracts']>, undefined>
+    encryption: Exclude<Required<StreamrClientConfig['encryption']>, undefined>
     decryption: Exclude<Required<StreamrClientConfig['decryption']>, undefined>
     cache: Exclude<Required<StreamrClientConfig['cache']>, undefined>
     _timeouts: Exclude<DeepRequired<StreamrClientConfig['_timeouts']>, undefined>
@@ -155,7 +160,11 @@ export const STREAM_CLIENT_DEFAULTS:
     maxGapRequests: 5,
     retryResendAfter: 5000,
     gapFillTimeout: 5000,
-    litProtocolEnabled: false,
+
+    encryption: {
+        litProtocolEnabled: false,
+        litProtocolLogging: false
+    },
     
     network: {
         acceptProxyConnections: false,
