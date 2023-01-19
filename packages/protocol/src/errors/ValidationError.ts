@@ -1,6 +1,10 @@
 export default class ValidationError extends Error {
-    constructor(msg: string, public code?: string) {
+
+    public code?: string
+
+    constructor(msg: string, code?: string) {
         super(msg)
+        this.code = code
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, this.constructor)
         }
