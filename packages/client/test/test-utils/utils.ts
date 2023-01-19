@@ -182,7 +182,7 @@ export const createGroupKeyManager = (groupKeyStore: GroupKeyStore = mock<GroupK
             },
             decryption: {
                 maxKeyRequestsPerSecond: 10,
-                keyRequestTimeout: 0
+                keyRequestTimeout: 50
             }
         }
     )

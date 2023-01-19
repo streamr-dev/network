@@ -13,14 +13,28 @@ import { uuid } from '../utils/uuid'
 
 @scoped(Lifecycle.ContainerScoped)
 export class GroupKeyManager {
+    private readonly groupKeyStore: GroupKeyStore
+    private readonly litProtocolFacade: LitProtocolFacade
+    private readonly subscriberKeyExchange: SubscriberKeyExchange
+    private readonly eventEmitter: StreamrClientEventEmitter
+    private readonly destroySignal: DestroySignal
+    private readonly config: Pick<StrictStreamrClientConfig, 'decryption' | 'encryption'>
+
     constructor(
-        @inject(GroupKeyStore) private readonly groupKeyStore: GroupKeyStore,
-        @inject(LitProtocolFacade) private readonly litProtocolFacade: LitProtocolFacade,
-        @inject(SubscriberKeyExchange) private readonly subscriberKeyExchange: SubscriberKeyExchange,
-        @inject(StreamrClientEventEmitter) private readonly eventEmitter: StreamrClientEventEmitter,
-        @inject(DestroySignal) private readonly destroySignal: DestroySignal,
-        @inject(ConfigInjectionToken) private readonly config: Pick<StrictStreamrClientConfig, 'decryption' | 'encryption'>
-    ) {}
+        groupKeyStore: GroupKeyStore,
+        litProtocolFacade: LitProtocolFacade,
+        subscriberKeyExchange: SubscriberKeyExchange,
+        eventEmitter: StreamrClientEventEmitter,
+        destroySignal: DestroySignal,
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'decryption' | 'encryption'>
+    ) {
+        this.groupKeyStore = groupKeyStore
+        this.litProtocolFacade = litProtocolFacade
+        this.subscriberKeyExchange = subscriberKeyExchange
+        this.eventEmitter = eventEmitter
+        this.destroySignal = destroySignal
+        this.config = config
+    }
 
     async fetchKey(streamPartId: StreamPartID, groupKeyId: string, publisherId: EthereumAddress): Promise<GroupKey> {
         const streamId = StreamPartIDUtils.getStreamID(streamPartId)
