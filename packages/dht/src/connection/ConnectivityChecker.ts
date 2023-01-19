@@ -19,8 +19,10 @@ export class ConnectivityChecker {
     private static readonly CONNECTIVITY_CHECKER_SERVICE_ID = 'system/connectivitychecker'
     private static readonly CONNECTIVITY_CHECKER_TIMEOUT = 5000
     private stopped = false
+    private webSocketPort?: number
 
-    constructor(private webSocketPort?: number) {
+    constructor(webSocketPort?: number) {
+        this.webSocketPort = webSocketPort
     }
 
     public async sendConnectivityRequest(entryPoint: PeerDescriptor): Promise<ConnectivityResponseMessage> {

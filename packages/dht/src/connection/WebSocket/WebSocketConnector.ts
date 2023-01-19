@@ -31,7 +31,14 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 const logger = new Logger(module)
 
 export class WebSocketConnector extends EventEmitter<ManagedConnectionSourceEvent> implements IWebSocketConnectorService {
+
     private static readonly WEBSOCKET_CONNECTOR_SERVICE_ID = 'system/websocketconnector'
+    
+    private protocolVersion: string
+    private rpcTransport: ITransport
+    private webSocketPort?: number
+    private webSocketHost?: string
+    private entrypoints?: PeerDescriptor[]
     private readonly rpcCommunicator: RoutingRpcCommunicator
     private readonly canConnectFunction: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean
     private readonly webSocketServer?: WebSocketServer
@@ -40,14 +47,20 @@ export class WebSocketConnector extends EventEmitter<ManagedConnectionSourceEven
     private ownPeerDescriptor?: PeerDescriptor
 
     constructor(
-        private protocolVersion: string,
-        private rpcTransport: ITransport,
+        protocolVersion: string,
+        rpcTransport: ITransport,
         fnCanConnect: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean,
-        private webSocketPort?: number,
-        private webSocketHost?: string,
-        private entrypoints?: PeerDescriptor[],
+        webSocketPort?: number,
+        webSocketHost?: string,
+        entrypoints?: PeerDescriptor[],
     ) {
         super()
+
+        this.protocolVersion = protocolVersion
+        this.rpcTransport = rpcTransport
+        this.webSocketPort = webSocketPort
+        this.webSocketHost = webSocketHost
+        this.entrypoints = entrypoints
 
         this.webSocketServer = webSocketPort ? new WebSocketServer() : undefined
         this.connectivityChecker = new ConnectivityChecker(webSocketPort)

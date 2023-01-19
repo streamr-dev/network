@@ -26,17 +26,24 @@ export class ManagedConnection extends EventEmitter<Events> {
     private peerDescriptor?: PeerDescriptor
     public connectionType: ConnectionType
 
-    constructor(private ownPeerDescriptor: PeerDescriptor,
-        private protocolVersion: string,
+    private ownPeerDescriptor: PeerDescriptor
+    private protocolVersion: string
+    protected connectingConnection?: IConnection
+
+    constructor(ownPeerDescriptor: PeerDescriptor,
+        protocolVersion: string,
         connectionType: ConnectionType,
-        protected connectingConnection?: IConnection,
+        connectingConnection?: IConnection,
         connectedConnection?: IConnection,
     ) {
         super()
         this.objectId = ManagedConnection.objectCounter
         ManagedConnection.objectCounter++
 
+        this.ownPeerDescriptor = ownPeerDescriptor
+        this.protocolVersion = protocolVersion
         this.connectionType = connectionType
+        this.connectingConnection = connectingConnection
         this.connectionId = new ConnectionID()
 
         logger.trace('creating ManagedConnection of type: ' + connectionType + ' objectId: ' + this.objectId)
