@@ -9,17 +9,22 @@ import { StrictStreamrClientConfig } from './../Config'
 import { MessageStream } from './MessageStream'
 
 export class ResendSubscription extends Subscription {
+
+    private resendOptions: ResendOptions
+    private resends: Resends
     private orderMessages: OrderMessages
 
     /** @internal */
     constructor(
         streamPartId: StreamPartID,
-        private resendOptions: ResendOptions,
-        private resends: Resends,
+        resendOptions: ResendOptions,
+        resends: Resends,
         loggerFactory: LoggerFactory,
         @inject(ConfigInjectionToken) config: StrictStreamrClientConfig
     ) {
         super(streamPartId, loggerFactory)
+        this.resendOptions = resendOptions
+        this.resends = resends
         this.orderMessages = new OrderMessages(
             config,
             resends,

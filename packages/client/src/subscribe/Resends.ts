@@ -75,6 +75,11 @@ function isResendRange<T extends ResendRangeOptions>(options: any): options is T
 
 @scoped(Lifecycle.ContainerScoped)
 export class Resends {
+
+    private streamStorageRegistry: StreamStorageRegistry
+    private storageNodeRegistry: StorageNodeRegistry
+    private streamRegistryCached: StreamRegistryCached
+    private httpUtil: HttpUtil
     private readonly groupKeyStore: GroupKeyStore
     private readonly subscriberKeyExchange: SubscriberKeyExchange
     private readonly streamrClientEventEmitter: StreamrClientEventEmitter
@@ -84,17 +89,21 @@ export class Resends {
     private readonly logger: Logger
 
     constructor(
-        @inject(StreamStorageRegistry) private streamStorageRegistry: StreamStorageRegistry,
-        @inject(delay(() => StorageNodeRegistry)) private storageNodeRegistry: StorageNodeRegistry,
-        @inject(delay(() => StreamRegistryCached)) private streamRegistryCached: StreamRegistryCached,
-        @inject(HttpUtil) private httpUtil: HttpUtil,
-        groupKeyStore: GroupKeyStore,
-        subscriberKeyExchange: SubscriberKeyExchange,
-        streamrClientEventEmitter: StreamrClientEventEmitter,
-        destroySignal: DestroySignal,
+        @inject(StreamStorageRegistry) streamStorageRegistry: StreamStorageRegistry,
+        @inject(delay(() => StorageNodeRegistry)) storageNodeRegistry: StorageNodeRegistry,
+        @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
+        @inject(HttpUtil) httpUtil: HttpUtil,
+            groupKeyStore: GroupKeyStore,
+            subscriberKeyExchange: SubscriberKeyExchange,
+            streamrClientEventEmitter: StreamrClientEventEmitter,
+            destroySignal: DestroySignal,
         @inject(ConfigInjectionToken) config: StrictStreamrClientConfig,
         @inject(LoggerFactory) loggerFactory: LoggerFactory
     ) {
+        this.streamStorageRegistry = streamStorageRegistry
+        this.storageNodeRegistry = storageNodeRegistry
+        this.streamRegistryCached = streamRegistryCached
+        this.httpUtil = httpUtil
         this.groupKeyStore = groupKeyStore
         this.subscriberKeyExchange = subscriberKeyExchange
         this.streamrClientEventEmitter = streamrClientEventEmitter

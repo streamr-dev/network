@@ -34,20 +34,33 @@ interface NodeQueryResult {
  */
 @scoped(Lifecycle.ContainerScoped)
 export class StreamStorageRegistry {
+
+    private contractFactory: ContractFactory
+    private streamFactory: StreamFactory
+    private streamIdBuilder: StreamIDBuilder
+    private graphQLClient: SynchronizedGraphQLClient
+    private authentication: Authentication
     private streamStorageRegistryContract?: StreamStorageRegistryContract
+    private config: Pick<StrictStreamrClientConfig, 'contracts'>
     private readonly streamStorageRegistryContractReadonly: StreamStorageRegistryContract
     private readonly logger: Logger
 
     constructor(
-        private contractFactory: ContractFactory,
-        @inject(delay(() => StreamFactory)) private streamFactory: StreamFactory,
-        @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
-        @inject(SynchronizedGraphQLClient) private graphQLClient: SynchronizedGraphQLClient,
+        contractFactory: ContractFactory,
+        @inject(delay(() => StreamFactory)) streamFactory: StreamFactory,
+        @inject(StreamIDBuilder) streamIdBuilder: StreamIDBuilder,
+        @inject(SynchronizedGraphQLClient) graphQLClient: SynchronizedGraphQLClient,
         @inject(StreamrClientEventEmitter) eventEmitter: StreamrClientEventEmitter,
-        @inject(AuthenticationInjectionToken) private authentication: Authentication,
+        @inject(AuthenticationInjectionToken) authentication: Authentication,
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
-        @inject(ConfigInjectionToken) private config: Pick<StrictStreamrClientConfig, 'contracts'>
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts'>
     ) {
+        this.contractFactory = contractFactory
+        this.streamFactory = streamFactory
+        this.streamIdBuilder = streamIdBuilder
+        this.graphQLClient = graphQLClient
+        this.authentication = authentication
+        this.config = config
         this.logger = loggerFactory.createLogger(module)
         const chainProvider = getStreamRegistryChainProvider(config)
         this.streamStorageRegistryContractReadonly = this.contractFactory.createReadContract(

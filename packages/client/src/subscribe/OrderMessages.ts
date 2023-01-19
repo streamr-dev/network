@@ -20,6 +20,10 @@ import { LoggerFactory } from '../utils/LoggerFactory'
  */
 @injectable()
 export class OrderMessages {
+
+    private config: StrictStreamrClientConfig
+    private resends: Resends
+    private readonly streamPartId: StreamPartID
     private readonly logger: Logger
     private stopSignal = Signal.once()
     private done = false
@@ -31,11 +35,14 @@ export class OrderMessages {
     private orderingUtil
 
     constructor(
-        private config: StrictStreamrClientConfig,
-        private resends: Resends,
-        private readonly streamPartId: StreamPartID,
+        config: StrictStreamrClientConfig,
+        resends: Resends,
+        streamPartId: StreamPartID,
         loggerFactory: LoggerFactory
     ) {
+        this.config = config
+        this.resends = resends
+        this.streamPartId = streamPartId
         this.logger = loggerFactory.createLogger(module)
         this.stopSignal.listen(() => {
             this.done = true
