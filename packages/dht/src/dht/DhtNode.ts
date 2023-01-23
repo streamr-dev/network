@@ -933,7 +933,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         try {
             result = await runAndRaceEvents3<RoutingSessionEvents>([() => {
                 session.start()
-            }], session, ['noCandidatesFound', 'candidatesFound'], 1000)
+            }], session, ['noCandidatesFound', 'candidatesFound'], 1500)
         } catch (e) {
             logger.error(e)
             throw e
@@ -1025,7 +1025,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             routedMessage,
             this.connections,
             1, //this.ownPeerId!.equals(PeerID.fromValue(routedMessage.sourcePeer!.kademliaId)) ? 2 : 1,
-            1000,
+            1500,
             RoutingMode.RECURSIVE_FIND,
             undefined,
             routedMessage.routingPath.map((descriptor) => PeerID.fromValue(descriptor.kademliaId))
@@ -1043,7 +1043,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         try {
             result = await runAndRaceEvents3<RoutingSessionEvents>([() => {
                 session.start()
-            }], session, ['noCandidatesFound', 'candidatesFound'], 1000)
+            }], session, ['noCandidatesFound', 'candidatesFound'], 1500)
         } catch (e) {
             logger.error(e)
         }
