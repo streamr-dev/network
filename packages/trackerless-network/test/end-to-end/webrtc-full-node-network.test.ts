@@ -1,13 +1,11 @@
 import { DhtNode, PeerDescriptor, NodeType, ConnectionManager, PeerID } from '@streamr/dht'
 import { StreamrNode, Event as StreamrNodeEvent } from '../../src/logic/StreamrNode'
 import { range } from 'lodash'
-import { Logger, waitForCondition } from '@streamr/utils'
+import { waitForCondition } from '@streamr/utils'
 import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { getRandomRegion } from '@streamr/dht/dist/test/data/pings'
 import { createStreamMessage } from '../utils'
 import { PeerIDKey } from '@streamr/dht/dist/src/helpers/PeerID'
-
-const logger = new Logger(module)
 
 describe('Full node network with WebRTC connections', () => {
 
@@ -97,11 +95,6 @@ describe('Full node network with WebRTC connections', () => {
 
         await Promise.all([...streamrNodes.map((streamrNode) =>
             waitForCondition(() => {
-                logger.info('hajoa getTargetNeighborStringIds().length ' +
-                    streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length)
-                logger.info('hajoa AgetNearbyContactPoolIds().length ' +
-                    streamrNode.getStream(randomGraphId)!.layer2.getNearbyContactPoolIds().length)
-                logger.info('hajoa getNumberOfOutgoingHandshakes ' + streamrNode.getStream(randomGraphId)!.layer2.getNumberOfOutgoingHandshakes())
                 return streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length >= 3
                     && !streamrNode.getStream(randomGraphId)!.layer1.isJoinOngoing()
             }

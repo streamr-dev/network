@@ -143,7 +143,7 @@ export class Handshaker {
             this.targetNeighbors.remove(furthest.getPeerDescriptor())
             this.connectionLocker.unlockConnection(furthestPeerDescriptor!, this.randomGraphId)
         } else {
-            logger.info('furthest was falsy')
+            logger.trace('furthest was falsy')
         }
 
         this.targetNeighbors.add(requester)

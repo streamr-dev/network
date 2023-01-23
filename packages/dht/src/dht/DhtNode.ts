@@ -72,7 +72,7 @@ export class DhtNodeConfig {
     maxNeighborListSize = 200
     numberOfNodesPerKBucket = 8
     joinNoProgressLimit = 4
-    routeMessageTimeout = 4000
+    routeMessageTimeout = 2000
     dhtJoinTimeout = 60000
     getClosestContactsLimit = 5
     metricsContext = new MetricsContext()
@@ -407,7 +407,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         )
 
         this.transportLayer!.on('connected', (peerDescriptor: PeerDescriptor) => {
-            logger.trace("connected: " + this.config.nodeName + ", " + peerDescriptor.nodeName + ' ')
             const dhtPeer = new DhtPeer(
                 this.ownPeerDescriptor!,
                 peerDescriptor,
@@ -418,7 +417,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             if (!this.connections.has(PeerID.fromValue(dhtPeer.id).toKey())) {
                 this.connections.set(PeerID.fromValue(dhtPeer.id).toKey(), dhtPeer)
             }
-            //console.info('connected, ' +PeerID.fromValue(dhtPeer.id).toKey() +', '+ dhtPeer.id)
+            if (this.ownPeerDescriptor!.nodeName === 'entrypoint') {
+                logger.info("connected: " + this.ownPeerDescriptor!.nodeName + ", " + peerDescriptor.nodeName + ' ' + this.connections.size)
+            }
             this.emit('connected', peerDescriptor)
 
         })
@@ -431,8 +432,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             if (this.connectionManager) {
                 this.bucket!.remove(peerDescriptor.kademliaId)
             }
-            //this.connectionManager?.unlockConnection(peerDescriptor, this.config.serviceId)
-
             this.emit('disconnected', peerDescriptor)
         })
 
@@ -871,9 +870,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         //setImmediate(()=> {
         this.addNewContact((context as DhtCallContext).incomingSourceDescriptor!)
         //})
-        if (this.config.serviceId.includes('stream')) {
-            logger.info(`getClosestPeers ${this.ownPeerId!.toString()} from ${PeerID.fromValue(request.kademliaId).toString()}`)
-        }
 
         const response = {
             peers: this.getClosestPeerDescriptors(request.kademliaId, this.config.getClosestContactsLimit),
@@ -924,7 +920,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             routedMessage,
             this.connections,
             this.ownPeerId!.equals(PeerID.fromValue(routedMessage.sourcePeer!.kademliaId)) ? 2 : 1,
-            5000,
+            this.config.routeMessageTimeout,
             forwarding ? RoutingMode.FORWARD : RoutingMode.ROUTE,
             undefined,
             routedMessage.routingPath.map((descriptor) => PeerID.fromValue(descriptor.kademliaId))

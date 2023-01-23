@@ -78,7 +78,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
         })
 
         this.connectingTimeoutRef = setTimeout(() => {
-            logger.error('connectingTimeout, this.closed === ' + this.closed)
+            logger.trace('connectingTimeout, this.closed === ' + this.closed)
             this.doClose()
         }, this.connectingTimeout)
 

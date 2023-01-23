@@ -4,7 +4,7 @@ import { Handshaker } from "./Handshaker"
 import { PeerDescriptor } from "../proto/packages/dht/protos/DhtRpc"
 import { Logger } from "@streamr/utils"
 import EventEmitter from "eventemitter3"
-import { raceEvents3, RunAndRaceEventsReturnType } from "../helpers/waitForEvent3"
+import { raceEvents3 } from "../helpers/waitForEvent3"
 import { PeerID, PeerIDKey } from "../helpers/PeerID"
 
 export interface ManagedConnectionEvents {
@@ -236,15 +236,8 @@ export class ManagedConnection extends EventEmitter<Events> {
             logger.trace('adding data to outputBuffer objectId: ' + this.objectId)
             this.outputBuffer.push(data)
 
-            let result: RunAndRaceEventsReturnType<Events>
-
-            try {
-                result = await raceEvents3<Events>(this, ['handshakeCompleted', 'handshakeFailed',
-                    'bufferSentByOtherConnection', 'closing', 'disconnected'], 15000)
-            } catch (e) {
-                logger.error('Race error1 ' + e)
-                throw e
-            }
+            const result = await raceEvents3<Events>(this, ['handshakeCompleted', 'handshakeFailed',
+                'bufferSentByOtherConnection', 'closing', 'disconnected'], 15000)
 
             if (result.winnerName == 'closing' || result.winnerName == 'disconnected') {
                 throw new Err.ConnectionFailed("")
@@ -258,23 +251,8 @@ export class ManagedConnection extends EventEmitter<Events> {
                     logger.trace('bufferSentByOtherConnection already true')
                     this.destroy()
                 } else {
-
-                    /*
-                    const lis = (code?: number, reason?: string) => {
-                        this.emit('supressedDisconnect')
-                    }
-                    this.outgoingConnection!.on('disconnected', lis)
-                    */
-
-                    let result2: RunAndRaceEventsReturnType<Events>
-
-                    try {
-                        result2 = await raceEvents3<Events>(this, [
-                            'bufferSentByOtherConnection', 'closing'], 15000)
-                    } catch (e) {
-                        logger.error('Race error2 ' + e)
-                        throw e
-                    }
+                    const result2 = await raceEvents3<Events>(this,
+                        ['bufferSentByOtherConnection', 'closing'], 15000)
 
                     if (result2.winnerName == 'bufferSentByOtherConnection') {
                         logger.trace('bufferSentByOtherConnection received')
@@ -334,7 +312,6 @@ export class ManagedConnection extends EventEmitter<Events> {
     }
 
     public rejectHandshake(errorMessage: string): void {
-
         this.handshaker!.sendHandshakeResponse(errorMessage)
     }
 

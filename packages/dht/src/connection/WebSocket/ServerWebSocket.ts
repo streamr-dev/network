@@ -71,7 +71,7 @@ export class ServerWebSocket extends EventEmitter<ConnectionEvents> implements I
         //logger.trace('serverwebsocket trying to send ' + JSON.stringify(data))
         // If in an Karma / Electron test, use the NodeJS implementation
         // of Buffer instead of the browser polyfill
-        
+
         if (!this.stopped && this.socket) {
             if (typeof NodeJsBuffer !== 'undefined') {
                 this.socket.sendBytes(NodeJsBuffer.from(data))

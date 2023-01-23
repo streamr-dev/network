@@ -49,7 +49,7 @@ describe('Layer1', () => {
 
     })
 
-    it.only('single layer1 dht', async () => {
+    it('single layer1 dht', async () => {
         const layer1EntryPoint = await createMockConnectionLayer1Node(layer0EntryPoint.getNodeId().toString(), layer0EntryPoint)
         await layer1EntryPoint.joinDht(entryPoint0Descriptor)
         layer1CleanUp.push(layer1EntryPoint)

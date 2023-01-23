@@ -73,6 +73,7 @@ export class ClientWebSocket extends EventEmitter<ConnectionEvents> implements I
 
     public send(data: Uint8Array): void {
         if (!this.stopped) {
+            // logger.info(`Sending message from WS Client ${protoToString(Message.fromBinary(data), Message)}`)
             if (this.socket && this.socket.readyState === this.socket.OPEN) {
                 logger.trace(`Sending data with size ${data.byteLength}`)
                 this.socket?.send(data.buffer)

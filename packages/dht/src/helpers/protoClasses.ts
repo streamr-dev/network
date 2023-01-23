@@ -1,5 +1,6 @@
 import { IMessageType } from '@protobuf-ts/runtime'
-import { ClosestPeersRequest, 
+import {
+    ClosestPeersRequest,
     ClosestPeersResponse, 
     ConnectivityMethod, 
     ConnectivityReportRequest, 

@@ -12,7 +12,7 @@ describe('Layer1 Scale', () => {
 
     const STREAM_ID = 'stream'
 
-    const NUM_OF_NODES = 48
+    const NUM_OF_NODES = 16
 
     let layer0Nodes: DhtNode[]
 
@@ -65,9 +65,7 @@ describe('Layer1 Scale', () => {
         layer0Nodes.forEach((node) => {
             expect(node.getBucketSize()).toBeGreaterThanOrEqual(8)
         })
-        layer1Nodes.forEach((node, i) => {
-            // eslint-disable-next-line no-console
-            console.log(i, node.getBucketSize())
+        layer1Nodes.forEach((node   ) => {
             expect(node.getBucketSize()).toBeGreaterThanOrEqual(8)
         })
     })

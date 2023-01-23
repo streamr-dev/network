@@ -67,8 +67,14 @@ export class DhtPeer implements KBucketContact {
             targetDescriptor: this.peerDescriptor
         }
 
-        const peers = await this.dhtClient.getClosestPeers(request, options)
-        return peers.peers
+        try {
+            const peers = await this.dhtClient.getClosestPeers(request, options)
+            return peers.peers
+        } catch (err) {
+            logger.debug(`failed getClosestPeers request: ${request.requestId}`)
+            throw err
+        }
+
     }
 
     async ping(): Promise<boolean> {
@@ -119,7 +125,14 @@ export class DhtPeer implements KBucketContact {
             logger.trace('calling dhtClient.routeMessage')
             const ack = await this.dhtClient.routeMessage(message, options)
             logger.trace('dhtClient.routeMessage returned')
-            if (ack.error!.length > 0) {
+
+            // Success signal if sent to destination and error includes duplicate
+            if (
+                PeerID.fromValue(params.destinationPeer!.kademliaId).equals(PeerID.fromValue(this.peerDescriptor.kademliaId))
+                && ack.error.includes('duplicate')
+            ) {
+                return true
+            } else if (ack.error!.length > 0) {
                 return false
             }
         } catch (err) {

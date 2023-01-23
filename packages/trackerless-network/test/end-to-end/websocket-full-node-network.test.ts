@@ -1,11 +1,9 @@
 import { DhtNode, PeerDescriptor, NodeType, ConnectionManager, PeerID } from '@streamr/dht'
 import { StreamrNode, Event as StreamrNodeEvent } from '../../src/logic/StreamrNode'
 import { range } from 'lodash'
-import { Logger, waitForCondition } from '@streamr/utils'
+import { waitForCondition } from '@streamr/utils'
 import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createStreamMessage } from '../utils'
-
-const logger = new Logger(module)
 
 describe('Full node network with WebSocket connections only', () => {
 
@@ -90,8 +88,6 @@ describe('Full node network with WebSocket connections only', () => {
 
         await Promise.all([...streamrNodes.map((streamrNode) =>
             waitForCondition(() => {
-                // eslint-disable-next-line max-len
-                logger.info(`name: ${streamrNode.config.nodeName}, stream neighbors: ${streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length}, stream contacts ${streamrNode.getStream(randomGraphId)!.layer2.getNearbyContactPoolIds().length}, layer1 size: ${streamrNode.getStream(randomGraphId)!.layer1.getBucketSize()}, layer1 neighborList: ${streamrNode.getStream(randomGraphId)!.layer1.getNeighborList().getSize()}, layer0 size: ${streamrNode.getLlayer0BucketSize()}, connection count: ${streamrNode.getConnectionCount()}`)
                 return streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length >= 3
                     && !streamrNode.getStream(randomGraphId)!.layer1.isJoinOngoing()
             }

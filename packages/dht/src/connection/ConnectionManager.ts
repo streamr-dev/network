@@ -178,8 +178,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
                 this.connections.forEach((connection) => {
                     if (!this.locks.isLocked(connection.peerIdKey) && Date.now() - connection.getLastUsed() > 30000) {
-                        // logger.info("disconnecting in timeout interval: " + this.config.nodeName + ', ' +
-                        // connection.getPeerDescriptor()?.nodeName + ' ')
+                        logger.trace("disconnecting in timeout interval: " + this.config.nodeName + ', ' +
+                        connection.getPeerDescriptor()?.nodeName + ' ')
                         // this.gracefullyDisconnect(connection.getPeerDescriptor()!)
 
                         disconnectionCandidates.addContact(new Contact(connection.getPeerDescriptor()!))
@@ -323,6 +323,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             throw (new Err.SendFailed('No connection to target, doNotConnect flag is true'))
         }
         const binary = Message.toBinary(message)
+
         this.metrics.sendBytesPerSecond.record(binary.byteLength)
         this.metrics.sendMessagesPerSecond.record(1)
         return connection!.send(binary)
@@ -577,10 +578,6 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         if (this.connections.has(hexKey)) {
             remoteConnectionLocker.unlockRequest(serviceId)
         }
-
-        if (this.connections.get(hexKey) && !this.locks.isLocked(hexKey)) {
-            this.gracefullyDisconnectAsync(targetDescriptor).catch((_e) => { })
-        }
     }
 
     public weakLockConnection(targetDescriptor: PeerDescriptor): void {
@@ -600,9 +597,6 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         const hexKey = PeerID.fromValue(targetDescriptor.kademliaId).toKey()
         this.locks.removeWeakLocked(hexKey)
 
-        //if (this.connections.get(hexKey) && !this.locks.isLocked(hexKey)) {
-        //    this.gracefullyDisconnect(targetDescriptor)
-        //}
     }
 
     /*
@@ -680,10 +674,6 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         const hexKey = PeerID.fromValue(unlockRequest.peerDescriptor!.kademliaId).toKey()
 
         this.locks.removeRemoteLocked(hexKey, unlockRequest.serviceId)
-
-        if (!this.locks.isLocked(hexKey)) {
-            await this.gracefullyDisconnectAsync(unlockRequest.peerDescriptor!)
-        }
 
         return {}
     }

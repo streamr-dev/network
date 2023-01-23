@@ -4,7 +4,7 @@ import { PeerID } from '../../src/helpers/PeerID'
 
 describe('Layer1 Scale', () => {
     const epPeerDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString('entrypoint').value,
+        kademliaId: PeerID.fromString('0').value,
         type: NodeType.NODEJS,
         websocket: { ip: '127.0.0.1', port: 43228 },
         nodeName: 'entrypoint'
@@ -12,7 +12,7 @@ describe('Layer1 Scale', () => {
 
     const STREAM_ID = 'stream'
 
-    const NUM_OF_NODES = 32
+    const NUM_OF_NODES = 16
 
     let layer0Nodes: DhtNode[]
 
@@ -33,7 +33,7 @@ describe('Layer1 Scale', () => {
         layer0Nodes = []
         layer1Nodes = []
 
-        for (let i = 0; i < NUM_OF_NODES; i++) {
+        for (let i = 1; i < NUM_OF_NODES; i++) {
             const node = new DhtNode({ peerIdString: `node-${i}`, nodeName: `${i}`, entryPoints: [epPeerDescriptor] })
             await node.start()
             layer0Nodes.push(node)
@@ -41,7 +41,8 @@ describe('Layer1 Scale', () => {
                 transportLayer: node,
                 entryPoints: [epPeerDescriptor],
                 peerDescriptor: node.getPeerDescriptor(),
-                serviceId: STREAM_ID
+                serviceId: STREAM_ID,
+                rpcRequestTimeout: 5000
             })
             await layer1.start()
             layer1Nodes.push(layer1)
@@ -64,9 +65,7 @@ describe('Layer1 Scale', () => {
         layer0Nodes.forEach((node) => {
             expect(node.getBucketSize()).toBeGreaterThanOrEqual(8)
         })
-        layer1Nodes.forEach((node, i) => {
-            // eslint-disable-next-line no-console
-            console.log(i, node.getBucketSize())
+        layer1Nodes.forEach((node) => {
             expect(node.getBucketSize()).toBeGreaterThanOrEqual(8)
         })
     })

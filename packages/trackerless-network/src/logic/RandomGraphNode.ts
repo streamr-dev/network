@@ -123,7 +123,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         if (candidates.length) {
             this.newContact(candidates[0], candidates)
         } else {
-            logger.warn('layer1 had no closest contacts in the beginning')
+            logger.debug('layer1 had no closest contacts in the beginning')
         }
 
         this.findNeighbors([]).catch((e) => {
@@ -306,7 +306,6 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     }
 
     private onPeerDisconnected(peerDescriptor: PeerDescriptor): void {
-        logger.info(`PEER DISCONNECTED ${PeerID.fromValue(peerDescriptor.kademliaId).toKey()} ${this.getOwnStringId()}`)
         if (this.targetNeighbors!.hasPeer(peerDescriptor)) {
             this.targetNeighbors!.remove(peerDescriptor)
             // this.randomContactPool.remove(peerDescriptor)
