@@ -190,6 +190,13 @@ export const STREAM_CLIENT_DEFAULTS:
                 port: 5349,
                 username: 'BrubeckTurn1',
                 password: 'MIlbgtMw4nhpmbgqRrht1Q=='
+            },
+            {
+                url: 'turn:turn.streamr.network',
+                port: 5349,
+                username: 'BrubeckTurn1',
+                password: 'MIlbgtMw4nhpmbgqRrht1Q==',
+                tcp: true
             }
         ]
     },

@@ -172,6 +172,9 @@
                             },
                             "password": {
                                 "type": "string"
+                            },
+                            "tcp": {
+                                "type": "boolean"
                             }
                         }
                     },
@@ -185,6 +188,13 @@
                             "port": 5349,
                             "username": "BrubeckTurn1",
                             "password": "MIlbgtMw4nhpmbgqRrht1Q=="
+                        },
+                        {
+                            "url": "turn:turn.streamr.network",
+                            "port": 5349,
+                            "username": "BrubeckTurn1",
+                            "password": "MIlbgtMw4nhpmbgqRrht1Q==",
+                            "tcp": true
                         }
                     ]
                 },
