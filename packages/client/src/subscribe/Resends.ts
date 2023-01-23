@@ -89,16 +89,16 @@ export class Resends {
     private readonly logger: Logger
 
     constructor(
-        @inject(StreamStorageRegistry) streamStorageRegistry: StreamStorageRegistry,
+        streamStorageRegistry: StreamStorageRegistry,
         @inject(delay(() => StorageNodeRegistry)) storageNodeRegistry: StorageNodeRegistry,
         @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
-        @inject(HttpUtil) httpUtil: HttpUtil,
+        httpUtil: HttpUtil,
         groupKeyStore: GroupKeyStore,
         subscriberKeyExchange: SubscriberKeyExchange,
         streamrClientEventEmitter: StreamrClientEventEmitter,
         destroySignal: DestroySignal,
         @inject(ConfigInjectionToken) config: StrictStreamrClientConfig,
-        @inject(LoggerFactory) loggerFactory: LoggerFactory
+        loggerFactory: LoggerFactory
     ) {
         this.streamStorageRegistry = streamStorageRegistry
         this.storageNodeRegistry = storageNodeRegistry
