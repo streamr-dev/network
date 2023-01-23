@@ -3,6 +3,7 @@ import { runAndWaitForEvents } from '@streamr/test-utils'
 import { MessageQueue } from '../../src/connection/MessageQueue'
 import { ConstructorOptions } from '../../src/connection/webrtc/WebRtcConnection'
 import { DeferredConnectionAttempt } from '../../src/connection/webrtc/DeferredConnectionAttempt'
+import { TEST_CONFIG } from '../../src/createNetworkNode'
 
 const connectionOpts1: ConstructorOptions = {
     selfId: 'peer1',
@@ -10,7 +11,7 @@ const connectionOpts1: ConstructorOptions = {
     routerId: 'tracker',
     iceServers: [],
     pingInterval: 5000,
-    messageQueue: new MessageQueue<string>(),
+    messageQueue: new MessageQueue<string>(TEST_CONFIG.webrtcSendBufferMaxMessageCount),
     deferredConnectionAttempt: new DeferredConnectionAttempt()
 }
 
@@ -20,7 +21,7 @@ const connectionOpts2: ConstructorOptions = {
     routerId: 'tracker',
     iceServers: [],
     pingInterval: 5000,
-    messageQueue: new MessageQueue<string>(),
+    messageQueue: new MessageQueue<string>(TEST_CONFIG.webrtcSendBufferMaxMessageCount),
     deferredConnectionAttempt: new DeferredConnectionAttempt()
 }
 
