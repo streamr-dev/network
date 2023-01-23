@@ -22,11 +22,11 @@ describe('Layer1 Scale', () => {
     let epLayer1Node: DhtNode
 
     beforeEach(async () => {
-        epLayer0Node = new DhtNode({ peerDescriptor: epPeerDescriptor })
+        epLayer0Node = new DhtNode({ peerDescriptor: epPeerDescriptor, nodeName: 'entrypoint' })
         await epLayer0Node.start()
         await epLayer0Node.joinDht(epPeerDescriptor)
 
-        epLayer1Node = new DhtNode({ transportLayer: epLayer0Node, peerDescriptor: epPeerDescriptor, serviceId: STREAM_ID })
+        epLayer1Node = new DhtNode({ transportLayer: epLayer0Node, peerDescriptor: epPeerDescriptor, serviceId: STREAM_ID, nodeName: 'entrypoint' })
         await epLayer1Node.start()
         await epLayer1Node.joinDht(epPeerDescriptor)
 
@@ -38,6 +38,7 @@ describe('Layer1 Scale', () => {
             await node.start()
             layer0Nodes.push(node)
             const layer1 = new DhtNode({
+                nodeName: `${i}`,
                 transportLayer: node,
                 entryPoints: [epPeerDescriptor],
                 peerDescriptor: node.getPeerDescriptor(),
