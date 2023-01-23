@@ -110,11 +110,11 @@ const buildQuery = (
         }
         if (permissionFilter.allOf !== undefined) {
             const now = String(Math.round(Date.now() / 1000))
-            variables.canEdit = permissionFilter.allOf.includes(StreamPermission.EDIT)
-            variables.canDelete = permissionFilter.allOf.includes(StreamPermission.DELETE)
+            variables.canEdit = permissionFilter.allOf.includes(StreamPermission.EDIT) ? true : undefined
+            variables.canDelete = permissionFilter.allOf.includes(StreamPermission.DELETE) ? true : undefined
             variables.publishExpiration_gt = permissionFilter.allOf.includes(StreamPermission.PUBLISH) ? now : undefined
             variables.subscribeExpiration_gt = permissionFilter.allOf.includes(StreamPermission.SUBSCRIBE) ? now : undefined
-            variables.canGrant = permissionFilter.allOf.includes(StreamPermission.GRANT)
+            variables.canGrant = permissionFilter.allOf.includes(StreamPermission.GRANT) ? true : undefined
         }
     }
     const query = `
