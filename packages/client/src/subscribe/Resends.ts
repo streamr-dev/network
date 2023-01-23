@@ -93,10 +93,10 @@ export class Resends {
         @inject(delay(() => StorageNodeRegistry)) storageNodeRegistry: StorageNodeRegistry,
         @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
         @inject(HttpUtil) httpUtil: HttpUtil,
-            groupKeyStore: GroupKeyStore,
-            subscriberKeyExchange: SubscriberKeyExchange,
-            streamrClientEventEmitter: StreamrClientEventEmitter,
-            destroySignal: DestroySignal,
+        groupKeyStore: GroupKeyStore,
+        subscriberKeyExchange: SubscriberKeyExchange,
+        streamrClientEventEmitter: StreamrClientEventEmitter,
+        destroySignal: DestroySignal,
         @inject(ConfigInjectionToken) config: StrictStreamrClientConfig,
         @inject(LoggerFactory) loggerFactory: LoggerFactory
     ) {
