@@ -12,6 +12,7 @@ export interface IceServer {
     port: number
     username?: string
     password?: string
+    tcp?: boolean
 }
 
 export interface ConstructorOptions {

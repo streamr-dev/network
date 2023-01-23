@@ -1,5 +1,5 @@
-import type { StreamStorageRegistry as StreamStorageRegistryContract } from '../ethereumArtifacts/StreamStorageRegistry'
-import StreamStorageRegistryArtifact from '../ethereumArtifacts/StreamStorageRegistry.json'
+import type { StreamStorageRegistryV2 as StreamStorageRegistryContract } from '../ethereumArtifacts/StreamStorageRegistryV2'
+import StreamStorageRegistryArtifact from '../ethereumArtifacts/StreamStorageRegistryV2Abi.json'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { Stream } from '../Stream'

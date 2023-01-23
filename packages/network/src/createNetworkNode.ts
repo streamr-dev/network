@@ -1,6 +1,3 @@
-import { v4 as uuidv4 } from 'uuid'
-import { MetricsContext } from '@streamr/utils'
-
 import { AbstractNodeOptions } from './identifiers'
 import { NodeToTracker } from './protocol/NodeToTracker'
 import { NodeToNode } from './protocol/NodeToNode'
@@ -16,23 +13,37 @@ import { IceServer } from './connection/webrtc/WebRtcConnection'
 
 export interface NetworkNodeOptions extends AbstractNodeOptions {
     trackers: TrackerRegistryRecord[]
-    disconnectionWaitTime?: number
-    peerPingInterval?: number
-    newWebrtcConnectionTimeout?: number
-    webrtcDatachannelBufferThresholdLow?: number
-    webrtcDatachannelBufferThresholdHigh?: number
-    iceServers?: ReadonlyArray<IceServer>
-    rttUpdateTimeout?: number
-    trackerConnectionMaintenanceInterval?: number
-    webrtcDisallowPrivateAddresses?: boolean
-    acceptProxyConnections?: boolean
+    disconnectionWaitTime: number
+    peerPingInterval: number
+    newWebrtcConnectionTimeout: number
+    webrtcDatachannelBufferThresholdLow: number
+    webrtcDatachannelBufferThresholdHigh: number
+    iceServers: ReadonlyArray<IceServer>
+    rttUpdateTimeout: number
+    trackerConnectionMaintenanceInterval: number
+    webrtcDisallowPrivateAddresses: boolean
+    acceptProxyConnections: boolean
+}
+
+export const TEST_CONFIG: Omit<NetworkNodeOptions, 'id' | 'trackers' | 'metricsContext'> = {
+    disconnectionWaitTime: 30 * 1000,
+    peerPingInterval: 30 * 1000,
+    newWebrtcConnectionTimeout: 15 * 1000,
+    webrtcDatachannelBufferThresholdLow: 2 ** 15,
+    webrtcDatachannelBufferThresholdHigh: 2 ** 17,
+    iceServers: [],
+    rttUpdateTimeout: 15 * 1000,
+    trackerConnectionMaintenanceInterval: 5 * 1000,
+    webrtcDisallowPrivateAddresses: false,
+    acceptProxyConnections: false,
+    trackerPingInterval: 60 * 1000
 }
 
 export const createNetworkNode = ({
-    id = uuidv4(),
+    id,
     location,
     trackers,
-    metricsContext = new MetricsContext(),
+    metricsContext,
     peerPingInterval,
     trackerPingInterval,
     disconnectionWaitTime,
@@ -40,9 +51,9 @@ export const createNetworkNode = ({
     rttUpdateTimeout,
     webrtcDatachannelBufferThresholdLow,
     webrtcDatachannelBufferThresholdHigh,
-    iceServers = [],
+    iceServers,
     trackerConnectionMaintenanceInterval,
-    webrtcDisallowPrivateAddresses = true,
+    webrtcDisallowPrivateAddresses,
     acceptProxyConnections
 }: NetworkNodeOptions): NetworkNode => {
     const peerInfo = PeerInfo.newNode(id, undefined, undefined, location)

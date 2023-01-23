@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://streamr.network">
-    <img alt="Streamr" src="https://raw.githubusercontent.com/streamr-dev/network-monorepo/main/packages/client/readme-header-img.png" width="1320" />
+    <img alt="Streamr" src="https://raw.githubusercontent.com/streamr-dev/network-monorepo/main/packages/client/readme-header.png" width="1320" />
   </a>
 </p>
 
@@ -8,15 +8,11 @@
   Streamr JavaScript Client
 </h1>
 
-[![Build status](https://github.com/streamr-dev/monorepo/actions/workflows/client-build.yml/badge.svg)](https://github.com/streamr-dev/monorepo/actions/workflows/client-build.yml)
 ![latest npm package version](https://img.shields.io/npm/v/streamr-client?label=latest)
 ![GitHub stars](https://img.shields.io/github/stars/streamr-dev/network-monorepo?style=social)
 [![Discord Chat](https://img.shields.io/discord/801574432350928907.svg?label=Discord&logo=Discord&colorB=7289da)](https://discord.gg/FVtAph9cvz)
 
 This library allows you to easily interact with the [Streamr Network](https://streamr.network) from JavaScript-based environments, such as browsers and [node.js](https://nodejs.org). The library wraps a Streamr light node for publishing and subscribing to messages, as well as contains convenience functions for creating and managing streams.
-
-| If you are using the Streamr Client in Node, NodeJS version `16.14.x` and NPM version `8.x` is required |
-| --- |
 
 Please see the [Streamr project docs](https://streamr.network/docs) for more detailed documentation.
 
@@ -25,6 +21,7 @@ Please see the [Streamr project docs](https://streamr.network/docs) for more det
     - [Subscribing](#subscribing)
     - [Publishing](#publishing)
 - [Setup](#setup)
+    - [Environments & frameworks](#environments-and-frameworks)
 - [Usage](#usage)
     - [API reference](#api-reference)
     - [Client creation](#client-creation)
@@ -35,7 +32,7 @@ Please see the [Streamr project docs](https://streamr.network/docs) for more det
     - [Searching for streams](#searching-for-streams)
     - [Interacting with the `Stream` object](#interacting-with-the-stream-object)
      - [Getting existing streams](#getting-existing-streams)
-     - [Stream access control](#stream-access-control)
+    - [Stream access control](#stream-access-control)
     - [Enabling storage](#enabling-storage)
     - [Utility functions](#utility-functions)
 - [Advanced usage](#advanced-usage)
@@ -95,16 +92,29 @@ If using Node.js you can import the library with:
 const { StreamrClient } = require('streamr-client')
 ```
 
+### Environments and frameworks
+
+#### NodeJS
+NodeJS `16.13.x` is the minimum required version. NodeJS `18.13.x`, NPM `8.x` and later versions are recommended.
+
+#### Browser (Website/WebApps)
 For usage in the browser include the latest build, e.g. by including a `<script>` tag pointing at a CDN:
 
 ```html
 <script src="https://unpkg.com/streamr-client@latest/streamr-client.web.js"></script>
 ```
+
+#### Browser extension
+Due to the stricter security rules inside browser extensions you must use the web build version of the Streamr Client.
+
+#### React Native
+We are actively working on React Native compatibility but currently the Streamr JavaScript Client is not compatible with React Native. To connect, pull or push data into the Streamr Network, use the [Broker integration pattern](https://streamr.network/docs/streamr-network/connecting-applications).
+
 ___
 ## Usage
 
 ### API reference
-See https://api-docs.streamr.network/client/v7.0/index.html
+See https://api-docs.streamr.network/client/v7.2/index.html
 
 ### Client creation
 In Streamr, Ethereum accounts are used for identity. You can generate an Ethereum private key using any Ethereum wallet, or you can use the utility function [`StreamrClient.generateEthereumAccount()`](#utility-functions), which returns the address and private key of a fresh Ethereum account. A private key is not required if you are only subscribing to public streams on the Network.

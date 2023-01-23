@@ -2,16 +2,16 @@ import { Event as wrtcEvent } from '../../src/connection/webrtc/IWebRtcEndpoint'
 import { PeerInfo, PeerType } from '../../src/connection/PeerInfo'
 import { MetricsContext } from '@streamr/utils'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
-import { Tracker, startTracker } from '@streamr/network-tracker'
+import { Tracker } from '@streamr/network-tracker'
 import { NodeToTracker } from '../../src/protocol/NodeToTracker'
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
 import { Event as ntnEvent, NodeToNode } from "../../src/protocol/NodeToNode"
 import { MessageID, StreamMessage, toStreamID } from "@streamr/protocol"
 import { runAndWaitForEvents } from '@streamr/test-utils'
-import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { WebRtcEndpoint } from '../../src/connection/webrtc/WebRtcEndpoint'
 import { webRtcConnectionFactory } from '../../src/connection/webrtc/NodeWebRtcConnection'
 import { toEthereumAddress } from '@streamr/utils'
+import { createTestNodeClientWsEndpoint, createTestWebRtcEndpoint, startTestTracker } from '../utils'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
@@ -27,11 +27,8 @@ describe('Node-to-Node protocol version negotiation', () => {
     let nodeToNode2: NodeToNode
 
     beforeEach(async () => {
-        tracker = await startTracker({
-            listen: {
-                hostname: '127.0.0.1',
-                port: 28680
-            }
+        tracker = await startTestTracker({
+            port: 28680
         })
 
         const peerInfo1 = new PeerInfo('node-endpoint1', PeerType.Node, [1, 2, 3], [29, 30, 31, 32])
@@ -39,9 +36,9 @@ describe('Node-to-Node protocol version negotiation', () => {
         const peerInfo3 = new PeerInfo('node-endpoint3', PeerType.Node, [1, 2], [33])
         const trackerPeerInfo = PeerInfo.newTracker(tracker.getTrackerId())
         // Need to set up NodeToTrackers and WsEndpoint(s) to exchange RelayMessage(s) via tracker
-        const wsEp1 = new NodeClientWsEndpoint(peerInfo1)
-        const wsEp2 = new NodeClientWsEndpoint(peerInfo2)
-        const wsEp3 = new NodeClientWsEndpoint(peerInfo3)
+        const wsEp1 = createTestNodeClientWsEndpoint(peerInfo1)
+        const wsEp2 = createTestNodeClientWsEndpoint(peerInfo2)
+        const wsEp3 = createTestNodeClientWsEndpoint(peerInfo3)
         nodeToTracker1 = new NodeToTracker(wsEp1)
         nodeToTracker2 = new NodeToTracker(wsEp2)
         nodeToTracker3 = new NodeToTracker(wsEp3)
@@ -51,7 +48,7 @@ describe('Node-to-Node protocol version negotiation', () => {
         await nodeToTracker3.connectToTracker(tracker.getUrl(), trackerPeerInfo)
 
         // Set up WebRTC endpoints
-        ep1 = new WebRtcEndpoint(
+        ep1 = createTestWebRtcEndpoint(
             peerInfo1,
             [],
             new RtcSignaller(peerInfo1, nodeToTracker1),
@@ -60,7 +57,7 @@ describe('Node-to-Node protocol version negotiation', () => {
             webRtcConnectionFactory,
             5000
         )
-        ep2 = new WebRtcEndpoint(
+        ep2 = createTestWebRtcEndpoint(
             peerInfo2,
             [],
             new RtcSignaller(peerInfo2, nodeToTracker2),
@@ -69,7 +66,7 @@ describe('Node-to-Node protocol version negotiation', () => {
             webRtcConnectionFactory,
             5000
         )
-        ep3 = new WebRtcEndpoint(
+        ep3 = createTestWebRtcEndpoint(
             peerInfo3,
             [],
             new RtcSignaller(peerInfo3, nodeToTracker3),

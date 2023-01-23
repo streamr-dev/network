@@ -3,14 +3,14 @@ import 'reflect-metadata'
 import { merge } from 'lodash'
 import { container } from 'tsyringe'
 import { StreamrClientConfig } from '../../src/Config'
-import { ConfigTest } from '../../src/ConfigTest'
+import { CONFIG_TEST } from '../../src/ConfigTest'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamrClient } from '../../src/StreamrClient'
 
 const createClient = (opts: StreamrClientConfig = {}) => {
     return new StreamrClient(merge(
         {},
-        ConfigTest,
+        CONFIG_TEST,
         {
             network: {
                 trackers: [] // without this setting NetworkNodeFacade would query the tracker addresses from the contract

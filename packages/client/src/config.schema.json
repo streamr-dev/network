@@ -1,7 +1,7 @@
 {
     "$id": "config.schema.json",
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "description": "Broker configuration format",
+    "description": "Client configuration format",
     "type": "object",
     "additionalProperties": false,
     "properties": {
@@ -18,7 +18,8 @@
                 "info",
                 "debug",
                 "trace"
-            ]
+            ],
+            "default": "info"
         },
         "auth": {
             "type": "object",
@@ -37,80 +38,25 @@
                 }
             }
         },
-        "cache": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "maxSize": {
-                    "type": "number"
-                },
-                "maxAge": {
-                    "type": "number"
-                }
-            }
-        },
-        "_timeouts": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "theGraph": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "properties": {
-                        "timeout": {
-                            "type": "number"
-                        },
-                        "retryInterval": {
-                            "type": "number"
-                        }
-                    }
-                },
-                "storageNode": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "properties": {
-                        "timeout": {
-                            "type": "number"
-                        },
-                        "retryInterval": {
-                            "type": "number"
-                        }
-                    }
-                },
-                "jsonRpc": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "properties": {
-                        "timeout": {
-                            "type": "number"
-                        },
-                        "retryInterval": {
-                            "type": "number"
-                        }
-                    }
-                },
-                "httpFetchTimeout": {
-                    "type": "number"
-                }
-            }
-        },
         "orderMessages": {
-            "type": "boolean"
+            "type": "boolean",
+            "default": true
         },
         "gapFill": {
-            "type": "boolean"
+            "type": "boolean",
+            "default": true
         },
         "maxGapRequests": {
-            "type": "number"
+            "type": "number",
+            "default": 5
         },
         "retryResendAfter": {
-            "type": "number"
+            "type": "number",
+            "default": 5000
         },
         "gapFillTimeout": {
-            "type": "number"
-        },
-        "encryptionKeys": {
-            "type": "object"
+            "type": "number",
+            "default": 5000
         },
         "network": {
             "type": "object",
@@ -119,26 +65,9 @@
                 "id": {
                     "type": "string"
                 },
-                "location": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "properties": {
-                        "latitude": {
-                            "type": "number"
-                        },
-                        "longitude": {
-                            "type": "number"
-                        },
-                        "country": {
-                            "type": "string"
-                        },
-                        "city": {
-                            "type": "string"
-                        }
-                    }
-                },
-                "trackerPingInterval": {
-                    "type": "number"
+                "acceptProxyConnections": {
+                    "type": "boolean",
+                    "default": false
                 },
                 "trackers": {
                     "anyOf": [
@@ -181,22 +110,46 @@
                                 }
                             }
                         }
-                    ]
+                    ],
+                    "default": {
+                        "contractAddress": "0xab9BEb0e8B106078c953CcAB4D6bF9142BeF854d"
+                    }
                 },
-                "disconnectionWaitTime": {
-                    "type": "number"
+                "trackerPingInterval": {
+                    "type": "number",
+                    "default": 60000
                 },
-                "peerPingInterval": {
-                    "type": "number"
+                "trackerConnectionMaintenanceInterval": {
+                    "type": "number",
+                    "default": 5000
+                },
+                "webrtcDisallowPrivateAddresses": {
+                    "type": "boolean",
+                    "default": true
                 },
                 "newWebrtcConnectionTimeout": {
-                    "type": "number"
+                    "type": "number",
+                    "default": 15000
                 },
                 "webrtcDatachannelBufferThresholdLow": {
-                    "type": "number"
+                    "type": "number",
+                    "default": 32768
                 },
                 "webrtcDatachannelBufferThresholdHigh": {
-                    "type": "number"
+                    "type": "number",
+                    "default": 131072
+                },
+                "disconnectionWaitTime": {
+                    "type": "number",
+                    "default": 200
+                },
+                "peerPingInterval": {
+                    "type": "number",
+                    "default": 30000
+                },
+                "rttUpdateTimeout": {
+                    "type": "number",
+                    "default": 15000
                 },
                 "iceServers": {
                     "type": "array",
@@ -219,23 +172,52 @@
                             },
                             "password": {
                                 "type": "string"
+                            },
+                            "tcp": {
+                                "type": "boolean"
                             }
                         }
+                    },
+                    "default": [
+                        {
+                            "url": "stun:stun.streamr.network",
+                            "port": 5349
+                        },
+                        {
+                            "url": "turn:turn.streamr.network",
+                            "port": 5349,
+                            "username": "BrubeckTurn1",
+                            "password": "MIlbgtMw4nhpmbgqRrht1Q=="
+                        },
+                        {
+                            "url": "turn:turn.streamr.network",
+                            "port": 5349,
+                            "username": "BrubeckTurn1",
+                            "password": "MIlbgtMw4nhpmbgqRrht1Q==",
+                            "tcp": true
+                        }
+                    ]
+                },
+                "location": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "latitude": {
+                            "type": "number"
+                        },
+                        "longitude": {
+                            "type": "number"
+                        },
+                        "country": {
+                            "type": "string"
+                        },
+                        "city": {
+                            "type": "string"
+                        }
                     }
-                },
-                "rttUpdateTimeout": {
-                    "type": "number"
-                },
-                "trackerConnectionMaintenanceInterval": {
-                    "type": "number"
-                },
-                "webrtcDisallowPrivateAddresses": {
-                    "type": "boolean"
-                },
-                "acceptProxyConnections": {
-                    "type": "boolean"
                 }
-            }
+            },
+            "default": {}
         },
         "contracts": {
             "type": "object",
@@ -243,19 +225,18 @@
             "properties": {
                 "streamRegistryChainAddress": {
                     "type": "string",
-                    "format": "ethereum-address"
+                    "format": "ethereum-address",
+                    "default": "0x0D483E10612F327FC11965Fc82E90dC19b141641"
                 },
                 "streamStorageRegistryChainAddress": {
                     "type": "string",
-                    "format": "ethereum-address"
+                    "format": "ethereum-address",
+                    "default": "0xe8e2660CeDf2a59C917a5ED05B72df4146b58399"
                 },
                 "storageNodeRegistryChainAddress": {
                     "type": "string",
-                    "format": "ethereum-address"
-                },
-                "ensCacheChainAddress": {
-                    "type": "string",
-                    "format": "ethereum-address"
+                    "format": "ethereum-address",
+                    "default": "0x080F34fec2bc33928999Ea9e39ADc798bEF3E0d6"
                 },
                 "mainChainRPCs": {
                     "anyOf": [
@@ -266,34 +247,75 @@
                             "type": "string",
                             "format": "uri"
                         }
-                    ]
+                    ],
+                    "default": {
+                        "name": "ethereum",
+                        "chainId": 1,
+                        "rpcs": [
+                            {
+                                "url": "https://eth-rpc.gateway.pokt.network",
+                                "timeout": 120000
+                            },
+                            {
+                                "url": "https://ethereum.publicnode.com",
+                                "timeout": 120000
+                            },
+                            {
+                                "url": "https://rpc.ankr.com/eth",
+                                "timeout": 120000
+                            }
+                        ]
+                    }
                 },
                 "streamRegistryChainRPCs": {
-                    "$ref": "#/definitions/chainConnectionInfoList"
+                    "$ref": "#/definitions/chainConnectionInfoList",
+                    "default": {
+                        "name": "polygon",
+                        "chainId": 137,
+                        "rpcs": [{
+                            "url": "https://polygon-rpc.com",
+                            "timeout": 120000
+                        }, {
+                            "url": "https://poly-rpc.gateway.pokt.network/",
+                            "timeout": 120000
+                        }]
+                    }
                 },
                 "ethereumNetworks": {
-                    "type": "object"
+                    "type": "object",
+                    "default": {
+                        "polygon": {
+                            "chainId": 137,
+                            "highGasPriceStrategy": true
+                        }
+                    }
                 },
                 "theGraphUrl": {
                     "type": "string",
-                    "format": "uri"
+                    "format": "uri",
+                    "default": "https://api.thegraph.com/subgraphs/name/streamr-dev/streams"
                 },
                 "maxConcurrentCalls": {
-                    "type": "number"
+                    "type": "number",
+                    "default": 10
                 }
-            }
+            },
+            "default": {}
         },
         "decryption": {
             "type": "object",
             "additionalProperties": false,
             "properties": {
                 "keyRequestTimeout": {
-                    "type": "number"
+                    "type": "number",
+                    "default": 30000
                 },
                 "maxKeyRequestsPerSecond": {
-                    "type": "number"
+                    "type": "number",
+                    "default": 20
                 }
-            }
+            },
+            "default": {}
         },
         "metrics": {
             "anyOf": [
@@ -327,8 +349,78 @@
                         }
                     }
                 }
-            ],
-            "default": true
+            ]
+        },
+        "cache": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "maxSize": {
+                    "type": "number",
+                    "default": 10000
+                },
+                "maxAge": {
+                    "type": "number",
+                    "default": 86400000
+                }
+            },
+            "default": {}
+        },
+        "_timeouts": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "theGraph": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "timeout": {
+                            "type": "number",
+                            "default": 60000
+                        },
+                        "retryInterval": {
+                            "type": "number",
+                            "default": 1000
+                        }
+                    },
+                    "default": {}
+                },
+                "storageNode": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "timeout": {
+                            "type": "number",
+                            "default": 30000
+                        },
+                        "retryInterval": {
+                            "type": "number",
+                            "default": 1000
+                        }
+                    },
+                    "default": {}
+                },
+                "jsonRpc": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "timeout": {
+                            "type": "number",
+                            "default": 30000
+                        },
+                        "retryInterval": {
+                            "type": "number",
+                            "default": 1000
+                        }
+                    },
+                    "default": {}
+                },
+                "httpFetchTimeout": {
+                    "type": "number",
+                    "default": 30000
+                }
+            },
+            "default": {}
         }
     },
     "definitions": {

@@ -1,32 +1,23 @@
 {
   "name": "@streamr/utils",
-  "version": "7.0.1",
+  "version": "7.2.1",
   "description": "A collection of shared common utilities",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/streamr-dev/network.git",
+    "directory": "packages/utils"
+  },
   "main": "./dist/src/exports.js",
   "types": "./dist/src/exports.d.ts",
   "scripts": {
-    "check": "tsc -p ./tsconfig.jest.json --noEmit",
-    "test": "jest",
-    "test-unit": "npm run test",
-    "test-browser": "webpack --mode=development --progress && karma start karma.config.js",
-    "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
-    "prepare": "npm run build",
     "build": "tsc --build tsconfig.node.json",
-    "clean": "jest --clearCache || true; rm -rf dist vendor *.tsbuildinfo node_modules/.cache || true"
+    "check": "tsc -p ./tsconfig.jest.json --noEmit",
+    "clean": "jest --clearCache || true; rm -rf dist vendor *.tsbuildinfo node_modules/.cache || true",
+    "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
+    "test": "jest",
+    "test-browser": "webpack --mode=development --progress && karma start karma.config.js"
   },
-  "keywords": [
-    "streamr"
-  ],
-  "homepage": "https://github.com/streamr-dev/utils",
-  "bugs": {
-    "url": "https://github.com/streamr-dev/utils/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/streamr-dev/network-monorepo.git",
-    "directory": "packages/utils"
-  },
-  "author": "Streamr <contact@streamr.com>",
+  "author": "Streamr Network AG <contact@streamr.network>",
   "license": "Apache-2.0",
   "dependencies": {
     "eventemitter3": "^4.0.7",
@@ -52,7 +43,6 @@
     "node-fetch": "^2.6.6",
     "node-module-polyfill": "^1.0.1",
     "node-polyfill-webpack-plugin": "^1.1.4",
-    "typescript": "^4.5.2",
     "webpack": "^5.64.1",
     "webpack-cli": "^4.9.1"
   }

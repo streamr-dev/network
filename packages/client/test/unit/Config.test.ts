@@ -1,12 +1,12 @@
 import { TrackerRegistryRecord } from '@streamr/protocol'
-import { fastPrivateKey } from '@streamr/test-utils'
-import { createStrictConfig, STREAM_CLIENT_DEFAULTS } from '../../src/Config'
-import { ConfigTest } from '../../src/ConfigTest'
+import { omit } from 'lodash'
+import { createStrictConfig, redactConfig, STREAM_CLIENT_DEFAULTS } from '../../src/Config'
+import { CONFIG_TEST } from '../../src/ConfigTest'
 import { generateEthereumAccount } from '../../src/Ethereum'
-import { STREAMR_ICE_SERVERS } from '@streamr/network-node'
 import { StreamrClient } from '../../src/StreamrClient'
 
 describe('Config', () => {
+
     describe('validate', () => {
         it('additional property', () => {
             expect(() => {
@@ -87,11 +87,6 @@ describe('Config', () => {
         })
     })
 
-    it('uses PRODUCTION_STUN_URLS by default', () => {
-        const clientDefaults = createStrictConfig()
-        expect(clientDefaults.network.iceServers).toEqual(STREAMR_ICE_SERVERS)
-    })
-
     describe('ignorable properties', () => {
         it('auth address', () => {
             expect(() => {
@@ -108,9 +103,9 @@ describe('Config', () => {
 
         it('can override network.trackers arrays', () => {
             const clientDefaults = createStrictConfig()
-            const clientOverrides = createStrictConfig(ConfigTest)
+            const clientOverrides = createStrictConfig(CONFIG_TEST)
             expect(clientOverrides.network.trackers).not.toEqual(clientDefaults.network.trackers)
-            expect(clientOverrides.network.trackers).toEqual(ConfigTest.network!.trackers)
+            expect(clientOverrides.network.trackers).toEqual(CONFIG_TEST.network!.trackers)
         })
 
         it('network can be empty', () => {
@@ -119,7 +114,9 @@ describe('Config', () => {
                 network: {}
             })
             expect(clientOverrides.network).toEqual(clientDefaults.network)
-            expect(clientOverrides.network.trackers).toEqual(STREAM_CLIENT_DEFAULTS.network.trackers)
+            expect(clientOverrides.network.trackers).toEqual({
+                contractAddress: '0xab9BEb0e8B106078c953CcAB4D6bF9142BeF854d'
+            })
         })
 
         it('can override trackers', () => {
@@ -139,65 +136,20 @@ describe('Config', () => {
             expect(clientOverrides.network.trackers).not.toBe(trackers)
             expect((clientOverrides.network.trackers as TrackerRegistryRecord[])[0]).not.toBe(trackers[0])
         })
+    })
 
-        describe('metrics', () => {
-            describe('default', () => {
-                it('private key auth', () => {
-                    const config = createStrictConfig({
-                        auth: {
-                            privateKey: fastPrivateKey()
-                        }
-                    })
-                    expect(config.metrics.periods).toEqual(STREAM_CLIENT_DEFAULTS.metrics.periods)
-                    expect(config.metrics.maxPublishDelay).toEqual(STREAM_CLIENT_DEFAULTS.metrics.maxPublishDelay)
-                })
-                it('ethereum auth', () => {
-                    const config = createStrictConfig({
-                        auth: {
-                            ethereum: {}
-                        }
-                    })
-                    expect(config.metrics.periods).toEqual([])
-                    expect(config.metrics.maxPublishDelay).toEqual(STREAM_CLIENT_DEFAULTS.metrics.maxPublishDelay)
-                })
-                it('unauthenticated', () => {
-                    const config = createStrictConfig({})
-                    expect(config.metrics.periods).toEqual(STREAM_CLIENT_DEFAULTS.metrics.periods)
-                    expect(config.metrics.maxPublishDelay).toEqual(STREAM_CLIENT_DEFAULTS.metrics.maxPublishDelay)
-                })
-            })
-            it('periods overrided', () => {
-                const config = createStrictConfig({
-                    metrics: {
-                        periods: [{ duration: 10, streamId: 'foo' }]
-                    }
-                })
-                expect(config.metrics.periods).toEqual([{ duration: 10, streamId: 'foo' }])
-                expect(config.metrics.maxPublishDelay).toEqual(STREAM_CLIENT_DEFAULTS.metrics.maxPublishDelay)
-            })
-            it('maxPublishDelay overrided', () => {
-                const config = createStrictConfig({
-                    metrics: {
-                        maxPublishDelay: 123
-                    }
-                })
-                expect(config.metrics.periods).toEqual(STREAM_CLIENT_DEFAULTS.metrics.periods)
-                expect(config.metrics.maxPublishDelay).toEqual(123)
-            })
-            it('enabled', () => {
-                const config = createStrictConfig({
-                    metrics: true
-                })
-                expect(config.metrics.periods).toEqual(STREAM_CLIENT_DEFAULTS.metrics.periods)
-                expect(config.metrics.maxPublishDelay).toEqual(STREAM_CLIENT_DEFAULTS.metrics.maxPublishDelay)
-            })
-            it('disabled', () => {
-                const config = createStrictConfig({
-                    metrics: false
-                })
-                expect(config.metrics.periods).toEqual([])
-                expect(config.metrics.maxPublishDelay).toEqual(STREAM_CLIENT_DEFAULTS.metrics.maxPublishDelay)
-            })
-        })
+    it('redact', () => {
+        const config: any = {
+            auth: {
+                privateKey: '0x0000000000000000000000000000000000000000000000000000000000000001'
+            }
+        }
+        redactConfig(config)
+        expect(config.auth.privateKey).toBe('(redacted)')
+    })
+
+    it('defaults', () => {
+        const config = createStrictConfig({})
+        expect(omit(config, 'id')).toEqual(STREAM_CLIENT_DEFAULTS)
     })
 })

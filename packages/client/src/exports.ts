@@ -21,9 +21,12 @@ export {
 export { StorageNodeAssignmentEvent } from './registry/StreamStorageRegistry'
 export { StorageNodeMetadata } from './registry/StorageNodeRegistry'
 export { SearchStreamsPermissionFilter } from './registry/searchStreams'
+import { StrictStreamrClientConfig as _StrictStreamrClientConfig } from './Config'
+/** @deprecated */
+type StrictStreamrClientConfig = _StrictStreamrClientConfig
+export { StrictStreamrClientConfig }
 export {
     StreamrClientConfig,
-    StrictStreamrClientConfig,
     TrackerRegistryContract,
     ChainConnectionInfo,
     EthereumNetworkConfig,
@@ -36,7 +39,7 @@ export {
 export { GroupKey as EncryptionKey } from './encryption/GroupKey'
 export { UpdateEncryptionKeyOptions } from './encryption/GroupKeyStore'
 
-export { ConfigTest } from './ConfigTest'
+export { CONFIG_TEST, ConfigTest } from './ConfigTest'
 export { NetworkNodeStub } from './NetworkNodeFacade'
 export { StreamDefinition } from './types'
 export { formStorageNodeAssignmentStreamId } from './utils/utils'
@@ -44,7 +47,11 @@ export { formStorageNodeAssignmentStreamId } from './utils/utils'
 export type { StreamID, StreamPartID, TrackerRegistryRecord } from '@streamr/protocol'
 export { ProxyDirection } from '@streamr/protocol'
 export type { BrandedString, EthereumAddress, LogLevel, Metric, MetricsContext, MetricsDefinition, MetricsReport } from '@streamr/utils'
-export type { IceServer, NetworkNodeOptions as NetworkNodeConfig, Location } from '@streamr/network-node'
+export type { IceServer, Location } from '@streamr/network-node'
+import type { NetworkNodeOptions } from '@streamr/network-node'
+/** @deprecated */
+type NetworkNodeConfig = NetworkNodeOptions
+export { NetworkNodeConfig }
 
 // These are currently exported because NetworkNodeStub uses methods which operate on StreamMessage.
 // If we remove that semi-public class we can maybe remove these exports.

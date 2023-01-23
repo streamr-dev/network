@@ -5,6 +5,7 @@ import { PeerInfo } from '../../src/connection/PeerInfo'
 import { ServerWsEndpoint, startHttpServer } from '../../src/connection/ws/ServerWsEndpoint'
 import { waitForCondition } from '@streamr/utils'
 import NodeClientWsEndpoint from "../../src/connection/ws/NodeClientWsEndpoint"
+import { createTestNodeClientWsEndpoint, createTestServerWsEndpoint, startServerWsEndpoint } from '../utils'
 
 // eslint-disable-next-line no-underscore-dangle
 declare let _streamr_electron_test: any
@@ -28,20 +29,9 @@ describe('ServerWsEndpoint', () => {
     })
 
     test('receives unencrypted connections', async () => {
-        const listen = {
-            hostname: '127.0.0.1',
-            port: wssPort1
-        }
-        const httpServer = await startHttpServer(
-            listen,
-            undefined,
-            undefined
-        )
-
         const trackerPeerInfo = PeerInfo.newTracker('tracker')
-
-        serverWsEndpoint = new ServerWsEndpoint(listen, false, httpServer, trackerPeerInfo)
-        clientWsEndpoint = new NodeClientWsEndpoint(PeerInfo.newNode('node1'))
+        serverWsEndpoint = await startServerWsEndpoint('127.0.0.1', wssPort1, trackerPeerInfo)
+        clientWsEndpoint = createTestNodeClientWsEndpoint(PeerInfo.newNode('node1'))
         
         const result = await clientWsEndpoint.connect(serverWsEndpoint.getUrl() + '/ws', trackerPeerInfo)
         
@@ -62,7 +52,7 @@ describe('ServerWsEndpoint', () => {
             'test/fixtures/key.pem',
             'test/fixtures/cert.pem'
         )
-        serverWsEndpoint = new ServerWsEndpoint(listen, true, httpsServer, PeerInfo.newTracker('tracker'))
+        serverWsEndpoint = createTestServerWsEndpoint(listen, true, httpsServer, PeerInfo.newTracker('tracker'))
         const webSocketClient = new w3cwebsocket(
             serverWsEndpoint.getUrl() + '/ws',
             undefined,
