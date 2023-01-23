@@ -2,21 +2,29 @@ import KBucket from 'k-bucket'
 import { PeerID, PeerIDKey } from '../helpers/PeerID'
 
 class ContactState<Contact> {
+
+    public contact: Contact
     public contacted = false
     public active = false
-    constructor(public contact: Contact) {
+
+    constructor(contact: Contact) {
+        this.contact = contact
     }
 }
 
 interface IContact { peerId: PeerID }
 
 export class SortedContactList<Contact extends IContact> {
+
     private contactsById: Map<PeerIDKey, ContactState<Contact>> = new Map()
     private contactIds: PeerID[] = []
+    private ownId: PeerID
+    private maxSize: number
 
-    constructor(private ownId: PeerID, private maxSize: number) {
+    constructor(ownId: PeerID, maxSize: number) {
         this.compareIds = this.compareIds.bind(this)
         this.ownId = ownId
+        this.maxSize = maxSize
     }
 
     public getClosestContactId(): PeerID {

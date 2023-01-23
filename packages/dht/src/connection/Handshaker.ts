@@ -16,10 +16,17 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
 
     private static readonly HANDSHAKER_SERVICE_ID = 'system/handshaker'
 
-    constructor(private ownPeerDescriptor: PeerDescriptor, 
-        private protocolVersion: string, 
-        private connection: IConnection) {
+    private ownPeerDescriptor: PeerDescriptor
+    private protocolVersion: string
+    private connection: IConnection
+
+    constructor(ownPeerDescriptor: PeerDescriptor, 
+        protocolVersion: string, 
+        connection: IConnection) {
         super()
+        this.ownPeerDescriptor = ownPeerDescriptor
+        this.protocolVersion = protocolVersion
+        this.connection = connection
         this.connection.on('data', this.onData)
     }
 

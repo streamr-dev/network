@@ -6,12 +6,15 @@ import { LoggerFactory } from './LoggerFactory'
 
 @scoped(Lifecycle.ContainerScoped)
 export class HttpFetcher {
+
+    private config: Pick<StrictStreamrClientConfig, '_timeouts'>
     private readonly logger: Logger
 
     constructor(
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
-        @inject(ConfigInjectionToken) private config: Pick<StrictStreamrClientConfig, '_timeouts'>
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, '_timeouts'>
     ) {
+        this.config = config
         this.logger = loggerFactory.createLogger(module)
     }
 
