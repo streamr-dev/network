@@ -125,13 +125,10 @@ export function pOnce<ArgsType extends unknown[], ReturnType>(
 
 export class TimeoutError extends Error {
     public timeout: number
-    
+
     constructor(msg = '', timeout = 0) {
         super(`The operation timed out. ${timeout}ms. ${msg}`)
         this.timeout = timeout
-        if (Error.captureStackTrace) {
-            Error.captureStackTrace(this, this.constructor)
-        }
     }
 }
 
@@ -229,7 +226,7 @@ export async function allSettledValues(items: Parameters<(typeof Promise)['allSe
 export async function until(
     condition: MaybeAsync<() => boolean>,
     timeOutMs = 10000,
-    pollingIntervalMs = 100, 
+    pollingIntervalMs = 100,
     failedMsgFn?: () => string
 ): Promise<boolean> {
     // condition could as well return any instead of boolean, could be convenient

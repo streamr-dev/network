@@ -34,10 +34,6 @@ export class HttpError extends Error {
         this.body = body
         this.code = errorCode || ErrorCode.UNKNOWN
         this.errorCode = this.code
-
-        if (Error.captureStackTrace) {
-            Error.captureStackTrace(this, this.constructor)
-        }
     }
 }
 
