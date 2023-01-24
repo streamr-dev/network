@@ -85,13 +85,19 @@ export class ConnectivityChecker {
 
     public listenToIncomingConnectivityRequests(connectionToListenTo: ServerWebSocket): void {
 
-        connectionToListenTo.on('data', async (data: Uint8Array) => {
+        connectionToListenTo.on('data', (data: Uint8Array) => {
             logger.trace('server received data')
             const message = Message.fromBinary(data)
 
             if (message.body.oneofKind === 'connectivityRequest') {
                 logger.trace('received connectivity request')
-                this.handleIncomingConnectivityRequest(connectionToListenTo, message.body.connectivityRequest)
+                
+                this.handleIncomingConnectivityRequest(connectionToListenTo, message.body.connectivityRequest).then(() => {
+                    logger.trace('handleIncomingConnectivityRequest ok')
+                    return
+                }).catch((e) => {
+                    logger.error('handleIncomingConnectivityRequest poikkeus KIINNI' + e)
+                })
             }
         })
     }
@@ -108,7 +114,7 @@ export class ConnectivityChecker {
         try {
             outgoingConnection = await this.connectAsync({
                 host: connection.getRemoteAddress(),
-                port: connectivityRequest.port, timeoutMs: 1000
+                port: connectivityRequest.port, timeoutMs: 1001
             })
         } catch (e) {
             logger.trace("Connectivity test produced negative result, communicating reply to the requester")
