@@ -24,7 +24,7 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
 
     constructor(
         peerInfo: PeerInfo,
-        pingInterval?: number
+        pingInterval: number
     ) {
         super(peerInfo, pingInterval)
 

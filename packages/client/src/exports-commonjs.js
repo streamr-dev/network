@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 // CJS entrypoint.
-const StreamrClientExports = require('./index-exports')
+const StreamrClientExports = require('./exports')
 
 Object.assign(StreamrClientExports.StreamrClient, StreamrClientExports)
 

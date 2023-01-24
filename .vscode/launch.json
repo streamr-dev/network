@@ -11,7 +11,7 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${workspaceFolder}/packages/broker/bin/broker.js",
+            "program": "${workspaceFolder}/packages/broker/dist/bin/broker.js",
             "env": { "DEBUG": "*" },
             "console": "internalConsole", 
             "outputCapture": "std",

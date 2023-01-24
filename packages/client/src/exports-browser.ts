@@ -1,4 +1,4 @@
-import * as StreamrClientExports from './index-exports'
+import * as StreamrClientExports from './exports'
 
 Object.assign(StreamrClientExports.StreamrClient, StreamrClientExports)
 

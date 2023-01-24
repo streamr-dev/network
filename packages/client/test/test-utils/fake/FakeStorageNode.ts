@@ -12,7 +12,7 @@ import { formStorageNodeAssignmentStreamId } from '../../../src/utils/utils'
 import { EthereumAddress, Multimap, toEthereumAddress } from '@streamr/utils'
 import { FakeChain } from './FakeChain'
 import { StreamPermission } from '../../../src/permission'
-import { Wallet } from 'ethers'
+import { Wallet } from '@ethersproject/wallet'
 import { createMockMessage } from '../utils'
 import { DEFAULT_PARTITION } from '../../../src/StreamIDBuilder'
 

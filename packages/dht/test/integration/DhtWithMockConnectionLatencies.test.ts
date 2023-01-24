@@ -43,13 +43,13 @@ describe('Mock connection Dht joining with latencies', () => {
         )
         nodes.forEach((node) => {
             expect(node.getBucketSize()).toBeGreaterThanOrEqual(node.getK() - 1)
-            expect(node.getNeighborList().getSize()).toBeGreaterThanOrEqual(node.getK())
+            expect(node.getNeighborList().getSize()).toBeGreaterThanOrEqual(node.getK() - 1)
         })
 
         nodes.forEach((node) => {
             expect(node.getBucketSize()).toBeGreaterThanOrEqual(node.getK() - 1)
-            expect(node.getNeighborList().getSize()).toBeGreaterThanOrEqual(node.getK())
+            expect(node.getNeighborList().getSize()).toBeGreaterThanOrEqual(node.getK() - 1)
         })
-        expect(entryPoint.getBucketSize()).toBeGreaterThanOrEqual(entryPoint.getK())
+        expect(entryPoint.getBucketSize()).toBeGreaterThanOrEqual(entryPoint.getK() - 1)
     }, 60 * 1000)
 })

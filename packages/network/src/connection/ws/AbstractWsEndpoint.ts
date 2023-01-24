@@ -53,7 +53,7 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
 
     protected constructor(
         peerInfo: PeerInfo,
-        pingInterval = 60 * 1000
+        pingInterval: number
     ) {
         super()
 

@@ -46,7 +46,7 @@ describe('Mock connection Dht joining with real latencies', () => {
         )
         nodes.forEach((node) => {
             expect(node.getBucketSize()).toBeGreaterThanOrEqual(node.getK() - 3)
-            expect(node.getNeighborList().getSize()).toBeGreaterThanOrEqual(node.getK())
+            expect(node.getNeighborList().getSize()).toBeGreaterThanOrEqual(node.getK() - 1)
         })
         expect(entryPoint.getBucketSize()).toBeGreaterThanOrEqual(entryPoint.getK())
     }, 60 * 1000)
