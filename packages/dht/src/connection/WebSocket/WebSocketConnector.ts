@@ -198,7 +198,6 @@ export class WebSocketConnector implements IWebSocketConnectorService {
                 const handshaker = new Handshaker(this.ownPeerDescriptor!, this.protocolVersion, connection)
 
                 handshaker.once('handshakeRequest', (peerDescriptor: PeerDescriptor) => {
-                    logger.trace('handshake request from serversocket objectId: ' + managedConnection.objectId)
                     this.onServerSocketHandshakeRequest(peerDescriptor, connection)
                 })
             })
