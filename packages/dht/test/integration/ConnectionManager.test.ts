@@ -194,13 +194,6 @@ describe('ConnectionManager', () => {
             return peerDescriptor2
         })
 
-        /*
-        const rpcMessage: RpcMessage = {
-            header: {},
-            body: new Uint8Array(10),
-            requestId: v4()
-        }
-        */
         const msg: Message = {
             serviceId: serviceId,
             messageType: MessageType.RPC,
@@ -213,14 +206,12 @@ describe('ConnectionManager', () => {
 
         const disconnectedPromise1 = new Promise<void>((resolve, _reject) => {
             connectionManager1.on('disconnected', (_peerDescriptor: PeerDescriptor) => {
-                //expect(message.messageType).toBe(MessageType.RPC)
                 resolve()
             })
         })
 
         const disconnectedPromise2 = new Promise<void>((resolve, _reject) => {
             connectionManager2.on('disconnected', (_peerDescriptor: PeerDescriptor) => {
-                //expect(message.messageType).toBe(MessageType.RPC)
                 resolve()
             })
         })
@@ -250,14 +241,6 @@ describe('ConnectionManager', () => {
         const connectionManager3 = new ConnectionManager({ ownPeerDescriptor: mockPeerDescriptor3, simulator: simulator2 })
         const connectionManager4 = new ConnectionManager({ ownPeerDescriptor: mockPeerDescriptor4, simulator: simulator2 })
 
-        /*
-        const rpcMessage: RpcMessage = {
-            header: {},
-            body: new Uint8Array(10),
-            requestId: v4()
-        }
-        */
-
         const msg: Message = {
             serviceId: serviceId,
             messageType: MessageType.RPC,
@@ -277,28 +260,24 @@ describe('ConnectionManager', () => {
 
         const connectedPromise1 = new Promise<void>((resolve, _reject) => {
             connectionManager4.on('connected', (_peerDescriptor: PeerDescriptor) => {
-                //expect(message.messageType).toBe(MessageType.RPC)
                 resolve()
             })
         })
 
         const connectedPromise2 = new Promise<void>((resolve, _reject) => {
             connectionManager3.on('connected', (_peerDescriptor: PeerDescriptor) => {
-                //expect(message.messageType).toBe(MessageType.RPC)
                 resolve()
             })
         })
 
         const disconnectedPromise1 = new Promise<void>((resolve, _reject) => {
             connectionManager4.on('disconnected', (_peerDescriptor: PeerDescriptor) => {
-                //expect(message.messageType).toBe(MessageType.RPC)
                 resolve()
             })
         })
 
         const disconnectedPromise2 = new Promise<void>((resolve, _reject) => {
             connectionManager3.on('disconnected', (_peerDescriptor: PeerDescriptor) => {
-                //expect(message.messageType).toBe(MessageType.RPC)
                 resolve()
             })
         })

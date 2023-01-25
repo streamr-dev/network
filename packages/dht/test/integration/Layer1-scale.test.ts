@@ -4,7 +4,6 @@ import { DhtNode } from '../../src/dht/DhtNode'
 import { createMockConnectionDhtNode, createMockConnectionLayer1Node } from '../utils'
 import { UUID } from '../../src/helpers/UUID'
 import { expect } from 'expect'
-// import { waitForCondition } from '@streamr/utils'
 
 describe('Layer1', () => {
 

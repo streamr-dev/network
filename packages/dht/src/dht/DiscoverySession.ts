@@ -41,13 +41,6 @@ export class DiscoverySession {
         return PeerID.fromValue(this.ownPeerDescriptor.kademliaId)
     }
 
-    /*
-    private isDiscoveryCompleted(): boolean {
-        return (this.neighborList!.getUncontactedContacts(this.parallelism).length < 1
-            || this.noProgressCounter >= this.noProgressLimit)
-    }
-    */
-
     private addNewContacts(contacts: PeerDescriptor[]): void {
         if (this.stopped) {
             return

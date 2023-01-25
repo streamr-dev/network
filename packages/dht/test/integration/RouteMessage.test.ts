@@ -64,9 +64,6 @@ describe('Route Message With Mock Connections', () => {
         logger.info('calling simulator stop')
         simulator.stop()
         logger.info('simulator stop called')
-        //await wait(1)
-        //wtf.dump()
-        //await wait(1)
     })
 
     it('Happy path', async () => {

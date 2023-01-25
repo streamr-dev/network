@@ -195,14 +195,10 @@ export class WebSocketConnector implements IWebSocketConnectorService {
 
         if (this.webSocketServer) {
             this.webSocketServer.on('connected', (connection: IConnection) => {
-                //const managedConnection = new ManagedConnection(ownPeerDescriptor, this.protocolVersion,
-                //    ConnectionType.WEBSOCKET_SERVER, undefined, connection)
-                //logger.trace('incoming connection from WebSocketServer, objectId: ' + managedConnection.objectId)
-                
                 const handshaker = new Handshaker(this.ownPeerDescriptor!, this.protocolVersion, connection)
 
                 handshaker.once('handshakeRequest', (peerDescriptor: PeerDescriptor) => {
-                    //logger.trace('handshake request from serversocket objectId: ' + managedConnection.objectId)
+                    logger.trace('handshake request from serversocket objectId: ' + managedConnection.objectId)
                     this.onServerSocketHandshakeRequest(peerDescriptor, connection)
                 })
             })
@@ -228,7 +224,6 @@ export class WebSocketConnector implements IWebSocketConnectorService {
             setImmediate(() => {
                 const connection = this.connect(request.requester!)
                 this.incomingConnectionCallback(connection)
-                //this.emit('newConnection', connection)
             })
             const res: WebSocketConnectionResponse = {
                 accepted: true
