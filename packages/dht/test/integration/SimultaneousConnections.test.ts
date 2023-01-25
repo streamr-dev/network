@@ -91,7 +91,7 @@ describe('SimultaneousConnections', () => {
             nodeName: 'mock1WebSocket',
             type: NodeType.NODEJS,
             websocket: {
-                ip: 'localhost',
+                ip: '127.0.0.1',
                 port: 43432
             }
         }
@@ -101,7 +101,7 @@ describe('SimultaneousConnections', () => {
             nodeName: 'mock2WebSocket',
             type: NodeType.NODEJS,
             websocket: {
-                ip: 'localhost',
+                ip: '127.0.0.1',
                 port: 43433
             }
         }
@@ -173,7 +173,7 @@ describe('SimultaneousConnections', () => {
             nodeName: 'mock1WebSocketServer',
             type: NodeType.NODEJS,
             websocket: {
-                ip: 'localhost',
+                ip: '127.0.0.1',
                 port: 43432
             }
         }
