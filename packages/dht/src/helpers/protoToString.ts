@@ -18,21 +18,4 @@ export function protoToString<T extends object, ClassType extends IMessageType<T
     }
 
     return ret
-    /*
-    const findResult = protoClasses.find((entry) => {
-        if (protoObj.typeName === entry.typeName) {
-            return true
-        } else {
-            return false
-        }
-    })
-
-    if (findResult) {
-        return findResult.toJsonString(protoObj, {
-            typeRegistry: protoClasses
-        })
-    }
-
-    return 'ERROR: protobuf type not fund in type registry of protoToString()'
-    */
 }

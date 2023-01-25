@@ -94,14 +94,6 @@ export class DhtPeer implements KBucketContact {
             }
         } catch (err) {
             logger.debug(`ping failed on ${this.serviceId} to ${this.peerId.toKey()}: ${err}`)
-            /*
-            if (this.dhtNode) {
-                
-                    let conn = this.dhtNode.connectionManager!.getConnectionTo(this.peerId.toKey())
-                    logger.error('conn got')
-                    conn.send(Uint8Array.from([1,9,7,9]))
-                    logger.error('sent 1979')
-            }*/
         }
         return false
     }

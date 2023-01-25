@@ -156,21 +156,6 @@ export class WebRtcConnector implements IWebRtcConnectorService {
             this.ongoingConnectAttempts.set(peerKey, managedConnection)
             this.incomingConnectionCallback(managedConnection)
 
-            /*
-            managedConnection.on('handshakeRequest', () => {
-                if (this.ongoingConnectAttempts.has(peerKey)) {
-
-                    this.ongoingConnectAttempts.delete(peerKey)
-                }
-                if (this.incomingConnectionCallback(managedConnection)) {
-                    managedConnection.acceptHandshake()
-                } else {
-                    managedConnection.rejectHandshake('Duplicate connection')
-                    managedConnection.close()
-                }
-            })
-            */
-
             const remoteConnector = new RemoteWebrtcConnector(
                 remotePeer,
                 toProtoRpcClient(new WebRtcConnectorServiceClient(this.rpcCommunicator.getRpcClientTransport()))
@@ -186,15 +171,8 @@ export class WebRtcConnector implements IWebRtcConnectorService {
 
             connection.start(false)
 
-        } /*else {
-            const managedConnection = this.ongoingConnectAttempts.get(peerKey)!
-            managedConnection.on('handshakeRequest', () => {
-                if (this.ongoingConnectAttempts.has(peerKey)) {
-                    this.ongoingConnectAttempts.delete(peerKey)
-                }
-                managedConnection.acceptHandshake()
-            })
-        }*/
+        }
+
         // Always use offerers connectionId
         connection!.setConnectionId(connectionId)
         connection!.setRemoteDescription(description, DescriptionType.Offer)
@@ -277,13 +255,6 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         return myId.hasSmallerHashThan(theirId)
 
     }
-
-    /*
-    private static offeringHash(idPair: string): number {
-        const buffer = crypto.createHash('md5').update(idPair).digest()
-        return buffer.readInt32LE(0)
-    }
-    */
 
     // IWebRTCConnector implementation
 

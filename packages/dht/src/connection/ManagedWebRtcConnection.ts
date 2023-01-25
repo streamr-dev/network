@@ -3,13 +3,6 @@ import { ConnectionType } from "./IConnection"
 import { ManagedConnection } from "./ManagedConnection"
 import { NodeWebRtcConnection } from "./WebRTC/NodeWebRtcConnection"
 
-/*
-export enum Event {
-    HANDSHAKE_FAILED = 'streamr:handshaker:handshake:failed',
-    HANDSHAKE_COMPLETED = 'streamr:handshaker:handshake:completed'
-}
-*/
-
 export class ManagedWebRtcConnection extends ManagedConnection {
 
     constructor(ownPeerDescriptor: PeerDescriptor,

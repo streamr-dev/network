@@ -146,13 +146,11 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
 
     private doClose(reason?: string): void {
         if (!this.closed) {
-            //const err = new Error()
             logger.trace(
                 `Closing Node WebRTC Connection to ${PeerID.fromValue(this.remotePeerDescriptor.kademliaId).toKey()}`
                 + `${reason ? `, reason: ${reason}` : ''}`
             )
-            //logger.trace('' + err.stack)
-            
+
             this.closed = true
             
             this.emit('disconnected', undefined, reason)

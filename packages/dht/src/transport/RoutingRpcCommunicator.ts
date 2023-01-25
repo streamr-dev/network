@@ -39,17 +39,6 @@ export class RoutingRpcCommunicator extends RpcCommunicator {
                 return this.sendFn(message)
             }
 
-            /*
-            .then(()=> {
-                if (callContext?.waitConfirmation) {
-                    const confirmation = {}
-                    this.handleIncomingMessage(confirmation)
-                }
-            })
-            .catch((e) => {
-                this.handleClientError(requestId, e)
-            })
-            */
         })
     }
 

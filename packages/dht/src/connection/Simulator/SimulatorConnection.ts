@@ -72,7 +72,6 @@ export class SimulatorConnection extends Connection implements IConnection {
     }
 
     public handleIncomingData(data: Uint8Array): void {
-        //logger.info('received data: ' + this.ownPeerDescriptor.nodeName + ', ' + this.targetPeerDescriptor.nodeName)
         if (!this.stopped) {
             logger.trace('handleIncomingData()')
             logger.trace(protoToString(Message.fromBinary(data), Message))

@@ -266,35 +266,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         this.connectionManager?.weakUnlockConnection(sortedContacts[sortedContacts.length - 1].getPeerDescriptor())
 
         this.bucket?.remove(sortedContacts[sortedContacts.length - 1].peerId.value)
-        //this.removeContact(oldContacts[oldContacts.length - 1].getPeerDescriptor(), true)
 
         this.bucket!.add(newContact)
-        //this.addNewContact(newContact.getPeerDescriptor())
-
-        // Here the node should call ping() on all old contacts. If one of them fails it should be removed
-        // and replaced with the newContact
-        /*
-        for (const contact of oldContacts) {
-            if (this.stopped) {
-                break
-            }
-            const alive = await contact.ping()
-            if (!alive) {
-                logger.trace(`Removing ${contact.peerId.value.toString()} due to being inactive, `
-                    + `replacing old contact with ${newContact.peerId.value.toString()}`)
-                this.removeContact(contact.getPeerDescriptor(), true)
-                this.addNewContact(newContact.getPeerDescriptor())
-                break
-            }
-        }
-        */
     }
-
-    /*
-    public getConnectionManager(peerId: PeerID) {
-        return (this.connections.get(peerId.toKey()))
-    }
-    */
 
     private onKBucketRemoved(contact: DhtPeer): void {
         this.connectionManager?.weakUnlockConnection(contact.getPeerDescriptor())
@@ -325,12 +299,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             // Important to lock here, before the ping result is known
 
             this.connectionManager?.weakLockConnection(contact.getPeerDescriptor())
-
-            /*
-            if (this.config.nodeName == '1' && contact.getPeerDescriptor().nodeName == '1') {
-                logger.info('node1 pinging node0')
-            }
-            */
 
             // If there already is a connection
             if (this.connections.has(contact.peerId.toKey())) {
@@ -819,12 +787,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         }
         this.stopped = true
 
-        /*
-        this.bucket!.toArray().map((peer) => {
-            peer.leaveNotice()
-        })
-        */
-
         if (this.joinTimeoutRef) {
             clearTimeout(this.joinTimeoutRef)
         }
@@ -867,9 +829,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
     public async getClosestPeers(request: ClosestPeersRequest, context: ServerCallContext): Promise<ClosestPeersResponse> {
 
-        //setImmediate(()=> {
         this.addNewContact((context as DhtCallContext).incomingSourceDescriptor!)
-        //})
 
         const response = {
             peers: this.getClosestPeerDescriptors(request.kademliaId, this.config.getClosestContactsLimit),

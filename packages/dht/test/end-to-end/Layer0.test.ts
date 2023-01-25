@@ -51,12 +51,7 @@ describe('Layer0', () => {
             node3.joinDht(epPeerDescriptor),
             node4.joinDht(epPeerDescriptor)
         ])
-        /*
-        console.info('node1.getBucketSize() ' + node1.getBucketSize())
-        console.info('node2.getBucketSize() ' + node2.getBucketSize())
-        console.info('node3.getBucketSize() ' + node3.getBucketSize())
-        console.info('node4.getBucketSize() ' + node4.getBucketSize())
-        */
+
         expect(node1.getBucketSize()).toBeGreaterThanOrEqual(2)
         expect(node2.getBucketSize()).toBeGreaterThanOrEqual(2)
         expect(node3.getBucketSize()).toBeGreaterThanOrEqual(2)

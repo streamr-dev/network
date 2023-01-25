@@ -86,28 +86,8 @@ export class SimulatorConnector {
                 managedConnection.rejectHandshake('Duplicate connection')
                 managedConnection.destroy()
             }
-            //this.emit('newConnection', managedConnection)
         })
     }
-
-    /*
-    public handleIncomingDisconnection(source: PeerDescriptor): void {
-        if (this.stopped) {
-            return
-        }
-        const connection = this.simulatorConnections.get(PeerID.fromValue(source.peerId).toKey())
-        connection?.handleIncomingDisconnection()
-        this.simulatorConnections.delete(PeerID.fromValue(source.peerId).toKey())
-    }
-
-    public handleIncomingData(from: PeerDescriptor, data: Uint8Array): void {
-        if (this.stopped) {
-            return
-        }
-        const connection = this.simulatorConnections.get(PeerID.fromValue(from.peerId).toKey())
-        connection?.handleIncomingData(data)
-    }
-    */
 
     public async stop(): Promise<void> {
         this.stopped = true
@@ -116,6 +96,5 @@ export class SimulatorConnector {
         await Promise.allSettled(conns.map((conn) =>
             conn.close()
         ))
-        //this.removeAllListeners()
     }
 }

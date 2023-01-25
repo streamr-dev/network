@@ -101,7 +101,6 @@ describe('Route Message With Mock Connections', () => {
 
             })
         }], [[destinationNode, 'message']], 20000)
-        logger.info('jee')
     }, 30000)
     /* ToDo: replace this with a case where no candidates
     can be found 

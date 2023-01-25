@@ -10,7 +10,6 @@ export interface ConnectionEvents {
 export enum ConnectionType {
     WEBSOCKET_SERVER = 'websocket-server',
     WEBSOCKET_CLIENT = 'websocket-client',
-    DEFERRED = 'deferred',
     WEBRTC = 'webrtc',
     SIMULATOR_SERVER = 'simulator-server',
     SIMULATOR_CLIENT = 'simulator-client',

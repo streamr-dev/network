@@ -98,12 +98,6 @@ export class DiscoverySession {
                 this.noProgressCounter = 0
             }
 
-            /*
-            if (!this.stopped && this.isDiscoveryCompleted()) {
-                this.emitter.emit('discoveryCompleted')
-                this.stop()
-            }*/
-
         }
     }
 
@@ -111,7 +105,6 @@ export class DiscoverySession {
         if (this.ongoingClosestPeersRequests.has(peer.peerId.toKey())) {
             this.ongoingClosestPeersRequests.delete(peer.peerId.toKey())
             this.neighborList!.removeContact(peer.peerId)
-            //this.findMoreContacts()
         }
     }
 
@@ -139,17 +132,6 @@ export class DiscoverySession {
                         this.outgoingClosestPeersRequestsCounter--
 
                         this.findMoreContacts()
-                        /*
-                        if (this.stopped) {
-                            this.emitter.emit('discoveryCompleted')
-                        } else if (this.outgoingClosestPeersRequestsCounter === 0) {
-                            if (this.isDiscoveryCompleted()) {
-                                this.emitter.emit('discoveryCompleted')
-                                this.stop()
-                            } else {
-                                this.findMoreContacts()
-                            }
-                        }*/
 
                     })
             }

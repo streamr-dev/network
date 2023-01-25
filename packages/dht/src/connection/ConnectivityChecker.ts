@@ -64,7 +64,6 @@ export class ConnectivityChecker {
                     } else {
                         return
                     }
-                    //(connectivityResponseMessage)
                 }
                 outgoingConnection!.on('data', listener)
             })
@@ -114,7 +113,7 @@ export class ConnectivityChecker {
         try {
             outgoingConnection = await this.connectAsync({
                 host: connection.getRemoteAddress(),
-                port: connectivityRequest.port, timeoutMs: 1001
+                port: connectivityRequest.port, timeoutMs: 1000
             })
         } catch (e) {
             logger.trace("Connectivity test produced negative result, communicating reply to the requester")
