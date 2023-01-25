@@ -1,9 +1,12 @@
+/* eslint-disable @typescript-eslint/member-delimiter-style */
+
 import { ConnectionLocker, PeerDescriptor, PeerID } from '@streamr/dht'
 import { PeerList } from './PeerList'
 import { RemoteRandomGraphNode } from './RemoteRandomGraphNode'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
 import { NetworkRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { StreamHandshakeRequest, StreamHandshakeResponse } from '../proto/packages/trackerless-network/protos/NetworkRpc'
+import { Logger } from '@streamr/utils'
 
 interface HandshakerParams {
     ownPeerDescriptor: PeerDescriptor
@@ -12,8 +15,11 @@ interface HandshakerParams {
     targetNeighbors: PeerList
     nearbyContactPool: PeerList
     randomContactPool: PeerList
-    protoRpcClient: ProtoRpcClient<NetworkRpcClient>
+    protoRpcClient: ProtoRpcClient<NetworkRpcClient>,
+    nodeName?: string
 }
+
+const logger = new Logger(module)
 
 export class Handshaker {
 
@@ -26,7 +32,7 @@ export class Handshaker {
     private readonly ongoingHandshakes: Set<string> = new Set()
     private readonly protoRpcClient: ProtoRpcClient<NetworkRpcClient>
 
-    constructor(params: HandshakerParams) {
+    constructor(private params: HandshakerParams) {
         this.nearbyContactPool = params.nearbyContactPool
         this.randomContactPool = params.randomContactPool
         this.targetNeighbors = params.targetNeighbors
@@ -137,7 +143,7 @@ export class Handshaker {
             this.targetNeighbors.remove(furthest.getPeerDescriptor())
             this.connectionLocker.unlockConnection(furthestPeerDescriptor!, this.randomGraphId)
         } else {
-            console.info('furthest was falsy')
+            logger.trace('furthest was falsy')
         }
 
         this.targetNeighbors.add(requester)

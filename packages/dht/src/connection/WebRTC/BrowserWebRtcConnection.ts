@@ -11,7 +11,7 @@ export const WEB_RTC_CLEANUP = new class {
     }
 }
 
-type Events =  WebRtcConnectionEvents & ConnectionEvents
+type Events = WebRtcConnectionEvents & ConnectionEvents
 
 export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRtcConnection, IConnection {
 
@@ -28,8 +28,9 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
     private dataChannel?: RTCDataChannel
     private makingOffer = false
     private isOffering = false
+    private closed = false
 
-    start(isOffering: boolean): void {
+    public start(isOffering: boolean): void {
         this.isOffering = isOffering
         const urls: RTCIceServer[] = this.stunUrls.map((url) => { return { urls: [url] } })
         this.peerConnection = new RTCPeerConnection({ iceServers: urls })
@@ -76,7 +77,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
         }
     }
 
-    async setRemoteDescription(description: string, type: string): Promise<void> {
+    public async setRemoteDescription(description: string, type: string): Promise<void> {
         const offerCollision = (type.toLowerCase() == RtcDescription.OFFER) && (this.makingOffer || !this.peerConnection ||
             this.peerConnection.signalingState != "stable")
 
@@ -102,7 +103,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
         }
     }
 
-    addRemoteCandidate(candidate: string, mid: string): void {
+    public addRemoteCandidate(candidate: string, mid: string): void {
         try {
             this.peerConnection?.addIceCandidate({ candidate: candidate, sdpMid: mid }).then(() => { return }).catch((err: any) => {
                 logger.warn(err)
@@ -112,38 +113,54 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
         }
     }
 
-    isOpen(): boolean {
+    public isOpen(): boolean {
         return this.lastState === 'connected'
     }
 
     // IConnection implementation
-    close(): void {
-        this.lastState = 'closed'
+    
+    public async close(): Promise<void> {
+        this.doClose()
+    }
+    
+    private doClose(): void {
+        if (!this.closed) {
+            this.closed = true
+            this.lastState = 'closed'
 
-        this.emit('disconnected')
+            this.stopListening()
+            this.emit('disconnected')
+            
+            this.removeAllListeners()
 
-        if (this.dataChannel) {
-            try {
-                this.dataChannel.close()
-            } catch (e) {
-                logger.warn('dc.close() errored: %s', e)
+            if (this.dataChannel) {
+                try {
+                    this.dataChannel.close()
+                } catch (e) {
+                    logger.warn('dc.close() errored: %s', e)
+                }
             }
-        }
 
-        this.dataChannel = undefined
+            this.dataChannel = undefined
 
-        if (this.peerConnection) {
-            try {
-                this.peerConnection.close()
-            } catch (e) {
-                logger.warn('conn.close() errored: %s', e)
+            if (this.peerConnection) {
+                try {
+                    this.peerConnection.close()
+                } catch (e) {
+                    logger.warn('conn.close() errored: %s', e)
+                }
             }
+            this.peerConnection = undefined
+            
         }
-        this.peerConnection = undefined
-        this.removeAllListeners()
     }
 
-    send(data: Uint8Array): void {
+    public destroy(): void {
+        this.removeAllListeners()
+        this.doClose()
+    }
+
+    public send(data: Uint8Array): void {
         if (this.lastState == 'connected') {
             this.dataChannel?.send(data as Buffer)
         } else {
@@ -159,7 +176,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
 
         dataChannel.onclose = () => {
             logger.trace('dc.onClosed')
-            this.close()
+            this.doClose()
         }
 
         dataChannel.onerror = (err) => {
@@ -173,6 +190,23 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
         dataChannel.onmessage = (msg) => {
             logger.trace('dc.onmessage')
             this.emit('data', new Uint8Array(msg.data))
+        }
+    }
+
+    private stopListening() {
+        if (this.dataChannel) {
+            this.dataChannel.onopen = null
+            this.dataChannel.onclose = null
+            this.dataChannel.onerror = null
+            this.dataChannel.onbufferedamountlow = null
+            this.dataChannel.onmessage = null
+        }
+
+        if (this.peerConnection) {
+            this.peerConnection.onicecandidate = null
+            this.peerConnection.onicegatheringstatechange = null
+            this.peerConnection.onnegotiationneeded = null
+            this.peerConnection.ondatachannel = null
         }
     }
 

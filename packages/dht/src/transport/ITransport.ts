@@ -1,4 +1,4 @@
-import { Message, PeerDescriptor } from '../proto/DhtRpc'
+import { Message, PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
 
 export interface TransportEvents {
     message: (message: Message) => void
@@ -16,7 +16,8 @@ export interface ITransport {
     off<T extends keyof TransportEvents>(eventName: T, listener: (message: Message) => void): void
     off<T extends keyof TransportEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor) => void): void
 
-    send(msg: Message): Promise<void>
+    send(msg: Message, doNotConnect?: boolean): Promise<void>
     getPeerDescriptor(): PeerDescriptor
+    getAllConnectionPeerDescriptors(): PeerDescriptor[]
     stop(): void | Promise<void>
 }

@@ -9,7 +9,9 @@ import {
 
 export const mockConnectionLocker: ConnectionLocker = {
     lockConnection: () => {},
-    unlockConnection: () => {}
+    unlockConnection: () => {},
+    weakLockConnection: () => {},
+    weakUnlockConnection: () => {}
 }
 
 export const createMockRandomGraphNodeAndDhtNode = (

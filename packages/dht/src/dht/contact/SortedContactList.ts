@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/prefer-for-of */
+
 import KBucket from 'k-bucket'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import EventEmitter from 'eventemitter3'
@@ -8,7 +10,7 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
     private contactIds: PeerID[] = []
 
     constructor(private ownId: PeerID, private maxSize: number, private getContactsLimit = 20,
-        private allowOwnPeerId = false, private peerIdDistanceLimit?: PeerID) {
+        private allowOwnPeerId = false, private peerIdDistanceLimit?: PeerID, private excludedPeerIDs?: PeerID[]) {
         super()
         this.compareIds = this.compareIds.bind(this)
         this.ownId = ownId
@@ -23,6 +25,14 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
     }
 
     public addContact(contact: Contact): void {
+        if (this.excludedPeerIDs !== undefined) {
+            for (let i = 0; i < this.excludedPeerIDs.length; i++) {
+                if (contact.peerId.equals(this.excludedPeerIDs[i])) {
+                    return
+                }
+            }
+        }
+        
         if ((!this.allowOwnPeerId && this.ownId.equals(contact.peerId)) ||
             (this.peerIdDistanceLimit !== undefined && this.compareIds(this.peerIdDistanceLimit, contact.peerId) < 0)) {
             return
@@ -93,15 +103,19 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
         return ret
     }
 
-    public getActiveContacts(): Contact[] {
+    public getActiveContacts(limit?: number): Contact[] {
         const ret: Contact[] = []
         this.contactIds.forEach((contactId) => {
             const contact = this.contactsById.get(contactId.toKey())
-            if (contact) {
+            if (contact && contact.active) {
                 ret.push(contact.contact)
             }
         })
-        return ret
+        if (limit !== undefined) {
+            return ret.splice(0, limit)
+        } else {
+            return ret
+        }
     }
 
     public compareIds(id1: PeerID, id2: PeerID): number {

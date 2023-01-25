@@ -84,7 +84,7 @@ message StreamHandshakeRequest {
   optional string concurrentHandshakeTargetId = 4;
   repeated string neighbors = 5;
   repeated string peerView = 6;
-  PeerDescriptor senderDescriptor = 7;
+  dht.PeerDescriptor senderDescriptor = 7;
   bool interleaving = 8;
   optional string interleavingFrom = 9;
 }
@@ -92,13 +92,13 @@ message StreamHandshakeRequest {
 message StreamHandshakeResponse {
   bool accepted = 1;
   string requestId = 2;
-  optional PeerDescriptor interleaveTarget = 3;
+  optional dht.PeerDescriptor interleaveTarget = 3;
 }
 
 message InterleaveNotice {
   string senderId = 1;
   string randomGraphId = 2;
-  PeerDescriptor interleaveTarget = 3;
+  dht.PeerDescriptor interleaveTarget = 3;
 }
 
 message LeaveStreamNotice {
@@ -110,5 +110,5 @@ message NeighborUpdate {
   string senderId = 1;
   string randomGraphId = 2;
   bool removeMe = 3;
-  repeated PeerDescriptor neighborDescriptors = 4;
+  repeated dht.PeerDescriptor neighborDescriptors = 4;
 }

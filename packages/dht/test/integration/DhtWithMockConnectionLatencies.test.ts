@@ -1,5 +1,5 @@
 import { DhtNode } from '../../src/dht/DhtNode'
-import { PeerDescriptor } from '../../src/proto/DhtRpc'
+import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils'
 import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator'
 
@@ -17,7 +17,8 @@ describe('Mock connection Dht joining with latencies', () => {
        
         entrypointDescriptor = {
             kademliaId: entryPoint.getNodeId().value,
-            type: 0
+            type: 0,
+            nodeName: '0'
         }
         
         for (let i = 1; i < 100; i++) {
@@ -30,7 +31,7 @@ describe('Mock connection Dht joining with latencies', () => {
     afterEach(async () => {
         await Promise.all([
             entryPoint.stop(),
-            ...nodes.map(async (node) => await node.stop())
+            ...nodes.map((node) => node.stop())
         ])
         simulator.stop()
     })
@@ -42,8 +43,13 @@ describe('Mock connection Dht joining with latencies', () => {
         )
         nodes.forEach((node) => {
             expect(node.getBucketSize()).toBeGreaterThanOrEqual(node.getK() - 1)
-            //expect(node.getNeighborList().getSize()).toBeGreaterThanOrEqual(node.getBucketSize())
+            expect(node.getNeighborList().getSize()).toBeGreaterThanOrEqual(node.getK() - 1)
         })
-        expect(entryPoint.getBucketSize()).toBeGreaterThanOrEqual(entryPoint.getK())
+
+        nodes.forEach((node) => {
+            expect(node.getBucketSize()).toBeGreaterThanOrEqual(node.getK() - 1)
+            expect(node.getNeighborList().getSize()).toBeGreaterThanOrEqual(node.getK() - 1)
+        })
+        expect(entryPoint.getBucketSize()).toBeGreaterThanOrEqual(entryPoint.getK() - 1)
     }, 60 * 1000)
 })

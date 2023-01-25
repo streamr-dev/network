@@ -1,7 +1,10 @@
 syntax = "proto3";
 option optimize_for = CODE_SIZE;
 
+package protorpc;
+
 import "google/protobuf/empty.proto";
+import "google/protobuf/any.proto";
 
 enum RpcErrorType {
     SERVER_TIMEOUT = 0;
@@ -13,7 +16,7 @@ enum RpcErrorType {
 
 message RpcMessage {
     map<string, string> header = 1;
-    bytes body = 2;
+    google.protobuf.Any body = 2;
     string requestId = 3;
     optional RpcErrorType errorType = 4;
     optional string errorClassName = 5;

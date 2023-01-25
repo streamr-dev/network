@@ -11,12 +11,14 @@ import {
     RpcErrorType
 } from './proto/ProtoRpc'
 import { Empty } from './proto/google/protobuf/empty'
-import { Parser, Serializer, ServerRegistry } from './ServerRegistry'
+import { ServerRegistry } from './ServerRegistry'
 import EventEmitter from 'eventemitter3'
 import { DeferredState } from '@protobuf-ts/runtime-rpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { Logger } from '@streamr/utils'
 import { ProtoCallContext, ProtoRpcOptions } from './ProtoCallContext'
+import { Any } from './proto/google/protobuf/any'
+import { IMessageType } from '@protobuf-ts/runtime'
 
 export enum StatusCode {
     OK = 'OK',
@@ -26,16 +28,16 @@ export enum StatusCode {
 }
 
 interface RpcCommunicatorEvents {
-    outgoingMessage: (message: Uint8Array, requestId: string, callContext?: ProtoCallContext) => void
+    outgoingMessage: (message: RpcMessage, requestId: string, callContext?: ProtoCallContext) => void
 }
 
 export interface RpcCommunicatorConfig {
     rpcRequestTimeout?: number
 }
 
-interface IRpcIo {
-    handleIncomingMessage(message: Uint8Array, callContext?: ProtoCallContext): Promise<void>
-}
+//interface IRpcIo {
+//    handleIncomingMessage(message: Uint8Array, callContext?: ProtoCallContext): Promise<void>
+//}
 
 class OngoingRequest {
     private timeoutRef: NodeJS.Timeout
@@ -76,7 +78,7 @@ class OngoingRequest {
 
     private resolveDeferredPromises(response: RpcMessage): void {
         if (this.deferredPromises.message.state === DeferredState.PENDING) {
-            const parsedResponse = this.deferredPromises.messageParser(response.body)
+            const parsedResponse = this.deferredPromises.messageParser(response.body!.value!)
             this.deferredPromises.message.resolve(parsedResponse)
             this.deferredPromises.header.resolve({})
             this.deferredPromises.status.resolve({ code: StatusCode.OK, detail: '' })
@@ -98,16 +100,16 @@ const logger = new Logger(module)
 
 interface RpcResponseParams {
     request: RpcMessage
-    body?: Uint8Array
+    body?: Any
     errorType?: RpcErrorType
     errorClassName?: string
     errorCode?: string
     errorMessage?: string
 }
 
-type OutgoingMessageListener = (message: Uint8Array, requestId: string, callContext?: ProtoCallContext) => Promise<void>
+type OutgoingMessageListener = (message: RpcMessage, requestId: string, callContext?: ProtoCallContext) => Promise<void>
 
-export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvents> implements IRpcIo {
+export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvents> {
     private stopped = false
     private readonly rpcClientTransport: ClientTransport
     private readonly rpcServerRegistry: ServerRegistry
@@ -133,15 +135,18 @@ export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvents> impleme
         })
     }
 
-    public async handleIncomingMessage(message: Uint8Array, callContext?: ProtoCallContext): Promise<void> {
+    public async handleIncomingMessage(message: RpcMessage, callContext?: ProtoCallContext): Promise<void> {
         if (this.stopped) {
             return
         }
-        const rpcCall = RpcMessage.fromBinary(message)
-        return this.onIncomingMessage(rpcCall, callContext)
+        //const rpcCall = RpcMessage.fromBinary(message)
+        return this.onIncomingMessage(message, callContext)
     }
 
-    public registerRpcMethod<RequestClass extends Parser<RequestType>, ReturnClass extends Serializer<ReturnType>, RequestType, ReturnType>(
+    public registerRpcMethod<RequestClass extends IMessageType<RequestType>,
+        ReturnClass extends IMessageType<ReturnType>,
+        RequestType extends object,
+        ReturnType extends object>(
         requestClass: RequestClass,
         returnClass: ReturnClass,
         name: string,
@@ -150,7 +155,8 @@ export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvents> impleme
         this.rpcServerRegistry.registerRpcMethod(requestClass, returnClass, name, fn)
     }
 
-    public registerRpcNotification<RequestClass extends Parser<RequestType>, RequestType>(
+    public registerRpcNotification<RequestClass extends IMessageType<RequestType>,
+        RequestType extends object>(
         requestClass: RequestClass,
         name: string,
         fn: (rq: RequestType, _context: ServerCallContext) => Promise<Empty>
@@ -186,14 +192,14 @@ export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvents> impleme
         if (deferredPromises && (!callContext || !callContext.notification)) {
             this.registerRequest(rpcMessage.requestId, deferredPromises, requestOptions!.timeout as number)
         }
-        const msg = RpcMessage.toBinary(rpcMessage)
+        //const msg = RpcMessage.toBinary(rpcMessage)
 
         logger.trace(`onOutGoingMessage, messageId: ${rpcMessage.requestId}`)
 
-        this.emit('outgoingMessage', msg, rpcMessage.requestId, callContext)
+        this.emit('outgoingMessage', rpcMessage, rpcMessage.requestId, callContext)
 
         if (this.outgoingMessageListener) {
-            this.outgoingMessageListener(msg, rpcMessage.requestId, callContext)
+            this.outgoingMessageListener(rpcMessage, rpcMessage.requestId, callContext)
                 .catch((clientSideException) => {
                     if (deferredPromises) {
                         if (this.ongoingRequests.has(rpcMessage.requestId)) {
@@ -351,7 +357,7 @@ export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvents> impleme
             RpcResponseParams
     ): RpcMessage {
         return {
-            body: body ? body : new Uint8Array(),
+            body: body,
             header: {
                 response: "response",
                 method: request.header.method

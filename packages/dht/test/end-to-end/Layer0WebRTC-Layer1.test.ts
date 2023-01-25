@@ -1,5 +1,5 @@
 import { DhtNode } from '../../src/dht/DhtNode'
-import { NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
+import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { PeerID } from '../../src/exports'
 
 describe('Layer 1 on Layer 0 with mocked connections', () => {
@@ -9,7 +9,7 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
         kademliaId: PeerID.fromString(entryPointId).value,
         type: NodeType.NODEJS,
         websocket: {
-            ip: 'localhost',
+            ip: '127.0.0.1',
             port: 23232
         }
     }
@@ -121,12 +121,10 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
             layer0Node4.joinDht(entrypointDescriptor)
         ])
 
-        //await Promise.all([
         await layer1Node1.joinDht(entrypointDescriptor)
         await layer1Node2.joinDht(entrypointDescriptor)
         await layer1Node3.joinDht(entrypointDescriptor)
         await layer1Node4.joinDht(entrypointDescriptor)
-        //])
 
         expect(layer1Node1.getBucketSize()).toBeGreaterThanOrEqual(2)
         expect(layer1Node2.getBucketSize()).toBeGreaterThanOrEqual(2)

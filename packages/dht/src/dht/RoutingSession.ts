@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/prefer-for-of, promise/catch-or-return */
+
 import { PeerDescriptor } from "../exports"
 import { DhtPeer } from "./DhtPeer"
 import { SortedContactList } from "./contact/SortedContactList"
@@ -5,7 +7,7 @@ import { PeerID, PeerIDKey } from '../helpers/PeerID'
 import { Logger } from "@streamr/utils"
 import EventEmitter from 'eventemitter3'
 import { v4 } from "uuid"
-import { RouteMessageWrapper } from "../proto/DhtRpc"
+import { RouteMessageWrapper } from "../proto/packages/dht/protos/DhtRpc"
 
 const logger = new Logger(module)
 
@@ -27,8 +29,11 @@ export interface RoutingSessionEvents {
     // through, and none of them responds with a success ack
 
     routingFailed: (sessionId: string) => void
+
+    stopped: (sessionId: string) => void
 }
 
+export enum RoutingMode { ROUTE, FORWARD, RECURSIVE_FIND }
 export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     public readonly sessionId = v4()
     private ongoingRequests: Set<PeerIDKey> = new Set()
@@ -41,11 +46,14 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         private connections: Map<PeerIDKey, DhtPeer>,
         private parallelism: number,
         private firstHopTimeout: number,
-        private forwarding = false
+        private mode: RoutingMode = RoutingMode.ROUTE,
+        destinationId?: Uint8Array,
+        excludedPeerIDs?: PeerID[]
     ) {
         super()
-        this.contactList = new SortedContactList(PeerID.fromValue(this.messageToRoute!.destinationPeer!.kademliaId),
-            10000, undefined, true, this.messageToRoute!.previousPeer ? PeerID.fromValue(this.messageToRoute!.previousPeer!.kademliaId) : undefined)
+        this.contactList = new SortedContactList(destinationId ? PeerID.fromValue(destinationId) :
+            PeerID.fromValue(this.messageToRoute!.destinationPeer!.kademliaId),
+        10000, undefined, true, undefined, excludedPeerIDs)
     }
 
     private onRequestFailed(peerId: PeerID) {
@@ -62,6 +70,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
             this.stopped = true
             this.emit('routingFailed', this.sessionId)
         } else {
+            logger.trace('routing failed, retrying to route')
             this.sendMoreRequests(contacts)
         }
     }
@@ -79,16 +88,22 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         this.contactList.setContacted(contact.peerId)
         this.ongoingRequests.add(contact.peerId.toKey())
 
-        if (this.forwarding) {
+        if (this.mode === RoutingMode.FORWARD) {
             return contact.forwardMessage({
                 ...this.messageToRoute,
                 previousPeer: this.ownPeerDescriptor
             })
+        } else if (this.mode === RoutingMode.RECURSIVE_FIND) {
+            return contact.findRecursively({
+                ...this.messageToRoute,
+                previousPeer: this.ownPeerDescriptor
+            })
+        } else {
+            return contact.routeMessage({
+                ...this.messageToRoute,
+                previousPeer: this.ownPeerDescriptor
+            })
         }
-        return contact.routeMessage({
-            ...this.messageToRoute,
-            previousPeer: this.ownPeerDescriptor
-        })
     }
 
     private findMoreContacts(): DhtPeer[] {
@@ -99,14 +114,31 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         return this.contactList.getUncontactedContacts(this.parallelism)
     }
 
+    public getClosestContacts(limit: number): PeerDescriptor[] {
+        const ret: PeerDescriptor[] = []
+        const contacts = this.contactList.getClosestContacts(limit)
+        for (let i = 0; i < contacts.length; i++) {
+            ret.push(contacts[i].getPeerDescriptor())
+        }
+        return ret
+    }
+
     private sendMoreRequests(uncontacted: DhtPeer[]) {
+        if (this.stopped) {
+            return
+        }
+
         if (uncontacted.length < 1) {
             this.emit('routingFailed', this.sessionId)
             return
         }
 
         while (this.ongoingRequests.size < this.parallelism && uncontacted.length > 0) {
+            if (this.stopped) {
+                return
+            }
             const nextPeer = uncontacted.shift()
+            logger.trace('sendRouteMessageRequest')
             this.sendRouteMessageRequest(nextPeer!)
                 .then((succeeded) => {
                     if (succeeded) {
@@ -114,8 +146,12 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
                     } else {
                         this.onRequestFailed(nextPeer!.peerId)
                     }
-                    return nextPeer
-                }).catch((_e) => { })
+                    return
+                }).catch((e) => { 
+                    logger.error(e)
+                }).finally(() => {
+                    logger.trace('sendRouteMessageRequest returned')
+                })
         }
     }
 
@@ -131,6 +167,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
 
     public stop(): void {
         this.stopped = true
+        this.emit('stopped', this.sessionId)
     }
 
 }

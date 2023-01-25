@@ -4,8 +4,8 @@ import EventEmitter from "eventemitter3"
 import { v4 } from "uuid"
 import { PeerID } from "../helpers/PeerID"
 import { runAndWaitForEvents3 } from "../helpers/waitForEvent3"
-import { PeerDescriptor } from "../proto/DhtRpc"
-import { DhtRpcServiceClient } from "../proto/DhtRpc.client"
+import { PeerDescriptor } from "../proto/packages/dht/protos/DhtRpc"
+import { DhtRpcServiceClient } from "../proto/packages/dht/protos/DhtRpc.client"
 import { SortedContactList } from "./contact/SortedContactList"
 import { DhtPeer } from "./DhtPeer"
 
@@ -32,7 +32,8 @@ export class DiscoverySession {
         private rpcCommunicator: RpcCommunicator,
         private parallelism: number,
         private noProgressLimit: number,
-        private newContactListener?: (dhtPeer: DhtPeer) => void
+        private newContactListener?: (dhtPeer: DhtPeer) => void,
+        private nodeName?: string
     ) {
     }
 
@@ -40,31 +41,28 @@ export class DiscoverySession {
         return PeerID.fromValue(this.ownPeerDescriptor.kademliaId)
     }
 
-    private isDiscoveryCompleted(): boolean {
-        return (this.neighborList!.getUncontactedContacts(this.parallelism).length < 1
-            || this.noProgressCounter >= this.noProgressLimit)
-    }
-
-    private addNewContact(contact: PeerDescriptor): void {
+    private addNewContacts(contacts: PeerDescriptor[]): void {
         if (this.stopped) {
             return
         }
 
-        const dhtPeer = new DhtPeer(
-            this.ownPeerDescriptor,
-            contact,
-            toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
-            this.serviceId
-        )
+        contacts.forEach((contact) => {
+            const dhtPeer = new DhtPeer(
+                this.ownPeerDescriptor,
+                contact,
+                toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
+                this.serviceId
+            )
 
-        if (!dhtPeer.peerId.equals(this.ownPeerId!)) {
-            if (this.newContactListener) {
-                this.newContactListener(dhtPeer)
+            if (!dhtPeer.peerId.equals(this.ownPeerId!)) {
+                if (this.newContactListener) {
+                    this.newContactListener(dhtPeer)
+                }
+                if (!this.neighborList.getContact(dhtPeer.peerId)) {
+                    this.neighborList!.addContact(dhtPeer)
+                }
             }
-            if (!this.neighborList.getContact(dhtPeer.peerId)) {
-                this.neighborList!.addContact(dhtPeer)
-            }
-        }
+        })
     }
 
     private async getClosestPeersFromContact(contact: DhtPeer): Promise<PeerDescriptor[]> {
@@ -82,18 +80,10 @@ export class DiscoverySession {
     private onClosestPeersRequestSucceeded(peerId: PeerID, contacts: PeerDescriptor[]) {
         if (this.ongoingClosestPeersRequests.has(peerId.toKey())) {
             this.ongoingClosestPeersRequests.delete(peerId.toKey())
-            const dhtPeers = contacts.map((peer) => {
-                return new DhtPeer(
-                    this.ownPeerDescriptor,
-                    peer,
-                    toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
-                    this.serviceId
-                )
-            })
 
             const oldClosestContact = this.neighborList!.getClosestContactId()
 
-            dhtPeers.forEach((contact) => this.addNewContact(contact.getPeerDescriptor()))
+            this.addNewContacts(contacts)
 
             if (this.neighborList!.getClosestContactId().equals(oldClosestContact)) {
                 this.noProgressCounter++
@@ -101,24 +91,26 @@ export class DiscoverySession {
                 this.noProgressCounter = 0
             }
 
-            if (!this.stopped && this.isDiscoveryCompleted()) {
-                this.emitter.emit('discoveryCompleted')
-                this.stop()
-            }
         }
     }
 
-    private onClosestPeersRequestFailed(peerId: PeerID, exception: Error) {
-        if (this.ongoingClosestPeersRequests.has(peerId.toKey())) {
-            this.ongoingClosestPeersRequests.delete(peerId.toKey())
-            logger.debug('onClosestPeersRequestFailed: ' + exception)
-            this.neighborList!.removeContact(peerId)
-            this.findMoreContacts()
+    private onClosestPeersRequestFailed(peer: DhtPeer, _exception: Error) {
+        if (this.ongoingClosestPeersRequests.has(peer.peerId.toKey())) {
+            this.ongoingClosestPeersRequests.delete(peer.peerId.toKey())
+            this.neighborList!.removeContact(peer.peerId)
         }
     }
 
     private findMoreContacts(): void {
         if (!this.stopped) {
+
+            if (this.neighborList!.getUncontactedContacts(this.parallelism).length < 1
+                || this.noProgressCounter >= this.noProgressLimit) {
+                this.emitter.emit('discoveryCompleted')
+                this.stopped = true
+                return
+            }
+
             const uncontacted = this.neighborList!.getUncontactedContacts(this.parallelism)
             while (this.ongoingClosestPeersRequests.size < this.parallelism && uncontacted.length > 0) {
                 const nextPeer = uncontacted.shift()
@@ -127,33 +119,31 @@ export class DiscoverySession {
                 this.getClosestPeersFromContact(nextPeer!)
                     .then((contacts) => this.onClosestPeersRequestSucceeded(nextPeer!.peerId, contacts))
                     .catch((err) => {
-                        this.onClosestPeersRequestFailed(nextPeer!.peerId, err)
+                        this.onClosestPeersRequestFailed(nextPeer!, err)
                     })
                     .finally(() => {
                         this.outgoingClosestPeersRequestsCounter--
-                        if (this.stopped) {
-                            this.emitter.emit('discoveryCompleted')
-                        } else if (this.outgoingClosestPeersRequestsCounter === 0) {
-                            if (this.isDiscoveryCompleted()) {
-                                this.emitter.emit('discoveryCompleted')
-                                this.stop()
-                            } else {
-                                this.findMoreContacts()
-                            }
-                        }
+
+                        this.findMoreContacts()
+
                     })
             }
         }
     }
 
     public async findClosestNodes(timeout: number): Promise<SortedContactList<DhtPeer>> {
+        if (this.neighborList!.getUncontactedContacts(this.parallelism).length < 1) {
+            logger.trace('IL ' + this.nodeName + 'getUncontactedContacts length was 0 in beginning of discovery, this.neighborList.size: ' +
+                this.neighborList.getSize())
+        }
         await runAndWaitForEvents3<DiscoverySessionEvents>([() => { this.findMoreContacts() }], [
             [this.emitter, 'discoveryCompleted']], timeout)
-        
+
         return this.neighborList
     }
 
     public stop(): void {
         this.stopped = true
+        this.emitter.emit('discoveryCompleted')
     }
 }

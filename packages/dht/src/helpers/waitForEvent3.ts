@@ -1,5 +1,7 @@
-import { withTimeout } from '@streamr/utils'
+import { withTimeout, Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
+
+const logger = new Logger(module)
 
 const once = <T extends EventEmitter.ValidEventTypes>(
     emitter: EventEmitter<T>,
@@ -66,7 +68,7 @@ export function raceEvents3<T extends EventEmitter.ValidEventTypes>(
     eventNames.forEach((eventName) => {
         const item = once(emitter, eventName)
         const wrappedTask = item.task.then((value: any[]) => {
-            const ret: RunAndRaceEventsReturnType<T> = { winnerName: eventName, winnerArgs: value } 
+            const ret: RunAndRaceEventsReturnType<T> = { winnerName: eventName, winnerArgs: value }
             return ret
         })
         promises.push({ task: wrappedTask, cancel: item.cancel })
@@ -94,7 +96,13 @@ export function runAndRaceEvents3<T extends EventEmitter.ValidEventTypes>(
     timeout: number
 ): Promise<RunAndRaceEventsReturnType<T>> {
     const promise = raceEvents3(emitter, eventNames, timeout)
-    operations.forEach((op) => { op() })
+    operations.forEach((op) => {
+        try {
+            op()
+        } catch (e) {
+            logger.error('runAndRaceEvents3 caught exception ' + e)
+        }
+    })
     return promise
 }
 

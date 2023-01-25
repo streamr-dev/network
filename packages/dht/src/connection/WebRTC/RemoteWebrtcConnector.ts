@@ -5,8 +5,8 @@ import {
     RtcAnswer,
     RtcOffer,
     WebRtcConnectionRequest
-} from '../../proto/DhtRpc'
-import { IWebRtcConnectorServiceClient } from '../../proto/DhtRpc.client'
+} from '../../proto/packages/dht/protos/DhtRpc'
+import { IWebRtcConnectorServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { DhtRpcOptions } from '../../rpc-protocol/DhtRpcOptions'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
 import { Logger } from '@streamr/utils'

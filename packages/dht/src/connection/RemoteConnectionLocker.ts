@@ -1,7 +1,7 @@
 import { Logger } from '@streamr/utils'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
-import { IConnectionLockerClient } from '../proto/DhtRpc.client'
-import { LockRequest, UnlockRequest, PeerDescriptor, DisconnectNotice } from '../proto/DhtRpc'
+import { IConnectionLockerClient } from '../proto/packages/dht/protos/DhtRpc.client'
+import { LockRequest, UnlockRequest, PeerDescriptor, DisconnectNotice } from '../proto/packages/dht/protos/DhtRpc'
 import { DhtRpcOptions } from '../rpc-protocol/DhtRpcOptions'
 import { PeerID } from '../helpers/PeerID'
 
@@ -13,23 +13,24 @@ export class RemoteConnectionLocker {
     private peerId: PeerID
 
     constructor(
-        private peerDescriptor: PeerDescriptor,
+        private ownPeerDescriptor: PeerDescriptor,
+        private targetPeerDescriptor: PeerDescriptor,
         private protocolVersion: string,
         private client: ProtoRpcClient<IConnectionLockerClient>
     ) {
-        this.peerId = PeerID.fromValue(peerDescriptor.kademliaId)
+        this.peerId = PeerID.fromValue(targetPeerDescriptor.kademliaId)
     }
 
-    public async lockRequest(sourceDescriptor: PeerDescriptor, serviceId: string): Promise<boolean> {
-        logger.trace(`Requesting locked connection to ${this.peerDescriptor.kademliaId.toString()}`)
+    public async lockRequest(serviceId: string): Promise<boolean> {
+        logger.trace(`Requesting locked connection to ${this.targetPeerDescriptor.kademliaId.toString()}`)
         const request: LockRequest = {
-            peerDescriptor: sourceDescriptor,
+            peerDescriptor: this.ownPeerDescriptor,
             protocolVersion: this.protocolVersion,
             serviceId
         }
         const options: DhtRpcOptions = {
-            sourceDescriptor: sourceDescriptor as PeerDescriptor,
-            targetDescriptor: this.peerDescriptor as PeerDescriptor
+            sourceDescriptor: this.ownPeerDescriptor,
+            targetDescriptor: this.targetPeerDescriptor
         }
         try {
             const res = await this.client.lockRequest(request, options)
@@ -40,16 +41,16 @@ export class RemoteConnectionLocker {
         }
     }
 
-    public unlockRequest(sourceDescriptor: PeerDescriptor, serviceId: string): void {
-        logger.trace(`Requesting connection to be unlocked from ${this.peerDescriptor.kademliaId.toString()}`)
+    public unlockRequest(serviceId: string): void {
+        logger.trace(`Requesting connection to be unlocked from ${this.targetPeerDescriptor.kademliaId.toString()}`)
         const request: UnlockRequest = {
-            peerDescriptor: sourceDescriptor,
+            peerDescriptor: this.ownPeerDescriptor,
             protocolVersion: this.protocolVersion,
             serviceId
         }
         const options: DhtRpcOptions = {
-            sourceDescriptor: sourceDescriptor as PeerDescriptor,
-            targetDescriptor: this.peerDescriptor as PeerDescriptor,
+            sourceDescriptor: this.ownPeerDescriptor as PeerDescriptor,
+            targetDescriptor: this.targetPeerDescriptor as PeerDescriptor,
             notification: true
         }
 
@@ -58,22 +59,23 @@ export class RemoteConnectionLocker {
         })
     }
 
-    public async gracefulDisconnect(sourceDescriptor: PeerDescriptor): Promise<void> {
-        logger.trace(`Notifying a graceful disconnect to ${this.peerDescriptor.kademliaId.toString()}`)
+    public async gracefulDisconnect(): Promise<void> {
+        logger.trace(`Notifying a graceful disconnect to ${this.targetPeerDescriptor.kademliaId.toString()}`)
         const request: DisconnectNotice = {
-            peerDescriptor: sourceDescriptor,
+            peerDescriptor: this.ownPeerDescriptor,
             protocolVersion: this.protocolVersion
         }
         const options: DhtRpcOptions = {
-            sourceDescriptor: sourceDescriptor as PeerDescriptor,
-            targetDescriptor: this.peerDescriptor as PeerDescriptor,
-            notification: true
+            sourceDescriptor: this.ownPeerDescriptor,
+            targetDescriptor: this.targetPeerDescriptor,
+            notification: true,
+            doNotConnect: true
         }
 
         try {
             await this.client.gracefulDisconnect(request, options)
-        } catch (_e) {
-            logger.trace('Failed to send gracefulDisconnect')
+        } catch (e) {
+            logger.error('Failed to send gracefulDisconnect' + e)
         }
     }
 }

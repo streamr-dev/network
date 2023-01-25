@@ -1,17 +1,18 @@
 import { RpcMessage } from './proto/ProtoRpc'
-import { BinaryReadOptions, BinaryWriteOptions } from '@protobuf-ts/runtime'
+import { BinaryReadOptions, BinaryWriteOptions, IMessageType } from '@protobuf-ts/runtime'
 import { promiseTimeout } from './common'
 import * as Err from './errors'
 import UnknownRpcMethod = Err.UnknownRpcMethod
 import { Empty } from './proto/google/protobuf/empty'
 import { Logger } from '@streamr/utils'
 import { ProtoCallContext } from './ProtoCallContext'
+import { Any } from './proto/google/protobuf/any'
 
 export interface Parser<Target> { fromBinary: (data: Uint8Array, options?: Partial<BinaryReadOptions>) => Target }
 export interface Serializer<Target> { toBinary: (message: Target, options?: Partial<BinaryWriteOptions>) => Uint8Array }
 
-type RegisteredMethod = (request: Uint8Array, callContext: ProtoCallContext) => Promise<Uint8Array>
-type RegisteredNotification = (request: Uint8Array, callContext: ProtoCallContext) => Promise<void>
+type RegisteredMethod = (request: Any, callContext: ProtoCallContext) => Promise<Any>
+type RegisteredNotification = (request: Any, callContext: ProtoCallContext) => Promise<void>
 
 const logger = new Logger(module)
 
@@ -48,42 +49,47 @@ export class ServerRegistry {
         return map.get(rpcMessage.header.method)!
     }
 
-    public async handleRequest(rpcMessage: RpcMessage, callContext?: ProtoCallContext): Promise<Uint8Array> {
+    public async handleRequest(rpcMessage: RpcMessage,
+        callContext?: ProtoCallContext): Promise<Any> {
 
         logger.trace(`Server processing RPC call ${rpcMessage.requestId}`)
 
         const fn = this.getImplementation(rpcMessage, this.methods)
-        return await promiseTimeout(1000, fn!(rpcMessage.body, callContext ? callContext : new ProtoCallContext()))
+        return await promiseTimeout(1000, fn!(rpcMessage.body!, callContext ? callContext : new ProtoCallContext()))
     }
 
     public async handleNotification(rpcMessage: RpcMessage, callContext?: ProtoCallContext): Promise<void> {
-       
+
         logger.trace(`Server processing RPC notification ${rpcMessage.requestId}`)
-        
+
         const fn = this.getImplementation(rpcMessage, this.notifications)
-        await promiseTimeout(1000, fn!(rpcMessage.body, callContext ? callContext : new ProtoCallContext()))
+        await promiseTimeout(1000, fn!(rpcMessage.body!, callContext ? callContext : new ProtoCallContext()))
     }
 
-    public registerRpcMethod<RequestClass extends Parser<RequestType>, ReturnClass extends Serializer<ReturnType>, RequestType, ReturnType>(
+    public registerRpcMethod<RequestClass extends IMessageType<RequestType>,
+        ReturnClass extends IMessageType<ReturnType>,
+        RequestType extends object,
+        ReturnType extends object>(
         requestClass: RequestClass,
         returnClass: ReturnClass,
         name: string,
         fn: (rq: RequestType, _context: ProtoCallContext) => Promise<ReturnType>
     ): void {
-        this.methods.set(name, async (bytes: Uint8Array, callContext: ProtoCallContext) => {
-            const request = parseWrapper(() => requestClass.fromBinary(bytes))
+        this.methods.set(name, async (data: Any, callContext: ProtoCallContext) => {
+            const request = parseWrapper(() => Any.unpack(data, requestClass))
             const response = await fn(request, callContext)
-            return returnClass.toBinary(response)
+            return Any.pack(response, returnClass)
         })
     }
 
-    public registerRpcNotification<RequestClass extends Parser<RequestType>, RequestType>(
+    public registerRpcNotification<RequestClass extends IMessageType<RequestType>, 
+        RequestType extends object>(
         requestClass: RequestClass,
         name: string,
         fn: (rq: RequestType, _context: ProtoCallContext) => Promise<Empty>
     ): void {
-        this.notifications.set(name, async (bytes: Uint8Array, callContext: ProtoCallContext): Promise<void> => {
-            const request = parseWrapper(() => requestClass.fromBinary(bytes))
+        this.notifications.set(name, async (data: Any, callContext: ProtoCallContext): Promise<void> => {
+            const request = parseWrapper(() => Any.unpack(data, requestClass))
             await fn(request, callContext)
         })
     }
