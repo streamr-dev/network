@@ -99,6 +99,7 @@ describe('Route Message With Mock Connections', () => {
             })
         }], [[destinationNode, 'message']], 20000)
     }, 30000)
+
     /* ToDo: replace this with a case where no candidates
     can be found 
 

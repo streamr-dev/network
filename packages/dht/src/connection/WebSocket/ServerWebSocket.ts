@@ -68,7 +68,6 @@ export class ServerWebSocket extends EventEmitter<ConnectionEvents> implements I
     }
 
     public send(data: Uint8Array): void {
-        //logger.trace('serverwebsocket trying to send ' + JSON.stringify(data))
         // If in an Karma / Electron test, use the NodeJS implementation
         // of Buffer instead of the browser polyfill
 

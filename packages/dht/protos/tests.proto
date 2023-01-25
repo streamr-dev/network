@@ -4,7 +4,6 @@ option optimize_for = CODE_SIZE;
 
 package tests;
 
-// import "google/protobuf/empty.proto";
 import "google/protobuf/any.proto";
 
 message TestMessage {

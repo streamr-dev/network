@@ -30,15 +30,11 @@ describe('Connection Locking', () => {
         mockConnectorTransport2 = new SimulatorTransport(mockPeerDescriptor2, simulator)
 
         connectionManager1 = new ConnectionManager({
-            transportLayer: mockConnectorTransport1,
-            //webSocketHost: '127.0.0.1',
-            //webSocketPort: 12312
+            transportLayer: mockConnectorTransport1
         })
 
         connectionManager2 = new ConnectionManager({
-            transportLayer: mockConnectorTransport2,
-            //webSocketHost: '127.0.0.1',
-            //webSocketPort: 12313
+            transportLayer: mockConnectorTransport2
         })
         await connectionManager1.start(() => mockPeerDescriptor1)
         await connectionManager2.start(() => mockPeerDescriptor2)

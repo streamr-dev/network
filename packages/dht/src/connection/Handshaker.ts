@@ -1,7 +1,6 @@
 import { Logger } from "@streamr/utils"
 import { EventEmitter } from "eventemitter3"
 import { v4 } from "uuid"
-// import { PeerID } from "../helpers/PeerID"
 import { Message, HandshakeRequest, HandshakeResponse, MessageType, PeerDescriptor } from "../proto/packages/dht/protos/DhtRpc"
 import { IConnection } from "./IConnection"
 
