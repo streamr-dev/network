@@ -8,12 +8,29 @@ import { Events, IContact, ContactState } from './Contact'
 export class SortedContactList<Contact extends IContact> extends EventEmitter<Events> {
     private contactsById: Map<PeerIDKey, ContactState<Contact>> = new Map()
     private contactIds: PeerID[] = []
+    private ownId: PeerID
+    private maxSize: number
+    private getContactsLimit: number
+    private allowOwnPeerId: boolean
+    private peerIdDistanceLimit?: PeerID
+    private excludedPeerIDs?: PeerID[]
 
-    constructor(private ownId: PeerID, private maxSize: number, private getContactsLimit = 20,
-        private allowOwnPeerId = false, private peerIdDistanceLimit?: PeerID, private excludedPeerIDs?: PeerID[]) {
+    constructor(
+        ownId: PeerID,
+        maxSize: number,
+        getContactsLimit = 20,
+        allowOwnPeerId = false,
+        peerIdDistanceLimit?: PeerID,
+        excludedPeerIDs?: PeerID[]
+    ) {
         super()
         this.compareIds = this.compareIds.bind(this)
         this.ownId = ownId
+        this.maxSize = maxSize
+        this.getContactsLimit = getContactsLimit
+        this.allowOwnPeerId = allowOwnPeerId
+        this.peerIdDistanceLimit = peerIdDistanceLimit
+        this.excludedPeerIDs = excludedPeerIDs
     }
 
     public getClosestContactId(): PeerID {

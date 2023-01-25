@@ -18,14 +18,21 @@ export interface StorageNodeMetadata {
  */
 @scoped(Lifecycle.ContainerScoped)
 export class StorageNodeRegistry {
+
+    private contractFactory: ContractFactory
+    private authentication: Authentication
+    private config: Pick<StrictStreamrClientConfig, 'contracts'>
     private nodeRegistryContract?: NodeRegistryContract
     private readonly nodeRegistryContractReadonly: NodeRegistryContract
 
     constructor(
-        private contractFactory: ContractFactory,
-        @inject(AuthenticationInjectionToken) private authentication: Authentication,
-        @inject(ConfigInjectionToken) private config: Pick<StrictStreamrClientConfig, 'contracts'>,
+        contractFactory: ContractFactory,
+        @inject(AuthenticationInjectionToken) authentication: Authentication,
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts'>,
     ) {
+        this.contractFactory = contractFactory
+        this.authentication = authentication
+        this.config = config
         const chainProvider = getStreamRegistryChainProvider(config)
         this.nodeRegistryContractReadonly = this.contractFactory.createReadContract(
             toEthereumAddress(this.config.contracts.storageNodeRegistryChainAddress),

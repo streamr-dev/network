@@ -10,9 +10,13 @@ export class SetDuplicateDetector {
     private values: Set<string> = new Set()
     private queue: Array<QueueEntry> = []
     private maxAge: number
+    private maxNumberOfValues: number
 
-    constructor(private maxNumberOfValues: number,
-        maxAgeInSeconds: number) {
+    constructor(
+        maxNumberOfValues: number,
+        maxAgeInSeconds: number
+    ) {
+        this.maxNumberOfValues = maxNumberOfValues
         this.maxAge = maxAgeInSeconds * 1000
     }
 

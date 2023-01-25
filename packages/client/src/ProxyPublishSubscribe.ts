@@ -6,10 +6,16 @@ import { ProxyDirection } from '@streamr/protocol'
 
 @scoped(Lifecycle.ContainerScoped)
 export class ProxyPublishSubscribe {
+
+    private node: NetworkNodeFacade
+    private streamIdBuilder: StreamIDBuilder
+
     constructor(
-        private node: NetworkNodeFacade,
-        @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
+        node: NetworkNodeFacade,
+        @inject(StreamIDBuilder) streamIdBuilder: StreamIDBuilder,
     ) {
+        this.node = node
+        this.streamIdBuilder = streamIdBuilder
     }
 
     async openProxyConnections(streamDefinition: StreamDefinition, nodeIds: string[], direction: ProxyDirection): Promise<void> {

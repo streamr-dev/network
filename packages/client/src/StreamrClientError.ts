@@ -7,8 +7,12 @@ export type StreamrClientErrorCode =
     'UNKNOWN_ERROR'
 
 export class StreamrClientError extends Error {
-    constructor(message: string, public readonly code: StreamrClientErrorCode) {
+
+    public readonly code: StreamrClientErrorCode
+
+    constructor(message: string, code: StreamrClientErrorCode) {
         super(message)
+        this.code = code
         this.name = this.constructor.name
     }
 }

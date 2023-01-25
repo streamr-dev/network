@@ -20,13 +20,21 @@ export class SimulatorConnector {
 
     private connectingConnections: Map<PeerIDKey, ManagedConnection> = new Map()
     private stopped = false
+    private protocolVersion: string
+    private ownPeerDescriptor: PeerDescriptor
+    private simulator: Simulator
+    private incomingConnectionCallback: (connection: ManagedConnection) => boolean
 
     constructor(
-        private protocolVersion: string,
-        private ownPeerDescriptor: PeerDescriptor,
-        private simulator: Simulator,
-        private incomingConnectionCallback: (connection: ManagedConnection) => boolean
+        protocolVersion: string,
+        ownPeerDescriptor: PeerDescriptor,
+        simulator: Simulator,
+        incomingConnectionCallback: (connection: ManagedConnection) => boolean
     ) {
+        this.protocolVersion = protocolVersion
+        this.ownPeerDescriptor = ownPeerDescriptor
+        this.simulator = simulator
+        this.incomingConnectionCallback = incomingConnectionCallback
     }
 
     public async start(): Promise<void> {

@@ -20,8 +20,14 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
 
     private timeouts: Map<string, NodeJS.Timeout> = new Map()
 
-    constructor(private latencyType: LatencyType = LatencyType.NONE, private fixedLatency?: number) {
+    private latencyType: LatencyType
+    private fixedLatency?: number
+
+    constructor(latencyType: LatencyType = LatencyType.NONE, fixedLatency?: number) {
         super()
+        this.latencyType = latencyType
+        this.fixedLatency = fixedLatency
+
         if (this.latencyType == LatencyType.REAL) {
             this.latencyTable = getRegionDelayMatrix()
         }

@@ -14,6 +14,7 @@ const SEPARATOR = '|' // always use SEPARATOR for cache key
 @scoped(Lifecycle.ContainerScoped)
 export class StreamRegistryCached {
 
+    private streamRegistry: StreamRegistry
     private readonly logger: Logger
     private readonly _getStream: CacheAsyncFnType<[StreamID], Stream, string>
     private readonly _isStreamPublisher: CacheAsyncFnType<[StreamID, EthereumAddress], boolean, string>
@@ -22,9 +23,10 @@ export class StreamRegistryCached {
 
     constructor(
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
-        @inject(delay(() => StreamRegistry)) private streamRegistry: StreamRegistry,
+        @inject(delay(() => StreamRegistry)) streamRegistry: StreamRegistry,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'cache'>
     ) {
+        this.streamRegistry = streamRegistry
         this.logger = loggerFactory.createLogger(module)
         this._getStream = CacheAsyncFn((streamId: StreamID) => {
             return this.streamRegistry.getStream(streamId)

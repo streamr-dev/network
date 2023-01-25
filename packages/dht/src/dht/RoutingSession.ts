@@ -38,19 +38,31 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     public readonly sessionId = v4()
     private ongoingRequests: Set<PeerIDKey> = new Set()
     private contactList: SortedContactList<DhtPeer>
+    private readonly ownPeerDescriptor: PeerDescriptor
+    private readonly messageToRoute: RouteMessageWrapper
+    private connections: Map<PeerIDKey, DhtPeer>
+    private readonly parallelism: number
+    private firstHopTimeout: number
+    private readonly mode: RoutingMode = RoutingMode.ROUTE
     private stopped = false
 
     constructor(
-        private ownPeerDescriptor: PeerDescriptor,
-        private messageToRoute: RouteMessageWrapper,
-        private connections: Map<PeerIDKey, DhtPeer>,
-        private parallelism: number,
-        private firstHopTimeout: number,
-        private mode: RoutingMode = RoutingMode.ROUTE,
+        ownPeerDescriptor: PeerDescriptor,
+        messageToRoute: RouteMessageWrapper,
+        connections: Map<PeerIDKey, DhtPeer>,
+        parallelism: number,
+        firstHopTimeout: number,
+        mode: RoutingMode = RoutingMode.ROUTE,
         destinationId?: Uint8Array,
         excludedPeerIDs?: PeerID[]
     ) {
         super()
+        this.ownPeerDescriptor = ownPeerDescriptor
+        this.messageToRoute = messageToRoute
+        this.connections = connections
+        this.parallelism = parallelism
+        this.firstHopTimeout = firstHopTimeout
+        this.mode = mode
         this.contactList = new SortedContactList(destinationId ? PeerID.fromValue(destinationId) :
             PeerID.fromValue(this.messageToRoute!.destinationPeer!.kademliaId),
         10000, undefined, true, undefined, excludedPeerIDs)

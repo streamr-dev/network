@@ -4,7 +4,10 @@ import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 export class ContactState<TContact> {
     public contacted = false
     public active = false
-    constructor(public contact: TContact) {
+    public contact: TContact
+
+    constructor(contact: TContact) {
+        this.contact = contact
     }
 }
 
@@ -16,8 +19,10 @@ export interface Events {
 }
 
 export class Contact implements IContact {
+    private peerDescriptor: PeerDescriptor
 
-    constructor(private peerDescriptor: PeerDescriptor) {
+    constructor(peerDescriptor: PeerDescriptor) {
+        this.peerDescriptor = peerDescriptor
     }
 
     public getPeerDescriptor(): PeerDescriptor {

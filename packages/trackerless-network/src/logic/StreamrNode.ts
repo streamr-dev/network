@@ -52,9 +52,11 @@ export class StreamrNode extends EventEmitter {
     protected extraMetadata: Record<string, unknown> = {}
     private readonly metricsContext: MetricsContext
     private readonly metrics: Metrics
+    public config: StreamrNodeOpts
 
-    constructor(public config: StreamrNodeOpts) {
+    constructor(config: StreamrNodeOpts) {
         super()
+        this.config = config
         this.streams = new Map()
         this.metricsContext = config.metricsContext || new MetricsContext()
         this.metrics = {

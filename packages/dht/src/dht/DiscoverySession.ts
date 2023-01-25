@@ -23,18 +23,36 @@ export class DiscoverySession {
     private outgoingClosestPeersRequestsCounter = 0
     private noProgressCounter = 0
     private ongoingClosestPeersRequests: Set<string> = new Set()
+    private readonly neighborList: SortedContactList<DhtPeer>
+    private readonly targetId: Uint8Array
+    private readonly ownPeerDescriptor: PeerDescriptor
+    private readonly serviceId: string
+    private readonly rpcCommunicator: RpcCommunicator
+    private readonly parallelism: number
+    private readonly noProgressLimit: number
+    private readonly newContactListener?: (dhtPeer: DhtPeer) => void
+    private readonly nodeName?: string
 
     constructor(
-        private neighborList: SortedContactList<DhtPeer>,
-        private targetId: Uint8Array,
-        private ownPeerDescriptor: PeerDescriptor,
-        private serviceId: string,
-        private rpcCommunicator: RpcCommunicator,
-        private parallelism: number,
-        private noProgressLimit: number,
-        private newContactListener?: (dhtPeer: DhtPeer) => void,
-        private nodeName?: string
+        neighborList: SortedContactList<DhtPeer>,
+        targetId: Uint8Array,
+        ownPeerDescriptor: PeerDescriptor,
+        serviceId: string,
+        rpcCommunicator: RpcCommunicator,
+        parallelism: number,
+        noProgressLimit: number,
+        newContactListener?: (dhtPeer: DhtPeer) => void,
+        nodeName?: string
     ) {
+        this.neighborList = neighborList
+        this.targetId = targetId
+        this.ownPeerDescriptor = ownPeerDescriptor
+        this.serviceId = serviceId
+        this.rpcCommunicator = rpcCommunicator
+        this.parallelism = parallelism
+        this.noProgressLimit = noProgressLimit
+        this.newContactListener = newContactListener
+        this.nodeName = nodeName
     }
 
     private get ownPeerId(): PeerID {

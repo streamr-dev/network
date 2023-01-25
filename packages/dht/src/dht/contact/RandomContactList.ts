@@ -5,15 +5,22 @@ import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 export class RandomContactList<Contact extends IContact> extends EventEmitter<Events> {
     private contactsById: Map<PeerIDKey, ContactState<Contact>> = new Map()
     private contactIds: PeerID[] = []
+    private ownId: PeerID
+    private maxSize: number
+    private randomness = 0.20
+    private getContactsLimit = 20
 
     constructor(
-        private ownId: PeerID,
-        private maxSize: number,
-        private randomness = 0.20,
-        private getContactsLimit = 20
+        ownId: PeerID,
+        maxSize: number,
+        randomness = 0.20,
+        getContactsLimit = 20
     ) {
         super()
         this.ownId = ownId
+        this.maxSize = maxSize
+        this.randomness = randomness
+        this.getContactsLimit = getContactsLimit
     }
 
     addContact(contact: Contact): void {

@@ -15,13 +15,18 @@ export class RemoteRecursiveFindSession {
 
     private rpcCommunicator: RpcCommunicator
     private client: ProtoRpcClient<IRecursiveFindSessionServiceClient>
+    private readonly ownPeerDescriptor: PeerDescriptor
+    private readonly targetPeerDescriptor: PeerDescriptor
 
-    constructor(private ownPeerDescriptor: PeerDescriptor,
-        private targetPeerDescriptor: PeerDescriptor,
+    constructor(
+        ownPeerDescriptor: PeerDescriptor,
+        targetPeerDescriptor: PeerDescriptor,
         serviceId: string,
         rpcTransport: ITransport
     ) {
 
+        this.ownPeerDescriptor = ownPeerDescriptor
+        this.targetPeerDescriptor = targetPeerDescriptor
         this.rpcCommunicator = new ListeningRpcCommunicator(serviceId, rpcTransport, { rpcRequestTimeout: 15000 })
         this.client = toProtoRpcClient(new RecursiveFindSessionServiceClient(this.rpcCommunicator.getRpcClientTransport()))
     }

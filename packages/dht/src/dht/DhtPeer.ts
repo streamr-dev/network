@@ -39,12 +39,13 @@ export class DhtPeer implements KBucketContact {
     private readonly dhtClient: ProtoRpcClient<IDhtRpcServiceClient>
     private readonly serviceId: string
     private readonly ownPeerDescriptor: PeerDescriptor
+    private dhtNode?: DhtNode
 
     constructor(ownPeerDescriptor: PeerDescriptor,
         peerDescriptor: PeerDescriptor,
         client: ProtoRpcClient<IDhtRpcServiceClient>,
         serviceId: string,
-        private dhtNode?: DhtNode
+        dhtNode?: DhtNode
     ) {
         this.ownPeerDescriptor = ownPeerDescriptor
         this.peerId = PeerID.fromValue(peerDescriptor.kademliaId)
@@ -52,6 +53,7 @@ export class DhtPeer implements KBucketContact {
         this.vectorClock = DhtPeer.counter++
         this.dhtClient = client
         this.serviceId = serviceId
+        this.dhtNode = dhtNode
         this.getClosestPeers = this.getClosestPeers.bind(this)
         this.ping = this.ping.bind(this)
     }

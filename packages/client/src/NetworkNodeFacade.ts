@@ -70,6 +70,10 @@ export class NetworkNodeFactory {
  */
 @scoped(Lifecycle.ContainerScoped)
 export class NetworkNodeFacade {
+
+    private destroySignal: DestroySignal
+    private networkNodeFactory: NetworkNodeFactory
+    private authentication: Authentication
     private cachedNode?: NetworkNodeStub
     private startNodeCalled = false
     private startNodeComplete = false
@@ -77,11 +81,14 @@ export class NetworkNodeFacade {
     private readonly eventEmitter: EventEmitter<Events>
 
     constructor(
-        private destroySignal: DestroySignal,
-        private networkNodeFactory: NetworkNodeFactory,
-        @inject(AuthenticationInjectionToken) private authentication: Authentication,
+        destroySignal: DestroySignal,
+        networkNodeFactory: NetworkNodeFactory,
+        @inject(AuthenticationInjectionToken) authentication: Authentication,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'network' | 'contracts'>
     ) {
+        this.destroySignal = destroySignal
+        this.networkNodeFactory = networkNodeFactory
+        this.authentication = authentication
         this.config = config
         this.eventEmitter = new EventEmitter<Events>()
         destroySignal.onDestroy.listen(this.destroy)

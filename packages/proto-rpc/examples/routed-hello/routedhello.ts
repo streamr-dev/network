@@ -10,7 +10,11 @@ import { RoutedHelloRpcServiceClient } from './proto/RoutedHelloRpc.client'
 
 // Rpc service
 class HelloService implements IRoutedHelloRpcService {
-    constructor(public serviceId: string) {
+
+    public serviceId: string
+
+    constructor(serviceId: string) {
+        this.serviceId = serviceId
         this.sayHello = this.sayHello.bind(this)
     }
 

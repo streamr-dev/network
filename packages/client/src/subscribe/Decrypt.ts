@@ -12,17 +12,30 @@ import { StreamrClientEventEmitter } from '../events'
 import { LoggerFactory } from '../utils/LoggerFactory'
 
 export class Decrypt {
+
+    private groupKeyStore: GroupKeyStore
+    private keyExchange: SubscriberKeyExchange
+    private streamRegistryCached: StreamRegistryCached
+    private destroySignal: DestroySignal
+    private eventEmitter: StreamrClientEventEmitter
+    private config: Pick<StrictStreamrClientConfig, 'decryption'>    
     private readonly logger: Logger
 
     constructor(
-        private groupKeyStore: GroupKeyStore,
-        private keyExchange: SubscriberKeyExchange,
-        private streamRegistryCached: StreamRegistryCached,
-        private destroySignal: DestroySignal,
+        groupKeyStore: GroupKeyStore,
+        keyExchange: SubscriberKeyExchange,
+        streamRegistryCached: StreamRegistryCached,
+        destroySignal: DestroySignal,
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
-        @inject(StreamrClientEventEmitter) private eventEmitter: StreamrClientEventEmitter,
-        @inject(ConfigInjectionToken) private config: Pick<StrictStreamrClientConfig, 'decryption'>
+        @inject(StreamrClientEventEmitter) eventEmitter: StreamrClientEventEmitter,
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'decryption'>
     ) {
+        this.groupKeyStore = groupKeyStore
+        this.keyExchange = keyExchange
+        this.streamRegistryCached = streamRegistryCached
+        this.destroySignal = destroySignal
+        this.eventEmitter = eventEmitter
+        this.config = config
         this.logger = loggerFactory.createLogger(module)
         this.decrypt = this.decrypt.bind(this)
     }

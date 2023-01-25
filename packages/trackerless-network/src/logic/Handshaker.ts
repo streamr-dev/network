@@ -31,8 +31,10 @@ export class Handshaker {
     private readonly randomContactPool: PeerList
     private readonly ongoingHandshakes: Set<string> = new Set()
     private readonly protoRpcClient: ProtoRpcClient<NetworkRpcClient>
+    private params: HandshakerParams
 
-    constructor(private params: HandshakerParams) {
+    constructor(params: HandshakerParams) {
+        this.params = params
         this.nearbyContactPool = params.nearbyContactPool
         this.randomContactPool = params.randomContactPool
         this.targetNeighbors = params.targetNeighbors

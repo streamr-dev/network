@@ -14,7 +14,13 @@ import { Logger } from '@streamr/utils'
 const logger = new Logger(module)
 
 export class RemoteWebrtcConnector {
-    constructor(private peerDescriptor: PeerDescriptor, private client: ProtoRpcClient<IWebRtcConnectorServiceClient>) {
+
+    private peerDescriptor: PeerDescriptor
+    private client: ProtoRpcClient<IWebRtcConnectorServiceClient>
+
+    constructor(peerDescriptor: PeerDescriptor, client: ProtoRpcClient<IWebRtcConnectorServiceClient>) {
+        this.peerDescriptor = peerDescriptor
+        this.client = client
     }
 
     requestConnection(sourceDescriptor: PeerDescriptor, connectionId: string): void {

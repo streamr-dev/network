@@ -42,17 +42,26 @@ export class ManagedConnection extends EventEmitter<Events> {
     private bufferSentbyOtherConnection = false
     private closing = false
     public replacedByOtherConnection = false
+    private ownPeerDescriptor: PeerDescriptor
+    private protocolVersion: string
+    protected outgoingConnection?: IConnection
+    protected incomingConnection?: IConnection
 
-    constructor(private ownPeerDescriptor: PeerDescriptor,
-        private protocolVersion: string,
+    constructor(
+        ownPeerDescriptor: PeerDescriptor,
+        protocolVersion: string,
         connectionType: ConnectionType,
-        protected outgoingConnection?: IConnection,
-        protected incomingConnection?: IConnection,
+        outgoingConnection?: IConnection,
+        incomingConnection?: IConnection,
     ) {
         super()
         this.objectId = ManagedConnection.objectCounter
         ManagedConnection.objectCounter++
 
+        this.ownPeerDescriptor = ownPeerDescriptor
+        this.protocolVersion = protocolVersion
+        this.outgoingConnection = outgoingConnection
+        this.incomingConnection = incomingConnection
         this.connectionType = connectionType
         this.connectionId = new ConnectionID()
 

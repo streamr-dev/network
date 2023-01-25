@@ -11,14 +11,22 @@ const logger = new Logger(module)
 
 export class RemoteConnectionLocker {
     private peerId: PeerID
+    private ownPeerDescriptor: PeerDescriptor
+    private targetPeerDescriptor: PeerDescriptor
+    private protocolVersion: string
+    private client: ProtoRpcClient<IConnectionLockerClient>
 
     constructor(
-        private ownPeerDescriptor: PeerDescriptor,
-        private targetPeerDescriptor: PeerDescriptor,
-        private protocolVersion: string,
-        private client: ProtoRpcClient<IConnectionLockerClient>
+        ownPeerDescriptor: PeerDescriptor,
+        targetPeerDescriptor: PeerDescriptor,
+        protocolVersion: string,
+        client: ProtoRpcClient<IConnectionLockerClient>
     ) {
         this.peerId = PeerID.fromValue(targetPeerDescriptor.kademliaId)
+        this.ownPeerDescriptor = ownPeerDescriptor
+        this.targetPeerDescriptor = targetPeerDescriptor
+        this.protocolVersion = protocolVersion
+        this.client = client
     }
 
     public async lockRequest(serviceId: string): Promise<boolean> {

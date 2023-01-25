@@ -19,10 +19,12 @@ const logger = new Logger(module)
 export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvents> implements IRecursiveFindSessionService {
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private results: SortedContactList<Contact>
+    private readonly rpcTransport: ITransport
 
-    constructor(serviceId: string, private rpcTransport: ITransport, kademliaIdToFind: Uint8Array) {
+    constructor(serviceId: string, rpcTransport: ITransport, kademliaIdToFind: Uint8Array) {
         super()
 
+        this.rpcTransport = rpcTransport
         this.results = new SortedContactList(PeerID.fromValue(kademliaIdToFind), 10)
 
         this.rpcCommunicator = new ListeningRpcCommunicator(serviceId, this.rpcTransport, {

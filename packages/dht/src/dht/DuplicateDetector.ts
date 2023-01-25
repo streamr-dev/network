@@ -6,16 +6,24 @@ export class DuplicateDetector {
     currentFilter: BloomFilter
     nextFilter?: BloomFilter
     counter: number
+    private numOfHashFunctions: number
+    private numOfBits: number
+    private nextFilterFillingLimit: number
+    private resetLimit: number
 
     // False positives at 0.05% at maximum capacity with default values
     constructor(
-        private numOfBits = 2 ** 20,
-        private numOfHashFunctions = 16,
-        private nextFilterFillingLimit = 1050,
-        private resetLimit = 2100
+        numOfBits = 2 ** 15,
+        numOfHashFunctions = 16,
+        nextFilterFillingLimit = 1050,
+        resetLimit = 2100
     ) {
         this.currentFilter = new BloomFilter(numOfBits, numOfHashFunctions)
         this.counter = 0
+        this.numOfHashFunctions = numOfHashFunctions
+        this.numOfBits = numOfBits
+        this.nextFilterFillingLimit = nextFilterFillingLimit
+        this.resetLimit = resetLimit
     }
 
     add(value: string): void {

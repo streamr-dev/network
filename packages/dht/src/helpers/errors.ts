@@ -18,8 +18,14 @@ export enum ErrorCode {
 }
 
 class Err extends Error {
-    constructor(public code: ErrorCode, message?: string, public originalError?: Error | string) {
+    
+    public code: ErrorCode
+    public originalError?: Error | string
+
+    constructor(code: ErrorCode, message?: string, originalError?: Error | string) {
         super(message)
+        this.code = code
+        this.originalError = originalError
     }
 }
 

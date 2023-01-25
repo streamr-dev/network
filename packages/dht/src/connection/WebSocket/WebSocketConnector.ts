@@ -34,21 +34,34 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     private readonly webSocketServer?: WebSocketServer
     private readonly connectivityChecker: ConnectivityChecker
     private readonly ongoingConnectRequests: Map<PeerIDKey, ManagedConnection> = new Map()
+    private incomingConnectionCallback: (connection: ManagedConnection) => boolean
+    private webSocketPort?: number
+    private webSocketHost?: string
+    private entrypoints?: PeerDescriptor[]
+
+    private readonly protocolVersion: string
+    private readonly rpcTransport: ITransport
     private ownPeerDescriptor?: PeerDescriptor
     private connectingConnections: Map<PeerIDKey, ManagedConnection> = new Map()
     private stopped = false
 
     constructor(
-        private protocolVersion: string,
-        private rpcTransport: ITransport,
+        protocolVersion: string,
+        rpcTransport: ITransport,
         fnCanConnect: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean,
-        private incomingConnectionCallback: (connection: ManagedConnection) => boolean,
-        private webSocketPort?: number,
-        private webSocketHost?: string,
-        private entrypoints?: PeerDescriptor[]
+        incomingConnectionCallback: (connection: ManagedConnection) => boolean,
+        webSocketPort?: number,
+        webSocketHost?: string,
+        entrypoints?: PeerDescriptor[]
     ) {
+        this.protocolVersion = protocolVersion
+        this.rpcTransport = rpcTransport
         this.webSocketServer = webSocketPort ? new WebSocketServer() : undefined
         this.connectivityChecker = new ConnectivityChecker(webSocketPort)
+        this.incomingConnectionCallback = incomingConnectionCallback
+        this.webSocketPort = webSocketPort
+        this.webSocketHost = webSocketHost
+        this.entrypoints = entrypoints
 
         this.canConnectFunction = fnCanConnect.bind(this)
 
@@ -190,6 +203,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
             }
         }
     }
+
     public setOwnPeerDescriptor(ownPeerDescriptor: PeerDescriptor): void {
         this.ownPeerDescriptor = ownPeerDescriptor
 

@@ -62,9 +62,12 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     private ownPeerDescriptor: PeerDescriptor
 
     private readonly propagation: Propagation
+    private config: RandomGraphNodeParams
 
-    constructor(private config: RandomGraphNodeParams) {
+    constructor(config: RandomGraphNodeParams) {
         super()
+
+        this.config = config
         this.randomGraphId = config.randomGraphId
         this.layer1 = config.layer1
         this.P2PTransport = config.P2PTransport

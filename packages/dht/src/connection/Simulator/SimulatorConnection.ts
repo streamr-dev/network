@@ -10,11 +10,22 @@ const logger = new Logger(module)
 export class SimulatorConnection extends Connection implements IConnection {
 
     private stopped = false
-   
-    constructor(public ownPeerDescriptor: PeerDescriptor, private targetPeerDescriptor: PeerDescriptor,
+    public ownPeerDescriptor: PeerDescriptor
+    private targetPeerDescriptor: PeerDescriptor
+    private simulator: Simulator
+
+    constructor(
+        ownPeerDescriptor: PeerDescriptor,
+        targetPeerDescriptor: PeerDescriptor,
         connectionType: ConnectionType,
-        private simulator: Simulator) {
+        simulator: Simulator
+    ) {
         super(connectionType)
+
+        this.ownPeerDescriptor = ownPeerDescriptor
+        this.targetPeerDescriptor = targetPeerDescriptor
+        this.connectionType = connectionType
+        this.simulator = simulator
 
         this.send = this.send.bind(this)
         this.close = this.close.bind(this)

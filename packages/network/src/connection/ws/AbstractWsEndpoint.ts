@@ -32,13 +32,6 @@ export enum DisconnectionReason {
 export class UnknownPeerError extends Error {
     static CODE = 'UnknownPeerError'
     readonly code = UnknownPeerError.CODE
-
-    constructor(msg: string) {
-        super(msg)
-        if (Error.captureStackTrace) {
-            Error.captureStackTrace(this, UnknownPeerError)
-        }
-    }
 }
 
 export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends EventEmitter {

@@ -45,15 +45,20 @@ export interface UpdateEncryptionKeyOptions {
 
 @scoped(Lifecycle.ContainerScoped)
 export class GroupKeyStore {
+
+    private authentication: Authentication
+    private eventEmitter: StreamrClientEventEmitter
     private readonly logger: Logger
     private readonly ensureInitialized: () => Promise<void>
     private persistence: Persistence<string, string> | undefined
 
     constructor(
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
-        @inject(AuthenticationInjectionToken) private authentication: Authentication,
-        @inject(StreamrClientEventEmitter) private eventEmitter: StreamrClientEventEmitter
+        @inject(AuthenticationInjectionToken) authentication: Authentication,
+        @inject(StreamrClientEventEmitter) eventEmitter: StreamrClientEventEmitter
     ) {
+        this.authentication = authentication
+        this.eventEmitter = eventEmitter
         this.logger = loggerFactory.createLogger(module)
         this.ensureInitialized = pOnce(async () => {
             const clientId = await this.authentication.getAddress()

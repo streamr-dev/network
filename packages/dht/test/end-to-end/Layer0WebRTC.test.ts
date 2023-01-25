@@ -52,9 +52,11 @@ describe('Layer0 with WebRTC connections', () => {
     })
 
     class Peer0Listener extends EventEmitter {
-        constructor(private nodeToListen: DhtNode) {
+        private nodeToListen: DhtNode
+        constructor(nodeToListen: DhtNode) {
             super()
-            nodeToListen.on('connected', (peer: PeerDescriptor) => {
+            this.nodeToListen = nodeToListen
+            this.nodeToListen.on('connected', (peer: PeerDescriptor) => {
                 if (PeerID.fromValue(peer.kademliaId).equals(PeerID.fromString('Peer0'))) {
                     this.emit('peer0connected')
                 }

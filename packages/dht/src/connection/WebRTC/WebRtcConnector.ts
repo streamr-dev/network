@@ -39,16 +39,22 @@ export class WebRtcConnector implements IWebRtcConnectorService {
     private static objectCounter = 0
     private objectId = 0
     private stunUrls: string[]
+    private config: WebRtcConnectorConfig
+    private incomingConnectionCallback: (connection: ManagedConnection) => boolean
 
-    constructor(private config: WebRtcConnectorConfig,
-        private incomingConnectionCallback: (connection: ManagedConnection) => boolean) {
+    constructor(
+        config: WebRtcConnectorConfig,
+        incomingConnectionCallback: (connection: ManagedConnection) => boolean
+    ) {
+
+        this.config = config
 
         WebRtcConnector.objectCounter++
         this.objectId = WebRtcConnector.objectCounter
 
         this.rpcTransport = config.rpcTransport
         this.stunUrls = config.stunUrls || []
-
+        this.incomingConnectionCallback = incomingConnectionCallback
         this.rpcCommunicator = new ListeningRpcCommunicator(WebRtcConnector.WEBRTC_CONNECTOR_SERVICE_ID, this.rpcTransport, {
             rpcRequestTimeout: 15000
         })

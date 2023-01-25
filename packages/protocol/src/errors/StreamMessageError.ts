@@ -2,7 +2,11 @@ import StreamMessage from '../protocol/message_layer/StreamMessage'
 import ValidationError from './ValidationError'
 
 export default class StreamMessageError extends ValidationError {
-    constructor(msg: string, readonly streamMessage: StreamMessage, code?: string) {
+
+    readonly streamMessage: StreamMessage
+
+    constructor(msg: string, streamMessage: StreamMessage, code?: string) {
         super(msg, code)
+        this.streamMessage = streamMessage
     }
 }

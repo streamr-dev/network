@@ -101,8 +101,11 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
     private disconnectorIntervalRef?: NodeJS.Timer
 
-    constructor(private config: ConnectionManagerConfig) {
+    private config: ConnectionManagerConfig
+
+    constructor(config: ConnectionManagerConfig) {
         super()
+        this.config = config
 
         this.onData = this.onData.bind(this)
         this.incomingConnectionCallback = this.incomingConnectionCallback.bind(this)
@@ -335,7 +338,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         }
 
         if (this.messageDuplicateDetector.isMostLikelyDuplicate(message.messageId, message.sourceDescriptor!.nodeName!, message)) {
-            logger.error('handleMessage filtered duplicate ' + this.config.nodeName + ', ' +
+            logger.trace('handleMessage filtered duplicate ' + this.config.nodeName + ', ' +
                 message.sourceDescriptor?.nodeName + ' ' + message.serviceId + ' ' + message.messageId)
             return
         }
@@ -369,7 +372,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
                 logger.trace(this.config.nodeName + ' received protojson: ' + protoToString(message, Message))
             } catch (e1) {
-                logger.error('Parsing incoming data into Message failed' + e1)
+                logger.debug('Parsing incoming data into Message failed' + e1)
                 return
             }
 
@@ -377,7 +380,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             this.handleMessage(message)
 
         } catch (e) {
-            logger.error('Handling incoming data failed ' + e)
+            logger.debug('Handling incoming data failed ' + e)
         }
     }
 
@@ -506,7 +509,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
         remoteConnectionLocker.lockRequest(serviceId)
             .then((_accepted) => logger.trace('LockRequest successful'))
-            .catch((err) => { logger.error(err) })
+            .catch((err) => { logger.debug(err) })
     }
 
     public unlockConnection(targetDescriptor: PeerDescriptor, serviceId: ServiceId): void {
