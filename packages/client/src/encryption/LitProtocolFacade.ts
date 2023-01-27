@@ -1,7 +1,7 @@
 import * as LitJsSdk from '@lit-protocol/lit-node-client'
-import { Lifecycle, scoped } from 'tsyringe'
+import { inject, Lifecycle, scoped } from 'tsyringe'
 import * as siwe from 'lit-siwe'
-import { Authentication } from '../Authentication'
+import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ethers } from 'ethers'
 import { StreamID } from '@streamr/protocol'
 import { StreamPermission, streamPermissionToSolidityType } from '../permission'
@@ -90,9 +90,9 @@ export class LitProtocolFacade {
     private connectLitNodeClient?: () => Promise<void>
 
     constructor(
-        authentication: Authentication,
         config: Pick<StrictStreamrClientConfig, 'contracts' | 'encryption'>,
-        loggerFactory: LoggerFactory
+        loggerFactory: LoggerFactory,
+        @inject(AuthenticationInjectionToken) authentication: Authentication,
     ) {
         this.authentication = authentication
         this.config = config
