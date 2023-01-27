@@ -97,7 +97,7 @@
     "@ethersproject/transactions": "^5.5.0",
     "@ethersproject/wallet": "^5.5.0",
     "@ethersproject/web": "^5.5.0",
-    "@lit-protocol/lit-node-client": "^2.0.40",
+    "@lit-protocol/lit-node-client": "^2.0.66",
     "@streamr/network-node": "7.3.0-beta.0",
     "@streamr/protocol": "7.3.0-beta.0",
     "@streamr/utils": "7.3.0-beta.0",
