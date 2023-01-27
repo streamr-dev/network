@@ -68,7 +68,17 @@ export interface StreamrClientConfig {
     gapFillTimeout?: number
 
     encryption?: {
+        /**
+         * Enable experimental Lit Protocol key exchange.
+         *
+         * When enabled encryption key storing and fetching will be primarily done through the Lit Protocol and
+         * secondarily through the standard Streamr key-exchange system.
+         */
         litProtocolEnabled?: boolean
+
+        /**
+         * Enable log messages of the Lit Protocol library to be printed to stdout.
+         */
         litProtocolLogging?: boolean
     }
 
