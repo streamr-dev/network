@@ -139,6 +139,10 @@
                     "type": "number",
                     "default": 131072
                 },
+                "webrtcSendBufferMaxMessageCount": {
+                    "type": "number",
+                    "default": 500
+                },
                 "disconnectionWaitTime": {
                     "type": "number",
                     "default": 200

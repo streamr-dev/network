@@ -5,6 +5,7 @@ import { NodeWebRtcConnection } from '../../src/connection/webrtc/NodeWebRtcConn
 import { DeferredConnectionAttempt } from '../../src/connection/webrtc/DeferredConnectionAttempt'
 import { runAndWaitForEvents } from '@streamr/test-utils'
 import { wait, waitForCondition } from '@streamr/utils'
+import { TEST_CONFIG } from '../../src/createNetworkNode'
 
 /**
  * Test that Connections can be established and message sent between them successfully. Tracker
@@ -41,8 +42,8 @@ describe('Connection', () => {
                 connectionOne.addRemoteCandidate(candidate, mid)
             },
         }
-        const messageQueueOne = new MessageQueue<string>()
-        const messageQueueTwo = new MessageQueue<string>()
+        const messageQueueOne = new MessageQueue<string>(TEST_CONFIG.webrtcSendBufferMaxMessageCount)
+        const messageQueueTwo = new MessageQueue<string>(TEST_CONFIG.webrtcSendBufferMaxMessageCount)
         const deferredConnectionAttemptOne = new DeferredConnectionAttempt()
         const deferredConnectionAttemptTwo = new DeferredConnectionAttempt()
         connectionOne = new NodeWebRtcConnection({

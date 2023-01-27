@@ -92,6 +92,10 @@ export interface StreamrClientConfig {
         newWebrtcConnectionTimeout?: number
         webrtcDatachannelBufferThresholdLow?: number
         webrtcDatachannelBufferThresholdHigh?: number
+        /**
+         * The maximum amount of outgoing messages to be buffered on a single WebRTC connection.
+         */
+        webrtcSendBufferMaxMessageCount?: number
         disconnectionWaitTime?: number
         peerPingInterval?: number
         rttUpdateTimeout?: number
@@ -187,6 +191,7 @@ export const STREAM_CLIENT_DEFAULTS:
         newWebrtcConnectionTimeout: 15 * 1000,
         webrtcDatachannelBufferThresholdLow: 2 ** 15,
         webrtcDatachannelBufferThresholdHigh: 2 ** 17,
+        webrtcSendBufferMaxMessageCount: 500,
         disconnectionWaitTime: 200,
         peerPingInterval: 30 * 1000,
         rttUpdateTimeout: 15 * 1000,

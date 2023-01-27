@@ -63,7 +63,7 @@ jobs:
 
       - name: Docker meta
         id: docker_meta_success
-        uses: docker/metadata-action@v4.1.1
+        uses: docker/metadata-action@v4.3.0
         if: ${{inputs.push_image}}
         with:
           images: ${{inputs.image_name}}
@@ -80,7 +80,7 @@ jobs:
 
       - name: Build
         if: ${{!inputs.push_image}}
-        uses: docker/build-push-action@v3.2.0
+        uses: docker/build-push-action@v3.3.0
         with:
           context: .
           file: ${{inputs.docker_file}}
@@ -105,7 +105,7 @@ jobs:
 
       - name: Build & Push
         if: ${{inputs.push_image}}
-        uses: docker/build-push-action@v3.2.0
+        uses: docker/build-push-action@v3.3.0
         with:
           context: .
           file: ${{inputs.docker_file}}

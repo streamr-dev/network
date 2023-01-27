@@ -30,7 +30,7 @@ export class AggregatedError extends Error {
     public errors: Set<Error>
     public ownMessage: string
     public ownStack?: string
-    
+
     constructor(errors: Error[] = [], errorMessage = '') {
         const message = joinMessages([
             errorMessage,
@@ -43,9 +43,6 @@ export class AggregatedError extends Error {
         this.message = message
         this.ownMessage = errorMessage
         this.errors = new Set(errors)
-        if (Error.captureStackTrace) {
-            Error.captureStackTrace(this, this.constructor)
-        }
         this.ownStack = this.stack
         this.stack = joinStackTraces([this, ...errors])
     }

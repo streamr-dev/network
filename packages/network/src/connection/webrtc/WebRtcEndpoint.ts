@@ -21,13 +21,6 @@ import { v4 as uuidv4 } from 'uuid'
 import { getAddressFromIceCandidate, isPrivateIPv4 } from '../../helpers/AddressTools'
 
 class WebRtcError extends Error {
-    constructor(msg: string) {
-        super(msg)
-        // exclude this constructor from stack trace
-        if (Error.captureStackTrace) {
-            Error.captureStackTrace(this, WebRtcError)
-        }
-    }
 }
 
 interface WebRtcEndpointMetrics extends MetricsDefinition {
@@ -60,6 +53,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     private stopped = false
     private readonly bufferThresholdLow: number
     private readonly bufferThresholdHigh: number
+    private readonly sendBufferMaxMessageCount: number
     private readonly disallowPrivateAddresses: boolean
     private readonly maxMessageSize: number
 
@@ -76,6 +70,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         pingInterval: number,
         webrtcDatachannelBufferThresholdLow: number,
         webrtcDatachannelBufferThresholdHigh: number,
+        webrtcSendBufferMaxMessageCount: number,
         webrtcDisallowPrivateAddresses: boolean,
         maxMessageSize = 1048576,
     ) {
@@ -92,6 +87,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         this.logger = new Logger(module)
         this.bufferThresholdLow = webrtcDatachannelBufferThresholdLow
         this.bufferThresholdHigh = webrtcDatachannelBufferThresholdHigh
+        this.sendBufferMaxMessageCount = webrtcSendBufferMaxMessageCount
         this.disallowPrivateAddresses = webrtcDisallowPrivateAddresses
         this.maxMessageSize = maxMessageSize
 
@@ -167,7 +163,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         routerId: string,
         deferredConnectionAttempt: DeferredConnectionAttempt | null
     ) {
-        const messageQueue = this.messageQueues[targetPeerId] = this.messageQueues[targetPeerId] || new MessageQueue()
+        const messageQueue = this.messageQueues[targetPeerId] = this.messageQueues[targetPeerId] || new MessageQueue(this.sendBufferMaxMessageCount)
         const connectionOptions: ConstructorOptions = {
             selfId: this.peerInfo.peerId,
             targetPeerId,
@@ -391,14 +387,14 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             this.rtcSignaller.sendRtcConnect(routerId, connection.getPeerId())
         }
 
-        const deferredAttempt = connection.getDeferredConnectionAttempt() 
-        
+        const deferredAttempt = connection.getDeferredConnectionAttempt()
+
         if (connection.getLastState() == 'connected') {
             return targetPeerId
         }
         if (deferredAttempt) {
             return deferredAttempt.getPromise()
-        } else { 
+        } else {
             throw new WebRtcError(`disconnected ${connection.getPeerId()}`)
         }
     }

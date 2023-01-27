@@ -81,10 +81,12 @@ export class Signal<ArgsType extends any[] = []> {
     protected listeners: (SignalListener<ArgsType> | SignalListenerWrap<ArgsType>)[] = []
     protected isEnded = false
     protected triggerCountValue = 0
+    protected triggerType: TRIGGER_TYPE
 
     constructor(
-        protected triggerType: TRIGGER_TYPE = TRIGGER_TYPE.PARALLEL
+        triggerType: TRIGGER_TYPE = TRIGGER_TYPE.PARALLEL
     ) {
+        this.triggerType = triggerType
         this.trigger = Function.prototype.bind.call(this.trigger, this)
         switch (triggerType) {
             case TRIGGER_TYPE.ONCE: {

@@ -4,8 +4,12 @@ import { uuid } from '../utils/uuid'
 import { EncryptionUtil } from './EncryptionUtil'
 
 export class GroupKeyError extends Error {
-    constructor(message: string, public groupKey?: GroupKey) {
+
+    public groupKey?: GroupKey
+
+    constructor(message: string, groupKey?: GroupKey) {
         super(message)
+        this.groupKey = groupKey
     }
 }
 

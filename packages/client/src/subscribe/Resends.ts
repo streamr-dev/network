@@ -73,21 +73,31 @@ function isResendRange<T extends ResendRangeOptions>(options: any): options is T
 
 @scoped(Lifecycle.ContainerScoped)
 export class Resends {
+    private readonly streamStorageRegistry: StreamStorageRegistry
+    private readonly storageNodeRegistry: StorageNodeRegistry
+    private readonly streamRegistryCached: StreamRegistryCached
+    private readonly httpUtil: HttpUtil
+    private readonly groupKeyManager: GroupKeyManager
     private readonly destroySignal: DestroySignal
     private readonly config: StrictStreamrClientConfig
     private readonly loggerFactory: LoggerFactory
     private readonly logger: Logger
 
     constructor(
-        @inject(StreamStorageRegistry) private streamStorageRegistry: StreamStorageRegistry,
-        @inject(delay(() => StorageNodeRegistry)) private storageNodeRegistry: StorageNodeRegistry,
-        @inject(delay(() => StreamRegistryCached)) private streamRegistryCached: StreamRegistryCached,
-        @inject(HttpUtil) private httpUtil: HttpUtil,
-        @inject(GroupKeyManager) private groupKeyManager: GroupKeyManager,
+        streamStorageRegistry: StreamStorageRegistry,
+        @inject(delay(() => StorageNodeRegistry)) storageNodeRegistry: StorageNodeRegistry,
+        @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
+        httpUtil: HttpUtil,
+        groupKeyManager: GroupKeyManager,
         destroySignal: DestroySignal,
         @inject(ConfigInjectionToken) config: StrictStreamrClientConfig,
-        @inject(LoggerFactory) loggerFactory: LoggerFactory
+        loggerFactory: LoggerFactory
     ) {
+        this.streamStorageRegistry = streamStorageRegistry
+        this.storageNodeRegistry = storageNodeRegistry
+        this.streamRegistryCached = streamRegistryCached
+        this.httpUtil = httpUtil
+        this.groupKeyManager = groupKeyManager
         this.destroySignal = destroySignal
         this.config = config
         this.loggerFactory = loggerFactory

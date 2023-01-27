@@ -7,11 +7,17 @@ import { IWsSimulator } from './IWsSimulator'
 import { NodeWebRtcConnection } from './NodeWebRtcConnection_simulator'
 
 export class SimulatedNode {
+
+    public wsServerEndpoint: ServerWsEndpoint | null
+    public wsClientEndpoint: NodeClientWsEndpoint | null
+
     constructor(
-        public wsServerEndpoint: ServerWsEndpoint | null,
-        public wsClientEndpoint: NodeClientWsEndpoint | null, 
+        wsServerEndpoint: ServerWsEndpoint | null,
+        wsClientEndpoint: NodeClientWsEndpoint | null, 
         //public webRtcEnpoint: SimulatedWebRtcEndpoint | null
     ) {
+        this.wsServerEndpoint = wsServerEndpoint
+        this.wsClientEndpoint = wsClientEndpoint
     }
 }
 

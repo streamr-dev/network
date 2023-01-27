@@ -67,20 +67,35 @@ const streamContractErrorProcessor = (err: any, streamId: StreamID, registry: st
 
 @scoped(Lifecycle.ContainerScoped)
 export class StreamRegistry {
+
+    private contractFactory: ContractFactory
+    private streamIdBuilder: StreamIDBuilder
+    private streamFactory: StreamFactory
+    private graphQLClient: SynchronizedGraphQLClient
+    private streamRegistryCached: StreamRegistryCached
+    private authentication: Authentication
+    private config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
     private readonly logger: Logger
     private streamRegistryContract?: ObservableContract<StreamRegistryContract>
     private streamRegistryContractsReadonly: ObservableContract<StreamRegistryContract>[]
 
     constructor(
-        private contractFactory: ContractFactory,
+        contractFactory: ContractFactory,
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
-        @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
-        private streamFactory: StreamFactory,
-        @inject(SynchronizedGraphQLClient) private graphQLClient: SynchronizedGraphQLClient,
-        @inject(delay(() => StreamRegistryCached)) private streamRegistryCached: StreamRegistryCached,
-        @inject(AuthenticationInjectionToken) private authentication: Authentication,
-        @inject(ConfigInjectionToken) private config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
+        @inject(StreamIDBuilder) streamIdBuilder: StreamIDBuilder,
+        streamFactory: StreamFactory,
+        @inject(SynchronizedGraphQLClient) graphQLClient: SynchronizedGraphQLClient,
+        @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
+        @inject(AuthenticationInjectionToken) authentication: Authentication,
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
     ) {
+        this.contractFactory = contractFactory
+        this.streamIdBuilder = streamIdBuilder
+        this.streamFactory = streamFactory
+        this.graphQLClient = graphQLClient
+        this.streamRegistryCached = streamRegistryCached
+        this.authentication = authentication
+        this.config = config
         this.logger = loggerFactory.createLogger(module)
         const chainProviders = getAllStreamRegistryChainProviders(config)
         this.streamRegistryContractsReadonly = chainProviders.map((provider: Provider) => {

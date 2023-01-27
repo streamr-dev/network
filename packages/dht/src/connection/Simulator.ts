@@ -13,8 +13,10 @@ export class Simulator {
     private connectionManagers: Map<PeerIDKey, SimulatorTransport> = new Map()
 
     private latencyTable?: Array<Array<number>>
+    private latencyType: LatencyType
 
-    constructor(private latencyType: LatencyType = LatencyType.NONE) {
+    constructor(latencyType: LatencyType = LatencyType.NONE) {
+        this.latencyType = latencyType
         if (this.latencyType == LatencyType.REAL) {
             this.latencyTable = getRegionDelayMatrix()
         }

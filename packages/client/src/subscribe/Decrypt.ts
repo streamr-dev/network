@@ -2,21 +2,27 @@ import { EncryptionType, StreamMessage } from '@streamr/protocol'
 import { EncryptionUtil, DecryptError } from '../encryption/EncryptionUtil'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { DestroySignal } from '../DestroySignal'
-import { inject } from 'tsyringe'
 import { GroupKey } from '../encryption/GroupKey'
 import { Logger } from '@streamr/utils'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'
 
 export class Decrypt {
+
+    private groupKeyManager: GroupKeyManager
+    private streamRegistryCached: StreamRegistryCached
+    private destroySignal: DestroySignal
     private readonly logger: Logger
 
     constructor(
-        private readonly groupKeyManager: GroupKeyManager,
-        private streamRegistryCached: StreamRegistryCached,
-        private destroySignal: DestroySignal,
-        @inject(LoggerFactory) loggerFactory: LoggerFactory,
+        groupKeyManager: GroupKeyManager,
+        streamRegistryCached: StreamRegistryCached,
+        destroySignal: DestroySignal,
+        loggerFactory: LoggerFactory,
     ) {
+        this.groupKeyManager = groupKeyManager
+        this.streamRegistryCached = streamRegistryCached
+        this.destroySignal = destroySignal
         this.logger = loggerFactory.createLogger(module)
         this.decrypt = this.decrypt.bind(this)
     }
