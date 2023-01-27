@@ -5,7 +5,7 @@ import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ethers } from 'ethers'
 import { StreamID } from '@streamr/protocol'
 import { StreamPermission, streamPermissionToSolidityType } from '../permission'
-import { StrictStreamrClientConfig } from '../Config'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { GroupKey } from './GroupKey'
 import { Logger, withRateLimit } from '@streamr/utils'
 import { LoggerFactory } from '../utils/LoggerFactory'
@@ -90,8 +90,8 @@ export class LitProtocolFacade {
     private connectLitNodeClient?: () => Promise<void>
 
     constructor(
-        config: Pick<StrictStreamrClientConfig, 'contracts' | 'encryption'>,
         loggerFactory: LoggerFactory,
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | 'encryption'>,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
     ) {
         this.authentication = authentication
