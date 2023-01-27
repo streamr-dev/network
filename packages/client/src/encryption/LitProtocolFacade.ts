@@ -1,11 +1,11 @@
 import * as LitJsSdk from '@lit-protocol/lit-node-client'
-import { inject, Lifecycle, scoped } from 'tsyringe'
+import { Lifecycle, scoped } from 'tsyringe'
 import * as siwe from 'lit-siwe'
-import { Authentication, AuthenticationInjectionToken } from '../Authentication'
+import { Authentication } from '../Authentication'
 import { ethers } from 'ethers'
 import { StreamID } from '@streamr/protocol'
 import { StreamPermission, streamPermissionToSolidityType } from '../permission'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import { StrictStreamrClientConfig } from '../Config'
 import { GroupKey } from './GroupKey'
 import { Logger, withRateLimit } from '@streamr/utils'
 import { LoggerFactory } from '../utils/LoggerFactory'
@@ -83,16 +83,20 @@ const signAuthMessage = async (authentication: Authentication) => {
  */
 @scoped(Lifecycle.ContainerScoped)
 export class LitProtocolFacade {
+    private readonly authentication: Authentication
+    private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | 'encryption'>
     private readonly logger: Logger
     private litNodeClient?: LitJsSdk.LitNodeClient
     private connectLitNodeClient?: () => Promise<void>
 
     constructor(
-        @inject(AuthenticationInjectionToken) private readonly authentication: Authentication,
-        @inject(ConfigInjectionToken) private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | 'encryption'>,
-        private readonly loggerFactory: LoggerFactory
+        authentication: Authentication,
+        config: Pick<StrictStreamrClientConfig, 'contracts' | 'encryption'>,
+        loggerFactory: LoggerFactory
     ) {
-        this.logger = this.loggerFactory.createLogger(module)
+        this.authentication = authentication
+        this.config = config
+        this.logger = loggerFactory.createLogger(module)
     }
 
     async getLitNodeClient(): Promise<LitJsSdk.LitNodeClient> {
