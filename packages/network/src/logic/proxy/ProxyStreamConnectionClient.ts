@@ -1,28 +1,26 @@
-import { TrackerManager } from './TrackerManager'
-import { StreamPartManager } from './StreamPartManager'
-import { NodeToNode } from '../protocol/NodeToNode'
-import { NodeId } from '../identifiers'
-import { Event, Node } from './Node'
+import { TrackerManager } from '../TrackerManager'
+import { StreamPartManager } from '../StreamPartManager'
+import { NodeToNode } from '../../protocol/NodeToNode'
+import { NodeId } from '../../identifiers'
+import { Event, Node } from '../Node'
 import {
-    ProxyConnectionRequest,
     ProxyConnectionResponse,
     ProxyDirection,
     StreamPartID,
     UnsubscribeRequest
 } from '@streamr/protocol'
 import { Logger, withTimeout } from "@streamr/utils"
-import { Propagation } from './propagation/Propagation'
+import { Propagation } from '../propagation/Propagation'
 
 const logger = new Logger(module)
 
-export interface ProxyStreamConnectionManagerOptions {
+export interface ProxyStreamConnectionClientOptions {
     trackerManager: TrackerManager
     streamPartManager: StreamPartManager
     nodeToNode: NodeToNode
     propagation: Propagation
     node: Node
     nodeConnectTimeout: number
-    acceptProxyConnections: boolean
 }
 
 enum State {
@@ -38,34 +36,38 @@ interface ProxyConnection {
     userId: string
 }
 
+interface ProxyTargets {
+    candidates: NodeId[]
+    numOfTargets: number
+    connections: Map<NodeId, ProxyConnection>
+}
+
 const DEFAULT_RECONNECTION_TIMEOUT = 10 * 1000
 
-export class ProxyStreamConnectionManager {
+export class ProxyStreamConnectionClient {
     private readonly trackerManager: TrackerManager
     private readonly streamPartManager: StreamPartManager
     private readonly nodeToNode: NodeToNode
     private readonly node: Node
     private readonly nodeConnectTimeout: number
-    private readonly acceptProxyConnections: boolean
-    private readonly connections: Map<StreamPartID, Map<NodeId, ProxyConnection>>
     private readonly propagation: Propagation
+    private readonly proxyTargets: Map<StreamPartID, ProxyTargets>
 
-    constructor(opts: ProxyStreamConnectionManagerOptions) {
+    constructor(opts: ProxyStreamConnectionClientOptions) {
         this.trackerManager = opts.trackerManager
         this.streamPartManager = opts.streamPartManager
         this.nodeToNode = opts.nodeToNode
         this.node = opts.node
         this.nodeConnectTimeout = opts.nodeConnectTimeout
-        this.acceptProxyConnections = opts.acceptProxyConnections
         this.propagation = opts.propagation
-        this.connections = new Map()
+        this.proxyTargets = new Map()
     }
 
     private addConnection(streamPartId: StreamPartID, nodeId: NodeId, direction: ProxyDirection, userId: string): void {
-        if (!this.connections.has(streamPartId)) {
-            this.connections.set(streamPartId, new Map())
+        if (!this.proxyTargets.has(streamPartId)) {
+            this.proxyTargets.set(streamPartId, new Map())
         }
-        this.connections.get(streamPartId)!.set(nodeId, {
+        this.proxyTargets.get(streamPartId)!.set(nodeId, {
             state: State.NEGOTIATING,
             direction,
             userId
@@ -73,43 +75,48 @@ export class ProxyStreamConnectionManager {
     }
 
     private removeConnection(streamPartId: StreamPartID, nodeId: NodeId): void {
-        if (this.connections.has(streamPartId)) {
-            this.connections.get(streamPartId)!.delete(nodeId)
-            if (this.connections.get(streamPartId)!.size === 0) {
-                this.connections.delete(streamPartId)
+        if (this.proxyTargets.has(streamPartId)) {
+            this.proxyTargets.get(streamPartId)!.delete(nodeId)
+            if (this.proxyTargets.get(streamPartId)!.size === 0) {
+                this.proxyTargets.delete(streamPartId)
             }
         }
 
         this.streamPartManager.removeNodeFromStreamPart(streamPartId, nodeId)
         // Finally if the stream has no neighbors or in/out connections, remove the stream
         if (this.streamPartManager.getAllNodesForStreamPart(streamPartId).length === 0
-            && !this.connections.has(streamPartId)
+            && !this.proxyTargets.has(streamPartId)
             && this.streamPartManager.isBehindProxy(streamPartId)
         ) {
             this.streamPartManager.removeStreamPart(streamPartId)
         }
     }
 
+    public addProxyTargets(streamPartId: StreamPartID, nodeIds: NodeId[], numOfTargets?: number): void {
+        if (!this.proxyTargets.has(streamPartId)) {
+            this.proxyTargets.set(streamPartId, {
+                connections: new Map(),
+                numOfTargets: numOfTargets ? numOfTargets : nodeIds.length,
+                candidates: nodeIds
+            })
+        }
+    }
+
+    setTargetConnectionCount(streamPartId: StreamPartID, count: number): void {
+        if (this.proxyTargets.has(streamPartId)) {
+            this.proxyTargets.get(streamPartId)!.numOfTargets = count
+        }
+    }
+
     private hasConnection(nodeId: NodeId, streamPartId: StreamPartID): boolean {
-        if (!this.connections.has(streamPartId)) {
+        if (!this.proxyTargets.has(streamPartId)) {
             return false
         }
-        return this.connections.get(streamPartId)!.has(nodeId)
+        return this.proxyTargets.get(streamPartId)!.connections.has(nodeId)
     }
 
     private getConnection(nodeId: NodeId, streamPartId: StreamPartID): ProxyConnection | undefined {
-        return this.connections.get(streamPartId)!.get(nodeId)!
-    }
-
-    public getNodeIdsForUserId(streamPartId: StreamPartID, userId: string): NodeId[] {
-        const connections = this.connections.get(streamPartId)!
-        const returnedNodeIds: NodeId[] = []
-        connections.forEach((connection, nodeId) => {
-            if (connection.userId === userId) {
-                returnedNodeIds.push(nodeId)
-            }
-        })
-        return returnedNodeIds
+        return this.proxyTargets.get(streamPartId)?.connections.get(nodeId)!
     }
 
     async openProxyConnection(streamPartId: StreamPartID, targetNodeId: string, direction: ProxyDirection, userId: string): Promise<void> {
@@ -177,26 +184,8 @@ export class ProxyStreamConnectionManager {
         if (this.streamPartManager.isSetUp(streamPartId) && this.streamPartManager.hasOutOnlyConnection(streamPartId, nodeId)) {
             this.removeConnection(streamPartId, nodeId)
             this.node.emit(Event.ONE_WAY_CONNECTION_CLOSED, nodeId, streamPartId)
-            logger.info(`Proxy node ${nodeId} closed one-way stream connection for ${streamPartId}`)
         }
-    }
-
-    async processProxyConnectionRequest(message: ProxyConnectionRequest, nodeId: NodeId): Promise<void> {
-        const streamPartId = message.getStreamPartID()
-        // More conditions could be added here, ie. a list of acceptable ids or max limit for number of one-way this
-        const isAccepted = this.streamPartManager.isSetUp(streamPartId) && this.acceptProxyConnections
-        if (isAccepted) {
-            if (message.direction === ProxyDirection.PUBLISH) {
-                // The receiver of the PUBLISH request will only receive data from the connection
-                this.streamPartManager.addInOnlyNeighbor(streamPartId, nodeId)
-                this.addConnection(streamPartId, nodeId, ProxyDirection.PUBLISH, message.userId)
-            } else {
-                this.streamPartManager.addOutOnlyNeighbor(streamPartId, nodeId)
-                this.addConnection(streamPartId, nodeId, ProxyDirection.SUBSCRIBE, message.userId)
-                this.propagation.onNeighborJoined(nodeId, streamPartId) // TODO: maybe should not be marked as full propagation in Propagation.ts?
-            }
-        }
-        await this.nodeToNode.respondToProxyConnectionRequest(nodeId, streamPartId, message.direction, isAccepted)
+        logger.info(`Proxy node ${nodeId} closed one-way stream connection for ${streamPartId}`)
     }
 
     processProxyConnectionResponse(message: ProxyConnectionResponse, nodeId: NodeId): void {
@@ -251,8 +240,8 @@ export class ProxyStreamConnectionManager {
     }
 
     isProxiedStreamPart(streamPartId: StreamPartID, direction: ProxyDirection): boolean {
-        if (this.connections.get(streamPartId) && [...this.connections.get(streamPartId)!.values()].length > 0) {
-            return [...this.connections.get(streamPartId)!.values()][0].direction === direction
+        if (this.connections.get(streamPartId) && [...this.proxyTargets.get(streamPartId)!.values()].length > 0) {
+            return [...this.proxyTargets.get(streamPartId)!.values()][0].direction === direction
         }
         return false
     }

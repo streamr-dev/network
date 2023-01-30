@@ -19,7 +19,8 @@ import { DEFAULT_MAX_NEIGHBOR_COUNT } from '../constants'
 import { TrackerManager, TrackerManagerOptions } from './TrackerManager'
 import { Propagation } from './propagation/Propagation'
 import { DisconnectionManager } from './DisconnectionManager'
-import { ProxyStreamConnectionManager } from './ProxyStreamConnectionManager'
+import { ProxyStreamConnectionClient } from './proxy/ProxyStreamConnectionClient'
+import { ProxyStreamConnectionServer } from './proxy/ProxyStreamConnectionServer'
 
 const logger = new Logger(module)
 
@@ -88,7 +89,8 @@ export class Node extends EventEmitter {
     private readonly metrics: Metrics
     protected extraMetadata: Record<string, unknown> = {}
     private readonly acceptProxyConnections: boolean
-    private readonly proxyStreamConnectionManager: ProxyStreamConnectionManager
+    private readonly proxyStreamConnectionClient: ProxyStreamConnectionClient
+    private readonly proxyStreamConnectionServer: ProxyStreamConnectionServer
 
     constructor(opts: NodeOptions) {
         super()
@@ -173,28 +175,39 @@ export class Node extends EventEmitter {
                 emitJoinFailed: this.emitJoinFailed.bind(this)
             }
         )
-        this.proxyStreamConnectionManager = new ProxyStreamConnectionManager({
+        this.proxyStreamConnectionClient = new ProxyStreamConnectionClient({
             trackerManager: this.trackerManager,
             streamPartManager: this.streamPartManager,
             propagation: this.propagation,
             node: this,
             nodeToNode: this.nodeToNode,
-            acceptProxyConnections: this.acceptProxyConnections,
             nodeConnectTimeout: this.nodeConnectTimeout
+        })
+
+        this.proxyStreamConnectionServer = new ProxyStreamConnectionServer({
+            streamPartManager: this.streamPartManager,
+            propagation: this.propagation,
+            node: this,
+            nodeToNode: this.nodeToNode,
+            acceptProxyConnections: this.acceptProxyConnections,
         })
 
         this.nodeToNode.on(NodeToNodeEvent.NODE_CONNECTED, (nodeId) => this.emit(Event.NODE_CONNECTED, nodeId))
         this.nodeToNode.on(NodeToNodeEvent.DATA_RECEIVED, (broadcastMessage, nodeId) => this.onDataReceived(broadcastMessage.streamMessage, nodeId))
         this.nodeToNode.on(NodeToNodeEvent.NODE_DISCONNECTED, (nodeId) => this.onNodeDisconnected(nodeId))
         this.nodeToNode.on(NodeToNodeEvent.PROXY_CONNECTION_REQUEST_RECEIVED, (message,  nodeId) => {
-            this.proxyStreamConnectionManager.processProxyConnectionRequest(message, nodeId)
+            this.proxyStreamConnectionServer.processProxyConnectionRequest(message, nodeId)
         })
         this.nodeToNode.on(NodeToNodeEvent.PROXY_CONNECTION_RESPONSE_RECEIVED, (message, nodeId) => {
-            this.proxyStreamConnectionManager.processProxyConnectionResponse(message, nodeId)
+            this.proxyStreamConnectionClient.processProxyConnectionResponse(message, nodeId)
         })
 
         this.nodeToNode.on(NodeToNodeEvent.LEAVE_REQUEST_RECEIVED, (message, nodeId) => {
-            this.proxyStreamConnectionManager.processLeaveRequest(message, nodeId)
+            this.proxyStreamConnectionClient.processLeaveRequest(message, nodeId)
+        })
+
+        this.nodeToNode.on(NodeToNodeEvent.LEAVE_REQUEST_RECEIVED, (message, nodeId) => {
+            this.proxyStreamConnectionServer.processLeaveRequest(message, nodeId)
         })
     }
 
@@ -261,7 +274,7 @@ export class Node extends EventEmitter {
                 this.on(Event.PROXY_CONNECTION_ACCEPTED, resolveHandler)
                 this.on(Event.PROXY_CONNECTION_REJECTED, rejectHandler)
             }),
-            this.proxyStreamConnectionManager.openProxyConnection(streamPartId, contactNodeId, direction, userId)
+            this.proxyStreamConnectionClient.openProxyConnection(streamPartId, contactNodeId, direction, userId)
         ]).finally(() => {
             this.off(Event.PROXY_CONNECTION_ACCEPTED, resolveHandler)
             this.off(Event.PROXY_CONNECTION_REJECTED, rejectHandler)
@@ -269,7 +282,7 @@ export class Node extends EventEmitter {
     }
 
     async removeProxyConnection(streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection): Promise<void> {
-        await this.proxyStreamConnectionManager.closeProxyConnection(streamPartId, contactNodeId, direction)
+        await this.proxyStreamConnectionClient.closeProxyConnection(streamPartId, contactNodeId, direction)
     }
 
     // Null source is used when a message is published by the node itself
@@ -324,7 +337,8 @@ export class Node extends EventEmitter {
     }
 
     stop(): Promise<unknown> {
-        this.proxyStreamConnectionManager.stop()
+        this.proxyStreamConnectionClient.stop()
+        this.proxyStreamConnectionServer.stop()
         this.disconnectionManager.stop()
         this.nodeToNode.stop()
         return this.trackerManager.stop()
@@ -338,11 +352,11 @@ export class Node extends EventEmitter {
         if (this.acceptProxyConnections) {
             if (GroupKeyRequest.is(streamMessage) || GroupKeyResponse.is(streamMessage)) {
                 const { recipient } = GroupKeyRequest.fromStreamMessage(streamMessage) as GroupKeyRequest | GroupKeyResponse
-                propagationTargets = propagationTargets.concat(this.proxyStreamConnectionManager.getNodeIdsForUserId(streamPartId, recipient))
+                propagationTargets = propagationTargets.concat(this.proxyStreamConnectionServer.getNodeIdsForUserId(streamPartId, recipient))
             }
         } else if (
             this.streamPartManager.isBehindProxy(streamMessage.getStreamPartID())
-            && this.proxyStreamConnectionManager.isProxiedStreamPart(streamMessage.getStreamPartID(), ProxyDirection.SUBSCRIBE)
+            && this.proxyStreamConnectionClient.isProxiedStreamPart(streamMessage.getStreamPartID(), ProxyDirection.SUBSCRIBE)
         ) {
             propagationTargets = propagationTargets.concat([...this.streamPartManager.getInboundNodesForStreamPart(streamPartId)])
         }
@@ -376,7 +390,7 @@ export class Node extends EventEmitter {
             this.trackerManager.sendStreamPartStatus(s)
         })
         proxiedStreams.forEach((s) => {
-            this.proxyStreamConnectionManager.reconnect(node, s)
+            this.proxyStreamConnectionClient.reconnect(node, s)
         })
         this.emit(Event.NODE_DISCONNECTED, node)
     }
@@ -435,6 +449,6 @@ export class Node extends EventEmitter {
     }
 
     isProxiedStreamPart(streamPartId: StreamPartID, direction: ProxyDirection): boolean {
-        return this.streamPartManager.isBehindProxy(streamPartId) && this.proxyStreamConnectionManager.isProxiedStreamPart(streamPartId, direction)
+        return this.streamPartManager.isBehindProxy(streamPartId) && this.proxyStreamConnectionClient.isProxiedStreamPart(streamPartId, direction)
     }
 }
