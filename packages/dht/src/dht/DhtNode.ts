@@ -1139,22 +1139,29 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         }
     }
 
+    public garbageCollectConnections(): void {
+        if (this.connectionManager) {
+            const LAST_USED_LIMIT = 100
+            this.connectionManager.garbageCollectConnections(this.config.maxConnections, LAST_USED_LIMIT)
+        }
+    }
+
     public async waitReadyForTesting(): Promise<void> {
         if (this.connectionManager) {
             const LAST_USED_LIMIT = 100
 
             this.connectionManager.garbageCollectConnections(this.config.maxConnections, LAST_USED_LIMIT)
             await waitForCondition(() => {
-                
+                /*
                 logger.info(this.getNodeName() + ': connections:' +
-                this.getNumberOfConnections() + ', kbucket: ' + this.getBucketSize()
-                + ', localLocked: ' + this.getNumberOfLocalLockedConnections()
-                + ', remoteLocked: ' + this.getNumberOfRemoteLockedConnections()
-                + ', weakLocked: ' + this.getNumberOfWeakLockedConnections())
-                
+                    this.getNumberOfConnections() + ', kbucket: ' + this.getBucketSize()
+                    + ', localLocked: ' + this.getNumberOfLocalLockedConnections()
+                    + ', remoteLocked: ' + this.getNumberOfRemoteLockedConnections()
+                    + ', weakLocked: ' + this.getNumberOfWeakLockedConnections())
+                */
                 return (this.getNumberOfLocalLockedConnections() == 0 &&
-                this.getNumberOfRemoteLockedConnections() == 0 &&
-                this.getNumberOfConnections() <= this.config.maxConnections)
+                    this.getNumberOfRemoteLockedConnections() == 0 &&
+                    this.getNumberOfConnections() <= this.config.maxConnections)
             })
         }
     }
@@ -1163,10 +1170,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
     // The first key is the key of the data, the second key is the 
     // PeerID of the storer of the data
 
-    private dataStore: Map<PeerIDKey, Map<PeerIDKey, Any> > = new Map()
-    
+    private dataStore: Map<PeerIDKey, Map<PeerIDKey, Any>> = new Map()
+
     public async storeData(publisher: PeerID, dataKey: PeerID, data: Any): Promise<void> {
-        
+
         if (!this.dataStore.has(dataKey.toKey())) {
             this.dataStore.set(dataKey.toKey(), new Map())
         }

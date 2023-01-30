@@ -17,8 +17,9 @@ describe('Storing data in DHT', () => {
     let nodes: DhtNode[]
     let entrypointDescriptor: PeerDescriptor
     const simulator = new Simulator(LatencyType.NONE)
-    const NUM_NODES = 1000
-    const MAX_CONNECTIONS = 80
+    const NUM_NODES = 100
+    const MAX_CONNECTIONS = 20
+    const K = 2
 
     const nodeIndicesById: Record<string, number> = {}
 
@@ -33,7 +34,7 @@ describe('Storing data in DHT', () => {
         nodes = []
         const entryPointId = '0'
         entryPoint = await createMockConnectionDhtNode(entryPointId, simulator,
-            Uint8Array.from(dhtIds[0].data), undefined, entryPointId, MAX_CONNECTIONS)
+            Uint8Array.from(dhtIds[0].data), K, entryPointId, MAX_CONNECTIONS)
         nodes.push(entryPoint)
         nodeIndicesById[entryPoint.getNodeId().toKey()] = 0
         entrypointDescriptor = {
@@ -45,7 +46,8 @@ describe('Storing data in DHT', () => {
         for (let i = 1; i < NUM_NODES; i++) {
             const nodeId = `${i}`
 
-            const node = await createMockConnectionDhtNode(nodeId, simulator, Uint8Array.from(dhtIds[i].data), undefined, nodeId, MAX_CONNECTIONS)
+            const node = await createMockConnectionDhtNode(nodeId, simulator, 
+                Uint8Array.from(dhtIds[i].data), K, nodeId, MAX_CONNECTIONS)
             nodeIndicesById[node.getNodeId().toKey()] = i
             nodes.push(node)
         }
@@ -58,7 +60,7 @@ describe('Storing data in DHT', () => {
         ])
     })
 
-    it('Entrypoint can find a node from the network (exact match)', async () => {
+    it('Data structures work locally', async () => {
         logger.info(NUM_NODES + ' nodes joining layer0 DHT')
         await entryPoint.joinDht(entrypointDescriptor)
 
@@ -68,8 +70,16 @@ describe('Storing data in DHT', () => {
 
         logger.info('completed ' + NUM_NODES + ' nodes joining layer0 DHT')
 
-        logger.info('doing waitReadyForTesting() for entrypoint')
         debugVars['waiting'] = true
+
+        logger.info('doing waitReadyForTesting() for nodes')
+
+        nodes.forEach((node) => node.garbageCollectConnections())
+        entryPoint.garbageCollectConnections()
+
+        await Promise.all(nodes.map((node) => node.waitReadyForTesting()))
+
+        logger.info('doing waitReadyForTesting() for entrypoint')
 
         await entryPoint.waitReadyForTesting()
 
