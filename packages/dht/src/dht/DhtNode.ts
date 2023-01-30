@@ -29,7 +29,7 @@ import * as Err from '../helpers/errors'
 import { ITransport, TransportEvents } from '../transport/ITransport'
 import { ConnectionManager, ConnectionManagerConfig } from '../connection/ConnectionManager'
 import { DhtRpcServiceClient } from '../proto/packages/dht/protos/DhtRpc.client'
-import { Logger, MetricsContext } from '@streamr/utils'
+import { Logger, MetricsContext, waitForCondition } from '@streamr/utils'
 import { v4 } from 'uuid'
 import { IDhtRpcService } from '../proto/packages/dht/protos/DhtRpc.server'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
@@ -42,6 +42,7 @@ import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { RemoteRecursiveFindSession } from './RemoteRecursiveFindSession'
 import { RecursiveFindSession, RecursiveFindSessionEvents } from './RecursiveFindSession'
 import { SetDuplicateDetector } from './SetDuplicateDetector'
+import { Any } from '../proto/google/protobuf/any'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -75,6 +76,7 @@ export class DhtNodeConfig {
     routeMessageTimeout = 2000
     dhtJoinTimeout = 60000
     getClosestContactsLimit = 5
+    maxConnections = 80
     metricsContext = new MetricsContext()
 
     constructor(conf: Partial<DhtNodeConfig>) {
@@ -152,7 +154,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         if (this.started || this.stopped) {
             return
         }
-        logger.info(`Starting new Streamr Network DHT Node with serviceId ${this.config.serviceId}`)
+        logger.trace(`Starting new Streamr Network DHT Node with serviceId ${this.config.serviceId}`)
         this.started = true
 
         // If transportLayer is given, do not create a ConnectionManager
@@ -169,7 +171,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
                 entryPoints: this.config.entryPoints,
                 stunUrls: this.config.stunUrls,
                 metricsContext: this.config.metricsContext,
-                nodeName: this.getNodeName()
+                nodeName: this.getNodeName(),
+                maxConnections: this.config.maxConnections
             }
             // If own PeerDescriptor is given in config, create a ConnectionManager with ws server
             if (this.config.peerDescriptor && this.config.peerDescriptor.websocket) {
@@ -486,7 +489,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
         this.ongoingJoinOperation = true
 
-        logger.info(
+        logger.trace(
             `Joining ${this.config.serviceId === 'layer0' ? 'The Streamr Network' : `Control Layer for ${this.config.serviceId}`}`
             + ` via entrypoint ${PeerID.fromValue(entryPointDescriptor.kademliaId).toKey()}`
         )
@@ -1133,6 +1136,49 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             }
         } else {
             return this.doRouteMessage(routedMessage, true)
+        }
+    }
+
+    public async waitReadyForTesting(): Promise<void> {
+        if (this.connectionManager) {
+            const LAST_USED_LIMIT = 100
+
+            this.connectionManager.garbageCollectConnections(this.config.maxConnections, LAST_USED_LIMIT)
+            await waitForCondition(() => {
+                
+                logger.info(this.getNodeName() + ': connections:' +
+                this.getNumberOfConnections() + ', kbucket: ' + this.getBucketSize()
+                + ', localLocked: ' + this.getNumberOfLocalLockedConnections()
+                + ', remoteLocked: ' + this.getNumberOfRemoteLockedConnections()
+                + ', weakLocked: ' + this.getNumberOfWeakLockedConnections())
+                
+                return (this.getNumberOfLocalLockedConnections() == 0 &&
+                this.getNumberOfRemoteLockedConnections() == 0 &&
+                this.getNumberOfConnections() <= this.config.maxConnections)
+            })
+        }
+    }
+
+    // A map into which each node can store one value per data key
+    // The first key is the key of the data, the second key is the 
+    // PeerID of the storer of the data
+
+    private dataStore: Map<PeerIDKey, Map<PeerIDKey, Any> > = new Map()
+    
+    public async storeData(publisher: PeerID, dataKey: PeerID, data: Any): Promise<void> {
+        
+        if (!this.dataStore.has(dataKey.toKey())) {
+            this.dataStore.set(dataKey.toKey(), new Map())
+        }
+
+        this.dataStore.get(dataKey.toKey())!.set(publisher.toKey(), data)
+    }
+
+    public async getData(key: PeerID): Promise<Map<PeerIDKey, Any>> {
+        if (this.dataStore.has(key.toKey())) {
+            return this.dataStore.get(key.toKey())!
+        } else {
+            throw new Err.GettingDataFailed('Data not found')
         }
     }
 }
