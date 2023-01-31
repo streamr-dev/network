@@ -5,8 +5,61 @@ import { Empty } from "../../../google/protobuf/empty";
 import { ServiceType } from "@protobuf-ts/runtime-rpc";
 import { MessageType as MessageType$ } from "@protobuf-ts/runtime";
 import { RpcMessage } from "../../proto-rpc/protos/ProtoRpc";
+import { Any } from "../../../google/protobuf/any";
 // Used inside RpcMessage
 
+/**
+ * @generated from protobuf message dht.StoreDataRequest
+ */
+export interface StoreDataRequest {
+    /**
+     * @generated from protobuf field: bytes kademliaId = 1;
+     */
+    kademliaId: Uint8Array;
+    /**
+     * @generated from protobuf field: google.protobuf.Any data = 2;
+     */
+    data?: Any;
+}
+/**
+ * @generated from protobuf message dht.StoreDataResponse
+ */
+export interface StoreDataResponse {
+    /**
+     * @generated from protobuf field: string error = 1;
+     */
+    error: string;
+}
+/**
+ * @generated from protobuf message dht.DataEntry
+ */
+export interface DataEntry {
+    /**
+     * @generated from protobuf field: dht.PeerDescriptor storer = 1;
+     */
+    storer?: PeerDescriptor;
+    /**
+     * @generated from protobuf field: google.protobuf.Any data = 2;
+     */
+    data?: Any;
+}
+/**
+ * @generated from protobuf message dht.FindDataResult
+ */
+export interface FindDataResult {
+    /**
+     * @generated from protobuf field: bytes dataKey = 1;
+     */
+    dataKey: Uint8Array;
+    /**
+     * @generated from protobuf field: repeated dht.DataEntry entries = 2;
+     */
+    entries: DataEntry[];
+    /**
+     * @generated from protobuf field: optional bool noCloserNodesFound = 3;
+     */
+    noCloserNodesFound?: boolean;
+}
 /**
  * @generated from protobuf message dht.ClosestPeersRequest
  */
@@ -650,6 +703,58 @@ export enum MessageType {
     RECURSIVE_FIND_REQUEST = 5
 }
 // @generated message type with reflection information, may provide speed optimized methods
+class StoreDataRequest$Type extends MessageType$<StoreDataRequest> {
+    constructor() {
+        super("dht.StoreDataRequest", [
+            { no: 1, name: "kademliaId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 2, name: "data", kind: "message", T: () => Any }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message dht.StoreDataRequest
+ */
+export const StoreDataRequest = new StoreDataRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class StoreDataResponse$Type extends MessageType$<StoreDataResponse> {
+    constructor() {
+        super("dht.StoreDataResponse", [
+            { no: 1, name: "error", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message dht.StoreDataResponse
+ */
+export const StoreDataResponse = new StoreDataResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class DataEntry$Type extends MessageType$<DataEntry> {
+    constructor() {
+        super("dht.DataEntry", [
+            { no: 1, name: "storer", kind: "message", T: () => PeerDescriptor },
+            { no: 2, name: "data", kind: "message", T: () => Any }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message dht.DataEntry
+ */
+export const DataEntry = new DataEntry$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class FindDataResult$Type extends MessageType$<FindDataResult> {
+    constructor() {
+        super("dht.FindDataResult", [
+            { no: 1, name: "dataKey", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 2, name: "entries", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => DataEntry },
+            { no: 3, name: "noCloserNodesFound", kind: "scalar", opt: true, T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message dht.FindDataResult
+ */
+export const FindDataResult = new FindDataResult$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class ClosestPeersRequest$Type extends MessageType$<ClosestPeersRequest> {
     constructor() {
         super("dht.ClosestPeersRequest", [
@@ -1062,13 +1167,21 @@ export const DhtRpcService = new ServiceType("dht.DhtRpcService", [
     { name: "routeMessage", options: {}, I: RouteMessageWrapper, O: RouteMessageAck },
     { name: "findRecursively", options: {}, I: RouteMessageWrapper, O: RouteMessageAck },
     { name: "forwardMessage", options: {}, I: RouteMessageWrapper, O: RouteMessageAck },
-    { name: "leaveNotice", options: {}, I: LeaveNotice, O: Empty }
+    { name: "findData", options: {}, I: RouteMessageWrapper, O: RouteMessageAck },
+    { name: "leaveNotice", options: {}, I: LeaveNotice, O: Empty },
+    { name: "storeData", options: {}, I: StoreDataRequest, O: StoreDataResponse }
 ]);
 /**
  * @generated ServiceType for protobuf service dht.RecursiveFindSessionService
  */
 export const RecursiveFindSessionService = new ServiceType("dht.RecursiveFindSessionService", [
     { name: "reportRecursiveFindResult", options: {}, I: RecursiveFindReport, O: Empty }
+]);
+/**
+ * @generated ServiceType for protobuf service dht.FindDataSessionService
+ */
+export const FindDataSessionService = new ServiceType("dht.FindDataSessionService", [
+    { name: "reportFindDataResult", options: {}, I: FindDataResult, O: Empty }
 ]);
 /**
  * @generated ServiceType for protobuf service dht.WebSocketConnectorService

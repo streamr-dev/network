@@ -3,6 +3,8 @@ import {
     ClosestPeersRequest, ClosestPeersResponse, LeaveNotice,
     NodeType,
     PeerDescriptor, PingRequest, PingResponse, RouteMessageAck, RouteMessageWrapper,
+    StoreDataRequest,
+    StoreDataResponse,
     WebSocketConnectionRequest, WebSocketConnectionResponse
 } from '../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../src/proto/packages/proto-rpc/protos/ProtoRpc'
@@ -133,6 +135,18 @@ export const MockDhtRpc: IDhtRpcWithError = {
             error: ''
         }
         return response
+    },
+    async findData(routed: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
+        const response: RouteMessageAck = {
+            requestId: routed.requestId,
+            destinationPeer: routed.sourcePeer,
+            sourcePeer: routed.destinationPeer,
+            error: ''
+        }
+        return response
+    },
+    async storeData(_request: StoreDataRequest, _context: ServerCallContext): Promise<StoreDataResponse> {
+        return StoreDataResponse.create()
     },
     async forwardMessage(routed: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
         const response: RouteMessageAck = {

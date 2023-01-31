@@ -23,7 +23,9 @@ import {
     LeaveNotice,
     RecursiveFindRequest,
     FindMode,
-    MessageType
+    MessageType,
+    StoreDataResponse,
+    StoreDataRequest
 } from '../proto/packages/dht/protos/DhtRpc'
 import * as Err from '../helpers/errors'
 import { ITransport, TransportEvents } from '../transport/ITransport'
@@ -695,6 +697,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         this.findRecursively = this.findRecursively.bind(this)
         this.forwardMessage = this.forwardMessage.bind(this)
         this.leaveNotice = this.leaveNotice.bind(this)
+        this.storeData = this.storeData.bind(this)
+        this.findData = this.findData.bind(this)
 
         this.rpcCommunicator!.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', this.getClosestPeers)
         this.rpcCommunicator!.registerRpcMethod(PingRequest, PingResponse, 'ping', this.ping)
@@ -1172,13 +1176,21 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
     private dataStore: Map<PeerIDKey, Map<PeerIDKey, Any>> = new Map()
 
-    public async storeData(publisher: PeerID, dataKey: PeerID, data: Any): Promise<void> {
+    public async storeData(_request: StoreDataRequest, _context: ServerCallContext): Promise<StoreDataResponse> {
+        return StoreDataResponse.create()
+    }
+
+    public async doStoreData(publisher: PeerID, dataKey: PeerID, data: Any): Promise<void> {
 
         if (!this.dataStore.has(dataKey.toKey())) {
             this.dataStore.set(dataKey.toKey(), new Map())
         }
 
         this.dataStore.get(dataKey.toKey())!.set(publisher.toKey(), data)
+    }
+
+    public async findData(_routedMessage: RouteMessageWrapper): Promise<RouteMessageAck> {
+        return RouteMessageAck.create()
     }
 
     public async getData(key: PeerID): Promise<Map<PeerIDKey, Any>> {

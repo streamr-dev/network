@@ -4,6 +4,7 @@ option optimize_for = CODE_SIZE;
 package dht;
 
 import "google/protobuf/empty.proto";
+import "google/protobuf/any.proto";
 import "packages/proto-rpc/protos/ProtoRpc.proto";
 
 service DhtRpcService {
@@ -12,12 +13,20 @@ service DhtRpcService {
   rpc routeMessage (RouteMessageWrapper) returns (RouteMessageAck);
   rpc findRecursively (RouteMessageWrapper) returns (RouteMessageAck);
   rpc forwardMessage (RouteMessageWrapper) returns (RouteMessageAck);
+  rpc findData (RouteMessageWrapper) returns (RouteMessageAck);
   rpc leaveNotice (LeaveNotice) returns (google.protobuf.Empty);
+  rpc storeData (StoreDataRequest) returns (StoreDataResponse);
+
 }
 
 service RecursiveFindSessionService {
   rpc reportRecursiveFindResult(RecursiveFindReport) returns (google.protobuf.Empty);
 }
+
+service FindDataSessionService {
+  rpc reportFindDataResult(FindDataResult) returns (google.protobuf.Empty);
+}
+
 
 service WebSocketConnectorService {
   rpc requestConnection (WebSocketConnectionRequest) returns (WebSocketConnectionResponse);
@@ -37,6 +46,26 @@ service ConnectionLocker {
 }
 
 // Used inside RpcMessage
+
+message StoreDataRequest {
+  bytes kademliaId = 1;
+  google.protobuf.Any data = 2;
+}
+
+message StoreDataResponse {
+  string error = 1;
+}
+
+message DataEntry {
+  PeerDescriptor storer = 1;
+  google.protobuf.Any data = 2;
+}
+
+message FindDataResult {
+  bytes dataKey = 1;
+  repeated DataEntry entries = 2;
+  optional bool noCloserNodesFound = 3;
+}
 
 message ClosestPeersRequest {
   bytes kademliaId = 1;
