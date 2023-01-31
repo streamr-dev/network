@@ -18,17 +18,22 @@ export class ProxyPublishSubscribe {
         this.streamIdBuilder = streamIdBuilder
     }
 
-    async openProxyConnections(streamDefinition: StreamDefinition, nodeIds: string[], direction: ProxyDirection): Promise<void> {
+    async addProxyConnectionCandidates(
+        streamDefinition: StreamDefinition,
+        nodeIds: string[],
+        direction: ProxyDirection,
+        targetNumberOfProxies?: number
+    ): Promise<void> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        await Promise.allSettled(
-            nodeIds.map((nodeId) => this.node.openProxyConnection(streamPartId, nodeId, direction))
-        )
+        await this.node.addProxyConnectionCandidates(streamPartId, nodeIds, direction, targetNumberOfProxies)
     }
 
-    async closeProxyConnections(streamDefinition: StreamDefinition, nodeIds: string[], direction: ProxyDirection): Promise<void> {
+    async removeProxyConnectionCandidates(
+        streamDefinition: StreamDefinition,
+        nodeIds: string[],
+        direction: ProxyDirection
+    ): Promise<void> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        await Promise.allSettled(
-            nodeIds.map(async (nodeId) => this.node.closeProxyConnection(streamPartId, nodeId, direction))
-        )
+        await this.node.removeProxyConnectionCandidates(streamPartId, nodeIds, direction)
     }
 }

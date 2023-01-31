@@ -39,6 +39,10 @@ export class NetworkNode extends Node {
         this.setNumberOfTargetProxyConnections(streamPartId, targetCount)
     }
 
+    getSelectedProxyNodeIds(streamPartId: StreamPartID): NodeId[] {
+        return this.getProxiedStreamPartConnectionNodeIds(streamPartId)
+    }
+
     async removeProxyConnectionCandidates(streamPartId: StreamPartID, contactNodeIds: NodeId[], direction: ProxyDirection): Promise<void> {
         await this.removeProxyCandidates(streamPartId, contactNodeIds, direction)
     }

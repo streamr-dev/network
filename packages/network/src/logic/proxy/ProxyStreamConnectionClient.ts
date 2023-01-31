@@ -175,9 +175,9 @@ export class ProxyStreamConnectionClient extends EventEmitter {
 
     stopProxyingOnStream(streamPartId: StreamPartID): void {
         if (this.proxyTargets.has(streamPartId)) {
-           [...this.proxyTargets.get(streamPartId)!.connections.keys()].forEach((nodeId) => {
-               this.removeConnection(streamPartId, nodeId)
-           })
+            [...this.proxyTargets.get(streamPartId)!.connections.keys()].forEach((nodeId) => {
+                this.removeConnection(streamPartId, nodeId)
+            })
         }
     }
 
@@ -195,7 +195,7 @@ export class ProxyStreamConnectionClient extends EventEmitter {
     }
 
     private getConnection(nodeId: NodeId, streamPartId: StreamPartID): ProxyConnection | undefined {
-        return this.proxyTargets.get(streamPartId)?.connections.get(nodeId)!
+        return this.proxyTargets.get(streamPartId)?.connections.get(nodeId)
     }
 
     public getConnectedNodeIds(streamPartId: StreamPartID): NodeId[] {
@@ -350,16 +350,17 @@ export class ProxyStreamConnectionClient extends EventEmitter {
                 }
             }).splice(0, attemptCount)
 
-            const results = await Promise.allSettled(
-                proxiesToAttempt.map((  proxy) => Promise.all([
-                        this.waitForHandshake(streamPartId, proxy.id, proxy.direction),
-                        this.addProxyConnectionCandidates(streamPartId, proxy.id, proxy.direction, proxy.userId)
-                    ])
-                )
-            )
+            const results = await Promise.allSettled(proxiesToAttempt.map((  proxy) =>
+                Promise.all([
+                    this.waitForHandshake(streamPartId, proxy.id, proxy.direction),
+                    this.addProxyConnectionCandidates(streamPartId, proxy.id, proxy.direction, proxy.userId)
+                ])
+            ))
             const rejections = results.filter((res) => res.status === 'rejected').map((res) => (res as PromiseRejectedResult).reason)
             if (initialAttempt && rejections.length === results.length) {
-                throw new Error(`Could not open any initial ProxyConnections: ${rejections.map((rej, i) => `${rej}${i < rejections.length - 1 ? ', ' : ''}`)}`)
+                throw new Error(
+                    `Could not open any initial ProxyConnections: ${rejections.map((rej, i) => `${rej}${i < rejections.length - 1 ? ', ' : ''}`)}`
+                )
             }
         }
     }

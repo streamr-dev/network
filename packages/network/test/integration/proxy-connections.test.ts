@@ -266,7 +266,12 @@ describe('Proxy connection tests', () => {
         await onewayNode.addProxyConnectionCandidates(defaultStreamPartId, ['contact-node'], ProxyDirection.PUBLISH, 'publisher', 3)
         await onewayNode.addProxyConnectionCandidates(defaultStreamPartId, ['contact-node-2'], ProxyDirection.PUBLISH, 'publisher')
         try {
-            await onewayNode.addProxyConnectionCandidates(StreamPartIDUtils.parse('stream-5#0'), ['non-existing-node'], ProxyDirection.PUBLISH, 'publisher')
+            await onewayNode.addProxyConnectionCandidates(
+                StreamPartIDUtils.parse('stream-5#0'),
+                ['non-existing-node'],
+                ProxyDirection.PUBLISH,
+                'publisher'
+            )
         } catch (err) {
             // no-op
         }
@@ -302,7 +307,13 @@ describe('Proxy connection tests', () => {
     })
 
     it('will not connect above set target limit, simultaneous', async () => {
-        await onewayNode.addProxyConnectionCandidates(defaultStreamPartId, ['contact-node', 'contact-node-2'], ProxyDirection.SUBSCRIBE, 'subscriber', 1)
+        await onewayNode.addProxyConnectionCandidates(
+            defaultStreamPartId,
+            ['contact-node', 'contact-node-2'],
+            ProxyDirection.SUBSCRIBE,
+            'subscriber',
+            1
+        )
 
         // @ts-expect-error private
         expect(onewayNode.streamPartManager.getInboundNodesForStreamPart(defaultStreamPartId)).toBeArrayOfSize(1)

@@ -39,9 +39,15 @@ export interface NetworkNodeStub {
     /** @internal */
     stop: () => Promise<unknown>
     /** @internal */
-    openProxyConnection: (streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection, userId: string) => Promise<void>
+    addProxyConnectionCandidates: (
+        streamPartId: StreamPartID,
+        nodeIds: string[],
+        direction: ProxyDirection,
+        userId: string,
+        targetNumberOfProxies?: number
+    ) => Promise<void>
     /** @internal */
-    closeProxyConnection: (streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection) => Promise<void>
+    removeProxyConnectionCandidates: (streamPartId: StreamPartID, nodeIds: string[], direction: ProxyDirection) => Promise<void>
 }
 
 export const getEthereumAddressFromNodeId = (nodeId: string): string => {
@@ -212,18 +218,33 @@ export class NetworkNodeFacade {
         return this.cachedNode!.publish(streamMessage)
     }
 
-    async openProxyConnection(streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection): Promise<void> {
+    async addProxyConnectionCandidates(
+        streamPartId: StreamPartID,
+        nodeIds: string[],
+        direction: ProxyDirection,
+        targetNumberOfProxies?: number
+    ): Promise<void> {
         if (this.isStarting()) {
             await this.startNodeTask()
         }
-        await this.cachedNode!.openProxyConnection(streamPartId, nodeId, direction, (await this.authentication.getAddress()))
+        await this.cachedNode!.addProxyConnectionCandidates(
+            streamPartId,
+            nodeIds,
+            direction,
+            (await this.authentication.getAddress()),
+            targetNumberOfProxies
+        )
     }
 
-    async closeProxyConnection(streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection): Promise<void> {
+    async removeProxyConnectionCandidates(
+        streamPartId: StreamPartID,
+        nodeIds: string[],
+        direction: ProxyDirection
+    ): Promise<void> {
         if (this.isStarting()) {
             return
         }
-        await this.cachedNode!.closeProxyConnection(streamPartId, nodeId, direction)
+        await this.cachedNode!.removeProxyConnectionCandidates(streamPartId, nodeIds, direction)
     }
 
     private isStarting(): boolean {
