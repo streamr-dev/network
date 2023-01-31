@@ -167,12 +167,6 @@ export class ProxyStreamConnectionClient extends EventEmitter {
         })
     }
 
-    removeProxyTargets(streamPartId: StreamPartID, nodeIds: NodeId[]): void {
-        if (this.proxyTargets.has(streamPartId)) {
-            nodeIds.forEach((node) => this.removeConnection(streamPartId, node))
-        }
-    }
-
     stopProxyingOnStream(streamPartId: StreamPartID): void {
         if (this.proxyTargets.has(streamPartId)) {
             [...this.proxyTargets.get(streamPartId)!.connections.keys()].forEach((nodeId) => {

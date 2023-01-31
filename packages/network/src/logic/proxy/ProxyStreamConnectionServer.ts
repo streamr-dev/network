@@ -71,10 +71,6 @@ export class ProxyStreamConnectionServer {
         }
     }
 
-    private getConnection(nodeId: NodeId, streamPartId: StreamPartID): ProxyConnection | undefined {
-        return this.connections.get(streamPartId)!.get(nodeId)!
-    }
-
     public getNodeIdsForUserId(streamPartId: StreamPartID, userId: string): NodeId[] {
         const connections = this.connections.get(streamPartId)!
         const returnedNodeIds: NodeId[] = []
@@ -84,21 +80,6 @@ export class ProxyStreamConnectionServer {
             }
         })
         return returnedNodeIds
-    }
-
-    async closeProxyConnection(streamPartId: StreamPartID, targetNodeId: NodeId, direction: ProxyDirection): Promise<void> {
-        if (this.streamPartManager.isSetUp(streamPartId)
-            && this.streamPartManager.hasOnewayConnection(streamPartId, targetNodeId)
-            && this.getConnection(targetNodeId, streamPartId)?.direction === direction
-        ) {
-            this.removeConnection(streamPartId, targetNodeId)
-            await this.nodeToNode.leaveStreamOnNode(targetNodeId, streamPartId)
-            this.node.emit(Event.ONE_WAY_CONNECTION_CLOSED, targetNodeId, streamPartId)
-        } else {
-            const reason = `A proxy ${direction} stream connection for ${streamPartId} on node ${targetNodeId} does not exist`
-            logger.warn(reason)
-            throw reason
-        }
     }
 
     processLeaveRequest(message: UnsubscribeRequest, nodeId: NodeId): void {
