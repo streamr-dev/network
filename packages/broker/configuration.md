@@ -4,14 +4,27 @@ See [config.schema.json](src/config/config.schema.json).
 
 ### Environment variables
 
-You may use environment variables to override any configuration option read from the configuration file. This is not the recommended way to change these values. It is better to modify the actual configuration file.
+You may use environment variables to define any configuration option. This is not the recommended way to use configuration: it is better to modify the actual configuration file, is possible.
 
-The syntax of the variables names is like this:
+E.g. if you want to set a private key, you can define a variable like this:
 ```
-STREAMR__BROKER__PLUGINS__BRUBECK_MINER__BENEFICIARY_ADDRESS
-```
+STREAMR__BROKER__CLIENT__AUTH__PRIVATE_KEY = '0x1234'
+````
 
-The names start with `STREAMR__BROKER__` and each configuration block is separated by double underscore. Blocks and properties are defined in *CONSTANT_CASE* instead of *camelCase*.
+It corresponds to this configuration file:
+```
+{
+    "client": {
+        "auth": {
+            "privateKey": "0x1234"
+        }
+    },
+    ...
+}
+
+All environment variable names start with `STREAMR__BROKER__` and each configuration block is separated by double underscore. Blocks and properties are defined in *CONSTANT_CASE* instead of *camelCase*.
+
+If the value is defined both in an environment variable and the configuration file, the environment variable value is used.
 
 It is possible to defined arrays by adding a numeration suffix to a block/property:
 ```
