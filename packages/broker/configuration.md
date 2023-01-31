@@ -15,8 +15,10 @@ The names start with `STREAMR__BROKER__` and each configuration block is separat
 
 It is possible to defined arrays by adding a numeration suffix to a block/property:
 ```
-STREAMR__BROKER__CLIENT__NETWORK__TRACKERS_1__ID = 'foo'
-STREAMR__BROKER__AUTHENTICATION__KEYS_1 = 'bar'
+STREAMR__BROKER__CLIENT__NETWORK__TRACKERS_1__ID = '0x1234'
+STREAMR__BROKER__CLIENT__NETWORK__TRACKERS_2__ID = '0x5678'
+STREAMR__BROKER__AUTHENTICATION__KEYS_1 = 'foo'
+STREAMR__BROKER__AUTHENTICATION__KEYS_2 = 'bar'
 ```
 
 Note that the first item of an array has index `1` (not `0`).
