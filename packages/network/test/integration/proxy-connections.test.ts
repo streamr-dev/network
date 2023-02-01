@@ -3,10 +3,10 @@ import { Tracker } from '@streamr/network-tracker'
 import {
     MessageID,
     ProxyDirection,
-    TrackerRegistryRecord,
     StreamMessage,
     StreamPartIDUtils,
-    toStreamID
+    toStreamID,
+    TrackerRegistryRecord
 } from '@streamr/protocol'
 import { toEthereumAddress, waitForEvent } from '@streamr/utils'
 
@@ -321,6 +321,50 @@ describe('Proxy connection tests', () => {
         expect(onewayNode.streamPartManager.getNeighborsForStreamPart(defaultStreamPartId)).toBeArrayOfSize(0)
     })
 
+    it('will connect up to a newly set target connection count', async () => {
+        await onewayNode.addProxyConnectionCandidates(
+            defaultStreamPartId,
+            ['contact-node', 'contact-node-2'],
+            ProxyDirection.SUBSCRIBE,
+            'subscriber',
+            1
+        )
+
+        // @ts-expect-error private
+        expect(onewayNode.streamPartManager.getInboundNodesForStreamPart(defaultStreamPartId)).toBeArrayOfSize(1)
+        // @ts-expect-error private
+        expect(onewayNode.streamPartManager.getNeighborsForStreamPart(defaultStreamPartId)).toBeArrayOfSize(0)
+
+        await onewayNode.setNumberOfTargetProxyConnections(defaultStreamPartId, 2)
+
+        // @ts-expect-error private
+        expect(onewayNode.streamPartManager.getInboundNodesForStreamPart(defaultStreamPartId)).toBeArrayOfSize(2)
+        // @ts-expect-error private
+        expect(onewayNode.streamPartManager.getNeighborsForStreamPart(defaultStreamPartId)).toBeArrayOfSize(0)
+    })
+
+    it('will disconnect down to a newly set target connection count', async () => {
+        await onewayNode.addProxyConnectionCandidates(
+            defaultStreamPartId,
+            ['contact-node', 'contact-node-2'],
+            ProxyDirection.SUBSCRIBE,
+            'subscriber',
+            2
+        )
+
+        // @ts-expect-error private
+        expect(onewayNode.streamPartManager.getInboundNodesForStreamPart(defaultStreamPartId)).toBeArrayOfSize(2)
+        // @ts-expect-error private
+        expect(onewayNode.streamPartManager.getNeighborsForStreamPart(defaultStreamPartId)).toBeArrayOfSize(0)
+
+        await onewayNode.setNumberOfTargetProxyConnections(defaultStreamPartId, 1)
+
+        // @ts-expect-error private
+        expect(onewayNode.streamPartManager.getInboundNodesForStreamPart(defaultStreamPartId)).toBeArrayOfSize(1)
+        // @ts-expect-error private
+        expect(onewayNode.streamPartManager.getNeighborsForStreamPart(defaultStreamPartId)).toBeArrayOfSize(0)
+    })
+
     it('will reconnect after lost connectivity', async () => {
         await onewayNode.addProxyConnectionCandidates(defaultStreamPartId, ['contact-node'], ProxyDirection.PUBLISH, 'publisher')
 
@@ -343,4 +387,24 @@ describe('Proxy connection tests', () => {
         ])
     }, 20100)
 
+    it('stop proxy connections on stream', async () => {
+        await onewayNode.addProxyConnectionCandidates(
+            defaultStreamPartId,
+            ['contact-node', 'contact-node-2'],
+            ProxyDirection.SUBSCRIBE,
+            'subscriber',
+            2
+        )
+
+        // @ts-expect-error private
+        expect(onewayNode.streamPartManager.getInboundNodesForStreamPart(defaultStreamPartId)).toBeArrayOfSize(2)
+        // @ts-expect-error private
+        expect(onewayNode.streamPartManager.getNeighborsForStreamPart(defaultStreamPartId)).toBeArrayOfSize(0)
+
+        await onewayNode.removeAllProxyConnectionCandidates(defaultStreamPartId, ProxyDirection.SUBSCRIBE)
+
+        // @ts-expect-error private
+        expect(onewayNode.streamPartManager.isSetUp(defaultStreamPartId)).toEqual(false)
+
+    })
 })

@@ -31,20 +31,17 @@ enum State {
     RENEGOTIATING
 }
 
-interface ProxyConnection {
+interface ProxyCandidate {
     state?: State
-    reconnectionTimer?: NodeJS.Timeout
     direction: ProxyDirection
     userId: string
 }
 
 interface ProxyTargets {
-    candidates: Map<NodeId, ProxyConnection>
+    candidates: Map<NodeId, ProxyCandidate>
     numOfTargets: number
-    connections: Map<NodeId, ProxyConnection>
+    connections: Map<NodeId, ProxyCandidate>
 }
-
-const DEFAULT_RECONNECTION_TIMEOUT = 10 * 1000
 
 export enum Event {
     PROXY_CONNECTION_ACCEPTED = 'streamr:node:proxy-connection-accepted',
@@ -107,7 +104,7 @@ export class ProxyStreamConnectionClient extends EventEmitter {
         }
     }
 
-    public async addProxyTargets(
+    public async addProxyConnections(
         streamPartId: StreamPartID,
         nodeIds: NodeId[],
         direction: ProxyDirection,
@@ -117,7 +114,7 @@ export class ProxyStreamConnectionClient extends EventEmitter {
         let initialAttempt = false
         if (!this.proxyTargets.has(streamPartId)) {
             initialAttempt = true
-            const candidates = new Map<NodeId, ProxyConnection>()
+            const candidates = new Map<NodeId, ProxyCandidate>()
             nodeIds.forEach((nodeId) => candidates.set(nodeId, {
                 direction,
                 userId
@@ -133,10 +130,10 @@ export class ProxyStreamConnectionClient extends EventEmitter {
                 userId
             }))
             if (numOfTargets) {
-                this.setTargetConnectionCount(streamPartId, numOfTargets)
+                this.proxyTargets.get(streamPartId)!.numOfTargets = numOfTargets
             }
         }
-        await this.selectNewConnectionsFromCandidates(streamPartId, initialAttempt)
+        await this.selectConnectionsFromCandidates(streamPartId, initialAttempt)
 
     }
 
@@ -167,17 +164,18 @@ export class ProxyStreamConnectionClient extends EventEmitter {
         })
     }
 
-    stopProxyingOnStream(streamPartId: StreamPartID): void {
+    async stopProxyingOnStream(streamPartId: StreamPartID, direction: ProxyDirection): Promise<void> {
         if (this.proxyTargets.has(streamPartId)) {
-            [...this.proxyTargets.get(streamPartId)!.connections.keys()].forEach((nodeId) => {
-                this.removeConnection(streamPartId, nodeId)
-            })
+            await this.removeProxyCandidates(streamPartId, [...this.proxyTargets.get(streamPartId)!.candidates.keys()], direction)
+        } else {
+            logger.debug(`Could not stop proxying for stream ${streamPartId} as proxy connections do not exist`)
         }
     }
 
-    setTargetConnectionCount(streamPartId: StreamPartID, count: number): void {
+    async setTargetConnectionCount(streamPartId: StreamPartID, count: number): Promise<void> {
         if (this.proxyTargets.has(streamPartId)) {
             this.proxyTargets.get(streamPartId)!.numOfTargets = count
+            await this.selectConnectionsFromCandidates(streamPartId)
         }
     }
 
@@ -188,7 +186,7 @@ export class ProxyStreamConnectionClient extends EventEmitter {
         return this.proxyTargets.get(streamPartId)!.connections.has(nodeId)
     }
 
-    private getConnection(nodeId: NodeId, streamPartId: StreamPartID): ProxyConnection | undefined {
+    private getConnection(nodeId: NodeId, streamPartId: StreamPartID): ProxyCandidate | undefined {
         return this.proxyTargets.get(streamPartId)?.connections.get(nodeId)
     }
 
@@ -196,7 +194,7 @@ export class ProxyStreamConnectionClient extends EventEmitter {
         return this.proxyTargets.has(streamPartId) ? [...this.proxyTargets.get(streamPartId)!.connections.keys()] : []
     }
 
-    async addProxyConnectionCandidates(streamPartId: StreamPartID, targetNodeId: string, direction: ProxyDirection, userId: string): Promise<void> {
+    private async openProxyConnection(streamPartId: StreamPartID, targetNodeId: string, direction: ProxyDirection, userId: string): Promise<void> {
         const trackerId = this.trackerManager.getTrackerId(streamPartId)
         try {
             if (!this.streamPartManager.isSetUp(streamPartId)) {
@@ -240,17 +238,22 @@ export class ProxyStreamConnectionClient extends EventEmitter {
 
     }
 
-    async closeProxyCandidates(streamPartId: StreamPartID, targetNodeIds: NodeId[], direction: ProxyDirection): Promise<void> {
+    async removeProxyCandidates(streamPartId: StreamPartID, targetNodeIds: NodeId[], direction: ProxyDirection): Promise<void> {
         await Promise.all(targetNodeIds.map(async (targetNodeId) => {
-            if (this.streamPartManager.isSetUp(streamPartId)
-                && this.streamPartManager.hasOnewayConnection(streamPartId, targetNodeId)
-                && this.getConnection(targetNodeId, streamPartId)?.direction === direction
+            if (this.proxyTargets.has(streamPartId)
+                && this.proxyTargets.get(streamPartId)!.candidates.has(targetNodeId)
+                && this.proxyTargets.get(streamPartId)!.candidates.get(targetNodeId)!.direction === direction
             ) {
+                if (this.proxyTargets.get(streamPartId)!.connections.has(targetNodeId)
+                    && this.streamPartManager.isSetUp(streamPartId)
+                    && this.streamPartManager.hasOnewayConnection(streamPartId, targetNodeId)
+                ) {
+                    await this.nodeToNode.leaveStreamOnNode(targetNodeId, streamPartId)
+                    this.node.emit(NodeEvent.ONE_WAY_CONNECTION_CLOSED, targetNodeId, streamPartId)
+                }
                 this.removeConnection(streamPartId, targetNodeId)
-                await this.nodeToNode.leaveStreamOnNode(targetNodeId, streamPartId)
-                this.node.emit(NodeEvent.ONE_WAY_CONNECTION_CLOSED, targetNodeId, streamPartId)
             } else {
-                const reason = `A proxy ${direction} stream connection for ${streamPartId} on node ${targetNodeId} does not exist`
+                const reason = `A proxy ${direction} candidate for ${streamPartId} on node ${targetNodeId} does not exist`
                 logger.warn(reason)
                 throw reason
             }
@@ -294,33 +297,6 @@ export class ProxyStreamConnectionClient extends EventEmitter {
         }
     }
 
-    async reconnect(targetNodeId: NodeId, streamPartId: StreamPartID): Promise<void> {
-        if (!this.hasConnection(targetNodeId, streamPartId)) {
-            logger.trace(`Cannot reconnect to a non-existing proxy connection on ${targetNodeId} ${streamPartId}`)
-            return
-        }
-        const connection = this.getConnection(targetNodeId, streamPartId)!
-        if (connection.state !== State.RENEGOTIATING) {
-            connection.state = State.RENEGOTIATING
-        }
-        const trackerId = this.trackerManager.getTrackerId(streamPartId)
-        try {
-            await this.connectAndNegotiate(streamPartId, targetNodeId, connection.direction, connection.userId)
-            logger.trace(`Successful proxy stream reconnection to ${targetNodeId}`)
-            connection.state = State.ACCEPTED
-            if (connection.reconnectionTimer !== undefined) {
-                clearTimeout(connection.reconnectionTimer)
-            }
-        } catch (err) {
-            logger.warn(`Proxy stream reconnection attempt to ${targetNodeId} failed with error: ${err}`)
-            connection.reconnectionTimer = setTimeout( async () => {
-                await this.reconnect(targetNodeId, streamPartId)
-            }, DEFAULT_RECONNECTION_TIMEOUT)
-        } finally {
-            this.trackerManager.disconnectFromSignallingOnlyTracker(trackerId)
-        }
-    }
-
     isProxiedStreamPart(streamPartId: StreamPartID, direction: ProxyDirection): boolean {
         if (this.proxyTargets.get(streamPartId) && [...this.proxyTargets.get(streamPartId)!.connections.values()].length > 0) {
             return [...this.proxyTargets.get(streamPartId)!.connections.values()][0].direction === direction
@@ -328,11 +304,12 @@ export class ProxyStreamConnectionClient extends EventEmitter {
         return false
     }
 
-    async selectNewConnectionsFromCandidates(streamPartId: StreamPartID, initialAttempt?: boolean): Promise<void> {
+    async selectConnectionsFromCandidates(streamPartId: StreamPartID, initialAttempt = false): Promise<void> {
         if (!this.proxyTargets.has(streamPartId)) {
             return
         }
         const attemptCount = this.proxyTargets.get(streamPartId)!.numOfTargets - this.proxyTargets.get(streamPartId)!.connections.size
+        // Add new connections
         if (attemptCount > 0) {
             const proxiesToAttempt = shuffle([...this.proxyTargets.get(streamPartId)!.candidates.entries()].filter(([id, _value]) =>
                 !this.proxyTargets.get(streamPartId)!.connections.has(id)
@@ -347,7 +324,7 @@ export class ProxyStreamConnectionClient extends EventEmitter {
             const results = await Promise.allSettled(proxiesToAttempt.map((  proxy) =>
                 Promise.all([
                     this.waitForHandshake(streamPartId, proxy.id, proxy.direction),
-                    this.addProxyConnectionCandidates(streamPartId, proxy.id, proxy.direction, proxy.userId)
+                    this.openProxyConnection(streamPartId, proxy.id, proxy.direction, proxy.userId)
                 ])
             ))
             const rejections = results.filter((res) => res.status === 'rejected').map((res) => (res as PromiseRejectedResult).reason)
@@ -356,17 +333,17 @@ export class ProxyStreamConnectionClient extends EventEmitter {
                     `Could not open any initial ProxyConnections: ${rejections.map((rej, i) => `${rej}${i < rejections.length - 1 ? ', ' : ''}`)}`
                 )
             }
+        } else if (attemptCount < 0 && this.proxyTargets.get(streamPartId)!.candidates.size > 0) {
+            const proxiesToDisconnect = shuffle([...this.proxyTargets.get(streamPartId)!.connections.keys()])
+                .splice(0, -attemptCount)
+
+            await Promise.allSettled(proxiesToDisconnect.map((node) => {
+                this.removeConnection(streamPartId, node)
+            }))
         }
     }
 
     stop(): void {
-        this.proxyTargets.forEach((streamPart: ProxyTargets) => {
-            streamPart.connections.forEach((connection: ProxyConnection) => {
-                if (connection.reconnectionTimer !== undefined) {
-                    clearTimeout(connection.reconnectionTimer)
-                }
-            })
-        })
         this.proxyTargets.clear()
     }
 }

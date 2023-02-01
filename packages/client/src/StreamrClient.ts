@@ -516,6 +516,14 @@ export class StreamrClient {
         return this.proxyPublishSubscribe.removeProxyConnectionCandidates(streamDefinition, nodeIds, direction)
     }
 
+    removeAllProxyConnectionCandidates(streamDefinition: StreamDefinition, direction: ProxyDirection): Promise<void> {
+        return this.proxyPublishSubscribe.removeAllProxyConnectionCandidates(streamDefinition, direction)
+    }
+
+    setProxyConnectionTargetCount(streamDefinition: StreamDefinition, targetCount: number): Promise<void> {
+        return this.proxyPublishSubscribe.setProxyConnectionTargetCount(streamDefinition, targetCount)
+    }
+
     // --------------------------------------------------------------------------------------------
     // Lifecycle
     // --------------------------------------------------------------------------------------------

@@ -255,19 +255,19 @@ export class Node extends EventEmitter {
         userId: string,
         targetNumberOfProxies?: number
     ): Promise<void> {
-        await this.proxyStreamConnectionClient.addProxyTargets(streamPartId, contactNodeIds, direction, userId, targetNumberOfProxies)
+        await this.proxyStreamConnectionClient.addProxyConnections(streamPartId, contactNodeIds, direction, userId, targetNumberOfProxies)
     }
 
     async removeProxyCandidates(streamPartId: StreamPartID, contactNodeIds: NodeId[], direction: ProxyDirection): Promise<void> {
-        await this.proxyStreamConnectionClient.closeProxyCandidates(streamPartId, contactNodeIds, direction)
+        await this.proxyStreamConnectionClient.removeProxyCandidates(streamPartId, contactNodeIds, direction)
     }
 
-    setNumberOfTargetProxyConnections(streamPartId: StreamPartID, targetCount: number): void {
-        this.proxyStreamConnectionClient.setTargetConnectionCount(streamPartId, targetCount)
+    async setNumberOfTargetProxyConnections(streamPartId: StreamPartID, targetCount: number): Promise<void> {
+        await this.proxyStreamConnectionClient.setTargetConnectionCount(streamPartId, targetCount)
     }
 
-    stopProxyingOnStream(streamPartId: StreamPartID): void {
-        this.proxyStreamConnectionClient.stopProxyingOnStream(streamPartId)
+    async stopProxyingOnStream(streamPartId: StreamPartID, direction: ProxyDirection): Promise<void> {
+        await this.proxyStreamConnectionClient.stopProxyingOnStream(streamPartId, direction)
     }
 
     // Null source is used when a message is published by the node itself
@@ -376,7 +376,7 @@ export class Node extends EventEmitter {
         })
         proxiedStreams.forEach((s) => {
             this.proxyStreamConnectionClient.removeConnection(s, node, false)
-            this.proxyStreamConnectionClient.selectNewConnectionsFromCandidates(s).catch((e: any) => {console.error(e)})
+            this.proxyStreamConnectionClient.selectConnectionsFromCandidates(s).catch((e: any) => {console.error(e)})
         })
         this.emit(Event.NODE_DISCONNECTED, node)
     }

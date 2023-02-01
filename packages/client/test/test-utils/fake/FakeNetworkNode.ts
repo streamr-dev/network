@@ -124,6 +124,16 @@ export class FakeNetworkNode implements NetworkNodeStub {
     async removeProxyConnectionCandidates(_streamPartId: StreamPartID, _nodeIds: string[], _direction: ProxyDirection): Promise<void> {
         throw new Error('not implemented')
     }
+
+    // eslint-disable-next-line class-methods-use-this
+    async removeAllProxyConnectionCandidates(_streamPartId: StreamPartID, _direction: ProxyDirection): Promise<void> {
+        throw new Error('not implemented')
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    async setProxyConnectionTargetCount(_streamPartId: StreamPartID, _targetCount: number): Promise<void> {
+        throw new Error('not implemented')
+    }
 }
 
 @scoped(Lifecycle.ContainerScoped)

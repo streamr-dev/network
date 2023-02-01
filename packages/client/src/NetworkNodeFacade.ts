@@ -48,6 +48,10 @@ export interface NetworkNodeStub {
     ) => Promise<void>
     /** @internal */
     removeProxyConnectionCandidates: (streamPartId: StreamPartID, nodeIds: string[], direction: ProxyDirection) => Promise<void>
+    /** @internal */
+    removeAllProxyConnectionCandidates: (streamPartId: StreamPartID, direction: ProxyDirection) => Promise<void>
+    /** @internal */
+    setProxyConnectionTargetCount: (streamPartId: StreamPartID, targetCount: number) => Promise<void>
 }
 
 export const getEthereumAddressFromNodeId = (nodeId: string): string => {
@@ -245,6 +249,14 @@ export class NetworkNodeFacade {
             return
         }
         await this.cachedNode!.removeProxyConnectionCandidates(streamPartId, nodeIds, direction)
+    }
+
+    async removeAllProxyConnectionCandidates(streamPartId: StreamPartID, direction: ProxyDirection): Promise<void> {
+        await this.cachedNode!.removeAllProxyConnectionCandidates(streamPartId, direction)
+    }
+
+    async setProxyConnectionTargetCount(streamPartId: StreamPartID, targetCount: number): Promise<void> {
+        await this.cachedNode!.setProxyConnectionTargetCount(streamPartId, targetCount)
     }
 
     private isStarting(): boolean {
