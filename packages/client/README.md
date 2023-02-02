@@ -694,16 +694,29 @@ Proxy publishing and subscribing are handled on the network overlay level. This 
 ```js
 
 // Open publish proxy to multiple nodes on stream
-await publishingClient.openProxyConnections(stream, ['0x11111...', '0x22222...'], ProxyDirection.PUBLISH)
+await publishingClient.addProxyConnectionCandidates(stream, ['0x11111...', '0x22222...'], ProxyDirection.PUBLISH)
 
 // Remove publish proxy to multiple nodes on stream
-await publishingClient.closeProxyConnections(stream, ['0x11111...', '0x22222...'], ProxyDirection.PUBLISH)
+await publishingClient.removeProxyConnectionCandidates(stream, ['0x11111...', '0x22222...'], ProxyDirection.PUBLISH)
 
-// Open publish proxy to multiple nodes on stream
-await publishingClient.openProxyConnections(stream, ['0x11111...', '0x22222...'], ProxyDirection.SUBSCRIBE)
+// Open subscribe proxy to multiple nodes on stream
+await publishingClient.addProxyConnectionCandidates(stream, ['0x11111...', '0x22222...'], ProxyDirection.SUBSCRIBE)
 
-// Remove publish proxy to multiple nodes on stream
-await publishingClient.closeProxyConnections(stream, ['0x11111...', '0x22222...'], ProxyDirection.SUBSCRIBE)
+// Remove subscribe proxy to multiple nodes on stream
+await publishingClient.removeProxyConnectionCandidates(stream, ['0x11111...', '0x22222...'], ProxyDirection.SUBSCRIBE)
+```
+
+By default the client will attempt to open proxy connections to all of the candidates set in the first `addProxyConnectionCandidates` method. However, it is also possible to configure multiple proxy candidates and a separate target connection count. In this approach if a connection to one of the candidates is disconnected, the client will attempt to connect to another candidate by random.
+
+```js
+// Opens 2 connections, with an extra candidate to use in case of disconnections
+await publishingClient.addProxyConnectionCandidates(stream, ['0x11111...', '0x22222...', '0x33333...'], ProxyDirection.PUBLISH, 2)
+
+// Sets the target number of connections to 3 and attempts to open new connections if necessary
+await publishingClient.setProxyConnectionTargetCount(stream, 3)
+
+// Sets the target number of connections to 1 and does required disconnections by random
+await publishingClient.setProxyConnectionTargetCount(stream, 1)
 ```
 
 IMPORTANT: The node that is used as a proxy must have set the option on the network layer to accept incoming proxy connections and must have joined to the stream that a proxy connection is wanted for.
