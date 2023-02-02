@@ -29,13 +29,19 @@ export type IPipeline<InType, OutType = InType> = {
 } & AsyncGenerator<OutType>
 
 class PipelineDefinition<InType, OutType = InType> {
+    
     public source: AsyncGeneratorWithId<InType>
+    protected transforms: PipelineTransform[]
+    protected transformsBefore: PipelineTransform[]
+
     constructor(
         source: AsyncGenerator<InType>,
-        protected transforms: PipelineTransform[] = [],
-        protected transformsBefore: PipelineTransform[] = []
+        transforms: PipelineTransform[] = [],
+        transformsBefore: PipelineTransform[] = []
     ) {
         this.source = this.setSource(source)
+        this.transforms = transforms
+        this.transformsBefore = transformsBefore
     }
 
     /**
@@ -76,12 +82,15 @@ class PipelineDefinition<InType, OutType = InType> {
 }
 
 export class Pipeline<InType, OutType = InType> implements IPipeline<InType, OutType> {
+
+    public source: AsyncGenerator<InType>
     protected iterator: AsyncGenerator<OutType>
     private isIterating = false
     public isCleaningUp = false
     private definition: PipelineDefinition<InType, OutType>
 
-    constructor(public source: AsyncGenerator<InType>, definition?: PipelineDefinition<InType, OutType>) {
+    constructor(source: AsyncGenerator<InType>, definition?: PipelineDefinition<InType, OutType>) {
+        this.source = source
         this.definition = definition || new PipelineDefinition<InType, OutType>(source)
         this.cleanup = pOnce(this.cleanup.bind(this))
         this.iterator = iteratorFinally(this.iterate(), this.cleanup)

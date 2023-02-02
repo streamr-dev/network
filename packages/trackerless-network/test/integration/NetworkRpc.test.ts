@@ -13,6 +13,7 @@ import { waitForCondition } from '@streamr/utils'
 import { Empty } from '../../src/proto/google/protobuf/empty'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { createStreamMessage } from '../utils'
+import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 
 describe('Network RPC', () => {
     let rpcCommunicator1: RpcCommunicator
@@ -24,7 +25,7 @@ describe('Network RPC', () => {
     beforeEach(() => {
         rpcCommunicator1 = new RpcCommunicator()
         rpcCommunicator2 = new RpcCommunicator()
-        rpcCommunicator1.on('outgoingMessage', (message: Uint8Array, _requestId: string, _ucallContext?: ProtoCallContext) => {
+        rpcCommunicator1.on('outgoingMessage', (message: RpcMessage, _requestId: string, _ucallContext?: ProtoCallContext) => {
             rpcCommunicator2.handleIncomingMessage(message)
         })
         client = toProtoRpcClient(new NetworkRpcClient(rpcCommunicator1.getRpcClientTransport()))

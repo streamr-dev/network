@@ -35,7 +35,7 @@ describe('Full node network with WebRTC connections', () => {
         connectionManagers = []
         layer0DhtNodes = []
 
-        layer0Ep = new DhtNode({ peerDescriptor: epPeerDescriptor, numberOfNodesPerKBucket: 4, routeMessageTimeout: 10000 })
+        layer0Ep = new DhtNode({ peerDescriptor: epPeerDescriptor, numberOfNodesPerKBucket: 8, routeMessageTimeout: 10000 })
 
         await layer0Ep.start()
         await layer0Ep.joinDht(epPeerDescriptor)
@@ -55,7 +55,7 @@ describe('Full node network with WebRTC connections', () => {
             }
 
             const layer0 = new DhtNode({
-                numberOfNodesPerKBucket: 2,
+                numberOfNodesPerKBucket: 8,
                 peerDescriptor,
                 routeMessageTimeout: 2000,
                 entryPoints: [epPeerDescriptor]
@@ -74,6 +74,7 @@ describe('Full node network with WebRTC connections', () => {
                 streamrNode.subscribeToStream(randomGraphId, epPeerDescriptor)
                 connectionManagers.push(connectionManager)
                 streamrNodes.push(streamrNode)
+                return
             })
         }))
 
@@ -93,9 +94,10 @@ describe('Full node network with WebRTC connections', () => {
     it('happy path', async () => {
 
         await Promise.all([...streamrNodes.map((streamrNode) =>
-            waitForCondition(() =>
-                streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length >= 3
-                && !streamrNode.getStream(randomGraphId)!.layer1.isJoinOngoing()
+            waitForCondition(() => {
+                return streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length >= 3
+                    && !streamrNode.getStream(randomGraphId)!.layer1.isJoinOngoing()
+            }
             , 60000
             )
         )])

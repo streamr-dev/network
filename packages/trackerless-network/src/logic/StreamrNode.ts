@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/member-delimiter-style */
+
 import { RandomGraphNode, Event as RandomGraphEvent } from './RandomGraphNode'
 import { PeerDescriptor, ConnectionLocker, DhtNode, ITransport, PeerID } from '@streamr/dht'
 import { StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
@@ -41,6 +43,7 @@ export interface StreamrNodeOpts {
     layer2NumOfTargetNeighbors?: number
     layer2MaxNumberOfContact?: number
     layer2MinPropagationTargets?: number
+    nodeName?: string
 }
 
 export class StreamrNode extends EventEmitter {
@@ -53,18 +56,19 @@ export class StreamrNode extends EventEmitter {
     protected extraMetadata: Record<string, unknown> = {}
     private readonly metricsContext: MetricsContext
     private readonly metrics: Metrics
-    private readonly opts: StreamrNodeOpts
+    public config: StreamrNodeOpts
 
-    constructor(opts: StreamrNodeOpts) {
+    constructor(config: StreamrNodeOpts) {
         super()
+        this.config = config
         this.streams = new Map()
-        this.metricsContext = opts.metricsContext || new MetricsContext()
+        this.metricsContext = config.metricsContext || new MetricsContext()
         this.metrics = {
             publishMessagesPerSecond: new RateMetric(),
             publishBytesPerSecond: new RateMetric(),
         }
         this.metricsContext.addMetrics('node', this.metrics)
-        this.opts = opts
+        this.config = config
     }
 
     async start(startedAndJoinedLayer0: DhtNode, transport: ITransport, connectionLocker: ConnectionLocker): Promise<void> {
@@ -83,7 +87,7 @@ export class StreamrNode extends EventEmitter {
         if (!this.started || this.destroyed) {
             return
         }
-        logger.trace('Destroying StreamrNode...')
+        logger.info('Destroying StreamrNode...')
         this.destroyed = true
         this.streams.forEach((stream) => {
             stream.layer2.stop()
@@ -142,7 +146,8 @@ export class StreamrNode extends EventEmitter {
             entryPoints: [entryPoint],
             numberOfNodesPerKBucket: 4,
             rpcRequestTimeout: 15000,
-            dhtJoinTimeout: 90000
+            dhtJoinTimeout: 90000,
+            nodeName: this.config.nodeName
         })
         const layer2 = new RandomGraphNode({
             randomGraphId: streamPartID,
@@ -150,9 +155,10 @@ export class StreamrNode extends EventEmitter {
             layer1: layer1,
             connectionLocker: this.connectionLocker!,
             ownPeerDescriptor: this.layer0!.getPeerDescriptor(),
-            minPropagationTargets: this.opts.layer2MinPropagationTargets,
-            numOfTargetNeighbors: this.opts.layer2NumOfTargetNeighbors,
-            maxNumberOfContact: this.opts.layer2MaxNumberOfContact
+            minPropagationTargets: this.config.layer2MinPropagationTargets,
+            numOfTargetNeighbors: this.config.layer2NumOfTargetNeighbors,
+            maxNumberOfContact: this.config.layer2MaxNumberOfContact,
+            nodeName: this.config.nodeName
         })
 
         this.streams.set(streamPartID, {
@@ -161,11 +167,19 @@ export class StreamrNode extends EventEmitter {
         })
 
         await layer1.start()
+
+        /* vars to be shown in debugger
+        const layer0BucketSize = this.layer0.getBucketSize()
+        const layer1BucketSize = layer1.getBucketSize()
+        const layer1ClosestContacts=  layer1.getNeighborList().getClosestContacts(20)
+        */
+
         layer2.start()
         layer2.on(RandomGraphEvent.MESSAGE, (message: StreamMessage) => {
             this.emit(Event.NEW_MESSAGE, message)
         })
         await layer1.joinDht(entryPoint)
+
     }
 
     async waitForJoinAndPublish(streamPartId: string, entrypointDescriptor: PeerDescriptor, msg: StreamMessage): Promise<number> {
@@ -215,6 +229,13 @@ export class StreamrNode extends EventEmitter {
         this.extraMetadata = metadata
     }
 
+    getConnectionCount(): number {
+        return this.layer0!.getNumberOfConnections()
+    }
+
+    getLlayer0BucketSize(): number {
+        return this.layer0!.getBucketSize()
+    }
 }
 
 [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `SIGTERM`].forEach((term) => {

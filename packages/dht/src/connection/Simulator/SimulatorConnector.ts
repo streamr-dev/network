@@ -7,7 +7,7 @@ import { ConnectionType } from '../IConnection'
 
 import {
     PeerDescriptor,
-} from '../../proto/DhtRpc'
+} from '../../proto/packages/dht/protos/DhtRpc'
 import { Logger } from '@streamr/utils'
 import { ManagedConnection } from '../ManagedConnection'
 import { PeerIDKey } from '../../helpers/PeerID'
@@ -20,19 +20,28 @@ export class SimulatorConnector {
 
     private connectingConnections: Map<PeerIDKey, ManagedConnection> = new Map()
     private stopped = false
+    private protocolVersion: string
+    private ownPeerDescriptor: PeerDescriptor
+    private simulator: Simulator
+    private incomingConnectionCallback: (connection: ManagedConnection) => boolean
 
     constructor(
-        private protocolVersion: string,
-        private ownPeerDescriptor: PeerDescriptor,
-        private simulator: Simulator,
-        private incomingConnectionCallback: (connection: ManagedConnection) => boolean
+        protocolVersion: string,
+        ownPeerDescriptor: PeerDescriptor,
+        simulator: Simulator,
+        incomingConnectionCallback: (connection: ManagedConnection) => boolean
     ) {
+        this.protocolVersion = protocolVersion
+        this.ownPeerDescriptor = ownPeerDescriptor
+        this.simulator = simulator
+        this.incomingConnectionCallback = incomingConnectionCallback
     }
 
     public async start(): Promise<void> {
     }
 
     public connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
+        logger.trace('connect() ' + this.ownPeerDescriptor.nodeName + ',' + targetPeerDescriptor.nodeName)
         const peerKey = PeerID.fromValue(targetPeerDescriptor.kademliaId).toKey()
         const existingConnection = this.connectingConnections.get(peerKey)
         if (existingConnection) {
@@ -75,41 +84,25 @@ export class SimulatorConnector {
             ConnectionType.SIMULATOR_SERVER, undefined, connection)
 
         logger.trace('connected, objectId: ' + managedConnection.objectId)
-        
+
         managedConnection.once('handshakeRequest', (_peerDescriptor: PeerDescriptor) => {
             logger.trace('incoming handshake request objectId: ' + managedConnection.objectId)
-            
+
             if (this.incomingConnectionCallback(managedConnection)) {
                 managedConnection.acceptHandshake()
             } else {
                 managedConnection.rejectHandshake('Duplicate connection')
-                managedConnection.close()
+                managedConnection.destroy()
             }
-            //this.emit('newConnection', managedConnection)
         })
     }
 
-    /*
-    public handleIncomingDisconnection(source: PeerDescriptor): void {
-        if (this.stopped) {
-            return
-        }
-        const connection = this.simulatorConnections.get(PeerID.fromValue(source.peerId).toKey())
-        connection?.handleIncomingDisconnection()
-        this.simulatorConnections.delete(PeerID.fromValue(source.peerId).toKey())
-    }
-
-    public handleIncomingData(from: PeerDescriptor, data: Uint8Array): void {
-        if (this.stopped) {
-            return
-        }
-        const connection = this.simulatorConnections.get(PeerID.fromValue(from.peerId).toKey())
-        connection?.handleIncomingData(data)
-    }
-    */
-
     public async stop(): Promise<void> {
         this.stopped = true
-        //this.removeAllListeners()
+        const conns = Array.from(this.connectingConnections.values())
+        logger.trace('CONNECTING conns.length in STOP ' + conns.length)
+        await Promise.allSettled(conns.map((conn) =>
+            conn.close()
+        ))
     }
 }

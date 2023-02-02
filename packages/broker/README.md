@@ -16,8 +16,9 @@ Broker nodes can also perform other tasks in addition to (or instead of) serving
 
 ## Table of Contents
 - [Install](#install)
-- [Plugins](#plugins)
 - [Run](#run)
+- [Configuration](#configuration)
+- [Plugins](#plugins)
 
 ## Install
 ```
@@ -28,14 +29,6 @@ Node.js `16.13.x` is the minimum required version. Node.js `18.12.x`, NPM `8.x` 
 
 For more information on the different ways of setting up a broker node, see
 [setting up a Broker node](https://streamr.network/docs/streamr-network/installing-broker-node).
-
-## Plugins
-
-The broker node ships with a number of plugins that can be enabled and configured selectively to match your specific
-needs. For easy data integration from any programming language environment, plugins for HTTP, WebSocket, and MQTT are
-provided. 
-
-Read more about available [plugins](plugins.md).
 
 ## Run
 
@@ -49,3 +42,15 @@ Then run the command broker with the desired configuration file:
 ```
 streamr-broker <configFile>
 ```
+
+## Configuration
+
+See [configuration](configuration.md) for a description of the configuration options.
+
+## Plugins
+
+The broker node ships with a number of plugins that can be enabled and configured selectively to match your specific
+needs. For easy data integration from any programming language environment, plugins for HTTP, WebSocket, and MQTT are
+provided.
+
+Read more about available [plugins](plugins.md).

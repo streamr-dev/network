@@ -19,14 +19,22 @@ export const NodeWebSocketConnectionFactory: WebSocketConnectionFactory<NodeClie
 export class NodeClientWsConnection extends AbstractWsConnection {
     
     private readyState: ReadyState = 1
+    private ownAddress: string
+    private ownPeerInfo: PeerInfo
+    private remoteAddress: string
+    private endpoint: NodeClientWsEndpoint
     
-    constructor(private ownAddress: string, 
-        private ownPeerInfo: PeerInfo, 
-        private remoteAddress: string, 
+    constructor(ownAddress: string, 
+        ownPeerInfo: PeerInfo, 
+        remoteAddress: string, 
         remotePeerInfo: PeerInfo,
-        private endpoint: NodeClientWsEndpoint
+        endpoint: NodeClientWsEndpoint
     ) {
         super(remotePeerInfo)
+        this.ownAddress = ownAddress
+        this.ownPeerInfo = ownPeerInfo
+        this.remoteAddress = remoteAddress
+        this.endpoint = endpoint        
     }
 
     close(code: DisconnectionCode, reason: DisconnectionReason): void {

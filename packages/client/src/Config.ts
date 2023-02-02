@@ -170,14 +170,11 @@ export const STREAM_CLIENT_DEFAULTS:
             webrtcDisallowPrivateAddresses: true,
             iceServers: [
                 {
-                    url: 'stun:stun.streamr.network',
-                    port: 5349
-                },
-                {
                     url: 'turn:turn.streamr.network',
                     port: 5349,
                     username: 'BrubeckTurn1',
-                    password: 'MIlbgtMw4nhpmbgqRrht1Q=='
+                    password: 'MIlbgtMw4nhpmbgqRrht1Q==',
+                    tcp: true
                 }
             ],
             entryPoints: [{

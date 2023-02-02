@@ -1,14 +1,22 @@
 syntax = "proto3";
 option optimize_for = CODE_SIZE;
 
+package dht;
+
 import "google/protobuf/empty.proto";
+import "packages/proto-rpc/protos/ProtoRpc.proto";
 
 service DhtRpcService {
   rpc getClosestPeers (ClosestPeersRequest) returns (ClosestPeersResponse);
   rpc ping (PingRequest) returns (PingResponse);
   rpc routeMessage (RouteMessageWrapper) returns (RouteMessageAck);
+  rpc findRecursively (RouteMessageWrapper) returns (RouteMessageAck);
   rpc forwardMessage (RouteMessageWrapper) returns (RouteMessageAck);
   rpc leaveNotice (LeaveNotice) returns (google.protobuf.Empty);
+}
+
+service RecursiveFindSessionService {
+  rpc reportRecursiveFindResult(RecursiveFindReport) returns (google.protobuf.Empty);
 }
 
 service WebSocketConnectorService {
@@ -40,6 +48,22 @@ message ClosestPeersResponse {
   string requestId = 2;
 }
 
+enum FindMode {
+  NODE = 0;
+  DATA = 1;
+}
+
+message RecursiveFindRequest {
+  string recursiveFindSessionId = 1;
+  FindMode findMode = 2;
+}
+
+message RecursiveFindReport {
+  repeated PeerDescriptor nodes = 1;
+  optional bytes data = 2;
+  optional bool noCloserNodesFound = 3;
+}
+
 message PingRequest {
   string requestId = 1;
 }
@@ -60,6 +84,7 @@ message PeerDescriptor {
   ConnectivityMethod websocket = 5;
   optional bool openInternet = 6;
   optional uint32 region = 7;
+  optional string nodeName = 8;
 }
 
 message ConnectivityMethod {
@@ -70,6 +95,7 @@ message ConnectivityMethod {
 enum NodeType {
   NODEJS = 0;
   BROWSER = 1;
+  VIRTUAL = 3;
 }
 
 message ConnectivityReportRequest {
@@ -96,8 +122,9 @@ message RouteMessageWrapper {
   string requestId = 2;
   PeerDescriptor destinationPeer = 3;
   PeerDescriptor previousPeer = 4;
-  bytes message = 5; // Expected to be of type Message
+  Message message = 5;
   repeated PeerDescriptor reachableThrough = 6;
+  repeated PeerDescriptor routingPath = 7;
 }
 
 message RouteMessageAck {
@@ -109,11 +136,11 @@ message RouteMessageAck {
 
 // Correspond to the MessageType Enum
 
-message ConnectivityRequestMessage {
+message ConnectivityRequest {
   uint32 port = 1;
 }
 
-message ConnectivityResponseMessage {
+message ConnectivityResponse {
   bool open_internet = 1;
   string ip = 2;
   string natType = 3;
@@ -133,12 +160,16 @@ message HandshakeResponse {
   optional string responseError = 4;
 }
 
+// protorpc.RpcMessage used as RpcMessage message type
+
+/*
 message RpcMessage {
   map<string, string> header = 1;
   bytes body = 2;
   string requestId = 3;
   optional RpcResponseError responseError = 4;
 }
+*/
 
 // Wraps all messages
 
@@ -148,6 +179,7 @@ enum MessageType {
   HANDSHAKE_REQUEST = 2;
   HANDSHAKE_RESPONSE = 3;
   RPC = 4;
+  RECURSIVE_FIND_REQUEST = 5;
 }
 
 message Message {
@@ -156,7 +188,14 @@ message Message {
   PeerDescriptor sourceDescriptor = 3;
   PeerDescriptor targetDescriptor = 4;
   string serviceId = 5; // id of the RPC service
-  bytes body = 6;
+  oneof body {
+    ConnectivityRequest connectivityRequest = 6;
+    ConnectivityResponse connectivityResponse = 7;
+    HandshakeRequest handshakeRequest = 8;
+    HandshakeResponse handshakeResponse = 9;
+    protorpc.RpcMessage rpcMessage = 10;
+    RecursiveFindRequest RecursiveFindRequest = 11;
+  };
 }
 
 // Connector Messages

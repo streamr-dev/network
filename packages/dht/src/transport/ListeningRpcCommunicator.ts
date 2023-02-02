@@ -1,7 +1,7 @@
 import { ITransport } from './ITransport' 
 import { RoutingRpcCommunicator } from "./RoutingRpcCommunicator"
 import { RpcCommunicatorConfig } from "@streamr/proto-rpc"
-import { Message } from "../proto/DhtRpc"
+import { Message } from "../proto/packages/dht/protos/DhtRpc"
 
 export class ListeningRpcCommunicator extends RoutingRpcCommunicator {
     constructor(ownServiceId: string, transport: ITransport, config?: RpcCommunicatorConfig) {

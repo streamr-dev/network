@@ -34,8 +34,6 @@ describe('StreamrNode', () => {
 
     afterEach(async () => {
         await Promise.all([
-            layer01.stop(),
-            layer02.stop(),
             node1.destroy(),
             node2.destroy()
         ])

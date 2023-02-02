@@ -1,7 +1,7 @@
 import { DhtNode } from '../../src/dht/DhtNode'
 import { createMockConnectionDhtNode } from '../utils'
 import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator'
-import { PeerDescriptor } from '../../src/proto/DhtRpc'
+import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { getRandomRegion } from '../../src/connection/Simulator/pings'
 
 describe('Mock connection Dht joining with real latencies', () => {
@@ -30,11 +30,12 @@ describe('Mock connection Dht joining with real latencies', () => {
     })
 
     afterEach(async () => {
-        await Promise.all([
+        await Promise.allSettled([
             entryPoint.stop(),
-            ...nodes.map(async (node) => await node.stop())
+            ...nodes.map(async (node) => node.stop())
         ])
         simulator.stop()
+        //wtf.dump()
     })
 
     it('Happy path', async () => {
@@ -44,7 +45,7 @@ describe('Mock connection Dht joining with real latencies', () => {
         )
         nodes.forEach((node) => {
             expect(node.getBucketSize()).toBeGreaterThanOrEqual(node.getK() - 3)
-            //expect(node.getNeighborList().getSize()).toBeGreaterThanOrEqual(node.getBucketSize())
+            expect(node.getNeighborList().getSize()).toBeGreaterThanOrEqual(node.getK() - 1)
         })
         expect(entryPoint.getBucketSize()).toBeGreaterThanOrEqual(entryPoint.getK())
     }, 60 * 1000)

@@ -1,6 +1,6 @@
 import { PeerID } from '../../../src/helpers/PeerID'
 import type { SimulationNode } from './SimulationNode'
-import { NodeType, PeerDescriptor } from '../../../src/proto/DhtRpc'
+import { NodeType, PeerDescriptor } from '../../../src/proto/packages/dht/protos/DhtRpc'
 
 export class Contact {
     private static counter = 0

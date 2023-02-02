@@ -3,22 +3,29 @@ import {
     ClosestPeersRequest, ClosestPeersResponse, LeaveNotice,
     NodeType,
     PeerDescriptor, PingRequest, PingResponse, RouteMessageAck, RouteMessageWrapper,
-    RpcMessage, WebSocketConnectionRequest, WebSocketConnectionResponse
-} from '../src/proto/DhtRpc'
+    WebSocketConnectionRequest, WebSocketConnectionResponse
+} from '../src/proto/packages/dht/protos/DhtRpc'
+import { RpcMessage } from '../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { PeerID } from '../src/helpers/PeerID'
-import { IDhtRpcService, IWebSocketConnectorService } from '../src/proto/DhtRpc.server'
+import { IDhtRpcService, IWebSocketConnectorService } from '../src/proto/packages/dht/protos/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { Simulator } from '../src/connection/Simulator/Simulator'
 import { ConnectionManager } from '../src/connection/ConnectionManager'
 import { v4 } from 'uuid'
 import { getRandomRegion } from '../src/connection/Simulator/pings'
 import { Empty } from '../src/proto/google/protobuf/empty'
+import { Any } from '../src/proto/google/protobuf/any'
 
 export const generateId = (stringId: string): Uint8Array => {
     return PeerID.fromString(stringId).value
 }
 
-export const createMockConnectionDhtNode = async (stringId: string, simulator: Simulator, binaryId?: Uint8Array, K?: number): Promise<DhtNode> => {
+export const createMockConnectionDhtNode = async (stringId: string, 
+    simulator: Simulator, 
+    binaryId?: Uint8Array, 
+    K?: number, 
+    nodeName?: string): Promise<DhtNode> => {
+    
     let id: PeerID
     if (binaryId) {
         id = PeerID.fromValue(binaryId)
@@ -28,26 +35,33 @@ export const createMockConnectionDhtNode = async (stringId: string, simulator: S
     const peerDescriptor: PeerDescriptor = {
         kademliaId: id.value,
         type: NodeType.NODEJS,
-        region: getRandomRegion()
+        region: getRandomRegion(),
+        nodeName: nodeName ? nodeName : stringId
     }
 
-    const mockConnectionManager = new ConnectionManager({ ownPeerDescriptor: peerDescriptor, simulator: simulator })
+    const mockConnectionManager = new ConnectionManager({ ownPeerDescriptor: peerDescriptor, 
+        simulator: simulator, 
+        nodeName: nodeName ? nodeName : stringId })
     
-    const node = new DhtNode({ peerDescriptor: peerDescriptor, transportLayer: mockConnectionManager, 
-        nodeName: stringId, numberOfNodesPerKBucket: K })
+    const node = new DhtNode({ peerDescriptor: peerDescriptor, 
+        transportLayer: mockConnectionManager, 
+        nodeName: nodeName, 
+        numberOfNodesPerKBucket: K ? K : 8 })
     await node.start()
 
     return node
 }
 
-export const createMockConnectionLayer1Node = async (stringId: string, layer0Node: DhtNode): Promise<DhtNode> => {
+export const createMockConnectionLayer1Node = async (stringId: string, layer0Node: DhtNode, serviceId?: string): Promise<DhtNode> => {
     const id = PeerID.fromString(stringId)
     const descriptor: PeerDescriptor = {
         kademliaId: id.value,
-        type: 0
+        type: 0,
+        nodeName: stringId
     }
 
-    const node = new DhtNode({ peerDescriptor: descriptor, transportLayer: layer0Node, serviceId: 'layer1' })
+    const node = new DhtNode({ peerDescriptor: descriptor, transportLayer: layer0Node, 
+        serviceId: serviceId ? serviceId : 'layer1', numberOfNodesPerKBucket: 8,  nodeName: stringId })
     await node.start()
     return node
 }
@@ -62,7 +76,7 @@ export const createWrappedClosestPeersRequest = (
         requestId: v4()
     }
     const rpcWrapper: RpcMessage = {
-        body: ClosestPeersRequest.toBinary(routedMessage),
+        body: Any.pack(routedMessage, ClosestPeersRequest),
         header: {
             method: 'closestPeersRequest',
             request: 'request'
@@ -95,6 +109,15 @@ export const MockDhtRpc: IDhtRpcWithError = {
         return response
     },
     async routeMessage(routed: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
+        const response: RouteMessageAck = {
+            requestId: routed.requestId,
+            destinationPeer: routed.sourcePeer,
+            sourcePeer: routed.destinationPeer,
+            error: ''
+        }
+        return response
+    },
+    async findRecursively(routed: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
         const response: RouteMessageAck = {
             requestId: routed.requestId,
             destinationPeer: routed.sourcePeer,

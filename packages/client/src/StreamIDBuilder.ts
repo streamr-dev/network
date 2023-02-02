@@ -38,7 +38,12 @@ function parseRawDefinition(definition: StreamDefinition): [string, number | und
 
 @scoped(Lifecycle.ContainerScoped)
 export class StreamIDBuilder {
-    constructor(@inject(AuthenticationInjectionToken) private authentication: Authentication) {}
+
+    private authentication: Authentication
+
+    constructor(@inject(AuthenticationInjectionToken) authentication: Authentication) {
+        this.authentication = authentication
+    }
 
     async toStreamID(streamIdOrPath: string): Promise<StreamID> {
         let address: EthereumAddress | undefined

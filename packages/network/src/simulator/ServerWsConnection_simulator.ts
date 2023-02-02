@@ -10,12 +10,19 @@ export const staticLogger = new Logger(module)
 export class ServerWsConnection extends AbstractWsConnection {
 
     private readyState: ReadyState = 1
-    constructor(private ownAddress: string,
-        private ownPeerInfo: PeerInfo,
-        private remoteAddress: string,
+    private ownAddress: string
+    private ownPeerInfo: PeerInfo
+    private remoteAddress: string
+
+    constructor(ownAddress: string,
+        ownPeerInfo: PeerInfo,
+        remoteAddress: string,
         remotePeerInfo: PeerInfo
     ) {
         super(remotePeerInfo)
+        this.ownAddress = ownAddress
+        this.ownPeerInfo = ownPeerInfo
+        this.remoteAddress = remoteAddress
     }
 
     close(code: DisconnectionCode, reason: DisconnectionReason): void {

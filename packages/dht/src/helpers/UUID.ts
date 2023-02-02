@@ -20,6 +20,10 @@ export class UUID {
         return stringify(this.buf)
     }
 
+    equals(other: UUID): boolean {
+        return (Buffer.compare(this.buf, other.value) == 0)
+    }
+
     get value(): Uint8Array {
         return this.buf
     }

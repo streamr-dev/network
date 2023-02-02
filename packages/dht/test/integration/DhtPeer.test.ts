@@ -6,10 +6,10 @@ import {
     ClosestPeersResponse,
     Message,
     MessageType,
-    PeerDescriptor, PingRequest, PingResponse, RouteMessageAck, RouteMessageWrapper,
-    RpcMessage
-} from '../../src/proto/DhtRpc'
-import { DhtRpcServiceClient } from '../../src/proto/DhtRpc.client'
+    PeerDescriptor, PingRequest, PingResponse, RouteMessageAck, RouteMessageWrapper
+} from '../../src/proto/packages/dht/protos/DhtRpc'
+import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
+import { DhtRpcServiceClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import { generateId } from '../utils'
 import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 
@@ -36,11 +36,11 @@ describe('DhtPeer', () => {
         serverRpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', MockDhtRpc.ping)
         serverRpcCommunicator.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'routeMessage', MockDhtRpc.routeMessage)
 
-        clientRpcCommunicator.on('outgoingMessage', (message: Uint8Array, _requestId: string, _ucallContext?: DhtCallContext) => {
+        clientRpcCommunicator.on('outgoingMessage', (message: RpcMessage, _requestId: string, _ucallContext?: DhtCallContext) => {
             serverRpcCommunicator.handleIncomingMessage(message)
         })
 
-        serverRpcCommunicator.on('outgoingMessage', (message: Uint8Array, _requestId: string, _ucallContext?: DhtCallContext) => {
+        serverRpcCommunicator.on('outgoingMessage', (message: RpcMessage, _requestId: string, _ucallContext?: DhtCallContext) => {
             clientRpcCommunicator.handleIncomingMessage(message)
         })
 
@@ -69,14 +69,18 @@ describe('DhtPeer', () => {
             serviceId: serviceId,
             messageId: 'routed',
             messageType: MessageType.RPC,
-            body: RpcMessage.toBinary(rpcWrapper)
+            body: {
+                oneofKind: 'rpcMessage',
+                rpcMessage: rpcWrapper
+            }
         }
         const routable = await dhtPeer.routeMessage({
             requestId: 'routed',
-            message: Message.toBinary(routed),
+            message: routed,
             sourcePeer: clientPeerDescriptor,
             destinationPeer: serverPeerDescriptor,
-            reachableThrough: []
+            reachableThrough: [],
+            routingPath: []
         })
         expect(routable).toEqual(true)
     })
@@ -100,14 +104,18 @@ describe('DhtPeer', () => {
             serviceId: serviceId,
             messageId: 'routed',
             messageType: MessageType.RPC,
-            body: RpcMessage.toBinary(rpcWrapper)
+            body: {
+                oneofKind: 'rpcMessage',
+                rpcMessage: rpcWrapper
+            }
         }
         const routable = await dhtPeer.routeMessage({
             requestId: 'routed',
-            message: Message.toBinary(routed),
+            message: routed,
             sourcePeer: clientPeerDescriptor,
             destinationPeer: serverPeerDescriptor,
-            reachableThrough: []
+            reachableThrough: [],
+            routingPath: []
         })
         expect(routable).toEqual(false)
     })

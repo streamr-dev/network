@@ -1,11 +1,11 @@
 import EventEmitter from "eventemitter3"
 import { PeerID, PeerIDKey } from "../../helpers/PeerID"
-import { PeerDescriptor } from "../../proto/DhtRpc"
+import { PeerDescriptor } from "../../proto/packages/dht/protos/DhtRpc"
 import { ConnectionSourceEvents } from "../IConnectionSource"
 import { SimulatorConnector } from "./SimulatorConnector"
 import { SimulatorConnection } from "./SimulatorConnection"
 import { ConnectionID } from "../IConnection"
-import { Logger, wait } from "@streamr/utils"
+import { Logger } from "@streamr/utils"
 import { getRegionDelayMatrix } from "./pings"
 import { v4 } from "uuid"
 
@@ -17,12 +17,17 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     private connectors: Map<PeerIDKey, SimulatorConnector> = new Map()
     private latencyTable?: Array<Array<number>>
     private associations: Map<ConnectionID, SimulatorConnection> = new Map()
-    private connectAbortControllers: Map<string, AbortController> = new Map()
-    private disconnectAbortControllers: Map<string, AbortController> = new Map()
-    private sendAbortControllers: Map<string, AbortController> = new Map()
 
-    constructor(private latencyType: LatencyType = LatencyType.NONE, private fixedLatency?: number) {
+    private timeouts: Map<string, NodeJS.Timeout> = new Map()
+
+    private latencyType: LatencyType
+    private fixedLatency?: number
+
+    constructor(latencyType: LatencyType = LatencyType.NONE, fixedLatency?: number) {
         super()
+        this.latencyType = latencyType
+        this.fixedLatency = fixedLatency
+
         if (this.latencyType == LatencyType.REAL) {
             this.latencyTable = getRegionDelayMatrix()
         }
@@ -64,68 +69,73 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
         this.connectors.set(PeerID.fromValue(connector.getPeerDescriptor().kademliaId).toKey(), connector)
     }
 
-    async connect(sourceConnection: SimulatorConnection, targetDescriptor: PeerDescriptor): Promise<void> {
+    public connect(sourceConnection: SimulatorConnection, targetDescriptor: PeerDescriptor, connectedCallback: (error?: string) => void): void {
         const target = this.connectors.get(PeerID.fromValue(targetDescriptor.kademliaId).toKey())
 
-        const abortId = v4()
-        const abortController = new AbortController()
-        this.connectAbortControllers.set(abortId, abortController)
+        if (!target) {
+            return connectedCallback('Traget connector not found')
+        }
+        
+        const timeoutId = v4()
+        const latency = 5 * this.getLatency(sourceConnection.ownPeerDescriptor.region, targetDescriptor.region)
+        
+        const timeout = setTimeout(() => {
+            this.timeouts.delete(timeoutId)
 
-        await wait(5 * this.getLatency(sourceConnection.ownPeerDescriptor.region, targetDescriptor.region), abortController.signal)
+            logger.trace('connect() calling hadleIncomingConnection()')
 
-        this.connectAbortControllers.delete(abortId)
+            target!.handleIncomingConnection(sourceConnection)
+        
+            connectedCallback()
 
-        target!.handleIncomingConnection(sourceConnection)
+        }, latency)
+
+        this.timeouts.set(timeoutId, timeout)
     }
 
     async disconnect(sourceConnection: SimulatorConnection): Promise<void> {
         const target = this.associations.get(sourceConnection.connectionId)
         if (target) {
 
-            const abortId = v4()
-            const abortController = new AbortController()
-            this.disconnectAbortControllers.set(abortId, abortController)
+            const timeoutId = v4()
+            const latency = this.getLatency(sourceConnection.ownPeerDescriptor.region, target!.ownPeerDescriptor.region)
+            const timeout = setTimeout(() => {
+                this.timeouts.delete(timeoutId)
 
-            await wait(this.getLatency(sourceConnection.ownPeerDescriptor.region, target!.ownPeerDescriptor.region), abortController.signal)
+                logger.trace('disconnect() calling hadleIncomingDisconnection()')
 
-            this.disconnectAbortControllers.delete(abortId)
+                this.associations.delete(sourceConnection.connectionId)
+                this.associations.delete(target!.connectionId)
+                target!.handleIncomingDisconnection()
+            }, latency)
 
-            this.associations.delete(sourceConnection.connectionId)
-            this.associations.delete(target!.connectionId)
+            this.timeouts.set(timeoutId, timeout)
+        }
+    }
+  
+    public send(sourceConnection: SimulatorConnection, data: Uint8Array): void {
+        const target = this.associations.get(sourceConnection.connectionId)
 
-            target!.handleIncomingDisconnection()
+        logger.trace('send()')
 
+        if (target) {
+            const timeoutId = v4()
+            const latency = this.getLatency(sourceConnection.ownPeerDescriptor.region, target!.ownPeerDescriptor.region)
+            const timeout = setTimeout(() => {
+                this.timeouts.delete(timeoutId)
+                logger.trace('send() calling handleIncomingData()')
+                target!.handleIncomingData(data)
+            }, latency)
+
+            this.timeouts.set(timeoutId, timeout)
         }
     }
 
-    async send(sourceConnection: SimulatorConnection, data: Uint8Array): Promise<void> {
-        const target = this.associations.get(sourceConnection.connectionId)
-
-        const abortId = v4()
-        const abortController = new AbortController()
-        this.sendAbortControllers.set(abortId, abortController)
-
-        await wait(this.getLatency(sourceConnection.ownPeerDescriptor.region, target!.ownPeerDescriptor.region), abortController.signal)
-
-        this.sendAbortControllers.delete(abortId)
-
-        target!.handleIncomingData(data)
-    }
-
     stop(): void {
-        logger.info('Stopping ' + this.connectAbortControllers.size + ' ongoing connect operations')
-        this.connectAbortControllers.forEach((abortController) => {
-            abortController.abort()
-        })
 
-        logger.info('Stopping ' + this.disconnectAbortControllers.size + ' ongoing disconnect operations')
-        this.disconnectAbortControllers.forEach((abortController) => {
-            abortController.abort()
-        })
-
-        logger.info('Stopping ' + this.sendAbortControllers.size + ' ongoing send operations')
-        this.sendAbortControllers.forEach((abortController) => {
-            abortController.abort()
+        logger.info(this.associations.size + ' associations in the beginning of stop()')
+        this.timeouts.forEach((timeoutref) => {
+            clearTimeout(timeoutref)
         })
     }
 }

@@ -2,12 +2,12 @@ import { RandomContactList } from '../../src/dht/contact/RandomContactList'
 import type { ServiceInfo, MethodInfo } from "@protobuf-ts/runtime-rpc"
 import { PeerID } from '../../src/helpers/PeerID'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
-import { IDhtRpcServiceClient } from '../../src/proto/DhtRpc.client'
-import { LeaveNotice, NodeType, PeerDescriptor, RouteMessageAck, RouteMessageWrapper } from "../../src/proto/DhtRpc"
-import type { PingResponse } from "../../src/proto//DhtRpc"
-import type { PingRequest } from "../../src/proto//DhtRpc"
-import type { ClosestPeersResponse } from "../../src/proto//DhtRpc"
-import type { ClosestPeersRequest } from "../../src/proto//DhtRpc"
+import { IDhtRpcServiceClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
+import { LeaveNotice, NodeType, PeerDescriptor, RouteMessageAck, RouteMessageWrapper } from "../../src/proto/packages/dht/protos/DhtRpc"
+import type { PingResponse } from "../../src/proto/packages/dht/protos/DhtRpc"
+import type { PingRequest } from "../../src/proto/packages/dht/protos/DhtRpc"
+import type { ClosestPeersResponse } from "../../src/proto/packages/dht/protos/DhtRpc"
+import type { ClosestPeersRequest } from "../../src/proto/packages/dht/protos/DhtRpc"
 import { UnaryCall } from "@protobuf-ts/runtime-rpc"
 import type { RpcOptions } from "@protobuf-ts/runtime-rpc"
 import { DhtPeer } from '../../src/dht/DhtPeer'
@@ -20,6 +20,9 @@ class MockRpcClient implements IDhtRpcServiceClient, ServiceInfo {
         { name: 'getClosestPeers', O: {} as IMessageType<ClosestPeersResponse> } as MethodInfo<any, any>,
         { name: 'ping', O: {} as IMessageType<PingResponse> } as MethodInfo<any, any>,
         { name: 'routeMessage', O: {} as IMessageType<RouteMessageAck> } as MethodInfo<any, any>,
+        { name: 'findRecursively', O: {} as IMessageType<RouteMessageAck> } as MethodInfo<any, any>,
+        { name: 'forwardMessage', O: {} as IMessageType<RouteMessageAck> } as MethodInfo<any, any>,
+        { name: 'leaveNotice', O: {} as IMessageType<Empty> } as MethodInfo<any, any>
     ]
     options = {}
 
@@ -35,6 +38,11 @@ class MockRpcClient implements IDhtRpcServiceClient, ServiceInfo {
 
     // eslint-disable-next-line class-methods-use-this
     routeMessage(_input: RouteMessageWrapper, _options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck> {
+        return {} as UnaryCall<RouteMessageWrapper, RouteMessageAck>
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    findRecursively(_input: RouteMessageWrapper, _options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck> {
         return {} as UnaryCall<RouteMessageWrapper, RouteMessageAck>
     }
 

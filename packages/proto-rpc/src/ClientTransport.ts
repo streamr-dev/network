@@ -16,6 +16,7 @@ import { RpcMessage } from './proto/ProtoRpc'
 import EventEmitter from 'eventemitter3'
 import { Logger } from '@streamr/utils'
 import { ProtoRpcOptions } from './ProtoCallContext'
+import { Any } from './proto/google/protobuf/any'
 
 interface ClientTransportEvents {
     rpcRequest: (rpcMessage: RpcMessage, options: ProtoRpcOptions, results?: ResultParts) => void
@@ -66,7 +67,7 @@ export class ClientTransport extends EventEmitter<ClientTransportEvents> impleme
             // eslint-disable-next-line max-len
             throw new Error('ProtoRpc ClientTransport can only be used with ProtoRpcClients. Please convert your protobuf-ts generated client to a ProtoRpcClient by calling toProtoRpcclient(yourClient).')
         }
-        const requestBody = method.I.toBinary(input)
+        const requestBody = Any.pack(input, method.I) // method.I.toBinary(input)
 
         const request: RpcMessage = {
             header: ClientTransport.createRequestHeaders(method, options.notification),

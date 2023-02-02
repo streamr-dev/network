@@ -4,19 +4,19 @@ import {
     PeerDescriptor,
     RtcAnswer,
     RtcOffer, WebRtcConnectionRequest
-} from '../../proto/DhtRpc'
+} from '../../proto/packages/dht/protos/DhtRpc'
 import { Empty } from '../../proto/google/protobuf/empty'
 import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { NodeWebRtcConnection } from './NodeWebRtcConnection'
 import { RemoteWebrtcConnector } from './RemoteWebrtcConnector'
-import { WebRtcConnectorServiceClient } from '../../proto/DhtRpc.client'
+import { WebRtcConnectorServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { DescriptionType } from 'node-datachannel'
 import { ManagedWebRtcConnection } from '../ManagedWebRtcConnection'
 import { Logger } from '@streamr/utils'
 import * as Err from '../../helpers/errors'
-import { IWebRtcConnectorService } from "../../proto/DhtRpc.server"
+import { IWebRtcConnectorService } from "../../proto/packages/dht/protos/DhtRpc.server"
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ManagedConnection } from '../ManagedConnection'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
@@ -39,6 +39,7 @@ export interface IceServer {
     port: number
     username?: string
     password?: string
+    tcp?: boolean
 }
 
 export class WebRtcConnector implements IWebRtcConnectorService {
@@ -52,9 +53,15 @@ export class WebRtcConnector implements IWebRtcConnectorService {
     private objectId = 0
     private iceServers: IceServer[]
     private disallowPrivateAddresses: boolean
+    private config: WebRtcConnectorConfig
+    private incomingConnectionCallback: (connection: ManagedConnection) => boolean
 
-    constructor(private config: WebRtcConnectorConfig,
-        private incomingConnectionCallback: (connection: ManagedConnection) => boolean) {
+    constructor(
+        config: WebRtcConnectorConfig,
+        incomingConnectionCallback: (connection: ManagedConnection) => boolean
+    ) {
+
+        this.config = config
 
         WebRtcConnector.objectCounter++
         this.objectId = WebRtcConnector.objectCounter
@@ -62,6 +69,7 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         this.rpcTransport = config.rpcTransport
         this.iceServers = config.iceServers || []
         this.disallowPrivateAddresses = config.disallowPrivateAddresses || false
+        this.incomingConnectionCallback = incomingConnectionCallback
 
         this.rpcCommunicator = new ListeningRpcCommunicator(WebRtcConnector.WEBRTC_CONNECTOR_SERVICE_ID, this.rpcTransport, {
             rpcRequestTimeout: 15000
@@ -186,21 +194,6 @@ export class WebRtcConnector implements IWebRtcConnectorService {
             this.ongoingConnectAttempts.set(peerKey, managedConnection)
             this.incomingConnectionCallback(managedConnection)
 
-            /*
-            managedConnection.on('handshakeRequest', () => {
-                if (this.ongoingConnectAttempts.has(peerKey)) {
-
-                    this.ongoingConnectAttempts.delete(peerKey)
-                }
-                if (this.incomingConnectionCallback(managedConnection)) {
-                    managedConnection.acceptHandshake()
-                } else {
-                    managedConnection.rejectHandshake('Duplicate connection')
-                    managedConnection.close()
-                }
-            })
-            */
-
             const remoteConnector = new RemoteWebrtcConnector(
                 remotePeer,
                 toProtoRpcClient(new WebRtcConnectorServiceClient(this.rpcCommunicator.getRpcClientTransport()))
@@ -216,15 +209,8 @@ export class WebRtcConnector implements IWebRtcConnectorService {
 
             connection.start(false)
 
-        } /*else {
-            const managedConnection = this.ongoingConnectAttempts.get(peerKey)!
-            managedConnection.on('handshakeRequest', () => {
-                if (this.ongoingConnectAttempts.has(peerKey)) {
-                    this.ongoingConnectAttempts.delete(peerKey)
-                }
-                managedConnection.acceptHandshake()
-            })
-        }*/
+        }
+
         // Always use offerers connectionId
         connection!.setConnectionId(connectionId)
         connection!.setRemoteDescription(description, DescriptionType.Offer)
@@ -290,14 +276,13 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         }
     }
 
-    stop(): void {
+    public async stop(): Promise<void> {
         logger.trace('stop()')
         this.stopped = true
-        this.ongoingConnectAttempts.forEach((conn)=> {
-            logger.trace('closing ongoingConnectAttempts')
-            conn.close()
-        })
 
+        const attempts = Array.from(this.ongoingConnectAttempts.values())
+        await Promise.allSettled(attempts.map((conn) => conn.close()))
+       
         this.rpcCommunicator.stop()
     }
 
@@ -308,13 +293,6 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         return myId.hasSmallerHashThan(theirId)
 
     }
-
-    /*
-    private static offeringHash(idPair: string): number {
-        const buffer = crypto.createHash('md5').update(idPair).digest()
-        return buffer.readInt32LE(0)
-    }
-    */
 
     // IWebRTCConnector implementation
 

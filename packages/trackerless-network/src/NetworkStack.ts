@@ -14,8 +14,10 @@ export class NetworkStack {
     private readonly layer0DhtNode: DhtNode
     private readonly streamrNode: StreamrNode
     private readonly metricsContext: MetricsContext
+    private readonly options: NetworkOptions
 
-    constructor(private readonly options: NetworkOptions) {
+    constructor(options: NetworkOptions) {
+        this.options = options
         this.metricsContext = options.metricsContext || new MetricsContext()
         this.layer0DhtNode = new DhtNode({
             ...options.layer0,

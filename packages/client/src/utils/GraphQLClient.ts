@@ -11,13 +11,18 @@ export interface GraphQLQuery {
 
 @scoped(Lifecycle.ContainerScoped)
 export class GraphQLClient {
+
+    private httpFetcher: HttpFetcher
+    private config: Pick<StrictStreamrClientConfig, 'contracts'>
     private readonly logger: Logger
 
     constructor(
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
-        @inject(HttpFetcher) private httpFetcher: HttpFetcher,
-        @inject(ConfigInjectionToken) private config: Pick<StrictStreamrClientConfig, 'contracts'>
+        @inject(HttpFetcher) httpFetcher: HttpFetcher,
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts'>
     ) {
+        this.httpFetcher = httpFetcher
+        this.config = config
         this.logger = loggerFactory.createLogger(module)
     }
 

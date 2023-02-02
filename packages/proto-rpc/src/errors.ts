@@ -13,16 +13,27 @@ export enum ErrorCode {
 }
 
 class Err extends Error {
-    constructor(public code: ErrorCode, message?: string, public originalError?: Error | string) {
+
+    public code: ErrorCode
+    public originalError?: Error | string
+
+    constructor(code: ErrorCode, message?: string, originalError?: Error | string) {
         super(message)
+        this.code = code
+        this.originalError = originalError
     }
 }
 
 export class RpcTimeout extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.RPC_TIMEOUT, message, originalError) } }
 export class RpcRequest extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.RPC_REQUEST, message, originalError) } }
 export class RpcServerError extends Err {
-    constructor(errorMessage?: string, public errorClassName?: string, public errorCode?: string) {
+    public errorClassName?: string
+    public errorCode?: string
+
+    constructor(errorMessage?: string, errorClassName?: string, errorCode?: string) {
         super(ErrorCode.RPC_SERVER_ERROR, errorMessage)
+        this.errorClassName = errorClassName
+        this.errorCode = errorCode
     }
 }
 export class RpcClientError extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.RPC_CLIENT_ERROR, message, originalError) } }

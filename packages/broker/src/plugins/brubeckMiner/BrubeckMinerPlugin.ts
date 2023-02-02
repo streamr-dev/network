@@ -115,7 +115,8 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
         const neighbors = networkNode.getNeighborsForStreamPart(toStreamPartID(this.streamId, REWARD_STREAM_PARTITION))
         return neighbors.map((nodeId: string) => ({
             id: nodeId,
-            rtt: networkNode.getRtt(nodeId)
+            // rtt: networkNode.getRtt(nodeId)
+            rtt: 0
         }))
     }
 

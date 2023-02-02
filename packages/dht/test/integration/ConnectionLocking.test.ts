@@ -1,6 +1,6 @@
 import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
-import { NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
+import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { waitForCondition } from '@streamr/utils'
 import { PeerID } from '../../src/helpers/PeerID'
 import { SimulatorTransport } from '../../src/exports'
@@ -9,10 +9,12 @@ describe('Connection Locking', () => {
 
     const mockPeerDescriptor1: PeerDescriptor = {
         kademliaId: PeerID.fromString("mock1").value,
+        nodeName: "mock1",
         type: NodeType.NODEJS
     }
     const mockPeerDescriptor2: PeerDescriptor = {
         kademliaId: PeerID.fromString("mock2").value,
+        nodeName: "mock2",
         type: NodeType.NODEJS
     }
 
@@ -28,15 +30,11 @@ describe('Connection Locking', () => {
         mockConnectorTransport2 = new SimulatorTransport(mockPeerDescriptor2, simulator)
 
         connectionManager1 = new ConnectionManager({
-            transportLayer: mockConnectorTransport1,
-            //webSocketHost: '127.0.0.1',
-            //webSocketPort: 12312
+            transportLayer: mockConnectorTransport1
         })
 
         connectionManager2 = new ConnectionManager({
-            transportLayer: mockConnectorTransport2,
-            //webSocketHost: '127.0.0.1',
-            //webSocketPort: 12313
+            transportLayer: mockConnectorTransport2
         })
         await connectionManager1.start(() => mockPeerDescriptor1)
         await connectionManager2.start(() => mockPeerDescriptor2)
@@ -44,6 +42,8 @@ describe('Connection Locking', () => {
 
     afterEach(async () => {
         await Promise.all([
+            mockConnectorTransport1.stop(),
+            mockConnectorTransport2.stop(),
             connectionManager1.stop(),
             connectionManager2.stop()
         ])
@@ -143,7 +143,9 @@ describe('Connection Locking', () => {
         expect(connectionManager2.hasLocalLockedConnection(mockPeerDescriptor1)).toEqual(true)
         expect(connectionManager2.hasRemoteLockedConnection(mockPeerDescriptor1)).toEqual(true)
 
-        await connectionManager1.gracefullyDisconnect(mockPeerDescriptor2)
+        //@ts-expect-error private field
+        await connectionManager1.gracefullyDisconnectAsync(mockPeerDescriptor2)
+        
         await waitForCondition(() =>
             !connectionManager1.hasRemoteLockedConnection(mockPeerDescriptor2, 'testLock1')
             && !connectionManager1.hasLocalLockedConnection(mockPeerDescriptor2, 'testLock1')

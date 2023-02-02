@@ -19,6 +19,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 
+## [7.3.0] - 2023-01-23
+
+### Added
+
+- Add optional config option `network.webrtcSendBufferMaxMessageCount`
+- Add optional config option `network.iceServers.tcp`
+
+
+## [7.2.1] - 2023-01-12
+
+### Fixed
+
+- Fix `allOf` filter of `client.searchStreams`
+
+
 ## [7.2.0] - 2022-12-14
 
 ### Deprecated
@@ -224,7 +239,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fixed an import so that the client successfully loads in a web browser environment (NET-721)
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/client/v7.2.0...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/client/v7.3.0...HEAD
+[7.3.0]: https://github.com/streamr-dev/network/compare/client/v7.2.1...client/v7.3.0
+[7.2.1]: https://github.com/streamr-dev/network/compare/client/v7.2.0...client/v7.2.1
 [7.2.0]: https://github.com/streamr-dev/network/compare/client/v7.1.0...client/v7.2.0
 [7.1.0]: https://github.com/streamr-dev/network/compare/client/v7.0.3...client/v7.1.0
 [7.0.3]: https://github.com/streamr-dev/network/compare/client/v7.0.2...client/v7.0.3

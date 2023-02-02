@@ -1,11 +1,12 @@
 import { getMockPeers, MockDhtRpc } from '../utils'
 import { ProtoRpcClient, RpcCommunicator, RpcError, toProtoRpcClient } from '@streamr/proto-rpc'
-import { DhtRpcServiceClient } from '../../src/proto/DhtRpc.client'
+import { DhtRpcServiceClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import { generateId } from '../utils'
-import { ClosestPeersRequest, ClosestPeersResponse, PeerDescriptor } from '../../src/proto/DhtRpc'
+import { ClosestPeersRequest, ClosestPeersResponse, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { wait } from '@streamr/utils'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
+import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 
 describe('DhtRpc', () => {
     let rpcCommunicator1: RpcCommunicator
@@ -23,7 +24,7 @@ describe('DhtRpc', () => {
         type: 0
     }
 
-    const outgoingListener2 = (message: Uint8Array, _requestId: string, _ucallContext?: DhtCallContext) => {
+    const outgoingListener2 = (message: RpcMessage, _requestId: string, _ucallContext?: DhtCallContext) => {
         rpcCommunicator1.handleIncomingMessage(message)
     }
 
@@ -34,7 +35,7 @@ describe('DhtRpc', () => {
         rpcCommunicator2 = new RpcCommunicator()
         rpcCommunicator2.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', MockDhtRpc.getClosestPeers)
 
-        rpcCommunicator1.on('outgoingMessage', (message: Uint8Array, _requestId: string, _ucallContext?: DhtCallContext) => {
+        rpcCommunicator1.on('outgoingMessage', (message: RpcMessage, _requestId: string, _ucallContext?: DhtCallContext) => {
             rpcCommunicator2.handleIncomingMessage(message)
         })
 
@@ -73,7 +74,7 @@ describe('DhtRpc', () => {
 
     it('Default RPC timeout, client side', async () => {
         rpcCommunicator2.off('outgoingMessage', outgoingListener2)
-        rpcCommunicator2.on('outgoingMessage', async (_umessage: Uint8Array, _requestId: string, _ucallContext?: DhtCallContext) => {
+        rpcCommunicator2.on('outgoingMessage', async (_message: RpcMessage, _requestId: string, _ucallContext?: DhtCallContext) => {
             await wait(3000)
         })
         const response2 = client2.getClosestPeers(

@@ -99,7 +99,7 @@ export class RemoteRandomGraphNode {
             senderId: PeerID.fromValue(ownPeerDescriptor.kademliaId).toKey()
         }
         this.client.interleaveNotice(notification, options).catch(() => {
-            logger.warn('Failed to send interleaveNotice')
+            logger.debug('Failed to send interleaveNotice')
         })
     }
 
@@ -114,7 +114,7 @@ export class RemoteRandomGraphNode {
             randomGraphId: this.graphId
         }
         this.client.leaveStreamNotice(notification, options).catch(() => {
-            logger.warn('Failed to send leaveStreamNotice')
+            logger.debug('Failed to send leaveStreamNotice')
         })
     }
 
