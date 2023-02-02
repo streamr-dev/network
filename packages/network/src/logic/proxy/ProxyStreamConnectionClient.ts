@@ -338,6 +338,7 @@ export class ProxyStreamConnectionClient extends EventEmitter {
                     `Could not open any initial ProxyConnections: ${rejections.map((rej, i) => `${rej}${i < rejections.length - 1 ? ', ' : ''}`)}`
                 )
             }
+        // Remove unnecessary connections
         } else if (attemptCount < 0 && this.proxyTargets.get(streamPartId)!.candidates.size > 0) {
             const proxiesToDisconnect = shuffle([...this.proxyTargets.get(streamPartId)!.connections.keys()])
                 .splice(0, -attemptCount)
