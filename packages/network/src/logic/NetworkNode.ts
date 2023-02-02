@@ -25,30 +25,14 @@ export class NetworkNode extends Node {
         this.onDataReceived(streamMessage)
     }
 
-    async addProxyConnectionCandidates(
+    async setProxies(
         streamPartId: StreamPartID,
         contactNodeIds: NodeId[],
         direction: ProxyDirection,
         userId: string,
-        targetNumberOfProxies?: number
+        connectionCount?: number
     ): Promise<void> {
-        await this.addProxyCandidates(streamPartId, contactNodeIds, direction, userId, targetNumberOfProxies)
-    }
-
-    async setProxyConnectionTargetCount(streamPartId: StreamPartID, targetCount: number): Promise<void> {
-        await this.setNumberOfTargetProxyConnections(streamPartId, targetCount)
-    }
-
-    getSelectedProxyNodeIds(streamPartId: StreamPartID): NodeId[] {
-        return this.getProxiedStreamPartConnectionNodeIds(streamPartId)
-    }
-
-    async removeProxyConnectionCandidates(streamPartId: StreamPartID, contactNodeIds: NodeId[]): Promise<void> {
-        await this.removeProxyCandidates(streamPartId, contactNodeIds)
-    }
-
-    async removeAllProxyConnectionCandidates(streamPartId: StreamPartID): Promise<void> {
-        await this.stopProxyingOnStream(streamPartId)
+        await this.doSetProxies(streamPartId, contactNodeIds, direction, userId, connectionCount)
     }
 
     addMessageListener<T>(cb: (msg: StreamMessage<T>) => void): void {

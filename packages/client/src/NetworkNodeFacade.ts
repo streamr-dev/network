@@ -39,19 +39,13 @@ export interface NetworkNodeStub {
     /** @internal */
     stop: () => Promise<unknown>
     /** @internal */
-    addProxyConnectionCandidates: (
+    setProxies: (
         streamPartId: StreamPartID,
         nodeIds: string[],
         direction: ProxyDirection,
         userId: string,
-        targetNumberOfProxies?: number
+        connectionCount?: number
     ) => Promise<void>
-    /** @internal */
-    removeProxyConnectionCandidates: (streamPartId: StreamPartID, nodeIds: string[]) => Promise<void>
-    /** @internal */
-    removeAllProxyConnectionCandidates: (streamPartId: StreamPartID) => Promise<void>
-    /** @internal */
-    setProxyConnectionTargetCount: (streamPartId: StreamPartID, targetCount: number) => Promise<void>
 }
 
 export const getEthereumAddressFromNodeId = (nodeId: string): string => {
@@ -222,37 +216,22 @@ export class NetworkNodeFacade {
         return this.cachedNode!.publish(streamMessage)
     }
 
-    async addProxyConnectionCandidates(
+    async setProxies(
         streamPartId: StreamPartID,
         nodeIds: string[],
         direction: ProxyDirection,
-        targetNumberOfProxies?: number
+        connectionCount?: number
     ): Promise<void> {
         if (this.isStarting()) {
             await this.startNodeTask()
         }
-        await this.cachedNode!.addProxyConnectionCandidates(
+        await this.cachedNode!.setProxies(
             streamPartId,
             nodeIds,
             direction,
             (await this.authentication.getAddress()),
-            targetNumberOfProxies
+            connectionCount
         )
-    }
-
-    async removeProxyConnectionCandidates(streamPartId: StreamPartID, nodeIds: string[]): Promise<void> {
-        if (this.isStarting()) {
-            return
-        }
-        await this.cachedNode!.removeProxyConnectionCandidates(streamPartId, nodeIds)
-    }
-
-    async removeAllProxyConnectionCandidates(streamPartId: StreamPartID): Promise<void> {
-        await this.cachedNode!.removeAllProxyConnectionCandidates(streamPartId)
-    }
-
-    async setProxyConnectionTargetCount(streamPartId: StreamPartID, targetCount: number): Promise<void> {
-        await this.cachedNode!.setProxyConnectionTargetCount(streamPartId, targetCount)
     }
 
     private isStarting(): boolean {

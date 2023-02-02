@@ -503,25 +503,13 @@ export class StreamrClient {
         return this.node.getNode()
     }
 
-    addProxyConnectionCandidates(
+    setProxies(
         streamDefinition: StreamDefinition,
         nodeIds: string[],
         direction: ProxyDirection,
-        targetNumberOfProxies?: number
+        connectionCount?: number
     ): Promise<void> {
-        return this.proxyPublishSubscribe.addProxyConnectionCandidates(streamDefinition, nodeIds, direction, targetNumberOfProxies)
-    }
-
-    removeProxyConnectionCandidates(streamDefinition: StreamDefinition, nodeIds: string[]): Promise<void> {
-        return this.proxyPublishSubscribe.removeProxyConnectionCandidates(streamDefinition, nodeIds)
-    }
-
-    removeAllProxyConnectionCandidates(streamDefinition: StreamDefinition): Promise<void> {
-        return this.proxyPublishSubscribe.removeAllProxyConnectionCandidates(streamDefinition)
-    }
-
-    setProxyConnectionTargetCount(streamDefinition: StreamDefinition, targetCount: number): Promise<void> {
-        return this.proxyPublishSubscribe.setProxyConnectionTargetCount(streamDefinition, targetCount)
+        return this.proxyPublishSubscribe.setProxies(streamDefinition, nodeIds, direction, connectionCount)
     }
 
     // --------------------------------------------------------------------------------------------

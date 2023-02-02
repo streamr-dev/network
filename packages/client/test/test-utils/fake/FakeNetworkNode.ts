@@ -110,28 +110,13 @@ export class FakeNetworkNode implements NetworkNodeStub {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async addProxyConnectionCandidates(
+    async setProxies(
         _streamPartId: StreamPartID,
         _nodeIds: string[],
         _direction: ProxyDirection,
         _userId: string,
         _targetCount?: number
     ): Promise<void> {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    async removeProxyConnectionCandidates(_streamPartId: StreamPartID, _nodeIds: string[]): Promise<void> {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    async removeAllProxyConnectionCandidates(_streamPartId: StreamPartID): Promise<void> {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    async setProxyConnectionTargetCount(_streamPartId: StreamPartID, _targetCount: number): Promise<void> {
         throw new Error('not implemented')
     }
 }

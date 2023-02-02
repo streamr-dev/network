@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Proxy pattern now functions on a select k out of n nodes basis. (NET-943)
+- Proxy enhancements: It is possible to set a limit for the number of proxy connections while having a larger set of nodes to choose from
 
 ### Deprecated
 
