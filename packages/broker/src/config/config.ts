@@ -1,9 +1,7 @@
 import { StreamrClientConfig } from 'streamr-client'
 import path from 'path'
 import * as os from 'os'
-import { Logger } from '@streamr/utils'
-
-const logger = new Logger(module)
+import { camelCase, set } from 'lodash'
 
 export interface Config {
     client: StreamrClientConfig
@@ -38,25 +36,44 @@ export const getLegacyDefaultFile = (): string => {
     return path.join(os.homedir(), relativePath)
 }
 
-// See NET-934, this exists for compatibility with a specific vendor's use case
-export function overrideConfigToEnvVarsIfGiven(config: Pick<Config, 'client' | 'plugins'>): void {
-    const ENV_VAR_PRIVATE_KEY: string | undefined = process.env.OVERRIDE_BROKER_PRIVATE_KEY
-    const ENV_VAR_BENEFICIARY_ADDRESS: string | undefined = process.env.OVERRIDE_BROKER_BENEFICIARY_ADDRESS
+export function overrideConfigToEnvVarsIfGiven(config: Config): void {
 
-    if (ENV_VAR_PRIVATE_KEY !== undefined) {
-        if (config.client.auth !== undefined && 'privateKey' in config.client.auth) {
-            logger.info('overriding private key to OVERRIDE_BROKER_PRIVATE_KEY')
-            config.client.auth.privateKey = ENV_VAR_PRIVATE_KEY
+    const parseValue = (value: string) => {
+        const number = /^-?\d+\.?\d*$/
+        if (number.test(value)) {
+            return Number(value)
+        } else if (value === 'true') {
+            return true
+        } else if (value === 'false') {
+            return false
+        } else if (value == 'null') {
+            return null
         } else {
-            logger.warn('ignoring OVERRIDE_BROKER_PRIVATE_KEY due to not using private key authentication')
+            return value
         }
     }
-    if (ENV_VAR_BENEFICIARY_ADDRESS !== undefined) {
-        if ('brubeckMiner' in config.plugins) {
-            logger.info('overriding beneficiary address to OVERRIDE_BROKER_BENEFICIARY_ADDRESS')
-            config.plugins.brubeckMiner.beneficiaryAddress = ENV_VAR_BENEFICIARY_ADDRESS
-        } else {
-            logger.warn('ignoring OVERRIDE_BROKER_BENEFICIARY_ADDRESS due to miner plugin not being enabled')
+    
+    const PREFIX = 'STREAMR__BROKER__'
+    Object.keys(process.env).forEach((variableName: string) => {
+        if (variableName.startsWith(PREFIX)) {
+            const parts = variableName.substring(PREFIX.length).split('__').map((part: string) => {
+                const groups = part.match(/^([A-Z_]*[A-Z])(_\d+)?$/)
+                if (groups !== null) {
+                    const base = camelCase(groups[1])
+                    const suffix = groups[2]
+                    if (suffix === undefined) {
+                        return base
+                    } else {
+                        const index = Number(suffix.substring(1)) - 1
+                        return `${base}[${index}]`
+                    }
+                } else {
+                    throw new Error(`Malformed environment variable ${variableName}`)
+                }
+            })
+            const key = parts.join('.')
+            const value = parseValue(process.env[variableName]!)
+            set(config, key, value)
         }
-    }
+    })
 }
