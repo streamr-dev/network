@@ -697,13 +697,13 @@ Proxy publishing and subscribing are handled on the network overlay level. This 
 await publishingClient.addProxyConnectionCandidates(stream, ['0x11111...', '0x22222...'], ProxyDirection.PUBLISH)
 
 // Remove publish proxy to multiple nodes on stream
-await publishingClient.removeProxyConnectionCandidates(stream, ['0x11111...', '0x22222...'], ProxyDirection.PUBLISH)
+await publishingClient.removeProxyConnectionCandidates(stream, ['0x11111...', '0x22222...'])
 
 // Open subscribe proxy to multiple nodes on stream
 await publishingClient.addProxyConnectionCandidates(stream, ['0x11111...', '0x22222...'], ProxyDirection.SUBSCRIBE)
 
-// Remove subscribe proxy to multiple nodes on stream
-await publishingClient.removeProxyConnectionCandidates(stream, ['0x11111...', '0x22222...'], ProxyDirection.SUBSCRIBE)
+// Remove all proxis to nodes on stream
+await publishingClient.removeAllProxyConnectionCandidates(stream)
 ```
 
 By default the client will attempt to open proxy connections to all of the candidates set in the first `addProxyConnectionCandidates` method. However, it is also possible to configure multiple proxy candidates and a separate target connection count. In this approach if a connection to one of the candidates is disconnected, the client will attempt to connect to another candidate by random.

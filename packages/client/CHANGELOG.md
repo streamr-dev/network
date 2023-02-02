@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Proxy pattern now functions on a select k out of n nodes basis. (NET-943)
+
 ### Deprecated
 
 ### Removed

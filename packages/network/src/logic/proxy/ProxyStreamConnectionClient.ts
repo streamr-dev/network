@@ -174,8 +174,14 @@ export class ProxyStreamConnectionClient extends EventEmitter {
 
     async setTargetConnectionCount(streamPartId: StreamPartID, count: number): Promise<void> {
         if (this.proxyTargets.has(streamPartId)) {
-            this.proxyTargets.get(streamPartId)!.numOfTargets = count
-            await this.selectConnectionsFromCandidates(streamPartId)
+            if (count > 0) {
+                this.proxyTargets.get(streamPartId)!.numOfTargets = count
+                await this.selectConnectionsFromCandidates(streamPartId)
+            } else {
+                logger.warn('Cannot set proxy connection target count below 1, if you wish to stop proxying on stream remove all candidates instead')
+            }
+        } else {
+            logger.warn(`Could not set target count on ${streamPartId} as proxy candidates have not been set`)
         }
     }
 
