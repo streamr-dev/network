@@ -47,9 +47,9 @@ export interface NetworkNodeStub {
         targetNumberOfProxies?: number
     ) => Promise<void>
     /** @internal */
-    removeProxyConnectionCandidates: (streamPartId: StreamPartID, nodeIds: string[], direction: ProxyDirection) => Promise<void>
+    removeProxyConnectionCandidates: (streamPartId: StreamPartID, nodeIds: string[]) => Promise<void>
     /** @internal */
-    removeAllProxyConnectionCandidates: (streamPartId: StreamPartID, direction: ProxyDirection) => Promise<void>
+    removeAllProxyConnectionCandidates: (streamPartId: StreamPartID) => Promise<void>
     /** @internal */
     setProxyConnectionTargetCount: (streamPartId: StreamPartID, targetCount: number) => Promise<void>
 }
@@ -240,19 +240,15 @@ export class NetworkNodeFacade {
         )
     }
 
-    async removeProxyConnectionCandidates(
-        streamPartId: StreamPartID,
-        nodeIds: string[],
-        direction: ProxyDirection
-    ): Promise<void> {
+    async removeProxyConnectionCandidates(streamPartId: StreamPartID, nodeIds: string[]): Promise<void> {
         if (this.isStarting()) {
             return
         }
-        await this.cachedNode!.removeProxyConnectionCandidates(streamPartId, nodeIds, direction)
+        await this.cachedNode!.removeProxyConnectionCandidates(streamPartId, nodeIds)
     }
 
-    async removeAllProxyConnectionCandidates(streamPartId: StreamPartID, direction: ProxyDirection): Promise<void> {
-        await this.cachedNode!.removeAllProxyConnectionCandidates(streamPartId, direction)
+    async removeAllProxyConnectionCandidates(streamPartId: StreamPartID): Promise<void> {
+        await this.cachedNode!.removeAllProxyConnectionCandidates(streamPartId)
     }
 
     async setProxyConnectionTargetCount(streamPartId: StreamPartID, targetCount: number): Promise<void> {

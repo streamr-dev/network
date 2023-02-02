@@ -98,7 +98,7 @@ describe('Proxy connection tests', () => {
 
         await Promise.all([
             waitForEvent(contactNode, NodeEvent.ONE_WAY_CONNECTION_CLOSED),
-            onewayNode.removeProxyConnectionCandidates(defaultStreamPartId, ['contact-node'], ProxyDirection.PUBLISH),
+            onewayNode.removeProxyConnectionCandidates(defaultStreamPartId, ['contact-node']),
         ])
 
         // @ts-expect-error private
@@ -107,7 +107,7 @@ describe('Proxy connection tests', () => {
         expect(onewayNode.streamPartManager.hasOutOnlyConnection(defaultStreamPartId, 'contact-node-2')).toBeTrue()
         await Promise.all([
             waitForEvent(contactNode2, NodeEvent.ONE_WAY_CONNECTION_CLOSED),
-            onewayNode.removeProxyConnectionCandidates(defaultStreamPartId, ['contact-node-2'], ProxyDirection.PUBLISH),
+            onewayNode.removeProxyConnectionCandidates(defaultStreamPartId, ['contact-node-2']),
         ])
 
         // @ts-expect-error private
@@ -128,7 +128,7 @@ describe('Proxy connection tests', () => {
 
         await Promise.all([
             waitForEvent(contactNode, NodeEvent.ONE_WAY_CONNECTION_CLOSED),
-            onewayNode.removeProxyConnectionCandidates(defaultStreamPartId, ['contact-node'], ProxyDirection.SUBSCRIBE),
+            onewayNode.removeProxyConnectionCandidates(defaultStreamPartId, ['contact-node']),
         ])
 
         // @ts-expect-error private
@@ -137,7 +137,7 @@ describe('Proxy connection tests', () => {
         expect(onewayNode.streamPartManager.hasInOnlyConnection(defaultStreamPartId, 'contact-node-2')).toBeTrue()
         await Promise.all([
             waitForEvent(contactNode2, NodeEvent.ONE_WAY_CONNECTION_CLOSED),
-            onewayNode.removeProxyConnectionCandidates(defaultStreamPartId, ['contact-node-2'], ProxyDirection.SUBSCRIBE),
+            onewayNode.removeProxyConnectionCandidates(defaultStreamPartId, ['contact-node-2']),
         ])
 
         // @ts-expect-error private
@@ -150,9 +150,9 @@ describe('Proxy connection tests', () => {
 
     it('closing one-way connections for incorrect direction rejects', async () => {
         await onewayNode.addProxyConnectionCandidates(defaultStreamPartId, ['contact-node'], ProxyDirection.PUBLISH, 'publisher')
-        await expect(onewayNode.removeProxyConnectionCandidates(defaultStreamPartId, ['non-contact-node'], ProxyDirection.PUBLISH))
+        await expect(onewayNode.removeProxyConnectionCandidates(defaultStreamPartId, ['non-contact-node']))
             .rejects
-            .toMatch(`proxy publish`)
+            .toMatch(`proxy candidate`)
     })
 
     it('publisher cannot connect to non-contact node', async () => {
@@ -290,7 +290,7 @@ describe('Proxy connection tests', () => {
         await onewayNode.addProxyConnectionCandidates(defaultStreamPartId, ['contact-node'], ProxyDirection.PUBLISH, 'publisher')
         await Promise.all([
             waitForEvent(contactNode, NodeEvent.ONE_WAY_CONNECTION_CLOSED),
-            onewayNode.removeProxyConnectionCandidates(defaultStreamPartId, ['contact-node'], ProxyDirection.PUBLISH),
+            onewayNode.removeProxyConnectionCandidates(defaultStreamPartId, ['contact-node']),
         ])
         // @ts-expect-error private
         expect(contactNode.streamPartManager.isSetUp(defaultStreamPartId)).toBeTrue()
@@ -401,7 +401,7 @@ describe('Proxy connection tests', () => {
         // @ts-expect-error private
         expect(onewayNode.streamPartManager.getNeighborsForStreamPart(defaultStreamPartId)).toBeArrayOfSize(0)
 
-        await onewayNode.removeAllProxyConnectionCandidates(defaultStreamPartId, ProxyDirection.SUBSCRIBE)
+        await onewayNode.removeAllProxyConnectionCandidates(defaultStreamPartId)
 
         // @ts-expect-error private
         expect(onewayNode.streamPartManager.isSetUp(defaultStreamPartId)).toEqual(false)

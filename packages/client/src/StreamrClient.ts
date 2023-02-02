@@ -512,12 +512,12 @@ export class StreamrClient {
         return this.proxyPublishSubscribe.addProxyConnectionCandidates(streamDefinition, nodeIds, direction, targetNumberOfProxies)
     }
 
-    removeProxyConnectionCandidates(streamDefinition: StreamDefinition, nodeIds: string[], direction: ProxyDirection): Promise<void> {
-        return this.proxyPublishSubscribe.removeProxyConnectionCandidates(streamDefinition, nodeIds, direction)
+    removeProxyConnectionCandidates(streamDefinition: StreamDefinition, nodeIds: string[]): Promise<void> {
+        return this.proxyPublishSubscribe.removeProxyConnectionCandidates(streamDefinition, nodeIds)
     }
 
-    removeAllProxyConnectionCandidates(streamDefinition: StreamDefinition, direction: ProxyDirection): Promise<void> {
-        return this.proxyPublishSubscribe.removeAllProxyConnectionCandidates(streamDefinition, direction)
+    removeAllProxyConnectionCandidates(streamDefinition: StreamDefinition): Promise<void> {
+        return this.proxyPublishSubscribe.removeAllProxyConnectionCandidates(streamDefinition)
     }
 
     setProxyConnectionTargetCount(streamDefinition: StreamDefinition, targetCount: number): Promise<void> {

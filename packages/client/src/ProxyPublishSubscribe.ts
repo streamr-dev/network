@@ -28,18 +28,14 @@ export class ProxyPublishSubscribe {
         await this.node.addProxyConnectionCandidates(streamPartId, nodeIds, direction, targetNumberOfProxies)
     }
 
-    async removeProxyConnectionCandidates(
-        streamDefinition: StreamDefinition,
-        nodeIds: string[],
-        direction: ProxyDirection
-    ): Promise<void> {
+    async removeProxyConnectionCandidates(streamDefinition: StreamDefinition, nodeIds: string[]): Promise<void> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        await this.node.removeProxyConnectionCandidates(streamPartId, nodeIds, direction)
+        await this.node.removeProxyConnectionCandidates(streamPartId, nodeIds)
     }
 
-    async removeAllProxyConnectionCandidates(streamDefinition: StreamDefinition, direction: ProxyDirection): Promise<void> {
+    async removeAllProxyConnectionCandidates(streamDefinition: StreamDefinition): Promise<void> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        await this.node.removeAllProxyConnectionCandidates(streamPartId, direction)
+        await this.node.removeAllProxyConnectionCandidates(streamPartId)
     }
 
     async setProxyConnectionTargetCount(streamDefinition: StreamDefinition, targetCount: number): Promise<void> {

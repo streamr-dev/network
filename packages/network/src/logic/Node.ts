@@ -258,16 +258,16 @@ export class Node extends EventEmitter {
         await this.proxyStreamConnectionClient.addProxyConnections(streamPartId, contactNodeIds, direction, userId, targetNumberOfProxies)
     }
 
-    async removeProxyCandidates(streamPartId: StreamPartID, contactNodeIds: NodeId[], direction: ProxyDirection): Promise<void> {
-        await this.proxyStreamConnectionClient.removeProxyCandidates(streamPartId, contactNodeIds, direction)
+    async removeProxyCandidates(streamPartId: StreamPartID, contactNodeIds: NodeId[]): Promise<void> {
+        await this.proxyStreamConnectionClient.removeProxyCandidates(streamPartId, contactNodeIds)
     }
 
     async setNumberOfTargetProxyConnections(streamPartId: StreamPartID, targetCount: number): Promise<void> {
         await this.proxyStreamConnectionClient.setTargetConnectionCount(streamPartId, targetCount)
     }
 
-    async stopProxyingOnStream(streamPartId: StreamPartID, direction: ProxyDirection): Promise<void> {
-        await this.proxyStreamConnectionClient.stopProxyingOnStream(streamPartId, direction)
+    async stopProxyingOnStream(streamPartId: StreamPartID): Promise<void> {
+        await this.proxyStreamConnectionClient.stopProxyingOnStream(streamPartId)
     }
 
     // Null source is used when a message is published by the node itself

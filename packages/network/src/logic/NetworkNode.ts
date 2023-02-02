@@ -43,12 +43,12 @@ export class NetworkNode extends Node {
         return this.getProxiedStreamPartConnectionNodeIds(streamPartId)
     }
 
-    async removeProxyConnectionCandidates(streamPartId: StreamPartID, contactNodeIds: NodeId[], direction: ProxyDirection): Promise<void> {
-        await this.removeProxyCandidates(streamPartId, contactNodeIds, direction)
+    async removeProxyConnectionCandidates(streamPartId: StreamPartID, contactNodeIds: NodeId[]): Promise<void> {
+        await this.removeProxyCandidates(streamPartId, contactNodeIds)
     }
 
-    async removeAllProxyConnectionCandidates(streamPartId: StreamPartID, direction: ProxyDirection): Promise<void> {
-        await this.stopProxyingOnStream(streamPartId, direction)
+    async removeAllProxyConnectionCandidates(streamPartId: StreamPartID): Promise<void> {
+        await this.stopProxyingOnStream(streamPartId)
     }
 
     addMessageListener<T>(cb: (msg: StreamMessage<T>) => void): void {

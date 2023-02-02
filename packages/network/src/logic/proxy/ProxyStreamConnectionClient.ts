@@ -164,9 +164,9 @@ export class ProxyStreamConnectionClient extends EventEmitter {
         })
     }
 
-    async stopProxyingOnStream(streamPartId: StreamPartID, direction: ProxyDirection): Promise<void> {
+    async stopProxyingOnStream(streamPartId: StreamPartID): Promise<void> {
         if (this.proxyTargets.has(streamPartId)) {
-            await this.removeProxyCandidates(streamPartId, [...this.proxyTargets.get(streamPartId)!.candidates.keys()], direction)
+            await this.removeProxyCandidates(streamPartId, [...this.proxyTargets.get(streamPartId)!.candidates.keys()])
         } else {
             logger.debug(`Could not stop proxying for stream ${streamPartId} as proxy connections do not exist`)
         }
@@ -238,11 +238,10 @@ export class ProxyStreamConnectionClient extends EventEmitter {
 
     }
 
-    async removeProxyCandidates(streamPartId: StreamPartID, targetNodeIds: NodeId[], direction: ProxyDirection): Promise<void> {
+    async removeProxyCandidates(streamPartId: StreamPartID, targetNodeIds: NodeId[]): Promise<void> {
         await Promise.all(targetNodeIds.map(async (targetNodeId) => {
             if (this.proxyTargets.has(streamPartId)
                 && this.proxyTargets.get(streamPartId)!.candidates.has(targetNodeId)
-                && this.proxyTargets.get(streamPartId)!.candidates.get(targetNodeId)!.direction === direction
             ) {
                 if (this.proxyTargets.get(streamPartId)!.connections.has(targetNodeId)
                     && this.streamPartManager.isSetUp(streamPartId)
@@ -253,7 +252,7 @@ export class ProxyStreamConnectionClient extends EventEmitter {
                 }
                 this.removeConnection(streamPartId, targetNodeId)
             } else {
-                const reason = `A proxy ${direction} candidate for ${streamPartId} on node ${targetNodeId} does not exist`
+                const reason = `A proxy candidate for ${streamPartId} on node ${targetNodeId} does not exist`
                 logger.warn(reason)
                 throw reason
             }

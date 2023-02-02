@@ -124,7 +124,7 @@ describe('PubSub with proxy connections', () => {
             .hasProxyConnection(toStreamPartID(stream.id, 0), proxyNodeId2, ProxyDirection.PUBLISH))
             .toEqual(true)
 
-        await onewayClient.removeProxyConnectionCandidates(stream, [proxyNodeId1, proxyNodeId2], ProxyDirection.PUBLISH)
+        await onewayClient.removeProxyConnectionCandidates(stream, [proxyNodeId1, proxyNodeId2])
 
         expect((await onewayClient.getNode())
             .hasStreamPart(toStreamPartID(stream.id, 0)))
@@ -181,7 +181,7 @@ describe('PubSub with proxy connections', () => {
             .toEqual(true)
 
         await onewayClient.unsubscribe(stream)
-        await onewayClient.removeProxyConnectionCandidates(stream, [proxyNodeId1, proxyNodeId2], ProxyDirection.SUBSCRIBE)
+        await onewayClient.removeProxyConnectionCandidates(stream, [proxyNodeId1, proxyNodeId2])
 
         expect((await onewayClient.getNode())
             .hasStreamPart(toStreamPartID(stream.id, 0)))
@@ -212,7 +212,7 @@ describe('PubSub with proxy connections', () => {
             .hasProxyConnection(toStreamPartID(stream.id, 0), proxyNodeId2, ProxyDirection.PUBLISH))
             .toEqual(true)
 
-        await onewayClient.removeAllProxyConnectionCandidates(stream, ProxyDirection.PUBLISH)
+        await onewayClient.removeAllProxyConnectionCandidates(stream)
 
         expect((await onewayClient.getNode())
             .hasStreamPart(toStreamPartID(stream.id, 0)))
