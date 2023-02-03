@@ -8,7 +8,7 @@ import {
     toStreamID,
     TrackerRegistryRecord
 } from '@streamr/protocol'
-import { toEthereumAddress, waitForEvent } from '@streamr/utils'
+import { toEthereumAddress, wait, waitForEvent } from '@streamr/utils'
 
 import { Event as NodeEvent } from '../../src/logic/Node'
 import { createTestNetworkNode, startTestTracker } from '../utils'
@@ -25,18 +25,22 @@ describe('Proxy connection tests', () => {
     let onewayNode: NetworkNode
     let trackerInfo: TrackerRegistryRecord
 
-    beforeEach(async () => {
-        tracker = await startTestTracker({
-            port: 30353
-        })
-        trackerInfo = tracker.getConfigRecord()
-        contactNode = createTestNetworkNode({
+    const createContactNode = () => {
+        return createTestNetworkNode({
             id: 'contact-node',
             trackers: [trackerInfo],
             iceServers: [],
             acceptProxyConnections: true,
             webrtcDisallowPrivateAddresses: false
         })
+    }
+
+    beforeEach(async () => {
+        tracker = await startTestTracker({
+            port: 30353
+        })
+        trackerInfo = tracker.getConfigRecord()
+        contactNode = createContactNode()
         await contactNode.start()
 
         contactNode2 = createTestNetworkNode({
@@ -107,7 +111,7 @@ describe('Proxy connection tests', () => {
         expect(onewayNode.streamPartManager.hasOutOnlyConnection(defaultStreamPartId, 'contact-node-2')).toBeTrue()
         await Promise.all([
             waitForEvent(contactNode2, NodeEvent.ONE_WAY_CONNECTION_CLOSED),
-            onewayNode.setProxies(defaultStreamPartId, ['contact-node-1'], ProxyDirection.PUBLISH, 'publisher'),
+            onewayNode.setProxies(defaultStreamPartId, [], ProxyDirection.PUBLISH, 'publisher'),
         ])
 
         // @ts-expect-error private
@@ -164,11 +168,9 @@ describe('Proxy connection tests', () => {
         await expect(onewayNode.setProxies(defaultStreamPartId, ['non-contact-node'], ProxyDirection.PUBLISH, 'publisher'))
             .rejects
             .toMatchObject(
-                new Error('Could not open any initial ProxyConnections: ' +
-                    new Error(
-                        'Joining stream as proxy publish failed on contact-node non-contact-node for stream stream-0#0'
-                        + ' reason: Target node non-contact-node rejected proxy publish stream connection stream-0#0'
-                    )
+                new Error(
+                    'Joining stream as proxy publish failed on contact-node non-contact-node for stream stream-0#0'
+                    + ' reason: Target node non-contact-node rejected proxy publish stream connection stream-0#0'
                 )
             )
         await nonContactNode.stop()
@@ -232,12 +234,11 @@ describe('Proxy connection tests', () => {
         await expect(onewayNode.setProxies(defaultStreamPartId, ['non-contact-node'], ProxyDirection.PUBLISH, 'publisher'))
             .rejects
             .toMatchObject(
-                new Error('Could not open any initial ProxyConnections: ' +
-                    new Error(
-                        'Joining stream as proxy publish failed on contact-node non-contact-node for stream stream-0#0'
-                        + ' reason: Error: RTC error RTC_UNKNOWN_PEER while attempting to signal with node non-contact-node'
-                    )
+                new Error(
+                    'Joining stream as proxy publish failed on contact-node non-contact-node for stream stream-0#0'
+                    + ' reason: Error: RTC error RTC_UNKNOWN_PEER while attempting to signal with node non-contact-node'
                 )
+
             )
     })
 
@@ -245,22 +246,20 @@ describe('Proxy connection tests', () => {
         await expect(onewayNode.setProxies(defaultStreamPartId, ['non-contact-node'], ProxyDirection.SUBSCRIBE, 'subscriber'))
             .rejects
             .toMatchObject(
-                new Error('Could not open any initial ProxyConnections: ' +
-                    new Error(
-                        'Joining stream as proxy subscribe failed on contact-node non-contact-node for stream stream-0#0'
-                        + ' reason: Error: RTC error RTC_UNKNOWN_PEER while attempting to signal with node non-contact-node'
-                    )
+                new Error(
+                    'Joining stream as proxy subscribe failed on contact-node non-contact-node for stream stream-0#0'
+                    + ' reason: Error: RTC error RTC_UNKNOWN_PEER while attempting to signal with node non-contact-node'
                 )
             )
     })
 
-    it('if caught, failed publish only connections do not clean out existing connections', async () => {
-        await onewayNode.setProxies(defaultStreamPartId, ['contact-node', 'contact-node-2', 'non-existing-node'], ProxyDirection.PUBLISH, 'publisher')
-
-        // @ts-expect-error private
-        expect(onewayNode.streamPartManager.getOutboundNodesForStreamPart(defaultStreamPartId)).toContainValues(['contact-node', 'contact-node-2'])
-        // @ts-expect-error private
-        expect(onewayNode.streamPartManager.getNeighborsForStreamPart(defaultStreamPartId)).toBeArrayOfSize(0)
+    it('If connection to any proxy node fails setProxies should reject', async () => {
+        expect(() => onewayNode.setProxies(
+            defaultStreamPartId,
+            ['contact-node', 'contact-node-2', 'non-existing-node'],
+            ProxyDirection.PUBLISH,
+            'publisher')
+        ).rejects.toThrow()
     })
 
     it('If publish only connection is the only stream connection on contact node it will not unsubscribe', async () => {
@@ -347,12 +346,19 @@ describe('Proxy connection tests', () => {
     })
 
     it('will reconnect after lost connectivity', async () => {
+        const restartContactNode = async () => {
+            await contactNode.stop()
+            await wait(20000)
+            // eslint-disable-next-line require-atomic-updates
+            contactNode = createContactNode()
+            await contactNode.start()
+            contactNode.subscribe(defaultStreamPartId)
+        }
         await onewayNode.setProxies(defaultStreamPartId, ['contact-node'], ProxyDirection.PUBLISH, 'publisher')
 
         await Promise.all([
-            waitForEvent(contactNode, NodeEvent.NODE_CONNECTED, 20000),
-            // @ts-expect-error private
-            contactNode.nodeToNode.disconnectFromNode('publisher', 'testing')
+            waitForEvent(onewayNode, NodeEvent.NODE_CONNECTED, 40000),
+            restartContactNode()
         ])
 
         await Promise.all([
@@ -366,5 +372,5 @@ describe('Proxy connection tests', () => {
                 signature: 'signature'
             }))
         ])
-    }, 20100)
+    }, 60000)
 })

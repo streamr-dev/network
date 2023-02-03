@@ -364,7 +364,7 @@ export class Node extends EventEmitter {
         })
         proxiedStreams.forEach((s) => {
             this.proxyStreamConnectionClient.removeConnection(s, node, false)
-            this.proxyStreamConnectionClient.selectConnectionsFromCandidates(s).catch((e: any) => {console.error(e)})
+            setImmediate(async () => this.proxyStreamConnectionClient.ensureConnections(s))
         })
         this.emit(Event.NODE_DISCONNECTED, node)
     }
