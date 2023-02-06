@@ -22,7 +22,7 @@ export interface ProxyStreamConnectionServerOptions {
 }
 
 interface ProxyConnection {
-    direction: ProxyDirection
+    direction: ProxyDirection // Direction is from the clients point of view
     userId: string
 }
 
@@ -78,11 +78,10 @@ export class ProxyStreamConnectionServer {
 
     private processLeaveRequest(message: UnsubscribeRequest, nodeId: NodeId): void {
         const streamPartId = message.getStreamPartID()
-        if (this.streamPartManager.isSetUp(streamPartId) && this.streamPartManager.hasInOnlyConnection(streamPartId, nodeId)) {
-            this.removeConnection(streamPartId, nodeId)
-            this.node.emit(Event.ONE_WAY_CONNECTION_CLOSED, nodeId, streamPartId)
-        }
-        if (this.streamPartManager.isSetUp(streamPartId) && this.streamPartManager.hasOutOnlyConnection(streamPartId, nodeId)) {
+        if (this.streamPartManager.isSetUp(streamPartId)
+            && (this.streamPartManager.hasInOnlyConnection(streamPartId, nodeId)
+                || this.streamPartManager.hasOutOnlyConnection(streamPartId, nodeId))
+        ) {
             this.removeConnection(streamPartId, nodeId)
             this.node.emit(Event.ONE_WAY_CONNECTION_CLOSED, nodeId, streamPartId)
         }
@@ -96,19 +95,12 @@ export class ProxyStreamConnectionServer {
                 this.connections.delete(streamPartId)
             }
         }
-
         this.streamPartManager.removeNodeFromStreamPart(streamPartId, nodeId)
     }
 
     public getNodeIdsForUserId(streamPartId: StreamPartID, userId: string): NodeId[] {
         const connections = this.connections.get(streamPartId)!
-        const returnedNodeIds: NodeId[] = []
-        connections.forEach((connection, nodeId) => {
-            if (connection.userId === userId) {
-                returnedNodeIds.push(nodeId)
-            }
-        })
-        return returnedNodeIds
+        return Array.from(connections.keys()).filter((nodeId) => connections.get(nodeId)!.userId === userId)
     }
 
     stop(): void {

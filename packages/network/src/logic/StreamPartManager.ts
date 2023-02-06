@@ -208,12 +208,7 @@ export class StreamPartManager {
     }
 
     isBehindProxy(streamPartId: StreamPartID): boolean {
-        try {
-            this.ensureThatIsSetUp(streamPartId)
-            return this.streamParts.get(streamPartId)!.isBehindProxy
-        } catch (err) {
-            return false
-        }
+        return this.isSetUp(streamPartId) && this.streamParts.get(streamPartId)!.isBehindProxy
     }
 
     private ensureThatIsSetUp(streamPartId: StreamPartID): void | never {
