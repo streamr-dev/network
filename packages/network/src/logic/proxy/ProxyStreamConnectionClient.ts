@@ -147,70 +147,67 @@ export class ProxyStreamConnectionClient extends EventEmitter {
     private async waitForHandshake(streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection): Promise<void> {
         let resolveHandler: any
         let rejectHandler: any
-        await Promise.all([
-            new Promise<void>((resolve, reject) => {
-                resolveHandler = (node: string, stream: StreamPartID, eventDirection: ProxyDirection) => {
-                    if (node === contactNodeId && stream === streamPartId && direction === eventDirection) {
-                        resolve()
-                    }
+        await new Promise<void>((resolve, reject) => {
+            resolveHandler = (node: string, stream: StreamPartID, eventDirection: ProxyDirection) => {
+                if (node === contactNodeId && stream === streamPartId && direction === eventDirection) {
+                    resolve()
                 }
-                rejectHandler = (node: string, stream: StreamPartID, eventDirection: ProxyDirection, reason?: string) => {
-                    if (node === contactNodeId && stream === streamPartId && direction === eventDirection) {
-                        reject(new Error(
-                            `Joining stream as proxy ${direction} failed on contact-node ${contactNodeId} for stream ${streamPartId}`
-                            + ` reason: ${reason}`
-                        ))
-                    }
+            }
+            rejectHandler = (node: string, stream: StreamPartID, eventDirection: ProxyDirection, reason?: string) => {
+                if (node === contactNodeId && stream === streamPartId && direction === eventDirection) {
+                    reject(new Error(
+                        `Joining stream as proxy ${direction} failed on contact-node ${contactNodeId} for stream ${streamPartId}`
+                        + ` reason: ${reason}`
+                    ))
                 }
-                this.on(Event.CONNECTION_ACCEPTED, resolveHandler)
-                this.on(Event.CONNECTION_REJECTED, rejectHandler)
-            }),
-        ]).finally(() => {
+            }
+            this.on(Event.CONNECTION_ACCEPTED, resolveHandler)
+            this.on(Event.CONNECTION_REJECTED, rejectHandler)
+        }).finally(() => {
             this.off(Event.CONNECTION_ACCEPTED, resolveHandler)
             this.off(Event.CONNECTION_REJECTED, rejectHandler)
         })
     }
 
     private async initiateConnection(
-        streamPartId: StreamPartID, targetNodeId: string, direction: ProxyDirection, userId: string): Promise<void> {
-
-        const trackerId = this.trackerManager.getTrackerId(streamPartId)
+        streamPartId: StreamPartID,
+        targetNodeId: string,
+        direction: ProxyDirection,
+        userId: string
+    ): Promise<void> {
+        if (!this.streamPartManager.isSetUp(streamPartId)) {
+            this.streamPartManager.setUpStreamPart(streamPartId, true)
+        } else if (!this.streamPartManager.isBehindProxy(streamPartId)) {
+            const reason = `Could not open a proxy ${direction} stream connection ${streamPartId}, non-proxy stream already exists`
+            logger.warn(reason)
+            throw reason
+        } else if (this.streamPartManager.hasOnewayConnection(streamPartId, targetNodeId)) {
+            const reason = `Could not open a proxy ${direction} stream connection ${streamPartId}, proxy stream connection already exists`
+            logger.warn(reason)
+            throw reason
+        } else if (this.hasConnection(targetNodeId, streamPartId)) {
+            const reason = `Could not open a proxy ${direction} stream connection ${streamPartId}, a connection already exists`
+            logger.warn(reason)
+            throw reason
+        }
+        logger.info(`Open proxy connection to ${targetNodeId} on ${streamPartId}`)
+        if (!this.connections.has(streamPartId)) {
+            this.connections.set(streamPartId, new Map())
+        }
+        this.connections.get(streamPartId)!.set(targetNodeId, direction)
         try {
-            if (!this.streamPartManager.isSetUp(streamPartId)) {
-                this.streamPartManager.setUpStreamPart(streamPartId, true)
-            } else if (!this.streamPartManager.isBehindProxy(streamPartId)) {
-                const reason = `Could not open a proxy ${direction} stream connection ${streamPartId}, bidirectional stream already exists`
-                logger.warn(reason)
-                this.emit(Event.CONNECTION_REJECTED, targetNodeId, streamPartId, direction, reason)
-                return
-            } else if (this.streamPartManager.hasOnewayConnection(streamPartId, targetNodeId)) {
-                const reason = `Could not open a proxy ${direction} stream connection ${streamPartId}, proxy stream connection already exists`
-                logger.warn(reason)
-                this.emit(Event.CONNECTION_REJECTED, targetNodeId, streamPartId, direction, reason)
-                return
-            } else if (this.hasConnection(targetNodeId, streamPartId)) {
-                const reason = `Could not open a proxy ${direction} stream connection ${streamPartId}, a connection already exists`
-                logger.warn(reason)
-                this.emit(Event.CONNECTION_REJECTED, targetNodeId, streamPartId, direction, reason)
-                return
-            }
-            logger.info(`Open proxy connection to ${targetNodeId} on ${streamPartId}`)
-            if (!this.connections.has(streamPartId)) {
-                this.connections.set(streamPartId, new Map())
-            }
-            this.connections.get(streamPartId)!.set(targetNodeId, direction)
-            await this.connectAndNegotiate(streamPartId, targetNodeId, direction, userId)
+            await this.connectAndHandshake(streamPartId, targetNodeId, direction, userId)
         } catch (err) {
             logger.warn(`Failed to create a proxy ${direction} stream connection to ${targetNodeId} for stream ${streamPartId}:\n${err}`)
             this.removeConnection(streamPartId, targetNodeId)
             this.emit(Event.CONNECTION_REJECTED, targetNodeId, streamPartId, direction, err)
-            return
         } finally {
+            const trackerId = this.trackerManager.getTrackerId(streamPartId)
             this.trackerManager.disconnectFromSignallingOnlyTracker(trackerId)
         }
     }
 
-    private async connectAndNegotiate(streamPartId: StreamPartID, targetNodeId: NodeId, direction: ProxyDirection, userId: string): Promise<void> {
+    private async connectAndHandshake(streamPartId: StreamPartID, targetNodeId: NodeId, direction: ProxyDirection, userId: string): Promise<void> {
         const trackerId = this.trackerManager.getTrackerId(streamPartId)
         const trackerAddress = this.trackerManager.getTrackerAddress(streamPartId)
 
