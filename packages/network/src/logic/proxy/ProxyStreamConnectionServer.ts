@@ -60,7 +60,7 @@ export class ProxyStreamConnectionServer {
             } else {
                 this.streamPartManager.addOutOnlyNeighbor(streamPartId, nodeId)
                 this.addConnection(streamPartId, nodeId, ProxyDirection.SUBSCRIBE, message.userId)
-                this.propagation.onNeighborJoined(nodeId, streamPartId) // TODO: maybe should not be marked as full propagation in Propagation.ts?
+                this.propagation.onNeighborJoined(nodeId, streamPartId)
             }
         }
         await this.nodeToNode.respondToProxyConnectionRequest(nodeId, streamPartId, message.direction, isAccepted)
