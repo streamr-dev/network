@@ -215,7 +215,11 @@ export class ProxyStreamConnectionClient extends EventEmitter {
                 this.emit(Event.PROXY_CONNECTION_REJECTED, targetNodeId, streamPartId, direction, reason)
                 return
             }
-            this.addConnection(streamPartId, targetNodeId, direction, userId)
+            this.proxyTargets.get(streamPartId)!.connections.set(targetNodeId, {
+                state: State.NEGOTIATING,
+                direction,
+                userId
+            })
             await this.connectAndNegotiate(streamPartId, targetNodeId, direction, userId)
         } catch (err) {
             logger.warn(`Failed to create a proxy ${direction} stream connection to ${targetNodeId} for stream ${streamPartId}:\n${err}`)
@@ -267,14 +271,6 @@ export class ProxyStreamConnectionClient extends EventEmitter {
         ]).finally(() => {
             this.off(Event.PROXY_CONNECTION_ACCEPTED, resolveHandler)
             this.off(Event.PROXY_CONNECTION_REJECTED, rejectHandler)
-        })
-    }
-
-    private addConnection(streamPartId: StreamPartID, nodeId: NodeId, direction: ProxyDirection, userId: string): void {
-        this.proxyTargets.get(streamPartId)!.connections.set(nodeId, {
-            state: State.NEGOTIATING,
-            direction,
-            userId
         })
     }
 
