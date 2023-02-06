@@ -191,10 +191,10 @@ export class Node extends EventEmitter {
         this.nodeToNode.on(NodeToNodeEvent.DATA_RECEIVED, (broadcastMessage, nodeId) => this.onDataReceived(broadcastMessage.streamMessage, nodeId))
         this.nodeToNode.on(NodeToNodeEvent.NODE_DISCONNECTED, (nodeId) => this.onNodeDisconnected(nodeId))
         this.nodeToNode.on(NodeToNodeEvent.PROXY_CONNECTION_REQUEST_RECEIVED, (message,  nodeId) => {
-            this.proxyStreamConnectionServer.processProxyConnectionRequest(message, nodeId)
+            this.proxyStreamConnectionServer.processHandshakeRequest(message, nodeId)
         })
         this.nodeToNode.on(NodeToNodeEvent.PROXY_CONNECTION_RESPONSE_RECEIVED, (message, nodeId) => {
-            this.proxyStreamConnectionClient.processProxyConnectionResponse(message, nodeId)
+            this.proxyStreamConnectionClient.processHandshakeResponse(message, nodeId)
         })
 
         this.nodeToNode.on(NodeToNodeEvent.LEAVE_REQUEST_RECEIVED, (message, nodeId) => {
@@ -424,9 +424,5 @@ export class Node extends EventEmitter {
 
     isProxiedStreamPart(streamPartId: StreamPartID, direction: ProxyDirection): boolean {
         return this.streamPartManager.isBehindProxy(streamPartId) && this.proxyStreamConnectionClient.isProxiedStreamPart(streamPartId, direction)
-    }
-
-    getProxiedStreamPartConnectionNodeIds(streamPartId: StreamPartID): NodeId[] {
-        return this.proxyStreamConnectionClient.getConnectedNodeIds(streamPartId)
     }
 }

@@ -95,7 +95,7 @@ export class ProxyStreamConnectionServer {
         logger.info(`Proxy node ${nodeId} closed one-way stream connection for ${streamPartId}`)
     }
 
-    async processProxyConnectionRequest(message: ProxyConnectionRequest, nodeId: NodeId): Promise<void> {
+    async processHandshakeRequest(message: ProxyConnectionRequest, nodeId: NodeId): Promise<void> {
         const streamPartId = message.getStreamPartID()
         // More conditions could be added here, ie. a list of acceptable ids or max limit for number of one-way this
         const isAccepted = this.streamPartManager.isSetUp(streamPartId) && this.acceptProxyConnections

@@ -179,7 +179,7 @@ describe('Proxy connection tests', () => {
     it('Multiple calls to joinStreamPartAsProxyPublisher do not cancel the first call', async () => {
         await Promise.all([
             // @ts-expect-error private
-            waitForEvent(onewayNode.proxyStreamConnectionClient, ProxyEvent.PROXY_CONNECTION_ACCEPTED),
+            waitForEvent(onewayNode.proxyStreamConnectionClient, ProxyEvent.CONNECTION_ACCEPTED),
             onewayNode.setProxies(defaultStreamPartId, ['contact-node'], ProxyDirection.PUBLISH, async () => 'publisher'),
             onewayNode.setProxies(defaultStreamPartId, ['contact-node'], ProxyDirection.PUBLISH, async () => 'publisher'),
             onewayNode.setProxies(defaultStreamPartId, ['contact-node'], ProxyDirection.PUBLISH, async () => 'publisher'),
