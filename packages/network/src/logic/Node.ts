@@ -252,10 +252,10 @@ export class Node extends EventEmitter {
         streamPartId: StreamPartID,
         contactNodeIds: NodeId[],
         direction: ProxyDirection,
-        userId: string,
+        getUserId: () => Promise<string>,
         connectionCount?: number
     ): Promise<void> {
-        await this.proxyStreamConnectionClient.setProxies(streamPartId, contactNodeIds, direction, userId, connectionCount)
+        await this.proxyStreamConnectionClient.setProxies(streamPartId, contactNodeIds, direction, getUserId, connectionCount)
     }
 
     // Null source is used when a message is published by the node itself
@@ -363,7 +363,7 @@ export class Node extends EventEmitter {
             this.trackerManager.sendStreamPartStatus(s)
         })
         proxiedStreams.forEach((s) => {
-            this.proxyStreamConnectionClient.removeConnection(s, node, false)
+            this.proxyStreamConnectionClient.removeConnection(s, node)
             setImmediate(async () => this.proxyStreamConnectionClient.ensureConnections(s))
         })
         this.emit(Event.NODE_DISCONNECTED, node)

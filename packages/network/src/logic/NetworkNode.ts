@@ -29,10 +29,10 @@ export class NetworkNode extends Node {
         streamPartId: StreamPartID,
         contactNodeIds: NodeId[],
         direction: ProxyDirection,
-        userId: string,
+        getUserId: () => Promise<string>,
         connectionCount?: number
     ): Promise<void> {
-        await this.doSetProxies(streamPartId, contactNodeIds, direction, userId, connectionCount)
+        await this.doSetProxies(streamPartId, contactNodeIds, direction, getUserId, connectionCount)
     }
 
     addMessageListener<T>(cb: (msg: StreamMessage<T>) => void): void {

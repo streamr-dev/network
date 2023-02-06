@@ -73,12 +73,12 @@ describe('Proxy connection tests', () => {
             tracker?.stop(),
             onewayNode?.stop(),
             contactNode?.stop(),
-            contactNode2?.stop(),
+            contactNode2?.stop()
         ])
     })
 
     it('publisher node can form proxy connections', async () => {
-        await onewayNode.setProxies(defaultStreamPartId, ['contact-node', 'contact-node-2'], ProxyDirection.PUBLISH, 'publisher')
+        await onewayNode.setProxies(defaultStreamPartId, ['contact-node', 'contact-node-2'], ProxyDirection.PUBLISH, async () => 'publisher')
         // @ts-expect-error private
         expect(onewayNode.streamPartManager.getOutboundNodesForStreamPart(defaultStreamPartId)).toContainValues(['contact-node', 'contact-node-2'])
         // @ts-expect-error private
@@ -86,7 +86,7 @@ describe('Proxy connection tests', () => {
     })
     
     it('subscriber node can form proxy connections', async () => {
-        await onewayNode.setProxies(defaultStreamPartId, ['contact-node', 'contact-node-2'], ProxyDirection.SUBSCRIBE, 'subscriber')
+        await onewayNode.setProxies(defaultStreamPartId, ['contact-node', 'contact-node-2'], ProxyDirection.SUBSCRIBE, async () => 'subscriber')
         // @ts-expect-error private
         expect(onewayNode.streamPartManager.getInboundNodesForStreamPart(defaultStreamPartId)).toContainValues(['contact-node', 'contact-node-2'])
         // @ts-expect-error private
@@ -94,7 +94,7 @@ describe('Proxy connection tests', () => {
     })
 
     it('publisher node can close proxy connections', async () => {
-        await onewayNode.setProxies(defaultStreamPartId, ['contact-node', 'contact-node-2'], ProxyDirection.PUBLISH, 'publisher')
+        await onewayNode.setProxies(defaultStreamPartId, ['contact-node', 'contact-node-2'], ProxyDirection.PUBLISH, async () => 'publisher')
         // @ts-expect-error private
         expect(onewayNode.streamPartManager.getOutboundNodesForStreamPart(defaultStreamPartId)).toContainValues(['contact-node', 'contact-node-2'])
         // @ts-expect-error private
@@ -102,7 +102,7 @@ describe('Proxy connection tests', () => {
 
         await Promise.all([
             waitForEvent(contactNode, NodeEvent.ONE_WAY_CONNECTION_CLOSED),
-            onewayNode.setProxies(defaultStreamPartId, ['contact-node-2'], ProxyDirection.PUBLISH, 'publisher'),
+            onewayNode.setProxies(defaultStreamPartId, ['contact-node-2'], ProxyDirection.PUBLISH, async () => 'publisher'),
         ])
 
         // @ts-expect-error private
@@ -111,7 +111,7 @@ describe('Proxy connection tests', () => {
         expect(onewayNode.streamPartManager.hasOutOnlyConnection(defaultStreamPartId, 'contact-node-2')).toBeTrue()
         await Promise.all([
             waitForEvent(contactNode2, NodeEvent.ONE_WAY_CONNECTION_CLOSED),
-            onewayNode.setProxies(defaultStreamPartId, [], ProxyDirection.PUBLISH, 'publisher'),
+            onewayNode.setProxies(defaultStreamPartId, [], ProxyDirection.PUBLISH, async () => 'publisher'),
         ])
 
         // @ts-expect-error private
@@ -123,7 +123,7 @@ describe('Proxy connection tests', () => {
     })
 
     it('subscriber node can close proxy connections', async () => {
-        await onewayNode.setProxies(defaultStreamPartId, ['contact-node', 'contact-node-2'], ProxyDirection.SUBSCRIBE, 'subscriber', 2)
+        await onewayNode.setProxies(defaultStreamPartId, ['contact-node', 'contact-node-2'], ProxyDirection.SUBSCRIBE, async () => 'subscriber', 2)
         // @ts-expect-error private
         expect(onewayNode.streamPartManager.getInboundNodesForStreamPart(defaultStreamPartId)).toContainValues(['contact-node', 'contact-node-2'])
         // @ts-expect-error private
@@ -131,7 +131,7 @@ describe('Proxy connection tests', () => {
 
         await Promise.all([
             waitForEvent(contactNode, NodeEvent.ONE_WAY_CONNECTION_CLOSED),
-            onewayNode.setProxies(defaultStreamPartId, ['contact-node-2'], ProxyDirection.SUBSCRIBE, 'subscriber'),
+            onewayNode.setProxies(defaultStreamPartId, ['contact-node-2'], ProxyDirection.SUBSCRIBE, async () => 'subscriber'),
         ])
 
         // @ts-expect-error private
@@ -140,7 +140,7 @@ describe('Proxy connection tests', () => {
         expect(onewayNode.streamPartManager.hasInOnlyConnection(defaultStreamPartId, 'contact-node-2')).toBeTrue()
         await Promise.all([
             waitForEvent(contactNode2, NodeEvent.ONE_WAY_CONNECTION_CLOSED),
-            onewayNode.setProxies(defaultStreamPartId, [], ProxyDirection.SUBSCRIBE, 'subscriber'),
+            onewayNode.setProxies(defaultStreamPartId, [], ProxyDirection.SUBSCRIBE, async () => 'subscriber'),
         ])
 
         // @ts-expect-error private
@@ -165,7 +165,7 @@ describe('Proxy connection tests', () => {
             nonContactNode.subscribe(defaultStreamPartId)
         ])
 
-        await expect(onewayNode.setProxies(defaultStreamPartId, ['non-contact-node'], ProxyDirection.PUBLISH, 'publisher'))
+        await expect(onewayNode.setProxies(defaultStreamPartId, ['non-contact-node'], ProxyDirection.PUBLISH, async () => 'publisher'))
             .rejects
             .toMatchObject(
                 new Error(
@@ -180,17 +180,17 @@ describe('Proxy connection tests', () => {
         await Promise.all([
             // @ts-expect-error private
             waitForEvent(onewayNode.proxyStreamConnectionClient, ProxyEvent.PROXY_CONNECTION_ACCEPTED),
-            onewayNode.setProxies(defaultStreamPartId, ['contact-node'], ProxyDirection.PUBLISH, 'publisher'),
-            onewayNode.setProxies(defaultStreamPartId, ['contact-node'], ProxyDirection.PUBLISH, 'publisher'),
-            onewayNode.setProxies(defaultStreamPartId, ['contact-node'], ProxyDirection.PUBLISH, 'publisher'),
-            onewayNode.setProxies(defaultStreamPartId, ['contact-node'], ProxyDirection.PUBLISH, 'publisher'),
+            onewayNode.setProxies(defaultStreamPartId, ['contact-node'], ProxyDirection.PUBLISH, async () => 'publisher'),
+            onewayNode.setProxies(defaultStreamPartId, ['contact-node'], ProxyDirection.PUBLISH, async () => 'publisher'),
+            onewayNode.setProxies(defaultStreamPartId, ['contact-node'], ProxyDirection.PUBLISH, async () => 'publisher'),
+            onewayNode.setProxies(defaultStreamPartId, ['contact-node'], ProxyDirection.PUBLISH, async () => 'publisher'),
         ])
         // @ts-expect-error private
         expect(onewayNode.streamPartManager.getOutboundNodesForStreamPart(defaultStreamPartId)).toContainValue('contact-node')
     })
 
     it('Published data is received using proxy publish stream connections', async () => {
-        await onewayNode.setProxies(defaultStreamPartId, ['contact-node'], ProxyDirection.PUBLISH, 'publisher')
+        await onewayNode.setProxies(defaultStreamPartId, ['contact-node'], ProxyDirection.PUBLISH, async () => 'publisher')
         await Promise.all([
             waitForEvent(contactNode, NodeEvent.MESSAGE_RECEIVED),
             waitForEvent(contactNode2, NodeEvent.MESSAGE_RECEIVED),
@@ -205,7 +205,7 @@ describe('Proxy connection tests', () => {
     })
 
     it('proxied subscribers receive data', async () => {
-        await onewayNode.setProxies(defaultStreamPartId, ['contact-node'], ProxyDirection.SUBSCRIBE, 'subscriber')
+        await onewayNode.setProxies(defaultStreamPartId, ['contact-node'], ProxyDirection.SUBSCRIBE, async () => 'subscriber')
         await Promise.all([
             waitForEvent(onewayNode, NodeEvent.MESSAGE_RECEIVED),
             contactNode.publish(new StreamMessage({
@@ -220,7 +220,7 @@ describe('Proxy connection tests', () => {
     })
 
     it('proxied subscribers cannot publish data', async () => {
-        await onewayNode.setProxies(defaultStreamPartId, ['contact-node'], ProxyDirection.SUBSCRIBE, 'subscriber')
+        await onewayNode.setProxies(defaultStreamPartId, ['contact-node'], ProxyDirection.SUBSCRIBE, async () => 'subscriber')
         expect(() => onewayNode.publish(new StreamMessage({
             messageId: new MessageID(toStreamID('stream-0'), 0, 120, 0, PUBLISHER_ID, 'session'),
             content: {
@@ -231,7 +231,7 @@ describe('Proxy connection tests', () => {
     })
 
     it('Cannot open a proxy publish stream connection to non-existing node (not connected to the streams tracker)', async () => {
-        await expect(onewayNode.setProxies(defaultStreamPartId, ['non-contact-node'], ProxyDirection.PUBLISH, 'publisher'))
+        await expect(onewayNode.setProxies(defaultStreamPartId, ['non-contact-node'], ProxyDirection.PUBLISH, async () => 'publisher'))
             .rejects
             .toMatchObject(
                 new Error(
@@ -243,7 +243,7 @@ describe('Proxy connection tests', () => {
     })
 
     it('Cannot open a proxy subscribe stream connection to a node without an existing subscription to the given stream', async () => {
-        await expect(onewayNode.setProxies(defaultStreamPartId, ['non-contact-node'], ProxyDirection.SUBSCRIBE, 'subscriber'))
+        await expect(onewayNode.setProxies(defaultStreamPartId, ['non-contact-node'], ProxyDirection.SUBSCRIBE, async () => 'subscriber'))
             .rejects
             .toMatchObject(
                 new Error(
@@ -258,7 +258,7 @@ describe('Proxy connection tests', () => {
             defaultStreamPartId,
             ['contact-node', 'contact-node-2', 'non-existing-node'],
             ProxyDirection.PUBLISH,
-            'publisher')
+            async () => 'publisher')
         ).rejects.toThrow()
     })
 
@@ -267,10 +267,10 @@ describe('Proxy connection tests', () => {
             waitForEvent(contactNode, NodeEvent.NODE_UNSUBSCRIBED),
             contactNode2.unsubscribe(defaultStreamPartId)
         ])
-        await onewayNode.setProxies(defaultStreamPartId, ['contact-node'], ProxyDirection.PUBLISH, 'publisher')
+        await onewayNode.setProxies(defaultStreamPartId, ['contact-node'], ProxyDirection.PUBLISH, async () => 'publisher')
         await Promise.all([
             waitForEvent(contactNode, NodeEvent.ONE_WAY_CONNECTION_CLOSED),
-            onewayNode.setProxies(defaultStreamPartId, [], ProxyDirection.PUBLISH, 'publisher'),
+            onewayNode.setProxies(defaultStreamPartId, [], ProxyDirection.PUBLISH, async () => 'publisher'),
         ])
         // @ts-expect-error private
         expect(contactNode.streamPartManager.isSetUp(defaultStreamPartId)).toBeTrue()
@@ -281,7 +281,7 @@ describe('Proxy connection tests', () => {
             defaultStreamPartId,
             ['contact-node', 'contact-node-2'],
             ProxyDirection.SUBSCRIBE,
-            'subscriber',
+            async () => 'subscriber',
             1
         )
 
@@ -296,7 +296,7 @@ describe('Proxy connection tests', () => {
             defaultStreamPartId,
             ['contact-node', 'contact-node-2'],
             ProxyDirection.SUBSCRIBE,
-            'subscriber',
+            async () => 'subscriber',
             1
         )
 
@@ -308,7 +308,7 @@ describe('Proxy connection tests', () => {
         await onewayNode.setProxies(defaultStreamPartId,
             ['contact-node', 'contact-node-2'],
             ProxyDirection.SUBSCRIBE,
-            'subscriber',
+            async () => 'subscriber',
             2
         )
 
@@ -323,7 +323,7 @@ describe('Proxy connection tests', () => {
             defaultStreamPartId,
             ['contact-node', 'contact-node-2'],
             ProxyDirection.SUBSCRIBE,
-            'subscriber',
+            async () => 'subscriber',
             2
         )
 
@@ -336,7 +336,7 @@ describe('Proxy connection tests', () => {
             defaultStreamPartId,
             ['contact-node', 'contact-node-2'],
             ProxyDirection.SUBSCRIBE,
-            'subscriber',
+            async () => 'subscriber',
             1
         )
         // @ts-expect-error private
@@ -354,7 +354,7 @@ describe('Proxy connection tests', () => {
             await contactNode.start()
             contactNode.subscribe(defaultStreamPartId)
         }
-        await onewayNode.setProxies(defaultStreamPartId, ['contact-node'], ProxyDirection.PUBLISH, 'publisher')
+        await onewayNode.setProxies(defaultStreamPartId, ['contact-node'], ProxyDirection.PUBLISH, async () => 'publisher')
 
         await Promise.all([
             waitForEvent(onewayNode, NodeEvent.NODE_CONNECTED, 40000),
