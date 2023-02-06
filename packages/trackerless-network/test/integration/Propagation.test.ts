@@ -10,12 +10,10 @@ describe('Propagation', () => {
         kademliaId: PeerID.fromString(`entrypoint`).value,
         type: 1
     }
-
     let dhtNodes: DhtNode[]
     let randomGraphNodes: RandomGraphNode[]
     const STREAM_ID = 'testingtesting'
     let totalReceived: number
-
     const NUM_OF_NODES = 256
 
     beforeEach(async () => {
@@ -24,7 +22,6 @@ describe('Propagation', () => {
         dhtNodes = []
         randomGraphNodes = []
         const [entryPoint, node1] = createMockRandomGraphNodeAndDhtNode(entryPointDescriptor, entryPointDescriptor, STREAM_ID, simulator)
-
         await entryPoint.start()
         await entryPoint.joinDht(entryPointDescriptor)
         await node1.start()
@@ -50,7 +47,6 @@ describe('Propagation', () => {
                 dhtNodes.push(dht)
                 randomGraphNodes.push(graph)
             })
-
         }))
     }, 30000)
 

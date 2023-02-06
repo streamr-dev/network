@@ -26,12 +26,11 @@ export class RemoteRandomGraphNode {
     private remotePeerDescriptor: PeerDescriptor
     private client: ProtoRpcClient<INetworkRpcClient>
     private graphId: string
-    private neighbors: PeerDescriptor[]
+
     constructor(peerDescriptor: PeerDescriptor, graphId: string, client: ProtoRpcClient<INetworkRpcClient>) {
         this.remotePeerDescriptor = peerDescriptor
         this.client = client
         this.graphId = graphId
-        this.neighbors = []
     }
 
     async handshake(
@@ -146,13 +145,5 @@ export class RemoteRandomGraphNode {
                 removeMe: true
             }
         }
-    }
-
-    setLocalNeighbors(neighbors: PeerDescriptor[]): void {
-        this.neighbors = neighbors
-    }
-
-    getLocalNeighbors(): PeerDescriptor[] {
-        return this.neighbors
     }
 }

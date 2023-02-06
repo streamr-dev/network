@@ -133,7 +133,6 @@ export class StreamrNode extends EventEmitter {
             return
         }
         logger.info(`Joining stream ${streamPartID}`)
-
         const layer1 = new DhtNode({
             transportLayer: this.layer0!,
             serviceId: 'layer1::' + streamPartID,
@@ -153,20 +152,11 @@ export class StreamrNode extends EventEmitter {
             ownPeerDescriptor: this.layer0!.getPeerDescriptor(),
             nodeName: this.config.nodeName
         })
-
         this.streams.set(streamPartID, {
             layer1,
             layer2
         })
-
         await layer1.start()
-
-        /* vars to be shown in debugger
-        const layer0BucketSize = this.layer0.getBucketSize()
-        const layer1BucketSize = layer1.getBucketSize()
-        const layer1ClosestContacts=  layer1.getNeighborList().getClosestContacts(20)
-        */
-
         layer2.start()
         layer2.on(RandomGraphEvent.MESSAGE, (message: StreamMessage) => {
             this.emit(Event.NEW_MESSAGE, message)
@@ -215,7 +205,7 @@ export class StreamrNode extends EventEmitter {
     }
 
     getStreamParts(): StreamPartID[] {
-        return [...this.streams.keys()].map((stringId) => StreamPartIDUtils.parse(stringId))
+        return Array.from(this.streams.keys()).map((stringId) => StreamPartIDUtils.parse(stringId))
     }
 
     setExtraMetadata(metadata: Record<string, unknown>): void {
@@ -226,7 +216,7 @@ export class StreamrNode extends EventEmitter {
         return this.layer0!.getNumberOfConnections()
     }
 
-    getLlayer0BucketSize(): number {
+    getLayer0BucketSize(): number {
         return this.layer0!.getBucketSize()
     }
 }

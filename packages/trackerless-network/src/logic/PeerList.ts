@@ -58,7 +58,7 @@ export class PeerList extends EventEmitter {
     }
 
     getStringIds(): string[] {
-        return [...this.peers.keys()]
+        return Array.from(this.peers.keys())
     }
 
     getNeighborWithId(id: string): RemoteRandomGraphNode | undefined {
@@ -73,11 +73,11 @@ export class PeerList extends EventEmitter {
     }
 
     size(exclude: string[] = []): number {
-        return [...this.peers.keys()].filter((peer) => !exclude.includes(peer)).length
+        return Array.from(this.peers.keys()).filter((peer) => !exclude.includes(peer)).length
     }
 
     getRandom(exclude: string[]): RemoteRandomGraphNode | undefined {
-        const keys = [...this.peers.keys()].filter((key) => !exclude.includes(key))
+        const keys = Array.from(this.peers.keys()).filter((key) => !exclude.includes(key))
         const shuffled = shuffle(keys)
         if (shuffled.length) {
             return this.peers.get(shuffled[0])
@@ -95,7 +95,7 @@ export class PeerList extends EventEmitter {
         if (excluded.size === 0) {
             return undefined
         }
-        return excluded.get([...excluded.keys()][0])
+        return excluded.get(Array.from(excluded.keys())[0])
     }
 
     getClosestAndFurthest(exclude: string[]): RemoteRandomGraphNode[] {
@@ -125,7 +125,7 @@ export class PeerList extends EventEmitter {
         if (excluded.size === 0) {
             return undefined
         }
-        return excluded.get([...excluded.keys()][excluded.size - 1])
+        return excluded.get(Array.from(excluded.keys())[excluded.size - 1])
     }
 
     clear(): void {
@@ -133,7 +133,7 @@ export class PeerList extends EventEmitter {
     }
 
     values(): RemoteRandomGraphNode[] {
-        return [...this.peers.values()]
+        return Array.from(this.peers.values())
     }
 
     getNeighborByStringId(id: string): RemoteRandomGraphNode | undefined {

@@ -56,8 +56,7 @@ export class Handshaker {
             }
         }
         targetNeighbors.forEach((contact) => this.ongoingHandshakes.add(PeerID.fromValue(contact.getPeerDescriptor().kademliaId).toKey()))
-
-        const promises = [...targetNeighbors.values()].map(async (target: RemoteRandomGraphNode, i) => {
+        const promises = Array.from(targetNeighbors.values()).map(async (target: RemoteRandomGraphNode, i) => {
             const otherPeer = i === 0 ? targetNeighbors[1] : targetNeighbors[0]
             const otherPeerStringId = targetNeighbors.length > 1 ? PeerID.fromValue(otherPeer.getPeerDescriptor().kademliaId).toKey() : undefined
             return this.handshakeWithTarget(target, otherPeerStringId)
