@@ -114,7 +114,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
         _streamPartId: StreamPartID,
         _nodeIds: string[],
         _direction: ProxyDirection,
-        _userId: string,
+        _getUserId: () => Promise<string>,
         _targetCount?: number
     ): Promise<void> {
         throw new Error('not implemented')

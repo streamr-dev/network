@@ -696,12 +696,11 @@ Proxy publishing and subscribing are handled on the network overlay level. This 
 // Open publish proxy to multiple nodes on stream
 await publishingClient.setProxies(stream, ['0x11111...', '0x22222...'], ProxyDirection.PUBLISH)
 
-// Remove publish proxy to multiple nodes on stream
+// To remove some/all proxies, call the same method with a different set of nodes. If the node list is empty, proxies are no longer used for the given stream.
 await publishingClient.setProxies(stream, [], ProxyDirection.PUBLISH)
-
 ```
 
-By default the client will attempt to open proxy connections to all of the nodes set in  `setProxies`. If you want to limit the number of connections by setting a fourth parameter. In this approach, if the client is disconnected from one of the nodes it will attempt to connect to another node by random.
+By default the client will attempt to open proxy connections to all of the nodes set in  `setProxies`. You can limit the number of connections by setting the `connectionCount` parameter. In this approach, if the client is disconnected from one of the nodes it will attempt to connect to another node by random.
 
 ```js
 // Opens 2 connections, with an extra candidate to use in case of disconnections

@@ -43,7 +43,7 @@ export interface NetworkNodeStub {
         streamPartId: StreamPartID,
         nodeIds: string[],
         direction: ProxyDirection,
-        userId: string,
+        getUserId: () => Promise<string>,
         connectionCount?: number
     ) => Promise<void>
 }
@@ -229,7 +229,7 @@ export class NetworkNodeFacade {
             streamPartId,
             nodeIds,
             direction,
-            (await this.authentication.getAddress()),
+            () => this.authentication.getAddress(),
             connectionCount
         )
     }
