@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/member-delimiter-style */
-
 import { EventEmitter } from 'events'
 import { DhtNode, PeerID, PeerDescriptor, DhtPeer, ListeningRpcCommunicator, ITransport, ConnectionLocker } from '@streamr/dht'
 import {
@@ -36,7 +34,7 @@ export interface RandomGraphNodeParams {
     layer1: DhtNode
     P2PTransport: ITransport
     connectionLocker: ConnectionLocker
-    ownPeerDescriptor: PeerDescriptor,
+    ownPeerDescriptor: PeerDescriptor
     nodeName?: string
 }
 
