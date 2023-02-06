@@ -98,12 +98,6 @@ export class ProxyStreamConnectionServer {
         }
 
         this.streamPartManager.removeNodeFromStreamPart(streamPartId, nodeId)
-        if (this.streamPartManager.getAllNodesForStreamPart(streamPartId).length === 0
-            && !this.connections.has(streamPartId)
-            && this.streamPartManager.isBehindProxy(streamPartId)
-        ) {
-            this.streamPartManager.removeStreamPart(streamPartId)
-        }
     }
 
     public getNodeIdsForUserId(streamPartId: StreamPartID, userId: string): NodeId[] {

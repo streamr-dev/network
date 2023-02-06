@@ -256,11 +256,6 @@ export class ProxyStreamConnectionClient extends EventEmitter {
         }
 
         this.streamPartManager.removeNodeFromStreamPart(streamPartId, nodeId)
-        if (this.streamPartManager.getAllNodesForStreamPart(streamPartId).length === 0
-            && this.streamPartManager.isBehindProxy(streamPartId)
-        ) {
-            this.streamPartManager.removeStreamPart(streamPartId)
-        }
     }
 
     private processHandshakeResponse(message: ProxyConnectionResponse, nodeId: NodeId): void {
