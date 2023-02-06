@@ -267,10 +267,6 @@ export class ProxyStreamConnectionClient extends EventEmitter {
         }
     }
 
-    public getConnectedNodeIds(streamPartId: StreamPartID): NodeId[] {
-        return this.definitions.has(streamPartId) ? Array.from(this.getConnections(streamPartId).keys()) : []
-    }
-
     processLeaveRequest(message: UnsubscribeRequest, nodeId: NodeId): void {
         const streamPartId = message.getStreamPartID()
         if (this.streamPartManager.isSetUp(streamPartId) && this.streamPartManager.hasInOnlyConnection(streamPartId, nodeId)) {
