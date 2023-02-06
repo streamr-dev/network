@@ -52,11 +52,9 @@ export class ProxyStreamConnectionServer {
 
     private async processHandshakeRequest(message: ProxyConnectionRequest, nodeId: NodeId): Promise<void> {
         const streamPartId = message.getStreamPartID()
-        // More conditions could be added here, ie. a list of acceptable ids or max limit for number of one-way this
         const isAccepted = this.streamPartManager.isSetUp(streamPartId) && this.acceptProxyConnections
         if (isAccepted) {
             if (message.direction === ProxyDirection.PUBLISH) {
-                // The receiver of the PUBLISH request will only receive data from the connection
                 this.streamPartManager.addInOnlyNeighbor(streamPartId, nodeId)
                 this.addConnection(streamPartId, nodeId, ProxyDirection.PUBLISH, message.userId)
             } else {
@@ -100,7 +98,6 @@ export class ProxyStreamConnectionServer {
         }
 
         this.streamPartManager.removeNodeFromStreamPart(streamPartId, nodeId)
-        // Finally if the stream has no neighbors or in/out connections, remove the stream
         if (this.streamPartManager.getAllNodesForStreamPart(streamPartId).length === 0
             && !this.connections.has(streamPartId)
             && this.streamPartManager.isBehindProxy(streamPartId)

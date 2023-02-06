@@ -256,7 +256,6 @@ export class ProxyStreamConnectionClient extends EventEmitter {
         }
 
         this.streamPartManager.removeNodeFromStreamPart(streamPartId, nodeId)
-        // Finally if the stream has no neighbors or in/out connections, remove the stream
         if (this.streamPartManager.getAllNodesForStreamPart(streamPartId).length === 0
             && this.streamPartManager.isBehindProxy(streamPartId)
         ) {
