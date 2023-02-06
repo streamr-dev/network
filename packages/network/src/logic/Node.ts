@@ -190,20 +190,6 @@ export class Node extends EventEmitter {
         this.nodeToNode.on(NodeToNodeEvent.NODE_CONNECTED, (nodeId) => this.emit(Event.NODE_CONNECTED, nodeId))
         this.nodeToNode.on(NodeToNodeEvent.DATA_RECEIVED, (broadcastMessage, nodeId) => this.onDataReceived(broadcastMessage.streamMessage, nodeId))
         this.nodeToNode.on(NodeToNodeEvent.NODE_DISCONNECTED, (nodeId) => this.onNodeDisconnected(nodeId))
-        this.nodeToNode.on(NodeToNodeEvent.PROXY_CONNECTION_REQUEST_RECEIVED, (message,  nodeId) => {
-            this.proxyStreamConnectionServer.processHandshakeRequest(message, nodeId)
-        })
-        this.nodeToNode.on(NodeToNodeEvent.PROXY_CONNECTION_RESPONSE_RECEIVED, (message, nodeId) => {
-            this.proxyStreamConnectionClient.processHandshakeResponse(message, nodeId)
-        })
-
-        this.nodeToNode.on(NodeToNodeEvent.LEAVE_REQUEST_RECEIVED, (message, nodeId) => {
-            this.proxyStreamConnectionClient.processLeaveRequest(message, nodeId)
-        })
-
-        this.nodeToNode.on(NodeToNodeEvent.LEAVE_REQUEST_RECEIVED, (message, nodeId) => {
-            this.proxyStreamConnectionServer.processLeaveRequest(message, nodeId)
-        })
     }
 
     start(): void {
@@ -363,8 +349,7 @@ export class Node extends EventEmitter {
             this.trackerManager.sendStreamPartStatus(s)
         })
         proxiedStreams.forEach((s) => {
-            this.proxyStreamConnectionClient.removeConnection(s, node)
-            setImmediate(async () => this.proxyStreamConnectionClient.ensureConnections(s))
+            setImmediate(async () => this.proxyStreamConnectionClient.onNodeDisconnected(s, node))
         })
         this.emit(Event.NODE_DISCONNECTED, node)
     }

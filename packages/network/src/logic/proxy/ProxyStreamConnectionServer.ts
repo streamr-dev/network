@@ -1,5 +1,5 @@
 import { StreamPartManager } from '../StreamPartManager'
-import { NodeToNode } from '../../protocol/NodeToNode'
+import { Event as NodeToNodeEvent, NodeToNode } from '../../protocol/NodeToNode'
 import { NodeId } from '../../identifiers'
 import { Event, Node } from '../Node'
 import {
@@ -41,6 +41,31 @@ export class ProxyStreamConnectionServer {
         this.acceptProxyConnections = opts.acceptProxyConnections
         this.propagation = opts.propagation
         this.connections = new Map()
+        this.nodeToNode.on(NodeToNodeEvent.PROXY_CONNECTION_REQUEST_RECEIVED, (message,  nodeId) => {
+            this.processHandshakeRequest(message, nodeId)
+        })
+
+        this.nodeToNode.on(NodeToNodeEvent.LEAVE_REQUEST_RECEIVED, (message, nodeId) => {
+            this.processLeaveRequest(message, nodeId)
+        })
+    }
+
+    private async processHandshakeRequest(message: ProxyConnectionRequest, nodeId: NodeId): Promise<void> {
+        const streamPartId = message.getStreamPartID()
+        // More conditions could be added here, ie. a list of acceptable ids or max limit for number of one-way this
+        const isAccepted = this.streamPartManager.isSetUp(streamPartId) && this.acceptProxyConnections
+        if (isAccepted) {
+            if (message.direction === ProxyDirection.PUBLISH) {
+                // The receiver of the PUBLISH request will only receive data from the connection
+                this.streamPartManager.addInOnlyNeighbor(streamPartId, nodeId)
+                this.addConnection(streamPartId, nodeId, ProxyDirection.PUBLISH, message.userId)
+            } else {
+                this.streamPartManager.addOutOnlyNeighbor(streamPartId, nodeId)
+                this.addConnection(streamPartId, nodeId, ProxyDirection.SUBSCRIBE, message.userId)
+                this.propagation.onNeighborJoined(nodeId, streamPartId) // TODO: maybe should not be marked as full propagation in Propagation.ts?
+            }
+        }
+        await this.nodeToNode.respondToProxyConnectionRequest(nodeId, streamPartId, message.direction, isAccepted)
     }
 
     private addConnection(streamPartId: StreamPartID, nodeId: NodeId, direction: ProxyDirection, userId: string): void {
@@ -51,6 +76,19 @@ export class ProxyStreamConnectionServer {
             direction,
             userId
         })
+    }
+
+    private processLeaveRequest(message: UnsubscribeRequest, nodeId: NodeId): void {
+        const streamPartId = message.getStreamPartID()
+        if (this.streamPartManager.isSetUp(streamPartId) && this.streamPartManager.hasInOnlyConnection(streamPartId, nodeId)) {
+            this.removeConnection(streamPartId, nodeId)
+            this.node.emit(Event.ONE_WAY_CONNECTION_CLOSED, nodeId, streamPartId)
+        }
+        if (this.streamPartManager.isSetUp(streamPartId) && this.streamPartManager.hasOutOnlyConnection(streamPartId, nodeId)) {
+            this.removeConnection(streamPartId, nodeId)
+            this.node.emit(Event.ONE_WAY_CONNECTION_CLOSED, nodeId, streamPartId)
+        }
+        logger.info(`Proxy node ${nodeId} closed one-way stream connection for ${streamPartId}`)
     }
 
     private removeConnection(streamPartId: StreamPartID, nodeId: NodeId): void {
@@ -80,37 +118,6 @@ export class ProxyStreamConnectionServer {
             }
         })
         return returnedNodeIds
-    }
-
-    processLeaveRequest(message: UnsubscribeRequest, nodeId: NodeId): void {
-        const streamPartId = message.getStreamPartID()
-        if (this.streamPartManager.isSetUp(streamPartId) && this.streamPartManager.hasInOnlyConnection(streamPartId, nodeId)) {
-            this.removeConnection(streamPartId, nodeId)
-            this.node.emit(Event.ONE_WAY_CONNECTION_CLOSED, nodeId, streamPartId)
-        }
-        if (this.streamPartManager.isSetUp(streamPartId) && this.streamPartManager.hasOutOnlyConnection(streamPartId, nodeId)) {
-            this.removeConnection(streamPartId, nodeId)
-            this.node.emit(Event.ONE_WAY_CONNECTION_CLOSED, nodeId, streamPartId)
-        }
-        logger.info(`Proxy node ${nodeId} closed one-way stream connection for ${streamPartId}`)
-    }
-
-    async processHandshakeRequest(message: ProxyConnectionRequest, nodeId: NodeId): Promise<void> {
-        const streamPartId = message.getStreamPartID()
-        // More conditions could be added here, ie. a list of acceptable ids or max limit for number of one-way this
-        const isAccepted = this.streamPartManager.isSetUp(streamPartId) && this.acceptProxyConnections
-        if (isAccepted) {
-            if (message.direction === ProxyDirection.PUBLISH) {
-                // The receiver of the PUBLISH request will only receive data from the connection
-                this.streamPartManager.addInOnlyNeighbor(streamPartId, nodeId)
-                this.addConnection(streamPartId, nodeId, ProxyDirection.PUBLISH, message.userId)
-            } else {
-                this.streamPartManager.addOutOnlyNeighbor(streamPartId, nodeId)
-                this.addConnection(streamPartId, nodeId, ProxyDirection.SUBSCRIBE, message.userId)
-                this.propagation.onNeighborJoined(nodeId, streamPartId) // TODO: maybe should not be marked as full propagation in Propagation.ts?
-            }
-        }
-        await this.nodeToNode.respondToProxyConnectionRequest(nodeId, streamPartId, message.direction, isAccepted)
     }
 
     stop(): void {
