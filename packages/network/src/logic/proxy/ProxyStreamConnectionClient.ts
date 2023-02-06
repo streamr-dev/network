@@ -25,13 +25,7 @@ export interface ProxyStreamConnectionClientOptions {
     nodeConnectTimeout: number
 }
 
-enum State {
-    NEGOTIATING,
-    ACCEPTED,
-}
-
 interface ProxyCandidate {
-    state?: State
     direction: ProxyDirection
     userId: string
 }
@@ -216,7 +210,6 @@ export class ProxyStreamConnectionClient extends EventEmitter {
                 return
             }
             this.proxyTargets.get(streamPartId)!.connections.set(targetNodeId, {
-                state: State.NEGOTIATING,
                 direction,
                 userId
             })
@@ -319,7 +312,6 @@ export class ProxyStreamConnectionClient extends EventEmitter {
     processProxyConnectionResponse(message: ProxyConnectionResponse, nodeId: NodeId): void {
         const streamPartId = message.getStreamPartID()
         if (message.accepted) {
-            this.getConnection(nodeId, streamPartId)!.state = State.ACCEPTED
             if (message.direction === ProxyDirection.PUBLISH) {
                 this.streamPartManager.addOutOnlyNeighbor(streamPartId, nodeId)
                 this.propagation.onNeighborJoined(nodeId, streamPartId)
