@@ -23,6 +23,7 @@ export interface Config {
 export type StrictConfig = Config & {
     client: Exclude<Config['client'], undefined>
     plugins: Exclude<Config['plugins'], undefined>
+    httpServer: Exclude<Config['httpServer'], undefined>
 }
 
 export interface ConfigFile extends Config {

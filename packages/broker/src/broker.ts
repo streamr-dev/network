@@ -54,7 +54,7 @@ export const createBroker = async (configWithoutDefaults: Config): Promise<Broke
             await Promise.all(plugins.map((plugin) => plugin.start()))
             const httpServerRoutes = plugins.flatMap((plugin) => plugin.getHttpServerRoutes())
             if (httpServerRoutes.length > 0) {
-                httpServer = await startHttpServer(httpServerRoutes, config.httpServer!, apiAuthenticator)
+                httpServer = await startHttpServer(httpServerRoutes, config.httpServer, apiAuthenticator)
             }
 
             const nodeId = (await streamrClient.getNode()).getNodeId()
