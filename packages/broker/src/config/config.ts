@@ -73,7 +73,9 @@ export function overrideConfigToEnvVarsIfGiven(config: Config): void {
             })
             const key = parts.join('.')
             const value = parseValue(process.env[variableName]!)
-            set(config, key, value)
+            if (value !== '') {
+                set(config, key, value)
+            }
         }
     })
 }

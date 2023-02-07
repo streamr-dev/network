@@ -1,6 +1,16 @@
 import { overrideConfigToEnvVarsIfGiven } from '../../src/config/config'
 
 describe('overrideConfigToEnvVarsIfGiven', () => {
+
+    beforeEach(() => {
+        const PREFIX = 'STREAMR__BROKER__'
+        Object.keys(process.env).forEach((variableName: string) => {
+            if (variableName.startsWith(PREFIX)) {
+                delete process.env[variableName]
+            }
+        })
+    })
+
     it('happy path', () => {
         const config = {
             client: {
@@ -52,6 +62,20 @@ describe('overrideConfigToEnvVarsIfGiven', () => {
                     stunServerHost: null
                 },
                 info: {}
+            }
+        })
+    })
+
+    it('empty variable', () => {
+        process.env.STREAMR__BROKER__CLIENT__AUTH__PRIVATE_KEY = ''
+        process.env.STREAMR__BROKER__PLUGINS__BRUBECK_MINER__BENEFICIARY_ADDRESS = '0x222'
+        const config = {} as any
+        overrideConfigToEnvVarsIfGiven(config)
+        expect(config).toEqual({
+            plugins: {
+                brubeckMiner: {
+                    beneficiaryAddress: '0x222'
+                }
             }
         })
     })
