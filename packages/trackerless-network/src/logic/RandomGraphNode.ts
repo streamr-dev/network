@@ -126,82 +126,6 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         })
     }
 
-    private registerDefaultServerMethods(): void {
-        this.handshake = this.handshake.bind(this)
-        this.sendData = this.sendData.bind(this)
-        this.interleaveNotice = this.interleaveNotice.bind(this)
-        this.leaveStreamNotice = this.leaveStreamNotice.bind(this)
-        this.neighborUpdate = this.neighborUpdate.bind(this)
-
-        this.rpcCommunicator!.registerRpcNotification(StreamMessage, 'sendData', this.sendData)
-        this.rpcCommunicator!.registerRpcNotification(LeaveStreamNotice, 'leaveStreamNotice', this.leaveStreamNotice)
-        this.rpcCommunicator!.registerRpcNotification(InterleaveNotice, 'interleaveNotice', this.interleaveNotice)
-        this.rpcCommunicator!.registerRpcMethod(StreamHandshakeRequest, StreamHandshakeResponse, 'handshake', this.handshake)
-        this.rpcCommunicator!.registerRpcMethod(NeighborUpdate, NeighborUpdate, 'neighborUpdate', this.neighborUpdate)
-    }
-
-    stop(): void {
-        if (!this.started) {
-            return
-        }
-        this.stopped = true
-        this.abortController.abort()
-        this.targetNeighbors!.values().map((remote) => remote.leaveStreamNotice(this.layer1.getPeerDescriptor()))
-        this.rpcCommunicator!.stop()
-        this.removeAllListeners()
-        this.layer1.off('newContact', (peerDescriptor, closestTen) => this.newContact(peerDescriptor, closestTen))
-        this.layer1.off('contactRemoved', (peerDescriptor, closestTen) => this.removedContact(peerDescriptor, closestTen))
-        this.layer1.off('newRandomContact', (peerDescriptor, randomPeers) => this.newRandomContact(peerDescriptor, randomPeers))
-        this.layer1.off('randomContactRemoved', (peerDescriptor, randomPeers) => this.removedRandomContact(peerDescriptor, randomPeers))
-        this.P2PTransport.off('disconnected', (peerDescriptor: PeerDescriptor) => this.onPeerDisconnected(peerDescriptor))
-        this.nearbyContactPool!.clear()
-        this.targetNeighbors!.clear()
-        if (this.findNeighborsIntervalRef) {
-            clearTimeout(this.findNeighborsIntervalRef)
-        }
-    }
-
-    broadcast(msg: StreamMessage, previousPeer?: string): void {
-        if (!previousPeer) {
-            this.markAndCheckDuplicate(msg.messageRef!, msg.previousMessageRef)
-        }
-        this.emit(Event.MESSAGE, msg)
-        this.propagation.feedUnseenMessage(msg, this.targetNeighbors!.getStringIds(), previousPeer || null)
-    }
-
-    private async findNeighbors(excluded: string[]): Promise<void> {
-        if (this.stopped) {
-            return
-        }
-        const newExcludes = await this.handshaker!.attemptHandshakesOnContacts(excluded)
-        if (this.targetNeighbors!.size() < this.N && newExcludes.length < this.nearbyContactPool!.size()) {
-            this.findNeighborsIntervalRef = setTimeout(async () => {
-                if (this.findNeighborsIntervalRef) {
-                    clearTimeout(this.findNeighborsIntervalRef)
-                }
-                await this.findNeighbors(newExcludes)
-                this.findNeighborsIntervalRef = null
-            }, 250)
-        } else {
-            this.findNeighborsIntervalRef = null
-        }
-    }
-
-    private async updateNeighborInfo(): Promise<void> {
-        logger.trace(`Updating neighbor info to peers`)
-        const neighborDescriptors = this.targetNeighbors!.values().map((neighbor) => neighbor.getPeerDescriptor())
-        await Promise.allSettled(this.targetNeighbors!.values().map(async (neighbor) => {
-            const res = await neighbor.updateNeighbors(this.layer1.getPeerDescriptor(), neighborDescriptors)
-            if (res.removeMe) {
-                this.targetNeighbors!.remove(neighbor.getPeerDescriptor())
-                if (!this.findNeighborsIntervalRef) {
-                    this.findNeighbors([PeerID.fromValue(neighbor.getPeerDescriptor().kademliaId).toKey()])
-                        .catch(() => {})
-                }
-            }
-        }))
-    }
-
     private newContact(_newContact: PeerDescriptor, closestTen: PeerDescriptor[]): void {
         logger.trace(`New nearby contact found`)
         if (this.stopped) {
@@ -257,12 +181,6 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         ))
     }
 
-    private getNewNeighborCandidates(): PeerDescriptor[] {
-        return this.layer1.getNeighborList().getClosestContacts(this.PEER_VIEW_SIZE).map((contact: DhtPeer) => {
-            return contact.getPeerDescriptor()
-        })
-    }
-
     private onPeerDisconnected(peerDescriptor: PeerDescriptor): void {
         if (this.targetNeighbors!.hasPeer(peerDescriptor)) {
             this.targetNeighbors!.remove(peerDescriptor)
@@ -271,6 +189,88 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
                 this.findNeighbors([PeerID.fromValue(peerDescriptor.kademliaId).toKey()]).catch(() => { })
             }
         }
+    }
+
+    private registerDefaultServerMethods(): void {
+        this.handshake = this.handshake.bind(this)
+        this.sendData = this.sendData.bind(this)
+        this.interleaveNotice = this.interleaveNotice.bind(this)
+        this.leaveStreamNotice = this.leaveStreamNotice.bind(this)
+        this.neighborUpdate = this.neighborUpdate.bind(this)
+
+        this.rpcCommunicator!.registerRpcNotification(StreamMessage, 'sendData', this.sendData)
+        this.rpcCommunicator!.registerRpcNotification(LeaveStreamNotice, 'leaveStreamNotice', this.leaveStreamNotice)
+        this.rpcCommunicator!.registerRpcNotification(InterleaveNotice, 'interleaveNotice', this.interleaveNotice)
+        this.rpcCommunicator!.registerRpcMethod(StreamHandshakeRequest, StreamHandshakeResponse, 'handshake', this.handshake)
+        this.rpcCommunicator!.registerRpcMethod(NeighborUpdate, NeighborUpdate, 'neighborUpdate', this.neighborUpdate)
+    }
+
+    private async findNeighbors(excluded: string[]): Promise<void> {
+        if (this.stopped) {
+            return
+        }
+        const newExcludes = await this.handshaker!.attemptHandshakesOnContacts(excluded)
+        if (this.targetNeighbors!.size() < this.N && newExcludes.length < this.nearbyContactPool!.size()) {
+            this.findNeighborsIntervalRef = setTimeout(async () => {
+                if (this.findNeighborsIntervalRef) {
+                    clearTimeout(this.findNeighborsIntervalRef)
+                }
+                await this.findNeighbors(newExcludes)
+                this.findNeighborsIntervalRef = null
+            }, 250)
+        } else {
+            this.findNeighborsIntervalRef = null
+        }
+    }
+
+    private async updateNeighborInfo(): Promise<void> {
+        logger.trace(`Updating neighbor info to peers`)
+        const neighborDescriptors = this.targetNeighbors!.values().map((neighbor) => neighbor.getPeerDescriptor())
+        await Promise.allSettled(this.targetNeighbors!.values().map(async (neighbor) => {
+            const res = await neighbor.updateNeighbors(this.layer1.getPeerDescriptor(), neighborDescriptors)
+            if (res.removeMe) {
+                this.targetNeighbors!.remove(neighbor.getPeerDescriptor())
+                if (!this.findNeighborsIntervalRef) {
+                    this.findNeighbors([PeerID.fromValue(neighbor.getPeerDescriptor().kademliaId).toKey()])
+                        .catch(() => {})
+                }
+            }
+        }))
+    }
+
+    private getNewNeighborCandidates(): PeerDescriptor[] {
+        return this.layer1.getNeighborList().getClosestContacts(this.PEER_VIEW_SIZE).map((contact: DhtPeer) => {
+            return contact.getPeerDescriptor()
+        })
+    }
+
+    stop(): void {
+        if (!this.started) {
+            return
+        }
+        this.stopped = true
+        this.abortController.abort()
+        this.targetNeighbors!.values().map((remote) => remote.leaveStreamNotice(this.layer1.getPeerDescriptor()))
+        this.rpcCommunicator!.stop()
+        this.removeAllListeners()
+        this.layer1.off('newContact', (peerDescriptor, closestTen) => this.newContact(peerDescriptor, closestTen))
+        this.layer1.off('contactRemoved', (peerDescriptor, closestTen) => this.removedContact(peerDescriptor, closestTen))
+        this.layer1.off('newRandomContact', (peerDescriptor, randomPeers) => this.newRandomContact(peerDescriptor, randomPeers))
+        this.layer1.off('randomContactRemoved', (peerDescriptor, randomPeers) => this.removedRandomContact(peerDescriptor, randomPeers))
+        this.P2PTransport.off('disconnected', (peerDescriptor: PeerDescriptor) => this.onPeerDisconnected(peerDescriptor))
+        this.nearbyContactPool!.clear()
+        this.targetNeighbors!.clear()
+        if (this.findNeighborsIntervalRef) {
+            clearTimeout(this.findNeighborsIntervalRef)
+        }
+    }
+
+    broadcast(msg: StreamMessage, previousPeer?: string): void {
+        if (!previousPeer) {
+            this.markAndCheckDuplicate(msg.messageRef!, msg.previousMessageRef)
+        }
+        this.emit(Event.MESSAGE, msg)
+        this.propagation.feedUnseenMessage(msg, this.targetNeighbors!.getStringIds(), previousPeer || null)
     }
 
     private markAndCheckDuplicate(currentMessageRef: MessageRef, previousMessageRef?: MessageRef): boolean {
