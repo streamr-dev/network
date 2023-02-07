@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/prefer-for-of, @typescript-eslint/member-delimiter-style */
-
 import { EventEmitter } from 'eventemitter3'
 import {
     ConnectivityResponse, DisconnectNotice,
@@ -37,13 +35,13 @@ export interface ConnectionManagerConfig {
     webSocketHost?: string
     webSocketPort?: number
     entryPoints?: PeerDescriptor[]
+    stunUrls?: string[]
+    metricsContext?: MetricsContext
+    nodeName?: string
     // the following fields are used in simulation only
     simulator?: Simulator
     ownPeerDescriptor?: PeerDescriptor
     serviceIdPrefix?: string
-    stunUrls?: string[]
-    metricsContext?: MetricsContext,
-    nodeName?: string
 }
 
 export enum NatType {
@@ -223,7 +221,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         }
 
         logger.info('stopping connections')
-        await Promise.allSettled([...this.connections.values()].map((connection: ManagedConnection) => {
+        await Promise.allSettled(Array.from(this.connections.values()).map((connection: ManagedConnection) => {
             return this.gracefullyDisconnectAsync(connection.getPeerDescriptor()!)
         }))
         logger.info('stopped connections')
@@ -436,8 +434,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
                 const buffer = oldConnection!.stealOutputBuffer()
 
-                for (let i = 0; i < buffer.length; i++) {
-                    connection.sendNoWait(buffer[i])
+                for (const data of buffer) {
+                    connection.sendNoWait(data)
                 }
                 oldConnection!.reportBufferSentByOtherConnection()
 
@@ -571,7 +569,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     public getAllConnectionPeerDescriptors(): PeerDescriptor[] {
-        return [...this.connections.values()]
+        return Array.from(this.connections.values())
             .filter((managedConnection: ManagedConnection) => managedConnection.isHandshakeCompleted())
             .map((managedConnection: ManagedConnection) => managedConnection.getPeerDescriptor()! as PeerDescriptor)
     }

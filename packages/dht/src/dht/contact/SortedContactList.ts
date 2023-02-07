@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/prefer-for-of */
-
 import KBucket from 'k-bucket'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import EventEmitter from 'eventemitter3'
@@ -42,12 +40,9 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
     }
 
     public addContact(contact: Contact): void {
-        if (this.excludedPeerIDs !== undefined) {
-            for (let i = 0; i < this.excludedPeerIDs.length; i++) {
-                if (contact.peerId.equals(this.excludedPeerIDs[i])) {
-                    return
-                }
-            }
+        if (this.excludedPeerIDs
+            && this.excludedPeerIDs.some((peerId) => contact.peerId.equals(peerId))) {
+            return
         }
         
         if ((!this.allowOwnPeerId && this.ownId.equals(contact.peerId)) ||

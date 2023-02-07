@@ -1,5 +1,3 @@
-/* eslint-disable class-methods-use-this */
-
 import 'setimmediate'
 
 import { PeerID } from '../../helpers/PeerID'
@@ -35,9 +33,6 @@ export class SimulatorConnector {
         this.ownPeerDescriptor = ownPeerDescriptor
         this.simulator = simulator
         this.incomingConnectionCallback = incomingConnectionCallback
-    }
-
-    public async start(): Promise<void> {
     }
 
     public connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {

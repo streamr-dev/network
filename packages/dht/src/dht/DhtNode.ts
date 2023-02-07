@@ -1,9 +1,6 @@
-/* eslint-disable class-methods-use-this */
-
 import crypto from 'crypto'
 import { DhtPeer } from './DhtPeer'
 import KBucket from 'k-bucket'
-//import { StreamrKBucket } from './SmtreamrKBucket'
 import { EventEmitter } from 'eventemitter3'
 import { SortedContactList } from './contact/SortedContactList'
 import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
@@ -714,7 +711,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
     }
 
     public getAllConnectionPeerDescriptors(): PeerDescriptor[] {
-        return [...this.connections.values()].map((peer) => peer.getPeerDescriptor())
+        return Array.from(this.connections.values()).map((peer) => peer.getPeerDescriptor())
     }
 
     public getK(): number {
@@ -859,6 +856,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         return {}
     }
 
+    // eslint-disable-next-line class-methods-use-this
     private createRouteMessageAck(routedMessage: RouteMessageWrapper, error?: string): RouteMessageAck {
         const ack: RouteMessageAck = {
             requestId: routedMessage.requestId,

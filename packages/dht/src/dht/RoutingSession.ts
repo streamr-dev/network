@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/prefer-for-of, promise/catch-or-return */
-
 import { PeerDescriptor } from "../exports"
 import { DhtPeer } from "./DhtPeer"
 import { SortedContactList } from "./contact/SortedContactList"
@@ -121,18 +119,14 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     private findMoreContacts(): DhtPeer[] {
         // the contents of the connections might have changed between the rounds
         // addContacts() will only add new contacts that were not there yet
-        this.contactList.addContacts([...this.connections.values()])
+        this.contactList.addContacts(Array.from(this.connections.values()))
 
         return this.contactList.getUncontactedContacts(this.parallelism)
     }
 
     public getClosestContacts(limit: number): PeerDescriptor[] {
-        const ret: PeerDescriptor[] = []
         const contacts = this.contactList.getClosestContacts(limit)
-        for (let i = 0; i < contacts.length; i++) {
-            ret.push(contacts[i].getPeerDescriptor())
-        }
-        return ret
+        return contacts.map((contact) => contact.getPeerDescriptor())
     }
 
     private sendMoreRequests(uncontacted: DhtPeer[]) {
@@ -151,6 +145,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
             }
             const nextPeer = uncontacted.shift()
             logger.trace('sendRouteMessageRequest')
+            // eslint-disable-next-line promise/catch-or-return
             this.sendRouteMessageRequest(nextPeer!)
                 .then((succeeded) => {
                     if (succeeded) {
@@ -158,7 +153,6 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
                     } else {
                         this.onRequestFailed(nextPeer!.peerId)
                     }
-                    return
                 }).catch((e) => { 
                     logger.error(e)
                 }).finally(() => {
