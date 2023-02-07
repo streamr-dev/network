@@ -4,7 +4,7 @@ import * as os from 'os'
 import { camelCase, set } from 'lodash'
 
 export interface Config {
-    client: StreamrClientConfig
+    client?: StreamrClientConfig
     httpServer?: {
         port: number
         sslCertificate?: {
@@ -15,7 +15,14 @@ export interface Config {
     apiAuthentication?: {
         keys: string[]
     }
-    plugins: Record<string, any>
+    plugins?: Record<string, any>
+}
+
+// StrictConfig is a config object to which some default values have been applied
+// (see `default` definitions in config.schema.json)
+export type StrictConfig = Config & {
+    client: Exclude<Config['client'], undefined>
+    plugins: Exclude<Config['plugins'], undefined>
 }
 
 export interface ConfigFile extends Config {
