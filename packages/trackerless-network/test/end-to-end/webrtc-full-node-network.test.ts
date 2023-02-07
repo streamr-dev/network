@@ -92,7 +92,6 @@ describe('Full node network with WebRTC connections', () => {
     })
 
     it('happy path', async () => {
-
         await Promise.all([...streamrNodes.map((streamrNode) =>
             waitForCondition(() => {
                 return streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length >= 3
@@ -101,9 +100,7 @@ describe('Full node network with WebRTC connections', () => {
             , 60000
             )
         )])
-
         let numOfMessagesReceived = 0
-
         const successIds: PeerIDKey[] = []
         streamrNodes.map((streamrNode) => {
             streamrNode.on(StreamrNodeEvent.NEW_MESSAGE, () => {
@@ -111,7 +108,6 @@ describe('Full node network with WebRTC connections', () => {
                 numOfMessagesReceived += 1
             })
         })
-
         const content: ContentMessage = {
             body: JSON.stringify({ hello: "WORLD" })
         }
@@ -120,11 +116,8 @@ describe('Full node network with WebRTC connections', () => {
             randomGraphId,
             PeerID.fromValue(epPeerDescriptor.kademliaId).toString()
         )
-
         epStreamrNode.publishToStream(randomGraphId, epPeerDescriptor, msg)
-
         await waitForCondition(() => numOfMessagesReceived === NUM_OF_NODES)
-
     }, 120000)
 
 })

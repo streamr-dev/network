@@ -87,7 +87,6 @@ export class Handshaker {
 
     public async handshakeWithTarget(targetNeighbor: RemoteRandomGraphNode, concurrentStringId?: string): Promise<boolean> {
         const targetStringId = PeerID.fromValue(targetNeighbor.getPeerDescriptor()!.kademliaId).toKey()
-
         this.ongoingHandshakes.add(targetStringId)
         const result = await targetNeighbor.handshake(
             this.ownPeerDescriptor,
@@ -108,7 +107,6 @@ export class Handshaker {
             await this.interleaveHandshake(interleaveTarget, targetStringId)
         }
         this.ongoingHandshakes.delete(targetStringId)
-
         return result.accepted
     }
 
@@ -128,7 +126,6 @@ export class Handshaker {
             this.connectionLocker.lockConnection(targetNeighbor.getPeerDescriptor(), this.randomGraphId)
         }
         this.ongoingHandshakes.delete(targetStringId)
-
         return result.accepted
     }
 
@@ -138,7 +135,6 @@ export class Handshaker {
         exclude.push(request.interleavingFrom!)
         const furthest = this.targetNeighbors.getFurthest(exclude)
         const furthestPeerDescriptor = furthest ? furthest.getPeerDescriptor() : undefined
-
         if (furthest) {
             furthest.interleaveNotice(this.ownPeerDescriptor, request.senderDescriptor!)
             this.targetNeighbors.remove(furthest.getPeerDescriptor())
@@ -146,7 +142,6 @@ export class Handshaker {
         } else {
             logger.trace('furthest was falsy')
         }
-
         this.targetNeighbors.add(requester)
         const res: StreamHandshakeResponse = {
             requestId: request.requestId,

@@ -11,7 +11,6 @@ describe('GroupKeyRequestTranslator', () => {
         requestId: 'request',
         groupKeyIds: ['id1', 'id2', 'id3']
     })
-
     const newGroupKeyRequest: GroupKeyRequest = {
         rsaPublicKey: 'aaaaaaaa',
         recipient: 'recipient',

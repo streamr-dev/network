@@ -8,22 +8,17 @@ import { createStreamMessage } from '../utils'
 describe('Full node network with WebSocket connections only', () => {
 
     const NUM_OF_NODES = 48
-
     const epPeerDescriptor: PeerDescriptor = {
         kademliaId: PeerID.fromString(`entrypoint`).value,
         type: NodeType.NODEJS,
         nodeName: 'entrypoint',
         websocket: { ip: 'localhost', port: 15555 }
     }
-
     const randomGraphId = 'websocket-network'
-
     let epConnectionManager: ConnectionManager
     let epStreamrNode: StreamrNode
-
     let connectionManagers: ConnectionManager[]
     let streamrNodes: StreamrNode[]
-
     let layer0Ep: DhtNode
     let layer0DhtNodes: DhtNode[]
 
@@ -32,17 +27,13 @@ describe('Full node network with WebSocket connections only', () => {
         streamrNodes = []
         connectionManagers = []
         layer0DhtNodes = []
-
         layer0Ep = new DhtNode({ peerDescriptor: epPeerDescriptor,  nodeName: 'entrypoint', numberOfNodesPerKBucket: 4, routeMessageTimeout: 10000 })
         await layer0Ep.start()
         await layer0Ep.joinDht(epPeerDescriptor)
-
         epConnectionManager = layer0Ep.getTransport() as ConnectionManager
         epStreamrNode = new StreamrNode({})
         await epStreamrNode.start(layer0Ep, epConnectionManager, epConnectionManager)
-
         await epStreamrNode.joinStream(randomGraphId, epPeerDescriptor)
-
         await Promise.all(range(NUM_OF_NODES).map(async (i) => {
             const layer0 = new DhtNode({
                 routeMessageTimeout: 10000,
@@ -53,16 +44,12 @@ describe('Full node network with WebSocket connections only', () => {
                 nodeName: `${i}`,
                 numberOfNodesPerKBucket: 4
             })
-
             layer0DhtNodes.push(layer0)
-
             await layer0.start()
             await layer0.joinDht(epPeerDescriptor)
-
             const connectionManager = layer0.getTransport() as ConnectionManager
             const streamrNode = new StreamrNode({ nodeName: `${i}` })
             await streamrNode.start(layer0, connectionManager, connectionManager)
-
             return await streamrNode.joinStream(randomGraphId, epPeerDescriptor).then(() => {
                 streamrNode.subscribeToStream(randomGraphId, epPeerDescriptor)
                 connectionManagers.push(connectionManager)
@@ -96,11 +83,9 @@ describe('Full node network with WebSocket connections only', () => {
         )])
 
         let numOfMessagesReceived = 0
-
         streamrNodes.map((streamrNode) => {
             streamrNode.on(StreamrNodeEvent.NEW_MESSAGE, () => numOfMessagesReceived += 1)
         })
-
         const content: ContentMessage = {
             body: JSON.stringify({ hello: "WORLD" })
         }
@@ -109,11 +94,8 @@ describe('Full node network with WebSocket connections only', () => {
             randomGraphId,
             PeerID.fromValue(epPeerDescriptor.kademliaId).toString()
         )
-
         epStreamrNode.publishToStream(randomGraphId, epPeerDescriptor, msg)
-
         await waitForCondition(() => numOfMessagesReceived === NUM_OF_NODES)
-
     }, 220000)
 
 })

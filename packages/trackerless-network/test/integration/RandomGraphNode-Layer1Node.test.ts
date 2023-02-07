@@ -77,7 +77,6 @@ describe('RandomGraphNode-DhtNode', () => {
         await dhtNodes[0].joinDht(entrypointDescriptor)
         entryPointRandomGraphNode.start()
         await graphNodes[0].start()
-
         await Promise.all([
             waitForCondition(() => graphNodes[0].getNearbyContactPoolIds().length === 1),
             waitForCondition(() => graphNodes[0].getTargetNeighborStringIds().length === 1)
@@ -92,13 +91,11 @@ describe('RandomGraphNode-DhtNode', () => {
         await Promise.all(range(4).map(async (i) => {
             await dhtNodes[i].joinDht(entrypointDescriptor)
         }))
-
         await Promise.all(range(4).map((i) => {
             return waitForCondition(() => {
                 return graphNodes[i].getTargetNeighborStringIds().length >= 4
             }, 10000, 2000)
         }))
-
         range(4).map((i) => {
             expect(graphNodes[i].getNearbyContactPoolIds().length).toBeGreaterThanOrEqual(4)
             expect(graphNodes[i].getTargetNeighborStringIds().length).toBeGreaterThanOrEqual(4)
@@ -147,13 +144,10 @@ describe('RandomGraphNode-DhtNode', () => {
         }, 0) / numOfNodes
 
         logger.info(`AVG Number of neighbors: ${avg}`)
-
         await Promise.all(graphNodes.map((node) =>
             waitForCondition(() => node.getNumberOfOutgoingHandshakes() == 0)
         ))
-
         await wait(20000)
-
         let mismatchCounter = 0
         graphNodes.forEach((node) => {
             const nodeId = node.getOwnStringId()

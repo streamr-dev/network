@@ -25,6 +25,7 @@ describe('PeerList', () => {
         
         return new RemoteRandomGraphNode(peerDescriptor, graphId, toProtoRpcClient(new NetworkRpcClient(mockClient)))
     }
+
     beforeEach(() => {
         peerList = new PeerList(ownId, 6)
 

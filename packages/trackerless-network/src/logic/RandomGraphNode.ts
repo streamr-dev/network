@@ -58,7 +58,6 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     private handshaker?: Handshaker
     private ownPeerDescriptor: PeerDescriptor
     private readonly abortController: AbortController
-
     private readonly propagation: Propagation
     private config: RandomGraphNodeParams
 
@@ -160,7 +159,6 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
             return
         }
         let newExcludes: string[]
-
         if (this.targetNeighbors!.size() + this.handshaker!.getOngoingHandshakes().size < this.N - 2) {
             newExcludes = await this.handshaker!.findParallelTargetsAndHandshake(excluded)
         } else if (this.targetNeighbors!.size() + this.handshaker!.getOngoingHandshakes().size < this.N) {

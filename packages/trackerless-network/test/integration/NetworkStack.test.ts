@@ -49,7 +49,6 @@ describe('NetworkStack', () => {
         stack1.getStreamrNode().on(Event.NEW_MESSAGE, () => {
             receivedMessages += 1
         })
-
         const content: ContentMessage = {
             body: JSON.stringify({ hello: "WORLD" })
         }
@@ -58,7 +57,6 @@ describe('NetworkStack', () => {
             toStreamID(streamPartId),
             PeerID.fromString('network-stack').toKey()
         )
-
         await stack2.getStreamrNode().waitForJoinAndPublish(streamPartId, epDescriptor, msg)
         await waitForCondition(() => receivedMessages === 1)
     })

@@ -41,7 +41,6 @@ export class RemoteRandomGraphNode {
         interleaving = false,
         interleavingFrom?: string
     ): Promise<HandshakeResponse> {
-
         const request: StreamHandshakeRequest = {
             randomGraphId: this.graphId,
             requestId: new UUID().toString(),

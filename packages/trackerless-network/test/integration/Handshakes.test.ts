@@ -14,27 +14,20 @@ describe('Handshakes', () => {
         kademliaId: new Uint8Array([1, 1, 1]),
         type: NodeType.NODEJS
     }
-
     const peerDescriptor2: PeerDescriptor = {
         kademliaId: new Uint8Array([2, 1, 1]),
         type: NodeType.NODEJS
     }
-
     const peerDescriptor3: PeerDescriptor = {
         kademliaId: new Uint8Array([3, 1, 1]),
         type: NodeType.NODEJS
     }
-
     let rpcCommunicator1: ListeningRpcCommunicator
     let rpcCommunicator2: ListeningRpcCommunicator
     let rpcCommunicator3: ListeningRpcCommunicator
-
     let contactPool: PeerList
-
     let targetNeighbors: PeerList
-
     let handshaker: Handshaker
-
     const randomGraphId = 'handshaker'
 
     const acceptHandshake = async (request: StreamHandshakeRequest, _context: ServerCallContext): Promise<StreamHandshakeResponse> => {
@@ -64,7 +57,6 @@ describe('Handshakes', () => {
 
     beforeEach(() => {
         const simulator = new Simulator()
-
         const simulatorTransport1 = new SimulatorTransport(peerDescriptor1, simulator)
         const simulatorTransport2 = new SimulatorTransport(peerDescriptor2, simulator)
         const simulatorTransport3 = new SimulatorTransport(peerDescriptor3, simulator)
@@ -75,9 +67,7 @@ describe('Handshakes', () => {
 
         const handshakerPeerId = PeerID.fromValue(peerDescriptor2.kademliaId)
         contactPool = new PeerList(handshakerPeerId, 10)
-
         targetNeighbors = new PeerList(handshakerPeerId, 4)
-
         handshaker = new Handshaker({
             ownPeerDescriptor: peerDescriptor2,
             randomGraphId: randomGraphId,
@@ -138,7 +128,6 @@ describe('Handshakes', () => {
     it('Handshake with Interleaving', async () => {
         rpcCommunicator1.registerRpcMethod(StreamHandshakeRequest, StreamHandshakeResponse, 'handshake', interleavingHandshake)
         rpcCommunicator3.registerRpcMethod(StreamHandshakeRequest, StreamHandshakeResponse, 'handshake', acceptHandshake)
-
         const res = await handshaker.handshakeWithTarget(
             new RemoteRandomGraphNode(
                 peerDescriptor1,

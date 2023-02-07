@@ -49,7 +49,6 @@ describe('FifoMapWithTtl', () => {
 
         it('can insert 5 items and retrieve all of them', () => {
             setFirstFiveMessages()
-
             expect(fifoMap.get('1st')).toEqual('foo')
             expect(fifoMap.get('2nd')).toEqual('bar')
             expect(fifoMap.get('3rd')).toEqual('hello')
@@ -60,7 +59,6 @@ describe('FifoMapWithTtl', () => {
         it('inserting items when full causes oldest items to get dropped', () => {
             setFirstFiveMessages()
             set6thAnd7thMessages()
-
             expect(fifoMap.get('1st')).toBeUndefined()
             expect(fifoMap.get('2nd')).toBeUndefined()
             expect(fifoMap.get('3rd')).toEqual('hello')
@@ -93,7 +91,6 @@ describe('FifoMapWithTtl', () => {
             it('can delete an item', () => {
                 setFirstFiveMessages()
                 fifoMap.delete('4th')
-
                 expect(fifoMap.get('1st')).toEqual('foo')
                 expect(fifoMap.get('2nd')).toEqual('bar')
                 expect(fifoMap.get('3rd')).toEqual('hello')
@@ -106,7 +103,6 @@ describe('FifoMapWithTtl', () => {
                 fifoMap.delete('2nd')
                 fifoMap.delete('4th')
                 set6thAnd7thMessages()
-
                 expect(fifoMap.get('1st')).toEqual('foo')
                 expect(fifoMap.get('2nd')).toBeUndefined()
                 expect(fifoMap.get('3rd')).toEqual('hello')
@@ -124,7 +120,6 @@ describe('FifoMapWithTtl', () => {
             it('deleting a non-existing item keeps existing items intact', () => {
                 setFirstFiveMessages()
                 fifoMap.delete('non-existing-key')
-
                 expect(fifoMap.get('1st')).toEqual('foo')
                 expect(fifoMap.get('2nd')).toEqual('bar')
                 expect(fifoMap.get('3rd')).toEqual('hello')

@@ -65,7 +65,6 @@ describe('Propagation', () => {
             }, 0) / randomGraphNodes.length
             return avg >= 3.90
         }, 20000)
-
         const content: ContentMessage = {
             body: JSON.stringify({ hello: "WORLD" })
         }
@@ -74,7 +73,6 @@ describe('Propagation', () => {
             STREAM_ID,
             PeerID.fromValue(dhtNodes[0].getPeerDescriptor().kademliaId).toString()
         )
-
         randomGraphNodes[0].broadcast(msg)
         await waitForCondition(() => totalReceived >= NUM_OF_NODES, 10000)
     }, 45000)
