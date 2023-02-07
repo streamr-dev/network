@@ -75,7 +75,8 @@ describe('Handshakes', () => {
             randomContactPool: contactPool,
             targetNeighbors: targetNeighbors,
             connectionLocker: mockConnectionLocker,
-            protoRpcClient: toProtoRpcClient(new NetworkRpcClient(rpcCommunicator2.getRpcClientTransport()))
+            protoRpcClient: toProtoRpcClient(new NetworkRpcClient(rpcCommunicator2.getRpcClientTransport())),
+            N: 4
         })
 
     })
@@ -88,6 +89,7 @@ describe('Handshakes', () => {
 
     it('Two peers can handshake', async () => {
         rpcCommunicator1.registerRpcMethod(StreamHandshakeRequest, StreamHandshakeResponse, 'handshake', acceptHandshake)
+        // @ts-expect-error private
         const res = await handshaker.handshakeWithTarget(
             new RemoteRandomGraphNode(
                 peerDescriptor1,
@@ -101,6 +103,7 @@ describe('Handshakes', () => {
 
     it('Handshake accepted', async () => {
         rpcCommunicator1.registerRpcMethod(StreamHandshakeRequest, StreamHandshakeResponse, 'handshake', acceptHandshake)
+        // @ts-expect-error private
         const res = await handshaker.handshakeWithTarget(
             new RemoteRandomGraphNode(
                 peerDescriptor1,
@@ -114,6 +117,7 @@ describe('Handshakes', () => {
 
     it('Handshake rejected', async () => {
         rpcCommunicator1.registerRpcMethod(StreamHandshakeRequest, StreamHandshakeResponse, 'handshake', rejectHandshake)
+        // @ts-expect-error private
         const res = await handshaker.handshakeWithTarget(
             new RemoteRandomGraphNode(
                 peerDescriptor1,
@@ -128,6 +132,7 @@ describe('Handshakes', () => {
     it('Handshake with Interleaving', async () => {
         rpcCommunicator1.registerRpcMethod(StreamHandshakeRequest, StreamHandshakeResponse, 'handshake', interleavingHandshake)
         rpcCommunicator3.registerRpcMethod(StreamHandshakeRequest, StreamHandshakeResponse, 'handshake', acceptHandshake)
+        // @ts-expect-error private
         const res = await handshaker.handshakeWithTarget(
             new RemoteRandomGraphNode(
                 peerDescriptor1,
