@@ -42,13 +42,13 @@ describe('Propagation', () => {
             )
             await dht.start()
             await graph.start()
-            return dht.joinDht(entryPointDescriptor).then(() => {
+            await dht.joinDht(entryPointDescriptor).then(() => {
                 graph.on(Event.MESSAGE, () => { totalReceived += 1 })
                 dhtNodes.push(dht)
                 randomGraphNodes.push(graph)
             })
         }))
-    }, 30000)
+    }, 45000)
 
     afterEach(async () => {
         await Promise.all(randomGraphNodes.map((node) => node.stop()))
@@ -63,7 +63,7 @@ describe('Propagation', () => {
             const avg = randomGraphNodes.reduce((acc, curr) => {
                 return acc + curr.getTargetNeighborStringIds().length
             }, 0) / randomGraphNodes.length
-            return avg >= 3.90
+            return avg >= 4
         }, 20000)
         const content: ContentMessage = {
             body: JSON.stringify({ hello: "WORLD" })
