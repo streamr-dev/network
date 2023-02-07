@@ -7,7 +7,7 @@ import { MetricsContext } from '@streamr/utils'
 
 /*
 Convenience wrapper for building client-facing functionality. Used by client.
- */
+*/
 
 export class NetworkNode {
 
@@ -119,7 +119,6 @@ export class NetworkNode {
         await this.stack.stop()
     }
 
-    // eslint-disable-next-line class-methods-use-this
     getMetricsContext(): MetricsContext {
         return this.stack.getMetricsContext()
     }
