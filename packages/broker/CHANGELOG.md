@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Changed the syntax of environment variables which are used to override configuration files (see [configuration.md](configuration.md))
+- Config file is optional
+  - uses environment variables and/or application defaults if no file is given
 
 ### Deprecated
 
