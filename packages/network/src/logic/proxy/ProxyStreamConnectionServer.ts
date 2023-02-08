@@ -78,10 +78,7 @@ export class ProxyStreamConnectionServer {
 
     private processLeaveRequest(message: UnsubscribeRequest, nodeId: NodeId): void {
         const streamPartId = message.getStreamPartID()
-        if (this.streamPartManager.isSetUp(streamPartId)
-            && (this.streamPartManager.hasInOnlyConnection(streamPartId, nodeId)
-                || this.streamPartManager.hasOutOnlyConnection(streamPartId, nodeId))
-        ) {
+        if (this.hasConnection(streamPartId, nodeId)) {
             this.removeConnection(streamPartId, nodeId)
             this.node.emit(Event.ONE_WAY_CONNECTION_CLOSED, nodeId, streamPartId)
         }
@@ -89,13 +86,17 @@ export class ProxyStreamConnectionServer {
     }
 
     private removeConnection(streamPartId: StreamPartID, nodeId: NodeId): void {
-        if (this.connections.has(streamPartId)) {
+        if (this.hasConnection(streamPartId, nodeId)) {
             this.connections.get(streamPartId)!.delete(nodeId)
             if (this.connections.get(streamPartId)!.size === 0) {
                 this.connections.delete(streamPartId)
             }
         }
         this.streamPartManager.removeNodeFromStreamPart(streamPartId, nodeId)
+    }
+
+    private hasConnection(streamPartId: StreamPartID, nodeId: NodeId): boolean {
+        return this.connections.has(streamPartId) && this.connections.get(streamPartId)!.has(nodeId)
     }
 
     public getNodeIdsForUserId(streamPartId: StreamPartID, userId: string): NodeId[] {
