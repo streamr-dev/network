@@ -91,12 +91,14 @@ export class ProxyStreamConnectionClient extends EventEmitter {
         connectionCount?: number
     ): Promise<void> {
         logger.trace(`Set proxies on ${streamPartId}`)
-        if (nodeIds.length > 0 && !this.streamPartManager.isSetUp(streamPartId)) {
+        if (connectionCount && connectionCount > nodeIds.length) {
+            throw Error('Cannot set connectionCount above the size of the configured array of nodes')
+        } else if (nodeIds.length > 0 && !this.streamPartManager.isSetUp(streamPartId)) {
             this.streamPartManager.setUpStreamPart(streamPartId, true)
         } else if (!this.streamPartManager.isBehindProxy(streamPartId)) {
             const reason = `Could not set ${direction} proxies for stream ${streamPartId}, non-proxy stream already exists`
             logger.warn(reason)
-            throw reason
+            throw Error(reason)
         }
         this.definitions.set(streamPartId, {
             nodeIds: new Set(nodeIds),
@@ -174,7 +176,7 @@ export class ProxyStreamConnectionClient extends EventEmitter {
         direction: ProxyDirection,
         userId: string
     ): Promise<void> {
-         if (this.streamPartManager.hasOnewayConnection(streamPartId, targetNodeId)) {
+        if (this.streamPartManager.hasOnewayConnection(streamPartId, targetNodeId)) {
             const reason = `Could not open a proxy ${direction} stream connection ${streamPartId}, proxy stream connection already exists`
             logger.warn(reason)
             throw reason
