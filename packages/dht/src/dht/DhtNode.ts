@@ -26,11 +26,17 @@ import * as Err from '../helpers/errors'
 import { ITransport, TransportEvents } from '../transport/ITransport'
 import { ConnectionManager, ConnectionManagerConfig } from '../connection/ConnectionManager'
 import { DhtRpcServiceClient } from '../proto/packages/dht/protos/DhtRpc.client'
-import { Logger, MetricsContext } from '@streamr/utils'
+import {
+    Logger,
+    MetricsContext,
+    raceEvents3,
+    runAndRaceEvents3,
+    RunAndRaceEventsReturnType,
+    waitForEvent3
+} from '@streamr/utils'
 import { v4 } from 'uuid'
 import { IDhtRpcService } from '../proto/packages/dht/protos/DhtRpc.server'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
-import { raceEvents3, runAndRaceEvents3, RunAndRaceEventsReturnType, waitForEvent3 } from '../helpers/waitForEvent3'
 import { RoutingMode, RoutingSession, RoutingSessionEvents } from './RoutingSession'
 import { DiscoverySession } from './DiscoverySession'
 import { RandomContactList } from './contact/RandomContactList'

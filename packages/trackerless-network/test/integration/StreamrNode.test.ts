@@ -1,7 +1,7 @@
 import { DhtNode, PeerDescriptor, PeerID, Simulator, SimulatorTransport, NodeType } from '@streamr/dht'
-import { StreamrNode, Event as NodeEvent } from '../../src/logic/StreamrNode'
+import { StreamrNode, Events } from '../../src/logic/StreamrNode'
 import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { waitForEvent, waitForCondition } from '@streamr/utils'
+import { waitForEvent3, waitForCondition } from '@streamr/utils'
 import { createStreamMessage } from '../utils'
 
 describe('StreamrNode', () => {
@@ -88,7 +88,7 @@ describe('StreamrNode', () => {
         await waitForCondition(() => node1.getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length === 1)
         await waitForCondition(() => node2.getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length === 1)
         await Promise.all([
-            waitForEvent(node1, NodeEvent.NEW_MESSAGE),
+            waitForEvent3<Events>(node1, 'newMessage'),
             node2.publishToStream(STREAM_ID, peer1, msg)
         ])
     })
@@ -113,8 +113,8 @@ describe('StreamrNode', () => {
             PeerID.fromValue(peer1.kademliaId).toKey()
         )
         await Promise.all([
-            waitForEvent(node1, NodeEvent.NEW_MESSAGE),
-            waitForEvent(node2, NodeEvent.NEW_MESSAGE),
+            waitForEvent3<Events>(node1, 'newMessage'),
+            waitForEvent3<Events>(node2, 'newMessage'),
             node1.publishToStream(stream2, peer1, msg2),
             node2.publishToStream(STREAM_ID, peer1, msg)
         ])
@@ -135,7 +135,7 @@ describe('StreamrNode', () => {
     // it('Publishing and subscribing to streams without join awaits', async () => {
     //     node1.subscribeToStream(STREAM_ID, peer1)
     //     await Promise.all([
-    //         waitForEvent(node1, NodeEvent.NEW_MESSAGE),
+    //         waitForEvent3<Events>(node1, 'newMessage'),
     //         node2.publishToStream(STREAM_ID, peer1, msg)
     //     ])
     // })

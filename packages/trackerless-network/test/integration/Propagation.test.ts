@@ -1,5 +1,5 @@
 import { DhtNode, PeerDescriptor, Simulator, PeerID, UUID } from '@streamr/dht'
-import { Event, RandomGraphNode } from '../../src/logic/RandomGraphNode'
+import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { createMockRandomGraphNodeAndDhtNode, createStreamMessage } from '../utils'
 import { range } from 'lodash'
 import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
@@ -25,7 +25,7 @@ describe('Propagation', () => {
         await entryPoint.start()
         await entryPoint.joinDht(entryPointDescriptor)
         await node1.start()
-        node1.on(Event.MESSAGE, () => {totalReceived += 1})
+        node1.on('message', () => {totalReceived += 1})
         dhtNodes.push(entryPoint)
         randomGraphNodes.push(node1)
 
@@ -43,7 +43,7 @@ describe('Propagation', () => {
             await dht.start()
             await graph.start()
             await dht.joinDht(entryPointDescriptor).then(() => {
-                graph.on(Event.MESSAGE, () => { totalReceived += 1 })
+                graph.on('message', () => { totalReceived += 1 })
                 dhtNodes.push(dht)
                 randomGraphNodes.push(graph)
             })

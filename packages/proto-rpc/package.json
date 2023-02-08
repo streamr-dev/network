@@ -29,6 +29,7 @@
     "@protobuf-ts/runtime": "^2.8.2",
     "@protobuf-ts/runtime-rpc": "^2.8.2",
     "@streamr/utils": "7.3.0",
+    "eventemitter3": "^4.0.7",
     "lodash": "^4.17.21",
     "uuid": "^8.3.2"
   },

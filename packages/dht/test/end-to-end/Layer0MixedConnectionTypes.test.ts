@@ -1,6 +1,6 @@
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { waitForEvent3 } from '../../src/helpers/waitForEvent3'
+import { waitForEvent3 } from '@streamr/utils'
 import { ConnectionManager, Events as ConnectionManagerEvents } from '../../src/connection/ConnectionManager'
 
 describe('Layer0MixedConnectionTypes', () => {

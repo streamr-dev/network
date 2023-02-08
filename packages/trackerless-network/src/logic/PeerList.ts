@@ -1,17 +1,13 @@
 import { PeerDescriptor, PeerID } from '@streamr/dht'
 import { shuffle } from 'lodash'
 import { RemoteRandomGraphNode } from './RemoteRandomGraphNode'
-import { EventEmitter } from 'events'
+import { EventEmitter } from 'eventemitter3'
 
-export enum Event {
-    PEER_ADDED = 'peer_added'
+export interface Events {
+    peerAdded: (id: string, remote: RemoteRandomGraphNode) => any
 }
 
-export interface RandomGraphNode {
-    on(event: Event.PEER_ADDED, listener: (id: string, remote: RemoteRandomGraphNode) => any): this
-}
-
-export class PeerList extends EventEmitter {
+export class PeerList extends EventEmitter<Events> {
     private readonly peers: Map<string, RemoteRandomGraphNode>
     private readonly limit: number
     private ownPeerID: PeerID
@@ -27,7 +23,7 @@ export class PeerList extends EventEmitter {
         if (!this.ownPeerID.equals(PeerID.fromValue(remote.getPeerDescriptor().kademliaId)) && this.peers.size < this.limit) {
             const stringId = this.toStringId(remote.getPeerDescriptor())
             this.peers.set(stringId, remote)
-            this.emit(Event.PEER_ADDED, stringId, remote)
+            this.emit('peerAdded', stringId, remote)
         }
     }
 

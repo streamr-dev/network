@@ -2,9 +2,8 @@ import { ConnectionEvents, ConnectionID, ConnectionType, IConnection } from "./I
 import * as Err from '../helpers/errors'
 import { Handshaker } from "./Handshaker"
 import { PeerDescriptor } from "../proto/packages/dht/protos/DhtRpc"
-import { Logger } from "@streamr/utils"
+import { Logger, raceEvents3 } from "@streamr/utils"
 import EventEmitter from "eventemitter3"
-import { raceEvents3 } from "../helpers/waitForEvent3"
 import { PeerID, PeerIDKey } from "../helpers/PeerID"
 
 export interface ManagedConnectionEvents {

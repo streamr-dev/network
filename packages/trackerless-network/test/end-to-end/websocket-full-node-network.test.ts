@@ -1,5 +1,5 @@
 import { DhtNode, PeerDescriptor, NodeType, ConnectionManager, PeerID } from '@streamr/dht'
-import { StreamrNode, Event as StreamrNodeEvent } from '../../src/logic/StreamrNode'
+import { StreamrNode } from '../../src/logic/StreamrNode'
 import { range } from 'lodash'
 import { waitForCondition } from '@streamr/utils'
 import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
@@ -84,7 +84,7 @@ describe('Full node network with WebSocket connections only', () => {
 
         let numOfMessagesReceived = 0
         streamrNodes.map((streamrNode) => {
-            streamrNode.on(StreamrNodeEvent.NEW_MESSAGE, () => numOfMessagesReceived += 1)
+            streamrNode.on('newMessage', () => numOfMessagesReceived += 1)
         })
         const content: ContentMessage = {
             body: JSON.stringify({ hello: "WORLD" })

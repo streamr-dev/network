@@ -33,6 +33,7 @@
     "@streamr/proto-rpc": "7.3.0",
     "@streamr/test-utils": "^7.3.0",
     "@streamr/utils": "7.3.0",
+    "eventemitter3": "^4.0.7",
     "lodash": "^4.17.21",
     "yallist": "^4.0.0"
   },

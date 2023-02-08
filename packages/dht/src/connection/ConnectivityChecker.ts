@@ -3,13 +3,12 @@ import {
     Message, MessageType, PeerDescriptor
 } from '../proto/packages/dht/protos/DhtRpc'
 import { ConnectionEvents, IConnection } from './IConnection'
-import { Logger } from '@streamr/utils'
+import { Logger, runAndRaceEvents3, RunAndRaceEventsReturnType } from '@streamr/utils'
 import * as Err from '../helpers/errors'
 import { ClientWebSocket } from './WebSocket/ClientWebSocket'
 import { v4 } from 'uuid'
 import { NatType } from './ConnectionManager'
 import { ServerWebSocket } from './WebSocket/ServerWebSocket'
-import { runAndRaceEvents3, RunAndRaceEventsReturnType } from '../helpers/waitForEvent3'
 
 const logger = new Logger(module)
 

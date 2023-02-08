@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events'
+import { EventEmitter } from 'eventemitter3'
 import { DhtNode, PeerID, PeerDescriptor, DhtPeer, ListeningRpcCommunicator, ITransport, ConnectionLocker } from '@streamr/dht'
 import {
     StreamMessage,
@@ -9,7 +9,7 @@ import {
     MessageRef,
     NeighborUpdate
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
-import { PeerList, Event as PeerListEvent } from './PeerList'
+import { PeerList } from './PeerList'
 import { NetworkRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { RemoteRandomGraphNode } from './RemoteRandomGraphNode'
 import { INetworkRpc } from '../proto/packages/trackerless-network/protos/NetworkRpc.server'
@@ -21,12 +21,8 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Handshaker } from './Handshaker'
 import { Propagation } from './propagation/Propagation'
 
-export enum Event {
-    MESSAGE = 'streamr:layer2:random-graph-node:onmessage'
-}
-
-export interface RandomGraphNode {
-    on(event: Event.MESSAGE, listener: (message: StreamMessage) => any): this
+export interface Events {
+    message: (message: StreamMessage) => void
 }
 
 export interface RandomGraphNodeParams {
@@ -40,7 +36,7 @@ export interface RandomGraphNodeParams {
 
 const logger = new Logger(module)
 
-export class RandomGraphNode extends EventEmitter implements INetworkRpc {
+export class RandomGraphNode extends EventEmitter<Events> implements INetworkRpc {
     private stopped = false
     private started = false
     private readonly N = 4
@@ -97,7 +93,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         this.layer1.on('newRandomContact', (peerDescriptor, randomPeers) => this.newRandomContact(peerDescriptor, randomPeers))
         this.layer1.on('randomContactRemoved', (peerDescriptor, randomPeers) => this.removedRandomContact(peerDescriptor, randomPeers))
         this.P2PTransport.on('disconnected', (peerDescriptor: PeerDescriptor) => this.onPeerDisconnected(peerDescriptor))
-        this.targetNeighbors.on(PeerListEvent.PEER_ADDED, (id, _remote) => {
+        this.targetNeighbors.on('peerAdded', (id, _remote) => {
             this.propagation.onNeighborJoined(id)
         })
         this.handshaker = new Handshaker({
@@ -269,7 +265,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         if (!previousPeer) {
             this.markAndCheckDuplicate(msg.messageRef!, msg.previousMessageRef)
         }
-        this.emit(Event.MESSAGE, msg)
+        this.emit('message', msg)
         this.propagation.feedUnseenMessage(msg, this.targetNeighbors!.getStringIds(), previousPeer || null)
     }
 

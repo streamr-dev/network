@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/member-delimiter-style */
 
-import { RandomGraphNode, Event as RandomGraphEvent } from './RandomGraphNode'
+import { RandomGraphNode } from './RandomGraphNode'
 import { PeerDescriptor, ConnectionLocker, DhtNode, ITransport, PeerID } from '@streamr/dht'
 import { StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
-import { EventEmitter } from 'events'
+import { EventEmitter } from 'eventemitter3'
 import {
     Logger,
     waitForCondition,
@@ -20,12 +20,8 @@ interface StreamObject {
     layer2: RandomGraphNode
 }
 
-export enum Event {
-    NEW_MESSAGE = 'unseen-message'
-}
-
-export interface StreamrNode {
-    on(event: Event.NEW_MESSAGE, listener: (msg: StreamMessage) => void): this
+export interface Events {
+    newMessage: (msg: StreamMessage) => void
 }
 
 const logger = new Logger(module)
@@ -42,7 +38,7 @@ interface StreamrNodeOpts {
     nodeName?: string
 }
 
-export class StreamrNode extends EventEmitter {
+export class StreamrNode extends EventEmitter<Events> {
     private readonly streams: Map<string, StreamObject>
     private layer0: DhtNode | null = null
     private started = false
@@ -158,11 +154,10 @@ export class StreamrNode extends EventEmitter {
         })
         await layer1.start()
         layer2.start()
-        layer2.on(RandomGraphEvent.MESSAGE, (message: StreamMessage) => {
-            this.emit(Event.NEW_MESSAGE, message)
+        layer2.on('message', (message: StreamMessage) => {
+            this.emit('newMessage', message)
         })
         await layer1.joinDht(entryPoint)
-
     }
 
     async waitForJoinAndPublish(streamPartId: string, entrypointDescriptor: PeerDescriptor, msg: StreamMessage): Promise<number> {

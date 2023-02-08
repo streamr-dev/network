@@ -1,5 +1,5 @@
 import { ConnectionManager, DhtNode, PeerDescriptor, PeerID, NodeType } from '@streamr/dht'
-import { Event, RandomGraphNode } from '../../src/logic/RandomGraphNode'
+import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { waitForCondition } from '@streamr/utils'
 import { createStreamMessage } from '../utils'
 import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
@@ -126,10 +126,10 @@ describe('random graph with real connections', () => {
 
     it('can propagate messages', async () => {
         let numOfMessagesReceived = 0
-        randomGraphNode2.on(Event.MESSAGE, () => numOfMessagesReceived += 1)
-        randomGraphNode3.on(Event.MESSAGE, () => numOfMessagesReceived += 1)
-        randomGraphNode4.on(Event.MESSAGE, () => numOfMessagesReceived += 1)
-        randomGraphNode5.on(Event.MESSAGE, () => numOfMessagesReceived += 1)
+        randomGraphNode2.on('message', () => numOfMessagesReceived += 1)
+        randomGraphNode3.on('message', () => numOfMessagesReceived += 1)
+        randomGraphNode4.on('message', () => numOfMessagesReceived += 1)
+        randomGraphNode5.on('message', () => numOfMessagesReceived += 1)
 
         await waitForCondition(() => {
             return randomGraphNode1.getTargetNeighborStringIds().length >= 3

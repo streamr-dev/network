@@ -1,5 +1,5 @@
 import { DhtNode, PeerDescriptor, NodeType, ConnectionManager, PeerID } from '@streamr/dht'
-import { StreamrNode, Event as StreamrNodeEvent } from '../../src/logic/StreamrNode'
+import { StreamrNode } from '../../src/logic/StreamrNode'
 import { range } from 'lodash'
 import { waitForCondition } from '@streamr/utils'
 import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
@@ -103,7 +103,7 @@ describe('Full node network with WebRTC connections', () => {
         let numOfMessagesReceived = 0
         const successIds: PeerIDKey[] = []
         streamrNodes.map((streamrNode) => {
-            streamrNode.on(StreamrNodeEvent.NEW_MESSAGE, () => {
+            streamrNode.on('newMessage', () => {
                 successIds.push(PeerID.fromValue(streamrNode.getPeerDescriptor().kademliaId).toKey())
                 numOfMessagesReceived += 1
             })
