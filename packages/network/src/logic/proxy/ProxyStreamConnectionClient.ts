@@ -10,7 +10,7 @@ import {
 } from '@streamr/protocol'
 import { Logger, wait, withTimeout } from "@streamr/utils"
 import { Propagation } from '../propagation/Propagation'
-import { shuffle } from 'lodash'
+import { sampleSize } from 'lodash'
 import { EventEmitter } from "events"
 
 const logger = new Logger(module)
@@ -126,9 +126,9 @@ export class ProxyStreamConnectionClient extends EventEmitter {
     private async openRandomConnections(streamPartId: StreamPartID, connectionCount: number): Promise<void> {
         logger.debug(`Open ${connectionCount} random connections on ${streamPartId}`)
         const definition = this.definitions.get(streamPartId)!
-        const proxiesToAttempt = shuffle(Array.from(definition.nodeIds.keys()).filter((id) =>
+        const proxiesToAttempt = sampleSize(Array.from(definition.nodeIds.keys()).filter((id) =>
             !this.getConnections(streamPartId).has(id)
-        )).map((id) => id).splice(0, connectionCount)
+        ), connectionCount).map((id) => id)
         await Promise.all(proxiesToAttempt.map((id) =>
             this.attemptConnection(streamPartId, id, definition.direction, definition.userId)
         ))
@@ -214,8 +214,7 @@ export class ProxyStreamConnectionClient extends EventEmitter {
 
     private async closeRandomConnections(streamPartId: StreamPartID, connectionCount: number): Promise<void> {
         logger.debug(`Close ${connectionCount} random connections on ${streamPartId}`)
-        const proxiesToDisconnect = shuffle(Array.from(this.getConnections(streamPartId).keys()))
-            .splice(0, connectionCount)
+        const proxiesToDisconnect = sampleSize(Array.from(this.getConnections(streamPartId).keys()), connectionCount)
         await Promise.allSettled(proxiesToDisconnect.map((node) => this.closeConnection(streamPartId, node)))
     }
 
