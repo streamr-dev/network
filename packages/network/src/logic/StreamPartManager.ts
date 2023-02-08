@@ -89,10 +89,6 @@ export class StreamPartManager {
         neighbors.delete(node)
         inOnly.delete(node)
         outOnly.delete(node)
-
-        if (this.isBehindProxy(streamPartId) && this.getAllNodesForStreamPart(streamPartId).length === 0) {
-            this.removeStreamPart(streamPartId)
-        }
     }
 
     getStreamPartStatus(streamPartId: StreamPartID): StreamPartStatus {
