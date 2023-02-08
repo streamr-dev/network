@@ -101,11 +101,7 @@ export class ProxyStreamConnectionClient extends EventEmitter {
     }
 
     private async updateConnections(streamPartId: StreamPartID): Promise<void> {
-        if (!this.definitions.has(streamPartId)) {
-            return
-        }
         await Promise.all(this.getInvalidConnections(streamPartId).map(async (id) => {
-            logger.debug(`Closing invalid connection to ${id} on ${streamPartId}`)
             await this.closeConnection(streamPartId, id)
         }))
         const connectionCountDiff =  this.definitions.get(streamPartId)!.connectionCount - this.getConnections(streamPartId).size
@@ -199,15 +195,13 @@ export class ProxyStreamConnectionClient extends EventEmitter {
             this.removeConnection(streamPartId, targetNodeId)
             this.emit(Event.CONNECTION_REJECTED, targetNodeId, streamPartId, direction, err)
         } finally {
-            const trackerId = this.trackerManager.getTrackerId(streamPartId)
-            this.trackerManager.disconnectFromSignallingOnlyTracker(trackerId)
+            this.trackerManager.removeSignallingOnlySession(streamPartId, targetNodeId)
         }
     }
 
     private async connectAndHandshake(streamPartId: StreamPartID, targetNodeId: NodeId, direction: ProxyDirection, userId: string): Promise<void> {
+        await this.trackerManager.addSignallingOnlySession(streamPartId, targetNodeId)
         const trackerId = this.trackerManager.getTrackerId(streamPartId)
-        const trackerAddress = this.trackerManager.getTrackerAddress(streamPartId)
-        await this.trackerManager.connectToSignallingOnlyTracker(trackerId, trackerAddress)
         await withTimeout(this.nodeToNode.connectToNode(targetNodeId, trackerId, false), this.nodeConnectTimeout)
         await this.nodeToNode.requestProxyConnection(targetNodeId, streamPartId, direction, userId)
     }
@@ -234,14 +228,11 @@ export class ProxyStreamConnectionClient extends EventEmitter {
     }
 
     private hasConnection(nodeId: NodeId, streamPartId: StreamPartID): boolean {
-        if (!this.definitions.has(streamPartId)) {
-            return false
-        }
         return this.getConnections(streamPartId).has(nodeId)
     }
 
     private removeConnection(streamPartId: StreamPartID, nodeId: NodeId): void {
-        if (this.connections.has(streamPartId)) {
+        if (this.hasConnection(nodeId, streamPartId)) {
             this.connections.get(streamPartId)!.delete(nodeId)
         }
         this.streamPartManager.removeNodeFromStreamPart(streamPartId, nodeId)
@@ -275,7 +266,7 @@ export class ProxyStreamConnectionClient extends EventEmitter {
     }
 
     isProxiedStreamPart(streamPartId: StreamPartID, direction: ProxyDirection): boolean {
-        if (this.definitions.get(streamPartId) && this.getConnections(streamPartId).size > 0) {
+        if (this.definitions.has(streamPartId)) {
             return this.definitions.get(streamPartId)!.direction === direction
         }
         return false

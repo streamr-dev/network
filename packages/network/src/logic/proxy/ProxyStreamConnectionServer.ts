@@ -22,7 +22,7 @@ export interface ProxyStreamConnectionServerOptions {
 }
 
 interface ProxyConnection {
-    direction: ProxyDirection // Direction is from the clients point of view
+    direction: ProxyDirection // Direction is from the client's point of view
     userId: string
 }
 
