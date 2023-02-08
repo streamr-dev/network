@@ -120,7 +120,6 @@ export class ProxyStreamConnectionClient extends EventEmitter {
     }
 
     private async openRandomConnections(streamPartId: StreamPartID, connectionCount: number): Promise<void> {
-        logger.debug(`Open ${connectionCount} random connections on ${streamPartId}`)
         const definition = this.definitions.get(streamPartId)!
         const proxiesToAttempt = sampleSize(Array.from(definition.nodeIds.keys()).filter((id) =>
             !this.getConnections(streamPartId).has(id)
@@ -207,7 +206,6 @@ export class ProxyStreamConnectionClient extends EventEmitter {
     }
 
     private async closeRandomConnections(streamPartId: StreamPartID, connectionCount: number): Promise<void> {
-        logger.debug(`Close ${connectionCount} random connections on ${streamPartId}`)
         const proxiesToDisconnect = sampleSize(Array.from(this.getConnections(streamPartId).keys()), connectionCount)
         await Promise.allSettled(proxiesToDisconnect.map((node) => this.closeConnection(streamPartId, node)))
     }
