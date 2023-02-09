@@ -4,6 +4,7 @@ import { AbstractWsEndpoint, DisconnectionCode, DisconnectionReason } from '../c
 import { AbstractWsConnection, ReadyState } from '../connection/ws/AbstractWsConnection'
 import { Simulator, cleanAddress } from './Simulator'
 import { v4 } from 'uuid'
+import WebSocket from 'ws'
 
 export type ServerUrl = string
 //export type SupportedWs = WebSocket | w3cwebsocket
@@ -125,7 +126,7 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
     protected handshakeListener(
         serverPeerInfo: PeerInfo,
         serverUrl: string,
-        message: string | Buffer | Buffer[],
+        message: WebSocket.RawData,
         resolve: (value: PeerId | PromiseLike<string>) => void
     ): void {
         try {
@@ -166,7 +167,7 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
     /**
      * Parse handshake message
      */
-    protected abstract doHandshakeParse(message: string | Buffer | Buffer[] ): HandshakeValues
+    protected abstract doHandshakeParse(message: WebSocket.RawData): HandshakeValues
 
     /**
      * Finalise WS connection e.g. add final event listeners

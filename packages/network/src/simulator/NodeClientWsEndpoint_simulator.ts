@@ -5,6 +5,7 @@ import { NodeClientWsConnection } from './NodeClientWsConnection_simulator'
 import { AbstractClientWsEndpoint, HandshakeValues, ServerUrl } from './AbstractClientWsEndpoint_simulator'
 import { ISimulatedWsEndpoint } from './ISimulatedWsEndpoint'
 import { Simulator } from './Simulator'
+import WebSocket from 'ws'
 
 export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeClientWsConnection> implements ISimulatedWsEndpoint {
 
@@ -54,7 +55,7 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
     }
 
     // eslint-disable-next-line class-methods-use-this
-    protected doHandshakeParse(message: string | Buffer | Buffer[]): HandshakeValues {
+    protected doHandshakeParse(message: WebSocket.RawData): HandshakeValues {
         const { uuid, peerId } = JSON.parse(message.toString())
         return {
             uuid,
@@ -97,7 +98,8 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
                 const { uuid, peerId } = JSON.parse(parsed)
 
                 if (uuid && peerId && this.pendingHandshakes.hasOwnProperty(fromInfo.peerId)) {
-                    this.handshakeListener(this.pendingHandshakes[fromInfo.peerId][2], fromAddress, data, this.pendingHandshakes[fromInfo.peerId][0])
+                    // eslint-disable-next-line max-len
+                    this.handshakeListener(this.pendingHandshakes[fromInfo.peerId][2], fromAddress, Buffer.from(data), this.pendingHandshakes[fromInfo.peerId][0])
                 } else {
                     this.onReceive(connection, data)
                 }
