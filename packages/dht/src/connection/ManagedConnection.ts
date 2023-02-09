@@ -4,7 +4,8 @@ import { Handshaker } from "./Handshaker"
 import { PeerDescriptor } from "../proto/packages/dht/protos/DhtRpc"
 import { Logger, raceEvents3 } from "@streamr/utils"
 import EventEmitter from "eventemitter3"
-import { PeerID, PeerIDKey } from "../helpers/PeerID"
+import { PeerIDKey } from "../helpers/PeerID"
+import { keyFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 
 export interface ManagedConnectionEvents {
     managedData: (bytes: Uint8Array, remotePeerDescriptor: PeerDescriptor) => void
@@ -154,7 +155,7 @@ export class ManagedConnection extends EventEmitter<Events> {
     }
 
     public get peerIdKey(): PeerIDKey {
-        return PeerID.fromValue(this.peerDescriptor!.kademliaId).toKey()
+        return keyFromPeerDescriptor(this.peerDescriptor!)
     }
 
     public getLastUsed(): number {

@@ -6,7 +6,7 @@ import { PeerID } from '../../src/helpers/PeerID'
 import { ConnectionType } from '../../src/connection/IConnection'
 import { ITransport } from '../../src/transport/ITransport'
 import * as Err from '../../src/helpers/errors'
-import { SimulatorTransport } from '../../src/exports'
+import { keyFromPeerDescriptor, SimulatorTransport } from '../../src/exports'
 
 describe('WebRTC Connection Management', () => {
 
@@ -177,7 +177,7 @@ describe('WebRTC Connection Management', () => {
         await Promise.all([dataPromise, connectedPromise1, connectedPromise2])
 
         // @ts-expect-error private field
-        manager1.closeConnection(PeerID.fromValue(peerDescriptor2.kademliaId).toKey())
+        manager1.closeConnection(keyFromPeerDescriptor(peerDescriptor2))
 
         await Promise.all([disconnectedPromise1, disconnectedPromise2])
 
@@ -215,7 +215,7 @@ describe('WebRTC Connection Management', () => {
         })
 
         // @ts-expect-error private field
-        manager1.closeConnection(PeerID.fromValue(peerDescriptor2.kademliaId).toKey())
+        manager1.closeConnection(keyFromPeerDescriptor(peerDescriptor2))
 
         await disconnectedPromise1
 

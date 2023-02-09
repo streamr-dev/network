@@ -6,6 +6,11 @@ import { DhtRpcOptions } from '../rpc-protocol/DhtRpcOptions'
 import { Logger } from '@streamr/utils'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
 import { DhtNode } from './DhtNode'
+import {
+    isSamePeerDescriptor,
+    keyFromPeerDescriptor,
+    peerIdFromPeerDescriptor
+} from '../helpers/peerIdFromPeerDescriptor'
 
 const logger = new Logger(module)
 
@@ -48,7 +53,7 @@ export class DhtPeer implements KBucketContact {
         dhtNode?: DhtNode
     ) {
         this.ownPeerDescriptor = ownPeerDescriptor
-        this.peerId = PeerID.fromValue(peerDescriptor.kademliaId)
+        this.peerId = peerIdFromPeerDescriptor(peerDescriptor)
         this.peerDescriptor = peerDescriptor
         this.vectorClock = DhtPeer.counter++
         this.dhtClient = client
@@ -122,7 +127,7 @@ export class DhtPeer implements KBucketContact {
 
             // Success signal if sent to destination and error includes duplicate
             if (
-                PeerID.fromValue(params.destinationPeer!.kademliaId).equals(PeerID.fromValue(this.peerDescriptor.kademliaId))
+                isSamePeerDescriptor(params.destinationPeer!, this.peerDescriptor)
                 && ack.error.includes('duplicate')
             ) {
                 return true
@@ -131,7 +136,7 @@ export class DhtPeer implements KBucketContact {
             }
         } catch (err) {
             const fromNode = params.previousPeer ?
-                PeerID.fromValue(params.previousPeer!.kademliaId).toKey() : PeerID.fromValue(params.sourcePeer!.kademliaId).toKey()
+                peerIdFromPeerDescriptor(params.previousPeer) : keyFromPeerDescriptor(params.sourcePeer!)
 
             logger.debug(
                 `Failed to send routeMessage from ${fromNode} to ${this.peerId.toKey()} with: ${err}`
@@ -163,7 +168,7 @@ export class DhtPeer implements KBucketContact {
             }
         } catch (err) {
             const fromNode = params.previousPeer ?
-                PeerID.fromValue(params.previousPeer!.kademliaId).toKey() : PeerID.fromValue(params.sourcePeer!.kademliaId).toKey()
+                keyFromPeerDescriptor(params.previousPeer) : keyFromPeerDescriptor(params.sourcePeer!)
 
             logger.debug(
                 `Failed to send routeMessage from ${fromNode} to ${this.peerId.toKey()} with: ${err}`
@@ -195,7 +200,7 @@ export class DhtPeer implements KBucketContact {
             }
         } catch (err) {
             const fromNode = params.previousPeer ?
-                PeerID.fromValue(params.previousPeer!.kademliaId).toKey() : PeerID.fromValue(params.sourcePeer!.kademliaId).toKey()
+                keyFromPeerDescriptor(params.previousPeer) : keyFromPeerDescriptor(params.sourcePeer!)
 
             logger.debug(
                 `Failed to send forwardMessage from ${fromNode} to ${this.peerId.toKey()} with: ${err}`
