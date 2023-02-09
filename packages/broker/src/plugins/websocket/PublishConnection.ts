@@ -29,7 +29,8 @@ export class PublishConnection implements Connection {
 
     init(ws: WebSocket, streamrClient: StreamrClient, payloadFormat: PayloadFormat): void {
         const msgChainId = uuid()
-        ws.on('message', async (payload: string) => {
+        ws.on('message', async (data: WebSocket.RawData) => {
+            const payload = data.toString()
             try {
                 const { content, metadata } = payloadFormat.createMessage(payload)
                 const partitionKey = this.partitionKey ?? (this.partitionKeyField ? (content[this.partitionKeyField] as string) : undefined)

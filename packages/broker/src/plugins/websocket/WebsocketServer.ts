@@ -116,6 +116,9 @@ export class WebsocketServer {
 
     async stop(): Promise<void> {
         await util.promisify((cb: any) => this.wss!.close(cb))()
+        for (const ws of this.wss!.clients) {
+            ws.terminate()
+        }
         this.httpServer!.close()
         await once(this.httpServer!, 'close')
         logger.info('WebSocket server stopped')
