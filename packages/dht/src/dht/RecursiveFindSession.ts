@@ -9,6 +9,7 @@ import { ITransport } from "../transport/ITransport"
 import { ListeningRpcCommunicator } from "../transport/ListeningRpcCommunicator"
 import { Contact } from "./contact/Contact"
 import { SortedContactList } from "./contact/SortedContactList"
+import { DataStoreEntry, RecursiveFindResult } from "./DhtNode"
 
 export interface RecursiveFindSessionEvents {
     findCompleted: (results: PeerDescriptor[]) => void
@@ -19,6 +20,8 @@ const logger = new Logger(module)
 export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvents> implements IRecursiveFindSessionService {
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private results: SortedContactList<Contact>
+    private foundData: Array<DataStoreEntry> = []
+
     private readonly rpcTransport: ITransport
 
     constructor(serviceId: string, rpcTransport: ITransport, kademliaIdToFind: Uint8Array) {
@@ -41,14 +44,25 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
         report.nodes.map((descriptor: PeerDescriptor) => {
             this.results.addContact(new Contact(descriptor))
         })
-        
+
+        if (report.dataEntries && report.dataEntries.length > 0) {
+            report.dataEntries.forEach((entry) => {
+                this.foundData.push([entry.storer!, entry.data!])
+            })
+        }
+
         if (report.noCloserNodesFound) {
-            this.emit('findCompleted', this.results.getAllContacts().map((contact)=> contact.getPeerDescriptor()))
+            this.emit('findCompleted', this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()))
         }
         return {}
     }
 
-    public getResults(): PeerDescriptor[] {
-        return this.results.getAllContacts().map((contact)=> contact.getPeerDescriptor())
-    } 
+    public getResults(): RecursiveFindResult {
+        const ret = {
+            closestNodes: this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()),
+            dataEntries: (this.foundData && this.foundData.length > 0) ? this.foundData : undefined
+        }
+
+        return ret
+    }
 }

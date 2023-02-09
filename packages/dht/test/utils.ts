@@ -17,6 +17,10 @@ import { v4 } from 'uuid'
 import { getRandomRegion } from './data/pings'
 import { Empty } from '../src/proto/google/protobuf/empty'
 import { Any } from '../src/proto/google/protobuf/any'
+import { Logger } from '@streamr/utils'
+import { debugVars } from '../src/helpers/debugHelpers'
+
+const logger = new Logger(module)
 
 export const generateId = (stringId: string): Uint8Array => {
     return PeerID.fromString(stringId).value
@@ -136,15 +140,6 @@ export const MockDhtRpc: IDhtRpcWithError = {
         }
         return response
     },
-    async findData(routed: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
-        const response: RouteMessageAck = {
-            requestId: routed.requestId,
-            destinationPeer: routed.sourcePeer,
-            sourcePeer: routed.destinationPeer,
-            error: ''
-        }
-        return response
-    },
     async storeData(_request: StoreDataRequest, _context: ServerCallContext): Promise<StoreDataResponse> {
         return StoreDataResponse.create()
     },
@@ -210,5 +205,18 @@ export const getMockPeers = (): PeerDescriptor[] => {
     return [
         n1, n2, n3, n4
     ]
+}
+
+export const waitNodesReadyForTesting = async (nodes: DhtNode[]): Promise<void> => {
+    debugVars['waiting'] = true
+
+    logger.info('doing waitReadyForTesting() for nodes')
+
+    nodes.forEach((node) => node.garbageCollectConnections())
+        
+    await Promise.all(nodes.map((node) => node.waitReadyForTesting()))
+
+    debugVars['waiting'] = false
+    logger.info('waiting waitReadyForTesting() over')
 }
 

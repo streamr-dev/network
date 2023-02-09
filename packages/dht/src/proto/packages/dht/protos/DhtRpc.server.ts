@@ -11,7 +11,6 @@ import { RtcOffer } from "./DhtRpc";
 import { WebRtcConnectionRequest } from "./DhtRpc";
 import { WebSocketConnectionResponse } from "./DhtRpc";
 import { WebSocketConnectionRequest } from "./DhtRpc";
-import { FindDataResult } from "./DhtRpc";
 import { RecursiveFindReport } from "./DhtRpc";
 import { StoreDataResponse } from "./DhtRpc";
 import { StoreDataRequest } from "./DhtRpc";
@@ -49,10 +48,8 @@ export interface IDhtRpcService<T = ServerCallContext> {
      */
     forwardMessage(request: RouteMessageWrapper, context: T): Promise<RouteMessageAck>;
     /**
-     * @generated from protobuf rpc: findData(dht.RouteMessageWrapper) returns (dht.RouteMessageAck);
-     */
-    findData(request: RouteMessageWrapper, context: T): Promise<RouteMessageAck>;
-    /**
+     * rpc findData (RouteMessageWrapper) returns (RouteMessageAck);
+     *
      * @generated from protobuf rpc: leaveNotice(dht.LeaveNotice) returns (google.protobuf.Empty);
      */
     leaveNotice(request: LeaveNotice, context: T): Promise<Empty>;
@@ -70,15 +67,10 @@ export interface IRecursiveFindSessionService<T = ServerCallContext> {
      */
     reportRecursiveFindResult(request: RecursiveFindReport, context: T): Promise<Empty>;
 }
-/**
- * @generated from protobuf service dht.FindDataSessionService
- */
-export interface IFindDataSessionService<T = ServerCallContext> {
-    /**
-     * @generated from protobuf rpc: reportFindDataResult(dht.FindDataResult) returns (google.protobuf.Empty);
-     */
-    reportFindDataResult(request: FindDataResult, context: T): Promise<Empty>;
-}
+// service FindDataSessionService {
+//  rpc reportFindDataResult(FindDataResult) returns (google.protobuf.Empty);
+// }
+
 /**
  * @generated from protobuf service dht.WebSocketConnectorService
  */

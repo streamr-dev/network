@@ -1,16 +1,17 @@
 /* eslint-disable no-console */
 import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { createMockConnectionDhtNode } from '../utils'
+import { FindMode, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { createMockConnectionDhtNode, waitNodesReadyForTesting } from '../utils'
 import { execSync } from 'child_process'
 import fs from 'fs'
 import { Logger } from '@streamr/utils'
-import { debugVars } from '../../src/helpers/debugHelpers'
 import { PeerID } from '../../src/exports'
 import { Any } from '../../src/proto/google/protobuf/any'
 
 const logger = new Logger(module)
+
+jest.setTimeout(20000) 
 
 describe('Storing data in DHT', () => {
     let entryPoint: DhtNode
@@ -43,6 +44,8 @@ describe('Storing data in DHT', () => {
             nodeName: entryPointId
         }
 
+        nodes.push(entryPoint)
+
         for (let i = 1; i < NUM_NODES; i++) {
             const nodeId = `${i}`
 
@@ -51,40 +54,14 @@ describe('Storing data in DHT', () => {
             nodeIndicesById[node.getNodeId().toKey()] = i
             nodes.push(node)
         }
-    })
 
-    afterEach(async () => {
-        await Promise.allSettled([
-            entryPoint.stop(),
-            ...nodes.map(async (node) => await node.stop())
-        ])
-    })
-
-    it('Data structures work locally', async () => {
         logger.info(NUM_NODES + ' nodes joining layer0 DHT')
-        await entryPoint.joinDht(entrypointDescriptor)
-
         await Promise.all(
             nodes.map((node) => node.joinDht(entrypointDescriptor))
         )
-
         logger.info('completed ' + NUM_NODES + ' nodes joining layer0 DHT')
 
-        debugVars['waiting'] = true
-
-        logger.info('doing waitReadyForTesting() for nodes')
-
-        nodes.forEach((node) => node.garbageCollectConnections())
-        entryPoint.garbageCollectConnections()
-
-        await Promise.all(nodes.map((node) => node.waitReadyForTesting()))
-
-        logger.info('doing waitReadyForTesting() for entrypoint')
-
-        await entryPoint.waitReadyForTesting()
-
-        debugVars['waiting'] = false
-        logger.info('waiting waitReadyForTesting() over')
+        await waitNodesReadyForTesting(nodes)
 
         const node = entryPoint
         logger.info(node.getNodeName() + ': connections:' +
@@ -92,23 +69,64 @@ describe('Storing data in DHT', () => {
             + ', localLocked: ' + node.getNumberOfLocalLockedConnections()
             + ', remoteLocked: ' + node.getNumberOfRemoteLockedConnections()
             + ', weakLocked: ' + node.getNumberOfWeakLockedConnections())
+    })
 
+    afterEach(async () => {
+        await Promise.allSettled([
+            ...nodes.map(async (node) => await node.stop())
+        ])
+    })
+
+    it('Data structures work locally', async () => {
         const storingNodeIndex = 34
         const dataKey = PeerID.fromString('3232323e12r31r3')
         const data = Any.pack(entrypointDescriptor, PeerDescriptor)
 
         logger.info('node ' + storingNodeIndex + ' starting to store data with key ' + dataKey.toString())
-        await nodes[storingNodeIndex].doStoreData(PeerID.fromValue(nodes[storingNodeIndex].getPeerDescriptor().kademliaId), dataKey, data)
+        await nodes[storingNodeIndex].doStoreData(nodes[storingNodeIndex].getPeerDescriptor(), dataKey, data)
         logger.info('store data over')
 
         logger.info('node ' + storingNodeIndex + ' starting to get data with key ' + dataKey.toString())
-        const fetchedData = await nodes[storingNodeIndex].getData(dataKey)
+        const fetchedData = await nodes[storingNodeIndex].doGetData(dataKey)!
         logger.info('getData over')
 
-        fetchedData.forEach((value) => {
-            const fetchedDescriptor = Any.unpack(value, PeerDescriptor)
+        fetchedData.forEach((entry) => {
+            const fetchedDescriptor = Any.unpack(entry[1], PeerDescriptor)
             logger.info(JSON.stringify(fetchedDescriptor))
         })
 
+    }, 180000)
+
+    it('Storing data works', async () => {
+        const storingNodeIndex = 34
+        const dataKey = PeerID.fromString('3232323e12r31r3')
+        const data = Any.pack(entrypointDescriptor, PeerDescriptor)
+
+        logger.info('node ' + storingNodeIndex + ' starting to store data with key ' + dataKey.toString())
+        await nodes[storingNodeIndex].storeDataToDht(dataKey.value, data)
+        logger.info('store data over')
+    }, 180000)
+
+    it.only('Storing and getting data works', async () => {
+        const storingNodeIndex = 34
+        const dataKey = PeerID.fromString('3232323e12r31r3')
+        const data = Any.pack(entrypointDescriptor, PeerDescriptor)
+
+        logger.info('node ' + storingNodeIndex + ' starting to store data with key ' + dataKey.toString())
+        await nodes[storingNodeIndex].storeDataToDht(dataKey.value, data)
+        logger.info('store data over')
+    
+        const results = await nodes[12].startRcursiveFind(dataKey.value, FindMode.DATA)
+        
+        logger.info('dataEntries.length: ' + results.dataEntries!.length)
+        results.dataEntries?.forEach((entry) => {
+            logger.info(JSON.stringify(entry[0]), Any.unpack(entry[1], PeerDescriptor))
+        })
+        
+        const fetchedData = Any.unpack(results.dataEntries![0][1], PeerDescriptor)
+
+        logger.info('find data over')
+
+        expect(JSON.stringify(fetchedData)).toEqual(JSON.stringify(entrypointDescriptor))
     }, 180000)
 })

@@ -14,8 +14,6 @@ import type { WebRtcConnectionRequest } from "./DhtRpc";
 import { WebSocketConnectorService } from "./DhtRpc";
 import type { WebSocketConnectionResponse } from "./DhtRpc";
 import type { WebSocketConnectionRequest } from "./DhtRpc";
-import { FindDataSessionService } from "./DhtRpc";
-import type { FindDataResult } from "./DhtRpc";
 import { RecursiveFindSessionService } from "./DhtRpc";
 import type { RecursiveFindReport } from "./DhtRpc";
 import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
@@ -59,10 +57,8 @@ export interface IDhtRpcServiceClient {
      */
     forwardMessage(input: RouteMessageWrapper, options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck>;
     /**
-     * @generated from protobuf rpc: findData(dht.RouteMessageWrapper) returns (dht.RouteMessageAck);
-     */
-    findData(input: RouteMessageWrapper, options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck>;
-    /**
+     * rpc findData (RouteMessageWrapper) returns (RouteMessageAck);
+     *
      * @generated from protobuf rpc: leaveNotice(dht.LeaveNotice) returns (google.protobuf.Empty);
      */
     leaveNotice(input: LeaveNotice, options?: RpcOptions): UnaryCall<LeaveNotice, Empty>;
@@ -116,24 +112,19 @@ export class DhtRpcServiceClient implements IDhtRpcServiceClient, ServiceInfo {
         return stackIntercept<RouteMessageWrapper, RouteMessageAck>("unary", this._transport, method, opt, input);
     }
     /**
-     * @generated from protobuf rpc: findData(dht.RouteMessageWrapper) returns (dht.RouteMessageAck);
-     */
-    findData(input: RouteMessageWrapper, options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck> {
-        const method = this.methods[5], opt = this._transport.mergeOptions(options);
-        return stackIntercept<RouteMessageWrapper, RouteMessageAck>("unary", this._transport, method, opt, input);
-    }
-    /**
+     * rpc findData (RouteMessageWrapper) returns (RouteMessageAck);
+     *
      * @generated from protobuf rpc: leaveNotice(dht.LeaveNotice) returns (google.protobuf.Empty);
      */
     leaveNotice(input: LeaveNotice, options?: RpcOptions): UnaryCall<LeaveNotice, Empty> {
-        const method = this.methods[6], opt = this._transport.mergeOptions(options);
+        const method = this.methods[5], opt = this._transport.mergeOptions(options);
         return stackIntercept<LeaveNotice, Empty>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: storeData(dht.StoreDataRequest) returns (dht.StoreDataResponse);
      */
     storeData(input: StoreDataRequest, options?: RpcOptions): UnaryCall<StoreDataRequest, StoreDataResponse> {
-        const method = this.methods[7], opt = this._transport.mergeOptions(options);
+        const method = this.methods[6], opt = this._transport.mergeOptions(options);
         return stackIntercept<StoreDataRequest, StoreDataResponse>("unary", this._transport, method, opt, input);
     }
 }
@@ -163,32 +154,10 @@ export class RecursiveFindSessionServiceClient implements IRecursiveFindSessionS
         return stackIntercept<RecursiveFindReport, Empty>("unary", this._transport, method, opt, input);
     }
 }
-/**
- * @generated from protobuf service dht.FindDataSessionService
- */
-export interface IFindDataSessionServiceClient {
-    /**
-     * @generated from protobuf rpc: reportFindDataResult(dht.FindDataResult) returns (google.protobuf.Empty);
-     */
-    reportFindDataResult(input: FindDataResult, options?: RpcOptions): UnaryCall<FindDataResult, Empty>;
-}
-/**
- * @generated from protobuf service dht.FindDataSessionService
- */
-export class FindDataSessionServiceClient implements IFindDataSessionServiceClient, ServiceInfo {
-    typeName = FindDataSessionService.typeName;
-    methods = FindDataSessionService.methods;
-    options = FindDataSessionService.options;
-    constructor(private readonly _transport: RpcTransport) {
-    }
-    /**
-     * @generated from protobuf rpc: reportFindDataResult(dht.FindDataResult) returns (google.protobuf.Empty);
-     */
-    reportFindDataResult(input: FindDataResult, options?: RpcOptions): UnaryCall<FindDataResult, Empty> {
-        const method = this.methods[0], opt = this._transport.mergeOptions(options);
-        return stackIntercept<FindDataResult, Empty>("unary", this._transport, method, opt, input);
-    }
-}
+// service FindDataSessionService {
+//  rpc reportFindDataResult(FindDataResult) returns (google.protobuf.Empty);
+// }
+
 /**
  * @generated from protobuf service dht.WebSocketConnectorService
  */
@@ -198,6 +167,10 @@ export interface IWebSocketConnectorServiceClient {
      */
     requestConnection(input: WebSocketConnectionRequest, options?: RpcOptions): UnaryCall<WebSocketConnectionRequest, WebSocketConnectionResponse>;
 }
+// service FindDataSessionService {
+//  rpc reportFindDataResult(FindDataResult) returns (google.protobuf.Empty);
+// }
+
 /**
  * @generated from protobuf service dht.WebSocketConnectorService
  */

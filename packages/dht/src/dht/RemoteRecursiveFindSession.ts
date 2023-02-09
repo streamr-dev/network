@@ -1,4 +1,5 @@
 import {
+    DataEntry,
     PeerDescriptor,
     RecursiveFindReport
 } from '../proto/packages/dht/protos/DhtRpc'
@@ -8,6 +9,8 @@ import { Logger } from '@streamr/utils'
 import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
 import { ITransport } from '../transport/ITransport'
 import { ListeningRpcCommunicator } from '../exports'
+import { PeerIDKey } from '../helpers/PeerID'
+import { DataStoreEntry } from './DhtNode'
 
 const logger = new Logger(module)
 
@@ -31,9 +34,18 @@ export class RemoteRecursiveFindSession {
         this.client = toProtoRpcClient(new RecursiveFindSessionServiceClient(this.rpcCommunicator.getRpcClientTransport()))
     }
 
-    reportRecursiveFindResult(closestNodes: PeerDescriptor[], noCloserNodesFound: boolean): void {
+    reportRecursiveFindResult(closestNodes: PeerDescriptor[], data: Map<PeerIDKey, DataStoreEntry> | undefined, noCloserNodesFound: boolean): void {
+        const dataEntries: Array<DataEntry> = []
+
+        if (data) {
+            data.forEach((entry) => {
+                dataEntries.push({ storer: entry[0], data: entry[1] })
+            })
+        }
+
         const report: RecursiveFindReport = {
             nodes: closestNodes,
+            dataEntries: dataEntries,
             noCloserNodesFound: noCloserNodesFound
         }
         const options: DhtRpcOptions = {
