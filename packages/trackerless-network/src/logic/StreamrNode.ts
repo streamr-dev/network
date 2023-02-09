@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/member-delimiter-style */
 
 import { RandomGraphNode } from './RandomGraphNode'
-import { PeerDescriptor, ConnectionLocker, DhtNode, ITransport, PeerID } from '@streamr/dht'
+import { PeerDescriptor, ConnectionLocker, DhtNode, ITransport, keyFromPeerDescriptor } from '@streamr/dht'
 import { StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { EventEmitter } from 'eventemitter3'
 import {
@@ -66,7 +66,7 @@ export class StreamrNode extends EventEmitter<Events> {
         if (this.started || this.destroyed) {
             return
         }
-        logger.info(`Starting new StreamrNode with id ${PeerID.fromValue(startedAndJoinedLayer0.getPeerDescriptor().kademliaId).toKey()}`)
+        logger.info(`Starting new StreamrNode with id ${keyFromPeerDescriptor(startedAndJoinedLayer0.getPeerDescriptor())}`)
         this.started = true
         this.layer0 = startedAndJoinedLayer0
         this.P2PTransport = transport

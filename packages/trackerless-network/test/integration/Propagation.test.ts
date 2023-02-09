@@ -1,4 +1,4 @@
-import { DhtNode, PeerDescriptor, Simulator, PeerID, UUID } from '@streamr/dht'
+import { DhtNode, PeerDescriptor, Simulator, PeerID, UUID, peerIdFromPeerDescriptor } from '@streamr/dht'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { createMockRandomGraphNodeAndDhtNode, createStreamMessage } from '../utils'
 import { range } from 'lodash'
@@ -71,7 +71,7 @@ describe('Propagation', () => {
         const msg = createStreamMessage(
             content,
             STREAM_ID,
-            PeerID.fromValue(dhtNodes[0].getPeerDescriptor().kademliaId).toString()
+            peerIdFromPeerDescriptor(dhtNodes[0].getPeerDescriptor()).toString()
         )
         randomGraphNodes[0].broadcast(msg)
         await waitForCondition(() => totalReceived >= NUM_OF_NODES, 10000)

@@ -1,4 +1,11 @@
-import { DhtNode, PeerDescriptor, PeerID, Simulator, SimulatorTransport, NodeType } from '@streamr/dht'
+import {
+    DhtNode,
+    PeerDescriptor,
+    Simulator,
+    SimulatorTransport,
+    NodeType,
+    keyFromPeerDescriptor
+} from '@streamr/dht'
 import { StreamrNode, Events } from '../../src/logic/StreamrNode'
 import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { waitForEvent3, waitForCondition } from '@streamr/utils'
@@ -29,7 +36,7 @@ describe('StreamrNode', () => {
     const msg = createStreamMessage(
         content,
         STREAM_ID,
-        PeerID.fromValue(peer2.kademliaId).toKey()
+        keyFromPeerDescriptor(peer2)
     )
 
     afterEach(async () => {
@@ -110,7 +117,7 @@ describe('StreamrNode', () => {
         const msg2 = createStreamMessage(
             content,
             stream2,
-            PeerID.fromValue(peer1.kademliaId).toKey()
+            keyFromPeerDescriptor(peer1)
         )
         await Promise.all([
             waitForEvent3<Events>(node1, 'newMessage'),

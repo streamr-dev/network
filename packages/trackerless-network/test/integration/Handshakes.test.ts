@@ -1,5 +1,12 @@
 import { Handshaker } from '../../src/logic/Handshaker'
-import { NodeType, PeerDescriptor, ListeningRpcCommunicator, Simulator, SimulatorTransport, PeerID } from '@streamr/dht'
+import {
+    NodeType,
+    PeerDescriptor,
+    ListeningRpcCommunicator,
+    Simulator,
+    SimulatorTransport,
+    peerIdFromPeerDescriptor
+} from '@streamr/dht'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { NetworkRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { PeerList } from '../../src/logic/PeerList'
@@ -65,7 +72,7 @@ describe('Handshakes', () => {
         rpcCommunicator2 = new ListeningRpcCommunicator(randomGraphId, simulatorTransport2)
         rpcCommunicator3 = new ListeningRpcCommunicator(randomGraphId, simulatorTransport3)
 
-        const handshakerPeerId = PeerID.fromValue(peerDescriptor2.kademliaId)
+        const handshakerPeerId = peerIdFromPeerDescriptor(peerDescriptor2)
         contactPool = new PeerList(handshakerPeerId, 10)
         targetNeighbors = new PeerList(handshakerPeerId, 4)
         handshaker = new Handshaker({

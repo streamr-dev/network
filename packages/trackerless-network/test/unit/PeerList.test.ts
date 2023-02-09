@@ -1,6 +1,13 @@
 import { PeerList } from '../../src/logic/PeerList'
 import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
-import { PeerDescriptor, ListeningRpcCommunicator, Simulator, PeerID, SimulatorTransport } from '@streamr/dht'
+import {
+    PeerDescriptor,
+    ListeningRpcCommunicator,
+    Simulator,
+    PeerID,
+    SimulatorTransport,
+    keyFromPeerDescriptor
+} from '@streamr/dht'
 import { NetworkRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 
@@ -65,7 +72,7 @@ describe('PeerList', () => {
 
     it('removeById', () => {
         const toRemove = peerList.getClosest([])
-        const stringId = PeerID.fromValue(toRemove!.getPeerDescriptor().kademliaId).toKey()
+        const stringId = keyFromPeerDescriptor(toRemove!.getPeerDescriptor())
         peerList.removeById(stringId)
         expect(peerList.hasPeer(toRemove!.getPeerDescriptor())).toEqual(false)
     })

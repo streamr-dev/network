@@ -1,5 +1,13 @@
 import { EventEmitter } from 'eventemitter3'
-import { DhtNode, PeerID, PeerDescriptor, DhtPeer, ListeningRpcCommunicator, ITransport, ConnectionLocker } from '@streamr/dht'
+import {
+    DhtNode,
+    PeerDescriptor,
+    DhtPeer,
+    ListeningRpcCommunicator,
+    ITransport,
+    ConnectionLocker,
+    peerIdFromPeerDescriptor, keyFromPeerDescriptor
+} from '@streamr/dht'
 import {
     StreamMessage,
     StreamHandshakeRequest,
@@ -66,7 +74,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements INetworkRpc
         this.connectionLocker = config.connectionLocker
         this.duplicateDetector = new DuplicateMessageDetector(10000)
         this.ownPeerDescriptor = config.ownPeerDescriptor
-        const peerId = PeerID.fromValue(this.ownPeerDescriptor.kademliaId)
+        const peerId = peerIdFromPeerDescriptor(this.ownPeerDescriptor)
         this.nearbyContactPool = new PeerList(peerId, this.PEER_VIEW_SIZE)
         this.randomContactPool = new PeerList(peerId, this.PEER_VIEW_SIZE)
         this.targetNeighbors = new PeerList(peerId, this.PEER_VIEW_SIZE)
@@ -182,7 +190,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements INetworkRpc
             this.targetNeighbors!.remove(peerDescriptor)
             this.connectionLocker.unlockConnection(peerDescriptor, this.randomGraphId)
             if (!this.findNeighborsIntervalRef) {
-                this.findNeighbors([PeerID.fromValue(peerDescriptor.kademliaId).toKey()]).catch(() => { })
+                this.findNeighbors([keyFromPeerDescriptor(peerDescriptor)]).catch(() => { })
             }
         }
     }
@@ -227,7 +235,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements INetworkRpc
             if (res.removeMe) {
                 this.targetNeighbors!.remove(neighbor.getPeerDescriptor())
                 if (!this.findNeighborsIntervalRef) {
-                    this.findNeighbors([PeerID.fromValue(neighbor.getPeerDescriptor().kademliaId).toKey()])
+                    this.findNeighbors([keyFromPeerDescriptor(neighbor.getPeerDescriptor())])
                         .catch(() => {})
                 }
             }
@@ -278,7 +286,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements INetworkRpc
     }
 
     getOwnStringId(): string {
-        return PeerID.fromValue(this.layer1.getPeerDescriptor().kademliaId).toKey()
+        return keyFromPeerDescriptor(this.layer1.getPeerDescriptor())
     }
 
     getNumberOfOutgoingHandshakes(): number {
@@ -320,7 +328,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements INetworkRpc
     async sendData(message: StreamMessage, _context: ServerCallContext): Promise<Empty> {
         if (this.markAndCheckDuplicate(message.messageRef!, message.previousMessageRef)) {
             const { previousPeer } = message
-            message["previousPeer"] = PeerID.fromValue(this.layer1.getPeerDescriptor().kademliaId).toKey()
+            message["previousPeer"] = keyFromPeerDescriptor(this.layer1.getPeerDescriptor())
             this.broadcast(message, previousPeer)
         }
         return Empty
@@ -372,7 +380,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements INetworkRpc
         if (this.targetNeighbors!.hasPeerWithStringId(message.senderId)) {
             const newPeers = message.neighborDescriptors
                 .filter((peerDescriptor) => {
-                    const stringId = PeerID.fromValue(peerDescriptor.kademliaId).toKey()
+                    const stringId = keyFromPeerDescriptor(peerDescriptor)
                     return stringId !== this.getOwnStringId() && !this.targetNeighbors!.getStringIds().includes(stringId)
                 })
 

@@ -1,4 +1,4 @@
-import { DhtNode, PeerDescriptor, NodeType, ConnectionManager, PeerID } from '@streamr/dht'
+import { DhtNode, PeerDescriptor, NodeType, ConnectionManager, PeerID, peerIdFromPeerDescriptor } from '@streamr/dht'
 import { StreamrNode } from '../../src/logic/StreamrNode'
 import { range } from 'lodash'
 import { waitForCondition } from '@streamr/utils'
@@ -92,7 +92,7 @@ describe('Full node network with WebSocket connections only', () => {
         const msg = createStreamMessage(
             content,
             randomGraphId,
-            PeerID.fromValue(epPeerDescriptor.kademliaId).toString()
+            peerIdFromPeerDescriptor(epPeerDescriptor).toString()
         )
         epStreamrNode.publishToStream(randomGraphId, epPeerDescriptor, msg)
         await waitForCondition(() => numOfMessagesReceived === NUM_OF_NODES)

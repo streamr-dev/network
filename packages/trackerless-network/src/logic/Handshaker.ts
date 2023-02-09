@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/member-delimiter-style */
 
-import { ConnectionLocker, PeerDescriptor, PeerID } from '@streamr/dht'
+import { ConnectionLocker, keyFromPeerDescriptor, PeerDescriptor } from '@streamr/dht'
 import { PeerList } from './PeerList'
 import { RemoteRandomGraphNode } from './RemoteRandomGraphNode'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
@@ -47,20 +47,18 @@ export class Handshaker {
             const random = this.config.randomContactPool.getRandom(exclude)
             if (random) {
                 targetNeighbors.push(random)
-                const id = PeerID.fromValue(random!.getPeerDescriptor().kademliaId).toKey()
-                exclude.push(id)
             }
         }
-        targetNeighbors.forEach((contact) => this.ongoingHandshakes.add(PeerID.fromValue(contact.getPeerDescriptor().kademliaId).toKey()))
+        targetNeighbors.forEach((contact) => this.ongoingHandshakes.add(keyFromPeerDescriptor(contact.getPeerDescriptor())))
         const promises = Array.from(targetNeighbors.values()).map(async (target: RemoteRandomGraphNode, i) => {
             const otherPeer = i === 0 ? targetNeighbors[1] : targetNeighbors[0]
-            const otherPeerStringId = targetNeighbors.length > 1 ? PeerID.fromValue(otherPeer.getPeerDescriptor().kademliaId).toKey() : undefined
+            const otherPeerStringId = otherPeer ? keyFromPeerDescriptor(otherPeer.getPeerDescriptor()) : undefined
             return this.handshakeWithTarget(target, otherPeerStringId)
         })
         const results = await Promise.allSettled(promises)
         results.map((res, i) => {
             if (res.status !== 'fulfilled' || !res.value) {
-                excludedIds.push(PeerID.fromValue(targetNeighbors[i].getPeerDescriptor().kademliaId).toKey())
+                excludedIds.push(keyFromPeerDescriptor(targetNeighbors[i].getPeerDescriptor()))
             }
         })
         return excludedIds
@@ -72,14 +70,14 @@ export class Handshaker {
         if (targetNeighbor) {
             const accepted = await this.handshakeWithTarget(targetNeighbor)
             if (!accepted) {
-                excludedIds.push(PeerID.fromValue(targetNeighbor.getPeerDescriptor()!.kademliaId).toKey())
+                excludedIds.push(keyFromPeerDescriptor(targetNeighbor.getPeerDescriptor()))
             }
         }
         return excludedIds
     }
 
     private async handshakeWithTarget(targetNeighbor: RemoteRandomGraphNode, concurrentStringId?: string): Promise<boolean> {
-        const targetStringId = PeerID.fromValue(targetNeighbor.getPeerDescriptor()!.kademliaId).toKey()
+        const targetStringId = keyFromPeerDescriptor(targetNeighbor.getPeerDescriptor())
         this.ongoingHandshakes.add(targetStringId)
         const result = await targetNeighbor.handshake(
             this.config.ownPeerDescriptor,
@@ -104,7 +102,7 @@ export class Handshaker {
     }
 
     public async interleaveHandshake(targetNeighbor: RemoteRandomGraphNode, interleavingFrom: string): Promise<boolean> {
-        const targetStringId = PeerID.fromValue(targetNeighbor.getPeerDescriptor()!.kademliaId).toKey()
+        const targetStringId = keyFromPeerDescriptor(targetNeighbor.getPeerDescriptor())
         this.ongoingHandshakes.add(targetStringId)
         const result = await targetNeighbor.handshake(
             this.config.ownPeerDescriptor,
@@ -124,7 +122,7 @@ export class Handshaker {
 
     public handleRequest(request: StreamHandshakeRequest, requester: RemoteRandomGraphNode): StreamHandshakeResponse {
         if (this.config.targetNeighbors!.hasPeer(requester.getPeerDescriptor())
-            || this.getOngoingHandshakes().has(PeerID.fromValue(requester.getPeerDescriptor().kademliaId).toKey())
+            || this.getOngoingHandshakes().has(keyFromPeerDescriptor(requester.getPeerDescriptor()))
         ) {
             return this.respondWithAccepted(request, requester)
         } else if (this.config.targetNeighbors!.size() + this.getOngoingHandshakes().size < this.config.N) {

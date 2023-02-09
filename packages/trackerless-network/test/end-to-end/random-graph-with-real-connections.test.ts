@@ -1,4 +1,4 @@
-import { ConnectionManager, DhtNode, PeerDescriptor, PeerID, NodeType } from '@streamr/dht'
+import { ConnectionManager, DhtNode, PeerDescriptor, NodeType, peerIdFromPeerDescriptor } from '@streamr/dht'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { waitForCondition } from '@streamr/utils'
 import { createStreamMessage } from '../utils'
@@ -145,7 +145,7 @@ describe('random graph with real connections', () => {
         const msg = createStreamMessage(
             content,
             randomGraphId,
-            PeerID.fromValue(epDhtNode.getPeerDescriptor().kademliaId).toString()
+            peerIdFromPeerDescriptor(epPeerDescriptor).toString()
         )
         randomGraphNode1.broadcast(msg)
         await waitForCondition(() => numOfMessagesReceived >= 4)
