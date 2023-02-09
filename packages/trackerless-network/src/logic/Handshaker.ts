@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/member-delimiter-style */
-
 import { ConnectionLocker, keyFromPeerDescriptor, PeerDescriptor } from '@streamr/dht'
 import { PeerList } from './PeerList'
 import { RemoteRandomGraphNode } from './RemoteRandomGraphNode'
@@ -15,9 +13,9 @@ interface HandshakerParams {
     targetNeighbors: PeerList
     nearbyContactPool: PeerList
     randomContactPool: PeerList
-    protoRpcClient: ProtoRpcClient<NetworkRpcClient>,
+    protoRpcClient: ProtoRpcClient<NetworkRpcClient>
     N: number
-    nodeName?: string,
+    nodeName?: string
 }
 
 const logger = new Logger(module)

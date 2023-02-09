@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/member-delimiter-style */
-
 import { RandomGraphNode } from './RandomGraphNode'
 import { PeerDescriptor, ConnectionLocker, DhtNode, ITransport, keyFromPeerDescriptor } from '@streamr/dht'
 import { StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
@@ -34,7 +32,7 @@ interface Metrics extends MetricsDefinition {
 }
 
 interface StreamrNodeOpts {
-    metricsContext?: MetricsContext,
+    metricsContext?: MetricsContext
     nodeName?: string
 }
 
@@ -57,7 +55,7 @@ export class StreamrNode extends EventEmitter<Events> {
         this.metricsContext = config.metricsContext || new MetricsContext()
         this.metrics = {
             publishMessagesPerSecond: new RateMetric(),
-            publishBytesPerSecond: new RateMetric(),
+            publishBytesPerSecond: new RateMetric()
         }
         this.metricsContext.addMetrics('node', this.metrics)
     }
