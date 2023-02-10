@@ -23,7 +23,10 @@ createMessagingPluginTest('websocket',
             client.send(JSON.stringify(msg))
         },
         subscribe: async (messageQueue: Queue<Message>, _streamId: string, client: WebSocket): Promise<void> => {
-            client.on('message', (payload: string) => messageQueue.push(JSON.parse(payload)))
+            client.on('message', (data: WebSocket.RawData) => {
+                const payload = data.toString()
+                messageQueue.push(JSON.parse(payload))
+            })
         }
     },
     {

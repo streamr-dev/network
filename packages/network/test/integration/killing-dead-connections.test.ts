@@ -44,6 +44,6 @@ describe('check and kill dead connections', () => {
         const [peerInfo, reason] = await event
 
         expect(peerInfo).toEqual(PeerInfo.newTracker('serverEndpoint'))
-        expect(reason).toEqual('')
+        expect((reason as any).toString()).toEqual('')
     })
 })
