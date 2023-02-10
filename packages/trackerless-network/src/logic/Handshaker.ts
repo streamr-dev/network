@@ -20,6 +20,8 @@ interface HandshakerParams {
 
 const logger = new Logger(module)
 
+const PARALLEL_HANDSHAKE_COUNT = 2
+
 export class Handshaker {
 
     private readonly ongoingHandshakes: Set<string> = new Set()
@@ -41,7 +43,8 @@ export class Handshaker {
     private async selectParallelTargetsAndHandshake(excludedIds: string[]): Promise<string[]> {
         const exclude = excludedIds.concat(this.config.targetNeighbors.getStringIds())
         const targetNeighbors = this.config.nearbyContactPool.getClosestAndFurthest(exclude)
-        while (targetNeighbors.length < 2 && this.config.randomContactPool.size(exclude) > 0) {
+        // Add random peers if there is room
+        while (targetNeighbors.length < PARALLEL_HANDSHAKE_COUNT && this.config.randomContactPool.size(exclude) > 0) {
             const random = this.config.randomContactPool.getRandom(exclude)
             if (random) {
                 targetNeighbors.push(random)
