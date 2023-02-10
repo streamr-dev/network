@@ -1,10 +1,16 @@
-import { PeerDescriptor, PeerID, peerIdFromPeerDescriptor } from '@streamr/dht'
-import { shuffle } from 'lodash'
+import { keyFromPeerDescriptor, PeerDescriptor, PeerID, peerIdFromPeerDescriptor } from '@streamr/dht'
+import { sampleSize } from 'lodash'
 import { RemoteRandomGraphNode } from './RemoteRandomGraphNode'
 import { EventEmitter } from 'eventemitter3'
 
 export interface Events {
     peerAdded: (id: string, remote: RemoteRandomGraphNode) => any
+}
+
+const getValuesOfIncludedKeys = (peers: Map<string, RemoteRandomGraphNode>, exclude: string[]): RemoteRandomGraphNode[] => {
+    return Array.from(peers.entries())
+        .filter(([id, _peer]) => !exclude.includes(id))
+        .map(([_id, peer]) => peer)
 }
 
 export class PeerList extends EventEmitter<Events> {
@@ -21,15 +27,14 @@ export class PeerList extends EventEmitter<Events> {
 
     add(remote: RemoteRandomGraphNode): void {
         if (!this.ownPeerID.equals(peerIdFromPeerDescriptor(remote.getPeerDescriptor())) && this.peers.size < this.limit) {
-            const stringId = this.toStringId(remote.getPeerDescriptor())
+            const stringId = keyFromPeerDescriptor(remote.getPeerDescriptor())
             this.peers.set(stringId, remote)
             this.emit('peerAdded', stringId, remote)
         }
     }
 
     remove(peerDescriptor: PeerDescriptor): void {
-        const stringId = this.toStringId(peerDescriptor)
-        this.peers.delete(stringId)
+        this.peers.delete(keyFromPeerDescriptor(peerDescriptor))
     }
 
     removeById(stringId: string): void {
@@ -37,8 +42,7 @@ export class PeerList extends EventEmitter<Events> {
     }
 
     hasPeer(peerDescriptor: PeerDescriptor): boolean {
-        const stringId = this.toStringId(peerDescriptor)
-        return this.peers.has(stringId)
+        return this.peers.has(keyFromPeerDescriptor(peerDescriptor))
     }
 
     hasPeerWithStringId(stringId: string): boolean {
@@ -61,67 +65,34 @@ export class PeerList extends EventEmitter<Events> {
         return this.peers.get(id)
     }
 
-    // eslint-disable-next-line class-methods-use-this
-    private toStringId(peerDescriptor: PeerDescriptor): string {
-        const peerId = peerIdFromPeerDescriptor(peerDescriptor)
-        const key = peerId.toKey()
-        return key
-    }
-
     size(exclude: string[] = []): number {
         return Array.from(this.peers.keys()).filter((peer) => !exclude.includes(peer)).length
     }
 
     getRandom(exclude: string[]): RemoteRandomGraphNode | undefined {
-        const keys = Array.from(this.peers.keys()).filter((key) => !exclude.includes(key))
-        const shuffled = shuffle(keys)
-        if (shuffled.length) {
-            return this.peers.get(shuffled[0])
-        }
-        return undefined
+        const shuffled = sampleSize(getValuesOfIncludedKeys(this.peers, exclude), 1)
+        return shuffled[0]
     }
 
     getClosest(exclude: string[]): RemoteRandomGraphNode | undefined {
-        const excluded = new Map<string, RemoteRandomGraphNode>()
-        this.peers.forEach((val, key) => {
-            if (!exclude.includes(key)) {
-                excluded.set(key, val)
-            }
-        })
-        if (excluded.size === 0) {
-            return undefined
-        }
-        return excluded.get(Array.from(excluded.keys())[0])
+        const included = getValuesOfIncludedKeys(this.peers, exclude)
+        return included[0]
     }
 
     getClosestAndFurthest(exclude: string[]): RemoteRandomGraphNode[] {
-        const excluded: RemoteRandomGraphNode[] = []
-        this.peers.forEach((val, key) => {
-            if (!exclude.includes(key)) {
-                excluded.push(val)
-            }
-        })
-        if (excluded.length === 0) {
+        const included = getValuesOfIncludedKeys(this.peers, exclude)
+        if (included.length === 0) {
             return []
-        } else if (excluded.length > 1) {
-            const toReturn = [excluded[0], excluded[excluded.length - 1]]
-            return toReturn.filter((contact) => contact)
+        } else if (included.length > 1) {
+            return [included[0], included[included.length - 1]]
         } else {
-            return [excluded[0]]
+            return [included[0]]
         }
     }
 
     getFurthest(exclude: string[]): RemoteRandomGraphNode | undefined {
-        const excluded = new Map<string, RemoteRandomGraphNode>()
-        this.peers.forEach((val, key) => {
-            if (!exclude.includes(key)) {
-                excluded.set(key, val)
-            }
-        })
-        if (excluded.size === 0) {
-            return undefined
-        }
-        return excluded.get(Array.from(excluded.keys())[excluded.size - 1])
+        const included = getValuesOfIncludedKeys(this.peers, exclude)
+        return included[included.length - 1]
     }
 
     clear(): void {
@@ -130,9 +101,5 @@ export class PeerList extends EventEmitter<Events> {
 
     values(): RemoteRandomGraphNode[] {
         return Array.from(this.peers.values())
-    }
-
-    getNeighborByStringId(id: string): RemoteRandomGraphNode | undefined {
-        return this.peers.get(id)
     }
 }
