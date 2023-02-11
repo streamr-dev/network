@@ -42,24 +42,33 @@ export class Handshaker {
 
     private async selectParallelTargetsAndHandshake(excludedIds: string[]): Promise<string[]> {
         const exclude = excludedIds.concat(this.config.targetNeighbors.getStringIds())
-        const targetNeighbors = this.config.nearbyContactPool.getClosestAndFurthest(exclude)
-        // Add random peers if there is room
-        while (targetNeighbors.length < PARALLEL_HANDSHAKE_COUNT && this.config.randomContactPool.size(exclude) > 0) {
-            const random = this.config.randomContactPool.getRandom(exclude)
+        const targetNeighbors = this.selectParallelTargets(exclude)
+        targetNeighbors.forEach((contact) => this.ongoingHandshakes.add(keyFromPeerDescriptor(contact.getPeerDescriptor())))
+        return this.doParallelHandshakes(targetNeighbors, exclude)
+    }
+
+    private selectParallelTargets(excludedIds: string[]): RemoteRandomGraphNode[] {
+        const targetNeighbors = this.config.nearbyContactPool.getClosestAndFurthest(excludedIds)
+        while (targetNeighbors.length < PARALLEL_HANDSHAKE_COUNT && this.config.randomContactPool.size(excludedIds) > 0) {
+            const random = this.config.randomContactPool.getRandom(excludedIds)
             if (random) {
                 targetNeighbors.push(random)
             }
         }
-        targetNeighbors.forEach((contact) => this.ongoingHandshakes.add(keyFromPeerDescriptor(contact.getPeerDescriptor())))
-        const promises = Array.from(targetNeighbors.values()).map(async (target: RemoteRandomGraphNode, i) => {
-            const otherPeer = i === 0 ? targetNeighbors[1] : targetNeighbors[0]
-            const otherPeerStringId = otherPeer ? keyFromPeerDescriptor(otherPeer.getPeerDescriptor()) : undefined
-            return this.handshakeWithTarget(target, otherPeerStringId)
-        })
-        const results = await Promise.allSettled(promises)
+        return targetNeighbors
+    }
+
+    private async doParallelHandshakes(targets: RemoteRandomGraphNode[], excludedIds: string[]): Promise<string[]> {
+        const results = await Promise.allSettled(
+            Array.from(targets.values()).map(async (target: RemoteRandomGraphNode, i) => {
+                const otherPeer = i === 0 ? targets[1] : targets[0]
+                const otherPeerStringId = otherPeer ? keyFromPeerDescriptor(otherPeer.getPeerDescriptor()) : undefined
+                return this.handshakeWithTarget(target, otherPeerStringId)
+            })
+        )
         results.map((res, i) => {
             if (res.status !== 'fulfilled' || !res.value) {
-                excludedIds.push(keyFromPeerDescriptor(targetNeighbors[i].getPeerDescriptor()))
+                excludedIds.push(keyFromPeerDescriptor(targets[i].getPeerDescriptor()))
             }
         })
         return excludedIds
