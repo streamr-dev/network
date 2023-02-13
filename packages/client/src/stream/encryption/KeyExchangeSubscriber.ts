@@ -21,8 +21,11 @@ type MessageMatch = (content: any, streamMessage: StreamMessage) => boolean
 
 const { MESSAGE_TYPES } = StreamMessage
 
-function waitForSubMessage(sub: Subscription, matchFn: MessageMatch): ReturnType<typeof Defer> & Promise<StreamMessage | undefined> {
+function waitForSubMessage(sub: Subscription, matchFn: MessageMatch, timeout: number): ReturnType<typeof Defer> & Promise<StreamMessage | undefined> {
     const task = Defer<StreamMessage | undefined>()
+    setTimeout(() => {
+        task.resolve(undefined)
+    }, timeout)
     const onMessage = (content: any, streamMessage: StreamMessage) => {
         try {
             if (matchFn(content, streamMessage)) {
@@ -99,10 +102,12 @@ export class SubscriberKeyExchange {
     initialGroupKeys
     encryptionUtil
     enabled = true
+    keyRequestTimeout
 
-    constructor(client: StreamrClient, { groupKeys = {} }: KeyExchangeOptions = {}) {
+    constructor(client: StreamrClient, { groupKeys = {}, keyRequestTimeout = 30 * 1000 }: KeyExchangeOptions = {}) {
         this.client = client
         this.initialGroupKeys = groupKeys
+        this.keyRequestTimeout = keyRequestTimeout
         this.getGroupKeyStore = pMemoize(this.getGroupKeyStore.bind(this), {
             cacheKey([maybeStreamId]) {
                 const { streamId } = validateOptions(maybeStreamId)
@@ -142,7 +147,7 @@ export class SubscriberKeyExchange {
 
                 const groupKeyResponse = GroupKeyResponse.fromArray(content)
                 return groupKeyResponse.requestId === requestId
-            })
+            }, this.keyRequestTimeout)
 
             const msg = new GroupKeyRequest({
                 streamId,

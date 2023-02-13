@@ -71,4 +71,5 @@ export async function subscribeToKeyExchangeStream(client: StreamrClient, onKeyE
 
 export type KeyExchangeOptions = {
     groupKeys?: Record<string, GroupKeysSerialized>
+    keyRequestTimeout?: number
 }

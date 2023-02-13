@@ -22,7 +22,8 @@ export default function Decrypt(client, options = {}) {
         groupKeys: {
             ...client.options.groupKeys,
             ...options.groupKeys,
-        }
+        },
+        keyRequestTimeout: options.keyRequestTimeout ?? client.options.keyRequestTimeout
     })
 
     async function* decrypt(src, onError = async () => {}) {

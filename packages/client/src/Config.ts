@@ -56,6 +56,7 @@ export type StrictStreamrClientOptions = {
     publisherStoreKeyHistory: boolean
     publishAutoDisconnectDelay: number,
     groupKeys: Todo
+    keyRequestTimeout?: number
     keyExchange: Todo
 
     binanceRPC: ConnectionInfo & { chainId?: number }
@@ -136,6 +137,7 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientOptions = {
     verifySignatures: 'auto',
     publisherStoreKeyHistory: true,
     groupKeys: {}, // {streamId: groupKey}
+    keyRequestTimeout: 30 * 1000,
     keyExchange: {},
 
     // Ethereum and Data Union related options
