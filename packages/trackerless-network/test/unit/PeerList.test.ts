@@ -78,25 +78,25 @@ describe('PeerList', () => {
 
     it('getClosest', () => {
         const closest = peerList.getClosest([])
-        expect(keyFromPeerDescriptor(closest.getPeerDescriptor()))
+        expect(keyFromPeerDescriptor(closest!.getPeerDescriptor()))
             .toEqual(PeerID.fromValue(new Uint8Array([1, 1, 1])).toKey())
     })
 
     it('getClosest with exclude', () => {
         const closest = peerList.getClosest([PeerID.fromValue(new Uint8Array([1, 1, 1])).toKey()])
-        expect(keyFromPeerDescriptor(closest.getPeerDescriptor()))
+        expect(keyFromPeerDescriptor(closest!.getPeerDescriptor()))
             .toEqual(PeerID.fromValue(new Uint8Array([1, 1, 2])).toKey())
     })
 
     it('getFurthest', () => {
         const closest = peerList.getFurthest([])
-        expect(keyFromPeerDescriptor(closest.getPeerDescriptor()))
+        expect(keyFromPeerDescriptor(closest!.getPeerDescriptor()))
             .toEqual(PeerID.fromValue(new Uint8Array([1, 1, 5])).toKey())
     })
 
     it('getFurthest with exclude', () => {
         const closest = peerList.getFurthest([PeerID.fromValue(new Uint8Array([1, 1, 5])).toKey()])
-        expect(keyFromPeerDescriptor(closest.getPeerDescriptor()))
+        expect(keyFromPeerDescriptor(closest!.getPeerDescriptor()))
             .toEqual(PeerID.fromValue(new Uint8Array([1, 1, 4])).toKey())
     })
 
