@@ -10,7 +10,6 @@ import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/prot
 import { ITransport } from '../transport/ITransport'
 import { ListeningRpcCommunicator } from '../exports'
 import { PeerIDKey } from '../helpers/PeerID'
-import { DataStoreEntry } from './DhtNode'
 
 const logger = new Logger(module)
 
@@ -34,13 +33,14 @@ export class RemoteRecursiveFindSession {
         this.client = toProtoRpcClient(new RecursiveFindSessionServiceClient(this.rpcCommunicator.getRpcClientTransport()))
     }
 
-    reportRecursiveFindResult(closestNodes: PeerDescriptor[], data: Map<PeerIDKey, DataStoreEntry> | undefined, noCloserNodesFound: boolean): void {
+    reportRecursiveFindResult(closestNodes: PeerDescriptor[], data: Map<PeerIDKey, DataEntry> | undefined, noCloserNodesFound: boolean): void {
         const dataEntries: Array<DataEntry> = []
 
         if (data) {
             data.forEach((entry) => {
-                dataEntries.push({ storer: entry[0], data: entry[1] })
+                dataEntries.push(DataEntry.create(entry))
             })
+            logger.info('dataEntries exist')
         }
 
         const report: RecursiveFindReport = {
@@ -54,7 +54,7 @@ export class RemoteRecursiveFindSession {
         }
 
         this.client.reportRecursiveFindResult(report, options).catch((_e) => {
-            logger.trace('Failed to send RecursiveFindResult rtcOffer')
+            logger.trace('Failed to send RecursiveFindResult')
         })
     }
 }

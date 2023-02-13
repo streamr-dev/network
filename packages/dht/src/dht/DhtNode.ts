@@ -25,7 +25,8 @@ import {
     FindMode,
     MessageType,
     StoreDataResponse,
-    StoreDataRequest
+    StoreDataRequest,
+    DataEntry
 } from '../proto/packages/dht/protos/DhtRpc'
 import * as Err from '../helpers/errors'
 import { ITransport, TransportEvents } from '../transport/ITransport'
@@ -45,6 +46,7 @@ import { RemoteRecursiveFindSession } from './RemoteRecursiveFindSession'
 import { RecursiveFindSession, RecursiveFindSessionEvents } from './RecursiveFindSession'
 import { SetDuplicateDetector } from './SetDuplicateDetector'
 import { Any } from '../proto/google/protobuf/any'
+import { Timestamp } from '../proto/google/protobuf/timestamp'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -79,6 +81,9 @@ export class DhtNodeConfig {
     dhtJoinTimeout = 60000
     getClosestContactsLimit = 5
     maxConnections = 80
+    storeHighestTtl = 10000
+    storeMaxTtl = 10000
+    storeNumberOfCopies = 5
     metricsContext = new MetricsContext()
 
     constructor(conf: Partial<DhtNodeConfig>) {
@@ -102,8 +107,7 @@ interface ForwardingTableEntry {
     peerDescriptors: PeerDescriptor[]
 }
 
-export type DataStoreEntry = [publisherDescriptor: PeerDescriptor, data: Any]
-export interface RecursiveFindResult { closestNodes: Array<PeerDescriptor>, dataEntries?: Array<DataStoreEntry> }
+export interface RecursiveFindResult { closestNodes: Array<PeerDescriptor>, dataEntries?: Array<DataEntry> }
 
 export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpcService {
     private readonly config: DhtNodeConfig
@@ -149,7 +153,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
     // The first key is the key of the data, the second key is the 
     // PeerID of the storer of the data
 
-    private dataStore: Map<PeerIDKey, Map<PeerIDKey, DataStoreEntry>> = new Map()
+    private dataStore: Map<PeerIDKey, Map<PeerIDKey, DataEntry>> = new Map()
 
     constructor(conf: Partial<DhtNodeConfig>) {
         super()
@@ -938,7 +942,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         }
     }
 
-    public async startRcursiveFind(idToFind: Uint8Array, findMode: FindMode = FindMode.NODE): Promise<RecursiveFindResult> {
+    public async startRecursiveFind(idToFind: Uint8Array, findMode: FindMode = FindMode.NODE): Promise<RecursiveFindResult> {
         const sessionId = v4()
         const recursiveFindSession = new RecursiveFindSession(sessionId, this, idToFind)
         const targetDescriptor: PeerDescriptor = { kademliaId: idToFind, type: NodeType.VIRTUAL }
@@ -974,7 +978,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
     }
 
     private reportRecursiveFindResult(targetPeerDescriptor: PeerDescriptor, serviceId: string,
-        closestNodes: PeerDescriptor[], data: Map<PeerIDKey, DataStoreEntry> | undefined, noCloserNodesFound: boolean = false) {
+        closestNodes: PeerDescriptor[], data: Map<PeerIDKey, DataEntry> | undefined, noCloserNodesFound: boolean = false) {
         const session = new RemoteRecursiveFindSession(this.ownPeerDescriptor!, targetPeerDescriptor, serviceId, this)
         session.reportRecursiveFindResult(closestNodes, data, noCloserNodesFound)
     }
@@ -983,7 +987,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
         routedMessage.routingPath.push(this.ownPeerDescriptor!)
 
-        logger.trace('findRecursively recursiveFindPath ' + routedMessage.routingPath.map((descriptor) => descriptor.nodeName))
+        logger.info('findRecursively recursiveFindPath ' + routedMessage.routingPath.map((descriptor) => descriptor.nodeName))
 
         const idToFind = PeerID.fromValue(routedMessage.destinationPeer!.kademliaId)
 
@@ -1201,26 +1205,33 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
     public async storeData(request: StoreDataRequest, context: ServerCallContext): Promise<StoreDataResponse> {
 
+        let ttl = request.ttl
+        if (ttl > this.config.storeMaxTtl) {
+            ttl = this.config.storeMaxTtl
+        }
+
         this.doStoreData((context as DhtCallContext).incomingSourceDescriptor!,
-            PeerID.fromValue(request.kademliaId), request.data!)
+            PeerID.fromValue(request.kademliaId), request.data!, ttl)
+
+        logger.info(this.config.nodeName + ' storeData()')
 
         return StoreDataResponse.create()
     }
 
     // Backednd of the RPC service implementation
 
-    public doStoreData(publisher: PeerDescriptor, dataKey: PeerID, data: Any): void {
+    public doStoreData(storer: PeerDescriptor, dataKey: PeerID, data: Any, ttl: number): void {
 
-        const publisherId = PeerID.fromValue(publisher.kademliaId)
+        const publisherId = PeerID.fromValue(storer.kademliaId)
 
         if (!this.dataStore.has(dataKey.toKey())) {
             this.dataStore.set(dataKey.toKey(), new Map())
         }
 
-        this.dataStore.get(dataKey.toKey())!.set(publisherId.toKey(), [publisher, data])
+        this.dataStore.get(dataKey.toKey())!.set(publisherId.toKey(), { storer, data, storedAt: Timestamp.now(), ttl })
     }
 
-    public doGetData(key: PeerID): Map<PeerIDKey, DataStoreEntry> | undefined {
+    public doGetData(key: PeerID): Map<PeerIDKey, DataEntry> | undefined {
         if (this.dataStore.has(key.toKey())) {
             return this.dataStore.get(key.toKey())!
         } else {
@@ -1230,13 +1241,19 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
     // Store API for higher layers and tests
 
-    public async storeDataToDht(key: Uint8Array, data: Any): Promise<void> {
+    public async storeDataToDht(key: Uint8Array, data: Any): Promise<PeerDescriptor[]> {
         // Find the closest nodes to the ID to store data into     
 
-        const result = await this.startRcursiveFind(key)
+        const result = await this.startRecursiveFind(key)
         const closestNodes = result.closestNodes
 
-        for (let i = 0; i < closestNodes.length && i < 5; i++) {
+        const successfulNodes: PeerDescriptor[] = []
+
+        // ToDo: make TTL decrease according to some nice curve
+
+        const ttl = this.config.storeHighestTtl
+
+        for (let i = 0; i < closestNodes.length && successfulNodes.length < 5; i++) {
             const dhtPeer = new DhtPeer(
                 this.ownPeerDescriptor!,
                 closestNodes[i],
@@ -1245,7 +1262,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
                 this
             )
             try {
-                const response = await dhtPeer.storeData({ kademliaId: key, data })
+                const response = await dhtPeer.storeData({ kademliaId: key, data, ttl })
                 if (response.error) {
                     logger.error('dhtPeer.storeData() returned error: ' + response.error)
                     continue
@@ -1254,7 +1271,15 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
                 logger.error('dhtPeer.storeData() threw an exception ' + e)
                 continue
             }
+            successfulNodes.push(closestNodes[i])
             logger.info('dhtPeer.storeData() returned success')
         }
+
+        return successfulNodes
     }
+
+    public async getDataFromDht(idToFind: Uint8Array): Promise<RecursiveFindResult> {
+        return this.startRecursiveFind(idToFind, FindMode.DATA)
+    }
+
 }

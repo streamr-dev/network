@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { FindMode, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode, waitNodesReadyForTesting } from '../utils'
 import { execSync } from 'child_process'
 import fs from 'fs'
@@ -11,7 +11,7 @@ import { Any } from '../../src/proto/google/protobuf/any'
 
 const logger = new Logger(module)
 
-jest.setTimeout(20000) 
+jest.setTimeout(60000) 
 
 describe('Storing data in DHT', () => {
     let entryPoint: DhtNode
@@ -30,6 +30,10 @@ describe('Storing data in DHT', () => {
     }
 
     const dhtIds: Array<{ type: string, data: Array<number> }> = JSON.parse(fs.readFileSync('test/data/nodeids.json').toString())
+
+    const getRandomNode = () => {
+        return nodes[Math.floor(Math.random() * nodes.length)]
+    }
 
     beforeEach(async () => {
         nodes = []
@@ -83,7 +87,7 @@ describe('Storing data in DHT', () => {
         const data = Any.pack(entrypointDescriptor, PeerDescriptor)
 
         logger.info('node ' + storingNodeIndex + ' starting to store data with key ' + dataKey.toString())
-        await nodes[storingNodeIndex].doStoreData(nodes[storingNodeIndex].getPeerDescriptor(), dataKey, data)
+        await nodes[storingNodeIndex].doStoreData(nodes[storingNodeIndex].getPeerDescriptor(), dataKey, data, 10000)
         logger.info('store data over')
 
         logger.info('node ' + storingNodeIndex + ' starting to get data with key ' + dataKey.toString())
@@ -91,7 +95,7 @@ describe('Storing data in DHT', () => {
         logger.info('getData over')
 
         fetchedData.forEach((entry) => {
-            const fetchedDescriptor = Any.unpack(entry[1], PeerDescriptor)
+            const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
             logger.info(JSON.stringify(fetchedDescriptor))
         })
 
@@ -103,27 +107,36 @@ describe('Storing data in DHT', () => {
         const data = Any.pack(entrypointDescriptor, PeerDescriptor)
 
         logger.info('node ' + storingNodeIndex + ' starting to store data with key ' + dataKey.toString())
-        await nodes[storingNodeIndex].storeDataToDht(dataKey.value, data)
+        const successfulStorers = await nodes[storingNodeIndex].storeDataToDht(dataKey.value, data)
+        
+        expect(successfulStorers.length).toBeGreaterThan(4)
+
         logger.info('store data over')
     }, 180000)
 
     it.only('Storing and getting data works', async () => {
-        const storingNodeIndex = 34
+        //const storingNodeIndex = 784
+        const storingNode = getRandomNode()
         const dataKey = PeerID.fromString('3232323e12r31r3')
         const data = Any.pack(entrypointDescriptor, PeerDescriptor)
 
-        logger.info('node ' + storingNodeIndex + ' starting to store data with key ' + dataKey.toString())
-        await nodes[storingNodeIndex].storeDataToDht(dataKey.value, data)
+        logger.info('node ' + storingNode.getNodeName() + ' starting to store data with key ' + dataKey.toString())
+        const successfulStorers = await storingNode.storeDataToDht(dataKey.value, data)
+        
+        expect(successfulStorers.length).toBeGreaterThan(4)
+
         logger.info('store data over')
     
-        const results = await nodes[12].startRcursiveFind(dataKey.value, FindMode.DATA)
+        const fetchingNode = getRandomNode()
+        logger.info('node ' + fetchingNode.getNodeName() + ' starting to get data with key ' + dataKey.toString())
+        const results = await fetchingNode.getDataFromDht(dataKey.value)
         
         logger.info('dataEntries.length: ' + results.dataEntries!.length)
         results.dataEntries?.forEach((entry) => {
-            logger.info(JSON.stringify(entry[0]), Any.unpack(entry[1], PeerDescriptor))
+            logger.info(JSON.stringify(entry.storer!), Any.unpack(entry.data!, PeerDescriptor))
         })
         
-        const fetchedData = Any.unpack(results.dataEntries![0][1], PeerDescriptor)
+        const fetchedData = Any.unpack(results.dataEntries![0].data!, PeerDescriptor)
 
         logger.info('find data over')
 
