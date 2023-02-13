@@ -76,13 +76,13 @@ describe('NetworkNode', () => {
         })
 
         let msgCount = 0
-        await node1.subscribeAndWaitForJoin(STREAM_ID, pd1)
+        await node1.subscribeAndWaitForJoin(STREAM_ID, [pd1])
         node1.addMessageListener((msg) => {
             expect(msg.messageId.timestamp).toEqual(666)
             expect(msg.getSequenceNumber()).toEqual(0)
             msgCount += 1
         })
-        await node2.waitForJoinAndPublish(streamMessage, pd1)
+        await node2.waitForJoinAndPublish(streamMessage, [pd1])
         await waitForCondition(() => msgCount === 1)
     })
 
