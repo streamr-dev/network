@@ -4,6 +4,7 @@ import { PeerID } from '../../src/helpers/PeerID'
 import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { DhtNode } from "../../src/dht/DhtNode"
 import { RpcMessage } from "../../src/proto/packages/proto-rpc/protos/ProtoRpc"
+import { keyFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 
 describe('ConnectionManager', () => {
     const serviceId = 'demo'
@@ -228,7 +229,7 @@ describe('ConnectionManager', () => {
         await promise
 
         // @ts-expect-error private field
-        connectionManager1.closeConnection(PeerID.fromValue(peerDescriptor2.kademliaId).toKey())
+        connectionManager1.closeConnection(keyFromPeerDescriptor(peerDescriptor2))
 
         await Promise.all([disconnectedPromise1, disconnectedPromise2])
 
@@ -286,7 +287,7 @@ describe('ConnectionManager', () => {
         await Promise.all([dataPromise, connectedPromise1, connectedPromise2])
 
         // @ts-expect-error private field
-        connectionManager3.closeConnection(PeerID.fromValue(mockPeerDescriptor4.kademliaId).toKey())
+        connectionManager3.closeConnection(keyFromPeerDescriptor(mockPeerDescriptor4))
 
         await Promise.all([disconnectedPromise1, disconnectedPromise2])
         await connectionManager3.stop()

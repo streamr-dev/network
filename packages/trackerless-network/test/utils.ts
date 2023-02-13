@@ -27,7 +27,6 @@ export const createMockRandomGraphNodeAndDhtNode = (
         numberOfNodesPerKBucket: 4,
         entryPoints: [entryPointDescriptor]
     })
-
     const randomGraphNode = new RandomGraphNode({
         randomGraphId,
         P2PTransport: mockCm,
@@ -35,9 +34,7 @@ export const createMockRandomGraphNodeAndDhtNode = (
         connectionLocker: mockCm,
         ownPeerDescriptor
     })
-
     return [dhtNode, randomGraphNode]
-
 }
 
 export const createStreamMessage = (content: ContentMessage, streamId: string, publisherId: string): StreamMessage => {
@@ -56,6 +53,5 @@ export const createStreamMessage = (content: ContentMessage, streamId: string, p
         messageRef,
         signature: 'signature'
     }
-
     return msg
 }

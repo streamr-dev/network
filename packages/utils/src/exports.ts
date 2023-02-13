@@ -27,6 +27,7 @@ import { DuplicateMessageDetector, NumberPair, GapMisMatchError, InvalidNumberin
 import { TimeoutError, withTimeout } from './withTimeout'
 import { composeAbortSignals } from './composeAbortSignals'
 import { waitForCondition } from './waitForCondition'
+import { waitForEvent3, runAndWaitForEvents3, raceEvents3, runAndRaceEvents3, RunAndRaceEventsReturnType } from './waitForEvent3'
 
 export {
     BrandedString,
@@ -57,7 +58,12 @@ export {
     DuplicateMessageDetector,
     NumberPair,
     GapMisMatchError,
-    InvalidNumberingError
+    InvalidNumberingError,
+    waitForEvent3,
+    runAndWaitForEvents3,
+    raceEvents3,
+    runAndRaceEvents3,
+    RunAndRaceEventsReturnType
 }
 
 export {

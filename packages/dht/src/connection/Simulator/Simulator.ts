@@ -1,5 +1,5 @@
 import EventEmitter from "eventemitter3"
-import { PeerID, PeerIDKey } from "../../helpers/PeerID"
+import { PeerIDKey } from "../../helpers/PeerID"
 import { PeerDescriptor } from "../../proto/packages/dht/protos/DhtRpc"
 import { ConnectionSourceEvents } from "../IConnectionSource"
 import { SimulatorConnector } from "./SimulatorConnector"
@@ -8,6 +8,7 @@ import { ConnectionID } from "../IConnection"
 import { Logger } from "@streamr/utils"
 import { getRegionDelayMatrix } from "../../../test/data/pings"
 import { v4 } from "uuid"
+import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 
 const logger = new Logger(module)
 
@@ -66,11 +67,11 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     }
 
     addConnector(connector: SimulatorConnector): void {
-        this.connectors.set(PeerID.fromValue(connector.getPeerDescriptor().kademliaId).toKey(), connector)
+        this.connectors.set(keyFromPeerDescriptor(connector.getPeerDescriptor()), connector)
     }
 
     public connect(sourceConnection: SimulatorConnection, targetDescriptor: PeerDescriptor, connectedCallback: (error?: string) => void): void {
-        const target = this.connectors.get(PeerID.fromValue(targetDescriptor.kademliaId).toKey())
+        const target = this.connectors.get(keyFromPeerDescriptor(targetDescriptor))
 
         if (!target) {
             return connectedCallback('Traget connector not found')

@@ -600,7 +600,7 @@ export interface LockResponse {
     /**
      * @generated from protobuf field: optional bool reason = 2;
      */
-    reason?: boolean; // if accepted = false
+    reason?: boolean;
 }
 /**
  * @generated from protobuf message dht.DisconnectNotice
@@ -666,16 +666,6 @@ export enum RpcResponseError {
      */
     UNKNOWN_RPC_METHOD = 3
 }
-// protorpc.RpcMessage used as RpcMessage message type
-
-// 
-// message RpcMessage {
-// map<string, string> header = 1;
-// bytes body = 2;
-// string requestId = 3;
-// optional RpcResponseError responseError = 4;
-// }
-
 // Wraps all messages
 
 /**

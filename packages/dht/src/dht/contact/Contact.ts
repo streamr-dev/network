@@ -1,5 +1,6 @@
 import { PeerID } from '../../helpers/PeerID'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
+import { peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 
 export class ContactState<TContact> {
     public contacted = false
@@ -30,6 +31,6 @@ export class Contact implements IContact {
     }
 
     public get peerId(): PeerID {
-        return PeerID.fromValue(this.peerDescriptor.kademliaId)
+        return peerIdFromPeerDescriptor(this.peerDescriptor)
     }
 }

@@ -6,6 +6,7 @@ import { DhtRpcOptions } from '../rpc-protocol/DhtRpcOptions'
 import { PeerID } from '../helpers/PeerID'
 
 import * as Err from '../helpers/errors'
+import { peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 
 const logger = new Logger(module)
 
@@ -22,7 +23,7 @@ export class RemoteConnectionLocker {
         protocolVersion: string,
         client: ProtoRpcClient<IConnectionLockerClient>
     ) {
-        this.peerId = PeerID.fromValue(targetPeerDescriptor.kademliaId)
+        this.peerId = peerIdFromPeerDescriptor(targetPeerDescriptor)
         this.ownPeerDescriptor = ownPeerDescriptor
         this.targetPeerDescriptor = targetPeerDescriptor
         this.protocolVersion = protocolVersion

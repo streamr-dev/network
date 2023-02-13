@@ -1,5 +1,5 @@
-import { DhtNode, PeerDescriptor, Simulator, PeerID, UUID } from '@streamr/dht'
-import { Event, RandomGraphNode } from '../../src/logic/RandomGraphNode'
+import { DhtNode, PeerDescriptor, Simulator, PeerID, UUID, peerIdFromPeerDescriptor } from '@streamr/dht'
+import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { createMockRandomGraphNodeAndDhtNode, createStreamMessage } from '../utils'
 import { range } from 'lodash'
 import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
@@ -10,12 +10,10 @@ describe('Propagation', () => {
         kademliaId: PeerID.fromString(`entrypoint`).value,
         type: 1
     }
-
     let dhtNodes: DhtNode[]
     let randomGraphNodes: RandomGraphNode[]
     const STREAM_ID = 'testingtesting'
     let totalReceived: number
-
     const NUM_OF_NODES = 256
 
     beforeEach(async () => {
@@ -24,11 +22,10 @@ describe('Propagation', () => {
         dhtNodes = []
         randomGraphNodes = []
         const [entryPoint, node1] = createMockRandomGraphNodeAndDhtNode(entryPointDescriptor, entryPointDescriptor, STREAM_ID, simulator)
-
         await entryPoint.start()
         await entryPoint.joinDht(entryPointDescriptor)
         await node1.start()
-        node1.on(Event.MESSAGE, () => {totalReceived += 1})
+        node1.on('message', () => {totalReceived += 1})
         dhtNodes.push(entryPoint)
         randomGraphNodes.push(node1)
 
@@ -45,14 +42,13 @@ describe('Propagation', () => {
             )
             await dht.start()
             await graph.start()
-            return dht.joinDht(entryPointDescriptor).then(() => {
-                graph.on(Event.MESSAGE, () => { totalReceived += 1 })
+            await dht.joinDht(entryPointDescriptor).then(() => {
+                graph.on('message', () => { totalReceived += 1 })
                 dhtNodes.push(dht)
                 randomGraphNodes.push(graph)
             })
-
         }))
-    }, 30000)
+    }, 45000)
 
     afterEach(async () => {
         await Promise.all(randomGraphNodes.map((node) => node.stop()))
@@ -67,18 +63,16 @@ describe('Propagation', () => {
             const avg = randomGraphNodes.reduce((acc, curr) => {
                 return acc + curr.getTargetNeighborStringIds().length
             }, 0) / randomGraphNodes.length
-            return avg >= 3.90
+            return avg >= 4
         }, 20000)
-
         const content: ContentMessage = {
             body: JSON.stringify({ hello: "WORLD" })
         }
         const msg = createStreamMessage(
             content,
             STREAM_ID,
-            PeerID.fromValue(dhtNodes[0].getPeerDescriptor().kademliaId).toString()
+            peerIdFromPeerDescriptor(dhtNodes[0].getPeerDescriptor()).toString()
         )
-
         randomGraphNodes[0].broadcast(msg)
         await waitForCondition(() => totalReceived >= NUM_OF_NODES, 10000)
     }, 45000)

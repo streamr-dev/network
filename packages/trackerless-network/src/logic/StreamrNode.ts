@@ -1,9 +1,7 @@
-/* eslint-disable @typescript-eslint/member-delimiter-style */
-
-import { RandomGraphNode, Event as RandomGraphEvent } from './RandomGraphNode'
-import { PeerDescriptor, ConnectionLocker, DhtNode, ITransport, PeerID } from '@streamr/dht'
+import { RandomGraphNode } from './RandomGraphNode'
+import { PeerDescriptor, ConnectionLocker, DhtNode, ITransport, keyFromPeerDescriptor } from '@streamr/dht'
 import { StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
-import { EventEmitter } from 'events'
+import { EventEmitter } from 'eventemitter3'
 import {
     Logger,
     waitForCondition,
@@ -20,12 +18,8 @@ interface StreamObject {
     layer2: RandomGraphNode
 }
 
-export enum Event {
-    NEW_MESSAGE = 'unseen-message'
-}
-
-export interface StreamrNode {
-    on(event: Event.NEW_MESSAGE, listener: (msg: StreamMessage) => void): this
+export interface Events {
+    newMessage: (msg: StreamMessage) => void
 }
 
 const logger = new Logger(module)
@@ -38,11 +32,11 @@ interface Metrics extends MetricsDefinition {
 }
 
 interface StreamrNodeOpts {
-    metricsContext?: MetricsContext,
+    metricsContext?: MetricsContext
     nodeName?: string
 }
 
-export class StreamrNode extends EventEmitter {
+export class StreamrNode extends EventEmitter<Events> {
     private readonly streams: Map<string, StreamObject>
     private layer0: DhtNode | null = null
     private started = false
@@ -61,7 +55,7 @@ export class StreamrNode extends EventEmitter {
         this.metricsContext = config.metricsContext || new MetricsContext()
         this.metrics = {
             publishMessagesPerSecond: new RateMetric(),
-            publishBytesPerSecond: new RateMetric(),
+            publishBytesPerSecond: new RateMetric()
         }
         this.metricsContext.addMetrics('node', this.metrics)
     }
@@ -70,7 +64,7 @@ export class StreamrNode extends EventEmitter {
         if (this.started || this.destroyed) {
             return
         }
-        logger.info(`Starting new StreamrNode with id ${PeerID.fromValue(startedAndJoinedLayer0.getPeerDescriptor().kademliaId).toKey()}`)
+        logger.info(`Starting new StreamrNode with id ${keyFromPeerDescriptor(startedAndJoinedLayer0.getPeerDescriptor())}`)
         this.started = true
         this.layer0 = startedAndJoinedLayer0
         this.P2PTransport = transport
@@ -133,7 +127,6 @@ export class StreamrNode extends EventEmitter {
             return
         }
         logger.info(`Joining stream ${streamPartID}`)
-
         const layer1 = new DhtNode({
             transportLayer: this.layer0!,
             serviceId: 'layer1::' + streamPartID,
@@ -153,26 +146,16 @@ export class StreamrNode extends EventEmitter {
             ownPeerDescriptor: this.layer0!.getPeerDescriptor(),
             nodeName: this.config.nodeName
         })
-
         this.streams.set(streamPartID, {
             layer1,
             layer2
         })
-
         await layer1.start()
-
-        /* vars to be shown in debugger
-        const layer0BucketSize = this.layer0.getBucketSize()
-        const layer1BucketSize = layer1.getBucketSize()
-        const layer1ClosestContacts=  layer1.getNeighborList().getClosestContacts(20)
-        */
-
         layer2.start()
-        layer2.on(RandomGraphEvent.MESSAGE, (message: StreamMessage) => {
-            this.emit(Event.NEW_MESSAGE, message)
+        layer2.on('message', (message: StreamMessage) => {
+            this.emit('newMessage', message)
         })
         await layer1.joinDht(entryPoint)
-
     }
 
     async waitForJoinAndPublish(streamPartId: string, entrypointDescriptor: PeerDescriptor, msg: StreamMessage): Promise<number> {
@@ -215,7 +198,7 @@ export class StreamrNode extends EventEmitter {
     }
 
     getStreamParts(): StreamPartID[] {
-        return [...this.streams.keys()].map((stringId) => StreamPartIDUtils.parse(stringId))
+        return Array.from(this.streams.keys()).map((stringId) => StreamPartIDUtils.parse(stringId))
     }
 
     setExtraMetadata(metadata: Record<string, unknown>): void {
@@ -226,7 +209,7 @@ export class StreamrNode extends EventEmitter {
         return this.layer0!.getNumberOfConnections()
     }
 
-    getLlayer0BucketSize(): number {
+    getLayer0BucketSize(): number {
         return this.layer0!.getBucketSize()
     }
 }

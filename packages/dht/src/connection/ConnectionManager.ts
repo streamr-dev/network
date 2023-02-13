@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/prefer-for-of, @typescript-eslint/member-delimiter-style */
-
 import { EventEmitter } from 'eventemitter3'
 import {
     ConnectivityResponse, DisconnectNotice,
@@ -11,7 +9,7 @@ import {
     UnlockRequest
 } from '../proto/packages/dht/protos/DhtRpc'
 import { WebSocketConnector } from './WebSocket/WebSocketConnector'
-import { PeerID, PeerIDKey } from '../helpers/PeerID'
+import { PeerIDKey } from '../helpers/PeerID'
 import { protoToString } from '../helpers/protoToString'
 import { ITransport, TransportEvents } from '../transport/ITransport'
 import { WebRtcConnector } from './WebRTC/WebRtcConnector'
@@ -31,20 +29,26 @@ import { ConnectionLockHandler } from './ConnectionLockHandler'
 import { SetDuplicateDetector } from '../dht/SetDuplicateDetector'
 import { SortedContactList } from '../dht/contact/SortedContactList'
 import { Contact } from '../dht/contact/Contact'
+import {
+    isSamePeerDescriptor,
+    keyFromPeerDescriptor,
+    peerIdFromPeerDescriptor
+} from '../helpers/peerIdFromPeerDescriptor'
 
 export class ConnectionManagerConfig {
     transportLayer?: ITransport
     webSocketHost?: string
     webSocketPort?: number
     entryPoints?: PeerDescriptor[]
-    // the following fields are used in simulation only
-    simulator?: Simulator
-    ownPeerDescriptor?: PeerDescriptor
-    serviceIdPrefix?: string
     stunUrls?: string[]
     metricsContext?: MetricsContext
     nodeName?: string
     maxConnections: number = 80
+
+    // the following fields are used in simulation only
+    simulator?: Simulator
+    ownPeerDescriptor?: PeerDescriptor
+    serviceIdPrefix?: string
 
     constructor(conf: Partial<ConnectionManagerConfig>) {
         // assign given non-undefined config vars over defaults
@@ -83,8 +87,8 @@ interface ConnectionManagerEvents {
 }
 
 export interface ConnectionLocker {
-    lockConnection(targetDescriptor: PeerDescriptor, serviceId: string): void
-    unlockConnection(targetDescriptor: PeerDescriptor, serviceId: string): void
+    lockConnection(targetDescriptor: PeerDescriptor, serviceId: ServiceId): void
+    unlockConnection(targetDescriptor: PeerDescriptor, serviceId: ServiceId): void
     weakLockConnection(targetDescriptor: PeerDescriptor): void
     weakUnlockConnection(targetDescriptor: PeerDescriptor): void
 }
@@ -106,7 +110,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     private webrtcConnector?: WebRtcConnector
     private simulatorConnector?: SimulatorConnector
 
-    private serviceId: string
+    private serviceId: ServiceId
     private rpcCommunicator?: RoutingRpcCommunicator
 
     private locks = new ConnectionLockHandler()
@@ -183,7 +187,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
     public garbageCollectConnections(maxConnections: number, lastUsedLimit: number): void {
         if (this.connections.size > maxConnections) {
-            const disconnectionCandidates = new SortedContactList(PeerID.fromValue(this.ownPeerDescriptor!.kademliaId!), 100000)
+            const disconnectionCandidates = new SortedContactList(peerIdFromPeerDescriptor(this.ownPeerDescriptor!), 100000)
 
             this.connections.forEach((connection) => {
                 if (!this.locks.isLocked(connection.peerIdKey) && Date.now() - connection.getLastUsed() > lastUsedLimit) {
@@ -275,8 +279,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         }
         const peerDescriptor = message.targetDescriptor!
 
-        const hexId = PeerID.fromValue(peerDescriptor.kademliaId).toKey()
-        if (PeerID.fromValue(this.ownPeerDescriptor!.kademliaId).equals(PeerID.fromValue(peerDescriptor.kademliaId))) {
+        const hexId = keyFromPeerDescriptor(peerDescriptor)
+        if (isSamePeerDescriptor(peerDescriptor, this.ownPeerDescriptor!)) {
             throw new Err.CannotConnectToSelf('Cannot send to self')
         }
         logger.trace(`Sending message to: ${peerDescriptor.kademliaId.toString()}`)
@@ -316,7 +320,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     public getConnection(peerDescriptor: PeerDescriptor): ManagedConnection | undefined {
-        const hexId = PeerID.fromValue(peerDescriptor.kademliaId).toKey()
+        const hexId = keyFromPeerDescriptor(peerDescriptor)
         return this.connections.get(hexId)
     }
 
@@ -325,17 +329,17 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     public hasConnection(peerDescriptor: PeerDescriptor): boolean {
-        const hexId = PeerID.fromValue(peerDescriptor.kademliaId).toKey()
+        const hexId = keyFromPeerDescriptor(peerDescriptor)
         return this.connections.has(hexId)
     }
 
     public hasLocalLockedConnection(peerDescriptor: PeerDescriptor, _serviceId?: ServiceId): boolean {
-        const hexId = PeerID.fromValue(peerDescriptor.kademliaId).toKey()
+        const hexId = keyFromPeerDescriptor(peerDescriptor)
         return this.locks.isLocalLocked(hexId)
     }
 
     public hasRemoteLockedConnection(peerDescriptor: PeerDescriptor, _serviceId?: ServiceId): boolean {
-        const hexId = PeerID.fromValue(peerDescriptor.kademliaId).toKey()
+        const hexId = keyFromPeerDescriptor(peerDescriptor)
         return this.locks.isRemoteLocked(hexId)
     }
 
@@ -372,7 +376,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     private onData(data: Uint8Array, peerDescriptor: PeerDescriptor): void {
         // This method parsed incoming data to Messages
         // and ensures they are meant to us
-        // ToDo: add signature checking and decryption here 
+        // ToDo: add signature checking and decryption here
 
         if (!this.started || this.stopped) {
             return
@@ -400,11 +404,12 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     private onConnected = (connection: ManagedConnection) => {
-        this.emit('connected', connection.getPeerDescriptor()!)
+        const peerDescriptor = connection.getPeerDescriptor()!
+        this.emit('connected', peerDescriptor)
         logger.trace(
             'connectedPeerId: '
-            + PeerID.fromValue(connection.getPeerDescriptor()!.kademliaId).toString()
-            + ', ' +  PeerID.fromValue(this.ownPeerDescriptor!.kademliaId).toString()
+            + peerIdFromPeerDescriptor(peerDescriptor).toString()
+            + ', ' +  peerIdFromPeerDescriptor(this.ownPeerDescriptor!).toString()
             + ', ' + this.connections.size
         )
         this.onConnectionCountChange()
@@ -417,7 +422,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
         logger.trace(this.config.nodeName + ' onDisconnected()')
 
-        const hexKey = PeerID.fromValue(connection.getPeerDescriptor()!.kademliaId).toKey()
+        const hexKey = keyFromPeerDescriptor(connection.getPeerDescriptor()!)
         const storedConnection = this.connections.get(hexKey)
 
         if (storedConnection && storedConnection.connectionId.equals(connection.connectionId)) {
@@ -439,10 +444,9 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
         connection.offeredAsIncoming = true
 
-        const newPeerID = PeerID.fromValue(connection.getPeerDescriptor()!.kademliaId)
+        const newPeerID = peerIdFromPeerDescriptor(connection.getPeerDescriptor()!)
         if (this.connections.has(newPeerID.toKey())) {
-            if (newPeerID.hasSmallerHashThan(
-                PeerID.fromValue(this.ownPeerDescriptor!.kademliaId))) {
+            if (newPeerID.hasSmallerHashThan(peerIdFromPeerDescriptor(this.ownPeerDescriptor!))) {
 
                 // replace the current connection
 
@@ -451,8 +455,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
                 const buffer = oldConnection!.stealOutputBuffer()
 
-                for (let i = 0; i < buffer.length; i++) {
-                    connection.sendNoWait(buffer[i])
+                for (const data of buffer) {
+                    connection.sendNoWait(data)
                 }
                 oldConnection!.reportBufferSentByOtherConnection()
 
@@ -475,10 +479,11 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             this.onDisconnected(connection)
         })
 
-        if (this.connections.has(PeerID.fromValue(connection.getPeerDescriptor()!.kademliaId).toKey())) {
-            this.connections.get(PeerID.fromValue(connection.getPeerDescriptor()!.kademliaId).toKey())!.replacedByOtherConnection = true
+        const hexKey = keyFromPeerDescriptor(connection.getPeerDescriptor()!)
+        if (this.connections.has(hexKey)) {
+            this.connections.get(hexKey)!.replacedByOtherConnection = true
         }
-        this.connections.set(PeerID.fromValue(connection.getPeerDescriptor()!.kademliaId).toKey(), connection)
+        this.connections.set(hexKey, connection)
 
         this.emit('newConnection', connection)
         return true
@@ -508,10 +513,10 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     */
 
     public lockConnection(targetDescriptor: PeerDescriptor, serviceId: ServiceId): void {
-        if (this.stopped || PeerID.fromValue(targetDescriptor.kademliaId).equals(PeerID.fromValue(this.ownPeerDescriptor!.kademliaId))) {
+        if (this.stopped || isSamePeerDescriptor(targetDescriptor, this.ownPeerDescriptor!)) {
             return
         }
-        const hexKey = PeerID.fromValue(targetDescriptor.kademliaId).toKey()
+        const hexKey = keyFromPeerDescriptor(targetDescriptor)
         //this.clearDisconnectionTimeout(hexKey)
         const remoteConnectionLocker = new RemoteConnectionLocker(
             this.ownPeerDescriptor!,
@@ -528,11 +533,11 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     public unlockConnection(targetDescriptor: PeerDescriptor, serviceId: ServiceId): void {
-        if (this.stopped || PeerID.fromValue(targetDescriptor.kademliaId).equals(PeerID.fromValue(this.ownPeerDescriptor!.kademliaId))) {
+        if (this.stopped || isSamePeerDescriptor(targetDescriptor, this.ownPeerDescriptor!)) {
             return
         }
 
-        const hexKey = PeerID.fromValue(targetDescriptor.kademliaId).toKey()
+        const hexKey = keyFromPeerDescriptor(targetDescriptor)
 
         this.locks.removeLocalLocked(hexKey, serviceId)
 
@@ -549,27 +554,27 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     public weakLockConnection(targetDescriptor: PeerDescriptor): void {
-        if (this.stopped || PeerID.fromValue(targetDescriptor.kademliaId).equals(PeerID.fromValue(this.ownPeerDescriptor!.kademliaId))) {
+        if (this.stopped || isSamePeerDescriptor(targetDescriptor, this.ownPeerDescriptor!)) {
             return
         }
 
-        const hexKey = PeerID.fromValue(targetDescriptor.kademliaId).toKey()
+        const hexKey = keyFromPeerDescriptor(targetDescriptor)
         this.locks.addWeakLocked(hexKey)
     }
 
     public weakUnlockConnection(targetDescriptor: PeerDescriptor): void {
-        if (this.stopped || PeerID.fromValue(targetDescriptor.kademliaId).equals(PeerID.fromValue(this.ownPeerDescriptor!.kademliaId))) {
+        if (this.stopped || isSamePeerDescriptor(targetDescriptor, this.ownPeerDescriptor!)) {
             return
         }
 
-        const hexKey = PeerID.fromValue(targetDescriptor.kademliaId).toKey()
+        const hexKey = keyFromPeerDescriptor(targetDescriptor)
         this.locks.removeWeakLocked(hexKey)
 
     }
 
     private async gracefullyDisconnectAsync(targetDescriptor: PeerDescriptor): Promise<void> {
         logger.trace('gracefullyDisconnectAsync()')
-        const hexKey = PeerID.fromValue(targetDescriptor.kademliaId).toKey()
+        const hexKey = keyFromPeerDescriptor(targetDescriptor)
         const remoteConnectionLocker = new RemoteConnectionLocker(
             this.ownPeerDescriptor!,
             targetDescriptor,
@@ -586,23 +591,22 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     public getAllConnectionPeerDescriptors(): PeerDescriptor[] {
-        return [...this.connections.values()]
+        return Array.from(this.connections.values())
             .filter((managedConnection: ManagedConnection) => managedConnection.isHandshakeCompleted())
             .map((managedConnection: ManagedConnection) => managedConnection.getPeerDescriptor()! as PeerDescriptor)
     }
 
     // IConnectionLocker server implementation
     private async lockRequest(lockRequest: LockRequest, _context: ServerCallContext): Promise<LockResponse> {
-        const remotePeerId = PeerID.fromValue(lockRequest.peerDescriptor!.kademliaId)
-        if (remotePeerId.equals(PeerID.fromValue(this.ownPeerDescriptor!.kademliaId))) {
+        const remotePeerId = peerIdFromPeerDescriptor(lockRequest.peerDescriptor!)
+        if (isSamePeerDescriptor(lockRequest.peerDescriptor!, this.ownPeerDescriptor!)) {
             const response: LockResponse = {
                 accepted: false
             }
             return response
         }
-        const hexKey = remotePeerId.toKey()
 
-        this.locks.addRemoteLocked(hexKey, lockRequest.serviceId)
+        this.locks.addRemoteLocked(remotePeerId.toKey(), lockRequest.serviceId)
 
         const response: LockResponse = {
             accepted: true
@@ -612,7 +616,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
     // IConnectionLocker server implementation
     private async unlockRequest(unlockRequest: UnlockRequest, _context: ServerCallContext): Promise<Empty> {
-        const hexKey = PeerID.fromValue(unlockRequest.peerDescriptor!.kademliaId).toKey()
+        const hexKey = keyFromPeerDescriptor(unlockRequest.peerDescriptor!)
 
         this.locks.removeRemoteLocked(hexKey, unlockRequest.serviceId)
 
@@ -621,7 +625,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
     // IConnectionLocker server implementation
     private async gracefulDisconnect(disconnectNotice: DisconnectNotice, _context: ServerCallContext): Promise<Empty> {
-        const hexKey = PeerID.fromValue(disconnectNotice.peerDescriptor!.kademliaId).toKey()
+        const hexKey = keyFromPeerDescriptor(disconnectNotice.peerDescriptor!)
 
         logger.trace(' ' + this.config.nodeName + ', ' + disconnectNotice.peerDescriptor?.nodeName +
             ' calling closeConnection after receiving incoming gracefulDisconnect notice')

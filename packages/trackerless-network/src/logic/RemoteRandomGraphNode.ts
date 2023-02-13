@@ -1,5 +1,5 @@
 import { INetworkRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { PeerDescriptor, UUID, PeerID, DhtRpcOptions } from '@streamr/dht'
+import { PeerDescriptor, UUID, DhtRpcOptions, keyFromPeerDescriptor } from '@streamr/dht'
 import {
     StreamMessage,
     StreamHandshakeRequest,
@@ -26,12 +26,11 @@ export class RemoteRandomGraphNode {
     private remotePeerDescriptor: PeerDescriptor
     private client: ProtoRpcClient<INetworkRpcClient>
     private graphId: string
-    private neighbors: PeerDescriptor[]
+
     constructor(peerDescriptor: PeerDescriptor, graphId: string, client: ProtoRpcClient<INetworkRpcClient>) {
         this.remotePeerDescriptor = peerDescriptor
         this.client = client
         this.graphId = graphId
-        this.neighbors = []
     }
 
     async handshake(
@@ -42,11 +41,10 @@ export class RemoteRandomGraphNode {
         interleaving = false,
         interleavingFrom?: string
     ): Promise<HandshakeResponse> {
-
         const request: StreamHandshakeRequest = {
             randomGraphId: this.graphId,
             requestId: new UUID().toString(),
-            senderId: PeerID.fromValue(ownPeerDescriptor.kademliaId).toKey(),
+            senderId: keyFromPeerDescriptor(ownPeerDescriptor),
             neighbors,
             peerView,
             concurrentHandshakeTargetId,
@@ -65,7 +63,7 @@ export class RemoteRandomGraphNode {
                 interleaveTarget: response.interleaveTarget
             }
         } catch (err: any) {
-            logger.debug(`handshake to ${PeerID.fromValue(this.getPeerDescriptor().kademliaId).toKey()} failed: ${err}`)
+            logger.debug(`handshake to ${keyFromPeerDescriptor(this.getPeerDescriptor())} failed: ${err}`)
             return {
                 accepted: false
             }
@@ -96,7 +94,7 @@ export class RemoteRandomGraphNode {
         const notification: InterleaveNotice = {
             randomGraphId: this.graphId,
             interleaveTarget: originatorDescriptor,
-            senderId: PeerID.fromValue(ownPeerDescriptor.kademliaId).toKey()
+            senderId: keyFromPeerDescriptor(ownPeerDescriptor)
         }
         this.client.interleaveNotice(notification, options).catch(() => {
             logger.debug('Failed to send interleaveNotice')
@@ -110,7 +108,7 @@ export class RemoteRandomGraphNode {
             notification: true
         }
         const notification: LeaveStreamNotice = {
-            senderId: PeerID.fromValue(ownPeerDescriptor.kademliaId).toKey(),
+            senderId: keyFromPeerDescriptor(ownPeerDescriptor),
             randomGraphId: this.graphId
         }
         this.client.leaveStreamNotice(notification, options).catch(() => {
@@ -128,7 +126,7 @@ export class RemoteRandomGraphNode {
             targetDescriptor: this.remotePeerDescriptor as PeerDescriptor,
         }
         const request: NeighborUpdate = {
-            senderId: PeerID.fromValue(ownPeerDescriptor.kademliaId).toKey(),
+            senderId: keyFromPeerDescriptor(ownPeerDescriptor),
             randomGraphId: this.graphId,
             neighborDescriptors: neighbors,
             removeMe: false
@@ -140,19 +138,11 @@ export class RemoteRandomGraphNode {
                 removeMe: response.removeMe
             }
         } catch (err: any) {
-            logger.debug(`updateNeighbors to ${PeerID.fromValue(this.getPeerDescriptor().kademliaId).toKey()} failed: ${err}`)
+            logger.debug(`updateNeighbors to ${keyFromPeerDescriptor(this.getPeerDescriptor())} failed: ${err}`)
             return {
                 peers: [],
                 removeMe: true
             }
         }
-    }
-
-    setLocalNeighbors(neighbors: PeerDescriptor[]): void {
-        this.neighbors = neighbors
-    }
-
-    getLocalNeighbors(): PeerDescriptor[] {
-        return this.neighbors
     }
 }

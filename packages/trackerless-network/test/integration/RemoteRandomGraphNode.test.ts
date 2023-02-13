@@ -1,4 +1,10 @@
-import { ListeningRpcCommunicator, Simulator, PeerDescriptor, PeerID, SimulatorTransport } from '@streamr/dht'
+import {
+    ListeningRpcCommunicator,
+    Simulator,
+    PeerDescriptor,
+    SimulatorTransport,
+    keyFromPeerDescriptor, peerIdFromPeerDescriptor
+} from '@streamr/dht'
 import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
 import { NetworkRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import {
@@ -81,7 +87,7 @@ describe('RemoteRandomGraphNode', () => {
                 }
 
                 const update: NeighborUpdate = {
-                    senderId: PeerID.fromValue(peer.kademliaId).toKey(),
+                    senderId: keyFromPeerDescriptor(peer),
                     randomGraphId: 'testStream',
                     neighborDescriptors: [
                         peer
@@ -104,14 +110,13 @@ describe('RemoteRandomGraphNode', () => {
     })
 
     it('sendData', async  () => {
-
         const content: ContentMessage = {
             body: JSON.stringify({ hello: "WORLD" })
         }
         const msg = createStreamMessage(
             content,
             'test-stream',
-            PeerID.fromValue(clientPeer.kademliaId).toString()
+            peerIdFromPeerDescriptor(clientPeer).toString()
         )
 
         await remoteRandomGraphNode.sendData(clientPeer, msg)

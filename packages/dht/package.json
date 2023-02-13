@@ -35,6 +35,7 @@
     "@streamr/proto-rpc": "7.3.0",
     "@streamr/utils": "7.3.0",
     "bloomfilter": "^0.0.18",
+    "eventemitter3": "^4.0.7",
     "k-bucket": "^5.1.0",
     "karma-mocha-reporter": "^2.2.5",
     "lodash": "^4.17.21",

@@ -1,4 +1,3 @@
-import { Event as NodeEvent } from './logic/StreamrNode'
 import { ProxyDirection, StreamMessage, StreamPartID } from '@streamr/protocol'
 import { PeerDescriptor } from '@streamr/dht'
 import { StreamMessageTranslator } from './logic/protocol-integration/stream-message/StreamMessageTranslator'
@@ -7,7 +6,7 @@ import { MetricsContext } from '@streamr/utils'
 
 /*
 Convenience wrapper for building client-facing functionality. Used by client.
- */
+*/
 
 export class NetworkNode {
 
@@ -54,15 +53,18 @@ export class NetworkNode {
         throw new Error('Not implemented')
     }
 
-    addMessageListener(cb: (msg: StreamMessage) => void): void {
-        this.stack.getStreamrNode().on(NodeEvent.NEW_MESSAGE, (msg) => {
-            const translated = StreamMessageTranslator.toClientProtocol(msg)
+    addMessageListener<T>(cb: (msg: StreamMessage<T>) => void): void {
+        this.stack.getStreamrNode().on('newMessage', (msg) => {
+            const translated = StreamMessageTranslator.toClientProtocol<T>(msg)
             return cb(translated)
         })
     }
 
-    removeMessageListener(cb: (msg: StreamMessage) => void): void {
-        this.stack.getStreamrNode().off(NodeEvent.NEW_MESSAGE, cb)
+    removeMessageListener<T>(cb: (msg: StreamMessage<T>) => void): void {
+        this.stack.getStreamrNode().off('newMessage', (msg) => {
+            const translated = StreamMessageTranslator.toClientProtocol<T>(msg)
+            return cb(translated)
+        })
     }
 
     async subscribeAndWaitForJoin(streamPartId: StreamPartID, entrypointDescriptor: PeerDescriptor, _timeout?: number): Promise<number> {
@@ -119,7 +121,6 @@ export class NetworkNode {
         await this.stack.stop()
     }
 
-    // eslint-disable-next-line class-methods-use-this
     getMetricsContext(): MetricsContext {
         return this.stack.getMetricsContext()
     }

@@ -196,17 +196,6 @@ message HandshakeResponse {
   optional string responseError = 4;
 }
 
-// protorpc.RpcMessage used as RpcMessage message type
-
-/*
-message RpcMessage {
-  map<string, string> header = 1;
-  bytes body = 2;
-  string requestId = 3;
-  optional RpcResponseError responseError = 4;
-}
-*/
-
 // Wraps all messages
 
 enum MessageType {
@@ -294,7 +283,7 @@ message UnlockRequest {
 
 message LockResponse {
   bool accepted = 1;
-  optional bool reason = 2; // if accepted = false
+  optional bool reason = 2;
 }
 
 message DisconnectNotice {
