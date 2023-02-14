@@ -258,6 +258,19 @@ export interface NeighborUpdate {
     neighborDescriptors: PeerDescriptor[];
 }
 /**
+ * @generated from protobuf message StreamEntryPoint
+ */
+export interface StreamEntryPoint {
+    /**
+     * @generated from protobuf field: dht.PeerDescriptor peerDescriptor = 1;
+     */
+    peerDescriptor?: PeerDescriptor;
+    /**
+     * @generated from protobuf field: bool firstToJoin = 2;
+     */
+    firstToJoin: boolean;
+}
+/**
  * @generated from protobuf enum StreamMessageType
  */
 export enum StreamMessageType {
@@ -480,6 +493,19 @@ class NeighborUpdate$Type extends MessageType<NeighborUpdate> {
  * @generated MessageType for protobuf message NeighborUpdate
  */
 export const NeighborUpdate = new NeighborUpdate$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class StreamEntryPoint$Type extends MessageType<StreamEntryPoint> {
+    constructor() {
+        super("StreamEntryPoint", [
+            { no: 1, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor },
+            { no: 2, name: "firstToJoin", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message StreamEntryPoint
+ */
+export const StreamEntryPoint = new StreamEntryPoint$Type();
 /**
  * @generated ServiceType for protobuf service NetworkRpc
  */

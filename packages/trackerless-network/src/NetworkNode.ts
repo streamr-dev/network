@@ -129,6 +129,10 @@ export class NetworkNode {
         return this.stack.getStreamrNode().getNodeId()
     }
 
+    getNodeStringId(): string {
+        return this.stack.getStreamrNode().getNodeStringId()
+    }
+
     getStreamParts(): StreamPartID[] {
         return this.stack.getStreamrNode().getStreamParts()
     }

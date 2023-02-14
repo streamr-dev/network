@@ -13,6 +13,8 @@ import {
 import { uniq } from 'lodash'
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { sample } from 'lodash'
+import { streamPartIdToDataKey } from './StreamEntryPointDiscovery'
+import { Any } from '@streamr/dht/dist/src/proto/google/protobuf/any'
 
 interface StreamObject {
     layer1: DhtNode
@@ -35,6 +37,15 @@ interface Metrics extends MetricsDefinition {
 interface StreamrNodeOpts {
     metricsContext?: MetricsContext
     nodeName?: string
+}
+
+const getLargestPeerDescriptor = (peerDescriptors: PeerDescriptor[]): PeerDescriptor => {
+    const sortedArray = peerDescriptors.sort((a, b) => {
+        const aValue = parseInt(Buffer.from(a.kademliaId).toString('hex'), 16)
+        const bValue = parseInt(Buffer.from(b.kademliaId).toString('hex'), 16)
+        return bValue - aValue
+    })
+    return sortedArray[0]
 }
 
 export class StreamrNode extends EventEmitter<Events> {
@@ -128,6 +139,12 @@ export class StreamrNode extends EventEmitter<Events> {
             return
         }
         logger.info(`Joining stream ${streamPartID}`)
+        if (knownEntryPointDescriptors.length === 0) {
+            const discoveredEntrypoints = await this.discoverEntrypoints(streamPartID)
+            discoveredEntrypoints.map((entrypoint) => {
+                knownEntryPointDescriptors.push(entrypoint)
+            })
+        }
         const layer1 = new DhtNode({
             transportLayer: this.layer0!,
             serviceId: 'layer1::' + streamPartID,
@@ -159,6 +176,27 @@ export class StreamrNode extends EventEmitter<Events> {
         await layer1.joinDht(sample(knownEntryPointDescriptors)!)
     }
 
+    private async discoverEntrypoints(streamPartId: string): Promise<PeerDescriptor[]> {
+        const dataKey = streamPartIdToDataKey(streamPartId)
+        const results = await this.layer0!.getDataFromDht(dataKey)
+        const ownPeerDescriptor = this.getPeerDescriptor()
+        const dataToStore = Any.pack(ownPeerDescriptor, PeerDescriptor)
+        if (!results.dataEntries) {
+            await this.layer0!.storeDataToDht(dataKey, dataToStore)
+            const reattempt = await this.layer0!.getDataFromDht(dataKey)
+            if (reattempt.dataEntries) {
+                const largest = getLargestPeerDescriptor(reattempt.dataEntries.map((entry) => entry.storer!))
+                return [largest]
+            } else {
+                return [ownPeerDescriptor]
+            }
+            // Keep x nodes as entrypoints in stream, only WS server peers here?
+        } else if (results.dataEntries.length < 10) {
+            setImmediate(() => this.layer0!.storeDataToDht(dataKey, dataToStore))
+        }
+        return results.dataEntries!.map((entry) => entry.storer!)
+    }
+
     async waitForJoinAndPublish(streamPartId: string, knownEntryPointDescriptors: PeerDescriptor[], msg: StreamMessage): Promise<number> {
         await this.joinStream(streamPartId, knownEntryPointDescriptors)
         if (this.getStream(streamPartId)!.layer1.getBucketSize() > 0) {
@@ -188,6 +226,10 @@ export class StreamrNode extends EventEmitter<Events> {
 
     getNodeId(): string {
         return this.layer0!.getNodeId().toKey()
+    }
+
+    getNodeStringId(): string {
+        return this.layer0!.getNodeId().toString()
     }
 
     getNeighbors(): string[] {
