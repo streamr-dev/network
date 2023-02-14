@@ -143,6 +143,12 @@ const socket = new WebSocket(`wss://...`)
 
 **Note**: self-signed certificates don't work well in browser environments (the connection may not open at all). In Node environment self-signed certificates can be trusted by setting the an environment variable `NODE_TLS_REJECT_UNAUTHORIZED=0`. If possible, please obtain an authorized certificate, e.g. from [Let's Encrypt](https://letsencrypt.org).
 
+#### Ping messages
+
+Websocket server supports standard protocol level ping and pong messages. To detect broken connections, you can use e.g. [this pattern](https://github.com/websockets/ws#how-to-detect-and-close-broken-connections).
+
+In browser environment clients are not able to send pings, as there is no `ping()` method in the standard websocket API. Therefore the websocket plugin supports also application level ping-pong: if a client sends a message which has payload of `"ping"`, server responds to it with a message which has payload of `"pong"`.
+
 ## MQTT
 
 You can publish and subscribe to a stream using [MQTT](https://mqtt.org), making the Broker appear like a traditional MQTT broker towards connected applications and devices. To enable the MQTT plugin, define an `mqtt` object in the `plugins` section of the Broker configuration file:

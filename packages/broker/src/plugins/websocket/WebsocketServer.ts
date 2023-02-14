@@ -7,7 +7,7 @@ import { Socket } from 'net'
 import qs, { ParsedQs } from 'qs'
 import StreamrClient from 'streamr-client'
 import { Logger } from '@streamr/utils'
-import { addPingSender, Connection } from './Connection'
+import { addPingSender, addPingListener, Connection } from './Connection'
 import { ApiAuthenticator } from '../../apiAuthenticator'
 import { PublishConnection } from './PublishConnection'
 import { SubscribeConnection } from './SubscribeConnection'
@@ -83,6 +83,7 @@ export class WebsocketServer {
 
         this.wss.on('connection', (ws: WebSocket, _request: http.IncomingMessage, connection: Connection) => {
             connection.init(ws, this.streamrClient, payloadFormat)
+            addPingListener(ws)
             if (this.pingSendInterval !== 0) {
                 addPingSender(ws, this.pingSendInterval, this.disconnectTimeout)
             }
