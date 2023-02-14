@@ -1,0 +1,109 @@
+import { wait, waitForEvent } from '@streamr/utils'
+import WebSocket from 'ws'
+import { createApiAuthenticator } from '../../../../src/apiAuthenticator'
+import { PlainPayloadFormat } from '../../../../src/helpers/PayloadFormat'
+import { WebsocketServer } from '../../../../src/plugins/websocket/WebsocketServer'
+
+const WEBSOCKET_PORT = 12404
+const STREAM_ID = 'stream'
+
+describe('ping', () => {
+
+    describe('server sends protocol pings', () => {
+
+        let server: WebsocketServer
+
+        const startServer = async (sendInterval: number, disconnectTimeout: number) => {
+            const streamrClient = {
+                publish: () => Promise.resolve()
+            }
+            server = new WebsocketServer(streamrClient as any, sendInterval, disconnectTimeout)
+            await server.start(WEBSOCKET_PORT, new PlainPayloadFormat(), createApiAuthenticator({} as any))
+        }
+    
+        afterEach(async () => {
+            await server.stop()
+        })
+
+        it('happy path', async () => {
+            const PING_SEND_INTERVAL = 100
+            const DISCONNECT_TIMEOUT = 200
+            await startServer(PING_SEND_INTERVAL, DISCONNECT_TIMEOUT)
+            const client = new WebSocket(`ws://localhost:${WEBSOCKET_PORT}/streams/${encodeURIComponent(STREAM_ID)}/publish`)
+            await waitForEvent(client, 'open')
+            let receivedCount = 0
+            let disconnected = false
+            client.on('ping', () => {
+                receivedCount++
+            })
+            client.on('close', () => {
+                disconnected = true
+            })
+
+            // active
+            client.send(JSON.stringify({ msg: 1 }))
+            await wait(PING_SEND_INTERVAL * 0.9)
+            client.send(JSON.stringify({ msg: 2 }))
+            await wait(PING_SEND_INTERVAL * 0.9)
+            expect(receivedCount).toBe(0)
+
+            // idle, receives ping, and client sends pong automatically
+            await wait(PING_SEND_INTERVAL * 0.2)
+            expect(receivedCount).toBe(1)
+
+            // back to active
+            client.send(JSON.stringify({ msg: 2 }))
+            expect(receivedCount).toBe(1)
+
+            // idle, receives ping again, and client sends pong automatically
+            await wait(PING_SEND_INTERVAL * 1.1)
+            expect(receivedCount).toBe(2)
+
+            // client paused, and therefore doens't send pong
+            client.pause()
+            await wait(PING_SEND_INTERVAL * 1.1)
+            expect(receivedCount).toBe(2)
+            expect(disconnected).toBe(false)
+            await wait(DISCONNECT_TIMEOUT * 1.1)
+            client.resume()
+            // wait some time so that buffered events (e.g. 'close' are processed)
+            await wait(10)
+            expect(disconnected).toBe(true)
+        })
+
+        it('no messages', async () => {
+            await startServer(50, 100)
+            const client = new WebSocket(`ws://localhost:${WEBSOCKET_PORT}/streams/${encodeURIComponent(STREAM_ID)}/publish`)
+            await waitForEvent(client, 'open')
+            client.pause()
+            const onClose = jest.fn()
+            client.on('close', onClose)
+            await wait(200)
+            client.resume()
+            // wait some time so that buffered events (e.g. 'close' are processed)
+            await wait(10)
+            expect(onClose).toBeCalled()
+        })
+
+        it('disable ping', async () => {
+            await startServer(0, 0)
+            const client = new WebSocket(`ws://localhost:${WEBSOCKET_PORT}/streams/${encodeURIComponent(STREAM_ID)}/publish`)
+            await waitForEvent(client, 'open')
+            const onPing = jest.fn()
+            client.on('ping', onPing)
+            await wait(100)
+            expect(onPing).not.toBeCalled()
+        })
+
+        it('disable disconnect', async () => {
+            await startServer(20, 0)
+            const client = new WebSocket(`ws://localhost:${WEBSOCKET_PORT}/streams/${encodeURIComponent(STREAM_ID)}/publish`)
+            await waitForEvent(client, 'open')
+            const onClose = jest.fn()
+            client.on('close', onClose)
+            client.pause()
+            await wait(100)
+            expect(onClose).not.toBeCalled()
+        })
+    })
+})

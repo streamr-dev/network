@@ -9,7 +9,7 @@ const STREAM_ID = 'stream'
 
 describe('close', () => {
     it('connection is closed when server stops', async () => {
-        const server = new WebsocketServer(undefined as any)
+        const server = new WebsocketServer(undefined as any, 0, 0)
         await server.start(WEBSOCKET_PORT, new PlainPayloadFormat(), createApiAuthenticator({} as any))
         const client = new WebSocket(`ws://localhost:${WEBSOCKET_PORT}/streams/${encodeURIComponent(STREAM_ID)}/publish`)
         await waitForEvent(client, 'open')
@@ -21,7 +21,7 @@ describe('close', () => {
     })
 
     it('paused client doesn\'t prevent server stop', async () => {
-        const server = new WebsocketServer(undefined as any)
+        const server = new WebsocketServer(undefined as any, 0, 0)
         await server.start(WEBSOCKET_PORT, new PlainPayloadFormat(), createApiAuthenticator({} as any))
         const client = new WebSocket(`ws://localhost:${WEBSOCKET_PORT}/streams/${encodeURIComponent(STREAM_ID)}/publish`)
         await waitForEvent(client, 'open')
