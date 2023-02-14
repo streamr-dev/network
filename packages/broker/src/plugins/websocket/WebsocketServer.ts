@@ -8,7 +8,7 @@ import { Socket } from 'net'
 import qs, { ParsedQs } from 'qs'
 import StreamrClient from 'streamr-client'
 import { Logger } from '@streamr/utils'
-import { Connection } from './Connection'
+import { addPingListener, Connection } from './Connection'
 import { ApiAuthenticator } from '../../apiAuthenticator'
 import { PublishConnection } from './PublishConnection'
 import { SubscribeConnection } from './SubscribeConnection'
@@ -38,6 +38,7 @@ export class WebsocketServer {
     private wss?: WebSocket.Server
     private httpServer?: http.Server | https.Server
     private streamrClient: StreamrClient
+    private abortController: AbortController = new AbortController()
 
     constructor(streamrClient: StreamrClient) {
         this.streamrClient = streamrClient
@@ -80,6 +81,7 @@ export class WebsocketServer {
 
         this.wss.on('connection', (ws: WebSocket, _request: http.IncomingMessage, connection: Connection) => {
             connection.init(ws, this.streamrClient, payloadFormat)
+            addPingListener(ws)
         })
 
         this.httpServer.listen(port)
@@ -115,6 +117,7 @@ export class WebsocketServer {
     }
 
     async stop(): Promise<void> {
+        this.abortController.abort()
         await util.promisify((cb: any) => this.wss!.close(cb))()
         for (const ws of this.wss!.clients) {
             ws.terminate()
