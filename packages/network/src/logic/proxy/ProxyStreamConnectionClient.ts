@@ -8,7 +8,7 @@ import {
     ProxyDirection,
     StreamPartID
 } from '@streamr/protocol'
-import { Logger, wait, withTimeout } from "@streamr/utils"
+import { Logger, wait, waitForEvent, withTimeout } from "@streamr/utils"
 import { Propagation } from '../propagation/Propagation'
 import { sampleSize } from 'lodash'
 import { EventEmitter } from "events"
@@ -146,28 +146,19 @@ export class ProxyStreamConnectionClient extends EventEmitter {
     }
 
     private async waitForHandshake(streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection): Promise<void> {
-        let resolveHandler: any
-        let rejectHandler: any
-        await new Promise<void>((resolve, reject) => {
-            resolveHandler = (node: string, stream: StreamPartID, eventDirection: ProxyDirection) => {
-                if (node === contactNodeId && stream === streamPartId && direction === eventDirection) {
-                    resolve()
-                }
-            }
-            rejectHandler = (node: string, stream: StreamPartID, eventDirection: ProxyDirection, reason?: string) => {
-                if (node === contactNodeId && stream === streamPartId && direction === eventDirection) {
-                    reject(new Error(
-                        `Joining stream as proxy ${direction} failed on contact-node ${contactNodeId} for stream ${streamPartId}`
-                        + ` reason: ${reason}`
-                    ))
-                }
-            }
-            this.on(Event.CONNECTION_ACCEPTED, resolveHandler)
-            this.on(Event.CONNECTION_REJECTED, rejectHandler)
-        }).finally(() => {
-            this.off(Event.CONNECTION_ACCEPTED, resolveHandler)
-            this.off(Event.CONNECTION_REJECTED, rejectHandler)
-        })
+        const predicate = (node: string, stream: StreamPartID, eventDirection: ProxyDirection) => {
+            return node === contactNodeId && stream === streamPartId && direction === eventDirection
+        }
+        await Promise.race([
+            waitForEvent(this, Event.CONNECTION_ACCEPTED, this.nodeConnectTimeout, predicate),
+            (async () => {
+                const result = await waitForEvent(this, Event.CONNECTION_REJECTED, this.nodeConnectTimeout, predicate)
+                throw new Error(
+                    `Joining stream as proxy ${direction} failed on contact-node ${contactNodeId} for stream ${streamPartId}`
+                    + ` reason: ${result[3]}`
+                )
+            })()
+        ])
     }
 
     private async initiateConnection(
