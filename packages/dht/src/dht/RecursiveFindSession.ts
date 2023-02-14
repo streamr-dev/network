@@ -52,7 +52,10 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
         }
 
         if (noCloserNodesFound) {
-            this.emit('findCompleted', this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()))
+            // Wait for possible on route responses
+            setTimeout(() => {
+                this.emit('findCompleted', this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()))
+            },1000)
         }
     }
     public async reportRecursiveFindResult(report: RecursiveFindReport, _context: ServerCallContext): Promise<Empty> {

@@ -1028,25 +1028,22 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             if (data) {
                 this.reportRecursiveFindResult(routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
                     this.getClosestPeerDescriptors(routedMessage.destinationPeer!.kademliaId, 5), data, false)
-                return this.createRouteMessageAck(routedMessage)
+                // return this.createRouteMessageAck(routedMessage)
             }
 
-        } else {
-            if (this.ownPeerId!.equals(idToFind)) {
+        } else if (this.ownPeerId!.equals(idToFind)) {
+            // Exact match, they were trying to find our kademliaID
 
-                // Exact match, they were trying to find our kademliaID
-
-                this.reportRecursiveFindResult(routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
-                    this.getClosestPeerDescriptors(routedMessage.destinationPeer!.kademliaId, 5), undefined, true)
-                return this.createRouteMessageAck(routedMessage)
-            }
+            this.reportRecursiveFindResult(routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
+                this.getClosestPeerDescriptors(routedMessage.destinationPeer!.kademliaId, 5), undefined, true)
+            return this.createRouteMessageAck(routedMessage)
         }
 
         const session = new RoutingSession(
             this.ownPeerDescriptor!,
             routedMessage,
             this.connections,
-            1,
+            this.ownPeerId!.equals(peerIdFromPeerDescriptor(routedMessage.sourcePeer!)) ? 2 : 1,
             1500,
             RoutingMode.RECURSIVE_FIND,
             undefined,
