@@ -9,7 +9,6 @@ import { Logger } from '@streamr/utils'
 import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
 import { ITransport } from '../transport/ITransport'
 import { ListeningRpcCommunicator } from '../exports'
-import { PeerIDKey } from '../helpers/PeerID'
 
 const logger = new Logger(module)
 
@@ -33,16 +32,8 @@ export class RemoteRecursiveFindSession {
         this.client = toProtoRpcClient(new RecursiveFindSessionServiceClient(this.rpcCommunicator.getRpcClientTransport()))
     }
 
-    reportRecursiveFindResult(closestNodes: PeerDescriptor[], data: Map<PeerIDKey, DataEntry> | undefined, noCloserNodesFound: boolean): void {
-        const dataEntries: Array<DataEntry> = []
-
-        if (data) {
-            data.forEach((entry) => {
-                dataEntries.push(DataEntry.create(entry))
-            })
-            logger.info('dataEntries exist')
-        }
-
+    reportRecursiveFindResult(closestNodes: PeerDescriptor[], dataEntries: DataEntry[], noCloserNodesFound: boolean): void {
+        
         const report: RecursiveFindReport = {
             nodes: closestNodes,
             dataEntries: dataEntries,

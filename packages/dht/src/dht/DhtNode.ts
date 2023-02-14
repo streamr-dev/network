@@ -131,6 +131,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
     private ongoingRoutingSessions: Map<string, RoutingSession> = new Map()
     private ongoingDiscoverySessions: Map<string, DiscoverySession> = new Map()
+    private ongoingRecursiveFindSessions: Map<string, RecursiveFindSession> = new Map()
 
     private bucket?: KBucket<DhtPeer>
     private connections: Map<PeerIDKey, DhtPeer> = new Map()
@@ -924,17 +925,17 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             logger.error(e)
             throw e
         }
-        raceEvents3<RoutingSessionEvents>(
-            session, ['routingSucceeded', 'routingFailed', 'stopped'], 10000).then(() => {
-            if (this.ongoingRoutingSessions.has(session.sessionId)) {
-                this.ongoingRoutingSessions.delete(session.sessionId)
-            }
-            return
-        }).catch(() => {
-            if (this.ongoingRoutingSessions.has(session.sessionId)) {
-                this.ongoingRoutingSessions.delete(session.sessionId)
-            }
-        })
+        raceEvents3<RoutingSessionEvents>(session, ['routingSucceeded', 'routingFailed', 'stopped'], 10000)
+            .then(() => {
+                if (this.ongoingRoutingSessions.has(session.sessionId)) {
+                    this.ongoingRoutingSessions.delete(session.sessionId)
+                }
+                return
+            }).catch(() => {
+                if (this.ongoingRoutingSessions.has(session.sessionId)) {
+                    this.ongoingRoutingSessions.delete(session.sessionId)
+                }
+            })
 
         if (this.stopped) {
             return this.createRouteMessageAck(routedMessage, 'DhtNode Stopped')
@@ -951,6 +952,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
     public async startRecursiveFind(idToFind: Uint8Array, findMode: FindMode = FindMode.NODE): Promise<RecursiveFindResult> {
         const sessionId = v4()
         const recursiveFindSession = new RecursiveFindSession(sessionId, this, idToFind)
+        this.ongoingRecursiveFindSessions.set(sessionId, recursiveFindSession)
         const targetDescriptor: PeerDescriptor = { kademliaId: idToFind, type: NodeType.VIRTUAL }
         const request: RecursiveFindRequest = {
             recursiveFindSessionId: sessionId,
@@ -985,8 +987,24 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
     private reportRecursiveFindResult(targetPeerDescriptor: PeerDescriptor, serviceId: string,
         closestNodes: PeerDescriptor[], data: Map<PeerIDKey, DataEntry> | undefined, noCloserNodesFound: boolean = false) {
-        const session = new RemoteRecursiveFindSession(this.ownPeerDescriptor!, targetPeerDescriptor, serviceId, this)
-        session.reportRecursiveFindResult(closestNodes, data, noCloserNodesFound)
+
+        const dataEntries: Array<DataEntry> = []
+
+        if (data) {
+            data.forEach((entry) => {
+                dataEntries.push(DataEntry.create(entry))
+            })
+            logger.info('dataEntries exist')
+        }
+
+        if (this.ownPeerId!.equals(PeerID.fromValue(targetPeerDescriptor!.kademliaId))) {
+            if (this.ongoingRecursiveFindSessions.has(serviceId)) {
+                this.ongoingRecursiveFindSessions.get(serviceId)!.doReportRecursiveFindResult(closestNodes, dataEntries, noCloserNodesFound)
+            }
+        } else {
+            const session = new RemoteRecursiveFindSession(this.ownPeerDescriptor!, targetPeerDescriptor, serviceId, this)
+            session.reportRecursiveFindResult(closestNodes, dataEntries, noCloserNodesFound)
+        }
     }
 
     private async doFindRecursevily(routedMessage: RouteMessageWrapper): Promise<RouteMessageAck> {
@@ -1009,7 +1027,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
             if (data) {
                 this.reportRecursiveFindResult(routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
-                    this.getClosestPeerDescriptors(routedMessage.destinationPeer!.kademliaId, 5), data, true)
+                    this.getClosestPeerDescriptors(routedMessage.destinationPeer!.kademliaId, 5), data, false)
                 return this.createRouteMessageAck(routedMessage)
             }
 
