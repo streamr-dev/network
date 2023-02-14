@@ -38,7 +38,6 @@ export class WebsocketServer {
     private wss?: WebSocket.Server
     private httpServer?: http.Server | https.Server
     private streamrClient: StreamrClient
-    private abortController: AbortController = new AbortController()
 
     constructor(streamrClient: StreamrClient) {
         this.streamrClient = streamrClient
@@ -117,7 +116,6 @@ export class WebsocketServer {
     }
 
     async stop(): Promise<void> {
-        this.abortController.abort()
         await util.promisify((cb: any) => this.wss!.close(cb))()
         for (const ws of this.wss!.clients) {
             ws.terminate()
