@@ -39,21 +39,27 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
 
     }
 
-    public async reportRecursiveFindResult(report: RecursiveFindReport, _context: ServerCallContext): Promise<Empty> {
-        logger.trace('recursiveFindReport arrived: ' + JSON.stringify(report))
-        report.nodes.map((descriptor: PeerDescriptor) => {
+    public doReportRecursiveFindResult(nodes: PeerDescriptor[], dataEntries: DataEntry[], noCloserNodesFound?: boolean): void {
+
+        nodes.map((descriptor: PeerDescriptor) => {
             this.results.addContact(new Contact(descriptor))
         })
 
-        if (report.dataEntries && report.dataEntries.length > 0) {
-            report.dataEntries.forEach((entry) => {
+        if (dataEntries && dataEntries.length > 0) {
+            dataEntries.forEach((entry) => {
                 this.foundData.push(entry)
             })
         }
 
-        if (report.noCloserNodesFound) {
+        if (noCloserNodesFound) {
             this.emit('findCompleted', this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()))
         }
+    }
+    public async reportRecursiveFindResult(report: RecursiveFindReport, _context: ServerCallContext): Promise<Empty> {
+        logger.trace('recursiveFindReport arrived: ' + JSON.stringify(report))
+        
+        this.doReportRecursiveFindResult(report.nodes, report.dataEntries, report.noCloserNodesFound)
+
         return {}
     }
 
