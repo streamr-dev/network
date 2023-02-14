@@ -52,7 +52,7 @@ export class ProxyStreamConnectionServer {
 
     private async processHandshakeRequest(message: ProxyConnectionRequest, nodeId: NodeId): Promise<void> {
         const streamPartId = message.getStreamPartID()
-        const isAccepted = this.streamPartManager.isSetUp(streamPartId) && this.acceptProxyConnections
+        const isAccepted =  this.acceptProxyConnections && this.streamPartManager.isSetUp(streamPartId)
         if (isAccepted) {
             if (message.direction === ProxyDirection.PUBLISH) {
                 this.streamPartManager.addInOnlyNeighbor(streamPartId, nodeId)
