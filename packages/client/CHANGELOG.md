@@ -10,8 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Proxy enhancements: It is possible to set a limit for the number of proxy connections while having a larger set of nodes to choose from
-
+- Proxy enhancements
+  - Use `.setProxies` instead of `.openProxyConnections` and `.closeProxyConnections`.
+  - It is possible to set a limit for the number of proxy connections while having a larger set of nodes to choose from.
 ### Deprecated
 
 ### Removed
