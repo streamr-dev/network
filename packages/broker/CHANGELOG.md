@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Application layer ping support in `websocket` plugin
+
 ### Changed
 
 - Changed the syntax of environment variables which are used to override configuration files (see [configuration.md](configuration.md))
