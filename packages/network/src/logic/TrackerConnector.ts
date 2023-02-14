@@ -111,12 +111,8 @@ export class TrackerConnector {
     }
 
     private isActiveTracker(trackerId: TrackerId): boolean {
-        for (const streamPartId of this.getStreamParts()) {
-            if (this.trackerRegistry.getTracker(streamPartId).id === trackerId) {
-                return true
-            }
-        }
-        for (const streamPartId of Array.from(this.signallingOnlySessions.keys())) {
+        const streamPartIds = [...this.getStreamParts(), ...this.signallingOnlySessions.keys()]
+        for (const streamPartId of streamPartIds) {
             if (this.trackerRegistry.getTracker(streamPartId).id === trackerId) {
                 return true
             }
