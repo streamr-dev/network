@@ -36,6 +36,7 @@ import { LoggerFactory } from '../utils/LoggerFactory'
 import { StreamFactory } from './../StreamFactory'
 import { GraphQLQuery } from '../utils/GraphQLClient'
 import { collect } from '../utils/iterators'
+import { shuffle } from 'lodash'
 
 /*
  * On-chain registry of stream metadata and permissions.
@@ -439,7 +440,7 @@ export class StreamRegistry {
 
     private queryAllReadonlyContracts<T>(call: (contract: StreamRegistryContract) => Promise<T>): any {
         return tryInSequence(
-            this.streamRegistryContractsReadonly.map((contract: StreamRegistryContract) => {
+            shuffle(this.streamRegistryContractsReadonly).map((contract: StreamRegistryContract) => {
                 return () => call(contract)
             })
         )

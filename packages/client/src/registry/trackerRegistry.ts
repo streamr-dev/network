@@ -6,6 +6,7 @@ import { StrictStreamrClientConfig, TrackerRegistryContract } from '../Config'
 import { getMainnetProviders } from '../Ethereum'
 import * as trackerRegistryConfig from '../ethereumArtifacts/TrackerRegistry.json'
 import { tryInSequence } from '../utils/promises'
+import { shuffle } from 'lodash'
 
 async function fetchTrackers(contractAddress: EthereumAddress, jsonRpcProvider: Provider) {
     // check that provider is connected and has some valid blockNumber
@@ -48,7 +49,7 @@ async function getTrackerRegistryFromContract(
 export const getTrackers = async (config: Pick<StrictStreamrClientConfig, 'network' | 'contracts'>): Promise<TrackerRegistryRecord[]> => {
     return ('contractAddress' in config.network.trackers)
         ? tryInSequence(
-            getMainnetProviders(config).map((provider) => {
+            shuffle(getMainnetProviders(config)).map((provider) => {
                 return async () => {
                     const address = toEthereumAddress((config.network.trackers as TrackerRegistryContract).contractAddress)
                     const registry = await getTrackerRegistryFromContract(address, provider)
