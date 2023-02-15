@@ -5,7 +5,7 @@ import { BigNumber } from '@ethersproject/bignumber'
 import { Provider } from '@ethersproject/providers'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 import { getStreamRegistryChainProviders, getStreamRegistryOverrides } from '../Ethereum'
-import { until, tryInSequence } from '../utils/promises'
+import { until } from '../utils/promises'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { Stream, StreamMetadata } from '../Stream'
 import { NotFoundError } from '../HttpUtil'
@@ -14,7 +14,7 @@ import { StreamIDBuilder } from '../StreamIDBuilder'
 import { SynchronizedGraphQLClient } from '../utils/SynchronizedGraphQLClient'
 import { searchStreams as _searchStreams, SearchStreamsPermissionFilter } from './searchStreams'
 import { filter, map } from '../utils/GeneratorUtils'
-import { ObservableContract, waitForTx } from '../utils/contract'
+import { ObservableContract, waitForTx, queryAllReadonlyContracts } from '../utils/contract'
 import {
     StreamPermission,
     convertChainPermissionsToStreamPermissions,
@@ -36,7 +36,6 @@ import { LoggerFactory } from '../utils/LoggerFactory'
 import { StreamFactory } from './../StreamFactory'
 import { GraphQLQuery } from '../utils/GraphQLClient'
 import { collect } from '../utils/iterators'
-import { shuffle } from 'lodash'
 
 /*
  * On-chain registry of stream metadata and permissions.
@@ -192,18 +191,18 @@ export class StreamRegistry {
     private async streamExistsOnChain(streamIdOrPath: string): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.logger.debug('checking if stream "%s" exists on chain', streamId)
-        return this.queryAllReadonlyContracts((contract: StreamRegistryContract) => {
+        return queryAllReadonlyContracts((contract: StreamRegistryContract) => {
             return contract.exists(streamId)
-        })
+        }, this.streamRegistryContractsReadonly)
     }
 
     async getStream(streamIdOrPath: string): Promise<Stream> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         let metadata
         try {
-            metadata = await this.queryAllReadonlyContracts((contract: StreamRegistryContract) => {
+            metadata = await queryAllReadonlyContracts((contract: StreamRegistryContract) => {
                 return contract.getStreamMetadata(streamId)
-            })
+            }, this.streamRegistryContractsReadonly)
         } catch (err) {
             return streamContractErrorProcessor(err, streamId, 'StreamRegistry')
         }
@@ -280,7 +279,7 @@ export class StreamRegistry {
     /* eslint-disable no-else-return */
     async hasPermission(query: PermissionQuery): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(query.streamId)
-        return this.queryAllReadonlyContracts((contract) => {
+        return queryAllReadonlyContracts((contract) => {
             const permissionType = streamPermissionToSolidityType(query.permission)
             if (isPublicPermissionQuery(query)) {
                 return contract.hasPublicPermission(streamId, permissionType)
@@ -289,7 +288,7 @@ export class StreamRegistry {
             } else {
                 return contract.hasDirectPermission(streamId, toEthereumAddress(query.user), permissionType)
             }
-        })
+        }, this.streamRegistryContractsReadonly)
     }
 
     async getPermissions(streamIdOrPath: string): Promise<PermissionAssignment[]> {
@@ -415,9 +414,9 @@ export class StreamRegistry {
     async isStreamPublisher(streamIdOrPath: string, userAddress: EthereumAddress): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         try {
-            return await this.queryAllReadonlyContracts((contract) => {
+            return await queryAllReadonlyContracts((contract) => {
                 return contract.hasPermission(streamId, userAddress, streamPermissionToSolidityType(StreamPermission.PUBLISH))
-            })
+            }, this.streamRegistryContractsReadonly)
         } catch (err) {
             return streamContractErrorProcessor(err, streamId, 'StreamPermission')
         }
@@ -426,23 +425,11 @@ export class StreamRegistry {
     async isStreamSubscriber(streamIdOrPath: string, userAddress: EthereumAddress): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         try {
-            return await this.queryAllReadonlyContracts((contract) => {
+            return await queryAllReadonlyContracts((contract) => {
                 return contract.hasPermission(streamId, userAddress, streamPermissionToSolidityType(StreamPermission.SUBSCRIBE))
-            })
+            }, this.streamRegistryContractsReadonly)
         } catch (err) {
             return streamContractErrorProcessor(err, streamId, 'StreamPermission')
         }
-    }
-
-    // --------------------------------------------------------------------------------------------
-    // Helpers
-    // --------------------------------------------------------------------------------------------
-
-    private queryAllReadonlyContracts<T>(call: (contract: StreamRegistryContract) => Promise<T>): Promise<T> {
-        return tryInSequence(
-            shuffle(this.streamRegistryContractsReadonly).map((contract: StreamRegistryContract) => {
-                return () => call(contract)
-            })
-        )
     }
 }
