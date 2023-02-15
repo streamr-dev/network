@@ -3,8 +3,9 @@ import type { Provider } from '@ethersproject/providers'
 import { createTrackerRegistry, TrackerRegistry, TrackerRegistryRecord } from '@streamr/protocol'
 import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 import { StrictStreamrClientConfig, TrackerRegistryContract } from '../Config'
-import { getMainnetProvider } from '../Ethereum'
+import { getMainnetProviders } from '../Ethereum'
 import * as trackerRegistryConfig from '../ethereumArtifacts/TrackerRegistry.json'
+import { tryInSequence } from '../utils/promises'
 
 async function fetchTrackers(contractAddress: EthereumAddress, jsonRpcProvider: Provider) {
     // check that provider is connected and has some valid blockNumber
@@ -43,9 +44,14 @@ async function getTrackerRegistryFromContract(contractAddress: EthereumAddress, 
 
 export const getTrackers = async (config: Pick<StrictStreamrClientConfig, 'network' | 'contracts'>): Promise<TrackerRegistryRecord[]> => {
     return ('contractAddress' in config.network.trackers)
-            ? (await getTrackerRegistryFromContract(
-                toEthereumAddress((config.network.trackers as TrackerRegistryContract).contractAddress),
-                getMainnetProvider(config)
-            )).getAllTrackers()
-            : config.network.trackers
+        ? tryInSequence(
+            getMainnetProviders(config).map((provider) => {
+                return async () => {
+                    const address = toEthereumAddress((config.network.trackers as TrackerRegistryContract).contractAddress)
+                    const registry = await getTrackerRegistryFromContract(address, provider)
+                    return registry.getAllTrackers()
+                }
+            })
+        )
+        : config.network.trackers
 }

@@ -17,10 +17,8 @@ export const generateEthereumAccount = (): { address: string, privateKey: string
     }
 }
 
-// TODO maybe we should use all providers?
-export const getMainnetProvider = (config: Pick<StrictStreamrClientConfig, 'contracts'>): Provider => {
-    const providers = getRpcProviders(config.contracts.mainChainRPCs)
-    return providers[0]
+export const getMainnetProviders = (config: Pick<StrictStreamrClientConfig, 'contracts'>): Provider[] => {
+    return getRpcProviders(config.contracts.mainChainRPCs)
 }
 
 export const getStreamRegistryChainProvider = (config: Pick<StrictStreamrClientConfig, 'contracts'>): Provider => {
