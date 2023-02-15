@@ -3,7 +3,7 @@ import StreamStorageRegistryArtifact from '../ethereumArtifacts/StreamStorageReg
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { Stream } from '../Stream'
-import { getStreamRegistryChainProvider, getStreamRegistryOverrides } from '../Ethereum'
+import { getPrimaryStreamRegistryChainProvider, getStreamRegistryOverrides } from '../Ethereum'
 import { StreamID, toStreamID } from '@streamr/protocol'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { waitForTx } from '../utils/contract'
@@ -62,7 +62,7 @@ export class StreamStorageRegistry {
         this.authentication = authentication
         this.config = config
         this.logger = loggerFactory.createLogger(module)
-        const chainProvider = getStreamRegistryChainProvider(config)
+        const chainProvider = getPrimaryStreamRegistryChainProvider(config)
         this.streamStorageRegistryContractReadonly = this.contractFactory.createReadContract(
             toEthereumAddress(this.config.contracts.streamStorageRegistryChainAddress),
             StreamStorageRegistryArtifact,

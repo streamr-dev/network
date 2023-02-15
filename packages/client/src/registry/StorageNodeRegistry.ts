@@ -2,7 +2,7 @@ import type { NodeRegistry as NodeRegistryContract } from '../ethereumArtifacts/
 import NodeRegistryArtifact from '../ethereumArtifacts/NodeRegistryAbi.json'
 import { scoped, Lifecycle, inject } from 'tsyringe'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
-import { getStreamRegistryChainProvider, getStreamRegistryOverrides } from '../Ethereum'
+import { getPrimaryStreamRegistryChainProvider, getStreamRegistryOverrides } from '../Ethereum'
 import { NotFoundError } from '../HttpUtil'
 import { waitForTx } from '../utils/contract'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -33,7 +33,7 @@ export class StorageNodeRegistry {
         this.contractFactory = contractFactory
         this.authentication = authentication
         this.config = config
-        const chainProvider = getStreamRegistryChainProvider(config)
+        const chainProvider = getPrimaryStreamRegistryChainProvider(config)
         this.nodeRegistryContractReadonly = this.contractFactory.createReadContract(
             toEthereumAddress(this.config.contracts.storageNodeRegistryChainAddress),
             NodeRegistryArtifact,

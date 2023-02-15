@@ -21,11 +21,11 @@ export const getMainnetProviders = (config: Pick<StrictStreamrClientConfig, 'con
     return getRpcProviders(config.contracts.mainChainRPCs)
 }
 
-export const getStreamRegistryChainProvider = (config: Pick<StrictStreamrClientConfig, 'contracts'>): Provider => {
-    return getAllStreamRegistryChainProviders(config)[0]
+export const getPrimaryStreamRegistryChainProvider = (config: Pick<StrictStreamrClientConfig, 'contracts'>): Provider => {
+    return getStreamRegistryChainProviders(config)[0]
 }
 
-export const getAllStreamRegistryChainProviders = (config: Pick<StrictStreamrClientConfig, 'contracts'>): Provider[] => {
+export const getStreamRegistryChainProviders = (config: Pick<StrictStreamrClientConfig, 'contracts'>): Provider[] => {
     return getRpcProviders(config.contracts.streamRegistryChainRPCs)
 }
 
@@ -36,7 +36,7 @@ const getRpcProviders = (connectionInfo: ChainConnectionInfo): Provider[] => {
 }
 
 export const getStreamRegistryOverrides = (config: Pick<StrictStreamrClientConfig, 'contracts'>): Overrides => {
-    return getOverrides(config.contracts.streamRegistryChainRPCs.name ?? 'polygon', getStreamRegistryChainProvider(config), config)
+    return getOverrides(config.contracts.streamRegistryChainRPCs.name ?? 'polygon', getPrimaryStreamRegistryChainProvider(config), config)
 }
 
 /**

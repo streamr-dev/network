@@ -4,7 +4,7 @@ import StreamRegistryArtifact from '../ethereumArtifacts/StreamRegistryV4Abi.jso
 import { BigNumber } from '@ethersproject/bignumber'
 import { Provider } from '@ethersproject/providers'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
-import { getAllStreamRegistryChainProviders, getStreamRegistryOverrides } from '../Ethereum'
+import { getStreamRegistryChainProviders, getStreamRegistryOverrides } from '../Ethereum'
 import { until, tryInSequence } from '../utils/promises'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { Stream, StreamMetadata } from '../Stream'
@@ -93,7 +93,7 @@ export class StreamRegistry {
         this.authentication = authentication
         this.config = config
         this.logger = loggerFactory.createLogger(module)
-        const chainProviders = getAllStreamRegistryChainProviders(config)
+        const chainProviders = getStreamRegistryChainProviders(config)
         this.streamRegistryContractsReadonly = chainProviders.map((provider: Provider) => {
             return this.contractFactory.createReadContract<StreamRegistryContract>(
                 toEthereumAddress(this.config.contracts.streamRegistryChainAddress),
