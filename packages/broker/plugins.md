@@ -145,9 +145,12 @@ const socket = new WebSocket(`wss://...`)
 
 #### Ping messages
 
-Websocket server supports standard protocol level ping and pong messages. To detect broken connections, you can use e.g. [this pattern](https://github.com/websockets/ws#how-to-detect-and-close-broken-connections).
+Websocket server supports standard protocol level ping and pong messages. If you want to detect broken connections at client side, you can use e.g. [this pattern](https://github.com/websockets/ws#how-to-detect-and-close-broken-connections).
 
 In browser environment clients are not able to send pings, as there is no `ping()` method in the standard websocket API. Therefore the websocket plugin supports also application level ping-pong: if a client sends a message which has payload of `"ping"`, server responds to it with a message which has payload of `"pong"`.
+
+The server side has a built-it detection of broken connections. It sends a ping message if a connection has been idle for a while. All standard websocket clients respond automatically to the ping by sending a pong message. If the server doesn't receive a pong message (or other traffic) within 15 seconds, it closes the connection. 
+- See also  `pingSendInterval` and `disconnectTimeout` config options
 
 ## MQTT
 

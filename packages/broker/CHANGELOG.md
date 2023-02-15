@@ -8,7 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Application layer ping support in `websocket` plugin
+- Ping features in `websocket` plugin:
+  - server sends pings and disconnects if client doesn't respond with pong
+  - application layer ping support
 
 ### Changed
 
