@@ -438,7 +438,7 @@ export class StreamRegistry {
     // Helpers
     // --------------------------------------------------------------------------------------------
 
-    private queryAllReadonlyContracts<T>(call: (contract: StreamRegistryContract) => Promise<T>): any {
+    private queryAllReadonlyContracts<T>(call: (contract: StreamRegistryContract) => Promise<T>): Promise<T> {
         return tryInSequence(
             shuffle(this.streamRegistryContractsReadonly).map((contract: StreamRegistryContract) => {
                 return () => call(contract)
