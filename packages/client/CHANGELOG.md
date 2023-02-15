@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- All contract providers are used to query the tracker registry contract
+
 ### Security
 
 
