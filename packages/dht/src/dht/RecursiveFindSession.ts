@@ -10,6 +10,7 @@ import { ListeningRpcCommunicator } from "../transport/ListeningRpcCommunicator"
 import { Contact } from "./contact/Contact"
 import { SortedContactList } from "./contact/SortedContactList"
 import { RecursiveFindResult } from "./DhtNode"
+import { keyFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 
 export interface RecursiveFindSessionEvents {
     findCompleted: (results: PeerDescriptor[]) => void
@@ -20,7 +21,7 @@ const logger = new Logger(module)
 export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvents> implements IRecursiveFindSessionService {
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private results: SortedContactList<Contact>
-    private foundData: Array<DataEntry> = []
+    private foundData: Map<string, DataEntry> = new Map()
 
     private readonly rpcTransport: ITransport
 
@@ -45,9 +46,14 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
             this.results.addContact(new Contact(descriptor))
         })
 
-        if (dataEntries && dataEntries.length > 0) {
+        if (dataEntries) {
             dataEntries.forEach((entry) => {
-                this.foundData.push(entry)
+                const storerKey = keyFromPeerDescriptor(entry.storer!)
+                if (!this.foundData.has(storerKey)) {
+                    this.foundData.set(storerKey, entry)
+                } else if (this.foundData.has(storerKey) && this.foundData.get(storerKey)!.storedAt! < entry.storedAt!) {
+                    this.foundData.set(storerKey, entry)
+                }
             })
         }
 
@@ -55,7 +61,7 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
             // Wait for possible on route responses
             setTimeout(() => {
                 this.emit('findCompleted', this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()))
-            }, 1000)
+            }, 500)
         }
     }
     public async reportRecursiveFindResult(report: RecursiveFindReport, _context: ServerCallContext): Promise<Empty> {
@@ -69,9 +75,12 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
     public getResults(): RecursiveFindResult {
         const ret = {
             closestNodes: this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()),
-            dataEntries: (this.foundData && this.foundData.length > 0) ? this.foundData : undefined
+            dataEntries: (this.foundData && this.foundData.size > 0) ? Array.from(this.foundData.values()) : undefined
         }
-
         return ret
+    }
+
+    public stop(): void {
+        this.emit('findCompleted', [])
     }
 }

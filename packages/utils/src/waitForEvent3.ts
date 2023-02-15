@@ -41,7 +41,7 @@ export function waitForEvent3<T extends EventEmitter.ValidEventTypes>(
     return withTimeout(
         task,
         timeout,
-        'waitForEvent'
+        'waitForEvent3'
     ).finally(() => {
         cancel()
     })

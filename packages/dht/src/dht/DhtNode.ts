@@ -127,7 +127,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
     //private noProgressCounter = 0
     private joinTimeoutRef?: NodeJS.Timeout
-    private ongoingJoinOperation = false
 
     private ongoingRoutingSessions: Map<string, RoutingSession> = new Map()
     private ongoingDiscoverySessions: Map<string, DiscoverySession> = new Map()
@@ -469,7 +468,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             requestId: v4(),
             destinationPeer: targetPeerDescriptor,
             sourcePeer: this.ownPeerDescriptor!,
-            reachableThrough: this.ongoingJoinOperation ? this.config.entryPoints || [] : [],
+            reachableThrough: this.isJoinOngoing() ? this.config.entryPoints || [] : [],
             routingPath: []
         }
 
@@ -503,14 +502,12 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         }
     }
 
-    public async joinDht(entryPointDescriptor: PeerDescriptor): Promise<void> {
-        if (!this.started || this.stopped || this.ongoingJoinOperation) {
+    public async joinDht(entryPointDescriptor: PeerDescriptor, doRandomJoin = true): Promise<void> {
+        if (!this.started || this.stopped) {
             return
         }
 
-        this.ongoingJoinOperation = true
-
-        logger.trace(
+        logger.info(
             `Joining ${this.config.serviceId === 'layer0' ? 'The Streamr Network' : `Control Layer for ${this.config.serviceId}`}`
             + ` via entrypoint ${keyFromPeerDescriptor(entryPointDescriptor)}`
         )
@@ -528,10 +525,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
         if (this.connectionManager) {
             this.connectionManager.lockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
-        }
-
-        if (!this.started || this.stopped) {
-            return
         }
 
         this.addNewContact(entryPointDescriptor)
@@ -572,9 +565,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         this.ongoingDiscoverySessions.set(randomSession.sessionId, randomSession)
 
         try {
-            await session.findClosestNodes(this.config.dhtJoinTimeout * 2)
+            await session.findClosestNodes(this.config.dhtJoinTimeout)
             this.neighborList?.setAllAsUncontacted()
-            await randomSession.findClosestNodes(this.config.dhtJoinTimeout * 2)
+            if (doRandomJoin) {
+                await randomSession.findClosestNodes(this.config.dhtJoinTimeout)
+            }
             if (!this.stopped) {
                 if (this.bucket!.count() === 0) {
                     this.rejoinDht(entryPointDescriptor).catch(() => { })
@@ -584,9 +579,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
                 }*/
             }
         } catch (_e) {
-            throw (new Err.DhtJoinTimeout('join timed out'))
+            throw new Err.DhtJoinTimeout('join timed out')
         } finally {
-            this.ongoingJoinOperation = false
             this.ongoingDiscoverySessions.delete(session.sessionId)
             this.ongoingDiscoverySessions.delete(randomSession.sessionId)
 
@@ -803,7 +797,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
     }
 
     public isJoinOngoing(): boolean {
-        return this.ongoingJoinOperation
+        return this.ongoingDiscoverySessions.size > 0
     }
 
     public async stop(): Promise<void> {
@@ -824,12 +818,15 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             clearTimeout(this.rejoinTimeoutRef)
             this.rejoinTimeoutRef = undefined
         }
-        this.ongoingJoinOperation = false
         this.ongoingRoutingSessions.forEach((session, _id) => {
             session.stop()
         })
 
         this.ongoingDiscoverySessions.forEach((session, _id) => {
+            session.stop()
+        })
+
+        this.ongoingRecursiveFindSessions.forEach((session, _id) => {
             session.stop()
         })
 
@@ -977,7 +974,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             routingPath: []
         }
         const promise = waitForEvent3<RecursiveFindSessionEvents>(recursiveFindSession, 'findCompleted', 60000)
-        this.doFindRecursevily(params)
+        this.doFindRecursevily(params).catch(() => {console.error("ÄÄÄÄ")})
         await promise
 
         const results = recursiveFindSession.getResults()
@@ -1067,9 +1064,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             logger.error(e)
         }
 
-        if (this.ongoingRoutingSessions.has(session.sessionId)) {
-            this.ongoingRoutingSessions.delete(session.sessionId)
-        }
+        this.ongoingRoutingSessions.delete(session.sessionId)
 
         if (this.stopped) {
             return this.createRouteMessageAck(routedMessage, 'DhtNode Stopped')
