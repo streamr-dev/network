@@ -5,7 +5,7 @@ import { BigNumber } from '@ethersproject/bignumber'
 import { Provider } from '@ethersproject/providers'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 import { getAllStreamRegistryChainProviders, getStreamRegistryOverrides } from '../Ethereum'
-import { until } from '../utils/promises'
+import { until, tryInSequence } from '../utils/promises'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { Stream, StreamMetadata } from '../Stream'
 import { NotFoundError } from '../HttpUtil'
@@ -54,14 +54,10 @@ interface StreamPublisherOrSubscriberItem {
 }
 
 const streamContractErrorProcessor = (err: any, streamId: StreamID, registry: string): never => {
-    if (err.errors) {
-        if (err.errors.some((e: any) => e.reason?.code === 'CALL_EXCEPTION')) {
-            throw new NotFoundError('Stream not found: id=' + streamId)
-        } else {
-            throw new Error(`Could not reach the ${registry} Smart Contract: ${err.errors[0]}`)
-        }
+    if (err.reason?.code === 'CALL_EXCEPTION') {
+        throw new NotFoundError('Stream not found: id=' + streamId)
     } else {
-        throw new Error(err)
+        throw new Error(`Could not reach the ${registry} Smart Contract: ${err.message}`)
     }
 }
 
@@ -195,11 +191,9 @@ export class StreamRegistry {
     private async streamExistsOnChain(streamIdOrPath: string): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.logger.debug('checking if stream "%s" exists on chain', streamId)
-        return Promise.any([
-            ...this.streamRegistryContractsReadonly.map((contract: StreamRegistryContract) => {
-                return contract.exists(streamId)
-            })
-        ])
+        return this.queryAllReadonlyContracts((contract: StreamRegistryContract) => {
+            return contract.exists(streamId)
+        })
     }
 
     async getStream(streamIdOrPath: string): Promise<Stream> {
@@ -444,10 +438,10 @@ export class StreamRegistry {
     // --------------------------------------------------------------------------------------------
 
     private queryAllReadonlyContracts<T>(call: (contract: StreamRegistryContract) => Promise<T>): any {
-        return Promise.any([
-            ...this.streamRegistryContractsReadonly.map((contract: StreamRegistryContract) => {
-                return call(contract)
+        return tryInSequence(
+            this.streamRegistryContractsReadonly.map((contract: StreamRegistryContract) => {
+                return () => call(contract)
             })
-        ])
+        )
     }
 }
