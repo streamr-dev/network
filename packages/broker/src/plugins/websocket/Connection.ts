@@ -1,6 +1,9 @@
 import WebSocket from 'ws'
 import { StreamrClient } from 'streamr-client'
 import { PayloadFormat } from '../../helpers/PayloadFormat'
+import { Logger } from '@streamr/utils'
+
+const logger = new Logger(module)
 
 export const PING_PAYLOAD = 'ping'
 const PONG_PAYLOAD = 'pong'
@@ -34,6 +37,7 @@ export const addPingSender = (ws: WebSocket, sendInterval: number, disconnectTim
                 pendingStateChange = setTimeout(() => setState('disconnected'), disconnectTimeout)
             }
         } else if (state === 'disconnected') {
+            logger.debug('Terminate connection  ')
             ws.terminate()
         }
     }
