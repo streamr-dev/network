@@ -22,7 +22,10 @@ async function fetchTrackers(contractAddress: EthereumAddress, jsonRpcProvider: 
     return contract.getNodes()
 }
 
-async function getTrackerRegistryFromContract(contractAddress: EthereumAddress, rpcProvider: Provider): Promise<TrackerRegistry<TrackerRegistryRecord>> {
+async function getTrackerRegistryFromContract(
+    contractAddress: EthereumAddress, 
+    rpcProvider: Provider
+): Promise<TrackerRegistry<TrackerRegistryRecord>> {
     const trackers = await fetchTrackers(contractAddress, rpcProvider)
     const records: TrackerRegistryRecord[] = []
     for (let i = 0; i < trackers.length; ++i) {
