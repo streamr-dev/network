@@ -2,7 +2,6 @@ import http from 'http'
 import https from 'https'
 import fs from 'fs'
 import WebSocket from 'ws'
-import util from 'util'
 import { once } from 'events'
 import { Socket } from 'net'
 import qs, { ParsedQs } from 'qs'
@@ -116,7 +115,7 @@ export class WebsocketServer {
     }
 
     async stop(): Promise<void> {
-        await util.promisify((cb: any) => this.wss!.close(cb))()
+        this.wss!.close()
         for (const ws of this.wss!.clients) {
             ws.terminate()
         }
