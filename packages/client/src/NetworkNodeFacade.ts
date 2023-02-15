@@ -7,13 +7,11 @@ import { NetworkNodeOptions, createNetworkNode as _createNetworkNode } from '@st
 import { MetricsContext } from '@streamr/utils'
 import { uuid } from './utils/uuid'
 import { pOnce } from './utils/promises'
-import { ConfigInjectionToken, TrackerRegistryContract, StrictStreamrClientConfig } from './Config'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
 import { StreamMessage, StreamPartID, ProxyDirection } from '@streamr/protocol'
 import { DestroySignal } from './DestroySignal'
-import { getMainnetProvider } from './Ethereum'
-import { getTrackerRegistryFromContract } from './registry/getTrackerRegistryFromContract'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
-import { toEthereumAddress } from '@streamr/utils'
+import { getTrackers } from './registry/trackerRegistry'
 
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
 /** @deprecated This in an internal interface */
@@ -108,16 +106,11 @@ export class NetworkNodeFacade {
                 throw new Error(`given node id ${id} not compatible with authenticated wallet ${ethereumAddress}`)
             }
         }
-        const trackers = ('contractAddress' in this.config.network.trackers)
-            ? (await getTrackerRegistryFromContract({
-                contractAddress: toEthereumAddress((this.config.network.trackers as TrackerRegistryContract).contractAddress),
-                jsonRpcProvider: getMainnetProvider(this.config)
-            })).getAllTrackers()
-            : this.config.network.trackers
+        
         return {
             ...this.config.network,
             id,
-            trackers,
+            trackers: await getTrackers(this.config),
             metricsContext: new MetricsContext()
         }
     }

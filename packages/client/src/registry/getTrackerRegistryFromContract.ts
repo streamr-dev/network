@@ -1,9 +1,10 @@
 import { Contract } from '@ethersproject/contracts'
 import type { Provider } from '@ethersproject/providers'
-
-import { createTrackerRegistry, TrackerRegistryRecord, TrackerRegistry } from '@streamr/protocol'
+import { createTrackerRegistry, TrackerRegistry, TrackerRegistryRecord } from '@streamr/protocol'
+import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
+import { StrictStreamrClientConfig, TrackerRegistryContract } from '../Config'
+import { getMainnetProvider } from '../Ethereum'
 import * as trackerRegistryConfig from '../ethereumArtifacts/TrackerRegistry.json'
-import { EthereumAddress } from '@streamr/utils'
 
 async function fetchTrackers(contractAddress: EthereumAddress, jsonRpcProvider: Provider) {
     // check that provider is connected and has some valid blockNumber
@@ -20,14 +21,8 @@ async function fetchTrackers(contractAddress: EthereumAddress, jsonRpcProvider: 
     return contract.getNodes()
 }
 
-export async function getTrackerRegistryFromContract({
-    contractAddress,
-    jsonRpcProvider
-}: {
-    contractAddress: EthereumAddress
-    jsonRpcProvider: Provider
-}): Promise<TrackerRegistry<TrackerRegistryRecord>> {
-    const trackers = await fetchTrackers(contractAddress, jsonRpcProvider)
+async function getTrackerRegistryFromContract(contractAddress: EthereumAddress, rpcProvider: Provider): Promise<TrackerRegistry<TrackerRegistryRecord>> {
+    const trackers = await fetchTrackers(contractAddress, rpcProvider)
     const records: TrackerRegistryRecord[] = []
     for (let i = 0; i < trackers.length; ++i) {
         const { metadata, url, nodeAddress } = trackers[i]
@@ -44,4 +39,13 @@ export async function getTrackerRegistryFromContract({
         }
     }
     return createTrackerRegistry(records)
+}
+
+export const getTrackers = async (config: Pick<StrictStreamrClientConfig, 'network' | 'contracts'>): Promise<TrackerRegistryRecord[]> => {
+    return ('contractAddress' in config.network.trackers)
+            ? (await getTrackerRegistryFromContract(
+                toEthereumAddress((config.network.trackers as TrackerRegistryContract).contractAddress),
+                getMainnetProvider(config)
+            )).getAllTrackers()
+            : config.network.trackers
 }
