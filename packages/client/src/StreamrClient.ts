@@ -507,7 +507,7 @@ export class StreamrClient {
         connectionCount?: number
     ): Promise<void> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        return this.node.setProxies(streamPartId, nodeIds, direction, connectionCount)
+        await this.node.setProxies(streamPartId, nodeIds, direction, connectionCount)
     }
 
     // --------------------------------------------------------------------------------------------
