@@ -13,6 +13,7 @@ import { toEthereumAddress, wait, waitForEvent } from '@streamr/utils'
 import { Event as NodeEvent } from '../../src/logic/Node'
 import { createTestNetworkNode, startTestTracker } from '../utils'
 import { Event as ProxyEvent } from '../../src/logic/proxy/ProxyStreamConnectionClient'
+import { NodeId } from '../../src/identifiers'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
@@ -35,13 +36,34 @@ describe('Proxy connection tests', () => {
         })
     }
 
+    const getMockUserId = async () => 'mock-user-id'
+
+    const getState = (node: NetworkNode) => {
+        // @ts-expect-error private
+        const streamPartManager = node.streamPartManager
+        if (streamPartManager.isSetUp(streamPartId)) {
+            return {
+                isSetUp: true,
+                inboundNodes: streamPartManager.getInboundNodesForStreamPart(streamPartId),
+                outboundNodes: streamPartManager.getOutboundNodesForStreamPart(streamPartId),
+                neighbors: streamPartManager.getNeighborsForStreamPart(streamPartId),
+                hasInOnlyConnection: (otherNodeId: NodeId) => streamPartManager.hasInOnlyConnection(streamPartId, otherNodeId),
+                hasOutOnlyConnection: (otherNodeId: NodeId) => streamPartManager.hasOutOnlyConnection(streamPartId, otherNodeId)
+            }
+        } else {
+            return {
+                isSetUp: false
+            }
+        }
+    }
+
     beforeEach(async () => {
         tracker = await startTestTracker({
             port: 30353
         })
         trackerInfo = tracker.getConfigRecord()
         contactNode = createContactNode()
-        await contactNode.start()
+        contactNode.start()
 
         contactNode2 = createTestNetworkNode({
             id: 'contact-node-2',
@@ -50,7 +72,7 @@ describe('Proxy connection tests', () => {
             acceptProxyConnections: true,
             webrtcDisallowPrivateAddresses: false
         })
-        await contactNode2.start()
+        contactNode2.start()
 
         await Promise.all([
             contactNode.subscribe(streamPartId),
@@ -65,7 +87,7 @@ describe('Proxy connection tests', () => {
             iceServers: [],
             webrtcDisallowPrivateAddresses: false
         })
-        await onewayNode.start()
+        onewayNode.start()
     })
 
     afterEach(async () => {
@@ -78,77 +100,61 @@ describe('Proxy connection tests', () => {
     })
 
     it('publisher node can form proxy connections', async () => {
-        await onewayNode.setProxies(streamPartId, ['contact-node', 'contact-node-2'], ProxyDirection.PUBLISH, async () => 'publisher')
-        // @ts-expect-error private
-        expect(onewayNode.streamPartManager.getOutboundNodesForStreamPart(streamPartId)).toContainValues(['contact-node', 'contact-node-2'])
-        // @ts-expect-error private
-        expect(onewayNode.streamPartManager.getNeighborsForStreamPart(streamPartId)).toBeArrayOfSize(0)
+        await onewayNode.setProxies(streamPartId, ['contact-node', 'contact-node-2'], ProxyDirection.PUBLISH, getMockUserId)
+        expect(getState(onewayNode).outboundNodes).toContainValues(['contact-node', 'contact-node-2'])
+        expect(getState(onewayNode).neighbors).toBeArrayOfSize(0)
     })
     
     it('subscriber node can form proxy connections', async () => {
-        await onewayNode.setProxies(streamPartId, ['contact-node', 'contact-node-2'], ProxyDirection.SUBSCRIBE, async () => 'subscriber')
-        // @ts-expect-error private
-        expect(onewayNode.streamPartManager.getInboundNodesForStreamPart(streamPartId)).toContainValues(['contact-node', 'contact-node-2'])
-        // @ts-expect-error private
-        expect(onewayNode.streamPartManager.getNeighborsForStreamPart(streamPartId)).toBeArrayOfSize(0)
+        await onewayNode.setProxies(streamPartId, ['contact-node', 'contact-node-2'], ProxyDirection.SUBSCRIBE, getMockUserId)
+        expect(getState(onewayNode).inboundNodes).toContainValues(['contact-node', 'contact-node-2'])
+        expect(getState(onewayNode).neighbors).toBeArrayOfSize(0)
     })
 
     it('publisher node can close proxy connections', async () => {
-        await onewayNode.setProxies(streamPartId, ['contact-node', 'contact-node-2'], ProxyDirection.PUBLISH, async () => 'publisher')
-        // @ts-expect-error private
-        expect(onewayNode.streamPartManager.getOutboundNodesForStreamPart(streamPartId)).toContainValues(['contact-node', 'contact-node-2'])
-        // @ts-expect-error private
-        expect(onewayNode.streamPartManager.getNeighborsForStreamPart(streamPartId)).toBeArrayOfSize(0)
+        await onewayNode.setProxies(streamPartId, ['contact-node', 'contact-node-2'], ProxyDirection.PUBLISH, getMockUserId)
+        expect(getState(onewayNode).outboundNodes).toContainValues(['contact-node', 'contact-node-2'])
+        expect(getState(onewayNode).neighbors).toBeArrayOfSize(0)
 
         await Promise.all([
             waitForEvent(contactNode, NodeEvent.ONE_WAY_CONNECTION_CLOSED),
-            onewayNode.setProxies(streamPartId, ['contact-node-2'], ProxyDirection.PUBLISH, async () => 'publisher'),
+            onewayNode.setProxies(streamPartId, ['contact-node-2'], ProxyDirection.PUBLISH, getMockUserId),
         ])
 
-        // @ts-expect-error private
-        expect(onewayNode.streamPartManager.hasOutOnlyConnection(streamPartId, 'contact-node')).toBeFalse()
-        // @ts-expect-error private
-        expect(onewayNode.streamPartManager.hasOutOnlyConnection(streamPartId, 'contact-node-2')).toBeTrue()
+        expect(getState(onewayNode).hasOutOnlyConnection!('contact-node')).toBeFalse()
+        expect(getState(onewayNode).hasOutOnlyConnection!('contact-node-2')).toBeTrue()
+
         await Promise.all([
             waitForEvent(contactNode2, NodeEvent.ONE_WAY_CONNECTION_CLOSED),
-            onewayNode.setProxies(streamPartId, [], ProxyDirection.PUBLISH, async () => 'publisher'),
+            onewayNode.setProxies(streamPartId, [], ProxyDirection.PUBLISH, getMockUserId),
         ])
 
-        // @ts-expect-error private
-        expect(onewayNode.streamPartManager.isSetUp(streamPartId)).toBeFalse()
-        // @ts-expect-error private
-        expect(contactNode.streamPartManager.getInboundNodesForStreamPart(streamPartId)).toContainValues(['contact-node-2'])
-        // @ts-expect-error private
-        expect(contactNode.streamPartManager.hasInOnlyConnection(streamPartId, 'publisher')).toBeFalse()
+        expect(getState(onewayNode).isSetUp).toBeFalse()
+        expect(getState(contactNode).outboundNodes).toContainValues(['contact-node-2'])
+        expect(getState(contactNode).hasInOnlyConnection!('publisher')).toBeFalse()
     })
 
     it('subscriber node can close proxy connections', async () => {
-        await onewayNode.setProxies(streamPartId, ['contact-node', 'contact-node-2'], ProxyDirection.SUBSCRIBE, async () => 'subscriber', 2)
-        // @ts-expect-error private
-        expect(onewayNode.streamPartManager.getInboundNodesForStreamPart(streamPartId)).toContainValues(['contact-node', 'contact-node-2'])
-        // @ts-expect-error private
-        expect(onewayNode.streamPartManager.getNeighborsForStreamPart(streamPartId)).toBeArrayOfSize(0)
+        await onewayNode.setProxies(streamPartId, ['contact-node', 'contact-node-2'], ProxyDirection.SUBSCRIBE, getMockUserId, 2)
+        expect(getState(onewayNode).inboundNodes).toContainValues(['contact-node', 'contact-node-2'])
+        expect(getState(onewayNode).neighbors).toBeArrayOfSize(0)
 
         await Promise.all([
             waitForEvent(contactNode, NodeEvent.ONE_WAY_CONNECTION_CLOSED),
-            onewayNode.setProxies(streamPartId, ['contact-node-2'], ProxyDirection.SUBSCRIBE, async () => 'subscriber'),
+            onewayNode.setProxies(streamPartId, ['contact-node-2'], ProxyDirection.SUBSCRIBE, getMockUserId),
         ])
 
-        // @ts-expect-error private
-        expect(onewayNode.streamPartManager.hasInOnlyConnection(streamPartId, 'contact-node')).toBeFalse()
-        // @ts-expect-error private
-        expect(onewayNode.streamPartManager.hasInOnlyConnection(streamPartId, 'contact-node-2')).toBeTrue()
+        expect(getState(onewayNode).hasInOnlyConnection!('contact-node')).toBeFalse()
+        expect(getState(onewayNode).hasInOnlyConnection!('contact-node-2')).toBeTrue()
+
         await Promise.all([
             waitForEvent(contactNode2, NodeEvent.ONE_WAY_CONNECTION_CLOSED),
-            onewayNode.setProxies(streamPartId, [], ProxyDirection.SUBSCRIBE, async () => 'subscriber'),
+            onewayNode.setProxies(streamPartId, [], ProxyDirection.SUBSCRIBE, getMockUserId),
         ])
 
-        // @ts-expect-error private
-        expect(onewayNode.streamPartManager.isSetUp(streamPartId)).toBeFalse()
-        // @ts-expect-error private
-        expect(contactNode.streamPartManager.getOutboundNodesForStreamPart(streamPartId)).toContainValues(['contact-node-2'])
-        // @ts-expect-error private
-        expect(contactNode.streamPartManager.hasOutOnlyConnection(streamPartId, 'publisher')).toBeFalse()
+        expect(getState(onewayNode).isSetUp).toBeFalse()
+        expect(getState(contactNode).outboundNodes).toContainValues(['contact-node-2'])
+        expect(getState(contactNode).hasOutOnlyConnection!('publisher')).toBeFalse()
     })
 
     it('publisher cannot connect to non-contact node', async () => {
@@ -165,7 +171,7 @@ describe('Proxy connection tests', () => {
             nonContactNode.subscribe(streamPartId)
         ])
 
-        await expect(onewayNode.setProxies(streamPartId, ['non-contact-node'], ProxyDirection.PUBLISH, async () => 'publisher'))
+        await expect(onewayNode.setProxies(streamPartId, ['non-contact-node'], ProxyDirection.PUBLISH, getMockUserId))
             .rejects
             .toMatchObject(
                 new Error(
@@ -180,17 +186,16 @@ describe('Proxy connection tests', () => {
         await Promise.all([
             // @ts-expect-error private
             waitForEvent(onewayNode.proxyStreamConnectionClient, ProxyEvent.CONNECTION_ACCEPTED),
-            onewayNode.setProxies(streamPartId, ['contact-node'], ProxyDirection.PUBLISH, async () => 'publisher'),
-            onewayNode.setProxies(streamPartId, ['contact-node'], ProxyDirection.PUBLISH, async () => 'publisher'),
-            onewayNode.setProxies(streamPartId, ['contact-node'], ProxyDirection.PUBLISH, async () => 'publisher'),
-            onewayNode.setProxies(streamPartId, ['contact-node'], ProxyDirection.PUBLISH, async () => 'publisher'),
+            onewayNode.setProxies(streamPartId, ['contact-node'], ProxyDirection.PUBLISH, getMockUserId),
+            onewayNode.setProxies(streamPartId, ['contact-node'], ProxyDirection.PUBLISH, getMockUserId),
+            onewayNode.setProxies(streamPartId, ['contact-node'], ProxyDirection.PUBLISH, getMockUserId),
+            onewayNode.setProxies(streamPartId, ['contact-node'], ProxyDirection.PUBLISH, getMockUserId),
         ])
-        // @ts-expect-error private
-        expect(onewayNode.streamPartManager.getOutboundNodesForStreamPart(streamPartId)).toContainValue('contact-node')
+        expect(getState(onewayNode).outboundNodes).toContainValue('contact-node')
     })
 
     it('Published data is received using proxy publish stream connections', async () => {
-        await onewayNode.setProxies(streamPartId, ['contact-node'], ProxyDirection.PUBLISH, async () => 'publisher')
+        await onewayNode.setProxies(streamPartId, ['contact-node'], ProxyDirection.PUBLISH, getMockUserId)
         await Promise.all([
             waitForEvent(contactNode, NodeEvent.MESSAGE_RECEIVED),
             waitForEvent(contactNode2, NodeEvent.MESSAGE_RECEIVED),
@@ -205,7 +210,7 @@ describe('Proxy connection tests', () => {
     })
 
     it('proxied subscribers receive data', async () => {
-        await onewayNode.setProxies(streamPartId, ['contact-node'], ProxyDirection.SUBSCRIBE, async () => 'subscriber')
+        await onewayNode.setProxies(streamPartId, ['contact-node'], ProxyDirection.SUBSCRIBE, getMockUserId)
         await Promise.all([
             waitForEvent(onewayNode, NodeEvent.MESSAGE_RECEIVED),
             contactNode.publish(new StreamMessage({
@@ -220,7 +225,7 @@ describe('Proxy connection tests', () => {
     })
 
     it('proxied subscribers cannot publish data', async () => {
-        await onewayNode.setProxies(streamPartId, ['contact-node'], ProxyDirection.SUBSCRIBE, async () => 'subscriber')
+        await onewayNode.setProxies(streamPartId, ['contact-node'], ProxyDirection.SUBSCRIBE, getMockUserId)
         expect(() => onewayNode.publish(new StreamMessage({
             messageId: new MessageID(toStreamID('stream-0'), 0, 120, 0, PUBLISHER_ID, 'session'),
             content: {
@@ -231,7 +236,7 @@ describe('Proxy connection tests', () => {
     })
 
     it('Cannot open a proxy publish stream connection to non-existing node (not connected to the streams tracker)', async () => {
-        await expect(onewayNode.setProxies(streamPartId, ['non-contact-node'], ProxyDirection.PUBLISH, async () => 'publisher'))
+        await expect(onewayNode.setProxies(streamPartId, ['non-contact-node'], ProxyDirection.PUBLISH, getMockUserId))
             .rejects
             .toMatchObject(
                 new Error(
@@ -243,7 +248,7 @@ describe('Proxy connection tests', () => {
     })
 
     it('Cannot open a proxy subscribe stream connection to a node without an existing subscription to the given stream', async () => {
-        await expect(onewayNode.setProxies(streamPartId, ['non-contact-node'], ProxyDirection.SUBSCRIBE, async () => 'subscriber'))
+        await expect(onewayNode.setProxies(streamPartId, ['non-contact-node'], ProxyDirection.SUBSCRIBE, getMockUserId))
             .rejects
             .toMatchObject(
                 new Error(
@@ -258,7 +263,7 @@ describe('Proxy connection tests', () => {
             streamPartId,
             ['contact-node', 'contact-node-2', 'non-existing-node'],
             ProxyDirection.PUBLISH,
-            async () => 'publisher')
+            getMockUserId)
         ).rejects.toThrow()
     })
 
@@ -267,13 +272,12 @@ describe('Proxy connection tests', () => {
             waitForEvent(contactNode, NodeEvent.NODE_UNSUBSCRIBED),
             contactNode2.unsubscribe(streamPartId)
         ])
-        await onewayNode.setProxies(streamPartId, ['contact-node'], ProxyDirection.PUBLISH, async () => 'publisher')
+        await onewayNode.setProxies(streamPartId, ['contact-node'], ProxyDirection.PUBLISH, getMockUserId)
         await Promise.all([
             waitForEvent(contactNode, NodeEvent.ONE_WAY_CONNECTION_CLOSED),
-            onewayNode.setProxies(streamPartId, [], ProxyDirection.PUBLISH, async () => 'publisher'),
+            onewayNode.setProxies(streamPartId, [], ProxyDirection.PUBLISH, getMockUserId),
         ])
-        // @ts-expect-error private
-        expect(contactNode.streamPartManager.isSetUp(streamPartId)).toBeTrue()
+        expect(getState(contactNode).isSetUp).toBeTrue()
     })
 
     it('cannot set connection count above size of nodeIds array', async () => {
@@ -281,7 +285,7 @@ describe('Proxy connection tests', () => {
             streamPartId,
             ['contact-node', 'contact-node-2'],
             ProxyDirection.SUBSCRIBE,
-            async () => 'subscriber',
+            getMockUserId,
             3
         )).rejects.toMatchObject(Error('Cannot set connectionCount above the size of the configured array of nodes'))
     })
@@ -291,14 +295,11 @@ describe('Proxy connection tests', () => {
             streamPartId,
             ['contact-node', 'contact-node-2'],
             ProxyDirection.SUBSCRIBE,
-            async () => 'subscriber',
+            getMockUserId,
             1
         )
-
-        // @ts-expect-error private
-        expect(onewayNode.streamPartManager.getInboundNodesForStreamPart(streamPartId)).toBeArrayOfSize(1)
-        // @ts-expect-error private
-        expect(onewayNode.streamPartManager.getNeighborsForStreamPart(streamPartId)).toBeArrayOfSize(0)
+        expect(getState(onewayNode).inboundNodes).toBeArrayOfSize(1)
+        expect(getState(onewayNode).neighbors).toBeArrayOfSize(0)
     })
 
     it('will connect up to a newly set target connection count', async () => {
@@ -306,26 +307,22 @@ describe('Proxy connection tests', () => {
             streamPartId,
             ['contact-node', 'contact-node-2'],
             ProxyDirection.SUBSCRIBE,
-            async () => 'subscriber',
+            getMockUserId,
             1
         )
 
-        // @ts-expect-error private
-        expect(onewayNode.streamPartManager.getInboundNodesForStreamPart(streamPartId)).toBeArrayOfSize(1)
-        // @ts-expect-error private
-        expect(onewayNode.streamPartManager.getNeighborsForStreamPart(streamPartId)).toBeArrayOfSize(0)
+        expect(getState(onewayNode).inboundNodes).toBeArrayOfSize(1)
+        expect(getState(onewayNode).neighbors).toBeArrayOfSize(0)
 
         await onewayNode.setProxies(streamPartId,
             ['contact-node', 'contact-node-2'],
             ProxyDirection.SUBSCRIBE,
-            async () => 'subscriber',
+            getMockUserId,
             2
         )
 
-        // @ts-expect-error private
-        expect(onewayNode.streamPartManager.getInboundNodesForStreamPart(streamPartId)).toBeArrayOfSize(2)
-        // @ts-expect-error private
-        expect(onewayNode.streamPartManager.getNeighborsForStreamPart(streamPartId)).toBeArrayOfSize(0)
+        expect(getState(onewayNode).inboundNodes).toBeArrayOfSize(2)
+        expect(getState(onewayNode).neighbors).toBeArrayOfSize(0)
     })
 
     it('will disconnect down to a newly set target connection count', async () => {
@@ -333,26 +330,22 @@ describe('Proxy connection tests', () => {
             streamPartId,
             ['contact-node', 'contact-node-2'],
             ProxyDirection.SUBSCRIBE,
-            async () => 'subscriber',
+            getMockUserId,
             2
         )
 
-        // @ts-expect-error private
-        expect(onewayNode.streamPartManager.getInboundNodesForStreamPart(streamPartId)).toBeArrayOfSize(2)
-        // @ts-expect-error private
-        expect(onewayNode.streamPartManager.getNeighborsForStreamPart(streamPartId)).toBeArrayOfSize(0)
+        expect(getState(onewayNode).inboundNodes).toBeArrayOfSize(2)
+        expect(getState(onewayNode).neighbors).toBeArrayOfSize(0)
 
         await onewayNode.setProxies(
             streamPartId,
             ['contact-node', 'contact-node-2'],
             ProxyDirection.SUBSCRIBE,
-            async () => 'subscriber',
+            getMockUserId,
             1
         )
-        // @ts-expect-error private
-        expect(onewayNode.streamPartManager.getInboundNodesForStreamPart(streamPartId)).toBeArrayOfSize(1)
-        // @ts-expect-error private
-        expect(onewayNode.streamPartManager.getNeighborsForStreamPart(streamPartId)).toBeArrayOfSize(0)
+        expect(getState(onewayNode).inboundNodes).toBeArrayOfSize(1)
+        expect(getState(onewayNode).neighbors).toBeArrayOfSize(0)
     })
 
     it('will reconnect after lost connectivity', async () => {
@@ -364,7 +357,7 @@ describe('Proxy connection tests', () => {
             await contactNode.start()
             contactNode.subscribe(streamPartId)
         }
-        await onewayNode.setProxies(streamPartId, ['contact-node'], ProxyDirection.PUBLISH, async () => 'publisher')
+        await onewayNode.setProxies(streamPartId, ['contact-node'], ProxyDirection.PUBLISH, getMockUserId)
 
         await Promise.all([
             waitForEvent(onewayNode, NodeEvent.NODE_CONNECTED, 40000),

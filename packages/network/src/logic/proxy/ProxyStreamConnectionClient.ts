@@ -57,15 +57,15 @@ export const retry = async <T>(task: () => Promise<T>, description: string, abor
 }
 
 export class ProxyStreamConnectionClient extends EventEmitter {
+    private readonly connections: Map<StreamPartID, Map<NodeId, ProxyDirection>>
+    private readonly definitions: Map<StreamPartID, ProxyDefinition>
+    private readonly nodeConnectTimeout: number
     private readonly trackerManager: TrackerManager
     private readonly streamPartManager: StreamPartManager
     private readonly nodeToNode: NodeToNode
     private readonly node: Node
-    private readonly nodeConnectTimeout: number
     private readonly propagation: Propagation
-    private readonly definitions: Map<StreamPartID, ProxyDefinition>
     private readonly abortController: AbortController
-    private readonly connections: Map<StreamPartID, Map<NodeId, ProxyDirection>>
 
     constructor(opts: ProxyStreamConnectionClientOptions) {
         super()

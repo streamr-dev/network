@@ -23,7 +23,7 @@ export class TrackerConnector {
     private maintenanceTimer?: NodeJS.Timeout | null
     private readonly maintenanceInterval: number
     private connectionStates: Map<TrackerId, ConnectionState>
-    private readonly signallingOnlySessions: Map<StreamPartID, Set<string>>
+    private readonly signallingOnlySessions: Map<StreamPartID, Set<NodeId>>
 
     constructor(
         getStreamParts: getStreamPartsFn,

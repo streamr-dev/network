@@ -27,11 +27,11 @@ interface ProxyConnection {
 }
 
 export class ProxyStreamConnectionServer {
+    private readonly connections: Map<StreamPartID, Map<NodeId, ProxyConnection>>
+    private readonly acceptProxyConnections: boolean
     private readonly streamPartManager: StreamPartManager
     private readonly nodeToNode: NodeToNode
     private readonly node: Node
-    private readonly acceptProxyConnections: boolean
-    private readonly connections: Map<StreamPartID, Map<NodeId, ProxyConnection>>
     private readonly propagation: Propagation
 
     constructor(opts: ProxyStreamConnectionServerOptions) {
