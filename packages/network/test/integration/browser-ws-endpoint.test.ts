@@ -94,7 +94,7 @@ describe('ws-endpoint', () => {
             const ws = new WebSocket(`ws://127.0.0.1:${trackerPort}/ws`)
             const close = await waitForEvent(ws, 'close')
             expect(close[0]).toEqual(DisconnectionCode.FAILED_HANDSHAKE)
-            expect(close[1]).toContain('Handshake not received from connection behind UUID')
+            expect((close[1] as any).toString()).toContain('Handshake not received from connection behind UUID')
         })
     })
 

@@ -6,6 +6,12 @@ const PATH = './configs'
 
 describe('Config', () => {
 
+    it('start with minimal config', async () => {
+        const broker = await createBroker({})
+        await broker.start()
+        await broker.stop()
+    })
+
     const fileNames = fs.readdirSync(PATH)
 
     describe.each(fileNames.map((fileName) => [fileName]))('validate', (fileName: string) => {

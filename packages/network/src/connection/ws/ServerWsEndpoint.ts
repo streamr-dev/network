@@ -125,8 +125,8 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
             connection.onPong()
         })
 
-        ws.on('close', (code: number, reason: string) => {
-            this.onClose(connection, code, reason as DisconnectionReason)
+        ws.on('close', (code: number, reason: Buffer) => {
+            this.onClose(connection, code, reason.toString() as DisconnectionReason)
         })
 
         this.onNewConnection(connection)
@@ -145,6 +145,9 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
 
     protected async doStop(): Promise<void> {
         return new Promise((resolve, reject) => {
+            for (const ws of this.wss.clients) {
+                ws.terminate()
+            }
             this.wss.close((err?) => {
                 if (err) {
                     this.logger.error('error on closing websocket server: %s', err)
