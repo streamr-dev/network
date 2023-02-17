@@ -8,7 +8,7 @@ export enum Event {
     HANDSHAKE_COMPLETED = 'streamr:handshaker:handshake:completed'
 }
 
-export class ManagedWebRtcConnection extends ManagedConnection  {
+export class ManagedWebRtcConnection extends ManagedConnection {
 
     constructor(ownPeerDescriptor: PeerDescriptor,
         protocolVersion: string,

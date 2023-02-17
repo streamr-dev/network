@@ -182,7 +182,7 @@ describe('OrderedMsgChain', () => {
                     util.add(unchainedMsg4) // bonus: also check it drops duplicate unchained
                     break
                 }
-                case 2:  {
+                case 2: {
                     // 3. on retry, filling first gap completes sequence
                     util.add(unchainedMsg2)
                     break

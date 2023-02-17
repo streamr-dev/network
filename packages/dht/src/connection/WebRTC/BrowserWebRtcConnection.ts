@@ -11,7 +11,7 @@ export const WEB_RTC_CLEANUP = new class {
     }
 }
 
-type Events =  WebRtcConnectionEvents & ConnectionEvents
+type Events = WebRtcConnectionEvents & ConnectionEvents
 
 export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRtcConnection, IConnection {
 
