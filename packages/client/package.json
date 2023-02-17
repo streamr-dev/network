@@ -67,7 +67,7 @@
     "eslint-plugin-import": "^2.25.3",
     "express": "^4.17.1",
     "git-revision-webpack-plugin": "^5.0.0",
-    "jest-leak-detector": "^29.4.3",
+    "jest-leak-detector": "^27.3.1",
     "lodash-webpack-plugin": "^0.11.6",
     "nightwatch": "^1.7.12",
     "node-polyfill-webpack-plugin": "^1.1.4",
