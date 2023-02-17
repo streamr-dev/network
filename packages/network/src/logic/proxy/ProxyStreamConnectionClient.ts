@@ -173,7 +173,6 @@ export class ProxyStreamConnectionClient extends EventEmitter {
             await this.connectAndHandshake(streamPartId, targetNodeId, direction, userId)
         } catch (err) {
             logger.warn(`Failed to create a proxy ${direction} stream connection to ${targetNodeId} for stream ${streamPartId}:\n${err}`)
-            this.removeConnection(streamPartId, targetNodeId)
             this.emit(Event.CONNECTION_REJECTED, targetNodeId, streamPartId, direction, err)
         } finally {
             this.trackerManager.removeSignallingOnlySession(streamPartId, targetNodeId)
@@ -237,7 +236,6 @@ export class ProxyStreamConnectionClient extends EventEmitter {
             }
             this.emit(Event.CONNECTION_ACCEPTED, nodeId, streamPartId, message.direction)
         } else {
-            this.removeConnection(streamPartId, nodeId)
             this.emit(
                 Event.CONNECTION_REJECTED,
                 nodeId,
