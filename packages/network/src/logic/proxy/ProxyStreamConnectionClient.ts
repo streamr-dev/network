@@ -113,7 +113,7 @@ export class ProxyStreamConnectionClient extends EventEmitter {
         await Promise.all(this.getInvalidConnections(streamPartId).map(async (id) => {
             await this.closeConnection(streamPartId, id)
         }))
-        const connectionCountDiff =  this.definitions.get(streamPartId)!.connectionCount - this.getConnections(streamPartId).size
+        const connectionCountDiff = this.definitions.get(streamPartId)!.connectionCount - this.getConnections(streamPartId).size
         if (connectionCountDiff > 0) {
             await this.openRandomConnections(streamPartId, connectionCountDiff)
         } else if (connectionCountDiff < 0) {
@@ -122,17 +122,18 @@ export class ProxyStreamConnectionClient extends EventEmitter {
     }
 
     private getInvalidConnections(streamPartId: StreamPartID): string[] {
-        return Array.from(this.getConnections(streamPartId).keys()).filter((id) =>
-            !this.definitions.get(streamPartId)!.nodeIds.has(id)
-            || this.definitions.get(streamPartId)!.direction !== this.getConnections(streamPartId).get(id)
-        )
+        return Array.from(this.getConnections(streamPartId).keys()).filter((id) => {
+            const definition = this.definitions.get(streamPartId)
+            return !definition!.nodeIds.has(id)
+                || definition!.direction !== this.getConnections(streamPartId).get(id)
+        })
     }
 
     private async openRandomConnections(streamPartId: StreamPartID, connectionCount: number): Promise<void> {
         const definition = this.definitions.get(streamPartId)!
         const proxiesToAttempt = sampleSize(Array.from(definition.nodeIds.keys()).filter((id) =>
             !this.getConnections(streamPartId).has(id)
-        ), connectionCount).map((id) => id)
+        ), connectionCount)
         await Promise.all(proxiesToAttempt.map((id) =>
             this.attemptConnection(streamPartId, id, definition.direction, definition.userId)
         ))

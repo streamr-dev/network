@@ -41,7 +41,7 @@ export class ProxyStreamConnectionServer {
         this.acceptProxyConnections = opts.acceptProxyConnections
         this.propagation = opts.propagation
         this.connections = new Map()
-        this.nodeToNode.on(NodeToNodeEvent.PROXY_CONNECTION_REQUEST_RECEIVED, (message,  nodeId) => {
+        this.nodeToNode.on(NodeToNodeEvent.PROXY_CONNECTION_REQUEST_RECEIVED, (message, nodeId) => {
             this.processHandshakeRequest(message, nodeId)
         })
 
@@ -52,14 +52,13 @@ export class ProxyStreamConnectionServer {
 
     private async processHandshakeRequest(message: ProxyConnectionRequest, nodeId: NodeId): Promise<void> {
         const streamPartId = message.getStreamPartID()
-        const isAccepted =  this.acceptProxyConnections && this.streamPartManager.isSetUp(streamPartId)
+        const isAccepted = this.acceptProxyConnections && this.streamPartManager.isSetUp(streamPartId)
         if (isAccepted) {
+            this.addConnection(streamPartId, nodeId, message.direction, message.userId)
             if (message.direction === ProxyDirection.PUBLISH) {
                 this.streamPartManager.addInOnlyNeighbor(streamPartId, nodeId)
-                this.addConnection(streamPartId, nodeId, ProxyDirection.PUBLISH, message.userId)
             } else {
                 this.streamPartManager.addOutOnlyNeighbor(streamPartId, nodeId)
-                this.addConnection(streamPartId, nodeId, ProxyDirection.SUBSCRIBE, message.userId)
                 this.propagation.onNeighborJoined(nodeId, streamPartId)
             }
         }
