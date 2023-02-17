@@ -1,5 +1,5 @@
 import { wait } from '@streamr/utils'
-import { pOrderedResolve, pOnce, pLimitFn, pOne, until } from '../../src/utils/promises'
+import { pOrderedResolve, pOnce, pLimitFn, pOne, until, tryInSequence } from '../../src/utils/promises'
 import { CacheAsyncFn, CacheFn } from '../../src/utils/caches'
 
 const WAIT_TIME = 25
@@ -483,5 +483,39 @@ describe('pOne', () => {
         expect(await Promise.all([wrappedFn(), wrappedFn(), wrappedFn()])).toEqual([3, 3, 3])
         // can call again immediately after resolved
         expect(await (wrappedFn().then(() => wrappedFn()))).toEqual(5)
+    })
+})
+
+describe('tryInSequence', () => {
+    it('all resolve', () => {
+        expect(
+            tryInSequence([
+                () => Promise.resolve(123)
+            ])
+        ).resolves.toEqual(123)
+    })
+
+    it('some resolves', () => {
+        expect(
+            tryInSequence([
+                () => Promise.reject(new Error('dummy')),
+                () => Promise.resolve(123)
+            ])
+        ).resolves.toEqual(123)
+    })
+
+    it('all reject', () => {
+        expect(
+            tryInSequence([
+                () => Promise.reject(new Error('mock-error')),
+                () => Promise.reject(new Error('dummy')),
+            ])
+        ).rejects.toThrow('mock-error')
+    })
+
+    it('no tasks', () => {
+        expect(
+            tryInSequence([])
+        ).rejects.toThrow('no tasks')
     })
 })

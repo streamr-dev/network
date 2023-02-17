@@ -52,7 +52,7 @@
     "qs": "^6.10.1",
     "streamr-client": "7.3.0",
     "uuid": "^8.3.2",
-    "ws": "^7.5.0"
+    "ws": "^8.12.0"
   },
   "devDependencies": {
     "@streamr/test-utils": "7.3.0",
@@ -67,7 +67,7 @@
     "@types/stream-to-array": "^2.3.0",
     "@types/supertest": "^2.0.11",
     "@types/uuid": "^8.3.1",
-    "@types/ws": "^7.4.5",
+    "@types/ws": "^8.5.4",
     "async-mqtt": "^2.6.1",
     "stream-to-array": "^2.3.0",
     "supertest": "^6.1.3"

@@ -1,35 +1,89 @@
 import { overrideConfigToEnvVarsIfGiven } from '../../src/config/config'
 
 describe('overrideConfigToEnvVarsIfGiven', () => {
-    it('environment variable OVERRIDE_BROKER_PRIVATE_KEY overrides config (NET-934)', async () => {
-        const PK = '0x222'
-        const config = {
-            client: {
-                auth: {
-                    privateKey: '0x111'
-                }
-            },
-            plugins: {}
-        }
-        process.env.OVERRIDE_BROKER_PRIVATE_KEY = PK
-        await overrideConfigToEnvVarsIfGiven(config)
-        expect(config.client.auth.privateKey).toEqual(PK)
+
+    beforeEach(() => {
+        const PREFIX = 'STREAMR__BROKER__'
+        Object.keys(process.env).forEach((variableName: string) => {
+            if (variableName.startsWith(PREFIX)) {
+                delete process.env[variableName]
+            }
+        })
     })
 
-    it('environment variable OVERRIDE_BROKER_BENEFICIARY_ADDRESS overrides config (NET-934)', async () => {
-        const BENEFICIARY_ADDRESS = '0x1957abc2e960eb5f2c6a166e7a628ded7570e298'
+    it('happy path', () => {
         const config = {
             client: {
                 auth: {
-                    privateKey: '0x111'
+                    privateKey: 'will-be-overridden'
                 }
             },
             plugins: {
-                brubeckMiner: {}
+                info: {}
             }
         }
-        process.env.OVERRIDE_BROKER_BENEFICIARY_ADDRESS = BENEFICIARY_ADDRESS
-        await overrideConfigToEnvVarsIfGiven(config)
-        expect((config.plugins.brubeckMiner as any).beneficiaryAddress).toEqual(BENEFICIARY_ADDRESS)
+        process.env.STREAMR__BROKER__CLIENT__AUTH__PRIVATE_KEY = '0x111'
+        process.env.STREAMR__BROKER__CLIENT__NETWORK__TRACKERS_1__ID = 'tracker1-id'
+        process.env.STREAMR__BROKER__CLIENT__NETWORK__TRACKERS_1__HTTP = 'tracker1-http'
+        process.env.STREAMR__BROKER__CLIENT__NETWORK__TRACKERS_2__ID = 'tracker2-id'
+        process.env.STREAMR__BROKER__CLIENT__NETWORK__TRACKERS_2__HTTP = 'tracker2-http'
+        process.env.STREAMR__BROKER__CLIENT__NETWORK__TRACKER_PING_INTERVAL = '-0.5'
+        process.env.STREAMR__BROKER__CLIENT__ORDER_MESSAGES = 'true'
+        process.env.STREAMR__BROKER__CLIENT__GAP_FILL = 'false'
+        process.env.STREAMR__BROKER__AUTHENTICATION__KEYS_1 = 'key-1'
+        process.env.STREAMR__BROKER__AUTHENTICATION__KEYS_2 = 'key-2'
+        process.env.STREAMR__BROKER__PLUGINS__BRUBECK_MINER__BENEFICIARY_ADDRESS = '0x222'
+        process.env.STREAMR__BROKER__PLUGINS__BRUBECK_MINER__STUN_SERVER_HOST = 'null'
+        overrideConfigToEnvVarsIfGiven(config)
+        expect(config).toEqual({
+            client: {
+                auth: {
+                    privateKey: '0x111'
+                },
+                network: {
+                    trackers: [{
+                        id: 'tracker1-id',
+                        http: 'tracker1-http'
+                    }, {
+                        id: 'tracker2-id',
+                        http: 'tracker2-http'
+                    }],
+                    trackerPingInterval: -0.5
+                },
+                orderMessages: true,
+                gapFill: false
+            },
+            authentication: {
+                keys: ['key-1', 'key-2']
+            },
+            plugins: {
+                brubeckMiner: {
+                    beneficiaryAddress: '0x222',
+                    stunServerHost: null
+                },
+                info: {}
+            }
+        })
+    })
+
+    it('empty variable', () => {
+        process.env.STREAMR__BROKER__CLIENT__AUTH__PRIVATE_KEY = ''
+        process.env.STREAMR__BROKER__PLUGINS__BRUBECK_MINER__BENEFICIARY_ADDRESS = '0x222'
+        const config = {} as any
+        overrideConfigToEnvVarsIfGiven(config)
+        expect(config).toEqual({
+            plugins: {
+                brubeckMiner: {
+                    beneficiaryAddress: '0x222'
+                }
+            }
+        })
+    })
+
+    it('malformed variable', () => {
+        expect(() => {
+            process.env.STREAMR__BROKER__AUTHENTICATION__KEYS1 = 'key-1'
+            overrideConfigToEnvVarsIfGiven({} as any)
+        }).toThrow('STREAMR__BROKER__AUTHENTICATION__KEYS1')
     })
 })
