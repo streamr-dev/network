@@ -60,9 +60,7 @@ export const exponentialRunOff = async (task: () => Promise<void>, description: 
         }
         try { // Abort controller throws unexpected errors in destroy?
             await wait(delay, abortSignal)
-        } catch (err) {
-            logger.warn(err)
-        }
+        } catch (_err) {}
     }
 }
 
@@ -217,6 +215,7 @@ export class StreamrNode extends EventEmitter<Events> {
                         .map((entrypoint) => stream!.layer1.joinDht(entrypoint, false))
                 )
                 if (stream!.layer1.getBucketSize() === 0) {
+                    logger.warn(`${stream!.layer1.getNeighborList().getUncontactedContacts(10).length}`)
                     throw new Error(`Node is alone in stream or a network split is still possible`)
                 }
             }

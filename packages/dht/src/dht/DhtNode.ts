@@ -36,6 +36,7 @@ import {
     runAndRaceEvents3,
     RunAndRaceEventsReturnType,
     waitForEvent3,
+    runAndWaitForEvents3,
     waitForCondition
 } from '@streamr/utils'
 import { v4 } from 'uuid'
@@ -508,7 +509,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         }
 
         logger.info(
-            `Joining ${this.config.serviceId === 'layer0' ? 'The Streamr Network' : `Control Layer for ${this.config.serviceId}`}`
+            `${this.ownPeerDescriptor!.nodeName} Joining ${this.config.serviceId === 'layer0' ? 'The Streamr Network' : `Control Layer for ${this.config.serviceId}`}`
             + ` via entrypoint ${keyFromPeerDescriptor(entryPointDescriptor)}`
         )
         const entryPoint = new DhtPeer(
@@ -973,9 +974,12 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             reachableThrough: [],
             routingPath: []
         }
-        const promise = waitForEvent3<RecursiveFindSessionEvents>(recursiveFindSession, 'findCompleted', 60000)
-        this.doFindRecursevily(params).catch(() => {console.error("ÄÄÄÄ")})
-        await promise
+
+        await runAndWaitForEvents3<RecursiveFindSessionEvents>(
+            [() => this.doFindRecursevily(params)],
+            [[recursiveFindSession, 'findCompleted']],
+            60000
+        )
 
         const results = recursiveFindSession.getResults()
         logger.trace("recursive find results: " + JSON.stringify(results))
@@ -1294,7 +1298,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         return successfulNodes
     }
 
-    public async getDataFromDht(idToFind: Uint8Array): Promise<RecursiveFindResult> {
+    public getDataFromDht(idToFind: Uint8Array): Promise<RecursiveFindResult> {
         return this.startRecursiveFind(idToFind, FindMode.DATA)
     }
 

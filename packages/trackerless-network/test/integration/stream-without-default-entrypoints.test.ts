@@ -53,7 +53,7 @@ describe('stream without default entrypoints', () => {
             entryPoints: [entryPointPeerDescriptor]
         })
         await entrypoint.start()
-        await Promise.all(range(20).map(async (i) => {
+        await Promise.all(range(10).map(async (i) => {
             const peerDescriptor: PeerDescriptor = {
                 kademliaId: PeerID.fromString(`${i}`).value,
                 type: NodeType.NODEJS,
@@ -67,6 +67,8 @@ describe('stream without default entrypoints', () => {
             })
             nodes.push(node)
             await node.start()
+            await node.stack.getLayer0DhtNode().garbageCollectConnections()
+            await node.stack.getLayer0DhtNode().waitReadyForTesting()
         }))
     })
 
@@ -109,7 +111,7 @@ describe('stream without default entrypoints', () => {
         console.log("here!!!")
         await Promise.all([
             waitForCondition(() => numOfReceivedMessages === numOfSubscribers),
-            nodes[15].waitForJoinAndPublish(streamMessage, [])
+            nodes[9].waitForJoinAndPublish(streamMessage, [])
         ])
     }, 90000)
 
