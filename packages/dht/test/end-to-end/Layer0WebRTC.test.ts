@@ -50,7 +50,7 @@ describe('Layer0 with WebRTC connections', () => {
     })
 
     it('Happy path two peers', async () => {
-        const promise =  Promise.all([
+        const promise = Promise.all([
             waitForEvent3<ConnectionManagerEvents>(node1.getTransport() as ConnectionManager, 'newConnection'),
             node2.joinDht(epPeerDescriptor)
         ])

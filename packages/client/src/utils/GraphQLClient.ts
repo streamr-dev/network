@@ -62,7 +62,7 @@ export class GraphQLClient {
          * or we want to return non-root elements as items, the caller must pass a custom 
          * function to parse the items.
          */
-        parseItems: ((response: any) => T[]) = (response: any) =>  {
+        parseItems: ((response: any) => T[]) = (response: any) => {
             const rootKey = Object.keys(response)[0]
             return (response as any)[rootKey]
         },

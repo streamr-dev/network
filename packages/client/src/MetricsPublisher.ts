@@ -27,7 +27,7 @@ export const DEFAULTS = {
     maxPublishDelay: 30000
 }
 
-const getNormalizedConfig = (config: Pick<StreamrClientConfig, 'metrics' | 'auth'>): NormalizedConfig  => {
+const getNormalizedConfig = (config: Pick<StreamrClientConfig, 'metrics' | 'auth'>): NormalizedConfig => {
     if (config.metrics === true) {
         return DEFAULTS
     } else if (config.metrics === false) {
