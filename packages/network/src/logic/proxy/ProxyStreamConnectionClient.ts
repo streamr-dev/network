@@ -169,10 +169,6 @@ export class ProxyStreamConnectionClient extends EventEmitter {
         userId: string
     ): Promise<void> {
         logger.info(`Open proxy connection to ${targetNodeId} on ${streamPartId}`)
-        if (!this.connections.has(streamPartId)) {
-            this.connections.set(streamPartId, new Map())
-        }
-        this.connections.get(streamPartId)!.set(targetNodeId, direction)
         try {
             await this.connectAndHandshake(streamPartId, targetNodeId, direction, userId)
         } catch (err) {
@@ -229,6 +225,10 @@ export class ProxyStreamConnectionClient extends EventEmitter {
     private processHandshakeResponse(message: ProxyConnectionResponse, nodeId: NodeId): void {
         const streamPartId = message.getStreamPartID()
         if (message.accepted) {
+            if (!this.connections.has(streamPartId)) {
+                this.connections.set(streamPartId, new Map())
+            }
+            this.connections.get(streamPartId)!.set(nodeId, message.direction)
             if (message.direction === ProxyDirection.PUBLISH) {
                 this.streamPartManager.addOutOnlyNeighbor(streamPartId, nodeId)
                 this.propagation.onNeighborJoined(nodeId, streamPartId)
