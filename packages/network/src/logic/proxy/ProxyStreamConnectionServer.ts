@@ -77,10 +77,8 @@ export class ProxyStreamConnectionServer {
 
     private processLeaveRequest(message: UnsubscribeRequest, nodeId: NodeId): void {
         const streamPartId = message.getStreamPartID()
-        if (this.hasConnection(streamPartId, nodeId)) {
-            this.removeConnection(streamPartId, nodeId)
-            this.node.emit(Event.ONE_WAY_CONNECTION_CLOSED, nodeId, streamPartId)
-        }
+        this.removeConnection(streamPartId, nodeId)
+        this.node.emit(Event.ONE_WAY_CONNECTION_CLOSED, nodeId, streamPartId)
         logger.info(`Proxy node ${nodeId} closed one-way stream connection for ${streamPartId}`)
     }
 
@@ -90,8 +88,8 @@ export class ProxyStreamConnectionServer {
             if (this.connections.get(streamPartId)!.size === 0) {
                 this.connections.delete(streamPartId)
             }
+            this.streamPartManager.removeNodeFromStreamPart(streamPartId, nodeId)
         }
-        this.streamPartManager.removeNodeFromStreamPart(streamPartId, nodeId)
     }
 
     private hasConnection(streamPartId: StreamPartID, nodeId: NodeId): boolean {
