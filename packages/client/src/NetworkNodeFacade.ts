@@ -31,15 +31,20 @@ export interface NetworkNodeStub {
     setExtraMetadata: (metadata: Record<string, unknown>) => void
     getMetricsContext: () => MetricsContext
     hasStreamPart: (streamPartId: StreamPartID) => boolean
+    /** @internal */
     hasProxyConnection: (streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection) => boolean
     /** @internal */
     start: () => void
     /** @internal */
     stop: () => Promise<unknown>
     /** @internal */
-    openProxyConnection: (streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection, userId: string) => Promise<void>
-    /** @internal */
-    closeProxyConnection: (streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection) => Promise<void>
+    setProxies: (
+        streamPartId: StreamPartID,
+        nodeIds: string[],
+        direction: ProxyDirection,
+        getUserId: () => Promise<string>,
+        connectionCount?: number
+    ) => Promise<void>
 }
 
 export const getEthereumAddressFromNodeId = (nodeId: string): string => {
@@ -205,18 +210,22 @@ export class NetworkNodeFacade {
         return this.cachedNode!.publish(streamMessage)
     }
 
-    async openProxyConnection(streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection): Promise<void> {
+    async setProxies(
+        streamPartId: StreamPartID,
+        nodeIds: string[],
+        direction: ProxyDirection,
+        connectionCount?: number
+    ): Promise<void> {
         if (this.isStarting()) {
             await this.startNodeTask()
         }
-        await this.cachedNode!.openProxyConnection(streamPartId, nodeId, direction, (await this.authentication.getAddress()))
-    }
-
-    async closeProxyConnection(streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection): Promise<void> {
-        if (this.isStarting()) {
-            return
-        }
-        await this.cachedNode!.closeProxyConnection(streamPartId, nodeId, direction)
+        await this.cachedNode!.setProxies(
+            streamPartId,
+            nodeIds,
+            direction,
+            () => this.authentication.getAddress(),
+            connectionCount
+        )
     }
 
     private isStarting(): boolean {

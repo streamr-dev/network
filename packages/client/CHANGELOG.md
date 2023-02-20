@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Proxy enhancements
+  - Use `.setProxies` instead of `.openProxyConnections` and `.closeProxyConnections`.
+  - It is possible to set a limit for the number of proxy connections while having a larger set of nodes to choose from.
 - All contract providers are used to query the tracker registry, storage node registry and stream storage registry
 - Stream registry contract queries are done in sequence
 - Combine `encryption` and `decryption` config option blocks

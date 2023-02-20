@@ -7,7 +7,6 @@ import { pOnce } from './utils/promises'
 import { StreamrClientConfig, createStrictConfig, redactConfig, StrictStreamrClientConfig, ConfigInjectionToken } from './Config'
 import { Publisher } from './publish/Publisher'
 import { Subscriber } from './subscribe/Subscriber'
-import { ProxyPublishSubscribe } from './ProxyPublishSubscribe'
 import { ResendOptions, Resends } from './subscribe/Resends'
 import { ResendSubscription } from './subscribe/ResendSubscription'
 import { NetworkNodeFacade, NetworkNodeStub } from './NetworkNodeFacade'
@@ -52,7 +51,6 @@ export class StreamrClient {
     private readonly resends: Resends
     private readonly publisher: Publisher
     private readonly subscriber: Subscriber
-    private readonly proxyPublishSubscribe: ProxyPublishSubscribe
     private readonly groupKeyStore: GroupKeyStore
     private readonly destroySignal: DestroySignal
     private readonly streamRegistry: StreamRegistry
@@ -80,7 +78,6 @@ export class StreamrClient {
         this.resends = container.resolve<Resends>(Resends)
         this.publisher = container.resolve<Publisher>(Publisher)
         this.subscriber = container.resolve<Subscriber>(Subscriber)
-        this.proxyPublishSubscribe = container.resolve<ProxyPublishSubscribe>(ProxyPublishSubscribe)
         this.groupKeyStore = container.resolve<GroupKeyStore>(GroupKeyStore)
         this.destroySignal = container.resolve<DestroySignal>(DestroySignal)
         this.streamRegistry = container.resolve<StreamRegistry>(StreamRegistry)
@@ -507,12 +504,14 @@ export class StreamrClient {
         return this.node.getNode()
     }
 
-    openProxyConnections(streamDefinition: StreamDefinition, nodeIds: string[], direction: ProxyDirection): Promise<void> {
-        return this.proxyPublishSubscribe.openProxyConnections(streamDefinition, nodeIds, direction)
-    }
-
-    closeProxyConnections(streamDefinition: StreamDefinition, nodeIds: string[], direction: ProxyDirection): Promise<void> {
-        return this.proxyPublishSubscribe.closeProxyConnections(streamDefinition, nodeIds, direction)
+    async setProxies(
+        streamDefinition: StreamDefinition,
+        nodeIds: string[],
+        direction: ProxyDirection,
+        connectionCount?: number
+    ): Promise<void> {
+        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
+        await this.node.setProxies(streamPartId, nodeIds, direction, connectionCount)
     }
 
     // --------------------------------------------------------------------------------------------
