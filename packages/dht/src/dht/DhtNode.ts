@@ -649,7 +649,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         }
         this.getClosestPeersFromBucketIntervalRef = setTimeout(async () =>
             await this.getClosestPeersFromBucket()
-        , 90 * 1000)
+            , 90 * 1000)
     }
 
     public getBucketSize(): number {
@@ -1033,22 +1033,21 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
                 // return this.createRouteMessageAck(routedMessage)
             }
 
-        } else {
-            if (this.ownPeerId!.equals(idToFind)) {
+        } else if (this.ownPeerId!.equals(idToFind)) {
+            // Exact match, they were trying to find our kademliaID
 
-                // Exact match, they were trying to find our kademliaID
+            // Exact match, they were trying to find our kademliaID
 
-                this.reportRecursiveFindResult(routedMessage.routingPath, routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
-                    this.getClosestPeerDescriptors(routedMessage.destinationPeer!.kademliaId, 5), undefined, true)
-                return this.createRouteMessageAck(routedMessage)
-            }
+            this.reportRecursiveFindResult(routedMessage.routingPath, routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
+                this.getClosestPeerDescriptors(routedMessage.destinationPeer!.kademliaId, 5), undefined, true)
+            return this.createRouteMessageAck(routedMessage)
         }
 
         const session = new RoutingSession(
             this.ownPeerDescriptor!,
             routedMessage,
             this.connections,
-            1,
+            this.ownPeerId!.equals(peerIdFromPeerDescriptor(routedMessage.sourcePeer!)) ? 2 : 1,
             1500,
             RoutingMode.RECURSIVE_FIND,
             undefined,

@@ -12,6 +12,7 @@ import {
 } from '@streamr/utils'
 import { uniq } from 'lodash'
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
+import { sample } from 'lodash'
 
 interface StreamObject {
     layer1: DhtNode
@@ -88,21 +89,21 @@ export class StreamrNode extends EventEmitter<Events> {
         await this.P2PTransport!.stop()
     }
 
-    subscribeToStream(streamPartID: string, entryPointDescriptor: PeerDescriptor): void {
+    subscribeToStream(streamPartID: string, knownEntryPointDescriptors: PeerDescriptor[]): void {
         if (!this.streams.has(streamPartID)) {
-            this.joinStream(streamPartID, entryPointDescriptor)
+            this.joinStream(streamPartID, knownEntryPointDescriptors)
                 .catch((err) => {
                     logger.warn(`Failed to subscribe to stream ${streamPartID} with error: ${err}`)
-                    this.subscribeToStream(streamPartID, entryPointDescriptor)
+                    this.subscribeToStream(streamPartID, knownEntryPointDescriptors)
                 })
         }
     }
 
-    publishToStream(streamPartID: string, entryPointDescriptor: PeerDescriptor, msg: StreamMessage): void {
+    publishToStream(streamPartID: string, knownEntryPointDescriptors: PeerDescriptor[], msg: StreamMessage): void {
         if (this.streams.has(streamPartID)) {
             this.streams.get(streamPartID)!.layer2.broadcast(msg)
         } else {
-            this.joinStream(streamPartID, entryPointDescriptor)
+            this.joinStream(streamPartID, knownEntryPointDescriptors)
                 .then(() => this.streams.get(streamPartID)?.layer2.broadcast(msg))
                 .catch((err) => {
                     logger.warn(`Failed to publish to stream ${streamPartID} with error: ${err}`)
@@ -122,7 +123,7 @@ export class StreamrNode extends EventEmitter<Events> {
         }
     }
 
-    async joinStream(streamPartID: string, entryPoint: PeerDescriptor): Promise<void> {
+    async joinStream(streamPartID: string, knownEntryPointDescriptors: PeerDescriptor[]): Promise<void> {
         if (this.streams.has(streamPartID)) {
             return
         }
@@ -132,7 +133,7 @@ export class StreamrNode extends EventEmitter<Events> {
             serviceId: 'layer1::' + streamPartID,
             peerDescriptor: this.layer0!.getPeerDescriptor(),
             routeMessageTimeout: 5000,
-            entryPoints: [entryPoint],
+            entryPoints: knownEntryPointDescriptors,
             numberOfNodesPerKBucket: 4,
             rpcRequestTimeout: 15000,
             dhtJoinTimeout: 90000,
@@ -155,21 +156,21 @@ export class StreamrNode extends EventEmitter<Events> {
         layer2.on('message', (message: StreamMessage) => {
             this.emit('newMessage', message)
         })
-        await layer1.joinDht(entryPoint)
+        await layer1.joinDht(sample(knownEntryPointDescriptors)!)
     }
 
-    async waitForJoinAndPublish(streamPartId: string, entrypointDescriptor: PeerDescriptor, msg: StreamMessage): Promise<number> {
-        await this.joinStream(streamPartId, entrypointDescriptor)
+    async waitForJoinAndPublish(streamPartId: string, knownEntryPointDescriptors: PeerDescriptor[], msg: StreamMessage): Promise<number> {
+        await this.joinStream(streamPartId, knownEntryPointDescriptors)
         if (this.getStream(streamPartId)!.layer1.getBucketSize() > 0) {
             await waitForCondition(() => this.getStream(streamPartId)!.layer2.getTargetNeighborStringIds().length > 0)
         }
-        this.publishToStream(streamPartId, entrypointDescriptor, msg)
+        this.publishToStream(streamPartId, knownEntryPointDescriptors, msg)
         return this.getStream(streamPartId)?.layer2.getTargetNeighborStringIds().length || 0
     }
 
-    async subscribeAndWaitForJoin(streamPartId: string, entryPointDescriptor: PeerDescriptor): Promise<number> {
-        await this.joinStream(streamPartId, entryPointDescriptor)
-        this.subscribeToStream(streamPartId, entryPointDescriptor)
+    async subscribeAndWaitForJoin(streamPartId: string, knownEntryPointDescriptors: PeerDescriptor[]): Promise<number> {
+        await this.joinStream(streamPartId, knownEntryPointDescriptors)
+        this.subscribeToStream(streamPartId, knownEntryPointDescriptors)
         return this.getStream(streamPartId)?.layer2.getTargetNeighborStringIds().length || 0
     }
 
