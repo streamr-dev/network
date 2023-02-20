@@ -18,6 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+## [8.0.1] - 2023-02-20
+
+### Fixed 
+
+- Browser bundle
+
 
 ## [8.0.0] - 2023-02-20
 
@@ -268,7 +274,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fixed an import so that the client successfully loads in a web browser environment (NET-721)
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/client/v8.0.0...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/client/v8.0.1...HEAD
+[8.0.1]: https://github.com/streamr-dev/network/compare/client/v8.0.0...client/v8.0.1
 [8.0.0]: https://github.com/streamr-dev/network/compare/client/v7.3.0...client/v8.0.0
 [7.3.0]: https://github.com/streamr-dev/network/compare/client/v7.2.1...client/v7.3.0
 [7.2.1]: https://github.com/streamr-dev/network/compare/client/v7.2.0...client/v7.2.1
