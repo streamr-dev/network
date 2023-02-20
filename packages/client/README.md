@@ -680,8 +680,8 @@ subscriber.addEncryptionKey(key, streamId)
 #### Configuration
 
 There are two optional configuration options related to encryption keys:
-- `decryption.keyRequestTimeout`: max time (in milliseconds) to wait before a key request timeouts
-- `decryption.maxKeyRequestsPerSecond`: max count of key request to be sent within a second (i.e. it throttles the requests if it receives messages from many new publishers within a short period of time)
+- `encryption.keyRequestTimeout`: max time (in milliseconds) to wait before a key request timeouts
+- `encryption.maxKeyRequestsPerSecond`: max count of key request to be sent within a second (i.e. it throttles the requests if it receives messages from many new publishers within a short period of time)
 
 ### Proxy publishing and subscribing
 

@@ -317,14 +317,7 @@
                 "litProtocolLogging": {
                     "type": "boolean",
                     "default": false
-                }
-            },
-            "default": {}
-        },
-        "decryption": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
+                },
                 "keyRequestTimeout": {
                     "type": "number",
                     "default": 30000
