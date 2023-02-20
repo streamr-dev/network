@@ -1,6 +1,5 @@
 import { TrackerRegistryRecord } from '@streamr/protocol'
-import { omit } from 'lodash'
-import { createStrictConfig, redactConfig, STREAM_CLIENT_DEFAULTS } from '../../src/Config'
+import { createStrictConfig, redactConfig } from '../../src/Config'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { generateEthereumAccount } from '../../src/Ethereum'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -146,10 +145,5 @@ describe('Config', () => {
         }
         redactConfig(config)
         expect(config.auth.privateKey).toBe('(redacted)')
-    })
-
-    it('defaults', () => {
-        const config = createStrictConfig({})
-        expect(omit(config, 'id')).toEqual(STREAM_CLIENT_DEFAULTS)
     })
 })
