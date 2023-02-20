@@ -11,7 +11,7 @@ export const scheduleAtFixedRate = (
     task: (now: number) => Promise<void>,
     interval: number,
     abortSignal: AbortSignal
-): void  => {
+): void => {
     const initTime = Date.now()
     let invocationTime = initTime - (initTime % interval)
     repeatScheduleTask((doneCb) => {

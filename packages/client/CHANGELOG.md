@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add support for experimental encryption key exchange via [Lit Protocol](https://litprotocol.com/). Enabled by
+  setting configuration option `encryption.litProtocolEnabled` to be true.
+
 ### Changed
 
 - Proxy enhancements

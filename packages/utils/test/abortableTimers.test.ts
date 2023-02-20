@@ -4,7 +4,7 @@ import { wait } from '../src/wait'
 const TIMEOUT_UNIT = 100
 const INTERVAL_UNIT = 50
 
-describe('setAbortableTimeout',  () => {
+describe('setAbortableTimeout', () => {
     it('invokes callback once if not aborted', async () => {
         const cb = jest.fn()
         setAbortableTimeout(cb, TIMEOUT_UNIT, new AbortController().signal)
@@ -34,7 +34,7 @@ describe('setAbortableTimeout',  () => {
     })
 })
 
-describe('setAbortableInterval',  () => {
+describe('setAbortableInterval', () => {
     let defaultTestAbortController: AbortController
 
     beforeEach(() => {

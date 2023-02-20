@@ -8,13 +8,18 @@ import { Stream } from '../../src/Stream'
 import { createPrivateKeyAuthentication } from '../../src/Authentication'
 import { DestroySignal } from '../../src/DestroySignal'
 import { DecryptError, EncryptionUtil } from '../../src/encryption/EncryptionUtil'
-import { StreamrClientEventEmitter } from '../../src/events'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { createSubscribePipeline } from "../../src/subscribe/subscribePipeline"
 import { collect } from '../../src/utils/iterators'
 import { mockLoggerFactory } from '../test-utils/utils'
 import { GroupKey } from './../../src/encryption/GroupKey'
 import { MessageStream } from './../../src/subscribe/MessageStream'
+import { mock } from 'jest-mock-extended'
+import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
+import { LitProtocolFacade } from '../../src/encryption/LitProtocolFacade'
+import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
+import { StreamrClientEventEmitter } from '../../src/events'
+import { StrictStreamrClientConfig } from '../../src/Config'
 
 const CONTENT = {
     foo: 'bar'
@@ -65,28 +70,39 @@ describe('subscribePipeline', () => {
             undefined as any,
             undefined as any
         )
+        const groupKeyStore = {
+            get: async () => undefined
+        } as any
+        const destroySignal = new DestroySignal()
+        const config: Pick<StrictStreamrClientConfig, 'decryption' | 'encryption'> = {
+            decryption: {
+                keyRequestTimeout: 50,
+                maxKeyRequestsPerSecond: 0
+            },
+            encryption: {
+                litProtocolEnabled: false,
+                litProtocolLogging: false
+            }
+        }
         pipeline = createSubscribePipeline({
             streamPartId,
             loggerFactory: mockLoggerFactory(),
             resends: undefined as any,
-            groupKeyStore: {
-                get: async () => undefined
-            } as any,
-            subscriberKeyExchange: {
-                requestGroupKey: async () => {}
-            } as any,
+            groupKeyManager: new GroupKeyManager(
+                groupKeyStore,
+                mock<LitProtocolFacade>(),
+                mock<SubscriberKeyExchange>(),
+                new StreamrClientEventEmitter(),
+                destroySignal,
+                config
+            ),
             streamRegistryCached: {
                 getStream: async () => stream,
                 isStreamPublisher: async () => true,
                 clearStream: () => {}
             } as any,
-            streamrClientEventEmitter: new StreamrClientEventEmitter(),
-            destroySignal: new DestroySignal(),
-            config: {
-                decryption: {
-                    keyRequestTimeout: 50
-                } as any
-            } as any
+            destroySignal,
+            config: config as any
         })
     })
 

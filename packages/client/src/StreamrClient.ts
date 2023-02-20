@@ -34,6 +34,7 @@ import { LoggerFactory } from './utils/LoggerFactory'
 import { convertStreamMessageToMessage, Message } from './Message'
 import { ErrorCode } from './HttpUtil'
 import { omit } from 'lodash'
+import { StreamrClientError } from './StreamrClientError'
 
 /**
  * The main API used to interact with Streamr.
@@ -119,6 +120,9 @@ export class StreamrClient {
     async updateEncryptionKey(opts: UpdateEncryptionKeyOptions): Promise<void> {
         if (opts.streamId === undefined) {
             throw new Error('streamId required')
+        }
+        if (opts.key !== undefined && this.config.encryption.litProtocolEnabled) {
+            throw new StreamrClientError('cannot pass "key" when Lit Protocol is enabled', 'UNSUPPORTED_OPERATION')
         }
         const streamId = await this.streamIdBuilder.toStreamID(opts.streamId)
         const queue = await this.publisher.getGroupKeyQueue(streamId)
