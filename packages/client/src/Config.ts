@@ -1,5 +1,4 @@
 import 'reflect-metadata'
-import type { BigNumber } from '@ethersproject/bignumber'
 import type { Overrides } from '@ethersproject/contracts'
 import cloneDeep from 'lodash/cloneDeep'
 import Ajv, { ErrorObject } from 'ajv'
@@ -43,8 +42,6 @@ export interface EthereumNetworkConfig {
     chainId: number
     overrides?: Overrides
     highGasPriceStrategy?: boolean
-    /** @deprecated */
-    gasPriceStrategy?: (estimatedGasPrice: BigNumber) => BigNumber
 }
 
 /**
