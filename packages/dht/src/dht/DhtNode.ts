@@ -649,7 +649,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         }
         this.getClosestPeersFromBucketIntervalRef = setTimeout(async () =>
             await this.getClosestPeersFromBucket()
-            , 90 * 1000)
+        , 90 * 1000)
     }
 
     public getBucketSize(): number {
