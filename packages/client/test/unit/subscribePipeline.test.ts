@@ -74,14 +74,12 @@ describe('subscribePipeline', () => {
             get: async () => undefined
         } as any
         const destroySignal = new DestroySignal()
-        const config: Pick<StrictStreamrClientConfig, 'decryption' | 'encryption'> = {
-            decryption: {
-                keyRequestTimeout: 50,
-                maxKeyRequestsPerSecond: 0
-            },
+        const config: Pick<StrictStreamrClientConfig, 'encryption'> = {
             encryption: {
                 litProtocolEnabled: false,
-                litProtocolLogging: false
+                litProtocolLogging: false,
+                keyRequestTimeout: 50,
+                maxKeyRequestsPerSecond: 0
             }
         }
         pipeline = createSubscribePipeline({

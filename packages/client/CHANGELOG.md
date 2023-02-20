@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - All contract providers are used to query the tracker registry, storage node registry and stream storage registry
 - Stream registry contract queries are done in sequence
+- Combine `encryption` and `decryption` config option blocks
+  - All options are now in the `encryption` block
 
 ### Deprecated
 

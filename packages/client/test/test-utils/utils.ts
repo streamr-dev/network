@@ -178,9 +178,7 @@ export const createGroupKeyManager = (groupKeyStore: GroupKeyStore = mock<GroupK
         {
             encryption: {
                 litProtocolEnabled: false,
-                litProtocolLogging: false
-            },
-            decryption: {
+                litProtocolLogging: false,
                 maxKeyRequestsPerSecond: 10,
                 keyRequestTimeout: 50
             }

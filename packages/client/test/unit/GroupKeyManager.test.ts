@@ -32,9 +32,7 @@ describe('GroupKeyManager', () => {
             {
                 encryption: {
                     litProtocolEnabled,
-                    litProtocolLogging: false
-                },
-                decryption: {
+                    litProtocolLogging: false,
                     maxKeyRequestsPerSecond: 10,
                     keyRequestTimeout: 100
                 }

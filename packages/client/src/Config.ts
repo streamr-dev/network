@@ -64,6 +64,9 @@ export interface StreamrClientConfig {
     retryResendAfter?: number
     gapFillTimeout?: number
 
+    /**
+     * Message encryption/decryption
+     */
     encryption?: {
         /**
          * Enable experimental Lit Protocol key exchange.
@@ -72,11 +75,14 @@ export interface StreamrClientConfig {
          * secondarily through the standard Streamr key-exchange system.
          */
         litProtocolEnabled?: boolean
-
         /**
          * Enable log messages of the Lit Protocol library to be printed to stdout.
          */
         litProtocolLogging?: boolean
+        // TODO keyRequestTimeout and maxKeyRequestsPerSecond config options could be applied
+        // to lit protocol key requests (both encryption and decryption?)
+        keyRequestTimeout?: number
+        maxKeyRequestsPerSecond?: number
     }
 
     network?: {
@@ -111,11 +117,6 @@ export interface StreamrClientConfig {
         /** Some TheGraph instance, that indexes the streamr registries */
         theGraphUrl?: string
         maxConcurrentCalls?: number
-    }
-
-    decryption?: {
-        keyRequestTimeout?: number
-        maxKeyRequestsPerSecond?: number
     }
 
     metrics?: {
@@ -153,7 +154,6 @@ export type StrictStreamrClientConfig = MarkOptional<Required<StreamrClientConfi
     network: MarkOptional<Exclude<Required<StreamrClientConfig['network']>, undefined>, 'location'>
     contracts: Exclude<Required<StreamrClientConfig['contracts']>, undefined>
     encryption: Exclude<Required<StreamrClientConfig['encryption']>, undefined>
-    decryption: Exclude<Required<StreamrClientConfig['decryption']>, undefined>
     cache: Exclude<Required<StreamrClientConfig['cache']>, undefined>
     _timeouts: Exclude<DeepRequired<StreamrClientConfig['_timeouts']>, undefined>
 }

@@ -49,7 +49,7 @@ export class SubscriberKeyExchange {
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         validator: Validator,
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
-        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'decryption'>
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'encryption'>
     ) {
         this.logger = loggerFactory.createLogger(module)
         this.networkNodeFacade = networkNodeFacade
@@ -64,7 +64,7 @@ export class SubscriberKeyExchange {
         })
         this.requestGroupKey = withThrottling((groupKeyId: string, publisherId: EthereumAddress, streamPartId: StreamPartID) => {
             return this.doRequestGroupKey(groupKeyId, publisherId, streamPartId)
-        }, config.decryption.maxKeyRequestsPerSecond)
+        }, config.encryption.maxKeyRequestsPerSecond)
     }
 
     private async doRequestGroupKey(groupKeyId: string, publisherId: EthereumAddress, streamPartId: StreamPartID): Promise<void> {

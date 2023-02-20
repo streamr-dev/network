@@ -18,7 +18,7 @@ export class GroupKeyManager {
     private readonly subscriberKeyExchange: SubscriberKeyExchange
     private readonly eventEmitter: StreamrClientEventEmitter
     private readonly destroySignal: DestroySignal
-    private readonly config: Pick<StrictStreamrClientConfig, 'decryption' | 'encryption'>
+    private readonly config: Pick<StrictStreamrClientConfig, 'encryption'>
 
     constructor(
         groupKeyStore: GroupKeyStore,
@@ -26,7 +26,7 @@ export class GroupKeyManager {
         subscriberKeyExchange: SubscriberKeyExchange,
         eventEmitter: StreamrClientEventEmitter,
         destroySignal: DestroySignal,
-        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'decryption' | 'encryption'>
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'encryption'>
     ) {
         this.groupKeyStore = groupKeyStore
         this.litProtocolFacade = litProtocolFacade
@@ -60,7 +60,7 @@ export class GroupKeyManager {
             // TODO remove "as any" type casing in NET-889
             this.eventEmitter as any,
             'addGroupKey',
-            this.config.decryption.keyRequestTimeout,
+            this.config.encryption.keyRequestTimeout,
             (storedGroupKey: GroupKey) => storedGroupKey.id === groupKeyId,
             this.destroySignal.abortSignal
         )
