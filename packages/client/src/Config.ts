@@ -64,6 +64,21 @@ export interface StreamrClientConfig {
     retryResendAfter?: number
     gapFillTimeout?: number
 
+    encryption?: {
+        /**
+         * Enable experimental Lit Protocol key exchange.
+         *
+         * When enabled encryption key storing and fetching will be primarily done through the Lit Protocol and
+         * secondarily through the standard Streamr key-exchange system.
+         */
+        litProtocolEnabled?: boolean
+
+        /**
+         * Enable log messages of the Lit Protocol library to be printed to stdout.
+         */
+        litProtocolLogging?: boolean
+    }
+
     network?: {
         id?: string
         acceptProxyConnections?: boolean
@@ -137,6 +152,7 @@ export interface StreamrClientConfig {
 export type StrictStreamrClientConfig = MarkOptional<Required<StreamrClientConfig>, 'auth' | 'metrics'> & {
     network: MarkOptional<Exclude<Required<StreamrClientConfig['network']>, undefined>, 'location'>
     contracts: Exclude<Required<StreamrClientConfig['contracts']>, undefined>
+    encryption: Exclude<Required<StreamrClientConfig['encryption']>, undefined>
     decryption: Exclude<Required<StreamrClientConfig['decryption']>, undefined>
     cache: Exclude<Required<StreamrClientConfig['cache']>, undefined>
     _timeouts: Exclude<DeepRequired<StreamrClientConfig['_timeouts']>, undefined>

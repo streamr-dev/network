@@ -4,31 +4,19 @@ import { StreamPartIDUtils } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
 import { DestroySignal } from '../../src/DestroySignal'
 import { GroupKey } from '../../src/encryption/GroupKey'
-import { StreamrClientEventEmitter } from '../../src/events'
 import { Decrypt } from '../../src/subscribe/Decrypt'
-import { createMockMessage, mockLoggerFactory } from '../test-utils/utils'
+import { createGroupKeyManager, createMockMessage, mockLoggerFactory } from '../test-utils/utils'
 
 describe('Decrypt', () => {
 
     it('group key not available: timeout while waiting', async () => {
-        const groupKeyStore = {
-            get: async () => undefined,
-        }
-        const keyExchange = {
-            requestGroupKey: async () => {}
-        }
         const decrypt = new Decrypt(
-            groupKeyStore as any,
-            keyExchange as any,
+            createGroupKeyManager(),
             {
                 clearStream: jest.fn()
             } as any,
             new DestroySignal(),
             mockLoggerFactory(),
-            new StreamrClientEventEmitter(),
-            {
-                keyRequestTimeout: 50
-            } as any
         )
         const groupKey = GroupKey.generate()
         const msg = await createMockMessage({

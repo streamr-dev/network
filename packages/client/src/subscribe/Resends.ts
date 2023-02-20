@@ -10,9 +10,6 @@ import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { HttpUtil } from '../HttpUtil'
 import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
 import { EthereumAddress, Logger, toEthereumAddress, wait } from '@streamr/utils'
-import { GroupKeyStore } from '../encryption/GroupKeyStore'
-import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'
-import { StreamrClientEventEmitter } from '../events'
 import { DestroySignal } from '../DestroySignal'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { LoggerFactory } from '../utils/LoggerFactory'
@@ -21,6 +18,7 @@ import { StreamrClientError } from '../StreamrClientError'
 import { collect } from '../utils/iterators'
 import { counting } from '../utils/GeneratorUtils'
 import { Message } from '../Message'
+import { GroupKeyManager } from '../encryption/GroupKeyManager'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 
@@ -75,14 +73,11 @@ function isResendRange<T extends ResendRangeOptions>(options: any): options is T
 
 @scoped(Lifecycle.ContainerScoped)
 export class Resends {
-
-    private streamStorageRegistry: StreamStorageRegistry
-    private storageNodeRegistry: StorageNodeRegistry
-    private streamRegistryCached: StreamRegistryCached
-    private httpUtil: HttpUtil
-    private readonly groupKeyStore: GroupKeyStore
-    private readonly subscriberKeyExchange: SubscriberKeyExchange
-    private readonly streamrClientEventEmitter: StreamrClientEventEmitter
+    private readonly streamStorageRegistry: StreamStorageRegistry
+    private readonly storageNodeRegistry: StorageNodeRegistry
+    private readonly streamRegistryCached: StreamRegistryCached
+    private readonly httpUtil: HttpUtil
+    private readonly groupKeyManager: GroupKeyManager
     private readonly destroySignal: DestroySignal
     private readonly config: StrictStreamrClientConfig
     private readonly loggerFactory: LoggerFactory
@@ -93,9 +88,7 @@ export class Resends {
         @inject(delay(() => StorageNodeRegistry)) storageNodeRegistry: StorageNodeRegistry,
         @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
         httpUtil: HttpUtil,
-        groupKeyStore: GroupKeyStore,
-        subscriberKeyExchange: SubscriberKeyExchange,
-        streamrClientEventEmitter: StreamrClientEventEmitter,
+        groupKeyManager: GroupKeyManager,
         destroySignal: DestroySignal,
         @inject(ConfigInjectionToken) config: StrictStreamrClientConfig,
         loggerFactory: LoggerFactory
@@ -104,9 +97,7 @@ export class Resends {
         this.storageNodeRegistry = storageNodeRegistry
         this.streamRegistryCached = streamRegistryCached
         this.httpUtil = httpUtil
-        this.groupKeyStore = groupKeyStore
-        this.subscriberKeyExchange = subscriberKeyExchange
-        this.streamrClientEventEmitter = streamrClientEventEmitter
+        this.groupKeyManager = groupKeyManager
         this.destroySignal = destroySignal
         this.config = config
         this.loggerFactory = loggerFactory
@@ -164,10 +155,8 @@ export class Resends {
         const messageStream = createSubscribePipeline({
             streamPartId,
             resends: this,
-            groupKeyStore: this.groupKeyStore,
-            subscriberKeyExchange: this.subscriberKeyExchange,
+            groupKeyManager: this.groupKeyManager,
             streamRegistryCached: this.streamRegistryCached,
-            streamrClientEventEmitter: this.streamrClientEventEmitter,
             destroySignal: this.destroySignal,
             config: this.config,
             loggerFactory: this.loggerFactory
