@@ -53,6 +53,7 @@ export class ProxyStreamConnectionServer {
     private async processHandshakeRequest(message: ProxyConnectionRequest, nodeId: NodeId): Promise<void> {
         const streamPartId = message.getStreamPartID()
         const isAccepted = this.acceptProxyConnections && this.streamPartManager.isSetUp(streamPartId)
+        await this.nodeToNode.respondToProxyConnectionRequest(nodeId, streamPartId, message.direction, isAccepted)
         if (isAccepted) {
             this.addConnection(streamPartId, nodeId, message.direction, message.userId)
             if (message.direction === ProxyDirection.PUBLISH) {
@@ -62,7 +63,6 @@ export class ProxyStreamConnectionServer {
                 this.propagation.onNeighborJoined(nodeId, streamPartId)
             }
         }
-        await this.nodeToNode.respondToProxyConnectionRequest(nodeId, streamPartId, message.direction, isAccepted)
     }
 
     private addConnection(streamPartId: StreamPartID, nodeId: NodeId, direction: ProxyDirection, userId: string): void {

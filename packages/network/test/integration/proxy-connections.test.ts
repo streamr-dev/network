@@ -8,7 +8,7 @@ import {
     toStreamID,
     TrackerRegistryRecord
 } from '@streamr/protocol'
-import { toEthereumAddress, wait, waitForEvent } from '@streamr/utils'
+import { toEthereumAddress, wait, waitForEvent, waitForCondition } from '@streamr/utils'
 
 import { Event as NodeEvent } from '../../src/logic/Node'
 import { createTestNetworkNode, startTestTracker } from '../utils'
@@ -376,4 +376,33 @@ describe('Proxy connection tests', () => {
             }))
         ])
     }, 45000)
+
+    it('Subscriber should not receive messages before handshake is completed', async () => {
+        let numberOfMessagesReceived = 0
+        onewayNode.addMessageListener((_msg) => {
+            numberOfMessagesReceived += 1
+        })
+        await Promise.all([
+            contactNode.publish(new StreamMessage({
+                messageId: new MessageID(toStreamID('stream-0'), 0, 120, 0, PUBLISHER_ID, 'session'),
+                content: {
+                    hello: 'world'
+                },
+                signature: 'signature'
+            })),
+            waitForEvent(contactNode2, NodeEvent.MESSAGE_RECEIVED),
+        ])
+        await onewayNode.setProxies(streamPartId, ['contact-node'], ProxyDirection.SUBSCRIBE, getMockUserId)
+        // Should received buffered messages as contact-node has a propagation target count of 2.
+        // Before the setProxies() call the message has been propagated only to contact-node-2.
+        await waitForCondition(() => numberOfMessagesReceived === 1)
+        contactNode.publish(new StreamMessage({
+            messageId: new MessageID(toStreamID('stream-0'), 0, 120, 1, PUBLISHER_ID, 'session'),
+            content: {
+                hello: 'world'
+            },
+            signature: 'signature'
+        }))
+        await waitForCondition(() => numberOfMessagesReceived === 2)
+    })
 })
