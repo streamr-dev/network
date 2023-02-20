@@ -73,7 +73,7 @@ describe('GroupKey exchange via proxy connections', () => {
 
     it('happy path request', async () => {
         await publisher.setProxies(streamPartId, ['proxy-node'], ProxyDirection.PUBLISH, async () => publisherUserId)
-        await subscriber.setProxies(streamPartId, ['proxy-node'], ProxyDirection.SUBSCRIBE, async () =>  subscriberUserId)
+        await subscriber.setProxies(streamPartId, ['proxy-node'], ProxyDirection.SUBSCRIBE, async () => subscriberUserId)
 
         const requestContent = new GroupKeyRequest({
             recipient: publisherUserId,
