@@ -7,7 +7,7 @@ const { KeyServer } = require('@streamr/test-utils')
 const StreamrClient = require('../../dist')
 const keyserver = new KeyServer()
 
-const { ConfigTest: clientOptions } = StreamrClient
+const { CONFIG_TEST: clientOptions } = StreamrClient
 
 // note this is not the number of messages, just the start number
 let count = 100000 // pedantic: use large initial number so payload size is similar
