@@ -114,7 +114,7 @@ ___
 ## Usage
 
 ### API reference
-See https://api-docs.streamr.network/client/v7.3/index.html
+See https://api-docs.streamr.network/client/v8.0/index.html
 
 ### Client creation
 In Streamr, Ethereum accounts are used for identity. You can generate an Ethereum private key using any Ethereum wallet, or you can use the utility function [`StreamrClient.generateEthereumAccount()`](#utility-functions), which returns the address and private key of a fresh Ethereum account. A private key is not required if you are only subscribing to public streams on the Network.

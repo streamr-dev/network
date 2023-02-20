@@ -8,6 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+
+## [8.0.0] - 2023-02-20
+
+### Added
+
 - Add support for experimental encryption key exchange via [Lit Protocol](https://litprotocol.com/). Enabled by
   setting configuration option `encryption.litProtocolEnabled` to be true.
 
@@ -21,8 +36,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Combine `encryption` and `decryption` config option blocks
   - All options are now in the `encryption` block
 
-### Deprecated
-
 ### Removed
 
 - Remove deprecated:
@@ -33,10 +46,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `StrictStreamrClientConfig` TypeScript interface
   - `NetworkNodeConfig` TypeScript interface
 - Remove `BigNumber` class export (was only used in `gasPriceStrategy`)
-
-### Fixed
-
-### Security
 
 
 ## [7.3.0] - 2023-01-23
@@ -259,7 +268,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fixed an import so that the client successfully loads in a web browser environment (NET-721)
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/client/v7.3.0...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/client/v8.0.0...HEAD
+[8.0.0]: https://github.com/streamr-dev/network/compare/client/v7.3.0...client/v8.0.0
 [7.3.0]: https://github.com/streamr-dev/network/compare/client/v7.2.1...client/v7.3.0
 [7.2.1]: https://github.com/streamr-dev/network/compare/client/v7.2.0...client/v7.2.1
 [7.2.0]: https://github.com/streamr-dev/network/compare/client/v7.1.0...client/v7.2.0
