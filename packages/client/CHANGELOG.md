@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - Remove deprecated `STREAM_CLIENT_DEFAULTS` constant
+- Remove deprecated `ConfigTest` constant
 - Remove deprecated `gasPriceStrategy` config option from `contracts.ethereumNetworks`
 - Remove `BigNumber` class export (was only used in `gasPriceStrategy`)
 

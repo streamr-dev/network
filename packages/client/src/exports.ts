@@ -38,7 +38,7 @@ export {
 export { GroupKey as EncryptionKey } from './encryption/GroupKey'
 export { UpdateEncryptionKeyOptions } from './encryption/GroupKeyStore'
 
-export { CONFIG_TEST, ConfigTest } from './ConfigTest'
+export { CONFIG_TEST } from './ConfigTest'
 export { NetworkNodeStub } from './NetworkNodeFacade'
 export { StreamDefinition } from './types'
 export { formStorageNodeAssignmentStreamId } from './utils/utils'
