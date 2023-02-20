@@ -1,6 +1,6 @@
 {
   "name": "@streamr/network-node",
-  "version": "7.3.0",
+  "version": "8.0.0-beta.0",
   "description": "Minimal and extendable implementation of the Streamr Network network node",
   "repository": {
     "type": "git",
@@ -26,8 +26,8 @@
     "test-unit": "jest test/unit"
   },
   "dependencies": {
-    "@streamr/protocol": "7.3.0",
-    "@streamr/utils": "7.3.0",
+    "@streamr/protocol": "8.0.0-beta.0",
+    "@streamr/utils": "8.0.0-beta.0",
     "cancelable-promise": "^3.2.3",
     "commander": "^8.3.0",
     "heap": "^0.2.6",
@@ -43,8 +43,8 @@
   },
   "devDependencies": {
     "@jest/fake-timers": "^27.0.5",
-    "@streamr/network-tracker": "7.3.0",
-    "@streamr/test-utils": "7.3.0",
+    "@streamr/network-tracker": "8.0.0-beta.0",
+    "@streamr/test-utils": "8.0.0-beta.0",
     "@types/heap": "^0.2.28",
     "@types/lodash": "^4.14.175",
     "@types/uuid": "^8.3.1",

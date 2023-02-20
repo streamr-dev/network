@@ -1,6 +1,6 @@
 {
   "name": "@streamr/cli-tools",
-  "version": "7.3.0",
+  "version": "8.0.0-beta.0",
   "description": "Command line tools for Streamr",
   "repository": {
     "type": "git",
@@ -28,12 +28,12 @@
   "dependencies": {
     "@ethersproject/wallet": "^5.5.0",
     "@snapshot-labs/snapshot.js": "^0.4.43",
-    "@streamr/utils": "7.3.0",
+    "@streamr/utils": "8.0.0-beta.0",
     "commander": "^8.3.0",
     "easy-table": "^1.1.1",
     "event-stream": "^4.0.1",
     "lodash": "^4.17.21",
-    "streamr-client": "7.3.0"
+    "streamr-client": "8.0.0-beta.0"
   },
   "devDependencies": {
     "@types/easy-table": "0.0.32",
