@@ -21,10 +21,6 @@ export {
 export { StorageNodeAssignmentEvent } from './registry/StreamStorageRegistry'
 export { StorageNodeMetadata } from './registry/StorageNodeRegistry'
 export { SearchStreamsPermissionFilter } from './registry/searchStreams'
-import { StrictStreamrClientConfig as _StrictStreamrClientConfig } from './Config'
-/** @deprecated */
-type StrictStreamrClientConfig = _StrictStreamrClientConfig
-export { StrictStreamrClientConfig }
 export {
     StreamrClientConfig,
     TrackerRegistryContract,
