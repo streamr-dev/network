@@ -679,11 +679,11 @@ subscriber.addEncryptionKey(key, streamId)
 
 #### Configuration
 
-The client uses Streamr network key-exchange by default. There is also experimental support for [Lit Protocol](https://litprotocol.com/). If you want to enable it, set `encryption.litProtocolEnabled` config option to `true`. 
+The client uses the Streamr Network's key-exchange by default. There is also experimental support for [Lit Protocol](https://litprotocol.com/). If you want to enable it, set `encryption.litProtocolEnabled` config option to `true`. 
 
-When Lit Protocol is enabled, it is used as a primary encryption key store. Streamr network key-exchange is still used as a fallback.
+When Lit Protocol is enabled, it is used as a primary encryption key store. The Streamr Network's key-exchange is still used as a fallback.
 
-For Streamr network key-exchange you can use these config options to control the decryption process:
+For the Streamr Network's key-exchange you can use these config options to control the decryption process:
 - `encryption.keyRequestTimeout`: max time (in milliseconds) to wait before a key request timeouts
 - `encryption.maxKeyRequestsPerSecond`: max count of key request to be sent within a second (i.e. it throttles the requests if it receives messages from many new publishers within a short period of time)
 
