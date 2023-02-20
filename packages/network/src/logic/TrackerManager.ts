@@ -64,7 +64,7 @@ export class TrackerManager {
         getNodeDescriptor: GetNodeDescriptor,
         subscriber: Subscriber
     ) {
-        this.nodeToTracker =  nodeToTracker
+        this.nodeToTracker = nodeToTracker
         this.streamPartManager = streamPartManager
         this.trackerRegistry = createTrackerRegistry<TrackerRegistryRecord>(opts.trackers)
         this.getNodeDescriptor = getNodeDescriptor

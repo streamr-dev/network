@@ -140,10 +140,10 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
         }
         const peerInfo = connection.getPeerInfo()
         connection.setBackPressureHandlers(
-            () =>  {
+            () => {
                 this.emitLowBackPressure(peerInfo)
             },
-            () =>  {
+            () => {
                 this.emitHighBackPressure(peerInfo)
             }
         )

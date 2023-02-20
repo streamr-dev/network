@@ -107,7 +107,7 @@ export default class StreamMessageValidator {
     }
 
     private async validateMessage(streamMessage: StreamMessage): Promise<void> {
-        const partitionCount  = await this.getPartitionCount(streamMessage.getStreamId())
+        const partitionCount = await this.getPartitionCount(streamMessage.getStreamId())
 
         if (streamMessage.getStreamPartition() < 0 || streamMessage.getStreamPartition() >= partitionCount) {
             throw new StreamMessageError(

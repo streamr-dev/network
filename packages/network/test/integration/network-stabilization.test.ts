@@ -50,7 +50,7 @@ describe('check network stabilization', () => {
         ])
     })
 
-    it('network must become stable in less than 10 seconds',  async () => {
+    it('network must become stable in less than 10 seconds', async () => {
         for (let i = 0; i < 10; ++i) {
             const beforeTopology = getTopology(tracker.getOverlayPerStreamPart(), tracker.getOverlayConnectionRtts())
             // eslint-disable-next-line no-await-in-loop
