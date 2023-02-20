@@ -17,12 +17,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- Remove deprecated `STREAM_CLIENT_DEFAULTS` constant
-- Remove deprecated `ConfigTest` constant
-- Remove deprecated `StrictStreamrClientConfig` TypeScript interface
-- Remove deprecated `NetworkNodeConfig` TypeScript interface
-- Remove deprecated method parameter of `.waitForStorage()`
-- Remove deprecated `gasPriceStrategy` config option from `contracts.ethereumNetworks`
+- Remove deprecated:
+  - `gasPriceStrategy` config option from `contracts.ethereumNetworks`
+  - method parameter of `.waitForStorage()`
+  - `STREAM_CLIENT_DEFAULTS` constant
+  - `ConfigTest` constant
+  - `StrictStreamrClientConfig` TypeScript interface
+  - `NetworkNodeConfig` TypeScript interface
 - Remove `BigNumber` class export (was only used in `gasPriceStrategy`)
 
 ### Fixed
