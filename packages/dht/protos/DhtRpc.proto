@@ -98,6 +98,7 @@ message RecursiveFindReport {
   //optional bytes data = 2;
   repeated DataEntry dataEntries = 2;
   optional bool noCloserNodesFound = 3;
+  repeated PeerDescriptor routingPath = 4;
 }
 
 message PingRequest {

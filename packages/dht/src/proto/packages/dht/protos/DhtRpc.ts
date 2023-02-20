@@ -120,6 +120,10 @@ export interface RecursiveFindReport {
      * @generated from protobuf field: optional bool noCloserNodesFound = 3;
      */
     noCloserNodesFound?: boolean;
+    /**
+     * @generated from protobuf field: repeated dht.PeerDescriptor routingPath = 4;
+     */
+    routingPath: PeerDescriptor[];
 }
 /**
  * @generated from protobuf message dht.PingRequest
@@ -783,7 +787,8 @@ class RecursiveFindReport$Type extends MessageType$<RecursiveFindReport> {
         super("dht.RecursiveFindReport", [
             { no: 1, name: "nodes", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
             { no: 2, name: "dataEntries", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => DataEntry },
-            { no: 3, name: "noCloserNodesFound", kind: "scalar", opt: true, T: 8 /*ScalarType.BOOL*/ }
+            { no: 3, name: "noCloserNodesFound", kind: "scalar", opt: true, T: 8 /*ScalarType.BOOL*/ },
+            { no: 4, name: "routingPath", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
         ]);
     }
 }
