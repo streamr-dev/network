@@ -33,7 +33,6 @@ export {
     ProviderAuthConfig,
     PrivateKeyAuthConfig,
     STREAMR_STORAGE_NODE_GERMANY,
-    STREAM_CLIENT_DEFAULTS,
     validateConfig
 } from './Config'
 export { GroupKey as EncryptionKey } from './encryption/GroupKey'
