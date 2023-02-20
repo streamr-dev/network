@@ -53,5 +53,23 @@ describe('StreamrClient', () => {
                 distributionMethod: 'rotate'
             })).rejects.toThrow('streamId')
         })
+
+        it('updateEncryptionKey: throws error message if lit protocol enabled and passing explicit key', async () => {
+            const client = createClient({
+                encryption: {
+                    litProtocolEnabled: true
+                }
+            })
+            await expect(() => {
+                return client.updateEncryptionKey({
+                    streamId: 'foobar.eth/foobar',
+                    distributionMethod: 'rotate',
+                    key: GroupKey.generate()
+                })
+            }).rejects.toThrowStreamError({
+                message: 'cannot pass "key" when Lit Protocol is enabled',
+                code: 'UNSUPPORTED_OPERATION'
+            })
+        })
     })
 })

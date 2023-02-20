@@ -19,6 +19,11 @@ import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
 import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
 import { LoggerFactory } from '../../src/utils/LoggerFactory'
 import { waitForCondition } from '@streamr/utils'
+import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
+import { mock } from 'jest-mock-extended'
+import { LitProtocolFacade } from '../../src/encryption/LitProtocolFacade'
+import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
+import { DestroySignal } from '../../src/DestroySignal'
 
 const logger = new Logger(module)
 
@@ -163,8 +168,31 @@ export const createStreamRegistryCached = (opts: {
     } as any
 }
 
+export const createGroupKeyManager = (groupKeyStore: GroupKeyStore = mock<GroupKeyStore>()): GroupKeyManager => {
+    return new GroupKeyManager(
+        groupKeyStore,
+        mock<LitProtocolFacade>(),
+        mock<SubscriberKeyExchange>(),
+        new StreamrClientEventEmitter(),
+        new DestroySignal(),
+        {
+            encryption: {
+                litProtocolEnabled: false,
+                litProtocolLogging: false
+            },
+            decryption: {
+                maxKeyRequestsPerSecond: 10,
+                keyRequestTimeout: 50
+            }
+        }
+    )
+}
+
 export const createGroupKeyQueue = async (current?: GroupKey, next?: GroupKey): Promise<GroupKeyQueue> => {
-    const queue = new GroupKeyQueue(undefined as any, { add: async () => {} } as any)
+    const queue = new GroupKeyQueue(
+        undefined as any,
+        createGroupKeyManager()
+    )
     if (current !== undefined) {
         await queue.rekey(current)
     }
