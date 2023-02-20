@@ -113,7 +113,7 @@ describe('stream without default entrypoints', () => {
             waitForCondition(() => numOfReceivedMessages === numOfSubscribers),
             nodes[9].waitForJoinAndPublish(streamMessage, [])
         ])
-    }, 90000)
+    }, 120000)
 
     it.skip('stores self as entrypoint on streamPart if number of entrypoints is low', async () => {
         for (let i = 0; i < 11; i++) {

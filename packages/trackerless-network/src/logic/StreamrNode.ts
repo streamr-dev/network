@@ -225,18 +225,27 @@ export class StreamrNode extends EventEmitter<Events> {
 
     private async discoverEntrypoints(streamPartId: string): Promise<PeerDescriptor[]> {
         const dataKey = streamPartIdToDataKey(streamPartId)
-        const results = await this.layer0!.getDataFromDht(dataKey)
-        if (results.dataEntries) {
-            return results.dataEntries!.map((entry) => entry.storer!)
-        } else {
+        try {
+            const results = await this.layer0!.getDataFromDht(dataKey)
+            if (results.dataEntries) {
+                return results.dataEntries!.map((entry) => entry.storer!)
+            } else {
+                return []
+            }
+        } catch (err) {
             return []
         }
+
     }
 
     private async storeSelfAsEntryPoint(streamPartId: string): Promise<void> {
         const ownPeerDescriptor = this.getPeerDescriptor()
         const dataToStore = Any.pack(ownPeerDescriptor, PeerDescriptor)
-        await this.layer0!.storeDataToDht(streamPartIdToDataKey(streamPartId), dataToStore)
+        try {
+            await this.layer0!.storeDataToDht(streamPartIdToDataKey(streamPartId), dataToStore)
+        } catch (err) {
+            logger.warn(`Failed to store self (${this.layer0!.getNodeId()}) as entrypoint for ${streamPartId}`)
+        }
     }
 
     async waitForJoinAndPublish(streamPartId: string, knownEntryPointDescriptors: PeerDescriptor[], msg: StreamMessage, timeout?: number): Promise<number> {

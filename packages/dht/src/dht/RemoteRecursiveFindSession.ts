@@ -32,9 +32,11 @@ export class RemoteRecursiveFindSession {
         this.client = toProtoRpcClient(new RecursiveFindSessionServiceClient(this.rpcCommunicator.getRpcClientTransport()))
     }
 
-    reportRecursiveFindResult(closestNodes: PeerDescriptor[], dataEntries: DataEntry[], noCloserNodesFound: boolean): void {
+    reportRecursiveFindResult(routingPath: PeerDescriptor[], closestNodes: PeerDescriptor[], 
+        dataEntries: DataEntry[], noCloserNodesFound: boolean): void {
         
         const report: RecursiveFindReport = {
+            routingPath,
             nodes: closestNodes,
             dataEntries: dataEntries,
             noCloserNodesFound: noCloserNodesFound
