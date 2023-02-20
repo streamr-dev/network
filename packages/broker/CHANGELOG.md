@@ -8,6 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+
+## [33.0.0] 2023-02-20
+
+### Added
+
 - Ping features in `websocket` plugin:
   - server sends pings and disconnects if client doesn't respond with pong
   - application layer ping support
@@ -18,15 +33,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Config file is optional
   - uses environment variables and/or application defaults if no file is given
 
-### Deprecated
-
-### Removed
-
 ### Fixed
 
 - Fix scheduler algorithm: it produced partial metrics samples on rare occasions
-
-### Security
 
 
 ## [32.1.0] - 2023-01-12
