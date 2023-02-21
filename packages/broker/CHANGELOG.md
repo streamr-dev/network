@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
 ## [Unreleased]
 
 ### Added
@@ -55,6 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Log output is always prettified (even when `NODE_ENV=production`)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/broker/v32.1.0...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/broker/v33.0.0...HEAD
+[33.0.0]: https://github.com/streamr-dev/network/compare/broker/v32.1.0...broker/v33.0.0
 [32.1.0]: https://github.com/streamr-dev/network/compare/broker/v32.0.1...broker/v32.1.0
 [32.0.1]: https://github.com/streamr-dev/network/compare/broker/v32.0.0...broker/v32.0.1
