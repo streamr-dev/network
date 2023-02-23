@@ -71,10 +71,10 @@ export class NetworkNode {
         // if (this.isProxiedStreamPart(streamPartId, ProxyDirection.PUBLISH)) {
         //     throw new Error(`Cannot subscribe to ${streamPartId} as proxy publish connections have been set`)
         // }
-        return this.stack.getStreamrNode().subscribeAndWaitForJoin(streamPartId, knownEntrypointDescriptors)
+        return this.stack.getStreamrNode().waitForJoinAndSubscribe(streamPartId, knownEntrypointDescriptors)
     }
 
-    async waitForJoinAndPublish(streamMessage: StreamMessage, knownEntrypointDescriptors: PeerDescriptor[], _timeout?: number): Promise<number> {
+    async waitForJoinAndPublish(streamMessage: StreamMessage, knownEntrypointDescriptors: PeerDescriptor[], timeout?: number): Promise<number> {
         const streamPartId = streamMessage.getStreamPartID()
         const msg = StreamMessageTranslator.toProtobuf(streamMessage)
 
@@ -82,7 +82,7 @@ export class NetworkNode {
         //     throw new Error(`Cannot publish to ${streamPartId} as proxy subscribe connections have been set`)
         // }
 
-        return this.stack.getStreamrNode().waitForJoinAndPublish(streamPartId, knownEntrypointDescriptors, msg)
+        return this.stack.getStreamrNode().waitForJoinAndPublish(streamPartId, knownEntrypointDescriptors, msg, timeout)
     }
 
     unsubscribe(streamPartId: StreamPartID): void {
@@ -127,6 +127,10 @@ export class NetworkNode {
 
     getNodeId(): string {
         return this.stack.getStreamrNode().getNodeId()
+    }
+
+    getNodeStringId(): string {
+        return this.stack.getStreamrNode().getNodeStringId()
     }
 
     getStreamParts(): StreamPartID[] {

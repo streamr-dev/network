@@ -168,12 +168,8 @@ export class DhtPeer implements KBucketContact {
                 return false
             }
         } catch (err) {
-            const fromNode = params.previousPeer ?
-                keyFromPeerDescriptor(params.previousPeer) : keyFromPeerDescriptor(params.sourcePeer!)
-
-            logger.debug(
-                `Failed to send routeMessage from ${fromNode} to ${this.peerId.toKey()} with: ${err}`
-            )
+            const fromNode = params.previousPeer ? keyFromPeerDescriptor(params.previousPeer) : keyFromPeerDescriptor(params.sourcePeer!)
+            logger.debug(`Failed to send routeMessage from ${fromNode} to ${this.peerId.toKey()} with: ${err}`)
             return false
         }
         return true
@@ -186,8 +182,13 @@ export class DhtPeer implements KBucketContact {
             targetDescriptor: this.peerDescriptor,
             timeout: 10000
         }
+        try {
+            const result = await this.dhtClient.storeData(request, options)
+            return result
+        } catch (err) {
+            throw `Could not store data to ${keyFromPeerDescriptor(this.peerDescriptor)} from ${keyFromPeerDescriptor(this.ownPeerDescriptor)} ${err}`
+        }
 
-        return this.dhtClient.storeData(request, options)      
     }
 
     async migrateData(request: MigrateDataRequest): Promise<MigrateDataResponse> {

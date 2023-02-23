@@ -1,5 +1,12 @@
 import { RandomGraphNode } from './RandomGraphNode'
-import { PeerDescriptor, ConnectionLocker, DhtNode, ITransport, keyFromPeerDescriptor } from '@streamr/dht'
+import {
+    PeerDescriptor,
+    ConnectionLocker,
+    DhtNode,
+    ITransport,
+    keyFromPeerDescriptor,
+    isSamePeerDescriptor
+} from '@streamr/dht'
 import { StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { EventEmitter } from 'eventemitter3'
 import {
@@ -8,11 +15,13 @@ import {
     MetricsContext,
     RateMetric,
     Metric,
-    MetricsDefinition
+    MetricsDefinition, wait
 } from '@streamr/utils'
 import { uniq } from 'lodash'
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
-import { sample } from 'lodash'
+import { sampleSize } from 'lodash'
+import { streamPartIdToDataKey } from './StreamEntryPointDiscovery'
+import { Any } from '@streamr/dht/dist/src/proto/google/protobuf/any'
 
 interface StreamObject {
     layer1: DhtNode
@@ -37,6 +46,32 @@ interface StreamrNodeOpts {
     nodeName?: string
 }
 
+export const exponentialRunOff = async (
+    task: () => Promise<void>,
+    description: string,
+    abortSignal: AbortSignal,
+    baseDelay = 1000,
+    maxAttempts = 5
+): Promise<void> => {
+    for (let i = 1; i <= maxAttempts; i++) {
+        if (abortSignal.aborted) {
+            return
+        }
+        const factor = 2 ** i
+        const delay = baseDelay * factor
+        try {
+            await task()
+        } catch (e: any) {
+            logger.warn(`${description} failed, retrying in ${delay} ms`)
+        }
+        try { // Abort controller throws unexpected errors in destroy?
+            await wait(delay, abortSignal)
+        } catch (err) {
+            logger.trace(err)
+        }
+    }
+}
+
 export class StreamrNode extends EventEmitter<Events> {
     private readonly streams: Map<string, StreamObject>
     private layer0: DhtNode | null = null
@@ -48,6 +83,7 @@ export class StreamrNode extends EventEmitter<Events> {
     private readonly metricsContext: MetricsContext
     private readonly metrics: Metrics
     public config: StreamrNodeOpts
+    private readonly abortController: AbortController
 
     constructor(config: StreamrNodeOpts) {
         super()
@@ -59,6 +95,7 @@ export class StreamrNode extends EventEmitter<Events> {
             publishBytesPerSecond: new RateMetric()
         }
         this.metricsContext.addMetrics('node', this.metrics)
+        this.abortController = new AbortController()
     }
 
     async start(startedAndJoinedLayer0: DhtNode, transport: ITransport, connectionLocker: ConnectionLocker): Promise<void> {
@@ -87,6 +124,7 @@ export class StreamrNode extends EventEmitter<Events> {
         this.removeAllListeners()
         await this.layer0!.stop()
         await this.P2PTransport!.stop()
+        this.abortController.abort()
     }
 
     subscribeToStream(streamPartID: string, knownEntryPointDescriptors: PeerDescriptor[]): void {
@@ -156,20 +194,87 @@ export class StreamrNode extends EventEmitter<Events> {
         layer2.on('message', (message: StreamMessage) => {
             this.emit('newMessage', message)
         })
-        await layer1.joinDht(sample(knownEntryPointDescriptors)!)
+        let joiningEmptyStream = false
+        if (knownEntryPointDescriptors.length === 0) {
+            const discoveredEntrypoints = await this.discoverEntrypoints(streamPartID)
+            discoveredEntrypoints.map((entrypoint) => {
+                knownEntryPointDescriptors.push(entrypoint)
+            })
+            if (knownEntryPointDescriptors.length === 0) {
+                joiningEmptyStream = true
+                knownEntryPointDescriptors.push(this.layer0!.getPeerDescriptor())
+            }
+        }
+        await Promise.all(sampleSize(knownEntryPointDescriptors, 3).map((entryPoint) => layer1.joinDht(entryPoint)))
+        if (joiningEmptyStream) {
+            await this.storeSelfAsEntryPoint(streamPartID)
+            setImmediate(() => this.avoidNetworkSplit(streamPartID))
+        }
     }
 
-    async waitForJoinAndPublish(streamPartId: string, knownEntryPointDescriptors: PeerDescriptor[], msg: StreamMessage): Promise<number> {
+    private async avoidNetworkSplit(streamPartID: string): Promise<void> {
+        await exponentialRunOff(async () => {
+            if (this.streams.has(streamPartID)) {
+                const stream = this.streams.get(streamPartID)
+                const rediscoveredEntrypoints = await this.discoverEntrypoints(streamPartID)
+                await Promise.all(
+                    rediscoveredEntrypoints
+                        .filter((entryPoint) => !isSamePeerDescriptor(entryPoint, this.getPeerDescriptor()))
+                        .map((entrypoint) => stream!.layer1.joinDht(entrypoint, false))
+                )
+                if (stream!.layer1.getBucketSize() === 0) {
+                    logger.warn(`${stream!.layer1.getNeighborList().getUncontactedContacts(10).length}`)
+                    throw new Error(`Node is alone in stream or a network split is still possible`)
+                }
+            }
+        }, 'avoid network split', this.abortController.signal)
+        logger.info(`Network split avoided`)
+    }
+
+    private async discoverEntrypoints(streamPartId: string): Promise<PeerDescriptor[]> {
+        const dataKey = streamPartIdToDataKey(streamPartId)
+        try {
+            const results = await this.layer0!.getDataFromDht(dataKey)
+            if (results.dataEntries) {
+                return results.dataEntries!.map((entry) => entry.storer!)
+            } else {
+                return []
+            }
+        } catch (err) {
+            return []
+        }
+
+    }
+
+    private async storeSelfAsEntryPoint(streamPartId: string): Promise<void> {
+        const ownPeerDescriptor = this.getPeerDescriptor()
+        const dataToStore = Any.pack(ownPeerDescriptor, PeerDescriptor)
+        try {
+            await this.layer0!.storeDataToDht(streamPartIdToDataKey(streamPartId), dataToStore)
+        } catch (err) {
+            logger.warn(`Failed to store self (${this.layer0!.getNodeId()}) as entrypoint for ${streamPartId}`)
+        }
+    }
+
+    async waitForJoinAndPublish(
+        streamPartId: string,
+        knownEntryPointDescriptors: PeerDescriptor[],
+        msg: StreamMessage,
+        timeout?: number
+    ): Promise<number> {
         await this.joinStream(streamPartId, knownEntryPointDescriptors)
         if (this.getStream(streamPartId)!.layer1.getBucketSize() > 0) {
-            await waitForCondition(() => this.getStream(streamPartId)!.layer2.getTargetNeighborStringIds().length > 0)
+            await waitForCondition(() => this.getStream(streamPartId)!.layer2.getTargetNeighborStringIds().length > 0, timeout)
         }
         this.publishToStream(streamPartId, knownEntryPointDescriptors, msg)
         return this.getStream(streamPartId)?.layer2.getTargetNeighborStringIds().length || 0
     }
 
-    async subscribeAndWaitForJoin(streamPartId: string, knownEntryPointDescriptors: PeerDescriptor[]): Promise<number> {
+    async waitForJoinAndSubscribe(streamPartId: string, knownEntryPointDescriptors: PeerDescriptor[], timeout?: number): Promise<number> {
         await this.joinStream(streamPartId, knownEntryPointDescriptors)
+        if (this.getStream(streamPartId)!.layer1.getBucketSize() > 0) {
+            await waitForCondition(() => this.getStream(streamPartId)!.layer2.getTargetNeighborStringIds().length > 0, timeout)
+        }
         this.subscribeToStream(streamPartId, knownEntryPointDescriptors)
         return this.getStream(streamPartId)?.layer2.getTargetNeighborStringIds().length || 0
     }
@@ -188,6 +293,10 @@ export class StreamrNode extends EventEmitter<Events> {
 
     getNodeId(): string {
         return this.layer0!.getNodeId().toKey()
+    }
+
+    getNodeStringId(): string {
+        return this.layer0!.getNodeId().toString()
     }
 
     getNeighbors(): string[] {

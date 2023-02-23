@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/parameter-properties */
-
 import { ServerCallContext } from "@protobuf-ts/runtime-rpc"
 import { Logger } from "@streamr/utils"
 import EventEmitter from "eventemitter3"
@@ -12,6 +10,8 @@ import { ListeningRpcCommunicator } from "../transport/ListeningRpcCommunicator"
 import { Contact } from "./contact/Contact"
 import { SortedContactList } from "./contact/SortedContactList"
 import { RecursiveFindResult } from "./DhtNode"
+import { keyFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
+import { clearTimeout } from 'timers'
 
 export interface RecursiveFindSessionEvents {
     findCompleted: (results: PeerDescriptor[]) => void
@@ -22,27 +22,25 @@ const logger = new Logger(module)
 export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvents> implements IRecursiveFindSessionService {
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private results: SortedContactList<Contact>
-    private foundData: Array<DataEntry> = []
-
+    private foundData: Map<string, DataEntry> = new Map()
     private readonly rpcTransport: ITransport
-
+    private readonly routingPaths: number
     private allKnownHops: Set<PeerIDKey> = new Set()
     private reportedHops: Set<PeerIDKey> = new Set()
     private reportFindCompletedTimeout?: NodeJS.Timeout
     private findCompletedEmitted = false
+    private noCloserNodesReceivedCounter = 0
+    private readonly ownPeerID: PeerID
 
-    private noCloserNodesReceived = false
-
-    constructor(serviceId: string, rpcTransport: ITransport, kademliaIdToFind: Uint8Array, private ownPeerID: PeerID) {
+    constructor(serviceId: string, rpcTransport: ITransport, kademliaIdToFind: Uint8Array, ownPeerID: PeerID, routingPaths: number) {
         super()
-
         this.rpcTransport = rpcTransport
         this.results = new SortedContactList(PeerID.fromValue(kademliaIdToFind), 10)
-
+        this.routingPaths = routingPaths
         this.rpcCommunicator = new ListeningRpcCommunicator(serviceId, this.rpcTransport, {
             rpcRequestTimeout: 15000
         })
-
+        this.ownPeerID = ownPeerID
         this.reportRecursiveFindResult = this.reportRecursiveFindResult.bind(this)
         this.rpcCommunicator.registerRpcNotification(RecursiveFindReport, 'reportRecursiveFindResult', this.reportRecursiveFindResult)
 
@@ -79,8 +77,7 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
         this.reportedHops.forEach((id) => {
             unreportedHops.delete(id)
         })
-
-        if (this.noCloserNodesReceived && unreportedHops.size == 0) {
+        if (this.noCloserNodesReceivedCounter >= this.routingPaths && unreportedHops.size == 0) {
             return true
         }
         return false
@@ -99,18 +96,25 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
             this.results.addContact(new Contact(descriptor))
         })
 
-        if (dataEntries && dataEntries.length > 0) {
+        if (dataEntries) {
             dataEntries.forEach((entry) => {
-                this.foundData.push(entry)
+                const storerKey = keyFromPeerDescriptor(entry.storer!)
+                if (!this.foundData.has(storerKey)) {
+                    this.foundData.set(storerKey, entry)
+                } else if (this.foundData.has(storerKey) && this.foundData.get(storerKey)!.storedAt! < entry.storedAt!) {
+                    this.foundData.set(storerKey, entry)
+                }
             })
         }
 
         if (noCloserNodesFound) {
-            this.noCloserNodesReceived = true
-
+            this.noCloserNodesReceivedCounter += 1
             if (this.isFindCompleted()) {
                 this.emit('findCompleted', this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()))
                 this.findCompletedEmitted = true
+                if (this.reportFindCompletedTimeout) {
+                    clearTimeout(this.reportFindCompletedTimeout)
+                }
             } else {
                 this.reportFindCompletedTimeout = setTimeout(() => {
                     if (!this.findCompletedEmitted) {
@@ -124,20 +128,20 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
     }
 
     public async reportRecursiveFindResult(report: RecursiveFindReport, _context: ServerCallContext): Promise<Empty> {
-
         logger.trace('recursiveFindReport arrived: ' + JSON.stringify(report))
-
         this.doReportRecursiveFindResult(report.routingPath, report.nodes, report.dataEntries, report.noCloserNodesFound)
-
         return {}
     }
 
     public getResults(): RecursiveFindResult {
         const ret = {
             closestNodes: this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()),
-            dataEntries: (this.foundData && this.foundData.length > 0) ? this.foundData : undefined
+            dataEntries: (this.foundData && this.foundData.size > 0) ? Array.from(this.foundData.values()) : undefined
         }
-
         return ret
+    }
+
+    public stop(): void {
+        this.emit('findCompleted', [])
     }
 }

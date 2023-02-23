@@ -10,22 +10,22 @@ import {
     ClosestPeersRequest,
     ClosestPeersResponse,
     ConnectivityResponse,
+    DataEntry,
+    FindMode,
+    LeaveNotice,
     Message,
+    MessageType,
     NodeType,
     PeerDescriptor,
     PingRequest,
     PingResponse,
+    RecursiveFindRequest,
     RouteMessageAck,
     RouteMessageWrapper,
-    LeaveNotice,
-    RecursiveFindRequest,
-    FindMode,
-    MessageType,
-    StoreDataResponse,
     StoreDataRequest,
-    DataEntry,
     MigrateDataResponse,
-    MigrateDataRequest
+    MigrateDataRequest,
+    StoreDataResponse
 } from '../proto/packages/dht/protos/DhtRpc'
 import * as Err from '../helpers/errors'
 import { ITransport, TransportEvents } from '../transport/ITransport'
@@ -37,7 +37,7 @@ import {
     raceEvents3,
     runAndRaceEvents3,
     RunAndRaceEventsReturnType,
-    waitForEvent3,
+    runAndWaitForEvents3,
     waitForCondition
 } from '@streamr/utils'
 import { v4 } from 'uuid'
@@ -129,7 +129,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
     //private noProgressCounter = 0
     private joinTimeoutRef?: NodeJS.Timeout
-    private ongoingJoinOperation = false
 
     private ongoingRoutingSessions: Map<string, RoutingSession> = new Map()
     private ongoingDiscoverySessions: Map<string, DiscoverySession> = new Map()
@@ -471,7 +470,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             requestId: v4(),
             destinationPeer: targetPeerDescriptor,
             sourcePeer: this.ownPeerDescriptor!,
-            reachableThrough: this.ongoingJoinOperation ? this.config.entryPoints || [] : [],
+            reachableThrough: this.isJoinOngoing() ? this.config.entryPoints || [] : [],
             routingPath: []
         }
 
@@ -505,14 +504,12 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         }
     }
 
-    public async joinDht(entryPointDescriptor: PeerDescriptor): Promise<void> {
-        if (!this.started || this.stopped || this.ongoingJoinOperation) {
+    public async joinDht(entryPointDescriptor: PeerDescriptor, doRandomJoin = true): Promise<void> {
+        if (!this.started || this.stopped) {
             return
         }
 
-        this.ongoingJoinOperation = true
-
-        logger.trace(
+        logger.info(
             `Joining ${this.config.serviceId === 'layer0' ? 'The Streamr Network' : `Control Layer for ${this.config.serviceId}`}`
             + ` via entrypoint ${keyFromPeerDescriptor(entryPointDescriptor)}`
         )
@@ -530,10 +527,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
         if (this.connectionManager) {
             this.connectionManager.lockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
-        }
-
-        if (!this.started || this.stopped) {
-            return
         }
 
         this.addNewContact(entryPointDescriptor)
@@ -574,9 +567,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         this.ongoingDiscoverySessions.set(randomSession.sessionId, randomSession)
 
         try {
-            await session.findClosestNodes(this.config.dhtJoinTimeout * 2)
+            await session.findClosestNodes(this.config.dhtJoinTimeout)
             this.neighborList?.setAllAsUncontacted()
-            await randomSession.findClosestNodes(this.config.dhtJoinTimeout * 2)
+            if (doRandomJoin) {
+                await randomSession.findClosestNodes(this.config.dhtJoinTimeout)
+            }
             if (!this.stopped) {
                 if (this.bucket!.count() === 0) {
                     this.rejoinDht(entryPointDescriptor).catch(() => { })
@@ -586,9 +581,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
                 }*/
             }
         } catch (_e) {
-            throw (new Err.DhtJoinTimeout('join timed out'))
+            throw new Err.DhtJoinTimeout('join timed out')
         } finally {
-            this.ongoingJoinOperation = false
             this.ongoingDiscoverySessions.delete(session.sessionId)
             this.ongoingDiscoverySessions.delete(randomSession.sessionId)
 
@@ -810,7 +804,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
     }
 
     public isJoinOngoing(): boolean {
-        return this.ongoingJoinOperation
+        return this.ongoingDiscoverySessions.size > 0
     }
 
     public async stop(): Promise<void> {
@@ -831,12 +825,15 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             clearTimeout(this.rejoinTimeoutRef)
             this.rejoinTimeoutRef = undefined
         }
-        this.ongoingJoinOperation = false
         this.ongoingRoutingSessions.forEach((session, _id) => {
             session.stop()
         })
 
         this.ongoingDiscoverySessions.forEach((session, _id) => {
+            session.stop()
+        })
+
+        this.ongoingRecursiveFindSessions.forEach((session, _id) => {
             session.stop()
         })
 
@@ -958,7 +955,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
     public async startRecursiveFind(idToFind: Uint8Array, findMode: FindMode = FindMode.NODE): Promise<RecursiveFindResult> {
         const sessionId = v4()
-        const recursiveFindSession = new RecursiveFindSession(sessionId, this, idToFind, this.ownPeerId!)
+        const recursiveFindSession = new RecursiveFindSession(sessionId, this, idToFind, this.ownPeerId!, 2)
         this.ongoingRecursiveFindSessions.set(sessionId, recursiveFindSession)
         const targetDescriptor: PeerDescriptor = { kademliaId: idToFind, type: NodeType.VIRTUAL }
         const request: RecursiveFindRequest = {
@@ -983,10 +980,23 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             reachableThrough: [],
             routingPath: []
         }
-        const promise = waitForEvent3<RecursiveFindSessionEvents>(recursiveFindSession, 'findCompleted', 60000)
-        this.doFindRecursevily(params)
-        await promise
+        try {
+            await runAndWaitForEvents3<RecursiveFindSessionEvents>(
+                [() => this.doFindRecursevily(params)],
+                [[recursiveFindSession, 'findCompleted']],
+                30000
+            )
+        } catch (err) {
+            logger.trace(`doFindRecursively failed with error ${err}`)
+        }
 
+        if (findMode === FindMode.DATA) {
+            const data = this.doGetData(PeerID.fromValue(idToFind))
+            if (data) {
+                this.reportRecursiveFindResult([], params.sourcePeer!, sessionId,
+                    [], data, true)
+            }
+        }
         const results = recursiveFindSession.getResults()
         logger.trace("recursive find results: " + JSON.stringify(results))
         return results
@@ -994,7 +1004,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
     private reportRecursiveFindResult(routingPath: PeerDescriptor[], targetPeerDescriptor: PeerDescriptor, serviceId: string,
         closestNodes: PeerDescriptor[], data: Map<PeerIDKey, DataEntry> | undefined,
-        noCloserNodesFound: boolean = false) {
+        noCloserNodesFound: boolean = false): void {
 
         const dataEntries: Array<DataEntry> = []
 
@@ -1030,23 +1040,21 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             recursiveFindRequest = msg.body.recursiveFindRequest
         }
 
+        const closestPeersToDestination = this.getClosestPeerDescriptors(routedMessage.destinationPeer!.kademliaId, 5)
+
         if (recursiveFindRequest!.findMode == FindMode.DATA) {
-
             const data = this.doGetData(idToFind)
-
             if (data) {
                 this.reportRecursiveFindResult(routedMessage.routingPath, routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
-                    this.getClosestPeerDescriptors(routedMessage.destinationPeer!.kademliaId, 5), data, false)
-                // return this.createRouteMessageAck(routedMessage)
+                    closestPeersToDestination, data, true)
+                return this.createRouteMessageAck(routedMessage)
             }
 
         } else if (this.ownPeerId!.equals(idToFind)) {
             // Exact match, they were trying to find our kademliaID
 
-            // Exact match, they were trying to find our kademliaID
-
             this.reportRecursiveFindResult(routedMessage.routingPath, routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
-                this.getClosestPeerDescriptors(routedMessage.destinationPeer!.kademliaId, 5), undefined, true)
+                closestPeersToDestination, undefined, true)
             return this.createRouteMessageAck(routedMessage)
         }
 
@@ -1078,9 +1086,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             logger.error(e)
         }
 
-        if (this.ongoingRoutingSessions.has(session.sessionId)) {
-            this.ongoingRoutingSessions.delete(session.sessionId)
-        }
+        this.ongoingRoutingSessions.delete(session.sessionId)
 
         if (this.stopped) {
             return this.createRouteMessageAck(routedMessage, 'DhtNode Stopped')
@@ -1090,15 +1096,27 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             }
             logger.trace(`findRecursively Node ${this.getNodeName()} found no candidates`)
             this.reportRecursiveFindResult(routedMessage.routingPath, routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
-                this.getClosestPeerDescriptors(routedMessage.destinationPeer!.kademliaId, 5), undefined, true)
+                closestPeersToDestination, undefined, true)
             return this.createRouteMessageAck(routedMessage)
         } else {
+            const closestContacts = session.getClosestContacts(5)
             logger.trace(`findRecursively Node ${this.getNodeName()} found candidates ` +
-                JSON.stringify((session.getClosestContacts(5).map((desc) => desc.nodeName))))
+                JSON.stringify((closestContacts.map((desc) => desc.nodeName))))
+            const noCloserContactsFound = (
+                closestContacts.length > 0
+                && routedMessage.previousPeer
+                && !this.isPeerCloserThanSelfToId(closestContacts[0], idToFind)
+            )
             this.reportRecursiveFindResult(routedMessage.routingPath, routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
-                session.getClosestContacts(5), undefined, false)
+                closestContacts, undefined, noCloserContactsFound)
             return this.createRouteMessageAck(routedMessage)
         }
+    }
+
+    private isPeerCloserThanSelfToId(peer1: PeerDescriptor, compareToId: PeerID): boolean {
+        const distance1 = this.bucket!.distance(peer1.kademliaId, compareToId.value)
+        const distance2 = this.bucket!.distance(this.ownPeerDescriptor!.kademliaId, compareToId.value)
+        return distance1 < distance2
     }
 
     public async findRecursively(routedMessage: RouteMessageWrapper): Promise<RouteMessageAck> {
@@ -1219,13 +1237,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
             this.connectionManager.garbageCollectConnections(this.config.maxConnections, LAST_USED_LIMIT)
             await waitForCondition(() => {
-                /*
-                logger.info(this.getNodeName() + ': connections:' +
-                    this.getNumberOfConnections() + ', kbucket: ' + this.getBucketSize()
-                    + ', localLocked: ' + this.getNumberOfLocalLockedConnections()
-                    + ', remoteLocked: ' + this.getNumberOfRemoteLockedConnections()
-                    + ', weakLocked: ' + this.getNumberOfWeakLockedConnections())
-                */
                 return (this.getNumberOfLocalLockedConnections() == 0 &&
                     this.getNumberOfRemoteLockedConnections() == 0 &&
                     this.getNumberOfConnections() <= this.config.maxConnections)
@@ -1390,7 +1401,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         this.doStoreData((context as DhtCallContext).incomingSourceDescriptor!,
             request.dataEntry!)
 
-        logger.info(this.config.nodeName + ' storeData()')
+        logger.info(this.ownPeerDescriptor!.nodeName + ' storeData()')
 
         return StoreDataResponse.create()
     }
@@ -1406,6 +1417,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             this.dataStore.set(dataKey, new Map())
         }
 
+        dataEntry.storer = storer
         this.dataStore.get(dataKey)!.set(publisherKey, dataEntry)
     }
 
@@ -1432,6 +1444,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         const ttl = this.config.storeHighestTtl
 
         for (let i = 0; i < closestNodes.length && successfulNodes.length < 5; i++) {
+            if (this.ownPeerId!.equals(PeerID.fromValue(closestNodes[i].kademliaId))) {
+                this.doStoreData(closestNodes[i], {kademliaId: key, data, ttl} )
+                continue
+            }
             const dhtPeer = new DhtPeer(
                 this.ownPeerDescriptor!,
                 closestNodes[i],
@@ -1456,7 +1472,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         return successfulNodes
     }
 
-    public async getDataFromDht(idToFind: Uint8Array): Promise<RecursiveFindResult> {
+    public getDataFromDht(idToFind: Uint8Array): Promise<RecursiveFindResult> {
         return this.startRecursiveFind(idToFind, FindMode.DATA)
     }
 }
