@@ -948,7 +948,13 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
     public async startRecursiveFind(idToFind: Uint8Array, findMode: FindMode = FindMode.NODE): Promise<RecursiveFindResult> {
         const sessionId = v4()
-        const recursiveFindSession = new RecursiveFindSession(sessionId, this, idToFind, this.ownPeerId!, 2)
+        const recursiveFindSession = new RecursiveFindSession(
+            sessionId,
+            this,
+            idToFind,
+            this.ownPeerId!,
+            this.connections.size > 1 ? 2 : 1
+        )
         this.ongoingRecursiveFindSessions.set(sessionId, recursiveFindSession)
         const targetDescriptor: PeerDescriptor = { kademliaId: idToFind, type: NodeType.VIRTUAL }
         const request: RecursiveFindRequest = {
