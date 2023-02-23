@@ -1,6 +1,8 @@
 import { DhtNode } from '../src/dht/DhtNode'
 import {
     ClosestPeersRequest, ClosestPeersResponse, LeaveNotice,
+    MigrateDataRequest,
+    MigrateDataResponse,
     NodeType,
     PeerDescriptor, PingRequest, PingResponse, RouteMessageAck, RouteMessageWrapper,
     StoreDataRequest,
@@ -142,6 +144,9 @@ export const MockDhtRpc: IDhtRpcWithError = {
     },
     async storeData(_request: StoreDataRequest, _context: ServerCallContext): Promise<StoreDataResponse> {
         return StoreDataResponse.create()
+    },
+    async migrateData(_request: MigrateDataRequest, _context: ServerCallContext): Promise<MigrateDataResponse> {
+        return MigrateDataResponse.create()
     },
     async forwardMessage(routed: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
         const response: RouteMessageAck = {

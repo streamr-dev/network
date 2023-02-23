@@ -87,7 +87,7 @@ describe('Storing data in DHT', () => {
         const data = Any.pack(entrypointDescriptor, PeerDescriptor)
 
         logger.info('node ' + storingNodeIndex + ' starting to store data with key ' + dataKey.toString())
-        await nodes[storingNodeIndex].doStoreData(nodes[storingNodeIndex].getPeerDescriptor(), dataKey, data, 10000)
+        await nodes[storingNodeIndex].doStoreData(nodes[storingNodeIndex].getPeerDescriptor(), { kademliaId: dataKey.value, data, ttl: 10000 })
         logger.info('store data over')
 
         logger.info('node ' + storingNodeIndex + ' starting to get data with key ' + dataKey.toString())

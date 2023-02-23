@@ -23,7 +23,9 @@ import {
     MessageType,
     StoreDataResponse,
     StoreDataRequest,
-    DataEntry
+    DataEntry,
+    MigrateDataResponse,
+    MigrateDataRequest
 } from '../proto/packages/dht/protos/DhtRpc'
 import * as Err from '../helpers/errors'
 import { ITransport, TransportEvents } from '../transport/ITransport'
@@ -50,8 +52,8 @@ import { RemoteRecursiveFindSession } from './RemoteRecursiveFindSession'
 import { RecursiveFindSession, RecursiveFindSessionEvents } from './RecursiveFindSession'
 import { SetDuplicateDetector } from './SetDuplicateDetector'
 import { Any } from '../proto/google/protobuf/any'
-import { Timestamp } from '../proto/google/protobuf/timestamp'
 import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
+import { Contact } from './contact/Contact'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -647,9 +649,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         if (!this.started || this.stopped) {
             return
         }
-        this.getClosestPeersFromBucketIntervalRef = setTimeout(async () =>
-            await this.getClosestPeersFromBucket()
-        , 90 * 1000)
+        this.getClosestPeersFromBucketIntervalRef = setTimeout(
+            async () =>
+                await this.getClosestPeersFromBucket()
+            , 90 * 1000)
     }
 
     public getBucketSize(): number {
@@ -660,6 +663,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         if (!this.started || this.stopped) {
             return
         }
+
+        this.migrateDataToContactIfNeeded(contact)
 
         const peerId = peerIdFromPeerDescriptor(contact)
         if (!peerId.equals(this.ownPeerId!)) {
@@ -717,6 +722,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         this.forwardMessage = this.forwardMessage.bind(this)
         this.leaveNotice = this.leaveNotice.bind(this)
         this.storeData = this.storeData.bind(this)
+        this.migrateData = this.migrateData.bind(this)
 
         this.rpcCommunicator!.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', this.getClosestPeers)
         this.rpcCommunicator!.registerRpcMethod(PingRequest, PingResponse, 'ping', this.ping)
@@ -725,6 +731,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         this.rpcCommunicator!.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'forwardMessage', this.forwardMessage)
         this.rpcCommunicator!.registerRpcNotification(LeaveNotice, 'leaveNotice', this.leaveNotice)
         this.rpcCommunicator!.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData', this.storeData)
+        this.rpcCommunicator!.registerRpcMethod(MigrateDataRequest, MigrateDataResponse, 'migrateData', this.migrateData)
     }
 
     public getRpcCommunicator(): RoutingRpcCommunicator {
@@ -1228,15 +1235,100 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
     // RPC service implementation
 
+    public async migrateData(request: MigrateDataRequest, context: ServerCallContext): Promise<MigrateDataResponse> {
+
+        this.doMigrateData((context as DhtCallContext).incomingSourceDescriptor!,
+            request.dataEntry!)
+
+        logger.info(this.config.nodeName + ' migrateData()')
+
+        return MigrateDataResponse.create()
+    }
+
+    public doMigrateData(_migrator: PeerDescriptor, dataEntry: DataEntry): void {
+
+        const publisherKey = PeerID.fromValue(dataEntry.storer!.kademliaId!).toKey()
+        const dataKey = PeerID.fromValue(dataEntry.kademliaId).toKey()
+
+        const storedMillis = (dataEntry.storedAt!.seconds * 1000) + (dataEntry.storedAt!.nanos / 1000000)
+
+        if (!this.dataStore.has(dataKey)) {
+            this.dataStore.set(dataKey, new Map())
+        }
+
+        if (this.dataStore.get(dataKey)!.has(publisherKey)) {
+            const oldEntry = this.dataStore.get(dataKey)!.get(publisherKey)!
+            const oldStoredMillis = (oldEntry.storedAt!.seconds * 1000) + (oldEntry.storedAt!.nanos / 1000000)
+
+            // do nothing if old entry is newer than the one being migrated
+            if (oldStoredMillis > storedMillis) {
+                return
+            }
+        }
+
+        this.dataStore.get(dataKey)!.set(publisherKey, dataEntry)
+    }
+
+    private isFurtherFromDataThan(dataEntry: DataEntry, peer: PeerDescriptor): boolean {
+
+        const peerDistanceFromData = KBucket.distance(dataEntry.kademliaId, peer.kademliaId)
+        const ownDistanceFromData = KBucket.distance(dataEntry.kademliaId, this.ownPeerDescriptor!.kademliaId)
+        if (ownDistanceFromData > peerDistanceFromData) {
+            return true
+        }
+
+        return false
+    }
+
+    private isFurtherstStorerOf(dataEntry: DataEntry): boolean {
+        const closestToData = this.bucket!.closest(dataEntry.kademliaId, 10)
+
+        const sortedList = new SortedContactList<Contact>(this.ownPeerId!, 20, undefined, true)
+
+        sortedList.addContact(new Contact(this.ownPeerDescriptor!))
+
+        closestToData.forEach((desc) => {
+            sortedList.addContact(new Contact(desc.getPeerDescriptor()))
+        })
+
+        const sorted = sortedList.getAllContacts()
+
+        let index = 0
+
+        for (index = 0; index < sorted.length; index++) {
+            if (sorted[index].peerId.equals(this.ownPeerId!)) {
+                break
+            }
+        }
+
+        if (index >= 5) {
+            return true
+        }
+
+        return false
+    }
+
+    private migrateDataToContactIfNeeded(contact: PeerDescriptor) {
+
+        this.dataStore.forEach((dataMap, _dataKey) => {
+            dataMap.forEach((dataEntry) => {
+                if (this.isFurtherFromDataThan(dataEntry, contact) &&
+                    this.isFurtherstStorerOf(dataEntry)) {
+                    // migrate data to contact
+                }
+            })
+        })
+    }
+
     public async storeData(request: StoreDataRequest, context: ServerCallContext): Promise<StoreDataResponse> {
 
-        let ttl = request.ttl
+        let ttl = request.dataEntry!.ttl
         if (ttl > this.config.storeMaxTtl) {
             ttl = this.config.storeMaxTtl
         }
 
         this.doStoreData((context as DhtCallContext).incomingSourceDescriptor!,
-            PeerID.fromValue(request.kademliaId), request.data!, ttl)
+            request.dataEntry!)
 
         logger.info(this.config.nodeName + ' storeData()')
 
@@ -1245,15 +1337,16 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
     // Backednd of the RPC service implementation
 
-    public doStoreData(storer: PeerDescriptor, dataKey: PeerID, data: Any, ttl: number): void {
+    public doStoreData(storer: PeerDescriptor, dataEntry: DataEntry): void {
 
-        const publisherId = PeerID.fromValue(storer.kademliaId)
+        const publisherKey = PeerID.fromValue(storer.kademliaId).toKey()
+        const dataKey = PeerID.fromValue(dataEntry.kademliaId).toKey()
 
-        if (!this.dataStore.has(dataKey.toKey())) {
-            this.dataStore.set(dataKey.toKey(), new Map())
+        if (!this.dataStore.has(dataKey)) {
+            this.dataStore.set(dataKey, new Map())
         }
 
-        this.dataStore.get(dataKey.toKey())!.set(publisherId.toKey(), { storer, data, storedAt: Timestamp.now(), ttl })
+        this.dataStore.get(dataKey)!.set(publisherKey, dataEntry)
     }
 
     public doGetData(key: PeerID): Map<PeerIDKey, DataEntry> | undefined {
@@ -1287,7 +1380,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
                 this
             )
             try {
-                const response = await dhtPeer.storeData({ kademliaId: key, data, ttl })
+                const response = await dhtPeer.storeData({ dataEntry: { kademliaId: key, data, ttl } })
                 if (response.error) {
                     logger.error('dhtPeer.storeData() returned error: ' + response.error)
                     continue
@@ -1306,5 +1399,4 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
     public async getDataFromDht(idToFind: Uint8Array): Promise<RecursiveFindResult> {
         return this.startRecursiveFind(idToFind, FindMode.DATA)
     }
-
 }

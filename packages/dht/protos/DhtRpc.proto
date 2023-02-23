@@ -17,7 +17,7 @@ service DhtRpcService {
   //rpc findData (RouteMessageWrapper) returns (RouteMessageAck);
   rpc leaveNotice (LeaveNotice) returns (google.protobuf.Empty);
   rpc storeData (StoreDataRequest) returns (StoreDataResponse);
-
+  rpc migrateData (MigrateDataRequest) returns (MigrateDataResponse);
 }
 
 service RecursiveFindSessionService {
@@ -48,10 +48,16 @@ service ConnectionLocker {
 
 // Used inside RpcMessage
 
+message MigrateDataRequest {
+  DataEntry dataEntry = 1;
+}
+
+message MigrateDataResponse {
+  string error = 1;
+}
+
 message StoreDataRequest {
-  bytes kademliaId = 1;
-  google.protobuf.Any data = 2;
-  uint32 ttl = 3;
+  DataEntry dataEntry = 1;
 }
 
 message StoreDataResponse {
@@ -60,9 +66,10 @@ message StoreDataResponse {
 
 message DataEntry {
   PeerDescriptor storer = 1;
-  google.protobuf.Any data = 2;
-  google.protobuf.Timestamp storedAt = 3; 
-  uint32 ttl = 4;   // milliseconds
+  bytes kademliaId = 2;
+  google.protobuf.Any data = 3;
+  google.protobuf.Timestamp storedAt = 4; 
+  uint32 ttl = 5;   // milliseconds
 }
 
 /*

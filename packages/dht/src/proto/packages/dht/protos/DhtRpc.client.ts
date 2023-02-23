@@ -19,6 +19,8 @@ import type { RecursiveFindReport } from "./DhtRpc";
 import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
 import { DhtRpcService } from "./DhtRpc";
+import type { MigrateDataResponse } from "./DhtRpc";
+import type { MigrateDataRequest } from "./DhtRpc";
 import type { StoreDataResponse } from "./DhtRpc";
 import type { StoreDataRequest } from "./DhtRpc";
 import type { Empty } from "../../../google/protobuf/empty";
@@ -66,6 +68,10 @@ export interface IDhtRpcServiceClient {
      * @generated from protobuf rpc: storeData(dht.StoreDataRequest) returns (dht.StoreDataResponse);
      */
     storeData(input: StoreDataRequest, options?: RpcOptions): UnaryCall<StoreDataRequest, StoreDataResponse>;
+    /**
+     * @generated from protobuf rpc: migrateData(dht.MigrateDataRequest) returns (dht.MigrateDataResponse);
+     */
+    migrateData(input: MigrateDataRequest, options?: RpcOptions): UnaryCall<MigrateDataRequest, MigrateDataResponse>;
 }
 /**
  * @generated from protobuf service dht.DhtRpcService
@@ -126,6 +132,13 @@ export class DhtRpcServiceClient implements IDhtRpcServiceClient, ServiceInfo {
     storeData(input: StoreDataRequest, options?: RpcOptions): UnaryCall<StoreDataRequest, StoreDataResponse> {
         const method = this.methods[6], opt = this._transport.mergeOptions(options);
         return stackIntercept<StoreDataRequest, StoreDataResponse>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: migrateData(dht.MigrateDataRequest) returns (dht.MigrateDataResponse);
+     */
+    migrateData(input: MigrateDataRequest, options?: RpcOptions): UnaryCall<MigrateDataRequest, MigrateDataResponse> {
+        const method = this.methods[7], opt = this._transport.mergeOptions(options);
+        return stackIntercept<MigrateDataRequest, MigrateDataResponse>("unary", this._transport, method, opt, input);
     }
 }
 /**

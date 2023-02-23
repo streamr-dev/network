@@ -12,6 +12,8 @@ import { WebRtcConnectionRequest } from "./DhtRpc";
 import { WebSocketConnectionResponse } from "./DhtRpc";
 import { WebSocketConnectionRequest } from "./DhtRpc";
 import { RecursiveFindReport } from "./DhtRpc";
+import { MigrateDataResponse } from "./DhtRpc";
+import { MigrateDataRequest } from "./DhtRpc";
 import { StoreDataResponse } from "./DhtRpc";
 import { StoreDataRequest } from "./DhtRpc";
 import { Empty } from "../../../google/protobuf/empty";
@@ -57,6 +59,10 @@ export interface IDhtRpcService<T = ServerCallContext> {
      * @generated from protobuf rpc: storeData(dht.StoreDataRequest) returns (dht.StoreDataResponse);
      */
     storeData(request: StoreDataRequest, context: T): Promise<StoreDataResponse>;
+    /**
+     * @generated from protobuf rpc: migrateData(dht.MigrateDataRequest) returns (dht.MigrateDataResponse);
+     */
+    migrateData(request: MigrateDataRequest, context: T): Promise<MigrateDataResponse>;
 }
 /**
  * @generated from protobuf service dht.RecursiveFindSessionService

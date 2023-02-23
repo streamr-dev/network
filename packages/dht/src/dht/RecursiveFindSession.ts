@@ -114,6 +114,7 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
             } else {
                 this.reportFindCompletedTimeout = setTimeout(() => {
                     if (!this.findCompletedEmitted) {
+                        logger.error('findCompleted emitted because of timeout')
                         this.emit('findCompleted', this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()))
                         this.findCompletedEmitted = true
                     }
