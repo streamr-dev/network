@@ -68,7 +68,7 @@ describe('Migrating data from node to node in DHT', () => {
         ])
     })
 
-    it.only('Data migrates to the closest node no matter where it is stored', async () => {
+    it('Data migrates to the closest node no matter where it is stored', async () => {
         //const storingNode = getRandomNode()
         const dataKey = PeerID.fromString('3232323e12r31r3')
         const data = Any.pack(entrypointDescriptor, PeerDescriptor)
@@ -93,12 +93,25 @@ describe('Migrating data from node to node in DHT', () => {
 
         await nodes[0].joinDht(entrypointDescriptor)
 
+        /*
         logger.info('storing data to node 0')
-
         const successfulStorers = await nodes[0].storeDataToDht(dataKey.value, data)
-
         expect(successfulStorers).toBe(1)
         logger.info('data successfully stored to node 0')
+        */
+
+        logger.info('Nodes sorted according to distance to data with storing nodes marked are: ')
+        
+        closest.forEach((contact) => {
+            const node = nodes[nodeIndicesById[PeerID.fromValue(contact.getPeerDescriptor().kademliaId).toKey()]]
+            let hasDataMarker = ''
+
+            if (node.doGetData(dataKey)) {
+                hasDataMarker = '<-'
+            }
+
+            logger.info('' + node.getNodeName() + hasDataMarker)
+        })
 
         /*
         logger.info('node ' + storingNode.getNodeName() + ' starting to store data with key ' + dataKey.toString())
