@@ -1269,6 +1269,45 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         this.dataStore.get(dataKey)!.set(publisherKey, dataEntry)
     }
 
+    private shouldMigrateDataToNewNode(dataEntry: DataEntry, newNode: PeerDescriptor): boolean {
+
+        const closestToData = this.bucket!.closest(dataEntry.kademliaId, 10)
+        const sortedList = new SortedContactList<Contact>(this.ownPeerId!, 20, undefined, true)
+        sortedList.addContact(new Contact(this.ownPeerDescriptor!))
+
+        closestToData.forEach((desc) => {
+            sortedList.addContact(new Contact(desc.getPeerDescriptor()))
+        })
+
+        if (!sortedList.getAllContacts()[0].peerId.equals(this.ownPeerId!)) {
+            // If we are not the closes node to the data, do not migrate
+            return false
+        }
+
+        const newPeerId = PeerID.fromValue(newNode.kademliaId)
+        sortedList.addContact(new Contact(newNode))
+
+        const sorted = sortedList.getAllContacts()
+
+        let index = 0
+
+        for (index = 0; index < sorted.length; index++) {
+            if (sorted[index].peerId.equals(newPeerId)) {
+                break
+            }
+        }
+
+        // if new node is within the 5 closest nodes to the data
+        // do migrate data to it
+
+        if (index < 5) {
+            return true
+        } else {
+            return false
+        }
+    }
+
+    /*
     private isFurtherFromDataThan(dataEntry: DataEntry, peer: PeerDescriptor): boolean {
 
         const peerDistanceFromData = KBucket.distance(dataEntry.kademliaId, peer.kademliaId)
@@ -1307,17 +1346,38 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
         return false
     }
-
+    */
     private migrateDataToContactIfNeeded(contact: PeerDescriptor) {
 
         this.dataStore.forEach((dataMap, _dataKey) => {
             dataMap.forEach((dataEntry) => {
-                if (this.isFurtherFromDataThan(dataEntry, contact) &&
-                    this.isFurtherstStorerOf(dataEntry)) {
-                    // migrate data to contact
+                //if (this.isFurtherFromDataThan(dataEntry, contact) &&
+                //    this.isFurtherstStorerOf(dataEntry)) 
+                if (this.shouldMigrateDataToNewNode(dataEntry, contact)) {
+
+                    this.migrateDataToContact(dataEntry, contact)
+
                 }
             })
         })
+    }
+
+    private async migrateDataToContact(dataEntry: DataEntry, contact: PeerDescriptor): Promise<void> {
+        const dhtPeer = new DhtPeer(
+            this.ownPeerDescriptor!,
+            contact,
+            toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
+            this.config.serviceId,
+            this
+        )
+        try {
+            const response = await dhtPeer.migrateData({ dataEntry })
+            if (response.error) {
+                logger.error('dhtPeer.migrateData() returned error: ' + response.error)
+            }
+        } catch (e) {
+            logger.error('dhtPeer.migrateData() threw an exception ' + e)
+        }
     }
 
     public async storeData(request: StoreDataRequest, context: ServerCallContext): Promise<StoreDataResponse> {

@@ -1,5 +1,5 @@
 import { IDhtRpcServiceClient } from '../proto/packages/dht/protos/DhtRpc.client'
-import { ClosestPeersRequest, LeaveNotice, PeerDescriptor, PingRequest, 
+import { ClosestPeersRequest, LeaveNotice, MigrateDataRequest, MigrateDataResponse, PeerDescriptor, PingRequest, 
     RouteMessageWrapper, StoreDataRequest, StoreDataResponse } from '../proto/packages/dht/protos/DhtRpc'
 import { v4 } from 'uuid'
 import { PeerID } from '../helpers/PeerID'
@@ -188,6 +188,17 @@ export class DhtPeer implements KBucketContact {
         }
 
         return this.dhtClient.storeData(request, options)      
+    }
+
+    async migrateData(request: MigrateDataRequest): Promise<MigrateDataResponse> {
+        
+        const options: DhtRpcOptions = {
+            sourceDescriptor: this.ownPeerDescriptor,
+            targetDescriptor: this.peerDescriptor,
+            timeout: 10000
+        }
+
+        return this.dhtClient.migrateData(request, options)      
     }
 
     async forwardMessage(params: RouteMessageWrapper): Promise<boolean> {
