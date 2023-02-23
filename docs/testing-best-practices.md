@@ -23,7 +23,7 @@ It would seem like the best order in which to use the control flow utilities is 
 ### Other
 - Usefulness of `waitForEvent` declines in the presence of multiple events from the same emitter with the same event type
     - Consider bringing in `eventsToArray` or `eventsWithArgsToArray` to help
-- Notice that `waitForStreamToEnd` has two uses cases: collecting the data of a stream into an array _and_ waiting for a
+- Notice that `waitForStreamToEnd` has two use cases: collecting the data of a stream into an array _and_ waiting for a
   stream to be closed.
     - In some use cases you may only be interested in waiting for the stream to end. You don't have to examine the
       contents of the stream.
