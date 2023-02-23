@@ -71,7 +71,7 @@ export class NetworkNode {
         // if (this.isProxiedStreamPart(streamPartId, ProxyDirection.PUBLISH)) {
         //     throw new Error(`Cannot subscribe to ${streamPartId} as proxy publish connections have been set`)
         // }
-        return this.stack.getStreamrNode().subscribeAndWaitForJoin(streamPartId, knownEntrypointDescriptors)
+        return this.stack.getStreamrNode().waitForJoinAndSubscribe(streamPartId, knownEntrypointDescriptors)
     }
 
     async waitForJoinAndPublish(streamMessage: StreamMessage, knownEntrypointDescriptors: PeerDescriptor[], timeout?: number): Promise<number> {

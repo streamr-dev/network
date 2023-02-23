@@ -19,7 +19,7 @@ import {
 } from '@streamr/utils'
 import { uniq } from 'lodash'
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
-import { sample } from 'lodash'
+import { sampleSize } from 'lodash'
 import { streamPartIdToDataKey } from './StreamEntryPointDiscovery'
 import { Any } from '@streamr/dht/dist/src/proto/google/protobuf/any'
 
@@ -46,7 +46,13 @@ interface StreamrNodeOpts {
     nodeName?: string
 }
 
-export const exponentialRunOff = async (task: () => Promise<void>, description: string, abortSignal: AbortSignal, baseDelay = 1000, maxAttempts = 5): Promise<void> => {
+export const exponentialRunOff = async (
+    task: () => Promise<void>,
+    description: string,
+    abortSignal: AbortSignal,
+    baseDelay = 1000,
+    maxAttempts = 5
+): Promise<void> => {
     for (let i = 1; i <= maxAttempts; i++) {
         if (abortSignal.aborted) {
             return
@@ -60,7 +66,9 @@ export const exponentialRunOff = async (task: () => Promise<void>, description: 
         }
         try { // Abort controller throws unexpected errors in destroy?
             await wait(delay, abortSignal)
-        } catch (_err) {}
+        } catch (err) {
+            logger.trace(err)
+        }
     }
 }
 
@@ -197,7 +205,7 @@ export class StreamrNode extends EventEmitter<Events> {
                 knownEntryPointDescriptors.push(this.layer0!.getPeerDescriptor())
             }
         }
-        await layer1.joinDht(sample(knownEntryPointDescriptors)!)
+        await Promise.all(sampleSize(knownEntryPointDescriptors, 3).map((entryPoint) => layer1.joinDht(entryPoint)))
         if (joiningEmptyStream) {
             await this.storeSelfAsEntryPoint(streamPartID)
             setImmediate(() => this.avoidNetworkSplit(streamPartID))
@@ -220,7 +228,7 @@ export class StreamrNode extends EventEmitter<Events> {
                 }
             }
         }, 'avoid network split', this.abortController.signal)
-
+        logger.info(`Network split avoided`)
     }
 
     private async discoverEntrypoints(streamPartId: string): Promise<PeerDescriptor[]> {
@@ -248,7 +256,12 @@ export class StreamrNode extends EventEmitter<Events> {
         }
     }
 
-    async waitForJoinAndPublish(streamPartId: string, knownEntryPointDescriptors: PeerDescriptor[], msg: StreamMessage, timeout?: number): Promise<number> {
+    async waitForJoinAndPublish(
+        streamPartId: string,
+        knownEntryPointDescriptors: PeerDescriptor[],
+        msg: StreamMessage,
+        timeout?: number
+    ): Promise<number> {
         await this.joinStream(streamPartId, knownEntryPointDescriptors)
         if (this.getStream(streamPartId)!.layer1.getBucketSize() > 0) {
             await waitForCondition(() => this.getStream(streamPartId)!.layer2.getTargetNeighborStringIds().length > 0, timeout)
@@ -257,8 +270,11 @@ export class StreamrNode extends EventEmitter<Events> {
         return this.getStream(streamPartId)?.layer2.getTargetNeighborStringIds().length || 0
     }
 
-    async subscribeAndWaitForJoin(streamPartId: string, knownEntryPointDescriptors: PeerDescriptor[]): Promise<number> {
+    async waitForJoinAndSubscribe(streamPartId: string, knownEntryPointDescriptors: PeerDescriptor[], timeout?: number): Promise<number> {
         await this.joinStream(streamPartId, knownEntryPointDescriptors)
+        if (this.getStream(streamPartId)!.layer1.getBucketSize() > 0) {
+            await waitForCondition(() => this.getStream(streamPartId)!.layer2.getTargetNeighborStringIds().length > 0, timeout)
+        }
         this.subscribeToStream(streamPartId, knownEntryPointDescriptors)
         return this.getStream(streamPartId)?.layer2.getTargetNeighborStringIds().length || 0
     }

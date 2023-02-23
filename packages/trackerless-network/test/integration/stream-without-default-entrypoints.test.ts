@@ -104,11 +104,21 @@ describe('stream without default entrypoints', () => {
         await Promise.all(range(numOfSubscribers).map(async (i) => {
             await nodes[i].subscribeAndWaitForJoin(STREAM_ID, [])
             nodes[i].addMessageListener((_msg) => {
+                // console.log(nodes[i].stack.getLayer0DhtNode().getNodeId())
                 numOfReceivedMessages += 1
             })
+            await waitForCondition(() => nodes[i].stack.getStreamrNode().getStream(STREAM_ID).layer2.getTargetNeighborStringIds().length >= 4)
         }))
 
-        console.log("here!!!")
+        // range(numOfSubscribers).forEach((i) => {
+        //     console.log(
+        //         nodes[i].stack.getLayer0DhtNode().getNodeId().toKey(),
+        //         nodes[i].stack.getStreamrNode().getNeighbors(),
+        //         nodes[i].stack.getStreamrNode().getStream('test#0').layer1.getKBucketPeers().map((peer) => keyFromPeerDescriptor(peer)),
+        //         // @ts-expect-error private
+        //         nodes[i].stack.getLayer0DhtNode().dataStore
+        //     )
+        // })
         await Promise.all([
             waitForCondition(() => numOfReceivedMessages === numOfSubscribers),
             nodes[9].waitForJoinAndPublish(streamMessage, [])
@@ -120,8 +130,8 @@ describe('stream without default entrypoints', () => {
             await nodes[i].subscribeAndWaitForJoin(STREAM_ID, [])
         }
         const entryPointData = await nodes[15].stack.getLayer0DhtNode().getDataFromDht(streamPartIdToDataKey(STREAM_ID))
-        entryPointData.dataEntries.map((data) => {
-            console.log(data.storer!)
+        entryPointData.dataEntries.map((_data) => {
+            // console.log(data.storer!)
         })
     }, 90000)
 })
