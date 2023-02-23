@@ -6,7 +6,7 @@ import { StrictStreamrClientConfig, TrackerRegistryContract } from '../Config'
 import { getMainnetProviders } from '../Ethereum'
 import * as trackerRegistryConfig from '../ethereumArtifacts/TrackerRegistry.json'
 import { tryInSequence } from '../utils/promises'
-import { shuffle } from 'lodash'
+import shuffle from 'lodash/shuffle'
 
 async function fetchTrackers(contractAddress: EthereumAddress, jsonRpcProvider: Provider) {
     // check that provider is connected and has some valid blockNumber

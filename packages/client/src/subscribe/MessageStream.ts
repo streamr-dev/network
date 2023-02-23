@@ -8,7 +8,7 @@ import { PushPipeline } from '../utils/PushPipeline'
 import { StreamMessage } from '@streamr/protocol'
 import * as G from '../utils/GeneratorUtils'
 import { convertStreamMessageToMessage, Message, MessageMetadata } from './../Message'
-import { omit } from 'lodash'
+import omit from 'lodash/omit'
 
 export type MessageListener = (content: unknown, metadata: MessageMetadata) => unknown | Promise<unknown>
 
