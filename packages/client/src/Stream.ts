@@ -7,7 +7,7 @@ import {
     StreamPartID,
     toStreamPartID
 } from '@streamr/protocol'
-import { range } from 'lodash'
+import range from 'lodash/range'
 import { StrictStreamrClientConfig } from './Config'
 import { PermissionAssignment, PublicPermissionQuery, UserPermissionQuery } from './permission'
 import { Subscriber } from './subscribe/Subscriber'

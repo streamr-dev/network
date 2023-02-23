@@ -1,5 +1,5 @@
 import { keyToArrayIndex, toEthereumAddress } from '@streamr/utils'
-import { random } from 'lodash'
+import random from 'lodash/random'
 import { ContentType, EncryptionType, MAX_PARTITION_COUNT, StreamMessage, StreamMessageType, toStreamID } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
 import { createPrivateKeyAuthentication } from '../../src/Authentication'

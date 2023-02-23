@@ -1,4 +1,4 @@
-import _ from 'lodash'
+import without from 'lodash/without'
 import { MessageMetadata, StreamrClient, Subscription } from 'streamr-client'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { Logger } from '@streamr/utils'
@@ -105,10 +105,10 @@ export class Bridge implements MqttServerListener {
         const streamId = this.getStreamId(topic)
         const existingSubscription = this.getSubscription(streamId)
         if (existingSubscription !== undefined) {
-            existingSubscription.clientIds = _.without(existingSubscription.clientIds, clientId)
+            existingSubscription.clientIds = without(existingSubscription.clientIds, clientId)
             if (existingSubscription.clientIds.length === 0) {
                 existingSubscription.streamrClientSubscription.unsubscribe()
-                this.subscriptions = _.without(this.subscriptions, existingSubscription)
+                this.subscriptions = without(this.subscriptions, existingSubscription)
             }
         }
     }

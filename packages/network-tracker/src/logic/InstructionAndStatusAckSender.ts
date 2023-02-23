@@ -1,4 +1,5 @@
-import _ from 'lodash'
+import debounce from 'lodash/debounce'
+import type { DebouncedFunc } from 'lodash'
 import { StreamPartID } from '@streamr/protocol'
 import { NodeId } from '@streamr/network-node'
 import { Logger, MetricsContext, MetricsDefinition, Metric, RateMetric } from '@streamr/utils'
@@ -43,10 +44,10 @@ function isInstruction(entry: Instruction | StatusAck): entry is Instruction {
 
 class Buffer {
     private readonly entries = new Map<NodeId, Instruction | StatusAck>()
-    private readonly debouncedOnReady: _.DebouncedFunc<() => void>
+    private readonly debouncedOnReady: DebouncedFunc<() => void>
 
     constructor(options: TopologyStabilizationOptions, onReady: () => void) {
-        this.debouncedOnReady = _.debounce(onReady, options.debounceWait, {
+        this.debouncedOnReady = debounce(onReady, options.debounceWait, {
             maxWait: options.maxWait
         })
     }

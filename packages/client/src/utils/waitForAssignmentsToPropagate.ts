@@ -1,6 +1,6 @@
 import { collect, unique } from './GeneratorUtils'
 import { StreamID, StreamMessage, StreamPartIDUtils } from '@streamr/protocol'
-import { identity } from 'lodash'
+import identity from 'lodash/identity'
 import { MessageStream } from '../subscribe/MessageStream'
 
 export function waitForAssignmentsToPropagate(

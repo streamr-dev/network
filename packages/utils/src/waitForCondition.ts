@@ -1,6 +1,6 @@
 import { asAbortable } from './asAbortable'
 import { wait } from './wait'
-import { compact } from 'lodash'
+import compact from 'lodash/compact'
 import { composeAbortSignals } from './composeAbortSignals'
 
 function throwError(userAborted: boolean, conditionFn: () => any, onTimeoutContext?: () => string): never {
