@@ -109,7 +109,6 @@ describe('Storing data in DHT', () => {
 
         logger.info('node ' + storingNode.getNodeName() + ' starting to store data with key ' + dataKey.toString())
         const successfulStorers = await storingNode.storeDataToDht(dataKey.value, data)
-        console.log(successfulStorers)
         expect(successfulStorers.length).toBeGreaterThan(4)
 
         logger.info('store data over')
@@ -118,7 +117,6 @@ describe('Storing data in DHT', () => {
         logger.info('node ' + fetchingNode.getNodeName() + ' starting to get data with key ' + dataKey.toString())
         const results = await fetchingNode.getDataFromDht(dataKey.value)
 
-        console.log(results)
         logger.info('dataEntries.length: ' + results.dataEntries!.length)
         results.dataEntries?.forEach((entry) => {
             logger.info(JSON.stringify(entry.storer!), Any.unpack(entry.data!, PeerDescriptor))
