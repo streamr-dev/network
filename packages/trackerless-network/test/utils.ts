@@ -43,7 +43,7 @@ export const createStreamMessage = (content: ContentMessage, streamId: string, p
         messageChainId: 'messageChain0',
         streamPartition: 0,
         sequenceNumber: 0,
-        timestamp: BigInt(Date.now()),
+        timestamp: Date.now(),
         publisherId
 
     }
