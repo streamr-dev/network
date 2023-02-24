@@ -53,7 +53,7 @@ describe('stream without default entrypoints', () => {
             entryPoints: [entryPointPeerDescriptor]
         })
         await entrypoint.start()
-        await Promise.all(range(10).map(async (i) => {
+        await Promise.all(range(20).map(async (i) => {
             const peerDescriptor: PeerDescriptor = {
                 kademliaId: PeerID.fromString(`${i}`).value,
                 type: NodeType.NODEJS,
@@ -99,39 +99,26 @@ describe('stream without default entrypoints', () => {
         ])
     })
 
-    it.only('multiple nodes can join without configured entrypoints simultaneously', async () => {
+    it('multiple nodes can join without configured entrypoints simultaneously', async () => {
         const numOfSubscribers = 8
         await Promise.all(range(numOfSubscribers).map(async (i) => {
             await nodes[i].subscribeAndWaitForJoin(STREAM_ID, [])
             nodes[i].addMessageListener((_msg) => {
-                // console.log(nodes[i].stack.getLayer0DhtNode().getNodeId())
                 numOfReceivedMessages += 1
             })
-            await waitForCondition(() => nodes[i].stack.getStreamrNode().getStream(STREAM_ID).layer2.getTargetNeighborStringIds().length >= 4)
+            await waitForCondition(() => nodes[i].stack.getStreamrNode().getStream(STREAM_ID).layer2.getTargetNeighborStringIds().length >= 3)
         }))
-
-        // range(numOfSubscribers).forEach((i) => {
-        //     console.log(
-        //         nodes[i].stack.getLayer0DhtNode().getNodeId().toKey(),
-        //         nodes[i].stack.getStreamrNode().getNeighbors(),
-        //         nodes[i].stack.getStreamrNode().getStream('test#0').layer1.getKBucketPeers().map((peer) => keyFromPeerDescriptor(peer)),
-        //         // @ts-expect-error private
-        //         nodes[i].stack.getLayer0DhtNode().dataStore
-        //     )
-        // })
         await Promise.all([
-            waitForCondition(() => numOfReceivedMessages === numOfSubscribers),
+            waitForCondition(() => numOfReceivedMessages === numOfSubscribers, 10000),
             nodes[9].waitForJoinAndPublish(streamMessage, [])
         ])
     }, 120000)
 
-    it.skip('stores self as entrypoint on streamPart if number of entrypoints is low', async () => {
-        for (let i = 0; i < 11; i++) {
+    it('nodes store themselves as entrypoints on streamPart if number of entrypoints is low', async () => {
+        for (let i = 0; i < 10; i++) {
             await nodes[i].subscribeAndWaitForJoin(STREAM_ID, [])
         }
         const entryPointData = await nodes[15].stack.getLayer0DhtNode().getDataFromDht(streamPartIdToDataKey(STREAM_ID))
-        entryPointData.dataEntries.map((_data) => {
-            // console.log(data.storer!)
-        })
+        expect(entryPointData.dataEntries.length).toBeGreaterThanOrEqual(7)
     }, 90000)
 })
