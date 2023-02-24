@@ -1,5 +1,5 @@
 import StreamrClient, {
-    ConfigTest,
+    CONFIG_TEST,
     Stream,
     StreamPermission,
     StreamMetadata,
@@ -55,7 +55,7 @@ export const formConfig = ({
 
     return {
         client: {
-            ...ConfigTest,
+            ...CONFIG_TEST,
             auth: {
                 privateKey
             },
@@ -113,12 +113,12 @@ export const createClient = async (
     clientOptions?: StreamrClientConfig
 ): Promise<StreamrClient> => {
     const networkOptions = {
-        ...ConfigTest?.network,
+        ...CONFIG_TEST?.network,
         trackers: [tracker.getConfigRecord()],
         ...clientOptions?.network
     }
     return new StreamrClient({
-        ...ConfigTest,
+        ...CONFIG_TEST,
         auth: {
             privateKey
         },
@@ -163,7 +163,7 @@ export async function startStorageNode(
     trackerPort: number
 ): Promise<Broker> {
     const client = new StreamrClient({
-        ...ConfigTest,
+        ...CONFIG_TEST,
         auth: {
             privateKey: storageNodePrivateKey
         },

@@ -64,7 +64,7 @@ export class TrackerManager {
         getNodeDescriptor: GetNodeDescriptor,
         subscriber: Subscriber
     ) {
-        this.nodeToTracker =  nodeToTracker
+        this.nodeToTracker = nodeToTracker
         this.streamPartManager = streamPartManager
         this.trackerRegistry = createTrackerRegistry<TrackerRegistryRecord>(opts.trackers)
         this.getNodeDescriptor = getNodeDescriptor
@@ -113,12 +113,12 @@ export class TrackerManager {
         this.trackerConnector.onNewStreamPart(streamPartId)
     }
 
-    async connectToSignallingOnlyTracker(trackerId: TrackerId, trackerAddress: string): Promise<void> {
-        await this.trackerConnector.createSignallingOnlyTrackerConnection(trackerId, trackerAddress)
+    async addSignallingOnlySession(streamPartId: StreamPartID, nodeToSignal: NodeId): Promise<void> {
+        await this.trackerConnector.addSignallingOnlySession(streamPartId, nodeToSignal)
     }
 
-    disconnectFromSignallingOnlyTracker(trackerId: string): void {
-        this.trackerConnector.removeSignallingOnlyTrackerConnection(trackerId)
+    removeSignallingOnlySession(streamPartId: StreamPartID, nodeToSignal: NodeId): void {
+        this.trackerConnector.removeSignallingOnlySession(streamPartId, nodeToSignal)
     }
 
     onUnsubscribeFromStreamPart(streamPartId: StreamPartID): void {

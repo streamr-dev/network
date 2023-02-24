@@ -63,10 +63,10 @@ export class NodeToNode extends EventEmitter {
 
     connectToNode(
         receiverNodeId: NodeId,
-        trackerAddress: string,
+        trackerId: string,
         trackerInstructed = true
     ): Promise<NodeId> {
-        return this.endpoint.connect(receiverNodeId, trackerAddress, trackerInstructed)
+        return this.endpoint.connect(receiverNodeId, trackerId, trackerInstructed)
     }
 
     sendData(receiverNodeId: NodeId, streamMessage: StreamMessage): Promise<BroadcastMessage> {

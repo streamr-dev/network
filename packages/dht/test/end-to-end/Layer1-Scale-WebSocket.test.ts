@@ -65,7 +65,7 @@ describe('Layer1 Scale', () => {
         layer0Nodes.forEach((node) => {
             expect(node.getBucketSize()).toBeGreaterThanOrEqual(node.getK() - 1)
         })
-        layer1Nodes.forEach((node   ) => {
+        layer1Nodes.forEach((node ) => {
             expect(node.getBucketSize()).toBeGreaterThanOrEqual(node.getK() - 1)
         })
     })

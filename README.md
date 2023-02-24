@@ -141,7 +141,7 @@ All the above packages should be released at the same time.
 
 1. `git checkout main`
 2. `git pull`
-3. `./update-versions.sh <SEMVER>` E.g. `./update-versions 7.1.1`
+3. `./update-versions.sh <SEMVER>` E.g. `./update-versions.sh 7.1.1`
 4. `npm run clean && npm install && npm run build && npm run versions`
 5. Look at the output of the above and ensure all versions are linked properly (i.e. no yellow or red markers)
 6. Update client and cli-tool CHANGELOG.md
@@ -175,7 +175,7 @@ for the time being.
 git checkout main
 cd packages/broker
 npm version <SEMVER_OPTION>
-git add package.json
+git add package.json package-lock.json
 git commit -m "release(broker): vX.Y.Z"
 git tag broker/vX.Y.Z
 git push origin

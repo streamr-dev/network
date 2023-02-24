@@ -80,7 +80,7 @@ describe('resend with existing key', () => {
             auth: {
                 privateKey: subscriberWallet.privateKey
             },
-            decryption: {
+            encryption: {
                 keyRequestTimeout: 50
             }
         })

@@ -24,7 +24,8 @@ describe('Tracker disconnects from node if node sends invalid status data', () =
             [nodeToTracker, NodeToTrackerEvent.CONNECTED_TO_TRACKER]
         ])
     })
-    beforeEach(async () => {
+
+    afterEach(async () => {
         await Promise.allSettled([
             tracker?.stop(),
             nodeToTracker?.stop()

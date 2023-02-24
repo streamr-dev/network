@@ -109,7 +109,7 @@ describe('RemoteRandomGraphNode', () => {
         mockServerRpc.stop()
     })
 
-    it('sendData', async  () => {
+    it('sendData', async () => {
         const content: ContentMessage = {
             body: JSON.stringify({ hello: "WORLD" })
         }

@@ -72,7 +72,7 @@ describe('Connection', () => {
         }
     })
 
-    afterEach(()  => {
+    afterEach(() => {
         conn1.close()
         conn2.close()
     })

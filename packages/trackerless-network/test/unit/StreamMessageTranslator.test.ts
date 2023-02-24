@@ -17,7 +17,7 @@ describe('StreamMessageTranslator', () => {
     }
     const protobufMsg = createStreamMessage(content, 'TEST', 'publisher')
 
-    const messageId =  new MessageID(
+    const messageId = new MessageID(
         'TEST' as StreamID,
         0,
         Date.now(),

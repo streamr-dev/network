@@ -15,6 +15,16 @@
             "description": "The format of payloads: payload is wrapped as { content, metadata } or is a plain content JSON",
             "default": false
         },
+        "pingSendInterval": {
+            "type": "integer",
+            "description": "Interval (in milliseconds) in which to pings are sent to clients if there is no other trafic in the connection (0 = disable)",
+            "default": 15000
+        },
+        "disconnectTimeout": {
+            "type": "integer",
+            "description": "Timeout (in milliseconds) after a connection is closed if there is no trafic after ping is sent (0 = disable)",
+            "default": 15000
+        },
         "sslCertificate": {
             "description": "Files to use for SSL",
             "type": "object",

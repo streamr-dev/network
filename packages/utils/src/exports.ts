@@ -28,6 +28,7 @@ import { TimeoutError, withTimeout } from './withTimeout'
 import { composeAbortSignals } from './composeAbortSignals'
 import { waitForCondition } from './waitForCondition'
 import { waitForEvent3, runAndWaitForEvents3, raceEvents3, runAndRaceEvents3, RunAndRaceEventsReturnType } from './waitForEvent3'
+import { withRateLimit } from './withRateLimit'
 
 export {
     BrandedString,
@@ -54,6 +55,7 @@ export {
     wait,
     waitForCondition,
     waitForEvent,
+    withRateLimit,
     withTimeout,
     DuplicateMessageDetector,
     NumberPair,

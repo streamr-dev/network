@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
 ## [Unreleased]
 
 ### Added
@@ -17,6 +18,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 ### Security
+
+
+## [8.0.1] - 2023-02-20
+
+### Fixed 
+
+- Browser bundle
+
+
+## [8.0.0] - 2023-02-20
+
+### Added
+
+- Add support for experimental encryption key exchange via [Lit Protocol](https://litprotocol.com/). Enabled by
+  setting configuration option `encryption.litProtocolEnabled` to be true.
+
+### Changed
+
+- Proxy enhancements
+  - Use `.setProxies` instead of `.openProxyConnections` and `.closeProxyConnections`.
+  - It is possible to set a limit for the number of proxy connections while having a larger set of nodes to choose from.
+- All contract providers are used to query the tracker registry, storage node registry and stream storage registry
+- Stream registry contract queries are done in sequence
+- Combine `encryption` and `decryption` config option blocks
+  - All options are now in the `encryption` block
+
+### Removed
+
+- Remove deprecated:
+  - `gasPriceStrategy` config option from `contracts.ethereumNetworks`
+  - method parameter of `.waitForStorage()`
+  - `STREAM_CLIENT_DEFAULTS` constant
+  - `ConfigTest` constant
+  - `StrictStreamrClientConfig` TypeScript interface
+  - `NetworkNodeConfig` TypeScript interface
+- Remove `BigNumber` class export (was only used in `gasPriceStrategy`)
 
 
 ## [7.3.0] - 2023-01-23
@@ -187,11 +224,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix `searchStreams`, `getStreamSubscribers`, and `getStreamPublishers` timestamp filtering behaviour where valid
   entries were not appearing in the result set.
 
+
 ## [6.0.9] - 2022-06-20
 
 ### Fixed
 
 - Update `streamr-network` library to include fix to `std::bad_weak_ptr` crashing issue
+
 
 ## [6.0.8] - 2022-05-31
 
@@ -199,11 +238,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update `streamr-network` library to include propagation fix to proxy stream behaviour
 
+
 ## [6.0.7] - 2022-05-25
 
 ### Fixed
 
 - Update `streamr-network` library to include race condition fix to proxy stream behaviour
+
 
 ## [6.0.6] - 2022-05-24
 
@@ -213,33 +254,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   This means that unhandled promise rejections will not occur when not setting an explicit error handler. The default error
   handler will simply log the error and continue.
 
+
 ## [6.0.5] - 2022-05-10
 
 ### Fixed
 
 - Update `streamr-network` library to include stability fixes
 
+
 ## [6.0.4] - 2022-04-28
 
 ### Fixed
 - Update `streamr-network` library that includes a fix to Firefox compatibility
+
 
 ## [6.0.3] - 2022-04-25
 
 ### Fixed
 - Fix stream encryption: messages weren't automatically encrypted if the local database didn't contain pre-existing encryption keys for a stream
 
+
 ## [6.0.2] - 2022-03-04
 
 ### Fixed
 - Fixed an issue in which method `searchStreams` would throw on invalid metadata (NET-730)
+
 
 ## [6.0.1] - 2022-02-24
 
 ### Fixed
 - Fixed an import so that the client successfully loads in a web browser environment (NET-721)
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/client/v7.3.0...HEAD
+
+[Unreleased]: https://github.com/streamr-dev/network/compare/client/v8.0.1...HEAD
+[8.0.1]: https://github.com/streamr-dev/network/compare/client/v8.0.0...client/v8.0.1
+[8.0.0]: https://github.com/streamr-dev/network/compare/client/v7.3.0...client/v8.0.0
 [7.3.0]: https://github.com/streamr-dev/network/compare/client/v7.2.1...client/v7.3.0
 [7.2.1]: https://github.com/streamr-dev/network/compare/client/v7.2.0...client/v7.2.1
 [7.2.0]: https://github.com/streamr-dev/network/compare/client/v7.1.0...client/v7.2.0
