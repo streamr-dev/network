@@ -25,6 +25,10 @@ The integration APIs exposed by plugins can be secured via API keys. In your Bro
 
 How to pass the API key depends on the protocol in question and is described in the sections below.
 
+### Plugin-specific authentication
+
+Alternatively, if you need you plugin-specific API keys, you can configure similar `apiAuthentication` object inside a plugin config. In that case case the global API keys are not used for the plugin.
+
 ## Ports
 
 The integration plugins open TCP server ports to allow applications to connect to them. The ports need to be reachable by those applications, meaning that you may need to allow the port in your firewall and potentially set up appropriate port forwarding in your router. The port number is configurable for each plugin (see below for details).
