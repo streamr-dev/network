@@ -106,7 +106,7 @@ describe('stream without default entrypoints', () => {
             nodes[i].addMessageListener((_msg) => {
                 numOfReceivedMessages += 1
             })
-            await waitForCondition(() => nodes[i].stack.getStreamrNode().getStream(STREAM_ID).layer2.getTargetNeighborStringIds().length >= 3)
+            await waitForCondition(() => nodes[i].stack.getStreamrNode().getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length >= 3)
         }))
         await Promise.all([
             waitForCondition(() => numOfReceivedMessages === numOfSubscribers, 10000),
@@ -119,6 +119,6 @@ describe('stream without default entrypoints', () => {
             await nodes[i].subscribeAndWaitForJoin(STREAM_ID, [])
         }
         const entryPointData = await nodes[15].stack.getLayer0DhtNode().getDataFromDht(streamPartIdToDataKey(STREAM_ID))
-        expect(entryPointData.dataEntries.length).toBeGreaterThanOrEqual(7)
+        expect(entryPointData.dataEntries!.length).toBeGreaterThanOrEqual(7)
     }, 90000)
 })
