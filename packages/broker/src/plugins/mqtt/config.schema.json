@@ -20,24 +20,7 @@
             "default": false
         },
         "apiAuthentication": {
-            "anyOf": [{
-                "type": "object",
-                "description": "Override Broker's API authentication keys",
-                "required": [
-                    "keys"
-                ],
-                "additionalProperties": false,
-                "properties": {
-                    "keys": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }, {
-                "type": "null"
-            }]
+            "$ref": "definitions.schema.json#/definitions/apiAuthenticationOverride"
         }
     }
 }
