@@ -1,17 +1,12 @@
-/* eslint-disable no-console */
 import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode, waitNodesReadyForTesting } from '../utils'
-import { execSync } from 'child_process'
-import fs from 'fs'
 import { Logger } from '@streamr/utils'
 import { PeerID } from '../../src/exports'
 import { Any } from '../../src/proto/google/protobuf/any'
 
 const logger = new Logger(module)
-
-jest.setTimeout(60000) 
 
 describe('Storing data in DHT', () => {
     let entryPoint: DhtNode
@@ -24,13 +19,6 @@ describe('Storing data in DHT', () => {
 
     const nodeIndicesById: Record<string, number> = {}
 
-    if (!fs.existsSync('test/data/nodeids.json')) {
-        console.log('ground truth data does not exist yet, generating..')
-        execSync("npm run prepare-kademlia-simulation")
-    }
-
-    const dhtIds: Array<{ type: string, data: Array<number> }> = JSON.parse(fs.readFileSync('test/data/nodeids.json').toString())
-
     const getRandomNode = () => {
         return nodes[Math.floor(Math.random() * nodes.length)]
     }
@@ -39,7 +27,7 @@ describe('Storing data in DHT', () => {
         nodes = []
         const entryPointId = '0'
         entryPoint = await createMockConnectionDhtNode(entryPointId, simulator,
-            Uint8Array.from(dhtIds[0].data), K, entryPointId, MAX_CONNECTIONS)
+            undefined, K, entryPointId, MAX_CONNECTIONS)
         nodes.push(entryPoint)
         nodeIndicesById[entryPoint.getNodeId().toKey()] = 0
         entrypointDescriptor = {
@@ -54,7 +42,7 @@ describe('Storing data in DHT', () => {
             const nodeId = `${i}`
 
             const node = await createMockConnectionDhtNode(nodeId, simulator, 
-                Uint8Array.from(dhtIds[i].data), K, nodeId, MAX_CONNECTIONS)
+                undefined, K, nodeId, MAX_CONNECTIONS)
             nodeIndicesById[node.getNodeId().toKey()] = i
             nodes.push(node)
         }
