@@ -2,8 +2,8 @@ import { StrictConfig } from './config/config'
 import { validateConfig } from './config/validateConfig'
 import { Schema } from 'ajv'
 import { StreamrClient } from 'streamr-client'
-import { ApiAuthentication } from './apiAuthentication'
 import { Endpoint } from './httpServer'
+import { ApiAuthentication } from './apiAuthentication'
 
 export interface PluginOptions {
     name: string
@@ -17,7 +17,7 @@ export interface ApiPluginConfig {
 
 export type HttpServerEndpoint = Omit<Endpoint, 'apiAuthentication'>
 
-export abstract class Plugin<T> {
+export abstract class Plugin<T extends object> {
 
     readonly name: string
     readonly streamrClient: StreamrClient
@@ -33,6 +33,14 @@ export abstract class Plugin<T> {
         const configSchema = this.getConfigSchema()
         if (configSchema !== undefined) {
             validateConfig(this.pluginConfig, configSchema, `${this.name} plugin`)
+        }
+    }
+
+    getApiAuthentication(): ApiAuthentication | undefined {
+        if ('apiAuthentication' in this.pluginConfig) {
+            return (this.pluginConfig.apiAuthentication as (ApiAuthentication | null)) ?? undefined
+        } else {
+            return this.brokerConfig.apiAuthentication
         }
     }
 

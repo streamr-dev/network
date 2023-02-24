@@ -66,13 +66,13 @@ export const createMessagingPluginTest = <T>(
             broker = await startBroker({
                 privateKey: brokerUser.privateKey,
                 trackerPort: ports.tracker,
-                apiAuthentication: {
-                    keys: [MOCK_API_KEY]
-                },
                 extraPlugins: {
                     [pluginName]: {
                         port: ports.plugin,
                         payloadMetadata: true,
+                        apiAuthentication: {
+                            keys: [MOCK_API_KEY]
+                        },
                         ...pluginConfig
                     }
                 }

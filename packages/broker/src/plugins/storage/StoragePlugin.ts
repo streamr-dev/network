@@ -2,7 +2,7 @@ import { StreamMessage, StreamMessageType } from '@streamr/protocol'
 import { createDataQueryEndpoint } from './dataQueryEndpoint'
 import { createDataMetadataEndpoint } from './dataMetadataEndpoint'
 import { createStorageConfigEndpoint } from './storageConfigEndpoint'
-import { Plugin } from '../../Plugin'
+import { ApiPluginConfig, Plugin } from '../../Plugin'
 import { Storage, startCassandraStorage } from './Storage'
 import { StorageConfig } from './StorageConfig'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
@@ -12,7 +12,7 @@ import { formStorageNodeAssignmentStreamId, Stream } from 'streamr-client'
 
 const logger = new Logger(module)
 
-export interface StoragePluginConfig {
+export interface StoragePluginConfig extends ApiPluginConfig {
     cassandra: {
         hosts: string[]
         username: string
