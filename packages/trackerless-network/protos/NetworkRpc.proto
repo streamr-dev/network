@@ -112,3 +112,8 @@ message NeighborUpdate {
   bool removeMe = 3;
   repeated dht.PeerDescriptor neighborDescriptors = 4;
 }
+
+message StreamEntryPoint {
+  dht.PeerDescriptor peerDescriptor = 1;
+  bool firstToJoin = 2;
+}
