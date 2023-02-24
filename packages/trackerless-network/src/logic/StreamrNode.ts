@@ -195,7 +195,9 @@ export class StreamrNode extends EventEmitter<Events> {
             this.emit('newMessage', message)
         })
         let joiningEmptyStream = false
+        let entryPointsFromDht = false
         if (knownEntryPointDescriptors.length === 0) {
+            entryPointsFromDht = true
             const discoveredEntrypoints = await this.discoverEntrypoints(streamPartID)
             discoveredEntrypoints.map((entrypoint) => {
                 knownEntryPointDescriptors.push(entrypoint)
@@ -205,10 +207,16 @@ export class StreamrNode extends EventEmitter<Events> {
                 knownEntryPointDescriptors.push(this.layer0!.getPeerDescriptor())
             }
         }
-        await Promise.all(sampleSize(knownEntryPointDescriptors, 3).map((entryPoint) => layer1.joinDht(entryPoint)))
+        await Promise.all(sampleSize(knownEntryPointDescriptors, 4).map((entryPoint) => layer1.joinDht(entryPoint)))
         if (joiningEmptyStream) {
             await this.storeSelfAsEntryPoint(streamPartID)
             setImmediate(() => this.avoidNetworkSplit(streamPartID))
+        } else if (entryPointsFromDht && knownEntryPointDescriptors.length < 8) {
+            try {
+                await this.storeSelfAsEntryPoint(streamPartID)
+            } catch (err) {
+                logger.trace(`Failed to store self as entrypoint on stream `)
+            }
         }
     }
 
