@@ -93,12 +93,12 @@ describe('Migrating data from node to node in DHT', () => {
 
         await nodes[0].joinDht(entrypointDescriptor)
 
-        /*
+        
         logger.info('storing data to node 0')
         const successfulStorers = await nodes[0].storeDataToDht(dataKey.value, data)
         expect(successfulStorers).toBe(1)
         logger.info('data successfully stored to node 0')
-        */
+        
 
         logger.info('Nodes sorted according to distance to data with storing nodes marked are: ')
         
