@@ -17,6 +17,7 @@ export interface Endpoint {
     path: string
     method: 'get' | 'post'
     requestHandlers: RequestHandler[]
+    apiAuthentication?: ApiAuthentication
 }
 
 const getApiKey = (req: Request) => {
@@ -42,17 +43,16 @@ export const createAuthenticatorMiddleware = (apiAuthentication?: ApiAuthenticat
 
 export const startServer = async (
     endpoints: Endpoint[],
-    config: StrictConfig['httpServer'],
-    apiAuthentication?: ApiAuthentication
+    config: StrictConfig['httpServer']
 ): Promise<HttpServer | https.Server> => {
     const app = express()
     app.use(cors({
         origin: true, // Access-Control-Allow-Origin: request origin. The default '*' is invalid if credentials included.
         credentials: true // Access-Control-Allow-Credentials: true
     }))
-    app.use(createAuthenticatorMiddleware(apiAuthentication))
     endpoints.forEach((endpoint: Endpoint) => {
-        app.route(endpoint.path)[endpoint.method](endpoint.requestHandlers)
+        const handlers = [createAuthenticatorMiddleware(endpoint.apiAuthentication)].concat(endpoint.requestHandlers)
+        app.route(endpoint.path)[endpoint.method](handlers)
     })
     let serverFactory: { listen: (port: number) => HttpServer | HttpsServer }
     if (config.sslCertificate !== undefined) {

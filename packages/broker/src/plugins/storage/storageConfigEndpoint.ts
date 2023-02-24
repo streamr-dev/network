@@ -1,7 +1,7 @@
 import { Request, RequestHandler, Response } from 'express'
 import { StorageConfig } from './StorageConfig'
 import { toStreamID, toStreamPartID } from '@streamr/protocol'
-import { Endpoint } from '../../httpServer'
+import { HttpServerEndpoint } from '../../Plugin'
 
 const createHandler = (storageConfig: StorageConfig): RequestHandler => {
     return (req: Request, res: Response) => {
@@ -20,7 +20,7 @@ const createHandler = (storageConfig: StorageConfig): RequestHandler => {
     }
 }
 
-export const createStorageConfigEndpoint = (storageConfig: StorageConfig): Endpoint => {
+export const createStorageConfigEndpoint = (storageConfig: StorageConfig): HttpServerEndpoint => {
     return {
         path: '/streams/:id/storage/partitions/:partition',
         method: 'get',

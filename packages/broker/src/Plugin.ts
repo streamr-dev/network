@@ -2,6 +2,7 @@ import { StrictConfig } from './config/config'
 import { validateConfig } from './config/validateConfig'
 import { Schema } from 'ajv'
 import { StreamrClient } from 'streamr-client'
+import { ApiAuthentication } from './apiAuthentication'
 import { Endpoint } from './httpServer'
 
 export interface PluginOptions {
@@ -10,13 +11,19 @@ export interface PluginOptions {
     brokerConfig: StrictConfig
 }
 
+export interface ApiPluginConfig {
+    apiAuthentication?: ApiAuthentication | null
+}
+
+export type HttpServerEndpoint = Omit<Endpoint, 'apiAuthentication'>
+
 export abstract class Plugin<T> {
 
     readonly name: string
     readonly streamrClient: StreamrClient
     readonly brokerConfig: StrictConfig
     readonly pluginConfig: T
-    private readonly httpServerRouters: Endpoint[] = []
+    private readonly httpServerEndpoints: HttpServerEndpoint[] = []
 
     constructor(options: PluginOptions) {
         this.name = options.name
@@ -29,12 +36,12 @@ export abstract class Plugin<T> {
         }
     }
 
-    addHttpServerEndpoint(endpoint: Endpoint): void {
-        this.httpServerRouters.push(endpoint)
+    addHttpServerEndpoint(endpoint: HttpServerEndpoint): void {
+        this.httpServerEndpoints.push(endpoint)
     }
 
-    getHttpServerEndpoints(): Endpoint[] {
-        return this.httpServerRouters
+    getHttpServerEndpoints(): HttpServerEndpoint[] {
+        return this.httpServerEndpoints
     }
 
     /**

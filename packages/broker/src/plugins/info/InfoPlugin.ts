@@ -1,6 +1,5 @@
 import { Request, Response } from 'express'
-import { Endpoint } from '../../httpServer'
-import { Plugin } from '../../Plugin'
+import { HttpServerEndpoint, Plugin } from '../../Plugin'
 
 export class InfoPlugin extends Plugin<void> {
 
@@ -8,7 +7,7 @@ export class InfoPlugin extends Plugin<void> {
         this.addHttpServerEndpoint(this.createEndpoint())
     }
 
-    private createEndpoint(): Endpoint {
+    private createEndpoint(): HttpServerEndpoint {
         return {
             path: '/info',
             method: 'get',
