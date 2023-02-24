@@ -8,10 +8,14 @@ import { createClient, startBroker, createTestStream, startTestTracker } from '.
 import { wait } from '@streamr/utils'
 
 interface MessagingPluginApi<T> {
-    createClient: (action: 'publish' | 'subscribe', streamId: string, apiKey: string) => Promise<T>
+    createClient: (action: 'publish' | 'subscribe', streamId: string, apiKey?: string) => Promise<T>
     closeClient: (client: T) => Promise<void>
     publish: (message: Message, streamId: string, client: T) => Promise<void>
     subscribe: (messageQueue: Queue<Message>, streamId: string, client: T) => Promise<void>
+    errors: {
+        unauthorized: string
+        forbidden: string
+    }
 }
 
 interface Ports {
@@ -114,6 +118,34 @@ export const createMessagingPluginTest = <T>(
                 })
                 const message = await messageQueue.pop()
                 assertReceivedMessage(message)
+            })
+        })
+
+        describe('unauthorized', () => {
+            test('publish', async () => {
+                await expect(() => {
+                    return api.createClient('publish', stream.id)
+                }).rejects.toThrow(api.errors.unauthorized)
+            })
+
+            test('subscribe', async () => {
+                await expect(() => {
+                    return api.createClient('subscribe', stream.id)
+                }).rejects.toThrow(api.errors.unauthorized)
+            })
+        })
+
+        describe('forbidden', () => {
+            test('publish', async () => {
+                await expect(() => {
+                    return api.createClient('publish', stream.id, 'invalid-key')
+                }).rejects.toThrow(api.errors.forbidden)
+            })
+
+            test('subscribe', async () => {
+                await expect(() => {
+                    return api.createClient('subscribe', stream.id, 'invalid-key')
+                }).rejects.toThrow(api.errors.forbidden)
             })
         })
 
