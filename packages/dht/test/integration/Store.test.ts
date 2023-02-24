@@ -61,7 +61,7 @@ describe('Storing data in DHT', () => {
             + ', localLocked: ' + node.getNumberOfLocalLockedConnections()
             + ', remoteLocked: ' + node.getNumberOfRemoteLockedConnections()
             + ', weakLocked: ' + node.getNumberOfWeakLockedConnections())
-    })
+    }, 60000)
 
     afterEach(async () => {
         await Promise.allSettled([

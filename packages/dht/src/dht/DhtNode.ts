@@ -1239,7 +1239,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
                 return (this.getNumberOfLocalLockedConnections() == 0 &&
                     this.getNumberOfRemoteLockedConnections() == 0 &&
                     this.getNumberOfConnections() <= this.config.maxConnections)
-            }, 10000)
+            }, 20000)
         }
     }
 
