@@ -35,7 +35,7 @@ export class StreamMessageTranslator {
             throw new Error('invalid message type')
         }
         const messageRef: MessageRef = {
-            timestamp: msg.getTimestamp(),
+            timestamp: BigInt(msg.getTimestamp()),
             sequenceNumber: msg.getSequenceNumber(),
             streamId: msg.getStreamId() as string,
             streamPartition: msg.getStreamPartition(),
@@ -45,7 +45,7 @@ export class StreamMessageTranslator {
         let previousMessageRef: MessageRef | undefined = undefined
         if (msg.getPreviousMessageRef()) {
             previousMessageRef = {
-                timestamp: msg.getPreviousMessageRef()!.timestamp,
+                timestamp: BigInt(msg.getPreviousMessageRef()!.timestamp),
                 sequenceNumber: msg.getPreviousMessageRef()!.sequenceNumber,
                 streamId: msg.getStreamId() as string,
                 streamPartition: msg.getStreamPartition(),

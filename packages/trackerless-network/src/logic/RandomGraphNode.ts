@@ -71,7 +71,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements INetworkRpc
         this.randomContactPool = new PeerList(peerId, this.PEER_VIEW_SIZE)
         this.targetNeighbors = new PeerList(peerId, this.PEER_VIEW_SIZE)
         this.propagation = new Propagation({
-            minPropagationTargets: 2,
+            minPropagationTargets: 1,
             randomGraphId: config.randomGraphId,
             sendToNeighbor: async (neighborId: string, msg: StreamMessage): Promise<void> => {
                 const remote = this.targetNeighbors.getNeighborWithId(neighborId)
@@ -107,12 +107,6 @@ export class RandomGraphNode extends EventEmitter<Events> implements INetworkRpc
             nodeName: this.config.nodeName,
             N: this.N
         })
-        this.neighborFinder = new NeighborFinder({
-            targetNeighbors: this.targetNeighbors,
-            nearbyContactPool: this.nearbyContactPool,
-            handshaker: this.handshaker,
-            N: this.N
-        })
         this.registerDefaultServerMethods()
         const candidates = this.getNewNeighborCandidates()
         if (candidates.length) {
@@ -120,6 +114,12 @@ export class RandomGraphNode extends EventEmitter<Events> implements INetworkRpc
         } else {
             logger.debug('layer1 had no closest contacts in the beginning')
         }
+        this.neighborFinder = new NeighborFinder({
+            targetNeighbors: this.targetNeighbors,
+            nearbyContactPool: this.nearbyContactPool,
+            handshaker: this.handshaker,
+            N: this.N
+        })
         this.neighborFinder!.start()
         setImmediate(async () => {
             await scheduleAtInterval(this.updateNeighborInfo.bind(this), 10000, false, this.abortController.signal)
@@ -138,9 +138,6 @@ export class RandomGraphNode extends EventEmitter<Events> implements INetworkRpc
                 toProtoRpcClient(new NetworkRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
             )
         ))
-        if (this.targetNeighbors.size() < this.N) {
-            this.neighborFinder!.start()
-        }
     }
 
     private removedContact(_removedContact: PeerDescriptor, closestTen: PeerDescriptor[]): void {
@@ -168,9 +165,6 @@ export class RandomGraphNode extends EventEmitter<Events> implements INetworkRpc
                 toProtoRpcClient(new NetworkRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
             )
         ))
-        if (this.targetNeighbors.size() < this.N) {
-            this.neighborFinder!.start()
-        }
     }
 
     private removedRandomContact(_removedDescriptor: PeerDescriptor, randomPeers: PeerDescriptor[]): void {
