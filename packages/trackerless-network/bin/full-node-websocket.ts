@@ -15,7 +15,7 @@ program
     .option('--wsPort <port>', 'Name in published messages', '23124')
     .option('--entrypointId <entrypointId>', 'Entrypoints stringId', 'bootstrap')
     .option('--entrypointIp <entrypointIp>', 'Entrypoints IP address', '0.0.0.0')
-    .option('--streamIds <streamIds>', 'streamId to publish',  (value: string) => value.split(','), ['stream-0'])
+    .option('--streamIds <streamIds>', 'streamId to publish', (value: string) => value.split(','), ['stream-0'])
     .description('Run full node')
     .parse(process.argv)
 
@@ -74,7 +74,7 @@ async function run(): Promise<void> {
         // eslint-disable-next-line no-console
         console.log(
             `Layer0: Kbucket size ${layer0.getBucketSize() || 0} `,
-            `DHT contacts ${layer0.getNeighborList().getSize()  || 0}`
+            `DHT contacts ${layer0.getNeighborList().getSize() || 0}`
         )
         const messageRef: MessageRef = {
             sequenceNumber,

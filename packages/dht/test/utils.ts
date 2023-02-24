@@ -61,7 +61,7 @@ export const createMockConnectionLayer1Node = async (stringId: string, layer0Nod
     }
 
     const node = new DhtNode({ peerDescriptor: descriptor, transportLayer: layer0Node, 
-        serviceId: serviceId ? serviceId : 'layer1', numberOfNodesPerKBucket: 8,  nodeName: stringId })
+        serviceId: serviceId ? serviceId : 'layer1', numberOfNodesPerKBucket: 8, nodeName: stringId })
     await node.start()
     return node
 }

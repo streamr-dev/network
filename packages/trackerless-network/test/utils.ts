@@ -19,7 +19,7 @@ export const createMockRandomGraphNodeAndDhtNode = (
     entryPointDescriptor: PeerDescriptor,
     randomGraphId: string,
     simulator: Simulator
-): [ DhtNode, RandomGraphNode ]  => {
+): [ DhtNode, RandomGraphNode ] => {
     const mockCm = new SimulatorTransport(ownPeerDescriptor, simulator)
     const dhtNode = new DhtNode({
         transportLayer: mockCm,
