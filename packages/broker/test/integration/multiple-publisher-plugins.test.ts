@@ -162,7 +162,8 @@ describe('multiple publisher plugins', () => {
 
         const receivedMessages: Queue<object> = new Queue()
         const subscriber = new WebSocket(`ws://localhost:${wsPort}/streams/${encodeURIComponent(streamId)}/subscribe`)
-        subscriber.on('message', (message: string) => {
+        subscriber.on('message', (data: WebSocket.RawData) => {
+            const message = data.toString()
             receivedMessages.push(JSON.parse(message))
         })
 

@@ -104,7 +104,7 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
         ws: SupportedWs,
         serverPeerInfo: PeerInfo,
         serverUrl: string,
-        message: IMessageEvent | string | Buffer | Buffer[],
+        message: IMessageEvent | WebSocket.RawData,
         resolve: (value: PeerId | PromiseLike<string>) => void
     ): void {
         try {
@@ -114,7 +114,7 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
                 this.doHandshakeResponse(uuid, peerId, ws)
                 resolve(this.setUpConnection(ws, serverPeerInfo, serverUrl))
             } else {
-                this.logger.trace('Expected a handshake message got: ' + message)
+                this.logger.trace('Expected a handshake message got %s: ', message)
             }
         } catch (err) {
             this.logger.trace(err)
@@ -144,7 +144,7 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
     /**
      * Parse handshake message
      */
-    protected abstract doHandshakeParse(message: string | Buffer | Buffer[] | IMessageEvent): HandshakeValues
+    protected abstract doHandshakeParse(message: IMessageEvent | WebSocket.RawData): HandshakeValues
 
     /**
      * Finalise WS connection e.g. add final event listeners

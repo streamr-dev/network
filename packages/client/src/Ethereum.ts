@@ -17,17 +17,11 @@ export const generateEthereumAccount = (): { address: string, privateKey: string
     }
 }
 
-// TODO maybe we should use all providers?
-export const getMainnetProvider = (config: Pick<StrictStreamrClientConfig, 'contracts'>): Provider => {
-    const providers = getRpcProviders(config.contracts.mainChainRPCs)
-    return providers[0]
+export const getMainnetProviders = (config: Pick<StrictStreamrClientConfig, 'contracts'>): Provider[] => {
+    return getRpcProviders(config.contracts.mainChainRPCs)
 }
 
-export const getStreamRegistryChainProvider = (config: Pick<StrictStreamrClientConfig, 'contracts'>): Provider => {
-    return getAllStreamRegistryChainProviders(config)[0]
-}
-
-export const getAllStreamRegistryChainProviders = (config: Pick<StrictStreamrClientConfig, 'contracts'>): Provider[] => {
+export const getStreamRegistryChainProviders = (config: Pick<StrictStreamrClientConfig, 'contracts'>): Provider[] => {
     return getRpcProviders(config.contracts.streamRegistryChainRPCs)
 }
 
@@ -38,7 +32,8 @@ const getRpcProviders = (connectionInfo: ChainConnectionInfo): Provider[] => {
 }
 
 export const getStreamRegistryOverrides = (config: Pick<StrictStreamrClientConfig, 'contracts'>): Overrides => {
-    return getOverrides(config.contracts.streamRegistryChainRPCs.name ?? 'polygon', getStreamRegistryChainProvider(config), config)
+    const primaryProvider = getStreamRegistryChainProviders(config)[0]
+    return getOverrides(config.contracts.streamRegistryChainRPCs.name ?? 'polygon', primaryProvider, config)
 }
 
 /**
@@ -49,10 +44,8 @@ const getOverrides = (chainName: string, provider: Provider, config: Pick<Strict
     const chainConfig = config.contracts.ethereumNetworks[chainName]
     if (chainConfig === undefined) { return {} }
     const overrides = chainConfig.overrides ?? {}
-    const gasPriceStrategy = chainConfig.highGasPriceStrategy
-        ? (estimatedGasPrice: BigNumber) => estimatedGasPrice.add('10000000000') 
-        : chainConfig.gasPriceStrategy
-    if (gasPriceStrategy !== undefined) {
+    if (chainConfig.highGasPriceStrategy) {
+        const gasPriceStrategy = (estimatedGasPrice: BigNumber) => estimatedGasPrice.add('10000000000') 
         return {
             ...overrides,
             gasPrice: provider.getGasPrice().then(gasPriceStrategy)

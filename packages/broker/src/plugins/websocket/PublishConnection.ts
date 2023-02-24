@@ -4,7 +4,7 @@ import { Logger } from '@streamr/utils'
 import { ParsedQs } from 'qs'
 import { v4 as uuid } from 'uuid'
 import { parsePositiveInteger, parseQueryParameter } from '../../helpers/parser'
-import { Connection } from './Connection'
+import { Connection, PING_PAYLOAD } from './Connection'
 import { PayloadFormat } from '../../helpers/PayloadFormat'
 
 const logger = new Logger(module)
@@ -29,20 +29,23 @@ export class PublishConnection implements Connection {
 
     init(ws: WebSocket, streamrClient: StreamrClient, payloadFormat: PayloadFormat): void {
         const msgChainId = uuid()
-        ws.on('message', async (payload: string) => {
-            try {
-                const { content, metadata } = payloadFormat.createMessage(payload)
-                const partitionKey = this.partitionKey ?? (this.partitionKeyField ? (content[this.partitionKeyField] as string) : undefined)
-                await streamrClient.publish({
-                    id: this.streamId,
-                    partition: this.partition
-                }, content, {
-                    timestamp: metadata.timestamp,
-                    partitionKey,
-                    msgChainId
-                })
-            } catch (err: any) {
-                logger.warn('Unable to publish, reason: %s', err)
+        ws.on('message', async (data: WebSocket.RawData) => {
+            const payload = data.toString()
+            if (payload !== PING_PAYLOAD) {
+                try {
+                    const { content, metadata } = payloadFormat.createMessage(payload)
+                    const partitionKey = this.partitionKey ?? (this.partitionKeyField ? (content[this.partitionKeyField] as string) : undefined)
+                    await streamrClient.publish({
+                        id: this.streamId,
+                        partition: this.partition
+                    }, content, {
+                        timestamp: metadata.timestamp,
+                        partitionKey,
+                        msgChainId
+                    })
+                } catch (err: any) {
+                    logger.warn('Unable to publish, reason: %s', err)
+                }
             }
         })
     }

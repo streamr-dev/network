@@ -2,40 +2,27 @@ import { EncryptionType, StreamMessage } from '@streamr/protocol'
 import { EncryptionUtil, DecryptError } from '../encryption/EncryptionUtil'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { DestroySignal } from '../DestroySignal'
-import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'
-import { GroupKeyStore } from '../encryption/GroupKeyStore'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
-import { inject } from 'tsyringe'
 import { GroupKey } from '../encryption/GroupKey'
-import { Logger, waitForEvent } from '@streamr/utils'
-import { StreamrClientEventEmitter } from '../events'
+import { Logger } from '@streamr/utils'
 import { LoggerFactory } from '../utils/LoggerFactory'
+import { GroupKeyManager } from '../encryption/GroupKeyManager'
 
 export class Decrypt {
 
-    private groupKeyStore: GroupKeyStore
-    private keyExchange: SubscriberKeyExchange
+    private groupKeyManager: GroupKeyManager
     private streamRegistryCached: StreamRegistryCached
     private destroySignal: DestroySignal
-    private eventEmitter: StreamrClientEventEmitter
-    private config: Pick<StrictStreamrClientConfig, 'decryption'>    
     private readonly logger: Logger
 
     constructor(
-        groupKeyStore: GroupKeyStore,
-        keyExchange: SubscriberKeyExchange,
+        groupKeyManager: GroupKeyManager,
         streamRegistryCached: StreamRegistryCached,
         destroySignal: DestroySignal,
-        @inject(LoggerFactory) loggerFactory: LoggerFactory,
-        @inject(StreamrClientEventEmitter) eventEmitter: StreamrClientEventEmitter,
-        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'decryption'>
+        loggerFactory: LoggerFactory,
     ) {
-        this.groupKeyStore = groupKeyStore
-        this.keyExchange = keyExchange
+        this.groupKeyManager = groupKeyManager
         this.streamRegistryCached = streamRegistryCached
         this.destroySignal = destroySignal
-        this.eventEmitter = eventEmitter
-        this.config = config
         this.logger = loggerFactory.createLogger(module)
         this.decrypt = this.decrypt.bind(this)
     }
@@ -57,40 +44,31 @@ export class Decrypt {
         }
 
         try {
-            const groupKeyId = streamMessage.groupKeyId!
-
-            let groupKey = await this.groupKeyStore.get(groupKeyId, streamMessage.getStreamId())
-            if (groupKey === undefined) {
-                await this.keyExchange.requestGroupKey(
+            let groupKey: GroupKey | undefined
+            try {
+                groupKey = await this.groupKeyManager.fetchKey(
+                    streamMessage.getStreamPartID(),
                     streamMessage.groupKeyId,
-                    streamMessage.getPublisherId(),
-                    streamMessage.getStreamPartID()
+                    streamMessage.getPublisherId()
                 )
-                try {
-                    const groupKeys = await waitForEvent(
-                        // TODO remove "as any" type casing in NET-889
-                        this.eventEmitter as any,
-                        'addGroupKey',
-                        this.config.decryption.keyRequestTimeout,
-                        (storedGroupKey: GroupKey) => storedGroupKey.id === groupKeyId,
-                        this.destroySignal.abortSignal)
-                    groupKey = groupKeys[0] as GroupKey
-                } catch (e: any) {
-                    if (this.destroySignal.isDestroyed()) {
-                        return streamMessage
-                    }
-                    throw new DecryptError(streamMessage, `Could not get GroupKey ${streamMessage.groupKeyId}: ${e.message}`)
-                }
+            } catch (e: any) {
                 if (this.destroySignal.isDestroyed()) {
                     return streamMessage
                 }
+                throw new DecryptError(streamMessage, `Could not get GroupKey ${streamMessage.groupKeyId}: ${e.message}`)
+            }
+            if (this.destroySignal.isDestroyed()) {
+                return streamMessage
             }
 
             const clone = StreamMessage.deserialize(streamMessage.serialize())
-            EncryptionUtil.decryptStreamMessage(clone, groupKey!)
+            EncryptionUtil.decryptStreamMessage(clone, groupKey)
             if (streamMessage.newGroupKey) {
                 // newGroupKey has been converted into GroupKey
-                await this.groupKeyStore.add(clone.newGroupKey as unknown as GroupKey, streamMessage.getStreamId())
+                await this.groupKeyManager.addKeyToLocalStore(
+                    clone.newGroupKey as unknown as GroupKey,
+                    streamMessage.getStreamId()
+                )
             }
             return clone
         } catch (err) {

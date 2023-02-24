@@ -1,7 +1,8 @@
 import Ajv, { Schema, ErrorObject } from 'ajv'
 import addFormats from 'ajv-formats'
+import { StrictConfig } from './config'
 
-export const validateConfig = (data: unknown, schema: Schema, contextName?: string, useDefaults = true): void | never => {
+export const validateConfig = (data: unknown, schema: Schema, contextName?: string, useDefaults = true): StrictConfig => {
     const ajv = new Ajv({
         useDefaults
     })
@@ -16,6 +17,7 @@ export const validateConfig = (data: unknown, schema: Schema, contextName?: stri
             return text
         }).join('\n'))
     }
+    return data as StrictConfig
 }
 
 export const isValidConfig = (data: unknown, schema: Schema): boolean => {

@@ -41,7 +41,7 @@ export class PeerInfo {
         controlLayerVersions?: number[] | undefined,
         messageLayerVersions?: number[] | undefined,
         location?: Location
-    ): PeerInfo  {
+    ): PeerInfo {
         return new PeerInfo(
             peerId,
             PeerType.Node,
@@ -51,11 +51,11 @@ export class PeerInfo {
         )
     }
 
-    static newUnknown(peerId: PeerId): PeerInfo  {
+    static newUnknown(peerId: PeerId): PeerInfo {
         return new PeerInfo(peerId, PeerType.Unknown, defaultControlLayerVersions, defaultMessageLayerVersions)
     }
 
-    static fromObject({ peerId, peerType, location, controlLayerVersions, messageLayerVersions }: ObjectRepresentation): PeerInfo  {
+    static fromObject({ peerId, peerType, location, controlLayerVersions, messageLayerVersions }: ObjectRepresentation): PeerInfo {
         return new PeerInfo(
             peerId,
             peerType as PeerType,

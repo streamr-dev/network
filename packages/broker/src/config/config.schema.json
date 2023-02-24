@@ -3,10 +3,6 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "description": "Broker configuration format",
     "type": "object",
-    "required": [
-        "client",
-        "plugins"
-    ],
     "additionalProperties": false,
     "properties": {
         "$schema": {
@@ -41,12 +37,13 @@
                     ]
                 }
             },
-            "required": ["auth"]
+            "default": {}
         },
         "plugins": {
             "type": "object",
             "description": "Plugin configurations",
-            "additionalProperties": true
+            "additionalProperties": true,
+            "default": {}
         },
         "httpServer": {
             "type": [
