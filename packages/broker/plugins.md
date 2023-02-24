@@ -15,7 +15,6 @@ The integration APIs exposed by plugins can be secured via API keys. In your Bro
 
 ```
 {
-    "network": ...
     "plugins": ...
     "apiAuthentication": {
         "keys": ["my-secret-api-key"]
