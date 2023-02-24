@@ -1,0 +1,11 @@
+{
+    "$id": "definitions.schema.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "definitions": {
+        "port": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 65353
+        }
+    }
+}

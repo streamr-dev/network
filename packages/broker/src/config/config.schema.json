@@ -54,7 +54,7 @@
             "additionalProperties": false,
             "properties": {
                 "port": {
-                    "$ref": "#/definitions/port",
+                    "$ref": "definitions.schema.json#/definitions/port",
                     "description": "Port to start HTTP server on",
                     "default": 7171
                 },
@@ -94,13 +94,6 @@
                     }
                 }
             }
-        }
-    },
-    "definitions": {
-        "port": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 65353
         }
     }
 }

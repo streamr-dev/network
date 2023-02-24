@@ -1,12 +1,14 @@
 import Ajv, { Schema, ErrorObject } from 'ajv'
 import addFormats from 'ajv-formats'
 import { StrictConfig } from './config'
+import DEFINITIONS_SCHEMA from './definitions.schema.json'
 
 export const validateConfig = (data: unknown, schema: Schema, contextName?: string, useDefaults = true): StrictConfig => {
     const ajv = new Ajv({
         useDefaults
     })
     addFormats(ajv)
+    ajv.addSchema(DEFINITIONS_SCHEMA)
     if (!ajv.validate(schema, data)) {
         const prefix = (contextName !== undefined) ? (contextName + ': ') : ''
         throw new Error(prefix + ajv.errors!.map((e: ErrorObject) => {
