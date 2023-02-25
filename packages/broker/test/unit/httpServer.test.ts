@@ -1,22 +1,25 @@
-import express, { Request, Response } from 'express'
+import { Request, Response } from 'express'
 import { Server } from 'http'
 import fetch from 'node-fetch'
-import { startServer, stopServer } from '../../src/httpServer'
 import { createApiAuthenticator } from '../../src/apiAuthenticator'
+import { startServer, stopServer } from '../../src/httpServer'
 
 const MOCK_API_KEY = 'mock-api-key'
 const PORT = 18888
 
-const startTestServer = (apiConfig?: { keys: string[] }) => {
-    const router = express.Router()
-    router.get('/foo', (_req: Request, res: Response) => {
-        res.send('FOO')
-    })
-    return startServer([router], {
+const startTestServer = (keys?: string[]) => {
+    const apiAuthenticator = createApiAuthenticator((keys !== undefined) ? {
+        apiAuthentication: { keys }
+    } : {})
+    return startServer([{
+        path: `/foo`,
+        method: 'get',
+        requestHandlers: [(_req: Request, res: Response) => {
+            res.send('FOO')
+        }]
+    }], {
         port: PORT
-    }, createApiAuthenticator({
-        apiAuthentication: apiConfig
-    } as any))
+    }, apiAuthenticator)
 }
 
 const createRequest = async (headers?: Record<string, string>) => {
@@ -39,27 +42,22 @@ describe('HttpServer', () => {
     describe('ApiAuthenticator', () => {
         
         it('no authentication required', async () => {
-            server = await startTestServer()
+            server = await startTestServer(undefined)
             const response = await createRequest()
             const body = await response.text()
             expect(body).toBe('FOO')
         })
 
         it('valid authentication', async () => {
-            server = await startTestServer({
-                keys: [MOCK_API_KEY]
-            })
+            server = await startTestServer([MOCK_API_KEY])
             const response = await createRequest({
                 Authorization: `Bearer ${MOCK_API_KEY}`
             })
-            const body = await response.text()
-            expect(body).toBe('FOO')
+            expect(await response.text()).toBe('FOO')
         })
 
         it('forbidden', async () => {
-            server = await startTestServer({
-                keys: [MOCK_API_KEY]
-            })
+            server = await startTestServer([MOCK_API_KEY])
             const response = await createRequest({
                 Authorization: 'Bearer invalid-api-key'
             })
@@ -67,9 +65,7 @@ describe('HttpServer', () => {
         })
 
         it('unauthorized', async () => {
-            server = await startTestServer({
-                keys: [MOCK_API_KEY]
-            })           
+            server = await startTestServer([MOCK_API_KEY])
             const response = await createRequest()
             expect(response.status).toBe(401)
         })

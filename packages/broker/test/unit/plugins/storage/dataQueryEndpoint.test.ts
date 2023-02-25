@@ -2,10 +2,10 @@ import express from 'express'
 import request from 'supertest'
 import { toReadableStream } from '@streamr/test-utils'
 import {
-    router as restEndpointRouter,
+    createDataQueryEndpoint,
     MIN_SEQUENCE_NUMBER_VALUE,
     MAX_SEQUENCE_NUMBER_VALUE
-} from '../../../../src/plugins/storage/DataQueryEndpoints'
+} from '../../../../src/plugins/storage/dataQueryEndpoint'
 import { toObject } from '../../../../src/plugins/storage/DataQueryFormat'
 import { Storage } from '../../../../src/plugins/storage/Storage'
 import { PassThrough } from 'stream'
@@ -18,7 +18,7 @@ const createEmptyStream = () => {
     return stream
 }
 
-describe('DataQueryEndpoints', () => {
+describe('dataQueryEndpoint', () => {
     let app: express.Express
     let storage: Storage
 
@@ -47,7 +47,8 @@ describe('DataQueryEndpoints', () => {
     beforeEach(() => {
         app = express()
         storage = {} as Storage
-        app.use(restEndpointRouter(storage, new MetricsContext()))
+        const endpoint = createDataQueryEndpoint(storage, new MetricsContext())
+        app.route(endpoint.path)[endpoint.method](endpoint.requestHandlers)
     })
 
     describe('Getting last events', () => {

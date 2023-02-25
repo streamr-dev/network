@@ -52,7 +52,7 @@ export const createBroker = async (configWithoutDefaults: Config): Promise<Broke
         start: async () => {
             logger.info(`Starting broker version ${CURRENT_VERSION}`)
             await Promise.all(plugins.map((plugin) => plugin.start()))
-            const httpServerRoutes = plugins.flatMap((plugin) => plugin.getHttpServerRoutes())
+            const httpServerRoutes = plugins.flatMap((plugin: Plugin<any>) => plugin.getHttpServerEndpoints())
             if (httpServerRoutes.length > 0) {
                 httpServer = await startHttpServer(httpServerRoutes, config.httpServer, apiAuthenticator)
             }

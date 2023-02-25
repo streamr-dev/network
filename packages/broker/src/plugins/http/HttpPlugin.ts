@@ -3,7 +3,7 @@ import { Plugin } from '../../Plugin'
 
 export class HttpPlugin extends Plugin<void> {
     async start(): Promise<void> {
-        this.addHttpServerRouter(createEndpoint(this.streamrClient!))
+        this.addHttpServerEndpoint(createEndpoint(this.streamrClient!))
     }
 
     // eslint-disable-next-line class-methods-use-this

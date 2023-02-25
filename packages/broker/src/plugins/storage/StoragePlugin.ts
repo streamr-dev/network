@@ -1,7 +1,7 @@
 import { StreamMessage, StreamMessageType } from '@streamr/protocol'
-import { router as dataQueryEndpoints } from './DataQueryEndpoints'
-import { router as dataMetadataEndpoint } from './DataMetadataEndpoints'
-import { router as storageConfigEndpoints } from './StorageConfigEndpoints'
+import { createDataQueryEndpoint } from './dataQueryEndpoint'
+import { createDataMetadataEndpoint } from './dataMetadataEndpoint'
+import { createStorageConfigEndpoint } from './storageConfigEndpoint'
 import { Plugin } from '../../Plugin'
 import { Storage, startCassandraStorage } from './Storage'
 import { StorageConfig } from './StorageConfig'
@@ -53,9 +53,9 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
         }
         const node = await this.streamrClient.getNode()
         node.addMessageListener(this.messageListener)
-        this.addHttpServerRouter(dataQueryEndpoints(this.cassandra, metricsContext))
-        this.addHttpServerRouter(dataMetadataEndpoint(this.cassandra))
-        this.addHttpServerRouter(storageConfigEndpoints(this.storageConfig))
+        this.addHttpServerEndpoint(createDataQueryEndpoint(this.cassandra, metricsContext))
+        this.addHttpServerEndpoint(createDataMetadataEndpoint(this.cassandra))
+        this.addHttpServerEndpoint(createStorageConfigEndpoint(this.storageConfig))
     }
 
     async stop(): Promise<void> {

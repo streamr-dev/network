@@ -1,8 +1,9 @@
-import express, { Request, Response, Router } from 'express'
+import { Request, RequestHandler, Response } from 'express'
 import { StorageConfig } from './StorageConfig'
 import { toStreamID, toStreamPartID } from '@streamr/protocol'
+import { Endpoint } from '../../httpServer'
 
-const createHandler = (storageConfig: StorageConfig) => {
+const createHandler = (storageConfig: StorageConfig): RequestHandler => {
     return (req: Request, res: Response) => {
         const { id, partition } = req.params
         const isValidPartition = !Number.isNaN(parseInt(partition))
@@ -19,9 +20,10 @@ const createHandler = (storageConfig: StorageConfig) => {
     }
 }
 
-export const router = (storageConfig: StorageConfig): Router => {
-    const router = express.Router()
-    const handler = createHandler(storageConfig)
-    router.get('/streams/:id/storage/partitions/:partition', handler)
-    return router
+export const createStorageConfigEndpoint = (storageConfig: StorageConfig): Endpoint => {
+    return {
+        path: '/streams/:id/storage/partitions/:partition',
+        method: 'get',
+        requestHandlers: [createHandler(storageConfig)]
+    }
 }
