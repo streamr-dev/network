@@ -3,12 +3,10 @@ import express from 'express'
 import { validateConfig } from './config/validateConfig'
 import { Schema } from 'ajv'
 import { StreamrClient } from 'streamr-client'
-import { ApiAuthenticator } from './apiAuthenticator'
 
 export interface PluginOptions {
     name: string
     streamrClient: StreamrClient
-    apiAuthenticator: ApiAuthenticator
     brokerConfig: StrictConfig
 }
 
@@ -16,7 +14,6 @@ export abstract class Plugin<T> {
 
     readonly name: string
     readonly streamrClient: StreamrClient
-    readonly apiAuthenticator: ApiAuthenticator
     readonly brokerConfig: StrictConfig
     readonly pluginConfig: T
     private readonly httpServerRouters: express.Router[] = []
@@ -24,7 +21,6 @@ export abstract class Plugin<T> {
     constructor(options: PluginOptions) {
         this.name = options.name
         this.streamrClient = options.streamrClient
-        this.apiAuthenticator = options.apiAuthenticator
         this.brokerConfig = options.brokerConfig
         this.pluginConfig = options.brokerConfig.plugins[this.name]
         const configSchema = this.getConfigSchema()

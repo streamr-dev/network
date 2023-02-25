@@ -17,7 +17,6 @@ const validateTargetConfig = async (config: any): Promise<void> | never => {
             ...pluginConfig,
             name: pluginName,
             streamrClient: undefined,
-            apiAuthenticator: undefined,
             brokerConfig: config
         })
     }
