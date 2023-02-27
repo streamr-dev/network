@@ -33,7 +33,7 @@ import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { convertStreamMessageToMessage, Message } from './Message'
 import { ErrorCode } from './HttpUtil'
-import { omit } from 'lodash'
+import omit from 'lodash/omit'
 import { StreamrClientError } from './StreamrClientError'
 
 /**

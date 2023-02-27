@@ -1,4 +1,4 @@
-import { once } from 'lodash'
+import once from 'lodash/once'
 
 type ResolveFn<T> = (value: T | PromiseLike<T>) => void
 
