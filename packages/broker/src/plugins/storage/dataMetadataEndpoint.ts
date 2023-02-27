@@ -1,5 +1,5 @@
 import { Request, RequestHandler, Response } from 'express'
-import { Endpoint } from '../../httpServer'
+import { HttpServerEndpoint } from '../../Plugin'
 import { Storage } from './Storage'
 
 const parseIntIfExists = (x: string | undefined): number | undefined => {
@@ -27,7 +27,7 @@ const createHandler = (cassandraStorage: Storage): RequestHandler => {
     }
 }
 
-export const createDataMetadataEndpoint = (cassandraStorage: Storage): Endpoint => {
+export const createDataMetadataEndpoint = (cassandraStorage: Storage): HttpServerEndpoint => {
     return {
         path: '/streams/:id/metadata/partitions/:partition',
         method: 'get',

@@ -4,7 +4,7 @@ import { Logger } from '@streamr/utils'
 import { v4 as uuid } from 'uuid'
 import { parseQueryParameter, parsePositiveInteger, parseTimestamp } from '../../helpers/parser'
 import { PlainPayloadFormat } from '../../helpers/PayloadFormat'
-import { Endpoint } from '../../httpServer'
+import { HttpServerEndpoint } from '../../Plugin'
 
 const logger = new Logger(module)
 const PAYLOAD_FORMAT = new PlainPayloadFormat()
@@ -51,7 +51,7 @@ const createHandler = (msgChainId: string, streamrClient: StreamrClient): Reques
     }
 }
 
-export const createEndpoint = (streamrClient: StreamrClient): Endpoint => {
+export const createEndpoint = (streamrClient: StreamrClient): HttpServerEndpoint => {
     const msgChainId = uuid()
     return {
         path: '/streams/:streamId/',

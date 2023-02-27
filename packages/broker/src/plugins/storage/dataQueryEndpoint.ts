@@ -7,7 +7,7 @@ import { Logger, MetricsContext, MetricsDefinition, RateMetric } from '@streamr/
 import { Readable, Transform, pipeline } from 'stream'
 import { Storage } from './Storage'
 import { Format, getFormat } from './DataQueryFormat'
-import { Endpoint } from '../../httpServer'
+import { HttpServerEndpoint } from '../../Plugin'
 
 const logger = new Logger(module)
 
@@ -249,7 +249,7 @@ const createHandler = (storage: Storage, metrics: MetricsDefinition): RequestHan
     }
 }
 
-export const createDataQueryEndpoint = (storage: Storage, metricsContext: MetricsContext): Endpoint => {
+export const createDataQueryEndpoint = (storage: Storage, metricsContext: MetricsContext): HttpServerEndpoint => {
     const metrics = {
         resendLastQueriesPerSecond: new RateMetric(),
         resendFromQueriesPerSecond: new RateMetric(),
