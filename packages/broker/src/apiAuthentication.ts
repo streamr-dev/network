@@ -7,7 +7,7 @@ export const isValidAuthentication = (apiKey?: string, apiAuthentication?: ApiAu
         if (apiKey === undefined) {
             return false
         }
-        return apiAuthentication.keys.includes(apiKey!)
+        return apiAuthentication.keys.includes(apiKey)
     } else {
         return true
     }
