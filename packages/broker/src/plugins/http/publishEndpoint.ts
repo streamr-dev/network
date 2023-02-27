@@ -1,21 +1,16 @@
-import express, { Request, Response } from 'express'
+import express, { Request, RequestHandler, Response } from 'express'
 import { StreamrClient } from 'streamr-client'
 import { Logger } from '@streamr/utils'
 import { v4 as uuid } from 'uuid'
 import { parseQueryParameter, parsePositiveInteger, parseTimestamp } from '../../helpers/parser'
 import { PlainPayloadFormat } from '../../helpers/PayloadFormat'
+import { Endpoint } from '../../httpServer'
 
 const logger = new Logger(module)
 const PAYLOAD_FORMAT = new PlainPayloadFormat()
 
-export const createEndpoint = (streamrClient: StreamrClient): express.Router => {
-    const msgChainId = uuid()
-    const router = express.Router()
-    router.use(express.raw({
-        limit: '1024kb',
-        type() { return true },
-    }))
-    router.post('/streams/:streamId/', async (req: Request, res: Response) => {
+const createHandler = (msgChainId: string, streamrClient: StreamrClient): RequestHandler => {
+    return async (req: Request, res: Response) => {
         let content: Record<string, unknown>
         let timestamp: number | undefined
         let partition: number | undefined
@@ -53,6 +48,20 @@ export const createEndpoint = (streamrClient: StreamrClient): express.Router => 
             logger.error(`Unable to publish to ${streamId}: ${e.message}`)
             return res.sendStatus(500)
         }
-    })
-    return router
+    }
+}
+
+export const createEndpoint = (streamrClient: StreamrClient): Endpoint => {
+    const msgChainId = uuid()
+    return {
+        path: '/streams/:streamId/',
+        method: 'post',
+        requestHandlers: [
+            express.raw({
+                limit: '1024kb',
+                type() { return true },
+            }),
+            createHandler(msgChainId, streamrClient)
+        ]
+    }
 }

@@ -1,8 +1,8 @@
 import { StrictConfig } from './config/config'
-import express from 'express'
 import { validateConfig } from './config/validateConfig'
 import { Schema } from 'ajv'
 import { StreamrClient } from 'streamr-client'
+import { Endpoint } from './httpServer'
 
 export interface PluginOptions {
     name: string
@@ -16,7 +16,7 @@ export abstract class Plugin<T> {
     readonly streamrClient: StreamrClient
     readonly brokerConfig: StrictConfig
     readonly pluginConfig: T
-    private readonly httpServerRouters: express.Router[] = []
+    private readonly httpServerRouters: Endpoint[] = []
 
     constructor(options: PluginOptions) {
         this.name = options.name
@@ -29,11 +29,11 @@ export abstract class Plugin<T> {
         }
     }
 
-    addHttpServerRouter(router: express.Router): void {
-        this.httpServerRouters.push(router)
+    addHttpServerEndpoint(endpoint: Endpoint): void {
+        this.httpServerRouters.push(endpoint)
     }
 
-    getHttpServerRoutes(): express.Router[] {
+    getHttpServerEndpoints(): Endpoint[] {
         return this.httpServerRouters
     }
 

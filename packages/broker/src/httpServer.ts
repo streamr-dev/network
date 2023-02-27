@@ -2,7 +2,7 @@ import fs from 'fs'
 import { Server as HttpServer } from 'http'
 import https, { Server as HttpsServer } from 'https'
 import cors from 'cors'
-import express, { Request, Response, NextFunction } from 'express'
+import express, { Request, Response, NextFunction, RequestHandler } from 'express'
 import { Logger } from '@streamr/utils'
 import { once } from 'events'
 import { StrictConfig } from './config/config'
@@ -12,6 +12,12 @@ const logger = new Logger(module)
 
 const HTTP_STATUS_UNAUTHORIZED = 401
 const HTTP_STATUS_FORBIDDEN = 403
+
+export interface Endpoint {
+    path: string
+    method: 'get' | 'post'
+    requestHandlers: RequestHandler[]
+}
 
 const getApiKey = (req: Request) => {
     const headerValue = req.headers.authorization
@@ -35,7 +41,7 @@ export const createAuthenticatorMiddleware = (apiAuthentication?: ApiAuthenticat
 }
 
 export const startServer = async (
-    routers: express.Router[],
+    endpoints: Endpoint[],
     config: StrictConfig['httpServer'],
     apiAuthentication?: ApiAuthentication
 ): Promise<HttpServer | https.Server> => {
@@ -45,7 +51,9 @@ export const startServer = async (
         credentials: true // Access-Control-Allow-Credentials: true
     }))
     app.use(createAuthenticatorMiddleware(apiAuthentication))
-    routers.forEach((router) => app.use(router))
+    endpoints.forEach((endpoint: Endpoint) => {
+        app.route(endpoint.path)[endpoint.method](endpoint.requestHandlers)
+    })
     let serverFactory: { listen: (port: number) => HttpServer | HttpsServer }
     if (config.sslCertificate !== undefined) {
         serverFactory = https.createServer({
