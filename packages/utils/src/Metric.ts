@@ -1,5 +1,5 @@
 import EventEmitter from 'eventemitter3'
-import { set } from 'lodash'
+import set from 'lodash/set'
 import { scheduleAtFixedRate } from './scheduleAtFixedRate'
 
 export type MetricsDefinition = Record<string, Metric>

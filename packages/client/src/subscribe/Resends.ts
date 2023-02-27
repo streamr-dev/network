@@ -5,7 +5,7 @@ import { MessageStream } from './MessageStream'
 import { createSubscribePipeline } from './subscribePipeline'
 
 import { StorageNodeRegistry } from '../registry/StorageNodeRegistry'
-import { random } from 'lodash'
+import random from 'lodash/random'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { HttpUtil } from '../HttpUtil'
 import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'

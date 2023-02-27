@@ -16,7 +16,7 @@ import { EthereumAddress, Logger, toEthereumAddress } from '@streamr/utils'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { StreamFactory } from '../StreamFactory'
 import { collect } from '../utils/iterators'
-import { min } from 'lodash'
+import min from 'lodash/min'
 
 export interface StorageNodeAssignmentEvent {
     readonly streamId: StreamID

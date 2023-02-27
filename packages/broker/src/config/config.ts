@@ -1,7 +1,8 @@
 import { StreamrClientConfig } from 'streamr-client'
 import path from 'path'
 import * as os from 'os'
-import { camelCase, set } from 'lodash'
+import camelCase from 'lodash/camelCase'
+import set from 'lodash/set'
 
 export interface Config {
     client?: StreamrClientConfig

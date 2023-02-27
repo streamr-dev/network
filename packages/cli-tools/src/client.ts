@@ -1,4 +1,5 @@
-import { merge, omit } from 'lodash'
+import omit from 'lodash/omit'
+import merge from 'lodash/merge'
 import { StreamrClientConfig, StreamrClient, CONFIG_TEST } from 'streamr-client'
 import { GlobalCommandLineArgs } from './common'
 import { getConfig } from './config'

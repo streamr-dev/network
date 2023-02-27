@@ -10,7 +10,7 @@ import {
 } from '@streamr/protocol'
 import { Logger, wait, waitForEvent, withTimeout } from "@streamr/utils"
 import { Propagation } from '../propagation/Propagation'
-import { sampleSize } from 'lodash'
+import sampleSize from 'lodash/sampleSize'
 import { EventEmitter } from "events"
 
 const logger = new Logger(module)
