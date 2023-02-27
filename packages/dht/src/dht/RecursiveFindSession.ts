@@ -19,28 +19,32 @@ export interface RecursiveFindSessionEvents {
 
 const logger = new Logger(module)
 
+export interface RecursiveFindSessionConfig {
+    serviceId: string
+    rpcTransport: ITransport
+    kademliaIdToFind: Uint8Array
+    ownPeerID: PeerID
+    routingPaths: number
+}
+
 export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvents> implements IRecursiveFindSessionService {
     private readonly rpcCommunicator: ListeningRpcCommunicator
+    private readonly config: RecursiveFindSessionConfig
     private results: SortedContactList<Contact>
     private foundData: Map<string, DataEntry> = new Map()
-    private readonly rpcTransport: ITransport
-    private readonly routingPaths: number
     private allKnownHops: Set<PeerIDKey> = new Set()
     private reportedHops: Set<PeerIDKey> = new Set()
     private reportFindCompletedTimeout?: NodeJS.Timeout
     private findCompletedEmitted = false
     private noCloserNodesReceivedCounter = 0
-    private readonly ownPeerID: PeerID
 
-    constructor(serviceId: string, rpcTransport: ITransport, kademliaIdToFind: Uint8Array, ownPeerID: PeerID, routingPaths: number) {
+    constructor(config: RecursiveFindSessionConfig) {
         super()
-        this.rpcTransport = rpcTransport
-        this.results = new SortedContactList(PeerID.fromValue(kademliaIdToFind), 10)
-        this.routingPaths = routingPaths
-        this.rpcCommunicator = new ListeningRpcCommunicator(serviceId, this.rpcTransport, {
+        this.config = config
+        this.results = new SortedContactList(PeerID.fromValue(config.kademliaIdToFind), 10)
+        this.rpcCommunicator = new ListeningRpcCommunicator(config.serviceId, config.rpcTransport, {
             rpcRequestTimeout: 15000
         })
-        this.ownPeerID = ownPeerID
         this.reportRecursiveFindResult = this.reportRecursiveFindResult.bind(this)
         this.rpcCommunicator.registerRpcNotification(RecursiveFindReport, 'reportRecursiveFindResult', this.reportRecursiveFindResult)
 
@@ -49,7 +53,7 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
     private addKnownHops(routingPath: PeerDescriptor[]) {
         routingPath.forEach((desc) => {
             const newPeerId = PeerID.fromValue(desc.kademliaId)
-            if (!this.ownPeerID.equals(newPeerId)) {
+            if (!this.config.ownPeerID.equals(newPeerId)) {
                 this.allKnownHops.add(newPeerId.toKey())
             }
         })
@@ -57,7 +61,7 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
 
     private setHopAsReported(desc: PeerDescriptor) {
         const newPeerId = PeerID.fromValue(desc.kademliaId)
-        if (!this.ownPeerID.equals(newPeerId)) {
+        if (!this.config.ownPeerID.equals(newPeerId)) {
             this.reportedHops.add(newPeerId.toKey())
         }
 
@@ -77,25 +81,25 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
         this.reportedHops.forEach((id) => {
             unreportedHops.delete(id)
         })
-        if (this.noCloserNodesReceivedCounter >= this.routingPaths && unreportedHops.size == 0) {
+        if (this.noCloserNodesReceivedCounter >= this.config.routingPaths && unreportedHops.size == 0) {
             return true
         }
         return false
     }
 
-    public doReportRecursiveFindResult(routingPath: PeerDescriptor[], nodes: PeerDescriptor[],
-        dataEntries: DataEntry[], noCloserNodesFound?: boolean): void {
-
+    public doReportRecursiveFindResult(
+        routingPath: PeerDescriptor[],
+        nodes: PeerDescriptor[],
+        dataEntries: DataEntry[],
+        noCloserNodesFound?: boolean
+    ): void {
         this.addKnownHops(routingPath)
-
         if (routingPath.length >= 1) {
             this.setHopAsReported(routingPath[routingPath.length - 1])
         }
-
         nodes.map((descriptor: PeerDescriptor) => {
             this.results.addContact(new Contact(descriptor))
         })
-
         if (dataEntries) {
             dataEntries.forEach((entry) => {
                 const storerKey = keyFromPeerDescriptor(entry.storer!)
@@ -106,7 +110,6 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
                 }
             })
         }
-
         if (noCloserNodesFound) {
             this.noCloserNodesReceivedCounter += 1
             if (this.isFindCompleted()) {

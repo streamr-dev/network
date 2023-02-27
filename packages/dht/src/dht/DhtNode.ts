@@ -948,13 +948,13 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
     public async startRecursiveFind(idToFind: Uint8Array, findMode: FindMode = FindMode.NODE): Promise<RecursiveFindResult> {
         const sessionId = v4()
-        const recursiveFindSession = new RecursiveFindSession(
-            sessionId,
-            this,
-            idToFind,
-            this.ownPeerId!,
-            this.connections.size > 1 ? 2 : 1
-        )
+        const recursiveFindSession = new RecursiveFindSession({
+            serviceId: sessionId,
+            rpcTransport: this,
+            kademliaIdToFind: idToFind,
+            ownPeerID: this.ownPeerId!,
+            routingPaths: this.connections.size > 1 ? 2 : 1
+        })
         this.ongoingRecursiveFindSessions.set(sessionId, recursiveFindSession)
         const targetDescriptor: PeerDescriptor = { kademliaId: idToFind, type: NodeType.VIRTUAL }
         const request: RecursiveFindRequest = {
@@ -1104,7 +1104,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             const noCloserContactsFound = (
                 closestContacts.length > 0
                 && routedMessage.previousPeer
-                && !this.isPeerCloserThanSelfToId(closestContacts[0], idToFind)
+                && !this.isPeerCloserToIdThanSelf(closestContacts[0], idToFind)
             )
             this.reportRecursiveFindResult(routedMessage.routingPath, routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
                 closestContacts, undefined, noCloserContactsFound)
@@ -1112,7 +1112,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         }
     }
 
-    private isPeerCloserThanSelfToId(peer1: PeerDescriptor, compareToId: PeerID): boolean {
+    private isPeerCloserToIdThanSelf(peer1: PeerDescriptor, compareToId: PeerID): boolean {
         const distance1 = this.bucket!.distance(peer1.kademliaId, compareToId.value)
         const distance2 = this.bucket!.distance(this.ownPeerDescriptor!.kademliaId, compareToId.value)
         return distance1 < distance2
@@ -1284,8 +1284,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
     // Store API for higher layers and tests
 
     public async storeDataToDht(key: Uint8Array, data: Any): Promise<PeerDescriptor[]> {
-        // Find the closest nodes to the ID to store data into     
-
         const result = await this.startRecursiveFind(key)
         const closestNodes = result.closestNodes
 

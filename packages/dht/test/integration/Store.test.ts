@@ -16,7 +16,6 @@ describe('Storing data in DHT', () => {
     const NUM_NODES = 100
     const MAX_CONNECTIONS = 20
     const K = 2
-
     const nodeIndicesById: Record<string, number> = {}
 
     const getRandomNode = () => {
@@ -40,7 +39,6 @@ describe('Storing data in DHT', () => {
 
         for (let i = 1; i < NUM_NODES; i++) {
             const nodeId = `${i}`
-
             const node = await createMockConnectionDhtNode(nodeId, simulator, 
                 undefined, K, nodeId, MAX_CONNECTIONS)
             nodeIndicesById[node.getNodeId().toKey()] = i
@@ -54,7 +52,6 @@ describe('Storing data in DHT', () => {
         logger.info('completed ' + NUM_NODES + ' nodes joining layer0 DHT')
 
         await waitNodesReadyForTesting(nodes)
-
         const node = entryPoint
         logger.info(node.getNodeName() + ': connections:' +
             node.getNumberOfConnections() + ', kbucket: ' + node.getBucketSize()
@@ -64,68 +61,42 @@ describe('Storing data in DHT', () => {
     }, 60000)
 
     afterEach(async () => {
-        await Promise.allSettled([
-            ...nodes.map(async (node) => await node.stop())
-        ])
+        await Promise.allSettled(nodes.map((node) => node.stop()))
     })
 
     it('Data structures work locally', async () => {
         const storingNodeIndex = 34
         const dataKey = PeerID.fromString('3232323e12r31r3')
         const data = Any.pack(entrypointDescriptor, PeerDescriptor)
-
-        logger.info('node ' + storingNodeIndex + ' starting to store data with key ' + dataKey.toString())
         await nodes[storingNodeIndex].doStoreData(nodes[storingNodeIndex].getPeerDescriptor(), dataKey, data, 10000)
-        logger.info('store data over')
-
-        logger.info('node ' + storingNodeIndex + ' starting to get data with key ' + dataKey.toString())
         const fetchedData = await nodes[storingNodeIndex].doGetData(dataKey)!
-        logger.info('getData over')
-
         fetchedData.forEach((entry) => {
             const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
             logger.info(JSON.stringify(fetchedDescriptor))
         })
-
-    }, 180000)
+    }, 60000)
 
     it('Storing data works', async () => {
         const storingNodeIndex = 34
         const dataKey = PeerID.fromString('3232323e12r31r3')
         const data = Any.pack(entrypointDescriptor, PeerDescriptor)
-
-        logger.info('node ' + storingNodeIndex + ' starting to store data with key ' + dataKey.toString())
         const successfulStorers = await nodes[storingNodeIndex].storeDataToDht(dataKey.value, data)
-        
         expect(successfulStorers.length).toBeGreaterThan(4)
-
-        logger.info('store data over')
-    }, 180000)
+    }, 60000)
 
     it('Storing and getting data works', async () => {
         const storingNode = getRandomNode()
         const dataKey = PeerID.fromString('3232323e12r31r3')
         const data = Any.pack(entrypointDescriptor, PeerDescriptor)
-
-        logger.info('node ' + storingNode.getNodeName() + ' starting to store data with key ' + dataKey.toString())
         const successfulStorers = await storingNode.storeDataToDht(dataKey.value, data)
         expect(successfulStorers.length).toBeGreaterThan(4)
 
-        logger.info('store data over')
-    
         const fetchingNode = getRandomNode()
-        logger.info('node ' + fetchingNode.getNodeName() + ' starting to get data with key ' + dataKey.toString())
         const results = await fetchingNode.getDataFromDht(dataKey.value)
-
-        logger.info('dataEntries.length: ' + results.dataEntries!.length)
         results.dataEntries?.forEach((entry) => {
             logger.info(JSON.stringify(entry.storer!), Any.unpack(entry.data!, PeerDescriptor))
         })
-        
         const fetchedData = Any.unpack(results.dataEntries![0].data!, PeerDescriptor)
-
-        logger.info('find data over')
-
         expect(JSON.stringify(fetchedData)).toEqual(JSON.stringify(entrypointDescriptor))
-    }, 180000)
+    }, 60000)
 })
