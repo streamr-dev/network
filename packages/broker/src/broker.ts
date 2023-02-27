@@ -9,7 +9,6 @@ import { Config } from './config/config'
 import { Plugin, PluginOptions } from './Plugin'
 import { startServer as startHttpServer, stopServer } from './httpServer'
 import BROKER_CONFIG_SCHEMA from './config/config.schema.json'
-import { createApiAuthenticator } from './apiAuthenticator'
 import { generateMnemonicFromAddress } from './helpers/generateMnemonicFromAddress'
 
 const logger = new Logger(module)
@@ -25,13 +24,11 @@ export const createBroker = async (configWithoutDefaults: Config): Promise<Broke
     validateClientConfig(config.client)
 
     const streamrClient = new StreamrClient(config.client)
-    const apiAuthenticator = createApiAuthenticator(config)
 
     const plugins: Plugin<any>[] = Object.keys(config.plugins).map((name) => {
         const pluginOptions: PluginOptions = {
             name,
             streamrClient,
-            apiAuthenticator,
             brokerConfig: config
         }
         return createPlugin(name, pluginOptions)
@@ -54,7 +51,7 @@ export const createBroker = async (configWithoutDefaults: Config): Promise<Broke
             await Promise.all(plugins.map((plugin) => plugin.start()))
             const httpServerRoutes = plugins.flatMap((plugin: Plugin<any>) => plugin.getHttpServerEndpoints())
             if (httpServerRoutes.length > 0) {
-                httpServer = await startHttpServer(httpServerRoutes, config.httpServer, apiAuthenticator)
+                httpServer = await startHttpServer(httpServerRoutes, config.httpServer, config.apiAuthentication)
             }
 
             const nodeId = (await streamrClient.getNode()).getNodeId()

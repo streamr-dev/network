@@ -23,7 +23,7 @@ export class WebsocketPlugin extends Plugin<WebsocketPluginConfig> {
         await this.server.start(
             this.pluginConfig.port, 
             getPayloadFormat(this.pluginConfig.payloadMetadata),
-            this.apiAuthenticator, 
+            this.brokerConfig.apiAuthentication, 
             this.pluginConfig.sslCertificate
         )
     }

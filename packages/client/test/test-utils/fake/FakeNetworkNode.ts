@@ -1,5 +1,5 @@
 import { Lifecycle, scoped } from 'tsyringe'
-import { pull } from 'lodash'
+import pull from 'lodash/pull'
 import { ProxyDirection, StreamMessage, StreamPartID } from '@streamr/protocol'
 import { MetricsContext } from '@streamr/utils'
 import { NodeId, NetworkNodeOptions } from '@streamr/network-node'

@@ -1,7 +1,8 @@
 import 'reflect-metadata'
 
 import { wait } from '@streamr/utils'
-import { random, uniq } from 'lodash'
+import random from 'lodash/random'
+import uniq from 'lodash/uniq'
 import { fastWallet } from '@streamr/test-utils'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'

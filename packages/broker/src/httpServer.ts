@@ -2,11 +2,11 @@ import fs from 'fs'
 import { Server as HttpServer } from 'http'
 import https, { Server as HttpsServer } from 'https'
 import cors from 'cors'
-import express, { Request, Response, RequestHandler } from 'express'
+import express, { Request, Response, NextFunction, RequestHandler } from 'express'
 import { Logger } from '@streamr/utils'
 import { once } from 'events'
 import { StrictConfig } from './config/config'
-import { ApiAuthenticator } from './apiAuthenticator'
+import { ApiAuthentication, isValidAuthentication } from './apiAuthentication'
 
 const logger = new Logger(module)
 
@@ -28,10 +28,10 @@ const getApiKey = (req: Request) => {
     return undefined
 }
 
-const createAuthenticatorMiddleware = (apiAuthenticator: ApiAuthenticator) => {
-    return (req: Request, res: Response, next: () => void) => {
+export const createAuthenticatorMiddleware = (apiAuthentication?: ApiAuthentication): (req: Request, res: Response, next: NextFunction) => void => {
+    return (req: Request, res: Response, next: NextFunction) => {
         const apiKey = getApiKey(req)
-        if (apiAuthenticator.isValidAuthentication(apiKey)) {
+        if (isValidAuthentication(apiKey, apiAuthentication)) {
             next()
         } else {
             const status = (apiKey === undefined) ? HTTP_STATUS_UNAUTHORIZED : HTTP_STATUS_FORBIDDEN
@@ -43,14 +43,14 @@ const createAuthenticatorMiddleware = (apiAuthenticator: ApiAuthenticator) => {
 export const startServer = async (
     routes: Endpoint[],
     config: StrictConfig['httpServer'],
-    apiAuthenticator: ApiAuthenticator
+    apiAuthentication?: ApiAuthentication
 ): Promise<HttpServer | https.Server> => {
     const app = express()
     app.use(cors({
         origin: true, // Access-Control-Allow-Origin: request origin. The default '*' is invalid if credentials included.
         credentials: true // Access-Control-Allow-Credentials: true
     }))
-    app.use(createAuthenticatorMiddleware(apiAuthenticator))
+    app.use(createAuthenticatorMiddleware(apiAuthentication))
     routes.forEach((route: Endpoint) => {
         app.route(route.path)[route.method](route.requestHandlers)
     })

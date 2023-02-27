@@ -1,16 +1,12 @@
 import { Request, Response } from 'express'
 import { Server } from 'http'
 import fetch from 'node-fetch'
-import { createApiAuthenticator } from '../../src/apiAuthenticator'
 import { startServer, stopServer } from '../../src/httpServer'
 
 const MOCK_API_KEY = 'mock-api-key'
 const PORT = 18888
 
 const startTestServer = (keys?: string[]) => {
-    const apiAuthenticator = createApiAuthenticator((keys !== undefined) ? {
-        apiAuthentication: { keys }
-    } : {})
     return startServer([{
         path: `/foo`,
         method: 'get',
@@ -19,7 +15,7 @@ const startTestServer = (keys?: string[]) => {
         }]
     }], {
         port: PORT
-    }, apiAuthenticator)
+    }, (keys !== undefined) ? { keys } : undefined)
 }
 
 const createRequest = async (headers?: Record<string, string>) => {
@@ -39,7 +35,7 @@ describe('HttpServer', () => {
         }
     })
 
-    describe('ApiAuthenticator', () => {
+    describe('API authentication', () => {
         
         it('no authentication required', async () => {
             server = await startTestServer(undefined)
