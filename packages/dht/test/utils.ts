@@ -20,8 +20,6 @@ import { Any } from '../src/proto/google/protobuf/any'
 import { Logger } from '@streamr/utils'
 import { debugVars } from '../src/helpers/debugHelpers'
 
-const logger = new Logger(module)
-
 export const generateId = (stringId: string): Uint8Array => {
     return PeerID.fromString(stringId).value
 }
@@ -208,15 +206,7 @@ export const getMockPeers = (): PeerDescriptor[] => {
 }
 
 export const waitNodesReadyForTesting = async (nodes: DhtNode[]): Promise<void> => {
-    debugVars['waiting'] = true
-
-    logger.info('doing waitReadyForTesting() for nodes')
-
     nodes.forEach((node) => node.garbageCollectConnections())
-        
     await Promise.all(nodes.map((node) => node.waitReadyForTesting()))
-
-    debugVars['waiting'] = false
-    logger.info('waiting waitReadyForTesting() over')
 }
 

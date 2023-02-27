@@ -47,7 +47,6 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
         })
         this.reportRecursiveFindResult = this.reportRecursiveFindResult.bind(this)
         this.rpcCommunicator.registerRpcNotification(RecursiveFindReport, 'reportRecursiveFindResult', this.reportRecursiveFindResult)
-
     }
 
     private addKnownHops(routingPath: PeerDescriptor[]) {
@@ -64,7 +63,6 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
         if (!this.config.ownPeerID.equals(newPeerId)) {
             this.reportedHops.add(newPeerId.toKey())
         }
-
         if (this.isFindCompleted()) { 
             if (!this.findCompletedEmitted && this.isFindCompleted()) {
                 if (this.reportFindCompletedTimeout) {

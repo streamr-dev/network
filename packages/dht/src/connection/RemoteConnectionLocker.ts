@@ -84,7 +84,7 @@ export class RemoteConnectionLocker {
         try {
             await this.client.gracefulDisconnect(request, options)
         } catch (e) {
-            logger.error('Failed to send gracefulDisconnect' + e)
+            logger.debug('Failed to send gracefulDisconnect' + e)
         }
     }
 }

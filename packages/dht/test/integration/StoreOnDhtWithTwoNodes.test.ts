@@ -5,7 +5,6 @@ import { PeerID } from '../../src/helpers/PeerID'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { isSamePeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
-import { waitForDebugger } from 'inspector'
 import { waitForCondition } from '@streamr/utils'
 
 describe('Storing data in DHT with two peers', () => {
@@ -55,4 +54,15 @@ describe('Storing data in DHT with two peers', () => {
         expect(isSamePeerDescriptor(entryPoint.getPeerDescriptor(), Any.unpack(foundData2.dataEntries![0]!.data!, PeerDescriptor))).toBeTrue()
     })
 
+    it('Can store on one peer DHT', async () => {
+        await otherNode.stop()
+        await waitForCondition(() => entryPoint.getBucketSize() === 0)
+        const dataKey = PeerID.fromString('data-to-store')
+        const data = Any.pack(entryPoint.getPeerDescriptor(), PeerDescriptor)
+        const successfulStorers = await entryPoint.storeDataToDht(dataKey.value, data)
+        expect(successfulStorers[0].nodeName).toEqual(entryPoint.getPeerDescriptor().nodeName)
+
+        const foundData = await entryPoint.getDataFromDht(dataKey.value)
+        expect(isSamePeerDescriptor(entryPoint.getPeerDescriptor(), Any.unpack(foundData.dataEntries![0]!.data!, PeerDescriptor))).toBeTrue()
+    }, 60000)
 })

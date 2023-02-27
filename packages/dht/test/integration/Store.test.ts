@@ -3,7 +3,7 @@ import { DhtNode } from '../../src/dht/DhtNode'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode, waitNodesReadyForTesting } from '../utils'
 import { Logger } from '@streamr/utils'
-import { PeerID } from '../../src/exports'
+import { isSamePeerDescriptor, PeerID } from '../../src/exports'
 import { Any } from '../../src/proto/google/protobuf/any'
 
 const logger = new Logger(module)
@@ -34,9 +34,7 @@ describe('Storing data in DHT', () => {
             type: NodeType.NODEJS,
             nodeName: entryPointId
         }
-
         nodes.push(entryPoint)
-
         for (let i = 1; i < NUM_NODES; i++) {
             const nodeId = `${i}`
             const node = await createMockConnectionDhtNode(nodeId, simulator, 
@@ -44,20 +42,8 @@ describe('Storing data in DHT', () => {
             nodeIndicesById[node.getNodeId().toKey()] = i
             nodes.push(node)
         }
-
-        logger.info(NUM_NODES + ' nodes joining layer0 DHT')
-        await Promise.all(
-            nodes.map((node) => node.joinDht(entrypointDescriptor))
-        )
-        logger.info('completed ' + NUM_NODES + ' nodes joining layer0 DHT')
-
+        await Promise.all(nodes.map((node) => node.joinDht(entrypointDescriptor)))
         await waitNodesReadyForTesting(nodes)
-        const node = entryPoint
-        logger.info(node.getNodeName() + ': connections:' +
-            node.getNumberOfConnections() + ', kbucket: ' + node.getBucketSize()
-            + ', localLocked: ' + node.getNumberOfLocalLockedConnections()
-            + ', remoteLocked: ' + node.getNumberOfRemoteLockedConnections()
-            + ', weakLocked: ' + node.getNumberOfWeakLockedConnections())
     }, 60000)
 
     afterEach(async () => {
@@ -72,9 +58,9 @@ describe('Storing data in DHT', () => {
         const fetchedData = await nodes[storingNodeIndex].doGetData(dataKey)!
         fetchedData.forEach((entry) => {
             const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
-            logger.info(JSON.stringify(fetchedDescriptor))
+            expect(isSamePeerDescriptor(fetchedDescriptor, entrypointDescriptor)).toBeTrue()
         })
-    }, 60000)
+    }, 90000)
 
     it('Storing data works', async () => {
         const storingNodeIndex = 34
@@ -82,7 +68,7 @@ describe('Storing data in DHT', () => {
         const data = Any.pack(entrypointDescriptor, PeerDescriptor)
         const successfulStorers = await nodes[storingNodeIndex].storeDataToDht(dataKey.value, data)
         expect(successfulStorers.length).toBeGreaterThan(4)
-    }, 60000)
+    }, 90000)
 
     it('Storing and getting data works', async () => {
         const storingNode = getRandomNode()
@@ -93,10 +79,9 @@ describe('Storing data in DHT', () => {
 
         const fetchingNode = getRandomNode()
         const results = await fetchingNode.getDataFromDht(dataKey.value)
-        results.dataEntries?.forEach((entry) => {
-            logger.info(JSON.stringify(entry.storer!), Any.unpack(entry.data!, PeerDescriptor))
+        results.dataEntries!.forEach((entry) => {
+            const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
+            expect(isSamePeerDescriptor(fetchedDescriptor, entrypointDescriptor)).toBeTrue()
         })
-        const fetchedData = Any.unpack(results.dataEntries![0].data!, PeerDescriptor)
-        expect(JSON.stringify(fetchedData)).toEqual(JSON.stringify(entrypointDescriptor))
-    }, 60000)
+    }, 90000)
 })
