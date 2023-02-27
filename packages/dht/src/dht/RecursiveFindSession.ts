@@ -98,16 +98,14 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
         nodes.map((descriptor: PeerDescriptor) => {
             this.results.addContact(new Contact(descriptor))
         })
-        if (dataEntries) {
-            dataEntries.forEach((entry) => {
-                const storerKey = keyFromPeerDescriptor(entry.storer!)
-                if (!this.foundData.has(storerKey)) {
-                    this.foundData.set(storerKey, entry)
-                } else if (this.foundData.has(storerKey) && this.foundData.get(storerKey)!.storedAt! < entry.storedAt!) {
-                    this.foundData.set(storerKey, entry)
-                }
-            })
-        }
+        dataEntries.forEach((entry) => {
+            const storerKey = keyFromPeerDescriptor(entry.storer!)
+            if (!this.foundData.has(storerKey)) {
+                this.foundData.set(storerKey, entry)
+            } else if (this.foundData.has(storerKey) && this.foundData.get(storerKey)!.storedAt! < entry.storedAt!) {
+                this.foundData.set(storerKey, entry)
+            }
+        })
         if (noCloserNodesFound) {
             this.noCloserNodesReceivedCounter += 1
             if (this.isFindCompleted()) {
