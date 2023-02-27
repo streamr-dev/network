@@ -35,8 +35,7 @@ import {
     raceEvents3,
     runAndRaceEvents3,
     RunAndRaceEventsReturnType,
-    runAndWaitForEvents3,
-    waitForCondition
+    runAndWaitForEvents3
 } from '@streamr/utils'
 import { v4 } from 'uuid'
 import { IDhtRpcService } from '../proto/packages/dht/protos/DhtRpc.server'
@@ -1095,8 +1094,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             return this.createRouteMessageAck(routedMessage)
         } else {
             const closestContacts = session.getClosestContacts(5)
-            logger.trace(`findRecursively Node ${this.getNodeName()} found candidates ` +
-                JSON.stringify((closestContacts.map((desc) => desc.nodeName))))
+            logger.trace(
+                `findRecursively Node ${this.getNodeName()} found candidates ${JSON.stringify((closestContacts.map((desc) => desc.nodeName)))}`
+            )
             const noCloserContactsFound = (
                 closestContacts.length > 0
                 && routedMessage.previousPeer
@@ -1131,7 +1131,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             return this.createRouteMessageAck(routedMessage, 'routeMessage() service is not running')
         } else if (this.routerDuplicateDetector.isMostLikelyDuplicate(routedMessage.requestId, routedMessage.sourcePeer!.nodeName!)) {
             logger.trace(`Peer ${this.ownPeerId?.value} routing message ${routedMessage.requestId} 
-                from ${routedMessage.sourcePeer?.kademliaId} to ${routedMessage.destinationPeer?.kademliaId} is likely a duplicate`)
+                from ${routedMessage.sourcePeer!.kademliaId} to ${routedMessage.destinationPeer!.kademliaId} is likely a duplicate`)
             return this.createRouteMessageAck(routedMessage, 'message given to routeMessage() service is likely a duplicate')
         }
 
@@ -1205,26 +1205,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             }
         } else {
             return this.doRouteMessage(routedMessage, true)
-        }
-    }
-
-    public garbageCollectConnections(): void {
-        if (this.connectionManager) {
-            const LAST_USED_LIMIT = 100
-            this.connectionManager.garbageCollectConnections(this.config.maxConnections, LAST_USED_LIMIT)
-        }
-    }
-
-    public async waitReadyForTesting(): Promise<void> {
-        if (this.connectionManager) {
-            const LAST_USED_LIMIT = 100
-
-            this.connectionManager.garbageCollectConnections(this.config.maxConnections, LAST_USED_LIMIT)
-            await waitForCondition(() => {
-                return (this.getNumberOfLocalLockedConnections() == 0 &&
-                    this.getNumberOfRemoteLockedConnections() == 0 &&
-                    this.getNumberOfConnections() <= this.config.maxConnections)
-            }, 20000)
         }
     }
 

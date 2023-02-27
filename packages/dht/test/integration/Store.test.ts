@@ -1,7 +1,7 @@
 import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { createMockConnectionDhtNode, waitNodesReadyForTesting } from '../utils'
+import { createMockConnectionDhtNode, waitConnectionManagersReadyForTesting } from '../utils'
 import { isSamePeerDescriptor, PeerID } from '../../src/exports'
 import { Any } from '../../src/proto/google/protobuf/any'
 
@@ -40,11 +40,11 @@ describe('Storing data in DHT', () => {
             nodes.push(node)
         }
         await Promise.all(nodes.map((node) => node.joinDht(entrypointDescriptor)))
-        await waitNodesReadyForTesting(nodes)
+        await waitConnectionManagersReadyForTesting(nodes.map((node) => node.connectionManager!), MAX_CONNECTIONS)
     }, 60000)
 
     afterEach(async () => {
-        await Promise.allSettled(nodes.map((node) => node.stop()))
+        await Promise.all(nodes.map((node) => node.stop()))
     })
 
     it('Data structures work locally', async () => {

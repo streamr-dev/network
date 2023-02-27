@@ -17,6 +17,7 @@ import { v4 } from 'uuid'
 import { getRandomRegion } from './data/pings'
 import { Empty } from '../src/proto/google/protobuf/empty'
 import { Any } from '../src/proto/google/protobuf/any'
+import { waitForCondition } from '@streamr/utils'
 
 export const generateId = (stringId: string): Uint8Array => {
     return PeerID.fromString(stringId).value
@@ -203,8 +204,23 @@ export const getMockPeers = (): PeerDescriptor[] => {
     ]
 }
 
-export const waitNodesReadyForTesting = async (nodes: DhtNode[]): Promise<void> => {
-    nodes.forEach((node) => node.garbageCollectConnections())
-    await Promise.all(nodes.map((node) => node.waitReadyForTesting()))
+export const waitConnectionManagersReadyForTesting = async (connectionManagers: ConnectionManager[], limit: number): Promise<void> => {
+    connectionManagers.forEach((connectionManager) => garbageCollectConnections(connectionManager, limit))
+    await Promise.all(connectionManagers.map((connectionManager) => waitReadyForTesting(connectionManager, limit)))
+}
+
+function garbageCollectConnections(connectionManager: ConnectionManager, limit: number): void {
+    const LAST_USED_LIMIT = 100
+    connectionManager.garbageCollectConnections(limit, LAST_USED_LIMIT)
+}
+
+async function waitReadyForTesting(connectionManager: ConnectionManager, limit: number): Promise<void> {
+    const LAST_USED_LIMIT = 100
+    connectionManager.garbageCollectConnections(limit, LAST_USED_LIMIT)
+    await waitForCondition(() => {
+        return (connectionManager.getNumberOfLocalLockedConnections() == 0 &&
+            connectionManager.getNumberOfRemoteLockedConnections() == 0 &&
+            connectionManager.getAllConnectionPeerDescriptors().length <= limit)
+    }, 30000)
 }
 
