@@ -6,26 +6,26 @@ import { startServer, stopServer } from '../../src/httpServer'
 const MOCK_API_KEY = 'mock-api-key'
 const PORT = 18888
 
-interface Route {
+interface Endpoint {
     id: string
     keys?: string[]
 }
 
-const startTestServer = (...routes: Route[]) => {
-    return startServer(routes.map((route) => ({
-        path: `/${route.id}`,
+const startTestServer = (...endpoints: Endpoint[]) => {
+    return startServer(endpoints.map((endpoint) => ({
+        path: `/${endpoint.id}`,
         method: 'get',
         requestHandlers: [(_req: Request, res: Response) => {
-            res.send(route.id.toUpperCase())
+            res.send(endpoint.id.toUpperCase())
         }],
-        apiAuthentication: (route.keys !== undefined) ? { keys: route.keys } : undefined
+        apiAuthentication: (endpoint.keys !== undefined) ? { keys: endpoint.keys } : undefined
     })), {
         port: PORT
     })
 }
 
-const createRequest = async (route: string, headers?: Record<string, string>) => {
-    return await fetch(`http://127.0.0.1:${PORT}/${route}`, {
+const createRequest = async (endpoint: string, headers?: Record<string, string>) => {
+    return await fetch(`http://127.0.0.1:${PORT}/${endpoint}`, {
         timeout: 9 * 1000,
         headers
     })
@@ -72,20 +72,20 @@ describe('HttpServer', () => {
             expect(response.status).toBe(401)
         })
 
-        it('multiple routes', async () => {
+        it('multiple endpoints', async () => {
             server = await startTestServer(
-                { id: 'route1', keys: ['other-key-1'] },
-                { id: 'route2', keys: [MOCK_API_KEY] },
-                { id: 'route3', keys: ['other-key-3'] }
+                { id: 'endpoint1', keys: ['other-key-1'] },
+                { id: 'endpoint2', keys: [MOCK_API_KEY] },
+                { id: 'endpoint3', keys: ['other-key-3'] }
             )
-            const route2response = await createRequest('route2', {
+            const endpoint2response = await createRequest('endpoint2', {
                 Authorization: `Bearer ${MOCK_API_KEY}`
             })
-            expect(await route2response.text()).toBe('ROUTE2')
-            const route3response = await createRequest('route3', {
+            expect(await endpoint2response.text()).toBe('ENDPOINT2')
+            const endpoint3response = await createRequest('endpoint3', {
                 Authorization: `Bearer ${MOCK_API_KEY}`
             })
-            expect(route3response.status).toBe(403)
+            expect(endpoint3response.status).toBe(403)
         })
 
     })
