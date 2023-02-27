@@ -29,8 +29,8 @@ export abstract class Plugin<T> {
         }
     }
 
-    addHttpServerEndpoint(route: Endpoint): void {
-        this.httpServerRouters.push(route)
+    addHttpServerEndpoint(endpoint: Endpoint): void {
+        this.httpServerRouters.push(endpoint)
     }
 
     getHttpServerEndpoints(): Endpoint[] {

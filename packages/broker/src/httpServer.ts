@@ -41,7 +41,7 @@ export const createAuthenticatorMiddleware = (apiAuthentication?: ApiAuthenticat
 }
 
 export const startServer = async (
-    routes: Endpoint[],
+    endpoints: Endpoint[],
     config: StrictConfig['httpServer'],
     apiAuthentication?: ApiAuthentication
 ): Promise<HttpServer | https.Server> => {
@@ -51,8 +51,8 @@ export const startServer = async (
         credentials: true // Access-Control-Allow-Credentials: true
     }))
     app.use(createAuthenticatorMiddleware(apiAuthentication))
-    routes.forEach((route: Endpoint) => {
-        app.route(route.path)[route.method](route.requestHandlers)
+    endpoints.forEach((endpoint: Endpoint) => {
+        app.route(endpoint.path)[endpoint.method](endpoint.requestHandlers)
     })
     let serverFactory: { listen: (port: number) => HttpServer | HttpsServer }
     if (config.sslCertificate !== undefined) {
