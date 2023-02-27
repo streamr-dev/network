@@ -17,8 +17,6 @@ import { v4 } from 'uuid'
 import { getRandomRegion } from './data/pings'
 import { Empty } from '../src/proto/google/protobuf/empty'
 import { Any } from '../src/proto/google/protobuf/any'
-import { Logger } from '@streamr/utils'
-import { debugVars } from '../src/helpers/debugHelpers'
 
 export const generateId = (stringId: string): Uint8Array => {
     return PeerID.fromString(stringId).value
