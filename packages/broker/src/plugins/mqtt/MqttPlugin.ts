@@ -15,7 +15,7 @@ export class MqttPlugin extends Plugin<MqttPluginConfig> {
     private server?: MqttServer
 
     async start(): Promise<void> {
-        this.server = new MqttServer(this.pluginConfig.port, this.apiAuthenticator)
+        this.server = new MqttServer(this.pluginConfig.port, this.brokerConfig.apiAuthentication)
         const bridge = new Bridge(
             this.streamrClient!, 
             this.server, 

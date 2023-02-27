@@ -19,7 +19,7 @@ describe('MQTT server', () => {
 
         beforeEach(async () => {
             server = new MqttServer(MQTT_PORT, {
-                isValidAuthentication: (apiKey?: string) => (apiKey === REQUIRED_API_KEY)
+                keys: [REQUIRED_API_KEY]
             })
             await server.start()
         })
@@ -49,9 +49,7 @@ describe('MQTT server', () => {
         let server: MqttServer
 
         beforeEach(async () => {
-            server = new MqttServer(MQTT_PORT, {
-                isValidAuthentication: () => true
-            })
+            server = new MqttServer(MQTT_PORT)
             await server.start()
         })
 

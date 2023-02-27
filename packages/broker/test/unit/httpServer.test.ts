@@ -2,21 +2,19 @@ import express, { Request, Response } from 'express'
 import { Server } from 'http'
 import fetch from 'node-fetch'
 import { startServer, stopServer } from '../../src/httpServer'
-import { createApiAuthenticator } from '../../src/apiAuthenticator'
+import { ApiAuthentication } from '../../src/apiAuthentication'
 
 const MOCK_API_KEY = 'mock-api-key'
 const PORT = 18888
 
-const startTestServer = (apiConfig?: { keys: string[] }) => {
+const startTestServer = (apiAuthentication?: ApiAuthentication) => {
     const router = express.Router()
     router.get('/foo', (_req: Request, res: Response) => {
         res.send('FOO')
     })
     return startServer([router], {
         port: PORT
-    }, createApiAuthenticator({
-        apiAuthentication: apiConfig
-    } as any))
+    }, apiAuthentication)
 }
 
 const createRequest = async (headers?: Record<string, string>) => {
@@ -36,7 +34,7 @@ describe('HttpServer', () => {
         }
     })
 
-    describe('ApiAuthenticator', () => {
+    describe('API authentication', () => {
         
         it('no authentication required', async () => {
             server = await startTestServer()

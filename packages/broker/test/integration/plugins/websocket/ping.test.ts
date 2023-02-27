@@ -2,7 +2,6 @@ import { Queue } from '@streamr/test-utils'
 import { wait, waitForEvent } from '@streamr/utils'
 import StreamrClient from 'streamr-client'
 import WebSocket from 'ws'
-import { createApiAuthenticator } from '../../../../src/apiAuthenticator'
 import { PlainPayloadFormat } from '../../../../src/helpers/PayloadFormat'
 import { WebsocketServer } from '../../../../src/plugins/websocket/WebsocketServer'
 
@@ -22,7 +21,7 @@ describe('ping', () => {
                 publish: jest.fn()
             } as any
             server = new WebsocketServer(streamrClient, 0, 0)
-            await server.start(WEBSOCKET_PORT, undefined as any, createApiAuthenticator({} as any))
+            await server.start(WEBSOCKET_PORT, undefined as any)
         })
     
         afterAll(async () => {
@@ -72,7 +71,7 @@ describe('ping', () => {
                 publish: () => Promise.resolve()
             }
             server = new WebsocketServer(streamrClient as any, sendInterval, disconnectTimeout)
-            await server.start(WEBSOCKET_PORT, new PlainPayloadFormat(), createApiAuthenticator({} as any))
+            await server.start(WEBSOCKET_PORT, new PlainPayloadFormat())
         }
     
         afterEach(async () => {

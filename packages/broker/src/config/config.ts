@@ -3,6 +3,7 @@ import path from 'path'
 import * as os from 'os'
 import camelCase from 'lodash/camelCase'
 import set from 'lodash/set'
+import { ApiAuthentication } from '../apiAuthentication'
 
 export interface Config {
     client?: StreamrClientConfig
@@ -13,9 +14,7 @@ export interface Config {
             certFileName: string
         }
     }
-    apiAuthentication?: {
-        keys: string[]
-    }
+    apiAuthentication?: ApiAuthentication
     plugins?: Record<string, any>
 }
 
