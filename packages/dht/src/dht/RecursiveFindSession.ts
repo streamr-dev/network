@@ -49,31 +49,6 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
         this.rpcCommunicator.registerRpcNotification(RecursiveFindReport, 'reportRecursiveFindResult', this.reportRecursiveFindResult)
     }
 
-    private addKnownHops(routingPath: PeerDescriptor[]) {
-        routingPath.forEach((desc) => {
-            const newPeerId = PeerID.fromValue(desc.kademliaId)
-            if (!this.config.ownPeerID.equals(newPeerId)) {
-                this.allKnownHops.add(newPeerId.toKey())
-            }
-        })
-    }
-
-    private setHopAsReported(desc: PeerDescriptor) {
-        const newPeerId = PeerID.fromValue(desc.kademliaId)
-        if (!this.config.ownPeerID.equals(newPeerId)) {
-            this.reportedHops.add(newPeerId.toKey())
-        }
-        if (this.isFindCompleted()) { 
-            if (!this.findCompletedEmitted && this.isFindCompleted()) {
-                if (this.reportFindCompletedTimeout) {
-                    clearTimeout(this.reportFindCompletedTimeout)
-                }
-                this.emit('findCompleted', this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()))
-                this.findCompletedEmitted = true
-            }
-        }
-    }
-
     private isFindCompleted(): boolean {
         const unreportedHops: Set<PeerIDKey> = new Set(this.allKnownHops)
         this.reportedHops.forEach((id) => {
@@ -101,6 +76,31 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
         this.processFoundData(dataEntries)
         if (noCloserNodesFound) {
             this.onNoCloserPeersFound()
+        }
+    }
+
+    private addKnownHops(routingPath: PeerDescriptor[]) {
+        routingPath.forEach((desc) => {
+            const newPeerId = PeerID.fromValue(desc.kademliaId)
+            if (!this.config.ownPeerID.equals(newPeerId)) {
+                this.allKnownHops.add(newPeerId.toKey())
+            }
+        })
+    }
+
+    private setHopAsReported(desc: PeerDescriptor) {
+        const newPeerId = PeerID.fromValue(desc.kademliaId)
+        if (!this.config.ownPeerID.equals(newPeerId)) {
+            this.reportedHops.add(newPeerId.toKey())
+        }
+        if (this.isFindCompleted()) {
+            if (!this.findCompletedEmitted && this.isFindCompleted()) {
+                if (this.reportFindCompletedTimeout) {
+                    clearTimeout(this.reportFindCompletedTimeout)
+                }
+                this.emit('findCompleted', this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()))
+                this.findCompletedEmitted = true
+            }
         }
     }
 
