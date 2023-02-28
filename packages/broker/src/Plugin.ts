@@ -1,4 +1,4 @@
-import { Config } from './config/config'
+import { StrictConfig } from './config/config'
 import express from 'express'
 import { validateConfig } from './config/validateConfig'
 import { Schema } from 'ajv'
@@ -9,7 +9,7 @@ export interface PluginOptions {
     name: string
     streamrClient: StreamrClient
     apiAuthenticator: ApiAuthenticator
-    brokerConfig: Config
+    brokerConfig: StrictConfig
 }
 
 export abstract class Plugin<T> {
@@ -17,7 +17,7 @@ export abstract class Plugin<T> {
     readonly name: string
     readonly streamrClient: StreamrClient
     readonly apiAuthenticator: ApiAuthenticator
-    readonly brokerConfig: Config
+    readonly brokerConfig: StrictConfig
     readonly pluginConfig: T
     private readonly httpServerRouters: express.Router[] = []
 

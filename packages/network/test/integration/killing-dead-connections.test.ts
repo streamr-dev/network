@@ -11,7 +11,7 @@ const STATE_OPEN = 1
 describe('check and kill dead connections', () => {
     let clientEndpoint: NodeClientWsEndpoint
     let serverEndpoint: ServerWsEndpoint
-    const trackerPeerInfo =  PeerInfo.newTracker('serverEndpoint')
+    const trackerPeerInfo = PeerInfo.newTracker('serverEndpoint')
     beforeEach(async () => {
         clientEndpoint = createTestNodeClientWsEndpoint(PeerInfo.newNode('clientEndpoint'))
         serverEndpoint = await startServerWsEndpoint('127.0.0.1', 43972, trackerPeerInfo)
@@ -44,6 +44,6 @@ describe('check and kill dead connections', () => {
         const [peerInfo, reason] = await event
 
         expect(peerInfo).toEqual(PeerInfo.newTracker('serverEndpoint'))
-        expect(reason).toEqual('')
+        expect((reason as any).toString()).toEqual('')
     })
 })

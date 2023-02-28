@@ -13,7 +13,7 @@ export class KademliaSimulation {
     private readonly nodes: SimulationNode[] = []
 
     private readonly dhtIds: Array<{ type: string, data: Array<number> }>
-    private readonly groundTruth:  Record<string, Array<{ name: string, distance: number, id: { type: string, data: Array<number> } }>>
+    private readonly groundTruth: Record<string, Array<{ name: string, distance: number, id: { type: string, data: Array<number> } }>>
 
     constructor() {
         if (!fs.existsSync('test/data/nodeids.json')) {
@@ -59,7 +59,7 @@ export class KademliaSimulation {
 
             let correctNeighbors = 0
             for (let j = 0; j < this.groundTruth[i + ''].length; j++) {
-                if (this.groundTruth[i + ''][j].name !=  (this.nodeNamesById[JSON.stringify(kademliaNeighbors[j])] + '')) {
+                if (this.groundTruth[i + ''][j].name != (this.nodeNamesById[JSON.stringify(kademliaNeighbors[j])] + '')) {
                     break
                 }
                 correctNeighbors++

@@ -56,13 +56,6 @@ export interface DataEntry {
      */
     ttl: number; // milliseconds
 }
-// 
-// message FindDataResult {
-// bytes dataKey = 1;
-// repeated DataEntry entries = 2;
-// optional bool noCloserNodesFound = 3;
-// }
-
 /**
  * @generated from protobuf message dht.ClosestPeersRequest
  */
@@ -111,8 +104,6 @@ export interface RecursiveFindReport {
      */
     nodes: PeerDescriptor[];
     /**
-     * optional bytes data = 2;
-     *
      * @generated from protobuf field: repeated dht.DataEntry dataEntries = 2;
      */
     dataEntries: DataEntry[];

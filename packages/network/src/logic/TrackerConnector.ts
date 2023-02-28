@@ -1,5 +1,5 @@
 import { TrackerRegistryRecord, StreamPartID, TrackerRegistry } from '@streamr/protocol'
-import { TrackerId } from '../identifiers'
+import { NodeId, TrackerId } from '../identifiers'
 import { Logger } from "@streamr/utils"
 import { PeerInfo } from '../connection/PeerInfo'
 import { NameDirectory } from '../NameDirectory'
@@ -23,7 +23,7 @@ export class TrackerConnector {
     private maintenanceTimer?: NodeJS.Timeout | null
     private readonly maintenanceInterval: number
     private connectionStates: Map<TrackerId, ConnectionState>
-    private readonly signallingOnlyTrackers: Set<TrackerId>
+    private readonly signallingOnlySessions: Map<StreamPartID, Set<NodeId>>
 
     constructor(
         getStreamParts: getStreamPartsFn,
@@ -38,7 +38,7 @@ export class TrackerConnector {
         this.trackerRegistry = trackerRegistry
         this.maintenanceInterval = maintenanceInterval
         this.connectionStates = new Map()
-        this.signallingOnlyTrackers = new Set()
+        this.signallingOnlySessions = new Map()
     }
 
     onNewStreamPart(streamPartId: StreamPartID): void {
@@ -46,14 +46,24 @@ export class TrackerConnector {
         this.connectTo(trackerInfo)
     }
 
-    async createSignallingOnlyTrackerConnection(trackerId: TrackerId, trackerAddress: string): Promise<void> {
-        this.signallingOnlyTrackers.add(trackerId)
-        await this.connectToTracker(trackerAddress, PeerInfo.newTracker(trackerId))
-        logger.info('Connected to tracker %s for signalling only', NameDirectory.getName(trackerId))
+    async addSignallingOnlySession(streamPartId: StreamPartID, nodeToSignal: NodeId): Promise<void> {
+        const tracker = this.trackerRegistry.getTracker(streamPartId)
+        if (!this.signallingOnlySessions.has(streamPartId)) {
+            this.signallingOnlySessions.set(streamPartId, new Set())
+        }
+        this.signallingOnlySessions.get(streamPartId)!.add(nodeToSignal)
+        await this.connectToTracker(tracker.ws, PeerInfo.newTracker(tracker.id))
+        logger.info('Connected to tracker %s for signalling only', NameDirectory.getName(tracker.id))
     }
 
-    removeSignallingOnlyTrackerConnection(trackerId: TrackerId): void {
-        this.signallingOnlyTrackers.delete(trackerId)
+    removeSignallingOnlySession(streamPartId: StreamPartID, nodeToSignal: NodeId): void {
+        if (this.signallingOnlySessions.has(streamPartId)) {
+            const session = this.signallingOnlySessions.get(streamPartId)!
+            session.delete(nodeToSignal)
+            if (session.size === 0) {
+                this.signallingOnlySessions.delete(streamPartId)
+            }
+        }
     }
 
     start(): void {
@@ -101,10 +111,8 @@ export class TrackerConnector {
     }
 
     private isActiveTracker(trackerId: TrackerId): boolean {
-        if (this.signallingOnlyTrackers.has(trackerId)) {
-            return true
-        }
-        for (const streamPartId of this.getStreamParts()) {
+        const streamPartIds = [...this.getStreamParts(), ...this.signallingOnlySessions.keys()]
+        for (const streamPartId of streamPartIds) {
             if (this.trackerRegistry.getTracker(streamPartId).id === trackerId) {
                 return true
             }

@@ -27,7 +27,7 @@ describe('Full node network with WebSocket connections only', () => {
         streamrNodes = []
         connectionManagers = []
         layer0DhtNodes = []
-        layer0Ep = new DhtNode({ peerDescriptor: epPeerDescriptor,  nodeName: 'entrypoint', numberOfNodesPerKBucket: 4, routeMessageTimeout: 10000 })
+        layer0Ep = new DhtNode({ peerDescriptor: epPeerDescriptor, nodeName: 'entrypoint', numberOfNodesPerKBucket: 4, routeMessageTimeout: 10000 })
         await layer0Ep.start()
         await layer0Ep.joinDht(epPeerDescriptor)
         epConnectionManager = layer0Ep.getTransport() as ConnectionManager

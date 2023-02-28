@@ -18,7 +18,7 @@ export interface PrivateKeyAnswers extends Answers {
     importPrivateKey?: string
 }
 
-export interface PluginAnswers extends Answers  {
+export interface PluginAnswers extends Answers {
     enabledApiPlugins: string[]
     websocketPort?: string
     mqttPort?: string
@@ -26,7 +26,7 @@ export interface PluginAnswers extends Answers  {
     enableMinerPlugin: boolean
 }
 
-export interface StorageAnswers extends Answers  {
+export interface StorageAnswers extends Answers {
     storagePath: string
 }
 
