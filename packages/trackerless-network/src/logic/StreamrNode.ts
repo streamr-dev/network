@@ -166,10 +166,10 @@ export class StreamrNode extends EventEmitter<Events> {
         layer2.on('message', (message: StreamMessage) => {
             this.emit('newMessage', message)
         })
-        const discoveryResult = await this.streamEntryPointDiscovery.discoverEntryPointsFromDht(streamPartID, knownEntryPointDescriptors.length)
+        const discoveryResult = await this.streamEntryPointDiscovery!.discoverEntryPointsFromDht(streamPartID, knownEntryPointDescriptors.length)
         const entryPoints = knownEntryPointDescriptors.concat(discoveryResult.discoveredEntryPoints)
         await Promise.all(sampleSize(entryPoints, 4).map((entryPoint) => layer1.joinDht(entryPoint)))
-        await this.streamEntryPointDiscovery.storeSelfAsEntryPointIfNecessary(
+        await this.streamEntryPointDiscovery!.storeSelfAsEntryPointIfNecessary(
             streamPartID,
             discoveryResult.joiningEmptyStream,
             discoveryResult.entryPointsFromDht,
