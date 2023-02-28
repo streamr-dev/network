@@ -49,31 +49,6 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
         this.rpcCommunicator.registerRpcNotification(RecursiveFindReport, 'reportRecursiveFindResult', this.reportRecursiveFindResult)
     }
 
-    private addKnownHops(routingPath: PeerDescriptor[]) {
-        routingPath.forEach((desc) => {
-            const newPeerId = PeerID.fromValue(desc.kademliaId)
-            if (!this.config.ownPeerID.equals(newPeerId)) {
-                this.allKnownHops.add(newPeerId.toKey())
-            }
-        })
-    }
-
-    private setHopAsReported(desc: PeerDescriptor) {
-        const newPeerId = PeerID.fromValue(desc.kademliaId)
-        if (!this.config.ownPeerID.equals(newPeerId)) {
-            this.reportedHops.add(newPeerId.toKey())
-        }
-        if (this.isFindCompleted()) { 
-            if (!this.findCompletedEmitted && this.isFindCompleted()) {
-                if (this.reportFindCompletedTimeout) {
-                    clearTimeout(this.reportFindCompletedTimeout)
-                }
-                this.emit('findCompleted', this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()))
-                this.findCompletedEmitted = true
-            }
-        }
-    }
-
     private isFindCompleted(): boolean {
         const unreportedHops: Set<PeerIDKey> = new Set(this.allKnownHops)
         this.reportedHops.forEach((id) => {
@@ -98,6 +73,38 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
         nodes.map((descriptor: PeerDescriptor) => {
             this.results.addContact(new Contact(descriptor))
         })
+        this.processFoundData(dataEntries)
+        if (noCloserNodesFound) {
+            this.onNoCloserPeersFound()
+        }
+    }
+
+    private addKnownHops(routingPath: PeerDescriptor[]) {
+        routingPath.forEach((desc) => {
+            const newPeerId = PeerID.fromValue(desc.kademliaId)
+            if (!this.config.ownPeerID.equals(newPeerId)) {
+                this.allKnownHops.add(newPeerId.toKey())
+            }
+        })
+    }
+
+    private setHopAsReported(desc: PeerDescriptor) {
+        const newPeerId = PeerID.fromValue(desc.kademliaId)
+        if (!this.config.ownPeerID.equals(newPeerId)) {
+            this.reportedHops.add(newPeerId.toKey())
+        }
+        if (this.isFindCompleted()) {
+            if (!this.findCompletedEmitted && this.isFindCompleted()) {
+                if (this.reportFindCompletedTimeout) {
+                    clearTimeout(this.reportFindCompletedTimeout)
+                }
+                this.emit('findCompleted', this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()))
+                this.findCompletedEmitted = true
+            }
+        }
+    }
+
+    private processFoundData(dataEntries: DataEntry[]): void {
         dataEntries.forEach((entry) => {
             const storerKey = keyFromPeerDescriptor(entry.storer!)
             if (!this.foundData.has(storerKey)) {
@@ -106,22 +113,23 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
                 this.foundData.set(storerKey, entry)
             }
         })
-        if (noCloserNodesFound) {
-            this.noCloserNodesReceivedCounter += 1
-            if (this.isFindCompleted()) {
-                this.emit('findCompleted', this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()))
-                this.findCompletedEmitted = true
-                if (this.reportFindCompletedTimeout) {
-                    clearTimeout(this.reportFindCompletedTimeout)
-                }
-            } else {
-                this.reportFindCompletedTimeout = setTimeout(() => {
-                    if (!this.findCompletedEmitted) {
-                        this.emit('findCompleted', this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()))
-                        this.findCompletedEmitted = true
-                    }
-                }, 5000)
+    }
+
+    private onNoCloserPeersFound(): void {
+        this.noCloserNodesReceivedCounter += 1
+        if (this.isFindCompleted()) {
+            this.emit('findCompleted', this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()))
+            this.findCompletedEmitted = true
+            if (this.reportFindCompletedTimeout) {
+                clearTimeout(this.reportFindCompletedTimeout)
             }
+        } else {
+            this.reportFindCompletedTimeout = setTimeout(() => {
+                if (!this.findCompletedEmitted) {
+                    this.emit('findCompleted', this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()))
+                    this.findCompletedEmitted = true
+                }
+            }, 5000)
         }
     }
 
