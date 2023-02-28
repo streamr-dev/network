@@ -67,8 +67,6 @@ describe('stream without default entrypoints', () => {
             })
             nodes.push(node)
             await node.start()
-            await node.stack.getLayer0DhtNode().garbageCollectConnections()
-            await node.stack.getLayer0DhtNode().waitReadyForTesting()
         }))
     })
 
@@ -106,13 +104,13 @@ describe('stream without default entrypoints', () => {
             nodes[i].addMessageListener((_msg) => {
                 numOfReceivedMessages += 1
             })
-            await waitForCondition(() => nodes[i].stack.getStreamrNode().getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length >= 3)
+            await waitForCondition(() => nodes[i].stack.getStreamrNode().getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length >= 3, 10000)
         }))
         await Promise.all([
             waitForCondition(() => numOfReceivedMessages === numOfSubscribers, 10000),
             nodes[9].waitForJoinAndPublish(streamMessage, [])
         ])
-    }, 120000)
+    }, 45000)
 
     it('nodes store themselves as entrypoints on streamPart if number of entrypoints is low', async () => {
         for (let i = 0; i < 10; i++) {
