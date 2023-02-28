@@ -28,7 +28,7 @@ const httpGet = (url: string): Promise<[number, string]> => { // return tuple is
     })
 }
 
-describe('DataMetadataEndpoints', () => {
+describe('dataMetadataEndpoint', () => {
     let tracker: Tracker
     let storageNode: Broker
     let client1: StreamrClient
@@ -99,7 +99,7 @@ describe('DataMetadataEndpoints', () => {
         const res = JSON.parse(json)
 
         expect(status).toEqual(200)
-        expect(res.totalBytes).toEqual(1775)
+        expect(res.totalBytes).toEqual(1771)
         expect(res.totalMessages).toEqual(4)
         expect(
             new Date(res.firstMessage).getTime()

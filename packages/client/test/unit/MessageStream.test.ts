@@ -6,7 +6,7 @@ import { MessageStream } from '../../src/subscribe/MessageStream'
 import { Msg } from '../test-utils/publish'
 import { createRandomAuthentication, waitForCalls } from '../test-utils/utils'
 import { convertStreamMessageToMessage } from './../../src/Message'
-import { omit } from 'lodash'
+import omit from 'lodash/omit'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 

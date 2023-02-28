@@ -4,7 +4,7 @@ import { NameDirectory } from '@streamr/network-node'
 import pLimit from 'p-limit'
 import { LoggerFactory } from './LoggerFactory'
 import { tryInSequence } from './promises'
-import { shuffle } from 'lodash'
+import shuffle from 'lodash/shuffle'
 
 export interface ContractEvent {
     onMethodExecute: (methodName: string) => void

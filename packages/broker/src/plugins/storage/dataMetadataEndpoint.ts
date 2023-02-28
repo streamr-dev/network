@@ -1,13 +1,13 @@
-import express, { Request, Response, Router } from 'express'
+import { Request, RequestHandler, Response } from 'express'
+import { HttpServerEndpoint } from '../../Plugin'
 import { Storage } from './Storage'
 
 const parseIntIfExists = (x: string | undefined): number | undefined => {
     return x === undefined ? undefined : parseInt(x)
 }
 
-export const router = (cassandraStorage: Storage): Router => {
-    const router = express.Router()
-    const handler = async (req: Request, res: Response) => {
+const createHandler = (cassandraStorage: Storage): RequestHandler => {
+    return async (req: Request, res: Response) => {
         const streamId = req.params.id
         const partition = parseIntIfExists(req.params.partition)
         if (Number.isNaN(partition) || partition === undefined) {
@@ -17,21 +17,20 @@ export const router = (cassandraStorage: Storage): Router => {
             })
             return
         }
-
         const out = {
             totalBytes: await cassandraStorage.getTotalBytesInStream(streamId, partition),
             totalMessages: await cassandraStorage.getNumberOfMessagesInStream(streamId, partition),
             firstMessage: await cassandraStorage.getFirstMessageTimestampInStream(streamId, partition),
             lastMessage: await cassandraStorage.getLastMessageTimestampInStream(streamId, partition)
         }
-
         res.status(200).send(out)
     }
+}
 
-    router.get(
-        '/streams/:id/metadata/partitions/:partition',
-        handler
-    )
-
-    return router
+export const createDataMetadataEndpoint = (cassandraStorage: Storage): HttpServerEndpoint => {
+    return {
+        path: '/streams/:id/metadata/partitions/:partition',
+        method: 'get',
+        requestHandlers: [createHandler(cassandraStorage)]
+    }
 }

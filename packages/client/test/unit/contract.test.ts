@@ -1,5 +1,5 @@
 import { wait } from '@streamr/utils'
-import { range } from 'lodash'
+import range from 'lodash/range'
 import { createDecoratedContract, ObservableContract } from '../../src/utils/contract'
 import { mockLoggerFactory } from '../test-utils/utils'
 

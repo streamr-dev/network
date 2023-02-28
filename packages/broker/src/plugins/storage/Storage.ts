@@ -10,7 +10,7 @@ import { StreamMessage } from '@streamr/protocol'
 import { BucketManager, BucketManagerOptions } from './BucketManager'
 import { Logger } from '@streamr/utils'
 import { Bucket, BucketId } from './Bucket'
-import { MAX_SEQUENCE_NUMBER_VALUE, MIN_SEQUENCE_NUMBER_VALUE } from './DataQueryEndpoints'
+import { MAX_SEQUENCE_NUMBER_VALUE, MIN_SEQUENCE_NUMBER_VALUE } from './dataQueryEndpoint'
 
 const logger = new Logger(module)
 

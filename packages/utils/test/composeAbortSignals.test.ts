@@ -1,5 +1,5 @@
 import { composeAbortSignals } from '../src/composeAbortSignals'
-import { range } from 'lodash'
+import range from 'lodash/range'
 import fetch from 'node-fetch'
 
 describe(composeAbortSignals, () => {

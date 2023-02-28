@@ -15,7 +15,6 @@ The integration APIs exposed by plugins can be secured via API keys. In your Bro
 
 ```
 {
-    "network": ...
     "plugins": ...
     "apiAuthentication": {
         "keys": ["my-secret-api-key"]
@@ -24,6 +23,10 @@ The integration APIs exposed by plugins can be secured via API keys. In your Bro
 ```
 
 How to pass the API key depends on the protocol in question and is described in the sections below.
+
+### Plugin-specific authentication
+
+Alternatively, if you need you plugin-specific API keys, you can configure similar `apiAuthentication` object inside a plugin config. In that case case the global API keys are not used for the plugin.
 
 ## Ports
 

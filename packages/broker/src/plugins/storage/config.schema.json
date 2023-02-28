@@ -80,6 +80,9 @@
                 "clusterSize": 1,
                 "myIndexInCluster": 0
             }
+        },
+        "apiAuthentication": {
+            "$ref": "definitions.schema.json#/definitions/apiAuthenticationOverride"
         }
     }
 }
