@@ -1269,6 +1269,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             }
         })
 
+        //const closestToDat = sortedList.getAllContacts()
         if (!sortedList.getAllContacts()[0].peerId.equals(this.ownPeerId!)) {
             // If we are not the closes node to the data, do not migrate
             return false
@@ -1373,9 +1374,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         */
 
         const contact = sortedList.getAllContacts()[0]
+        const contactPeerId = PeerID.fromValue(contact.getPeerDescriptor().kademliaId)
         //sortedList.getAllContacts().forEach(contact => {
-        if (!this.ownPeerId!.equals(incomingPeerId) &&
-            !this.ownPeerId!.equals(PeerID.fromValue(contact.getPeerDescriptor().kademliaId))) {
+        if (!incomingPeerId.equals(contactPeerId) &&
+            !this.ownPeerId!.equals(contactPeerId)) {
             this.migrateDataToContact(dataEntry, contact.getPeerDescriptor())
         }
         //})

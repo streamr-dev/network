@@ -44,7 +44,7 @@ describe('Migrating data from node to node in DHT', () => {
             Uint8Array.from(dhtIds[0].data), K, entryPointId, MAX_CONNECTIONS)
         nodes.push(entryPoint)
         nodesById.set(entryPoint.getNodeId().toKey(), entryPoint)
-        
+
         entrypointDescriptor = {
             kademliaId: entryPoint.getNodeId().value,
             type: NodeType.NODEJS,
@@ -139,6 +139,18 @@ describe('Migrating data from node to node in DHT', () => {
 
             logger.info('' + node.getNodeName() + hasDataMarker)
         })
+
+        const closestNode = nodesById.get(PeerID.fromValue(closest[0].getPeerDescriptor().kademliaId).toKey())!
+
+        if (!closestNode.doGetData(dataKey)) {
+            let node1Neighbors = ''
+            nodes[1].getNeighborList().getAllContacts().forEach((contact) => {
+                node1Neighbors += (contact.getPeerDescriptor().nodeName + ',')
+            })
+            console.error('node1Neighbors:  ' + node1Neighbors)
+        }
+
+        expect(closestNode.doGetData(dataKey)).toBeTruthy()
 
         /*
         logger.info('node ' + storingNode.getNodeName() + ' starting to store data with key ' + dataKey.toString())
