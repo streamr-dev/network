@@ -1,6 +1,6 @@
 export { DhtNode, DhtNodeEvents } from './dht/DhtNode'
 export { ListeningRpcCommunicator } from './transport/ListeningRpcCommunicator'
-export { Simulator } from './connection/Simulator/Simulator'
+export { Simulator, LatencyType } from './connection/Simulator/Simulator'
 export { SimulatorTransport } from './connection/Simulator/SimulatorTransport'
 export { PeerDescriptor, Message, NodeType } from './proto/packages/dht/protos/DhtRpc'
 export { ITransport } from './transport/ITransport'

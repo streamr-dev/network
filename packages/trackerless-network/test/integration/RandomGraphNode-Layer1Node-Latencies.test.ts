@@ -1,9 +1,8 @@
-import { DhtNode, Simulator, SimulatorTransport, PeerDescriptor, PeerID } from '@streamr/dht'
+import { DhtNode, Simulator, SimulatorTransport, PeerDescriptor, PeerID, LatencyType } from '@streamr/dht'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { range } from 'lodash'
 import { wait, waitForCondition } from '@streamr/utils'
 import { Logger } from '@streamr/utils'
-import { LatencyType } from '@streamr/dht/dist/src/connection/Simulator/Simulator'
 
 const logger = new Logger(module)
 

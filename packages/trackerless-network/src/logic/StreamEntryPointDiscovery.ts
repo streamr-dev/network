@@ -1,6 +1,6 @@
 import { createHash } from 'crypto'
 import { DhtNode, isSamePeerDescriptor, PeerDescriptor } from '@streamr/dht'
-import { Any } from '@streamr/dht/dist/src/proto/google/protobuf/any'
+import { Any } from '../proto/google/protobuf/any'
 import { Logger, wait } from '@streamr/utils'
 import { StreamObject } from './StreamrNode'
 
@@ -128,7 +128,6 @@ export class StreamEntryPointDiscovery {
                     .filter((entryPoint) => !isSamePeerDescriptor(entryPoint, this.layer0.getPeerDescriptor()))
                     .map((entrypoint) => stream!.layer1.joinDht(entrypoint, false)))
                 if (stream!.layer1.getBucketSize() === 0) {
-                    logger.warn(`${stream!.layer1.getNeighborList().getUncontactedContacts(10).length}`)
                     throw new Error(`Node is alone in stream or a network split is still possible`)
                 }
             }

@@ -1,6 +1,6 @@
 import { NetworkNode } from '../../src/NetworkNode'
 import { range } from 'lodash'
-import { NodeType, PeerDescriptor, PeerID, Simulator, SimulatorTransport } from '@streamr/dht'
+import { NodeType, PeerDescriptor, PeerID, Simulator, SimulatorTransport, LatencyType } from '@streamr/dht'
 import {
     MessageID,
     MessageRef,
@@ -10,7 +10,6 @@ import {
     toStreamID
 } from '@streamr/protocol'
 import { EthereumAddress, waitForCondition } from '@streamr/utils'
-import { LatencyType } from '@streamr/dht/dist/src/connection/Simulator/Simulator'
 import { streamPartIdToDataKey } from '../../src/logic/StreamEntryPointDiscovery'
 
 describe('stream without default entrypoints', () => {
