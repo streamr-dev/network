@@ -76,6 +76,21 @@ export class StreamEntryPointDiscovery {
         }
     }
 
+    private async discoverEntrypoints(streamPartId: string): Promise<PeerDescriptor[]> {
+        const dataKey = streamPartIdToDataKey(streamPartId)
+        try {
+            const results = await this.layer0!.getDataFromDht(dataKey)
+            if (results.dataEntries) {
+                return results.dataEntries!.map((entry) => entry.storer!)
+            } else {
+                return []
+            }
+        } catch (err) {
+            return []
+        }
+
+    }
+
     async storeSelfAsEntryPointIfNecessary(
         streamPartID: string,
         joiningEmptyStream: boolean,
@@ -91,6 +106,16 @@ export class StreamEntryPointDiscovery {
             } catch (err) {
                 logger.trace(`Failed to store self as entrypoint on stream `)
             }
+        }
+    }
+
+    private async storeSelfAsEntryPoint(streamPartId: string): Promise<void> {
+        const ownPeerDescriptor = this.layer0.getPeerDescriptor()
+        const dataToStore = Any.pack(ownPeerDescriptor, PeerDescriptor)
+        try {
+            await this.layer0!.storeDataToDht(streamPartIdToDataKey(streamPartId), dataToStore)
+        } catch (err) {
+            logger.warn(`Failed to store self (${this.layer0!.getNodeId()}) as entrypoint for ${streamPartId}`)
         }
     }
 
@@ -111,32 +136,8 @@ export class StreamEntryPointDiscovery {
         logger.info(`Network split avoided`)
     }
 
-    private async discoverEntrypoints(streamPartId: string): Promise<PeerDescriptor[]> {
-        const dataKey = streamPartIdToDataKey(streamPartId)
-        try {
-            const results = await this.layer0!.getDataFromDht(dataKey)
-            if (results.dataEntries) {
-                return results.dataEntries!.map((entry) => entry.storer!)
-            } else {
-                return []
-            }
-        } catch (err) {
-            return []
-        }
-
-    }
-
-    private async storeSelfAsEntryPoint(streamPartId: string): Promise<void> {
-        const ownPeerDescriptor = this.layer0.getPeerDescriptor()
-        const dataToStore = Any.pack(ownPeerDescriptor, PeerDescriptor)
-        try {
-            await this.layer0!.storeDataToDht(streamPartIdToDataKey(streamPartId), dataToStore)
-        } catch (err) {
-            logger.warn(`Failed to store self (${this.layer0!.getNodeId()}) as entrypoint for ${streamPartId}`)
-        }
-    }
-
     stop(): void {
         this.abortController.abort()
     }
+
 }
