@@ -3,7 +3,6 @@ import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { range } from 'lodash'
 import { wait, waitForCondition } from '@streamr/utils'
 import { Logger } from '@streamr/utils'
-import { LatencyType } from '@streamr/dht/dist/src/connection/Simulator/Simulator'
 
 const logger = new Logger(module)
 
@@ -27,7 +26,7 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         }
     })
     beforeEach(async () => {
-        const simulator = new Simulator(LatencyType.FIXED, 50)
+        const simulator = new Simulator()
         const entrypointCm = new SimulatorTransport(entrypointDescriptor, simulator)
         const cms: SimulatorTransport[] = range(numOfNodes).map((i) =>
             new SimulatorTransport(peerDescriptors[i], simulator)

@@ -4,7 +4,7 @@ import * as path from 'path'
 
 program
     .option('--numOfNodes <id>', 'Number of nodes in the network', '10')
-    .option('--streamIds <streamIds>', 'streamId to publish',  (value: string) => value.split(','), ['stream-0'])
+    .option('--streamIds <streamIds>', 'streamId to publish', (value: string) => value.split(','), ['stream-0'])
     .option('--entrypointIp <entrypointIp>', 'public IP of nodes to run', '0.0.0.0')
     .description('Run bootstrap node')
     .parse(process.argv)

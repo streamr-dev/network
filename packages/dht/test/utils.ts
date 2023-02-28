@@ -19,10 +19,7 @@ import { v4 } from 'uuid'
 import { getRandomRegion } from './data/pings'
 import { Empty } from '../src/proto/google/protobuf/empty'
 import { Any } from '../src/proto/google/protobuf/any'
-import { Logger } from '@streamr/utils'
-import { debugVars } from '../src/helpers/debugHelpers'
-
-const logger = new Logger(module)
+import { waitForCondition } from '@streamr/utils'
 
 export const generateId = (stringId: string): Uint8Array => {
     return PeerID.fromString(stringId).value
@@ -212,16 +209,30 @@ export const getMockPeers = (): PeerDescriptor[] => {
     ]
 }
 
-export const waitNodesReadyForTesting = async (nodes: DhtNode[]): Promise<void> => {
-    debugVars['waiting'] = true
+export const waitConnectionManagersReadyForTesting = async (connectionManagers: ConnectionManager[], limit: number): Promise<void> => {
+    connectionManagers.forEach((connectionManager) => garbageCollectConnections(connectionManager, limit))
+    await Promise.all(connectionManagers.map((connectionManager) => waitReadyForTesting(connectionManager, limit)))
+}
 
-    logger.info('doing waitReadyForTesting() for nodes')
+export const waitNodesReadyForTesting = async (nodes: DhtNode[], limit: number = 10000): Promise<void> => {
+    return waitConnectionManagersReadyForTesting(
+        nodes.map((node) => {
+            return (node.getTransport() as ConnectionManager)
+        }), limit)
+}
 
-    nodes.forEach((node) => node.garbageCollectConnections())
-        
-    await Promise.all(nodes.map((node) => node.waitReadyForTesting()))
+function garbageCollectConnections(connectionManager: ConnectionManager, limit: number): void {
+    const LAST_USED_LIMIT = 100
+    connectionManager.garbageCollectConnections(limit, LAST_USED_LIMIT)
+}
 
-    debugVars['waiting'] = false
-    logger.info('waiting waitReadyForTesting() over')
+async function waitReadyForTesting(connectionManager: ConnectionManager, limit: number): Promise<void> {
+    const LAST_USED_LIMIT = 100
+    connectionManager.garbageCollectConnections(limit, LAST_USED_LIMIT)
+    await waitForCondition(() => {
+        return (connectionManager.getNumberOfLocalLockedConnections() == 0 &&
+            connectionManager.getNumberOfRemoteLockedConnections() == 0 &&
+            connectionManager.getAllConnectionPeerDescriptors().length <= limit)
+    }, 30000)
 }
 

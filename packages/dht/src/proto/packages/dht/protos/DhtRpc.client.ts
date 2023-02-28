@@ -59,8 +59,6 @@ export interface IDhtRpcServiceClient {
      */
     forwardMessage(input: RouteMessageWrapper, options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck>;
     /**
-     * rpc findData (RouteMessageWrapper) returns (RouteMessageAck);
-     *
      * @generated from protobuf rpc: leaveNotice(dht.LeaveNotice) returns (google.protobuf.Empty);
      */
     leaveNotice(input: LeaveNotice, options?: RpcOptions): UnaryCall<LeaveNotice, Empty>;
@@ -118,8 +116,6 @@ export class DhtRpcServiceClient implements IDhtRpcServiceClient, ServiceInfo {
         return stackIntercept<RouteMessageWrapper, RouteMessageAck>("unary", this._transport, method, opt, input);
     }
     /**
-     * rpc findData (RouteMessageWrapper) returns (RouteMessageAck);
-     *
      * @generated from protobuf rpc: leaveNotice(dht.LeaveNotice) returns (google.protobuf.Empty);
      */
     leaveNotice(input: LeaveNotice, options?: RpcOptions): UnaryCall<LeaveNotice, Empty> {
@@ -167,10 +163,6 @@ export class RecursiveFindSessionServiceClient implements IRecursiveFindSessionS
         return stackIntercept<RecursiveFindReport, Empty>("unary", this._transport, method, opt, input);
     }
 }
-// service FindDataSessionService {
-//  rpc reportFindDataResult(FindDataResult) returns (google.protobuf.Empty);
-// }
-
 /**
  * @generated from protobuf service dht.WebSocketConnectorService
  */
@@ -180,10 +172,6 @@ export interface IWebSocketConnectorServiceClient {
      */
     requestConnection(input: WebSocketConnectionRequest, options?: RpcOptions): UnaryCall<WebSocketConnectionRequest, WebSocketConnectionResponse>;
 }
-// service FindDataSessionService {
-//  rpc reportFindDataResult(FindDataResult) returns (google.protobuf.Empty);
-// }
-
 /**
  * @generated from protobuf service dht.WebSocketConnectorService
  */

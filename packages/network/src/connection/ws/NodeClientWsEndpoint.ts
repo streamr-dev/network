@@ -14,12 +14,12 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
                     this.handshakeInit(ws, serverPeerInfo, reject)
                 })
 
-                ws.on('message', (message: string | Buffer | Buffer[]) => {
+                ws.on('message', (message: WebSocket.RawData) => {
                     this.handshakeListener(ws, serverPeerInfo, serverUrl, message, resolve)
                 })
 
-                ws.on('close', (code: number, reason: string): void => {
-                    this.onHandshakeClosed(serverUrl, code, reason, reject)
+                ws.on('close', (code: number, reason: Buffer): void => {
+                    this.onHandshakeClosed(serverUrl, code, reason.toString(), reject)
                 })
 
                 ws.on('error', (err) => {
@@ -64,7 +64,7 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
     }
 
     // eslint-disable-next-line class-methods-use-this
-    protected doHandshakeParse(message: string | Buffer | Buffer[]): HandshakeValues {
+    protected doHandshakeParse(message: WebSocket.RawData): HandshakeValues {
         const { uuid, peerId } = JSON.parse(message.toString())
         return {
             uuid,

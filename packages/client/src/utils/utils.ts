@@ -20,7 +20,7 @@ import { randomString, toEthereumAddress } from '@streamr/utils'
  */
 
 // TODO convert to a class?
-type  CounterIdType = ((prefix: string, separator?: string) => string) & { clear: (...args: [string] | []) => void }
+type CounterIdType = ((prefix: string, separator?: string) => string) & { clear: (...args: [string] | []) => void }
 export const CounterId = (rootPrefix?: string, { maxPrefixes = 256 }: { maxPrefixes?: number } = {}): CounterIdType => {
     let counts: Record<string, number> = {} // possible we could switch this to WeakMap and pass functions or classes.
     let didWarn = false

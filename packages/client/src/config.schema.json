@@ -306,10 +306,18 @@
             },
             "default": {}
         },
-        "decryption": {
+        "encryption": {
             "type": "object",
             "additionalProperties": false,
             "properties": {
+                "litProtocolEnabled": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "litProtocolLogging": {
+                    "type": "boolean",
+                    "default": false
+                },
                 "keyRequestTimeout": {
                     "type": "number",
                     "default": 30000

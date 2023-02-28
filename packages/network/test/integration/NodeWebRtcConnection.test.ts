@@ -88,7 +88,7 @@ describe('Connection', () => {
         }
     })
 
-    afterEach(()  => {
+    afterEach(() => {
         connectionOne.close()
         connectionTwo.close()
     })

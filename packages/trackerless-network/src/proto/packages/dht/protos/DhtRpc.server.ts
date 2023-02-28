@@ -48,8 +48,6 @@ export interface IDhtRpcService<T = ServerCallContext> {
      */
     forwardMessage(request: RouteMessageWrapper, context: T): Promise<RouteMessageAck>;
     /**
-     * rpc findData (RouteMessageWrapper) returns (RouteMessageAck);
-     *
      * @generated from protobuf rpc: leaveNotice(dht.LeaveNotice) returns (google.protobuf.Empty);
      */
     leaveNotice(request: LeaveNotice, context: T): Promise<Empty>;
@@ -67,10 +65,6 @@ export interface IRecursiveFindSessionService<T = ServerCallContext> {
      */
     reportRecursiveFindResult(request: RecursiveFindReport, context: T): Promise<Empty>;
 }
-// service FindDataSessionService {
-//  rpc reportFindDataResult(FindDataResult) returns (google.protobuf.Empty);
-// }
-
 /**
  * @generated from protobuf service dht.WebSocketConnectorService
  */

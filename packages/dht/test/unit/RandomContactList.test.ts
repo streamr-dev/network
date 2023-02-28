@@ -31,7 +31,7 @@ class MockRpcClient implements IDhtRpcServiceClient, ServiceInfo {
 
     // eslint-disable-next-line class-methods-use-this
     getClosestPeers(_input: ClosestPeersRequest, _options?: RpcOptions): UnaryCall<ClosestPeersRequest, ClosestPeersResponse> {
-        return {} as  UnaryCall<ClosestPeersRequest, ClosestPeersResponse>
+        return {} as UnaryCall<ClosestPeersRequest, ClosestPeersResponse>
     }
 
     // eslint-disable-next-line class-methods-use-this

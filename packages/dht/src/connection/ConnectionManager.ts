@@ -409,7 +409,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         logger.trace(
             'connectedPeerId: '
             + peerIdFromPeerDescriptor(peerDescriptor).toString()
-            + ', ' +  peerIdFromPeerDescriptor(this.ownPeerDescriptor!).toString()
+            + ', ' + peerIdFromPeerDescriptor(this.ownPeerDescriptor!).toString()
             + ', ' + this.connections.size
         )
         this.onConnectionCountChange()
