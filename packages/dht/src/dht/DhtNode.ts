@@ -10,17 +10,20 @@ import {
     ClosestPeersRequest,
     ClosestPeersResponse,
     ConnectivityResponse,
+    DataEntry,
+    FindMode,
+    LeaveNotice,
     Message,
+    MessageType,
     NodeType,
     PeerDescriptor,
     PingRequest,
     PingResponse,
+    RecursiveFindRequest,
     RouteMessageAck,
     RouteMessageWrapper,
-    LeaveNotice,
-    RecursiveFindRequest,
-    FindMode,
-    MessageType
+    StoreDataRequest,
+    StoreDataResponse
 } from '../proto/packages/dht/protos/DhtRpc'
 import * as Err from '../helpers/errors'
 import { ITransport, TransportEvents } from '../transport/ITransport'
@@ -32,7 +35,7 @@ import {
     raceEvents3,
     runAndRaceEvents3,
     RunAndRaceEventsReturnType,
-    waitForEvent3
+    runAndWaitForEvents3
 } from '@streamr/utils'
 import { v4 } from 'uuid'
 import { IDhtRpcService } from '../proto/packages/dht/protos/DhtRpc.server'
@@ -45,6 +48,8 @@ import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { RemoteRecursiveFindSession } from './RemoteRecursiveFindSession'
 import { RecursiveFindSession, RecursiveFindSessionEvents } from './RecursiveFindSession'
 import { SetDuplicateDetector } from './SetDuplicateDetector'
+import { Any } from '../proto/google/protobuf/any'
+import { Timestamp } from '../proto/google/protobuf/timestamp'
 import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 
 export interface DhtNodeEvents {
@@ -79,6 +84,10 @@ export class DhtNodeConfig {
     routeMessageTimeout = 2000
     dhtJoinTimeout = 60000
     getClosestContactsLimit = 5
+    maxConnections = 80
+    storeHighestTtl = 10000
+    storeMaxTtl = 10000
+    storeNumberOfCopies = 5
     metricsContext = new MetricsContext()
 
     constructor(conf: Partial<DhtNodeConfig>) {
@@ -102,6 +111,8 @@ interface ForwardingTableEntry {
     peerDescriptors: PeerDescriptor[]
 }
 
+export interface RecursiveFindResult { closestNodes: Array<PeerDescriptor>, dataEntries?: Array<DataEntry> }
+
 export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpcService {
     private readonly config: DhtNodeConfig
     private readonly routerDuplicateDetector: SetDuplicateDetector = new SetDuplicateDetector(100000, 100)
@@ -115,10 +126,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
     //private noProgressCounter = 0
     private joinTimeoutRef?: NodeJS.Timeout
-    private ongoingJoinOperation = false
 
     private ongoingRoutingSessions: Map<string, RoutingSession> = new Map()
     private ongoingDiscoverySessions: Map<string, DiscoverySession> = new Map()
+    private ongoingRecursiveFindSessions: Map<string, RecursiveFindSession> = new Map()
 
     private bucket?: KBucket<DhtPeer>
     private connections: Map<PeerIDKey, DhtPeer> = new Map()
@@ -142,6 +153,12 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
     public contactAddCounter = 0
     public contactOnAddedCounter = 0
 
+    // A map into which each node can store one value per data key
+    // The first key is the key of the data, the second key is the 
+    // PeerID of the storer of the data
+
+    private dataStore: Map<PeerIDKey, Map<PeerIDKey, DataEntry>> = new Map()
+
     constructor(conf: Partial<DhtNodeConfig>) {
         super()
         this.config = new DhtNodeConfig(conf)
@@ -156,7 +173,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         if (this.started || this.stopped) {
             return
         }
-        logger.info(`Starting new Streamr Network DHT Node with serviceId ${this.config.serviceId}`)
+        logger.trace(`Starting new Streamr Network DHT Node with serviceId ${this.config.serviceId}`)
         this.started = true
 
         // If transportLayer is given, do not create a ConnectionManager
@@ -173,7 +190,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
                 entryPoints: this.config.entryPoints,
                 stunUrls: this.config.stunUrls,
                 metricsContext: this.config.metricsContext,
-                nodeName: this.getNodeName()
+                nodeName: this.getNodeName(),
+                maxConnections: this.config.maxConnections
             }
             // If own PeerDescriptor is given in config, create a ConnectionManager with ws server
             if (this.config.peerDescriptor && this.config.peerDescriptor.websocket) {
@@ -449,7 +467,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             requestId: v4(),
             destinationPeer: targetPeerDescriptor,
             sourcePeer: this.ownPeerDescriptor!,
-            reachableThrough: this.ongoingJoinOperation ? this.config.entryPoints || [] : [],
+            reachableThrough: this.isJoinOngoing() ? this.config.entryPoints || [] : [],
             routingPath: []
         }
 
@@ -483,12 +501,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         }
     }
 
-    public async joinDht(entryPointDescriptor: PeerDescriptor): Promise<void> {
-        if (!this.started || this.stopped || this.ongoingJoinOperation) {
+    public async joinDht(entryPointDescriptor: PeerDescriptor, doRandomJoin = true): Promise<void> {
+        if (!this.started || this.stopped) {
             return
         }
-
-        this.ongoingJoinOperation = true
 
         logger.info(
             `Joining ${this.config.serviceId === 'layer0' ? 'The Streamr Network' : `Control Layer for ${this.config.serviceId}`}`
@@ -508,10 +524,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
         if (this.connectionManager) {
             this.connectionManager.lockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
-        }
-
-        if (!this.started || this.stopped) {
-            return
         }
 
         this.addNewContact(entryPointDescriptor)
@@ -552,9 +564,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         this.ongoingDiscoverySessions.set(randomSession.sessionId, randomSession)
 
         try {
-            await session.findClosestNodes(this.config.dhtJoinTimeout * 2)
+            await session.findClosestNodes(this.config.dhtJoinTimeout)
             this.neighborList?.setAllAsUncontacted()
-            await randomSession.findClosestNodes(this.config.dhtJoinTimeout * 2)
+            if (doRandomJoin) {
+                await randomSession.findClosestNodes(this.config.dhtJoinTimeout)
+            }
             if (!this.stopped) {
                 if (this.bucket!.count() === 0) {
                     this.rejoinDht(entryPointDescriptor).catch(() => { })
@@ -564,9 +578,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
                 }*/
             }
         } catch (_e) {
-            throw (new Err.DhtJoinTimeout('join timed out'))
+            throw new Err.DhtJoinTimeout('join timed out')
         } finally {
-            this.ongoingJoinOperation = false
             this.ongoingDiscoverySessions.delete(session.sessionId)
             this.ongoingDiscoverySessions.delete(randomSession.sessionId)
 
@@ -696,6 +709,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         this.findRecursively = this.findRecursively.bind(this)
         this.forwardMessage = this.forwardMessage.bind(this)
         this.leaveNotice = this.leaveNotice.bind(this)
+        this.storeData = this.storeData.bind(this)
 
         this.rpcCommunicator!.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', this.getClosestPeers)
         this.rpcCommunicator!.registerRpcMethod(PingRequest, PingResponse, 'ping', this.ping)
@@ -703,6 +717,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         this.rpcCommunicator!.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'findRecursively', this.findRecursively)
         this.rpcCommunicator!.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'forwardMessage', this.forwardMessage)
         this.rpcCommunicator!.registerRpcNotification(LeaveNotice, 'leaveNotice', this.leaveNotice)
+        this.rpcCommunicator!.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData', this.storeData)
     }
 
     public getRpcCommunicator(): RoutingRpcCommunicator {
@@ -781,7 +796,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
     }
 
     public isJoinOngoing(): boolean {
-        return this.ongoingJoinOperation
+        return this.ongoingDiscoverySessions.size > 0
     }
 
     public async stop(): Promise<void> {
@@ -802,12 +817,15 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             clearTimeout(this.rejoinTimeoutRef)
             this.rejoinTimeoutRef = undefined
         }
-        this.ongoingJoinOperation = false
         this.ongoingRoutingSessions.forEach((session, _id) => {
             session.stop()
         })
 
         this.ongoingDiscoverySessions.forEach((session, _id) => {
+            session.stop()
+        })
+
+        this.ongoingRecursiveFindSessions.forEach((session, _id) => {
             session.stop()
         })
 
@@ -903,17 +921,17 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             logger.error(e)
             throw e
         }
-        raceEvents3<RoutingSessionEvents>(
-            session, ['routingSucceeded', 'routingFailed', 'stopped'], 10000).then(() => {
-            if (this.ongoingRoutingSessions.has(session.sessionId)) {
-                this.ongoingRoutingSessions.delete(session.sessionId)
-            }
-            return
-        }).catch(() => {
-            if (this.ongoingRoutingSessions.has(session.sessionId)) {
-                this.ongoingRoutingSessions.delete(session.sessionId)
-            }
-        })
+        raceEvents3<RoutingSessionEvents>(session, ['routingSucceeded', 'routingFailed', 'stopped'], 10000)
+            .then(() => {
+                if (this.ongoingRoutingSessions.has(session.sessionId)) {
+                    this.ongoingRoutingSessions.delete(session.sessionId)
+                }
+                return
+            }).catch(() => {
+                if (this.ongoingRoutingSessions.has(session.sessionId)) {
+                    this.ongoingRoutingSessions.delete(session.sessionId)
+                }
+            })
 
         if (this.stopped) {
             return this.createRouteMessageAck(routedMessage, 'DhtNode Stopped')
@@ -927,11 +945,31 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         }
     }
 
-    public async startRcursiveFindNode(idToFind: Uint8Array): Promise<PeerDescriptor[]> {
+    public async startRecursiveFind(idToFind: Uint8Array, findMode: FindMode = FindMode.NODE): Promise<RecursiveFindResult> {
         const sessionId = v4()
-        const recursiveFindSession = new RecursiveFindSession(sessionId, this, idToFind)
+        const recursiveFindSession = new RecursiveFindSession({
+            serviceId: sessionId,
+            rpcTransport: this,
+            kademliaIdToFind: idToFind,
+            ownPeerID: this.ownPeerId!,
+            routingPaths: this.connections.size > 1 ? 2 : 1
+        })
+        if (this.getBucketSize() === 0) {
+            const data = this.dataStore.get(PeerID.fromValue(idToFind).toKey())
+            recursiveFindSession.doReportRecursiveFindResult(
+                [this.ownPeerDescriptor!],
+                [this.ownPeerDescriptor!],
+                data ? Array.from(data.values()) : [],
+                true
+            )
+            return recursiveFindSession.getResults()
+        }
+        this.ongoingRecursiveFindSessions.set(sessionId, recursiveFindSession)
         const targetDescriptor: PeerDescriptor = { kademliaId: idToFind, type: NodeType.VIRTUAL }
-        const request: RecursiveFindRequest = { recursiveFindSessionId: sessionId, findMode: FindMode.NODE }
+        const request: RecursiveFindRequest = {
+            recursiveFindSessionId: sessionId,
+            findMode: findMode
+        }
         const msg: Message = {
             messageType: MessageType.RECURSIVE_FIND_REQUEST,
             messageId: v4(),
@@ -950,38 +988,72 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             reachableThrough: [],
             routingPath: []
         }
-        const promise = waitForEvent3<RecursiveFindSessionEvents>(recursiveFindSession, 'findCompleted', 60000)
-        this.doFindRecursevily(params)
-        await promise
+        try {
+            await runAndWaitForEvents3<RecursiveFindSessionEvents>(
+                [() => this.doFindRecursevily(params)],
+                [[recursiveFindSession, 'findCompleted']],
+                30000
+            )
+        } catch (err) {
+            logger.trace(`doFindRecursively failed with error ${err}`)
+        }
 
-        const results = recursiveFindSession.getResults()
-        logger.trace("recursive find results: " + JSON.stringify(results))
-        return results
+        if (findMode === FindMode.DATA) {
+            const data = this.doGetData(PeerID.fromValue(idToFind))
+            if (data) {
+                this.reportRecursiveFindResult([], params.sourcePeer!, sessionId,
+                    [], data, true)
+            }
+        }
+        return recursiveFindSession.getResults()
     }
 
-    private reportRecursiveFindResult(targetPeerDescriptor: PeerDescriptor, serviceId: string,
-        closestNodes: PeerDescriptor[], noCloserNodesFound: boolean = false) {
-        const session = new RemoteRecursiveFindSession(this.ownPeerDescriptor!, targetPeerDescriptor, serviceId, this)
-        session.reportRecursiveFindResult(closestNodes, noCloserNodesFound)
+    private reportRecursiveFindResult(routingPath: PeerDescriptor[], targetPeerDescriptor: PeerDescriptor, serviceId: string,
+        closestNodes: PeerDescriptor[], data: Map<PeerIDKey, DataEntry> | undefined,
+        noCloserNodesFound: boolean = false): void {
+
+        const dataEntries: Array<DataEntry> = []
+
+        if (data) {
+            data.forEach((entry) => {
+                dataEntries.push(DataEntry.create(entry))
+            })
+            logger.trace('dataEntries exist')
+        }
+
+        if (this.ownPeerId!.equals(PeerID.fromValue(targetPeerDescriptor!.kademliaId))) {
+            if (this.ongoingRecursiveFindSessions.has(serviceId)) {
+                this.ongoingRecursiveFindSessions.get(serviceId)!
+                    .doReportRecursiveFindResult(routingPath, closestNodes, dataEntries, noCloserNodesFound)
+            }
+        } else {
+            const session = new RemoteRecursiveFindSession(this.ownPeerDescriptor!, targetPeerDescriptor, serviceId, this)
+            session.reportRecursiveFindResult(routingPath, closestNodes, dataEntries, noCloserNodesFound)
+        }
     }
 
     private async doFindRecursevily(routedMessage: RouteMessageWrapper): Promise<RouteMessageAck> {
-
         routedMessage.routingPath.push(this.ownPeerDescriptor!)
+        logger.debug('findRecursively recursiveFindPath ' + routedMessage.routingPath.map((descriptor) => descriptor.nodeName))
 
-        logger.trace('findRecursively recursiveFindPath ' + routedMessage.routingPath.map((descriptor) => descriptor.nodeName))
-
+        const idToFind = PeerID.fromValue(routedMessage.destinationPeer!.kademliaId)
         let recursiveFindRequest: RecursiveFindRequest | undefined
         const msg = routedMessage.message
         if (msg?.body.oneofKind === 'recursiveFindRequest') {
             recursiveFindRequest = msg.body.recursiveFindRequest
         }
-        if (this.ownPeerId!.equals(peerIdFromPeerDescriptor(routedMessage.destinationPeer!))) {
-
+        const closestPeersToDestination = this.getClosestPeerDescriptors(routedMessage.destinationPeer!.kademliaId, 5)
+        if (recursiveFindRequest!.findMode == FindMode.DATA) {
+            const data = this.doGetData(idToFind)
+            if (data) {
+                this.reportRecursiveFindResult(routedMessage.routingPath, routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
+                    closestPeersToDestination, data, true)
+                return this.createRouteMessageAck(routedMessage)
+            }
+        } else if (this.ownPeerId!.equals(idToFind)) {
             // Exact match, they were trying to find our kademliaID
-
-            this.reportRecursiveFindResult(routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
-                this.getClosestPeerDescriptors(routedMessage.destinationPeer!.kademliaId, 5), true)
+            this.reportRecursiveFindResult(routedMessage.routingPath, routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
+                closestPeersToDestination, undefined, true)
             return this.createRouteMessageAck(routedMessage)
         }
 
@@ -989,33 +1061,26 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             this.ownPeerDescriptor!,
             routedMessage,
             this.connections,
-            1,
+            this.ownPeerId!.equals(peerIdFromPeerDescriptor(routedMessage.sourcePeer!)) ? 2 : 1,
             1500,
             RoutingMode.RECURSIVE_FIND,
             undefined,
             routedMessage.routingPath.map((descriptor) => peerIdFromPeerDescriptor(descriptor))
         )
-
         this.ongoingRoutingSessions.set(session.sessionId, session)
-
-        const logFailure = () => {
-            logger.trace(`findRecursively Node ${this.getNodeName()} giving up routing`)
-        }
-        session.on('routingFailed', logFailure)
+        session.on('routingFailed', () => {
+            logger.debug(`findRecursively Node ${this.getNodeName()} giving up routing`)
+        })
 
         let result: RunAndRaceEventsReturnType<RoutingSessionEvents>
-
         try {
             result = await runAndRaceEvents3<RoutingSessionEvents>([() => {
                 session.start()
             }], session, ['noCandidatesFound', 'candidatesFound'], 1500)
         } catch (e) {
-            logger.error(e)
+            logger.debug(e)
         }
-
-        if (this.ongoingRoutingSessions.has(session.sessionId)) {
-            this.ongoingRoutingSessions.delete(session.sessionId)
-        }
+        this.ongoingRoutingSessions.delete(session.sessionId)
 
         if (this.stopped) {
             return this.createRouteMessageAck(routedMessage, 'DhtNode Stopped')
@@ -1024,33 +1089,40 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
                 throw new Error(`Could not perform initial routing`)
             }
             logger.trace(`findRecursively Node ${this.getNodeName()} found no candidates`)
-            this.reportRecursiveFindResult(routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
-                this.getClosestPeerDescriptors(routedMessage.destinationPeer!.kademliaId, 5), true)
+            this.reportRecursiveFindResult(routedMessage.routingPath, routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
+                closestPeersToDestination, undefined, true)
             return this.createRouteMessageAck(routedMessage)
         } else {
-            logger.trace(`findRecursively Node ${this.getNodeName()} found candidates ` +
-                JSON.stringify((session.getClosestContacts(5).map((desc) => desc.nodeName))))
-            this.reportRecursiveFindResult(routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
-                session.getClosestContacts(5))
+            const closestContacts = session.getClosestContacts(5)
+            logger.trace(
+                `findRecursively Node ${this.getNodeName()} found candidates ${JSON.stringify((closestContacts.map((desc) => desc.nodeName)))}`
+            )
+            const noCloserContactsFound = (
+                closestContacts.length > 0
+                && routedMessage.previousPeer
+                && !this.isPeerCloserToIdThanSelf(closestContacts[0], idToFind)
+            )
+            this.reportRecursiveFindResult(routedMessage.routingPath, routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
+                closestContacts, undefined, noCloserContactsFound)
             return this.createRouteMessageAck(routedMessage)
         }
+    }
+
+    private isPeerCloserToIdThanSelf(peer1: PeerDescriptor, compareToId: PeerID): boolean {
+        const distance1 = this.bucket!.distance(peer1.kademliaId, compareToId.value)
+        const distance2 = this.bucket!.distance(this.ownPeerDescriptor!.kademliaId, compareToId.value)
+        return distance1 < distance2
     }
 
     public async findRecursively(routedMessage: RouteMessageWrapper): Promise<RouteMessageAck> {
         if (!this.started || this.stopped) {
             return this.createRouteMessageAck(routedMessage, 'findRecursively() service is not running')
         } else if (this.routerDuplicateDetector.isMostLikelyDuplicate(routedMessage.requestId, routedMessage.sourcePeer!.nodeName!)) {
-            logger.trace(`findRecursively Node ${this.getNodeName()} received a DUPLICATE RouteMessageWrapper from 
-            ${routedMessage.previousPeer?.nodeName}`)
-
             return this.createRouteMessageAck(routedMessage, 'message given to findRecursively() service is likely a duplicate')
         }
-
         logger.trace(`Node ${this.getNodeName()} received findRecursively call from ${routedMessage.previousPeer!.nodeName!}`)
-
         this.addNewContact(routedMessage.sourcePeer!, true)
         this.routerDuplicateDetector.add(routedMessage.requestId, routedMessage.sourcePeer!.nodeName!)
-
         return this.doFindRecursevily(routedMessage)
     }
 
@@ -1059,20 +1131,15 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             return this.createRouteMessageAck(routedMessage, 'routeMessage() service is not running')
         } else if (this.routerDuplicateDetector.isMostLikelyDuplicate(routedMessage.requestId, routedMessage.sourcePeer!.nodeName!)) {
             logger.trace(`Peer ${this.ownPeerId?.value} routing message ${routedMessage.requestId} 
-                from ${routedMessage.sourcePeer?.kademliaId} to ${routedMessage.destinationPeer?.kademliaId} is likely a duplicate`)
+                from ${routedMessage.sourcePeer!.kademliaId} to ${routedMessage.destinationPeer!.kademliaId} is likely a duplicate`)
             return this.createRouteMessageAck(routedMessage, 'message given to routeMessage() service is likely a duplicate')
         }
 
         logger.trace(`Processing received routeMessage ${routedMessage.requestId}`)
-
         this.addNewContact(routedMessage.sourcePeer!, true)
-
         this.routerDuplicateDetector.add(routedMessage.requestId, routedMessage.sourcePeer!.nodeName!)
-
         if (this.ownPeerId!.equals(peerIdFromPeerDescriptor(routedMessage.destinationPeer!))) {
-
             logger.trace(`${this.config.nodeName} routing message targeted to self ${routedMessage.requestId}`)
-
             if (routedMessage.reachableThrough.length > 0) {
                 const sourceKey = keyFromPeerDescriptor(routedMessage.sourcePeer!)
                 if (this.forwardingTable.has(sourceKey)) {
@@ -1140,4 +1207,79 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             return this.doRouteMessage(routedMessage, true)
         }
     }
+
+    // RPC service implementation
+    public async storeData(request: StoreDataRequest, context: ServerCallContext): Promise<StoreDataResponse> {
+        let ttl = request.ttl
+        if (ttl > this.config.storeMaxTtl) {
+            ttl = this.config.storeMaxTtl
+        }
+        this.doStoreData(
+            (context as DhtCallContext).incomingSourceDescriptor!,
+            PeerID.fromValue(request.kademliaId),
+            request.data!,
+            ttl
+        )
+        logger.trace(this.ownPeerDescriptor!.nodeName + ' storeData()')
+        return StoreDataResponse.create()
+    }
+
+    // RPC service implementation
+    public doStoreData(storer: PeerDescriptor, dataKey: PeerID, data: Any, ttl: number): void {
+        const publisherId = PeerID.fromValue(storer.kademliaId)
+        if (!this.dataStore.has(dataKey.toKey())) {
+            this.dataStore.set(dataKey.toKey(), new Map())
+        }
+
+        this.dataStore.get(dataKey.toKey())!.set(publisherId.toKey(), { storer, data, storedAt: Timestamp.now(), ttl })
+    }
+
+    public doGetData(key: PeerID): Map<PeerIDKey, DataEntry> | undefined {
+        if (this.dataStore.has(key.toKey())) {
+            return this.dataStore.get(key.toKey())!
+        } else {
+            return undefined
+        }
+    }
+
+    // Store API for higher layers and tests
+    public async storeDataToDht(key: Uint8Array, data: Any): Promise<PeerDescriptor[]> {
+        logger.info(`Storing data to DHT ${this.config.serviceId} with key ${PeerID.fromValue(key)}`)
+        const result = await this.startRecursiveFind(key)
+        const closestNodes = result.closestNodes
+        const successfulNodes: PeerDescriptor[] = []
+        const ttl = this.config.storeHighestTtl // ToDo: make TTL decrease according to some nice curve
+        for (let i = 0; i < closestNodes.length && successfulNodes.length < 5; i++) {
+            if (this.ownPeerId!.equals(PeerID.fromValue(closestNodes[i].kademliaId))) {
+                this.doStoreData(closestNodes[i], PeerID.fromValue(key), data, ttl)
+                successfulNodes.push(closestNodes[i])
+                continue
+            }
+            const dhtPeer = new DhtPeer(
+                this.ownPeerDescriptor!,
+                closestNodes[i],
+                toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
+                this.config.serviceId,
+                this
+            )
+            try {
+                const response = await dhtPeer.storeData({ kademliaId: key, data, ttl })
+                if (response.error) {
+                    logger.debug('dhtPeer.storeData() returned error: ' + response.error)
+                    continue
+                }
+            } catch (e) {
+                logger.debug('dhtPeer.storeData() threw an exception ' + e)
+                continue
+            }
+            successfulNodes.push(closestNodes[i])
+            logger.trace('dhtPeer.storeData() returned success')
+        }
+        return successfulNodes
+    }
+
+    public getDataFromDht(idToFind: Uint8Array): Promise<RecursiveFindResult> {
+        return this.startRecursiveFind(idToFind, FindMode.DATA)
+    }
+
 }

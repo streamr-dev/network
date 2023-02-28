@@ -1,5 +1,6 @@
 import { IDhtRpcServiceClient } from '../proto/packages/dht/protos/DhtRpc.client'
-import { ClosestPeersRequest, LeaveNotice, PeerDescriptor, PingRequest, RouteMessageWrapper } from '../proto/packages/dht/protos/DhtRpc'
+import { ClosestPeersRequest, LeaveNotice, PeerDescriptor, PingRequest, 
+    RouteMessageWrapper, StoreDataRequest, StoreDataResponse } from '../proto/packages/dht/protos/DhtRpc'
 import { v4 } from 'uuid'
 import { PeerID } from '../helpers/PeerID'
 import { DhtRpcOptions } from '../rpc-protocol/DhtRpcOptions'
@@ -167,15 +168,27 @@ export class DhtPeer implements KBucketContact {
                 return false
             }
         } catch (err) {
-            const fromNode = params.previousPeer ?
-                keyFromPeerDescriptor(params.previousPeer) : keyFromPeerDescriptor(params.sourcePeer!)
-
-            logger.debug(
-                `Failed to send routeMessage from ${fromNode} to ${this.peerId.toKey()} with: ${err}`
-            )
+            const fromNode = params.previousPeer ? keyFromPeerDescriptor(params.previousPeer) : keyFromPeerDescriptor(params.sourcePeer!)
+            logger.debug(`Failed to send routeMessage from ${fromNode} to ${this.peerId.toKey()} with: ${err}`)
             return false
         }
         return true
+    }
+
+    async storeData(request: StoreDataRequest): Promise<StoreDataResponse> {
+        
+        const options: DhtRpcOptions = {
+            sourceDescriptor: this.ownPeerDescriptor,
+            targetDescriptor: this.peerDescriptor,
+            timeout: 10000
+        }
+        try {
+            const result = await this.dhtClient.storeData(request, options)
+            return result
+        } catch (err) {
+            throw `Could not store data to ${keyFromPeerDescriptor(this.peerDescriptor)} from ${keyFromPeerDescriptor(this.ownPeerDescriptor)} ${err}`
+        }
+
     }
 
     async forwardMessage(params: RouteMessageWrapper): Promise<boolean> {

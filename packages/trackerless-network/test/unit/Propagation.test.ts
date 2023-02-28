@@ -12,7 +12,7 @@ function makeMsg(streamId: string, partition: number, ts: number, msgNo: number)
     const ref: MessageRef = {
         streamId,
         streamPartition: partition,
-        timestamp: BigInt(ts),
+        timestamp: ts,
         sequenceNumber: msgNo,
         messageChainId: 'msgChain',
         publisherId: PUBLISHER_ID

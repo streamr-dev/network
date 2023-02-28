@@ -62,7 +62,6 @@ export class DiscoverySession {
         if (this.stopped) {
             return
         }
-
         contacts.forEach((contact) => {
             const dhtPeer = new DhtPeer(
                 this.ownPeerDescriptor,
@@ -70,7 +69,6 @@ export class DiscoverySession {
                 toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
                 this.serviceId
             )
-
             if (!dhtPeer.peerId.equals(this.ownPeerId!)) {
                 if (this.newContactListener) {
                     this.newContactListener(dhtPeer)
@@ -97,17 +95,13 @@ export class DiscoverySession {
     private onClosestPeersRequestSucceeded(peerId: PeerID, contacts: PeerDescriptor[]) {
         if (this.ongoingClosestPeersRequests.has(peerId.toKey())) {
             this.ongoingClosestPeersRequests.delete(peerId.toKey())
-
             const oldClosestContact = this.neighborList!.getClosestContactId()
-
             this.addNewContacts(contacts)
-
             if (this.neighborList!.getClosestContactId().equals(oldClosestContact)) {
                 this.noProgressCounter++
             } else {
                 this.noProgressCounter = 0
             }
-
         }
     }
 
@@ -119,39 +113,35 @@ export class DiscoverySession {
     }
 
     private findMoreContacts(): void {
-        if (!this.stopped) {
-
-            if (this.neighborList!.getUncontactedContacts(this.parallelism).length < 1
-                || this.noProgressCounter >= this.noProgressLimit) {
-                this.emitter.emit('discoveryCompleted')
-                this.stopped = true
-                return
-            }
-
-            const uncontacted = this.neighborList!.getUncontactedContacts(this.parallelism)
-            while (this.ongoingClosestPeersRequests.size < this.parallelism && uncontacted.length > 0) {
-                const nextPeer = uncontacted.shift()
-                this.ongoingClosestPeersRequests.add(nextPeer!.peerId.toKey())
-                // eslint-disable-next-line promise/catch-or-return
-                this.getClosestPeersFromContact(nextPeer!)
-                    .then((contacts) => this.onClosestPeersRequestSucceeded(nextPeer!.peerId, contacts))
-                    .catch((err) => {
-                        this.onClosestPeersRequestFailed(nextPeer!, err)
-                    })
-                    .finally(() => {
-                        this.outgoingClosestPeersRequestsCounter--
-
-                        this.findMoreContacts()
-
-                    })
-            }
+        if (this.stopped) {
+            return
+        }
+        if (this.neighborList!.getUncontactedContacts(this.parallelism).length < 1
+            || this.noProgressCounter >= this.noProgressLimit) {
+            this.emitter.emit('discoveryCompleted')
+            this.stopped = true
+            return
+        }
+        const uncontacted = this.neighborList!.getUncontactedContacts(this.parallelism)
+        while (this.ongoingClosestPeersRequests.size < this.parallelism && uncontacted.length > 0) {
+            const nextPeer = uncontacted.shift()
+            this.ongoingClosestPeersRequests.add(nextPeer!.peerId.toKey())
+            // eslint-disable-next-line promise/catch-or-return
+            this.getClosestPeersFromContact(nextPeer!)
+                .then((contacts) => this.onClosestPeersRequestSucceeded(nextPeer!.peerId, contacts))
+                .catch((err) => this.onClosestPeersRequestFailed(nextPeer!, err))
+                .finally(() => {
+                    this.outgoingClosestPeersRequestsCounter--
+                    this.findMoreContacts()
+                })
         }
     }
 
     public async findClosestNodes(timeout: number): Promise<SortedContactList<DhtPeer>> {
         if (this.neighborList!.getUncontactedContacts(this.parallelism).length < 1) {
-            logger.trace('IL ' + this.nodeName + 'getUncontactedContacts length was 0 in beginning of discovery, this.neighborList.size: ' +
-                this.neighborList.getSize())
+            logger.trace('getUncontactedContacts length was 0 in beginning of discovery, this.neighborList.size: '
+                + this.neighborList.getSize())
+            return this.neighborList
         }
         await runAndWaitForEvents3<DiscoverySessionEvents>([() => { this.findMoreContacts() }], [
             [this.emitter, 'discoveryCompleted']], timeout)

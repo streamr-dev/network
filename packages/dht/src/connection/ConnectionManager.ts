@@ -35,7 +35,7 @@ import {
     peerIdFromPeerDescriptor
 } from '../helpers/peerIdFromPeerDescriptor'
 
-export interface ConnectionManagerConfig {
+export class ConnectionManagerConfig {
     transportLayer?: ITransport
     webSocketHost?: string
     webSocketPort?: number
@@ -43,10 +43,23 @@ export interface ConnectionManagerConfig {
     stunUrls?: string[]
     metricsContext?: MetricsContext
     nodeName?: string
+    maxConnections: number = 80
+
     // the following fields are used in simulation only
     simulator?: Simulator
     ownPeerDescriptor?: PeerDescriptor
     serviceIdPrefix?: string
+
+    constructor(conf: Partial<ConnectionManagerConfig>) {
+        // assign given non-undefined config vars over defaults
+        let k: keyof typeof conf
+        for (k in conf) {
+            if (conf[k] === undefined) {
+                delete conf[k]
+            }
+        }
+        Object.assign(this, conf)
+    }
 }
 
 export enum NatType {
@@ -74,8 +87,8 @@ interface ConnectionManagerEvents {
 }
 
 export interface ConnectionLocker {
-    lockConnection(targetDescriptor: PeerDescriptor, serviceId: string): void
-    unlockConnection(targetDescriptor: PeerDescriptor, serviceId: string): void
+    lockConnection(targetDescriptor: PeerDescriptor, serviceId: ServiceId): void
+    unlockConnection(targetDescriptor: PeerDescriptor, serviceId: ServiceId): void
     weakLockConnection(targetDescriptor: PeerDescriptor): void
     weakUnlockConnection(targetDescriptor: PeerDescriptor): void
 }
@@ -97,7 +110,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     private webrtcConnector?: WebRtcConnector
     private simulatorConnector?: SimulatorConnector
 
-    private serviceId: string
+    private serviceId: ServiceId
     private rpcCommunicator?: RoutingRpcCommunicator
 
     private locks = new ConnectionLockHandler()
@@ -106,13 +119,14 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
     private config: ConnectionManagerConfig
 
-    constructor(config: ConnectionManagerConfig) {
+    constructor(conf: Partial<ConnectionManagerConfig>) {
         super()
-        this.config = config
+
+        this.config = new ConnectionManagerConfig(conf)
 
         this.onData = this.onData.bind(this)
         this.incomingConnectionCallback = this.incomingConnectionCallback.bind(this)
-        this.metricsContext = config.metricsContext || new MetricsContext()
+        this.metricsContext = this.config.metricsContext || new MetricsContext()
 
         this.metrics = {
             sendMessagesPerSecond: new RateMetric(),
@@ -166,31 +180,33 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         // Garbage collection of connections
         this.disconnectorIntervalRef = setInterval(() => {
             logger.trace('disconnectorInterval')
-            const MAX_CONNECTIONS = 80
-
-            if (this.connections.size > MAX_CONNECTIONS) {
-                const disconnectionCandidates = new SortedContactList(peerIdFromPeerDescriptor(this.ownPeerDescriptor!), 100000)
-
-                this.connections.forEach((connection) => {
-                    if (!this.locks.isLocked(connection.peerIdKey) && Date.now() - connection.getLastUsed() > 30000) {
-                        logger.trace("disconnecting in timeout interval: " + this.config.nodeName + ', ' +
-                        connection.getPeerDescriptor()?.nodeName + ' ')
-
-                        disconnectionCandidates.addContact(new Contact(connection.getPeerDescriptor()!))
-                    }
-                })
-
-                const sortedCandidates = disconnectionCandidates.getAllContacts()
-                const targetNum = this.connections.size - MAX_CONNECTIONS
-
-                for (let i = 0; i < sortedCandidates.length && i < targetNum; i++) {
-                    logger.trace(this.config.nodeName + ' garbageCollecting ' +
-                        sortedCandidates[sortedCandidates.length - 1 - i].getPeerDescriptor().nodeName)
-                    this.gracefullyDisconnectAsync(sortedCandidates[sortedCandidates.length - 1 - i].getPeerDescriptor()).catch((_e) => { })
-                }
-            }
-
+            const LAST_USED_LIMIT = 30000
+            this.garbageCollectConnections(this.config.maxConnections, LAST_USED_LIMIT)
         }, 1000)
+    }
+
+    public garbageCollectConnections(maxConnections: number, lastUsedLimit: number): void {
+        if (this.connections.size > maxConnections) {
+            const disconnectionCandidates = new SortedContactList(peerIdFromPeerDescriptor(this.ownPeerDescriptor!), 100000)
+
+            this.connections.forEach((connection) => {
+                if (!this.locks.isLocked(connection.peerIdKey) && Date.now() - connection.getLastUsed() > lastUsedLimit) {
+                    logger.trace("disconnecting in timeout interval: " + this.config.nodeName + ', ' +
+                    connection.getPeerDescriptor()?.nodeName + ' ')
+
+                    disconnectionCandidates.addContact(new Contact(connection.getPeerDescriptor()!))
+                }
+            })
+
+            const sortedCandidates = disconnectionCandidates.getAllContacts()
+            const targetNum = this.connections.size - maxConnections
+
+            for (let i = 0; i < sortedCandidates.length && i < targetNum; i++) {
+                logger.trace(this.config.nodeName + ' garbageCollecting ' +
+                    sortedCandidates[sortedCandidates.length - 1 - i].getPeerDescriptor().nodeName)
+                this.gracefullyDisconnectAsync(sortedCandidates[sortedCandidates.length - 1 - i].getPeerDescriptor()).catch((_e) => { })
+            }
+        }
     }
 
     public async start(peerDescriptorGeneratorCallback?: PeerDescriptorGeneratorCallback): Promise<void> {
@@ -198,7 +214,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             throw new Err.CouldNotStart(`Cannot start already ${this.started ? 'started' : 'stopped'} module`)
         }
         this.started = true
-        logger.info(`Starting ConnectionManager...`)
+        logger.trace(`Starting ConnectionManager...`)
 
         if (!this.config.simulator) {
             await this.webSocketConnector!.start()
@@ -225,11 +241,11 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             clearInterval(this.disconnectorIntervalRef)
         }
 
-        logger.info('stopping connections')
-        await Promise.allSettled(Array.from(this.connections.values()).map((connection: ManagedConnection) => {
+        logger.trace('stopping connections')
+        await Promise.allSettled([...this.connections.values()].map((connection: ManagedConnection) => {
             return this.gracefullyDisconnectAsync(connection.getPeerDescriptor()!)
         }))
-        logger.info('stopped connections')
+        logger.trace('stopped connections')
 
         this.rpcCommunicator!.stop()
 

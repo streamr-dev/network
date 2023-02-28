@@ -61,9 +61,11 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         this.parallelism = parallelism
         this.firstHopTimeout = firstHopTimeout
         this.mode = mode
+
+        const previousId = messageToRoute.previousPeer ? PeerID.fromValue(messageToRoute.previousPeer.kademliaId) : undefined
         this.contactList = new SortedContactList(destinationId ? PeerID.fromValue(destinationId) :
             PeerID.fromValue(this.messageToRoute!.destinationPeer!.kademliaId),
-        10000, undefined, true, undefined, excludedPeerIDs)
+        10000, undefined, true, previousId, excludedPeerIDs)
     }
 
     private onRequestFailed(peerId: PeerID) {

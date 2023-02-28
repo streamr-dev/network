@@ -3,6 +3,8 @@ import {
     ClosestPeersRequest, ClosestPeersResponse, LeaveNotice,
     NodeType,
     PeerDescriptor, PingRequest, PingResponse, RouteMessageAck, RouteMessageWrapper,
+    StoreDataRequest,
+    StoreDataResponse,
     WebSocketConnectionRequest, WebSocketConnectionResponse
 } from '../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../src/proto/packages/proto-rpc/protos/ProtoRpc'
@@ -15,17 +17,19 @@ import { v4 } from 'uuid'
 import { getRandomRegion } from './data/pings'
 import { Empty } from '../src/proto/google/protobuf/empty'
 import { Any } from '../src/proto/google/protobuf/any'
+import { waitForCondition } from '@streamr/utils'
 
 export const generateId = (stringId: string): Uint8Array => {
     return PeerID.fromString(stringId).value
 }
 
-export const createMockConnectionDhtNode = async (stringId: string, 
-    simulator: Simulator, 
-    binaryId?: Uint8Array, 
-    K?: number, 
-    nodeName?: string): Promise<DhtNode> => {
-    
+export const createMockConnectionDhtNode = async (stringId: string,
+    simulator: Simulator,
+    binaryId?: Uint8Array,
+    K?: number,
+    nodeName?: string,
+    maxConnections: number = 80): Promise<DhtNode> => {
+
     let id: PeerID
     if (binaryId) {
         id = PeerID.fromValue(binaryId)
@@ -39,14 +43,19 @@ export const createMockConnectionDhtNode = async (stringId: string,
         nodeName: nodeName ? nodeName : stringId
     }
 
-    const mockConnectionManager = new ConnectionManager({ ownPeerDescriptor: peerDescriptor, 
-        simulator: simulator, 
-        nodeName: nodeName ? nodeName : stringId })
-    
-    const node = new DhtNode({ peerDescriptor: peerDescriptor, 
-        transportLayer: mockConnectionManager, 
-        nodeName: nodeName, 
-        numberOfNodesPerKBucket: K ? K : 8 })
+    const mockConnectionManager = new ConnectionManager({
+        ownPeerDescriptor: peerDescriptor,
+        simulator: simulator,
+        nodeName: nodeName ? nodeName : stringId
+    })
+
+    const node = new DhtNode({
+        peerDescriptor: peerDescriptor,
+        transportLayer: mockConnectionManager,
+        nodeName: nodeName,
+        numberOfNodesPerKBucket: K ? K : 8,
+        maxConnections: maxConnections
+    })
     await node.start()
 
     return node
@@ -60,8 +69,10 @@ export const createMockConnectionLayer1Node = async (stringId: string, layer0Nod
         nodeName: stringId
     }
 
-    const node = new DhtNode({ peerDescriptor: descriptor, transportLayer: layer0Node, 
-        serviceId: serviceId ? serviceId : 'layer1', numberOfNodesPerKBucket: 8, nodeName: stringId })
+    const node = new DhtNode({
+        peerDescriptor: descriptor, transportLayer: layer0Node,
+        serviceId: serviceId ? serviceId : 'layer1', numberOfNodesPerKBucket: 8, nodeName: stringId
+    })
     await node.start()
     return node
 }
@@ -87,8 +98,8 @@ export const createWrappedClosestPeersRequest = (
 }
 
 interface IDhtRpcWithError extends IDhtRpcService {
-    throwPingError: (request: PingRequest, _context: ServerCallContext) => Promise<PingResponse> 
-    respondPingWithTimeout: (request: PingRequest, _context: ServerCallContext) => Promise<PingResponse> 
+    throwPingError: (request: PingRequest, _context: ServerCallContext) => Promise<PingResponse>
+    respondPingWithTimeout: (request: PingRequest, _context: ServerCallContext) => Promise<PingResponse>
     throwGetClosestPeersError: (request: ClosestPeersRequest, _context: ServerCallContext) => Promise<ClosestPeersResponse>
     throwRouteMessageError: (request: RouteMessageWrapper, _context: ServerCallContext) => Promise<RouteMessageAck>
 }
@@ -125,6 +136,9 @@ export const MockDhtRpc: IDhtRpcWithError = {
             error: ''
         }
         return response
+    },
+    async storeData(_request: StoreDataRequest, _context: ServerCallContext): Promise<StoreDataResponse> {
+        return StoreDataResponse.create()
     },
     async forwardMessage(routed: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
         const response: RouteMessageAck = {
@@ -188,5 +202,25 @@ export const getMockPeers = (): PeerDescriptor[] => {
     return [
         n1, n2, n3, n4
     ]
+}
+
+export const waitConnectionManagersReadyForTesting = async (connectionManagers: ConnectionManager[], limit: number): Promise<void> => {
+    connectionManagers.forEach((connectionManager) => garbageCollectConnections(connectionManager, limit))
+    await Promise.all(connectionManagers.map((connectionManager) => waitReadyForTesting(connectionManager, limit)))
+}
+
+function garbageCollectConnections(connectionManager: ConnectionManager, limit: number): void {
+    const LAST_USED_LIMIT = 100
+    connectionManager.garbageCollectConnections(limit, LAST_USED_LIMIT)
+}
+
+async function waitReadyForTesting(connectionManager: ConnectionManager, limit: number): Promise<void> {
+    const LAST_USED_LIMIT = 100
+    connectionManager.garbageCollectConnections(limit, LAST_USED_LIMIT)
+    await waitForCondition(() => {
+        return (connectionManager.getNumberOfLocalLockedConnections() == 0 &&
+            connectionManager.getNumberOfRemoteLockedConnections() == 0 &&
+            connectionManager.getAllConnectionPeerDescriptors().length <= limit)
+    }, 30000)
 }
 
