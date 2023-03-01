@@ -6,7 +6,7 @@ import { keyFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { DhtRpcServiceClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import { PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
-import { Logger } from '@streamr/utils'
+import { Logger, scheduleAtInterval } from '@streamr/utils'
 import KBucket from 'k-bucket'
 import { SortedContactList } from './contact/SortedContactList'
 import { ConnectionManager } from '../connection/ConnectionManager'
@@ -42,9 +42,11 @@ export class PeerDiscovery {
 
     private getClosestPeersFromBucketIntervalRef?: NodeJS.Timeout
     private rejoinTimeoutRef?: NodeJS.Timeout
+    private readonly abortController: AbortController
 
     constructor(config: PeerDiscoveryConfig) {
         this.config = config
+        this.abortController = new AbortController()
     }
 
     async joinDht(entryPointDescriptor: PeerDescriptor, doRandomJoin = true): Promise<void> {
@@ -109,7 +111,7 @@ export class PeerDiscovery {
                 if (this.config.bucket.count() === 0) {
                     this.rejoinDht(entryPointDescriptor).catch(() => {})
                 } else {
-                    this.getClosestPeersFromBucketIntervalRef = setTimeout(async () => await this.getClosestPeersFromBucket(), 5 * 1000)
+                    scheduleAtInterval(() => this.getClosestPeersFromBucket(), 60000, true, this.abortController.signal)
                 }
             }
         } catch (_e) {
@@ -166,12 +168,6 @@ export class PeerDiscovery {
                 this.config.addContact(contact)
             })
         }))
-        if (this.stopped) {
-            return
-        }
-        this.getClosestPeersFromBucketIntervalRef = setTimeout(async () =>
-            await this.getClosestPeersFromBucket()
-        , 90 * 1000)
     }
 
     public isJoinOngoing(): boolean {
@@ -179,10 +175,8 @@ export class PeerDiscovery {
     }
 
     public stop(): void {
-        if (this.getClosestPeersFromBucketIntervalRef) {
-            clearTimeout(this.getClosestPeersFromBucketIntervalRef)
-            this.getClosestPeersFromBucketIntervalRef = undefined
-        }
+        this.stopped = true
+        this.abortController.abort()
         if (this.rejoinTimeoutRef) {
             clearTimeout(this.rejoinTimeoutRef)
             this.rejoinTimeoutRef = undefined
