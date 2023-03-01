@@ -61,8 +61,12 @@ jobs:
     uses: ./.github/workflows/test-setup.yml
     with:
       package: dht
+  dht-browser:
+    needs: build
+    uses: ./.github/workflows/test-setup.yml
+    with:
+      package: dht
       command: |
-        npm run test
         sudo apt-get install xvfb
         xvfb-run --auto-servernum npm run test-browser
   trackerless-network:
@@ -74,6 +78,13 @@ jobs:
         npm run test-unit
         npm run test-integration
         npm run test-e2e
+  trackerless-network-browser:
+    needs: build
+    uses: ./.github/workflows/test-setup.yml
+    with:
+      package: trackerless-network
+      command: |
+        sudo apt-get install xvfb
         xvfb-run --auto-servernum npm run test-browser
   network:
     needs: build
