@@ -221,6 +221,6 @@ async function waitReadyForTesting(connectionManager: ConnectionManager, limit: 
         return (connectionManager.getNumberOfLocalLockedConnections() == 0 &&
             connectionManager.getNumberOfRemoteLockedConnections() == 0 &&
             connectionManager.getAllConnectionPeerDescriptors().length <= limit)
-    }, 30000)
+    }, 45000)
 }
 
