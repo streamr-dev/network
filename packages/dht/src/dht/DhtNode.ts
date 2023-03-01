@@ -17,9 +17,7 @@ import {
     NodeType,
     PeerDescriptor,
     PingRequest,
-    PingResponse,
-    StoreDataRequest,
-    StoreDataResponse
+    PingResponse
 } from '../proto/packages/dht/protos/DhtRpc'
 import * as Err from '../helpers/errors'
 import { ITransport, TransportEvents } from '../transport/ITransport'
@@ -35,10 +33,10 @@ import { RandomContactList } from './contact/RandomContactList'
 import { Empty } from '../proto/google/protobuf/empty'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { Any } from '../proto/google/protobuf/any'
-import { Timestamp } from '../proto/google/protobuf/timestamp'
 import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 import { Router } from './Router'
 import { RecursiveFinder } from './RecursiveFinder'
+import { DataStore } from './DataStore'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -117,6 +115,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private transportLayer?: ITransport
     private ownPeerDescriptor?: PeerDescriptor
     public router?: Router
+    public dataStore?: DataStore
     private recursiveFinder?: RecursiveFinder
 
     private outgoingClosestPeersRequestsCounter = 0
@@ -131,12 +130,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     public contactAddCounter = 0
     public contactOnAddedCounter = 0
-
-    // A map into which each node can store one value per data key
-    // The first key is the key of the data, the second key is the 
-    // PeerID of the storer of the data
-
-    private dataStore: Map<PeerIDKey, Map<PeerIDKey, DataEntry>> = new Map()
 
     constructor(conf: Partial<DhtNodeConfig>) {
         super()
@@ -220,9 +213,19 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             serviceId: this.config.serviceId,
             ownPeerId: this.ownPeerId!,
             addContact: this.addNewContact.bind(this),
-            getData: this.doGetData.bind(this),
+            getLocalData: this.getLocalData.bind(this),
             isPeerCloserToIdThanSelf: this.isPeerCloserToIdThanSelf.bind(this),
             getClosestPeerDescriptors: this.getClosestPeerDescriptors.bind(this)
+        })
+        this.dataStore = new DataStore({
+            rpcCommunicator: this.rpcCommunicator!,
+            router: this.router!,
+            recursiveFinder: this.recursiveFinder,
+            ownPeerDescriptor: this.ownPeerDescriptor!,
+            serviceId: this.config.serviceId,
+            storeHighestTtl: this.config.storeHighestTtl,
+            storeMaxTtl: this.config.storeMaxTtl,
+            storeNumberOfCopies: this.config.storeNumberOfCopies
         })
     }
 
@@ -230,6 +233,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         const distance1 = this.bucket!.distance(peer1.kademliaId, compareToId.value)
         const distance2 = this.bucket!.distance(this.ownPeerDescriptor!.kademliaId, compareToId.value)
         return distance1 < distance2
+    }
+
+    private getLocalData(key: PeerID): Map<PeerIDKey, DataEntry> | undefined {
+        return this.dataStore!.getLocalData(key)
     }
 
     public handleMessage(message: Message): void {
@@ -386,8 +393,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                     this.ownPeerDescriptor!,
                     peerDescriptor,
                     toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
-                    this.config.serviceId,
-                    this
+                    this.config.serviceId
                 )
             )
         })
@@ -408,8 +414,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 this.ownPeerDescriptor!,
                 peerDescriptor,
                 toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
-                this.config.serviceId,
-                this
+                this.config.serviceId
             )
             if (!this.connections.has(PeerID.fromValue(dhtPeer.id).toKey())) {
                 this.connections.set(PeerID.fromValue(dhtPeer.id).toKey(), dhtPeer)
@@ -481,8 +486,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.ownPeerDescriptor!,
             entryPointDescriptor,
             toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
-            this.config.serviceId,
-            this
+            this.config.serviceId
         )
 
         if (this.ownPeerId!.equals(entryPoint.peerId)) {
@@ -628,8 +632,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 this.ownPeerDescriptor!,
                 contact,
                 toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
-                this.config.serviceId,
-                this
+                this.config.serviceId
             )
             if (!this.bucket!.get(contact.kademliaId) && !this.neighborList!.getContact(peerIdFromPeerDescriptor(contact))) {
                 this.neighborList!.addContact(dhtPeer)
@@ -673,12 +676,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.getClosestPeers = this.getClosestPeers.bind(this)
         this.ping = this.ping.bind(this)
         this.leaveNotice = this.leaveNotice.bind(this)
-        this.storeData = this.storeData.bind(this)
 
         this.rpcCommunicator!.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', this.getClosestPeers)
         this.rpcCommunicator!.registerRpcMethod(PingRequest, PingResponse, 'ping', this.ping)
         this.rpcCommunicator!.registerRpcNotification(LeaveNotice, 'leaveNotice', this.leaveNotice)
-        this.rpcCommunicator!.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData', this.storeData)
     }
 
     public getRpcCommunicator(): RoutingRpcCommunicator {
@@ -785,7 +786,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
         this.bucket!.removeAllListeners()
         this.rpcCommunicator!.stop()
-        //this.removeAllListeners()
+        this.router!.stop()
+        this.recursiveFinder!.stop()
 
         if (this.connectionManager) {
             await this.connectionManager.stop()
@@ -835,74 +837,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return this.recursiveFinder!.startRecursiveFind(idToFind, findMode)
     }
 
-    // RPC service implementation
-    public async storeData(request: StoreDataRequest, context: ServerCallContext): Promise<StoreDataResponse> {
-        let ttl = request.ttl
-        if (ttl > this.config.storeMaxTtl) {
-            ttl = this.config.storeMaxTtl
-        }
-        this.doStoreData(
-            (context as DhtCallContext).incomingSourceDescriptor!,
-            PeerID.fromValue(request.kademliaId),
-            request.data!,
-            ttl
-        )
-        logger.trace(this.ownPeerDescriptor!.nodeName + ' storeData()')
-        return StoreDataResponse.create()
-    }
-
-    // RPC service implementation
-    public doStoreData(storer: PeerDescriptor, dataKey: PeerID, data: Any, ttl: number): void {
-        const publisherId = PeerID.fromValue(storer.kademliaId)
-        if (!this.dataStore.has(dataKey.toKey())) {
-            this.dataStore.set(dataKey.toKey(), new Map())
-        }
-
-        this.dataStore.get(dataKey.toKey())!.set(publisherId.toKey(), { storer, data, storedAt: Timestamp.now(), ttl })
-    }
-
-    public doGetData(key: PeerID): Map<PeerIDKey, DataEntry> | undefined {
-        if (this.dataStore.has(key.toKey())) {
-            return this.dataStore.get(key.toKey())!
-        } else {
-            return undefined
-        }
-    }
-
     // Store API for higher layers and tests
     public async storeDataToDht(key: Uint8Array, data: Any): Promise<PeerDescriptor[]> {
-        logger.info(`Storing data to DHT ${this.config.serviceId} with key ${PeerID.fromValue(key)}`)
-        const result = await this.recursiveFinder!.startRecursiveFind(key)
-        const closestNodes = result.closestNodes
-        const successfulNodes: PeerDescriptor[] = []
-        const ttl = this.config.storeHighestTtl // ToDo: make TTL decrease according to some nice curve
-        for (let i = 0; i < closestNodes.length && successfulNodes.length < 5; i++) {
-            if (this.ownPeerId!.equals(PeerID.fromValue(closestNodes[i].kademliaId))) {
-                this.doStoreData(closestNodes[i], PeerID.fromValue(key), data, ttl)
-                successfulNodes.push(closestNodes[i])
-                continue
-            }
-            const dhtPeer = new DhtPeer(
-                this.ownPeerDescriptor!,
-                closestNodes[i],
-                toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
-                this.config.serviceId,
-                this
-            )
-            try {
-                const response = await dhtPeer.storeData({ kademliaId: key, data, ttl })
-                if (response.error) {
-                    logger.debug('dhtPeer.storeData() returned error: ' + response.error)
-                    continue
-                }
-            } catch (e) {
-                logger.debug('dhtPeer.storeData() threw an exception ' + e)
-                continue
-            }
-            successfulNodes.push(closestNodes[i])
-            logger.trace('dhtPeer.storeData() returned success')
-        }
-        return successfulNodes
+        return this.dataStore!.storeDataToDht(key, data)
     }
 
     public async getDataFromDht(idToFind: Uint8Array): Promise<RecursiveFindResult> {

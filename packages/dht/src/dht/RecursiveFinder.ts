@@ -27,7 +27,7 @@ interface RecursiveFinderConfig {
     ownPeerDescriptor: PeerDescriptor
     ownPeerId: PeerID
     serviceId: string
-    getData: (key: PeerID) => Map<PeerIDKey, DataEntry> | undefined
+    getLocalData: (key: PeerID) => Map<PeerIDKey, DataEntry> | undefined
     addContact: (contact: PeerDescriptor, setActive?: boolean) => void
     getClosestPeerDescriptors: (kademliaId: Uint8Array, limit: number) => PeerDescriptor[]
     isPeerCloserToIdThanSelf: (peer1: PeerDescriptor, compareToId: PeerID) => boolean
@@ -55,7 +55,7 @@ export class RecursiveFinder {
             routingPaths: this.config.connections.size > 1 ? 2 : 1
         })
         if (this.config.connections.size === 0) {
-            const data = this.config.getData(PeerID.fromValue(idToFind))
+            const data = this.config.getLocalData(PeerID.fromValue(idToFind))
             recursiveFindSession.doReportRecursiveFindResult(
                 [this.config.ownPeerDescriptor!],
                 [this.config.ownPeerDescriptor!],
@@ -97,7 +97,7 @@ export class RecursiveFinder {
             logger.trace(`doFindRecursively failed with error ${err}`)
         }
         if (findMode === FindMode.DATA) {
-            const data = this.config.getData(PeerID.fromValue(idToFind))
+            const data = this.config.getLocalData(PeerID.fromValue(idToFind))
             if (data) {
                 this.reportRecursiveFindResult([], params.sourcePeer!, sessionId, [], data, true)
             }
@@ -147,7 +147,7 @@ export class RecursiveFinder {
         }
         const closestPeersToDestination = this.config.getClosestPeerDescriptors(routedMessage.destinationPeer!.kademliaId, 5)
         if (recursiveFindRequest!.findMode == FindMode.DATA) {
-            const data = this.config.getData(idToFind)
+            const data = this.config.getLocalData(idToFind)
             if (data) {
                 this.reportRecursiveFindResult(routedMessage.routingPath, routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
                     closestPeersToDestination, data, true)
