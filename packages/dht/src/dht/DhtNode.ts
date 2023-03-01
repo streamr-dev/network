@@ -387,9 +387,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
                 )
             )
         })
-        this.neighborList.on('newContact', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
+        this.neighborList.on('newContact', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) => {
+
+            this.migrateDataToContactIfNeeded(peerDescriptor)
             this.emit('newContact', peerDescriptor, activeContacts)
-        )
+        })
 
         this.openInternetPeers = new SortedContactList(selfId, this.config.maxNeighborListSize / 2)
         this.openInternetPeers.on('contactRemoved', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
@@ -658,7 +660,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             return
         }
 
-        this.migrateDataToContactIfNeeded(contact)
+        //this.migrateDataToContactIfNeeded(contact)
 
         const peerId = peerIdFromPeerDescriptor(contact)
         if (!peerId.equals(this.ownPeerId!)) {
