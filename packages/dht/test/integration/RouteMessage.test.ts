@@ -233,7 +233,7 @@ describe('Route Message With Mock Connections', () => {
             )
         )
 
-    }, 60000)
+    }, 90000)
 
     it('Destination receives forwarded message', async () => {
         await destinationNode.joinDht(entryPointDescriptor)

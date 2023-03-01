@@ -1,4 +1,3 @@
-import crypto from 'crypto'
 import { DhtPeer } from './DhtPeer'
 import KBucket from 'k-bucket'
 import { EventEmitter } from 'eventemitter3'
@@ -28,7 +27,6 @@ import {
     MetricsContext
 } from '@streamr/utils'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
-import { DiscoverySession } from './DiscoverySession'
 import { RandomContactList } from './contact/RandomContactList'
 import { Empty } from '../proto/google/protobuf/empty'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
@@ -37,6 +35,7 @@ import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../helpers/peer
 import { Router } from './Router'
 import { RecursiveFinder } from './RecursiveFinder'
 import { DataStore } from './DataStore'
+import { PeerDiscovery } from './PeerDiscovery'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -95,16 +94,6 @@ export interface RecursiveFindResult { closestNodes: Array<PeerDescriptor>, data
 
 export class DhtNode extends EventEmitter<Events> implements ITransport {
     private readonly config: DhtNodeConfig
-    private readonly ongoingClosestPeersRequests: Set<string> = new Set()
-
-    // noProgressCounter is Increased on every getClosestPeers round in which no new nodes
-    // with an id closer to target id were found.
-    // When joinNoProgressLimit is reached, the join process will terminate. If a closer node is found
-    // before reaching joinNoProgressLimit, this counter gets reset to 0.
-
-    private joinTimeoutRef?: NodeJS.Timeout
-
-    private ongoingDiscoverySessions: Map<string, DiscoverySession> = new Map()
 
     private bucket?: KBucket<DhtPeer>
     private connections: Map<PeerIDKey, DhtPeer> = new Map()
@@ -117,16 +106,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     public router?: Router
     public dataStore?: DataStore
     private recursiveFinder?: RecursiveFinder
-
-    private outgoingClosestPeersRequestsCounter = 0
+    private peerDiscovery?: PeerDiscovery
 
     public connectionManager?: ConnectionManager
     private started = false
     private stopped = false
-    private rejoinOngoing = false
-
-    private getClosestPeersFromBucketIntervalRef?: NodeJS.Timeout
-    private rejoinTimeoutRef?: NodeJS.Timeout
 
     public contactAddCounter = 0
     public contactOnAddedCounter = 0
@@ -194,6 +178,23 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
         this.bindDefaultServerMethods()
         this.initKBuckets(this.ownPeerId!)
+        this.peerDiscovery = new PeerDiscovery({
+            rpcCommunicator: this.rpcCommunicator!,
+            ownPeerDescriptor: this.ownPeerDescriptor!,
+            ownPeerId: this.ownPeerId!,
+            bucket: this.bucket!,
+            connections: this.connections!,
+            neighborList: this.neighborList!,
+            randomPeers: this.randomPeers!,
+            openInternetPeers: this.openInternetPeers!,
+            joinNoProgressLimit: this.config.joinNoProgressLimit,
+            getClosestContactsLimit: this.config.getClosestContactsLimit,
+            joinTimeout: this.config.dhtJoinTimeout,
+            serviceId: this.config.serviceId,
+            parallelism: this.config.parallelism,
+            addContact: this.addNewContact.bind(this),
+            connectionManager: this.connectionManager
+        })
         this.router = new Router({
             rpcCommunicator: this.rpcCommunicator!,
             connections: this.connections,
@@ -315,12 +316,12 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         )
         if (
             this.bucket!.count() === 0
-            && !this.isJoinOngoing()
+            && !this.peerDiscovery!.isJoinOngoing()
             && this.config.entryPoints
             && this.config.entryPoints.length > 0
         ) {
             setImmediate(async () => {
-                await this.rejoinDht(this.config.entryPoints![0])
+                await this.peerDiscovery!.rejoinDht(this.config.entryPoints![0])
             })
         }
     }
@@ -469,151 +470,15 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (!this.started || this.stopped) {
             return
         }
-        const reachableThrough = this.isJoinOngoing() ? this.config.entryPoints || [] : []
+        const reachableThrough = this.peerDiscovery!.isJoinOngoing() ? this.config.entryPoints || [] : []
         await this.router!.send(msg, reachableThrough)
     }
 
-    public async joinDht(entryPointDescriptor: PeerDescriptor, doRandomJoin = true): Promise<void> {
-        if (!this.started || this.stopped) {
-            return
+    public async joinDht(entryPointDescriptor: PeerDescriptor, doRandomJoin?: boolean): Promise<void> {
+        if (!this.started) {
+            throw new Error('Cannot join DHT before calling start() on DhtNode')
         }
-
-        logger.info(
-            `Joining ${this.config.serviceId === 'layer0' ? 'The Streamr Network' : `Control Layer for ${this.config.serviceId}`}`
-            + ` via entrypoint ${keyFromPeerDescriptor(entryPointDescriptor)}`
-        )
-        const entryPoint = new DhtPeer(
-            this.ownPeerDescriptor!,
-            entryPointDescriptor,
-            toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
-            this.config.serviceId
-        )
-
-        if (this.ownPeerId!.equals(entryPoint.peerId)) {
-            return
-        }
-
-        if (this.connectionManager) {
-            this.connectionManager.lockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
-        }
-
-        this.addNewContact(entryPointDescriptor)
-        const closest = this.bucket!.closest(this.ownPeerId!.value, this.config.getClosestContactsLimit)
-        this.neighborList!.addContacts(closest)
-
-        const session = new DiscoverySession(this.neighborList!, this.ownPeerId!.value,
-            this.ownPeerDescriptor!, this.config.serviceId, this.rpcCommunicator!, this.config.parallelism,
-            this.config.joinNoProgressLimit, (newPeer: DhtPeer) => {
-                if (!this.bucket!.get(newPeer.id)) {
-
-                    if (newPeer.getPeerDescriptor().openInternet) {
-                        this.openInternetPeers!.addContact(newPeer)
-                    }
-
-                    this.bucket!.add(newPeer)
-                } else {
-                    this.randomPeers!.addContact(newPeer)
-                }
-            }, this.config.nodeName)
-
-        const randomSession = new DiscoverySession(this.neighborList!, crypto.randomBytes(8),
-            this.ownPeerDescriptor!, this.config.serviceId, this.rpcCommunicator!, this.config.parallelism,
-            this.config.joinNoProgressLimit, (newPeer: DhtPeer) => {
-                if (!this.bucket!.get(newPeer.id)) {
-
-                    if (newPeer.getPeerDescriptor().openInternet) {
-                        this.openInternetPeers!.addContact(newPeer)
-                    }
-
-                    this.bucket!.add(newPeer)
-                } else {
-                    this.randomPeers!.addContact(newPeer)
-                }
-            }, this.config.nodeName + '-random')
-
-        this.ongoingDiscoverySessions.set(session.sessionId, session)
-        this.ongoingDiscoverySessions.set(randomSession.sessionId, randomSession)
-
-        try {
-            await session.findClosestNodes(this.config.dhtJoinTimeout)
-            this.neighborList?.setAllAsUncontacted()
-            if (doRandomJoin) {
-                await randomSession.findClosestNodes(this.config.dhtJoinTimeout)
-            }
-            if (!this.stopped) {
-                if (this.bucket!.count() === 0) {
-                    this.rejoinDht(entryPointDescriptor).catch(() => { })
-                }
-                /* else {
-                    this.getClosestPeersFromBucketIntervalRef = setTimeout(async () => await this.getClosestPeersFromBucket(), 30 * 1000)
-                }*/
-            }
-        } catch (_e) {
-            throw new Err.DhtJoinTimeout('join timed out')
-        } finally {
-            this.ongoingDiscoverySessions.delete(session.sessionId)
-            this.ongoingDiscoverySessions.delete(randomSession.sessionId)
-
-            if (this.connectionManager) {
-                logger.trace('unlocking entryPoint Disconnect')
-                this.connectionManager.unlockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
-            }
-        }
-
-        // -- todo, separate into a function, now trying this out
-    }
-
-    private async rejoinDht(entryPoint: PeerDescriptor): Promise<void> {
-        if (!this.started || this.stopped || this.rejoinOngoing) {
-            return
-        }
-        logger.info(`Rejoining DHT ${this.config.serviceId} ${this.config.nodeName}!`)
-        this.rejoinOngoing = true
-        try {
-            this.neighborList!.clear()
-            await this.joinDht(entryPoint)
-
-            this.rejoinOngoing = false
-            if (this.connections.size === 0 || this.bucket!.count() === 0) {
-                if (!this.started || this.stopped) {
-                    return
-                }
-                this.rejoinTimeoutRef = setTimeout(async () => {
-                    await this.rejoinDht(entryPoint)
-                    this.rejoinTimeoutRef = undefined
-                }, 5000)
-            } else {
-                logger.info(`Rejoined DHT successfully ${this.config.serviceId}!`)
-            }
-        } catch (err) {
-            logger.warn(`rejoining DHT ${this.config.serviceId} failed`)
-            this.rejoinOngoing = false
-            if (!this.started || this.stopped) {
-                return
-            }
-            this.rejoinTimeoutRef = setTimeout(async () => {
-                await this.rejoinDht(entryPoint)
-                this.rejoinTimeoutRef = undefined
-            }, 5000)
-        }
-    }
-
-    private async getClosestPeersFromBucket(): Promise<void> {
-        if (!this.started || this.stopped) {
-            return
-        }
-        await Promise.allSettled(this.bucket!.toArray().map(async (peer: DhtPeer) => {
-            const contacts = await peer.getClosestPeers(this.ownPeerDescriptor!.kademliaId!)
-            contacts.forEach((contact) => {
-                this.addNewContact(contact)
-            })
-        }))
-        if (!this.started || this.stopped) {
-            return
-        }
-        this.getClosestPeersFromBucketIntervalRef = setTimeout(async () =>
-            await this.getClosestPeersFromBucket()
-        , 90 * 1000)
+        await this.peerDiscovery!.joinDht(entryPointDescriptor, doRandomJoin)
     }
 
     public getBucketSize(): number {
@@ -710,10 +575,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return this.openInternetPeers!.getAllContacts().map((contact) => contact.getPeerDescriptor())
     }
 
-    public getNumberOfOutgoingClosestPeersRequests(): number {
-        return this.outgoingClosestPeersRequestsCounter
-    }
-
     public getNumberOfConnections(): number {
         return this.connections.size
     }
@@ -757,10 +618,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
     }
 
-    public isJoinOngoing(): boolean {
-        return this.ongoingDiscoverySessions.size > 0
-    }
-
     public async stop(): Promise<void> {
         logger.trace('stop()')
         if (!this.started) {
@@ -768,27 +625,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
         this.stopped = true
 
-        if (this.joinTimeoutRef) {
-            clearTimeout(this.joinTimeoutRef)
-        }
-        if (this.getClosestPeersFromBucketIntervalRef) {
-            clearTimeout(this.getClosestPeersFromBucketIntervalRef)
-            this.getClosestPeersFromBucketIntervalRef = undefined
-        }
-        if (this.rejoinTimeoutRef) {
-            clearTimeout(this.rejoinTimeoutRef)
-            this.rejoinTimeoutRef = undefined
-        }
-
-        this.ongoingDiscoverySessions.forEach((session, _id) => {
-            session.stop()
-        })
-
         this.bucket!.removeAllListeners()
         this.rpcCommunicator!.stop()
         this.router!.stop()
         this.recursiveFinder!.stop()
-
+        this.peerDiscovery!.stop()
         if (this.connectionManager) {
             await this.connectionManager.stop()
         }
