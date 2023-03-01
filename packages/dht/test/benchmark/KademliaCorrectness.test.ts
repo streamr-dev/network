@@ -64,9 +64,6 @@ describe('Kademlia correctness', () => {
         let sumKbucketSize = 1
 
         for (let i = nodes.length - 1; i >= 0; i--) {
-
-
-
             let groundTruthString = 'groundTruthNeighb: '
             // eslint-disable-next-line @typescript-eslint/prefer-for-of
             for (let j = 0; j < groundTruth[i + ''].length; j++) {
