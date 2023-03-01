@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/prefer-for-of */
-//import wtf from 'wtfnode'
 import { DhtNode, Events as DhtNodeEvents } from '../../src/dht/DhtNode'
 import { Message, MessageType, PeerDescriptor, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
@@ -87,7 +85,7 @@ describe('Route Message With Mock Connections', () => {
         }
 
         await runAndWaitForEvents3<DhtNodeEvents>([() => {
-            sourceNode.doRouteMessage({
+            sourceNode.router!.doRouteMessage({
                 message: message,
                 destinationPeer: destinationNode.getPeerDescriptor(),
                 requestId: v4(),
@@ -145,7 +143,7 @@ describe('Route Message With Mock Connections', () => {
                 sourceDescriptor: sourceNode.getPeerDescriptor(),
                 targetDescriptor: destinationNode.getPeerDescriptor()
             }
-            sourceNode.doRouteMessage({
+            await sourceNode.router!.doRouteMessage({
                 message: message,
                 destinationPeer: destinationNode.getPeerDescriptor(),
                 requestId: v4(),
@@ -161,13 +159,15 @@ describe('Route Message With Mock Connections', () => {
 
     it('From all to all', async () => {
         const routers: DhtNode[] = []
-        for (let i = 0; i < routerNodes.length; i++) {
-            routers.push(routerNodes[i])
+        for (const router of routerNodes) {
+            routers.push(router)
         }
 
-        for (let i = 0; i < routers.length; i++) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        for (const i in routers) {
             const arr: Array<number> = []
-            for (let j = 0; j < routers.length; j++) {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            for (const j in routers) {
                 arr.push(0)
             }
             receiveMatrix.push(arr)
@@ -209,7 +209,7 @@ describe('Route Message With Mock Connections', () => {
                             sourceDescriptor: node.getPeerDescriptor(),
                             targetDescriptor: destinationNode.getPeerDescriptor()
                         }
-                        await node.doRouteMessage({
+                        await node.router!.doRouteMessage({
                             message: message,
                             destinationPeer: receiver.getPeerDescriptor(),
                             sourcePeer: node.getPeerDescriptor(),
@@ -296,8 +296,8 @@ describe('Route Message With Mock Connections', () => {
         }
 
         await runAndWaitForEvents3<DhtNodeEvents>([() => {
-            sourceNode.doRouteMessage(forwardedMessage, true)
-        }], [/*[entryPoint, 'forwardedMessage'], */[destinationNode, 'message']])
+            sourceNode.router!.doRouteMessage(forwardedMessage, true)
+        }], [[destinationNode, 'message']])
 
     })
 

@@ -16,7 +16,6 @@ service DhtRpcService {
   rpc forwardMessage (RouteMessageWrapper) returns (RouteMessageAck);
   rpc leaveNotice (LeaveNotice) returns (google.protobuf.Empty);
   rpc storeData (StoreDataRequest) returns (StoreDataResponse);
-
 }
 
 service RecursiveFindSessionService {

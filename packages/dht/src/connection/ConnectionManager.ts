@@ -356,7 +356,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             return
         }
 
-        if (this.messageDuplicateDetector.isMostLikelyDuplicate(message.messageId, message.sourceDescriptor!.nodeName!, message)) {
+        if (this.messageDuplicateDetector.isMostLikelyDuplicate(message.messageId)) {
             logger.trace('handleMessage filtered duplicate ' + this.config.nodeName + ', ' +
                 message.sourceDescriptor?.nodeName + ' ' + message.serviceId + ' ' + message.messageId)
             return

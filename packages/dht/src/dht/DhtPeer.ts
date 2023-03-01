@@ -1,6 +1,13 @@
 import { IDhtRpcServiceClient } from '../proto/packages/dht/protos/DhtRpc.client'
-import { ClosestPeersRequest, LeaveNotice, PeerDescriptor, PingRequest, 
-    RouteMessageWrapper, StoreDataRequest, StoreDataResponse } from '../proto/packages/dht/protos/DhtRpc'
+import {
+    ClosestPeersRequest,
+    LeaveNotice,
+    PeerDescriptor,
+    PingRequest,
+    RouteMessageWrapper,
+    StoreDataRequest,
+    StoreDataResponse
+} from '../proto/packages/dht/protos/DhtRpc'
 import { v4 } from 'uuid'
 import { PeerID } from '../helpers/PeerID'
 import { DhtRpcOptions } from '../rpc-protocol/DhtRpcOptions'
