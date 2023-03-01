@@ -108,18 +108,15 @@ export class Router {
         try {
             result = await runAndRaceEvents3<RoutingSessionEvents>([() => {
                 session.start()
-            }], session, ['noCandidatesFound', 'candidatesFound'], 1500)
+            }], session, ['noCandidatesFound', 'candidatesFound'], 1000)
         } catch (e) {
             logger.error(e)
             throw e
         }
         // eslint-disable-next-line promise/catch-or-return
         raceEvents3<RoutingSessionEvents>(session, ['routingSucceeded', 'routingFailed', 'stopped'], 10000)
-            .catch(() => {})
-            .finally(() => {
-                this.removeRoutingSession(session.sessionId)
-            })
-
+            .then(() => this.removeRoutingSession(session.sessionId))
+            .catch(() => this.removeRoutingSession(session.sessionId))
         if (this.stopped) {
             return createRouteMessageAck(routedMessage, 'DhtNode Stopped')
         } else if (result.winnerName === 'noCandidatesFound' || result.winnerName === 'routingFailed') {
