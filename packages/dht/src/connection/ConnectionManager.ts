@@ -26,7 +26,7 @@ import { Empty } from '../proto/google/protobuf/empty'
 import { Simulator } from './Simulator/Simulator'
 import { SimulatorConnector } from './Simulator/SimulatorConnector'
 import { ConnectionLockHandler } from './ConnectionLockHandler'
-import { SetDuplicateDetector } from '../dht/SetDuplicateDetector'
+import { DuplicateDetector } from '../dht/DuplicateDetector'
 import { SortedContactList } from '../dht/contact/SortedContactList'
 import { Contact } from '../dht/contact/Contact'
 import {
@@ -102,7 +102,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
     private ownPeerDescriptor?: PeerDescriptor
     private connections: Map<PeerIDKey, ManagedConnection> = new Map()
-    private readonly messageDuplicateDetector: SetDuplicateDetector = new SetDuplicateDetector(100000, 100)
+    private readonly messageDuplicateDetector: DuplicateDetector = new DuplicateDetector(100000, 100)
     private readonly metricsContext: MetricsContext
     private readonly metrics: ConnectionManagerMetrics
 

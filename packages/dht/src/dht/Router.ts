@@ -5,7 +5,7 @@ import { RoutingMode, RoutingSession, RoutingSessionEvents } from './RoutingSess
 import { Logger, raceEvents3, runAndRaceEvents3, RunAndRaceEventsReturnType } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
 import { PeerID, PeerIDKey } from '../helpers/PeerID'
-import { SetDuplicateDetector } from './SetDuplicateDetector'
+import { DuplicateDetector } from './DuplicateDetector'
 import { ConnectionManager } from '../connection/ConnectionManager'
 import { DhtPeer } from './DhtPeer'
 import { v4 } from 'uuid'
@@ -42,7 +42,7 @@ export class Router {
     private readonly config: RouterConfig
     private readonly forwardingTable: Map<string, ForwardingTableEntry> = new Map()
     private ongoingRoutingSessions: Map<string, RoutingSession> = new Map()
-    private readonly routerDuplicateDetector: SetDuplicateDetector = new SetDuplicateDetector(100000, 100)
+    private readonly routerDuplicateDetector: DuplicateDetector = new DuplicateDetector(100000, 100)
     private stopped = false
 
     constructor(config: RouterConfig) {
