@@ -118,7 +118,9 @@ export class NodeWebRtcConnection extends WebRtcConnection {
     protected doConnect(): void {
         this.connection = new nodeDataChannel.PeerConnection(this.selfId, {
             iceServers: this.iceServers.map(iceServerAsString),
-            maxMessageSize: this.maxMessageSize
+            maxMessageSize: this.maxMessageSize,
+            portRangeBegin: this.portRangeBegin,
+            portRangeEnd: this.portRangeEnd
         })
 
         this.connectionEmitter = PeerConnectionEmitter(this.connection)

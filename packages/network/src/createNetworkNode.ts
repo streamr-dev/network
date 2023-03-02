@@ -24,6 +24,9 @@ export interface NetworkNodeOptions extends AbstractNodeOptions {
     trackerConnectionMaintenanceInterval: number
     webrtcDisallowPrivateAddresses: boolean
     acceptProxyConnections: boolean
+    webrtcDatachannelMaxMessageSize?: number
+    webrtcDatachannelPortRangeBegin?: number
+    webrtcDatachannelPortRangeEnd?: number
 }
 
 export const TEST_CONFIG: Omit<NetworkNodeOptions, 'id' | 'trackers' | 'metricsContext'> = {
@@ -57,7 +60,10 @@ export const createNetworkNode = ({
     iceServers,
     trackerConnectionMaintenanceInterval,
     webrtcDisallowPrivateAddresses,
-    acceptProxyConnections
+    acceptProxyConnections,
+    webrtcDatachannelMaxMessageSize,
+    webrtcDatachannelPortRangeBegin,
+    webrtcDatachannelPortRangeEnd
 }: NetworkNodeOptions): NetworkNode => {
     const peerInfo = PeerInfo.newNode(id, undefined, undefined, location)
     const endpoint = new NodeClientWsEndpoint(peerInfo, trackerPingInterval)
@@ -77,7 +83,10 @@ export const createNetworkNode = ({
         webrtcDatachannelBufferThresholdLow,
         webrtcDatachannelBufferThresholdHigh,
         webrtcSendBufferMaxMessageCount,
-        webrtcDisallowPrivateAddresses
+        webrtcDisallowPrivateAddresses,
+        webrtcDatachannelMaxMessageSize,
+        webrtcDatachannelPortRangeBegin,
+        webrtcDatachannelPortRangeEnd
     ))
 
     return new NetworkNode({

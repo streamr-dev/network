@@ -56,6 +56,8 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     private readonly sendBufferMaxMessageCount: number
     private readonly disallowPrivateAddresses: boolean
     private readonly maxMessageSize: number
+    private readonly portRangeBegin?: number
+    private readonly portRangeEnd?: number
 
     private statusReportTimer?: NodeJS.Timeout
 
@@ -73,6 +75,8 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         webrtcSendBufferMaxMessageCount: number,
         webrtcDisallowPrivateAddresses: boolean,
         maxMessageSize = 1048576,
+        portRangeBegin?: number,
+        portRangeEnd?: number
     ) {
         super()
         this.peerInfo = peerInfo
@@ -90,6 +94,8 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         this.sendBufferMaxMessageCount = webrtcSendBufferMaxMessageCount
         this.disallowPrivateAddresses = webrtcDisallowPrivateAddresses
         this.maxMessageSize = maxMessageSize
+        this.portRangeBegin = portRangeBegin
+        this.portRangeEnd = portRangeEnd
 
         this.connectionFactory.registerWebRtcEndpoint()
 
