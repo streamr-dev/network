@@ -1,6 +1,7 @@
 import pino from 'pino'
 import path from 'path'
-import _ from 'lodash'
+import without from 'lodash/without'
+import padEnd from 'lodash/padEnd'
 import pinoPretty from 'pino-pretty'
 
 export type LogLevel = 'silent' | 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace'
@@ -30,8 +31,8 @@ export class Logger {
             fileId = parts[parts.length - 1]
         }
         const appId = process.env.STREAMR_APPLICATION_ID
-        const longName = _.without([appId, context, fileId], undefined).join(':')
-        return _.padEnd(longName.substring(0, this.NAME_LENGTH), this.NAME_LENGTH, ' ')
+        const longName = without([appId, context, fileId], undefined).join(':')
+        return padEnd(longName.substring(0, this.NAME_LENGTH), this.NAME_LENGTH, ' ')
     }
 
     private readonly logger: pino.Logger

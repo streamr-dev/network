@@ -43,6 +43,9 @@
                     "description": "Path of private key file"
                 }
             }
+        },
+        "apiAuthentication": {
+            "$ref": "definitions.schema.json#/definitions/apiAuthenticationOverride"
         }
     }
 }

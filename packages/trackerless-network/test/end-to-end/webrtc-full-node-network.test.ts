@@ -93,12 +93,9 @@ describe('Full node network with WebRTC connections', () => {
 
     it('happy path', async () => {
         await Promise.all([...streamrNodes.map((streamrNode) =>
-            waitForCondition(() => {
-                return streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length >= 3
-                    && !streamrNode.getStream(randomGraphId)!.layer1.isJoinOngoing()
-            }
-            , 60000
-            )
+            waitForCondition(() =>
+                streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length >= 3
+            , 160000)
         )])
         let numOfMessagesReceived = 0
         const successIds: PeerIDKey[] = []

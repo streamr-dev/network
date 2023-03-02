@@ -5,7 +5,7 @@ import { addAfterFn } from '../test-utils/jest-utils'
 import LeakDetector from 'jest-leak-detector' // requires weak-napi
 import { StreamID, toStreamID } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { range } from 'lodash'
+import range from 'lodash/range'
 import { EthereumAddress } from '@streamr/utils'
 
 describe('GroupKeyStore', () => {

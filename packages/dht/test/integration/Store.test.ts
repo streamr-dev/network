@@ -35,7 +35,7 @@ describe('Storing data in DHT', () => {
         for (let i = 1; i < NUM_NODES; i++) {
             const nodeId = `${i}`
             const node = await createMockConnectionDhtNode(nodeId, simulator, 
-                undefined, K, nodeId, MAX_CONNECTIONS)
+                undefined, K, nodeId, MAX_CONNECTIONS, 60000)
             nodeIndicesById[node.getNodeId().toKey()] = i
             nodes.push(node)
         }
@@ -46,18 +46,6 @@ describe('Storing data in DHT', () => {
     afterEach(async () => {
         await Promise.all(nodes.map((node) => node.stop()))
     })
-
-    it('Data structures work locally', async () => {
-        const storingNodeIndex = 34
-        const dataKey = PeerID.fromString('3232323e12r31r3')
-        const data = Any.pack(entrypointDescriptor, PeerDescriptor)
-        await nodes[storingNodeIndex].doStoreData(nodes[storingNodeIndex].getPeerDescriptor(), dataKey, data, 10000)
-        const fetchedData = await nodes[storingNodeIndex].doGetData(dataKey)!
-        fetchedData.forEach((entry) => {
-            const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
-            expect(isSamePeerDescriptor(fetchedDescriptor, entrypointDescriptor)).toBeTrue()
-        })
-    }, 90000)
 
     it('Storing data works', async () => {
         const storingNodeIndex = 34

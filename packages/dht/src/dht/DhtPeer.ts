@@ -1,12 +1,18 @@
 import { IDhtRpcServiceClient } from '../proto/packages/dht/protos/DhtRpc.client'
-import { ClosestPeersRequest, LeaveNotice, PeerDescriptor, PingRequest, 
-    RouteMessageWrapper, StoreDataRequest, StoreDataResponse } from '../proto/packages/dht/protos/DhtRpc'
+import {
+    ClosestPeersRequest,
+    LeaveNotice,
+    PeerDescriptor,
+    PingRequest,
+    RouteMessageWrapper,
+    StoreDataRequest,
+    StoreDataResponse
+} from '../proto/packages/dht/protos/DhtRpc'
 import { v4 } from 'uuid'
 import { PeerID } from '../helpers/PeerID'
 import { DhtRpcOptions } from '../rpc-protocol/DhtRpcOptions'
 import { Logger } from '@streamr/utils'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
-import { DhtNode } from './DhtNode'
 import {
     isSamePeerDescriptor,
     keyFromPeerDescriptor,
@@ -19,16 +25,6 @@ const logger = new Logger(module)
 export interface KBucketContact {
     id: Uint8Array
     vectorClock: number
-}
-
-export interface RouteMessageParams {
-    message: Uint8Array
-    destinationPeer: PeerDescriptor
-    sourcePeer: PeerDescriptor
-    serviceId: string
-    previousPeer?: PeerDescriptor
-    messageId?: string
-    reachableThrough?: PeerDescriptor[]
 }
 
 export class DhtPeer implements KBucketContact {
@@ -45,13 +41,11 @@ export class DhtPeer implements KBucketContact {
     private readonly dhtClient: ProtoRpcClient<IDhtRpcServiceClient>
     private readonly serviceId: string
     private readonly ownPeerDescriptor: PeerDescriptor
-    private dhtNode?: DhtNode
 
     constructor(ownPeerDescriptor: PeerDescriptor,
         peerDescriptor: PeerDescriptor,
         client: ProtoRpcClient<IDhtRpcServiceClient>,
         serviceId: string,
-        dhtNode?: DhtNode
     ) {
         this.ownPeerDescriptor = ownPeerDescriptor
         this.peerId = peerIdFromPeerDescriptor(peerDescriptor)
@@ -59,7 +53,6 @@ export class DhtPeer implements KBucketContact {
         this.vectorClock = DhtPeer.counter++
         this.dhtClient = client
         this.serviceId = serviceId
-        this.dhtNode = dhtNode
         this.getClosestPeers = this.getClosestPeers.bind(this)
         this.ping = this.ping.bind(this)
     }

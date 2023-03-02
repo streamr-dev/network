@@ -5,7 +5,7 @@ import StreamrClient, {
     StreamMetadata,
     StreamrClientConfig
 } from 'streamr-client'
-import _ from 'lodash'
+import padEnd from 'lodash/padEnd'
 import { Wallet } from 'ethers'
 import { Tracker, startTracker } from '@streamr/network-tracker'
 import { Broker, createBroker } from '../src/broker'
@@ -104,7 +104,7 @@ export const startBroker = async (testConfig: TestConfig): Promise<Broker> => {
 }
 
 export const createEthereumAddress = (id: number): EthereumAddress => {
-    return toEthereumAddress('0x' + _.padEnd(String(id), 40, '0'))
+    return toEthereumAddress('0x' + padEnd(String(id), 40, '0'))
 }
 
 export const createClient = async (

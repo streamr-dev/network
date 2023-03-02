@@ -1,6 +1,6 @@
 import { expect } from '@jest/globals'
 import { printExpected, printReceived } from 'jest-matcher-utils'
-import { isFunction } from 'lodash'
+import isFunction from 'lodash/isFunction'
 import { StreamrClientError, StreamrClientErrorCode } from './../../src/StreamrClientError'
 
 interface ExpectationResult {

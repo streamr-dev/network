@@ -182,7 +182,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             logger.trace('disconnectorInterval')
             const LAST_USED_LIMIT = 30000
             this.garbageCollectConnections(this.config.maxConnections, LAST_USED_LIMIT)
-        }, 1000)
+        }, 5000)
     }
 
     public garbageCollectConnections(maxConnections: number, lastUsedLimit: number): void {
@@ -356,7 +356,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             return
         }
 
-        if (this.messageDuplicateDetector.isMostLikelyDuplicate(message.messageId, message.sourceDescriptor!.nodeName!, message)) {
+        if (this.messageDuplicateDetector.isMostLikelyDuplicate(message.messageId)) {
             logger.trace('handleMessage filtered duplicate ' + this.config.nodeName + ', ' +
                 message.sourceDescriptor?.nodeName + ' ' + message.serviceId + ' ' + message.messageId)
             return

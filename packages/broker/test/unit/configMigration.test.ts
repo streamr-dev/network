@@ -1,4 +1,4 @@
-import { merge } from 'lodash'
+import merge from 'lodash/merge'
 import { validateConfig as validateClientConfig } from 'streamr-client'
 import { createMigratedConfig, CURRENT_CONFIGURATION_VERSION, formSchemaUrl, needsMigration } from '../../src/config/migration'
 import BROKER_CONFIG_SCHEMA from '../../src/config/config.schema.json'
@@ -17,7 +17,6 @@ const validateTargetConfig = async (config: any): Promise<void> | never => {
             ...pluginConfig,
             name: pluginName,
             streamrClient: undefined,
-            apiAuthenticator: undefined,
             brokerConfig: config
         })
     }
