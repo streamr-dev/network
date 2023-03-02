@@ -11,7 +11,6 @@ import { Contact } from "./contact/Contact"
 import { SortedContactList } from "./contact/SortedContactList"
 import { RecursiveFindResult } from "./DhtNode"
 import { keyFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
-import { clearTimeout } from 'timers'
 
 export interface RecursiveFindSessionEvents {
     findCompleted: (results: PeerDescriptor[]) => void

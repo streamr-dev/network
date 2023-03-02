@@ -51,8 +51,8 @@ describe('Storing data in DHT', () => {
         const storingNodeIndex = 34
         const dataKey = PeerID.fromString('3232323e12r31r3')
         const data = Any.pack(entrypointDescriptor, PeerDescriptor)
-        await nodes[storingNodeIndex].doStoreData(nodes[storingNodeIndex].getPeerDescriptor(), dataKey, data, 10000)
-        const fetchedData = await nodes[storingNodeIndex].doGetData(dataKey)!
+        await nodes[storingNodeIndex].dataStore!.storeLocalData(nodes[storingNodeIndex].getPeerDescriptor(), dataKey, data, 10000)
+        const fetchedData = await nodes[storingNodeIndex].dataStore!.getLocalData(dataKey)!
         fetchedData.forEach((entry) => {
             const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
             expect(isSamePeerDescriptor(fetchedDescriptor, entrypointDescriptor)).toBeTrue()

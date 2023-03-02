@@ -54,7 +54,8 @@ export const createMockConnectionDhtNode = async (stringId: string,
         transportLayer: mockConnectionManager,
         nodeName: nodeName,
         numberOfNodesPerKBucket: K ? K : 8,
-        maxConnections: maxConnections
+        maxConnections: maxConnections,
+        dhtJoinTimeout: 20000
     })
     await node.start()
 
