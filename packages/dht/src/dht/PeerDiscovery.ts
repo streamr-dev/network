@@ -53,7 +53,6 @@ export class PeerDiscovery {
         if (this.stopped) {
             return
         }
-
         logger.info(
             `Joining ${this.config.serviceId === 'layer0' ? 'The Streamr Network' : `Control Layer for ${this.config.serviceId}`}`
             + ` via entrypoint ${keyFromPeerDescriptor(entryPointDescriptor)}`
@@ -64,16 +63,13 @@ export class PeerDiscovery {
             toProtoRpcClient(new DhtRpcServiceClient(this.config.rpcCommunicator.getRpcClientTransport())),
             this.config.serviceId
         )
-
         if (this.config.ownPeerId!.equals(entryPoint.peerId)) {
             return
         }
-
         this.config.connectionManager?.lockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
         this.config.addContact(entryPointDescriptor)
         const closest = this.config.bucket.closest(this.config.ownPeerId!.value, this.config.getClosestContactsLimit)
         this.config.neighborList.addContacts(closest)
-
         const session = new DiscoverySession(
             this.config.neighborList!,
             this.config.ownPeerId!.value,
@@ -85,7 +81,6 @@ export class PeerDiscovery {
             (newPeer: DhtPeer) => this.config.addContact(newPeer.getPeerDescriptor()),
             this.config.ownPeerDescriptor.nodeName
         )
-
         const randomSession = new DiscoverySession(
             this.config.neighborList!,
             crypto.randomBytes(8),
@@ -97,13 +92,10 @@ export class PeerDiscovery {
             (newPeer: DhtPeer) => this.config.addContact(newPeer.getPeerDescriptor()),
             this.config.ownPeerDescriptor.nodeName + '-random'
         )
-
         this.ongoingDiscoverySessions.set(session.sessionId, session)
         this.ongoingDiscoverySessions.set(randomSession.sessionId, randomSession)
-
         try {
             await session.findClosestNodes(this.config.joinTimeout)
-            this.config.neighborList!.setAllAsUncontacted()
             if (doRandomJoin) {
                 await randomSession.findClosestNodes(this.config.joinTimeout)
             }
@@ -132,7 +124,6 @@ export class PeerDiscovery {
         try {
             this.config.neighborList.clear()
             await this.joinDht(entryPoint)
-
             this.rejoinOngoing = false
             if (this.config.connections.size === 0 || this.config.bucket.count() === 0) {
                 if (this.stopped) {

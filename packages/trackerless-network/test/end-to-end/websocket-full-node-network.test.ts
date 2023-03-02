@@ -33,7 +33,7 @@ describe('Full node network with WebSocket connections only', () => {
         epConnectionManager = layer0Ep.getTransport() as ConnectionManager
         epStreamrNode = new StreamrNode({})
         await epStreamrNode.start(layer0Ep, epConnectionManager, epConnectionManager)
-        await epStreamrNode.joinStream(randomGraphId, epPeerDescriptor)
+        await epStreamrNode.joinStream(randomGraphId, [epPeerDescriptor])
         await Promise.all(range(NUM_OF_NODES).map(async (i) => {
             const layer0 = new DhtNode({
                 routeMessageTimeout: 10000,
@@ -50,8 +50,8 @@ describe('Full node network with WebSocket connections only', () => {
             const connectionManager = layer0.getTransport() as ConnectionManager
             const streamrNode = new StreamrNode({ nodeName: `${i}` })
             await streamrNode.start(layer0, connectionManager, connectionManager)
-            return await streamrNode.joinStream(randomGraphId, epPeerDescriptor).then(() => {
-                streamrNode.subscribeToStream(randomGraphId, epPeerDescriptor)
+            return await streamrNode.joinStream(randomGraphId, [epPeerDescriptor]).then(() => {
+                streamrNode.subscribeToStream(randomGraphId, [epPeerDescriptor])
                 connectionManagers.push(connectionManager)
                 streamrNodes.push(streamrNode)
                 return
@@ -91,7 +91,7 @@ describe('Full node network with WebSocket connections only', () => {
             randomGraphId,
             peerIdFromPeerDescriptor(epPeerDescriptor).toString()
         )
-        epStreamrNode.publishToStream(randomGraphId, epPeerDescriptor, msg)
+        epStreamrNode.publishToStream(randomGraphId, [epPeerDescriptor], msg)
         await waitForCondition(() => numOfMessagesReceived === NUM_OF_NODES)
     }, 220000)
 

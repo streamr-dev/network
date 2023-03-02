@@ -44,7 +44,7 @@ describe('Full node network with WebRTC connections', () => {
         epStreamrNode = new StreamrNode({})
         await epStreamrNode.start(layer0Ep, epConnectionManager, epConnectionManager)
 
-        await epStreamrNode.joinStream(randomGraphId, epPeerDescriptor)
+        await epStreamrNode.joinStream(randomGraphId, [epPeerDescriptor])
 
         await Promise.all(range(NUM_OF_NODES).map(async (i) => {
             const peerId = PeerID.fromString(`${i}`)
@@ -70,8 +70,8 @@ describe('Full node network with WebRTC connections', () => {
             const streamrNode = new StreamrNode({})
             await streamrNode.start(layer0, connectionManager, connectionManager)
 
-            return await streamrNode.joinStream(randomGraphId, epPeerDescriptor).then(() => {
-                streamrNode.subscribeToStream(randomGraphId, epPeerDescriptor)
+            return await streamrNode.joinStream(randomGraphId, [epPeerDescriptor]).then(() => {
+                streamrNode.subscribeToStream(randomGraphId, [epPeerDescriptor])
                 connectionManagers.push(connectionManager)
                 streamrNodes.push(streamrNode)
                 return
@@ -113,7 +113,7 @@ describe('Full node network with WebRTC connections', () => {
             randomGraphId,
             peerIdFromPeerDescriptor(epPeerDescriptor).toString()
         )
-        epStreamrNode.publishToStream(randomGraphId, epPeerDescriptor, msg)
+        epStreamrNode.publishToStream(randomGraphId, [epPeerDescriptor], msg)
         await waitForCondition(() => numOfMessagesReceived === NUM_OF_NODES)
     }, 120000)
 
