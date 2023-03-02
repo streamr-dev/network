@@ -29,7 +29,8 @@ export const createMockConnectionDhtNode = async (stringId: string,
     K?: number,
     nodeName?: string,
     maxConnections = 80,
-    dhtJoinTimeout = 30000): Promise<DhtNode> => {
+    dhtJoinTimeout = 45000
+): Promise<DhtNode> => {
 
     let id: PeerID
     if (binaryId) {
