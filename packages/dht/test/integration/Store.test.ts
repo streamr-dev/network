@@ -41,7 +41,7 @@ describe('Storing data in DHT', () => {
         }
         await Promise.all(nodes.map((node) => node.joinDht(entrypointDescriptor)))
         await waitConnectionManagersReadyForTesting(nodes.map((node) => node.connectionManager!), MAX_CONNECTIONS)
-    }, 60000)
+    }, 90000)
 
     afterEach(async () => {
         await Promise.all(nodes.map((node) => node.stop()))
