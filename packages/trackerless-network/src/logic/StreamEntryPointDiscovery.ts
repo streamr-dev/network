@@ -1,5 +1,5 @@
 import { createHash } from 'crypto'
-import { DhtNode, isSamePeerDescriptor, PeerDescriptor } from '@streamr/dht'
+import { DhtNode, isSamePeerDescriptor, PeerDescriptor, PeerID, Contact, SortedContactList } from '@streamr/dht'
 import { Any } from '../proto/google/protobuf/any'
 import { Logger, wait } from '@streamr/utils'
 import { StreamObject } from './StreamrNode'
@@ -124,9 +124,13 @@ export class StreamEntryPointDiscovery {
             if (this.streams.has(streamPartID)) {
                 const stream = this.streams.get(streamPartID)
                 const rediscoveredEntrypoints = await this.discoverEntrypoints(streamPartID)
-                await Promise.all(rediscoveredEntrypoints
-                    .filter((entryPoint) => !isSamePeerDescriptor(entryPoint, this.layer0.getPeerDescriptor()))
-                    .map((entrypoint) => stream!.layer1.joinDht(entrypoint, false)))
+                const sortedEntrypoints = new SortedContactList(PeerID.fromString(streamPartID), 4)
+                sortedEntrypoints.addContacts(
+                    rediscoveredEntrypoints
+                        .filter((entryPoint) => !isSamePeerDescriptor(entryPoint, this.layer0.getPeerDescriptor()))
+                        .map((entryPoint) => new Contact(entryPoint)))
+                await Promise.allSettled(sortedEntrypoints.getAllContacts()
+                    .map((entryPoint) => stream!.layer1.joinDht(entryPoint.getPeerDescriptor(), false)))
                 if (stream!.layer1.getBucketSize() === 0) {
                     throw new Error(`Node is alone in stream or a network split is still possible`)
                 }

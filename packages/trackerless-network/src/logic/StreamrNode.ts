@@ -146,7 +146,7 @@ export class StreamrNode extends EventEmitter<Events> {
             entryPoints: knownEntryPointDescriptors,
             numberOfNodesPerKBucket: 4,
             rpcRequestTimeout: 15000,
-            dhtJoinTimeout: 90000,
+            dhtJoinTimeout: 60000,
             nodeName: this.config.nodeName
         })
         const layer2 = new RandomGraphNode({
