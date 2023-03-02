@@ -32,7 +32,15 @@ describe('Layer1', () => {
         layer1CleanUp = []
 
         for (let i = 0; i < NODE_COUNT; i++) {
-            const node = await createMockConnectionDhtNode(new UUID().toString(), simulator)
+            const node = await createMockConnectionDhtNode(
+                new UUID().toString(),
+                simulator,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                40000
+            )
             nodes.push(node)
         }
 
@@ -45,7 +53,6 @@ describe('Layer1', () => {
         await Promise.all(layer1CleanUp.map((node) => node.stop()))
         await layer0EntryPoint.stop()
         simulator.stop()
-
     })
 
     it('single layer1 dht', async () => {
