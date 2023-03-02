@@ -39,7 +39,7 @@ describe('Layer1', () => {
                 undefined,
                 undefined,
                 undefined,
-                40000
+                60000
             )
             nodes.push(node)
         }
