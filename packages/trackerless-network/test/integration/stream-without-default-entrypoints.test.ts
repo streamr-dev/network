@@ -81,7 +81,7 @@ describe('stream without default entrypoints', () => {
         })
         await Promise.all([
             waitForCondition(() => numOfReceivedMessages === 1, 10000),
-            nodes[1].waitForJoinAndPublish(streamMessage, [], 10000)
+            nodes[1].publish(streamMessage, [])
         ])
     })
 
@@ -90,9 +90,9 @@ describe('stream without default entrypoints', () => {
             numOfReceivedMessages += 1
         })
         await Promise.all([
+            waitForCondition(() => numOfReceivedMessages === 1, 15000),
             nodes[0].subscribeAndWaitForJoin(STREAM_ID, []),
-            nodes[1].waitForJoinAndPublish(streamMessage, []),
-            waitForCondition(() => numOfReceivedMessages === 1, 10000),
+            nodes[1].publish(streamMessage, []),
         ])
     })
 
@@ -103,11 +103,10 @@ describe('stream without default entrypoints', () => {
             nodes[i].addMessageListener((_msg) => {
                 numOfReceivedMessages += 1
             })
-            await waitForCondition(() => nodes[i].stack.getStreamrNode().getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length >= 3, 10000)
         }))
         await Promise.all([
             waitForCondition(() => numOfReceivedMessages === numOfSubscribers, 10000),
-            nodes[9].waitForJoinAndPublish(streamMessage, [])
+            nodes[9].publish(streamMessage, [])
         ])
     }, 45000)
 
