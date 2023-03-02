@@ -2,7 +2,7 @@ import { ConnectionManager } from "../../src/connection/ConnectionManager"
 import { Message, MessageType, NodeType, PeerDescriptor } from "../../src/proto/packages/dht/protos/DhtRpc"
 import { PeerID } from '../../src/helpers/PeerID'
 import { Simulator } from '../../src/connection/Simulator/Simulator'
-import { DhtNode } from "../../src/dht/DhtNode"
+import { createPeerDescriptor } from "../../src/dht/DhtNode"
 import { RpcMessage } from "../../src/proto/packages/proto-rpc/protos/ProtoRpc"
 import { keyFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 
@@ -48,7 +48,7 @@ describe('ConnectionManager', () => {
         await connectionManager.start((report) => {
             expect(report.ip).toEqual('127.0.0.1')
             expect(report.openInternet).toEqual(true)
-            return DhtNode.createPeerDescriptor(report)
+            return createPeerDescriptor(report)
         })
 
         await connectionManager.stop()
@@ -64,7 +64,7 @@ describe('ConnectionManager', () => {
         })
 
         await expect(connectionManager.start((report) => {
-            return DhtNode.createPeerDescriptor(report)
+            return createPeerDescriptor(report)
         })).rejects.toThrow('Failed to connect to the entrypoints')
 
         await connectionManager.stop()
@@ -76,7 +76,7 @@ describe('ConnectionManager', () => {
         await connectionManager1.start((report) => {
             expect(report.ip).toEqual('127.0.0.1')
             expect(report.openInternet).toEqual(true)
-            return DhtNode.createPeerDescriptor(report)
+            return createPeerDescriptor(report)
         })
 
         const connectionManager2 = new ConnectionManager({
@@ -89,7 +89,7 @@ describe('ConnectionManager', () => {
         await connectionManager2.start((report) => {
             expect(report.ip).toEqual('127.0.0.1')
             expect(report.openInternet).toEqual(true)
-            return DhtNode.createPeerDescriptor(report)
+            return createPeerDescriptor(report)
         })
 
         await connectionManager1.stop()
@@ -104,7 +104,7 @@ describe('ConnectionManager', () => {
         await connectionManager1.start((report) => {
             expect(report.ip).toEqual('127.0.0.1')
             expect(report.openInternet).toEqual(true)
-            peerDescriptor = DhtNode.createPeerDescriptor(report)
+            peerDescriptor = createPeerDescriptor(report)
             return peerDescriptor
         })
 
@@ -119,17 +119,9 @@ describe('ConnectionManager', () => {
         await connectionManager2.start((report2) => {
             expect(report2.ip).toEqual('127.0.0.1')
             expect(report2.openInternet).toEqual(true)
-            peerDescriptor2 = DhtNode.createPeerDescriptor(report2)
+            peerDescriptor2 = createPeerDescriptor(report2)
             return peerDescriptor2
         })
-
-        /*
-        const rpcMessage: RpcMessage = {
-            header: {},
-            body: new Uint8Array(10),
-            requestId: v4()
-        }
-        */
 
         const msg: Message = {
             serviceId: serviceId,
@@ -178,7 +170,7 @@ describe('ConnectionManager', () => {
         await connectionManager1.start((report) => {
             expect(report.ip).toEqual('127.0.0.1')
             expect(report.openInternet).toEqual(true)
-            peerDescriptor = DhtNode.createPeerDescriptor(report)
+            peerDescriptor = createPeerDescriptor(report)
             return peerDescriptor
         })
 
@@ -191,7 +183,7 @@ describe('ConnectionManager', () => {
 
         let peerDescriptor2: PeerDescriptor | undefined
         await connectionManager2.start((report2) => {
-            peerDescriptor2 = DhtNode.createPeerDescriptor(report2)
+            peerDescriptor2 = createPeerDescriptor(report2)
             return peerDescriptor2
         })
 
