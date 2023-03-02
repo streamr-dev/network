@@ -1,23 +1,24 @@
-import { DataEntry, PeerDescriptor, StoreDataRequest, StoreDataResponse } from '../proto/packages/dht/protos/DhtRpc'
-import { PeerID, PeerIDKey } from '../helpers/PeerID'
-import { Any } from '../proto/google/protobuf/any'
-import { Timestamp } from '../proto/google/protobuf/timestamp'
+import { PeerDescriptor, StoreDataRequest, StoreDataResponse } from '../../proto/packages/dht/protos/DhtRpc'
+import { PeerID } from '../../helpers/PeerID'
+import { Any } from '../../proto/google/protobuf/any'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
-import { DhtPeer } from './DhtPeer'
+import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
+import { DhtPeer } from '../DhtPeer'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
-import { DhtRpcServiceClient } from '../proto/packages/dht/protos/DhtRpc.client'
-import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
-import { Router } from './Router'
-import { RecursiveFinder } from './RecursiveFinder'
-import { isSamePeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
+import { DhtRpcServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
+import { Router } from '../Router'
+import { RecursiveFinder } from '../RecursiveFinder'
+import { isSamePeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger } from '@streamr/utils'
+import { LocalDataStore } from './LocalDataStore'
 
 interface DataStoreConfig {
     rpcCommunicator: RoutingRpcCommunicator
     router: Router
     recursiveFinder: RecursiveFinder
     ownPeerDescriptor: PeerDescriptor
+    localDataStore: LocalDataStore
     serviceId: string
     storeMaxTtl: number
     storeHighestTtl: number
@@ -27,16 +28,13 @@ interface DataStoreConfig {
 const logger = new Logger(module)
 
 export class DataStore {
+
     private readonly config: DataStoreConfig
-    // A map into which each node can store one value per data key
-    // The first key is the key of the data, the second key is the
-    // PeerID of the storer of the data
-    private store: Map<PeerIDKey, Map<PeerIDKey, DataEntry>> = new Map()
+
     constructor(config: DataStoreConfig) {
         this.config = config
         this.storeData = this.storeData.bind(this)
         this.config.rpcCommunicator!.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData', this.storeData)
-
     }
 
     public async storeDataToDht(key: Uint8Array, data: Any): Promise<PeerDescriptor[]> {
@@ -47,7 +45,7 @@ export class DataStore {
         const ttl = this.config.storeHighestTtl // ToDo: make TTL decrease according to some nice curve
         for (let i = 0; i < closestNodes.length && successfulNodes.length < 5; i++) {
             if (isSamePeerDescriptor(this.config.ownPeerDescriptor, closestNodes[i])) {
-                this.storeLocalData(closestNodes[i], PeerID.fromValue(key), data, ttl)
+                this.config.localDataStore.storeEntry(closestNodes[i], PeerID.fromValue(key), data, ttl)
                 successfulNodes.push(closestNodes[i])
                 continue
             }
@@ -73,29 +71,13 @@ export class DataStore {
         return successfulNodes
     }
 
-    public storeLocalData(storer: PeerDescriptor, dataKey: PeerID, data: Any, ttl: number): void {
-        const publisherId = PeerID.fromValue(storer.kademliaId)
-        if (!this.store.has(dataKey.toKey())) {
-            this.store.set(dataKey.toKey(), new Map())
-        }
-        this.store.get(dataKey.toKey())!.set(publisherId.toKey(), { storer, data, storedAt: Timestamp.now(), ttl })
-    }
-
-    public getLocalData(key: PeerID): Map<PeerIDKey, DataEntry> | undefined {
-        if (this.store.has(key.toKey())) {
-            return this.store.get(key.toKey())!
-        } else {
-            return undefined
-        }
-    }
-
     // RPC service implementation
     private async storeData(request: StoreDataRequest, context: ServerCallContext): Promise<StoreDataResponse> {
         let ttl = request.ttl
         if (ttl > this.config.storeMaxTtl) {
             ttl = this.config.storeMaxTtl
         }
-        this.storeLocalData(
+        this.config.localDataStore.storeEntry(
             (context as DhtCallContext).incomingSourceDescriptor!,
             PeerID.fromValue(request.kademliaId),
             request.data!,
