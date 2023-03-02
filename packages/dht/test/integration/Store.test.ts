@@ -47,18 +47,6 @@ describe('Storing data in DHT', () => {
         await Promise.all(nodes.map((node) => node.stop()))
     })
 
-    it('Data structures work locally', async () => {
-        const storingNodeIndex = 34
-        const dataKey = PeerID.fromString('3232323e12r31r3')
-        const data = Any.pack(entrypointDescriptor, PeerDescriptor)
-        await nodes[storingNodeIndex].dataStore!.storeLocalData(nodes[storingNodeIndex].getPeerDescriptor(), dataKey, data, 10000)
-        const fetchedData = await nodes[storingNodeIndex].dataStore!.getLocalData(dataKey)!
-        fetchedData.forEach((entry) => {
-            const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
-            expect(isSamePeerDescriptor(fetchedDescriptor, entrypointDescriptor)).toBeTrue()
-        })
-    }, 90000)
-
     it('Storing data works', async () => {
         const storingNodeIndex = 34
         const dataKey = PeerID.fromString('3232323e12r31r3')

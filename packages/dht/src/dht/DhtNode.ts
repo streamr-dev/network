@@ -34,8 +34,9 @@ import { Any } from '../proto/google/protobuf/any'
 import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 import { Router } from './Router'
 import { RecursiveFinder } from './RecursiveFinder'
-import { DataStore } from './DataStore'
+import { DataStore } from './store/DataStore'
 import { PeerDiscovery } from './PeerDiscovery'
+import { LocalDataStore } from './store/LocalDataStore'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -121,6 +122,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private ownPeerId?: PeerID
     public router?: Router
     public dataStore?: DataStore
+    private localDataStore = new LocalDataStore()
     private recursiveFinder?: RecursiveFinder
     private peerDiscovery?: PeerDiscovery
 
@@ -231,9 +233,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             serviceId: this.config.serviceId,
             ownPeerId: this.ownPeerId!,
             addContact: this.addNewContact.bind(this),
-            getLocalData: this.getLocalData.bind(this),
             isPeerCloserToIdThanSelf: this.isPeerCloserToIdThanSelf.bind(this),
-            getClosestPeerDescriptors: this.getClosestPeerDescriptors.bind(this)
+            getClosestPeerDescriptors: this.getClosestPeerDescriptors.bind(this),
+            localDataStore: this.localDataStore
         })
         this.dataStore = new DataStore({
             rpcCommunicator: this.rpcCommunicator!,
@@ -243,7 +245,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             serviceId: this.config.serviceId,
             storeHighestTtl: this.config.storeHighestTtl,
             storeMaxTtl: this.config.storeMaxTtl,
-            storeNumberOfCopies: this.config.storeNumberOfCopies
+            storeNumberOfCopies: this.config.storeNumberOfCopies,
+            localDataStore: this.localDataStore
         })
     }
 
@@ -345,10 +348,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         const distance1 = this.bucket!.distance(peer1.kademliaId, compareToId.value)
         const distance2 = this.bucket!.distance(this.ownPeerDescriptor!.kademliaId, compareToId.value)
         return distance1 < distance2
-    }
-
-    private getLocalData(key: PeerID): Map<PeerIDKey, DataEntry> | undefined {
-        return this.dataStore!.getLocalData(key)
     }
 
     public handleMessage(message: Message): void {

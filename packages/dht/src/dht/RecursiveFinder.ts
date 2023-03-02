@@ -18,6 +18,7 @@ import { RecursiveFindSession, RecursiveFindSessionEvents } from './RecursiveFin
 import { RecursiveFindResult } from './DhtNode'
 import { DhtPeer } from './DhtPeer'
 import { ITransport } from '../transport/ITransport'
+import { LocalDataStore } from './store/LocalDataStore'
 
 interface RecursiveFinderConfig {
     rpcCommunicator: RoutingRpcCommunicator
@@ -27,7 +28,7 @@ interface RecursiveFinderConfig {
     ownPeerDescriptor: PeerDescriptor
     ownPeerId: PeerID
     serviceId: string
-    getLocalData: (key: PeerID) => Map<PeerIDKey, DataEntry> | undefined
+    localDataStore: LocalDataStore
     addContact: (contact: PeerDescriptor, setActive?: boolean) => void
     getClosestPeerDescriptors: (kademliaId: Uint8Array, limit: number) => PeerDescriptor[]
     isPeerCloserToIdThanSelf: (peer1: PeerDescriptor, compareToId: PeerID) => boolean
@@ -55,7 +56,7 @@ export class RecursiveFinder {
             routingPaths: this.config.connections.size > 1 ? 2 : 1
         })
         if (this.config.connections.size === 0) {
-            const data = this.config.getLocalData(PeerID.fromValue(idToFind))
+            const data = this.config.localDataStore.getEntry(PeerID.fromValue(idToFind))
             recursiveFindSession.doReportRecursiveFindResult(
                 [this.config.ownPeerDescriptor!],
                 [this.config.ownPeerDescriptor!],
@@ -97,7 +98,7 @@ export class RecursiveFinder {
             logger.trace(`doFindRecursively failed with error ${err}`)
         }
         if (findMode === FindMode.DATA) {
-            const data = this.config.getLocalData(PeerID.fromValue(idToFind))
+            const data = this.config.localDataStore.getEntry(PeerID.fromValue(idToFind))
             if (data) {
                 this.reportRecursiveFindResult([], params.sourcePeer!, sessionId, [], data, true)
             }
@@ -147,7 +148,7 @@ export class RecursiveFinder {
         }
         const closestPeersToDestination = this.config.getClosestPeerDescriptors(routedMessage.destinationPeer!.kademliaId, 5)
         if (recursiveFindRequest!.findMode == FindMode.DATA) {
-            const data = this.config.getLocalData(idToFind)
+            const data = this.config.localDataStore.getEntry(idToFind)
             if (data) {
                 this.reportRecursiveFindResult(routedMessage.routingPath, routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
                     closestPeersToDestination, data, true)
