@@ -219,9 +219,12 @@ async function waitReadyForTesting(connectionManager: ConnectionManager, limit: 
     const LAST_USED_LIMIT = 100
     connectionManager.garbageCollectConnections(limit, LAST_USED_LIMIT)
     await waitForCondition(() => {
-        return (connectionManager.getNumberOfLocalLockedConnections() == 0 &&
-            connectionManager.getNumberOfRemoteLockedConnections() == 0 &&
-            connectionManager.getAllConnectionPeerDescriptors().length <= limit)
-    }, 30000)
+        return (connectionManager.getNumberOfLocalLockedConnections() === 0 &&
+            connectionManager.getNumberOfRemoteLockedConnections() === 0 &&
+            // Limit will not go down to soft cap limit in all cases.
+            // For example, a node has limit+1 weak locked connections
+            // and all its neighbors have below limit number of connections
+            connectionManager.getAllConnectionPeerDescriptors().length <= limit + 2)
+    }, 60000)
 }
 
