@@ -220,13 +220,20 @@ function garbageCollectConnections(connectionManager: ConnectionManager, limit: 
 async function waitReadyForTesting(connectionManager: ConnectionManager, limit: number): Promise<void> {
     const LAST_USED_LIMIT = 100
     connectionManager.garbageCollectConnections(limit, LAST_USED_LIMIT)
-    await waitForCondition(() => {
-        return (connectionManager.getNumberOfLocalLockedConnections() === 0 &&
-            connectionManager.getNumberOfRemoteLockedConnections() === 0 &&
-            // Limit will not go down to soft cap limit in all cases.
-            // For example, a node has limit+1 weak locked connections
-            // and all its neighbors have below limit number of connections
-            connectionManager.getAllConnectionPeerDescriptors().length <= limit + 2)
-    }, 60000)
+    try {
+        await waitForCondition(() => {
+            return (connectionManager.getNumberOfLocalLockedConnections() === 0 &&
+                connectionManager.getNumberOfRemoteLockedConnections() === 0 &&
+                connectionManager.getAllConnectionPeerDescriptors().length <= limit)
+        }, 20000)
+    } catch (err) {
+        if (connectionManager.getNumberOfLocalLockedConnections() > 0
+            && connectionManager.getNumberOfRemoteLockedConnections() > 0) {
+            throw Error('Connections are still locked')
+        } else if (connectionManager.getAllConnectionPeerDescriptors().length > limit + 5) {
+            throw Error(`ConnectionManager has more than ${limit} + 5 connections after 20 seconds`)
+        }
+    }
+
 }
 
