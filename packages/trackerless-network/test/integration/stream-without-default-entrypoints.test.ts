@@ -91,7 +91,7 @@ describe('stream without default entrypoints', () => {
         })
         await Promise.all([
             waitForCondition(() => numOfReceivedMessages === 1, 15000),
-            nodes[0].subscribeAndWaitForJoin(STREAM_ID, []),
+            nodes[0].subscribe(STREAM_ID, []),
             nodes[1].publish(streamMessage, []),
         ])
     })
