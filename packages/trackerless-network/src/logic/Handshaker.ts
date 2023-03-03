@@ -137,8 +137,7 @@ export class Handshaker {
             return this.respondWithAccepted(request, requester)
         } else if (this.config.targetNeighbors!.size() + this.getOngoingHandshakes().size < this.config.N) {
             return this.respondWithAccepted(request, requester)
-        } else if (this.config.targetNeighbors!.size([request.interleavingFrom!]) >= 1 &&
-            this.config.targetNeighbors!.size() + this.getOngoingHandshakes().size >= this.config.N) {
+        } else if (this.config.targetNeighbors!.size([request.interleavingFrom!]) >= 2) {
             return this.respondWithInterleaveRequest(request, requester)
         } else {
             return this.respondWithUnaccepted(request)
