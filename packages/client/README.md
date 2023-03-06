@@ -101,7 +101,7 @@ NodeJS `16.13.x` is the minimum required version. NodeJS `18.13.x`, NPM `8.x` an
 For usage in the browser include the latest build, e.g. by including a `<script>` tag pointing at a CDN:
 
 ```html
-<script src="https://unpkg.com/streamr-client@latest/streamr-client.web.js"></script>
+<script src="https://unpkg.com/streamr-client@latest/streamr-client.web.min.js"></script>
 ```
 
 #### Browser extension
