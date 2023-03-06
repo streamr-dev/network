@@ -181,6 +181,8 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             deferredConnectionAttempt: deferredConnectionAttempt || new DeferredConnectionAttempt(),
             newConnectionTimeout: this.newConnectionTimeout,
             pingInterval: this.pingInterval,
+            portRangeBegin: this.portRangeBegin,
+            portRangeEnd: this.portRangeEnd
         }
 
         const connection = this.connectionFactory.createConnection(connectionOptions)
