@@ -9,12 +9,19 @@ import {
     PingResponse,
     RouteMessageAck,
     RouteMessageWrapper,
+    StoreDataRequest,
+    StoreDataResponse,
     WebSocketConnectionRequest,
     WebSocketConnectionResponse
 } from '../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { PeerID } from '../src/helpers/PeerID'
-import { IDhtRpcService, IRoutingService, IWebSocketConnectorService } from '../src/proto/packages/dht/protos/DhtRpc.server'
+import {
+    IDhtRpcService,
+    IRoutingService,
+    IStoreService,
+    IWebSocketConnectorService
+} from '../src/proto/packages/dht/protos/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { Simulator } from '../src/connection/Simulator/Simulator'
 import { ConnectionManager } from '../src/connection/ConnectionManager'
@@ -179,6 +186,27 @@ export const MockRoutingService: IRouterServiceWithError = {
     },
     async throwRouteMessageError(_urequest: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
         throw new Error()
+    }
+}
+
+interface IStoreServiceWithError extends IStoreService {
+    throwStoreDataError: (request: StoreDataRequest, _context: ServerCallContext) => Promise<StoreDataResponse>
+    storeDataErrorString: (request: StoreDataRequest, _context: ServerCallContext) => Promise<StoreDataResponse>
+}
+
+export const MockStoreService: IStoreServiceWithError = {
+    async storeData(_request: StoreDataRequest, _context: ServerCallContext): Promise<StoreDataResponse> {
+        return {
+            error: ''
+        }
+    },
+    async throwStoreDataError(_request: StoreDataRequest, _context: ServerCallContext): Promise<StoreDataResponse> {
+        throw new Error('Mock')
+    },
+    async storeDataErrorString(_request: StoreDataRequest, _context: ServerCallContext): Promise<StoreDataResponse> {
+        return {
+            error: 'Mock'
+        }
     }
 }
 
