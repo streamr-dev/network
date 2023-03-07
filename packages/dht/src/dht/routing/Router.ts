@@ -172,68 +172,67 @@ export class Router implements Omit<IRoutingService, 'findRecursively'> {
         this.addToDuplicateDetector(routedMessage.requestId, routedMessage.sourcePeer!.nodeName!)
         if (this.config.ownPeerId!.equals(peerIdFromPeerDescriptor(routedMessage.destinationPeer!))) {
             logger.trace(`${this.config.ownPeerDescriptor.nodeName} routing message targeted to self ${routedMessage.requestId}`)
-            if (routedMessage.reachableThrough.length > 0) {
-                const sourceKey = keyFromPeerDescriptor(routedMessage.sourcePeer!)
-                if (this.forwardingTable.has(sourceKey)) {
-                    const oldEntry = this.forwardingTable.get(sourceKey)
-                    clearTimeout(oldEntry!.timeout)
-                    this.forwardingTable.delete(sourceKey)
-                }
-                const forwardingEntry: ForwardingTableEntry = {
-                    peerDescriptors: routedMessage.reachableThrough,
-                    timeout: setTimeout(() => {
-                        this.forwardingTable.delete(sourceKey)
-                    }, 10000)
-                }
-                this.forwardingTable.set(sourceKey, forwardingEntry)
-            }
-            if (this.config.connectionManager) {
-                this.config.connectionManager.handleMessage(routedMessage.message!)
-            }
+            this.setForwardingEntries(routedMessage)
+            this.config.connectionManager?.handleMessage(routedMessage.message!)
             return createRouteMessageAck(routedMessage)
         } else {
             return this.doRouteMessage(routedMessage)
         }
     }
 
-    // IRoutingService method
-    async forwardMessage(routedMessage: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
-        if (this.stopped) {
-            return createRouteMessageAck(routedMessage, 'forwardMessage() service is not running')
-        } else if (this.routerDuplicateDetector.isMostLikelyDuplicate(routedMessage.requestId)) {
-            logger.trace(`Peer ${this.config.ownPeerId.value} forwarding message ${routedMessage.requestId} 
-        from ${routedMessage.sourcePeer?.kademliaId} to ${routedMessage.destinationPeer?.kademliaId} is likely a duplicate`)
-            return createRouteMessageAck(routedMessage, 'message given to forwardMessage() service is likely a duplicate')
-        }
-        logger.trace(`Processing received forward routeMessage ${routedMessage.requestId}`)
-        this.config.addContact(routedMessage.sourcePeer!, true)
-        this.addToDuplicateDetector(routedMessage.requestId, routedMessage.sourcePeer!.nodeName!)
-        if (this.config.ownPeerId.equals(peerIdFromPeerDescriptor(routedMessage.destinationPeer!))) {
-            logger.trace(`Peer ${this.config.ownPeerId.value} forwarding found message targeted to self ${routedMessage.requestId}`)
-            try {
-                const forwardedMessage = routedMessage.message!
-                if (this.config.ownPeerId!.equals(peerIdFromPeerDescriptor(forwardedMessage.targetDescriptor!))) {
-                    if (this.config.connectionManager) {
-                        this.config.connectionManager.handleMessage(forwardedMessage!)
-                    }
-                    return createRouteMessageAck(routedMessage)
-                }
-                // eslint-disable-next-line promise/catch-or-return
-                this.doRouteMessage({ ...routedMessage, destinationPeer: forwardedMessage.targetDescriptor })
-                    .catch((err) => {
-                        logger.error(
-                            `Failed to send (forwardMessage: ${this.config.serviceId}) to`
-                            + ` ${keyFromPeerDescriptor(forwardedMessage.targetDescriptor!)}: ${err}`
-                        )
-                    })
-                return createRouteMessageAck(routedMessage)
-            } catch (err) {
-                logger.trace(`Could not forward message`)
-                return createRouteMessageAck(routedMessage, `could not route forwarded message ${routedMessage.requestId}`)
+    private setForwardingEntries(routedMessage: RouteMessageWrapper): void {
+        if (routedMessage.reachableThrough.length > 0) {
+            const sourceKey = keyFromPeerDescriptor(routedMessage.sourcePeer!)
+            if (this.forwardingTable.has(sourceKey)) {
+                const oldEntry = this.forwardingTable.get(sourceKey)
+                clearTimeout(oldEntry!.timeout)
+                this.forwardingTable.delete(sourceKey)
             }
-        } else {
-            return this.doRouteMessage(routedMessage, true)
+            const forwardingEntry: ForwardingTableEntry = {
+                peerDescriptors: routedMessage.reachableThrough,
+                timeout: setTimeout(() => {
+                    this.forwardingTable.delete(sourceKey)
+                }, 10000)
+            }
+            this.forwardingTable.set(sourceKey, forwardingEntry)
         }
+    }
+
+    // IRoutingService method
+    async forwardMessage(forwardMessage: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
+        if (this.stopped) {
+            return createRouteMessageAck(forwardMessage, 'forwardMessage() service is not running')
+        } else if (this.routerDuplicateDetector.isMostLikelyDuplicate(forwardMessage.requestId)) {
+            logger.trace(`Peer ${this.config.ownPeerId.value} forwarding message ${forwardMessage.requestId} 
+        from ${forwardMessage.sourcePeer?.kademliaId} to ${forwardMessage.destinationPeer?.kademliaId} is likely a duplicate`)
+            return createRouteMessageAck(forwardMessage, 'message given to forwardMessage() service is likely a duplicate')
+        }
+        logger.trace(`Processing received forward routeMessage ${forwardMessage.requestId}`)
+        this.config.addContact(forwardMessage.sourcePeer!, true)
+        this.addToDuplicateDetector(forwardMessage.requestId, forwardMessage.sourcePeer!.nodeName!)
+        if (this.config.ownPeerId.equals(peerIdFromPeerDescriptor(forwardMessage.destinationPeer!))) {
+            return this.forwardToDestination(forwardMessage)
+        } else {
+            return this.doRouteMessage(forwardMessage, true)
+        }
+    }
+
+    private forwardToDestination(routedMessage: RouteMessageWrapper): RouteMessageAck {
+        logger.trace(`Peer ${this.config.ownPeerId.value} forwarding found message targeted to self ${routedMessage.requestId}`)
+        const forwardedMessage = routedMessage.message!
+        if (this.config.ownPeerId!.equals(peerIdFromPeerDescriptor(forwardedMessage.targetDescriptor!))) {
+            this.config.connectionManager?.handleMessage(forwardedMessage!)
+            return createRouteMessageAck(routedMessage)
+        }
+        // eslint-disable-next-line promise/catch-or-return
+        this.doRouteMessage({ ...routedMessage, destinationPeer: forwardedMessage.targetDescriptor })
+            .catch((err) => {
+                logger.error(
+                    `Failed to send (forwardMessage: ${this.config.serviceId}) to`
+                    + ` ${keyFromPeerDescriptor(forwardedMessage.targetDescriptor!)}: ${err}`
+                )
+            })
+        return createRouteMessageAck(routedMessage)
     }
 
 }
