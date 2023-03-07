@@ -12,7 +12,7 @@ export class ContactState<TContact> {
     }
 }
 
-export interface IContact { peerId: PeerID, getPeerDescriptor: () => PeerDescriptor }
+export interface IContact { getPeerId: () => PeerID, getPeerDescriptor: () => PeerDescriptor }
 
 export interface Events {
     contactRemoved: (removedDescriptor: PeerDescriptor, closestDescriptors: PeerDescriptor[]) => void
@@ -30,7 +30,7 @@ export class Contact implements IContact {
         return this.peerDescriptor
     }
 
-    public get peerId(): PeerID {
+    public getPeerId(): PeerID {
         return peerIdFromPeerDescriptor(this.peerDescriptor)
     }
 }

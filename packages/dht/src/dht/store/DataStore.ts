@@ -3,15 +3,16 @@ import { PeerID } from '../../helpers/PeerID'
 import { Any } from '../../proto/google/protobuf/any'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
-import { DhtPeer } from '../DhtPeer'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
-import { DhtRpcServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { StoreServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
-import { Router } from '../Router'
-import { RecursiveFinder } from '../RecursiveFinder'
+import { Router } from '../routing/Router'
+import { RecursiveFinder } from '../find/RecursiveFinder'
 import { isSamePeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger } from '@streamr/utils'
 import { LocalDataStore } from './LocalDataStore'
+import { IStoreService } from '../../proto/packages/dht/protos/DhtRpc.server'
+import { RemoteStore } from './RemoteStore'
 
 interface DataStoreConfig {
     rpcCommunicator: RoutingRpcCommunicator
@@ -27,7 +28,7 @@ interface DataStoreConfig {
 
 const logger = new Logger(module)
 
-export class DataStore {
+export class DataStore implements IStoreService {
 
     private readonly config: DataStoreConfig
 
@@ -49,10 +50,10 @@ export class DataStore {
                 successfulNodes.push(closestNodes[i])
                 continue
             }
-            const dhtPeer = new DhtPeer(
+            const dhtPeer = new RemoteStore(
                 this.config.ownPeerDescriptor,
                 closestNodes[i],
-                toProtoRpcClient(new DhtRpcServiceClient(this.config.rpcCommunicator.getRpcClientTransport())),
+                toProtoRpcClient(new StoreServiceClient(this.config.rpcCommunicator.getRpcClientTransport())),
                 this.config.serviceId
             )
             try {
@@ -72,7 +73,7 @@ export class DataStore {
     }
 
     // RPC service implementation
-    private async storeData(request: StoreDataRequest, context: ServerCallContext): Promise<StoreDataResponse> {
+    async storeData(request: StoreDataRequest, context: ServerCallContext): Promise<StoreDataResponse> {
         let ttl = request.ttl
         if (ttl > this.config.storeMaxTtl) {
             ttl = this.config.storeMaxTtl

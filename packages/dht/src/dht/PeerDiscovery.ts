@@ -40,7 +40,6 @@ export class PeerDiscovery {
     private stopped = false
     private rejoinOngoing = false
 
-    private getClosestPeersFromBucketIntervalRef?: NodeJS.Timeout
     private rejoinTimeoutRef?: NodeJS.Timeout
     private readonly abortController: AbortController
 
@@ -63,7 +62,7 @@ export class PeerDiscovery {
             toProtoRpcClient(new DhtRpcServiceClient(this.config.rpcCommunicator.getRpcClientTransport())),
             this.config.serviceId
         )
-        if (this.config.ownPeerId!.equals(entryPoint.peerId)) {
+        if (this.config.ownPeerId!.equals(entryPoint.getPeerId())) {
             return
         }
         this.config.connectionManager?.lockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)

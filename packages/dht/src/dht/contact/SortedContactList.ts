@@ -41,24 +41,24 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
 
     public addContact(contact: Contact): void {
         if (this.excludedPeerIDs
-            && this.excludedPeerIDs.some((peerId) => contact.peerId.equals(peerId))) {
+            && this.excludedPeerIDs.some((peerId) => contact.getPeerId().equals(peerId))) {
             return
         }
         
-        if ((!this.allowOwnPeerId && this.ownId.equals(contact.peerId)) ||
-            (this.peerIdDistanceLimit !== undefined && this.compareIds(this.peerIdDistanceLimit, contact.peerId) < 0)) {
+        if ((!this.allowOwnPeerId && this.ownId.equals(contact.getPeerId())) ||
+            (this.peerIdDistanceLimit !== undefined && this.compareIds(this.peerIdDistanceLimit, contact.getPeerId()) < 0)) {
             return
         }
-        if (!this.contactsById.has(contact.peerId.toKey())) {
+        if (!this.contactsById.has(contact.getPeerId().toKey())) {
             if (this.contactIds.length < this.maxSize) {
-                this.contactsById.set(contact.peerId.toKey(), new ContactState(contact))
-                this.contactIds.push(contact.peerId)
+                this.contactsById.set(contact.getPeerId().toKey(), new ContactState(contact))
+                this.contactIds.push(contact.getPeerId())
                 this.contactIds.sort(this.compareIds)
-            } else if (this.compareIds(this.contactIds[this.maxSize - 1], contact.peerId) > 0) {
+            } else if (this.compareIds(this.contactIds[this.maxSize - 1], contact.getPeerId()) > 0) {
                 const removed = this.contactIds.pop()
                 this.contactsById.delete(removed!.toKey())
-                this.contactsById.set(contact.peerId.toKey(), new ContactState(contact))
-                this.contactIds.push(contact.peerId)
+                this.contactsById.set(contact.getPeerId().toKey(), new ContactState(contact))
+                this.contactIds.push(contact.getPeerId())
                 this.contactIds.sort(this.compareIds)
                 this.emit(
                     'contactRemoved',

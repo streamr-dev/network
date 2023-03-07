@@ -1144,10 +1144,20 @@ export const DisconnectNotice = new DisconnectNotice$Type();
 export const DhtRpcService = new ServiceType("dht.DhtRpcService", [
     { name: "getClosestPeers", options: {}, I: ClosestPeersRequest, O: ClosestPeersResponse },
     { name: "ping", options: {}, I: PingRequest, O: PingResponse },
+    { name: "leaveNotice", options: {}, I: LeaveNotice, O: Empty }
+]);
+/**
+ * @generated ServiceType for protobuf service dht.RoutingService
+ */
+export const RoutingService = new ServiceType("dht.RoutingService", [
     { name: "routeMessage", options: {}, I: RouteMessageWrapper, O: RouteMessageAck },
-    { name: "findRecursively", options: {}, I: RouteMessageWrapper, O: RouteMessageAck },
     { name: "forwardMessage", options: {}, I: RouteMessageWrapper, O: RouteMessageAck },
-    { name: "leaveNotice", options: {}, I: LeaveNotice, O: Empty },
+    { name: "findRecursively", options: {}, I: RouteMessageWrapper, O: RouteMessageAck }
+]);
+/**
+ * @generated ServiceType for protobuf service dht.StoreService
+ */
+export const StoreService = new ServiceType("dht.StoreService", [
     { name: "storeData", options: {}, I: StoreDataRequest, O: StoreDataResponse }
 ]);
 /**

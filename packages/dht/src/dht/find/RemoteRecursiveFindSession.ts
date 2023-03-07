@@ -2,13 +2,13 @@ import {
     DataEntry,
     PeerDescriptor,
     RecursiveFindReport
-} from '../proto/packages/dht/protos/DhtRpc'
-import { IRecursiveFindSessionServiceClient, RecursiveFindSessionServiceClient } from '../proto/packages/dht/protos/DhtRpc.client'
-import { DhtRpcOptions } from '../rpc-protocol/DhtRpcOptions'
+} from '../../proto/packages/dht/protos/DhtRpc'
+import { IRecursiveFindSessionServiceClient, RecursiveFindSessionServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { DhtRpcOptions } from '../../rpc-protocol/DhtRpcOptions'
 import { Logger } from '@streamr/utils'
 import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
-import { ITransport } from '../transport/ITransport'
-import { ListeningRpcCommunicator } from '../exports'
+import { ITransport } from '../../transport/ITransport'
+import { ListeningRpcCommunicator } from '../../exports'
 
 const logger = new Logger(module)
 

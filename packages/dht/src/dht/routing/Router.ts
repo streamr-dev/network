@@ -1,14 +1,15 @@
-import { Message, PeerDescriptor, RouteMessageAck, RouteMessageWrapper } from '../proto/packages/dht/protos/DhtRpc'
+import { Message, PeerDescriptor, RouteMessageAck, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
+import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { RoutingMode, RoutingSession, RoutingSessionEvents } from './RoutingSession'
 import { Logger, raceEvents3, runAndRaceEvents3, RunAndRaceEventsReturnType } from '@streamr/utils'
-import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
-import { PeerID, PeerIDKey } from '../helpers/PeerID'
-import { DuplicateDetector } from './DuplicateDetector'
-import { ConnectionManager } from '../connection/ConnectionManager'
-import { DhtPeer } from './DhtPeer'
+import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
+import { PeerID, PeerIDKey } from '../../helpers/PeerID'
+import { DuplicateDetector } from '../DuplicateDetector'
+import { ConnectionManager } from '../../connection/ConnectionManager'
+import { DhtPeer } from '../DhtPeer'
 import { v4 } from 'uuid'
+import { IRoutingService } from '../../proto/packages/dht/protos/DhtRpc.server'
 
 export const createRouteMessageAck = (routedMessage: RouteMessageWrapper, error?: string): RouteMessageAck => {
     const ack: RouteMessageAck = {
@@ -38,7 +39,7 @@ interface ForwardingTableEntry {
 
 const logger = new Logger(module)
 
-export class Router {
+export class Router implements Omit<IRoutingService, 'findRecursively'> {
     private readonly config: RouterConfig
     private readonly forwardingTable: Map<string, ForwardingTableEntry> = new Map()
     private ongoingRoutingSessions: Map<string, RoutingSession> = new Map()
@@ -94,6 +95,7 @@ export class Router {
             from ${routedMessage.sourcePeer?.kademliaId} to ${routedMessage.destinationPeer?.kademliaId}`)
         routedMessage.routingPath.push(this.config.ownPeerDescriptor!)
         const session = new RoutingSession(
+            this.config.rpcCommunicator,
             this.config.ownPeerDescriptor!,
             routedMessage,
             this.config.connections,
@@ -156,8 +158,8 @@ export class Router {
         this.forwardingTable.clear()
     }
     
-    // IDhtRpcService method
-    private async routeMessage(routedMessage: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
+    // IRoutingService method
+    async routeMessage(routedMessage: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
         if (this.stopped) {
             return createRouteMessageAck(routedMessage, 'routeMessage() service is not running')
         } else if (this.routerDuplicateDetector.isMostLikelyDuplicate(routedMessage.requestId)) {
@@ -194,8 +196,8 @@ export class Router {
         }
     }
 
-    // IDhtRpcService method
-    private async forwardMessage(routedMessage: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
+    // IRoutingService method
+    async forwardMessage(routedMessage: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
         if (this.stopped) {
             return createRouteMessageAck(routedMessage, 'forwardMessage() service is not running')
         } else if (this.routerDuplicateDetector.isMostLikelyDuplicate(routedMessage.requestId)) {
