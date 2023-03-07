@@ -68,15 +68,8 @@ jobs:
         with:
           images: ${{inputs.image_name}}
           tags: |
-            type=sha
-            type=ref,event=branch
-            type=semver,pattern=v{{version}}
             type=raw,value=dev,enable=${{ inputs.test_success }}
-            type=raw,value=debug,enable=${{ !inputs.test_success }}
             type=raw,value=latest,enable=${{ github.event_name == 'workflow_dispatch' }}
-            type=semver,pattern={{major}}.{{minor}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.0.') }}
-            type=semver,pattern={{major}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.') }}
-            type=schedule,pattern=nightly
 
       - name: Build
         if: ${{!inputs.push_image}}
