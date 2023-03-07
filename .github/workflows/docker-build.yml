@@ -68,6 +68,7 @@ jobs:
         with:
           images: ${{inputs.image_name}}
           tags: |
+            type=match,pattern=broker/v(.*),group=1
             type=raw,value=dev,enable=${{ inputs.test_success }}
             type=raw,value=latest,enable=${{ github.event_name == 'workflow_dispatch' }}
 
