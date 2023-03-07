@@ -14,10 +14,10 @@ import { WebSocketConnectionRequest } from "./DhtRpc";
 import { RecursiveFindReport } from "./DhtRpc";
 import { StoreDataResponse } from "./DhtRpc";
 import { StoreDataRequest } from "./DhtRpc";
-import { Empty } from "../../../google/protobuf/empty";
-import { LeaveNotice } from "./DhtRpc";
 import { RouteMessageAck } from "./DhtRpc";
 import { RouteMessageWrapper } from "./DhtRpc";
+import { Empty } from "../../../google/protobuf/empty";
+import { LeaveNotice } from "./DhtRpc";
 import { PingResponse } from "./DhtRpc";
 import { PingRequest } from "./DhtRpc";
 import { ClosestPeersResponse } from "./DhtRpc";
@@ -36,21 +36,31 @@ export interface IDhtRpcService<T = ServerCallContext> {
      */
     ping(request: PingRequest, context: T): Promise<PingResponse>;
     /**
+     * @generated from protobuf rpc: leaveNotice(dht.LeaveNotice) returns (google.protobuf.Empty);
+     */
+    leaveNotice(request: LeaveNotice, context: T): Promise<Empty>;
+}
+/**
+ * @generated from protobuf service dht.RoutingService
+ */
+export interface IRoutingService<T = ServerCallContext> {
+    /**
      * @generated from protobuf rpc: routeMessage(dht.RouteMessageWrapper) returns (dht.RouteMessageAck);
      */
     routeMessage(request: RouteMessageWrapper, context: T): Promise<RouteMessageAck>;
-    /**
-     * @generated from protobuf rpc: findRecursively(dht.RouteMessageWrapper) returns (dht.RouteMessageAck);
-     */
-    findRecursively(request: RouteMessageWrapper, context: T): Promise<RouteMessageAck>;
     /**
      * @generated from protobuf rpc: forwardMessage(dht.RouteMessageWrapper) returns (dht.RouteMessageAck);
      */
     forwardMessage(request: RouteMessageWrapper, context: T): Promise<RouteMessageAck>;
     /**
-     * @generated from protobuf rpc: leaveNotice(dht.LeaveNotice) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: findRecursively(dht.RouteMessageWrapper) returns (dht.RouteMessageAck);
      */
-    leaveNotice(request: LeaveNotice, context: T): Promise<Empty>;
+    findRecursively(request: RouteMessageWrapper, context: T): Promise<RouteMessageAck>;
+}
+/**
+ * @generated from protobuf service dht.StoreService
+ */
+export interface IStoreService<T = ServerCallContext> {
     /**
      * @generated from protobuf rpc: storeData(dht.StoreDataRequest) returns (dht.StoreDataResponse);
      */
