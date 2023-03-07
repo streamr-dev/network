@@ -22,9 +22,6 @@ on:
       build_platforms:
         type: string
         required: true
-      test_success:
-        description: required when pushing images
-        type: boolean
 
     secrets:
       dockerhub_username:
@@ -69,7 +66,7 @@ jobs:
           images: ${{inputs.image_name}}
           tags: |
             type=match,pattern=broker/v(.*),group=1
-            type=raw,value=dev,enable=${{ inputs.test_success }}
+            type=raw,value=dev,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
             type=raw,value=latest,enable=${{ github.event_name == 'workflow_dispatch' }}
 
       - name: Build
