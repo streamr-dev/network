@@ -69,11 +69,11 @@ export class DiscoverySession {
                 toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
                 this.serviceId
             )
-            if (!dhtPeer.peerId.equals(this.ownPeerId!)) {
+            if (!dhtPeer.getPeerId().equals(this.ownPeerId!)) {
                 if (this.newContactListener) {
                     this.newContactListener(dhtPeer)
                 }
-                if (!this.neighborList.getContact(dhtPeer.peerId)) {
+                if (!this.neighborList.getContact(dhtPeer.getPeerId())) {
                     this.neighborList!.addContact(dhtPeer)
                 }
             }
@@ -84,11 +84,11 @@ export class DiscoverySession {
         if (this.stopped) {
             return []
         }
-        logger.trace(`Getting closest peers from contact: ${contact.peerId.toKey()}`)
+        logger.trace(`Getting closest peers from contact: ${contact.getPeerId().toKey()}`)
         this.outgoingClosestPeersRequestsCounter++
-        this.neighborList!.setContacted(contact.peerId)
+        this.neighborList!.setContacted(contact.getPeerId())
         const returnedContacts = await contact.getClosestPeers(this.targetId)
-        this.neighborList!.setActive(contact.peerId)
+        this.neighborList!.setActive(contact.getPeerId())
         return returnedContacts
     }
 
@@ -106,9 +106,9 @@ export class DiscoverySession {
     }
 
     private onClosestPeersRequestFailed(peer: DhtPeer, _exception: Error) {
-        if (this.ongoingClosestPeersRequests.has(peer.peerId.toKey())) {
-            this.ongoingClosestPeersRequests.delete(peer.peerId.toKey())
-            this.neighborList!.removeContact(peer.peerId)
+        if (this.ongoingClosestPeersRequests.has(peer.getPeerId().toKey())) {
+            this.ongoingClosestPeersRequests.delete(peer.getPeerId().toKey())
+            this.neighborList!.removeContact(peer.getPeerId())
         }
     }
 
@@ -125,10 +125,10 @@ export class DiscoverySession {
         const uncontacted = this.neighborList!.getUncontactedContacts(this.parallelism)
         while (this.ongoingClosestPeersRequests.size < this.parallelism && uncontacted.length > 0) {
             const nextPeer = uncontacted.shift()
-            this.ongoingClosestPeersRequests.add(nextPeer!.peerId.toKey())
+            this.ongoingClosestPeersRequests.add(nextPeer!.getPeerId().toKey())
             // eslint-disable-next-line promise/catch-or-return
             this.getClosestPeersFromContact(nextPeer!)
-                .then((contacts) => this.onClosestPeersRequestSucceeded(nextPeer!.peerId, contacts))
+                .then((contacts) => this.onClosestPeersRequestSucceeded(nextPeer!.getPeerId(), contacts))
                 .catch((err) => this.onClosestPeersRequestFailed(nextPeer!, err))
                 .finally(() => {
                     this.outgoingClosestPeersRequestsCounter--

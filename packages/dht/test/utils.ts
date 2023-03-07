@@ -1,15 +1,20 @@
 import { DhtNode } from '../src/dht/DhtNode'
 import {
-    ClosestPeersRequest, ClosestPeersResponse, LeaveNotice,
+    ClosestPeersRequest,
+    ClosestPeersResponse,
+    LeaveNotice,
     NodeType,
-    PeerDescriptor, PingRequest, PingResponse, RouteMessageAck, RouteMessageWrapper,
-    StoreDataRequest,
-    StoreDataResponse,
-    WebSocketConnectionRequest, WebSocketConnectionResponse
+    PeerDescriptor,
+    PingRequest,
+    PingResponse,
+    RouteMessageAck,
+    RouteMessageWrapper,
+    WebSocketConnectionRequest,
+    WebSocketConnectionResponse
 } from '../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { PeerID } from '../src/helpers/PeerID'
-import { IDhtRpcService, IWebSocketConnectorService } from '../src/proto/packages/dht/protos/DhtRpc.server'
+import { IDhtRpcService, IRoutingService, IWebSocketConnectorService } from '../src/proto/packages/dht/protos/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { Simulator } from '../src/connection/Simulator/Simulator'
 import { ConnectionManager } from '../src/connection/ConnectionManager'
@@ -104,7 +109,6 @@ interface IDhtRpcWithError extends IDhtRpcService {
     throwPingError: (request: PingRequest, _context: ServerCallContext) => Promise<PingResponse>
     respondPingWithTimeout: (request: PingRequest, _context: ServerCallContext) => Promise<PingResponse>
     throwGetClosestPeersError: (request: ClosestPeersRequest, _context: ServerCallContext) => Promise<ClosestPeersResponse>
-    throwRouteMessageError: (request: RouteMessageWrapper, _context: ServerCallContext) => Promise<RouteMessageAck>
 }
 
 export const MockDhtRpc: IDhtRpcWithError = {
@@ -119,36 +123,6 @@ export const MockDhtRpc: IDhtRpcWithError = {
     async ping(request: PingRequest, _context: ServerCallContext): Promise<PingResponse> {
         const response: PingResponse = {
             requestId: request.requestId
-        }
-        return response
-    },
-    async routeMessage(routed: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
-        const response: RouteMessageAck = {
-            requestId: routed.requestId,
-            destinationPeer: routed.sourcePeer,
-            sourcePeer: routed.destinationPeer,
-            error: ''
-        }
-        return response
-    },
-    async findRecursively(routed: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
-        const response: RouteMessageAck = {
-            requestId: routed.requestId,
-            destinationPeer: routed.sourcePeer,
-            sourcePeer: routed.destinationPeer,
-            error: ''
-        }
-        return response
-    },
-    async storeData(_request: StoreDataRequest, _context: ServerCallContext): Promise<StoreDataResponse> {
-        return StoreDataResponse.create()
-    },
-    async forwardMessage(routed: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
-        const response: RouteMessageAck = {
-            requestId: routed.requestId,
-            destinationPeer: routed.sourcePeer,
-            sourcePeer: routed.destinationPeer,
-            error: ''
         }
         return response
     },
@@ -168,6 +142,40 @@ export const MockDhtRpc: IDhtRpcWithError = {
     },
     async throwGetClosestPeersError(_urequest: ClosestPeersRequest, _context: ServerCallContext): Promise<ClosestPeersResponse> {
         throw new Error('Closest peers error')
+    }
+}
+
+interface IRouterServiceWithError extends IRoutingService {
+    throwRouteMessageError: (request: RouteMessageWrapper, _context: ServerCallContext) => Promise<RouteMessageAck>
+}
+
+export const MockRoutingService: IRouterServiceWithError = {
+    async routeMessage(routed: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
+        const response: RouteMessageAck = {
+            requestId: routed.requestId,
+            destinationPeer: routed.sourcePeer,
+            sourcePeer: routed.destinationPeer,
+            error: ''
+        }
+        return response
+    },
+    async findRecursively(routed: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
+        const response: RouteMessageAck = {
+            requestId: routed.requestId,
+            destinationPeer: routed.sourcePeer,
+            sourcePeer: routed.destinationPeer,
+            error: ''
+        }
+        return response
+    },
+    async forwardMessage(routed: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
+        const response: RouteMessageAck = {
+            requestId: routed.requestId,
+            destinationPeer: routed.sourcePeer,
+            sourcePeer: routed.destinationPeer,
+            error: ''
+        }
+        return response
     },
     async throwRouteMessageError(_urequest: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
         throw new Error()

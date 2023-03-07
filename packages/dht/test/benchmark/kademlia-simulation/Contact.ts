@@ -6,6 +6,7 @@ export class Contact {
     private static counter = 0
 
     public peerId: PeerID
+    public id: Uint8Array
     public vectorClock = 0
     public dhtNode: SimulationNode | undefined
 
@@ -13,10 +14,7 @@ export class Contact {
         this.peerId = ownId
         this.vectorClock = Contact.counter++
         this.dhtNode = dhtNode
-    }
-
-    get id(): Uint8Array {
-        return this.peerId.value
+        this.id = ownId.value
     }
 
     getPeerDescriptor(): PeerDescriptor {
@@ -25,6 +23,10 @@ export class Contact {
             type: NodeType.NODEJS
         }
         return peerDescriptor
+    }
+
+    getPeerId(): PeerID {
+        return this.peerId
     }
 
 }

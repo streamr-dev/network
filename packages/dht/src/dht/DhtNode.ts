@@ -32,8 +32,8 @@ import { Empty } from '../proto/google/protobuf/empty'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { Any } from '../proto/google/protobuf/any'
 import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
-import { Router } from './Router'
-import { RecursiveFinder } from './RecursiveFinder'
+import { Router } from './routing/Router'
+import { RecursiveFinder } from './find/RecursiveFinder'
 import { DataStore } from './store/DataStore'
 import { PeerDiscovery } from './PeerDiscovery'
 import { LocalDataStore } from './store/LocalDataStore'
@@ -383,13 +383,13 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         sortingList.addContacts(oldContacts)
         const sortedContacts = sortingList.getAllContacts()
         this.connectionManager?.weakUnlockConnection(sortedContacts[sortedContacts.length - 1].getPeerDescriptor())
-        this.bucket?.remove(sortedContacts[sortedContacts.length - 1].peerId.value)
+        this.bucket?.remove(sortedContacts[sortedContacts.length - 1].getPeerId().value)
         this.bucket!.add(newContact)
     }
 
     private onKBucketRemoved(contact: DhtPeer): void {
         this.connectionManager?.weakUnlockConnection(contact.getPeerDescriptor())
-        logger.trace(`Removed contact ${contact.peerId.value.toString()}`)
+        logger.trace(`Removed contact ${contact.getPeerId().value.toString()}`)
         this.emit(
             'kbucketContactRemoved',
             contact.getPeerDescriptor()
@@ -410,11 +410,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (this.config.nodeName == '1') {
             logger.trace('peer1 contactOnAddCounter: ' + this.contactOnAddedCounter)
         }
-        if (!this.stopped && !contact.peerId.equals(this.ownPeerId!)) {
+        if (!this.stopped && !contact.getPeerId().equals(this.ownPeerId!)) {
             // Important to lock here, before the ping result is known
             this.connectionManager?.weakLockConnection(contact.getPeerDescriptor())
-            if (this.connections.has(contact.peerId.toKey())) {
-                logger.trace(`Added new contact ${contact.peerId.value.toString()}`)
+            if (this.connections.has(contact.getPeerId().toKey())) {
+                logger.trace(`Added new contact ${contact.getPeerId().value.toString()}`)
                 this.emit(
                     'newKbucketContact',
                     contact.getPeerDescriptor(),
@@ -424,7 +424,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 logger.trace('starting ping ' + this.config.nodeName + ', ' + contact.getPeerDescriptor().nodeName + ' ')
                 contact.ping().then((result) => {
                     if (result) {
-                        logger.trace(`Added new contact ${contact.peerId.value.toString()}`)
+                        logger.trace(`Added new contact ${contact.getPeerId().value.toString()}`)
                         this.emit(
                             'newKbucketContact',
                             contact.getPeerDescriptor(),

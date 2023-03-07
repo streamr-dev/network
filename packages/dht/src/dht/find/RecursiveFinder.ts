@@ -5,20 +5,21 @@ import {
     RecursiveFindRequest,
     RouteMessageAck,
     RouteMessageWrapper
-} from '../proto/packages/dht/protos/DhtRpc'
-import { PeerID, PeerIDKey } from '../helpers/PeerID'
-import { createRouteMessageAck, Router } from './Router'
-import { RoutingMode, RoutingSession, RoutingSessionEvents } from './RoutingSession'
-import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
+} from '../../proto/packages/dht/protos/DhtRpc'
+import { PeerID, PeerIDKey } from '../../helpers/PeerID'
+import { createRouteMessageAck, Router } from '../routing/Router'
+import { RoutingMode, RoutingSession, RoutingSessionEvents } from '../routing/RoutingSession'
+import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger, runAndRaceEvents3, RunAndRaceEventsReturnType, runAndWaitForEvents3 } from '@streamr/utils'
-import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
+import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { RemoteRecursiveFindSession } from './RemoteRecursiveFindSession'
 import { v4 } from 'uuid'
 import { RecursiveFindSession, RecursiveFindSessionEvents } from './RecursiveFindSession'
-import { RecursiveFindResult } from './DhtNode'
-import { DhtPeer } from './DhtPeer'
-import { ITransport } from '../transport/ITransport'
-import { LocalDataStore } from './store/LocalDataStore'
+import { RecursiveFindResult } from '../DhtNode'
+import { DhtPeer } from '../DhtPeer'
+import { ITransport } from '../../transport/ITransport'
+import { LocalDataStore } from '../store/LocalDataStore'
+import { IRoutingService } from '../../proto/packages/dht/protos/DhtRpc.server'
 
 interface RecursiveFinderConfig {
     rpcCommunicator: RoutingRpcCommunicator
@@ -36,7 +37,7 @@ interface RecursiveFinderConfig {
 
 const logger = new Logger(module)
 
-export class RecursiveFinder {
+export class RecursiveFinder implements Pick<IRoutingService, 'findRecursively'> {
     private readonly config: RecursiveFinderConfig
     private ongoingSessions: Map<string, RecursiveFindSession> = new Map()
     private stopped = false
@@ -161,6 +162,7 @@ export class RecursiveFinder {
             return createRouteMessageAck(routedMessage)
         }
         const session = new RoutingSession(
+            this.config.rpcCommunicator,
             this.config.ownPeerDescriptor,
             routedMessage,
             this.config.connections,
@@ -206,8 +208,8 @@ export class RecursiveFinder {
         }
     }
 
-    // IDhtRpcService method
-    private async findRecursively(routedMessage: RouteMessageWrapper): Promise<RouteMessageAck> {
+    // IRoutingService method
+    async findRecursively(routedMessage: RouteMessageWrapper): Promise<RouteMessageAck> {
         if (this.stopped) {
             return createRouteMessageAck(routedMessage, 'findRecursively() service is not running')
         } else if (this.config.router.checkDuplicate(routedMessage.requestId)) {

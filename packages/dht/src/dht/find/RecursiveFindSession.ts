@@ -1,16 +1,16 @@
 import { ServerCallContext } from "@protobuf-ts/runtime-rpc"
 import { Logger } from "@streamr/utils"
 import EventEmitter from "eventemitter3"
-import { PeerID, PeerIDKey } from "../helpers/PeerID"
-import { DataEntry, PeerDescriptor, RecursiveFindReport } from "../proto/packages/dht/protos/DhtRpc"
-import { IRecursiveFindSessionService } from "../proto/packages/dht/protos/DhtRpc.server"
-import { Empty } from "../proto/google/protobuf/empty"
-import { ITransport } from "../transport/ITransport"
-import { ListeningRpcCommunicator } from "../transport/ListeningRpcCommunicator"
-import { Contact } from "./contact/Contact"
-import { SortedContactList } from "./contact/SortedContactList"
-import { RecursiveFindResult } from "./DhtNode"
-import { keyFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
+import { PeerID, PeerIDKey } from "../../helpers/PeerID"
+import { DataEntry, PeerDescriptor, RecursiveFindReport } from "../../proto/packages/dht/protos/DhtRpc"
+import { IRecursiveFindSessionService } from "../../proto/packages/dht/protos/DhtRpc.server"
+import { Empty } from "../../proto/google/protobuf/empty"
+import { ITransport } from "../../transport/ITransport"
+import { ListeningRpcCommunicator } from "../../transport/ListeningRpcCommunicator"
+import { Contact } from "../contact/Contact"
+import { SortedContactList } from "../contact/SortedContactList"
+import { RecursiveFindResult } from "../DhtNode"
+import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 
 export interface RecursiveFindSessionEvents {
     findCompleted: (results: PeerDescriptor[]) => void

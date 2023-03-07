@@ -1,11 +1,15 @@
-import { PeerDescriptor } from "../exports"
-import { DhtPeer } from "./DhtPeer"
-import { SortedContactList } from "./contact/SortedContactList"
-import { PeerID, PeerIDKey } from '../helpers/PeerID'
+import { PeerDescriptor } from "../../exports"
+import { DhtPeer } from "../DhtPeer"
+import { SortedContactList } from "../contact/SortedContactList"
+import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { Logger } from "@streamr/utils"
 import EventEmitter from 'eventemitter3'
 import { v4 } from "uuid"
-import { RouteMessageWrapper } from "../proto/packages/dht/protos/DhtRpc"
+import { RouteMessageWrapper } from "../../proto/packages/dht/protos/DhtRpc"
+import { RemoteRouter } from './RemoteRouter'
+import { RoutingRpcCommunicator } from "../../transport/RoutingRpcCommunicator"
+import { RoutingServiceClient } from "../../proto/packages/dht/protos/DhtRpc.client"
+import { toProtoRpcClient } from '@streamr/proto-rpc'
 
 const logger = new Logger(module)
 
@@ -34,8 +38,9 @@ export interface RoutingSessionEvents {
 export enum RoutingMode { ROUTE, FORWARD, RECURSIVE_FIND }
 export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     public readonly sessionId = v4()
+    private readonly rpcCommunicator: RoutingRpcCommunicator
     private ongoingRequests: Set<PeerIDKey> = new Set()
-    private contactList: SortedContactList<DhtPeer>
+    private contactList: SortedContactList<RemoteRouter>
     private readonly ownPeerDescriptor: PeerDescriptor
     private readonly messageToRoute: RouteMessageWrapper
     private connections: Map<PeerIDKey, DhtPeer>
@@ -45,6 +50,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     private stopped = false
 
     constructor(
+        rpcCommunicator: RoutingRpcCommunicator,
         ownPeerDescriptor: PeerDescriptor,
         messageToRoute: RouteMessageWrapper,
         connections: Map<PeerIDKey, DhtPeer>,
@@ -55,6 +61,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         excludedPeerIDs?: PeerID[]
     ) {
         super()
+        this.rpcCommunicator = rpcCommunicator
         this.ownPeerDescriptor = ownPeerDescriptor
         this.messageToRoute = messageToRoute
         this.connections = connections
@@ -95,10 +102,10 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         this.emit('routingSucceeded', this.sessionId)
     }
 
-    private async sendRouteMessageRequest(contact: DhtPeer): Promise<boolean> {
-        logger.trace(`Sending routeMessage request from ${this.ownPeerDescriptor.kademliaId} to contact: ${contact.peerId}`)
-        this.contactList.setContacted(contact.peerId)
-        this.ongoingRequests.add(contact.peerId.toKey())
+    private async sendRouteMessageRequest(contact: RemoteRouter): Promise<boolean> {
+        logger.trace(`Sending routeMessage request from ${this.ownPeerDescriptor.kademliaId} to contact: ${contact.getPeerId()}`)
+        this.contactList.setContacted(contact.getPeerId())
+        this.ongoingRequests.add(contact.getPeerId().toKey())
 
         if (this.mode === RoutingMode.FORWARD) {
             return contact.forwardMessage({
@@ -118,11 +125,19 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         }
     }
 
-    private findMoreContacts(): DhtPeer[] {
+    private findMoreContacts(): RemoteRouter[] {
         // the contents of the connections might have changed between the rounds
         // addContacts() will only add new contacts that were not there yet
-        this.contactList.addContacts(Array.from(this.connections.values()))
-
+        const contacts = Array.from(this.connections.values())
+            .map((contact) => {
+                return new RemoteRouter(
+                    this.ownPeerDescriptor,
+                    contact.getPeerDescriptor(),
+                    toProtoRpcClient(new RoutingServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
+                    contact.getServiceId()
+                )  
+            })
+        this.contactList.addContacts(contacts)
         return this.contactList.getUncontactedContacts(this.parallelism)
     }
 
@@ -131,7 +146,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         return contacts.map((contact) => contact.getPeerDescriptor())
     }
 
-    private sendMoreRequests(uncontacted: DhtPeer[]) {
+    private sendMoreRequests(uncontacted: RemoteRouter[]) {
         if (this.stopped) {
             return
         }
@@ -151,9 +166,9 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
             this.sendRouteMessageRequest(nextPeer!)
                 .then((succeeded) => {
                     if (succeeded) {
-                        this.onRequestSucceeded(nextPeer!.peerId)
+                        this.onRequestSucceeded(nextPeer!.getPeerId())
                     } else {
-                        this.onRequestFailed(nextPeer!.peerId)
+                        this.onRequestFailed(nextPeer!.getPeerId())
                     }
                 }).catch((e) => { 
                     logger.error(e)
