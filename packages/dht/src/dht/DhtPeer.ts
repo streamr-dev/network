@@ -32,8 +32,6 @@ export class DhtPeer extends Remote<IDhtRpcServiceClient> implements KBucketCont
         super(ownPeerDescriptor, peerDescriptor, client, serviceId)
         this.id = this.peerId.value
         this.vectorClock = DhtPeer.counter++
-        this.getClosestPeers = this.getClosestPeers.bind(this)
-        this.ping = this.ping.bind(this)
     }
 
     async getClosestPeers(kademliaId: Uint8Array): Promise<PeerDescriptor[]> {
