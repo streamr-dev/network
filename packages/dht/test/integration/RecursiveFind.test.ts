@@ -25,7 +25,7 @@ describe('Recursive find correctness', () => {
         }
         for (let i = 1; i < NUM_NODES; i++) {
             const nodeId = `${i}`
-            const node = await createMockConnectionDhtNode(nodeId, simulator, undefined, K, nodeId)
+            const node = await createMockConnectionDhtNode(nodeId, simulator, undefined, K, nodeId, 20, 60000)
             nodes.push(node)
         }
         await entryPoint.joinDht(entrypointDescriptor)
