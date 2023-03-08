@@ -68,7 +68,7 @@ export class Router implements Omit<IRoutingService, 'findRecursively'> {
                 reachableThrough: [],
                 routingPath: []
             }
-            this.doRouteMessage(forwardedMessage, true).catch((err) => {
+            this.doRouteMessage(forwardedMessage, RoutingMode.FORWARD).catch((err) => {
                 logger.warn(
                     `Failed to send (forwardMessage: ${this.config.serviceId}) to ${keyFromPeerDescriptor(targetPeerDescriptor)}: ${err}`
                 )
@@ -90,7 +90,7 @@ export class Router implements Omit<IRoutingService, 'findRecursively'> {
         }
     }
 
-    public async doRouteMessage(routedMessage: RouteMessageWrapper, forwarding = false): Promise<RouteMessageAck> {
+    public async doRouteMessage(routedMessage: RouteMessageWrapper, mode = RoutingMode.ROUTE): Promise<RouteMessageAck> {
         logger.trace(`Peer ${this.config.ownPeerId.value} routing message ${routedMessage.requestId} 
             from ${routedMessage.sourcePeer?.kademliaId} to ${routedMessage.destinationPeer?.kademliaId}`)
         routedMessage.routingPath.push(this.config.ownPeerDescriptor!)
@@ -101,7 +101,7 @@ export class Router implements Omit<IRoutingService, 'findRecursively'> {
             this.config.connections,
             this.config.ownPeerId!.equals(peerIdFromPeerDescriptor(routedMessage.sourcePeer!)) ? 2 : 1,
             this.config.routeMessageTimeout,
-            forwarding ? RoutingMode.FORWARD : RoutingMode.ROUTE,
+            mode,
             undefined,
             routedMessage.routingPath.map((descriptor) => peerIdFromPeerDescriptor(descriptor))
         )
@@ -213,7 +213,7 @@ export class Router implements Omit<IRoutingService, 'findRecursively'> {
         if (this.config.ownPeerId.equals(peerIdFromPeerDescriptor(forwardMessage.destinationPeer!))) {
             return this.forwardToDestination(forwardMessage)
         } else {
-            return this.doRouteMessage(forwardMessage, true)
+            return this.doRouteMessage(forwardMessage, RoutingMode.FORWARD)
         }
     }
 

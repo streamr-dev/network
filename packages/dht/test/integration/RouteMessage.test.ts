@@ -1,13 +1,14 @@
 import { DhtNode, Events as DhtNodeEvents } from '../../src/dht/DhtNode'
 import { Message, MessageType, PeerDescriptor, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
-import { Logger, waitForCondition, runAndWaitForEvents3 } from '@streamr/utils'
+import { Logger, runAndWaitForEvents3, waitForCondition } from '@streamr/utils'
 import { createMockConnectionDhtNode, createWrappedClosestPeersRequest } from '../utils'
 import { PeerID } from '../../src/helpers/PeerID'
 import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { v4 } from 'uuid'
 import { UUID } from '../../src/helpers/UUID'
 import { Any } from '../../src/proto/google/protobuf/any'
+import { RoutingMode } from '../../src/dht/routing/RoutingSession'
 
 const logger = new Logger(module)
 
@@ -244,7 +245,7 @@ describe('Route Message With Mock Connections', () => {
         }
 
         await runAndWaitForEvents3<DhtNodeEvents>([() => {
-            sourceNode.router!.doRouteMessage(forwardedMessage, true)
+            sourceNode.router!.doRouteMessage(forwardedMessage, RoutingMode.FORWARD)
         }], [[destinationNode, 'message']])
 
     })
