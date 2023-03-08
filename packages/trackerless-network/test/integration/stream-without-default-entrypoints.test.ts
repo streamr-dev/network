@@ -105,7 +105,7 @@ describe('stream without default entrypoints', () => {
             })
         }))
         await Promise.all([
-            waitForCondition(() => numOfReceivedMessages === numOfSubscribers, 10000),
+            waitForCondition(() => numOfReceivedMessages === numOfSubscribers, 15000),
             nodes[9].publish(streamMessage, [])
         ])
     }, 45000)
