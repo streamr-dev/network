@@ -41,9 +41,11 @@ interface RecursiveFinderConfig {
 const logger = new Logger(module)
 
 export class RecursiveFinder implements Pick<IRoutingService, 'findRecursively'> {
+
     private readonly config: RecursiveFinderConfig
     private ongoingSessions: Map<string, RecursiveFindSession> = new Map()
     private stopped = false
+
     constructor(config: RecursiveFinderConfig) {
         this.config = config
         this.findRecursively = this.findRecursively.bind(this)
@@ -69,11 +71,35 @@ export class RecursiveFinder implements Pick<IRoutingService, 'findRecursively'>
             )
             return recursiveFindSession.getResults()
         }
+        const routeMessage = this.wrapRecursiveFindRequest(idToFind, sessionId, findMode)
         this.ongoingSessions.set(sessionId, recursiveFindSession)
-        const targetDescriptor: PeerDescriptor = { kademliaId: idToFind, type: NodeType.VIRTUAL }
+        try {
+            await runAndWaitForEvents3<RecursiveFindSessionEvents>(
+                [() => this.doFindRecursevily(routeMessage)],
+                [[recursiveFindSession, 'findCompleted']],
+                30000
+            )
+        } catch (err) {
+            logger.trace(`doFindRecursively failed with error ${err}`)
+        }
+        if (findMode === FindMode.DATA) {
+            const data = this.config.localDataStore.getEntry(PeerID.fromValue(idToFind))
+            if (data) {
+                this.reportRecursiveFindResult([], this.config.ownPeerDescriptor, sessionId, [], data, true)
+            }
+        }
+        this.ongoingSessions.delete(sessionId)
+        return recursiveFindSession.getResults()
+    }
+
+    private wrapRecursiveFindRequest(idToFind: Uint8Array, sessionId: string, findMode: FindMode): RouteMessageWrapper {
+        const targetDescriptor: PeerDescriptor = {
+            kademliaId: idToFind,
+            type: NodeType.VIRTUAL
+        }
         const request: RecursiveFindRequest = {
             recursiveFindSessionId: sessionId,
-            findMode: findMode
+            findMode
         }
         const msg: Message = {
             messageType: MessageType.RECURSIVE_FIND_REQUEST,
@@ -92,22 +118,7 @@ export class RecursiveFinder implements Pick<IRoutingService, 'findRecursively'>
             reachableThrough: [],
             routingPath: []
         }
-        try {
-            await runAndWaitForEvents3<RecursiveFindSessionEvents>(
-                [() => this.doFindRecursevily(routeMessage)],
-                [[recursiveFindSession, 'findCompleted']],
-                30000
-            )
-        } catch (err) {
-            logger.trace(`doFindRecursively failed with error ${err}`)
-        }
-        if (findMode === FindMode.DATA) {
-            const data = this.config.localDataStore.getEntry(PeerID.fromValue(idToFind))
-            if (data) {
-                this.reportRecursiveFindResult([], this.config.ownPeerDescriptor, sessionId, [], data, true)
-            }
-        }
-        return recursiveFindSession.getResults()
+        return routeMessage
     }
 
     private reportRecursiveFindResult(
@@ -141,7 +152,7 @@ export class RecursiveFinder implements Pick<IRoutingService, 'findRecursively'>
         }
     }
 
-    private async doFindRecursevily(routedMessage: RouteMessageWrapper): Promise<RouteMessageAck> {
+    private doFindRecursevily(routedMessage: RouteMessageWrapper): RouteMessageAck {
         if (this.stopped) {
             return createRouteMessageAck(routedMessage, 'DhtNode Stopped')
         }
