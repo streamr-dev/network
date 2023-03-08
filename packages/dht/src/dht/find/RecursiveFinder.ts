@@ -82,12 +82,7 @@ export class RecursiveFinder implements Pick<IRoutingService, 'findRecursively'>
         } catch (err) {
             logger.trace(`doFindRecursively failed with error ${err}`)
         }
-        if (findMode === FindMode.DATA) {
-            const data = this.config.localDataStore.getEntry(PeerID.fromValue(idToFind))
-            if (data) {
-                this.reportRecursiveFindResult([], this.config.ownPeerDescriptor, sessionId, [], data, true)
-            }
-        }
+        this.findAndReportLocalData(idToFind, findMode, [], this.config.ownPeerDescriptor, sessionId)
         this.ongoingSessions.delete(sessionId)
         return recursiveFindSession.getResults()
     }
@@ -119,6 +114,23 @@ export class RecursiveFinder implements Pick<IRoutingService, 'findRecursively'>
             routingPath: []
         }
         return routeMessage
+    }
+
+    private findAndReportLocalData(
+        idToFind: Uint8Array,
+        findMode: FindMode,
+        routingPath: PeerDescriptor[],
+        sourcePeer: PeerDescriptor,
+        sessionId: string
+    ): boolean {
+        if (findMode === FindMode.DATA) {
+            const data = this.config.localDataStore.getEntry(PeerID.fromValue(idToFind))
+            if (data) {
+                this.reportRecursiveFindResult(routingPath, sourcePeer, sessionId, [], data, true)
+                return true
+            }
+        }
+        return false
     }
 
     private reportRecursiveFindResult(
@@ -163,13 +175,14 @@ export class RecursiveFinder implements Pick<IRoutingService, 'findRecursively'>
             recursiveFindRequest = msg.body.recursiveFindRequest
         }
         const closestPeersToDestination = this.config.getClosestPeerDescriptors(routedMessage.destinationPeer!.kademliaId, 5)
-        if (recursiveFindRequest!.findMode === FindMode.DATA) {
-            const data = this.config.localDataStore.getEntry(idToFind)
-            if (data) {
-                this.reportRecursiveFindResult(routedMessage.routingPath, routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
-                    closestPeersToDestination, data, true)
-                return createRouteMessageAck(routedMessage)
-            }
+        if (this.findAndReportLocalData(
+            idToFind.value,
+            recursiveFindRequest!.findMode,
+            routedMessage.routingPath,
+            routedMessage.sourcePeer!,
+            recursiveFindRequest!.recursiveFindSessionId)
+        ) {
+            return createRouteMessageAck(routedMessage)
         } else if (this.config.ownPeerId!.equals(idToFind)) {
             // Exact match, they were trying to find our kademliaID
             this.reportRecursiveFindResult(routedMessage.routingPath, routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
@@ -181,6 +194,8 @@ export class RecursiveFinder implements Pick<IRoutingService, 'findRecursively'>
             logger.trace(`findRecursively Node ${this.config.ownPeerDescriptor.nodeName} found no candidates`)
             this.reportRecursiveFindResult(routedMessage.routingPath, routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
                 closestPeersToDestination, undefined, true)
+            return ack
+        } else if (ack.error) {
             return ack
         } else {
             const noCloserContactsFound = (
