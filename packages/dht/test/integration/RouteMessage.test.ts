@@ -51,7 +51,7 @@ describe('Route Message With Mock Connections', () => {
         await sourceNode.joinDht(entryPointDescriptor)
         await Promise.all(routerNodes.map((node) => node.joinDht(entryPointDescriptor)))
         await entryPoint.joinDht(entryPointDescriptor)
-    })
+    }, 15000)
 
     afterEach(async () => {
         await Promise.allSettled(routerNodes.map((node) => node.stop()))

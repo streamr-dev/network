@@ -2,7 +2,7 @@ import { Message, PeerDescriptor, RouteMessageAck, RouteMessageWrapper } from '.
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { RoutingMode, RoutingSession, RoutingSessionEvents } from './RoutingSession'
-import { Logger, raceEvents3, runAndRaceEvents3, RunAndRaceEventsReturnType } from '@streamr/utils'
+import { Logger, raceEvents3 } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { DuplicateDetector } from '../DuplicateDetector'
@@ -19,6 +19,11 @@ export const createRouteMessageAck = (routedMessage: RouteMessageWrapper, error?
         error: error ? error : ''
     }
     return ack
+}
+
+export enum RoutingErrors {
+    NO_CANDIDATES_FOUND = 'No routing candidates found',
+    STOPPED = 'DhtNode Stopped'
 }
 
 export interface RouterConfig {
@@ -68,11 +73,7 @@ export class Router implements Omit<IRoutingService, 'findRecursively'> {
                 reachableThrough: [],
                 routingPath: []
             }
-            this.doRouteMessage(forwardedMessage, RoutingMode.FORWARD).catch((err) => {
-                logger.warn(
-                    `Failed to send (forwardMessage: ${this.config.serviceId}) to ${keyFromPeerDescriptor(targetPeerDescriptor)}: ${err}`
-                )
-            })
+            this.doRouteMessage(forwardedMessage, RoutingMode.FORWARD)
         } else {
             const routedMessage: RouteMessageWrapper = {
                 message: msg,
@@ -82,19 +83,38 @@ export class Router implements Omit<IRoutingService, 'findRecursively'> {
                 reachableThrough,
                 routingPath: []
             }
-            this.doRouteMessage(routedMessage).catch((err) => {
-                logger.warn(
-                    `Failed to send (routeMessage: ${this.config.serviceId}) to ${keyFromPeerDescriptor(targetPeerDescriptor)}: ${err}`
-                )
-            })
+            this.doRouteMessage(routedMessage, RoutingMode.FORWARD)
         }
     }
 
-    public async doRouteMessage(routedMessage: RouteMessageWrapper, mode = RoutingMode.ROUTE): Promise<RouteMessageAck> {
+    public doRouteMessage(routedMessage: RouteMessageWrapper, mode = RoutingMode.ROUTE): RouteMessageAck {
+        if (this.stopped) {
+            return createRouteMessageAck(routedMessage, RoutingErrors.STOPPED)
+        }
         logger.trace(`Peer ${this.config.ownPeerId.value} routing message ${routedMessage.requestId} 
             from ${routedMessage.sourcePeer?.kademliaId} to ${routedMessage.destinationPeer?.kademliaId}`)
         routedMessage.routingPath.push(this.config.ownPeerDescriptor!)
-        const session = new RoutingSession(
+        const session = this.createRoutingSession(routedMessage, mode)
+        this.addRoutingSession(session)
+        try {
+            // eslint-disable-next-line promise/catch-or-return
+            raceEvents3<RoutingSessionEvents>(session, ['routingSucceeded', 'routingFailed', 'stopped'], 10000)
+                .then(() => this.removeRoutingSession(session.sessionId))
+                .catch(() => this.removeRoutingSession(session.sessionId))
+            session.start()
+        } catch (e) {
+            if (peerIdFromPeerDescriptor(routedMessage.sourcePeer!).equals(this.config.ownPeerId!)) {
+                logger.warn(
+                    `Failed to send (routeMessage: ${this.config.serviceId}) to ${keyFromPeerDescriptor(routedMessage.destinationPeer!)}: ${e}`
+                )
+            }
+            return createRouteMessageAck(routedMessage, RoutingErrors.NO_CANDIDATES_FOUND)
+        }
+        return createRouteMessageAck(routedMessage)
+    }
+
+    private createRoutingSession(routedMessage: RouteMessageWrapper, mode: RoutingMode): RoutingSession {
+        return new RoutingSession(
             this.config.rpcCommunicator,
             this.config.ownPeerDescriptor!,
             routedMessage,
@@ -105,30 +125,6 @@ export class Router implements Omit<IRoutingService, 'findRecursively'> {
             undefined,
             routedMessage.routingPath.map((descriptor) => peerIdFromPeerDescriptor(descriptor))
         )
-        this.addRoutingSession(session)
-        let result: RunAndRaceEventsReturnType<RoutingSessionEvents>
-        try {
-            result = await runAndRaceEvents3<RoutingSessionEvents>([() => {
-                session.start()
-            }], session, ['noCandidatesFound', 'candidatesFound'], 1000)
-        } catch (e) {
-            logger.error(e)
-            throw e
-        }
-        // eslint-disable-next-line promise/catch-or-return
-        raceEvents3<RoutingSessionEvents>(session, ['routingSucceeded', 'routingFailed', 'stopped'], 10000)
-            .then(() => this.removeRoutingSession(session.sessionId))
-            .catch(() => this.removeRoutingSession(session.sessionId))
-        if (this.stopped) {
-            return createRouteMessageAck(routedMessage, 'DhtNode Stopped')
-        } else if (result.winnerName === 'noCandidatesFound' || result.winnerName === 'routingFailed') {
-            if (peerIdFromPeerDescriptor(routedMessage.sourcePeer!).equals(this.config.ownPeerId!)) {
-                throw new Error(`Could not perform initial routing`)
-            }
-            return createRouteMessageAck(routedMessage, 'No routing candidates found')
-        } else {
-            return createRouteMessageAck(routedMessage)
-        }
     }
 
     public checkDuplicate(messageId: string): boolean {
@@ -224,15 +220,7 @@ export class Router implements Omit<IRoutingService, 'findRecursively'> {
             this.config.connectionManager?.handleMessage(forwardedMessage!)
             return createRouteMessageAck(routedMessage)
         }
-        // eslint-disable-next-line promise/catch-or-return
-        this.doRouteMessage({ ...routedMessage, destinationPeer: forwardedMessage.targetDescriptor })
-            .catch((err) => {
-                logger.error(
-                    `Failed to send (forwardMessage: ${this.config.serviceId}) to`
-                    + ` ${keyFromPeerDescriptor(forwardedMessage.targetDescriptor!)}: ${err}`
-                )
-            })
-        return createRouteMessageAck(routedMessage)
+        return this.doRouteMessage({ ...routedMessage, destinationPeer: forwardedMessage.targetDescriptor })
     }
 
 }
