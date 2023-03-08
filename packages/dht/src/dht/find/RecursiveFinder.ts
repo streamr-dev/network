@@ -1,16 +1,19 @@
 import {
     DataEntry,
-    FindMode, Message, MessageType, NodeType,
+    FindMode,
+    Message,
+    MessageType,
+    NodeType,
     PeerDescriptor,
     RecursiveFindRequest,
     RouteMessageAck,
     RouteMessageWrapper
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
-import { createRouteMessageAck, Router } from '../routing/Router'
-import { RoutingMode, RoutingSession, RoutingSessionEvents } from '../routing/RoutingSession'
-import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
-import { Logger, runAndRaceEvents3, RunAndRaceEventsReturnType, runAndWaitForEvents3 } from '@streamr/utils'
+import { createRouteMessageAck, Router, RoutingErrors } from '../routing/Router'
+import { RoutingMode } from '../routing/RoutingSession'
+import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { Logger, runAndWaitForEvents3 } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { RemoteRecursiveFindSession } from './RemoteRecursiveFindSession'
 import { v4 } from 'uuid'
@@ -81,7 +84,7 @@ export class RecursiveFinder implements Pick<IRoutingService, 'findRecursively'>
                 recursiveFindRequest: request
             }
         }
-        const params: RouteMessageWrapper = {
+        const routeMessage: RouteMessageWrapper = {
             message: msg,
             requestId: v4(),
             destinationPeer: targetDescriptor,
@@ -91,7 +94,7 @@ export class RecursiveFinder implements Pick<IRoutingService, 'findRecursively'>
         }
         try {
             await runAndWaitForEvents3<RecursiveFindSessionEvents>(
-                [() => this.doFindRecursevily(params)],
+                [() => this.doFindRecursevily(routeMessage)],
                 [[recursiveFindSession, 'findCompleted']],
                 30000
             )
@@ -101,7 +104,7 @@ export class RecursiveFinder implements Pick<IRoutingService, 'findRecursively'>
         if (findMode === FindMode.DATA) {
             const data = this.config.localDataStore.getEntry(PeerID.fromValue(idToFind))
             if (data) {
-                this.reportRecursiveFindResult([], params.sourcePeer!, sessionId, [], data, true)
+                this.reportRecursiveFindResult([], this.config.ownPeerDescriptor, sessionId, [], data, true)
             }
         }
         return recursiveFindSession.getResults()
@@ -139,8 +142,9 @@ export class RecursiveFinder implements Pick<IRoutingService, 'findRecursively'>
     }
 
     private async doFindRecursevily(routedMessage: RouteMessageWrapper): Promise<RouteMessageAck> {
-        routedMessage.routingPath.push(this.config.ownPeerDescriptor)
-        logger.debug('findRecursively recursiveFindPath ' + routedMessage.routingPath.map((descriptor) => descriptor.nodeName))
+        if (this.stopped) {
+            return createRouteMessageAck(routedMessage, 'DhtNode Stopped')
+        }
         const idToFind = PeerID.fromValue(routedMessage.destinationPeer!.kademliaId)
         let recursiveFindRequest: RecursiveFindRequest | undefined
         const msg = routedMessage.message
@@ -148,7 +152,7 @@ export class RecursiveFinder implements Pick<IRoutingService, 'findRecursively'>
             recursiveFindRequest = msg.body.recursiveFindRequest
         }
         const closestPeersToDestination = this.config.getClosestPeerDescriptors(routedMessage.destinationPeer!.kademliaId, 5)
-        if (recursiveFindRequest!.findMode == FindMode.DATA) {
+        if (recursiveFindRequest!.findMode === FindMode.DATA) {
             const data = this.config.localDataStore.getEntry(idToFind)
             if (data) {
                 this.reportRecursiveFindResult(routedMessage.routingPath, routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
@@ -161,50 +165,21 @@ export class RecursiveFinder implements Pick<IRoutingService, 'findRecursively'>
                 closestPeersToDestination, undefined, true)
             return createRouteMessageAck(routedMessage)
         }
-        const session = new RoutingSession(
-            this.config.rpcCommunicator,
-            this.config.ownPeerDescriptor,
-            routedMessage,
-            this.config.connections,
-            this.config.ownPeerId.equals(peerIdFromPeerDescriptor(routedMessage.sourcePeer!)) ? 2 : 1,
-            1500,
-            RoutingMode.RECURSIVE_FIND,
-            undefined,
-            routedMessage.routingPath.map((descriptor) => peerIdFromPeerDescriptor(descriptor))
-        )
-        this.config.router.addRoutingSession(session)
-        session.on('routingFailed', () => {
-            logger.debug(`findRecursively Node ${this.config.ownPeerDescriptor.nodeName} giving up routing`)
-        })
-        let result: RunAndRaceEventsReturnType<RoutingSessionEvents>
-        try {
-            result = await runAndRaceEvents3<RoutingSessionEvents>([() => {
-                session.start()
-            }], session, ['noCandidatesFound', 'candidatesFound'], 1500)
-        } catch (e) {
-            logger.debug(e)
-        }
-        this.config.router.removeRoutingSession(session.sessionId)
-        if (this.stopped) {
-            return createRouteMessageAck(routedMessage, 'DhtNode Stopped')
-        } else if (result!.winnerName === 'noCandidatesFound' || result!.winnerName === 'routingFailed') {
-            if (peerIdFromPeerDescriptor(routedMessage.sourcePeer!).equals(this.config.ownPeerId)) {
-                throw new Error(`Could not perform initial routing`)
-            }
+        const ack = this.config.router.doRouteMessage(routedMessage, RoutingMode.RECURSIVE_FIND)
+        if (ack.error === RoutingErrors.NO_CANDIDATES_FOUND) {
             logger.trace(`findRecursively Node ${this.config.ownPeerDescriptor.nodeName} found no candidates`)
             this.reportRecursiveFindResult(routedMessage.routingPath, routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
                 closestPeersToDestination, undefined, true)
-            return createRouteMessageAck(routedMessage)
+            return ack
         } else {
-            const closestContacts = session.getClosestContacts(5)
             const noCloserContactsFound = (
-                closestContacts.length > 0
+                closestPeersToDestination.length > 0
                 && routedMessage.previousPeer
-                && !this.config.isPeerCloserToIdThanSelf(closestContacts[0], idToFind)
+                && !this.config.isPeerCloserToIdThanSelf(closestPeersToDestination[0], idToFind)
             )
             this.reportRecursiveFindResult(routedMessage.routingPath, routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
-                closestContacts, undefined, noCloserContactsFound)
-            return createRouteMessageAck(routedMessage)
+                closestPeersToDestination, undefined, noCloserContactsFound)
+            return ack
         }
     }
 

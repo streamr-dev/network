@@ -14,29 +14,20 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 const logger = new Logger(module)
 
 export interface RoutingSessionEvents {
-    // These events are emitted based on
-    // checking whether there are suitable connected
-    // peers to route the message to. The routeMessage RPC
-    // server implementation should return success or error ack
-    // based on these events.
-
-    noCandidatesFound: (sessionId: string) => void
-    candidatesFound: (sessionId: string) => void
-
     // This event is emitted when a peer responds with a success ack
     // to routeMessage call
     routingSucceeded: (sessionId: string) => void
 
     // This event is emitted when all the candidates have been gone
     // through, and none of them responds with a success ack
-
     routingFailed: (sessionId: string) => void
-
     stopped: (sessionId: string) => void
 }
 
 export enum RoutingMode { ROUTE, FORWARD, RECURSIVE_FIND }
+
 export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
+
     public readonly sessionId = v4()
     private readonly rpcCommunicator: RoutingRpcCommunicator
     private ongoingRequests: Set<PeerIDKey> = new Set()
@@ -68,11 +59,15 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         this.parallelism = parallelism
         this.firstHopTimeout = firstHopTimeout
         this.mode = mode
-
         const previousId = messageToRoute.previousPeer ? PeerID.fromValue(messageToRoute.previousPeer.kademliaId) : undefined
-        this.contactList = new SortedContactList(destinationId ? PeerID.fromValue(destinationId) :
-            PeerID.fromValue(this.messageToRoute!.destinationPeer!.kademliaId),
-        10000, undefined, true, previousId, excludedPeerIDs)
+        this.contactList = new SortedContactList(
+            destinationId ? PeerID.fromValue(destinationId) : PeerID.fromValue(this.messageToRoute!.destinationPeer!.kademliaId),
+            10000,
+            undefined,
+            true,
+            previousId,
+            excludedPeerIDs
+        )
     }
 
     private onRequestFailed(peerId: PeerID) {
@@ -82,9 +77,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         if (this.ongoingRequests.has(peerId.toKey())) {
             this.ongoingRequests.delete(peerId.toKey())
         }
-
         const contacts = this.findMoreContacts()
-
         if (contacts.length < 1 && this.ongoingRequests.size < 1) {
             this.stopped = true
             this.emit('routingFailed', this.sessionId)
@@ -106,7 +99,6 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         logger.trace(`Sending routeMessage request from ${this.ownPeerDescriptor.kademliaId} to contact: ${contact.getPeerId()}`)
         this.contactList.setContacted(contact.getPeerId())
         this.ongoingRequests.add(contact.getPeerId().toKey())
-
         if (this.mode === RoutingMode.FORWARD) {
             return contact.forwardMessage({
                 ...this.messageToRoute,
@@ -150,12 +142,10 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         if (this.stopped) {
             return
         }
-
         if (uncontacted.length < 1) {
             this.emit('routingFailed', this.sessionId)
             return
         }
-
         while (this.ongoingRequests.size < this.parallelism && uncontacted.length > 0) {
             if (this.stopped) {
                 return
@@ -181,9 +171,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     public start(): void {
         const contacts = this.findMoreContacts()
         if (contacts.length < 1) {
-            this.emit('noCandidatesFound', this.sessionId)
-        } else {
-            this.emit('candidatesFound', this.sessionId)
+            throw new Error('noCandidatesFound ' + this.sessionId)
         }
         this.sendMoreRequests(contacts)
     }
