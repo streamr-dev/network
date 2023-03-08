@@ -1,6 +1,5 @@
 name: release
 on:
-  workflow_dispatch:
   workflow_run:
     branches: [main]
     workflows: [validate]
