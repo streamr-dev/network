@@ -81,12 +81,16 @@ export class PeerDiscovery {
             ...sessionOptions,
             targetId: crypto.randomBytes(8),
             nodeName: this.config.ownPeerDescriptor.nodeName + '-random'
-        }): null
+        }) : null
         this.ongoingDiscoverySessions.set(session.sessionId, session)
-        randomSession && this.ongoingDiscoverySessions.set(randomSession.sessionId, randomSession)
+        if (randomSession) {
+            this.ongoingDiscoverySessions.set(randomSession.sessionId, randomSession)
+        }
         try {
             await session.findClosestNodes(this.config.joinTimeout)
-            randomSession && (await randomSession.findClosestNodes(this.config.joinTimeout))
+            if (randomSession) {
+                await randomSession.findClosestNodes(this.config.joinTimeout)
+            }
             if (!this.stopped) {
                 if (this.config.bucket.count() === 0) {
                     this.rejoinDht(entryPointDescriptor).catch(() => {})
@@ -98,7 +102,9 @@ export class PeerDiscovery {
             throw new Err.DhtJoinTimeout('join timed out')
         } finally {
             this.ongoingDiscoverySessions.delete(session.sessionId)
-            randomSession && this.ongoingDiscoverySessions.delete(randomSession.sessionId)
+            if (randomSession) {
+                this.ongoingDiscoverySessions.delete(randomSession.sessionId)
+            }
             this.config.connectionManager?.unlockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
         }
     }

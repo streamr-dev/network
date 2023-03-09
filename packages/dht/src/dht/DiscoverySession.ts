@@ -16,14 +16,14 @@ interface DiscoverySessionEvents {
 }
 
 interface DiscoverySessionConfig {
-    neighborList: SortedContactList<DhtPeer>,
-    targetId: Uint8Array,
-    ownPeerDescriptor: PeerDescriptor,
-    serviceId: string,
-    rpcCommunicator: RpcCommunicator,
-    parallelism: number,
-    noProgressLimit: number,
-    newContactListener?: (dhtPeer: DhtPeer) => void,
+    neighborList: SortedContactList<DhtPeer>
+    targetId: Uint8Array
+    ownPeerDescriptor: PeerDescriptor
+    serviceId: string
+    rpcCommunicator: RpcCommunicator
+    parallelism: number
+    noProgressLimit: number
+    newContactListener?: (dhtPeer: DhtPeer) => void
     nodeName?: string
 }
 
