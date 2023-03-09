@@ -10,6 +10,10 @@ on:
       - '*'
   workflow_dispatch:
 
+concurrency:
+  group: build-${{ github.head_ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
