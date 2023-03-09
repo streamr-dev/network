@@ -61,6 +61,8 @@ jobs:
       - name: Get current head git tag
         id: head_tag
         run: |
+          echo "any values?"
+          echo "$(git tag --points-at HEAD)"
           echo "head_tag=$(git tag --points-at HEAD)" >> $GITHUB_ENV
 
       - name: Print current head git tag (debug)
