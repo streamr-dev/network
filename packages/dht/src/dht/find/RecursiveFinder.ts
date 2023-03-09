@@ -23,6 +23,9 @@ import { DhtPeer } from '../DhtPeer'
 import { ITransport } from '../../transport/ITransport'
 import { LocalDataStore } from '../store/LocalDataStore'
 import { IRoutingService } from '../../proto/packages/dht/protos/DhtRpc.server'
+import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
+import { RecursiveFindSessionServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { toProtoRpcClient } from '@streamr/proto-rpc'
 
 interface RecursiveFinderConfig {
     rpcCommunicator: RoutingRpcCommunicator
@@ -147,13 +150,14 @@ export class RecursiveFinder implements Pick<IRoutingService, 'findRecursively'>
             this.ongoingSessions.get(serviceId)!
                 .doReportRecursiveFindResult(routingPath, closestNodes, dataEntries, noCloserNodesFound)
         } else if (!isOwnPeerId) {
-            const session = new RemoteRecursiveFindSession(
+            const remoteCommunicator = new ListeningRpcCommunicator(serviceId, this.config.sessionTransport, { rpcRequestTimeout: 15000 })
+            const remoteSession = new RemoteRecursiveFindSession(
                 this.config.ownPeerDescriptor,
                 targetPeerDescriptor,
-                serviceId,
-                this.config.sessionTransport
+                toProtoRpcClient(new RecursiveFindSessionServiceClient(remoteCommunicator.getRpcClientTransport())),
+                serviceId
             )
-            session.reportRecursiveFindResult(routingPath, closestNodes, dataEntries, noCloserNodesFound)
+            remoteSession.reportRecursiveFindResult(routingPath, closestNodes, dataEntries, noCloserNodesFound)
         }
     }
 
