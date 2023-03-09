@@ -2,10 +2,10 @@ name: validate
 
 on:
   push:
-    branches:
-      - main
     tags:
       - '*'
+    branches:
+      - main
   pull_request:
     branches:
       - '*'
