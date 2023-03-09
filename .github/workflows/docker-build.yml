@@ -63,6 +63,11 @@ jobs:
         run: |
           echo "head_tag=$(git tag --points-at HEAD)" >> $GITHUB_ENV
 
+      - name: Print current head git tag (debug)
+        run: |
+          echo "some text"
+          echo "${{ env.head_tag }}"
+
 
       - name: Docker meta
         id: docker_meta_success
