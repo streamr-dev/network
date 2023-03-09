@@ -257,36 +257,36 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             return
         }
         const peerDescriptor = message.targetDescriptor!
-        const hexId = keyFromPeerDescriptor(peerDescriptor)
         if (isSamePeerDescriptor(peerDescriptor, this.ownPeerDescriptor!)) {
             throw new Err.CannotConnectToSelf('Cannot send to self')
         }
         logger.trace(`Sending message to: ${peerDescriptor.kademliaId.toString()}`)
-        if (!(message.targetDescriptor)) {
-            message = ({ ...message, targetDescriptor: peerDescriptor })
+        message = {
+            ...message,
+            targetDescriptor: message.targetDescriptor || peerDescriptor,
+            sourceDescriptor: message.sourceDescriptor || this.ownPeerDescriptor,
         }
-        if (!(message.sourceDescriptor)) {
-            message = ({ ...message, sourceDescriptor: this.ownPeerDescriptor })
-        }
-        let connection: ManagedConnection | undefined
-        if (this.connections.has(hexId)) {
-            connection = this.connections.get(hexId)
-        } else if (!doNotConnect) {
-            if (this.simulatorConnector) {
-                connection = this.simulatorConnector!.connect(peerDescriptor)
-            } else if (peerDescriptor.websocket || this.ownPeerDescriptor!.websocket) {
-                connection = this.webSocketConnector!.connect(peerDescriptor)
-            } else {
-                connection = this.webrtcConnector!.connect(peerDescriptor)
-            }
+        const hexId = keyFromPeerDescriptor(peerDescriptor)
+        let connection = this.connections.get(hexId)
+        if (!connection && !doNotConnect) {
+            connection = this.createConnection(peerDescriptor)
             this.incomingConnectionCallback(connection)
-        } else {
+        } else if (!connection) {
             throw new Err.SendFailed('No connection to target, doNotConnect flag is true')
         }
         const binary = Message.toBinary(message)
         this.metrics.sendBytesPerSecond.record(binary.byteLength)
         this.metrics.sendMessagesPerSecond.record(1)
         return connection!.send(binary)
+    }
+
+    private createConnection(peerDescriptor: PeerDescriptor): ManagedConnection {
+        if (this.simulatorConnector) {
+            return this.simulatorConnector!.connect(peerDescriptor)
+        } else if (peerDescriptor.websocket || this.ownPeerDescriptor!.websocket) {
+            return this.webSocketConnector!.connect(peerDescriptor)
+        }
+        return this.webrtcConnector!.connect(peerDescriptor)
     }
 
     public getConnection(peerDescriptor: PeerDescriptor): ManagedConnection | undefined {
@@ -330,7 +330,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             return
         }
         this.messageDuplicateDetector.add(message.messageId, message.sourceDescriptor!.nodeName!, message)
-        if (message.serviceId == this.serviceId) {
+        if (message.serviceId === this.serviceId) {
             this.rpcCommunicator?.handleMessageFromPeer(message)
         } else {
             logger.trace('emit "message" ' + this.config.nodeName + ', ' + message.sourceDescriptor?.nodeName
