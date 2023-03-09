@@ -56,12 +56,8 @@ export class PeerDiscovery {
             `Joining ${this.config.serviceId === 'layer0' ? 'The Streamr Network' : `Control Layer for ${this.config.serviceId}`}`
             + ` via entrypoint ${keyFromPeerDescriptor(entryPointDescriptor)}`
         )
-        const entryPoint = new DhtPeer(
-            this.config.ownPeerDescriptor,
-            entryPointDescriptor,
-            toProtoRpcClient(new DhtRpcServiceClient(this.config.rpcCommunicator.getRpcClientTransport())),
-            this.config.serviceId
-        )
+        const entryPointClient = toProtoRpcClient(new DhtRpcServiceClient(this.config.rpcCommunicator.getRpcClientTransport()))
+        const entryPoint = new DhtPeer(this.config.ownPeerDescriptor, entryPointDescriptor, entryPointClient, this.config.serviceId)
         if (this.config.ownPeerId!.equals(entryPoint.getPeerId())) {
             return
         }
@@ -69,35 +65,28 @@ export class PeerDiscovery {
         this.config.addContact(entryPointDescriptor)
         const closest = this.config.bucket.closest(this.config.ownPeerId!.value, this.config.getClosestContactsLimit)
         this.config.neighborList.addContacts(closest)
-        const session = new DiscoverySession(
-            this.config.neighborList!,
-            this.config.ownPeerId!.value,
-            this.config.ownPeerDescriptor!,
-            this.config.serviceId,
-            this.config.rpcCommunicator!,
-            this.config.parallelism,
-            this.config.joinNoProgressLimit,
-            (newPeer: DhtPeer) => this.config.addContact(newPeer.getPeerDescriptor()),
-            this.config.ownPeerDescriptor.nodeName
-        )
-        const randomSession = new DiscoverySession(
-            this.config.neighborList!,
-            crypto.randomBytes(8),
-            this.config.ownPeerDescriptor!,
-            this.config.serviceId,
-            this.config.rpcCommunicator!,
-            this.config.parallelism,
-            this.config.joinNoProgressLimit,
-            (newPeer: DhtPeer) => this.config.addContact(newPeer.getPeerDescriptor()),
-            this.config.ownPeerDescriptor.nodeName + '-random'
-        )
+        const sessionOptions = {
+            neighborList: this.config.neighborList!,
+            targetId: this.config.ownPeerId!.value,
+            ownPeerDescriptor: this.config.ownPeerDescriptor!,
+            serviceId: this.config.serviceId,
+            rpcCommunicator: this.config.rpcCommunicator!,
+            parallelism: this.config.parallelism,
+            noProgressLimit: this.config.joinNoProgressLimit,
+            newContactListener: (newPeer: DhtPeer) => this.config.addContact(newPeer.getPeerDescriptor()),
+            nodeName: this.config.ownPeerDescriptor.nodeName
+        }
+        const session = new DiscoverySession(sessionOptions)
+        const randomSession = doRandomJoin ? new DiscoverySession({
+            ...sessionOptions,
+            targetId: crypto.randomBytes(8),
+            nodeName: this.config.ownPeerDescriptor.nodeName + '-random'
+        }): null
         this.ongoingDiscoverySessions.set(session.sessionId, session)
-        this.ongoingDiscoverySessions.set(randomSession.sessionId, randomSession)
+        randomSession && this.ongoingDiscoverySessions.set(randomSession.sessionId, randomSession)
         try {
             await session.findClosestNodes(this.config.joinTimeout)
-            if (doRandomJoin) {
-                await randomSession.findClosestNodes(this.config.joinTimeout)
-            }
+            randomSession && (await randomSession.findClosestNodes(this.config.joinTimeout))
             if (!this.stopped) {
                 if (this.config.bucket.count() === 0) {
                     this.rejoinDht(entryPointDescriptor).catch(() => {})
@@ -109,7 +98,7 @@ export class PeerDiscovery {
             throw new Err.DhtJoinTimeout('join timed out')
         } finally {
             this.ongoingDiscoverySessions.delete(session.sessionId)
-            this.ongoingDiscoverySessions.delete(randomSession.sessionId)
+            randomSession && this.ongoingDiscoverySessions.delete(randomSession.sessionId)
             this.config.connectionManager?.unlockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
         }
     }

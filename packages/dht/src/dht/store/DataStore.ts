@@ -50,22 +50,22 @@ export class DataStore implements IStoreService {
                 successfulNodes.push(closestNodes[i])
                 continue
             }
-            const dhtPeer = new RemoteStore(
+            const remoteStore = new RemoteStore(
                 this.config.ownPeerDescriptor,
                 closestNodes[i],
                 toProtoRpcClient(new StoreServiceClient(this.config.rpcCommunicator.getRpcClientTransport())),
                 this.config.serviceId
             )
             try {
-                const response = await dhtPeer.storeData({ kademliaId: key, data, ttl })
+                const response = await remoteStore.storeData({ kademliaId: key, data, ttl })
                 if (!response.error) {
                     successfulNodes.push(closestNodes[i])
-                    logger.trace('dhtPeer.storeData() returned success')
+                    logger.trace('remoteStore.storeData() returned success')
                 } else {
-                    logger.debug('dhtPeer.storeData() returned error: ' + response.error)
+                    logger.debug('remoteStore.storeData() returned error: ' + response.error)
                 }
             } catch (e) {
-                logger.debug('dhtPeer.storeData() threw an exception ' + e)
+                logger.debug('remoteStore.storeData() threw an exception ' + e)
             }
         }
         return successfulNodes
