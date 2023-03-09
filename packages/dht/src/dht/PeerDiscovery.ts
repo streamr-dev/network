@@ -112,28 +112,14 @@ export class PeerDiscovery {
         try {
             this.config.neighborList.clear()
             await this.joinDht(entryPoint)
-            this.rejoinOngoing = false
-            if (this.config.connections.size === 0 || this.config.bucket.count() === 0) {
-                if (this.stopped) {
-                    return
-                }
-                this.rejoinTimeoutRef = setTimeout(async () => {
-                    await this.rejoinDht(entryPoint)
-                    this.rejoinTimeoutRef = undefined
-                }, 5000)
-            } else {
-                logger.info(`Rejoined DHT successfully ${this.config.serviceId}!`)
-            }
+            logger.info(`Rejoined DHT successfully ${this.config.serviceId}!`)
         } catch (err) {
             logger.warn(`rejoining DHT ${this.config.serviceId} failed`)
-            this.rejoinOngoing = false
-            if (this.stopped) {
-                return
+            if (!this.stopped) {
+                setTimeout(() => this.rejoinDht(entryPoint), 5000)
             }
-            this.rejoinTimeoutRef = setTimeout(async () => {
-                await this.rejoinDht(entryPoint)
-                this.rejoinTimeoutRef = undefined
-            }, 5000)
+        } finally {
+            this.rejoinOngoing = false
         }
     }
 
