@@ -19,18 +19,11 @@ export class LocalDataStore {
     }
 
     public getEntry(key: PeerID): Map<PeerIDKey, DataEntry> | undefined {
-        if (this.store.has(key.toKey())) {
-            return this.store.get(key.toKey())!
-        } else {
-            return undefined
-        }
+        return this.store.get(key.toKey())
     }
 
     public deleteEntry(key: PeerID, storer: PeerDescriptor): void {
-        const dataKey = key.toKey()
-        if (this.store.has(dataKey)) {
-            const storerKey = keyFromPeerDescriptor(storer)
-            this.store.get(dataKey)!.delete(storerKey)
-        }
+        const storerKey = keyFromPeerDescriptor(storer)
+        this.store.get(key.toKey())?.delete(storerKey)
     }
 }

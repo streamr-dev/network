@@ -13,8 +13,7 @@ export class RemoteStore extends Remote<IStoreServiceClient> {
             timeout: 10000
         }
         try {
-            const result = await this.client.storeData(request, options)
-            return result
+            return await this.client.storeData(request, options)
         } catch (err) {
             throw Error(
                 `Could not store data to ${keyFromPeerDescriptor(this.peerDescriptor)} from ${keyFromPeerDescriptor(this.ownPeerDescriptor)} ${err}`

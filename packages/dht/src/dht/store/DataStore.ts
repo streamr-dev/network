@@ -58,32 +58,25 @@ export class DataStore implements IStoreService {
             )
             try {
                 const response = await dhtPeer.storeData({ kademliaId: key, data, ttl })
-                if (response.error) {
+                if (!response.error) {
+                    successfulNodes.push(closestNodes[i])
+                    logger.trace('dhtPeer.storeData() returned success')
+                } else {
                     logger.debug('dhtPeer.storeData() returned error: ' + response.error)
-                    continue
                 }
             } catch (e) {
                 logger.debug('dhtPeer.storeData() threw an exception ' + e)
-                continue
             }
-            successfulNodes.push(closestNodes[i])
-            logger.trace('dhtPeer.storeData() returned success')
         }
         return successfulNodes
     }
 
     // RPC service implementation
     async storeData(request: StoreDataRequest, context: ServerCallContext): Promise<StoreDataResponse> {
-        let ttl = request.ttl
-        if (ttl > this.config.storeMaxTtl) {
-            ttl = this.config.storeMaxTtl
-        }
-        this.config.localDataStore.storeEntry(
-            (context as DhtCallContext).incomingSourceDescriptor!,
-            PeerID.fromValue(request.kademliaId),
-            request.data!,
-            ttl
-        )
+        const ttl = Math.min(request.ttl, this.config.storeMaxTtl)
+        const { incomingSourceDescriptor } = context as DhtCallContext
+        const { kademliaId, data } = request
+        this.config.localDataStore.storeEntry(incomingSourceDescriptor!, PeerID.fromValue(kademliaId), data!, ttl)
         logger.trace(this.config.ownPeerDescriptor.nodeName + ' storeData()')
         return StoreDataResponse.create()
     }
