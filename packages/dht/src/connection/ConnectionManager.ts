@@ -9,7 +9,7 @@ import {
     UnlockRequest
 } from '../proto/packages/dht/protos/DhtRpc'
 import { WebSocketConnector } from './WebSocket/WebSocketConnector'
-import { PeerID, PeerIDKey } from '../helpers/PeerID'
+import { PeerIDKey } from '../helpers/PeerID'
 import { protoToString } from '../helpers/protoToString'
 import { ITransport, TransportEvents } from '../transport/ITransport'
 import { WebRtcConnector } from './WebRTC/WebRtcConnector'
@@ -177,22 +177,23 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     public garbageCollectConnections(maxConnections: number, lastUsedLimit: number): void {
-        if (this.connections.size > maxConnections) {
-            const disconnectionCandidates = new SortedContactList(peerIdFromPeerDescriptor(this.ownPeerDescriptor!), 100000)
-            this.connections.forEach((connection) => {
-                if (!this.locks.isLocked(connection.peerIdKey) && Date.now() - connection.getLastUsed() > lastUsedLimit) {
-                    logger.trace("disconnecting in timeout interval: " + this.config.nodeName + ', '
-                        + connection.getPeerDescriptor()?.nodeName + ' ')
-                    disconnectionCandidates.addContact(new Contact(connection.getPeerDescriptor()!))
-                }
-            })
-            const sortedCandidates = disconnectionCandidates.getAllContacts()
-            const targetNum = this.connections.size - maxConnections
-            for (let i = 0; i < sortedCandidates.length && i < targetNum; i++) {
-                logger.trace(this.config.nodeName + ' garbageCollecting '
-                    + sortedCandidates[sortedCandidates.length - 1 - i].getPeerDescriptor().nodeName)
-                this.gracefullyDisconnectAsync(sortedCandidates[sortedCandidates.length - 1 - i].getPeerDescriptor()).catch((_e) => { })
+        if (this.connections.size <= maxConnections) {
+            return
+        }
+        const disconnectionCandidates = new SortedContactList(peerIdFromPeerDescriptor(this.ownPeerDescriptor!), 100000)
+        this.connections.forEach((connection) => {
+            if (!this.locks.isLocked(connection.peerIdKey) && Date.now() - connection.getLastUsed() > lastUsedLimit) {
+                logger.trace("disconnecting in timeout interval: " + this.config.nodeName + ', '
+                    + connection.getPeerDescriptor()?.nodeName + ' ')
+                disconnectionCandidates.addContact(new Contact(connection.getPeerDescriptor()!))
             }
+        })
+        const sortedCandidates = disconnectionCandidates.getAllContacts()
+        const targetNum = this.connections.size - maxConnections
+        for (let i = 0; i < sortedCandidates.length && i < targetNum; i++) {
+            logger.trace(this.config.nodeName + ' garbageCollecting '
+                + sortedCandidates[sortedCandidates.length - 1 - i].getPeerDescriptor().nodeName)
+            this.gracefullyDisconnectAsync(sortedCandidates[sortedCandidates.length - 1 - i].getPeerDescriptor()).catch((_e) => { })
         }
     }
 
@@ -397,7 +398,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         }
         logger.trace('incomingConnectionCallback() objectId ' + connection.objectId)
         connection.offeredAsIncoming = true
-        if (this.acceptIncomingConnection(connection)) {
+        if (!this.acceptIncomingConnection(connection)) {
             return false
         }
         connection.on('managedData', this.onData)
@@ -431,11 +432,11 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 oldConnection.replacedByOtherConnection = true
             } else {
                 newConnection.rejectedAsIncoming = true
-                return true
+                return false
             }
         }
         this.connections.set(hexKey, newConnection)
-        return false
+        return true
     }
 
     private async closeConnection(id: PeerIDKey, reason?: string): Promise<void> {
