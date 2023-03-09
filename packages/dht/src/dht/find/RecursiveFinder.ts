@@ -141,19 +141,12 @@ export class RecursiveFinder implements Pick<IRoutingService, 'findRecursively'>
         data: Map<PeerIDKey, DataEntry> | undefined,
         noCloserNodesFound: boolean = false
     ): void {
-        const dataEntries: Array<DataEntry> = []
-        if (data) {
-            data.forEach((entry) => {
-                dataEntries.push(DataEntry.create(entry))
-            })
-            logger.trace('dataEntries exist')
-        }
-        if (this.config.ownPeerId.equals(PeerID.fromValue(targetPeerDescriptor!.kademliaId))) {
-            if (this.ongoingSessions.has(serviceId)) {
-                this.ongoingSessions.get(serviceId)!
-                    .doReportRecursiveFindResult(routingPath, closestNodes, dataEntries, noCloserNodesFound)
-            }
-        } else {
+        const dataEntries = data ? Array.from(data.values(), DataEntry.create.bind(DataEntry)) : []
+        const isOwnPeerId = this.config.ownPeerId.equals(PeerID.fromValue(targetPeerDescriptor!.kademliaId))
+        if (isOwnPeerId && this.ongoingSessions.has(serviceId)) {
+            this.ongoingSessions.get(serviceId)!
+                .doReportRecursiveFindResult(routingPath, closestNodes, dataEntries, noCloserNodesFound)
+        } else if (!isOwnPeerId) {
             const session = new RemoteRecursiveFindSession(
                 this.config.ownPeerDescriptor,
                 targetPeerDescriptor,
@@ -169,22 +162,14 @@ export class RecursiveFinder implements Pick<IRoutingService, 'findRecursively'>
             return createRouteMessageAck(routedMessage, 'DhtNode Stopped')
         }
         const idToFind = PeerID.fromValue(routedMessage.destinationPeer!.kademliaId)
-        let recursiveFindRequest: RecursiveFindRequest | undefined
         const msg = routedMessage.message
-        if (msg?.body.oneofKind === 'recursiveFindRequest') {
-            recursiveFindRequest = msg.body.recursiveFindRequest
-        }
+        const recursiveFindRequest = msg?.body.oneofKind === 'recursiveFindRequest' ? msg.body.recursiveFindRequest : undefined
         const closestPeersToDestination = this.config.getClosestPeerDescriptors(routedMessage.destinationPeer!.kademliaId, 5)
-        if (this.findAndReportLocalData(
-            idToFind.value,
-            recursiveFindRequest!.findMode,
-            routedMessage.routingPath,
-            routedMessage.sourcePeer!,
-            recursiveFindRequest!.recursiveFindSessionId)
-        ) {
+        const foundLocalData = this.findAndReportLocalData(idToFind.value, recursiveFindRequest!.findMode,
+            routedMessage.routingPath, routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId)
+        if (foundLocalData) {
             return createRouteMessageAck(routedMessage)
         } else if (this.config.ownPeerId!.equals(idToFind)) {
-            // Exact match, they were trying to find our kademliaID
             this.reportRecursiveFindResult(routedMessage.routingPath, routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
                 closestPeersToDestination, undefined, true)
             return createRouteMessageAck(routedMessage)
@@ -194,7 +179,6 @@ export class RecursiveFinder implements Pick<IRoutingService, 'findRecursively'>
             logger.trace(`findRecursively Node ${this.config.ownPeerDescriptor.nodeName} found no candidates`)
             this.reportRecursiveFindResult(routedMessage.routingPath, routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
                 closestPeersToDestination, undefined, true)
-            return ack
         } else if (ack.error) {
             return ack
         } else {
@@ -205,8 +189,8 @@ export class RecursiveFinder implements Pick<IRoutingService, 'findRecursively'>
             )
             this.reportRecursiveFindResult(routedMessage.routingPath, routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
                 closestPeersToDestination, undefined, noCloserContactsFound)
-            return ack
         }
+        return ack
     }
 
     // IRoutingService method
