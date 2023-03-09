@@ -56,12 +56,8 @@ export class PeerDiscovery {
             `Joining ${this.config.serviceId === 'layer0' ? 'The Streamr Network' : `Control Layer for ${this.config.serviceId}`}`
             + ` via entrypoint ${keyFromPeerDescriptor(entryPointDescriptor)}`
         )
-        const entryPoint = new DhtPeer(
-            this.config.ownPeerDescriptor,
-            entryPointDescriptor,
-            toProtoRpcClient(new DhtRpcServiceClient(this.config.rpcCommunicator.getRpcClientTransport())),
-            this.config.serviceId
-        )
+        const entryPointClient = toProtoRpcClient(new DhtRpcServiceClient(this.config.rpcCommunicator.getRpcClientTransport()))
+        const entryPoint = new DhtPeer(this.config.ownPeerDescriptor, entryPointDescriptor, entryPointClient, this.config.serviceId)
         if (this.config.ownPeerId!.equals(entryPoint.getPeerId())) {
             return
         }
@@ -69,33 +65,30 @@ export class PeerDiscovery {
         this.config.addContact(entryPointDescriptor)
         const closest = this.config.bucket.closest(this.config.ownPeerId!.value, this.config.getClosestContactsLimit)
         this.config.neighborList.addContacts(closest)
-        const session = new DiscoverySession(
-            this.config.neighborList!,
-            this.config.ownPeerId!.value,
-            this.config.ownPeerDescriptor!,
-            this.config.serviceId,
-            this.config.rpcCommunicator!,
-            this.config.parallelism,
-            this.config.joinNoProgressLimit,
-            (newPeer: DhtPeer) => this.config.addContact(newPeer.getPeerDescriptor()),
-            this.config.ownPeerDescriptor.nodeName
-        )
-        const randomSession = new DiscoverySession(
-            this.config.neighborList!,
-            crypto.randomBytes(8),
-            this.config.ownPeerDescriptor!,
-            this.config.serviceId,
-            this.config.rpcCommunicator!,
-            this.config.parallelism,
-            this.config.joinNoProgressLimit,
-            (newPeer: DhtPeer) => this.config.addContact(newPeer.getPeerDescriptor()),
-            this.config.ownPeerDescriptor.nodeName + '-random'
-        )
+        const sessionOptions = {
+            neighborList: this.config.neighborList!,
+            targetId: this.config.ownPeerId!.value,
+            ownPeerDescriptor: this.config.ownPeerDescriptor!,
+            serviceId: this.config.serviceId,
+            rpcCommunicator: this.config.rpcCommunicator!,
+            parallelism: this.config.parallelism,
+            noProgressLimit: this.config.joinNoProgressLimit,
+            newContactListener: (newPeer: DhtPeer) => this.config.addContact(newPeer.getPeerDescriptor()),
+            nodeName: this.config.ownPeerDescriptor.nodeName
+        }
+        const session = new DiscoverySession(sessionOptions)
+        const randomSession = doRandomJoin ? new DiscoverySession({
+            ...sessionOptions,
+            targetId: crypto.randomBytes(8),
+            nodeName: this.config.ownPeerDescriptor.nodeName + '-random'
+        }) : null
         this.ongoingDiscoverySessions.set(session.sessionId, session)
-        this.ongoingDiscoverySessions.set(randomSession.sessionId, randomSession)
+        if (randomSession) {
+            this.ongoingDiscoverySessions.set(randomSession.sessionId, randomSession)
+        }
         try {
             await session.findClosestNodes(this.config.joinTimeout)
-            if (doRandomJoin) {
+            if (randomSession) {
                 await randomSession.findClosestNodes(this.config.joinTimeout)
             }
             if (!this.stopped) {
@@ -109,7 +102,9 @@ export class PeerDiscovery {
             throw new Err.DhtJoinTimeout('join timed out')
         } finally {
             this.ongoingDiscoverySessions.delete(session.sessionId)
-            this.ongoingDiscoverySessions.delete(randomSession.sessionId)
+            if (randomSession) {
+                this.ongoingDiscoverySessions.delete(randomSession.sessionId)
+            }
             this.config.connectionManager?.unlockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
         }
     }
@@ -123,28 +118,14 @@ export class PeerDiscovery {
         try {
             this.config.neighborList.clear()
             await this.joinDht(entryPoint)
-            this.rejoinOngoing = false
-            if (this.config.connections.size === 0 || this.config.bucket.count() === 0) {
-                if (this.stopped) {
-                    return
-                }
-                this.rejoinTimeoutRef = setTimeout(async () => {
-                    await this.rejoinDht(entryPoint)
-                    this.rejoinTimeoutRef = undefined
-                }, 5000)
-            } else {
-                logger.info(`Rejoined DHT successfully ${this.config.serviceId}!`)
-            }
+            logger.info(`Rejoined DHT successfully ${this.config.serviceId}!`)
         } catch (err) {
             logger.warn(`rejoining DHT ${this.config.serviceId} failed`)
-            this.rejoinOngoing = false
-            if (this.stopped) {
-                return
+            if (!this.stopped) {
+                setTimeout(() => this.rejoinDht(entryPoint), 5000)
             }
-            this.rejoinTimeoutRef = setTimeout(async () => {
-                await this.rejoinDht(entryPoint)
-                this.rejoinTimeoutRef = undefined
-            }, 5000)
+        } finally {
+            this.rejoinOngoing = false
         }
     }
 
