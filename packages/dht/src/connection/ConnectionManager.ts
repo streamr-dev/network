@@ -177,22 +177,23 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     public garbageCollectConnections(maxConnections: number, lastUsedLimit: number): void {
-        if (this.connections.size > maxConnections) {
-            const disconnectionCandidates = new SortedContactList(peerIdFromPeerDescriptor(this.ownPeerDescriptor!), 100000)
-            this.connections.forEach((connection) => {
-                if (!this.locks.isLocked(connection.peerIdKey) && Date.now() - connection.getLastUsed() > lastUsedLimit) {
-                    logger.trace("disconnecting in timeout interval: " + this.config.nodeName + ', '
-                        + connection.getPeerDescriptor()?.nodeName + ' ')
-                    disconnectionCandidates.addContact(new Contact(connection.getPeerDescriptor()!))
-                }
-            })
-            const sortedCandidates = disconnectionCandidates.getAllContacts()
-            const targetNum = this.connections.size - maxConnections
-            for (let i = 0; i < sortedCandidates.length && i < targetNum; i++) {
-                logger.trace(this.config.nodeName + ' garbageCollecting '
-                    + sortedCandidates[sortedCandidates.length - 1 - i].getPeerDescriptor().nodeName)
-                this.gracefullyDisconnectAsync(sortedCandidates[sortedCandidates.length - 1 - i].getPeerDescriptor()).catch((_e) => { })
+        if (this.connections.size <= maxConnections) {
+            return
+        }
+        const disconnectionCandidates = new SortedContactList(peerIdFromPeerDescriptor(this.ownPeerDescriptor!), 100000)
+        this.connections.forEach((connection) => {
+            if (!this.locks.isLocked(connection.peerIdKey) && Date.now() - connection.getLastUsed() > lastUsedLimit) {
+                logger.trace("disconnecting in timeout interval: " + this.config.nodeName + ', '
+                    + connection.getPeerDescriptor()?.nodeName + ' ')
+                disconnectionCandidates.addContact(new Contact(connection.getPeerDescriptor()!))
             }
+        })
+        const sortedCandidates = disconnectionCandidates.getAllContacts()
+        const targetNum = this.connections.size - maxConnections
+        for (let i = 0; i < sortedCandidates.length && i < targetNum; i++) {
+            logger.trace(this.config.nodeName + ' garbageCollecting '
+                + sortedCandidates[sortedCandidates.length - 1 - i].getPeerDescriptor().nodeName)
+            this.gracefullyDisconnectAsync(sortedCandidates[sortedCandidates.length - 1 - i].getPeerDescriptor()).catch((_e) => { })
         }
     }
 
@@ -257,36 +258,36 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             return
         }
         const peerDescriptor = message.targetDescriptor!
-        const hexId = keyFromPeerDescriptor(peerDescriptor)
         if (isSamePeerDescriptor(peerDescriptor, this.ownPeerDescriptor!)) {
             throw new Err.CannotConnectToSelf('Cannot send to self')
         }
         logger.trace(`Sending message to: ${peerDescriptor.kademliaId.toString()}`)
-        if (!(message.targetDescriptor)) {
-            message = ({ ...message, targetDescriptor: peerDescriptor })
+        message = {
+            ...message,
+            targetDescriptor: message.targetDescriptor || peerDescriptor,
+            sourceDescriptor: message.sourceDescriptor || this.ownPeerDescriptor,
         }
-        if (!(message.sourceDescriptor)) {
-            message = ({ ...message, sourceDescriptor: this.ownPeerDescriptor })
-        }
-        let connection: ManagedConnection | undefined
-        if (this.connections.has(hexId)) {
-            connection = this.connections.get(hexId)
-        } else if (!doNotConnect) {
-            if (this.simulatorConnector) {
-                connection = this.simulatorConnector!.connect(peerDescriptor)
-            } else if (peerDescriptor.websocket || this.ownPeerDescriptor!.websocket) {
-                connection = this.webSocketConnector!.connect(peerDescriptor)
-            } else {
-                connection = this.webrtcConnector!.connect(peerDescriptor)
-            }
+        const hexId = keyFromPeerDescriptor(peerDescriptor)
+        let connection = this.connections.get(hexId)
+        if (!connection && !doNotConnect) {
+            connection = this.createConnection(peerDescriptor)
             this.incomingConnectionCallback(connection)
-        } else {
+        } else if (!connection) {
             throw new Err.SendFailed('No connection to target, doNotConnect flag is true')
         }
         const binary = Message.toBinary(message)
         this.metrics.sendBytesPerSecond.record(binary.byteLength)
         this.metrics.sendMessagesPerSecond.record(1)
         return connection!.send(binary)
+    }
+
+    private createConnection(peerDescriptor: PeerDescriptor): ManagedConnection {
+        if (this.simulatorConnector) {
+            return this.simulatorConnector!.connect(peerDescriptor)
+        } else if (peerDescriptor.websocket || this.ownPeerDescriptor!.websocket) {
+            return this.webSocketConnector!.connect(peerDescriptor)
+        }
+        return this.webrtcConnector!.connect(peerDescriptor)
     }
 
     public getConnection(peerDescriptor: PeerDescriptor): ManagedConnection | undefined {
@@ -330,7 +331,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             return
         }
         this.messageDuplicateDetector.add(message.messageId, message.sourceDescriptor!.nodeName!, message)
-        if (message.serviceId == this.serviceId) {
+        if (message.serviceId === this.serviceId) {
             this.rpcCommunicator?.handleMessageFromPeer(message)
         } else {
             logger.trace('emit "message" ' + this.config.nodeName + ', ' + message.sourceDescriptor?.nodeName
@@ -340,27 +341,24 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     private onData(data: Uint8Array, peerDescriptor: PeerDescriptor): void {
-        // This method parsed incoming data to Messages
-        // and ensures they are meant to us
-        // ToDo: add signature checking and decryption here
         if (!this.started || this.stopped) {
             return
         }
         this.metrics.receiveBytesPerSecond.record(data.byteLength)
         this.metrics.receiveMessagesPerSecond.record(1)
+        let message: Message | undefined
         try {
-            let message: Message | undefined
-            try {
-                message = Message.fromBinary(data)
-                logger.trace(this.config.nodeName + ' received protojson: ' + protoToString(message, Message))
-            } catch (e1) {
-                logger.debug('Parsing incoming data into Message failed' + e1)
-                return
-            }
-            message.sourceDescriptor = peerDescriptor
+            message = Message.fromBinary(data)
+            logger.trace(`${this.config.nodeName} received protojson: ${protoToString(message, Message)}`)
+        } catch (e) {
+            logger.debug(`Parsing incoming data into Message failed: ${e}`)
+            return
+        }
+        message.sourceDescriptor = peerDescriptor
+        try {
             this.handleMessage(message)
         } catch (e) {
-            logger.debug('Handling incoming data failed ' + e)
+            logger.debug(`Handling incoming data failed: ${e}`)
         }
     }
 
@@ -400,23 +398,14 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         }
         logger.trace('incomingConnectionCallback() objectId ' + connection.objectId)
         connection.offeredAsIncoming = true
-        const newPeerID = peerIdFromPeerDescriptor(connection.getPeerDescriptor()!)
-        if (this.connections.has(newPeerID.toKey())) {
-            if (newPeerID.hasSmallerHashThan(peerIdFromPeerDescriptor(this.ownPeerDescriptor!))) {
-                // replace the current connection
-                const oldConnection = this.connections.get(newPeerID.toKey())!
-                logger.trace("replaced: " + this.config.nodeName + ', ' + connection.getPeerDescriptor()?.nodeName + ' ')
-                const buffer = oldConnection!.stealOutputBuffer()
-                for (const data of buffer) {
-                    connection.sendNoWait(data)
-                }
-                oldConnection!.reportBufferSentByOtherConnection()
-            } else {
-                connection.rejectedAsIncoming = true
-                return false
-            }
+        if (!this.acceptIncomingConnection(connection)) {
+            return false
         }
         connection.on('managedData', this.onData)
+        connection.on('disconnected', (_code?: number, _reason?: string) => {
+            this.onDisconnected(connection)
+        })
+        this.emit('newConnection', connection)
         if (connection.isHandshakeCompleted()) {
             this.onConnected(connection)
         } else {
@@ -424,15 +413,29 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 this.onConnected(connection)
             })
         }
-        connection.on('disconnected', (_code?: number, _reason?: string) => {
-            this.onDisconnected(connection)
-        })
-        const hexKey = keyFromPeerDescriptor(connection.getPeerDescriptor()!)
+        return true
+    }
+
+    private acceptIncomingConnection(newConnection: ManagedConnection): boolean {
+        const newPeerID = peerIdFromPeerDescriptor(newConnection.getPeerDescriptor()!)
+        const hexKey = keyFromPeerDescriptor(newConnection.getPeerDescriptor()!)
         if (this.connections.has(hexKey)) {
-            this.connections.get(hexKey)!.replacedByOtherConnection = true
+            if (newPeerID.hasSmallerHashThan(peerIdFromPeerDescriptor(this.ownPeerDescriptor!))) {
+                // replace the current connection
+                const oldConnection = this.connections.get(newPeerID.toKey())!
+                logger.trace("replaced: " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName + ' ')
+                const buffer = oldConnection!.stealOutputBuffer()
+                for (const data of buffer) {
+                    newConnection.sendNoWait(data)
+                }
+                oldConnection!.reportBufferSentByOtherConnection()
+                oldConnection.replacedByOtherConnection = true
+            } else {
+                newConnection.rejectedAsIncoming = true
+                return false
+            }
         }
-        this.connections.set(hexKey, connection)
-        this.emit('newConnection', connection)
+        this.connections.set(hexKey, newConnection)
         return true
     }
 
