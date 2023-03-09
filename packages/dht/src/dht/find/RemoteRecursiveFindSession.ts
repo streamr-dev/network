@@ -3,34 +3,14 @@ import {
     PeerDescriptor,
     RecursiveFindReport
 } from '../../proto/packages/dht/protos/DhtRpc'
-import { IRecursiveFindSessionServiceClient, RecursiveFindSessionServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { IRecursiveFindSessionServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { DhtRpcOptions } from '../../rpc-protocol/DhtRpcOptions'
 import { Logger } from '@streamr/utils'
-import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
-import { ITransport } from '../../transport/ITransport'
-import { ListeningRpcCommunicator } from '../../exports'
+import { Remote } from '../contact/Remote'
 
 const logger = new Logger(module)
 
-export class RemoteRecursiveFindSession {
-
-    private rpcCommunicator: RpcCommunicator
-    private client: ProtoRpcClient<IRecursiveFindSessionServiceClient>
-    private readonly ownPeerDescriptor: PeerDescriptor
-    private readonly targetPeerDescriptor: PeerDescriptor
-
-    constructor(
-        ownPeerDescriptor: PeerDescriptor,
-        targetPeerDescriptor: PeerDescriptor,
-        serviceId: string,
-        rpcTransport: ITransport
-    ) {
-
-        this.ownPeerDescriptor = ownPeerDescriptor
-        this.targetPeerDescriptor = targetPeerDescriptor
-        this.rpcCommunicator = new ListeningRpcCommunicator(serviceId, rpcTransport, { rpcRequestTimeout: 15000 })
-        this.client = toProtoRpcClient(new RecursiveFindSessionServiceClient(this.rpcCommunicator.getRpcClientTransport()))
-    }
+export class RemoteRecursiveFindSession extends Remote<IRecursiveFindSessionServiceClient> {
 
     reportRecursiveFindResult(routingPath: PeerDescriptor[], closestNodes: PeerDescriptor[], 
         dataEntries: DataEntry[], noCloserNodesFound: boolean): void {
@@ -43,7 +23,7 @@ export class RemoteRecursiveFindSession {
         }
         const options: DhtRpcOptions = {
             sourceDescriptor: this.ownPeerDescriptor,
-            targetDescriptor: this.targetPeerDescriptor
+            targetDescriptor: this.peerDescriptor
         }
 
         this.client.reportRecursiveFindResult(report, options).catch((_e) => {
