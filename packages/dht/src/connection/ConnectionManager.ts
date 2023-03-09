@@ -9,7 +9,7 @@ import {
     UnlockRequest
 } from '../proto/packages/dht/protos/DhtRpc'
 import { WebSocketConnector } from './WebSocket/WebSocketConnector'
-import { PeerIDKey } from '../helpers/PeerID'
+import { PeerID, PeerIDKey } from '../helpers/PeerID'
 import { protoToString } from '../helpers/protoToString'
 import { ITransport, TransportEvents } from '../transport/ITransport'
 import { WebRtcConnector } from './WebRTC/WebRtcConnector'
@@ -345,7 +345,6 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         }
         this.metrics.receiveBytesPerSecond.record(data.byteLength)
         this.metrics.receiveMessagesPerSecond.record(1)
-
         let message: Message | undefined
         try {
             message = Message.fromBinary(data)
@@ -398,23 +397,14 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         }
         logger.trace('incomingConnectionCallback() objectId ' + connection.objectId)
         connection.offeredAsIncoming = true
-        const newPeerID = peerIdFromPeerDescriptor(connection.getPeerDescriptor()!)
-        if (this.connections.has(newPeerID.toKey())) {
-            if (newPeerID.hasSmallerHashThan(peerIdFromPeerDescriptor(this.ownPeerDescriptor!))) {
-                // replace the current connection
-                const oldConnection = this.connections.get(newPeerID.toKey())!
-                logger.trace("replaced: " + this.config.nodeName + ', ' + connection.getPeerDescriptor()?.nodeName + ' ')
-                const buffer = oldConnection!.stealOutputBuffer()
-                for (const data of buffer) {
-                    connection.sendNoWait(data)
-                }
-                oldConnection!.reportBufferSentByOtherConnection()
-            } else {
-                connection.rejectedAsIncoming = true
-                return false
-            }
+        if (this.acceptIncomingConnection(connection)) {
+            return false
         }
         connection.on('managedData', this.onData)
+        connection.on('disconnected', (_code?: number, _reason?: string) => {
+            this.onDisconnected(connection)
+        })
+        this.emit('newConnection', connection)
         if (connection.isHandshakeCompleted()) {
             this.onConnected(connection)
         } else {
@@ -422,16 +412,30 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 this.onConnected(connection)
             })
         }
-        connection.on('disconnected', (_code?: number, _reason?: string) => {
-            this.onDisconnected(connection)
-        })
-        const hexKey = keyFromPeerDescriptor(connection.getPeerDescriptor()!)
-        if (this.connections.has(hexKey)) {
-            this.connections.get(hexKey)!.replacedByOtherConnection = true
-        }
-        this.connections.set(hexKey, connection)
-        this.emit('newConnection', connection)
         return true
+    }
+
+    private acceptIncomingConnection(newConnection: ManagedConnection): boolean {
+        const newPeerID = peerIdFromPeerDescriptor(newConnection.getPeerDescriptor()!)
+        const hexKey = keyFromPeerDescriptor(newConnection.getPeerDescriptor()!)
+        if (this.connections.has(hexKey)) {
+            if (newPeerID.hasSmallerHashThan(peerIdFromPeerDescriptor(this.ownPeerDescriptor!))) {
+                // replace the current connection
+                const oldConnection = this.connections.get(newPeerID.toKey())!
+                logger.trace("replaced: " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName + ' ')
+                const buffer = oldConnection!.stealOutputBuffer()
+                for (const data of buffer) {
+                    newConnection.sendNoWait(data)
+                }
+                oldConnection!.reportBufferSentByOtherConnection()
+                oldConnection.replacedByOtherConnection = true
+            } else {
+                newConnection.rejectedAsIncoming = true
+                return true
+            }
+        }
+        this.connections.set(hexKey, newConnection)
+        return false
     }
 
     private async closeConnection(id: PeerIDKey, reason?: string): Promise<void> {
