@@ -340,27 +340,25 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     private onData(data: Uint8Array, peerDescriptor: PeerDescriptor): void {
-        // This method parsed incoming data to Messages
-        // and ensures they are meant to us
-        // ToDo: add signature checking and decryption here
         if (!this.started || this.stopped) {
             return
         }
         this.metrics.receiveBytesPerSecond.record(data.byteLength)
         this.metrics.receiveMessagesPerSecond.record(1)
+
+        let message: Message | undefined
         try {
-            let message: Message | undefined
-            try {
-                message = Message.fromBinary(data)
-                logger.trace(this.config.nodeName + ' received protojson: ' + protoToString(message, Message))
-            } catch (e1) {
-                logger.debug('Parsing incoming data into Message failed' + e1)
-                return
-            }
-            message.sourceDescriptor = peerDescriptor
+            message = Message.fromBinary(data)
+            logger.trace(`${this.config.nodeName} received protojson: ${protoToString(message, Message)}`)
+        } catch (e) {
+            logger.debug(`Parsing incoming data into Message failed: ${e}`)
+            return
+        }
+        message.sourceDescriptor = peerDescriptor
+        try {
             this.handleMessage(message)
         } catch (e) {
-            logger.debug('Handling incoming data failed ' + e)
+            logger.debug(`Handling incoming data failed: ${e}`)
         }
     }
 
