@@ -135,9 +135,6 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         if (this.ownPeerDescriptor!.websocket && !targetPeerDescriptor.websocket) {
             return this.requestConnectionFromPeer(this.ownPeerDescriptor!, targetPeerDescriptor)
         } else {
-            if (this.ownPeerDescriptor!.nodeName === 'entrypoint') {
-                logger.info(`pranklin ${targetPeerDescriptor.nodeName}`)
-            }
             const socket = new ClientWebSocket()
 
             const address = 'ws://' + targetPeerDescriptor.websocket!.ip + ':' +
