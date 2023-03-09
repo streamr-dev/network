@@ -106,9 +106,8 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
     private processFoundData(dataEntries: DataEntry[]): void {
         dataEntries.forEach((entry) => {
             const storerKey = keyFromPeerDescriptor(entry.storer!)
-            if (!this.foundData.has(storerKey)) {
-                this.foundData.set(storerKey, entry)
-            } else if (this.foundData.has(storerKey) && this.foundData.get(storerKey)!.storedAt! < entry.storedAt!) {
+            const existingEntry = this.foundData.get(storerKey)
+            if (!existingEntry || existingEntry.storedAt! < entry.storedAt!) {
                 this.foundData.set(storerKey, entry)
             }
         })
@@ -138,13 +137,10 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
         return {}
     }
 
-    public getResults(): RecursiveFindResult {
-        const ret = {
-            closestNodes: this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()),
-            dataEntries: (this.foundData && this.foundData.size > 0) ? Array.from(this.foundData.values()) : undefined
-        }
-        return ret
-    }
+    public getResults = (): RecursiveFindResult => ({
+        closestNodes: this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()),
+        dataEntries: (this.foundData && this.foundData.size > 0) ? Array.from(this.foundData.values()) : undefined
+    })
 
     public stop(): void {
         this.emit('findCompleted', [])
