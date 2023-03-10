@@ -151,44 +151,51 @@ describe('Migrating data from node to node in DHT', () => {
         }
 
         expect(closestNode.doGetData(dataKey)).toBeTruthy()
+    }, 180000)
 
-        /*
-        logger.info('node ' + storingNode.getNodeName() + ' starting to store data with key ' + dataKey.toString())
-        const successfulStorers = await storingNode.storeDataToDht(dataKey.value, data)
+    it.only('Data migrates to the last remaining node if all other nodes leave gracefully', async () => {
 
-        expect(successfulStorers.length).toBeGreaterThan(4)
-
-        logger.info('store data over')
+        const dataKey = PeerID.fromString('3232323e12r31r3')
+        const data = Any.pack(entrypointDescriptor, PeerDescriptor)
 
         logger.info(NUM_NODES + ' nodes joining layer0 DHT')
         await Promise.all(
-            nodes.map((node) => node.joinDht(entrypointDescriptor))
+            nodes.map((node) => {
+                node.joinDht(entrypointDescriptor)
+            })
         )
+
         logger.info('completed ' + NUM_NODES + ' nodes joining layer0 DHT')
 
         await waitNodesReadyForTesting(nodes)
 
-        const node = entryPoint
-        logger.info(node.getNodeName() + ': connections:' +
-            node.getNumberOfConnections() + ', kbucket: ' + node.getBucketSize()
-            + ', localLocked: ' + node.getNumberOfLocalLockedConnections()
-            + ', remoteLocked: ' + node.getNumberOfRemoteLockedConnections()
-            + ', weakLocked: ' + node.getNumberOfWeakLockedConnections())
+        const randomIndex = Math.floor(Math.random() * nodes.length)
+        logger.info('storing data to a random node: ' + randomIndex)
 
-        const fetchingNode = getRandomNode()
-        logger.info('node ' + fetchingNode.getNodeName() + ' starting to get data with key ' + dataKey.toString())
-        const results = await fetchingNode.getDataFromDht(dataKey.value)
+        const successfulStorers = await nodes[randomIndex].storeDataToDht(dataKey.value, data)
 
-        logger.info('dataEntries.length: ' + results.dataEntries!.length)
-        results.dataEntries?.forEach((entry) => {
-            logger.info(JSON.stringify(entry.storer!), Any.unpack(entry.data!, PeerDescriptor))
-        })
+        logger.info('data successfully stored to ' + successfulStorers + ' nodes')
 
-        const fetchedData = Any.unpack(results.dataEntries![0].data!, PeerDescriptor)
+        const randomIndices = []
+        for (let i = 0; i < nodes.length; i++) {
+            randomIndices.push(i)
+        }
 
-        logger.info('find data over')
+        console.error(randomIndices)
+        while (randomIndices.length > 1) {
+            const index = Math.floor(Math.random() * randomIndices.length)
+            const nodeIndex = randomIndices[index]
+            randomIndices.splice(index, 1)
 
-        expect(JSON.stringify(fetchedData)).toEqual(JSON.stringify(entrypointDescriptor))
-        */
+            logger.info('Stopping node ' + nodeIndex + ' ' + (nodes[nodeIndex].doGetData(dataKey) ? ', has data' : ' does not have data'))
+
+            await nodes[nodeIndex].stop()
+        }
+
+        logger.info('after random graceful leaving, node ' + randomIndices[0] + ' is left')
+        logger.info('data of ' + randomIndices[0] + ' was ' + nodes[randomIndices[0]].doGetData(dataKey))
+
+        expect(nodes[randomIndices[0]].doGetData(dataKey)).toBeTruthy()
+
     }, 180000)
 })

@@ -191,12 +191,13 @@ export class DhtPeer implements KBucketContact {
 
     }
 
-    async migrateData(request: MigrateDataRequest): Promise<MigrateDataResponse> {
+    async migrateData(request: MigrateDataRequest, doNotConnect: boolean = false): Promise<MigrateDataResponse> {
         
         const options: DhtRpcOptions = {
             sourceDescriptor: this.ownPeerDescriptor,
             targetDescriptor: this.peerDescriptor,
-            timeout: 10000
+            timeout: 10000,
+            doNotConnect: doNotConnect
         }
 
         return this.dhtClient.migrateData(request, options)      

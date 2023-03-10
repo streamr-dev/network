@@ -816,6 +816,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         }
         this.stopped = true
 
+        await this.migrateAllDataUponStop()
+
         if (this.joinTimeoutRef) {
             clearTimeout(this.joinTimeoutRef)
         }
@@ -1221,14 +1223,13 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
     // RPC service implementation
 
     public async migrateData(request: MigrateDataRequest, context: ServerCallContext): Promise<MigrateDataResponse> {
-
+        logger.info(this.getNodeName() + ' server-side migrateData()')
         this.doMigrateData((context as DhtCallContext).incomingSourceDescriptor!,
             request.dataEntry!)
 
-        logger.info(this.config.nodeName + ' migrateData()')
-
         this.migrateDataToNeighborsIfNeeded((context as DhtCallContext).incomingSourceDescriptor!, request.dataEntry!)
 
+        logger.info(this.getNodeName() + ' server-side migrateData() at end')
         return MigrateDataResponse.create()
     }
 
@@ -1340,6 +1341,51 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         return false
     }
     */
+
+    private async migrateAllDataUponStop(): Promise<void> {
+
+        const promises: Promise<PeerDescriptor[]>[] = []
+        this.dataStore.forEach((dataMap, _dataKey) => {
+            dataMap.forEach((dataEntry) => {
+
+                promises.push(this.storeDataToDht(dataEntry.kademliaId, dataEntry.data!))
+                /*
+                const targetNode = this.findPeerToMigrateDataToUponStop(PeerID.fromValue(dataEntry.kademliaId))
+                if (targetNode) {
+                    promises.push(this.migrateDataToContact(dataEntry, targetNode, true))
+                }
+                */
+            })
+        })
+
+        await Promise.allSettled(promises)
+    }
+
+    private findPeerToMigrateDataToUponStop(dataId: PeerID): PeerDescriptor | undefined {
+
+        const contacts = this.connections // this.bucket!.closest(dataId.value, 10) //  //this.getNeighborList().getAllContacts() // 
+        const sortedList = new SortedContactList<Contact>(dataId, 6, undefined, true)
+        //sortedList.addContact(new Contact(this.ownPeerDescriptor!))
+
+        contacts.forEach((con) => {
+            sortedList.addContact(new Contact(con.getPeerDescriptor()))
+        })
+
+        //const closestToDat = sortedList.getAllContacts()
+        //if (!sortedList.getAllContacts()[0].peerId.equals(this.ownPeerId!)) {
+        // If we are not the closes node to the data, do not migrate
+        //    return undefined
+        //}
+
+        const sorted = sortedList.getAllContacts()
+
+        if (sorted && sorted.length > 0) {
+            return sorted[sorted.length - 1].getPeerDescriptor()
+        } else {
+            return undefined
+        }
+    }
+
     private migrateDataToContactIfNeeded(contact: PeerDescriptor) {
 
         this.dataStore.forEach((dataMap, _dataKey) => {
@@ -1355,7 +1401,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         })
     }
 
-    private migrateDataToNeighborsIfNeeded(incomingPeer: PeerDescriptor, dataEntry: DataEntry) {
+    private migrateDataToNeighborsIfNeeded(incomingPeer: PeerDescriptor, dataEntry: DataEntry): void {
 
         // sort own contact list according to data id
         const dataId = PeerID.fromValue(dataEntry.kademliaId)
@@ -1375,14 +1421,31 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         }
         */
 
-        const contact = sortedList.getAllContacts()[0]
-        const contactPeerId = PeerID.fromValue(contact.getPeerDescriptor().kademliaId)
-        //sortedList.getAllContacts().forEach(contact => {
-        if (!incomingPeerId.equals(contactPeerId) &&
-            !this.ownPeerId!.equals(contactPeerId)) {
-            this.migrateDataToContact(dataEntry, contact.getPeerDescriptor())
+        if (!sortedList.getAllContacts()[0].peerId.equals(this.ownPeerId!)) {
+            // If we are not the closest node to the data, migrate only to the 
+            // closest one to the data
+
+            const contact = sortedList.getAllContacts()[0]
+            const contactPeerId = PeerID.fromValue(contact.getPeerDescriptor().kademliaId)
+            if (!incomingPeerId.equals(contactPeerId) &&
+                !this.ownPeerId!.equals(contactPeerId)) {
+                this.migrateDataToContact(dataEntry, contact.getPeerDescriptor()).catch((e) => {
+                    logger.error('migrating data to only the closest contact failed ' + e)
+                })
+            }
+        } else {
+            // if we are the closest to the data, migrate to all 5 nearest
+
+            sortedList.getAllContacts().forEach((contact) => {
+                const contactPeerId = PeerID.fromValue(contact.getPeerDescriptor().kademliaId)
+                if (!incomingPeerId.equals(contactPeerId) &&
+                    !this.ownPeerId!.equals(contactPeerId)) {
+                    this.migrateDataToContact(dataEntry, contact.getPeerDescriptor()).catch((e) => {
+                        logger.error('migrating data to one of the closest contacts failed ' + e)
+                    })
+                }
+            })
         }
-        //})
 
         logger.info('migrateDataToNeighborsIfNeeded() sortedContacts')
         sortedList.getAllContacts().forEach((contact) => {
@@ -1404,7 +1467,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             })*/
     }
 
-    private async migrateDataToContact(dataEntry: DataEntry, contact: PeerDescriptor): Promise<void> {
+    private async migrateDataToContact(dataEntry: DataEntry, contact: PeerDescriptor, doNotConnect: boolean = false): Promise<void> {
         const dhtPeer = new DhtPeer(
             this.ownPeerDescriptor!,
             contact,
@@ -1413,7 +1476,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             this
         )
         try {
-            const response = await dhtPeer.migrateData({ dataEntry })
+            const response = await dhtPeer.migrateData({ dataEntry }, doNotConnect)
             if (response.error) {
                 logger.error('dhtPeer.migrateData() returned error: ' + response.error)
             }
@@ -1463,14 +1526,21 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
     // Store API for higher layers and tests
     public async storeDataToDht(key: Uint8Array, data: Any): Promise<PeerDescriptor[]> {
         logger.info(`Storing data to DHT ${this.config.serviceId} with key ${PeerID.fromValue(key)}`)
+
         const result = await this.startRecursiveFind(key)
         const closestNodes = result.closestNodes
         const successfulNodes: PeerDescriptor[] = []
         const ttl = this.config.storeHighestTtl // ToDo: make TTL decrease according to some nice curve
+
+        // Always store data to self first 
+
+        this.doStoreData(this.ownPeerDescriptor!, { kademliaId: key, data, ttl, storedAt: Timestamp.now() })
+        successfulNodes.push(this.ownPeerDescriptor!)
+
         for (let i = 0; i < closestNodes.length && successfulNodes.length < 5; i++) {
             if (this.ownPeerId!.equals(PeerID.fromValue(closestNodes[i].kademliaId))) {
-                this.doStoreData(closestNodes[i], { kademliaId: key, data, ttl, storedAt: Timestamp.now() })
-                successfulNodes.push(closestNodes[i])
+                //this.doStoreData(closestNodes[i], { kademliaId: key, data, ttl, storedAt: Timestamp.now() })
+                //successfulNodes.push(closestNodes[i])
                 continue
             }
             const dhtPeer = new DhtPeer(
