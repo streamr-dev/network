@@ -178,8 +178,7 @@ npm version <SEMVER_OPTION>
 git add package.json package-lock.json
 git commit -m "release(broker): vX.Y.Z"
 git tag broker/vX.Y.Z
-git push origin
-git push origin broker/vX.Y.Z
+git push --atomic origin main broker/vX.Y.Z
 
 npm run build
 npm publish
