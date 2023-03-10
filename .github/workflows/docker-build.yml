@@ -58,17 +58,22 @@ jobs:
           username: ${{ secrets.dockerhub_username }}
           password: ${{ secrets.dockerhub_token }}
 
+      - name: Get tags
+        run: git fetch --tags origin
+
       - name: Get current head git tag
         id: head_tag
         run: |
           echo "any values?"
           echo "$(git tag --points-at HEAD)"
           echo "head_tag=$(git tag --points-at HEAD)" >> $GITHUB_ENV
+          echo "foobar=loremipsum" >> $GITHUB_ENV
 
       - name: Print current head git tag (debug)
         run: |
           echo "some text"
           echo "${{ env.head_tag }}"
+          echo "${{ env.foobar }}"
 
 
       - name: Docker meta
