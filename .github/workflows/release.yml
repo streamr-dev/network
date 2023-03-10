@@ -4,9 +4,10 @@ on:
     branches: [main]
     workflows: [validate]
     types:
-      - requested
+      - completed
 jobs:
   tracker-docker-image:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     uses: ./.github/workflows/docker-build.yml
     with:
       docker_file: Dockerfile.tracker
@@ -17,6 +18,7 @@ jobs:
       dockerhub_username: ${{secrets.DOCKERHUB_USERNAME}}
       dockerhub_token: ${{secrets.DOCKERHUB_TOKEN}}
   broker-docker-image:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     uses: ./.github/workflows/docker-build.yml
     with:
       docker_file: Dockerfile.broker

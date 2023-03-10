@@ -58,22 +58,10 @@ jobs:
           username: ${{ secrets.dockerhub_username }}
           password: ${{ secrets.dockerhub_token }}
 
-      - name: Get tags
-        run: git fetch --tags origin
-
-      - name: Get current head git tag
-        id: head_tag
+      - name: Get current git tag (for Docker meta) # assuming one tag on current HEAD
         run: |
-          echo "any values?"
-          echo "$(git tag --points-at HEAD)"
+          git fetch --tags origin
           echo "head_tag=$(git tag --points-at HEAD)" >> $GITHUB_ENV
-          echo "foobar=loremipsum" >> $GITHUB_ENV
-
-      - name: Print current head git tag (debug)
-        run: |
-          echo "some text"
-          echo "${{ env.head_tag }}"
-          echo "${{ env.foobar }}"
 
 
       - name: Docker meta
@@ -85,7 +73,7 @@ jobs:
           tags: |
             type=match,pattern=broker/(v.*),group=1,value=${{ env.head_tag }}
             type=raw,value=dev,enable=${{ github.ref == 'refs/heads/main' }}
-            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/broker/v') && !contains(github.ref, 'beta') && !contains(github.ref, 'alpha') }}
+            type=raw,value=latest,enable=${{ startsWith(env.head_tag, 'broker/v') && !contains(env.head_tag, 'beta') && !contains(env.head_tag, 'alpha') }}
 
       - name: Build
         if: ${{!inputs.push_image}}
