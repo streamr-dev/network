@@ -60,7 +60,7 @@ jobs:
 
       - name: Get current git tag (for Docker meta) # assuming one tag on current HEAD
         run: |
-          git fetch --tags origin
+          git fetch --tags origin --force
           echo "head_tag=$(git tag --points-at HEAD)" >> $GITHUB_ENV
 
 
