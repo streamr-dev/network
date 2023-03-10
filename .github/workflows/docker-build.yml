@@ -73,7 +73,6 @@ jobs:
           tags: |
             type=match,pattern=broker/(v.*),group=1,value=${{ env.head_tag }}
             type=raw,value=dev,enable=${{ github.ref == 'refs/heads/main' }}
-            type=raw,value=latest,enable=${{ startsWith(env.head_tag, 'broker/v') && !contains(env.head_tag, 'beta') && !contains(env.head_tag, 'alpha') }}
 
       - name: Build
         if: ${{!inputs.push_image}}
