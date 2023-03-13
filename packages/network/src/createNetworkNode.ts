@@ -9,7 +9,7 @@ import NodeClientWsEndpoint from './connection/ws/NodeClientWsEndpoint'
 import { WebRtcEndpoint } from './connection/webrtc/WebRtcEndpoint'
 import { webRtcConnectionFactory } from './connection/webrtc/NodeWebRtcConnection'
 import { TrackerRegistryRecord } from '@streamr/protocol'
-import { IceServer } from './connection/webrtc/WebRtcConnection'
+import { IceServer, WebRtcPortRange } from './connection/webrtc/WebRtcConnection'
 
 export interface NetworkNodeOptions extends AbstractNodeOptions {
     trackers: TrackerRegistryRecord[]
@@ -24,9 +24,8 @@ export interface NetworkNodeOptions extends AbstractNodeOptions {
     trackerConnectionMaintenanceInterval: number
     webrtcDisallowPrivateAddresses: boolean
     acceptProxyConnections: boolean
-    webrtcDatachannelMaxMessageSize?: number
-    webrtcDatachannelPortRangeBegin?: number
-    webrtcDatachannelPortRangeEnd?: number
+    webrtcDatachannelMaxMessageSize: number
+    webrtcPortRange: WebRtcPortRange
 }
 
 export const TEST_CONFIG: Omit<NetworkNodeOptions, 'id' | 'trackers' | 'metricsContext'> = {
@@ -41,7 +40,12 @@ export const TEST_CONFIG: Omit<NetworkNodeOptions, 'id' | 'trackers' | 'metricsC
     trackerConnectionMaintenanceInterval: 5 * 1000,
     webrtcDisallowPrivateAddresses: false,
     acceptProxyConnections: false,
-    trackerPingInterval: 60 * 1000
+    trackerPingInterval: 60 * 1000,
+    webrtcPortRange: {
+        begin: 6000,
+        end: 65535
+    },
+    webrtcDatachannelMaxMessageSize: 1048576
 }
 
 export const createNetworkNode = ({
@@ -61,9 +65,8 @@ export const createNetworkNode = ({
     trackerConnectionMaintenanceInterval,
     webrtcDisallowPrivateAddresses,
     acceptProxyConnections,
+    webrtcPortRange,
     webrtcDatachannelMaxMessageSize,
-    webrtcDatachannelPortRangeBegin,
-    webrtcDatachannelPortRangeEnd
 }: NetworkNodeOptions): NetworkNode => {
     const peerInfo = PeerInfo.newNode(id, undefined, undefined, location)
     const endpoint = new NodeClientWsEndpoint(peerInfo, trackerPingInterval)
@@ -84,9 +87,8 @@ export const createNetworkNode = ({
         webrtcDatachannelBufferThresholdHigh,
         webrtcSendBufferMaxMessageCount,
         webrtcDisallowPrivateAddresses,
-        webrtcDatachannelMaxMessageSize,
-        webrtcDatachannelPortRangeBegin,
-        webrtcDatachannelPortRangeEnd
+        webrtcPortRange,
+        webrtcDatachannelMaxMessageSize
     ))
 
     return new NetworkNode({

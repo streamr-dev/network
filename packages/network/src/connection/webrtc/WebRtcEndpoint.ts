@@ -3,7 +3,7 @@ import { Event, IWebRtcEndpoint } from './IWebRtcEndpoint'
 import { Logger } from "@streamr/utils"
 import { PeerId, PeerInfo } from '../PeerInfo'
 import { DeferredConnectionAttempt } from './DeferredConnectionAttempt'
-import { WebRtcConnection, ConstructorOptions, isOffering, IceServer } from './WebRtcConnection'
+import { WebRtcConnection, ConstructorOptions, isOffering, IceServer, WebRtcPortRange } from './WebRtcConnection'
 import { CountMetric, LevelMetric, Metric, MetricsContext, MetricsDefinition, RateMetric } from '@streamr/utils'
 import {
     AnswerOptions,
@@ -55,9 +55,8 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     private readonly bufferThresholdHigh: number
     private readonly sendBufferMaxMessageCount: number
     private readonly disallowPrivateAddresses: boolean
-    private readonly maxMessageSize: number
-    private readonly portRangeBegin?: number
-    private readonly portRangeEnd?: number
+    private readonly maxMessageSize?: number
+    private readonly portRange: WebRtcPortRange
 
     private statusReportTimer?: NodeJS.Timeout
 
@@ -74,9 +73,8 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         webrtcDatachannelBufferThresholdHigh: number,
         webrtcSendBufferMaxMessageCount: number,
         webrtcDisallowPrivateAddresses: boolean,
+        portRange: WebRtcPortRange,
         maxMessageSize = 1048576,
-        portRangeBegin?: number,
-        portRangeEnd?: number
     ) {
         super()
         this.peerInfo = peerInfo
@@ -94,8 +92,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         this.sendBufferMaxMessageCount = webrtcSendBufferMaxMessageCount
         this.disallowPrivateAddresses = webrtcDisallowPrivateAddresses
         this.maxMessageSize = maxMessageSize
-        this.portRangeBegin = portRangeBegin
-        this.portRangeEnd = portRangeEnd
+        this.portRange = portRange
 
         this.connectionFactory.registerWebRtcEndpoint()
 
@@ -181,8 +178,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             deferredConnectionAttempt: deferredConnectionAttempt || new DeferredConnectionAttempt(),
             newConnectionTimeout: this.newConnectionTimeout,
             pingInterval: this.pingInterval,
-            portRangeBegin: this.portRangeBegin,
-            portRangeEnd: this.portRangeEnd
+            portRange: this.portRange
         }
 
         const connection = this.connectionFactory.createConnection(connectionOptions)

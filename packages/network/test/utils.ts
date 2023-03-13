@@ -50,6 +50,7 @@ export const createTestWebRtcEndpoint = (
         webrtcDatachannelBufferThresholdHigh ?? TEST_CONFIG.webrtcDatachannelBufferThresholdHigh,
         TEST_CONFIG.webrtcSendBufferMaxMessageCount,
         webrtcDisallowPrivateAddresses ?? false,
+        { begin: 6000, end: 65535 }
     )
 }
 
