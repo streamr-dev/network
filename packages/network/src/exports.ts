@@ -13,7 +13,7 @@ export {
     COUNTER_UNSUBSCRIBE,
     DEFAULT_MAX_NEIGHBOR_COUNT
 } from './constants'
-export { IceServer } from './connection/webrtc/WebRtcConnection'
+export { IceServer, WebRtcPortRange } from './connection/webrtc/WebRtcConnection'
 export { NetworkNode } from './logic/NetworkNode'
 export { Event as NodeEvent } from './logic/Node'
 export { NameDirectory } from './NameDirectory'

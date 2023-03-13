@@ -132,7 +132,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         messageQueue,
         deferredConnectionAttempt,
         pingInterval,
-        portRange,
+        portRange = { begin: 6000, end: 65535 },
         bufferThresholdHigh = 2 ** 17,
         bufferThresholdLow = 2 ** 15,
         newConnectionTimeout = 15000,
