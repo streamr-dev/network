@@ -188,3 +188,27 @@ npm publish
 
 After pushing the broker tag, GitHub Actions will build and publish the Docker image automatically if
 tests pass.
+
+##### Tag `latest`
+
+GitHub Actions will not update the `latest` tag. This must be done manually. Keep in mind that `latest` should
+always refer to the latest _stable_ version.
+
+To update `latest` do the following.
+
+1. Find out the sha256 digests of both the amd64 and arm64 builds for a `vX.Y.Z` tag. This can be
+done via command-line `docker buildx imagetools inspect streamr/broker-node:vX.Y.Z` or you can check
+this from docker hub website under https://hub.docker.com/r/streamr/broker-node/tags.
+2. Then we shall create the manifest by running the below. Remember to replace `<SHA-AMD64>` and `<SHA-ARM64>`
+with real values.
+```
+docker manifest create streamr/broker-node:latest \
+    --amend streamr/broker-node@sha256:<SHA-AMD64> \
+    --amend streamr/broker-node@sha256:<SHA-ARM64>
+```
+3. Then we publish the manifest with
+```
+docker manifest push streamr/broker-node:latest
+```
+4. Then we are ready. It would be wise to double-check this by checking
+https://hub.docker.com/r/streamr/broker-node/tags.
