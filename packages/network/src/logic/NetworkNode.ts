@@ -22,6 +22,7 @@ export class NetworkNode extends Node {
         if (this.isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE) && streamMessage.messageType === StreamMessageType.MESSAGE) {
             throw new Error(`Cannot publish content data to ${streamPartId} as proxy subscribe connections have been set`)
         }
+        this.subscribeToStreamIfHaveNotYet(streamPartId)
         this.onDataReceived(streamMessage)
     }
 
