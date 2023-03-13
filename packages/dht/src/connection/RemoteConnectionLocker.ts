@@ -77,10 +77,30 @@ export class RemoteConnectionLocker {
         const options: DhtRpcOptions = {
             sourceDescriptor: this.ownPeerDescriptor,
             targetDescriptor: this.targetPeerDescriptor,
+            // notification: true,
+            doNotConnect: true,
+            timeout: 2000
+        }
+
+        try {
+            await this.client.gracefulDisconnect(request, options)
+        } catch (e) {
+            logger.debug('Failed to send gracefulDisconnect' + e)
+        }
+    }
+
+    public async notifyDisconnect(): Promise<void> {
+        logger.trace(`Notifying a graceful disconnect to ${this.targetPeerDescriptor.kademliaId.toString()}`)
+        const request: DisconnectNotice = {
+            peerDescriptor: this.ownPeerDescriptor,
+            protocolVersion: this.protocolVersion
+        }
+        const options: DhtRpcOptions = {
+            sourceDescriptor: this.ownPeerDescriptor,
+            targetDescriptor: this.targetPeerDescriptor,
             notification: true,
             doNotConnect: true
         }
-
         try {
             await this.client.gracefulDisconnect(request, options)
         } catch (e) {

@@ -611,6 +611,15 @@ export interface DisconnectNotice {
     peerDescriptor?: PeerDescriptor;
 }
 /**
+ * @generated from protobuf message dht.GracefulDisconnectResponse
+ */
+export interface GracefulDisconnectResponse {
+    /**
+     * @generated from protobuf field: string protocolVersion = 1;
+     */
+    protocolVersion: string;
+}
+/**
  * @generated from protobuf enum dht.FindMode
  */
 export enum FindMode {
@@ -1138,6 +1147,18 @@ class DisconnectNotice$Type extends MessageType$<DisconnectNotice> {
  * @generated MessageType for protobuf message dht.DisconnectNotice
  */
 export const DisconnectNotice = new DisconnectNotice$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GracefulDisconnectResponse$Type extends MessageType$<GracefulDisconnectResponse> {
+    constructor() {
+        super("dht.GracefulDisconnectResponse", [
+            { no: 1, name: "protocolVersion", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message dht.GracefulDisconnectResponse
+ */
+export const GracefulDisconnectResponse = new GracefulDisconnectResponse$Type();
 /**
  * @generated ServiceType for protobuf service dht.DhtRpcService
  */
@@ -1187,5 +1208,6 @@ export const WebRtcConnectorService = new ServiceType("dht.WebRtcConnectorServic
 export const ConnectionLocker = new ServiceType("dht.ConnectionLocker", [
     { name: "lockRequest", options: {}, I: LockRequest, O: LockResponse },
     { name: "unlockRequest", options: {}, I: UnlockRequest, O: Empty },
-    { name: "gracefulDisconnect", options: {}, I: DisconnectNotice, O: Empty }
+    { name: "gracefulDisconnect", options: {}, I: DisconnectNotice, O: GracefulDisconnectResponse },
+    { name: "notifyDisconnect", options: {}, I: DisconnectNotice, O: PingResponse }
 ]);

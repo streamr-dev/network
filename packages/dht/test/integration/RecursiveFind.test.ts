@@ -30,7 +30,7 @@ describe('Recursive find correctness', () => {
         }
         await entryPoint.joinDht(entrypointDescriptor)
         await Promise.all(nodes.map((node) => node.joinDht(entrypointDescriptor)))
-        await waitConnectionManagersReadyForTesting(nodes.map((node) => node.connectionManager!), 20)
+        await waitConnectionManagersReadyForTesting(nodes.map((node) => node.connectionManager!), 25)
     }, 90000)
 
     afterEach(async () => {

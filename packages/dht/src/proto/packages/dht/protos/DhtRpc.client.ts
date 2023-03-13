@@ -2,6 +2,7 @@
 // @generated from protobuf file "packages/dht/protos/DhtRpc.proto" (package "dht", syntax proto3)
 // tslint:disable
 import { ConnectionLocker } from "./DhtRpc";
+import type { GracefulDisconnectResponse } from "./DhtRpc";
 import type { DisconnectNotice } from "./DhtRpc";
 import type { UnlockRequest } from "./DhtRpc";
 import type { LockResponse } from "./DhtRpc";
@@ -280,9 +281,13 @@ export interface IConnectionLockerClient {
      */
     unlockRequest(input: UnlockRequest, options?: RpcOptions): UnaryCall<UnlockRequest, Empty>;
     /**
-     * @generated from protobuf rpc: gracefulDisconnect(dht.DisconnectNotice) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: gracefulDisconnect(dht.DisconnectNotice) returns (dht.GracefulDisconnectResponse);
      */
-    gracefulDisconnect(input: DisconnectNotice, options?: RpcOptions): UnaryCall<DisconnectNotice, Empty>;
+    gracefulDisconnect(input: DisconnectNotice, options?: RpcOptions): UnaryCall<DisconnectNotice, GracefulDisconnectResponse>;
+    /**
+     * @generated from protobuf rpc: notifyDisconnect(dht.DisconnectNotice) returns (dht.PingResponse);
+     */
+    notifyDisconnect(input: DisconnectNotice, options?: RpcOptions): UnaryCall<DisconnectNotice, PingResponse>;
 }
 /**
  * @generated from protobuf service dht.ConnectionLocker
@@ -308,10 +313,17 @@ export class ConnectionLockerClient implements IConnectionLockerClient, ServiceI
         return stackIntercept<UnlockRequest, Empty>("unary", this._transport, method, opt, input);
     }
     /**
-     * @generated from protobuf rpc: gracefulDisconnect(dht.DisconnectNotice) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: gracefulDisconnect(dht.DisconnectNotice) returns (dht.GracefulDisconnectResponse);
      */
-    gracefulDisconnect(input: DisconnectNotice, options?: RpcOptions): UnaryCall<DisconnectNotice, Empty> {
+    gracefulDisconnect(input: DisconnectNotice, options?: RpcOptions): UnaryCall<DisconnectNotice, GracefulDisconnectResponse> {
         const method = this.methods[2], opt = this._transport.mergeOptions(options);
-        return stackIntercept<DisconnectNotice, Empty>("unary", this._transport, method, opt, input);
+        return stackIntercept<DisconnectNotice, GracefulDisconnectResponse>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: notifyDisconnect(dht.DisconnectNotice) returns (dht.PingResponse);
+     */
+    notifyDisconnect(input: DisconnectNotice, options?: RpcOptions): UnaryCall<DisconnectNotice, PingResponse> {
+        const method = this.methods[3], opt = this._transport.mergeOptions(options);
+        return stackIntercept<DisconnectNotice, PingResponse>("unary", this._transport, method, opt, input);
     }
 }
