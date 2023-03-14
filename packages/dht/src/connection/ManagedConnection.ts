@@ -215,7 +215,7 @@ export class ManagedConnection extends EventEmitter<Events> {
     }
 
     private onDisconnected(code?: number, reason?: string): void {
-        logger.trace('IL onDisconnected ' + code + ' ' + reason)
+        logger.trace('onDisconnected ' + code + ' ' + reason)
         this.doDisconnect()
     }
 
@@ -232,7 +232,7 @@ export class ManagedConnection extends EventEmitter<Events> {
                 'bufferSentByOtherConnection', 'closing', 'disconnected'], 15000)
 
             if (result.winnerName == 'closing' || result.winnerName == 'disconnected') {
-                throw new Err.ConnectionFailed("")
+                throw new Err.ConnectionFailed("Disconnected before send")
             }
 
             if (result.winnerName == 'handshakeFailed') {
@@ -251,7 +251,7 @@ export class ManagedConnection extends EventEmitter<Events> {
                         this.destroy()
                     } else if (result2.winnerName == 'closing') {
                         logger.trace('bufferSentByOtherConnection not received, instead received a closing event')
-                        throw new Err.ConnectionFailed("")
+                        throw new Err.ConnectionFailed("Closing before buffer sent by duplicate onnection")
                     }
                 }
             }

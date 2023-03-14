@@ -64,7 +64,7 @@ describe('Route Message With Mock Connections', () => {
         logger.info('calling simulator stop')
         simulator.stop()
         logger.info('simulator stop called')
-    })
+    }, 10000)
 
     it('Happy path', async () => {
         const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())

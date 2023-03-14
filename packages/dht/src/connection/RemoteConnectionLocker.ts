@@ -74,7 +74,7 @@ export class RemoteConnectionLocker {
             peerDescriptor: this.ownPeerDescriptor,
             protocolVersion: this.protocolVersion
         }
-        const options: DhtRpcOptions = {
+        const options = {
             sourceDescriptor: this.ownPeerDescriptor,
             targetDescriptor: this.targetPeerDescriptor,
             notification: true,
@@ -84,7 +84,7 @@ export class RemoteConnectionLocker {
         try {
             await this.client.gracefulDisconnect(request, options)
         } catch (e) {
-            logger.debug('Failed to send gracefulDisconnect' + e)
+            logger.warn('Failed to send gracefulDisconnect' + e)
         }
     }
 }

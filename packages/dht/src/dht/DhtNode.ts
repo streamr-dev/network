@@ -379,6 +379,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     private onKBucketPing(oldContacts: DhtPeer[], newContact: DhtPeer): void {
+        if (this.stopped) {
+            return
+        }
         const sortingList: SortedContactList<DhtPeer> = new SortedContactList(this.ownPeerId!, 100)
         sortingList.addContacts(oldContacts)
         const sortedContacts = sortingList.getAllContacts()
@@ -388,6 +391,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     private onKBucketRemoved(contact: DhtPeer): void {
+        if (this.stopped) {
+            return
+        }
         this.connectionManager?.weakUnlockConnection(contact.getPeerDescriptor())
         logger.trace(`Removed contact ${contact.getPeerId().value.toString()}`)
         this.emit(
@@ -406,6 +412,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     private onKBucketAdded(contact: DhtPeer): void {
+        if (this.stopped) {
+            return
+        }
         this.contactOnAddedCounter++
         if (this.config.nodeName == '1') {
             logger.trace('peer1 contactOnAddCounter: ' + this.contactOnAddedCounter)
