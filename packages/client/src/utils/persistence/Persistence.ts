@@ -1,7 +1,6 @@
-import { StreamID } from "@streamr/protocol"
-
-export interface Persistence<K, V> {
-    get(key: K, streamId: StreamID): Promise<V | undefined>
-    set(key: K, value: V, streamId: StreamID): Promise<void>
+// TODO: make into abstract base class and define abstract constructor to enforce options?
+export interface Persistence<K extends string, V extends string> {
+    get(key: K): Promise<V | undefined>
+    set(key: K, value: V): Promise<void>
     close(): Promise<void>
 }
