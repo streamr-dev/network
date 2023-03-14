@@ -215,7 +215,7 @@ export class ManagedConnection extends EventEmitter<Events> {
     }
 
     private onDisconnected(code?: number, reason?: string): void {
-        logger.trace('IL onDisconnected ' + code + ' ' + reason)
+        logger.trace('onDisconnected ' + code + ' ' + reason)
         this.doDisconnect()
     }
 

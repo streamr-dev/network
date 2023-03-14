@@ -1,12 +1,12 @@
 import { EventEmitter } from 'eventemitter3'
 import {
-    ConnectivityResponse, DisconnectNotice,
+    ConnectivityResponse,
+    DisconnectNotice,
     LockRequest,
     LockResponse,
     Message,
     MessageType,
     PeerDescriptor,
-    GracefulDisconnectResponse,
     UnlockRequest
 } from '../proto/packages/dht/protos/DhtRpc'
 import { WebSocketConnector } from './WebSocket/WebSocketConnector'
@@ -166,15 +166,13 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         this.lockRequest = this.lockRequest.bind(this)
         this.unlockRequest = this.unlockRequest.bind(this)
         this.gracefulDisconnect = this.gracefulDisconnect.bind(this)
-        this.notifyDisconnect = this.notifyDisconnect.bind(this)
         this.rpcCommunicator.registerRpcMethod(LockRequest, LockResponse, 'lockRequest', this.lockRequest)
         this.rpcCommunicator.registerRpcNotification(UnlockRequest, 'unlockRequest', this.unlockRequest)
-        this.rpcCommunicator.registerRpcMethod(DisconnectNotice, GracefulDisconnectResponse, 'gracefulDisconnect', this.gracefulDisconnect)
-        this.rpcCommunicator.registerRpcNotification(DisconnectNotice, 'notifyDisconnect', this.notifyDisconnect)
+        this.rpcCommunicator.registerRpcNotification(DisconnectNotice, 'gracefulDisconnect', this.gracefulDisconnect)
         // Garbage collection of connections
         this.disconnectorIntervalRef = setInterval(() => {
             logger.trace('disconnectorInterval')
-            const LAST_USED_LIMIT = 30000
+            const LAST_USED_LIMIT = 20000
             this.garbageCollectConnections(this.config.maxConnections, LAST_USED_LIMIT)
         }, 5000)
     }
@@ -196,7 +194,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         for (let i = 0; i < sortedCandidates.length && i < targetNum; i++) {
             logger.trace(this.config.nodeName + ' garbageCollecting '
                 + sortedCandidates[sortedCandidates.length - 1 - i].getPeerDescriptor().nodeName)
-            this.gracefullyDisconnectAsync(sortedCandidates[sortedCandidates.length - 1 - i].getPeerDescriptor(), false).catch((_e) => { })
+            this.gracefullyDisconnectAsync(sortedCandidates[sortedCandidates.length - 1 - i].getPeerDescriptor()).catch((_e) => { })
         }
     }
 
@@ -260,6 +258,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         if (!this.started || this.stopped) {
             return
         }
+
         const peerDescriptor = message.targetDescriptor!
         if (isSamePeerDescriptor(peerDescriptor, this.ownPeerDescriptor!)) {
             throw new Err.CannotConnectToSelf('Cannot send to self')
@@ -442,13 +441,16 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         return true
     }
 
-    private async closeConnection(id: PeerIDKey, reason?: string): Promise<void> {
+    private async closeConnection(peerDescriptor: PeerDescriptor, reason?: string): Promise<void> {
+        const id = keyFromPeerDescriptor(peerDescriptor)
         this.locks.clearAllLocks(id)
         if (this.connections.has(id)) {
             logger.trace(`Closeconnection called to Peer ${id}${reason ? `: ${reason}` : ''}`)
             const connectionToClose = this.connections.get(id)!
             logger.trace("disconnecting: " + this.config.nodeName + ", " + connectionToClose.getPeerDescriptor()?.nodeName)
             await connectionToClose.close()
+        } else {
+            this.emit('disconnected', peerDescriptor)
         }
     }
 
@@ -503,22 +505,17 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
     }
 
-    private async gracefullyDisconnectAsync(targetDescriptor: PeerDescriptor, waitForAck = true): Promise<void> {
+    private async gracefullyDisconnectAsync(targetDescriptor: PeerDescriptor): Promise<void> {
         logger.trace('gracefullyDisconnectAsync()')
-        const hexKey = keyFromPeerDescriptor(targetDescriptor)
         const remoteConnectionLocker = new RemoteConnectionLocker(
             this.ownPeerDescriptor!,
             targetDescriptor,
             ConnectionManager.PROTOCOL_VERSION,
             toProtoRpcClient(new ConnectionLockerClient(this.rpcCommunicator!.getRpcClientTransport()))
         )
-        if (waitForAck) {
-            await remoteConnectionLocker.gracefulDisconnect()
-        } else {
-            await remoteConnectionLocker.notifyDisconnect()
-        }
+        await remoteConnectionLocker.gracefulDisconnect()
         try {
-            await this.closeConnection(hexKey)
+            await this.closeConnection(targetDescriptor)
         } catch (e) {
             logger.trace(e)
         }
@@ -554,22 +551,10 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     // IConnectionLocker server implementation
-    private async gracefulDisconnect(disconnectNotice: DisconnectNotice, _context: ServerCallContext): Promise<GracefulDisconnectResponse> {
-        const hexKey = keyFromPeerDescriptor(disconnectNotice.peerDescriptor!)
+    private async gracefulDisconnect(disconnectNotice: DisconnectNotice, _context: ServerCallContext): Promise<Empty> {
         logger.trace(' ' + this.config.nodeName + ', ' + disconnectNotice.peerDescriptor?.nodeName
             + ' calling closeConnection after receiving incoming gracefulDisconnect notice')
-        setImmediate(() => this.closeConnection(hexKey, 'graceful disconnect notified'))
-        return {
-            protocolVersion: ConnectionManager.PROTOCOL_VERSION
-        }
-    }
-
-    // IConnectionLocker server implementation
-    private async notifyDisconnect(disconnectNotice: DisconnectNotice, _context: ServerCallContext): Promise<Empty> {
-        const hexKey = keyFromPeerDescriptor(disconnectNotice.peerDescriptor!)
-        logger.trace(' ' + this.config.nodeName + ', ' + disconnectNotice.peerDescriptor?.nodeName
-            + ' calling closeConnection after receiving incoming gracefulDisconnect notice')
-        await this.closeConnection(hexKey, 'graceful disconnect notified')
+        await this.closeConnection(disconnectNotice.peerDescriptor!, 'graceful disconnect notified')
         return {}
     }
 

@@ -38,7 +38,7 @@ export class RoutingRpcCommunicator extends RpcCommunicator {
                 targetDescriptor: targetDescriptor
             }
 
-            if (callContext && callContext.doNotConnect) {
+            if (msg.header.response || callContext && callContext.doNotConnect) {
                 return this.sendFn(message, true)
             } else {
                 return this.sendFn(message)
@@ -48,9 +48,6 @@ export class RoutingRpcCommunicator extends RpcCommunicator {
     }
 
     public handleMessageFromPeer(message: Message): void {
-        if (!message.sourceDescriptor) {
-            console.info('virhe')
-        }
         if (message.serviceId == this.ownServiceId && message.body.oneofKind === 'rpcMessage') {
             const context = new DhtCallContext()
             context.incomingSourceDescriptor = message.sourceDescriptor
