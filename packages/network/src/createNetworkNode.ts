@@ -42,8 +42,8 @@ export const TEST_CONFIG: Omit<NetworkNodeOptions, 'id' | 'trackers' | 'metricsC
     acceptProxyConnections: false,
     trackerPingInterval: 60 * 1000,
     webrtcPortRange: {
-        begin: 6000,
-        end: 65535
+        min: 6000,
+        max: 65535
     },
     webrtcDatachannelMaxMessageSize: 1048576
 }

@@ -33,8 +33,8 @@ export interface ConstructorOptions {
 }
 
 export interface WebRtcPortRange {
-    begin: number
-    end: number
+    min: number
+    max: number
 }
 
 let ID = 0
@@ -132,7 +132,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         messageQueue,
         deferredConnectionAttempt,
         pingInterval,
-        portRange = { begin: 6000, end: 65535 },
+        portRange = { min: 6000, max: 65535 },
         bufferThresholdHigh = 2 ** 17,
         bufferThresholdLow = 2 ** 15,
         newConnectionTimeout = 15000,

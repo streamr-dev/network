@@ -151,14 +151,14 @@
                     "type": "object",
                     "additionalProperties": false,
                     "required": [
-                        "begin",
-                        "end"
+                        "min",
+                        "max"
                     ],
                     "properties": {
-                        "begin": {
+                        "min": {
                             "type": "number"
                         },
-                        "end": {
+                        "max": {
                             "type": "number"
                         }
                     }

@@ -106,7 +106,6 @@ export interface StreamrClientConfig {
         rttUpdateTimeout?: number
         iceServers?: ReadonlyArray<IceServer>
         location?: Location
-
     }
 
     contracts?: {
