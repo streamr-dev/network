@@ -11,9 +11,6 @@ import {
 } from '@streamr/dht'
 import {
     StreamMessage,
-    StreamHandshakeRequest,
-    StreamHandshakeResponse,
-    InterleaveNotice,
     LeaveStreamNotice,
     MessageRef
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
@@ -26,10 +23,10 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DuplicateMessageDetector, NumberPair } from '@streamr/utils'
 import { Logger } from '@streamr/utils'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
-import { Handshaker } from './Handshaker'
+import { Handshaker } from './neighbor-discovery/Handshaker'
 import { Propagation } from './propagation/Propagation'
-import { NeighborFinder } from './NeighborFinder'
-import { NeighborUpdateManager } from './neighbor-update/NeighborUpdateManager'
+import { NeighborFinder } from './neighbor-discovery/NeighborFinder'
+import { NeighborUpdateManager } from './neighbor-discovery/NeighborUpdateManager'
 import { PeerIDKey } from '@streamr/dht/dist/src/helpers/PeerID'
 
 export interface Events {
@@ -105,7 +102,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements INetworkRpc
             randomContactPool: this.randomContactPool!,
             targetNeighbors: this.targetNeighbors!,
             connectionLocker: this.config.connectionLocker,
-            protoRpcClient: toProtoRpcClient(new NetworkRpcClient(this.rpcCommunicator!.getRpcClientTransport())),
+            rpcCommunicator: this.rpcCommunicator!,
             nodeName: this.config.nodeName,
             N: this.N
         })
@@ -206,15 +203,10 @@ export class RandomGraphNode extends EventEmitter<Events> implements INetworkRpc
     }
 
     private registerDefaultServerMethods(): void {
-        this.handshake = this.handshake.bind(this)
         this.sendData = this.sendData.bind(this)
-        this.interleaveNotice = this.interleaveNotice.bind(this)
         this.leaveStreamNotice = this.leaveStreamNotice.bind(this)
-
         this.rpcCommunicator!.registerRpcNotification(StreamMessage, 'sendData', this.sendData)
         this.rpcCommunicator!.registerRpcNotification(LeaveStreamNotice, 'leaveStreamNotice', this.leaveStreamNotice)
-        this.rpcCommunicator!.registerRpcNotification(InterleaveNotice, 'interleaveNotice', this.interleaveNotice)
-        this.rpcCommunicator!.registerRpcMethod(StreamHandshakeRequest, StreamHandshakeResponse, 'handshake', this.handshake)
     }
 
     private getNewNeighborCandidates(): PeerDescriptor[] {
@@ -288,16 +280,6 @@ export class RandomGraphNode extends EventEmitter<Events> implements INetworkRpc
     }
 
     // INetworkRpc server method
-    async handshake(request: StreamHandshakeRequest, _context: ServerCallContext): Promise<StreamHandshakeResponse> {
-        const requester = new RemoteRandomGraphNode(
-            request.senderDescriptor!,
-            request.randomGraphId,
-            toProtoRpcClient(new NetworkRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
-        )
-        return this.handshaker!.handleRequest(request, requester)
-    }
-
-    // INetworkRpc server method
     async sendData(message: StreamMessage, _context: ServerCallContext): Promise<Empty> {
         if (this.markAndCheckDuplicate(message.messageRef!, message.previousMessageRef)) {
             const { previousPeer } = message
@@ -321,27 +303,6 @@ export class RandomGraphNode extends EventEmitter<Events> implements INetworkRpc
                 this.config.connectionLocker.unlockConnection(contact.getPeerDescriptor(), this.config.randomGraphId)
                 this.neighborFinder!.start([message.senderId])
             }
-        }
-        return Empty
-    }
-
-    // INetworkRpc server method
-    async interleaveNotice(message: InterleaveNotice, _context: ServerCallContext): Promise<Empty> {
-        if (message.randomGraphId === this.config.randomGraphId) {
-            if (this.targetNeighbors!.hasPeerWithStringId(message.senderId)) {
-                const senderDescriptor = this.targetNeighbors!.getNeighborWithId(message.senderId)!.getPeerDescriptor()
-                this.config.connectionLocker.unlockConnection(senderDescriptor, this.config.randomGraphId)
-                this.targetNeighbors!.remove(senderDescriptor)
-            }
-
-            const newContact = new RemoteRandomGraphNode(
-                message.interleaveTarget!,
-                this.config.randomGraphId,
-                toProtoRpcClient(new NetworkRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
-            )
-            this.handshaker!.interleaveHandshake(newContact, message.senderId).catch((e) => {
-                logger.error(e)
-            })
         }
         return Empty
     }

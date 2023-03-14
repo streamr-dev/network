@@ -11,7 +11,7 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 import {
     NeighborUpdateRpcClient,
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { RemoteNeighborUpdateManager } from '../../src/logic/neighbor-update/RemoteNeighborUpdateManager'
+import { RemoteNeighborUpdateManager } from '../../src/logic/neighbor-discovery/RemoteNeighborUpdateManager'
 
 describe('RemoteNeighborUpdateManager', () => {
     let mockServerRpc: ListeningRpcCommunicator

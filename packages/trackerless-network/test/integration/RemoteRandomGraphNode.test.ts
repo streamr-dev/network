@@ -9,8 +9,6 @@ import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
 import { NetworkRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import {
     ContentMessage,
-    StreamHandshakeRequest,
-    StreamHandshakeResponse,
     LeaveStreamNotice,
     StreamMessage
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
@@ -54,19 +52,6 @@ describe('RemoteRandomGraphNode', () => {
             }
         )
 
-        mockServerRpc.registerRpcMethod(
-            StreamHandshakeRequest,
-            StreamHandshakeResponse,
-            'handshake',
-            async (msg: StreamHandshakeRequest, _context: ServerCallContext): Promise<StreamHandshakeResponse> => {
-                const res: StreamHandshakeResponse = {
-                    requestId: msg.requestId,
-                    accepted: true
-                }
-                return res
-            }
-        )
-
         mockServerRpc.registerRpcNotification(
             LeaveStreamNotice,
             'leaveStreamNotice',
@@ -100,11 +85,6 @@ describe('RemoteRandomGraphNode', () => {
 
         await remoteRandomGraphNode.sendData(clientPeer, msg)
         await waitForCondition(() => recvCounter === 1)
-    })
-
-    it('handshake', async () => {
-        const result = await remoteRandomGraphNode.handshake(clientPeer, [], [])
-        expect(result.accepted).toEqual(true)
     })
 
     it('leaveNotice', async () => {

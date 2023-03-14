@@ -7,8 +7,11 @@ import "packages/dht/protos/DhtRpc.proto";
 
 service NetworkRpc {
   rpc sendData (StreamMessage) returns (google.protobuf.Empty);
-  rpc handshake (StreamHandshakeRequest) returns (StreamHandshakeResponse);
   rpc leaveStreamNotice (LeaveStreamNotice) returns (google.protobuf.Empty);
+}
+
+service HandshakeRpc {
+  rpc handshake (StreamHandshakeRequest) returns (StreamHandshakeResponse);
   rpc interleaveNotice (InterleaveNotice) returns (google.protobuf.Empty);
 }
 

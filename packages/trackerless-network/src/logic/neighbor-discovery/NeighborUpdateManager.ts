@@ -9,9 +9,9 @@ import {
 } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { Logger, scheduleAtInterval } from '@streamr/utils'
 import { PeerIDKey } from '@streamr/dht/dist/src/helpers/PeerID'
-import { NeighborFinder } from '../NeighborFinder'
+import { NeighborFinder } from './NeighborFinder'
 import { PeerList } from '../PeerList'
-import { Handshaker } from '../Handshaker'
+import { Handshaker } from './Handshaker'
 import { RemoteNeighborUpdateManager } from './RemoteNeighborUpdateManager'
 import { INeighborUpdateRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
 

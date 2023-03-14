@@ -1,5 +1,5 @@
 import { setAbortableTimeout } from '@streamr/utils'
-import { PeerList } from './PeerList'
+import { PeerList } from '../PeerList'
 import { Handshaker } from './Handshaker'
 
 interface FindNeighborsSessionConfig {

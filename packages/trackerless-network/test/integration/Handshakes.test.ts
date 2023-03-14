@@ -1,4 +1,4 @@
-import { Handshaker } from '../../src/logic/Handshaker'
+import { Handshaker } from '../../src/logic/neighbor-discovery/Handshaker'
 import {
     NodeType,
     PeerDescriptor,
@@ -8,12 +8,14 @@ import {
     peerIdFromPeerDescriptor
 } from '@streamr/dht'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
-import { NetworkRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
+import {
+    HandshakeRpcClient
+} from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { PeerList } from '../../src/logic/PeerList'
 import { mockConnectionLocker } from '../utils'
 import { StreamHandshakeRequest, StreamHandshakeResponse } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
+import { RemoteHandshaker } from '../../src/logic/neighbor-discovery/RemoteHandshaker'
 
 describe('Handshakes', () => {
 
@@ -82,7 +84,7 @@ describe('Handshakes', () => {
             randomContactPool: contactPool,
             targetNeighbors: targetNeighbors,
             connectionLocker: mockConnectionLocker,
-            protoRpcClient: toProtoRpcClient(new NetworkRpcClient(rpcCommunicator2.getRpcClientTransport())),
+            rpcCommunicator: rpcCommunicator2,
             N: 4
         })
 
@@ -98,10 +100,10 @@ describe('Handshakes', () => {
         rpcCommunicator1.registerRpcMethod(StreamHandshakeRequest, StreamHandshakeResponse, 'handshake', acceptHandshake)
         // @ts-expect-error private
         const res = await handshaker.handshakeWithTarget(
-            new RemoteRandomGraphNode(
+            new RemoteHandshaker(
                 peerDescriptor1,
                 randomGraphId,
-                toProtoRpcClient(new NetworkRpcClient(rpcCommunicator2.getRpcClientTransport())),
+                toProtoRpcClient(new HandshakeRpcClient(rpcCommunicator2.getRpcClientTransport())),
             )
         )
         expect(res).toEqual(true)
@@ -112,10 +114,10 @@ describe('Handshakes', () => {
         rpcCommunicator1.registerRpcMethod(StreamHandshakeRequest, StreamHandshakeResponse, 'handshake', acceptHandshake)
         // @ts-expect-error private
         const res = await handshaker.handshakeWithTarget(
-            new RemoteRandomGraphNode(
+            new RemoteHandshaker(
                 peerDescriptor1,
                 randomGraphId,
-                toProtoRpcClient(new NetworkRpcClient(rpcCommunicator2.getRpcClientTransport())),
+                toProtoRpcClient(new HandshakeRpcClient(rpcCommunicator2.getRpcClientTransport())),
             )
         )
         expect(res).toEqual(true)
@@ -126,10 +128,10 @@ describe('Handshakes', () => {
         rpcCommunicator1.registerRpcMethod(StreamHandshakeRequest, StreamHandshakeResponse, 'handshake', rejectHandshake)
         // @ts-expect-error private
         const res = await handshaker.handshakeWithTarget(
-            new RemoteRandomGraphNode(
+            new RemoteHandshaker(
                 peerDescriptor1,
                 randomGraphId,
-                toProtoRpcClient(new NetworkRpcClient(rpcCommunicator2.getRpcClientTransport())),
+                toProtoRpcClient(new HandshakeRpcClient(rpcCommunicator2.getRpcClientTransport())),
             )
         )
         expect(res).toEqual(false)
@@ -141,10 +143,10 @@ describe('Handshakes', () => {
         rpcCommunicator3.registerRpcMethod(StreamHandshakeRequest, StreamHandshakeResponse, 'handshake', acceptHandshake)
         // @ts-expect-error private
         const res = await handshaker.handshakeWithTarget(
-            new RemoteRandomGraphNode(
+            new RemoteHandshaker(
                 peerDescriptor1,
                 randomGraphId,
-                toProtoRpcClient(new NetworkRpcClient(rpcCommunicator2.getRpcClientTransport())),
+                toProtoRpcClient(new HandshakeRpcClient(rpcCommunicator2.getRpcClientTransport())),
             )
         )
         expect(res).toEqual(true)

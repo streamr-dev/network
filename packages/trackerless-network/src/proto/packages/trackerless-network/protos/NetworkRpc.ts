@@ -511,8 +511,13 @@ export const StreamEntryPoint = new StreamEntryPoint$Type();
  */
 export const NetworkRpc = new ServiceType("NetworkRpc", [
     { name: "sendData", options: {}, I: StreamMessage, O: Empty },
+    { name: "leaveStreamNotice", options: {}, I: LeaveStreamNotice, O: Empty }
+]);
+/**
+ * @generated ServiceType for protobuf service HandshakeRpc
+ */
+export const HandshakeRpc = new ServiceType("HandshakeRpc", [
     { name: "handshake", options: {}, I: StreamHandshakeRequest, O: StreamHandshakeResponse },
-    { name: "leaveStreamNotice", options: {}, I: LeaveStreamNotice, O: Empty },
     { name: "interleaveNotice", options: {}, I: InterleaveNotice, O: Empty }
 ]);
 /**
