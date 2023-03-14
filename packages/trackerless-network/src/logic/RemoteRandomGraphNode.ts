@@ -4,34 +4,19 @@ import {
     StreamMessage,
     StreamHandshakeRequest,
     InterleaveNotice,
-    LeaveStreamNotice,
-    NeighborUpdate
+    LeaveStreamNotice
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { Logger } from '@streamr/utils'
-import { ProtoRpcClient } from '@streamr/proto-rpc'
+import { Remote } from './Remote'
 
 interface HandshakeResponse {
     accepted: boolean
     interleaveTarget?: PeerDescriptor
 }
 
-interface UpdateNeighborsResponse {
-    peers: PeerDescriptor[]
-    removeMe: boolean
-}
-
 const logger = new Logger(module)
 
-export class RemoteRandomGraphNode {
-    private remotePeerDescriptor: PeerDescriptor
-    private client: ProtoRpcClient<INetworkRpcClient>
-    private graphId: string
-
-    constructor(peerDescriptor: PeerDescriptor, graphId: string, client: ProtoRpcClient<INetworkRpcClient>) {
-        this.remotePeerDescriptor = peerDescriptor
-        this.client = client
-        this.graphId = graphId
-    }
+export class RemoteRandomGraphNode extends Remote<INetworkRpcClient> {
 
     async handshake(
         ownPeerDescriptor: PeerDescriptor,
@@ -114,35 +99,5 @@ export class RemoteRandomGraphNode {
         this.client.leaveStreamNotice(notification, options).catch(() => {
             logger.debug('Failed to send leaveStreamNotice')
         })
-    }
-
-    getPeerDescriptor(): PeerDescriptor {
-        return this.remotePeerDescriptor
-    }
-
-    async updateNeighbors(ownPeerDescriptor: PeerDescriptor, neighbors: PeerDescriptor[]): Promise<UpdateNeighborsResponse> {
-        const options: DhtRpcOptions = {
-            sourceDescriptor: ownPeerDescriptor as PeerDescriptor,
-            targetDescriptor: this.remotePeerDescriptor as PeerDescriptor,
-        }
-        const request: NeighborUpdate = {
-            senderId: keyFromPeerDescriptor(ownPeerDescriptor),
-            randomGraphId: this.graphId,
-            neighborDescriptors: neighbors,
-            removeMe: false
-        }
-        try {
-            const response = await this.client.neighborUpdate(request, options)
-            return {
-                peers: response.neighborDescriptors!,
-                removeMe: response.removeMe
-            }
-        } catch (err: any) {
-            logger.debug(`updateNeighbors to ${keyFromPeerDescriptor(this.getPeerDescriptor())} failed: ${err}`)
-            return {
-                peers: [],
-                removeMe: true
-            }
-        }
     }
 }

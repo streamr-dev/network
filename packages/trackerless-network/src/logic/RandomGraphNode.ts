@@ -15,8 +15,7 @@ import {
     StreamHandshakeResponse,
     InterleaveNotice,
     LeaveStreamNotice,
-    MessageRef,
-    NeighborUpdate
+    MessageRef
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { PeerList } from './PeerList'
 import { NetworkRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
@@ -24,12 +23,14 @@ import { RemoteRandomGraphNode } from './RemoteRandomGraphNode'
 import { INetworkRpc } from '../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { Empty } from '../proto/google/protobuf/empty'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { DuplicateMessageDetector, NumberPair, scheduleAtInterval } from '@streamr/utils'
+import { DuplicateMessageDetector, NumberPair } from '@streamr/utils'
 import { Logger } from '@streamr/utils'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Handshaker } from './Handshaker'
 import { Propagation } from './propagation/Propagation'
 import { NeighborFinder } from './NeighborFinder'
+import { NeighborUpdateManager } from './neighbor-update/NeighborUpdateManager'
+import { PeerIDKey } from '@streamr/dht/dist/src/helpers/PeerID'
 
 export interface Events {
     message: (message: StreamMessage) => void
@@ -61,6 +62,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements INetworkRpc
     private readonly propagation: Propagation
     private config: RandomGraphNodeParams
     private neighborFinder?: NeighborFinder
+    private neighborUpdateManager?: NeighborUpdateManager
 
     constructor(config: RandomGraphNodeParams) {
         super()
@@ -85,7 +87,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements INetworkRpc
         this.abortController = new AbortController()
     }
 
-    start(): void {
+    async start(): Promise<void> {
         this.started = true
         this.rpcCommunicator = new ListeningRpcCommunicator(`layer2-${this.config.randomGraphId}`, this.config.P2PTransport)
         this.config.layer1.on('newContact', (peerDescriptor, closestPeers) => this.newContact(peerDescriptor, closestPeers))
@@ -113,6 +115,16 @@ export class RandomGraphNode extends EventEmitter<Events> implements INetworkRpc
             handshaker: this.handshaker,
             N: this.N
         })
+        this.neighborUpdateManager = new NeighborUpdateManager({
+            targetNeighbors: this.targetNeighbors,
+            nearbyContactPool: this.nearbyContactPool,
+            handshaker: this.handshaker,
+            ownStringId: this.getOwnStringId(),
+            ownPeerDescriptor: this.config.layer1.getPeerDescriptor(),
+            neighborFinder: this.neighborFinder,
+            randomGraphId: this.config.randomGraphId,
+            rpcCommunicator: this.rpcCommunicator
+        })
         this.registerDefaultServerMethods()
         const candidates = this.getNewNeighborCandidates()
         if (candidates.length) {
@@ -121,9 +133,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements INetworkRpc
             logger.debug('layer1 had no closest contacts in the beginning')
         }
         this.neighborFinder!.start()
-        setImmediate(async () => {
-            await scheduleAtInterval(this.updateNeighborInfo.bind(this), 10000, false, this.abortController.signal)
-        })
+        await this.neighborUpdateManager!.start()
     }
 
     private newContact(_newContact: PeerDescriptor, closestTen: PeerDescriptor[]): void {
@@ -200,25 +210,11 @@ export class RandomGraphNode extends EventEmitter<Events> implements INetworkRpc
         this.sendData = this.sendData.bind(this)
         this.interleaveNotice = this.interleaveNotice.bind(this)
         this.leaveStreamNotice = this.leaveStreamNotice.bind(this)
-        this.neighborUpdate = this.neighborUpdate.bind(this)
 
         this.rpcCommunicator!.registerRpcNotification(StreamMessage, 'sendData', this.sendData)
         this.rpcCommunicator!.registerRpcNotification(LeaveStreamNotice, 'leaveStreamNotice', this.leaveStreamNotice)
         this.rpcCommunicator!.registerRpcNotification(InterleaveNotice, 'interleaveNotice', this.interleaveNotice)
         this.rpcCommunicator!.registerRpcMethod(StreamHandshakeRequest, StreamHandshakeResponse, 'handshake', this.handshake)
-        this.rpcCommunicator!.registerRpcMethod(NeighborUpdate, NeighborUpdate, 'neighborUpdate', this.neighborUpdate)
-    }
-
-    private async updateNeighborInfo(): Promise<void> {
-        logger.trace(`Updating neighbor info to peers`)
-        const neighborDescriptors = this.targetNeighbors!.values().map((neighbor) => neighbor.getPeerDescriptor())
-        await Promise.allSettled(this.targetNeighbors!.values().map(async (neighbor) => {
-            const res = await neighbor.updateNeighbors(this.config.layer1.getPeerDescriptor(), neighborDescriptors)
-            if (res.removeMe) {
-                this.targetNeighbors!.remove(neighbor.getPeerDescriptor())
-                this.neighborFinder!.start([keyFromPeerDescriptor(neighbor.getPeerDescriptor())])
-            }
-        }))
     }
 
     private getNewNeighborCandidates(): PeerDescriptor[] {
@@ -262,7 +258,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements INetworkRpc
         return this.duplicateDetector.markAndCheck(previousNumberPair, currentNumberPair)
     }
 
-    getOwnStringId(): string {
+    getOwnStringId(): PeerIDKey {
         return keyFromPeerDescriptor(this.config.layer1.getPeerDescriptor())
     }
 
@@ -348,40 +344,5 @@ export class RandomGraphNode extends EventEmitter<Events> implements INetworkRpc
             })
         }
         return Empty
-    }
-
-    // INetworkRpc server method
-    async neighborUpdate(message: NeighborUpdate, _context: ServerCallContext): Promise<NeighborUpdate> {
-        if (this.targetNeighbors!.hasPeerWithStringId(message.senderId)) {
-            const newPeers = message.neighborDescriptors
-                .filter((peerDescriptor) => {
-                    const stringId = keyFromPeerDescriptor(peerDescriptor)
-                    return stringId !== this.getOwnStringId() && !this.targetNeighbors!.getStringIds().includes(stringId)
-                })
-
-            newPeers.forEach((peer) => this.nearbyContactPool!.add(
-                new RemoteRandomGraphNode(
-                    peer,
-                    this.config.randomGraphId,
-                    toProtoRpcClient(new NetworkRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
-                ))
-            )
-            this.neighborFinder!.start()
-        } else {
-            const response: NeighborUpdate = {
-                senderId: this.getOwnStringId(),
-                randomGraphId: this.config.randomGraphId,
-                neighborDescriptors: this.targetNeighbors!.values().map((neighbor) => neighbor.getPeerDescriptor()),
-                removeMe: true
-            }
-            return response
-        }
-        const response: NeighborUpdate = {
-            senderId: this.getOwnStringId(),
-            randomGraphId: this.config.randomGraphId,
-            neighborDescriptors: this.targetNeighbors!.values().map((neighbor) => neighbor.getPeerDescriptor()),
-            removeMe: false
-        }
-        return response
     }
 }

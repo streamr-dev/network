@@ -3,7 +3,7 @@ import {
     Simulator,
     PeerDescriptor,
     SimulatorTransport,
-    keyFromPeerDescriptor, peerIdFromPeerDescriptor
+    peerIdFromPeerDescriptor
 } from '@streamr/dht'
 import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
 import { NetworkRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
@@ -12,7 +12,7 @@ import {
     StreamHandshakeRequest,
     StreamHandshakeResponse,
     LeaveStreamNotice,
-    NeighborUpdate, StreamMessage
+    StreamMessage
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { Empty } from '../../src/proto/google/protobuf/empty'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
@@ -76,27 +76,6 @@ describe('RemoteRandomGraphNode', () => {
             }
         )
 
-        mockServerRpc.registerRpcMethod(
-            NeighborUpdate,
-            NeighborUpdate,
-            'neighborUpdate',
-            async (_msg: NeighborUpdate, _context: ServerCallContext): Promise<NeighborUpdate> => {
-                const peer: PeerDescriptor = {
-                    kademliaId: new Uint8Array([4, 2, 4]),
-                    type: 0
-                }
-
-                const update: NeighborUpdate = {
-                    senderId: keyFromPeerDescriptor(peer),
-                    randomGraphId: 'testStream',
-                    neighborDescriptors: [
-                        peer
-                    ],
-                    removeMe: false
-                }
-                return update
-            }
-        )
         remoteRandomGraphNode = new RemoteRandomGraphNode(
             serverPeer,
             'test-stream',
@@ -133,8 +112,4 @@ describe('RemoteRandomGraphNode', () => {
         await waitForCondition(() => recvCounter === 1)
     })
 
-    it('updateNeighbors', async () => {
-        const res = await remoteRandomGraphNode.updateNeighbors(clientPeer, [])
-        expect(res.peers.length).toEqual(1)
-    })
 })

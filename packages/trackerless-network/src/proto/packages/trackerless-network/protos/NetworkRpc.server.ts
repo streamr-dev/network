@@ -29,6 +29,11 @@ export interface INetworkRpc<T = ServerCallContext> {
      * @generated from protobuf rpc: interleaveNotice(InterleaveNotice) returns (google.protobuf.Empty);
      */
     interleaveNotice(request: InterleaveNotice, context: T): Promise<Empty>;
+}
+/**
+ * @generated from protobuf service NeighborUpdateRpc
+ */
+export interface INeighborUpdateRpc<T = ServerCallContext> {
     /**
      * @generated from protobuf rpc: neighborUpdate(NeighborUpdate) returns (NeighborUpdate);
      */

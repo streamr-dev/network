@@ -10,6 +10,9 @@ service NetworkRpc {
   rpc handshake (StreamHandshakeRequest) returns (StreamHandshakeResponse);
   rpc leaveStreamNotice (LeaveStreamNotice) returns (google.protobuf.Empty);
   rpc interleaveNotice (InterleaveNotice) returns (google.protobuf.Empty);
+}
+
+service NeighborUpdateRpc {
   rpc neighborUpdate (NeighborUpdate) returns (NeighborUpdate);
 }
 

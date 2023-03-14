@@ -513,6 +513,11 @@ export const NetworkRpc = new ServiceType("NetworkRpc", [
     { name: "sendData", options: {}, I: StreamMessage, O: Empty },
     { name: "handshake", options: {}, I: StreamHandshakeRequest, O: StreamHandshakeResponse },
     { name: "leaveStreamNotice", options: {}, I: LeaveStreamNotice, O: Empty },
-    { name: "interleaveNotice", options: {}, I: InterleaveNotice, O: Empty },
+    { name: "interleaveNotice", options: {}, I: InterleaveNotice, O: Empty }
+]);
+/**
+ * @generated ServiceType for protobuf service NeighborUpdateRpc
+ */
+export const NeighborUpdateRpc = new ServiceType("NeighborUpdateRpc", [
     { name: "neighborUpdate", options: {}, I: NeighborUpdate, O: NeighborUpdate }
 ]);
