@@ -4,7 +4,7 @@
 
 CREATE TABLE IF NOT EXISTS EncryptionKeys (
     key_ TEXT,
-    value_ TEXT,
+    value_ TEXT
 );
 
 --------------------------------------------------------------------------------
