@@ -78,7 +78,12 @@ export class StreamrNode extends EventEmitter<Events> {
         this.layer0 = startedAndJoinedLayer0
         this.P2PTransport = transport
         this.connectionLocker = connectionLocker
-        this.streamEntryPointDiscovery = new StreamEntryPointDiscovery(this.layer0, this.streams)
+        this.streamEntryPointDiscovery = new StreamEntryPointDiscovery({
+            ownPeerDescriptor: this.getPeerDescriptor(),
+            streams: this.streams,
+            getEntryPointData: this.layer0.getDataFromDht,
+            storeEntryPointData: this.layer0.storeDataToDht
+        })
         cleanUp = this.destroy.bind(this)
     }
 
@@ -96,7 +101,7 @@ export class StreamrNode extends EventEmitter<Events> {
         this.removeAllListeners()
         await this.layer0!.stop()
         await this.P2PTransport!.stop()
-        await this.streamEntryPointDiscovery!.stop()
+        await this.streamEntryPointDiscovery!.destroy()
     }
 
     subscribeToStream(streamPartID: string, knownEntryPointDescriptors: PeerDescriptor[]): void {
