@@ -219,10 +219,12 @@ export class ManagedConnection extends EventEmitter<Events> {
         this.doDisconnect()
     }
 
-    async send(data: Uint8Array): Promise<void> {
+    async send(data: Uint8Array, doNotConnect = false): Promise<void> {
         this.lastUsed = Date.now()
 
-        if (this.implementation) {
+        if (doNotConnect && !this.implementation) {
+            throw new Err.ConnectionNotOpen('Connection not open when calling send() with doNotConnect flag')
+        } else if (this.implementation) {
             this.implementation.send(data)
         } else {
             logger.trace('adding data to outputBuffer objectId: ' + this.objectId)

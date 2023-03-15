@@ -3,7 +3,7 @@ import type { ServiceInfo, MethodInfo } from "@protobuf-ts/runtime-rpc"
 import { PeerID } from '../../src/helpers/PeerID'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { IDhtRpcServiceClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
-import { LeaveNotice, NodeType, PeerDescriptor, RouteMessageAck, RouteMessageWrapper, 
+import { LeaveNotice, MigrateDataRequest, MigrateDataResponse, NodeType, PeerDescriptor, RouteMessageAck, RouteMessageWrapper, 
     StoreDataRequest, StoreDataResponse } from "../../src/proto/packages/dht/protos/DhtRpc"
 import type { PingResponse } from "../../src/proto/packages/dht/protos/DhtRpc"
 import type { PingRequest } from "../../src/proto/packages/dht/protos/DhtRpc"
@@ -24,6 +24,7 @@ class MockRpcClient implements IDhtRpcServiceClient, ServiceInfo {
         { name: 'findRecursively', O: {} as IMessageType<RouteMessageAck> } as MethodInfo<any, any>,
         { name: 'findData', O: {} as IMessageType<RouteMessageAck> } as MethodInfo<any, any>,
         { name: 'storeData', O: {} as IMessageType<StoreDataResponse> } as MethodInfo<any, any>,
+        { name: 'migrateData', O: {} as IMessageType<MigrateDataResponse> } as MethodInfo<any, any>,
         { name: 'forwardMessage', O: {} as IMessageType<RouteMessageAck> } as MethodInfo<any, any>,
         { name: 'leaveNotice', O: {} as IMessageType<Empty> } as MethodInfo<any, any>
     ]
@@ -57,6 +58,11 @@ class MockRpcClient implements IDhtRpcServiceClient, ServiceInfo {
     // eslint-disable-next-line class-methods-use-this
     storeData(_input: StoreDataRequest, _options?: RpcOptions): UnaryCall<StoreDataRequest, StoreDataResponse> {
         return {} as UnaryCall<StoreDataRequest, StoreDataResponse>
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    migrateData(_input: MigrateDataRequest, _options?: RpcOptions): UnaryCall<MigrateDataRequest, MigrateDataResponse> {
+        return {} as UnaryCall<MigrateDataRequest, MigrateDataResponse>
     }
 
     // eslint-disable-next-line class-methods-use-this

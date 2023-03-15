@@ -273,7 +273,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         return this.locks.getNumberOfWeakLockedConnections()
     }
 
-    public send = async (message: Message, doNotConnect?: boolean): Promise<void> => {
+    public send = async (message: Message, doNotConnect = false): Promise<void> => {
         if (!this.started || this.stopped) {
             return
         }
@@ -316,7 +316,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
         this.metrics.sendBytesPerSecond.record(binary.byteLength)
         this.metrics.sendMessagesPerSecond.record(1)
-        return connection!.send(binary)
+        return connection!.send(binary, doNotConnect)
     }
 
     public getConnection(peerDescriptor: PeerDescriptor): ManagedConnection | undefined {

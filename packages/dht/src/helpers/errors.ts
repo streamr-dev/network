@@ -15,7 +15,8 @@ export enum ErrorCode {
     CONNECTION_LOCKER = 'CONNECTION_LOCKER',
     DHT_JOIN_TIMEOUT = 'DHT_JOIN_TIMEOUT',
     SEND_FAILED = 'SEND_FAILED',
-    GETTING_DATA_FAILED = 'GETTING_DATA_FAILED'
+    GETTING_DATA_FAILED = 'GETTING_DATA_FAILED',
+    CONNECTION_NOT_OPEN = 'CONNECTION_NOT_OPEN'
 }
 
 class Err extends Error {
@@ -45,3 +46,4 @@ export class ConnectionLocker extends Err { constructor(message?: string, origin
 export class DhtJoinTimeout extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.DHT_JOIN_TIMEOUT, message, originalError) } }
 export class SendFailed extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.SEND_FAILED, message, originalError) } }
 export class GettingDataFailed extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.GETTING_DATA_FAILED, message, originalError) } }
+export class ConnectionNotOpen extends Err { constructor( message?: string, originalError?: Error | string) { super(ErrorCode.CONNECTION_NOT_OPEN, message, originalError) } }
