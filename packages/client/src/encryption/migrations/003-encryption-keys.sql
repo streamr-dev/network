@@ -7,6 +7,8 @@ CREATE TABLE IF NOT EXISTS EncryptionKeys (
     value_ TEXT
 );
 
+INSERT INTO EncryptionKeys (key_, value_) SELECT "LEGACY::" || id, groupKey FROM GroupKeys;
+
 --------------------------------------------------------------------------------
 -- Down
 --------------------------------------------------------------------------------
