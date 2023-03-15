@@ -24,7 +24,6 @@ interface NodeDescriptor {
 }
 
 interface Subscriber {
-    subscribeToStreamPartIfHaveNotYet: (streamPartId: StreamPartID, sendStatus?: boolean) => void
     subscribeToStreamPartOnNodes: (
         nodeIds: NodeId[],
         streamPartId: StreamPartID,
@@ -177,8 +176,11 @@ export class TrackerManager {
         reattempt = false
     ): Promise<void> {
         const streamPartId = instructionMessage.getStreamPartID()
-        const { nodeIds, counter } = instructionMessage
+        if (!this.streamPartManager.isSetUp(streamPartId)) {
+            return
+        }
 
+        const { nodeIds, counter } = instructionMessage
         this.instructionRetryManager.add(instructionMessage, trackerId)
 
         // Check that tracker matches expected tracker
@@ -190,7 +192,6 @@ export class TrackerManager {
 
         logger.trace('received instructions for %s, nodes to connect %o', streamPartId, nodeIds)
 
-        this.subscriber.subscribeToStreamPartIfHaveNotYet(streamPartId, false)
         const currentNodes = this.streamPartManager.getNeighborsForStreamPart(streamPartId)
 
         const nodesToUnsubscribeFrom = currentNodes.filter((nodeId) => !nodeIds.includes(nodeId))
