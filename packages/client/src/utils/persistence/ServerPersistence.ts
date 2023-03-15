@@ -41,8 +41,7 @@ export default class ServerPersistence<K extends string, V extends string> imple
         this.logger = loggerFactory.createLogger(module)
         this.tableName = tableName
         const paths = envPaths('streamr-client')
-        const dbFilePath = resolve(paths.data, join('./', clientId, `${tableName}.db`))
-        this.dbFilePath = dbFilePath
+        this.dbFilePath = resolve(paths.data, join('./', clientId, `GroupKeys.db`))
         this.migrationsPath = migrationsPath
         this.onInit = onInit
         this.init = pOnce(this.init.bind(this))
