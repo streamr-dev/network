@@ -69,13 +69,11 @@ export class WebSocketConnector implements IWebSocketConnectorService {
             rpcRequestTimeout: 15000
         })
 
-        this.requestConnection = this.requestConnection.bind(this)
-
         this.rpcCommunicator.registerRpcMethod(
             WebSocketConnectionRequest,
             WebSocketConnectionResponse,
             'requestConnection',
-            this.requestConnection
+            (req: WebSocketConnectionRequest, context) => this.requestConnection(req, context)
         )
     }
 

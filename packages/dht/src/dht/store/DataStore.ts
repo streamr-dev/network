@@ -34,8 +34,8 @@ export class DataStore implements IStoreService {
 
     constructor(config: DataStoreConfig) {
         this.config = config
-        this.storeData = this.storeData.bind(this)
-        this.config.rpcCommunicator!.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData', this.storeData)
+        this.config.rpcCommunicator!.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData',
+            (req: StoreDataRequest, context) => this.storeData(req, context))
     }
 
     public async storeDataToDht(key: Uint8Array, data: Any): Promise<PeerDescriptor[]> {
