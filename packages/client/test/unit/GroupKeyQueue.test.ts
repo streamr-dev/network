@@ -1,6 +1,7 @@
 import 'reflect-metadata'
 
 import { toStreamID } from '@streamr/protocol'
+import { randomEthereumAddress } from '@streamr/test-utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
 import { mock, MockProxy } from 'jest-mock-extended'
@@ -15,18 +16,19 @@ describe('GroupKeyQueue', () => {
     let groupKeyStore: MockProxy<GroupKeyStore>
     let queue: GroupKeyQueue
     let groupKeyManager: GroupKeyManager
+    const publisherId = randomEthereumAddress()
 
     beforeEach(() => {
         groupKeyStore = mock<GroupKeyStore>()
         groupKeyManager = createGroupKeyManager(groupKeyStore)
-        queue = new GroupKeyQueue(streamId, groupKeyManager)
+        queue = new GroupKeyQueue(publisherId, streamId, groupKeyManager)
     })
 
     it('can rotate and use', async () => {
         const groupKey = GroupKey.generate()
         await queue.rotate(groupKey)
         expect(groupKeyStore.add).toBeCalledTimes(1)
-        expect(groupKeyStore.add).toBeCalledWith(groupKey, streamId)
+        expect(groupKeyStore.add).toBeCalledWith(groupKey, publisherId)
         expect(await queue.useGroupKey()).toEqual({ current: groupKey })
         expect(await queue.useGroupKey()).toEqual({ current: groupKey })
         const groupKey2 = GroupKey.generate()

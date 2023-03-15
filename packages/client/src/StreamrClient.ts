@@ -141,9 +141,8 @@ export class StreamrClient {
      * @remarks Keys will be added to the store automatically by the client as encountered. This method can be used to
      * manually add some known keys into the store.
      */
-    async addEncryptionKey(key: GroupKey, streamIdOrPath: string): Promise<void> {
-        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        await this.groupKeyStore.add(key, streamId)
+    async addEncryptionKey(key: GroupKey, publisherId: EthereumAddress): Promise<void> {
+        await this.groupKeyStore.add(key, publisherId)
     }
 
     // --------------------------------------------------------------------------------------------

@@ -54,7 +54,7 @@ describe('GroupKeyManager', () => {
 
             const key = await groupKeyManager.fetchKey(toStreamPartID(streamId, 0), groupKeyId, publisherId)
             expect(key).toEqual(groupKey)
-            expect(groupKeyStore.get).toHaveBeenCalledWith(groupKeyId, streamId)
+            expect(groupKeyStore.get).toHaveBeenCalledWith(groupKeyId, publisherId)
             expect(groupKeyStore.get).toHaveBeenCalledTimes(1)
             expect(litProtocolFacade.get).toHaveBeenCalledTimes(0)
             expect(subscriberKeyExchange.requestGroupKey).toHaveBeenCalledTimes(0)
@@ -110,9 +110,9 @@ describe('GroupKeyManager', () => {
 
     describe('storeKey', () => {
         it('given pre-defined key only stores in (local) group key store and skips lit protocol', async () => {
-            const returnedGroupKey = await groupKeyManager.storeKey(groupKey, streamId)
+            const returnedGroupKey = await groupKeyManager.storeKey(groupKey, publisherId, streamId)
             expect(returnedGroupKey).toEqual(groupKey)
-            expect(groupKeyStore.add).toHaveBeenCalledWith(groupKey, streamId)
+            expect(groupKeyStore.add).toHaveBeenCalledWith(groupKey, publisherId)
             expect(litProtocolFacade.store).toHaveBeenCalledTimes(0)
         })
 
@@ -122,29 +122,29 @@ describe('GroupKeyManager', () => {
                     return new GroupKey('foobarId', Buffer.from(symmetricKey))
                 })
 
-                const returnedGroupKey = await groupKeyManager.storeKey(undefined, streamId)
+                const returnedGroupKey = await groupKeyManager.storeKey(undefined, publisherId, streamId)
                 expect(returnedGroupKey.id).toEqual('foobarId')
-                expect(groupKeyStore.add).toHaveBeenCalledWith(returnedGroupKey, streamId)
+                expect(groupKeyStore.add).toHaveBeenCalledWith(returnedGroupKey, publisherId)
                 expect(litProtocolFacade.store).toHaveBeenCalledWith(streamId, returnedGroupKey.data)
 
             })
 
             it('lit-protocol offline: generates new key and stores only in (local) group key store', async () => {
-                const returnedGroupKey = await groupKeyManager.storeKey(undefined, streamId)
-                expect(groupKeyStore.add).toHaveBeenCalledWith(returnedGroupKey, streamId)
+                const returnedGroupKey = await groupKeyManager.storeKey(undefined, publisherId, streamId)
+                expect(groupKeyStore.add).toHaveBeenCalledWith(returnedGroupKey, publisherId)
                 expect(litProtocolFacade.store).toHaveBeenCalledWith(streamId, returnedGroupKey.data)
             })
 
             it('lit-protocol disabled: does not even attempt to store key in lit protocol', async () => {
                 groupKeyManager = createGroupKeyManager(false)
-                await groupKeyManager.storeKey(undefined, streamId)
+                await groupKeyManager.storeKey(undefined, publisherId, streamId)
                 expect(litProtocolFacade.store).toHaveBeenCalledTimes(0)
             })
         })
     })
 
     it('addKeyToLocalStore delegates to groupKeyStore#add', async () => {
-        await groupKeyManager.addKeyToLocalStore(groupKey, streamId)
-        expect(groupKeyStore.add).toHaveBeenCalledWith(groupKey, streamId)
+        await groupKeyManager.addKeyToLocalStore(groupKey, publisherId)
+        expect(groupKeyStore.add).toHaveBeenCalledWith(groupKey, publisherId)
     })
 })

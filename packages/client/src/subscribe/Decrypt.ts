@@ -67,7 +67,7 @@ export class Decrypt {
                 // newGroupKey has been converted into GroupKey
                 await this.groupKeyManager.addKeyToLocalStore(
                     clone.newGroupKey as unknown as GroupKey,
-                    streamMessage.getStreamId()
+                    streamMessage.getPublisherId()
                 )
             }
             return clone

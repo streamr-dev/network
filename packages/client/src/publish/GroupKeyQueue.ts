@@ -1,4 +1,5 @@
 import { StreamID } from '@streamr/protocol'
+import { EthereumAddress } from '@streamr/utils'
 import { GroupKey } from '../encryption/GroupKey'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'
 
@@ -11,10 +12,12 @@ export class GroupKeyQueue {
 
     private currentGroupKey: GroupKey | undefined
     private queuedGroupKey: GroupKey | undefined // a group key queued to be rotated into use after the call to useGroupKey
+    private readonly publisherId: EthereumAddress
     private readonly streamId: StreamID
     private readonly groupKeyManager: GroupKeyManager
 
-    constructor(streamId: StreamID, groupKeyManager: GroupKeyManager) {
+    constructor(publisherId: EthereumAddress, streamId: StreamID, groupKeyManager: GroupKeyManager) {
+        this.publisherId = publisherId
         this.streamId = streamId
         this.groupKeyManager = groupKeyManager
     }
@@ -39,13 +42,13 @@ export class GroupKeyQueue {
     }
 
     async rotate(newKey?: GroupKey): Promise<GroupKey> {
-        newKey = await this.groupKeyManager.storeKey(newKey, this.streamId)
+        newKey = await this.groupKeyManager.storeKey(newKey, this.publisherId, this.streamId)
         this.queuedGroupKey = newKey
         return newKey
     }
 
     async rekey(newKey?: GroupKey): Promise<GroupKey> {
-        newKey = await this.groupKeyManager.storeKey(newKey, this.streamId)
+        newKey = await this.groupKeyManager.storeKey(newKey, this.publisherId, this.streamId)
         this.currentGroupKey = newKey
         this.queuedGroupKey = undefined
         return newKey
