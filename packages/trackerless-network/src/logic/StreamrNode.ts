@@ -84,7 +84,7 @@ export class StreamrNode extends EventEmitter<Events> {
             getEntryPointData: (key) => this.layer0!.getDataFromDht(key),
             storeEntryPointData: (key, data) => this.layer0!.storeDataToDht(key, data)
         })
-        cleanUp = this.destroy.bind(this)
+        cleanUp = () => this.destroy()
     }
 
     async destroy(): Promise<void> {

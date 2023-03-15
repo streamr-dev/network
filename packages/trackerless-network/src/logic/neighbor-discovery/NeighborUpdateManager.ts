@@ -11,7 +11,6 @@ import { Logger, scheduleAtInterval } from '@streamr/utils'
 import { PeerIDKey } from '@streamr/dht/dist/src/helpers/PeerID'
 import { NeighborFinder } from './NeighborFinder'
 import { PeerList } from '../PeerList'
-import { Handshaker } from './Handshaker'
 import { RemoteNeighborUpdateManager } from './RemoteNeighborUpdateManager'
 import { INeighborUpdateRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
 
@@ -23,7 +22,6 @@ interface NeighborUpdateManagerConfig {
     neighborFinder: NeighborFinder
     randomGraphId: string
     rpcCommunicator: ListeningRpcCommunicator
-    handshaker: Handshaker
 }
 
 const logger = new Logger(module)
@@ -42,7 +40,7 @@ export class NeighborUpdateManager implements INeighborUpdateRpc {
 
     public async start(): Promise<void> {
         setImmediate(async () => {
-            await scheduleAtInterval(this.updateNeighborInfo.bind(this), 10000, false, this.abortController.signal)
+            await scheduleAtInterval(() => this.updateNeighborInfo(), 10000, false, this.abortController.signal)
         })
     }
 
@@ -82,6 +80,13 @@ export class NeighborUpdateManager implements INeighborUpdateRpc {
                 ))
             )
             this.config.neighborFinder!.start()
+            const response: NeighborUpdate = {
+                senderId: this.config.ownStringId,
+                randomGraphId: this.config.randomGraphId,
+                neighborDescriptors: this.config.targetNeighbors.values().map((neighbor) => neighbor.getPeerDescriptor()),
+                removeMe: false
+            }
+            return response
         } else {
             const response: NeighborUpdate = {
                 senderId: this.config.ownStringId,
@@ -91,12 +96,5 @@ export class NeighborUpdateManager implements INeighborUpdateRpc {
             }
             return response
         }
-        const response: NeighborUpdate = {
-            senderId: this.config.ownStringId,
-            randomGraphId: this.config.randomGraphId,
-            neighborDescriptors: this.config.targetNeighbors.values().map((neighbor) => neighbor.getPeerDescriptor()),
-            removeMe: false
-        }
-        return response
     }
 }

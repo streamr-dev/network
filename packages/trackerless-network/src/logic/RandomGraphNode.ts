@@ -115,7 +115,6 @@ export class RandomGraphNode extends EventEmitter<Events> implements INetworkRpc
         this.neighborUpdateManager = new NeighborUpdateManager({
             targetNeighbors: this.targetNeighbors,
             nearbyContactPool: this.nearbyContactPool,
-            handshaker: this.handshaker,
             ownStringId: this.getOwnStringId(),
             ownPeerDescriptor: this.config.layer1.getPeerDescriptor(),
             neighborFinder: this.neighborFinder,
