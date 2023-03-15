@@ -53,10 +53,10 @@ export class Router implements Omit<IRoutingService, 'findRecursively'> {
 
     constructor(config: RouterConfig) {
         this.config = config
-        this.routeMessage = this.routeMessage.bind(this)
-        this.forwardMessage = this.forwardMessage.bind(this)
-        this.config.rpcCommunicator.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'forwardMessage', this.forwardMessage)
-        this.config.rpcCommunicator.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'routeMessage', this.routeMessage)
+        this.config.rpcCommunicator.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'forwardMessage',
+            (forwardMessage: RouteMessageWrapper, context) => this.forwardMessage(forwardMessage, context))
+        this.config.rpcCommunicator.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'routeMessage',
+            (routedMessage: RouteMessageWrapper, context) => this.routeMessage(routedMessage, context))
     }
 
     public async send(msg: Message, reachableThrough: PeerDescriptor[]): Promise<void> {

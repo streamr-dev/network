@@ -35,9 +35,9 @@ export class NeighborUpdateManager implements INeighborUpdateRpc {
     constructor(config: NeighborUpdateManagerConfig) {
         this.abortController = new AbortController()
         this.client = toProtoRpcClient(new NeighborUpdateRpcClient(config.rpcCommunicator.getRpcClientTransport()))
-        this.neighborUpdate = this.neighborUpdate.bind(this)
         this.config = config
-        this.config.rpcCommunicator.registerRpcMethod(NeighborUpdate, NeighborUpdate, 'neighborUpdate', this.neighborUpdate)
+        this.config.rpcCommunicator.registerRpcMethod(NeighborUpdate, NeighborUpdate, 'neighborUpdate',
+            (req: NeighborUpdate, context) => this.neighborUpdate(req, context))
     }
 
     public async start(): Promise<void> {

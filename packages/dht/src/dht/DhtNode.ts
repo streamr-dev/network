@@ -133,11 +133,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     constructor(conf: Partial<DhtNodeConfig>) {
         super()
         this.config = new DhtNodeConfig(conf)
-
         this.send = this.send.bind(this)
-        this.onKBucketAdded = this.onKBucketAdded.bind(this)
-        this.onKBucketPing = this.onKBucketPing.bind(this)
-        this.onKBucketRemoved = this.onKBucketRemoved.bind(this)
     }
 
     public async start(): Promise<void> {
@@ -253,9 +249,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             numberOfNodesPerKBucket: this.config.numberOfNodesPerKBucket,
             numberOfNodesToPing: this.config.numberOfNodesPerKBucket
         })
-        this.bucket.on('ping', this.onKBucketPing)
-        this.bucket.on('removed', this.onKBucketRemoved)
-        this.bucket.on('added', this.onKBucketAdded)
+        this.bucket.on('ping', (oldContacts: DhtPeer[], newContact: DhtPeer) => this.onKBucketPing(oldContacts, newContact))
+        this.bucket.on('removed', (contact: DhtPeer) => this.onKBucketRemoved(contact))
+        this.bucket.on('added', (contact: DhtPeer) => this.onKBucketAdded(contact))
         this.bucket.on('updated', (_oldContact: DhtPeer, _newContact: DhtPeer) => {
             // TODO: Update contact info to the connection manager and reconnect
         })
@@ -333,12 +329,12 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             return
         }
         logger.trace(`Binding default DHT RPC methods`)
-        this.getClosestPeers = this.getClosestPeers.bind(this)
-        this.ping = this.ping.bind(this)
-        this.leaveNotice = this.leaveNotice.bind(this)
-        this.rpcCommunicator!.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', this.getClosestPeers)
-        this.rpcCommunicator!.registerRpcMethod(PingRequest, PingResponse, 'ping', this.ping)
-        this.rpcCommunicator!.registerRpcNotification(LeaveNotice, 'leaveNotice', this.leaveNotice)
+        this.rpcCommunicator!.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers',
+            (req: ClosestPeersRequest, context) => this.getClosestPeers(req, context))
+        this.rpcCommunicator!.registerRpcMethod(PingRequest, PingResponse, 'ping',
+            (req: PingRequest, context) => this.ping(req, context))
+        this.rpcCommunicator!.registerRpcNotification(LeaveNotice, 'leaveNotice',
+            (req: LeaveNotice, context) => this.leaveNotice(req, context))
     }
 
     private isPeerCloserToIdThanSelf(peer1: PeerDescriptor, compareToId: PeerID): boolean {

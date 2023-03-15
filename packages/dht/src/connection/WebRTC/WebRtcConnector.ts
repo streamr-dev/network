@@ -63,16 +63,14 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         this.rpcCommunicator = new ListeningRpcCommunicator(WebRtcConnector.WEBRTC_CONNECTOR_SERVICE_ID, this.rpcTransport, {
             rpcRequestTimeout: 15000
         })
-
-        this.rtcOffer = this.rtcOffer.bind(this)
-        this.rtcAnswer = this.rtcAnswer.bind(this)
-        this.iceCandidate = this.iceCandidate.bind(this)
-        this.requestConnection = this.requestConnection.bind(this)
-
-        this.rpcCommunicator.registerRpcNotification(RtcOffer, 'rtcOffer', this.rtcOffer)
-        this.rpcCommunicator.registerRpcNotification(RtcAnswer, 'rtcAnswer', this.rtcAnswer)
-        this.rpcCommunicator.registerRpcNotification(IceCandidate, 'iceCandidate', this.iceCandidate)
-        this.rpcCommunicator.registerRpcNotification(WebRtcConnectionRequest, 'requestConnection', this.requestConnection)
+        this.rpcCommunicator.registerRpcNotification(RtcOffer, 'rtcOffer',
+            (req: RtcOffer, context) => this.rtcOffer(req, context))
+        this.rpcCommunicator.registerRpcNotification(RtcAnswer, 'rtcAnswer',
+            (req: RtcAnswer, context) => this.rtcAnswer(req, context))
+        this.rpcCommunicator.registerRpcNotification(IceCandidate, 'iceCandidate',
+            (req: IceCandidate, context) => this.iceCandidate(req, context))
+        this.rpcCommunicator.registerRpcNotification(WebRtcConnectionRequest, 'requestConnection',
+            (req: WebRtcConnectionRequest, context) => this.requestConnection(req, context))
     }
 
     connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {

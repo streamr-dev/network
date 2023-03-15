@@ -163,12 +163,12 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         this.rpcCommunicator = new RoutingRpcCommunicator(this.serviceId, this.send, {
             rpcRequestTimeout: 10000
         })
-        this.lockRequest = this.lockRequest.bind(this)
-        this.unlockRequest = this.unlockRequest.bind(this)
-        this.gracefulDisconnect = this.gracefulDisconnect.bind(this)
-        this.rpcCommunicator.registerRpcMethod(LockRequest, LockResponse, 'lockRequest', this.lockRequest)
-        this.rpcCommunicator.registerRpcNotification(UnlockRequest, 'unlockRequest', this.unlockRequest)
-        this.rpcCommunicator.registerRpcNotification(DisconnectNotice, 'gracefulDisconnect', this.gracefulDisconnect)
+        this.rpcCommunicator.registerRpcMethod(LockRequest, LockResponse, 'lockRequest',
+            (req: LockRequest, context) => this.lockRequest(req, context))
+        this.rpcCommunicator.registerRpcNotification(UnlockRequest, 'unlockRequest',
+            (req: UnlockRequest, context) => this.unlockRequest(req, context))
+        this.rpcCommunicator.registerRpcNotification(DisconnectNotice, 'gracefulDisconnect',
+            (req: DisconnectNotice, context) => this.gracefulDisconnect(req, context))
         // Garbage collection of connections
         this.disconnectorIntervalRef = setInterval(() => {
             logger.trace('disconnectorInterval')

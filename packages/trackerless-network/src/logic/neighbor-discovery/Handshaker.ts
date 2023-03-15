@@ -42,11 +42,10 @@ export class Handshaker implements IHandshakeRpc {
     constructor(config: HandshakerConfig) {
         this.config = config
         this.client = toProtoRpcClient(new HandshakeRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
-
-        this.handshake = this.handshake.bind(this)
-        this.interleaveNotice = this.interleaveNotice.bind(this)
-        this.config.rpcCommunicator.registerRpcNotification(InterleaveNotice, 'interleaveNotice', this.interleaveNotice)
-        this.config.rpcCommunicator.registerRpcMethod(StreamHandshakeRequest, StreamHandshakeResponse, 'handshake', this.handshake)
+        this.config.rpcCommunicator.registerRpcNotification(InterleaveNotice, 'interleaveNotice',
+            (req: InterleaveNotice, context) => this.interleaveNotice(req, context))
+        this.config.rpcCommunicator.registerRpcMethod(StreamHandshakeRequest, StreamHandshakeResponse, 'handshake',
+            (req: StreamHandshakeRequest, context) => this.handshake(req, context))
     }
 
     public async attemptHandshakesOnContacts(excludedIds: string[]): Promise<string[]> {

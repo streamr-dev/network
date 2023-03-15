@@ -52,8 +52,8 @@ export class RecursiveFinder implements Pick<IRoutingService, 'findRecursively'>
 
     constructor(config: RecursiveFinderConfig) {
         this.config = config
-        this.findRecursively = this.findRecursively.bind(this)
-        this.config.rpcCommunicator!.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'findRecursively', this.findRecursively)
+        this.config.rpcCommunicator!.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'findRecursively',
+            (routedMessage: RouteMessageWrapper) => this.findRecursively(routedMessage))
     }
 
     public async startRecursiveFind(idToFind: Uint8Array, findMode: FindMode = FindMode.NODE): Promise<RecursiveFindResult> {

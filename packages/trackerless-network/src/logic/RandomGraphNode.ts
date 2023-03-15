@@ -203,10 +203,10 @@ export class RandomGraphNode extends EventEmitter<Events> implements INetworkRpc
     }
 
     private registerDefaultServerMethods(): void {
-        this.sendData = this.sendData.bind(this)
-        this.leaveStreamNotice = this.leaveStreamNotice.bind(this)
-        this.rpcCommunicator!.registerRpcNotification(StreamMessage, 'sendData', this.sendData)
-        this.rpcCommunicator!.registerRpcNotification(LeaveStreamNotice, 'leaveStreamNotice', this.leaveStreamNotice)
+        this.rpcCommunicator!.registerRpcNotification(StreamMessage, 'sendData',
+            (msg: StreamMessage, context) => this.sendData(msg, context))
+        this.rpcCommunicator!.registerRpcNotification(LeaveStreamNotice, 'leaveStreamNotice',
+            (req: LeaveStreamNotice, context) => this.leaveStreamNotice(req, context))
     }
 
     private getNewNeighborCandidates(): PeerDescriptor[] {
