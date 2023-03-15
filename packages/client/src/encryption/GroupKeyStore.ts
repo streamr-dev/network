@@ -44,7 +44,7 @@ export interface UpdateEncryptionKeyOptions {
 }
 
 function formKey(keyId: string, streamId: StreamID): string {
-    return `${keyId}::${streamId}`
+    return `${streamId}::${keyId}`
 }
 
 /**
