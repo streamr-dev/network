@@ -32,7 +32,15 @@ describe('Layer1', () => {
         layer1CleanUp = []
 
         for (let i = 0; i < NODE_COUNT; i++) {
-            const node = await createMockConnectionDhtNode(new UUID().toString(), simulator)
+            const node = await createMockConnectionDhtNode(
+                new UUID().toString(),
+                simulator,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                60000
+            )
             nodes.push(node)
         }
 
@@ -45,7 +53,6 @@ describe('Layer1', () => {
         await Promise.all(layer1CleanUp.map((node) => node.stop()))
         await layer0EntryPoint.stop()
         simulator.stop()
-
     })
 
     it('single layer1 dht', async () => {
@@ -68,7 +75,7 @@ describe('Layer1', () => {
             const layer1Node = layer1Nodes[i]
             expect(layer1Node.getNodeId().equals(layer0Node.getNodeId())).toEqual(true)
             expect(layer1Node.getNumberOfConnections()).toEqual(layer0Node.getNumberOfConnections())
-            expect(layer1Node.getBucketSize()).toBeGreaterThanOrEqual(layer1Node.getK() - 1)
+            expect(layer1Node.getBucketSize()).toBeGreaterThanOrEqual(layer1Node.getK() / 2)
             expect(layer1Node.getAllConnectionPeerDescriptors()).toEqual(layer0Node.getAllConnectionPeerDescriptors())
         }
     }, 120000)

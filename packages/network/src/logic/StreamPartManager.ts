@@ -3,7 +3,7 @@ import { StreamPartStatus } from '../identifiers'
 import { DuplicateMessageDetector, NumberPair } from '@streamr/utils'
 import { NodeId } from '../identifiers'
 import { COUNTER_UNSUBSCRIBE } from '../constants'
-import _ from 'lodash'
+import uniq from 'lodash/uniq'
 
 interface StreamPartState {
     detectors: Map<string, DuplicateMessageDetector> // "publisherId-msgChainId" => DuplicateMessageDetector
@@ -176,7 +176,7 @@ export class StreamPartManager {
         this.streamParts.forEach(({ neighbors }) => {
             nodes.push(...neighbors)
         })
-        return _.uniq(nodes)
+        return uniq(nodes)
     }
 
     hasNeighbor(streamPartId: StreamPartID, node: NodeId): boolean {
@@ -204,12 +204,7 @@ export class StreamPartManager {
     }
 
     isBehindProxy(streamPartId: StreamPartID): boolean {
-        try {
-            this.ensureThatIsSetUp(streamPartId)
-            return this.streamParts.get(streamPartId)!.isBehindProxy
-        } catch (err) {
-            return false
-        }
+        return this.isSetUp(streamPartId) && this.streamParts.get(streamPartId)!.isBehindProxy
     }
 
     private ensureThatIsSetUp(streamPartId: StreamPartID): void | never {

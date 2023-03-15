@@ -19,7 +19,6 @@ describe('Network RPC', () => {
     let rpcCommunicator1: RpcCommunicator
     let rpcCommunicator2: RpcCommunicator
     let client: ProtoRpcClient<NetworkRpcClient>
-
     let recvCounter = 0
 
     beforeEach(() => {

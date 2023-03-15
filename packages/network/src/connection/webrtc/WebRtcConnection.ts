@@ -40,7 +40,7 @@ interface Events {
     localDescription: (type: any, description: string) => void
     localCandidate: (candidate: string, mid: string) => void
     open: () => void
-    message: (msg: string)  => void
+    message: (msg: string) => void
     close: (err?: Error) => void
     error: (err: Error) => void
     bufferLow: () => void
@@ -347,7 +347,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
             if (queueItem.isFailed()) {
                 this.baseLogger.debug('popping failed queue item: %o', queueItem, numOfSuccessSends)
                 this.messageQueue.pop()
-            } else if (queueItem.getMessage().length > this.getMaxMessageSize())  {
+            } else if (queueItem.getMessage().length > this.getMaxMessageSize()) {
                 const errorMessage = 'Dropping message due to size '
                     + queueItem.getMessage().length
                     + ' exceeding the limit of '

@@ -25,8 +25,8 @@ describe('ServerWsEndpoint', () => {
             serverWsEndpoint.getUrl(),
             { rejectUnauthorized: false }
         )
-        webSocketClient.on('message', async (message: string) => {
-            const { uuid, peerId } = JSON.parse(message)
+        webSocketClient.on('message', async (message: WebSocket.RawData) => {
+            const { uuid, peerId } = JSON.parse(message.toString())
             if (uuid && peerId) {
                 webSocketClient.send(JSON.stringify({ uuid, peerId: 'peerId' }))
                 await waitForCondition(() => webSocketClient.readyState === webSocketClient.OPEN)

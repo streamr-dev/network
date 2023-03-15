@@ -57,7 +57,7 @@ export class ClientWebSocket extends EventEmitter<ConnectionEvents> implements I
                 }
             }
         } else {
-            logger.error('Tried to connect() a stopped connection')
+            logger.debug('Tried to connect() a stopped connection')
         }
     }
 
@@ -79,7 +79,7 @@ export class ClientWebSocket extends EventEmitter<ConnectionEvents> implements I
                 logger.warn('Tried to send data on a non-open connection')
             }
         } else {
-            logger.error('Tried to send() on stopped connection')
+            logger.debug('Tried to send() on stopped connection')
         }
     }
 
@@ -88,7 +88,7 @@ export class ClientWebSocket extends EventEmitter<ConnectionEvents> implements I
             logger.trace(`Closing socket for connection ${this.connectionId.toString()}`)
             this.socket?.close()
         } else {
-            logger.error('Tried to close() a stopped connection')
+            logger.debug('Tried to close() a stopped connection')
         }
     }
 
@@ -111,7 +111,7 @@ export class ClientWebSocket extends EventEmitter<ConnectionEvents> implements I
             }
             this.stopped = true
         } else {
-            logger.error('Tried to destroy() a stopped connection')
+            logger.debug('Tried to destroy() a stopped connection')
         }
     }
 }

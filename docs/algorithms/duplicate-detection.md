@@ -16,7 +16,7 @@ complicated. Indeed, much of the complexity arises from handling the minute deta
 
 ### Naive solution
 A naive solution would be to store every encountered message identity in a set, and then check it for duplicates. The
-downside of this approach is that the memory use will grow without bounds as long as the the software runs. (In
+downside of this approach is that the memory use will grow without bounds as long as the software runs. (In
 practice, very old message identities could be pruned as they would most likely not be encountered after a while.)
 
 ### Simplified problem
@@ -80,7 +80,7 @@ detection](todolink).
 
 With intricate book-keeping of message numbers and previous message numbers of arriving messages, we can fully contract
 an interval once we know the [gap has been filled](gapfiling). We still won't be able to say beforehand how many
-messages a interval will contain, but we will know once all relevant messages have been received, and can thus close
+messages an interval will contain, but we will know once all relevant messages have been received, and can thus close
 the interval.
 
 // TODO: Add example

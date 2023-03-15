@@ -4,7 +4,6 @@ import {
     StreamPartIDUtils,
     toStreamID,
 } from '@streamr/protocol'
-import { Event } from '../../src/logic/StreamrNode'
 import { waitForCondition } from '@streamr/utils'
 import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createStreamMessage } from '../utils'
@@ -45,11 +44,10 @@ describe('NetworkStack', () => {
     it('Can use NetworkNode pub/sub via NetworkStack', async () => {
         let receivedMessages = 0
         const streamPartId = StreamPartIDUtils.parse('stream1#0')
-        await stack1.getStreamrNode().subscribeAndWaitForJoin(streamPartId, epDescriptor)
-        stack1.getStreamrNode().on(Event.NEW_MESSAGE, () => {
+        await stack1.getStreamrNode().waitForJoinAndSubscribe(streamPartId, [epDescriptor])
+        stack1.getStreamrNode().on('newMessage', () => {
             receivedMessages += 1
         })
-
         const content: ContentMessage = {
             body: JSON.stringify({ hello: "WORLD" })
         }
@@ -58,8 +56,7 @@ describe('NetworkStack', () => {
             toStreamID(streamPartId),
             PeerID.fromString('network-stack').toKey()
         )
-
-        await stack2.getStreamrNode().waitForJoinAndPublish(streamPartId, epDescriptor, msg)
+        await stack2.getStreamrNode().waitForJoinAndPublish(streamPartId, [epDescriptor], msg)
         await waitForCondition(() => receivedMessages === 1)
     })
 

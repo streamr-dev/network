@@ -2,10 +2,10 @@ import { ConnectionEvents, ConnectionID, ConnectionType, IConnection } from "./I
 import * as Err from '../helpers/errors'
 import { Handshaker } from "./Handshaker"
 import { PeerDescriptor } from "../proto/packages/dht/protos/DhtRpc"
-import { Logger } from "@streamr/utils"
+import { Logger, raceEvents3 } from "@streamr/utils"
 import EventEmitter from "eventemitter3"
-import { raceEvents3 } from "../helpers/waitForEvent3"
-import { PeerID, PeerIDKey } from "../helpers/PeerID"
+import { PeerIDKey } from "../helpers/PeerID"
+import { keyFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 
 export interface ManagedConnectionEvents {
     managedData: (bytes: Uint8Array, remotePeerDescriptor: PeerDescriptor) => void
@@ -155,7 +155,7 @@ export class ManagedConnection extends EventEmitter<Events> {
     }
 
     public get peerIdKey(): PeerIDKey {
-        return PeerID.fromValue(this.peerDescriptor!.kademliaId).toKey()
+        return keyFromPeerDescriptor(this.peerDescriptor!)
     }
 
     public getLastUsed(): number {
@@ -215,14 +215,16 @@ export class ManagedConnection extends EventEmitter<Events> {
     }
 
     private onDisconnected(code?: number, reason?: string): void {
-        logger.trace('IL onDisconnected ' + code + ' ' + reason)
+        logger.trace('onDisconnected ' + code + ' ' + reason)
         this.doDisconnect()
     }
 
-    async send(data: Uint8Array): Promise<void> {
+    async send(data: Uint8Array, doNotConnect = false): Promise<void> {
         this.lastUsed = Date.now()
 
-        if (this.implementation) {
+        if (doNotConnect && !this.implementation) {
+            throw new Err.ConnectionNotOpen('Connection not open when calling send() with doNotConnect flag')
+        } else if (this.implementation) {
             this.implementation.send(data)
         } else {
             logger.trace('adding data to outputBuffer objectId: ' + this.objectId)
@@ -232,7 +234,7 @@ export class ManagedConnection extends EventEmitter<Events> {
                 'bufferSentByOtherConnection', 'closing', 'disconnected'], 15000)
 
             if (result.winnerName == 'closing' || result.winnerName == 'disconnected') {
-                throw new Err.ConnectionFailed("")
+                throw new Err.ConnectionFailed("Disconnected before send")
             }
 
             if (result.winnerName == 'handshakeFailed') {
@@ -251,7 +253,7 @@ export class ManagedConnection extends EventEmitter<Events> {
                         this.destroy()
                     } else if (result2.winnerName == 'closing') {
                         logger.trace('bufferSentByOtherConnection not received, instead received a closing event')
-                        throw new Err.ConnectionFailed("")
+                        throw new Err.ConnectionFailed("Closing before buffer sent by duplicate onnection")
                     }
                 }
             }

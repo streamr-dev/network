@@ -1,4 +1,3 @@
-import { Event as NodeEvent } from './logic/StreamrNode'
 import { ProxyDirection, StreamMessage, StreamPartID } from '@streamr/protocol'
 import { PeerDescriptor } from '@streamr/dht'
 import { StreamMessageTranslator } from './logic/protocol-integration/stream-message/StreamMessageTranslator'
@@ -7,7 +6,7 @@ import { MetricsContext } from '@streamr/utils'
 
 /*
 Convenience wrapper for building client-facing functionality. Used by client.
- */
+*/
 
 export class NetworkNode {
 
@@ -25,21 +24,21 @@ export class NetworkNode {
         this.stack.getStreamrNode().setExtraMetadata(metadata)
     }
 
-    publish(streamMessage: StreamMessage, entrypointDescriptor: PeerDescriptor): void | never {
+    publish(streamMessage: StreamMessage, knownEntrypointDescriptors: PeerDescriptor[]): void | never {
         const streamPartId = streamMessage.getStreamPartID()
         // if (this.isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE) && streamMessage.messageType === StreamMessageType.MESSAGE) {
         //     throw new Error(`Cannot publish content data to ${streamPartId} as proxy subscribe connections have been set`)
         // }
 
         const msg = StreamMessageTranslator.toProtobuf(streamMessage)
-        this.stack.getStreamrNode().publishToStream(streamPartId, entrypointDescriptor, msg)
+        this.stack.getStreamrNode().publishToStream(streamPartId, knownEntrypointDescriptors, msg)
     }
 
-    subscribe(streamPartId: StreamPartID, entrypointDescriptor: PeerDescriptor): void {
+    subscribe(streamPartId: StreamPartID, knownEntrypointDescriptors: PeerDescriptor[]): void {
         // if (this.isProxiedStreamPart(streamPartId, ProxyDirection.PUBLISH)) {
         //     throw new Error(`Cannot subscribe to ${streamPartId} as proxy publish connections have been set`)
         // }
-        this.stack.getStreamrNode().subscribeToStream(streamPartId, entrypointDescriptor)
+        this.stack.getStreamrNode().subscribeToStream(streamPartId, knownEntrypointDescriptors)
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -54,25 +53,28 @@ export class NetworkNode {
         throw new Error('Not implemented')
     }
 
-    addMessageListener(cb: (msg: StreamMessage) => void): void {
-        this.stack.getStreamrNode().on(NodeEvent.NEW_MESSAGE, (msg) => {
-            const translated = StreamMessageTranslator.toClientProtocol(msg)
+    addMessageListener<T>(cb: (msg: StreamMessage<T>) => void): void {
+        this.stack.getStreamrNode().on('newMessage', (msg) => {
+            const translated = StreamMessageTranslator.toClientProtocol<T>(msg)
             return cb(translated)
         })
     }
 
-    removeMessageListener(cb: (msg: StreamMessage) => void): void {
-        this.stack.getStreamrNode().off(NodeEvent.NEW_MESSAGE, cb)
+    removeMessageListener<T>(cb: (msg: StreamMessage<T>) => void): void {
+        this.stack.getStreamrNode().off('newMessage', (msg) => {
+            const translated = StreamMessageTranslator.toClientProtocol<T>(msg)
+            return cb(translated)
+        })
     }
 
-    async subscribeAndWaitForJoin(streamPartId: StreamPartID, entrypointDescriptor: PeerDescriptor, _timeout?: number): Promise<number> {
+    async subscribeAndWaitForJoin(streamPartId: StreamPartID, knownEntrypointDescriptors: PeerDescriptor[], _timeout?: number): Promise<number> {
         // if (this.isProxiedStreamPart(streamPartId, ProxyDirection.PUBLISH)) {
         //     throw new Error(`Cannot subscribe to ${streamPartId} as proxy publish connections have been set`)
         // }
-        return this.stack.getStreamrNode().subscribeAndWaitForJoin(streamPartId, entrypointDescriptor)
+        return this.stack.getStreamrNode().waitForJoinAndSubscribe(streamPartId, knownEntrypointDescriptors)
     }
 
-    async waitForJoinAndPublish(streamMessage: StreamMessage, entrypointDescriptor: PeerDescriptor, _timeout?: number): Promise<number> {
+    async waitForJoinAndPublish(streamMessage: StreamMessage, knownEntrypointDescriptors: PeerDescriptor[], timeout?: number): Promise<number> {
         const streamPartId = streamMessage.getStreamPartID()
         const msg = StreamMessageTranslator.toProtobuf(streamMessage)
 
@@ -80,7 +82,7 @@ export class NetworkNode {
         //     throw new Error(`Cannot publish to ${streamPartId} as proxy subscribe connections have been set`)
         // }
 
-        return this.stack.getStreamrNode().waitForJoinAndPublish(streamPartId, entrypointDescriptor, msg)
+        return this.stack.getStreamrNode().waitForJoinAndPublish(streamPartId, knownEntrypointDescriptors, msg, timeout)
     }
 
     unsubscribe(streamPartId: StreamPartID): void {
@@ -119,13 +121,16 @@ export class NetworkNode {
         await this.stack.stop()
     }
 
-    // eslint-disable-next-line class-methods-use-this
     getMetricsContext(): MetricsContext {
         return this.stack.getMetricsContext()
     }
 
     getNodeId(): string {
         return this.stack.getStreamrNode().getNodeId()
+    }
+
+    getNodeStringId(): string {
+        return this.stack.getStreamrNode().getNodeStringId()
     }
 
     getStreamParts(): StreamPartID[] {

@@ -4,7 +4,7 @@ import { createEndpoint } from '../../../../src/plugins/http/publishEndpoint'
 
 const MOCK_STREAM_ID = 'mock-stream-id'
 
-describe('PublishEndpoint', () => {
+describe('publishEndpoint', () => {
 
     let app: express.Express
     let streamrClient: any
@@ -14,7 +14,8 @@ describe('PublishEndpoint', () => {
         streamrClient = {
             publish: publishFn
         }
-        app.use(createEndpoint(streamrClient as any))
+        const endpoint = createEndpoint(streamrClient as any)
+        app.route(endpoint.path)[endpoint.method](endpoint.requestHandlers)
         return app
     }
     

@@ -34,20 +34,18 @@ export class StreamMessageTranslator {
         } else {
             throw new Error('invalid message type')
         }
-
         const messageRef: MessageRef = {
-            timestamp: BigInt(msg.getTimestamp()),
+            timestamp: msg.getTimestamp(),
             sequenceNumber: msg.getSequenceNumber(),
             streamId: msg.getStreamId() as string,
             streamPartition: msg.getStreamPartition(),
             publisherId: msg.getPublisherId(),
             messageChainId: msg.getMsgChainId()
         }
-
         let previousMessageRef: MessageRef | undefined = undefined
         if (msg.getPreviousMessageRef()) {
             previousMessageRef = {
-                timestamp: BigInt(msg.getPreviousMessageRef()!.timestamp),
+                timestamp: msg.getPreviousMessageRef()!.timestamp,
                 sequenceNumber: msg.getPreviousMessageRef()!.sequenceNumber,
                 streamId: msg.getStreamId() as string,
                 streamPartition: msg.getStreamPartition(),
@@ -55,7 +53,6 @@ export class StreamMessageTranslator {
                 messageChainId: msg.getMsgChainId()
             }
         }
-
         let newGroupKey: EncryptedGroupKey | undefined = undefined
         if (msg.getNewGroupKey()) {
             newGroupKey = {
@@ -64,7 +61,6 @@ export class StreamMessageTranslator {
                 serialized: msg.getNewGroupKey()!.serialized || undefined
             }
         }
-
         const translated: StreamMessage = {
             content: content,
             encryptionType: msg.encryptionType,
@@ -90,11 +86,9 @@ export class StreamMessageTranslator {
         } else if (msg.messageType === StreamMessageType.GROUP_KEY_RESPONSE) {
             contentType = OldStreamMessageType.GROUP_KEY_RESPONSE
             content = ContentMessageTranslator.toClientProtocol(ContentMessage.fromBinary(msg.content))
-
         } else {
             throw new Error('invalid message type')
         }
-
         const messageId = new MessageID(
             msg.messageRef!.streamId as StreamID,
             msg.messageRef!.streamPartition,
@@ -103,12 +97,10 @@ export class StreamMessageTranslator {
             msg.messageRef!.publisherId as EthereumAddress,
             msg.messageRef!.messageChainId
         )
-
         let prevMsgRef: OldMessageRef | undefined = undefined
         if (msg.previousMessageRef) {
             prevMsgRef = new OldMessageRef(Number(msg.previousMessageRef!.timestamp), msg.previousMessageRef!.sequenceNumber)
         }
-
         let newGroupKey: OldEncryptedGroupKey | undefined = undefined
         if (msg.newGroupKey) {
             newGroupKey = new OldEncryptedGroupKey(
@@ -117,7 +109,6 @@ export class StreamMessageTranslator {
                 msg.newGroupKey!.serialized
             )
         }
-
         const translated = new OldStreamMessage<T>({
             signature: msg.signature,
             newGroupKey,
@@ -128,7 +119,6 @@ export class StreamMessageTranslator {
             messageId,
             prevMsgRef
         })
-
         return translated
     }
 }

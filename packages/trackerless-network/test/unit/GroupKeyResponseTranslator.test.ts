@@ -13,7 +13,6 @@ describe('GroupKeyResponseTranslator', () => {
         recipient: 'recipient' as EthereumAddress,
         encryptedGroupKeys: [ new OldEncryptedGroupKey('id', '0000') ]
     })
-
     const newEncryptedGroupKey: EncryptedGroupKey = {
         groupKeyId: 'id',
         encryptedGroupKeyHex: '0000'

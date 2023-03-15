@@ -1,5 +1,5 @@
 /* eslint-disable no-new */
-import { Batch, State } from  '../../../../src/plugins/storage/Batch'
+import { Batch, State } from '../../../../src/plugins/storage/Batch'
 import { BucketId } from '../../../../src/plugins/storage/Bucket'
 
 const streamMessage = {

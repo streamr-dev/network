@@ -60,21 +60,10 @@ describe('Kademlia correctness', () => {
         )
 
         let minimumCorrectNeighbors = Number.MAX_SAFE_INTEGER
-        let maxOutgoingRpcCalls = 0
         let sumCorrectNeighbors = 0
         let sumKbucketSize = 1
-        let sumOutgoingRpcCalls = 0
 
         for (let i = nodes.length - 1; i >= 0; i--) {
-
-            const outgoingCalls = nodes[i].getNumberOfOutgoingClosestPeersRequests()
-
-            if (outgoingCalls > maxOutgoingRpcCalls) {
-                maxOutgoingRpcCalls = outgoingCalls
-            }
-
-            sumOutgoingRpcCalls += outgoingCalls
-
             let groundTruthString = 'groundTruthNeighb: '
             // eslint-disable-next-line @typescript-eslint/prefer-for-of
             for (let j = 0; j < groundTruth[i + ''].length; j++) {
@@ -117,13 +106,10 @@ describe('Kademlia correctness', () => {
 
         const avgKbucketSize = sumKbucketSize / (NUM_NODES - 1)
         const avgCorrectNeighbors = sumCorrectNeighbors / (NUM_NODES - 1)
-        const avgNumberOfOutgoingRpcCalls = sumOutgoingRpcCalls / (NUM_NODES - 1)
 
         console.log('----------- Simulation results ------------------')
         console.log('Minimum correct neighbors: ' + minimumCorrectNeighbors)
         console.log('Average correct neighbors: ' + avgCorrectNeighbors)
         console.log('Average Kbucket size: ' + avgKbucketSize)
-        console.log('Average outgoing RPC calls: ' + avgNumberOfOutgoingRpcCalls)
-        console.log('Max outgoing RPC calls: ' + maxOutgoingRpcCalls)
     })
 })

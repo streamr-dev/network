@@ -1,4 +1,4 @@
-import { DhtNode, Simulator, SimulatorTransport, PeerDescriptor, PeerID } from '@streamr/dht'
+import { DhtNode, Simulator, SimulatorTransport, PeerDescriptor, PeerID, LatencyType } from '@streamr/dht'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { range } from 'lodash'
 import { wait, waitForCondition } from '@streamr/utils'
@@ -26,9 +26,8 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         }
     })
     beforeEach(async () => {
-        const simulator = new Simulator()
+        const simulator = new Simulator(LatencyType.FIXED, 50)
         const entrypointCm = new SimulatorTransport(entrypointDescriptor, simulator)
-
         const cms: SimulatorTransport[] = range(numOfNodes).map((i) =>
             new SimulatorTransport(peerDescriptors[i], simulator)
         )
@@ -38,13 +37,11 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
             peerDescriptor: entrypointDescriptor,
             serviceId: streamId
         })
-
         dhtNodes = range(numOfNodes).map((i) => new DhtNode({
             transportLayer: cms[i],
             peerDescriptor: peerDescriptors[i],
             serviceId: streamId
         }))
-
         graphNodes = range(numOfNodes).map((i) => new RandomGraphNode({
             randomGraphId: streamId,
             layer1: dhtNodes[i],
@@ -52,7 +49,6 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
             connectionLocker: cms[i],
             ownPeerDescriptor: peerDescriptors[i]
         }))
-
         entryPointRandomGraphNode = new RandomGraphNode({
             randomGraphId: streamId,
             layer1: dhtEntryPoint,
@@ -77,7 +73,6 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         await dhtNodes[0].joinDht(entrypointDescriptor)
         entryPointRandomGraphNode.start()
         await graphNodes[0].start()
-
         await Promise.all([
             waitForCondition(() => graphNodes[0].getNearbyContactPoolIds().length === 1),
             waitForCondition(() => graphNodes[0].getTargetNeighborStringIds().length === 1)
@@ -92,18 +87,15 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         await Promise.all(range(4).map(async (i) => {
             await dhtNodes[i].joinDht(entrypointDescriptor)
         }))
-
         await Promise.all(range(4).map((i) => {
             return waitForCondition(() => {
                 return graphNodes[i].getTargetNeighborStringIds().length >= 4
             }, 10000, 2000)
         }))
-
         range(4).map((i) => {
             expect(graphNodes[i].getNearbyContactPoolIds().length).toBeGreaterThanOrEqual(4)
             expect(graphNodes[i].getTargetNeighborStringIds().length).toBeGreaterThanOrEqual(4)
         })
-
         // Check bidirectionality
         const allNodes = graphNodes
         allNodes.push(entryPointRandomGraphNode)
@@ -129,7 +121,6 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
                 waitForCondition(() => node.getTargetNeighborStringIds().length >= 3, 10000)
             ])
         ))
-        
         await waitForCondition(() => {
             const avg = graphNodes.reduce((acc, curr) => {
                 return acc + curr.getTargetNeighborStringIds().length
@@ -137,19 +128,16 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
             logger.info(`AVG Number of neighbors: ${avg}`)
             return avg >= 3.90
         }, 60000)
-
         const avg = graphNodes.reduce((acc, curr) => {
             return acc + curr.getTargetNeighborStringIds().length
         }, 0) / numOfNodes
 
         logger.info(`AVG Number of neighbors: ${avg}`)
-
         await Promise.all(graphNodes.map((node) =>
             waitForCondition(() => node.getNumberOfOutgoingHandshakes() == 0)
         ))
 
         await wait(20000)
-        
         let mismatchCounter = 0
         graphNodes.forEach((node) => {
             const nodeId = node.getOwnStringId()

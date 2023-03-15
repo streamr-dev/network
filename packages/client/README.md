@@ -101,7 +101,7 @@ NodeJS `16.13.x` is the minimum required version. NodeJS `18.13.x`, NPM `8.x` an
 For usage in the browser include the latest build, e.g. by including a `<script>` tag pointing at a CDN:
 
 ```html
-<script src="https://unpkg.com/streamr-client@latest/streamr-client.web.js"></script>
+<script src="https://unpkg.com/streamr-client@latest/streamr-client.web.min.js"></script>
 ```
 
 #### Browser extension
@@ -114,7 +114,7 @@ ___
 ## Usage
 
 ### API reference
-See https://api-docs.streamr.network/client/v7.3/index.html
+See https://api-docs.streamr.network/client/v8.0/index.html
 
 ### Client creation
 In Streamr, Ethereum accounts are used for identity. You can generate an Ethereum private key using any Ethereum wallet, or you can use the utility function [`StreamrClient.generateEthereumAccount()`](#utility-functions), which returns the address and private key of a fresh Ethereum account. A private key is not required if you are only subscribing to public streams on the Network.
@@ -679,9 +679,13 @@ subscriber.addEncryptionKey(key, streamId)
 
 #### Configuration
 
-There are two optional configuration options related to encryption keys:
-- `decryption.keyRequestTimeout`: max time (in milliseconds) to wait before a key request timeouts
-- `decryption.maxKeyRequestsPerSecond`: max count of key request to be sent within a second (i.e. it throttles the requests if it receives messages from many new publishers within a short period of time)
+The client uses the Streamr Network's key-exchange by default. There is also experimental support for [Lit Protocol](https://litprotocol.com/). If you want to enable it, set `encryption.litProtocolEnabled` config option to `true`. 
+
+When Lit Protocol is enabled, it is used as a primary encryption key store. The Streamr Network's key-exchange is still used as a fallback.
+
+For the Streamr Network's key-exchange you can use these config options to control the decryption process:
+- `encryption.keyRequestTimeout`: max time (in milliseconds) to wait before a key request timeouts
+- `encryption.maxKeyRequestsPerSecond`: max count of key request to be sent within a second (i.e. it throttles the requests if it receives messages from many new publishers within a short period of time)
 
 ### Proxy publishing and subscribing
 
@@ -691,19 +695,24 @@ Setting subscribe proxies can be useful for cases where broker nodes with public
 
 Proxy publishing and subscribing are handled on the network overlay level. This means that there is no need to know the IP address of the node that will be used as a proxy. Instead, the node needs to know the ID of the network node it wants to connect to. It is not possible to set publish / subscribe proxies for a stream that is already being "traditionally" subscribed or published to and vice versa.
 
+
+To open publish proxy connections to multiple nodes on a stream partition:
+
 ```js
+await publishingClient.setProxies(streamPartition, ['0x11111...', '0x22222...'], ProxyDirection.PUBLISH)
+```
 
-// Open publish proxy to multiple nodes on stream
-await publishingClient.openProxyConnections(stream, ['0x11111...', '0x22222...'], ProxyDirection.PUBLISH)
+To remove some/all proxies, call the same method with a different set of nodes. If the node list is empty, proxies are no longer used for the given stream partition:
 
-// Remove publish proxy to multiple nodes on stream
-await publishingClient.closeProxyConnections(stream, ['0x11111...', '0x22222...'], ProxyDirection.PUBLISH)
+```js
+await publishingClient.setProxies(streamPartition, [], ProxyDirection.PUBLISH)
+```
 
-// Open publish proxy to multiple nodes on stream
-await publishingClient.openProxyConnections(stream, ['0x11111...', '0x22222...'], ProxyDirection.SUBSCRIBE)
+By default the client will attempt to open proxy connections to all of the nodes set in  `setProxies`. You can limit the number of connections by setting the `connectionCount` parameter. In this approach, if the client is disconnected from one of the nodes it will attempt to connect to another node by random:
 
-// Remove publish proxy to multiple nodes on stream
-await publishingClient.closeProxyConnections(stream, ['0x11111...', '0x22222...'], ProxyDirection.SUBSCRIBE)
+```js
+// Opens 2 connections, with an extra candidate to use in case of disconnections
+await publishingClient.setProxies(streamPartition, ['0x11111...', '0x22222...', '0x33333...'], ProxyDirection.PUBLISH, 2)
 ```
 
 IMPORTANT: The node that is used as a proxy must have set the option on the network layer to accept incoming proxy connections and must have joined to the stream that a proxy connection is wanted for.

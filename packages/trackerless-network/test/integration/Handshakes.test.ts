@@ -1,12 +1,21 @@
-import { Handshaker } from '../../src/logic/Handshaker'
-import { NodeType, PeerDescriptor, ListeningRpcCommunicator, Simulator, SimulatorTransport, PeerID } from '@streamr/dht'
+import { Handshaker } from '../../src/logic/neighbor-discovery/Handshaker'
+import {
+    NodeType,
+    PeerDescriptor,
+    ListeningRpcCommunicator,
+    Simulator,
+    SimulatorTransport,
+    peerIdFromPeerDescriptor
+} from '@streamr/dht'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
-import { NetworkRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
+import {
+    HandshakeRpcClient
+} from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { PeerList } from '../../src/logic/PeerList'
 import { mockConnectionLocker } from '../utils'
 import { StreamHandshakeRequest, StreamHandshakeResponse } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
+import { RemoteHandshaker } from '../../src/logic/neighbor-discovery/RemoteHandshaker'
 
 describe('Handshakes', () => {
 
@@ -14,27 +23,20 @@ describe('Handshakes', () => {
         kademliaId: new Uint8Array([1, 1, 1]),
         type: NodeType.NODEJS
     }
-
     const peerDescriptor2: PeerDescriptor = {
         kademliaId: new Uint8Array([2, 1, 1]),
         type: NodeType.NODEJS
     }
-
     const peerDescriptor3: PeerDescriptor = {
         kademliaId: new Uint8Array([3, 1, 1]),
         type: NodeType.NODEJS
     }
-
     let rpcCommunicator1: ListeningRpcCommunicator
     let rpcCommunicator2: ListeningRpcCommunicator
     let rpcCommunicator3: ListeningRpcCommunicator
-
     let contactPool: PeerList
-
     let targetNeighbors: PeerList
-
     let handshaker: Handshaker
-
     const randomGraphId = 'handshaker'
 
     const acceptHandshake = async (request: StreamHandshakeRequest, _context: ServerCallContext): Promise<StreamHandshakeResponse> => {
@@ -64,7 +66,6 @@ describe('Handshakes', () => {
 
     beforeEach(() => {
         const simulator = new Simulator()
-
         const simulatorTransport1 = new SimulatorTransport(peerDescriptor1, simulator)
         const simulatorTransport2 = new SimulatorTransport(peerDescriptor2, simulator)
         const simulatorTransport3 = new SimulatorTransport(peerDescriptor3, simulator)
@@ -73,11 +74,9 @@ describe('Handshakes', () => {
         rpcCommunicator2 = new ListeningRpcCommunicator(randomGraphId, simulatorTransport2)
         rpcCommunicator3 = new ListeningRpcCommunicator(randomGraphId, simulatorTransport3)
 
-        const handshakerPeerId = PeerID.fromValue(peerDescriptor2.kademliaId)
+        const handshakerPeerId = peerIdFromPeerDescriptor(peerDescriptor2)
         contactPool = new PeerList(handshakerPeerId, 10)
-
         targetNeighbors = new PeerList(handshakerPeerId, 4)
-
         handshaker = new Handshaker({
             ownPeerDescriptor: peerDescriptor2,
             randomGraphId: randomGraphId,
@@ -85,7 +84,8 @@ describe('Handshakes', () => {
             randomContactPool: contactPool,
             targetNeighbors: targetNeighbors,
             connectionLocker: mockConnectionLocker,
-            protoRpcClient: toProtoRpcClient(new NetworkRpcClient(rpcCommunicator2.getRpcClientTransport()))
+            rpcCommunicator: rpcCommunicator2,
+            N: 4
         })
 
     })
@@ -98,11 +98,12 @@ describe('Handshakes', () => {
 
     it('Two peers can handshake', async () => {
         rpcCommunicator1.registerRpcMethod(StreamHandshakeRequest, StreamHandshakeResponse, 'handshake', acceptHandshake)
+        // @ts-expect-error private
         const res = await handshaker.handshakeWithTarget(
-            new RemoteRandomGraphNode(
+            new RemoteHandshaker(
                 peerDescriptor1,
                 randomGraphId,
-                toProtoRpcClient(new NetworkRpcClient(rpcCommunicator2.getRpcClientTransport())),
+                toProtoRpcClient(new HandshakeRpcClient(rpcCommunicator2.getRpcClientTransport())),
             )
         )
         expect(res).toEqual(true)
@@ -111,11 +112,12 @@ describe('Handshakes', () => {
 
     it('Handshake accepted', async () => {
         rpcCommunicator1.registerRpcMethod(StreamHandshakeRequest, StreamHandshakeResponse, 'handshake', acceptHandshake)
+        // @ts-expect-error private
         const res = await handshaker.handshakeWithTarget(
-            new RemoteRandomGraphNode(
+            new RemoteHandshaker(
                 peerDescriptor1,
                 randomGraphId,
-                toProtoRpcClient(new NetworkRpcClient(rpcCommunicator2.getRpcClientTransport())),
+                toProtoRpcClient(new HandshakeRpcClient(rpcCommunicator2.getRpcClientTransport())),
             )
         )
         expect(res).toEqual(true)
@@ -124,11 +126,12 @@ describe('Handshakes', () => {
 
     it('Handshake rejected', async () => {
         rpcCommunicator1.registerRpcMethod(StreamHandshakeRequest, StreamHandshakeResponse, 'handshake', rejectHandshake)
+        // @ts-expect-error private
         const res = await handshaker.handshakeWithTarget(
-            new RemoteRandomGraphNode(
+            new RemoteHandshaker(
                 peerDescriptor1,
                 randomGraphId,
-                toProtoRpcClient(new NetworkRpcClient(rpcCommunicator2.getRpcClientTransport())),
+                toProtoRpcClient(new HandshakeRpcClient(rpcCommunicator2.getRpcClientTransport())),
             )
         )
         expect(res).toEqual(false)
@@ -138,12 +141,12 @@ describe('Handshakes', () => {
     it('Handshake with Interleaving', async () => {
         rpcCommunicator1.registerRpcMethod(StreamHandshakeRequest, StreamHandshakeResponse, 'handshake', interleavingHandshake)
         rpcCommunicator3.registerRpcMethod(StreamHandshakeRequest, StreamHandshakeResponse, 'handshake', acceptHandshake)
-
+        // @ts-expect-error private
         const res = await handshaker.handshakeWithTarget(
-            new RemoteRandomGraphNode(
+            new RemoteHandshaker(
                 peerDescriptor1,
                 randomGraphId,
-                toProtoRpcClient(new NetworkRpcClient(rpcCommunicator2.getRpcClientTransport())),
+                toProtoRpcClient(new HandshakeRpcClient(rpcCommunicator2.getRpcClientTransport())),
             )
         )
         expect(res).toEqual(true)

@@ -1,5 +1,5 @@
-import { ConnectionManager, DhtNode, PeerDescriptor, PeerID, NodeType } from '@streamr/dht'
-import { Event, RandomGraphNode } from '../../src/logic/RandomGraphNode'
+import { ConnectionManager, DhtNode, PeerDescriptor, NodeType, peerIdFromPeerDescriptor } from '@streamr/dht'
+import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { waitForCondition } from '@streamr/utils'
 import { createStreamMessage } from '../utils'
 import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
@@ -13,13 +13,11 @@ describe('random graph with real connections', () => {
     }
 
     const randomGraphId = 'random-graph'
-
     let epDhtNode: DhtNode
     let dhtNode1: DhtNode
     let dhtNode2: DhtNode
     let dhtNode3: DhtNode
     let dhtNode4: DhtNode
-
     let randomGraphNode1: RandomGraphNode
     let randomGraphNode2: RandomGraphNode
     let randomGraphNode3: RandomGraphNode
@@ -27,15 +25,12 @@ describe('random graph with real connections', () => {
     let randomGraphNode5: RandomGraphNode
 
     beforeEach(async () => {
-
         epDhtNode = new DhtNode({ peerDescriptor: epPeerDescriptor })
         await epDhtNode.start()
-
         dhtNode1 = new DhtNode({ peerIdString: '1', webSocketPort: 12222, entryPoints: [epPeerDescriptor] })
         dhtNode2 = new DhtNode({ peerIdString: '2', webSocketPort: 12223, entryPoints: [epPeerDescriptor] })
         dhtNode3 = new DhtNode({ peerIdString: '3', webSocketPort: 12224, entryPoints: [epPeerDescriptor] })
         dhtNode4 = new DhtNode({ peerIdString: '4', webSocketPort: 12225, entryPoints: [epPeerDescriptor] })
-
         await dhtNode1.start()
         await dhtNode2.start()
         await dhtNode3.start()
@@ -57,7 +52,6 @@ describe('random graph with real connections', () => {
             connectionLocker: dhtNode1.getTransport() as ConnectionManager,
             ownPeerDescriptor: dhtNode1.getPeerDescriptor()
         })
-
         randomGraphNode3 = new RandomGraphNode({
             randomGraphId,
             layer1: dhtNode2,
@@ -65,7 +59,6 @@ describe('random graph with real connections', () => {
             connectionLocker: dhtNode2.getTransport() as ConnectionManager,
             ownPeerDescriptor: dhtNode2.getPeerDescriptor()
         })
-
         randomGraphNode4 = new RandomGraphNode({
             randomGraphId,
             layer1: dhtNode3,
@@ -73,7 +66,6 @@ describe('random graph with real connections', () => {
             connectionLocker: dhtNode3.getTransport() as ConnectionManager,
             ownPeerDescriptor: dhtNode3.getPeerDescriptor()
         })
-
         randomGraphNode5 = new RandomGraphNode({
             randomGraphId,
             layer1: dhtNode4,
@@ -81,7 +73,6 @@ describe('random graph with real connections', () => {
             connectionLocker: dhtNode4.getTransport() as ConnectionManager,
             ownPeerDescriptor: dhtNode4.getPeerDescriptor()
         })
-
         await epDhtNode.joinDht(epPeerDescriptor)
         await Promise.all([
             dhtNode1.joinDht(epPeerDescriptor),
@@ -89,7 +80,6 @@ describe('random graph with real connections', () => {
             dhtNode3.joinDht(epPeerDescriptor),
             dhtNode4.joinDht(epPeerDescriptor)
         ])
-
         await Promise.all([
             randomGraphNode1.start(),
             randomGraphNode2.start(),
@@ -115,13 +105,11 @@ describe('random graph with real connections', () => {
             (dhtNode1.getTransport() as ConnectionManager).stop(),
             (dhtNode2.getTransport() as ConnectionManager).stop(),
             (dhtNode3.getTransport() as ConnectionManager).stop(),
-            (dhtNode4.getTransport() as ConnectionManager).stop(),
-
+            (dhtNode4.getTransport() as ConnectionManager).stop()
         ])
     })
 
     it('can fully connected topologies ', async () => {
-
         await waitForCondition(() => {
             return randomGraphNode1.getTargetNeighborStringIds().length >= 3
                 && randomGraphNode2.getTargetNeighborStringIds().length >= 3
@@ -129,7 +117,6 @@ describe('random graph with real connections', () => {
                 && randomGraphNode4.getTargetNeighborStringIds().length >= 3
                 && randomGraphNode5.getTargetNeighborStringIds().length >= 3
         }, 10000)
-
         expect(randomGraphNode1.getTargetNeighborStringIds().length).toBeGreaterThanOrEqual(3)
         expect(randomGraphNode2.getTargetNeighborStringIds().length).toBeGreaterThanOrEqual(3)
         expect(randomGraphNode3.getTargetNeighborStringIds().length).toBeGreaterThanOrEqual(3)
@@ -139,10 +126,10 @@ describe('random graph with real connections', () => {
 
     it('can propagate messages', async () => {
         let numOfMessagesReceived = 0
-        randomGraphNode2.on(Event.MESSAGE, () => numOfMessagesReceived += 1)
-        randomGraphNode3.on(Event.MESSAGE, () => numOfMessagesReceived += 1)
-        randomGraphNode4.on(Event.MESSAGE, () => numOfMessagesReceived += 1)
-        randomGraphNode5.on(Event.MESSAGE, () => numOfMessagesReceived += 1)
+        randomGraphNode2.on('message', () => numOfMessagesReceived += 1)
+        randomGraphNode3.on('message', () => numOfMessagesReceived += 1)
+        randomGraphNode4.on('message', () => numOfMessagesReceived += 1)
+        randomGraphNode5.on('message', () => numOfMessagesReceived += 1)
 
         await waitForCondition(() => {
             return randomGraphNode1.getTargetNeighborStringIds().length >= 3
@@ -158,9 +145,8 @@ describe('random graph with real connections', () => {
         const msg = createStreamMessage(
             content,
             randomGraphId,
-            PeerID.fromValue(epDhtNode.getPeerDescriptor().kademliaId).toString()
+            peerIdFromPeerDescriptor(epPeerDescriptor).toString()
         )
-
         randomGraphNode1.broadcast(msg)
         await waitForCondition(() => numOfMessagesReceived >= 4)
     })

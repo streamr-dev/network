@@ -75,22 +75,6 @@ export class ClientTransport extends EventEmitter<ClientTransportEvents> impleme
             requestId: v4()
         }
 
-        /*
-        if (options.notification) {
-            const unary = new UnaryCall<I, O>(
-                method,
-                {},
-                input,
-                undefined as unknown as Promise<RpcMetadata>,
-                undefined as unknown as Promise<O>,
-                undefined as unknown as Promise<RpcStatus>,
-                undefined as unknown as Promise<RpcMetadata>,
-            )
-            logger.trace(`New rpc ${options.notification ? 'notification' : 'request'}, ${request.requestId}`)
-            this.emit('rpcRequest', request, options, undefined)
-            return unary
-
-        } else { */
         const defHeader = new Deferred<RpcMetadata>()
         const defMessage = new Deferred<O>()
         const defStatus = new Deferred<RpcStatus>()
@@ -117,7 +101,6 @@ export class ClientTransport extends EventEmitter<ClientTransportEvents> impleme
         logger.trace(`New rpc ${options.notification ? 'notification' : 'request'}, ${request.requestId}`)
         this.emit('rpcRequest', request, options, deferred)
         return unary
-        //}
     }
 
     // eslint-disable-next-line class-methods-use-this

@@ -35,16 +35,12 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
     }
 
     private onData = (data: Uint8Array) => {
-
         const message = Message.fromBinary(data)
-
         if (message.body.oneofKind === 'handshakeRequest') {
             logger.trace('handshake request received')
-
             const handshake = message.body.handshakeRequest
             this.emit('handshakeRequest', handshake.peerDescriptor!)
         }
-
         if (message.body.oneofKind === 'handshakeResponse') {
             logger.trace('handshake response received')
             const handshake = message.body.handshakeResponse
@@ -57,7 +53,6 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
     }
 
     public sendHandshakeRequest(): void {
-
         const outgoingHandshake: HandshakeRequest = {
             sourceId: this.ownPeerDescriptor.kademliaId,
             protocolVersion: this.protocolVersion,
@@ -72,19 +67,16 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
                 handshakeRequest: outgoingHandshake
             }
         }
-
         this.connection.send(Message.toBinary(msg))
         logger.trace('handshake request sent')
     }
 
     public sendHandshakeResponse(error?: string): void {
-
         const outgoingHandshakeResponse: HandshakeResponse = {
             sourceId: this.ownPeerDescriptor.kademliaId,
             protocolVersion: this.protocolVersion,
             peerDescriptor: this.ownPeerDescriptor
         }
-
         if (error) {
             outgoingHandshakeResponse.responseError = error
         }
@@ -97,7 +89,6 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
                 handshakeResponse: outgoingHandshakeResponse
             }
         }
-
         this.connection.send(Message.toBinary(msg))
         logger.trace('handshake request sent')
     }

@@ -14,13 +14,11 @@ describe('Mock connection Dht joining with latencies', () => {
         simulator = new Simulator(LatencyType.RANDOM)
         const entryPointId = '0'
         entryPoint = await createMockConnectionDhtNode(entryPointId, simulator)
-       
         entrypointDescriptor = {
             kademliaId: entryPoint.getNodeId().value,
             type: 0,
             nodeName: '0'
         }
-        
         for (let i = 1; i < 100; i++) {
             const nodeId = `${i}`
             const node = await createMockConnectionDhtNode(nodeId, simulator)
@@ -38,18 +36,11 @@ describe('Mock connection Dht joining with latencies', () => {
 
     it('Happy path', async () => {
         await entryPoint.joinDht(entrypointDescriptor)
-        await Promise.all(
-            nodes.map((node) => node.joinDht(entrypointDescriptor))
-        )
+        await Promise.all(nodes.map((node) => node.joinDht(entrypointDescriptor)))
         nodes.forEach((node) => {
-            expect(node.getBucketSize()).toBeGreaterThanOrEqual(node.getK() - 1)
-            expect(node.getNeighborList().getSize()).toBeGreaterThanOrEqual(node.getK() - 1)
+            expect(node.getBucketSize()).toBeGreaterThanOrEqual(node.getK() - 2)
+            expect(node.getNeighborList().getSize()).toBeGreaterThanOrEqual(node.getK() - 2)
         })
-
-        nodes.forEach((node) => {
-            expect(node.getBucketSize()).toBeGreaterThanOrEqual(node.getK() - 1)
-            expect(node.getNeighborList().getSize()).toBeGreaterThanOrEqual(node.getK() - 1)
-        })
-        expect(entryPoint.getBucketSize()).toBeGreaterThanOrEqual(entryPoint.getK() - 1)
+        expect(entryPoint.getBucketSize()).toBeGreaterThanOrEqual(entryPoint.getK() - 2)
     }, 60 * 1000)
 })

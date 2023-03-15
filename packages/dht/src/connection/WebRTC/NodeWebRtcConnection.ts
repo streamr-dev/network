@@ -3,9 +3,9 @@ import { ConnectionType, IConnection, ConnectionID, ConnectionEvents } from '../
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import EventEmitter from 'eventemitter3'
 import nodeDatachannel, { DataChannel, DescriptionType, PeerConnection } from 'node-datachannel'
-import { PeerID } from '../../helpers/PeerID'
 import { Logger } from '@streamr/utils'
 import { IllegalRTCPeerConnectionState } from '../../helpers/errors'
+import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 
 const logger = new Logger(module)
 
@@ -71,9 +71,9 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
 
     public start(isOffering: boolean): void {
         logger.trace(`Staring new connection for peer: ${this.remotePeerDescriptor.kademliaId.toString()}`)
-        const hexId = PeerID.fromValue(this.remotePeerDescriptor.kademliaId).toKey()
+        const hexId = keyFromPeerDescriptor(this.remotePeerDescriptor)
         this.connection = new PeerConnection(hexId, {
-            iceServers: [...this.stunUrls],
+            iceServers: this.stunUrls,
             maxMessageSize: MAX_MESSAGE_SIZE
         })
 
@@ -135,7 +135,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
             try {
                 this.dataChannel?.sendMessageBinary(data as Buffer)
             } catch (err) {
-                logger.warn('Failed to send binary message to ' + PeerID.fromValue(this.remotePeerDescriptor.kademliaId).toKey())
+                logger.warn('Failed to send binary message to ' + keyFromPeerDescriptor(this.remotePeerDescriptor))
             }
         }
     }
@@ -147,7 +147,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
     private doClose(reason?: string): void {
         if (!this.closed) {
             logger.trace(
-                `Closing Node WebRTC Connection to ${PeerID.fromValue(this.remotePeerDescriptor.kademliaId).toKey()}`
+                `Closing Node WebRTC Connection to ${keyFromPeerDescriptor(this.remotePeerDescriptor)}`
                 + `${reason ? `, reason: ${reason}` : ''}`
             )
 

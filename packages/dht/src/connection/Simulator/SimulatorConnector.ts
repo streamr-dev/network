@@ -1,8 +1,5 @@
-/* eslint-disable class-methods-use-this */
-
 import 'setimmediate'
 
-import { PeerID } from '../../helpers/PeerID'
 import { ConnectionType } from '../IConnection'
 
 import {
@@ -13,6 +10,7 @@ import { ManagedConnection } from '../ManagedConnection'
 import { PeerIDKey } from '../../helpers/PeerID'
 import { Simulator } from './Simulator'
 import { SimulatorConnection } from './SimulatorConnection'
+import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 
 const logger = new Logger(module)
 
@@ -37,12 +35,9 @@ export class SimulatorConnector {
         this.incomingConnectionCallback = incomingConnectionCallback
     }
 
-    public async start(): Promise<void> {
-    }
-
     public connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
         logger.trace('connect() ' + this.ownPeerDescriptor.nodeName + ',' + targetPeerDescriptor.nodeName)
-        const peerKey = PeerID.fromValue(targetPeerDescriptor.kademliaId).toKey()
+        const peerKey = keyFromPeerDescriptor(targetPeerDescriptor)
         const existingConnection = this.connectingConnections.get(peerKey)
         if (existingConnection) {
             return existingConnection
@@ -54,12 +49,12 @@ export class SimulatorConnector {
             ConnectionType.SIMULATOR_CLIENT, connection, undefined)
         managedConnection.setPeerDescriptor(targetPeerDescriptor!)
 
-        this.connectingConnections.set(PeerID.fromValue(targetPeerDescriptor.kademliaId).toKey(), managedConnection)
+        this.connectingConnections.set(peerKey, managedConnection)
         connection.once('disconnected', () => {
-            this.connectingConnections.delete(PeerID.fromValue(targetPeerDescriptor.kademliaId).toKey())
+            this.connectingConnections.delete(peerKey)
         })
         connection.once('connected', () => {
-            this.connectingConnections.delete(PeerID.fromValue(targetPeerDescriptor.kademliaId).toKey())
+            this.connectingConnections.delete(peerKey)
         })
 
         connection.connect()

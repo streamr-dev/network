@@ -1,8 +1,16 @@
 import { PeerList } from '../../src/logic/PeerList'
 import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
-import { PeerDescriptor, ListeningRpcCommunicator, Simulator, PeerID, SimulatorTransport } from '@streamr/dht'
+import {
+    PeerDescriptor,
+    ListeningRpcCommunicator,
+    Simulator,
+    PeerID,
+    SimulatorTransport,
+    keyFromPeerDescriptor
+} from '@streamr/dht'
 import { NetworkRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
+import { expect } from 'expect'
 
 describe('PeerList', () => {
 
@@ -25,9 +33,9 @@ describe('PeerList', () => {
         
         return new RemoteRandomGraphNode(peerDescriptor, graphId, toProtoRpcClient(new NetworkRpcClient(mockClient)))
     }
+
     beforeEach(() => {
         peerList = new PeerList(ownId, 6)
-
         ids.forEach((peerId) => {
             const peerDescriptor: PeerDescriptor = {
                 kademliaId: peerId,
@@ -35,7 +43,6 @@ describe('PeerList', () => {
             }
             peerList.add(createRemoteGraphNode(peerDescriptor))
         })
-
     })
 
     it('add', () => {
@@ -64,8 +71,68 @@ describe('PeerList', () => {
 
     it('removeById', () => {
         const toRemove = peerList.getClosest([])
-        const stringId = PeerID.fromValue(toRemove!.getPeerDescriptor().kademliaId).toKey()
+        const stringId = keyFromPeerDescriptor(toRemove!.getPeerDescriptor())
         peerList.removeById(stringId)
         expect(peerList.hasPeer(toRemove!.getPeerDescriptor())).toEqual(false)
+    })
+
+    it('getClosest', () => {
+        const closest = peerList.getClosest([])
+        expect(keyFromPeerDescriptor(closest!.getPeerDescriptor()))
+            .toEqual(PeerID.fromValue(new Uint8Array([1, 1, 1])).toKey())
+    })
+
+    it('getClosest with exclude', () => {
+        const closest = peerList.getClosest([PeerID.fromValue(new Uint8Array([1, 1, 1])).toKey()])
+        expect(keyFromPeerDescriptor(closest!.getPeerDescriptor()))
+            .toEqual(PeerID.fromValue(new Uint8Array([1, 1, 2])).toKey())
+    })
+
+    it('getFurthest', () => {
+        const closest = peerList.getFurthest([])
+        expect(keyFromPeerDescriptor(closest!.getPeerDescriptor()))
+            .toEqual(PeerID.fromValue(new Uint8Array([1, 1, 5])).toKey())
+    })
+
+    it('getFurthest with exclude', () => {
+        const closest = peerList.getFurthest([PeerID.fromValue(new Uint8Array([1, 1, 5])).toKey()])
+        expect(keyFromPeerDescriptor(closest!.getPeerDescriptor()))
+            .toEqual(PeerID.fromValue(new Uint8Array([1, 1, 4])).toKey())
+    })
+
+    it('getClosestAndFurthest', () => {
+        const results = peerList.getClosestAndFurthest([])
+        expect(results).toEqual([peerList.getClosest([]), peerList.getFurthest([])])
+    })
+
+    it('getClosest empty', () => {
+        const emptyPeerList = new PeerList(ownId, 2)
+        expect(emptyPeerList.getClosest([])).toBeUndefined()
+    })
+
+    it('getFurthest empty', () => {
+        const emptyPeerList = new PeerList(ownId, 2)
+        expect(emptyPeerList.getFurthest([])).toBeUndefined()
+    })
+
+    it('getRandom empty', () => {
+        const emptyPeerList = new PeerList(ownId, 2)
+        expect(emptyPeerList.getRandom([])).toBeUndefined()
+    })
+
+    it('getClosestAndFurthest empty', () => {
+        const emptyPeerList = new PeerList(ownId, 2)
+        expect(emptyPeerList.getClosestAndFurthest([])).toEqual([])
+    })
+
+    it('getClosestAndFurthest with exclude', () => {
+        const results = peerList.getClosestAndFurthest([
+            PeerID.fromValue(new Uint8Array([1, 1, 1])).toKey(),
+            PeerID.fromValue(new Uint8Array([1, 1, 5])).toKey()
+        ])
+        expect(results).toEqual([
+            peerList.getClosest([PeerID.fromValue(new Uint8Array([1, 1, 1])).toKey()]),
+            peerList.getFurthest([PeerID.fromValue(new Uint8Array([1, 1, 5])).toKey()])
+        ])
     })
 })

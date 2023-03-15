@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { merge } from 'lodash'
+import merge from 'lodash/merge'
 import { container } from 'tsyringe'
 import { StreamrClientConfig } from '../../src/Config'
 import { CONFIG_TEST } from '../../src/ConfigTest'
@@ -52,6 +52,24 @@ describe('StreamrClient', () => {
                 key: GroupKey.generate(),
                 distributionMethod: 'rotate'
             })).rejects.toThrow('streamId')
+        })
+
+        it('updateEncryptionKey: throws error message if lit protocol enabled and passing explicit key', async () => {
+            const client = createClient({
+                encryption: {
+                    litProtocolEnabled: true
+                }
+            })
+            await expect(() => {
+                return client.updateEncryptionKey({
+                    streamId: 'foobar.eth/foobar',
+                    distributionMethod: 'rotate',
+                    key: GroupKey.generate()
+                })
+            }).rejects.toThrowStreamError({
+                message: 'cannot pass "key" when Lit Protocol is enabled',
+                code: 'UNSUPPORTED_OPERATION'
+            })
         })
     })
 })

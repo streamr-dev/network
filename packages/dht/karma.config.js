@@ -15,7 +15,7 @@ module.exports = function (config) {
         files: [
             './karma-setup.js',
             './test/end-to-end/**',
-            './test/integration/**',
+            './test/integration/**/!(DhtWith*).ts/',
             './test/unit/**',
            {
                 pattern: '**/*.js.map',

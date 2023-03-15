@@ -38,9 +38,9 @@ describe('WebsocketServer', () => {
             publish: jest.fn().mockResolvedValue(undefined),
             subscribe: jest.fn().mockResolvedValue(undefined),
         } as Partial<StreamrClient>
-        wsServer = new WebsocketServer(streamrClient as StreamrClient)
+        wsServer = new WebsocketServer(streamrClient as StreamrClient, 0, 0)
         await wsServer.start(PORT, new PlainPayloadFormat(), {
-            isValidAuthentication: (apiKey?: string) => (apiKey === REQUIRED_API_KEY)
+            keys: [REQUIRED_API_KEY]
         })
     })
 
