@@ -5,11 +5,11 @@ import { StreamObject } from '../../src/logic/StreamrNode'
 import { DataEntry } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { Any } from '../../src/proto/google/protobuf/any'
 
-
 describe('StreamEntryPointDiscovery', () => {
 
     let streamEntryPointDiscoveryWithData: StreamEntryPointDiscovery
     let streamEntryPointDiscoveryWithoutData: StreamEntryPointDiscovery
+    let storeCalled: number
 
     const peerDescriptor: PeerDescriptor = {
         kademliaId: PeerID.fromString('mock').value,
@@ -33,21 +33,19 @@ describe('StreamEntryPointDiscovery', () => {
     }
 
     const mockStoreEntryPointData = async (_key: Uint8Array, _data: Any): Promise<PeerDescriptor[]> => {
+        storeCalled++
         return [peerDescriptor]
     }
 
     const emptyGetEntryPointData = async (_key: Uint8Array): Promise<RecursiveFindResult> => {
         return {
-            closestNodes: [peerDescriptor],
-            dataEntries: [mockData]
+            closestNodes: [],
+            dataEntries: []
         }
     }
 
-    const emptyStoreEntryPointData = async (_key: Uint8Array, _data: Any): Promise<PeerDescriptor[]> => {
-        return [peerDescriptor]
-    }
-
     beforeEach(() => {
+        storeCalled = 0
         streamEntryPointDiscoveryWithData = new StreamEntryPointDiscovery({
             ownPeerDescriptor: peerDescriptor,
             streams: new Map<string, StreamObject>(),
@@ -58,7 +56,7 @@ describe('StreamEntryPointDiscovery', () => {
             ownPeerDescriptor: peerDescriptor,
             streams: new Map<string, StreamObject>(),
             getEntryPointData: emptyGetEntryPointData,
-            storeEntryPointData: emptyStoreEntryPointData
+            storeEntryPointData: mockStoreEntryPointData
         })
     })
 
@@ -80,7 +78,26 @@ describe('StreamEntryPointDiscovery', () => {
         expect(res.discoveredEntryPoints).toEqual([peerDescriptor])
     })
 
-    it('', async () => {
-
+    it('discoverEntryPointsfromDht on an empty stream', async () => {
+        const res = await streamEntryPointDiscoveryWithoutData.discoverEntryPointsFromDht(stream, 0)
+        expect(res.joiningEmptyStream).toEqual(true)
+        expect(res.entryPointsFromDht).toEqual(true)
+        expect(res.discoveredEntryPoints).toEqual([peerDescriptor]) // ownPeerDescriptor
     })
+
+    it('store on empty stream', async () => {
+        await streamEntryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(stream, true, true, 0)
+        expect(storeCalled).toEqual(1)
+    })
+
+    it('store on non-empty stream without known entry points', async () => {
+        await streamEntryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(stream, false, false, 0)
+        expect(storeCalled).toEqual(0)
+    })
+
+    it('store on stream without saturated entrypoint count', async () => {
+        await streamEntryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(stream, false, true, 0)
+        expect(storeCalled).toEqual(1)
+    })
+
 })
