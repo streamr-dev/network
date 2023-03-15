@@ -23,7 +23,7 @@ describe('ServerPersistence', () => {
         await persistence.close()
     })
 
-    it('happy path', async () => {
+    it('set and get', async () => {
         await persistence.set('foo', 'bar')
         expect(await persistence.get('foo')).toBe('bar')
     })
@@ -32,29 +32,13 @@ describe('ServerPersistence', () => {
         expect(await persistence.get('non-existing')).toBeUndefined()
     })
 
-    it('can get and set', async () => {
-        const key = 'mock-key'
-        const value = 'mock-value'
-        expect(await persistence.exists()).toBeFalsy()
-        expect(await persistence.get(key)).toBeFalsy()
-        expect(await persistence.exists()).toBeFalsy()
-        expect(await persistence.exists()).toBeFalsy()
-        expect(await persistence.close()).toBeFalsy()
-        expect(await persistence.exists()).toBeFalsy()
-        // should only start existing now
-        await persistence.set(key, value)
-        expect(await persistence.exists()).toBeTruthy()
-    })
-
-    it('does not exist until write', async () => {
-        const key = 'mock-key'
-        expect(await persistence.exists()).toBeFalsy()
-        expect(await persistence.get(key)).toBeUndefined()
-        expect(await persistence.exists()).toBeFalsy()
-        expect(await persistence.close()).toBeFalsy()
-        expect(await persistence.exists()).toBeFalsy()
-        // should only start existing now
-        await persistence.set(key, 'dummy')
-        expect(await persistence.exists()).toBeTruthy()
+    it('database does not exist until value set', async () => {
+        expect(await persistence.exists()).toBeFalse()
+        expect(await persistence.get('mock-key')).toBeUndefined()
+        expect(await persistence.exists()).toBeFalse()
+        await persistence.close()
+        expect(await persistence.exists()).toBeFalse()
+        await persistence.set('mock-key', 'mock-value')
+        expect(await persistence.exists()).toBeTrue()
     })
 })
