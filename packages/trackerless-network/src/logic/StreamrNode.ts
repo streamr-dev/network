@@ -81,8 +81,8 @@ export class StreamrNode extends EventEmitter<Events> {
         this.streamEntryPointDiscovery = new StreamEntryPointDiscovery({
             ownPeerDescriptor: this.getPeerDescriptor(),
             streams: this.streams,
-            getEntryPointData: (key) => this.layer0.getDataFromDht(key),
-            storeEntryPointData: (key, data) => this.layer0.storeDataToDht(key, data)
+            getEntryPointData: (key) => this.layer0!.getDataFromDht(key),
+            storeEntryPointData: (key, data) => this.layer0!.storeDataToDht(key, data)
         })
         cleanUp = this.destroy.bind(this)
     }
