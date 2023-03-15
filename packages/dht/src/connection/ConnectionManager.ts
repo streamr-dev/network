@@ -292,6 +292,15 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         return this.webrtcConnector!.connect(peerDescriptor)
     }
 
+    private createConnection(peerDescriptor: PeerDescriptor): ManagedConnection {
+        if (this.simulatorConnector) {
+            return this.simulatorConnector!.connect(peerDescriptor)
+        } else if (peerDescriptor.websocket || this.ownPeerDescriptor!.websocket) {
+            return this.webSocketConnector!.connect(peerDescriptor)
+        }
+        return this.webrtcConnector!.connect(peerDescriptor)
+    }
+
     public getConnection(peerDescriptor: PeerDescriptor): ManagedConnection | undefined {
         const hexId = keyFromPeerDescriptor(peerDescriptor)
         return this.connections.get(hexId)
