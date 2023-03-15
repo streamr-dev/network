@@ -3,7 +3,7 @@
 --------------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS EncryptionKeys (
-    key_ TEXT,
+    key_ TEXT NOT NULL PRIMARY KEY,
     value_ TEXT
 );
 
