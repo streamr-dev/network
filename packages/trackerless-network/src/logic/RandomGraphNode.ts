@@ -232,6 +232,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements INetworkRpc
         this.nearbyContactPool!.clear()
         this.targetNeighbors!.clear()
         this.neighborFinder!.stop()
+        this.neighborUpdateManager!.stop()
     }
 
     broadcast(msg: StreamMessage, previousPeer?: string): void {
