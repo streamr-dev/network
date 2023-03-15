@@ -9,7 +9,6 @@ import {
     ClosestPeersRequest,
     ClosestPeersResponse,
     ConnectivityResponse,
-    DataEntry,
     FindMode,
     LeaveNotice,
     Message,
@@ -33,7 +32,7 @@ import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { Any } from '../proto/google/protobuf/any'
 import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 import { Router } from './routing/Router'
-import { RecursiveFinder } from './find/RecursiveFinder'
+import { RecursiveFinder, RecursiveFindResult } from './find/RecursiveFinder'
 import { DataStore } from './store/DataStore'
 import { PeerDiscovery } from './PeerDiscovery'
 import { LocalDataStore } from './store/LocalDataStore'
@@ -90,8 +89,6 @@ export class DhtNodeConfig {
 const logger = new Logger(module)
 
 export type Events = TransportEvents & DhtNodeEvents
-
-export interface RecursiveFindResult { closestNodes: Array<PeerDescriptor>, dataEntries?: Array<DataEntry> }
 
 export const createPeerDescriptor = (msg?: ConnectivityResponse, peerIdString?: string, nodeName?: string): PeerDescriptor => {
     let peerId: Uint8Array

@@ -9,7 +9,7 @@ import { ITransport } from "../../transport/ITransport"
 import { ListeningRpcCommunicator } from "../../transport/ListeningRpcCommunicator"
 import { Contact } from "../contact/Contact"
 import { SortedContactList } from "../contact/SortedContactList"
-import { RecursiveFindResult } from "../DhtNode"
+import { RecursiveFindResult } from "./RecursiveFinder"
 import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 
 export interface RecursiveFindSessionEvents {

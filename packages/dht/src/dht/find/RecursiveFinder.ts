@@ -18,7 +18,6 @@ import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { RemoteRecursiveFindSession } from './RemoteRecursiveFindSession'
 import { v4 } from 'uuid'
 import { RecursiveFindSession, RecursiveFindSessionEvents } from './RecursiveFindSession'
-import { RecursiveFindResult } from '../DhtNode'
 import { DhtPeer } from '../DhtPeer'
 import { ITransport } from '../../transport/ITransport'
 import { LocalDataStore } from '../store/LocalDataStore'
@@ -40,6 +39,8 @@ interface RecursiveFinderConfig {
     getClosestPeerDescriptors: (kademliaId: Uint8Array, limit: number) => PeerDescriptor[]
     isPeerCloserToIdThanSelf: (peer1: PeerDescriptor, compareToId: PeerID) => boolean
 }
+
+export interface RecursiveFindResult { closestNodes: Array<PeerDescriptor>, dataEntries?: Array<DataEntry> }
 
 const logger = new Logger(module)
 
