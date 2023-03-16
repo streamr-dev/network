@@ -161,6 +161,10 @@
                         "max": {
                             "type": "number"
                         }
+                    },
+                    "default": {
+                        "min": 6000,
+                        "max": 65535
                     }
                 },
                 "disconnectionWaitTime": {
