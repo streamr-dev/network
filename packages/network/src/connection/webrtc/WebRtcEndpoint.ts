@@ -55,7 +55,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     private readonly bufferThresholdHigh: number
     private readonly sendBufferMaxMessageCount: number
     private readonly disallowPrivateAddresses: boolean
-    private readonly maxMessageSize?: number
+    private readonly maxMessageSize: number
     private readonly portRange: WebRtcPortRange
 
     private statusReportTimer?: NodeJS.Timeout
@@ -74,7 +74,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         webrtcSendBufferMaxMessageCount: number,
         webrtcDisallowPrivateAddresses: boolean,
         portRange: WebRtcPortRange,
-        maxMessageSize = 1048576,
+        maxMessageSize: number,
     ) {
         super()
         this.peerInfo = peerInfo
@@ -178,7 +178,8 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             deferredConnectionAttempt: deferredConnectionAttempt || new DeferredConnectionAttempt(),
             newConnectionTimeout: this.newConnectionTimeout,
             pingInterval: this.pingInterval,
-            portRange: this.portRange
+            portRange: this.portRange,
+            maxMessageSize: this.maxMessageSize
         }
 
         const connection = this.connectionFactory.createConnection(connectionOptions)

@@ -21,15 +21,15 @@ export interface ConstructorOptions {
     routerId: string
     iceServers: ReadonlyArray<IceServer>
     pingInterval: number
-    bufferThresholdLow?: number
-    bufferThresholdHigh?: number
-    maxMessageSize?: number
-    newConnectionTimeout?: number
-    maxPingPongAttempts?: number
-    flushRetryTimeout?: number
     messageQueue: MessageQueue<string>
     deferredConnectionAttempt: DeferredConnectionAttempt
     portRange: WebRtcPortRange
+    maxMessageSize: number
+    bufferThresholdLow?: number
+    bufferThresholdHigh?: number
+    newConnectionTimeout?: number
+    maxPingPongAttempts?: number
+    flushRetryTimeout?: number
 }
 
 export interface WebRtcPortRange {
@@ -133,12 +133,12 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         deferredConnectionAttempt,
         pingInterval,
         portRange,
+        maxMessageSize,
         bufferThresholdHigh = 2 ** 17,
         bufferThresholdLow = 2 ** 15,
         newConnectionTimeout = 15000,
         maxPingPongAttempts = 5,
-        flushRetryTimeout = 500,
-        maxMessageSize = 1048576
+        flushRetryTimeout = 500
     }: ConstructorOptions) {
         super()
 
