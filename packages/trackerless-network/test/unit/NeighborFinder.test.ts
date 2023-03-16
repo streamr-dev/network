@@ -1,11 +1,10 @@
 import { NeighborFinder } from '../../src/logic/neighbor-discovery/NeighborFinder'
-import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { PeerList } from '../../src/logic/PeerList'
-import { keyFromPeerDescriptor, PeerID, UUID } from '@streamr/dht'
-import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
+import { keyFromPeerDescriptor, PeerID } from '@streamr/dht'
 import { waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { expect } from 'expect'
+import { createMockRemotePeer } from '../utils'
 
 describe('NeighborFinder', () => {
 
@@ -13,14 +12,6 @@ describe('NeighborFinder', () => {
     let targetNeighbors: PeerList
     let nearbyContactPool: PeerList
     let neighborFinder: NeighborFinder
-
-    const createMockRemotePeer = (): RemoteRandomGraphNode => {
-        const mockPeer: PeerDescriptor = {
-            kademliaId: PeerID.fromString(new UUID().toString()).value,
-            type: 0
-        }
-        return new RemoteRandomGraphNode(mockPeer, 'mock', {} as any)
-    }
 
     const N = 4
 
