@@ -1,11 +1,10 @@
 import { setAbortableTimeout } from '@streamr/utils'
 import { PeerList } from '../PeerList'
-import { Handshaker } from './Handshaker'
 
 interface FindNeighborsSessionConfig {
     targetNeighbors: PeerList
     nearbyContactPool: PeerList
-    handshaker: Handshaker
+    doFindNeighbors: (excludedNodes: string[]) => Promise<string[]>
     N: number
 }
 
@@ -26,12 +25,16 @@ export class NeighborFinder {
         if (!this.running) {
             return
         }
-        const newExcludes = await this.config.handshaker.attemptHandshakesOnContacts(excluded)
+        const newExcludes = await this.config.doFindNeighbors(excluded)
         if (this.config.targetNeighbors!.size() < this.config.N && newExcludes.length < this.config.nearbyContactPool!.size()) {
             setAbortableTimeout(() => this.findNeighbors(newExcludes), INTERVAL_TIMEOUT, this.abortController.signal)
         } else {
             this.running = false
         }
+    }
+
+    isRunning(): boolean {
+        return this.running
     }
 
     start(excluded: string[] = []): void {

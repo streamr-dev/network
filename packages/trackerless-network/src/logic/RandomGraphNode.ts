@@ -109,7 +109,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements INetworkRpc
         this.neighborFinder = new NeighborFinder({
             targetNeighbors: this.targetNeighbors,
             nearbyContactPool: this.nearbyContactPool,
-            handshaker: this.handshaker,
+            doFindNeighbors: (excludedIds) => this.handshaker!.attemptHandshakesOnContacts(excludedIds),
             N: this.N
         })
         this.neighborUpdateManager = new NeighborUpdateManager({
