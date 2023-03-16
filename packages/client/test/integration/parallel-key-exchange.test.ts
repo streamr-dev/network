@@ -57,15 +57,16 @@ describe('parallel key exchange', () => {
         const sub = await subscriber.subscribe(stream.id)
 
         for (const publisher of PUBLISHERS) {
+            const authentication = createPrivateKeyAuthentication(publisher.wallet.privateKey, undefined as any)
             const messageFactory = new MessageFactory({
                 streamId: stream.id,
-                authentication: createPrivateKeyAuthentication(publisher.wallet.privateKey, undefined as any),
+                authentication,
                 streamRegistry: createStreamRegistryCached({
                     partitionCount: 1,
                     isPublicStream: false,
                     isStreamPublisher: true
                 }),
-                groupKeyQueue: await createGroupKeyQueue(toEthereumAddress(publisher.wallet.address), publisher.groupKey)
+                groupKeyQueue: await createGroupKeyQueue(authentication, publisher.groupKey)
             })
             for (let i = 0; i < MESSAGE_COUNT_PER_PUBLISHER; i++) {
                 const msg = await messageFactory.createMessage({

@@ -57,7 +57,7 @@ export class Publisher {
             return this.createMessageFactory(streamId)
         })
         this.groupKeyQueues = new Mapping(async (streamId: StreamID) => {
-            return new GroupKeyQueue(await this.authentication.getAddress(), streamId, groupKeyManager)
+            return new GroupKeyQueue(streamId, this.authentication, groupKeyManager)
         })
     }
 
