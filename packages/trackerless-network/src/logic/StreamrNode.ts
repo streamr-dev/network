@@ -167,7 +167,7 @@ export class StreamrNode extends EventEmitter<Events> {
             layer2
         })
         await layer1.start()
-        layer2.start()
+        await layer2.start()
         layer2.on('message', (message: StreamMessage) => {
             this.emit('newMessage', message)
         })
@@ -250,7 +250,7 @@ export class StreamrNode extends EventEmitter<Events> {
     }
 }
 
-[`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `SIGTERM`].forEach((term) => {
+[`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `unhandledRejection`, `SIGTERM`].forEach((term) => {
     process.on(term, async () => {
         await cleanUp()
         process.exit()

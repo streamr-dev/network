@@ -39,9 +39,7 @@ export class NeighborUpdateManager implements INeighborUpdateRpc {
     }
 
     public async start(): Promise<void> {
-        setImmediate(async () => {
-            await scheduleAtInterval(() => this.updateNeighborInfo(), 10000, false, this.abortController.signal)
-        })
+        await scheduleAtInterval(() => this.updateNeighborInfo(), 10000, false, this.abortController.signal)
     }
 
     public stop(): void {
@@ -49,7 +47,7 @@ export class NeighborUpdateManager implements INeighborUpdateRpc {
     }
 
     private async updateNeighborInfo(): Promise<void> {
-        logger.trace(`Updating neighbor info to peers`)
+        logger.info(`Updating neighbor info to peers`)
         const neighborDescriptors = this.config.targetNeighbors!.values().map((neighbor) => neighbor.getPeerDescriptor())
         await Promise.allSettled(this.config.targetNeighbors!.values().map(async (neighbor) => {
             const res = await this.createRemote(neighbor.getPeerDescriptor()).updateNeighbors(this.config.ownPeerDescriptor, neighborDescriptors)

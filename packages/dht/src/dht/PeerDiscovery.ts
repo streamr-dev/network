@@ -95,7 +95,7 @@ export class PeerDiscovery {
                 if (this.config.bucket.count() === 0) {
                     this.rejoinDht(entryPointDescriptor).catch(() => {})
                 } else {
-                    scheduleAtInterval(() => this.getClosestPeersFromBucket(), 60000, true, this.abortController.signal)
+                    await scheduleAtInterval(() => this.getClosestPeersFromBucket(), 60000, true, this.abortController.signal)
                 }
             }
         } catch (_e) {
