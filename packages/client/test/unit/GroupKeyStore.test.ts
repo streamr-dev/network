@@ -4,6 +4,7 @@ import { getGroupKeyStore } from '../test-utils/utils'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import range from 'lodash/range'
 import { EthereumAddress } from '@streamr/utils'
+import crypto from 'crypto'
 
 describe('GroupKeyStore', () => {
     
@@ -68,5 +69,28 @@ describe('GroupKeyStore', () => {
         for (const assignment of assignments) {
             expect(await store.get(assignment.key.id, assignment.publisherId)).toEqual(assignment.key)
         }
+    })
+
+    /**
+     * Legacy keys refer to group keys migrated from a previous version of the client where group keys were not tied
+     * to a specific publisherId, therefore any publisherId for a given legacy key id is considered a match.
+     */
+    it('supports "legacy" keys', async () => {
+        const groupKey = GroupKey.generate()
+        const internalPersistence = await store.getPersistence()
+        await internalPersistence.set(`LEGACY::${groupKey.id}`, Buffer.from(groupKey.data).toString('hex'))
+        expect(await store.get(groupKey.id, randomEthereumAddress())).toEqual(groupKey)
+    })
+
+    it('"normal" keys have precedence over "legacy" keys', async () => {
+        const keyId = GroupKey.generate().id
+        const legacyKey = new GroupKey(keyId, crypto.randomBytes(32))
+        const normalKey = new GroupKey(keyId, crypto.randomBytes(32))
+        const internalPersistence = await store.getPersistence()
+        await internalPersistence.set(`LEGACY::${legacyKey.id}`, Buffer.from(legacyKey.data).toString('hex'))
+        await internalPersistence.set(`${publisherId}::${normalKey.id}`, Buffer.from(normalKey.data).toString('hex'))
+
+        expect(await store.get(keyId, publisherId)).toEqual(normalKey)
+        expect(await store.get(keyId, randomEthereumAddress())).toEqual(legacyKey)
     })
 })
