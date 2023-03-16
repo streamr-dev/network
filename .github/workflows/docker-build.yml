@@ -34,7 +34,7 @@ jobs:
   build:
     runs-on: ${{ inputs.host_machine_platform }}
     steps:
-      - uses: actions/checkout@v3.3.0
+      - uses: actions/checkout@v3.4.0
       - name: Cache Docker layers
         uses: actions/cache@v3.3.1
         with:
