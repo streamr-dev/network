@@ -26,7 +26,8 @@ describe('Connection', () => {
             pingInterval: 5000,
             messageQueue: new MessageQueue<string>(TEST_CONFIG.webrtcSendBufferMaxMessageCount),
             deferredConnectionAttempt: new DeferredConnectionAttempt(),
-            portRange: TEST_CONFIG.webrtcPortRange
+            portRange: TEST_CONFIG.webrtcPortRange,
+            maxMessageSize: TEST_CONFIG.webrtcDatachannelMaxMessageSize
         }
 
         const connectionOpts2: ConstructorOptions = {
@@ -37,7 +38,8 @@ describe('Connection', () => {
             pingInterval: 5000,
             messageQueue: new MessageQueue<string>(TEST_CONFIG.webrtcSendBufferMaxMessageCount),
             deferredConnectionAttempt: new DeferredConnectionAttempt(),
-            portRange: TEST_CONFIG.webrtcPortRange
+            portRange: TEST_CONFIG.webrtcPortRange,
+            maxMessageSize: TEST_CONFIG.webrtcDatachannelMaxMessageSize
         }
 
         conn1 = new BrowserWebRtcConnection(connectionOpts1)
