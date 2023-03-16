@@ -3,7 +3,7 @@ import type { StreamRegistryV4 as StreamRegistryContract } from '../ethereumArti
 import StreamRegistryArtifact from '../ethereumArtifacts/StreamRegistryV4Abi.json'
 import { BigNumber } from '@ethersproject/bignumber'
 import { Provider } from '@ethersproject/providers'
-import { scoped, Lifecycle, inject, delay } from 'tsyringe'
+import { delay, inject, Lifecycle, scoped } from 'tsyringe'
 import { getStreamRegistryChainProviders, getStreamRegistryOverrides } from '../Ethereum'
 import { until } from '../utils/promises'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
@@ -14,9 +14,9 @@ import { StreamIDBuilder } from '../StreamIDBuilder'
 import { SynchronizedGraphQLClient } from '../utils/SynchronizedGraphQLClient'
 import { searchStreams as _searchStreams, SearchStreamsPermissionFilter } from './searchStreams'
 import { filter, map } from '../utils/GeneratorUtils'
-import { ObservableContract, waitForTx, queryAllReadonlyContracts } from '../utils/contract'
+import { ObservableContract, queryAllReadonlyContracts, waitForTx } from '../utils/contract'
 import {
-    StreamPermission,
+    ChainPermissions,
     convertChainPermissionsToStreamPermissions,
     convertStreamPermissionsToChainPermission,
     isPublicPermissionAssignment,
@@ -25,8 +25,8 @@ import {
     PermissionQuery,
     PermissionQueryResult,
     PUBLIC_PERMISSION_ADDRESS,
-    streamPermissionToSolidityType,
-    ChainPermissions
+    StreamPermission,
+    streamPermissionToSolidityType
 } from '../permission'
 import { StreamRegistryCached } from './StreamRegistryCached'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -36,6 +36,8 @@ import { LoggerFactory } from '../utils/LoggerFactory'
 import { StreamFactory } from './../StreamFactory'
 import { GraphQLQuery } from '../utils/GraphQLClient'
 import { collect } from '../utils/iterators'
+import { StreamSortOptions } from '../utils/StreamSortOptions'
+import { SortDirection } from '../utils/SortDirection'
 
 /*
  * On-chain registry of stream metadata and permissions.
@@ -209,10 +211,15 @@ export class StreamRegistry {
         return this.parseStream(streamId, metadata)
     }
 
-    searchStreams(term: string | undefined, permissionFilter: SearchStreamsPermissionFilter | undefined): AsyncIterable<Stream> {
+    searchStreams(
+        term: string | undefined,
+        permissionFilter: SearchStreamsPermissionFilter | undefined,
+        sort: { sortBy: StreamSortOptions, sortDirection: SortDirection }
+    ): AsyncIterable<Stream> {
         return _searchStreams(
             term,
             permissionFilter,
+            sort,
             this.graphQLClient,
             (id: StreamID, metadata: string) => this.parseStream(id, metadata),
             this.logger)

@@ -21,7 +21,7 @@ import { StreamrClientEventEmitter, StreamrClientEvents } from './events'
 import { ProxyDirection } from '@streamr/protocol'
 import { MessageStream, MessageListener } from './subscribe/MessageStream'
 import { Stream, StreamMetadata } from './Stream'
-import { SearchStreamsPermissionFilter } from './registry/searchStreams'
+import { DEFAULT_STREAM_SORT, SearchStreamsPermissionFilter } from './registry/searchStreams'
 import { PermissionAssignment, PermissionQuery } from './permission'
 import { MetricsPublisher } from './MetricsPublisher'
 import { PublishMetadata } from '../src/publish/Publisher'
@@ -35,6 +35,8 @@ import { convertStreamMessageToMessage, Message } from './Message'
 import { ErrorCode } from './HttpUtil'
 import omit from 'lodash/omit'
 import { StreamrClientError } from './StreamrClientError'
+import { StreamSortOptions } from './utils/StreamSortOptions'
+import { SortDirection } from './utils/SortDirection'
 
 /**
  * The main API used to interact with Streamr.
@@ -339,9 +341,14 @@ export class StreamrClient {
      *
      * @param term - a search term that should be part of the stream id of a result
      * @param permissionFilter - permissions that should be in effect for a result
+     * @param sort - sorting options, default is asc by stream id field
      */
-    searchStreams(term: string | undefined, permissionFilter: SearchStreamsPermissionFilter | undefined): AsyncIterable<Stream> {
-        return this.streamRegistry.searchStreams(term, permissionFilter)
+    searchStreams(
+        term: string | undefined,
+        permissionFilter: SearchStreamsPermissionFilter | undefined,
+        sort: { sortBy: StreamSortOptions, sortDirection: SortDirection } = DEFAULT_STREAM_SORT
+    ): AsyncIterable<Stream> {
+        return this.streamRegistry.searchStreams(term, permissionFilter, sort)
     }
 
     // --------------------------------------------------------------------------------------------

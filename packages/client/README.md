@@ -303,6 +303,19 @@ const streams = await streamr.searchStreams('foo', {
 })
 ```
 
+To set the sort order of the results, provide a sort settings object:
+You can search for streams by specifying a search term:
+```js
+const streams = await streamr.searchStreams('foo', undefined, {sortBy: StreamSortOptions.createdAt, sortDirection: SortDirection.desc})
+```
+Default sorting settings:
+```
+{
+  sortBy: StreamSortOptions.id, 
+  sortDirection: SortDirection.asc
+}
+```
+
 It is also possible to filter by specific permissions by using `allOf` and `anyOf` properties. The `allOf` property should be preferred over `anyOf` when possible due to better query performance.
 
 If you want to find the streams you can subscribe to:
