@@ -105,15 +105,16 @@ export const createMockMessage = async (
     const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(
         opts.streamPartId ?? opts.stream.getStreamParts()[0]
     )
+    const authentication = createPrivateKeyAuthentication(opts.publisher.privateKey, undefined as any)
     const factory = new MessageFactory({
-        authentication: createPrivateKeyAuthentication(opts.publisher.privateKey, undefined as any),
+        authentication,
         streamId,
         streamRegistry: createStreamRegistryCached({
             partitionCount: MAX_PARTITION_COUNT,
             isPublicStream: (opts.encryptionKey === undefined),
             isStreamPublisher: true
         }),
-        groupKeyQueue: await createGroupKeyQueue(toEthereumAddress(opts.publisher.address), opts.encryptionKey, opts.nextEncryptionKey)
+        groupKeyQueue: await createGroupKeyQueue(authentication, opts.encryptionKey, opts.nextEncryptionKey)
     })
     const DEFAULT_CONTENT = {}
     const plainContent = opts.content ?? DEFAULT_CONTENT
@@ -186,10 +187,10 @@ export const createGroupKeyManager = (groupKeyStore: GroupKeyStore = mock<GroupK
     )
 }
 
-export const createGroupKeyQueue = async (publisherId: EthereumAddress, current?: GroupKey, next?: GroupKey): Promise<GroupKeyQueue> => {
+export const createGroupKeyQueue = async (authentication: Authentication, current?: GroupKey, next?: GroupKey): Promise<GroupKeyQueue> => {
     const queue = new GroupKeyQueue(
-        publisherId,
         undefined as any,
+        authentication,
         createGroupKeyManager()
     )
     if (current !== undefined) {
