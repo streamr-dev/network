@@ -1,6 +1,6 @@
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { createTestStream } from '../test-utils/utils'
-import { range } from 'lodash'
+import range from 'lodash/range'
 import { CONFIG_TEST, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { wait, waitForCondition } from '@streamr/utils'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -82,7 +82,7 @@ describe('resend', () => {
         let stream: Stream
 
         beforeEach(async () => {
-            stream = await createTestStream(publisherClient, module, { partitions: 3  })
+            stream = await createTestStream(publisherClient, module, { partitions: 3 })
             await stream.grantPermissions({
                 permissions: [StreamPermission.SUBSCRIBE],
                 user: await resendClient.getAddress()

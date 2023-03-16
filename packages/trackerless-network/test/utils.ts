@@ -19,7 +19,7 @@ export const createMockRandomGraphNodeAndDhtNode = (
     entryPointDescriptor: PeerDescriptor,
     randomGraphId: string,
     simulator: Simulator
-): [ DhtNode, RandomGraphNode ]  => {
+): [ DhtNode, RandomGraphNode ] => {
     const mockCm = new SimulatorTransport(ownPeerDescriptor, simulator)
     const dhtNode = new DhtNode({
         transportLayer: mockCm,
@@ -27,7 +27,6 @@ export const createMockRandomGraphNodeAndDhtNode = (
         numberOfNodesPerKBucket: 4,
         entryPoints: [entryPointDescriptor]
     })
-
     const randomGraphNode = new RandomGraphNode({
         randomGraphId,
         P2PTransport: mockCm,
@@ -35,9 +34,7 @@ export const createMockRandomGraphNodeAndDhtNode = (
         connectionLocker: mockCm,
         ownPeerDescriptor
     })
-
     return [dhtNode, randomGraphNode]
-
 }
 
 export const createStreamMessage = (content: ContentMessage, streamId: string, publisherId: string): StreamMessage => {
@@ -46,7 +43,7 @@ export const createStreamMessage = (content: ContentMessage, streamId: string, p
         messageChainId: 'messageChain0',
         streamPartition: 0,
         sequenceNumber: 0,
-        timestamp: BigInt(Date.now()),
+        timestamp: Date.now(),
         publisherId
 
     }
@@ -56,6 +53,5 @@ export const createStreamMessage = (content: ContentMessage, streamId: string, p
         messageRef,
         signature: 'signature'
     }
-
     return msg
 }

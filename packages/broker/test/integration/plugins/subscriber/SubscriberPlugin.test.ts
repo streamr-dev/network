@@ -35,7 +35,6 @@ const createMockPlugin = async (streamrClient: StreamrClient) => {
     return new SubscriberPlugin({
         name: 'subscriber',
         streamrClient,
-        apiAuthenticator: undefined as any,
         brokerConfig
     })
 }

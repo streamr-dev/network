@@ -188,7 +188,7 @@ describe('GapFill', () => {
                         return undefined
                     }
 
-                    return publish(msg, client.getEntryPoints()[0])
+                    return publish(msg, client.getEntryPoints())
                 }
 
                 const published = await publishTestMessages(MAX_MESSAGES, {
@@ -239,7 +239,7 @@ describe('GapFill', () => {
                     return undefined
                 }
 
-                return publish(msg, client.getEntryPoints()[0])
+                return publish(msg, client.getEntryPoints())
             }
 
             const sub = await client.subscribe({
@@ -278,7 +278,7 @@ describe('GapFill', () => {
                     return undefined
                 }
 
-                return publish(msg, client.getEntryPoints()[0])
+                return publish(msg, client.getEntryPoints())
             }
 
             const published = await publishTestMessages(MAX_MESSAGES, {

@@ -4,15 +4,24 @@ option optimize_for = CODE_SIZE;
 package dht;
 
 import "google/protobuf/empty.proto";
+import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
 import "packages/proto-rpc/protos/ProtoRpc.proto";
 
 service DhtRpcService {
   rpc getClosestPeers (ClosestPeersRequest) returns (ClosestPeersResponse);
   rpc ping (PingRequest) returns (PingResponse);
-  rpc routeMessage (RouteMessageWrapper) returns (RouteMessageAck);
-  rpc findRecursively (RouteMessageWrapper) returns (RouteMessageAck);
-  rpc forwardMessage (RouteMessageWrapper) returns (RouteMessageAck);
   rpc leaveNotice (LeaveNotice) returns (google.protobuf.Empty);
+}
+
+service RoutingService {
+  rpc routeMessage (RouteMessageWrapper) returns (RouteMessageAck);
+  rpc forwardMessage (RouteMessageWrapper) returns (RouteMessageAck);
+  rpc findRecursively (RouteMessageWrapper) returns (RouteMessageAck);
+}
+
+service StoreService {
+  rpc storeData (StoreDataRequest) returns (StoreDataResponse);
 }
 
 service RecursiveFindSessionService {
@@ -38,6 +47,23 @@ service ConnectionLocker {
 
 // Used inside RpcMessage
 
+message StoreDataRequest {
+  bytes kademliaId = 1;
+  google.protobuf.Any data = 2;
+  uint32 ttl = 3;
+}
+
+message StoreDataResponse {
+  string error = 1;
+}
+
+message DataEntry {
+  PeerDescriptor storer = 1;
+  google.protobuf.Any data = 2;
+  google.protobuf.Timestamp storedAt = 3; 
+  uint32 ttl = 4;   // milliseconds
+}
+
 message ClosestPeersRequest {
   bytes kademliaId = 1;
   string requestId = 2;
@@ -60,8 +86,9 @@ message RecursiveFindRequest {
 
 message RecursiveFindReport {
   repeated PeerDescriptor nodes = 1;
-  optional bytes data = 2;
+  repeated DataEntry dataEntries = 2;
   optional bool noCloserNodesFound = 3;
+  repeated PeerDescriptor routingPath = 4;
 }
 
 message PingRequest {
@@ -160,17 +187,6 @@ message HandshakeResponse {
   optional string responseError = 4;
 }
 
-// protorpc.RpcMessage used as RpcMessage message type
-
-/*
-message RpcMessage {
-  map<string, string> header = 1;
-  bytes body = 2;
-  string requestId = 3;
-  optional RpcResponseError responseError = 4;
-}
-*/
-
 // Wraps all messages
 
 enum MessageType {
@@ -258,7 +274,7 @@ message UnlockRequest {
 
 message LockResponse {
   bool accepted = 1;
-  optional bool reason = 2; // if accepted = false
+  optional bool reason = 2;
 }
 
 message DisconnectNotice {

@@ -1,18 +1,30 @@
 import { RpcCommunicator, toProtoRpcClient } from "@streamr/proto-rpc"
-import { Logger } from "@streamr/utils"
+import { Logger, runAndWaitForEvents3 } from "@streamr/utils"
 import EventEmitter from "eventemitter3"
 import { v4 } from "uuid"
 import { PeerID } from "../helpers/PeerID"
-import { runAndWaitForEvents3 } from "../helpers/waitForEvent3"
 import { PeerDescriptor } from "../proto/packages/dht/protos/DhtRpc"
 import { DhtRpcServiceClient } from "../proto/packages/dht/protos/DhtRpc.client"
 import { SortedContactList } from "./contact/SortedContactList"
 import { DhtPeer } from "./DhtPeer"
+import { peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 
 const logger = new Logger(module)
 
 interface DiscoverySessionEvents {
     discoveryCompleted: () => void
+}
+
+interface DiscoverySessionConfig {
+    neighborList: SortedContactList<DhtPeer>
+    targetId: Uint8Array
+    ownPeerDescriptor: PeerDescriptor
+    serviceId: string
+    rpcCommunicator: RpcCommunicator
+    parallelism: number
+    noProgressLimit: number
+    newContactListener?: (dhtPeer: DhtPeer) => void
+    nodeName?: string
 }
 
 export class DiscoverySession {
@@ -23,61 +35,31 @@ export class DiscoverySession {
     private outgoingClosestPeersRequestsCounter = 0
     private noProgressCounter = 0
     private ongoingClosestPeersRequests: Set<string> = new Set()
-    private readonly neighborList: SortedContactList<DhtPeer>
-    private readonly targetId: Uint8Array
-    private readonly ownPeerDescriptor: PeerDescriptor
-    private readonly serviceId: string
-    private readonly rpcCommunicator: RpcCommunicator
-    private readonly parallelism: number
-    private readonly noProgressLimit: number
-    private readonly newContactListener?: (dhtPeer: DhtPeer) => void
-    private readonly nodeName?: string
+    private readonly config: DiscoverySessionConfig
+    private readonly ownPeerId: PeerID
 
-    constructor(
-        neighborList: SortedContactList<DhtPeer>,
-        targetId: Uint8Array,
-        ownPeerDescriptor: PeerDescriptor,
-        serviceId: string,
-        rpcCommunicator: RpcCommunicator,
-        parallelism: number,
-        noProgressLimit: number,
-        newContactListener?: (dhtPeer: DhtPeer) => void,
-        nodeName?: string
-    ) {
-        this.neighborList = neighborList
-        this.targetId = targetId
-        this.ownPeerDescriptor = ownPeerDescriptor
-        this.serviceId = serviceId
-        this.rpcCommunicator = rpcCommunicator
-        this.parallelism = parallelism
-        this.noProgressLimit = noProgressLimit
-        this.newContactListener = newContactListener
-        this.nodeName = nodeName
-    }
-
-    private get ownPeerId(): PeerID {
-        return PeerID.fromValue(this.ownPeerDescriptor.kademliaId)
+    constructor(config: DiscoverySessionConfig) {
+        this.config = config
+        this.ownPeerId = peerIdFromPeerDescriptor(config.ownPeerDescriptor)
     }
 
     private addNewContacts(contacts: PeerDescriptor[]): void {
         if (this.stopped) {
             return
         }
-
         contacts.forEach((contact) => {
             const dhtPeer = new DhtPeer(
-                this.ownPeerDescriptor,
+                this.config.ownPeerDescriptor,
                 contact,
-                toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
-                this.serviceId
+                toProtoRpcClient(new DhtRpcServiceClient(this.config.rpcCommunicator!.getRpcClientTransport())),
+                this.config.serviceId
             )
-
-            if (!dhtPeer.peerId.equals(this.ownPeerId!)) {
-                if (this.newContactListener) {
-                    this.newContactListener(dhtPeer)
+            if (!dhtPeer.getPeerId().equals(this.ownPeerId!)) {
+                if (this.config.newContactListener) {
+                    this.config.newContactListener(dhtPeer)
                 }
-                if (!this.neighborList.getContact(dhtPeer.peerId)) {
-                    this.neighborList!.addContact(dhtPeer)
+                if (!this.config.neighborList.getContact(dhtPeer.getPeerId())) {
+                    this.config.neighborList!.addContact(dhtPeer)
                 }
             }
         })
@@ -87,77 +69,74 @@ export class DiscoverySession {
         if (this.stopped) {
             return []
         }
-        logger.trace(`Getting closest peers from contact: ${contact.peerId.toKey()}`)
+        logger.trace(`Getting closest peers from contact: ${contact.getPeerId().toKey()}`)
         this.outgoingClosestPeersRequestsCounter++
-        this.neighborList!.setContacted(contact.peerId)
-        const returnedContacts = await contact.getClosestPeers(this.targetId)
-        this.neighborList!.setActive(contact.peerId)
+        this.config.neighborList!.setContacted(contact.getPeerId())
+        const returnedContacts = await contact.getClosestPeers(this.config.targetId)
+        this.config.neighborList!.setActive(contact.getPeerId())
         return returnedContacts
     }
 
     private onClosestPeersRequestSucceeded(peerId: PeerID, contacts: PeerDescriptor[]) {
-        if (this.ongoingClosestPeersRequests.has(peerId.toKey())) {
-            this.ongoingClosestPeersRequests.delete(peerId.toKey())
-
-            const oldClosestContact = this.neighborList!.getClosestContactId()
-
-            this.addNewContacts(contacts)
-
-            if (this.neighborList!.getClosestContactId().equals(oldClosestContact)) {
-                this.noProgressCounter++
-            } else {
-                this.noProgressCounter = 0
-            }
-
+        if (!this.ongoingClosestPeersRequests.has(peerId.toKey())) {
+            return
+        }
+        this.ongoingClosestPeersRequests.delete(peerId.toKey())
+        const oldClosestContact = this.config.neighborList!.getClosestContactId()
+        this.addNewContacts(contacts)
+        if (this.config.neighborList!.getClosestContactId().equals(oldClosestContact)) {
+            this.noProgressCounter++
+        } else {
+            this.noProgressCounter = 0
         }
     }
 
     private onClosestPeersRequestFailed(peer: DhtPeer, _exception: Error) {
-        if (this.ongoingClosestPeersRequests.has(peer.peerId.toKey())) {
-            this.ongoingClosestPeersRequests.delete(peer.peerId.toKey())
-            this.neighborList!.removeContact(peer.peerId)
+        if (!this.ongoingClosestPeersRequests.has(peer.getPeerId().toKey())) {
+            return
         }
+        this.ongoingClosestPeersRequests.delete(peer.getPeerId().toKey())
+        this.config.neighborList!.removeContact(peer.getPeerId())
     }
 
     private findMoreContacts(): void {
-        if (!this.stopped) {
-
-            if (this.neighborList!.getUncontactedContacts(this.parallelism).length < 1
-                || this.noProgressCounter >= this.noProgressLimit) {
-                this.emitter.emit('discoveryCompleted')
-                this.stopped = true
-                return
+        if (this.stopped) {
+            return
+        }
+        const uncontacted = this.config.neighborList!.getUncontactedContacts(this.config.parallelism)
+        if (uncontacted.length < 1 || this.noProgressCounter >= this.config.noProgressLimit) {
+            this.emitter.emit('discoveryCompleted')
+            this.stopped = true
+            return
+        }
+        for (const nextPeer of uncontacted) {
+            if (this.ongoingClosestPeersRequests.size >= this.config.parallelism) {
+                break
             }
-
-            const uncontacted = this.neighborList!.getUncontactedContacts(this.parallelism)
-            while (this.ongoingClosestPeersRequests.size < this.parallelism && uncontacted.length > 0) {
-                const nextPeer = uncontacted.shift()
-                this.ongoingClosestPeersRequests.add(nextPeer!.peerId.toKey())
-                // eslint-disable-next-line promise/catch-or-return
-                this.getClosestPeersFromContact(nextPeer!)
-                    .then((contacts) => this.onClosestPeersRequestSucceeded(nextPeer!.peerId, contacts))
-                    .catch((err) => {
-                        this.onClosestPeersRequestFailed(nextPeer!, err)
-                    })
-                    .finally(() => {
-                        this.outgoingClosestPeersRequestsCounter--
-
-                        this.findMoreContacts()
-
-                    })
-            }
+            this.ongoingClosestPeersRequests.add(nextPeer!.getPeerId().toKey())
+            // eslint-disable-next-line promise/catch-or-return
+            this.getClosestPeersFromContact(nextPeer!)
+                .then((contacts) => this.onClosestPeersRequestSucceeded(nextPeer!.getPeerId(), contacts))
+                .catch((err) => this.onClosestPeersRequestFailed(nextPeer!, err))
+                .finally(() => {
+                    this.outgoingClosestPeersRequestsCounter--
+                    this.findMoreContacts()
+                })
         }
     }
 
     public async findClosestNodes(timeout: number): Promise<SortedContactList<DhtPeer>> {
-        if (this.neighborList!.getUncontactedContacts(this.parallelism).length < 1) {
-            logger.trace('IL ' + this.nodeName + 'getUncontactedContacts length was 0 in beginning of discovery, this.neighborList.size: ' +
-                this.neighborList.getSize())
+        if (this.config.neighborList!.getUncontactedContacts(this.config.parallelism).length < 1) {
+            logger.trace('getUncontactedContacts length was 0 in beginning of discovery, this.neighborList.size: '
+                + this.config.neighborList.getSize())
+            return this.config.neighborList
         }
-        await runAndWaitForEvents3<DiscoverySessionEvents>([() => { this.findMoreContacts() }], [
-            [this.emitter, 'discoveryCompleted']], timeout)
-
-        return this.neighborList
+        await runAndWaitForEvents3<DiscoverySessionEvents>(
+            [this.findMoreContacts.bind(this)],
+            [[this.emitter, 'discoveryCompleted']],
+            timeout
+        )
+        return this.config.neighborList
     }
 
     public stop(): void {

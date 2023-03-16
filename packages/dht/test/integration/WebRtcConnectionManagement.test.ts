@@ -118,14 +118,6 @@ describe('WebRTC Connection Management', () => {
     })
 
     it('Connects and disconnects webrtc connections', async () => {
-
-        /*
-        const rpcMessage: RpcMessage = {
-            header: {},
-            body: Any.pack(Uint8Array(10), ),
-            requestId: v4()
-        }*/
-
         const msg: Message = {
             serviceId: serviceId,
             messageType: MessageType.RPC,
@@ -152,21 +144,18 @@ describe('WebRTC Connection Management', () => {
 
         const connectedPromise2 = new Promise<void>((resolve, _reject) => {
             manager2.on('connected', (_peerDescriptor: PeerDescriptor) => {
-                //expect(message.messageType).toBe(MessageType.RPC)
                 resolve()
             })
         })
 
         const disconnectedPromise1 = new Promise<void>((resolve, _reject) => {
             manager1.on('disconnected', (_peerDescriptor: PeerDescriptor) => {
-                //expect(message.messageType).toBe(MessageType.RPC)
                 resolve()
             })
         })
 
         const disconnectedPromise2 = new Promise<void>((resolve, _reject) => {
             manager2.on('disconnected', (_peerDescriptor: PeerDescriptor) => {
-                //expect(message.messageType).toBe(MessageType.RPC)
                 resolve()
             })
         })
@@ -177,21 +166,13 @@ describe('WebRTC Connection Management', () => {
         await Promise.all([dataPromise, connectedPromise1, connectedPromise2])
 
         // @ts-expect-error private field
-        manager1.closeConnection(PeerID.fromValue(peerDescriptor2.kademliaId).toKey())
+        manager1.closeConnection(peerDescriptor2)
 
         await Promise.all([disconnectedPromise1, disconnectedPromise2])
 
     }, 20000)
 
     it('Disconnects webrtcconnection while being connected', async () => {
-
-        /*
-        const rpcMessage: RpcMessage = {
-            header: {},
-            body: new Uint8Array(10),
-            requestId: v4()
-        }
-        */
         const msg: Message = {
             serviceId: serviceId,
             messageType: MessageType.RPC,
@@ -204,7 +185,6 @@ describe('WebRTC Connection Management', () => {
 
         const disconnectedPromise1 = new Promise<void>((resolve, _reject) => {
             manager1.on('disconnected', (_peerDescriptor: PeerDescriptor) => {
-                //expect(message.messageType).toBe(MessageType.RPC)
                 resolve()
             })
         })
@@ -215,7 +195,7 @@ describe('WebRTC Connection Management', () => {
         })
 
         // @ts-expect-error private field
-        manager1.closeConnection(PeerID.fromValue(peerDescriptor2.kademliaId).toKey())
+        manager1.closeConnection(peerDescriptor2)
 
         await disconnectedPromise1
 

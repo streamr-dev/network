@@ -7,7 +7,8 @@ import {
     toStreamID,
     toStreamPartID
 } from '@streamr/protocol'
-import { range, shuffle } from 'lodash'
+import range from 'lodash/range'
+import shuffle from 'lodash/shuffle'
 import { wait } from '@streamr/utils'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { createRandomAuthentication } from '../test-utils/utils'

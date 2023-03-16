@@ -1,6 +1,6 @@
 import fs from 'fs'
 import path from 'path'
-import { cloneDeep } from 'lodash'
+import cloneDeep from 'lodash/cloneDeep'
 import { ConfigFile, getDefaultFile, getLegacyDefaultFile } from './config'
 
 export const CURRENT_CONFIGURATION_VERSION = 2
@@ -147,8 +147,12 @@ export const readConfigAndMigrateIfNeeded = (fileName: string | undefined): Conf
         const legacyTargetFile = getLegacyDefaultFile()
         fileName = [defaultTargetFile, legacyTargetFile].find((file) => fs.existsSync(file))
         if (fileName === undefined) {
-            // eslint-disable-next-line max-len
-            throw new Error(`Config file not found in the default location. You can run "streamr-broker-init" to generate a config file interactively, or specify the config file as argument: "streamr-broker path-to-config/file.json"`)
+            /*
+             * No config file. Some config options are maybe set with enviroment variables
+             * (see overrideConfigToEnvVarsIfGiven function), and others just
+             * use the default values (see `default` definitions in config.schema.json)
+             */
+            return {}
         }
         if (fileName === legacyTargetFile) {
             /*

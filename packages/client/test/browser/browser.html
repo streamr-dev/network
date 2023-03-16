@@ -233,7 +233,7 @@
         subscriberAuth
     })
     const publisher = new StreamrClient({
-        ...StreamrClient.ConfigTest,
+        ...StreamrClient.CONFIG_TEST,
         id: 'publisher',
         logLevel: 'trace',
         auth: publisherAuth,
@@ -255,7 +255,7 @@
         }
     })
     const subscriber = new StreamrClient({
-        ...StreamrClient.ConfigTest,
+        ...StreamrClient.CONFIG_TEST,
         id: 'subscriber',
         logLevel: 'trace',
         auth: subscriberAuth,

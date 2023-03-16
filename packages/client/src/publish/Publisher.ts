@@ -6,12 +6,12 @@ import { StreamIDBuilder } from '../StreamIDBuilder'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { MessageFactory } from './MessageFactory'
-import { isString } from 'lodash'
+import isString from 'lodash/isString'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
-import { GroupKeyStore } from '../encryption/GroupKeyStore'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { Mapping } from '../utils/Mapping'
 import { StreamrClientError } from '../StreamrClientError'
+import { GroupKeyManager } from '../encryption/GroupKeyManager'
 
 export interface PublishMetadata {
     timestamp?: string | number | Date
@@ -46,7 +46,7 @@ export class Publisher {
         streamIdBuilder: StreamIDBuilder,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         streamRegistryCached: StreamRegistryCached,
-        groupKeyStore: GroupKeyStore,
+        groupKeyManager: GroupKeyManager,
         node: NetworkNodeFacade
     ) {
         this.streamIdBuilder = streamIdBuilder
@@ -57,7 +57,7 @@ export class Publisher {
             return this.createMessageFactory(streamId)
         })
         this.groupKeyQueues = new Mapping(async (streamId: StreamID) => {
-            return new GroupKeyQueue(streamId, groupKeyStore)
+            return new GroupKeyQueue(streamId, groupKeyManager)
         })
     }
 

@@ -25,11 +25,11 @@ export interface NetworkNodeStub {
     getNodeId: () => string
     addMessageListener: (listener: (msg: StreamMessage) => void) => void
     removeMessageListener: (listener: (msg: StreamMessage) => void) => void
-    subscribe: (streamPartId: StreamPartID, entryPointDescriptor: PeerDescriptor) => void
-    subscribeAndWaitForJoin: (streamPart: StreamPartID, entryPointDescriptor: PeerDescriptor, timeout?: number) => Promise<number>
-    waitForJoinAndPublish: (msg: StreamMessage, entryPointDescriptor: PeerDescriptor, timeout?: number) => Promise<number>
+    subscribe: (streamPartId: StreamPartID, entryPointDescriptors: PeerDescriptor[]) => void
+    subscribeAndWaitForJoin: (streamPart: StreamPartID, entryPointDescriptors: PeerDescriptor[], timeout?: number) => Promise<number>
+    waitForJoinAndPublish: (msg: StreamMessage, entryPointDescriptors: PeerDescriptor[], timeout?: number) => Promise<number>
     unsubscribe: (streamPartId: StreamPartID) => void
-    publish: (streamMessage: StreamMessage, entryPointDescriptor: PeerDescriptor) => void
+    publish: (streamMessage: StreamMessage, entryPointDescriptors: PeerDescriptor[]) => void
     getStreamParts: () => StreamPartID[]
     getNeighbors: () => string[]
     getNeighborsForStreamPart: (streamPartId: StreamPartID) => ReadonlyArray<string>
@@ -37,15 +37,20 @@ export interface NetworkNodeStub {
     setExtraMetadata: (metadata: Record<string, unknown>) => void
     getMetricsContext: () => MetricsContext
     hasStreamPart: (streamPartId: StreamPartID) => boolean
+    /** @internal */
     hasProxyConnection: (streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection) => boolean
     /** @internal */
     start: () => Promise<void>
     /** @internal */
     stop: () => Promise<void>
-    /** @internal */
-    openProxyConnection: (streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection, userId: string) => Promise<void>
-    /** @internal */
-    closeProxyConnection: (streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection) => Promise<void>
+    // /** @internal */
+    // setProxies: (
+    //     streamPartId: StreamPartID,
+    //     nodeIds: string[],
+    //     direction: ProxyDirection,
+    //     getUserId: () => Promise<string>,
+    //     connectionCount?: number
+    // ) => Promise<void>
 }
 
 export interface Events {
@@ -214,30 +219,34 @@ export class NetworkNodeFacade {
         // Will call cachedNode.publish immediately if cachedNode is set.
         // Otherwise will wait for node to start.
         this.destroySignal.assertNotDestroyed()
-        const entryPoint = this.getEntryPoints()[0]
+        const entryPoints = this.getEntryPoints()
         if (this.isStarting()) {
             // use .then instead of async/await so
             // this.cachedNode.publish call can be sync
             return this.startNodeTask().then((node) => {
-                return node.publish(streamMessage, entryPoint)
+                return node.publish(streamMessage, entryPoints)
             })
         }
-        return this.cachedNode!.publish(streamMessage, entryPoint)
+        return this.cachedNode!.publish(streamMessage, entryPoints)
     }
-
-    async openProxyConnection(streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection): Promise<void> {
-        if (this.isStarting()) {
-            await this.startNodeTask()
-        }
-        await this.cachedNode!.openProxyConnection(streamPartId, nodeId, direction, (await this.authentication.getAddress()))
-    }
-
-    async closeProxyConnection(streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection): Promise<void> {
-        if (this.isStarting()) {
-            return
-        }
-        await this.cachedNode!.closeProxyConnection(streamPartId, nodeId, direction)
-    }
+    //
+    // async setProxies(
+    //     streamPartId: StreamPartID,
+    //     nodeIds: string[],
+    //     direction: ProxyDirection,
+    //     connectionCount?: number
+    // ): Promise<void> {
+    //     if (this.isStarting()) {
+    //         await this.startNodeTask()
+    //     }
+    //     await this.cachedNode!.setProxies(
+    //         streamPartId,
+    //         nodeIds,
+    //         direction,
+    //         () => this.authentication.getAddress(),
+    //         connectionCount
+    //     )
+    // }
 
     private isStarting(): boolean {
         return !this.cachedNode || !this.startNodeComplete

@@ -123,7 +123,7 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
             } catch (err) {
                 this.logger.warn(err)
             }
-            if (this.peerConnection.localDescription)  {
+            if (this.peerConnection.localDescription) {
                 this.emitLocalDescription(this.peerConnection.localDescription.sdp, this.peerConnection.localDescription.type )
             }
         }

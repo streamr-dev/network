@@ -3,7 +3,7 @@ import * as net from 'net'
 import util from 'util'
 import { ISubscription, IPublishPacket } from 'mqtt-packet'
 import { Logger } from '@streamr/utils'
-import { ApiAuthenticator } from '../../apiAuthenticator'
+import { ApiAuthentication, isValidAuthentication } from '../../apiAuthentication'
 
 const logger = new Logger(module)
 
@@ -24,10 +24,10 @@ export class MqttServer {
     private server?: net.Server
     private listener?: MqttServerListener
 
-    constructor(port: number, apiAuthenticator: ApiAuthenticator) {
+    constructor(port: number, apiAuthentication?: ApiAuthentication) {
         this.port = port
         this.aedes = aedes.Server({
-            authenticate: MqttServer.createAuthenicationHandler(apiAuthenticator)
+            authenticate: MqttServer.createAuthenicationHandler(apiAuthentication)
         })
         this.aedes.on('publish', (packet: IPublishPacket, client: aedes.Client) => {
             if (client !== null) {  // is null if the this server sent the message
@@ -78,14 +78,14 @@ export class MqttServer {
         })
     }
 
-    private static createAuthenicationHandler(apiAuthenticator: ApiAuthenticator): aedes.AuthenticateHandler {
+    private static createAuthenicationHandler(apiAuthentication?: ApiAuthentication): aedes.AuthenticateHandler {
         return (
             _client: aedes.Client,
             _username: Readonly<string> | undefined,
             password: Readonly<Buffer> | undefined,
             done: (error: aedes.AuthenticateError | null, success: boolean | null) => void
         ) => {
-            if (apiAuthenticator.isValidAuthentication(password?.toString())) {
+            if (isValidAuthentication(password?.toString(), apiAuthentication)) {
                 done(null, true)
             } else {
                 const error: aedes.AuthenticateError = Object.assign(new Error(), { 

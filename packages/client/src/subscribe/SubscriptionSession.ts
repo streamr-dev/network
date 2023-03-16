@@ -10,13 +10,11 @@ import { Subscription } from './Subscription'
 import { createSubscribePipeline } from './subscribePipeline'
 import { NetworkNodeFacade, NetworkNodeStub } from '../NetworkNodeFacade'
 import { Resends } from './Resends'
-import { GroupKeyStore } from '../encryption/GroupKeyStore'
-import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
-import { StreamrClientEventEmitter } from '../events'
 import { DestroySignal } from '../DestroySignal'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { LoggerFactory } from '../utils/LoggerFactory'
+import { GroupKeyManager } from '../encryption/GroupKeyManager'
 
 /**
  * Manages adding & removing subscriptions to node as needed.
@@ -36,11 +34,9 @@ export class SubscriptionSession {
     constructor(
         streamPartId: StreamPartID,
         resends: Resends,
-        groupKeyStore: GroupKeyStore,
-        subscriberKeyExchange: SubscriberKeyExchange,
+        groupKeyManager: GroupKeyManager,
         streamRegistryCached: StreamRegistryCached,
         node: NetworkNodeFacade,
-        streamrClientEventEmitter: StreamrClientEventEmitter,
         destroySignal: DestroySignal,
         loggerFactory: LoggerFactory,
         @inject(ConfigInjectionToken) config: StrictStreamrClientConfig
@@ -52,10 +48,8 @@ export class SubscriptionSession {
         this.pipeline = createSubscribePipeline({
             streamPartId,
             resends,
-            groupKeyStore,
-            subscriberKeyExchange,
+            groupKeyManager,
             streamRegistryCached,
-            streamrClientEventEmitter,
             loggerFactory,
             destroySignal,
             config: config
@@ -115,7 +109,7 @@ export class SubscriptionSession {
     private async subscribe(): Promise<NetworkNodeStub> {
         const node = await this.node.getNode()
         node.addMessageListener(this.onMessageInput)
-        node.subscribe(this.streamPartId, this.node.getEntryPoints()[0])
+        node.subscribe(this.streamPartId, this.node.getEntryPoints())
         return node
     }
 

@@ -1,4 +1,5 @@
-import { withTimeout, Logger } from '@streamr/utils'
+import { withTimeout } from './withTimeout'
+import { Logger } from './Logger'
 import EventEmitter from 'eventemitter3'
 
 const logger = new Logger(module)
@@ -40,7 +41,7 @@ export function waitForEvent3<T extends EventEmitter.ValidEventTypes>(
     return withTimeout(
         task,
         timeout,
-        'waitForEvent'
+        'waitForEvent3'
     ).finally(() => {
         cancel()
     })
@@ -119,7 +120,7 @@ const runAndWait = async <T extends EventEmitter.ValidEventTypes>(
 }
 
 /**
- * Run functions and wait for events to be emitted within timeout. Returns a promise created with Promise.all() 
+ * Run functions and wait for events to be emitted within timeout. Returns a promise created with Promise.all()
  * and waitForEvent() calls. Calls the functions after creating the promise.
  *
  * @param operations function(s) to call

@@ -1,5 +1,5 @@
 import { ReadyState, AbstractWsConnection } from '../connection/ws/AbstractWsConnection'
-import  NodeClientWsEndpoint from './NodeClientWsEndpoint_simulator'
+import NodeClientWsEndpoint from './NodeClientWsEndpoint_simulator'
 import { PeerInfo } from '../connection/PeerInfo'
 import { DisconnectionCode, DisconnectionReason } from '../connection/ws/AbstractWsEndpoint'
 //import { Logger } from '../helpers/Logger'

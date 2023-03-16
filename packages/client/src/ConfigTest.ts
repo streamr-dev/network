@@ -69,7 +69,4 @@ export const CONFIG_TEST: StreamrClientConfig = {
     metrics: false
 }
 
-/** @deprecated Use CONFIG_TEST */
-export const ConfigTest = CONFIG_TEST
-
 export const DOCKER_DEV_STORAGE_NODE = toEthereumAddress('0xde1112f631486CfC759A50196853011528bC5FA0')

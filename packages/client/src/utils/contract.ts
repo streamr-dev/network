@@ -3,6 +3,8 @@ import EventEmitter from 'eventemitter3'
 import { NameDirectory } from '@streamr/trackerless-network'
 import pLimit from 'p-limit'
 import { LoggerFactory } from './LoggerFactory'
+import { tryInSequence } from './promises'
+import shuffle from 'lodash/shuffle'
 
 export interface ContractEvent {
     onMethodExecute: (methodName: string) => void
@@ -135,4 +137,15 @@ export const createDecoratedContract = <T extends Contract>(
         result[key] = methods[key] !== undefined ? methods[key] : contract[key]
     }
     return result
+}
+
+export const queryAllReadonlyContracts = <T, C>(
+    call: (contract: C) => Promise<T>,
+    contracts: C[]
+): Promise<T> => {
+    return tryInSequence(
+        shuffle(contracts).map((contract: C) => {
+            return () => call(contract)
+        })
+    )
 }

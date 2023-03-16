@@ -1,7 +1,14 @@
-import { DhtNode, PeerDescriptor, PeerID, Simulator, SimulatorTransport, NodeType } from '@streamr/dht'
-import { StreamrNode, Event as NodeEvent } from '../../src/logic/StreamrNode'
+import {
+    DhtNode,
+    PeerDescriptor,
+    Simulator,
+    SimulatorTransport,
+    NodeType,
+    keyFromPeerDescriptor
+} from '@streamr/dht'
+import { StreamrNode, Events } from '../../src/logic/StreamrNode'
 import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { waitForEvent, waitForCondition } from '@streamr/utils'
+import { waitForEvent3, waitForCondition } from '@streamr/utils'
 import { createStreamMessage } from '../utils'
 
 describe('StreamrNode', () => {
@@ -29,7 +36,7 @@ describe('StreamrNode', () => {
     const msg = createStreamMessage(
         content,
         STREAM_ID,
-        PeerID.fromValue(peer2.kademliaId).toKey()
+        keyFromPeerDescriptor(peer2)
     )
 
     afterEach(async () => {
@@ -74,8 +81,8 @@ describe('StreamrNode', () => {
     })
 
     it('Joining stream', async () => {
-        await node1.joinStream(STREAM_ID, peer1)
-        await node2.joinStream(STREAM_ID, peer1)
+        await node1.joinStream(STREAM_ID, [peer1])
+        await node2.joinStream(STREAM_ID, [peer1])
         await waitForCondition(() => node1.getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length === 1)
         await waitForCondition(() => node2.getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length === 1)
         expect(node1.getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length).toEqual(1)
@@ -83,52 +90,46 @@ describe('StreamrNode', () => {
     })
 
     it('Publishing after joining and waiting for neighbors', async () => {
-        node1.subscribeToStream(STREAM_ID, peer1)
-        await node2.joinStream(STREAM_ID, peer1)
+        node1.subscribeToStream(STREAM_ID, [peer1])
+        await node2.joinStream(STREAM_ID, [peer1])
         await waitForCondition(() => node1.getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length === 1)
         await waitForCondition(() => node2.getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length === 1)
-
         await Promise.all([
-            waitForEvent(node1, NodeEvent.NEW_MESSAGE),
-            node2.publishToStream(STREAM_ID, peer1, msg)
+            waitForEvent3<Events>(node1, 'newMessage'),
+            node2.publishToStream(STREAM_ID, [peer1], msg)
         ])
     })
 
     it('multi-stream pub/sub', async () => {
         const stream2 = 'test2'
-
-        await node1.joinStream(STREAM_ID, peer1)
-        await node1.joinStream(stream2, peer1)
-
-        await node2.joinStream(STREAM_ID, peer1)
-        await node2.joinStream(stream2, peer1)
-        node1.subscribeToStream(STREAM_ID, peer1)
-        node2.subscribeToStream(stream2, peer1)
-
+        await node1.joinStream(STREAM_ID, [peer1])
+        await node1.joinStream(stream2, [peer1])
+        await node2.joinStream(STREAM_ID, [peer1])
+        await node2.joinStream(stream2, [peer1])
+        node1.subscribeToStream(STREAM_ID, [peer1])
+        node2.subscribeToStream(stream2, [peer1])
         await Promise.all([
             waitForCondition(() => node1.getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length === 1),
             waitForCondition(() => node2.getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length === 1),
             waitForCondition(() => node1.getStream(stream2)!.layer2.getTargetNeighborStringIds().length === 1),
             waitForCondition(() => node2.getStream(stream2)!.layer2.getTargetNeighborStringIds().length === 1)
         ])
-
         const msg2 = createStreamMessage(
             content,
             stream2,
-            PeerID.fromValue(peer1.kademliaId).toKey()
+            keyFromPeerDescriptor(peer1)
         )
-
         await Promise.all([
-            waitForEvent(node1, NodeEvent.NEW_MESSAGE),
-            waitForEvent(node2, NodeEvent.NEW_MESSAGE),
-            node1.publishToStream(stream2, peer1, msg2),
-            node2.publishToStream(STREAM_ID, peer1, msg)
+            waitForEvent3<Events>(node1, 'newMessage'),
+            waitForEvent3<Events>(node2, 'newMessage'),
+            node1.publishToStream(stream2, [peer1], msg2),
+            node2.publishToStream(STREAM_ID, [peer1], msg)
         ])
     })
 
     it('leaving streams', async () => {
-        await node1.joinStream(STREAM_ID, peer1)
-        await node2.joinStream(STREAM_ID, peer1)
+        await node1.joinStream(STREAM_ID, [peer1])
+        await node2.joinStream(STREAM_ID, [peer1])
         await Promise.all([
             waitForCondition(() => node1.getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length === 1),
             waitForCondition(() => node2.getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length === 1)
@@ -141,7 +142,7 @@ describe('StreamrNode', () => {
     // it('Publishing and subscribing to streams without join awaits', async () => {
     //     node1.subscribeToStream(STREAM_ID, peer1)
     //     await Promise.all([
-    //         waitForEvent(node1, NodeEvent.NEW_MESSAGE),
+    //         waitForEvent3<Events>(node1, 'newMessage'),
     //         node2.publishToStream(STREAM_ID, peer1, msg)
     //     ])
     // })

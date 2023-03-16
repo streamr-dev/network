@@ -112,13 +112,13 @@ export class Simulator implements IWsSimulator {
 
     //public async webRtcDisconnect(fromId: string, toId: string): Promise<void> 
     public webRtcDisconnect(fromId: string, toId: string): void {
-        if  (this.webRtcConnections.hasOwnProperty(toId) && this.webRtcConnections[toId].hasOwnProperty(fromId)) {
+        if (this.webRtcConnections.hasOwnProperty(toId) && this.webRtcConnections[toId].hasOwnProperty(fromId)) {
             this.webRtcConnections[toId][fromId].handleIncomingDisconnection()
         }
     }
 
     public webRtcConnect(fromId: string, toId: string): void {
-        if  (this.webRtcConnections.hasOwnProperty(toId) && this.webRtcConnections[toId].hasOwnProperty(fromId)) {
+        if (this.webRtcConnections.hasOwnProperty(toId) && this.webRtcConnections[toId].hasOwnProperty(fromId)) {
             this.webRtcConnections[toId][fromId].handleIncomingConnection()
         }
     } 

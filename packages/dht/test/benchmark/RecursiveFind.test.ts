@@ -5,7 +5,7 @@ import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/Dh
 import { createMockConnectionDhtNode } from '../utils'
 import { execSync } from 'child_process'
 import fs from 'fs'
-import { PeerID } from '../../src/exports'
+import { PeerID, peerIdFromPeerDescriptor } from '../../src/exports'
 import { Logger, wait } from '@streamr/utils'
 import { debugVars } from '../../src/helpers/debugHelpers'
 
@@ -78,10 +78,10 @@ describe('Recursive find correctness', () => {
 
         logger.info('starting recursive find')
         const kademliaIdToFind = Uint8Array.from(dhtIds[9].data)
-        const results = await nodes[159].startRcursiveFindNode(kademliaIdToFind)
+        const results = await nodes[159].startRecursiveFind(kademliaIdToFind)
         logger.info('recursive find over')
-        expect(results.length).toBeGreaterThanOrEqual(5)
-        expect(PeerID.fromValue(kademliaIdToFind).equals(PeerID.fromValue(results[0].kademliaId)))
+        expect(results.closestNodes).toBeGreaterThanOrEqual(5)
+        expect(PeerID.fromValue(kademliaIdToFind).equals(peerIdFromPeerDescriptor(results.closestNodes[0])))
 
     }, 180000)
 })

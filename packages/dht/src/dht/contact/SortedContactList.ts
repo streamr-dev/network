@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/prefer-for-of */
-
 import KBucket from 'k-bucket'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import EventEmitter from 'eventemitter3'
@@ -42,28 +40,25 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
     }
 
     public addContact(contact: Contact): void {
-        if (this.excludedPeerIDs !== undefined) {
-            for (let i = 0; i < this.excludedPeerIDs.length; i++) {
-                if (contact.peerId.equals(this.excludedPeerIDs[i])) {
-                    return
-                }
-            }
-        }
-        
-        if ((!this.allowOwnPeerId && this.ownId.equals(contact.peerId)) ||
-            (this.peerIdDistanceLimit !== undefined && this.compareIds(this.peerIdDistanceLimit, contact.peerId) < 0)) {
+        if (this.excludedPeerIDs
+            && this.excludedPeerIDs.some((peerId) => contact.getPeerId().equals(peerId))) {
             return
         }
-        if (!this.contactsById.has(contact.peerId.toKey())) {
+        
+        if ((!this.allowOwnPeerId && this.ownId.equals(contact.getPeerId())) ||
+            (this.peerIdDistanceLimit !== undefined && this.compareIds(this.peerIdDistanceLimit, contact.getPeerId()) < 0)) {
+            return
+        }
+        if (!this.contactsById.has(contact.getPeerId().toKey())) {
             if (this.contactIds.length < this.maxSize) {
-                this.contactsById.set(contact.peerId.toKey(), new ContactState(contact))
-                this.contactIds.push(contact.peerId)
+                this.contactsById.set(contact.getPeerId().toKey(), new ContactState(contact))
+                this.contactIds.push(contact.getPeerId())
                 this.contactIds.sort(this.compareIds)
-            } else if (this.compareIds(this.contactIds[this.maxSize - 1], contact.peerId) > 0) {
+            } else if (this.compareIds(this.contactIds[this.maxSize - 1], contact.getPeerId()) > 0) {
                 const removed = this.contactIds.pop()
                 this.contactsById.delete(removed!.toKey())
-                this.contactsById.set(contact.peerId.toKey(), new ContactState(contact))
-                this.contactIds.push(contact.peerId)
+                this.contactsById.set(contact.getPeerId().toKey(), new ContactState(contact))
+                this.contactIds.push(contact.getPeerId())
                 this.contactIds.sort(this.compareIds)
                 this.emit(
                     'contactRemoved',

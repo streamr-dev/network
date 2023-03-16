@@ -35,10 +35,6 @@ export interface RpcCommunicatorConfig {
     rpcRequestTimeout?: number
 }
 
-//interface IRpcIo {
-//    handleIncomingMessage(message: Uint8Array, callContext?: ProtoCallContext): Promise<void>
-//}
-
 class OngoingRequest {
 
     private deferredPromises: ResultParts
@@ -195,7 +191,6 @@ export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvents> {
         if (deferredPromises && (!callContext || !callContext.notification)) {
             this.registerRequest(rpcMessage.requestId, deferredPromises, requestOptions!.timeout as number)
         }
-        //const msg = RpcMessage.toBinary(rpcMessage)
 
         logger.trace(`onOutGoingMessage, messageId: ${rpcMessage.requestId}`)
 

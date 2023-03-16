@@ -7,8 +7,9 @@ import { Broker } from '../../src/broker'
 import { startBroker, createClient, createTestStream } from '../utils'
 import { fastPrivateKey } from '@streamr/test-utils'
 import { wait, waitForEvent, waitForCondition } from '@streamr/utils'
-import { range, sample } from 'lodash'
 import { Wallet } from 'ethers'
+import sample from 'lodash/sample'
+import range from 'lodash/range'
 
 const MESSAGE_COUNT = 120
 const mqttPort = 13611
@@ -143,7 +144,7 @@ describe('multiple publisher plugins', () => {
         await broker?.stop()
     })
 
-    it('subscribe by StreamrClient', async () => {
+    it.only('subscribe by StreamrClient', async () => {
 
         const receivedMessages: Queue<unknown> = new Queue()
         const subscriber = await createClient(fastPrivateKey(), {
@@ -180,7 +181,8 @@ describe('multiple publisher plugins', () => {
 
         const receivedMessages: Queue<object> = new Queue()
         const subscriber = new WebSocket(`ws://localhost:${wsPort}/streams/${encodeURIComponent(streamId)}/subscribe`)
-        subscriber.on('message', (message: string) => {
+        subscriber.on('message', (data: WebSocket.RawData) => {
+            const message = data.toString()
             receivedMessages.push(JSON.parse(message))
         })
 

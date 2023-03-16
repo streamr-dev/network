@@ -2,7 +2,7 @@ import 'reflect-metadata'
 
 import { Wallet } from '@ethersproject/wallet'
 import { wait } from '@streamr/utils'
-import { range } from 'lodash'
+import range from 'lodash/range'
 import { StreamMessageType } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
 import { createPrivateKeyAuthentication } from '../../src/Authentication'
@@ -74,7 +74,7 @@ describe('parallel key exchange', () => {
                     timestamp: Date.now()
                 })
                 const node = await publisher.client!.getNode()
-                node.publish(msg, publisher.client!.getEntryPoints()[0])
+                node.publish(msg, publisher.client!.getEntryPoints())
                 await wait(10)
             }
         }

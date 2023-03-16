@@ -141,7 +141,7 @@ All the above packages should be released at the same time.
 
 1. `git checkout main`
 2. `git pull`
-3. `./update-versions.sh <SEMVER>` E.g. `./update-versions 7.1.1`
+3. `./update-versions.sh <SEMVER>` E.g. `./update-versions.sh 7.1.1`
 4. `npm run clean && npm install && npm run build && npm run versions`
 5. Look at the output of the above and ensure all versions are linked properly (i.e. no yellow or red markers)
 6. Update client and cli-tool CHANGELOG.md
@@ -175,11 +175,10 @@ for the time being.
 git checkout main
 cd packages/broker
 npm version <SEMVER_OPTION>
-git add package.json
+git add package.json package-lock.json
 git commit -m "release(broker): vX.Y.Z"
 git tag broker/vX.Y.Z
-git push origin
-git push origin broker/vX.Y.Z
+git push --atomic origin main broker/vX.Y.Z
 
 npm run build
 npm publish
@@ -187,9 +186,29 @@ npm publish
 
 #### Docker release
 
-1. Go to https://github.com/streamr-dev/network/actions/workflows/release.yml
-2. From "run workflow" dropdown:
-   - select `main` branch
-   - click "Run workflow"
-3. You can manually cancel other queued workflows (triggered by possible previous commits to `main`)
-4. After ~1 hour a new release is ready, annotated with `latest` tag: https://hub.docker.com/r/streamr/broker-node/tags
+After pushing the broker tag, GitHub Actions will build and publish the Docker image automatically if
+tests pass.
+
+##### Tag `latest`
+
+GitHub Actions will not update the `latest` tag. This must be done manually. Keep in mind that `latest` should
+always refer to the latest _stable_ version.
+
+To update `latest` do the following.
+
+1. Find out the sha256 digests of both the amd64 and arm64 builds for a `vX.Y.Z` tag. This can be
+done via command-line `docker buildx imagetools inspect streamr/broker-node:vX.Y.Z` or you can check
+this from docker hub website under https://hub.docker.com/r/streamr/broker-node/tags.
+2. Then we shall create the manifest by running the below. Remember to replace `<SHA-AMD64>` and `<SHA-ARM64>`
+with real values.
+```
+docker manifest create streamr/broker-node:latest \
+    --amend streamr/broker-node@sha256:<SHA-AMD64> \
+    --amend streamr/broker-node@sha256:<SHA-ARM64>
+```
+3. Then we publish the manifest with
+```
+docker manifest push streamr/broker-node:latest
+```
+4. Then we are ready. It would be wise to double-check this by checking
+https://hub.docker.com/r/streamr/broker-node/tags.

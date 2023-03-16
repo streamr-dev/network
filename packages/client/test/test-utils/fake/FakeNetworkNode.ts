@@ -1,5 +1,5 @@
 import { Lifecycle, scoped } from 'tsyringe'
-import { pull } from 'lodash'
+import pull from 'lodash/pull'
 import { ProxyDirection, StreamMessage, StreamPartID } from '@streamr/protocol'
 import { MetricsContext } from '@streamr/utils'
 import { NetworkNodeFactory, NetworkNodeStub } from '../../../src/NetworkNodeFacade'
@@ -40,12 +40,12 @@ export class FakeNetworkNode implements NetworkNodeStub {
         this.subscriptions.delete(streamPartId)
     }
 
-    async subscribeAndWaitForJoin(streamPartId: StreamPartID, _entryPointDescriptor: PeerDescriptor, _timeout?: number): Promise<number> {
+    async subscribeAndWaitForJoin(streamPartId: StreamPartID, _entryPointDescriptors: PeerDescriptor[], _timeout?: number): Promise<number> {
         this.subscriptions.add(streamPartId)
         return this.getNeighborsForStreamPart(streamPartId).length
     }
 
-    async waitForJoinAndPublish(msg: StreamMessage, _entryPointDescriptor: PeerDescriptor, _timeout?: number): Promise<number> {
+    async waitForJoinAndPublish(msg: StreamMessage, _entryPointDescriptors: PeerDescriptor[], _timeout?: number): Promise<number> {
         const streamPartID = msg.getStreamPartID()
         this.subscriptions.add(streamPartID)
         this.publish(msg)
@@ -110,12 +110,13 @@ export class FakeNetworkNode implements NetworkNodeStub {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async openProxyConnection(_streamPartId: StreamPartID, _nodeId: string, _direction: ProxyDirection): Promise<void> {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    async closeProxyConnection(_streamPartId: StreamPartID, _nodeId: string, _direction: ProxyDirection): Promise<void> {
+    async setProxies(
+        _streamPartId: StreamPartID,
+        _nodeIds: string[],
+        _direction: ProxyDirection,
+        _getUserId: () => Promise<string>,
+        _targetCount?: number
+    ): Promise<void> {
         throw new Error('not implemented')
     }
 }

@@ -1,5 +1,4 @@
 import 'reflect-metadata'
-import type { BigNumber } from '@ethersproject/bignumber'
 import type { Overrides } from '@ethersproject/contracts'
 import cloneDeep from 'lodash/cloneDeep'
 import Ajv, { ErrorObject } from 'ajv'
@@ -64,8 +63,6 @@ export interface EthereumNetworkConfig {
     chainId: number
     overrides?: Overrides
     highGasPriceStrategy?: boolean
-    /** @deprecated */
-    gasPriceStrategy?: (estimatedGasPrice: BigNumber) => BigNumber
 }
 
 /**
@@ -89,6 +86,26 @@ export interface StreamrClientConfig {
     gapFillTimeout?: number
 
     network?: NetworkConfig
+    /**
+     * Message encryption/decryption
+     */
+    encryption?: {
+        /**
+         * Enable experimental Lit Protocol key exchange.
+         *
+         * When enabled encryption key storing and fetching will be primarily done through the Lit Protocol and
+         * secondarily through the standard Streamr key-exchange system.
+         */
+        litProtocolEnabled?: boolean
+        /**
+         * Enable log messages of the Lit Protocol library to be printed to stdout.
+         */
+        litProtocolLogging?: boolean
+        // TODO keyRequestTimeout and maxKeyRequestsPerSecond config options could be applied
+        // to lit protocol key requests (both encryption and decryption?)
+        keyRequestTimeout?: number
+        maxKeyRequestsPerSecond?: number
+    }
 
     contracts?: {
         streamRegistryChainAddress?: string
@@ -101,11 +118,6 @@ export interface StreamrClientConfig {
         /** Some TheGraph instance, that indexes the streamr registries */
         theGraphUrl?: string
         maxConcurrentCalls?: number
-    }
-
-    decryption?: {
-        keyRequestTimeout?: number
-        maxKeyRequestsPerSecond?: number
     }
 
     metrics?: {
@@ -142,192 +154,12 @@ export interface StreamrClientConfig {
 export type StrictStreamrClientConfig = MarkOptional<Required<StreamrClientConfig>, 'auth' | 'metrics'> & {
     network: Exclude<Required<StreamrClientConfig['network']>, undefined>
     contracts: Exclude<Required<StreamrClientConfig['contracts']>, undefined>
-    decryption: Exclude<Required<StreamrClientConfig['decryption']>, undefined>
+    encryption: Exclude<Required<StreamrClientConfig['encryption']>, undefined>
     cache: Exclude<Required<StreamrClientConfig['cache']>, undefined>
     _timeouts: Exclude<DeepRequired<StreamrClientConfig['_timeouts']>, undefined>
 }
 
 export const STREAMR_STORAGE_NODE_GERMANY = '0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916'
-
-/** @deprecated */
-export const STREAM_CLIENT_DEFAULTS: 
-    Omit<StrictStreamrClientConfig, 'id' | 'auth' | 'network'> & { network: Omit<StrictStreamrClientConfig['network'], 'id'> }
-= {
-    logLevel: 'info',
-
-    orderMessages: true,
-    gapFill: true,
-    maxGapRequests: 5,
-    retryResendAfter: 5000,
-    gapFillTimeout: 5000,
-
-    network: {
-        layer0: {
-            // acceptProxyConnections: false,
-            webrtcDatachannelBufferThresholdLow: 2 ** 15,
-            webrtcDatachannelBufferThresholdHigh: 2 ** 17,
-            newWebrtcConnectionTimeout: 15 * 1000,
-            webrtcDisallowPrivateAddresses: true,
-            iceServers: [
-                {
-                    url: 'stun:stun.streamr.network',
-                    port: 5349
-                },
-                {
-                    url: 'turn:turn.streamr.network',
-                    port: 5349,
-                    username: 'BrubeckTurn1',
-                    password: 'MIlbgtMw4nhpmbgqRrht1Q==',
-                },
-                {
-                    url: 'turn:turn.streamr.network',
-                    port: 5349,
-                    username: 'BrubeckTurn1',
-                    password: 'MIlbgtMw4nhpmbgqRrht1Q==',
-                    tcp: true
-                }
-            ],
-            entryPoints: [{
-                kademliaId: 'productionEntryPoint1',
-                type: 0,
-                websocket: {
-                    ip: '127.0.0.1',
-                    port: 40401
-                }
-            }]
-        },
-        networkNode: {}
-    },
-
-    // For ethers.js provider params, see https://docs.ethers.io/ethers.js/v5-beta/api-providers.html#provider
-    contracts: {
-        streamRegistryChainAddress: '0x0D483E10612F327FC11965Fc82E90dC19b141641',
-        streamStorageRegistryChainAddress: '0xe8e2660CeDf2a59C917a5ED05B72df4146b58399',
-        storageNodeRegistryChainAddress: '0x080F34fec2bc33928999Ea9e39ADc798bEF3E0d6',
-        mainChainRPCs: {
-            name: 'ethereum',
-            chainId: 1,
-            rpcs: [
-                {
-                    url: 'https://eth-rpc.gateway.pokt.network',
-                    timeout: 120 * 1000
-                },
-                {
-                    url: 'https://ethereum.publicnode.com',
-                    timeout: 120 * 1000
-                },
-                {
-                    url: 'https://rpc.ankr.com/eth',
-                    timeout: 120 * 1000
-                },
-            ]
-        },
-        streamRegistryChainRPCs: {
-            name: 'polygon',
-            chainId: 137,
-            rpcs: [{
-                url: 'https://polygon-rpc.com',
-                timeout: 120 * 1000
-            }, {
-                url: 'https://poly-rpc.gateway.pokt.network/',
-                timeout: 120 * 1000
-            }]
-        },
-        ethereumNetworks: {
-            polygon: {
-                chainId: 137,
-                highGasPriceStrategy: true
-            }
-        },
-        theGraphUrl: 'https://api.thegraph.com/subgraphs/name/streamr-dev/streams',
-        maxConcurrentCalls: 10    
-    },
-
-    decryption: {
-        keyRequestTimeout: 30 * 1000,
-        maxKeyRequestsPerSecond: 20
-    },
-
-    cache: {
-        maxSize: 10000,
-        maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    },
-
-    _timeouts: {
-        theGraph: {
-            timeout: 60 * 1000,
-            retryInterval: 1000
-        },
-        storageNode: {
-            timeout: 30 * 1000,
-            retryInterval: 1000
-        },
-        jsonRpc: {
-            timeout: 30 * 1000,
-            retryInterval: 1000
-        },
-        httpFetchTimeout: 30 * 1000
-    }
-}
-
-// export const createStrictConfig = (inputOptions: StreamrClientConfig = {}): StrictStreamrClientConfig => {
-//     validateConfig(inputOptions)
-//     const opts = cloneDeep(inputOptions)
-//     const defaults = cloneDeep(STREAM_CLIENT_DEFAULTS)
-//
-//     const getMetricsConfig = () => {
-//         if (opts.metrics === true) {
-//             return defaults.metrics
-//         } else if (opts.metrics === false) {
-//             return {
-//                 ...defaults.metrics,
-//                 periods: []
-//             }
-//         } else if (opts.metrics !== undefined) {
-//             return {
-//                 ...defaults.metrics,
-//                 ...opts.metrics
-//             }
-//         } else {
-//             const isEthereumAuth = ((opts.auth as ProviderAuthConfig)?.ethereum !== undefined)
-//             return {
-//                 ...defaults.metrics,
-//                 periods: isEthereumAuth ? [] : defaults.metrics.periods
-//             }
-//         }
-//     }
-//
-//     const options: StrictStreamrClientConfig = {
-//         id: generateClientId(),
-//         ...defaults,
-//         ...opts,
-//         network: {
-//             ...merge(defaults.network || {}, opts.network),
-//             trackers: opts.network?.trackers ?? defaults.network.trackers,
-//             entryPoints: opts.network?.entryPoints ?? []
-//         },
-//         contracts: { ...defaults.contracts, ...opts.contracts },
-//         decryption: merge(defaults.decryption || {}, opts.decryption),
-//         metrics: getMetricsConfig(),
-//         cache: {
-//             ...defaults.cache,
-//             ...opts.cache,
-//         }
-//         // NOTE: sidechain and storageNode settings are not merged with the defaults
-//     }
-//
-//     const privateKey = (options.auth as PrivateKeyAuthConfig)?.privateKey
-//     if (privateKey !== undefined) {
-//         if (typeof privateKey === 'string' && !privateKey.startsWith('0x')) {
-//             (options.auth as PrivateKeyAuthConfig).privateKey = `0x${privateKey}`
-//         }
-//     }
-//
-//     if (options.network.iceServers === undefined) {
-//         options.network.iceServers = STREAMR_ICE_SERVERS
-//     }
-//
-//     return options
 
 export const createStrictConfig = (input: StreamrClientConfig = {}): StrictStreamrClientConfig => {
     // TODO is it good to cloneDeep the input object as it may have object references (e.g. auth.ethereum)?

@@ -1,5 +1,5 @@
 import { container, DependencyContainer } from 'tsyringe'
-import { merge } from 'lodash'
+import merge from 'lodash/merge'
 import { fastPrivateKey, fastWallet } from '@streamr/test-utils'
 import { StreamrClientConfig } from '../../../src/Config'
 import { StorageNodeRegistry } from '../../../src/registry/StorageNodeRegistry'

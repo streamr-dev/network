@@ -2,7 +2,7 @@ import 'reflect-metadata'
 
 import { once } from 'events'
 import express from 'express'
-import { range } from 'lodash'
+import range from 'lodash/range'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
 import { HttpUtil } from '../../src/HttpUtil'

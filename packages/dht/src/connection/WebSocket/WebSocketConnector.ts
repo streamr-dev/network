@@ -1,6 +1,5 @@
 import 'setimmediate'
 
-import { PeerID } from '../../helpers/PeerID'
 import { ClientWebSocket } from './ClientWebSocket'
 import { IConnection, ConnectionType } from '../IConnection'
 import { ITransport } from '../../transport/ITransport'
@@ -24,6 +23,7 @@ import { PeerIDKey } from '../../helpers/PeerID'
 import { ServerWebSocket } from './ServerWebSocket'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Handshaker } from '../Handshaker'
+import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 
 const logger = new Logger(module)
 
@@ -69,13 +69,11 @@ export class WebSocketConnector implements IWebSocketConnectorService {
             rpcRequestTimeout: 15000
         })
 
-        this.requestConnection = this.requestConnection.bind(this)
-
         this.rpcCommunicator.registerRpcMethod(
             WebSocketConnectionRequest,
             WebSocketConnectionResponse,
             'requestConnection',
-            this.requestConnection
+            (req: WebSocketConnectionRequest, context) => this.requestConnection(req, context)
         )
     }
 
@@ -135,7 +133,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         if (this.stopped) {
             logger.info('connect called on closed websocketconnector')
         }
-        const peerKey = PeerID.fromValue(targetPeerDescriptor.kademliaId).toKey()
+        const peerKey = keyFromPeerDescriptor(targetPeerDescriptor)
         const existingConnection = this.connectingConnections.get(peerKey)
         if (existingConnection) {
             return existingConnection
@@ -144,9 +142,6 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         if (this.ownPeerDescriptor!.websocket && !targetPeerDescriptor.websocket) {
             return this.requestConnectionFromPeer(this.ownPeerDescriptor!, targetPeerDescriptor)
         } else {
-            if (this.ownPeerDescriptor!.nodeName === 'entrypoint') {
-                logger.info(`pranklin ${targetPeerDescriptor.nodeName}`)
-            }
             const socket = new ClientWebSocket()
 
             const address = 'ws://' + targetPeerDescriptor.websocket!.ip + ':' +
@@ -156,7 +151,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
                 ConnectionType.WEBSOCKET_CLIENT, socket, undefined)
             managedConnection.setPeerDescriptor(targetPeerDescriptor!)
 
-            this.connectingConnections.set(PeerID.fromValue(targetPeerDescriptor.kademliaId).toKey(), managedConnection)
+            this.connectingConnections.set(keyFromPeerDescriptor(targetPeerDescriptor), managedConnection)
 
             const delFunc = () => {
                 if (this.connectingConnections.has(peerKey)) {
@@ -183,16 +178,15 @@ export class WebSocketConnector implements IWebSocketConnectorService {
             remoteConnector.requestConnection(ownPeerDescriptor, ownPeerDescriptor.websocket!.ip, ownPeerDescriptor.websocket!.port)
         })
         const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, this.protocolVersion, ConnectionType.WEBSOCKET_SERVER)
-        managedConnection.on('disconnected', () => this.ongoingConnectRequests.delete(PeerID.fromValue(targetPeerDescriptor.kademliaId).toKey()))
+        managedConnection.on('disconnected', () => this.ongoingConnectRequests.delete(keyFromPeerDescriptor(targetPeerDescriptor)))
         managedConnection.setPeerDescriptor(targetPeerDescriptor)
-        this.ongoingConnectRequests.set(PeerID.fromValue(targetPeerDescriptor.kademliaId).toKey(), managedConnection)
+        this.ongoingConnectRequests.set(keyFromPeerDescriptor(targetPeerDescriptor), managedConnection)
         return managedConnection
     }
 
-    private onServerSocketHandshakeRequest = (peerDescriptor: PeerDescriptor,
-        serverWebSocket: IConnection) => {
+    private onServerSocketHandshakeRequest = (peerDescriptor: PeerDescriptor, serverWebSocket: IConnection) => {
 
-        const peerId = PeerID.fromValue(peerDescriptor.kademliaId)
+        const peerId = peerIdFromPeerDescriptor(peerDescriptor)
         
         if (this.ongoingConnectRequests.has(peerId.toKey())) {
             this.ongoingConnectRequests.get(peerId.toKey())?.attachImplementation(serverWebSocket, peerDescriptor)

@@ -1,12 +1,12 @@
 import StreamrClient, {
-    ConfigTest,
+    CONFIG_TEST,
     Stream,
     StreamPermission,
     StreamMetadata,
     StreamrClientConfig,
     JsonPeerDescriptor
 } from 'streamr-client'
-import _ from 'lodash'
+import padEnd from 'lodash/padEnd'
 import { Wallet } from 'ethers'
 import { Broker, createBroker } from '../src/broker'
 import { Config } from '../src/config/config'
@@ -76,7 +76,7 @@ export const formConfig = ({
 
     return {
         client: {
-            ...ConfigTest,
+            ...CONFIG_TEST,
             auth: {
                 privateKey
             },
@@ -105,7 +105,7 @@ export const startBroker = async (testConfig: TestConfig): Promise<Broker> => {
 }
 
 export const createEthereumAddress = (id: number): EthereumAddress => {
-    return toEthereumAddress('0x' + _.padEnd(String(id), 40, '0'))
+    return toEthereumAddress('0x' + padEnd(String(id), 40, '0'))
 }
 
 export const createClient = async (
@@ -113,11 +113,11 @@ export const createClient = async (
     clientOptions?: StreamrClientConfig
 ): Promise<StreamrClient> => {
     const networkOptions = {
-        ...ConfigTest?.network,
+        ...CONFIG_TEST?.network,
         ...clientOptions?.network
     }
     return new StreamrClient({
-        ...ConfigTest,
+        ...CONFIG_TEST,
         auth: {
             privateKey
         },
@@ -164,7 +164,7 @@ export async function startStorageNode(
     extraPlugins = {}
 ): Promise<Broker> {
     const client = new StreamrClient({
-        ...ConfigTest,
+        ...CONFIG_TEST,
         auth: {
             privateKey: storageNodePrivateKey
         }
