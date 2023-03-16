@@ -31,9 +31,9 @@ describe('NeighborFinder', () => {
         const mockDoFindNeighbors = async (excluded: string[]) => {
             const target = nearbyContactPool.getRandom(excluded)
             if (Math.random() < 0.5) {
-                targetNeighbors.add(target)
+                targetNeighbors.add(target!)
             } else {
-                excluded.push(keyFromPeerDescriptor(target.getPeerDescriptor()))
+                excluded.push(keyFromPeerDescriptor(target!.getPeerDescriptor()))
             }
             return excluded
         }
