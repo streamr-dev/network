@@ -1,5 +1,4 @@
 import { StreamID } from '@streamr/protocol'
-import { EthereumAddress } from '@streamr/utils'
 import { GroupKey } from '../encryption/GroupKey'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'
 import { Authentication } from '../Authentication'
