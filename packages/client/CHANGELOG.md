@@ -20,6 +20,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 
+## 8.1.0 - 2023-03-20
+
+### Added
+
+- Added optional sorting parameter in the `searchStreams` method
+
+
 ## [8.0.3] - 2023-03-08
 
 ### Fixed 
