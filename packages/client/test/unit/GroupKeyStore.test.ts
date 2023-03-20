@@ -5,6 +5,7 @@ import { randomEthereumAddress } from '@streamr/test-utils'
 import range from 'lodash/range'
 import { EthereumAddress } from '@streamr/utils'
 import crypto from 'crypto'
+import { toStreamID } from '@streamr/protocol'
 
 describe('GroupKeyStore', () => {
     
@@ -92,5 +93,15 @@ describe('GroupKeyStore', () => {
 
         expect(await store.get(keyId, publisherId)).toEqual(normalKey)
         expect(await store.get(keyId, randomEthereumAddress())).toEqual(legacyKey)
+    })
+
+    describe('publisherKeyId', () => {
+        const streamId = toStreamID('/foobar', randomEthereumAddress())
+        it('add and get key', async () => {
+            await store.addPublisherKeyId('keyId', publisherId, streamId)
+            expect(await store.getPublisherKeyId(publisherId, streamId)).toEqual('keyId')
+            expect(await store.getPublisherKeyId(randomEthereumAddress(), streamId)).toBeUndefined()
+            expect(await store.getPublisherKeyId(publisherId, toStreamID('foobar'))).toBeUndefined()
+        })
     })
 })
