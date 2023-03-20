@@ -192,7 +192,7 @@ export const createGroupKeyManager = (
 }
 
 export const createGroupKeyQueue = async (authentication: Authentication, current?: GroupKey, next?: GroupKey): Promise<GroupKeyQueue> => {
-    const queue = new GroupKeyQueue(
+    const queue = await GroupKeyQueue.createInstance(
         undefined as any,
         authentication,
         createGroupKeyManager(undefined, authentication)

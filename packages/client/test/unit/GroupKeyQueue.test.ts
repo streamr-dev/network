@@ -18,11 +18,11 @@ describe('GroupKeyQueue', () => {
     let queue: GroupKeyQueue
     let groupKeyManager: GroupKeyManager
 
-    beforeEach(() => {
+    beforeEach(async () => {
         groupKeyStore = mock<GroupKeyStore>()
         authentication = createRandomAuthentication()
         groupKeyManager = createGroupKeyManager(groupKeyStore, authentication)
-        queue = new GroupKeyQueue(streamId, authentication, groupKeyManager)
+        queue = await GroupKeyQueue.createInstance(streamId, authentication, groupKeyManager)
     })
 
     it('can rotate and use', async () => {

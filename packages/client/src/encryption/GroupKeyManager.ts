@@ -71,8 +71,17 @@ export class GroupKeyManager {
         return groupKeys[0] as GroupKey
     }
 
-    async storeKey(groupKey: GroupKey | undefined, publisherId: EthereumAddress, streamId: StreamID): Promise<GroupKey> { // TODO: name
+    // TODO: unit test?
+    async fetchLatestPublisherKey(streamId: StreamID, publisherId: EthereumAddress): Promise<GroupKey | undefined> {
         if (publisherId !== (await this.authentication.getAddress())) {
+            throw new Error('storeKey: fetching latest publisher keys for other publishers not supported.')
+        }
+        const keyId = await this.groupKeyStore.getPublisherKeyId(publisherId, streamId)
+        return keyId !== undefined ? this.groupKeyStore.get(keyId, publisherId) : undefined
+    }
+
+    async storeKey(groupKey: GroupKey | undefined, publisherId: EthereumAddress, streamId: StreamID): Promise<GroupKey> { // TODO: name
+        if (publisherId !== (await this.authentication.getAddress())) { // TODO: unit test?
             throw new Error('storeKey: storing keys for other publishers not supported.')
         }
         if (groupKey === undefined) {
