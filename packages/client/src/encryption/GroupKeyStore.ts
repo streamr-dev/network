@@ -9,6 +9,7 @@ import ServerPersistence from '../utils/persistence/ServerPersistence'
 import { pOnce } from '../utils/promises'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { Logger } from '@streamr/utils'
+import { StreamID } from '@streamr/protocol'
 
 /**
  * @privateRemarks
@@ -47,6 +48,10 @@ function formKey(keyId: string, publisherId: string): string {
     return `${publisherId}::${keyId}`
 }
 
+function formKey2(publisherId: EthereumAddress, streamId: StreamID): string {
+    return `${publisherId}::${streamId}`
+}
+
 /**
  * TODO: rename to e.g. `LocalGroupKeyStore` for clarity
  */
@@ -58,6 +63,7 @@ export class GroupKeyStore {
     private readonly logger: Logger
     private readonly ensureInitialized: () => Promise<void>
     private persistence: Persistence<string, string> | undefined
+    private publisherKeyIdPersistence: Persistence<string, string> | undefined
 
     constructor(
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
@@ -72,6 +78,12 @@ export class GroupKeyStore {
             this.persistence = new ServerPersistence({
                 loggerFactory,
                 tableName: 'EncryptionKeys',
+                clientId,
+                migrationsPath: join(__dirname, 'migrations')
+            })
+            this.publisherKeyIdPersistence = new ServerPersistence({
+                loggerFactory,
+                tableName: 'PublisherKeyIds',
                 clientId,
                 migrationsPath: join(__dirname, 'migrations')
             })
@@ -104,6 +116,18 @@ export class GroupKeyStore {
         this.logger.debug('add key %s', key.id)
         await this.persistence!.set(formKey(key.id, publisherId), Buffer.from(key.data).toString('hex'))
         this.eventEmitter.emit('addGroupKey', key)
+    }
+
+    async addPublisherKeyId(keyId: string, publisherId: EthereumAddress, streamId: StreamID): Promise<void> {
+        await this.ensureInitialized()
+        this.logger.debug('add publisherKeyId %s', keyId)
+        await this.publisherKeyIdPersistence!.set(formKey2(publisherId, streamId), keyId)
+    }
+
+    async getPublisherKeyId(publisherId: EthereumAddress, streamId: StreamID): Promise<string | undefined> {
+        await this.ensureInitialized()
+        const value = await this.publisherKeyIdPersistence!.get(formKey2(publisherId, streamId))
+        return value
     }
 
     /** Should be used by tests only. */
