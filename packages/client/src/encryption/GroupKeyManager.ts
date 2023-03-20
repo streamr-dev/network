@@ -10,6 +10,7 @@ import { StreamrClientEventEmitter } from '../events'
 import { DestroySignal } from '../DestroySignal'
 import crypto from 'crypto'
 import { uuid } from '../utils/uuid'
+import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 
 @scoped(Lifecycle.ContainerScoped)
 export class GroupKeyManager {
@@ -18,6 +19,7 @@ export class GroupKeyManager {
     private readonly subscriberKeyExchange: SubscriberKeyExchange
     private readonly eventEmitter: StreamrClientEventEmitter
     private readonly destroySignal: DestroySignal
+    private readonly authentication: Authentication
     private readonly config: Pick<StrictStreamrClientConfig, 'encryption'>
 
     constructor(
@@ -26,6 +28,7 @@ export class GroupKeyManager {
         subscriberKeyExchange: SubscriberKeyExchange,
         eventEmitter: StreamrClientEventEmitter,
         destroySignal: DestroySignal,
+        @inject(AuthenticationInjectionToken) authentication: Authentication,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'encryption'>
     ) {
         this.groupKeyStore = groupKeyStore
@@ -33,6 +36,7 @@ export class GroupKeyManager {
         this.subscriberKeyExchange = subscriberKeyExchange
         this.eventEmitter = eventEmitter
         this.destroySignal = destroySignal
+        this.authentication = authentication
         this.config = config
     }
 
@@ -68,6 +72,9 @@ export class GroupKeyManager {
     }
 
     async storeKey(groupKey: GroupKey | undefined, publisherId: EthereumAddress, streamId: StreamID): Promise<GroupKey> { // TODO: name
+        if (publisherId !== (await this.authentication.getAddress())) {
+            throw new Error('storeKey: storing keys for other publishers not supported.')
+        }
         if (groupKey === undefined) {
             const keyData = crypto.randomBytes(32)
             // 1st try lit-protocol, if a key cannot be generated and stored, then generate group key locally
@@ -79,6 +86,7 @@ export class GroupKeyManager {
             }
         }
         await this.groupKeyStore.add(groupKey, publisherId)
+        await this.groupKeyStore.addPublisherKeyId(groupKey.id, publisherId, streamId)
         return groupKey
     }
 
