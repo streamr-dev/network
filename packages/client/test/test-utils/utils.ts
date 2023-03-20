@@ -24,6 +24,7 @@ import { mock } from 'jest-mock-extended'
 import { LitProtocolFacade } from '../../src/encryption/LitProtocolFacade'
 import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
 import { DestroySignal } from '../../src/DestroySignal'
+import { PersistenceManager } from '../../src/PersistenceManager'
 
 const logger = new Logger(module)
 
@@ -125,11 +126,17 @@ export const createMockMessage = async (
 }
 
 export const getGroupKeyStore = (userAddress: EthereumAddress): GroupKeyStore => {
+    const authentication = {
+        getAddress: () => userAddress
+    } as any
+    const loggerFactory = mockLoggerFactory()
     return new GroupKeyStore(
-        mockLoggerFactory(),
-        {
-            getAddress: () => userAddress
-        } as any,
+        new PersistenceManager(
+            authentication,
+            new DestroySignal(),
+            loggerFactory
+        ),
+        loggerFactory,
         new StreamrClientEventEmitter()
     )
 }

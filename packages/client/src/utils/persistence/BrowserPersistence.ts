@@ -1,19 +1,25 @@
 import { get, set, createStore, UseStore } from 'idb-keyval'
-import { Persistence } from './Persistence'
+import { PersistenceContext } from './PersistenceContext'
+import { Mapping } from '../Mapping'
 
-export default class BrowserPersistence<K extends string, V extends string> implements Persistence<K, V> {
-    private readonly store: UseStore
+// TODO remove generics?
+
+export default class BrowserPersistence<K extends string, V extends string> implements PersistenceContext<K, V> {
+    
+    private readonly stores: Mapping<[string], UseStore>
 
     constructor({ clientId }: { clientId: string }) {
-        this.store = createStore(`streamr-client::${clientId}`, 'GroupKeys')
+        this.stores = new Mapping(async (namespace: string) => {
+            return createStore(`streamr-client::${clientId}`, namespace)
+        })
     }
 
-    async get(key: K): Promise<V | undefined> {
-        return get(key, this.store)
+    async get(key: K, namespace: string): Promise<V | undefined> {
+        return get(key, await this.stores.get(namespace))
     }
 
-    async set(key: K, value: V): Promise<void> {
-        await set(key, value, this.store)
+    async set(key: K, value: V, namespace: string): Promise<void> {
+        await set(key, value, await this.stores.get(namespace))
     }
 
     // eslint-disable-next-line class-methods-use-this

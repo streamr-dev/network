@@ -6,6 +6,9 @@ import range from 'lodash/range'
 import { EthereumAddress } from '@streamr/utils'
 import crypto from 'crypto'
 import { toStreamID } from '@streamr/protocol'
+import { PersistenceManager } from '../../src/PersistenceManager'
+import { DestroySignal } from '../../src/DestroySignal'
+import { mockLoggerFactory } from '../test-utils/utils'
 
 describe('GroupKeyStore', () => {
     
@@ -13,20 +16,27 @@ describe('GroupKeyStore', () => {
     let publisherId: EthereumAddress
     let store: GroupKeyStore
     let store2: GroupKeyStore
+    let persistenceManager: PersistenceManager
 
     beforeEach(() => {
         clientId = randomEthereumAddress()
         publisherId = randomEthereumAddress()
         store = getGroupKeyStore(clientId)
+        persistenceManager = new PersistenceManager(
+            {
+                getAddress: async () => clientId
+            } as any, 
+            new DestroySignal(),
+            mockLoggerFactory()
+        )
     })
 
     afterEach(async () => {
-        await store?.stop()
-        await store2?.stop()
         // @ts-expect-error doesn't want us to unassign, but it's ok
         store = undefined // eslint-disable-line require-atomic-updates
         // @ts-expect-error doesn't want us to unassign, but it's ok
         store2 = undefined // eslint-disable-line require-atomic-updates
+        // TODO trigger destroySignal in persistenceManager
     })
 
     it('can get and set', async () => {
@@ -78,7 +88,7 @@ describe('GroupKeyStore', () => {
      */
     it('supports "legacy" keys', async () => {
         const groupKey = GroupKey.generate()
-        const internalPersistence = await store.getPersistence()
+        const internalPersistence = await persistenceManager.getPersistence('EncryptionKeys')
         await internalPersistence.set(`LEGACY::${groupKey.id}`, Buffer.from(groupKey.data).toString('hex'))
         expect(await store.get(groupKey.id, randomEthereumAddress())).toEqual(groupKey)
     })
@@ -87,7 +97,7 @@ describe('GroupKeyStore', () => {
         const keyId = GroupKey.generate().id
         const legacyKey = new GroupKey(keyId, crypto.randomBytes(32))
         const normalKey = new GroupKey(keyId, crypto.randomBytes(32))
-        const internalPersistence = await store.getPersistence()
+        const internalPersistence = await persistenceManager.getPersistence('EncryptionKeys')
         await internalPersistence.set(`LEGACY::${legacyKey.id}`, Buffer.from(legacyKey.data).toString('hex'))
         await internalPersistence.set(`${publisherId}::${normalKey.id}`, Buffer.from(normalKey.data).toString('hex'))
 

@@ -1,15 +1,13 @@
-import { scoped, Lifecycle, inject } from 'tsyringe'
-import { join } from 'path'
-import { GroupKey } from './GroupKey'
-import { EthereumAddress } from '@streamr/utils'
-import { Authentication, AuthenticationInjectionToken } from '../Authentication'
-import { StreamrClientEventEmitter } from '../events'
-import { Persistence } from '../utils/persistence/Persistence'
-import ServerPersistence from '../utils/persistence/ServerPersistence'
-import { pOnce } from '../utils/promises'
-import { LoggerFactory } from '../utils/LoggerFactory'
-import { Logger } from '@streamr/utils'
 import { StreamID } from '@streamr/protocol'
+import { EthereumAddress, Logger } from '@streamr/utils'
+import { inject, Lifecycle, scoped } from 'tsyringe'
+import { StreamrClientEventEmitter } from '../events'
+import { PersistenceManager } from '../PersistenceManager'
+import { LoggerFactory } from '../utils/LoggerFactory'
+import { GroupKey } from './GroupKey'
+
+const PERSISTENCE_ENCRYPTION_KEYS = 'EncryptionKeys'
+const PERSISTENCE_PUBLISHER_KEY_IDS = 'PublisherKeyIds'
 
 /**
  * @privateRemarks
@@ -58,41 +56,23 @@ function formKey2(publisherId: EthereumAddress, streamId: StreamID): string {
 @scoped(Lifecycle.ContainerScoped)
 export class GroupKeyStore {
 
-    private authentication: Authentication
+    private persistenceManager: PersistenceManager
     private eventEmitter: StreamrClientEventEmitter
     private readonly logger: Logger
-    private readonly ensureInitialized: () => Promise<void>
-    private persistence: Persistence<string, string> | undefined
-    private publisherKeyIdPersistence: Persistence<string, string> | undefined
 
     constructor(
+        @inject(PersistenceManager) persistenceManager: PersistenceManager,
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
-        @inject(AuthenticationInjectionToken) authentication: Authentication,
         @inject(StreamrClientEventEmitter) eventEmitter: StreamrClientEventEmitter
     ) {
-        this.authentication = authentication
+        this.persistenceManager = persistenceManager
         this.eventEmitter = eventEmitter
         this.logger = loggerFactory.createLogger(module)
-        this.ensureInitialized = pOnce(async () => {
-            const clientId = await this.authentication.getAddress()
-            this.persistence = new ServerPersistence({
-                loggerFactory,
-                tableName: 'EncryptionKeys',
-                clientId,
-                migrationsPath: join(__dirname, 'migrations')
-            })
-            this.publisherKeyIdPersistence = new ServerPersistence({
-                loggerFactory,
-                tableName: 'PublisherKeyIds',
-                clientId,
-                migrationsPath: join(__dirname, 'migrations')
-            })
-        })
     }
 
     async get(keyId: string, publisherId: EthereumAddress): Promise<GroupKey | undefined> {
-        await this.ensureInitialized()
-        const value = await this.persistence!.get(formKey(keyId, publisherId))
+        const persistence = await this.persistenceManager.getPersistence(PERSISTENCE_ENCRYPTION_KEYS)
+        const value = await persistence.get(formKey(keyId, publisherId))
         if (value !== undefined) {
             return new GroupKey(keyId, Buffer.from(value, 'hex'))
         } else {
@@ -107,36 +87,27 @@ export class GroupKeyStore {
      * TODO: remove this functionality in the future
      */
     private async getLegacyKey(keyId: string): Promise<GroupKey | undefined> {
-        const value = await this.persistence!.get(formKey(keyId, 'LEGACY'))
+        const persistence = await this.persistenceManager.getPersistence(PERSISTENCE_ENCRYPTION_KEYS)
+        const value = await persistence.get(formKey(keyId, 'LEGACY'))
         return value !== undefined ? new GroupKey(keyId, Buffer.from(value, 'hex')) : undefined
     }
 
     async add(key: GroupKey, publisherId: EthereumAddress): Promise<void> {
-        await this.ensureInitialized()
+        const persistence = await this.persistenceManager.getPersistence(PERSISTENCE_ENCRYPTION_KEYS)
         this.logger.debug('add key %s', key.id)
-        await this.persistence!.set(formKey(key.id, publisherId), Buffer.from(key.data).toString('hex'))
+        await persistence.set(formKey(key.id, publisherId), Buffer.from(key.data).toString('hex'))
         this.eventEmitter.emit('addGroupKey', key)
     }
 
     async addPublisherKeyId(keyId: string, publisherId: EthereumAddress, streamId: StreamID): Promise<void> {
-        await this.ensureInitialized()
+        const persistence = await this.persistenceManager.getPersistence(PERSISTENCE_PUBLISHER_KEY_IDS)
         this.logger.debug('add publisherKeyId %s', keyId)
-        await this.publisherKeyIdPersistence!.set(formKey2(publisherId, streamId), keyId)
+        await persistence.set(formKey2(publisherId, streamId), keyId)
     }
 
     async getPublisherKeyId(publisherId: EthereumAddress, streamId: StreamID): Promise<string | undefined> {
-        await this.ensureInitialized()
-        const value = await this.publisherKeyIdPersistence!.get(formKey2(publisherId, streamId))
+        const persistence = await this.persistenceManager.getPersistence(PERSISTENCE_PUBLISHER_KEY_IDS)
+        const value = await persistence.get(formKey2(publisherId, streamId))
         return value
-    }
-
-    /** Should be used by tests only. */
-    async getPersistence(): Promise<Persistence<string, string>> {
-        await this.ensureInitialized()
-        return this.persistence!
-    }
-
-    async stop(): Promise<void> {
-        await this.persistence?.close()
     }
 }

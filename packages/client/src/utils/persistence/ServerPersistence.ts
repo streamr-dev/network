@@ -6,13 +6,14 @@ import sqlite3 from 'sqlite3'
 
 import { pOnce } from '../promises'
 
-import { Persistence } from './Persistence'
+import { PersistenceContext } from './PersistenceContext'
 import { Logger, wait } from '@streamr/utils'
 import { LoggerFactory } from '../LoggerFactory'
 
+// TODO remove generics?
+
 export interface ServerPersistenceOptions {
     loggerFactory: LoggerFactory
-    tableName: string
     clientId: string
     migrationsPath?: string
     onInit?: (db: Database) => Promise<void>
@@ -21,9 +22,8 @@ export interface ServerPersistenceOptions {
 /*
  * Stores key-value pairs for a given stream
  */
-export default class ServerPersistence<K extends string, V extends string> implements Persistence<K, V> {
+export default class ServerPersistence<K extends string, V extends string> implements PersistenceContext<K, V> {
     private readonly logger: Logger
-    private readonly tableName: string
     private readonly dbFilePath: string
     private store?: Database
     private error?: Error
@@ -34,12 +34,10 @@ export default class ServerPersistence<K extends string, V extends string> imple
     constructor({
         loggerFactory,
         clientId,
-        tableName,
         migrationsPath,
         onInit
     }: ServerPersistenceOptions) {
         this.logger = loggerFactory.createLogger(module)
-        this.tableName = tableName
         const paths = envPaths('streamr-client')
         this.dbFilePath = resolve(paths.data, join('./', clientId, `GroupKeys.db`))
         this.migrationsPath = migrationsPath
@@ -126,7 +124,7 @@ export default class ServerPersistence<K extends string, V extends string> imple
         this.logger.trace('database initialized')
     }
 
-    async get(key: K): Promise<V | undefined> {
+    async get(key: K, namespace: string): Promise<V | undefined> {
         if (!this.initCalled) {
             // can't have if doesn't exist
             if (!(await this.exists())) { return undefined }
@@ -134,13 +132,13 @@ export default class ServerPersistence<K extends string, V extends string> imple
 
         await this.init()
         const row = await this.store!.get(
-            `SELECT value_ FROM ${this.tableName} WHERE key_ = ?`,
+            `SELECT value_ FROM ${namespace} WHERE key_ = ?`,
             key
         )
         return row?.['value_']
     }
 
-    async set(key: K, value: V): Promise<void> {
+    async set(key: K, value: V, namespace: string): Promise<void> {
         await this.init()
         await this.store!.run(
             `INSERT INTO ${this.tableName} (key_, value_) VALUES ($key_, $value_) ON CONFLICT DO UPDATE SET value_ = $value_`,
