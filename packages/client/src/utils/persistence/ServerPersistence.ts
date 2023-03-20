@@ -10,8 +10,6 @@ import { PersistenceContext } from './PersistenceContext'
 import { Logger, wait } from '@streamr/utils'
 import { LoggerFactory } from '../LoggerFactory'
 
-// TODO remove generics?
-
 export interface ServerPersistenceOptions {
     loggerFactory: LoggerFactory
     clientId: string
@@ -22,7 +20,7 @@ export interface ServerPersistenceOptions {
 /*
  * Stores key-value pairs for a given stream
  */
-export default class ServerPersistence<K extends string, V extends string> implements PersistenceContext<K, V> {
+export default class ServerPersistence implements PersistenceContext {
     private readonly logger: Logger
     private readonly dbFilePath: string
     private store?: Database
@@ -138,7 +136,7 @@ export default class ServerPersistence<K extends string, V extends string> imple
         return row?.['value_']
     }
 
-    async set(key: K, value: V, namespace: string): Promise<void> {
+    async set(key: string, value: string, namespace: string): Promise<void> {
         await this.init()
         await this.store!.run(
             `INSERT INTO ${namespace} (key_, value_) VALUES ($key_, $value_) ON CONFLICT DO NOTHING`,
