@@ -2,9 +2,7 @@ import { get, set, createStore, UseStore } from 'idb-keyval'
 import { PersistenceContext } from './PersistenceContext'
 import { Mapping } from '../Mapping'
 
-// TODO remove generics?
-
-export default class BrowserPersistence<K extends string, V extends string> implements PersistenceContext<K, V> {
+export default class BrowserPersistence implements PersistenceContext {
     
     private readonly stores: Mapping<[string], UseStore>
 
@@ -14,11 +12,11 @@ export default class BrowserPersistence<K extends string, V extends string> impl
         })
     }
 
-    async get(key: K, namespace: string): Promise<V | undefined> {
+    async get(key: string, namespace: string): Promise<string | undefined> {
         return get(key, await this.stores.get(namespace))
     }
 
-    async set(key: K, value: V, namespace: string): Promise<void> {
+    async set(key: string, value: string, namespace: string): Promise<void> {
         await set(key, value, await this.stores.get(namespace))
     }
 

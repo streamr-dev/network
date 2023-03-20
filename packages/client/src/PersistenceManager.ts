@@ -40,7 +40,7 @@ export class PersistenceManager {
         }
     }
 
-    async getPersistence(namespace: string): Promise<Persistence<string, string>> {
+    async getPersistence(namespace: string): Promise<Persistence> {
         await this.ensureInitialized()
         return {
             get: (key: string): Promise<string | undefined> => {

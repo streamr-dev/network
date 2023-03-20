@@ -1,4 +1,4 @@
-export interface Persistence<K extends string, V extends string> {
-    get(key: K): Promise<V | undefined>
-    set(key: K, value: V): Promise<void>
+export interface Persistence {
+    get(key: string): Promise<string | undefined>
+    set(key: string, value: string): Promise<void>
 }
