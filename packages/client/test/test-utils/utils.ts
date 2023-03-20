@@ -176,6 +176,7 @@ export const createGroupKeyManager = (groupKeyStore: GroupKeyStore = mock<GroupK
         mock<SubscriberKeyExchange>(),
         new StreamrClientEventEmitter(),
         new DestroySignal(),
+        createRandomAuthentication(),
         {
             encryption: {
                 litProtocolEnabled: false,
