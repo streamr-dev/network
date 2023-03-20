@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add optional config option `network.webrtcPortRange`
+- Add optional config option `network.webrtcMaxMessageSize`
+
 ### Changed
 
 ### Deprecated
