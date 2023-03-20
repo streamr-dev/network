@@ -7,7 +7,6 @@ import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { collect } from '../../src/utils/iterators'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
-import { toEthereumAddress, wait } from '@streamr/utils'
 
 describe('publisher key reuse', () => {
     let publisherWallet: Wallet
