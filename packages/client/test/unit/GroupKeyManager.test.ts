@@ -8,7 +8,10 @@ import { StreamrClientEventEmitter } from '../../src/events'
 import { DestroySignal } from '../../src/DestroySignal'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { toStreamID, toStreamPartID } from '@streamr/protocol'
-import { randomEthereumAddress } from '@streamr/test-utils'
+import { fastPrivateKey } from '@streamr/test-utils'
+import { createPrivateKeyAuthentication } from '../../src/Authentication'
+import { Wallet } from '@ethersproject/wallet'
+import { toEthereumAddress } from '@streamr/utils'
 
 describe('GroupKeyManager', () => {
     let groupKeyStore: MockProxy<GroupKeyStore>
@@ -19,7 +22,8 @@ describe('GroupKeyManager', () => {
 
     const groupKeyId = 'groupKeyId-123'
     const streamId = toStreamID('test.eth/foobar')
-    const publisherId = randomEthereumAddress()
+    const wallet = new Wallet(fastPrivateKey())
+    const publisherId = toEthereumAddress(wallet.address)
     const groupKey = GroupKey.generate(groupKeyId)
 
     function createGroupKeyManager(litProtocolEnabled: boolean): GroupKeyManager {
@@ -29,6 +33,7 @@ describe('GroupKeyManager', () => {
             subscriberKeyExchange,
             eventEmitter,
             new DestroySignal(),
+            createPrivateKeyAuthentication(wallet.privateKey, {} as any),
             {
                 encryption: {
                     litProtocolEnabled,
