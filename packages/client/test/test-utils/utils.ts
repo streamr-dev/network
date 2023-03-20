@@ -169,14 +169,17 @@ export const createStreamRegistryCached = (opts: {
     } as any
 }
 
-export const createGroupKeyManager = (groupKeyStore: GroupKeyStore = mock<GroupKeyStore>()): GroupKeyManager => {
+export const createGroupKeyManager = (
+    groupKeyStore: GroupKeyStore = mock<GroupKeyStore>(),
+    authentication = createRandomAuthentication()
+): GroupKeyManager => {
     return new GroupKeyManager(
         groupKeyStore,
         mock<LitProtocolFacade>(),
         mock<SubscriberKeyExchange>(),
         new StreamrClientEventEmitter(),
         new DestroySignal(),
-        createRandomAuthentication(),
+        authentication,
         {
             encryption: {
                 litProtocolEnabled: false,
@@ -192,7 +195,7 @@ export const createGroupKeyQueue = async (authentication: Authentication, curren
     const queue = new GroupKeyQueue(
         undefined as any,
         authentication,
-        createGroupKeyManager()
+        createGroupKeyManager(undefined, authentication)
     )
     if (current !== undefined) {
         await queue.rekey(current)

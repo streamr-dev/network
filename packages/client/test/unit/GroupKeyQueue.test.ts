@@ -20,8 +20,8 @@ describe('GroupKeyQueue', () => {
 
     beforeEach(() => {
         groupKeyStore = mock<GroupKeyStore>()
-        groupKeyManager = createGroupKeyManager(groupKeyStore)
         authentication = createRandomAuthentication()
+        groupKeyManager = createGroupKeyManager(groupKeyStore, authentication)
         queue = new GroupKeyQueue(streamId, authentication, groupKeyManager)
     })
 
