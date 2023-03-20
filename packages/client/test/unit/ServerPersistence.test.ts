@@ -14,7 +14,7 @@ describe('ServerPersistence', () => {
             tableName: 'MockTable',
             clientId,
             onInit: async (db: Database) => {
-                await db.exec('CREATE TABLE IF NOT EXISTS MockTable (key_ TEXT, value_ TEXT);')
+                await db.exec('CREATE TABLE IF NOT EXISTS MockTable (key_ TEXT NOT NULL PRIMARY KEY, value_ TEXT);')
             }
         })
     })
@@ -26,6 +26,12 @@ describe('ServerPersistence', () => {
     it('set and get', async () => {
         await persistence.set('foo', 'bar')
         expect(await persistence.get('foo')).toBe('bar')
+    })
+
+    it('overwrite', async () => {
+        await persistence.set('foo', 'value1')
+        await persistence.set('foo', 'value2')
+        expect(await persistence.get('foo')).toBe('value2')
     })
 
     it('no value', async () => {

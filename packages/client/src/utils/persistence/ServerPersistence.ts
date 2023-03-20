@@ -143,7 +143,7 @@ export default class ServerPersistence<K extends string, V extends string> imple
     async set(key: K, value: V): Promise<void> {
         await this.init()
         await this.store!.run(
-            `INSERT INTO ${this.tableName} (key_, value_) VALUES ($key_, $value_) ON CONFLICT DO NOTHING`,
+            `INSERT INTO ${this.tableName} (key_, value_) VALUES ($key_, $value_) ON CONFLICT DO UPDATE SET value_ = $value_`,
             {
                 $key_: key,
                 $value_: value,
