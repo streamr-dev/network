@@ -95,7 +95,7 @@ export interface StreamrClientConfig {
         newWebrtcConnectionTimeout?: number
         webrtcDatachannelBufferThresholdLow?: number
         webrtcDatachannelBufferThresholdHigh?: number
-        webrtcDatachannelMaxMessageSize?: number
+        webrtcMaxMessageSize?: number
         webrtcPortRange?: WebRtcPortRange
         /**
          * The maximum amount of outgoing messages to be buffered on a single WebRTC connection.
