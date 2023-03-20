@@ -17,9 +17,6 @@ export interface ServerPersistenceOptions {
     onInit?: (db: Database) => Promise<void>
 }
 
-/*
- * Stores key-value pairs for a given stream
- */
 export default class ServerPersistence implements PersistenceContext {
     private readonly logger: Logger
     private readonly dbFilePath: string
