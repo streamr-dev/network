@@ -6,13 +6,12 @@ import sqlite3 from 'sqlite3'
 
 import { pOnce } from '../promises'
 
-import { PersistenceContext } from './PersistenceContext'
+import { PersistenceContext, PersistenceContextOptions } from './PersistenceContext'
 import { Logger, wait } from '@streamr/utils'
 import { LoggerFactory } from '../LoggerFactory'
 
-export interface ServerPersistenceOptions {
+export interface ServerPersistenceOptions extends PersistenceContextOptions {
     loggerFactory: LoggerFactory
-    clientId: string
     migrationsPath?: string
     onInit?: (db: Database) => Promise<void>
 }
@@ -26,7 +25,17 @@ export default class ServerPersistence implements PersistenceContext {
     private readonly migrationsPath?: string
     private readonly onInit?: (db: Database) => Promise<void>
 
-    constructor({
+    // uses createInstance factory pattern so that ServerPersistence and BrowserPersistence
+    // are interchangeable
+    static async createInstance(opts: ServerPersistenceOptions): Promise<ServerPersistence> {
+        // TODO init() call could called here, so that we don't need to separate logic for 
+        // initialization (i.e. check this.initCalled flag before eaach call).
+        // It would be ok to do initialization, because the PersistenceManager already lazy loads
+        // and therefore doesn't create this instance before it is needed
+        return new ServerPersistence(opts)
+    }
+
+    private constructor({
         loggerFactory,
         clientId,
         migrationsPath,
@@ -119,7 +128,7 @@ export default class ServerPersistence implements PersistenceContext {
         this.logger.trace('database initialized')
     }
 
-    async get(key: K, namespace: string): Promise<V | undefined> {
+    async get(key: string, namespace: string): Promise<string | undefined> {
         if (!this.initCalled) {
             // can't have if doesn't exist
             if (!(await this.exists())) { return undefined }

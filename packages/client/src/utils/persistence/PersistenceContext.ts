@@ -4,3 +4,8 @@ export interface PersistenceContext {
     set(key: string, value: string, namespace: string): Promise<void>
     close(): Promise<void>
 }
+
+export interface PersistenceContextOptions {
+    clientId: string
+    namespaces: string[]
+}
