@@ -2,7 +2,7 @@ import 'reflect-metadata'
 
 import { Publisher } from '../../src/publish/Publisher'
 import { StreamIDBuilder } from '../../src/StreamIDBuilder'
-import { createRandomAuthentication } from '../test-utils/utils'
+import { createGroupKeyManager, createRandomAuthentication } from '../test-utils/utils'
 
 describe('Publisher', () => {
     it('error message', async () => {
@@ -15,7 +15,7 @@ describe('Publisher', () => {
             streamIdBuilder,
             authentication,
             streamRegistry as any,
-            undefined as any,
+            createGroupKeyManager(undefined, authentication),
             undefined as any,
         )
         const streamId = await streamIdBuilder.toStreamID('/test')

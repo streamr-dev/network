@@ -16,7 +16,20 @@ export class GroupKeyQueue {
     private readonly authentication: Authentication
     private readonly groupKeyManager: GroupKeyManager
 
-    constructor(streamId: StreamID, authentication: Authentication, groupKeyManager: GroupKeyManager) {
+    static async createInstance(
+        streamId: StreamID,
+        authentication: Authentication,
+        groupKeyManager: GroupKeyManager
+    ): Promise<GroupKeyQueue> {
+        const instance = new GroupKeyQueue(streamId, authentication, groupKeyManager)
+        instance.currentGroupKey = await instance.groupKeyManager.fetchLatestPublisherKey(
+            streamId,
+            await authentication.getAddress()
+        )
+        return instance
+    }
+
+    private constructor(streamId: StreamID, authentication: Authentication, groupKeyManager: GroupKeyManager) {
         this.streamId = streamId
         this.authentication = authentication
         this.groupKeyManager = groupKeyManager
