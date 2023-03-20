@@ -7,13 +7,14 @@ const NAMESPACE = 'MockTable'
 
 describe('ServerPersistence', () => {
 
-    let persistence: ServerPersistence<string, string>
+    let persistence: ServerPersistence
 
     beforeEach(async () => {
         const clientId = randomEthereumAddress()
-        persistence = new ServerPersistence({
+        persistence = await ServerPersistence.createInstance({
             loggerFactory: mockLoggerFactory(),
             clientId,
+            namespaces: [NAMESPACE],
             onInit: async (db: Database) => {
                 await db.exec(`CREATE TABLE IF NOT EXISTS ${NAMESPACE} (key_ TEXT NOT NULL PRIMARY KEY, value_ TEXT);`)
             }

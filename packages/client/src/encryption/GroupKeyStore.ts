@@ -2,12 +2,9 @@ import { StreamID } from '@streamr/protocol'
 import { EthereumAddress, Logger } from '@streamr/utils'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { StreamrClientEventEmitter } from '../events'
-import { PersistenceManager } from '../PersistenceManager'
+import { PersistenceManager, NAMESPACES } from '../PersistenceManager'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { GroupKey } from './GroupKey'
-
-const PERSISTENCE_ENCRYPTION_KEYS = 'EncryptionKeys'
-const PERSISTENCE_PUBLISHER_KEY_IDS = 'PublisherKeyIds'
 
 /**
  * @privateRemarks
@@ -71,7 +68,7 @@ export class GroupKeyStore {
     }
 
     async get(keyId: string, publisherId: EthereumAddress): Promise<GroupKey | undefined> {
-        const persistence = await this.persistenceManager.getPersistence(PERSISTENCE_ENCRYPTION_KEYS)
+        const persistence = await this.persistenceManager.getPersistence(NAMESPACES.ENCRYPTION_KEYS)
         const value = await persistence.get(formKey(keyId, publisherId))
         if (value !== undefined) {
             return new GroupKey(keyId, Buffer.from(value, 'hex'))
@@ -87,26 +84,26 @@ export class GroupKeyStore {
      * TODO: remove this functionality in the future
      */
     private async getLegacyKey(keyId: string): Promise<GroupKey | undefined> {
-        const persistence = await this.persistenceManager.getPersistence(PERSISTENCE_ENCRYPTION_KEYS)
+        const persistence = await this.persistenceManager.getPersistence(NAMESPACES.ENCRYPTION_KEYS)
         const value = await persistence.get(formKey(keyId, 'LEGACY'))
         return value !== undefined ? new GroupKey(keyId, Buffer.from(value, 'hex')) : undefined
     }
 
     async add(key: GroupKey, publisherId: EthereumAddress): Promise<void> {
-        const persistence = await this.persistenceManager.getPersistence(PERSISTENCE_ENCRYPTION_KEYS)
+        const persistence = await this.persistenceManager.getPersistence(NAMESPACES.ENCRYPTION_KEYS)
         this.logger.debug('add key %s', key.id)
         await persistence.set(formKey(key.id, publisherId), Buffer.from(key.data).toString('hex'))
         this.eventEmitter.emit('addGroupKey', key)
     }
 
     async addPublisherKeyId(keyId: string, publisherId: EthereumAddress, streamId: StreamID): Promise<void> {
-        const persistence = await this.persistenceManager.getPersistence(PERSISTENCE_PUBLISHER_KEY_IDS)
+        const persistence = await this.persistenceManager.getPersistence(NAMESPACES.PUBLISHER_KEY_IDS)
         this.logger.debug('add publisherKeyId %s', keyId)
         await persistence.set(formKey2(publisherId, streamId), keyId)
     }
 
     async getPublisherKeyId(publisherId: EthereumAddress, streamId: StreamID): Promise<string | undefined> {
-        const persistence = await this.persistenceManager.getPersistence(PERSISTENCE_PUBLISHER_KEY_IDS)
+        const persistence = await this.persistenceManager.getPersistence(NAMESPACES.PUBLISHER_KEY_IDS)
         const value = await persistence.get(formKey2(publisherId, streamId))
         return value
     }

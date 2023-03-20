@@ -1,23 +1,29 @@
-import { get, set, createStore, UseStore } from 'idb-keyval'
-import { PersistenceContext } from './PersistenceContext'
-import { Mapping } from '../Mapping'
+import { openDB, IDBPDatabase } from 'idb'
+import { PersistenceContext, PersistenceContextOptions } from './PersistenceContext'
 
 export default class BrowserPersistence implements PersistenceContext {
     
-    private readonly stores: Mapping<[string], UseStore>
+    private readonly db: IDBPDatabase
 
-    constructor({ clientId }: { clientId: string }) {
-        this.stores = new Mapping(async (namespace: string) => {
-            return createStore(`streamr-client::${clientId}`, namespace)
+    static async createInstance(opts: PersistenceContextOptions): Promise<BrowserPersistence> {
+        const db = await openDB(`streamr-client::${opts.clientId}`, 1, {
+            upgrade(db) {
+                opts.namespaces.forEach((namespace) => db.createObjectStore(namespace))
+            }
         })
+        return new BrowserPersistence(db)
+    }
+
+    private constructor(db: IDBPDatabase) {
+        this.db = db
     }
 
     async get(key: string, namespace: string): Promise<string | undefined> {
-        return get(key, await this.stores.get(namespace))
+        return this.db.get(namespace, key)
     }
 
     async set(key: string, value: string, namespace: string): Promise<void> {
-        await set(key, value, await this.stores.get(namespace))
+        await this.db.put(namespace, value, key)
     }
 
     // eslint-disable-next-line class-methods-use-this

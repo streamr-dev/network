@@ -107,7 +107,7 @@
     "env-paths": "^2.2.1",
     "eventemitter3": "^4.0.7",
     "heap": "^0.2.6",
-    "idb-keyval": "^5.1.5",
+    "idb": "^7.1.1",
     "lit-siwe": "^1.1.8",
     "lodash": "^4.17.21",
     "mem": "^8.1.1",

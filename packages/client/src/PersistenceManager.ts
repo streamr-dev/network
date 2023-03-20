@@ -8,10 +8,15 @@ import { LoggerFactory } from './utils/LoggerFactory'
 import { Persistence } from './utils/persistence/Persistence'
 import ServerPersistence from './utils/persistence/ServerPersistence'
 
+export const NAMESPACES = {
+    ENCRYPTION_KEYS: 'EncryptionKeys',
+    PUBLISHER_KEY_IDS: 'PublisherKeyIds'
+}
+
 @scoped(Lifecycle.ContainerScoped)
 export class PersistenceManager {
 
-    private persistence: ServerPersistence<string, string> | undefined
+    private persistence: ServerPersistence | undefined
     private readonly authentication: Authentication
     private readonly loggerFactory: LoggerFactory
 
@@ -32,9 +37,10 @@ export class PersistenceManager {
 
     private async ensureInitialized() {
         if (this.persistence === undefined) {
-            this.persistence = new ServerPersistence({
+            this.persistence = await ServerPersistence.createInstance({
                 loggerFactory: this.loggerFactory,
                 clientId: await this.authentication.getAddress(),
+                namespaces: Object.values(NAMESPACES),
                 migrationsPath: join(__dirname, 'encryption/migrations') // TODO move migrations to some generic place?
             })
         }
