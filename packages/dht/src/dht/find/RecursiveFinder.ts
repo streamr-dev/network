@@ -40,11 +40,17 @@ interface RecursiveFinderConfig {
     isPeerCloserToIdThanSelf: (peer1: PeerDescriptor, compareToId: PeerID) => boolean
 }
 
+interface RecursiveFinderFunc {
+    startRecursiveFind(idToFind: Uint8Array, findMode?: FindMode): Promise<RecursiveFindResult>
+}
+
+export interface IRecursiveFinder extends Pick<IRoutingService, 'findRecursively'>, RecursiveFinderFunc {}
+
 export interface RecursiveFindResult { closestNodes: Array<PeerDescriptor>, dataEntries?: Array<DataEntry> }
 
 const logger = new Logger(module)
 
-export class RecursiveFinder implements Pick<IRoutingService, 'findRecursively'> {
+export class RecursiveFinder implements IRecursiveFinder {
 
     private readonly config: RecursiveFinderConfig
     private ongoingSessions: Map<string, RecursiveFindSession> = new Map()
