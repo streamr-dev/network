@@ -81,8 +81,22 @@ export class GroupKeyStore {
     async get(keyId: string, publisherId: EthereumAddress): Promise<GroupKey | undefined> {
         await this.ensureInitialized()
         const value = await this.persistence!.get(formKey(keyId, publisherId))
-        if (value === undefined) { return undefined }
-        return new GroupKey(keyId, Buffer.from(value, 'hex'))
+        if (value !== undefined) {
+            return new GroupKey(keyId, Buffer.from(value, 'hex'))
+        } else {
+            return this.getLegacyKey(keyId)
+        }
+    }
+
+    /**
+     * Legacy keys refer to group keys migrated from a previous version of the client where group keys were not tied
+     * to a specific publisherId, therefore any publisherId for a given legacy key id is considered a match.
+     *
+     * TODO: remove this functionality in the future
+     */
+    private async getLegacyKey(keyId: string): Promise<GroupKey | undefined> {
+        const value = await this.persistence!.get(formKey(keyId, 'LEGACY'))
+        return value !== undefined ? new GroupKey(keyId, Buffer.from(value, 'hex')) : undefined
     }
 
     async add(key: GroupKey, publisherId: EthereumAddress): Promise<void> {
@@ -90,6 +104,12 @@ export class GroupKeyStore {
         this.logger.debug('add key %s', key.id)
         await this.persistence!.set(formKey(key.id, publisherId), Buffer.from(key.data).toString('hex'))
         this.eventEmitter.emit('addGroupKey', key)
+    }
+
+    /** Should be used by tests only. */
+    async getPersistence(): Promise<Persistence<string, string>> {
+        await this.ensureInitialized()
+        return this.persistence!
     }
 
     async stop(): Promise<void> {
