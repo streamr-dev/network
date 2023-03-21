@@ -10,7 +10,7 @@ import ServerPersistence from './utils/persistence/ServerPersistence'
 
 export const NAMESPACES = {
     ENCRYPTION_KEYS: 'EncryptionKeys',
-    PUBLISHER_KEY_IDS: 'PublisherKeyIds'
+    LATEST_ENCRYPTION_KEY_IDS: 'LatestEncryptionKeyIds'
 }
 
 @scoped(Lifecycle.ContainerScoped)

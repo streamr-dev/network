@@ -105,13 +105,13 @@ describe('GroupKeyStore', () => {
         expect(await store.get(keyId, randomEthereumAddress())).toEqual(legacyKey)
     })
 
-    describe('publisherKeyId', () => {
+    describe('latest encryptionKey id', () => {
         const streamId = toStreamID('/foobar', randomEthereumAddress())
         it('add and get key', async () => {
-            await store.addPublisherKeyId('keyId', publisherId, streamId)
-            expect(await store.getPublisherKeyId(publisherId, streamId)).toEqual('keyId')
-            expect(await store.getPublisherKeyId(randomEthereumAddress(), streamId)).toBeUndefined()
-            expect(await store.getPublisherKeyId(publisherId, toStreamID('foobar'))).toBeUndefined()
+            await store.setLatestEncryptionKeyId('keyId', publisherId, streamId)
+            expect(await store.getLatestEncryptionKeyId(publisherId, streamId)).toEqual('keyId')
+            expect(await store.getLatestEncryptionKeyId(randomEthereumAddress(), streamId)).toBeUndefined()
+            expect(await store.getLatestEncryptionKeyId(publisherId, toStreamID('foobar'))).toBeUndefined()
         })
     })
 })

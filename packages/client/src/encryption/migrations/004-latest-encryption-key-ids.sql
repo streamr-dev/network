@@ -2,7 +2,7 @@
 -- Up
 --------------------------------------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS PublisherKeyIds (
+CREATE TABLE IF NOT EXISTS LatestEncryptionKeyIds (
     key_ TEXT NOT NULL PRIMARY KEY,
     value_ TEXT
 );
@@ -11,5 +11,5 @@ CREATE TABLE IF NOT EXISTS PublisherKeyIds (
 -- Down
 --------------------------------------------------------------------------------
 
-DROP TABLE PublisherKeyIds;
+DROP TABLE LatestEncryptionKeyIds;
 

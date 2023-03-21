@@ -22,7 +22,7 @@ export class GroupKeyQueue {
         groupKeyManager: GroupKeyManager
     ): Promise<GroupKeyQueue> {
         const instance = new GroupKeyQueue(streamId, authentication, groupKeyManager)
-        instance.currentGroupKey = await instance.groupKeyManager.fetchLatestPublisherKey(
+        instance.currentGroupKey = await instance.groupKeyManager.fetchLatestEncryptionKey(
             streamId,
             await authentication.getAddress()
         )

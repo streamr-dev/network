@@ -89,6 +89,7 @@ export class GroupKeyStore {
         return value !== undefined ? new GroupKey(keyId, Buffer.from(value, 'hex')) : undefined
     }
 
+    // TODO: rename to "set"?
     async add(key: GroupKey, publisherId: EthereumAddress): Promise<void> {
         const persistence = await this.persistenceManager.getPersistence(NAMESPACES.ENCRYPTION_KEYS)
         this.logger.debug('add key %s', key.id)
@@ -96,14 +97,14 @@ export class GroupKeyStore {
         this.eventEmitter.emit('addGroupKey', key)
     }
 
-    async addPublisherKeyId(keyId: string, publisherId: EthereumAddress, streamId: StreamID): Promise<void> {
-        const persistence = await this.persistenceManager.getPersistence(NAMESPACES.PUBLISHER_KEY_IDS)
-        this.logger.debug('add publisherKeyId %s', keyId)
+    async setLatestEncryptionKeyId(keyId: string, publisherId: EthereumAddress, streamId: StreamID): Promise<void> {
+        const persistence = await this.persistenceManager.getPersistence(NAMESPACES.LATEST_ENCRYPTION_KEY_IDS)
+        this.logger.debug('set latest encryptionKey id %s', keyId)
         await persistence.set(formKey2(publisherId, streamId), keyId)
     }
 
-    async getPublisherKeyId(publisherId: EthereumAddress, streamId: StreamID): Promise<string | undefined> {
-        const persistence = await this.persistenceManager.getPersistence(NAMESPACES.PUBLISHER_KEY_IDS)
+    async getLatestEncryptionKeyId(publisherId: EthereumAddress, streamId: StreamID): Promise<string | undefined> {
+        const persistence = await this.persistenceManager.getPersistence(NAMESPACES.LATEST_ENCRYPTION_KEY_IDS)
         const value = await persistence.get(formKey2(publisherId, streamId))
         return value
     }
