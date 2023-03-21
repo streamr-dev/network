@@ -7,6 +7,7 @@ import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { collect } from '../../src/utils/iterators'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
+import { nextValue } from './../../src/utils/iterators'
 
 describe('publisher key reuse', () => {
     let publisherWallet: Wallet
@@ -62,10 +63,14 @@ describe('publisher key reuse', () => {
         })
 
         const sub = await subscriber.subscribe(stream.id)
+        const messageIterator = sub[Symbol.asyncIterator]()
+        
         await publisher.publish(stream, {
             msg: '1'
         })
-        // await publisher.destroy() TODO: our guess is this somehow breaks FakeEnvironment
+        const receivedMessage1 = await nextValue(messageIterator)
+        await publisher.destroy()
+
         const publisher2 = environment.createClient({
             auth: {
                 privateKey: otherWallet.privateKey
@@ -74,8 +79,9 @@ describe('publisher key reuse', () => {
         await publisher2.publish(stream.id, {
             msg: '2'
         })
-        const msgs = await collect(sub, 2)
-        expect(msgs[0].streamMessage.groupKeyId).toBeString()
-        expect(msgs[0].streamMessage.groupKeyId).not.toEqual(msgs[1].streamMessage.groupKeyId)
+        const receivedMessage2 = await nextValue(messageIterator)
+
+        expect(receivedMessage1!.streamMessage.groupKeyId).toBeString()
+        expect(receivedMessage1!.streamMessage.groupKeyId).not.toEqual(receivedMessage2!.streamMessage.groupKeyId)
     })
 })
