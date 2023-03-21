@@ -39,11 +39,11 @@ export interface UpdateEncryptionKeyOptions {
     key?: GroupKey
 }
 
-function formKey(keyId: string, publisherId: string): string {
+function formLookupKey1(keyId: string, publisherId: string): string {
     return `${publisherId}::${keyId}`
 }
 
-function formKey2(publisherId: EthereumAddress, streamId: StreamID): string { // TODO name
+function formLookupKey2(publisherId: EthereumAddress, streamId: StreamID): string {
     return `${publisherId}::${streamId}`
 }
 
@@ -66,7 +66,7 @@ export class LocalGroupKeyStore {
 
     async get(keyId: string, publisherId: EthereumAddress): Promise<GroupKey | undefined> {
         const persistence = await this.persistenceManager.getPersistence(NAMESPACES.ENCRYPTION_KEYS)
-        const value = await persistence.get(formKey(keyId, publisherId))
+        const value = await persistence.get(formLookupKey1(keyId, publisherId))
         if (value !== undefined) {
             return new GroupKey(keyId, Buffer.from(value, 'hex'))
         } else {
@@ -82,26 +82,26 @@ export class LocalGroupKeyStore {
      */
     private async getLegacyKey(keyId: string): Promise<GroupKey | undefined> {
         const persistence = await this.persistenceManager.getPersistence(NAMESPACES.ENCRYPTION_KEYS)
-        const value = await persistence.get(formKey(keyId, 'LEGACY'))
+        const value = await persistence.get(formLookupKey1(keyId, 'LEGACY'))
         return value !== undefined ? new GroupKey(keyId, Buffer.from(value, 'hex')) : undefined
     }
 
     async set(keyId: string, publisherId: EthereumAddress, data: Buffer): Promise<void> {
         const persistence = await this.persistenceManager.getPersistence(NAMESPACES.ENCRYPTION_KEYS)
         this.logger.debug('add key %s', keyId)
-        await persistence.set(formKey(keyId, publisherId), Buffer.from(data).toString('hex'))
+        await persistence.set(formLookupKey1(keyId, publisherId), Buffer.from(data).toString('hex'))
         this.eventEmitter.emit('storeEncryptionKeyToLocalStore', keyId)
     }
 
     async setLatestEncryptionKeyId(keyId: string, publisherId: EthereumAddress, streamId: StreamID): Promise<void> {
         const persistence = await this.persistenceManager.getPersistence(NAMESPACES.LATEST_ENCRYPTION_KEY_IDS)
         this.logger.debug('set latest encryptionKey id %s', keyId)
-        await persistence.set(formKey2(publisherId, streamId), keyId)
+        await persistence.set(formLookupKey2(publisherId, streamId), keyId)
     }
 
     async getLatestEncryptionKeyId(publisherId: EthereumAddress, streamId: StreamID): Promise<string | undefined> {
         const persistence = await this.persistenceManager.getPersistence(NAMESPACES.LATEST_ENCRYPTION_KEY_IDS)
-        const value = await persistence.get(formKey2(publisherId, streamId))
+        const value = await persistence.get(formLookupKey2(publisherId, streamId))
         return value
     }
 }
