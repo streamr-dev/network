@@ -53,7 +53,9 @@ describe('Connection', () => {
             pingInterval: 5000,
             iceServers: [],
             messageQueue: messageQueueOne,
-            deferredConnectionAttempt: deferredConnectionAttemptOne
+            deferredConnectionAttempt: deferredConnectionAttemptOne,
+            portRange: TEST_CONFIG.webrtcPortRange,
+            maxMessageSize: TEST_CONFIG.webrtcMaxMessageSize
         })
         connectionOne.on('localDescription', (...args) => oneFunctions.onLocalDescription(...args))
         connectionOne.on('localCandidate', (...args) => oneFunctions.onLocalCandidate(...args))
@@ -65,7 +67,9 @@ describe('Connection', () => {
             pingInterval: 5000,
             iceServers: [],
             messageQueue: messageQueueTwo,
-            deferredConnectionAttempt: deferredConnectionAttemptTwo
+            deferredConnectionAttempt: deferredConnectionAttemptTwo,
+            portRange: TEST_CONFIG.webrtcPortRange,
+            maxMessageSize: TEST_CONFIG.webrtcMaxMessageSize
         })
 
         connectionTwo.on('localDescription', (...args) => twoFunctions.onLocalDescription(...args))
