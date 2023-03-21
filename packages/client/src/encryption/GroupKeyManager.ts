@@ -60,7 +60,7 @@ export class GroupKeyManager {
 
         // 3rd try: Streamr key-exchange
         await this.subscriberKeyExchange.requestGroupKey(groupKeyId, publisherId, streamPartId)
-        const groupKeys = await waitForEvent(
+        const groupKeyIds = await waitForEvent(
             // TODO remove "as any" type casing in NET-889
             this.eventEmitter as any,
             'storeEncryptionKeyToLocalStore',
@@ -68,7 +68,8 @@ export class GroupKeyManager {
             (storedGroupKeyId: string) => storedGroupKeyId === groupKeyId,
             this.destroySignal.abortSignal
         )
-        return groupKeys[0] as GroupKey
+        groupKey = await this.localGroupKeyStore.get(groupKeyIds[0] as string, publisherId)
+        return groupKey!
     }
 
     // TODO: unit test?

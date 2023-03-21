@@ -78,12 +78,13 @@ describe('GroupKeyManager', () => {
 
         it('key present in subscriber key exchange', async () => {
             subscriberKeyExchange.requestGroupKey.mockImplementation(async () => {
+                groupKeyStore.get.mockResolvedValue(groupKey)
                 setTimeout(() => eventEmitter.emit('storeEncryptionKeyToLocalStore', groupKey.id), 0)
             })
 
             const key = await groupKeyManager.fetchKey(toStreamPartID(streamId, 0), groupKeyId, publisherId)
             expect(key).toEqual(groupKey)
-            expect(groupKeyStore.get).toHaveBeenCalledTimes(1)
+            expect(groupKeyStore.get).toHaveBeenCalledTimes(2)
             expect(litProtocolFacade.get).toHaveBeenCalledTimes(1)
             expect(subscriberKeyExchange.requestGroupKey).toHaveBeenCalledWith(
                 groupKeyId,
