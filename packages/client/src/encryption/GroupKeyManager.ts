@@ -40,7 +40,7 @@ export class GroupKeyManager {
         const streamId = StreamPartIDUtils.getStreamID(streamPartId)
 
         // 1st try: local storage
-        let groupKey = await this.groupKeyStore.get(groupKeyId, streamId)
+        let groupKey = await this.groupKeyStore.get(groupKeyId, publisherId)
         if (groupKey !== undefined) {
             return groupKey
         }
@@ -49,7 +49,7 @@ export class GroupKeyManager {
         if (this.config.encryption.litProtocolEnabled) {
             groupKey = await this.litProtocolFacade.get(streamId, groupKeyId)
             if (groupKey !== undefined) {
-                await this.groupKeyStore.add(groupKey, streamId)
+                await this.groupKeyStore.add(groupKey, publisherId)
                 return groupKey
             }
         }
@@ -67,7 +67,7 @@ export class GroupKeyManager {
         return groupKeys[0] as GroupKey
     }
 
-    async storeKey(groupKey: GroupKey | undefined, streamId: StreamID): Promise<GroupKey> { // TODO: name
+    async storeKey(groupKey: GroupKey | undefined, publisherId: EthereumAddress, streamId: StreamID): Promise<GroupKey> { // TODO: name
         if (groupKey === undefined) {
             const keyData = crypto.randomBytes(32)
             // 1st try lit-protocol, if a key cannot be generated and stored, then generate group key locally
@@ -78,11 +78,11 @@ export class GroupKeyManager {
                 groupKey = new GroupKey(uuid('GroupKey'), keyData)
             }
         }
-        await this.groupKeyStore.add(groupKey, streamId)
+        await this.groupKeyStore.add(groupKey, publisherId)
         return groupKey
     }
 
-    addKeyToLocalStore(groupKey: GroupKey, streamId: StreamID): Promise<void> {
-        return this.groupKeyStore.add(groupKey, streamId)
+    addKeyToLocalStore(groupKey: GroupKey, publisherId: EthereumAddress): Promise<void> {
+        return this.groupKeyStore.add(groupKey, publisherId)
     }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@streamr/dht",
-  "version": "8.0.3",
+  "version": "8.0.4",
   "description": "Streamr Network DHT",
   "repository": {
     "type": "git",
@@ -31,8 +31,8 @@
   "dependencies": {
     "@protobuf-ts/runtime": "^2.8.2",
     "@protobuf-ts/runtime-rpc": "^2.8.2",
-    "@streamr/proto-rpc": "8.0.3",
-    "@streamr/utils": "8.0.3",
+    "@streamr/proto-rpc": "8.0.4",
+    "@streamr/utils": "8.0.4",
     "bloomfilter": "^0.0.18",
     "eventemitter3": "^4.0.7",
     "k-bucket": "^5.1.0",
@@ -44,7 +44,7 @@
     "websocket": "^1.0.34"
   },
   "devDependencies": {
-    "@streamr/test-utils": "8.0.3",
+    "@streamr/test-utils": "8.0.4",
     "@types/bloomfilter": "^0.0.0",
     "@types/express": "^4.17.13",
     "@types/k-bucket": "^5.0.1",

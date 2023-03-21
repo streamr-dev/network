@@ -1,32 +1,23 @@
 import { get, set, createStore, UseStore } from 'idb-keyval'
 import { Persistence } from './Persistence'
-import { StreamID } from '@streamr/protocol'
-import memoize from 'lodash/memoize'
 
-export default class BrowserPersistence implements Persistence<string, string> {
-    private getStore: (streamId: StreamID) => UseStore
+export default class BrowserPersistence<K extends string, V extends string> implements Persistence<K, V> {
+    private readonly store: UseStore
 
     constructor({ clientId }: { clientId: string }) {
-        this.getStore = memoize((streamId: StreamID) => {
-            const dbName = `streamr-client::${clientId}::${streamId}`
-            return createStore(dbName, 'GroupKeys')
-        })
+        this.store = createStore(`streamr-client::${clientId}`, 'GroupKeys')
     }
 
-    async get(key: string, streamId: StreamID): Promise<string | undefined> {
-        return get(key, this.getStore(streamId))
+    async get(key: K): Promise<V | undefined> {
+        return get(key, this.store)
     }
 
-    async set(key: string, value: string, streamId: StreamID): Promise<void> {
-        await set(key, value, this.getStore(streamId))
+    async set(key: K, value: V): Promise<void> {
+        await set(key, value, this.store)
     }
 
     // eslint-disable-next-line class-methods-use-this
     async close(): Promise<void> {
         // noop
-    }
-
-    get [Symbol.toStringTag](): string {
-        return this.constructor.name
     }
 }

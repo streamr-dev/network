@@ -1,80 +1,96 @@
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
-import { getGroupKeyStore, uid } from '../test-utils/utils'
-import { addAfterFn } from '../test-utils/jest-utils'
-import LeakDetector from 'jest-leak-detector' // requires weak-napi
-import { StreamID, toStreamID } from '@streamr/protocol'
+import { getGroupKeyStore } from '../test-utils/utils'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import range from 'lodash/range'
 import { EthereumAddress } from '@streamr/utils'
+import crypto from 'crypto'
 
 describe('GroupKeyStore', () => {
+    
     let clientId: EthereumAddress
-    let streamId: StreamID
+    let publisherId: EthereumAddress
     let store: GroupKeyStore
-    let leakDetector: LeakDetector
-
-    const addAfter = addAfterFn()
+    let store2: GroupKeyStore
 
     beforeEach(() => {
         clientId = randomEthereumAddress()
-        streamId = toStreamID(uid('stream'))
+        publisherId = randomEthereumAddress()
         store = getGroupKeyStore(clientId)
-        leakDetector = new LeakDetector(store)
     })
 
     afterEach(async () => {
-        await store.stop()
+        await store?.stop()
+        await store2?.stop()
         // @ts-expect-error doesn't want us to unassign, but it's ok
         store = undefined // eslint-disable-line require-atomic-updates
-    })
-
-    afterEach(async () => {
-        expect(await leakDetector.isLeaking()).toBeFalsy()
+        // @ts-expect-error doesn't want us to unassign, but it's ok
+        store2 = undefined // eslint-disable-line require-atomic-updates
     })
 
     it('can get and set', async () => {
         const groupKey = GroupKey.generate()
-        expect(await store.get(groupKey.id, streamId)).toBeFalsy()
+        expect(await store.get(groupKey.id, publisherId)).toBeUndefined()
 
-        await store.add(groupKey, streamId)
-        expect(await store.get(groupKey.id, streamId)).toEqual(groupKey)
+        await store.add(groupKey, publisherId)
+        expect(await store.get(groupKey.id, publisherId)).toEqual(groupKey)
     })
 
-    it('does not conflict with other streamIds', async () => {
+    it('key lookup is publisher specific', async () => {
         const groupKey = GroupKey.generate()
-        await store.add(groupKey, streamId)
-        expect(await store.get(groupKey.id, streamId)).toEqual(groupKey)
-        expect(await store.get(groupKey.id, toStreamID('other-stream'))).toBeFalsy()
+        await store.add(groupKey, publisherId)
+        expect(await store.get(groupKey.id, publisherId)).toEqual(groupKey)
+        expect(await store.get(groupKey.id, randomEthereumAddress())).toBeUndefined()
     })
 
-    it('does not conflict with other clientIds', async () => {
+    it('key stores are clientId specific', async () => {
         const clientId2 = randomEthereumAddress()
-        const store2 = getGroupKeyStore(clientId2)
-
-        addAfter(() => store2.stop())
+        store2 = getGroupKeyStore(clientId2)
 
         const groupKey = GroupKey.generate()
-        await store.add(groupKey, streamId)
-        expect(await store2.get(groupKey.id, streamId)).toBeFalsy()
-        expect(await store.get(groupKey.id, streamId)).toEqual(groupKey)
+        await store.add(groupKey, publisherId)
+        expect(await store2.get(groupKey.id, publisherId)).toBeUndefined()
+        expect(await store.get(groupKey.id, publisherId)).toEqual(groupKey)
     })
 
     it('can read previously persisted data', async () => {
         const groupKey = GroupKey.generate()
-        await store.add(groupKey, streamId)
+        await store.add(groupKey, publisherId)
 
         const store2 = getGroupKeyStore(clientId)
-        expect(await store2.get(groupKey.id, streamId)).toEqual(groupKey)
+        expect(await store2.get(groupKey.id, publisherId)).toEqual(groupKey)
     })
 
-    it('add keys for multiple streams in parallel', async () => {
-        const assignments = range(10).map((i) => {
-            return { key: GroupKey.generate(), streamId: toStreamID(`stream${i}`) }
+    it('add multiple keys in parallel', async () => {
+        const assignments = range(10).map(() => {
+            return { key: GroupKey.generate(), publisherId: randomEthereumAddress() }
         })
-        await Promise.all(assignments.map(({ key, streamId }) => store.add(key, streamId)))
+        await Promise.all(assignments.map(({ key, publisherId }) => store.add(key, publisherId)))
         for (const assignment of assignments) {
-            expect(await store.get(assignment.key.id, assignment.streamId)).toEqual(assignment.key)
+            expect(await store.get(assignment.key.id, assignment.publisherId)).toEqual(assignment.key)
         }
+    })
+
+    /**
+     * Legacy keys refer to group keys migrated from a previous version of the client where group keys were not tied
+     * to a specific publisherId, therefore any publisherId for a given legacy key id is considered a match.
+     */
+    it('supports "legacy" keys', async () => {
+        const groupKey = GroupKey.generate()
+        const internalPersistence = await store.getPersistence()
+        await internalPersistence.set(`LEGACY::${groupKey.id}`, Buffer.from(groupKey.data).toString('hex'))
+        expect(await store.get(groupKey.id, randomEthereumAddress())).toEqual(groupKey)
+    })
+
+    it('"normal" keys have precedence over "legacy" keys', async () => {
+        const keyId = GroupKey.generate().id
+        const legacyKey = new GroupKey(keyId, crypto.randomBytes(32))
+        const normalKey = new GroupKey(keyId, crypto.randomBytes(32))
+        const internalPersistence = await store.getPersistence()
+        await internalPersistence.set(`LEGACY::${legacyKey.id}`, Buffer.from(legacyKey.data).toString('hex'))
+        await internalPersistence.set(`${publisherId}::${normalKey.id}`, Buffer.from(normalKey.data).toString('hex'))
+
+        expect(await store.get(keyId, publisherId)).toEqual(normalKey)
+        expect(await store.get(keyId, randomEthereumAddress())).toEqual(legacyKey)
     })
 })

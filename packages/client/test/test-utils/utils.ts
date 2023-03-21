@@ -1,7 +1,7 @@
 import crypto from 'crypto'
 import { DependencyContainer } from 'tsyringe'
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { EthereumAddress, Logger, wait } from '@streamr/utils'
+import { EthereumAddress, toEthereumAddress, Logger, wait } from '@streamr/utils'
 import { Wallet } from '@ethersproject/wallet'
 import { StreamMessage, StreamPartID, StreamPartIDUtils, MAX_PARTITION_COUNT } from '@streamr/protocol'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -113,7 +113,7 @@ export const createMockMessage = async (
             isPublicStream: (opts.encryptionKey === undefined),
             isStreamPublisher: true
         }),
-        groupKeyQueue: await createGroupKeyQueue(opts.encryptionKey, opts.nextEncryptionKey)
+        groupKeyQueue: await createGroupKeyQueue(toEthereumAddress(opts.publisher.address), opts.encryptionKey, opts.nextEncryptionKey)
     })
     const DEFAULT_CONTENT = {}
     const plainContent = opts.content ?? DEFAULT_CONTENT
@@ -186,8 +186,9 @@ export const createGroupKeyManager = (groupKeyStore: GroupKeyStore = mock<GroupK
     )
 }
 
-export const createGroupKeyQueue = async (current?: GroupKey, next?: GroupKey): Promise<GroupKeyQueue> => {
+export const createGroupKeyQueue = async (publisherId: EthereumAddress, current?: GroupKey, next?: GroupKey): Promise<GroupKeyQueue> => {
     const queue = new GroupKeyQueue(
+        publisherId,
         undefined as any,
         createGroupKeyManager()
     )

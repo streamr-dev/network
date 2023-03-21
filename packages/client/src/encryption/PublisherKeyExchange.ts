@@ -63,7 +63,7 @@ export class PublisherKeyExchange {
                     this.logger.debug('handling group key request %s', requestId)
                     await this.validator.validate(request)
                     const keys = without(
-                        await Promise.all(groupKeyIds.map((id: string) => this.store.get(id, request.getStreamId()))),
+                        await Promise.all(groupKeyIds.map((id: string) => this.store.get(id, authenticatedUser))),
                         undefined) as GroupKey[]
                     if (keys.length > 0) {
                         const response = await this.createResponse(
