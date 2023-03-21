@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Encryption keys are re-used automatically
+
 ### Changed
 
 - .addEncryptionKey: 2nd parameter is now `publisherId` instead of `streamId`
