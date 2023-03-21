@@ -2,7 +2,8 @@ const streamStatusSchemaLatest = {
     type: 'object',
     properties: {
         id: {
-            type: 'string'
+            type: 'string',
+            minLength: 1
         },
         partition: {
             type: 'number'
