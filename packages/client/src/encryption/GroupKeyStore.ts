@@ -1,7 +1,7 @@
 import { scoped, Lifecycle, inject } from 'tsyringe'
 import { join } from 'path'
 import { GroupKey } from './GroupKey'
-import { StreamID } from '@streamr/protocol'
+import { EthereumAddress } from '@streamr/utils'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { StreamrClientEventEmitter } from '../events'
 import { Persistence } from '../utils/persistence/Persistence'
@@ -43,8 +43,8 @@ export interface UpdateEncryptionKeyOptions {
     key?: GroupKey
 }
 
-function formKey(keyId: string, streamId: StreamID): string {
-    return `${streamId}::${keyId}`
+function formKey(keyId: string, publisherId: string): string {
+    return `${publisherId}::${keyId}`
 }
 
 /**
@@ -78,17 +78,17 @@ export class GroupKeyStore {
         })
     }
 
-    async get(keyId: string, streamId: StreamID): Promise<GroupKey | undefined> {
+    async get(keyId: string, publisherId: EthereumAddress): Promise<GroupKey | undefined> {
         await this.ensureInitialized()
-        const value = await this.persistence!.get(formKey(keyId, streamId))
+        const value = await this.persistence!.get(formKey(keyId, publisherId))
         if (value === undefined) { return undefined }
         return new GroupKey(keyId, Buffer.from(value, 'hex'))
     }
 
-    async add(key: GroupKey, streamId: StreamID): Promise<void> {
+    async add(key: GroupKey, publisherId: EthereumAddress): Promise<void> {
         await this.ensureInitialized()
         this.logger.debug('add key %s', key.id)
-        await this.persistence!.set(formKey(key.id, streamId), Buffer.from(key.data).toString('hex'))
+        await this.persistence!.set(formKey(key.id, publisherId), Buffer.from(key.data).toString('hex'))
         this.eventEmitter.emit('addGroupKey', key)
     }
 

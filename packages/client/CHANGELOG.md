@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- .addEncryptionKey: 2nd parameter is now `publisherId` instead of `streamId`
+
 ### Deprecated
 
 ### Removed

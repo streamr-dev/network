@@ -29,7 +29,7 @@ const createMessageFactory = async (opts?: {
             isPublicStream: false,
             isStreamPublisher: true
         }),
-        groupKeyQueue: await createGroupKeyQueue(GROUP_KEY),
+        groupKeyQueue: await createGroupKeyQueue(toEthereumAddress(WALLET.address), GROUP_KEY),
         ...opts
     })
 }
@@ -102,7 +102,7 @@ describe('MessageFactory', () => {
     it('next group key', async () => {
         const nextGroupKey = GroupKey.generate()
         const messageFactory = await createMessageFactory({
-            groupKeyQueue: await createGroupKeyQueue(GROUP_KEY, nextGroupKey)
+            groupKeyQueue: await createGroupKeyQueue(toEthereumAddress(WALLET.address), GROUP_KEY, nextGroupKey)
         })
         const msg = await createMessage({}, messageFactory)
         expect(msg.groupKeyId).toBe(GROUP_KEY.id)
