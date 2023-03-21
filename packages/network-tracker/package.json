@@ -1,6 +1,6 @@
 {
   "name": "@streamr/network-tracker",
-  "version": "8.0.4",
+  "version": "8.1.0-beta.0",
   "description": "Streamr Network tracker implementation (Brubeck)",
   "repository": {
     "type": "git",
@@ -24,10 +24,10 @@
     "test-unit": "jest test/unit"
   },
   "dependencies": {
-    "@streamr/network-node": "8.0.4",
-    "@streamr/protocol": "8.0.4",
+    "@streamr/network-node": "8.1.0-beta.0",
+    "@streamr/protocol": "8.1.0-beta.0",
     "@streamr/slackbot": "^1.1.0",
-    "@streamr/utils": "8.0.4",
+    "@streamr/utils": "8.1.0-beta.0",
     "ajv": "^8.8.2",
     "commander": "^8.3.0",
     "compression": "^1.7.4",
@@ -40,7 +40,7 @@
     "uuid": "^8.3.2"
   },
   "devDependencies": {
-    "@streamr/test-utils": "8.0.4",
+    "@streamr/test-utils": "8.1.0-beta.0",
     "@types/compression": "^1.7.2",
     "@types/cors": "^2.8.12",
     "@types/express": "^4.17.13",
