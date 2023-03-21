@@ -11,7 +11,7 @@ import { CONFIG_TEST } from '../../src/ConfigTest'
 import { StreamrClientConfig } from '../../src/Config'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { addAfterFn } from './jest-utils'
-import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
+import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
 import { StreamrClientEventEmitter } from '../../src/events'
 import { MessageFactory } from '../../src/publish/MessageFactory'
 import { Authentication, createPrivateKeyAuthentication } from '../../src/Authentication'
@@ -125,12 +125,12 @@ export const createMockMessage = async (
     }, partition)
 }
 
-export const getGroupKeyStore = (userAddress: EthereumAddress): GroupKeyStore => {
+export const getLocalGroupKeyStore = (userAddress: EthereumAddress): LocalGroupKeyStore => {
     const authentication = {
         getAddress: () => userAddress
     } as any
     const loggerFactory = mockLoggerFactory()
-    return new GroupKeyStore(
+    return new LocalGroupKeyStore(
         new PersistenceManager(
             authentication,
             new DestroySignal(),
@@ -177,7 +177,7 @@ export const createStreamRegistryCached = (opts: {
 }
 
 export const createGroupKeyManager = (
-    groupKeyStore: GroupKeyStore = mock<GroupKeyStore>(),
+    groupKeyStore: LocalGroupKeyStore = mock<LocalGroupKeyStore>(),
     authentication = createRandomAuthentication()
 ): GroupKeyManager => {
     return new GroupKeyManager(

@@ -5,7 +5,7 @@ import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
 import { mock, MockProxy } from 'jest-mock-extended'
 import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
-import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
+import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
 import { createGroupKeyManager, createRandomAuthentication } from '../test-utils/utils'
 import { Authentication } from '../../src/Authentication'
 
@@ -13,13 +13,13 @@ const streamId = toStreamID('mock-stream')
 
 describe('GroupKeyQueue', () => {
 
-    let groupKeyStore: MockProxy<GroupKeyStore>
+    let groupKeyStore: MockProxy<LocalGroupKeyStore>
     let authentication: Authentication
     let queue: GroupKeyQueue
     let groupKeyManager: GroupKeyManager
 
     beforeEach(async () => {
-        groupKeyStore = mock<GroupKeyStore>()
+        groupKeyStore = mock<LocalGroupKeyStore>()
         authentication = createRandomAuthentication()
         groupKeyManager = createGroupKeyManager(groupKeyStore, authentication)
         queue = await GroupKeyQueue.createInstance(streamId, authentication, groupKeyManager)

@@ -1,6 +1,6 @@
 import { GroupKey } from '../../src/encryption/GroupKey'
-import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
-import { getGroupKeyStore } from '../test-utils/utils'
+import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
+import { getLocalGroupKeyStore } from '../test-utils/utils'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import range from 'lodash/range'
 import { EthereumAddress } from '@streamr/utils'
@@ -10,18 +10,18 @@ import { PersistenceManager } from '../../src/PersistenceManager'
 import { DestroySignal } from '../../src/DestroySignal'
 import { mockLoggerFactory } from '../test-utils/utils'
 
-describe('GroupKeyStore', () => {
+describe('LocalGroupKeyStore', () => {
     
     let clientId: EthereumAddress
     let publisherId: EthereumAddress
-    let store: GroupKeyStore
-    let store2: GroupKeyStore
+    let store: LocalGroupKeyStore
+    let store2: LocalGroupKeyStore
     let persistenceManager: PersistenceManager
 
     beforeEach(() => {
         clientId = randomEthereumAddress()
         publisherId = randomEthereumAddress()
-        store = getGroupKeyStore(clientId)
+        store = getLocalGroupKeyStore(clientId)
         persistenceManager = new PersistenceManager(
             {
                 getAddress: async () => clientId
@@ -56,7 +56,7 @@ describe('GroupKeyStore', () => {
 
     it('key stores are clientId specific', async () => {
         const clientId2 = randomEthereumAddress()
-        store2 = getGroupKeyStore(clientId2)
+        store2 = getLocalGroupKeyStore(clientId2)
 
         const groupKey = GroupKey.generate()
         await store.set(groupKey.id, publisherId, groupKey.data)
@@ -68,7 +68,7 @@ describe('GroupKeyStore', () => {
         const groupKey = GroupKey.generate()
         await store.set(groupKey.id, publisherId, groupKey.data)
 
-        const store2 = getGroupKeyStore(clientId)
+        const store2 = getLocalGroupKeyStore(clientId)
         expect(await store2.get(groupKey.id, publisherId)).toEqual(groupKey)
     })
 

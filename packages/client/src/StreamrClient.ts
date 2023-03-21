@@ -11,7 +11,7 @@ import { ResendOptions, Resends } from './subscribe/Resends'
 import { ResendSubscription } from './subscribe/ResendSubscription'
 import { NetworkNodeFacade, NetworkNodeStub } from './NetworkNodeFacade'
 import { DestroySignal } from './DestroySignal'
-import { GroupKeyStore, UpdateEncryptionKeyOptions } from './encryption/GroupKeyStore'
+import { LocalGroupKeyStore, UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
 import { StorageNodeMetadata, StorageNodeRegistry } from './registry/StorageNodeRegistry'
 import { StreamRegistry } from './registry/StreamRegistry'
 import { StreamDefinition } from './types'
@@ -51,7 +51,7 @@ export class StreamrClient {
     private readonly resends: Resends
     private readonly publisher: Publisher
     private readonly subscriber: Subscriber
-    private readonly groupKeyStore: GroupKeyStore
+    private readonly localGroupKeyStore: LocalGroupKeyStore
     private readonly destroySignal: DestroySignal
     private readonly streamRegistry: StreamRegistry
     private readonly streamStorageRegistry: StreamStorageRegistry
@@ -78,7 +78,7 @@ export class StreamrClient {
         this.resends = container.resolve<Resends>(Resends)
         this.publisher = container.resolve<Publisher>(Publisher)
         this.subscriber = container.resolve<Subscriber>(Subscriber)
-        this.groupKeyStore = container.resolve<GroupKeyStore>(GroupKeyStore)
+        this.localGroupKeyStore = container.resolve<LocalGroupKeyStore>(LocalGroupKeyStore)
         this.destroySignal = container.resolve<DestroySignal>(DestroySignal)
         this.streamRegistry = container.resolve<StreamRegistry>(StreamRegistry)
         this.streamStorageRegistry = container.resolve<StreamStorageRegistry>(StreamStorageRegistry)
@@ -142,7 +142,7 @@ export class StreamrClient {
      * manually add some known keys into the store.
      */
     async addEncryptionKey(key: GroupKey, publisherId: EthereumAddress): Promise<void> {
-        await this.groupKeyStore.set(key.id, publisherId, key.data)
+        await this.localGroupKeyStore.set(key.id, publisherId, key.data)
     }
 
     // --------------------------------------------------------------------------------------------

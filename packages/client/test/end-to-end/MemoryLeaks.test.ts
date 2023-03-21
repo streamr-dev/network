@@ -17,7 +17,7 @@ import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
 import { Resends } from '../../src/subscribe/Resends'
 import { Publisher } from '../../src/publish/Publisher'
 import { Subscriber } from '../../src/subscribe/Subscriber'
-import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
+import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
 import { DestroySignal } from '../../src/DestroySignal'
 import { MessageMetadata } from '../../src/Message'
 import { AuthenticationInjectionToken, createAuthentication } from '../../src/Authentication'
@@ -29,7 +29,7 @@ const Dependencies = {
     Resends,
     Publisher,
     Subscriber,
-    GroupKeyStore,
+    LocalGroupKeyStore,
     DestroySignal
 }
 

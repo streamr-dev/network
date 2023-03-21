@@ -1,6 +1,6 @@
 import { LitProtocolFacade } from './LitProtocolFacade'
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import { GroupKeyStore } from './GroupKeyStore'
+import { LocalGroupKeyStore } from './LocalGroupKeyStore'
 import { GroupKey } from './GroupKey'
 import { StreamID, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { EthereumAddress, waitForEvent } from '@streamr/utils'
@@ -14,7 +14,7 @@ import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 
 @scoped(Lifecycle.ContainerScoped)
 export class GroupKeyManager {
-    private readonly groupKeyStore: GroupKeyStore
+    private readonly localGroupKeyStore: LocalGroupKeyStore
     private readonly litProtocolFacade: LitProtocolFacade
     private readonly subscriberKeyExchange: SubscriberKeyExchange
     private readonly eventEmitter: StreamrClientEventEmitter
@@ -23,7 +23,7 @@ export class GroupKeyManager {
     private readonly config: Pick<StrictStreamrClientConfig, 'encryption'>
 
     constructor(
-        groupKeyStore: GroupKeyStore,
+        localGroupKeyStore: LocalGroupKeyStore,
         litProtocolFacade: LitProtocolFacade,
         subscriberKeyExchange: SubscriberKeyExchange,
         eventEmitter: StreamrClientEventEmitter,
@@ -31,7 +31,7 @@ export class GroupKeyManager {
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'encryption'>
     ) {
-        this.groupKeyStore = groupKeyStore
+        this.localGroupKeyStore = localGroupKeyStore
         this.litProtocolFacade = litProtocolFacade
         this.subscriberKeyExchange = subscriberKeyExchange
         this.eventEmitter = eventEmitter
@@ -44,7 +44,7 @@ export class GroupKeyManager {
         const streamId = StreamPartIDUtils.getStreamID(streamPartId)
 
         // 1st try: local storage
-        let groupKey = await this.groupKeyStore.get(groupKeyId, publisherId)
+        let groupKey = await this.localGroupKeyStore.get(groupKeyId, publisherId)
         if (groupKey !== undefined) {
             return groupKey
         }
@@ -53,7 +53,7 @@ export class GroupKeyManager {
         if (this.config.encryption.litProtocolEnabled) {
             groupKey = await this.litProtocolFacade.get(streamId, groupKeyId)
             if (groupKey !== undefined) {
-                await this.groupKeyStore.set(groupKey.id, publisherId, groupKey.data)
+                await this.localGroupKeyStore.set(groupKey.id, publisherId, groupKey.data)
                 return groupKey
             }
         }
@@ -76,8 +76,8 @@ export class GroupKeyManager {
         if (publisherId !== (await this.authentication.getAddress())) {
             throw new Error('storeKey: fetching latest encryption keys for other publishers not supported.')
         }
-        const keyId = await this.groupKeyStore.getLatestEncryptionKeyId(publisherId, streamId)
-        return keyId !== undefined ? this.groupKeyStore.get(keyId, publisherId) : undefined
+        const keyId = await this.localGroupKeyStore.getLatestEncryptionKeyId(publisherId, streamId)
+        return keyId !== undefined ? this.localGroupKeyStore.get(keyId, publisherId) : undefined
     }
 
     async storeKey(groupKey: GroupKey | undefined, publisherId: EthereumAddress, streamId: StreamID): Promise<GroupKey> { // TODO: name
@@ -94,12 +94,12 @@ export class GroupKeyManager {
                 groupKey = new GroupKey(uuid('GroupKey'), keyData)
             }
         }
-        await this.groupKeyStore.set(groupKey.id, publisherId, groupKey.data)
-        await this.groupKeyStore.setLatestEncryptionKeyId(groupKey.id, publisherId, streamId)
+        await this.localGroupKeyStore.set(groupKey.id, publisherId, groupKey.data)
+        await this.localGroupKeyStore.setLatestEncryptionKeyId(groupKey.id, publisherId, streamId)
         return groupKey
     }
 
     addKeyToLocalStore(groupKey: GroupKey, publisherId: EthereumAddress): Promise<void> {
-        return this.groupKeyStore.set(groupKey.id, publisherId, groupKey.data)
+        return this.localGroupKeyStore.set(groupKey.id, publisherId, groupKey.data)
     }
 }

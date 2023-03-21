@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
-import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
+import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
 import { mock, MockProxy } from 'jest-mock-extended'
 import { LitProtocolFacade } from '../../src/encryption/LitProtocolFacade'
 import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
@@ -14,7 +14,7 @@ import { Wallet } from '@ethersproject/wallet'
 import { toEthereumAddress } from '@streamr/utils'
 
 describe('GroupKeyManager', () => {
-    let groupKeyStore: MockProxy<GroupKeyStore>
+    let groupKeyStore: MockProxy<LocalGroupKeyStore>
     let litProtocolFacade: MockProxy<LitProtocolFacade>
     let subscriberKeyExchange: MockProxy<SubscriberKeyExchange>
     let eventEmitter: StreamrClientEventEmitter
@@ -46,7 +46,7 @@ describe('GroupKeyManager', () => {
     }
 
     beforeEach(() => {
-        groupKeyStore = mock<GroupKeyStore>()
+        groupKeyStore = mock<LocalGroupKeyStore>()
         litProtocolFacade = mock<LitProtocolFacade>()
         subscriberKeyExchange = mock<SubscriberKeyExchange>()
         eventEmitter = new StreamrClientEventEmitter()

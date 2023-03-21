@@ -20,7 +20,7 @@ import { withThrottling, pOnce } from '../utils/promises'
 import { MaxSizedSet } from '../utils/utils'
 import { Validator } from '../Validator'
 import { GroupKey } from './GroupKey'
-import { GroupKeyStore } from './GroupKeyStore'
+import { LocalGroupKeyStore } from './LocalGroupKeyStore'
 import { RSAKeyPair } from './RSAKeyPair'
 import { EthereumAddress, Logger } from '@streamr/utils'
 import { LoggerFactory } from '../utils/LoggerFactory'
@@ -36,7 +36,7 @@ export class SubscriberKeyExchange {
     private readonly logger: Logger
     private rsaKeyPair: RSAKeyPair | undefined
     private readonly networkNodeFacade: NetworkNodeFacade
-    private readonly store: GroupKeyStore
+    private readonly store: LocalGroupKeyStore
     private readonly authentication: Authentication
     private readonly validator: Validator
     private readonly pendingRequests: MaxSizedSet<string> = new MaxSizedSet(MAX_PENDING_REQUEST_COUNT)
@@ -45,7 +45,7 @@ export class SubscriberKeyExchange {
 
     constructor(
         networkNodeFacade: NetworkNodeFacade,
-        store: GroupKeyStore,
+        store: LocalGroupKeyStore,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         validator: Validator,
         @inject(LoggerFactory) loggerFactory: LoggerFactory,

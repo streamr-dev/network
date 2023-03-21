@@ -47,11 +47,8 @@ function formKey2(publisherId: EthereumAddress, streamId: StreamID): string {
     return `${publisherId}::${streamId}`
 }
 
-/**
- * TODO: rename to e.g. `LocalGroupKeyStore` for clarity
- */
 @scoped(Lifecycle.ContainerScoped)
-export class GroupKeyStore {
+export class LocalGroupKeyStore {
 
     private persistenceManager: PersistenceManager
     private eventEmitter: StreamrClientEventEmitter
