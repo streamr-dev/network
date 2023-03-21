@@ -1,4 +1,4 @@
-import { createMockConnectionDhtNode } from '../utils'
+import { createMockConnectionDhtNode } from '../utils/utils'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { PeerID } from '../../src/helpers/PeerID'

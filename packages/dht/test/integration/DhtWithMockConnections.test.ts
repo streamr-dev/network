@@ -1,7 +1,7 @@
 import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { createMockConnectionDhtNode } from '../utils'
+import { createMockConnectionDhtNode } from '../utils/utils'
 
 describe('Mock IConnection DHT Joining', () => {
     let entryPoint: DhtNode

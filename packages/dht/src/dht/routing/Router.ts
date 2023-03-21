@@ -42,9 +42,21 @@ interface ForwardingTableEntry {
     peerDescriptors: PeerDescriptor[]
 }
 
+interface IRouterFunc {
+    doRouteMessage(routedMessage: RouteMessageWrapper, mode: RoutingMode): RouteMessageAck
+    send(msg: Message, reachableThrough: PeerDescriptor[]): Promise<void>
+    checkDuplicate(messageId: string): boolean
+    addToDuplicateDetector(messageId: string, senderId: string, message?: Message): void
+    addRoutingSession(session: RoutingSession): void
+    removeRoutingSession(sessionId: string): void
+    stop(): void
+}
+
+export interface IRouter extends Omit<IRoutingService, 'findRecursively'>, IRouterFunc {}
+
 const logger = new Logger(module)
 
-export class Router implements Omit<IRoutingService, 'findRecursively'> {
+export class Router implements IRouter {
     private readonly config: RouterConfig
     private readonly forwardingTable: Map<string, ForwardingTableEntry> = new Map()
     private ongoingRoutingSessions: Map<string, RoutingSession> = new Map()

@@ -1,6 +1,6 @@
 import { DhtPeer } from '../../src/dht/DhtPeer'
 import { RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
-import { getMockPeers, MockDhtRpc } from '../utils'
+import { getMockPeers, MockDhtRpc } from '../utils/utils'
 import {
     ClosestPeersRequest,
     ClosestPeersResponse,
@@ -10,7 +10,7 @@ import {
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { DhtRpcServiceClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
-import { generateId } from '../utils'
+import { generateId } from '../utils/utils'
 import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 
 describe('DhtPeer', () => {
