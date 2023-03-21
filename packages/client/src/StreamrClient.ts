@@ -142,7 +142,7 @@ export class StreamrClient {
      * manually add some known keys into the store.
      */
     async addEncryptionKey(key: GroupKey, publisherId: EthereumAddress): Promise<void> {
-        await this.groupKeyStore.add(key, publisherId)
+        await this.groupKeyStore.set(key.id, publisherId, key.data)
     }
 
     // --------------------------------------------------------------------------------------------

@@ -43,13 +43,13 @@ describe('GroupKeyStore', () => {
         const groupKey = GroupKey.generate()
         expect(await store.get(groupKey.id, publisherId)).toBeUndefined()
 
-        await store.add(groupKey, publisherId)
+        await store.set(groupKey.id, publisherId, groupKey.data)
         expect(await store.get(groupKey.id, publisherId)).toEqual(groupKey)
     })
 
     it('key lookup is publisher specific', async () => {
         const groupKey = GroupKey.generate()
-        await store.add(groupKey, publisherId)
+        await store.set(groupKey.id, publisherId, groupKey.data)
         expect(await store.get(groupKey.id, publisherId)).toEqual(groupKey)
         expect(await store.get(groupKey.id, randomEthereumAddress())).toBeUndefined()
     })
@@ -59,14 +59,14 @@ describe('GroupKeyStore', () => {
         store2 = getGroupKeyStore(clientId2)
 
         const groupKey = GroupKey.generate()
-        await store.add(groupKey, publisherId)
+        await store.set(groupKey.id, publisherId, groupKey.data)
         expect(await store2.get(groupKey.id, publisherId)).toBeUndefined()
         expect(await store.get(groupKey.id, publisherId)).toEqual(groupKey)
     })
 
     it('can read previously persisted data', async () => {
         const groupKey = GroupKey.generate()
-        await store.add(groupKey, publisherId)
+        await store.set(groupKey.id, publisherId, groupKey.data)
 
         const store2 = getGroupKeyStore(clientId)
         expect(await store2.get(groupKey.id, publisherId)).toEqual(groupKey)
@@ -76,7 +76,7 @@ describe('GroupKeyStore', () => {
         const assignments = range(10).map(() => {
             return { key: GroupKey.generate(), publisherId: randomEthereumAddress() }
         })
-        await Promise.all(assignments.map(({ key, publisherId }) => store.add(key, publisherId)))
+        await Promise.all(assignments.map(({ key, publisherId }) => store.set(key.id, publisherId, key.data)))
         for (const assignment of assignments) {
             expect(await store.get(assignment.key.id, assignment.publisherId)).toEqual(assignment.key)
         }

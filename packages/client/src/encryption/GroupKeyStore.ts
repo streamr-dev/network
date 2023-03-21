@@ -89,12 +89,11 @@ export class GroupKeyStore {
         return value !== undefined ? new GroupKey(keyId, Buffer.from(value, 'hex')) : undefined
     }
 
-    // TODO: rename to "set"?
-    async add(key: GroupKey, publisherId: EthereumAddress): Promise<void> {
+    async set(keyId: string, publisherId: EthereumAddress, data: Buffer): Promise<void> {
         const persistence = await this.persistenceManager.getPersistence(NAMESPACES.ENCRYPTION_KEYS)
-        this.logger.debug('add key %s', key.id)
-        await persistence.set(formKey(key.id, publisherId), Buffer.from(key.data).toString('hex'))
-        this.eventEmitter.emit('addGroupKey', key)
+        this.logger.debug('add key %s', keyId)
+        await persistence.set(formKey(keyId, publisherId), Buffer.from(data).toString('hex'))
+        this.eventEmitter.emit('storeEncryptionKeyToLocalStore', keyId)
     }
 
     async setLatestEncryptionKeyId(keyId: string, publisherId: EthereumAddress, streamId: StreamID): Promise<void> {

@@ -122,7 +122,7 @@ export class SubscriberKeyExchange {
                     await this.validator.validate(msg)
                     await Promise.all(encryptedGroupKeys.map(async (encryptedKey) => {
                         const key = GroupKey.decryptRSAEncrypted(encryptedKey, this.rsaKeyPair!.getPrivateKey())
-                        await this.store.add(key, msg.getPublisherId())
+                        await this.store.set(key.id, msg.getPublisherId(), key.data)
                     }))
                 }
             } catch (e: any) {

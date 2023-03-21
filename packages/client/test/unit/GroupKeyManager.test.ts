@@ -78,7 +78,7 @@ describe('GroupKeyManager', () => {
 
         it('key present in subscriber key exchange', async () => {
             subscriberKeyExchange.requestGroupKey.mockImplementation(async () => {
-                setTimeout(() => eventEmitter.emit('addGroupKey', groupKey), 0)
+                setTimeout(() => eventEmitter.emit('storeEncryptionKeyToLocalStore', groupKey.id), 0)
             })
 
             const key = await groupKeyManager.fetchKey(toStreamPartID(streamId, 0), groupKeyId, publisherId)
@@ -117,7 +117,7 @@ describe('GroupKeyManager', () => {
         it('given pre-defined key only stores in (local) group key store and skips lit protocol', async () => {
             const returnedGroupKey = await groupKeyManager.storeKey(groupKey, publisherId, streamId)
             expect(returnedGroupKey).toEqual(groupKey)
-            expect(groupKeyStore.add).toHaveBeenCalledWith(groupKey, publisherId)
+            expect(groupKeyStore.set).toHaveBeenCalledWith(groupKey.id, publisherId, groupKey.data)
             expect(litProtocolFacade.store).toHaveBeenCalledTimes(0)
         })
 
@@ -129,14 +129,14 @@ describe('GroupKeyManager', () => {
 
                 const returnedGroupKey = await groupKeyManager.storeKey(undefined, publisherId, streamId)
                 expect(returnedGroupKey.id).toEqual('foobarId')
-                expect(groupKeyStore.add).toHaveBeenCalledWith(returnedGroupKey, publisherId)
+                expect(groupKeyStore.set).toHaveBeenCalledWith(returnedGroupKey.id, publisherId, returnedGroupKey.data)
                 expect(litProtocolFacade.store).toHaveBeenCalledWith(streamId, returnedGroupKey.data)
 
             })
 
             it('lit-protocol offline: generates new key and stores only in (local) group key store', async () => {
                 const returnedGroupKey = await groupKeyManager.storeKey(undefined, publisherId, streamId)
-                expect(groupKeyStore.add).toHaveBeenCalledWith(returnedGroupKey, publisherId)
+                expect(groupKeyStore.set).toHaveBeenCalledWith(returnedGroupKey.id, publisherId, returnedGroupKey.data)
                 expect(litProtocolFacade.store).toHaveBeenCalledWith(streamId, returnedGroupKey.data)
             })
 
@@ -150,6 +150,6 @@ describe('GroupKeyManager', () => {
 
     it('addKeyToLocalStore delegates to groupKeyStore#add', async () => {
         await groupKeyManager.addKeyToLocalStore(groupKey, publisherId)
-        expect(groupKeyStore.add).toHaveBeenCalledWith(groupKey, publisherId)
+        expect(groupKeyStore.set).toHaveBeenCalledWith(groupKey.id, publisherId, groupKey.data)
     })
 })

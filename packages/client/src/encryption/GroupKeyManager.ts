@@ -53,7 +53,7 @@ export class GroupKeyManager {
         if (this.config.encryption.litProtocolEnabled) {
             groupKey = await this.litProtocolFacade.get(streamId, groupKeyId)
             if (groupKey !== undefined) {
-                await this.groupKeyStore.add(groupKey, publisherId)
+                await this.groupKeyStore.set(groupKey.id, publisherId, groupKey.data)
                 return groupKey
             }
         }
@@ -63,9 +63,9 @@ export class GroupKeyManager {
         const groupKeys = await waitForEvent(
             // TODO remove "as any" type casing in NET-889
             this.eventEmitter as any,
-            'addGroupKey',
+            'storeEncryptionKeyToLocalStore',
             this.config.encryption.keyRequestTimeout,
-            (storedGroupKey: GroupKey) => storedGroupKey.id === groupKeyId,
+            (storedGroupKeyId: string) => storedGroupKeyId === groupKeyId,
             this.destroySignal.abortSignal
         )
         return groupKeys[0] as GroupKey
@@ -94,12 +94,12 @@ export class GroupKeyManager {
                 groupKey = new GroupKey(uuid('GroupKey'), keyData)
             }
         }
-        await this.groupKeyStore.add(groupKey, publisherId)
+        await this.groupKeyStore.set(groupKey.id, publisherId, groupKey.data)
         await this.groupKeyStore.setLatestEncryptionKeyId(groupKey.id, publisherId, streamId)
         return groupKey
     }
 
     addKeyToLocalStore(groupKey: GroupKey, publisherId: EthereumAddress): Promise<void> {
-        return this.groupKeyStore.add(groupKey, publisherId)
+        return this.groupKeyStore.set(groupKey.id, publisherId, groupKey.data)
     }
 }
