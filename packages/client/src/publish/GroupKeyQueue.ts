@@ -23,8 +23,8 @@ export class GroupKeyQueue {
     ): Promise<GroupKeyQueue> {
         const instance = new GroupKeyQueue(streamId, authentication, groupKeyManager)
         instance.currentGroupKey = await instance.groupKeyManager.fetchLatestEncryptionKey(
+            await authentication.getAddress(),
             streamId,
-            await authentication.getAddress()
         )
         return instance
     }

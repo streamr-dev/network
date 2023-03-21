@@ -1,4 +1,5 @@
 import 'reflect-metadata'
+
 import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
 import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
 import { mock, MockProxy } from 'jest-mock-extended'
@@ -8,7 +9,7 @@ import { StreamrClientEventEmitter } from '../../src/events'
 import { DestroySignal } from '../../src/DestroySignal'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { toStreamID, toStreamPartID } from '@streamr/protocol'
-import { fastPrivateKey } from '@streamr/test-utils'
+import { fastPrivateKey, randomEthereumAddress } from '@streamr/test-utils'
 import { createPrivateKeyAuthentication } from '../../src/Authentication'
 import { Wallet } from '@ethersproject/wallet'
 import { toEthereumAddress } from '@streamr/utils'
@@ -152,5 +153,33 @@ describe('GroupKeyManager', () => {
     it('addKeyToLocalStore delegates to groupKeyStore#add', async () => {
         await groupKeyManager.addKeyToLocalStore(groupKey, publisherId)
         expect(groupKeyStore.set).toHaveBeenCalledWith(groupKey.id, publisherId, groupKey.data)
+    })
+
+    describe('fetchLatestEncryptionKey', () => {
+
+        it('happy path', async () => {
+            const key = GroupKey.generate()
+            groupKeyStore.getLatestEncryptionKeyId.calledWith(publisherId, streamId).mockResolvedValue(key.id)
+            groupKeyStore.get.calledWith(key.id, publisherId).mockResolvedValue(key)
+            expect(await groupKeyManager.fetchLatestEncryptionKey(publisherId, streamId)).toEqual(key)
+        })
+
+        it('key reference not found', async () => {
+            const key = GroupKey.generate()
+            groupKeyStore.get.calledWith(key.id, publisherId).mockResolvedValue(key)
+            expect(await groupKeyManager.fetchLatestEncryptionKey(publisherId, streamId)).toBeUndefined()
+        })
+
+        it('key data not found', async () => {
+            const key = GroupKey.generate()
+            groupKeyStore.getLatestEncryptionKeyId.calledWith(publisherId, streamId).mockResolvedValue(key.id)
+            expect(await groupKeyManager.fetchLatestEncryptionKey(publisherId, streamId)).toBeUndefined()
+        })
+
+        it('not own key', async () => {
+            await expect(() => {
+                return groupKeyManager.fetchLatestEncryptionKey(randomEthereumAddress(), streamId)
+            }).rejects.toThrow('not supported')
+        })
     })
 })

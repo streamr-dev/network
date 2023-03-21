@@ -43,7 +43,7 @@ function formKey(keyId: string, publisherId: string): string {
     return `${publisherId}::${keyId}`
 }
 
-function formKey2(publisherId: EthereumAddress, streamId: StreamID): string {
+function formKey2(publisherId: EthereumAddress, streamId: StreamID): string { // TODO name
     return `${publisherId}::${streamId}`
 }
 
