@@ -70,7 +70,7 @@ export class Router implements Omit<IRoutingService, 'findRecursively'> {
                 requestId: v4(),
                 destinationPeer: forwardingPeer,
                 sourcePeer: this.config.ownPeerDescriptor!,
-                reachableThrough: [],
+                reachableThrough,
                 routingPath: []
             }
             this.doRouteMessage(forwardedMessage, RoutingMode.FORWARD)
@@ -83,7 +83,7 @@ export class Router implements Omit<IRoutingService, 'findRecursively'> {
                 reachableThrough,
                 routingPath: []
             }
-            this.doRouteMessage(routedMessage, RoutingMode.FORWARD)
+            this.doRouteMessage(routedMessage, RoutingMode.ROUTE)
         }
     }
 
