@@ -43,6 +43,10 @@ export interface UpdateEncryptionKeyOptions {
     key?: GroupKey
 }
 
+function formKey(keyId: string, streamId: StreamID): string {
+    return `${streamId}::${keyId}`
+}
+
 /**
  * TODO: rename to e.g. `LocalGroupKeyStore` for clarity
  */
@@ -67,8 +71,7 @@ export class GroupKeyStore {
             const clientId = await this.authentication.getAddress()
             this.persistence = new ServerPersistence({
                 loggerFactory,
-                tableName: 'GroupKeys',
-                valueColumnName: 'groupKey',
+                tableName: 'EncryptionKeys',
                 clientId,
                 migrationsPath: join(__dirname, 'migrations')
             })
@@ -77,7 +80,7 @@ export class GroupKeyStore {
 
     async get(keyId: string, streamId: StreamID): Promise<GroupKey | undefined> {
         await this.ensureInitialized()
-        const value = await this.persistence!.get(keyId, streamId)
+        const value = await this.persistence!.get(formKey(keyId, streamId))
         if (value === undefined) { return undefined }
         return new GroupKey(keyId, Buffer.from(value, 'hex'))
     }
@@ -85,7 +88,7 @@ export class GroupKeyStore {
     async add(key: GroupKey, streamId: StreamID): Promise<void> {
         await this.ensureInitialized()
         this.logger.debug('add key %s', key.id)
-        await this.persistence!.set(key.id, Buffer.from(key.data).toString('hex'), streamId)
+        await this.persistence!.set(formKey(key.id, streamId), Buffer.from(key.data).toString('hex'))
         this.eventEmitter.emit('addGroupKey', key)
     }
 

@@ -7,14 +7,12 @@ import sqlite3 from 'sqlite3'
 import { pOnce } from '../promises'
 
 import { Persistence } from './Persistence'
-import { StreamID } from '@streamr/protocol'
 import { Logger, wait } from '@streamr/utils'
 import { LoggerFactory } from '../LoggerFactory'
 
 export interface ServerPersistenceOptions {
     loggerFactory: LoggerFactory
     tableName: string
-    valueColumnName: string
     clientId: string
     migrationsPath?: string
     onInit?: (db: Database) => Promise<void>
@@ -23,10 +21,9 @@ export interface ServerPersistenceOptions {
 /*
  * Stores key-value pairs for a given stream
  */
-export default class ServerPersistence implements Persistence<string, string> {
+export default class ServerPersistence<K extends string, V extends string> implements Persistence<K, V> {
     private readonly logger: Logger
     private readonly tableName: string
-    private readonly valueColumnName: string
     private readonly dbFilePath: string
     private store?: Database
     private error?: Error
@@ -38,16 +35,13 @@ export default class ServerPersistence implements Persistence<string, string> {
         loggerFactory,
         clientId,
         tableName,
-        valueColumnName,
         migrationsPath,
         onInit
     }: ServerPersistenceOptions) {
         this.logger = loggerFactory.createLogger(module)
         this.tableName = tableName
-        this.valueColumnName = valueColumnName
         const paths = envPaths('streamr-client')
-        const dbFilePath = resolve(paths.data, join('./', clientId, `${tableName}.db`))
-        this.dbFilePath = dbFilePath
+        this.dbFilePath = resolve(paths.data, join('./', clientId, `GroupKeys.db`))
         this.migrationsPath = migrationsPath
         this.onInit = onInit
         this.init = pOnce(this.init.bind(this))
@@ -132,29 +126,27 @@ export default class ServerPersistence implements Persistence<string, string> {
         this.logger.trace('database initialized')
     }
 
-    async get(key: string, streamId: StreamID): Promise<string | undefined> {
+    async get(key: K): Promise<V | undefined> {
         if (!this.initCalled) {
             // can't have if doesn't exist
             if (!(await this.exists())) { return undefined }
         }
 
         await this.init()
-        const value = await this.store!.get(
-            `SELECT ${this.valueColumnName} FROM ${this.tableName} WHERE id = ? AND streamId = ?`,
-            key,
-            encodeURIComponent(streamId)
+        const row = await this.store!.get(
+            `SELECT value_ FROM ${this.tableName} WHERE key_ = ?`,
+            key
         )
-        return value?.[this.valueColumnName]
+        return row?.['value_']
     }
 
-    async set(key: string, value: string, streamId: StreamID): Promise<void> {
+    async set(key: K, value: V): Promise<void> {
         await this.init()
         await this.store!.run(
-            `INSERT INTO ${this.tableName} VALUES ($id, $${this.valueColumnName}, $streamId) ON CONFLICT DO NOTHING`,
+            `INSERT INTO ${this.tableName} (key_, value_) VALUES ($key_, $value_) ON CONFLICT DO NOTHING`,
             {
-                $id: key,
-                [`$${this.valueColumnName}`]: value,
-                $streamId: encodeURIComponent(streamId),
+                $key_: key,
+                $value_: value,
             }
         )
     }
@@ -168,9 +160,5 @@ export default class ServerPersistence implements Persistence<string, string> {
         await this.init()
         await this.store!.close()
         this.logger.trace('closed')
-    }
-
-    get [Symbol.toStringTag](): string {
-        return this.constructor.name
     }
 }
