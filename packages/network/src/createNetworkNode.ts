@@ -9,7 +9,7 @@ import NodeClientWsEndpoint from './connection/ws/NodeClientWsEndpoint'
 import { WebRtcEndpoint } from './connection/webrtc/WebRtcEndpoint'
 import { webRtcConnectionFactory } from './connection/webrtc/NodeWebRtcConnection'
 import { TrackerRegistryRecord } from '@streamr/protocol'
-import { IceServer } from './connection/webrtc/WebRtcConnection'
+import { IceServer, WebRtcPortRange } from './connection/webrtc/WebRtcConnection'
 
 export interface NetworkNodeOptions extends AbstractNodeOptions {
     trackers: TrackerRegistryRecord[]
@@ -24,6 +24,8 @@ export interface NetworkNodeOptions extends AbstractNodeOptions {
     trackerConnectionMaintenanceInterval: number
     webrtcDisallowPrivateAddresses: boolean
     acceptProxyConnections: boolean
+    webrtcMaxMessageSize: number
+    webrtcPortRange: WebRtcPortRange
 }
 
 export const TEST_CONFIG: Omit<NetworkNodeOptions, 'id' | 'trackers' | 'metricsContext'> = {
@@ -38,7 +40,12 @@ export const TEST_CONFIG: Omit<NetworkNodeOptions, 'id' | 'trackers' | 'metricsC
     trackerConnectionMaintenanceInterval: 5 * 1000,
     webrtcDisallowPrivateAddresses: false,
     acceptProxyConnections: false,
-    trackerPingInterval: 60 * 1000
+    trackerPingInterval: 60 * 1000,
+    webrtcPortRange: {
+        min: 6000,
+        max: 65535
+    },
+    webrtcMaxMessageSize: 1048576
 }
 
 export const createNetworkNode = ({
@@ -57,7 +64,9 @@ export const createNetworkNode = ({
     iceServers,
     trackerConnectionMaintenanceInterval,
     webrtcDisallowPrivateAddresses,
-    acceptProxyConnections
+    acceptProxyConnections,
+    webrtcPortRange,
+    webrtcMaxMessageSize,
 }: NetworkNodeOptions): NetworkNode => {
     const peerInfo = PeerInfo.newNode(id, undefined, undefined, location)
     const endpoint = new NodeClientWsEndpoint(peerInfo, trackerPingInterval)
@@ -77,7 +86,9 @@ export const createNetworkNode = ({
         webrtcDatachannelBufferThresholdLow,
         webrtcDatachannelBufferThresholdHigh,
         webrtcSendBufferMaxMessageCount,
-        webrtcDisallowPrivateAddresses
+        webrtcDisallowPrivateAddresses,
+        webrtcPortRange,
+        webrtcMaxMessageSize
     ))
 
     return new NetworkNode({
