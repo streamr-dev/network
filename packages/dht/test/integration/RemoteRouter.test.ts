@@ -4,7 +4,7 @@ import { Message, MessageType, PeerDescriptor, RouteMessageAck, RouteMessageWrap
 import { RoutingServiceClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import { RpcMessage } from "../../src/proto/packages/proto-rpc/protos/ProtoRpc"
 import { DhtCallContext } from "../../src/rpc-protocol/DhtCallContext"
-import { createWrappedClosestPeersRequest, generateId, MockRoutingService } from "../utils"
+import { createWrappedClosestPeersRequest, generateId, MockRoutingService } from "../utils/utils"
 
 describe('RemoteRouter', () => {
 

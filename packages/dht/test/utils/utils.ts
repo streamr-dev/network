@@ -1,4 +1,4 @@
-import { DhtNode } from '../src/dht/DhtNode'
+import { DhtNode } from '../../src/dht/DhtNode'
 import {
     ClosestPeersRequest,
     ClosestPeersResponse,
@@ -12,24 +12,26 @@ import {
     StoreDataRequest,
     StoreDataResponse,
     WebSocketConnectionRequest,
-    WebSocketConnectionResponse
-} from '../src/proto/packages/dht/protos/DhtRpc'
-import { RpcMessage } from '../src/proto/packages/proto-rpc/protos/ProtoRpc'
-import { PeerID } from '../src/helpers/PeerID'
+    WebSocketConnectionResponse,
+    RecursiveFindRequest, FindMode
+} from '../../src/proto/packages/dht/protos/DhtRpc'
+import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
+import { PeerID } from '../../src/helpers/PeerID'
 import {
     IDhtRpcService,
     IRoutingService,
     IStoreService,
     IWebSocketConnectorService
-} from '../src/proto/packages/dht/protos/DhtRpc.server'
+} from '../../src/proto/packages/dht/protos/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { Simulator } from '../src/connection/Simulator/Simulator'
-import { ConnectionManager } from '../src/connection/ConnectionManager'
+import { Simulator } from '../../src/connection/Simulator/Simulator'
+import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { v4 } from 'uuid'
-import { getRandomRegion } from './data/pings'
-import { Empty } from '../src/proto/google/protobuf/empty'
-import { Any } from '../src/proto/google/protobuf/any'
+import { getRandomRegion } from '../data/pings'
+import { Empty } from '../../src/proto/google/protobuf/empty'
+import { Any } from '../../src/proto/google/protobuf/any'
 import { waitForCondition } from '@streamr/utils'
+import { RoutingRpcCommunicator } from '../../src/transport/RoutingRpcCommunicator'
 
 export const generateId = (stringId: string): Uint8Array => {
     return PeerID.fromString(stringId).value
@@ -110,6 +112,16 @@ export const createWrappedClosestPeersRequest = (
         requestId: v4()
     }
     return rpcWrapper
+}
+
+export const createRecursiveFindRequest = (
+    findMode: FindMode
+): RecursiveFindRequest => {
+    const request: RecursiveFindRequest = {
+        findMode,
+        recursiveFindSessionId: v4()
+    }
+    return request
 }
 
 interface IDhtRpcWithError extends IDhtRpcService {
@@ -274,6 +286,8 @@ async function waitReadyForTesting(connectionManager: ConnectionManager, limit: 
             throw Error(`ConnectionManager has more than ${limit}`)
         }
     }
-
 }
 
+export function createMockRoutingRpcCommunicator(): RoutingRpcCommunicator {
+    return new RoutingRpcCommunicator('router', async (_msg, _doNotConnect) => {})
+}

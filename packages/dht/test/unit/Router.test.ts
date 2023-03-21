@@ -2,9 +2,8 @@ import { Router } from "../../src/dht/routing/Router"
 import { Message, MessageType, PeerDescriptor, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { PeerID, PeerIDKey } from '../../src/helpers/PeerID'
 import { DhtPeer } from '../../src/dht/DhtPeer'
-import { createWrappedClosestPeersRequest } from '../utils'
+import { createWrappedClosestPeersRequest, createMockRoutingRpcCommunicator } from '../utils/utils'
 import { v4 } from 'uuid'
-import { RoutingRpcCommunicator } from '../../src/transport/RoutingRpcCommunicator'
 import { keyFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 
 describe('Router', () => {
@@ -19,7 +18,6 @@ describe('Router', () => {
     const peerDescriptor2: PeerDescriptor = {
         kademliaId: PeerID.fromString('destination').value,
         type: 0,
-        nodeName: 'router'
     }
     const rpcWrapper = createWrappedClosestPeersRequest(peerDescriptor1, peerDescriptor2)
     const message: Message = {
@@ -42,7 +40,7 @@ describe('Router', () => {
         sourcePeer: peerDescriptor2
     }
     let connections: Map<PeerIDKey, DhtPeer>
-    const mockRpcCommunicator = new RoutingRpcCommunicator('router', async (_msg, _doNotConnect) => {})
+    const mockRpcCommunicator = createMockRoutingRpcCommunicator()
 
     const createMockDhtPeer = (destination: PeerDescriptor): DhtPeer => {
         return new DhtPeer(peerDescriptor1, destination, {} as any, 'router')

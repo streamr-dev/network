@@ -10,7 +10,7 @@ import {
     RouteMessageWrapper
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
-import { createRouteMessageAck, Router, RoutingErrors } from '../routing/Router'
+import { createRouteMessageAck, RoutingErrors, IRouter } from '../routing/Router'
 import { RoutingMode } from '../routing/RoutingSession'
 import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger, runAndWaitForEvents3 } from '@streamr/utils'
@@ -30,7 +30,7 @@ interface RecursiveFinderConfig {
     rpcCommunicator: RoutingRpcCommunicator
     sessionTransport: ITransport
     connections: Map<PeerIDKey, DhtPeer>
-    router: Router
+    router: IRouter
     ownPeerDescriptor: PeerDescriptor
     ownPeerId: PeerID
     serviceId: string
@@ -205,7 +205,8 @@ export class RecursiveFinder implements Pick<IRoutingService, 'findRecursively'>
         } else if (this.config.router.checkDuplicate(routedMessage.requestId)) {
             return createRouteMessageAck(routedMessage, 'message given to findRecursively() service is likely a duplicate')
         }
-        logger.trace(`Node ${this.config.ownPeerDescriptor.nodeName} received findRecursively call from ${routedMessage.previousPeer!.nodeName!}`)
+        const senderKey = keyFromPeerDescriptor(routedMessage.previousPeer || routedMessage.sourcePeer!)
+        logger.trace(`Node ${this.config.ownPeerId.toKey()} received findRecursively call from ${senderKey}`)
         this.config.addContact(routedMessage.sourcePeer!, true)
         this.config.router!.addToDuplicateDetector(routedMessage.requestId, keyFromPeerDescriptor(routedMessage.sourcePeer!))
         return this.doFindRecursevily(routedMessage)

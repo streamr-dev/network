@@ -1,7 +1,7 @@
 import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { PeerID } from '../../src/helpers/PeerID'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { createMockConnectionDhtNode, createMockConnectionLayer1Node } from '../utils'
+import { createMockConnectionDhtNode, createMockConnectionLayer1Node } from '../utils/utils'
 import { UUID } from '../../src/helpers/UUID'
 import { expect } from 'expect'
 
