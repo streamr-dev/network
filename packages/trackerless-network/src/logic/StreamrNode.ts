@@ -143,25 +143,8 @@ export class StreamrNode extends EventEmitter<Events> {
             return
         }
         logger.info(`Joining stream ${streamPartID}`)
-        const layer1 = new DhtNode({
-            transportLayer: this.layer0!,
-            serviceId: 'layer1::' + streamPartID,
-            peerDescriptor: this.layer0!.getPeerDescriptor(),
-            routeMessageTimeout: 5000,
-            entryPoints: knownEntryPointDescriptors,
-            numberOfNodesPerKBucket: 4,
-            rpcRequestTimeout: 15000,
-            dhtJoinTimeout: 60000,
-            nodeName: this.config.nodeName
-        })
-        const layer2 = new RandomGraphNode({
-            randomGraphId: streamPartID,
-            P2PTransport: this.P2PTransport!,
-            layer1: layer1,
-            connectionLocker: this.connectionLocker!,
-            ownPeerDescriptor: this.layer0!.getPeerDescriptor(),
-            nodeName: this.config.nodeName
-        })
+        const layer1 = this.createLayer1Node(streamPartID, knownEntryPointDescriptors)
+        const layer2 = this.createRandomGraphNode(streamPartID, layer1)
         this.streams.set(streamPartID, {
             layer1,
             layer2
@@ -203,6 +186,31 @@ export class StreamrNode extends EventEmitter<Events> {
         }
         this.subscribeToStream(streamPartId, knownEntryPointDescriptors)
         return this.getStream(streamPartId)?.layer2.getTargetNeighborStringIds().length || 0
+    }
+
+    private createLayer1Node = (streamPartID: string, knownEntryPointDescriptors: PeerDescriptor[]) => {
+        return new DhtNode({
+            transportLayer: this.layer0!,
+            serviceId: 'layer1::' + streamPartID,
+            peerDescriptor: this.layer0!.getPeerDescriptor(),
+            routeMessageTimeout: 5000,
+            entryPoints: knownEntryPointDescriptors,
+            numberOfNodesPerKBucket: 4,
+            rpcRequestTimeout: 15000,
+            dhtJoinTimeout: 60000,
+            nodeName: this.config.nodeName
+        })
+    }
+
+    private createRandomGraphNode = (streamPartID: string, layer1: DhtNode) => {
+        return new RandomGraphNode({
+            randomGraphId: streamPartID,
+            P2PTransport: this.P2PTransport!,
+            layer1: layer1,
+            connectionLocker: this.connectionLocker!,
+            ownPeerDescriptor: this.layer0!.getPeerDescriptor(),
+            nodeName: this.config.nodeName
+        })
     }
 
     getStream(streamPartId: string): StreamObject | undefined {
