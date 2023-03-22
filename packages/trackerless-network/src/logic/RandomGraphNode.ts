@@ -82,21 +82,9 @@ export class RandomGraphNode extends EventEmitter<Events> implements INetworkRpc
             }
         })
         this.abortController = new AbortController()
-    }
-
-    async start(): Promise<void> {
-        this.started = true
         this.rpcCommunicator = new ListeningRpcCommunicator(`layer2-${this.config.randomGraphId}`, this.config.P2PTransport)
-        this.config.layer1.on('newContact', (peerDescriptor, closestPeers) => this.newContact(peerDescriptor, closestPeers))
-        this.config.layer1.on('contactRemoved', (peerDescriptor, closestPeers) => this.removedContact(peerDescriptor, closestPeers))
-        this.config.layer1.on('newRandomContact', (peerDescriptor, randomPeers) => this.newRandomContact(peerDescriptor, randomPeers))
-        this.config.layer1.on('randomContactRemoved', (peerDescriptor, randomPeers) => this.removedRandomContact(peerDescriptor, randomPeers))
-        this.config.P2PTransport.on('disconnected', (peerDescriptor: PeerDescriptor) => this.onPeerDisconnected(peerDescriptor))
-        this.targetNeighbors.on('peerAdded', (id, _remote) => {
-            this.propagation.onNeighborJoined(id)
-        })
         this.handshaker = new Handshaker({
-            ownPeerDescriptor: this.config.layer1.getPeerDescriptor(),
+            ownPeerDescriptor: this.config.ownPeerDescriptor,
             randomGraphId: this.config.randomGraphId,
             nearbyContactPool: this.nearbyContactPool!,
             randomContactPool: this.randomContactPool!,
@@ -116,14 +104,26 @@ export class RandomGraphNode extends EventEmitter<Events> implements INetworkRpc
             targetNeighbors: this.targetNeighbors,
             nearbyContactPool: this.nearbyContactPool,
             ownStringId: this.getOwnStringId(),
-            ownPeerDescriptor: this.config.layer1.getPeerDescriptor(),
+            ownPeerDescriptor: this.config.ownPeerDescriptor,
             neighborFinder: this.neighborFinder,
             randomGraphId: this.config.randomGraphId,
             rpcCommunicator: this.rpcCommunicator
         })
+    }
+
+    async start(): Promise<void> {
+        this.started = true
         this.registerDefaultServerMethods()
+        this.config.layer1.on('newContact', (peerDescriptor, closestPeers) => this.newContact(peerDescriptor, closestPeers))
+        this.config.layer1.on('contactRemoved', (peerDescriptor, closestPeers) => this.removedContact(peerDescriptor, closestPeers))
+        this.config.layer1.on('newRandomContact', (peerDescriptor, randomPeers) => this.newRandomContact(peerDescriptor, randomPeers))
+        this.config.layer1.on('randomContactRemoved', (peerDescriptor, randomPeers) => this.removedRandomContact(peerDescriptor, randomPeers))
+        this.config.P2PTransport.on('disconnected', (peerDescriptor: PeerDescriptor) => this.onPeerDisconnected(peerDescriptor))
+        this.targetNeighbors.on('peerAdded', (id, _remote) => {
+            this.propagation.onNeighborJoined(id)
+        })
         const candidates = this.getNewNeighborCandidates()
-        if (candidates.length) {
+        if (candidates.length > 0) {
             this.newContact(candidates[0], candidates)
         } else {
             logger.debug('layer1 had no closest contacts in the beginning')
@@ -220,7 +220,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements INetworkRpc
         }
         this.stopped = true
         this.abortController.abort()
-        this.targetNeighbors!.values().map((remote) => remote.leaveStreamNotice(this.config.layer1.getPeerDescriptor()))
+        this.targetNeighbors!.values().map((remote) => remote.leaveStreamNotice(this.config.ownPeerDescriptor))
         this.rpcCommunicator!.stop()
         this.removeAllListeners()
         this.config.layer1.off('newContact', (peerDescriptor, closestTen) => this.newContact(peerDescriptor, closestTen))
@@ -251,7 +251,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements INetworkRpc
     }
 
     getOwnStringId(): PeerIDKey {
-        return keyFromPeerDescriptor(this.config.layer1.getPeerDescriptor())
+        return keyFromPeerDescriptor(this.config.ownPeerDescriptor)
     }
 
     getNumberOfOutgoingHandshakes(): number {
@@ -283,7 +283,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements INetworkRpc
     async sendData(message: StreamMessage, _context: ServerCallContext): Promise<Empty> {
         if (this.markAndCheckDuplicate(message.messageRef!, message.previousMessageRef)) {
             const { previousPeer } = message
-            message["previousPeer"] = keyFromPeerDescriptor(this.config.layer1.getPeerDescriptor())
+            message["previousPeer"] = keyFromPeerDescriptor(this.config.ownPeerDescriptor)
             this.broadcast(message, previousPeer)
         }
         return Empty
