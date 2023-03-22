@@ -99,7 +99,7 @@ describe('SubscriberKeyExchange', () => {
                     privateKey: publisherWallet.privateKey
                 }
             })
-            await publisher.addEncryptionKey(groupKey, StreamPartIDUtils.getStreamID(streamPartId))
+            await publisher.addEncryptionKey(groupKey, toEthereumAddress(publisherWallet.address))
             await subscriber.subscribe(streamPartId, () => {})
 
             await triggerGroupKeyRequest(groupKey, publisher)
@@ -109,7 +109,7 @@ describe('SubscriberKeyExchange', () => {
             })
             await assertGroupKeyRequest(request!, [groupKey.id])
             const keyStore = getGroupKeyStore(toEthereumAddress(subscriberWallet.address))
-            await waitForCondition(async () => (await keyStore.get(groupKey.id, StreamPartIDUtils.getStreamID(streamPartId))) !== undefined)
+            await waitForCondition(async () => (await keyStore.get(groupKey.id, toEthereumAddress(publisherWallet.address))) !== undefined)
         })
     })
 })

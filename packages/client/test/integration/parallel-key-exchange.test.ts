@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { Wallet } from '@ethersproject/wallet'
-import { wait } from '@streamr/utils'
+import { wait, toEthereumAddress } from '@streamr/utils'
 import range from 'lodash/range'
 import { StreamMessageType } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
@@ -49,7 +49,7 @@ describe('parallel key exchange', () => {
                     privateKey: publisher.wallet.privateKey
                 }
             })
-            await publisher.client.addEncryptionKey(publisher.groupKey, stream.id)
+            await publisher.client.addEncryptionKey(publisher.groupKey, toEthereumAddress(publisher.wallet.address))
         }))
     }, 20000)
 
@@ -65,7 +65,7 @@ describe('parallel key exchange', () => {
                     isPublicStream: false,
                     isStreamPublisher: true
                 }),
-                groupKeyQueue: await createGroupKeyQueue(publisher.groupKey)
+                groupKeyQueue: await createGroupKeyQueue(toEthereumAddress(publisher.wallet.address), publisher.groupKey)
             })
             for (let i = 0; i < MESSAGE_COUNT_PER_PUBLISHER; i++) {
                 const msg = await messageFactory.createMessage({

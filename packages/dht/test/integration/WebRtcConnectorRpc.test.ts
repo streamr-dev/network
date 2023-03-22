@@ -8,7 +8,7 @@ import {
     WebRtcConnectionRequest
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { Empty } from '../../src/proto/google/protobuf/empty'
-import { generateId } from '../utils'
+import { generateId } from '../utils/utils'
 import { IWebRtcConnectorService } from '../../src/proto/packages/dht/protos/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'

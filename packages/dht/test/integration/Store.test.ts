@@ -1,7 +1,7 @@
 import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { createMockConnectionDhtNode, waitConnectionManagersReadyForTesting } from '../utils'
+import { createMockConnectionDhtNode, waitConnectionManagersReadyForTesting } from '../utils/utils'
 import { isSamePeerDescriptor, PeerID } from '../../src/exports'
 import { Any } from '../../src/proto/google/protobuf/any'
 

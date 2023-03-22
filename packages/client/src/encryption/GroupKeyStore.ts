@@ -1,7 +1,7 @@
 import { scoped, Lifecycle, inject } from 'tsyringe'
 import { join } from 'path'
 import { GroupKey } from './GroupKey'
-import { StreamID } from '@streamr/protocol'
+import { EthereumAddress } from '@streamr/utils'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { StreamrClientEventEmitter } from '../events'
 import { Persistence } from '../utils/persistence/Persistence'
@@ -43,6 +43,10 @@ export interface UpdateEncryptionKeyOptions {
     key?: GroupKey
 }
 
+function formKey(keyId: string, publisherId: string): string {
+    return `${publisherId}::${keyId}`
+}
+
 /**
  * TODO: rename to e.g. `LocalGroupKeyStore` for clarity
  */
@@ -67,26 +71,45 @@ export class GroupKeyStore {
             const clientId = await this.authentication.getAddress()
             this.persistence = new ServerPersistence({
                 loggerFactory,
-                tableName: 'GroupKeys',
-                valueColumnName: 'groupKey',
+                tableName: 'EncryptionKeys',
                 clientId,
                 migrationsPath: join(__dirname, 'migrations')
             })
         })
     }
 
-    async get(keyId: string, streamId: StreamID): Promise<GroupKey | undefined> {
+    async get(keyId: string, publisherId: EthereumAddress): Promise<GroupKey | undefined> {
         await this.ensureInitialized()
-        const value = await this.persistence!.get(keyId, streamId)
-        if (value === undefined) { return undefined }
-        return new GroupKey(keyId, Buffer.from(value, 'hex'))
+        const value = await this.persistence!.get(formKey(keyId, publisherId))
+        if (value !== undefined) {
+            return new GroupKey(keyId, Buffer.from(value, 'hex'))
+        } else {
+            return this.getLegacyKey(keyId)
+        }
     }
 
-    async add(key: GroupKey, streamId: StreamID): Promise<void> {
+    /**
+     * Legacy keys refer to group keys migrated from a previous version of the client where group keys were not tied
+     * to a specific publisherId, therefore any publisherId for a given legacy key id is considered a match.
+     *
+     * TODO: remove this functionality in the future
+     */
+    private async getLegacyKey(keyId: string): Promise<GroupKey | undefined> {
+        const value = await this.persistence!.get(formKey(keyId, 'LEGACY'))
+        return value !== undefined ? new GroupKey(keyId, Buffer.from(value, 'hex')) : undefined
+    }
+
+    async add(key: GroupKey, publisherId: EthereumAddress): Promise<void> {
         await this.ensureInitialized()
         this.logger.debug('add key %s', key.id)
-        await this.persistence!.set(key.id, Buffer.from(key.data).toString('hex'), streamId)
+        await this.persistence!.set(formKey(key.id, publisherId), Buffer.from(key.data).toString('hex'))
         this.eventEmitter.emit('addGroupKey', key)
+    }
+
+    /** Should be used by tests only. */
+    async getPersistence(): Promise<Persistence<string, string>> {
+        await this.ensureInitialized()
+        return this.persistence!
     }
 
     async stop(): Promise<void> {

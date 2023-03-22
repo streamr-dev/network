@@ -4,7 +4,7 @@ import {
     StoreDataRequest,
     StoreDataResponse
 } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { generateId, MockStoreService } from '../utils'
+import { generateId, MockStoreService } from '../utils/utils'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 import { StoreServiceClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
