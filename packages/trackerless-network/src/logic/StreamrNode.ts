@@ -143,17 +143,9 @@ export class StreamrNode extends EventEmitter<Events> {
             return
         }
         logger.info(`Joining stream ${streamPartID}`)
-        const layer1 = this.createLayer1Node(streamPartID, knownEntryPointDescriptors)
-        const layer2 = this.createRandomGraphNode(streamPartID, layer1)
-        this.streams.set(streamPartID, {
-            layer1,
-            layer2
-        })
+        const [ layer1, layer2 ] = this.createStream(streamPartID, knownEntryPointDescriptors)
         await layer1.start()
         await layer2.start()
-        layer2.on('message', (message: StreamMessage) => {
-            this.emit('newMessage', message)
-        })
         const discoveryResult = await this.streamEntryPointDiscovery!.discoverEntryPointsFromDht(streamPartID, knownEntryPointDescriptors.length)
         const entryPoints = knownEntryPointDescriptors.concat(discoveryResult.discoveredEntryPoints)
         await Promise.all(sampleSize(entryPoints, 4).map((entryPoint) => layer1.joinDht(entryPoint)))
@@ -163,6 +155,44 @@ export class StreamrNode extends EventEmitter<Events> {
             discoveryResult.entryPointsFromDht,
             entryPoints.length
         )
+    }
+
+    private createStream(streamPartID: string, entryPoints: PeerDescriptor[]): [DhtNode, RandomGraphNode] {
+        const layer1 = this.createLayer1Node(streamPartID, entryPoints)
+        const layer2 = this.createRandomGraphNode(streamPartID, layer1)
+        this.streams.set(streamPartID, {
+            layer1,
+            layer2
+        })
+        layer2.on('message', (message: StreamMessage) => {
+            this.emit('newMessage', message)
+        })
+        return [layer1, layer2]
+    }
+
+    private createLayer1Node = (streamPartID: string, entryPoints: PeerDescriptor[]) => {
+        return new DhtNode({
+            transportLayer: this.layer0!,
+            serviceId: 'layer1::' + streamPartID,
+            peerDescriptor: this.layer0!.getPeerDescriptor(),
+            routeMessageTimeout: 5000,
+            entryPoints: entryPoints,
+            numberOfNodesPerKBucket: 4,
+            rpcRequestTimeout: 15000,
+            dhtJoinTimeout: 60000,
+            nodeName: this.config.nodeName
+        })
+    }
+
+    private createRandomGraphNode = (streamPartID: string, layer1: DhtNode) => {
+        return new RandomGraphNode({
+            randomGraphId: streamPartID,
+            P2PTransport: this.P2PTransport!,
+            layer1: layer1,
+            connectionLocker: this.connectionLocker!,
+            ownPeerDescriptor: this.layer0!.getPeerDescriptor(),
+            nodeName: this.config.nodeName
+        })
     }
 
     async waitForJoinAndPublish(
@@ -186,31 +216,6 @@ export class StreamrNode extends EventEmitter<Events> {
         }
         this.subscribeToStream(streamPartId, knownEntryPointDescriptors)
         return this.getStream(streamPartId)?.layer2.getTargetNeighborStringIds().length || 0
-    }
-
-    private createLayer1Node = (streamPartID: string, knownEntryPointDescriptors: PeerDescriptor[]) => {
-        return new DhtNode({
-            transportLayer: this.layer0!,
-            serviceId: 'layer1::' + streamPartID,
-            peerDescriptor: this.layer0!.getPeerDescriptor(),
-            routeMessageTimeout: 5000,
-            entryPoints: knownEntryPointDescriptors,
-            numberOfNodesPerKBucket: 4,
-            rpcRequestTimeout: 15000,
-            dhtJoinTimeout: 60000,
-            nodeName: this.config.nodeName
-        })
-    }
-
-    private createRandomGraphNode = (streamPartID: string, layer1: DhtNode) => {
-        return new RandomGraphNode({
-            randomGraphId: streamPartID,
-            P2PTransport: this.P2PTransport!,
-            layer1: layer1,
-            connectionLocker: this.connectionLocker!,
-            ownPeerDescriptor: this.layer0!.getPeerDescriptor(),
-            nodeName: this.config.nodeName
-        })
     }
 
     getStream(streamPartId: string): StreamObject | undefined {
