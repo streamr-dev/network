@@ -113,7 +113,7 @@ streamr.resend(streamId, { last: 10 }, (msgs) => {
 ```
 
 ### API reference
-See https://api-docs.streamr.network/client/v8.0/index.html
+See https://api-docs.streamr.network/client/v8.1/index.html
 
 ___
 
