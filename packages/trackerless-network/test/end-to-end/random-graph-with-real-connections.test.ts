@@ -1,7 +1,7 @@
 import { ConnectionManager, DhtNode, PeerDescriptor, NodeType, peerIdFromPeerDescriptor } from '@streamr/dht'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { waitForCondition } from '@streamr/utils'
-import { createStreamMessage } from '../utils'
+import { createStreamMessage } from '../utils/utils'
 import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 
 describe('random graph with real connections', () => {

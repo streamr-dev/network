@@ -20,6 +20,7 @@ import { uniq } from 'lodash'
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { sampleSize } from 'lodash'
 import { StreamEntryPointDiscovery } from './StreamEntryPointDiscovery'
+import { ILayer0 } from './ILayer0'
 
 export interface StreamObject {
     layer1: DhtNode
@@ -47,7 +48,7 @@ interface StreamrNodeOpts {
 export class StreamrNode extends EventEmitter<Events> {
     private P2PTransport?: ITransport
     private connectionLocker?: ConnectionLocker
-    private layer0?: DhtNode
+    private layer0?: ILayer0
     private streamEntryPointDiscovery?: StreamEntryPointDiscovery
     private readonly metricsContext: MetricsContext
     private readonly metrics: Metrics
@@ -69,7 +70,7 @@ export class StreamrNode extends EventEmitter<Events> {
         this.metricsContext.addMetrics('node', this.metrics)
     }
 
-    async start(startedAndJoinedLayer0: DhtNode, transport: ITransport, connectionLocker: ConnectionLocker): Promise<void> {
+    async start(startedAndJoinedLayer0: ILayer0, transport: ITransport, connectionLocker: ConnectionLocker): Promise<void> {
         if (this.started || this.destroyed) {
             return
         }
@@ -135,6 +136,7 @@ export class StreamrNode extends EventEmitter<Events> {
         if (stream) {
             stream.layer2.stop()
             stream.layer1.stop()
+            this.streams.delete(streamPartID)
         }
     }
 
@@ -254,13 +256,6 @@ export class StreamrNode extends EventEmitter<Events> {
         this.extraMetadata = metadata
     }
 
-    getConnectionCount(): number {
-        return this.layer0!.getNumberOfConnections()
-    }
-
-    getLayer0BucketSize(): number {
-        return this.layer0!.getBucketSize()
-    }
 }
 
 [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `unhandledRejection`, `SIGTERM`].forEach((term) => {

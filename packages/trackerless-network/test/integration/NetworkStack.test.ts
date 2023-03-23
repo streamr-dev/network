@@ -6,7 +6,7 @@ import {
 } from '@streamr/protocol'
 import { waitForCondition } from '@streamr/utils'
 import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { createStreamMessage } from '../utils'
+import { createStreamMessage } from '../utils/utils'
 
 describe('NetworkStack', () => {
 
