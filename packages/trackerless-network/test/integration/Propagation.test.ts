@@ -1,6 +1,6 @@
 import { DhtNode, PeerDescriptor, Simulator, PeerID, UUID, peerIdFromPeerDescriptor } from '@streamr/dht'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
-import { createMockRandomGraphNodeAndDhtNode, createStreamMessage } from '../utils'
+import { createMockRandomGraphNodeAndDhtNode, createStreamMessage } from '../utils/utils'
 import { range } from 'lodash'
 import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { waitForCondition } from '@streamr/utils'

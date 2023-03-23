@@ -1,6 +1,6 @@
 import { Handshaker } from '../../src/logic/neighbor-discovery/Handshaker'
 import { ListeningRpcCommunicator, PeerDescriptor, PeerID, Simulator, SimulatorTransport } from '@streamr/dht'
-import { mockConnectionLocker, createMockRemotePeer } from '../utils'
+import { mockConnectionLocker, createMockRemotePeer } from '../utils/utils'
 import { PeerList } from '../../src/logic/PeerList'
 import { range } from 'lodash'
 

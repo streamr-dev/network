@@ -1,4 +1,4 @@
-import { createStreamMessage } from '../utils'
+import { createStreamMessage } from '../utils/utils'
 import { ContentMessage, StreamMessageType } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { StreamMessageTranslator } from '../../src/logic/protocol-integration/stream-message/StreamMessageTranslator'
 import {
