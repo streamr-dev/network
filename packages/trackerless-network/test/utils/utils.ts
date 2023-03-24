@@ -7,6 +7,7 @@ import {
     StreamMessageType
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
+import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
 
 export const mockConnectionLocker: ConnectionLocker = {
     lockConnection: () => {},
@@ -28,7 +29,7 @@ export const createMockRandomGraphNodeAndDhtNode = (
         numberOfNodesPerKBucket: 4,
         entryPoints: [entryPointDescriptor]
     })
-    const randomGraphNode = new RandomGraphNode({
+    const randomGraphNode = createRandomGraphNode({
         randomGraphId,
         P2PTransport: mockCm,
         layer1: dhtNode,

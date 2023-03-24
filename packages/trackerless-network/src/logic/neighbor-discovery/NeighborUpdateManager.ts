@@ -9,7 +9,7 @@ import {
 } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { Logger, scheduleAtInterval } from '@streamr/utils'
 import { PeerIDKey } from '@streamr/dht/dist/src/helpers/PeerID'
-import { NeighborFinder } from './NeighborFinder'
+import { INeighborFinder } from './NeighborFinder'
 import { PeerList } from '../PeerList'
 import { RemoteNeighborUpdateManager } from './RemoteNeighborUpdateManager'
 import { INeighborUpdateRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
@@ -19,14 +19,21 @@ interface NeighborUpdateManagerConfig {
     ownPeerDescriptor: PeerDescriptor
     targetNeighbors: PeerList
     nearbyContactPool: PeerList
-    neighborFinder: NeighborFinder
+    neighborFinder: INeighborFinder
     randomGraphId: string
     rpcCommunicator: ListeningRpcCommunicator
 }
 
 const logger = new Logger(module)
 
-export class NeighborUpdateManager implements INeighborUpdateRpc {
+interface NeighborFunc {
+    start(): Promise<void>
+    stop(): void
+}
+
+export interface INeighborUpdateManager extends INeighborUpdateRpc, NeighborFunc {}
+
+export class NeighborUpdateManager implements INeighborUpdateManager {
     private readonly abortController: AbortController
     private readonly config: NeighborUpdateManagerConfig
     private readonly client: ProtoRpcClient<NeighborUpdateRpcClient>
