@@ -3,6 +3,7 @@ import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { waitForCondition } from '@streamr/utils'
 import { createStreamMessage } from '../utils/utils'
 import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
 
 describe('random graph with real connections', () => {
 
@@ -36,7 +37,7 @@ describe('random graph with real connections', () => {
         await dhtNode3.start()
         await dhtNode4.start()
 
-        randomGraphNode1 = new RandomGraphNode(
+        randomGraphNode1 = createRandomGraphNode(
             {
                 randomGraphId,
                 layer1: epDhtNode,
@@ -45,28 +46,28 @@ describe('random graph with real connections', () => {
                 ownPeerDescriptor: epPeerDescriptor
             }
         )
-        randomGraphNode2 = new RandomGraphNode({
+        randomGraphNode2 = createRandomGraphNode({
             randomGraphId,
             layer1: dhtNode1,
             P2PTransport: dhtNode1.getTransport(),
             connectionLocker: dhtNode1.getTransport() as ConnectionManager,
             ownPeerDescriptor: dhtNode1.getPeerDescriptor()
         })
-        randomGraphNode3 = new RandomGraphNode({
+        randomGraphNode3 = createRandomGraphNode({
             randomGraphId,
             layer1: dhtNode2,
             P2PTransport: dhtNode2.getTransport(),
             connectionLocker: dhtNode2.getTransport() as ConnectionManager,
             ownPeerDescriptor: dhtNode2.getPeerDescriptor()
         })
-        randomGraphNode4 = new RandomGraphNode({
+        randomGraphNode4 = createRandomGraphNode({
             randomGraphId,
             layer1: dhtNode3,
             P2PTransport: dhtNode3.getTransport(),
             connectionLocker: dhtNode3.getTransport() as ConnectionManager,
             ownPeerDescriptor: dhtNode3.getPeerDescriptor()
         })
-        randomGraphNode5 = new RandomGraphNode({
+        randomGraphNode5 = createRandomGraphNode({
             randomGraphId,
             layer1: dhtNode4,
             P2PTransport: dhtNode4.getTransport(),

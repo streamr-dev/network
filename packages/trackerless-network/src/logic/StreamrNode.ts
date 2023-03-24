@@ -21,6 +21,7 @@ import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { sampleSize } from 'lodash'
 import { StreamEntryPointDiscovery } from './StreamEntryPointDiscovery'
 import { ILayer0 } from './ILayer0'
+import { createRandomGraphNode } from './createRandomGraphNode'
 
 export interface StreamObject {
     layer1: DhtNode
@@ -187,7 +188,7 @@ export class StreamrNode extends EventEmitter<Events> {
     }
 
     private createRandomGraphNode = (streamPartID: string, layer1: DhtNode) => {
-        return new RandomGraphNode({
+        return createRandomGraphNode({
             randomGraphId: streamPartID,
             P2PTransport: this.P2PTransport!,
             layer1: layer1,

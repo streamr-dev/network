@@ -33,7 +33,16 @@ const logger = new Logger(module)
 
 const PARALLEL_HANDSHAKE_COUNT = 2
 
-export class Handshaker implements IHandshakeRpc {
+interface HandshakerFunc {
+    attemptHandshakesOnContacts(excludedIds: string[]): Promise<string[]>
+    interleaveHandshake(targetNeighbor: RemoteHandshaker, interleavingFrom: string): Promise<boolean>
+    handleRequest(request: StreamHandshakeRequest, requester: RemoteHandshaker): StreamHandshakeResponse
+    getOngoingHandshakes(): Set<string>
+}
+
+export interface IHandshaker extends IHandshakeRpc, HandshakerFunc {}
+
+export class Handshaker implements IHandshaker {
 
     private readonly ongoingHandshakes: Set<string> = new Set()
     private config: HandshakerConfig

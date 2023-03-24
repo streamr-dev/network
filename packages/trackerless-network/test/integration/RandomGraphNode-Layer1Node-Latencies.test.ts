@@ -3,6 +3,7 @@ import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { range } from 'lodash'
 import { wait, waitForCondition } from '@streamr/utils'
 import { Logger } from '@streamr/utils'
+import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
 
 const logger = new Logger(module)
 
@@ -42,14 +43,14 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
             peerDescriptor: peerDescriptors[i],
             serviceId: streamId
         }))
-        graphNodes = range(numOfNodes).map((i) => new RandomGraphNode({
+        graphNodes = range(numOfNodes).map((i) => createRandomGraphNode({
             randomGraphId: streamId,
             layer1: dhtNodes[i],
             P2PTransport: cms[i],
             connectionLocker: cms[i],
             ownPeerDescriptor: peerDescriptors[i]
         }))
-        entryPointRandomGraphNode = new RandomGraphNode({
+        entryPointRandomGraphNode = createRandomGraphNode({
             randomGraphId: streamId,
             layer1: dhtEntryPoint,
             P2PTransport: entrypointCm,

@@ -11,7 +11,13 @@ interface FindNeighborsSessionConfig {
 const INITIAL_TIMEOUT = 100
 const INTERVAL_TIMEOUT = 250
 
-export class NeighborFinder {
+export interface INeighborFinder {
+    start(excluded?: string[]): void
+    stop(): void
+    isRunning(): boolean
+}
+
+export class NeighborFinder implements INeighborFinder {
     private readonly abortController: AbortController
     private readonly config: FindNeighborsSessionConfig
     private running = false
