@@ -32,7 +32,7 @@ export {
     validateConfig
 } from './Config'
 export { GroupKey as EncryptionKey } from './encryption/GroupKey'
-export { UpdateEncryptionKeyOptions } from './encryption/GroupKeyStore'
+export { UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
 
 export { CONFIG_TEST } from './ConfigTest'
 export { NetworkNodeStub } from './NetworkNodeFacade'

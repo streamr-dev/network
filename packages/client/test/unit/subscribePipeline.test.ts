@@ -92,6 +92,7 @@ describe('subscribePipeline', () => {
                 mock<SubscriberKeyExchange>(),
                 new StreamrClientEventEmitter(),
                 destroySignal,
+                createPrivateKeyAuthentication(publisher.privateKey, {} as any),
                 config
             ),
             streamRegistryCached: {

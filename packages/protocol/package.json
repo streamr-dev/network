@@ -1,6 +1,6 @@
 {
   "name": "@streamr/protocol",
-  "version": "8.0.4",
+  "version": "8.1.0",
   "description": "Implementation of Streamr Protocol (Brubeck)",
   "repository": {
     "type": "git",
@@ -19,11 +19,11 @@
   "author": "Streamr Network AG <contact@streamr.network>",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@streamr/test-utils": "8.0.4",
+    "@streamr/test-utils": "8.1.0",
     "@types/sinon": "^10.0.4",
     "sinon": "^11.1.2"
   },
   "dependencies": {
-    "@streamr/utils": "8.0.4"
+    "@streamr/utils": "8.1.0"
   }
 }
