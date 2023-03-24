@@ -2,17 +2,24 @@ import { ListeningRpcCommunicator, peerIdFromPeerDescriptor } from '@streamr/dht
 import { Handshaker } from './neighbor-discovery/Handshaker'
 import { NeighborFinder } from './neighbor-discovery/NeighborFinder'
 import { NeighborUpdateManager } from './neighbor-discovery/NeighborUpdateManager'
-import { RandomGraphNodeConfig, RandomGraphNode } from './RandomGraphNode'
+import { StrictRandomGraphNodeConfig, RandomGraphNode } from './RandomGraphNode'
 import { PeerList } from './PeerList'
 import { Propagation } from './propagation/Propagation'
 import { StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
+import { MarkOptional } from 'ts-essentials'
 
 const PEER_VIEW_SIZE = 20
 const N = 4
 
+type RandomGraphNodeConfig = MarkOptional<StrictRandomGraphNodeConfig,
+    "nearbyContactPool" | "randomContactPool" | "targetNeighbors" | "propagation"
+    | "handshaker" | "neighborFinder" | "neighborUpdateManager" | "nodeName" | "N"
+    | "rpcCommunicator" | "peerViewSize">
+
 const createConfigWithDefaults = (config: RandomGraphNodeConfig) => {
     const peerId = peerIdFromPeerDescriptor(config.ownPeerDescriptor)
-    const rpcCommunicator = new ListeningRpcCommunicator(`layer2-${config.randomGraphId}`, config.P2PTransport)
+    const rpcCommunicator = config.rpcCommunicator ?? new ListeningRpcCommunicator(`layer2-${config.randomGraphId}`, config.P2PTransport)
+    const nodeName = config.nodeName ?? peerId.toKey()
     const nearbyContactPool = config.nearbyContactPool ?? new PeerList(peerId, PEER_VIEW_SIZE)
     const randomContactPool = config.randomContactPool ?? new PeerList(peerId, PEER_VIEW_SIZE)
     const targetNeighbors = config.targetNeighbors ?? new PeerList(peerId, PEER_VIEW_SIZE)
@@ -65,6 +72,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig) => {
         neighborUpdateManager,
         propagation,
         N,
+        nodeName,
         peerViewSize: PEER_VIEW_SIZE
     }
 }
