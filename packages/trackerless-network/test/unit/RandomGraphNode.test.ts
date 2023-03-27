@@ -1,25 +1,13 @@
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { keyFromPeerDescriptor, PeerDescriptor, PeerID, peerIdFromPeerDescriptor } from '@streamr/dht'
 import { MockTransport } from '../utils/mock/Transport'
-import { createMockRemotePeer, createStreamMessage, mockConnectionLocker } from '../utils/utils'
-import { ContentMessage, LeaveStreamNotice } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { createMockRemotePeer, mockConnectionLocker } from '../utils/utils'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
 import { PeerList } from '../../src/logic/PeerList'
 import { MockHandshaker } from '../utils/mock/MockHandshaker'
 import { MockNeighborUpdateManager } from '../utils/mock/MockNeighborUpdateManager'
 import { MockNeighborFinder } from '../utils/mock/MockNeighborFinder'
-
-const mockLayer1 = {
-    on: () => {},
-    once: () => {},
-    off: () => {},
-    getNeighborList: () => { return { getClosestContacts: () => [] }},
-}
-
-const content: ContentMessage = {
-    body: JSON.stringify({ hello: "WORLD" })
-}
-const message = createStreamMessage(content, 'random-graph', 'publisher')
+import { mockLayer1 } from '../utils/mock/MockLayer1'
 
 describe('RandomGraphNode', () => {
 
@@ -58,18 +46,6 @@ describe('RandomGraphNode', () => {
 
     afterEach(async () => {
         await randomGraphNode.stop()
-    })
-
-    it('Server sendData()', async () => {
-        await randomGraphNode.sendData(message, {} as any)
-    })
-
-    it('Server leaveStreamNotice()', async () => {
-        const leaveNotice: LeaveStreamNotice = {
-            senderId: 'sender',
-            randomGraphId: 'random-graph'
-        }
-        await randomGraphNode.leaveStreamNotice(leaveNotice, {} as any)
     })
 
     it('getTargetNeighborStringIds', () => {
