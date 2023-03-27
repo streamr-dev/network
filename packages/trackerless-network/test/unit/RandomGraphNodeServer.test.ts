@@ -50,10 +50,6 @@ describe('RandomGraphNodeServer', () => {
             rpcCommunicator: new ListeningRpcCommunicator('random-graph-node', new MockTransport())
         })
     })
-
-    afterEach(() => {
-        jest.clearAllMocks()
-    })
     
     it('Server sendData()', async () => {
         await randomGraphNodeServer.sendData(message, {} as any)
