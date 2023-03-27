@@ -32,7 +32,6 @@ export class HandshakerServer implements IHandshakeRpc {
                 this.config.connectionLocker.unlockConnection(senderDescriptor, this.config.randomGraphId)
                 this.config.targetNeighbors.remove(senderDescriptor)
             }
-            console.log(this.config)
             this.config.interleaveHandshake(message.interleaveTarget!, message.senderId).catch((_e) => {})
         }
         return Empty

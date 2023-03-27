@@ -24,12 +24,15 @@ describe('HandshakerServer', () => {
             randomGraphId: 'random-graph',
             connectionLocker: mockConnectionLocker,
             handleRequest,
-            interleaveHandshake,
+            interleaveHandshake: async () => {
+                interleaveHandshake()
+                return true
+            },
             targetNeighbors,
         })
     })
 
-    it('handshake', async  () => {
+    it('handshake', async () => {
         const req = StreamHandshakeRequest.create({
             randomGraphId: 'random-graph',
             senderId: 'senderId',
@@ -39,7 +42,7 @@ describe('HandshakerServer', () => {
         expect(handleRequest).toHaveBeenCalledTimes(1)
     })
 
-    it.only('interleaveHandshake', async  () => {
+    it('interleaveHandshake success', async () => {
         const req: InterleaveNotice = {
             randomGraphId: 'random-graph',
             senderId: 'senderId',
@@ -51,6 +54,20 @@ describe('HandshakerServer', () => {
         }
         await handshakerServer.interleaveNotice(req, {} as any)
         expect(interleaveHandshake).toHaveBeenCalledTimes(1)
+    })
+
+    it('interleaveHandshake success', async () => {
+        const req: InterleaveNotice = {
+            randomGraphId: 'wrong-random-graph',
+            senderId: 'senderId',
+            interleaveTarget: {
+                kademliaId: PeerID.fromString('interleaveTarget').value,
+                type: 0
+            }
+
+        }
+        await handshakerServer.interleaveNotice(req, {} as any)
+        expect(interleaveHandshake).toHaveBeenCalledTimes(0)
     })
 
 })
