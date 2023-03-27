@@ -51,7 +51,11 @@ export class Handshaker implements IHandshaker {
             randomGraphId: this.config.randomGraphId,
             targetNeighbors: this.config.targetNeighbors,
             connectionLocker: this.config.connectionLocker,
-            handleRequest: (request: StreamHandshakeRequest) => this.handleRequest(request),
+            ongoingHandshakes: this.ongoingHandshakes,
+            N: this.config.N,
+            respondWithAccepted: (request: StreamHandshakeRequest, sender: PeerDescriptor) => this.respondWithAccepted(request, sender),
+            respondWithUnaccepted: (request: StreamHandshakeRequest) => this.respondWithUnaccepted(request),
+            respondWithInterleaveRequest: (req: StreamHandshakeRequest, sender: PeerDescriptor) => this.respondWithInterleaveRequest(req, sender),
             interleaveHandshake: (target: PeerDescriptor, senderId: string) => this.interleaveHandshake(target, senderId)
         })
         this.config.rpcCommunicator.registerRpcNotification(InterleaveNotice, 'interleaveNotice',
@@ -61,9 +65,9 @@ export class Handshaker implements IHandshaker {
     }
 
     public async attemptHandshakesOnContacts(excludedIds: string[]): Promise<string[]> {
-        if (this.config.targetNeighbors!.size() + this.getOngoingHandshakes().size < this.config.N - 2) {
+        if (this.config.targetNeighbors!.size() + this.ongoingHandshakes.size < this.config.N - 2) {
             return this.selectParallelTargetsAndHandshake(excludedIds)
-        } else if (this.config.targetNeighbors!.size() + this.getOngoingHandshakes().size < this.config.N) {
+        } else if (this.config.targetNeighbors!.size() + this.ongoingHandshakes.size < this.config.N) {
             return this.selectNewTargetAndHandshake(excludedIds)
         }
         return excludedIds
@@ -159,20 +163,6 @@ export class Handshaker implements IHandshaker {
         return result.accepted
     }
 
-    private handleRequest(request: StreamHandshakeRequest): StreamHandshakeResponse {
-        if (this.config.targetNeighbors!.hasPeer(request.senderDescriptor!)
-            || this.getOngoingHandshakes().has(keyFromPeerDescriptor(request.senderDescriptor!))
-        ) {
-            return this.respondWithAccepted(request, request.senderDescriptor!)
-        } else if (this.config.targetNeighbors!.size() + this.getOngoingHandshakes().size < this.config.N) {
-            return this.respondWithAccepted(request, request.senderDescriptor!)
-        } else if (this.config.targetNeighbors!.size([request.interleavingFrom!]) >= 2) {
-            return this.respondWithInterleaveRequest(request, request.senderDescriptor!)
-        } else {
-            return this.respondWithUnaccepted(request)
-        }
-    }
-
     private respondWithInterleaveRequest(request: StreamHandshakeRequest, requester: PeerDescriptor): StreamHandshakeResponse {
         const exclude = request.neighbors
         exclude.push(request.senderId)
@@ -197,6 +187,18 @@ export class Handshaker implements IHandshaker {
         return res
     }
 
+    private createRemoteHandshaker(targetPeerDescriptor: PeerDescriptor): RemoteHandshaker {
+        return new RemoteHandshaker(targetPeerDescriptor, this.config.randomGraphId, this.client)
+    }
+
+    private createRemoteNode(targetPeerDescriptor: PeerDescriptor): RemoteRandomGraphNode {
+        return new RemoteRandomGraphNode(
+            targetPeerDescriptor,
+            this.config.randomGraphId,
+            toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator!.getRpcClientTransport()))
+        )
+    }
+
     // eslint-disable-next-line class-methods-use-this
     private respondWithUnaccepted(request: StreamHandshakeRequest): StreamHandshakeResponse {
         const res: StreamHandshakeResponse = {
@@ -214,18 +216,6 @@ export class Handshaker implements IHandshaker {
         this.config.targetNeighbors.add(this.createRemoteNode(requester))
         this.config.connectionLocker.lockConnection(request.senderDescriptor!, this.config.randomGraphId)
         return res
-    }
-
-    private createRemoteHandshaker(targetPeerDescriptor: PeerDescriptor): RemoteHandshaker {
-        return new RemoteHandshaker(targetPeerDescriptor, this.config.randomGraphId, this.client)
-    }
-
-    private createRemoteNode(targetPeerDescriptor: PeerDescriptor): RemoteRandomGraphNode {
-        return new RemoteRandomGraphNode(
-            targetPeerDescriptor,
-            this.config.randomGraphId,
-            toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator!.getRpcClientTransport()))
-        )
     }
 
     public getOngoingHandshakes(): Set<string> {
