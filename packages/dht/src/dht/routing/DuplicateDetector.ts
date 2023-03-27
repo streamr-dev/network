@@ -1,4 +1,4 @@
-import { Message } from "../proto/packages/dht/protos/DhtRpc"
+import { Message } from "../../proto/packages/dht/protos/DhtRpc"
 
 type QueueEntry = [timeStamp: number, value: string, senderId: string, message?: Message]
 

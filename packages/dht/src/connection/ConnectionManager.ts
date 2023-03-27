@@ -27,7 +27,7 @@ import { Empty } from '../proto/google/protobuf/empty'
 import { Simulator } from './Simulator/Simulator'
 import { SimulatorConnector } from './Simulator/SimulatorConnector'
 import { ConnectionLockHandler } from './ConnectionLockHandler'
-import { DuplicateDetector } from '../dht/DuplicateDetector'
+import { DuplicateDetector } from '../dht/routing/DuplicateDetector'
 import { SortedContactList } from '../dht/contact/SortedContactList'
 import { Contact } from '../dht/contact/Contact'
 import {
