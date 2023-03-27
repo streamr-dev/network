@@ -12,28 +12,8 @@ export class MockHandshaker implements IHandshaker {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    handleRequest(_request: StreamHandshakeRequest, _requester: RemoteHandshaker): StreamHandshakeResponse {
-        return StreamHandshakeResponse.create()
-    }
-
-    // eslint-disable-next-line class-methods-use-this
     async attemptHandshakesOnContacts(excludedIds: string[]): Promise<string[]> {
         return excludedIds
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    async interleaveHandshake(_targetNeighbor: RemoteHandshaker, _interleavingFrom: string): Promise<boolean> {
-        return true
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    async interleaveNotice(_request: InterleaveNotice, _context: ServerCallContext): Promise<Empty> {
-        return {}
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    async handshake(_request: StreamHandshakeRequest, _context: ServerCallContext): Promise<StreamHandshakeResponse> {
-        return StreamHandshakeResponse.create()
     }
 
 }
