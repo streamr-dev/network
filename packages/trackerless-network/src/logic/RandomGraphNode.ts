@@ -17,8 +17,6 @@ import { PeerList } from './PeerList'
 import { NetworkRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { RemoteRandomGraphNode } from './RemoteRandomGraphNode'
 import { INetworkRpc } from '../proto/packages/trackerless-network/protos/NetworkRpc.server'
-import { Empty } from '../proto/google/protobuf/empty'
-import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DuplicateMessageDetector, NumberPair } from '@streamr/utils'
 import { Logger } from '@streamr/utils'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
@@ -27,6 +25,7 @@ import { Propagation } from './propagation/Propagation'
 import { INeighborFinder } from './neighbor-discovery/NeighborFinder'
 import { INeighborUpdateManager } from './neighbor-discovery/NeighborUpdateManager'
 import { PeerIDKey } from '@streamr/dht/dist/src/helpers/PeerID'
+import { RandomGraphNodeServer } from './RandomGraphNodeServer'
 
 export interface Events {
     message: (message: StreamMessage) => void
@@ -53,18 +52,32 @@ export interface StrictRandomGraphNodeConfig {
 
 const logger = new Logger(module)
 
-export class RandomGraphNode extends EventEmitter<Events> implements INetworkRpc {
+export class RandomGraphNode extends EventEmitter<Events> {
     private stopped = false
     private started = false
     private readonly duplicateDetector: DuplicateMessageDetector
     private readonly abortController: AbortController
     private config: StrictRandomGraphNodeConfig
+    private readonly server: INetworkRpc
 
     constructor(config: StrictRandomGraphNodeConfig) {
         super()
         this.config = config
         this.duplicateDetector = new DuplicateMessageDetector(10000)
         this.abortController = new AbortController()
+        this.server = new RandomGraphNodeServer({
+            ownPeerDescriptor: this.config.ownPeerDescriptor,
+            randomGraphId: this.config.randomGraphId,
+            markAndCheckDuplicate: (msg: MessageRef, prev?: MessageRef) => this.markAndCheckDuplicate(msg, prev),
+            broadcast: (message: StreamMessage, previousPeer?: string) => this.broadcast(message, previousPeer),
+            layer1: this.config.layer1,
+            targetNeighbors: this.config.targetNeighbors,
+            nearbyContactPool: this.config.nearbyContactPool,
+            randomContactPool: this.config.randomContactPool,
+            connectionLocker:  this.config.connectionLocker,
+            neighborFinder: this.config.neighborFinder,
+            rpcCommunicator: this.config.rpcCommunicator
+        })
     }
 
     async start(): Promise<void> {
@@ -86,6 +99,13 @@ export class RandomGraphNode extends EventEmitter<Events> implements INetworkRpc
         }
         this.config.neighborFinder.start()
         await this.config.neighborUpdateManager.start()
+    }
+
+    private registerDefaultServerMethods(): void {
+        this.config.rpcCommunicator.registerRpcNotification(StreamMessage, 'sendData',
+            (msg: StreamMessage, context) => this.server.sendData(msg, context))
+        this.config.rpcCommunicator.registerRpcNotification(LeaveStreamNotice, 'leaveStreamNotice',
+            (req: LeaveStreamNotice, context) => this.server.leaveStreamNotice(req, context))
     }
 
     private newContact(_newContact: PeerDescriptor, closestTen: PeerDescriptor[]): void {
@@ -157,13 +177,6 @@ export class RandomGraphNode extends EventEmitter<Events> implements INetworkRpc
         }
     }
 
-    private registerDefaultServerMethods(): void {
-        this.config.rpcCommunicator.registerRpcNotification(StreamMessage, 'sendData',
-            (msg: StreamMessage, context) => this.sendData(msg, context))
-        this.config.rpcCommunicator.registerRpcNotification(LeaveStreamNotice, 'leaveStreamNotice',
-            (req: LeaveStreamNotice, context) => this.leaveStreamNotice(req, context))
-    }
-
     private getNewNeighborCandidates(): PeerDescriptor[] {
         return this.config.layer1.getNeighborList().getClosestContacts(this.config.peerViewSize).map((contact: DhtPeer) => {
             return contact.getPeerDescriptor()
@@ -188,7 +201,6 @@ export class RandomGraphNode extends EventEmitter<Events> implements INetworkRpc
         this.config.targetNeighbors.clear()
         this.config.neighborFinder.stop()
         this.config.neighborUpdateManager.stop()
-
     }
 
     broadcast(msg: StreamMessage, previousPeer?: string): void {
@@ -234,33 +246,5 @@ export class RandomGraphNode extends EventEmitter<Events> implements INetworkRpc
             return []
         }
         return this.config.randomContactPool.getStringIds()
-    }
-
-    // INetworkRpc server method
-    async sendData(message: StreamMessage, _context: ServerCallContext): Promise<Empty> {
-        if (this.markAndCheckDuplicate(message.messageRef!, message.previousMessageRef)) {
-            const { previousPeer } = message
-            message["previousPeer"] = keyFromPeerDescriptor(this.config.ownPeerDescriptor)
-            this.broadcast(message, previousPeer)
-        }
-        return Empty
-    }
-
-    // INetworkRpc server method
-    async leaveStreamNotice(message: LeaveStreamNotice, _context: ServerCallContext): Promise<Empty> {
-        if (message.randomGraphId === this.config.randomGraphId) {
-            const contact = this.config.nearbyContactPool.getNeighborWithId(message.senderId)
-                || this.config.randomContactPool.getNeighborWithId(message.senderId)
-                || this.config.targetNeighbors.getNeighborWithId(message.senderId)
-            // TODO: check integrity of notifier?
-            if (contact) {
-                this.config.layer1.removeContact(contact.getPeerDescriptor(), true)
-                this.config.targetNeighbors!.remove(contact.getPeerDescriptor())
-                this.config.nearbyContactPool!.remove(contact.getPeerDescriptor())
-                this.config.connectionLocker.unlockConnection(contact.getPeerDescriptor(), this.config.randomGraphId)
-                this.config.neighborFinder!.start([message.senderId])
-            }
-        }
-        return Empty
     }
 }
