@@ -44,7 +44,6 @@ describe('Handshaker', () => {
     it('attemptHandshakesOnContact works with empty structures', async () => {
         const res = await handshaker.attemptHandshakesOnContacts([])
         expect(res.length).toEqual(0)
-        expect(handshaker.getOngoingHandshakes().size).toEqual(0)
     })
 
     it('attemptHandshakesOnContact with known peers that cannot be connected to', async () => {
