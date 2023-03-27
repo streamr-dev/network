@@ -2,12 +2,12 @@ import { RpcCommunicator, toProtoRpcClient } from "@streamr/proto-rpc"
 import { Logger, runAndWaitForEvents3 } from "@streamr/utils"
 import EventEmitter from "eventemitter3"
 import { v4 } from "uuid"
-import { PeerID } from "../helpers/PeerID"
-import { PeerDescriptor } from "../proto/packages/dht/protos/DhtRpc"
-import { DhtRpcServiceClient } from "../proto/packages/dht/protos/DhtRpc.client"
-import { SortedContactList } from "./contact/SortedContactList"
-import { DhtPeer } from "./DhtPeer"
-import { peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
+import { PeerID } from "../../helpers/PeerID"
+import { PeerDescriptor } from "../../proto/packages/dht/protos/DhtRpc"
+import { DhtRpcServiceClient } from "../../proto/packages/dht/protos/DhtRpc.client"
+import { SortedContactList } from "../contact/SortedContactList"
+import { DhtPeer } from "../DhtPeer"
+import { peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 
 const logger = new Logger(module)
 

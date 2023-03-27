@@ -188,6 +188,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements INetworkRpc
         this.config.targetNeighbors.clear()
         this.config.neighborFinder.stop()
         this.config.neighborUpdateManager.stop()
+
     }
 
     broadcast(msg: StreamMessage, previousPeer?: string): void {

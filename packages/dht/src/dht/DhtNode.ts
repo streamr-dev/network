@@ -34,7 +34,7 @@ import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../helpers/peer
 import { Router } from './routing/Router'
 import { RecursiveFinder, RecursiveFindResult } from './find/RecursiveFinder'
 import { DataStore } from './store/DataStore'
-import { PeerDiscovery } from './PeerDiscovery'
+import { PeerDiscovery } from './discovery/PeerDiscovery'
 import { LocalDataStore } from './store/LocalDataStore'
 
 export interface DhtNodeEvents {
