@@ -436,7 +436,7 @@
                     },
                     "default": {}
                 },
-                "jsonRpc": {
+                "ensStreamCreation": {
                     "type": "object",
                     "additionalProperties": false,
                     "properties": {

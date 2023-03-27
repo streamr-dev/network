@@ -144,7 +144,7 @@ export interface StreamrClientConfig {
             timeout?: number
             retryInterval?: number
         }
-        jsonRpc?: {
+        ensStreamCreation?: {
             timeout?: number
             retryInterval?: number
         }
