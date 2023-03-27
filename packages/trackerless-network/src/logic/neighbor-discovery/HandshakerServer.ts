@@ -11,10 +11,10 @@ interface HandshakerServerConfig {
     connectionLocker: ConnectionLocker
     ongoingHandshakes: Set<string>
     N: number
-    respondWithAccepted: (request: StreamHandshakeRequest, requester: PeerDescriptor) => StreamHandshakeResponse
-    respondWithUnaccepted: (request: StreamHandshakeRequest) => StreamHandshakeResponse
-    respondWithInterleaveRequest: (request: StreamHandshakeRequest, requester: PeerDescriptor) => StreamHandshakeResponse
-    interleaveHandshake: (target: PeerDescriptor, senderId: string) => Promise<boolean>
+    acceptHandshake: (request: StreamHandshakeRequest, requester: PeerDescriptor) => StreamHandshakeResponse
+    rejectHandshake: (request: StreamHandshakeRequest) => StreamHandshakeResponse
+    acceptHandshakeWithInterleaving: (request: StreamHandshakeRequest, requester: PeerDescriptor) => StreamHandshakeResponse
+    handshakeWithInterleaving: (target: PeerDescriptor, senderId: string) => Promise<boolean>
 }
 
 export class HandshakerServer implements IHandshakeRpc {
@@ -33,13 +33,13 @@ export class HandshakerServer implements IHandshakeRpc {
         if (this.config.targetNeighbors!.hasPeer(request.senderDescriptor!)
             || this.config.ongoingHandshakes.has(keyFromPeerDescriptor(request.senderDescriptor!))
         ) {
-            return this.config.respondWithAccepted(request, request.senderDescriptor!)
+            return this.config.acceptHandshake(request, request.senderDescriptor!)
         } else if (this.config.targetNeighbors!.size() + this.config.ongoingHandshakes.size < this.config.N) {
-            return this.config.respondWithAccepted(request, request.senderDescriptor!)
+            return this.config.acceptHandshake(request, request.senderDescriptor!)
         } else if (this.config.targetNeighbors!.size([request.interleavingFrom!]) >= 2) {
-            return this.config.respondWithInterleaveRequest(request, request.senderDescriptor!)
+            return this.config.acceptHandshakeWithInterleaving(request, request.senderDescriptor!)
         } else {
-            return this.config.respondWithUnaccepted(request)
+            return this.config.rejectHandshake(request)
         }
     }
 
@@ -50,7 +50,7 @@ export class HandshakerServer implements IHandshakeRpc {
                 this.config.connectionLocker.unlockConnection(senderDescriptor, this.config.randomGraphId)
                 this.config.targetNeighbors.remove(senderDescriptor)
             }
-            this.config.interleaveHandshake(message.interleaveTarget!, message.senderId).catch((_e) => {})
+            this.config.handshakeWithInterleaving(message.interleaveTarget!, message.senderId).catch((_e) => {})
         }
         return Empty
     }

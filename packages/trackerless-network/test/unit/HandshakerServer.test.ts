@@ -12,29 +12,29 @@ describe('HandshakerServer', () => {
 
     let targetNeighbors: PeerList
     let ongoingHandshakes: Set<string>
-    let respondWithAccepted: jest.Mock
-    let respondWithUnaccepted: jest.Mock
-    let respondWithInterleaveRequest: jest.Mock
-    let interleaveHandshake: jest.Mock
+    let acceptHandshake: jest.Mock
+    let rejectHandshake: jest.Mock
+    let acceptHandshakeWithInterleaving: jest.Mock
+    let handshakeWithInterleaving: jest.Mock
 
     beforeEach(() => {
         targetNeighbors = new PeerList(peerId, 10)
         ongoingHandshakes = new Set()
 
-        respondWithAccepted = jest.fn()
-        respondWithUnaccepted = jest.fn()
-        respondWithInterleaveRequest = jest.fn()
-        interleaveHandshake = jest.fn()
+        acceptHandshake = jest.fn()
+        rejectHandshake = jest.fn()
+        acceptHandshakeWithInterleaving = jest.fn()
+        handshakeWithInterleaving = jest.fn()
 
         handshakerServer = new HandshakerServer({
             randomGraphId: 'random-graph',
             connectionLocker: mockConnectionLocker,
             ongoingHandshakes,
-            respondWithAccepted,
-            respondWithUnaccepted,
-            respondWithInterleaveRequest,
-            interleaveHandshake: async () => {
-                interleaveHandshake()
+            acceptHandshake,
+            rejectHandshake,
+            acceptHandshakeWithInterleaving,
+            handshakeWithInterleaving: async () => {
+                handshakeWithInterleaving()
                 return true
             },
             targetNeighbors,
@@ -53,7 +53,7 @@ describe('HandshakerServer', () => {
             }
         })
         await handshakerServer.handshake(req, {} as any)
-        expect(respondWithAccepted).toHaveBeenCalledTimes(1)
+        expect(acceptHandshake).toHaveBeenCalledTimes(1)
     })
 
     it('handshake interleave', async () => {
@@ -71,7 +71,7 @@ describe('HandshakerServer', () => {
             }
         })
         await handshakerServer.handshake(req, {} as any)
-        expect(respondWithInterleaveRequest).toHaveBeenCalledTimes(1)
+        expect(acceptHandshakeWithInterleaving).toHaveBeenCalledTimes(1)
     })
 
     it('unaccepted handshake', async () => {
@@ -89,10 +89,10 @@ describe('HandshakerServer', () => {
             }
         })
         await handshakerServer.handshake(req, {} as any)
-        expect(respondWithUnaccepted).toHaveBeenCalledTimes(1)
+        expect(rejectHandshake).toHaveBeenCalledTimes(1)
     })
 
-    it('interleaveHandshake success', async () => {
+    it('handshakeWithInterleaving success', async () => {
         const req: InterleaveNotice = {
             randomGraphId: 'random-graph',
             senderId: 'senderId',
@@ -103,10 +103,10 @@ describe('HandshakerServer', () => {
 
         }
         await handshakerServer.interleaveNotice(req, {} as any)
-        expect(interleaveHandshake).toHaveBeenCalledTimes(1)
+        expect(handshakeWithInterleaving).toHaveBeenCalledTimes(1)
     })
 
-    it('interleaveHandshake success', async () => {
+    it('handshakeWithInterleaving success', async () => {
         const req: InterleaveNotice = {
             randomGraphId: 'wrong-random-graph',
             senderId: 'senderId',
@@ -117,7 +117,7 @@ describe('HandshakerServer', () => {
 
         }
         await handshakerServer.interleaveNotice(req, {} as any)
-        expect(interleaveHandshake).toHaveBeenCalledTimes(0)
+        expect(handshakeWithInterleaving).toHaveBeenCalledTimes(0)
     })
 
 })
