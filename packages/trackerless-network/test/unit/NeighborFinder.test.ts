@@ -4,7 +4,7 @@ import { keyFromPeerDescriptor, PeerID } from '@streamr/dht'
 import { waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { expect } from 'expect'
-import { createMockRemotePeer } from '../utils'
+import { createMockRemotePeer } from '../utils/utils'
 
 describe('NeighborFinder', () => {
 

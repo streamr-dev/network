@@ -6,24 +6,18 @@ import sqlite3 from 'sqlite3'
 
 import { pOnce } from '../promises'
 
-import { Persistence } from './Persistence'
+import { PersistenceContext, PersistenceContextOptions } from './PersistenceContext'
 import { Logger, wait } from '@streamr/utils'
 import { LoggerFactory } from '../LoggerFactory'
 
-export interface ServerPersistenceOptions {
+export interface ServerPersistenceOptions extends PersistenceContextOptions {
     loggerFactory: LoggerFactory
-    tableName: string
-    clientId: string
     migrationsPath?: string
     onInit?: (db: Database) => Promise<void>
 }
 
-/*
- * Stores key-value pairs for a given stream
- */
-export default class ServerPersistence<K extends string, V extends string> implements Persistence<K, V> {
+export default class ServerPersistence implements PersistenceContext {
     private readonly logger: Logger
-    private readonly tableName: string
     private readonly dbFilePath: string
     private store?: Database
     private error?: Error
@@ -31,15 +25,23 @@ export default class ServerPersistence<K extends string, V extends string> imple
     private readonly migrationsPath?: string
     private readonly onInit?: (db: Database) => Promise<void>
 
-    constructor({
+    // uses createInstance factory pattern so that ServerPersistence and BrowserPersistence
+    // are interchangeable
+    static async createInstance(opts: ServerPersistenceOptions): Promise<ServerPersistence> {
+        // TODO init() call could called here, so that we don't need to separate logic for 
+        // initialization (i.e. check this.initCalled flag before eaach call).
+        // It would be ok to do initialization, because the PersistenceManager already lazy loads
+        // and therefore doesn't create this instance before it is needed
+        return new ServerPersistence(opts)
+    }
+
+    private constructor({
         loggerFactory,
         clientId,
-        tableName,
         migrationsPath,
         onInit
     }: ServerPersistenceOptions) {
         this.logger = loggerFactory.createLogger(module)
-        this.tableName = tableName
         const paths = envPaths('streamr-client')
         this.dbFilePath = resolve(paths.data, join('./', clientId, `GroupKeys.db`))
         this.migrationsPath = migrationsPath
@@ -126,7 +128,7 @@ export default class ServerPersistence<K extends string, V extends string> imple
         this.logger.trace('database initialized')
     }
 
-    async get(key: K): Promise<V | undefined> {
+    async get(key: string, namespace: string): Promise<string | undefined> {
         if (!this.initCalled) {
             // can't have if doesn't exist
             if (!(await this.exists())) { return undefined }
@@ -134,16 +136,16 @@ export default class ServerPersistence<K extends string, V extends string> imple
 
         await this.init()
         const row = await this.store!.get(
-            `SELECT value_ FROM ${this.tableName} WHERE key_ = ?`,
+            `SELECT value_ FROM ${namespace} WHERE key_ = ?`,
             key
         )
         return row?.['value_']
     }
 
-    async set(key: K, value: V): Promise<void> {
+    async set(key: string, value: string, namespace: string): Promise<void> {
         await this.init()
         await this.store!.run(
-            `INSERT INTO ${this.tableName} (key_, value_) VALUES ($key_, $value_) ON CONFLICT DO NOTHING`,
+            `INSERT INTO ${namespace} (key_, value_) VALUES ($key_, $value_) ON CONFLICT DO UPDATE SET value_ = $value_`,
             {
                 $key_: key,
                 $value_: value,

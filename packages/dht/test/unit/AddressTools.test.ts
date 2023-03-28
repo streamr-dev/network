@@ -38,4 +38,3 @@ describe('isPrivateIPv4', () => {
         expect(isPrivateIPv4('203.0.113.181')).toBe(false)
     })
 })
-

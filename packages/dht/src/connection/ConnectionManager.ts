@@ -27,7 +27,7 @@ import { Empty } from '../proto/google/protobuf/empty'
 import { Simulator } from './Simulator/Simulator'
 import { SimulatorConnector } from './Simulator/SimulatorConnector'
 import { ConnectionLockHandler } from './ConnectionLockHandler'
-import { DuplicateDetector } from '../dht/DuplicateDetector'
+import { DuplicateDetector } from '../dht/routing/DuplicateDetector'
 import { SortedContactList } from '../dht/contact/SortedContactList'
 import { Contact } from '../dht/contact/Contact'
 import {
@@ -163,7 +163,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 disallowPrivateAddresses: this.config.webrtcDisallowPrivateAddresses,
                 bufferThresholdLow: this.config.webrtcDatachannelBufferThresholdLow,
                 bufferThresholdHigh: this.config.webrtcDatachannelBufferThresholdHigh,
-                connectionTimeout: this.config.newWebrtcConnectionTimeout,
+                connectionTimeout: this.config.newWebrtcConnectionTimeout
             }, this.incomingConnectionCallback)
         }
         this.serviceId = (this.config.serviceIdPrefix ? this.config.serviceIdPrefix : '') + 'ConnectionManager'

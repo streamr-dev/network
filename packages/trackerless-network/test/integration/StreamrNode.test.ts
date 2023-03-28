@@ -9,7 +9,7 @@ import {
 import { StreamrNode, Events } from '../../src/logic/StreamrNode'
 import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { waitForEvent3, waitForCondition } from '@streamr/utils'
-import { createStreamMessage } from '../utils'
+import { createStreamMessage } from '../utils/utils'
 
 describe('StreamrNode', () => {
 

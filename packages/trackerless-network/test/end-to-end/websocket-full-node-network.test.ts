@@ -3,7 +3,7 @@ import { StreamrNode } from '../../src/logic/StreamrNode'
 import { range } from 'lodash'
 import { waitForCondition } from '@streamr/utils'
 import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { createStreamMessage } from '../utils'
+import { createStreamMessage } from '../utils/utils'
 
 describe('Full node network with WebSocket connections only', () => {
 

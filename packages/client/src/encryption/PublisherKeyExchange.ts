@@ -19,7 +19,7 @@ import { createSignedMessage } from '../publish/MessageFactory'
 import { Validator } from '../Validator'
 import { EncryptionUtil } from './EncryptionUtil'
 import { GroupKey } from './GroupKey'
-import { GroupKeyStore } from './GroupKeyStore'
+import { LocalGroupKeyStore } from './LocalGroupKeyStore'
 import { EthereumAddress, Logger } from '@streamr/utils'
 import { LoggerFactory } from '../utils/LoggerFactory'
 
@@ -30,13 +30,13 @@ import { LoggerFactory } from '../utils/LoggerFactory'
 @scoped(Lifecycle.ContainerScoped)
 export class PublisherKeyExchange {
     private readonly logger: Logger
-    private readonly store: GroupKeyStore
+    private readonly store: LocalGroupKeyStore
     private readonly networkNodeFacade: NetworkNodeFacade
     private readonly authentication: Authentication
     private readonly validator: Validator
 
     constructor(
-        store: GroupKeyStore,
+        store: LocalGroupKeyStore,
         networkNodeFacade: NetworkNodeFacade,
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
         @inject(AuthenticationInjectionToken) authentication: Authentication,

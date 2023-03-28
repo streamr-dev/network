@@ -20,6 +20,8 @@ import { uniq } from 'lodash'
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { sampleSize } from 'lodash'
 import { StreamEntryPointDiscovery } from './StreamEntryPointDiscovery'
+import { ILayer0 } from './ILayer0'
+import { createRandomGraphNode } from './createRandomGraphNode'
 
 export interface StreamObject {
     layer1: DhtNode
@@ -51,7 +53,7 @@ export interface StreamrNodeOpts {
 export class StreamrNode extends EventEmitter<Events> {
     private P2PTransport?: ITransport
     private connectionLocker?: ConnectionLocker
-    private layer0?: DhtNode
+    private layer0?: ILayer0
     private streamEntryPointDiscovery?: StreamEntryPointDiscovery
     private readonly metricsContext: MetricsContext
     private readonly metrics: Metrics
@@ -74,7 +76,7 @@ export class StreamrNode extends EventEmitter<Events> {
         this.config = config
     }
 
-    async start(startedAndJoinedLayer0: DhtNode, transport: ITransport, connectionLocker: ConnectionLocker): Promise<void> {
+    async start(startedAndJoinedLayer0: ILayer0, transport: ITransport, connectionLocker: ConnectionLocker): Promise<void> {
         if (this.started || this.destroyed) {
             return
         }
@@ -148,37 +150,9 @@ export class StreamrNode extends EventEmitter<Events> {
             return
         }
         logger.info(`Joining stream ${streamPartID}`)
-        const layer1 = new DhtNode({
-            transportLayer: this.layer0!,
-            serviceId: 'layer1::' + streamPartID,
-            peerDescriptor: this.layer0!.getPeerDescriptor(),
-            routeMessageTimeout: 5000,
-            entryPoints: knownEntryPointDescriptors,
-            numberOfNodesPerKBucket: 4,
-            rpcRequestTimeout: 15000,
-            dhtJoinTimeout: 60000,
-            nodeName: this.config.nodeName
-        })
-        const layer2 = new RandomGraphNode({
-            randomGraphId: streamPartID,
-            P2PTransport: this.P2PTransport!,
-            layer1: layer1,
-            connectionLocker: this.connectionLocker!,
-            ownPeerDescriptor: this.layer0!.getPeerDescriptor(),
-            minPropagationTargets: this.config.layer2MinPropagationTargets,
-            numOfTargetNeighbors: this.config.layer2NumOfTargetNeighbors,
-            maxNumberOfContact: this.config.layer2MaxNumberOfContact,
-            nodeName: this.config.nodeName
-        })
-        this.streams.set(streamPartID, {
-            layer1,
-            layer2
-        })
+        const [ layer1, layer2 ] = this.createStream(streamPartID, knownEntryPointDescriptors)
         await layer1.start()
         await layer2.start()
-        layer2.on('message', (message: StreamMessage) => {
-            this.emit('newMessage', message)
-        })
         const discoveryResult = await this.streamEntryPointDiscovery!.discoverEntryPointsFromDht(streamPartID, knownEntryPointDescriptors.length)
         const entryPoints = knownEntryPointDescriptors.concat(discoveryResult.discoveredEntryPoints)
         await Promise.all(sampleSize(entryPoints, 4).map((entryPoint) => layer1.joinDht(entryPoint)))
@@ -188,6 +162,47 @@ export class StreamrNode extends EventEmitter<Events> {
             discoveryResult.entryPointsFromDht,
             entryPoints.length
         )
+    }
+
+    private createStream(streamPartID: string, entryPoints: PeerDescriptor[]): [DhtNode, RandomGraphNode] {
+        const layer1 = this.createLayer1Node(streamPartID, entryPoints)
+        const layer2 = this.createRandomGraphNode(streamPartID, layer1)
+        this.streams.set(streamPartID, {
+            layer1,
+            layer2
+        })
+        layer2.on('message', (message: StreamMessage) => {
+            this.emit('newMessage', message)
+        })
+        return [layer1, layer2]
+    }
+
+    private createLayer1Node = (streamPartID: string, entryPoints: PeerDescriptor[]) => {
+        return new DhtNode({
+            transportLayer: this.layer0!,
+            serviceId: 'layer1::' + streamPartID,
+            peerDescriptor: this.layer0!.getPeerDescriptor(),
+            routeMessageTimeout: 5000,
+            entryPoints: entryPoints,
+            numberOfNodesPerKBucket: 4,
+            rpcRequestTimeout: 15000,
+            dhtJoinTimeout: 60000,
+            nodeName: this.config.nodeName
+        })
+    }
+
+    private createRandomGraphNode = (streamPartID: string, layer1: DhtNode) => {
+        return createRandomGraphNode({
+            randomGraphId: streamPartID,
+            P2PTransport: this.P2PTransport!,
+            layer1: layer1,
+            connectionLocker: this.connectionLocker!,
+            ownPeerDescriptor: this.layer0!.getPeerDescriptor(),
+            minPropagationTargets: this.config.layer2MinPropagationTargets,
+            numOfTargetNeighbors: this.config.layer2NumOfTargetNeighbors,
+            maxNumberOfContacts: this.config.layer2MaxNumberOfContact,
+            nodeName: this.config.nodeName
+        })
     }
 
     async waitForJoinAndPublish(
@@ -249,13 +264,6 @@ export class StreamrNode extends EventEmitter<Events> {
         this.extraMetadata = metadata
     }
 
-    getConnectionCount(): number {
-        return this.layer0!.getNumberOfConnections()
-    }
-
-    getLayer0BucketSize(): number {
-        return this.layer0!.getBucketSize()
-    }
 }
 
 [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `unhandledRejection`, `SIGTERM`].forEach((term) => {

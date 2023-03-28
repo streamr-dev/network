@@ -12,7 +12,7 @@ import {
 import { waitForCondition } from '@streamr/utils'
 import { Empty } from '../../src/proto/google/protobuf/empty'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { createStreamMessage } from '../utils'
+import { createStreamMessage } from '../utils/utils'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 
 describe('Network RPC', () => {

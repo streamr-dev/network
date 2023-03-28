@@ -1,7 +1,7 @@
 import crypto from 'crypto'
 import { DependencyContainer } from 'tsyringe'
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { EthereumAddress, toEthereumAddress, Logger, wait } from '@streamr/utils'
+import { EthereumAddress, Logger, wait } from '@streamr/utils'
 import { Wallet } from '@ethersproject/wallet'
 import { StreamMessage, StreamPartID, StreamPartIDUtils, MAX_PARTITION_COUNT } from '@streamr/protocol'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -11,7 +11,7 @@ import { CONFIG_TEST } from '../../src/ConfigTest'
 import { StreamrClientConfig } from '../../src/Config'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { addAfterFn } from './jest-utils'
-import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
+import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
 import { StreamrClientEventEmitter } from '../../src/events'
 import { MessageFactory } from '../../src/publish/MessageFactory'
 import { Authentication, createPrivateKeyAuthentication } from '../../src/Authentication'
@@ -24,6 +24,7 @@ import { mock } from 'jest-mock-extended'
 import { LitProtocolFacade } from '../../src/encryption/LitProtocolFacade'
 import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
 import { DestroySignal } from '../../src/DestroySignal'
+import { PersistenceManager } from '../../src/PersistenceManager'
 
 const logger = new Logger(module)
 
@@ -105,15 +106,16 @@ export const createMockMessage = async (
     const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(
         opts.streamPartId ?? opts.stream.getStreamParts()[0]
     )
+    const authentication = createPrivateKeyAuthentication(opts.publisher.privateKey, undefined as any)
     const factory = new MessageFactory({
-        authentication: createPrivateKeyAuthentication(opts.publisher.privateKey, undefined as any),
+        authentication,
         streamId,
         streamRegistry: createStreamRegistryCached({
             partitionCount: MAX_PARTITION_COUNT,
             isPublicStream: (opts.encryptionKey === undefined),
             isStreamPublisher: true
         }),
-        groupKeyQueue: await createGroupKeyQueue(toEthereumAddress(opts.publisher.address), opts.encryptionKey, opts.nextEncryptionKey)
+        groupKeyQueue: await createGroupKeyQueue(authentication, opts.encryptionKey, opts.nextEncryptionKey)
     })
     const DEFAULT_CONTENT = {}
     const plainContent = opts.content ?? DEFAULT_CONTENT
@@ -123,12 +125,18 @@ export const createMockMessage = async (
     }, partition)
 }
 
-export const getGroupKeyStore = (userAddress: EthereumAddress): GroupKeyStore => {
-    return new GroupKeyStore(
-        mockLoggerFactory(),
-        {
-            getAddress: () => userAddress
-        } as any,
+export const getLocalGroupKeyStore = (userAddress: EthereumAddress): LocalGroupKeyStore => {
+    const authentication = {
+        getAddress: () => userAddress
+    } as any
+    const loggerFactory = mockLoggerFactory()
+    return new LocalGroupKeyStore(
+        new PersistenceManager(
+            authentication,
+            new DestroySignal(),
+            loggerFactory
+        ),
+        loggerFactory,
         new StreamrClientEventEmitter()
     )
 }
@@ -168,13 +176,17 @@ export const createStreamRegistryCached = (opts: {
     } as any
 }
 
-export const createGroupKeyManager = (groupKeyStore: GroupKeyStore = mock<GroupKeyStore>()): GroupKeyManager => {
+export const createGroupKeyManager = (
+    groupKeyStore: LocalGroupKeyStore = mock<LocalGroupKeyStore>(),
+    authentication = createRandomAuthentication()
+): GroupKeyManager => {
     return new GroupKeyManager(
         groupKeyStore,
         mock<LitProtocolFacade>(),
         mock<SubscriberKeyExchange>(),
         new StreamrClientEventEmitter(),
         new DestroySignal(),
+        authentication,
         {
             encryption: {
                 litProtocolEnabled: false,
@@ -186,11 +198,11 @@ export const createGroupKeyManager = (groupKeyStore: GroupKeyStore = mock<GroupK
     )
 }
 
-export const createGroupKeyQueue = async (publisherId: EthereumAddress, current?: GroupKey, next?: GroupKey): Promise<GroupKeyQueue> => {
-    const queue = new GroupKeyQueue(
-        publisherId,
+export const createGroupKeyQueue = async (authentication: Authentication, current?: GroupKey, next?: GroupKey): Promise<GroupKeyQueue> => {
+    const queue = await GroupKeyQueue.createInstance(
         undefined as any,
-        createGroupKeyManager()
+        authentication,
+        createGroupKeyManager(undefined, authentication)
     )
     if (current !== undefined) {
         await queue.rekey(current)

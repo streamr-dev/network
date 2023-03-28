@@ -1,4 +1,4 @@
-import { DuplicateDetector } from '../../src/dht/DuplicateDetector'
+import { DuplicateDetector } from '../../src/dht/routing/DuplicateDetector'
 
 describe('Duplicate Detector', () => {
     let detector: DuplicateDetector

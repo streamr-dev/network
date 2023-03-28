@@ -5,7 +5,7 @@ import { RoutingMode, RoutingSession, RoutingSessionEvents } from './RoutingSess
 import { Logger, raceEvents3 } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
-import { DuplicateDetector } from '../DuplicateDetector'
+import { DuplicateDetector } from './DuplicateDetector'
 import { ConnectionManager } from '../../connection/ConnectionManager'
 import { DhtPeer } from '../DhtPeer'
 import { v4 } from 'uuid'

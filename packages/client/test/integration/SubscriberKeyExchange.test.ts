@@ -19,7 +19,7 @@ import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import {
     createMockMessage,
     createRelativeTestStreamId,
-    getGroupKeyStore
+    getLocalGroupKeyStore
 } from '../test-utils/utils'
 
 describe('SubscriberKeyExchange', () => {
@@ -108,7 +108,7 @@ describe('SubscriberKeyExchange', () => {
                 messageType: StreamMessageType.GROUP_KEY_REQUEST
             })
             await assertGroupKeyRequest(request!, [groupKey.id])
-            const keyStore = getGroupKeyStore(toEthereumAddress(subscriberWallet.address))
+            const keyStore = getLocalGroupKeyStore(toEthereumAddress(subscriberWallet.address))
             await waitForCondition(async () => (await keyStore.get(groupKey.id, toEthereumAddress(publisherWallet.address))) !== undefined)
         })
     })

@@ -29,10 +29,10 @@
   "dependencies": {
     "@protobuf-ts/runtime": "^2.8.2",
     "@protobuf-ts/runtime-rpc": "^2.8.2",
-    "@streamr/dht": "8.0.4",
-    "@streamr/proto-rpc": "8.0.4",
-    "@streamr/test-utils": "8.0.4",
-    "@streamr/utils": "8.0.4",
+    "@streamr/dht": "8.1.0",
+    "@streamr/proto-rpc": "8.1.0",
+    "@streamr/test-utils": "8.1.0",
+    "@streamr/utils": "8.1.0",
     "eventemitter3": "^4.0.7",
     "lodash": "^4.17.21",
     "yallist": "^4.0.0"
@@ -61,6 +61,7 @@
     "karma-webpack": "^5.0.0",
     "node-module-polyfill": "^1.0.1",
     "node-polyfill-webpack-plugin": "^1.1.4",
+    "ts-essentials": "^9.3.0",
     "ts-jest": "^29.0.5",
     "ts-loader": "^9.3.1",
     "ts-node": "^10.9.1",
