@@ -21,13 +21,19 @@ describe('NetworkStack', () => {
 
     beforeEach(async () => {
         stack1 = new NetworkStack({
-            peerDescriptor: epDescriptor,
-            entryPoints: [epDescriptor]
+            layer0: {
+                peerDescriptor: epDescriptor,
+                entryPoints: [epDescriptor]
+            },
+            networkNode: {}
         })
         stack2 = new NetworkStack({
-            websocketPort: 32223,
-            peerIdString: 'network-stack',
-            entryPoints: [epDescriptor]
+            layer0: {
+                webSocketPort: 32223,
+                peerIdString: 'network-stack',
+                entryPoints: [epDescriptor]
+            },
+            networkNode: {}
         })
 
         await stack1.start()

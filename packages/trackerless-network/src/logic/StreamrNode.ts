@@ -41,8 +41,12 @@ interface Metrics extends MetricsDefinition {
     publishBytesPerSecond: Metric
 }
 
-interface StreamrNodeOpts {
+export interface StreamrNodeOpts {
     metricsContext?: MetricsContext
+    id?: string
+    layer2NumOfTargetNeighbors?: number
+    layer2MaxNumberOfContact?: number
+    layer2MinPropagationTargets?: number
     nodeName?: string
 }
 

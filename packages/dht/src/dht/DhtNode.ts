@@ -36,6 +36,7 @@ import { RecursiveFinder, RecursiveFindResult } from './find/RecursiveFinder'
 import { DataStore } from './store/DataStore'
 import { PeerDiscovery } from './discovery/PeerDiscovery'
 import { LocalDataStore } from './store/LocalDataStore'
+import { IceServer } from '../connection/WebRTC/WebRtcConnector'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -49,6 +50,32 @@ export interface DhtNodeEvents {
     randomContactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
 }
 
+export interface DhtNodeOptions {
+    serviceId?: string
+    parallelism?: number
+    maxNeighborListSize?: number
+    numberOfNodesPerKBucket?: number
+    joinNoProgressLimit?: number
+    routeMessageTimeout?: number
+    dhtJoinTimeout?: number
+    metricsContext?: MetricsContext
+
+    transportLayer?: ITransport
+    peerDescriptor?: PeerDescriptor
+    entryPoints?: PeerDescriptor[]
+    webSocketHost?: string
+    webSocketPort?: number
+    peerIdString?: string
+
+    nodeName?: string
+    rpcRequestTimeout?: number
+    iceServers?: IceServer[]
+    webrtcDisallowPrivateAddresses?: boolean
+    webrtcDatachannelBufferThresholdLow?: number
+    webrtcDatachannelBufferThresholdHigh?: number
+    newWebrtcConnectionTimeout?: number
+}
+
 export class DhtNodeConfig {
     transportLayer?: ITransport
     peerDescriptor?: PeerDescriptor
@@ -58,7 +85,11 @@ export class DhtNodeConfig {
     peerIdString?: string
     nodeName?: string
     rpcRequestTimeout?: number
-    stunUrls?: string[]
+    iceServers?: IceServer[]
+    webrtcDisallowPrivateAddresses?: boolean
+    webrtcDatachannelBufferThresholdLow?: number
+    webrtcDatachannelBufferThresholdHigh?: number
+    newWebrtcConnectionTimeout?: number
 
     serviceId = 'layer0'
     parallelism = 3
@@ -154,7 +185,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             const connectionManagerConfig: ConnectionManagerConfig = {
                 transportLayer: this,
                 entryPoints: this.config.entryPoints,
-                stunUrls: this.config.stunUrls,
+                iceServers: this.config.iceServers,
                 metricsContext: this.config.metricsContext,
                 nodeName: this.getNodeName(),
                 maxConnections: this.config.maxConnections
