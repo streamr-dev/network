@@ -35,7 +35,7 @@
     "@streamr/utils": "8.1.0",
     "bloomfilter": "^0.0.18",
     "eventemitter3": "^4.0.7",
-    "ipaddr.js": "^2.0.0",
+    "ipaddr.js": "^2.0.1",
     "k-bucket": "^5.1.0",
     "karma-mocha-reporter": "^2.2.5",
     "lodash": "^4.17.21",
