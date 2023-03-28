@@ -8,23 +8,23 @@ import { Propagation } from './propagation/Propagation'
 import { StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { MarkOptional } from 'ts-essentials'
 
-const PEER_VIEW_SIZE = 20
-const N = 4
-
 type RandomGraphNodeConfig = MarkOptional<StrictRandomGraphNodeConfig,
     "nearbyContactPool" | "randomContactPool" | "targetNeighbors" | "propagation"
-    | "handshaker" | "neighborFinder" | "neighborUpdateManager" | "nodeName" | "N"
-    | "rpcCommunicator" | "peerViewSize">
+    | "handshaker" | "neighborFinder" | "neighborUpdateManager" | "nodeName" | "numOfTargetNeighbors"
+    | "maxNumberOfContacts" | "minPropagationTargets" | "rpcCommunicator" | "peerViewSize">
 
 const createConfigWithDefaults = (config: RandomGraphNodeConfig) => {
     const peerId = peerIdFromPeerDescriptor(config.ownPeerDescriptor)
     const rpcCommunicator = config.rpcCommunicator ?? new ListeningRpcCommunicator(`layer2-${config.randomGraphId}`, config.P2PTransport)
     const nodeName = config.nodeName ?? peerId.toKey()
-    const nearbyContactPool = config.nearbyContactPool ?? new PeerList(peerId, PEER_VIEW_SIZE)
-    const randomContactPool = config.randomContactPool ?? new PeerList(peerId, PEER_VIEW_SIZE)
-    const targetNeighbors = config.targetNeighbors ?? new PeerList(peerId, PEER_VIEW_SIZE)
+    const numOfTargetNeighbors = config.numOfTargetNeighbors ?? 4
+    const maxNumberOfContacts = config.maxNumberOfContacts ?? 20
+    const minPropagationTargets = config.minPropagationTargets ?? 2
+    const nearbyContactPool = config.nearbyContactPool ?? new PeerList(peerId, maxNumberOfContacts)
+    const randomContactPool = config.randomContactPool ?? new PeerList(peerId, maxNumberOfContacts)
+    const targetNeighbors = config.targetNeighbors ?? new PeerList(peerId, maxNumberOfContacts)
     const propagation = config.propagation ?? new Propagation({
-        minPropagationTargets: 2,
+        minPropagationTargets,
         randomGraphId: config.randomGraphId,
         sendToNeighbor: async (neighborId: string, msg: StreamMessage): Promise<void> => {
             const remote = targetNeighbors.getNeighborWithId(neighborId)
@@ -44,13 +44,13 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig) => {
         connectionLocker: config.connectionLocker,
         rpcCommunicator: rpcCommunicator!,
         nodeName: config.nodeName,
-        N
+        N: numOfTargetNeighbors
     })
     const neighborFinder = config.neighborFinder ?? new NeighborFinder({
         targetNeighbors: targetNeighbors,
         nearbyContactPool: nearbyContactPool,
         doFindNeighbors: (excludedIds) => handshaker!.attemptHandshakesOnContacts(excludedIds),
-        N
+        N: numOfTargetNeighbors
     })
     const neighborUpdateManager = config.neighborUpdateManager ?? new NeighborUpdateManager({
         targetNeighbors: targetNeighbors,
@@ -71,9 +71,11 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig) => {
         neighborFinder,
         neighborUpdateManager,
         propagation,
-        N,
+        numOfTargetNeighbors,
+        minPropagationTargets,
+        maxNumberOfContacts,
         nodeName,
-        peerViewSize: PEER_VIEW_SIZE
+        peerViewSize: maxNumberOfContacts
     }
 }
 

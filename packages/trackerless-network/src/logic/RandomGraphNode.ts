@@ -37,7 +37,6 @@ export interface StrictRandomGraphNodeConfig {
     P2PTransport: ITransport
     connectionLocker: ConnectionLocker
     ownPeerDescriptor: PeerDescriptor
-    N: number
     peerViewSize: number
     nearbyContactPool: PeerList
     randomContactPool: PeerList
@@ -47,6 +46,9 @@ export interface StrictRandomGraphNodeConfig {
     neighborUpdateManager: INeighborUpdateManager
     propagation: Propagation
     rpcCommunicator: ListeningRpcCommunicator
+    numOfTargetNeighbors: number
+    maxNumberOfContacts: number
+    minPropagationTargets: number
     nodeName: string
 }
 
@@ -120,7 +122,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
                 toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
             )
         ))
-        if (this.config.targetNeighbors.size() < this.config.N) {
+        if (this.config.targetNeighbors.size() < this.config.numOfTargetNeighbors) {
             this.config.neighborFinder.start()
         }
     }
@@ -150,7 +152,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
                 toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
             )
         ))
-        if (this.config.targetNeighbors.size() < this.config.N) {
+        if (this.config.targetNeighbors.size() < this.config.numOfTargetNeighbors) {
             this.config.neighborFinder.start()
         }
     }

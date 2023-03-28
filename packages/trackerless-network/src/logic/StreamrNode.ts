@@ -125,10 +125,10 @@ export class StreamrNode extends EventEmitter<Events> {
             this.streams.get(streamPartID)!.layer2.broadcast(msg)
         } else {
             this.joinStream(streamPartID, knownEntryPointDescriptors)
-                .then(() => this.streams.get(streamPartID)?.layer2.broadcast(msg))
                 .catch((err) => {
                     logger.warn(`Failed to publish to stream ${streamPartID} with error: ${err}`)
                 })
+            this.streams.get(streamPartID)!.layer2.broadcast(msg)
         }
     }
 
