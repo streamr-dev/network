@@ -13,7 +13,7 @@ import { WebSocketConnector } from './WebSocket/WebSocketConnector'
 import { PeerIDKey } from '../helpers/PeerID'
 import { protoToString } from '../helpers/protoToString'
 import { ITransport, TransportEvents } from '../transport/ITransport'
-import { WebRtcConnector } from './WebRTC/WebRtcConnector'
+import { IceServer, WebRtcConnector } from './WebRTC/WebRtcConnector'
 import { CountMetric, LevelMetric, Logger, Metric, MetricsContext, MetricsDefinition, RateMetric } from '@streamr/utils'
 import * as Err from '../helpers/errors'
 import { WEB_RTC_CLEANUP } from './WebRTC/NodeWebRtcConnection'
@@ -41,8 +41,12 @@ export class ConnectionManagerConfig {
     webSocketHost?: string
     webSocketPort?: number
     entryPoints?: PeerDescriptor[]
-    stunUrls?: string[]
+    iceServers?: IceServer[]
     metricsContext?: MetricsContext
+    webrtcDisallowPrivateAddresses?: boolean
+    webrtcDatachannelBufferThresholdLow?: number
+    webrtcDatachannelBufferThresholdHigh?: number
+    newWebrtcConnectionTimeout?: number
     nodeName?: string
     maxConnections: number = 80
 
@@ -155,7 +159,11 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             this.webrtcConnector = new WebRtcConnector({
                 rpcTransport: this.config.transportLayer!,
                 protocolVersion: ConnectionManager.PROTOCOL_VERSION,
-                stunUrls: this.config.stunUrls
+                iceServers: this.config.iceServers,
+                disallowPrivateAddresses: this.config.webrtcDisallowPrivateAddresses,
+                bufferThresholdLow: this.config.webrtcDatachannelBufferThresholdLow,
+                bufferThresholdHigh: this.config.webrtcDatachannelBufferThresholdHigh,
+                connectionTimeout: this.config.newWebrtcConnectionTimeout
             }, this.incomingConnectionCallback)
         }
         this.serviceId = (this.config.serviceIdPrefix ? this.config.serviceIdPrefix : '') + 'ConnectionManager'
