@@ -49,29 +49,14 @@ export class Handshaker implements IHandshaker {
         this.client = toProtoRpcClient(new HandshakeRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
         this.server = new HandshakerServer({
             randomGraphId: this.config.randomGraphId,
+            ownPeerDescriptor: this.config.ownPeerDescriptor,
             targetNeighbors: this.config.targetNeighbors,
             connectionLocker: this.config.connectionLocker,
             ongoingHandshakes: this.ongoingHandshakes,
             N: this.config.N,
-            acceptHandshakeWithInterleaving: (req: StreamHandshakeRequest, sender: PeerDescriptor) => 
-                this.acceptHandshakeWithInterleaving(req, sender),
             handshakeWithInterleaving: (target: PeerDescriptor, senderId: string) => this.handshakeWithInterleaving(target, senderId),
-            acceptHandshake: (request: StreamHandshakeRequest, requester: PeerDescriptor) => {
-                const res: StreamHandshakeResponse = {
-                    requestId: request.requestId,
-                    accepted: true
-                }
-                this.config.targetNeighbors.add(this.createRemoteNode(requester))
-                this.config.connectionLocker.lockConnection(request.senderDescriptor!, this.config.randomGraphId)
-                return res
-            },
-            rejectHandshake: (request: StreamHandshakeRequest) => {
-                const res: StreamHandshakeResponse = {
-                    requestId: request.requestId,
-                    accepted: false
-                }
-                return res
-            }
+            createRemoteHandshaker: (target: PeerDescriptor) => this.createRemoteHandshaker(target),
+            createRemoteNode: (target: PeerDescriptor) => this.createRemoteNode(target)
         })
         this.config.rpcCommunicator.registerRpcNotification(InterleaveNotice, 'interleaveNotice',
             (req: InterleaveNotice, context) => this.server.interleaveNotice(req, context))
@@ -79,33 +64,12 @@ export class Handshaker implements IHandshaker {
             (req: StreamHandshakeRequest, context) => this.server.handshake(req, context))
     }
 
-    private acceptHandshakeWithInterleaving(request: StreamHandshakeRequest, requester: PeerDescriptor): StreamHandshakeResponse {
-        const exclude = request.neighbors
-        exclude.push(request.senderId)
-        exclude.push(request.interleavingFrom!)
-        const furthest = this.config.targetNeighbors.getFurthest(exclude)
-        const furthestPeerDescriptor = furthest ? furthest.getPeerDescriptor() : undefined
-        if (furthest) {
-            const remote = this.createRemoteHandshaker(furthest.getPeerDescriptor())
-            remote.interleaveNotice(this.config.ownPeerDescriptor, request.senderDescriptor!)
-            this.config.targetNeighbors.remove(furthest.getPeerDescriptor())
-            this.config.connectionLocker.unlockConnection(furthestPeerDescriptor!, this.config.randomGraphId)
-        } else {
-            logger.trace('furthest was falsy')
-        }
-        this.config.targetNeighbors.add(this.createRemoteNode(requester))
-        this.config.connectionLocker.lockConnection(request.senderDescriptor!, this.config.randomGraphId)
-        return {
-            requestId: request.requestId,
-            accepted: true,
-            interleaveTarget: furthestPeerDescriptor
-        }
-    }
-
     public async attemptHandshakesOnContacts(excludedIds: string[]): Promise<string[]> {
         if (this.config.targetNeighbors!.size() + this.ongoingHandshakes.size < this.config.N - 2) {
+            logger.trace(`Attempting parallel handshakes with ${PARALLEL_HANDSHAKE_COUNT} targets`)
             return this.selectParallelTargetsAndHandshake(excludedIds)
         } else if (this.config.targetNeighbors!.size() + this.ongoingHandshakes.size < this.config.N) {
+            logger.trace(`Attempting handshake with new target`)
             return this.selectNewTargetAndHandshake(excludedIds)
         }
         return excludedIds

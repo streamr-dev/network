@@ -2,38 +2,36 @@ import { PeerID } from "@streamr/dht"
 import { HandshakerServer } from "../../src/logic/neighbor-discovery/HandshakerServer"
 import { PeerList } from "../../src/logic/PeerList"
 import { InterleaveNotice, StreamHandshakeRequest } from "../../src/proto/packages/trackerless-network/protos/NetworkRpc"
-import { createMockRemotePeer, mockConnectionLocker } from '../utils/utils'
+import { createMockRemoteHandshaker, createMockRemotePeer, mockConnectionLocker } from '../utils/utils'
 
 describe('HandshakerServer', () => {
 
     let handshakerServer: HandshakerServer
 
     const peerId = PeerID.fromString('Handshaker')
+    const ownPeerDescriptor = {
+        kademliaId: peerId.value,
+        type: 0
+    }
 
     let targetNeighbors: PeerList
     let ongoingHandshakes: Set<string>
-    let acceptHandshake: jest.Mock
-    let rejectHandshake: jest.Mock
-    let acceptHandshakeWithInterleaving: jest.Mock
     let handshakeWithInterleaving: jest.Mock
 
     beforeEach(() => {
         targetNeighbors = new PeerList(peerId, 10)
         ongoingHandshakes = new Set()
 
-        acceptHandshake = jest.fn()
-        rejectHandshake = jest.fn()
-        acceptHandshakeWithInterleaving = jest.fn()
         handshakeWithInterleaving = jest.fn()
 
         handshakerServer = new HandshakerServer({
             randomGraphId: 'random-graph',
+            ownPeerDescriptor,
             connectionLocker: mockConnectionLocker,
             ongoingHandshakes,
-            acceptHandshake,
-            rejectHandshake,
-            acceptHandshakeWithInterleaving,
-            handshakeWithInterleaving: async () => {
+            createRemoteHandshaker: (_p) => createMockRemoteHandshaker(),
+            createRemoteNode: (_p) => createMockRemotePeer(),
+            handshakeWithInterleaving: async (_p, _t) => {
                 handshakeWithInterleaving()
                 return true
             },
@@ -52,8 +50,10 @@ describe('HandshakerServer', () => {
                 type: 0
             }
         })
-        await handshakerServer.handshake(req, {} as any)
-        expect(acceptHandshake).toHaveBeenCalledTimes(1)
+        const res = await handshakerServer.handshake(req, {} as any)
+        expect(res.accepted).toEqual(true)
+        expect(res.interleaveTarget).toBeUndefined()
+        expect(res.requestId).toEqual('requestId')
     })
 
     it('handshake interleave', async () => {
@@ -70,8 +70,9 @@ describe('HandshakerServer', () => {
                 type: 0
             }
         })
-        await handshakerServer.handshake(req, {} as any)
-        expect(acceptHandshakeWithInterleaving).toHaveBeenCalledTimes(1)
+        const res = await handshakerServer.handshake(req, {} as any)
+        expect(res.accepted).toEqual(true)
+        expect(res.interleaveTarget).toBeDefined()
     })
 
     it('unaccepted handshake', async () => {
@@ -88,8 +89,8 @@ describe('HandshakerServer', () => {
                 type: 0
             }
         })
-        await handshakerServer.handshake(req, {} as any)
-        expect(rejectHandshake).toHaveBeenCalledTimes(1)
+        const res = await handshakerServer.handshake(req, {} as any)
+        expect(res.accepted).toEqual(false)
     })
 
     it('handshakeWithInterleaving success', async () => {
@@ -114,7 +115,6 @@ describe('HandshakerServer', () => {
                 kademliaId: PeerID.fromString('interleaveTarget').value,
                 type: 0
             }
-
         }
         await handshakerServer.interleaveNotice(req, {} as any)
         expect(handshakeWithInterleaving).toHaveBeenCalledTimes(0)
