@@ -7,7 +7,7 @@ import { PeerIDKey } from '@streamr/dht/dist/src/helpers/PeerID'
 import { INeighborFinder } from './NeighborFinder'
 import { PeerList } from '../PeerList'
 import { RemoteNeighborUpdateManager } from './RemoteNeighborUpdateManager'
-import { NeighborUpdateManagerServer } from './NEighborUpdateManagerServer'
+import { NeighborUpdateManagerServer } from './NeighborUpdateManagerServer'
 
 interface NeighborUpdateManagerConfig {
     ownStringId: PeerIDKey
