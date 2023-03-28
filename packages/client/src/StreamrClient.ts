@@ -36,6 +36,8 @@ import { ErrorCode } from './HttpUtil'
 import omit from 'lodash/omit'
 import { StreamrClientError } from './StreamrClientError'
 
+export type SubscribeOptions = StreamDefinition & { resend?: ResendOptions }
+
 /**
  * The main API used to interact with Streamr.
  *
@@ -160,7 +162,7 @@ export class StreamrClient {
      * @returns a {@link Subscription} that can be used to manage the subscription etc.
      */
     async subscribe(
-        options: StreamDefinition & { resend?: ResendOptions },
+        options: SubscribeOptions,
         onMessage?: MessageListener
     ): Promise<Subscription> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(options)
