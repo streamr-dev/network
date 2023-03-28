@@ -25,6 +25,7 @@ import {
     keyFromPeerDescriptor,
     peerIdFromPeerDescriptor
 } from '../../helpers/peerIdFromPeerDescriptor'
+import { getAddressFromIceCandidate, isPrivateIPv4 } from '../../helpers/AddressTools'
 
 const logger = new Logger(module)
 
@@ -163,14 +164,13 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         this.ownPeerDescriptor = peerDescriptor
     }
 
-    // eslint-disable-next-line class-methods-use-this
-    isIceCandidateAllowed(_candidate: string): boolean {
-        // if (this.disallowPrivateAddresses) {
-        //     const address = getAddressFromIceCandidate(candidate)
-        //     if (address && isPrivateIPv4(address)) {
-        //         return false
-        //     }
-        // }
+    isIceCandidateAllowed(candidate: string): boolean {
+        if (this.disallowPrivateAddresses) {
+            const address = getAddressFromIceCandidate(candidate)
+            if (address && isPrivateIPv4(address)) {
+                return false
+            }
+        }
         return true
     }
 
