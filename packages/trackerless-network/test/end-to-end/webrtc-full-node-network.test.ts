@@ -3,7 +3,7 @@ import { StreamrNode } from '../../src/logic/StreamrNode'
 import { range } from 'lodash'
 import { waitForCondition } from '@streamr/utils'
 import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { getRandomRegion } from '@streamr/dht/dist/test/data/pings'
+import { getRandomRegion } from '@streamr/dht'
 import { createStreamMessage } from '../utils/utils'
 import { PeerIDKey } from '@streamr/dht/dist/src/helpers/PeerID'
 
