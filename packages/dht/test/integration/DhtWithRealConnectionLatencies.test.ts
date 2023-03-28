@@ -2,7 +2,7 @@ import { DhtNode } from '../../src/dht/DhtNode'
 import { createMockConnectionDhtNode } from '../utils/utils'
 import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator'
 import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { getRandomRegion } from '../data/pings'
+import { getRandomRegion } from '../../src/connection/Simulator/pings'
 
 describe('Mock connection Dht joining with real latencies', () => {
     let entryPoint: DhtNode
