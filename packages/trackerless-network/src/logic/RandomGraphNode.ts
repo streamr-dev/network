@@ -206,7 +206,6 @@ export class RandomGraphNode extends EventEmitter<Events> {
     }
 
     broadcast(msg: StreamMessage, previousPeer?: string): void {
-        console.log(this.getOwnStringId(), msg.messageRef!.timestamp, msg.messageRef!.sequenceNumber)
         if (!previousPeer) {
             this.markAndCheckDuplicate(msg.messageRef!, msg.previousMessageRef)
         }

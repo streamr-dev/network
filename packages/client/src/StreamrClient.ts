@@ -508,13 +508,14 @@ export class StreamrClient {
         return this.node.getEntryPoints()
     }
 
+    // eslint-disable-next-line class-methods-use-this
     async setProxies(
-        streamDefinition: StreamDefinition,
+        _streamDefinition: StreamDefinition,
         _nodeIds: string[],
         _direction: ProxyDirection,
         _connectionCount?: number
     ): Promise<void> {
-        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
+        // const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         // await this.node.setProxies(streamPartId, nodeIds, direction, connectionCount)
     }
 

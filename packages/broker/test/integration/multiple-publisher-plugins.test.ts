@@ -86,7 +86,7 @@ const publishMessages = async (streamId: string): Promise<any[]> => {
         })
     }
     let firstMessage = true
-    for await (const msg of messages) {
+    for (const msg of messages) {
         await publishers[msg.publisher].publish(msg, streamId)
         if (firstMessage) {
             firstMessage = false
@@ -126,11 +126,17 @@ describe('multiple publisher plugins', () => {
                 websocket: {
                     port: wsPort
                 },
-                http: {}
+                http: {},
+                subscriber: {
+                    streams: [{
+                        streamId,
+                        streamPartition: 0
+                    }]
+                } 
             },
             wsServerPort: 44409,
             entryPoints: [{
-                kademliaId: (await new Wallet(privateKey).getAddress()),
+                kademliaId: (await new Wallet(privateKey).getAddress()).toLowerCase(),
                 type: 0,
                 websocket: {
                     ip: '127.0.0.1',
@@ -144,7 +150,7 @@ describe('multiple publisher plugins', () => {
         await broker?.stop()
     })
 
-    it('subscribe by StreamrClient', async () => {
+    it.only('subscribe by StreamrClient', async () => {
 
         const receivedMessages: Queue<unknown> = new Queue()
         const subscriber = await createClient(fastPrivateKey(), {

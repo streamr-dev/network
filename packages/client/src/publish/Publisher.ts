@@ -94,6 +94,7 @@ export class Publisher {
                     },
                     partition
                 )
+                // console.log(message.getPreviousMessageRef(), message.getMessageRef())
                 await this.node.publishToNode(message)
                 return message
             } catch (e) {

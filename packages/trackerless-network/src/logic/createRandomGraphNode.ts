@@ -19,7 +19,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig) => {
     const nodeName = config.nodeName ?? peerId.toKey()
     const numOfTargetNeighbors = config.numOfTargetNeighbors ?? 4
     const maxNumberOfContacts = config.maxNumberOfContacts ?? 20
-    const minPropagationTargets = config.minPropagationTargets ?? 2
+    const minPropagationTargets = config.minPropagationTargets ?? 1
     const nearbyContactPool = config.nearbyContactPool ?? new PeerList(peerId, maxNumberOfContacts)
     const randomContactPool = config.randomContactPool ?? new PeerList(peerId, maxNumberOfContacts)
     const targetNeighbors = config.targetNeighbors ?? new PeerList(peerId, maxNumberOfContacts)
