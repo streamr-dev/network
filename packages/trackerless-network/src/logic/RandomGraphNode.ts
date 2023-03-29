@@ -57,7 +57,7 @@ const logger = new Logger(module)
 export class RandomGraphNode extends EventEmitter<Events> {
     private stopped = false
     private started = false
-    private readonly duplicateDetector: DuplicateMessageDetector
+    private readonly duplicateDetectors: Map<string, DuplicateMessageDetector>
     private readonly abortController: AbortController
     private config: StrictRandomGraphNodeConfig
     private readonly server: INetworkRpc
@@ -65,7 +65,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
     constructor(config: StrictRandomGraphNodeConfig) {
         super()
         this.config = config
-        this.duplicateDetector = new DuplicateMessageDetector(10000)
+        this.duplicateDetectors = new Map()
         this.abortController = new AbortController()
         this.server = new RandomGraphNodeServer({
             ownPeerDescriptor: this.config.ownPeerDescriptor,
@@ -218,7 +218,10 @@ export class RandomGraphNode extends EventEmitter<Events> {
             new NumberPair(Number(previousMessageRef!.timestamp), previousMessageRef!.sequenceNumber)
             : null
         const currentNumberPair = new NumberPair(Number(currentMessageRef.timestamp), currentMessageRef.sequenceNumber)
-        return this.duplicateDetector.markAndCheck(previousNumberPair, currentNumberPair)
+        if (!this.duplicateDetectors.has(currentMessageRef.messageChainId)) {
+            this.duplicateDetectors.set(currentMessageRef.messageChainId, new DuplicateMessageDetector(10000))
+        }
+        return this.duplicateDetectors.get(currentMessageRef.messageChainId)!.markAndCheck(previousNumberPair, currentNumberPair)
     }
 
     getOwnStringId(): PeerIDKey {
@@ -249,4 +252,5 @@ export class RandomGraphNode extends EventEmitter<Events> {
         }
         return this.config.randomContactPool.getStringIds()
     }
+
 }
