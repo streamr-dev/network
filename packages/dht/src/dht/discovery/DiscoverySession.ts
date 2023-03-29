@@ -1,6 +1,7 @@
 import { RpcCommunicator, toProtoRpcClient } from "@streamr/proto-rpc"
 import { Logger, runAndWaitForEvents3 } from "@streamr/utils"
 import EventEmitter from "eventemitter3"
+import KBucket from 'k-bucket'
 import { v4 } from "uuid"
 import { PeerID } from "../../helpers/PeerID"
 import { PeerDescriptor } from "../../proto/packages/dht/protos/DhtRpc"
@@ -16,6 +17,7 @@ interface DiscoverySessionEvents {
 }
 
 interface DiscoverySessionConfig {
+    bucket: KBucket<DhtPeer>
     neighborList: SortedContactList<DhtPeer>
     targetId: Uint8Array
     ownPeerDescriptor: PeerDescriptor
@@ -96,6 +98,7 @@ export class DiscoverySession {
             return
         }
         this.ongoingClosestPeersRequests.delete(peer.getPeerId().toKey())
+        this.config.bucket.remove(peer.getPeerId().value)
         this.config.neighborList!.removeContact(peer.getPeerId())
     }
 

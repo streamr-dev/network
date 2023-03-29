@@ -66,6 +66,7 @@ export class PeerDiscovery {
         const closest = this.config.bucket.closest(this.config.ownPeerId!.value, this.config.getClosestContactsLimit)
         this.config.neighborList.addContacts(closest)
         const sessionOptions = {
+            bucket: this.config.bucket,
             neighborList: this.config.neighborList!,
             targetId: this.config.ownPeerId!.value,
             ownPeerDescriptor: this.config.ownPeerDescriptor!,
