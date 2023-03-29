@@ -61,7 +61,7 @@ export const CONFIG_TEST: StreamrClientConfig = {
             timeout: 30 * 1000,
             retryInterval: 500
         },
-        jsonRpc: {
+        ensStreamCreation: {
             timeout: 20 * 1000,
             retryInterval: 500
         },

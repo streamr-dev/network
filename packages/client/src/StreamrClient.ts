@@ -290,6 +290,8 @@ export class StreamrClient {
      *
      * @param propsOrStreamIdOrPath - the stream id to be used for the new stream, and optionally, any
      * associated metadata
+     *
+     * @remarks when creating a stream with an ENS domain, the returned promise can take several minutes to settle
      */
     async createStream(propsOrStreamIdOrPath: Partial<StreamMetadata> & { id: string } | string): Promise<Stream> {
         const props = typeof propsOrStreamIdOrPath === 'object' ? propsOrStreamIdOrPath : { id: propsOrStreamIdOrPath }
@@ -306,6 +308,8 @@ export class StreamrClient {
      * @category Important
      *
      * @param props - the stream id to get or create. Field `partitions` is only used if creating the stream.
+     *
+     * @remarks when creating a stream with an ENS domain, the returned promise can take several minutes to settle
      */
     async getOrCreateStream(props: { id: string, partitions?: number }): Promise<Stream> {
         try {
