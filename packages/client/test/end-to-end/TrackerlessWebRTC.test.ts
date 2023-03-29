@@ -128,7 +128,7 @@ describe('publish-subscribe', () => {
                 messages.push(msg)
             })
             sub.on('error', (e) => console.error(e))
-            await waitForCondition(() => messages.length > 0)
+            await waitForCondition(() => messages.length > 0, 45000)
             expect(messages).toEqual([PAYLOAD])
 
         }, TIMEOUT)

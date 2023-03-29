@@ -150,7 +150,7 @@ describe('multiple publisher plugins', () => {
         await broker?.stop()
     })
 
-    it.only('subscribe by StreamrClient', async () => {
+    it('subscribe by StreamrClient', async () => {
 
         const receivedMessages: Queue<unknown> = new Queue()
         const subscriber = await createClient(fastPrivateKey(), {
