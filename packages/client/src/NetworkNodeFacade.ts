@@ -107,16 +107,14 @@ export class NetworkNodeFacade {
 
         const entryPoints = this.getEntryPoints()
 
-        const peerId = PeerID.fromString(this.config.network.layer0!.peerDescriptor!.kademliaId)
-                
         const ownPeerDescriptor: PeerDescriptor | undefined = this.config.network.layer0!.peerDescriptor ? {
-            kademliaId: peerId.value,
+            kademliaId: PeerID.fromString(this.config.network.layer0!.peerDescriptor!.kademliaId).value,
             type: this.config.network.layer0!.peerDescriptor!.type,
             openInternet: this.config.network.layer0!.peerDescriptor!.openInternet,
             udp: this.config.network.layer0!.peerDescriptor!.udp,
             tcp: this.config.network.layer0!.peerDescriptor!.tcp,
             websocket: this.config.network.layer0!.peerDescriptor!.websocket,
-            nodeName: peerId.toString()
+            nodeName: this.config.network.layer0!.peerDescriptor!.kademliaId,
         } : undefined
 
         if (id == null || id === '') {
