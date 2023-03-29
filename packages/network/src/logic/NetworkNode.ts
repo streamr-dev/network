@@ -33,6 +33,9 @@ export class NetworkNode extends Node {
         getUserId: () => Promise<string>,
         connectionCount?: number
     ): Promise<void> {
+        if (this.acceptProxyConnections) {
+            throw new Error('cannot set proxies when acceptProxyConnections=true')
+        }
         await this.doSetProxies(streamPartId, contactNodeIds, direction, getUserId, connectionCount)
     }
 
