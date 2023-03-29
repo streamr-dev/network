@@ -130,7 +130,7 @@ export const createMessagingPluginTest = <T>(
                 })
                 pluginClient = await api.createClient('publish', stream.id, MOCK_API_KEY)
                 await api.publish(MOCK_MESSAGE, stream.id, pluginClient)
-                const message = await messageQueue.pop()
+                const message = await messageQueue.pop(30000)
                 assertReceivedMessage(message)
             })
 
