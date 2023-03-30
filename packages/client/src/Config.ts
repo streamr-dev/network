@@ -10,7 +10,7 @@ import CONFIG_SCHEMA from './config.schema.json'
 import { TrackerRegistryRecord } from '@streamr/protocol'
 import { LogLevel } from '@streamr/utils'
 
-import { IceServer, Location } from '@streamr/network-node'
+import { IceServer, Location, WebRtcPortRange } from '@streamr/network-node'
 import type { ConnectionInfo } from '@ethersproject/web'
 import { generateClientId } from './utils/utils'
 
@@ -95,6 +95,8 @@ export interface StreamrClientConfig {
         newWebrtcConnectionTimeout?: number
         webrtcDatachannelBufferThresholdLow?: number
         webrtcDatachannelBufferThresholdHigh?: number
+        webrtcMaxMessageSize?: number
+        webrtcPortRange?: WebRtcPortRange
         /**
          * The maximum amount of outgoing messages to be buffered on a single WebRTC connection.
          */
@@ -142,7 +144,7 @@ export interface StreamrClientConfig {
             timeout?: number
             retryInterval?: number
         }
-        jsonRpc?: {
+        ensStreamCreation?: {
             timeout?: number
             retryInterval?: number
         }

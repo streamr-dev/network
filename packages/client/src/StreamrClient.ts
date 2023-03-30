@@ -11,7 +11,7 @@ import { ResendOptions, Resends } from './subscribe/Resends'
 import { ResendSubscription } from './subscribe/ResendSubscription'
 import { NetworkNodeFacade, NetworkNodeStub } from './NetworkNodeFacade'
 import { DestroySignal } from './DestroySignal'
-import { GroupKeyStore, UpdateEncryptionKeyOptions } from './encryption/GroupKeyStore'
+import { LocalGroupKeyStore, UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
 import { StorageNodeMetadata, StorageNodeRegistry } from './registry/StorageNodeRegistry'
 import { StreamRegistry } from './registry/StreamRegistry'
 import { StreamDefinition } from './types'
@@ -38,6 +38,8 @@ import { StreamrClientError } from './StreamrClientError'
 import { StreamSortOptions } from './utils/StreamSortOptions'
 import { SortDirection } from './utils/SortDirection'
 
+export type SubscribeOptions = StreamDefinition & { resend?: ResendOptions }
+
 /**
  * The main API used to interact with Streamr.
  *
@@ -53,7 +55,7 @@ export class StreamrClient {
     private readonly resends: Resends
     private readonly publisher: Publisher
     private readonly subscriber: Subscriber
-    private readonly groupKeyStore: GroupKeyStore
+    private readonly localGroupKeyStore: LocalGroupKeyStore
     private readonly destroySignal: DestroySignal
     private readonly streamRegistry: StreamRegistry
     private readonly streamStorageRegistry: StreamStorageRegistry
@@ -80,7 +82,7 @@ export class StreamrClient {
         this.resends = container.resolve<Resends>(Resends)
         this.publisher = container.resolve<Publisher>(Publisher)
         this.subscriber = container.resolve<Subscriber>(Subscriber)
-        this.groupKeyStore = container.resolve<GroupKeyStore>(GroupKeyStore)
+        this.localGroupKeyStore = container.resolve<LocalGroupKeyStore>(LocalGroupKeyStore)
         this.destroySignal = container.resolve<DestroySignal>(DestroySignal)
         this.streamRegistry = container.resolve<StreamRegistry>(StreamRegistry)
         this.streamStorageRegistry = container.resolve<StreamStorageRegistry>(StreamStorageRegistry)
@@ -138,14 +140,13 @@ export class StreamrClient {
     }
 
     /**
-     * Adds an encryption key for a given stream to the key store.
+     * Adds an encryption key for a given publisher to the key store.
      *
      * @remarks Keys will be added to the store automatically by the client as encountered. This method can be used to
      * manually add some known keys into the store.
      */
-    async addEncryptionKey(key: GroupKey, streamIdOrPath: string): Promise<void> {
-        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        await this.groupKeyStore.add(key, streamId)
+    async addEncryptionKey(key: GroupKey, publisherId: EthereumAddress): Promise<void> {
+        await this.localGroupKeyStore.set(key.id, publisherId, key.data)
     }
 
     // --------------------------------------------------------------------------------------------
@@ -163,7 +164,7 @@ export class StreamrClient {
      * @returns a {@link Subscription} that can be used to manage the subscription etc.
      */
     async subscribe(
-        options: StreamDefinition & { resend?: ResendOptions },
+        options: SubscribeOptions,
         onMessage?: MessageListener
     ): Promise<Subscription> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(options)
@@ -291,6 +292,8 @@ export class StreamrClient {
      *
      * @param propsOrStreamIdOrPath - the stream id to be used for the new stream, and optionally, any
      * associated metadata
+     *
+     * @remarks when creating a stream with an ENS domain, the returned promise can take several minutes to settle
      */
     async createStream(propsOrStreamIdOrPath: Partial<StreamMetadata> & { id: string } | string): Promise<Stream> {
         const props = typeof propsOrStreamIdOrPath === 'object' ? propsOrStreamIdOrPath : { id: propsOrStreamIdOrPath }
@@ -307,6 +310,8 @@ export class StreamrClient {
      * @category Important
      *
      * @param props - the stream id to get or create. Field `partitions` is only used if creating the stream.
+     *
+     * @remarks when creating a stream with an ENS domain, the returned promise can take several minutes to settle
      */
     async getOrCreateStream(props: { id: string, partitions?: number }): Promise<Stream> {
         try {
@@ -557,8 +562,7 @@ export class StreamrClient {
         this._connect.reset() // reset connect (will error on next call)
         const tasks = [
             this.destroySignal.destroy().then(() => undefined),
-            this.subscriber.unsubscribe(),
-            this.groupKeyStore.stop()
+            this.subscriber.unsubscribe()
         ]
 
         await Promise.allSettled(tasks)

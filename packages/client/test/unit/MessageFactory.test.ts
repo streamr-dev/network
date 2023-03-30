@@ -21,15 +21,16 @@ const createMessageFactory = async (opts?: {
     streamRegistry?: StreamRegistryCached
     groupKeyQueue?: GroupKeyQueue
 }) => {
+    const authentication = createPrivateKeyAuthentication(WALLET.privateKey, undefined as any)
     return new MessageFactory({
         streamId: STREAM_ID,
-        authentication: createPrivateKeyAuthentication(WALLET.privateKey, undefined as any),
+        authentication,
         streamRegistry: createStreamRegistryCached({
             partitionCount: PARTITION_COUNT,
             isPublicStream: false,
             isStreamPublisher: true
         }),
-        groupKeyQueue: await createGroupKeyQueue(GROUP_KEY),
+        groupKeyQueue: await createGroupKeyQueue(authentication, GROUP_KEY),
         ...opts
     })
 }
@@ -102,7 +103,7 @@ describe('MessageFactory', () => {
     it('next group key', async () => {
         const nextGroupKey = GroupKey.generate()
         const messageFactory = await createMessageFactory({
-            groupKeyQueue: await createGroupKeyQueue(GROUP_KEY, nextGroupKey)
+            groupKeyQueue: await createGroupKeyQueue(createPrivateKeyAuthentication(WALLET.privateKey, undefined as any), GROUP_KEY, nextGroupKey)
         })
         const msg = await createMessage({}, messageFactory)
         expect(msg.groupKeyId).toBe(GROUP_KEY.id)

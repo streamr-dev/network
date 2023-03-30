@@ -146,9 +146,9 @@ export class StreamRegistry {
                 await until(
                     async () => this.streamExistsOnChain(streamId),
                     // eslint-disable-next-line no-underscore-dangle
-                    this.config._timeouts.jsonRpc.timeout,
+                    this.config._timeouts.ensStreamCreation.timeout,
                     // eslint-disable-next-line no-underscore-dangle
-                    this.config._timeouts.jsonRpc.retryInterval
+                    this.config._timeouts.ensStreamCreation.retryInterval
                 )
             } catch (e) {
                 throw new Error(`unable to create stream "${streamId}"`)

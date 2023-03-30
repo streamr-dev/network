@@ -1,6 +1,7 @@
 import 'reflect-metadata'
 
 import { Wallet } from '@ethersproject/wallet'
+import { toEthereumAddress } from '@streamr/utils'
 import { fastWallet } from '@streamr/test-utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'
@@ -67,7 +68,7 @@ describe('Subscriber', () => {
                 privateKey: publisherWallet.privateKey
             }
         })
-        await publisher.addEncryptionKey(groupKey, stream.id)
+        await publisher.addEncryptionKey(groupKey, toEthereumAddress(publisherWallet.address))
 
         const sub = await subscriber.subscribe(stream.id)
 

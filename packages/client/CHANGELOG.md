@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Increase default timeout of stream creation when ENS domains are used
+
 ### Deprecated
 
 ### Removed
@@ -20,11 +22,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 
-## 8.1.0 - 2023-03-20
+## [8.1.0] - 2023-03-23
 
 ### Added
 
-- Added optional sorting parameter in the `searchStreams` method
+- Encryption keys are re-used automatically
+
+### Changed
+
+- .addEncryptionKey: 2nd parameter is now `publisherId` instead of `streamId`
+
+
+## [8.0.4] - 2023-03-20
+
+### Added
+
+- Add optional config option `network.webrtcPortRange`
+- Add optional config option `network.webrtcMaxMessageSize`
 
 
 ## [8.0.3] - 2023-03-08
@@ -307,7 +321,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed an import so that the client successfully loads in a web browser environment (NET-721)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/client/v8.0.3...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/client/v8.1.0...HEAD
+[8.1.0]: https://github.com/streamr-dev/network/compare/client/v8.0.4...client/v8.1.0
+[8.0.4]: https://github.com/streamr-dev/network/compare/client/v8.0.3...client/v8.0.4
 [8.0.3]: https://github.com/streamr-dev/network/compare/client/v8.0.2...client/v8.0.3
 [8.0.2]: https://github.com/streamr-dev/network/compare/client/v8.0.1...client/v8.0.2
 [8.0.1]: https://github.com/streamr-dev/network/compare/client/v8.0.0...client/v8.0.1

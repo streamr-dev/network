@@ -11,7 +11,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { collect } from '../../src/utils/iterators'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
-import { createMockMessage, createRelativeTestStreamId, getGroupKeyStore } from '../test-utils/utils'
+import { createMockMessage, createRelativeTestStreamId, getLocalGroupKeyStore } from '../test-utils/utils'
 
 /*
  * A subscriber has some GroupKeys in the local store and reads historical data
@@ -121,7 +121,7 @@ describe('resend with existing key', () => {
 
     describe('initial key available', () => {
         beforeEach(async () => {
-            await getGroupKeyStore(await subscriber.getAddress()).add(initialKey, stream.id)
+            await getLocalGroupKeyStore(await subscriber.getAddress()).set(initialKey.id, toEthereumAddress(publisherWallet.address), initialKey.data)
         })
         it('can decrypt initial', async () => {
             await assertDecryptable(1000, 2000)
@@ -139,7 +139,7 @@ describe('resend with existing key', () => {
 
     describe('rotated key available', () => {
         beforeEach(async () => {
-            await getGroupKeyStore(await subscriber.getAddress()).add(rotatedKey, stream.id)
+            await getLocalGroupKeyStore(await subscriber.getAddress()).set(rotatedKey.id, toEthereumAddress(publisherWallet.address), rotatedKey.data)
         })
         it('can\'t decrypt initial', async () => {
             await assertNonDecryptable(1000, 2000)
@@ -154,7 +154,7 @@ describe('resend with existing key', () => {
 
     describe('rekeyed key available', () => {
         beforeEach(async () => {
-            await getGroupKeyStore(await subscriber.getAddress()).add(rekeyedKey, stream.id)
+            await getLocalGroupKeyStore(await subscriber.getAddress()).set(rekeyedKey.id, toEthereumAddress(publisherWallet.address), rekeyedKey.data)
         })
         it('can\'t decrypt initial', async () => {
             await assertNonDecryptable(1000, 2000)

@@ -19,7 +19,7 @@ import { createSignedMessage } from '../publish/MessageFactory'
 import { Validator } from '../Validator'
 import { EncryptionUtil } from './EncryptionUtil'
 import { GroupKey } from './GroupKey'
-import { GroupKeyStore } from './GroupKeyStore'
+import { LocalGroupKeyStore } from './LocalGroupKeyStore'
 import { EthereumAddress, Logger } from '@streamr/utils'
 import { LoggerFactory } from '../utils/LoggerFactory'
 
@@ -30,13 +30,13 @@ import { LoggerFactory } from '../utils/LoggerFactory'
 @scoped(Lifecycle.ContainerScoped)
 export class PublisherKeyExchange {
     private readonly logger: Logger
-    private readonly store: GroupKeyStore
+    private readonly store: LocalGroupKeyStore
     private readonly networkNodeFacade: NetworkNodeFacade
     private readonly authentication: Authentication
     private readonly validator: Validator
 
     constructor(
-        store: GroupKeyStore,
+        store: LocalGroupKeyStore,
         networkNodeFacade: NetworkNodeFacade,
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
@@ -63,7 +63,7 @@ export class PublisherKeyExchange {
                     this.logger.debug('handling group key request %s', requestId)
                     await this.validator.validate(request)
                     const keys = without(
-                        await Promise.all(groupKeyIds.map((id: string) => this.store.get(id, request.getStreamId()))),
+                        await Promise.all(groupKeyIds.map((id: string) => this.store.get(id, authenticatedUser))),
                         undefined) as GroupKey[]
                     if (keys.length > 0) {
                         const response = await this.createResponse(

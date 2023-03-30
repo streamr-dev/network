@@ -16,7 +16,7 @@ const PARTITION_COUNT = 3
 const TIMEOUT_CONFIG = {
     // eslint-disable-next-line no-underscore-dangle
     ...CONFIG_TEST._timeouts!,
-    jsonRpc: {
+    ensStreamCreation: {
         timeout: 5000,
         retryInterval: 200
     }

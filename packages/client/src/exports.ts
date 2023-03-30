@@ -1,7 +1,7 @@
 /**
  * This file captures named exports so we can manipulate them for cjs/browser builds.
  */
-export { StreamrClient } from './StreamrClient'
+export { StreamrClient, SubscribeOptions } from './StreamrClient'
 export { Stream, StreamMetadata, Field, VALID_FIELD_TYPES } from './Stream'
 export { Message, MessageMetadata } from './Message'
 export { StreamrClientEvents } from './events'
@@ -32,7 +32,7 @@ export {
     validateConfig
 } from './Config'
 export { GroupKey as EncryptionKey } from './encryption/GroupKey'
-export { UpdateEncryptionKeyOptions } from './encryption/GroupKeyStore'
+export { UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
 
 export { CONFIG_TEST } from './ConfigTest'
 export { NetworkNodeStub } from './NetworkNodeFacade'
@@ -42,7 +42,7 @@ export { formStorageNodeAssignmentStreamId } from './utils/utils'
 export type { StreamID, StreamPartID, TrackerRegistryRecord } from '@streamr/protocol'
 export { ProxyDirection } from '@streamr/protocol'
 export type { BrandedString, EthereumAddress, LogLevel, Metric, MetricsContext, MetricsDefinition, MetricsReport } from '@streamr/utils'
-export type { IceServer, Location } from '@streamr/network-node'
+export type { IceServer, Location, WebRtcPortRange } from '@streamr/network-node'
 
 // These are currently exported because NetworkNodeStub uses methods which operate on StreamMessage.
 // If we remove that semi-public class we can maybe remove these exports.
