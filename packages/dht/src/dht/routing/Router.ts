@@ -5,7 +5,7 @@ import { RoutingMode, RoutingSession, RoutingSessionEvents } from './RoutingSess
 import { Logger, raceEvents3 } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
-import { DuplicateDetector } from '../DuplicateDetector'
+import { DuplicateDetector } from './DuplicateDetector'
 import { ConnectionManager } from '../../connection/ConnectionManager'
 import { DhtPeer } from '../DhtPeer'
 import { v4 } from 'uuid'
@@ -42,9 +42,21 @@ interface ForwardingTableEntry {
     peerDescriptors: PeerDescriptor[]
 }
 
+interface IRouterFunc {
+    doRouteMessage(routedMessage: RouteMessageWrapper, mode: RoutingMode): RouteMessageAck
+    send(msg: Message, reachableThrough: PeerDescriptor[]): Promise<void>
+    checkDuplicate(messageId: string): boolean
+    addToDuplicateDetector(messageId: string, senderId: string, message?: Message): void
+    addRoutingSession(session: RoutingSession): void
+    removeRoutingSession(sessionId: string): void
+    stop(): void
+}
+
+export interface IRouter extends Omit<IRoutingService, 'findRecursively'>, IRouterFunc {}
+
 const logger = new Logger(module)
 
-export class Router implements Omit<IRoutingService, 'findRecursively'> {
+export class Router implements IRouter {
     private readonly config: RouterConfig
     private readonly forwardingTable: Map<string, ForwardingTableEntry> = new Map()
     private ongoingRoutingSessions: Map<string, RoutingSession> = new Map()
@@ -53,10 +65,10 @@ export class Router implements Omit<IRoutingService, 'findRecursively'> {
 
     constructor(config: RouterConfig) {
         this.config = config
-        this.routeMessage = this.routeMessage.bind(this)
-        this.forwardMessage = this.forwardMessage.bind(this)
-        this.config.rpcCommunicator.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'forwardMessage', this.forwardMessage)
-        this.config.rpcCommunicator.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'routeMessage', this.routeMessage)
+        this.config.rpcCommunicator.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'forwardMessage',
+            (forwardMessage: RouteMessageWrapper, context) => this.forwardMessage(forwardMessage, context))
+        this.config.rpcCommunicator.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'routeMessage',
+            (routedMessage: RouteMessageWrapper, context) => this.routeMessage(routedMessage, context))
     }
 
     public async send(msg: Message, reachableThrough: PeerDescriptor[]): Promise<void> {
@@ -70,7 +82,7 @@ export class Router implements Omit<IRoutingService, 'findRecursively'> {
                 requestId: v4(),
                 destinationPeer: forwardingPeer,
                 sourcePeer: this.config.ownPeerDescriptor!,
-                reachableThrough: [],
+                reachableThrough,
                 routingPath: []
             }
             this.doRouteMessage(forwardedMessage, RoutingMode.FORWARD)
@@ -83,7 +95,7 @@ export class Router implements Omit<IRoutingService, 'findRecursively'> {
                 reachableThrough,
                 routingPath: []
             }
-            this.doRouteMessage(routedMessage, RoutingMode.FORWARD)
+            this.doRouteMessage(routedMessage, RoutingMode.ROUTE)
         }
     }
 

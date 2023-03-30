@@ -143,6 +143,30 @@
                     "type": "number",
                     "default": 500
                 },
+                "webrtcMaxMessageSize": {
+                    "type": "number",
+                    "default": 1048576
+                },
+                "webrtcPortRange": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                        "min",
+                        "max"
+                    ],
+                    "properties": {
+                        "min": {
+                            "type": "number"
+                        },
+                        "max": {
+                            "type": "number"
+                        }
+                    },
+                    "default": {
+                        "min": 6000,
+                        "max": 65535
+                    }
+                },
                 "disconnectionWaitTime": {
                     "type": "number",
                     "default": 200

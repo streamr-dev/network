@@ -9,8 +9,8 @@ import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { StoreServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
-import { Router } from '../routing/Router'
-import { RecursiveFinder } from '../find/RecursiveFinder'
+import { IRouter } from '../routing/Router'
+import { IRecursiveFinder } from '../find/RecursiveFinder'
 import { isSamePeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger } from '@streamr/utils'
 import { LocalDataStore } from './LocalDataStore'
@@ -25,8 +25,8 @@ import { DhtPeer } from '../DhtPeer'
 
 interface DataStoreConfig {
     rpcCommunicator: RoutingRpcCommunicator
-    router: Router
-    recursiveFinder: RecursiveFinder
+    router: IRouter
+    recursiveFinder: IRecursiveFinder
     ownPeerDescriptor: PeerDescriptor
     localDataStore: LocalDataStore
     serviceId: string

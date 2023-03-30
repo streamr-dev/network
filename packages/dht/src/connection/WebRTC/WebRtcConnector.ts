@@ -25,13 +25,26 @@ import {
     keyFromPeerDescriptor,
     peerIdFromPeerDescriptor
 } from '../../helpers/peerIdFromPeerDescriptor'
+import { getAddressFromIceCandidate, isPrivateIPv4 } from '../../helpers/AddressTools'
 
 const logger = new Logger(module)
 
 export interface WebRtcConnectorConfig {
     rpcTransport: ITransport
     protocolVersion: string
-    stunUrls?: string[]
+    iceServers?: IceServer[]
+    disallowPrivateAddresses?: boolean
+    bufferThresholdLow?: number
+    bufferThresholdHigh?: number
+    connectionTimeout?: number
+}
+
+export interface IceServer {
+    url: string
+    port: number
+    username?: string
+    password?: string
+    tcp?: boolean
 }
 
 export class WebRtcConnector implements IWebRtcConnectorService {
@@ -43,7 +56,8 @@ export class WebRtcConnector implements IWebRtcConnectorService {
     private stopped = false
     private static objectCounter = 0
     private objectId = 0
-    private stunUrls: string[]
+    private iceServers: IceServer[]
+    private disallowPrivateAddresses: boolean
     private config: WebRtcConnectorConfig
     private incomingConnectionCallback: (connection: ManagedConnection) => boolean
 
@@ -58,21 +72,20 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         this.objectId = WebRtcConnector.objectCounter
 
         this.rpcTransport = config.rpcTransport
-        this.stunUrls = config.stunUrls || []
+        this.iceServers = config.iceServers || []
+        this.disallowPrivateAddresses = config.disallowPrivateAddresses || false
         this.incomingConnectionCallback = incomingConnectionCallback
         this.rpcCommunicator = new ListeningRpcCommunicator(WebRtcConnector.WEBRTC_CONNECTOR_SERVICE_ID, this.rpcTransport, {
             rpcRequestTimeout: 15000
         })
-
-        this.rtcOffer = this.rtcOffer.bind(this)
-        this.rtcAnswer = this.rtcAnswer.bind(this)
-        this.iceCandidate = this.iceCandidate.bind(this)
-        this.requestConnection = this.requestConnection.bind(this)
-
-        this.rpcCommunicator.registerRpcNotification(RtcOffer, 'rtcOffer', this.rtcOffer)
-        this.rpcCommunicator.registerRpcNotification(RtcAnswer, 'rtcAnswer', this.rtcAnswer)
-        this.rpcCommunicator.registerRpcNotification(IceCandidate, 'iceCandidate', this.iceCandidate)
-        this.rpcCommunicator.registerRpcNotification(WebRtcConnectionRequest, 'requestConnection', this.requestConnection)
+        this.rpcCommunicator.registerRpcNotification(RtcOffer, 'rtcOffer',
+            (req: RtcOffer, context) => this.rtcOffer(req, context))
+        this.rpcCommunicator.registerRpcNotification(RtcAnswer, 'rtcAnswer',
+            (req: RtcAnswer, context) => this.rtcAnswer(req, context))
+        this.rpcCommunicator.registerRpcNotification(IceCandidate, 'iceCandidate',
+            (req: IceCandidate, context) => this.iceCandidate(req, context))
+        this.rpcCommunicator.registerRpcNotification(WebRtcConnectionRequest, 'requestConnection',
+            (req: WebRtcConnectionRequest, context) => this.requestConnection(req, context))
     }
 
     connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
@@ -88,7 +101,13 @@ export class WebRtcConnector implements IWebRtcConnectorService {
             return existingConnection
         }
 
-        const connection = new NodeWebRtcConnection({ remotePeerDescriptor: targetPeerDescriptor, stunUrls: this.stunUrls })
+        const connection = new NodeWebRtcConnection({ 
+            remotePeerDescriptor: targetPeerDescriptor,
+            iceServers: this.iceServers,
+            bufferThresholdLow: this.config.bufferThresholdLow,
+            bufferThresholdHigh: this.config.bufferThresholdHigh,
+            connectingTimeout: this.config.connectionTimeout
+        })
 
         const offering = this.isOffering(targetPeerDescriptor)
         let managedConnection: ManagedWebRtcConnection
@@ -143,6 +162,16 @@ export class WebRtcConnector implements IWebRtcConnectorService {
 
     setOwnPeerDescriptor(peerDescriptor: PeerDescriptor): void {
         this.ownPeerDescriptor = peerDescriptor
+    }
+
+    isIceCandidateAllowed(candidate: string): boolean {
+        if (this.disallowPrivateAddresses) {
+            const address = getAddressFromIceCandidate(candidate)
+            if (address && isPrivateIPv4(address)) {
+                return false
+            }
+        }
+        return true
     }
 
     private onRtcOffer(
@@ -244,8 +273,9 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         } else if (connection.connectionId.toString() !== connectionId) {
             logger.trace(`Ignoring remote candidate due to connectionId mismatch`)
             return
+        } else if (this.isIceCandidateAllowed(candidate)) {
+            connection.addRemoteCandidate(candidate, mid)
         }
-        connection.addRemoteCandidate(candidate, mid)
     }
 
     public async stop(): Promise<void> {

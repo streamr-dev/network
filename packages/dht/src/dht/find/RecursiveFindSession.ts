@@ -9,7 +9,7 @@ import { ITransport } from "../../transport/ITransport"
 import { ListeningRpcCommunicator } from "../../transport/ListeningRpcCommunicator"
 import { Contact } from "../contact/Contact"
 import { SortedContactList } from "../contact/SortedContactList"
-import { RecursiveFindResult } from "../DhtNode"
+import { RecursiveFindResult } from "./RecursiveFinder"
 import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 
 export interface RecursiveFindSessionEvents {
@@ -44,8 +44,8 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
         this.rpcCommunicator = new ListeningRpcCommunicator(config.serviceId, config.rpcTransport, {
             rpcRequestTimeout: 15000
         })
-        this.reportRecursiveFindResult = this.reportRecursiveFindResult.bind(this)
-        this.rpcCommunicator.registerRpcNotification(RecursiveFindReport, 'reportRecursiveFindResult', this.reportRecursiveFindResult)
+        this.rpcCommunicator.registerRpcNotification(RecursiveFindReport, 'reportRecursiveFindResult',
+            (req: RecursiveFindReport, context) => this.reportRecursiveFindResult(req, context))
     }
 
     private isFindCompleted(): boolean {

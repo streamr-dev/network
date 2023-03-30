@@ -2,7 +2,7 @@
 import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { createMockConnectionDhtNode, waitNodesReadyForTesting } from '../utils'
+import { createMockConnectionDhtNode, waitNodesReadyForTesting } from '../utils/utils'
 import { execSync } from 'child_process'
 import fs from 'fs'
 import { Logger } from '@streamr/utils'

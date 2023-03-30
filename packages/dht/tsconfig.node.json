@@ -5,8 +5,7 @@
         "noImplicitOverride": false
     },
     "include": [
-        "src/**/*",
-        "test/data/pings.ts"
+        "src/**/*"
     ],
     "exclude": [
         "src/connection/WebRTC/BrowserWebRtcConnection.ts"

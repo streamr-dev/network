@@ -1,11 +1,14 @@
-import { ConnectionLocker, DhtNode, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
-import { RandomGraphNode } from '../src/logic/RandomGraphNode'
+import { ConnectionLocker, DhtNode, PeerDescriptor, PeerID, Simulator, SimulatorTransport, UUID } from '@streamr/dht'
+import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import {
     ContentMessage,
     MessageRef,
     StreamMessage,
     StreamMessageType
-} from '../src/proto/packages/trackerless-network/protos/NetworkRpc'
+} from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
+import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
+import { RemoteHandshaker } from '../../src/logic/neighbor-discovery/RemoteHandshaker'
 
 export const mockConnectionLocker: ConnectionLocker = {
     lockConnection: () => {},
@@ -27,7 +30,7 @@ export const createMockRandomGraphNodeAndDhtNode = (
         numberOfNodesPerKBucket: 4,
         entryPoints: [entryPointDescriptor]
     })
-    const randomGraphNode = new RandomGraphNode({
+    const randomGraphNode = createRandomGraphNode({
         randomGraphId,
         P2PTransport: mockCm,
         layer1: dhtNode,
@@ -54,4 +57,23 @@ export const createStreamMessage = (content: ContentMessage, streamId: string, p
         signature: 'signature'
     }
     return msg
+}
+
+export const createMockRemotePeer = (): RemoteRandomGraphNode => {
+    const mockPeer: PeerDescriptor = {
+        kademliaId: PeerID.fromString(new UUID().toString()).value,
+        type: 0
+    }
+    return new RemoteRandomGraphNode(mockPeer, 'mock', {} as any)
+}
+
+export const createMockRemoteHandshaker = (): RemoteHandshaker => {
+    const mockPeer: PeerDescriptor = {
+        kademliaId: PeerID.fromString(new UUID().toString()).value,
+        type: 0
+    }
+    return new RemoteHandshaker(mockPeer, 'mock', {
+        handshake: async () => {},
+        interleaveNotice: async () => {}
+    } as any)
 }

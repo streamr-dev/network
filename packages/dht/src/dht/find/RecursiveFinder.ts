@@ -10,7 +10,7 @@ import {
     RouteMessageWrapper
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
-import { createRouteMessageAck, Router, RoutingErrors } from '../routing/Router'
+import { createRouteMessageAck, RoutingErrors, IRouter } from '../routing/Router'
 import { RoutingMode } from '../routing/RoutingSession'
 import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger, runAndWaitForEvents3 } from '@streamr/utils'
@@ -18,7 +18,6 @@ import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { RemoteRecursiveFindSession } from './RemoteRecursiveFindSession'
 import { v4 } from 'uuid'
 import { RecursiveFindSession, RecursiveFindSessionEvents } from './RecursiveFindSession'
-import { RecursiveFindResult } from '../DhtNode'
 import { DhtPeer } from '../DhtPeer'
 import { ITransport } from '../../transport/ITransport'
 import { LocalDataStore } from '../store/LocalDataStore'
@@ -31,7 +30,7 @@ interface RecursiveFinderConfig {
     rpcCommunicator: RoutingRpcCommunicator
     sessionTransport: ITransport
     connections: Map<PeerIDKey, DhtPeer>
-    router: Router
+    router: IRouter
     ownPeerDescriptor: PeerDescriptor
     ownPeerId: PeerID
     serviceId: string
@@ -41,9 +40,17 @@ interface RecursiveFinderConfig {
     isPeerCloserToIdThanSelf: (peer1: PeerDescriptor, compareToId: PeerID) => boolean
 }
 
+interface RecursiveFinderFunc {
+    startRecursiveFind(idToFind: Uint8Array, findMode?: FindMode): Promise<RecursiveFindResult>
+}
+
+export interface IRecursiveFinder extends Pick<IRoutingService, 'findRecursively'>, RecursiveFinderFunc {}
+
+export interface RecursiveFindResult { closestNodes: Array<PeerDescriptor>, dataEntries?: Array<DataEntry> }
+
 const logger = new Logger(module)
 
-export class RecursiveFinder implements Pick<IRoutingService, 'findRecursively'> {
+export class RecursiveFinder implements IRecursiveFinder {
 
     private readonly config: RecursiveFinderConfig
     private ongoingSessions: Map<string, RecursiveFindSession> = new Map()
@@ -51,8 +58,8 @@ export class RecursiveFinder implements Pick<IRoutingService, 'findRecursively'>
 
     constructor(config: RecursiveFinderConfig) {
         this.config = config
-        this.findRecursively = this.findRecursively.bind(this)
-        this.config.rpcCommunicator!.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'findRecursively', this.findRecursively)
+        this.config.rpcCommunicator!.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'findRecursively',
+            (routedMessage: RouteMessageWrapper) => this.findRecursively(routedMessage))
     }
 
     public async startRecursiveFind(idToFind: Uint8Array, findMode: FindMode = FindMode.NODE): Promise<RecursiveFindResult> {
@@ -204,7 +211,8 @@ export class RecursiveFinder implements Pick<IRoutingService, 'findRecursively'>
         } else if (this.config.router.checkDuplicate(routedMessage.requestId)) {
             return createRouteMessageAck(routedMessage, 'message given to findRecursively() service is likely a duplicate')
         }
-        logger.trace(`Node ${this.config.ownPeerDescriptor.nodeName} received findRecursively call from ${routedMessage.previousPeer!.nodeName!}`)
+        const senderKey = keyFromPeerDescriptor(routedMessage.previousPeer || routedMessage.sourcePeer!)
+        logger.trace(`Node ${this.config.ownPeerId.toKey()} received findRecursively call from ${senderKey}`)
         this.config.addContact(routedMessage.sourcePeer!, true)
         this.config.router!.addToDuplicateDetector(routedMessage.requestId, keyFromPeerDescriptor(routedMessage.sourcePeer!))
         return this.doFindRecursevily(routedMessage)

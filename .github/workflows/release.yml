@@ -1,6 +1,5 @@
 name: release
 on:
-  workflow_dispatch:
   workflow_run:
     branches: [main]
     workflows: [validate]
@@ -8,17 +7,18 @@ on:
       - completed
 jobs:
   tracker-docker-image:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     uses: ./.github/workflows/docker-build.yml
     with:
       docker_file: Dockerfile.tracker
       image_name: streamr/tracker
       build_platforms: linux/amd64
       push_image: true
-      test_success: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     secrets:
       dockerhub_username: ${{secrets.DOCKERHUB_USERNAME}}
       dockerhub_token: ${{secrets.DOCKERHUB_TOKEN}}
   broker-docker-image:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     uses: ./.github/workflows/docker-build.yml
     with:
       docker_file: Dockerfile.broker
@@ -26,7 +26,6 @@ jobs:
       host_machine_platform: self-hosted
       build_platforms: linux/amd64,linux/arm64
       push_image: true
-      test_success: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     secrets:
       dockerhub_username: ${{secrets.DOCKERHUB_USERNAME}}
       dockerhub_token: ${{secrets.DOCKERHUB_TOKEN}}

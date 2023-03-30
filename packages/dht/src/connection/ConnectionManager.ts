@@ -14,7 +14,7 @@ import { WebSocketConnector } from './WebSocket/WebSocketConnector'
 import { PeerIDKey } from '../helpers/PeerID'
 import { protoToString } from '../helpers/protoToString'
 import { DisconnectionType, ITransport, TransportEvents } from '../transport/ITransport'
-import { WebRtcConnector } from './WebRTC/WebRtcConnector'
+import { IceServer, WebRtcConnector } from './WebRTC/WebRtcConnector'
 import { CountMetric, LevelMetric, Logger, Metric, MetricsContext, MetricsDefinition, RateMetric } from '@streamr/utils'
 import * as Err from '../helpers/errors'
 import { WEB_RTC_CLEANUP } from './WebRTC/NodeWebRtcConnection'
@@ -28,7 +28,7 @@ import { Empty } from '../proto/google/protobuf/empty'
 import { Simulator } from './Simulator/Simulator'
 import { SimulatorConnector } from './Simulator/SimulatorConnector'
 import { ConnectionLockHandler } from './ConnectionLockHandler'
-import { DuplicateDetector } from '../dht/DuplicateDetector'
+import { DuplicateDetector } from '../dht/routing/DuplicateDetector'
 import { SortedContactList } from '../dht/contact/SortedContactList'
 import { Contact } from '../dht/contact/Contact'
 import {
@@ -42,8 +42,12 @@ export class ConnectionManagerConfig {
     webSocketHost?: string
     webSocketPort?: number
     entryPoints?: PeerDescriptor[]
-    stunUrls?: string[]
+    iceServers?: IceServer[]
     metricsContext?: MetricsContext
+    webrtcDisallowPrivateAddresses?: boolean
+    webrtcDatachannelBufferThresholdLow?: number
+    webrtcDatachannelBufferThresholdHigh?: number
+    newWebrtcConnectionTimeout?: number
     nodeName?: string
     maxConnections: number = 80
 
@@ -156,7 +160,11 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             this.webrtcConnector = new WebRtcConnector({
                 rpcTransport: this.config.transportLayer!,
                 protocolVersion: ConnectionManager.PROTOCOL_VERSION,
-                stunUrls: this.config.stunUrls
+                iceServers: this.config.iceServers,
+                disallowPrivateAddresses: this.config.webrtcDisallowPrivateAddresses,
+                bufferThresholdLow: this.config.webrtcDatachannelBufferThresholdLow,
+                bufferThresholdHigh: this.config.webrtcDatachannelBufferThresholdHigh,
+                connectionTimeout: this.config.newWebrtcConnectionTimeout
             }, this.incomingConnectionCallback)
         }
         this.serviceId = (this.config.serviceIdPrefix ? this.config.serviceIdPrefix : '') + 'ConnectionManager'
@@ -164,12 +172,12 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         this.rpcCommunicator = new RoutingRpcCommunicator(this.serviceId, this.send, {
             rpcRequestTimeout: 10000
         })
-        this.lockRequest = this.lockRequest.bind(this)
-        this.unlockRequest = this.unlockRequest.bind(this)
-        this.gracefulDisconnect = this.gracefulDisconnect.bind(this)
-        this.rpcCommunicator.registerRpcMethod(LockRequest, LockResponse, 'lockRequest', this.lockRequest)
-        this.rpcCommunicator.registerRpcNotification(UnlockRequest, 'unlockRequest', this.unlockRequest)
-        this.rpcCommunicator.registerRpcNotification(DisconnectNotice, 'gracefulDisconnect', this.gracefulDisconnect)
+        this.rpcCommunicator.registerRpcMethod(LockRequest, LockResponse, 'lockRequest',
+            (req: LockRequest, context) => this.lockRequest(req, context))
+        this.rpcCommunicator.registerRpcNotification(UnlockRequest, 'unlockRequest',
+            (req: UnlockRequest, context) => this.unlockRequest(req, context))
+        this.rpcCommunicator.registerRpcNotification(DisconnectNotice, 'gracefulDisconnect',
+            (req: DisconnectNotice, context) => this.gracefulDisconnect(req, context))
         // Garbage collection of connections
         this.disconnectorIntervalRef = setInterval(() => {
             logger.trace('disconnectorInterval')

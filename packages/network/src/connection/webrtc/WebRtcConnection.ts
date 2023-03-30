@@ -21,14 +21,20 @@ export interface ConstructorOptions {
     routerId: string
     iceServers: ReadonlyArray<IceServer>
     pingInterval: number
+    messageQueue: MessageQueue<string>
+    deferredConnectionAttempt: DeferredConnectionAttempt
+    portRange: WebRtcPortRange
+    maxMessageSize: number
     bufferThresholdLow?: number
     bufferThresholdHigh?: number
-    maxMessageSize?: number
     newConnectionTimeout?: number
     maxPingPongAttempts?: number
     flushRetryTimeout?: number
-    messageQueue: MessageQueue<string>
-    deferredConnectionAttempt: DeferredConnectionAttempt
+}
+
+export interface WebRtcPortRange {
+    min: number
+    max: number
 }
 
 let ID = 0
@@ -117,6 +123,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
     protected readonly iceServers: ReadonlyArray<IceServer>
     protected readonly bufferThresholdHigh: number
     protected readonly bufferThresholdLow: number
+    protected readonly portRange: WebRtcPortRange
 
     constructor({
         selfId,
@@ -125,12 +132,13 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         messageQueue,
         deferredConnectionAttempt,
         pingInterval,
+        portRange,
+        maxMessageSize,
         bufferThresholdHigh = 2 ** 17,
         bufferThresholdLow = 2 ** 15,
         newConnectionTimeout = 15000,
         maxPingPongAttempts = 5,
-        flushRetryTimeout = 500,
-        maxMessageSize = 1048576,
+        flushRetryTimeout = 500
     }: ConstructorOptions) {
         super()
 
@@ -148,6 +156,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         this.flushRetryTimeout = flushRetryTimeout
         this.messageQueue = messageQueue
         this.deferredConnectionAttempt = deferredConnectionAttempt
+        this.portRange = portRange
         this.baseLogger = new Logger(module, `${NameDirectory.getName(this.getPeerId())}/${ID}`)
         this.isFinished = false
         this.paused = false

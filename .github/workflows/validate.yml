@@ -2,16 +2,11 @@ name: validate
 
 on:
   push:
-    tags:
-      - '*'
     branches:
       - main
   pull_request:
     branches:
       - '*'
-  schedule:
-    # run every day at 00:00
-    - cron: '0 0 * * *'
   workflow_dispatch:
 
 concurrency:

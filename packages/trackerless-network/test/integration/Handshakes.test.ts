@@ -12,7 +12,7 @@ import {
     HandshakeRpcClient
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { PeerList } from '../../src/logic/PeerList'
-import { mockConnectionLocker } from '../utils'
+import { mockConnectionLocker } from '../utils/utils'
 import { StreamHandshakeRequest, StreamHandshakeResponse } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { RemoteHandshaker } from '../../src/logic/neighbor-discovery/RemoteHandshaker'

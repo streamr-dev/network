@@ -1,18 +1,18 @@
 import { DiscoverySession } from './DiscoverySession'
-import { DhtPeer } from './DhtPeer'
+import { DhtPeer } from '../DhtPeer'
 import crypto from "crypto"
-import * as Err from '../helpers/errors'
-import { keyFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
+import * as Err from '../../helpers/errors'
+import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
-import { DhtRpcServiceClient } from '../proto/packages/dht/protos/DhtRpc.client'
-import { PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
+import { DhtRpcServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { Logger, scheduleAtInterval } from '@streamr/utils'
 import KBucket from 'k-bucket'
-import { SortedContactList } from './contact/SortedContactList'
-import { ConnectionManager } from '../connection/ConnectionManager'
-import { PeerID, PeerIDKey } from '../helpers/PeerID'
-import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
-import { RandomContactList } from './contact/RandomContactList'
+import { SortedContactList } from '../contact/SortedContactList'
+import { ConnectionManager } from '../../connection/ConnectionManager'
+import { PeerID, PeerIDKey } from '../../helpers/PeerID'
+import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
+import { RandomContactList } from '../contact/RandomContactList'
 
 interface PeerDiscoveryConfig {
     rpcCommunicator: RoutingRpcCommunicator
@@ -66,6 +66,7 @@ export class PeerDiscovery {
         const closest = this.config.bucket.closest(this.config.ownPeerId!.value, this.config.getClosestContactsLimit)
         this.config.neighborList.addContacts(closest)
         const sessionOptions = {
+            bucket: this.config.bucket,
             neighborList: this.config.neighborList!,
             targetId: this.config.ownPeerId!.value,
             ownPeerDescriptor: this.config.ownPeerDescriptor!,
@@ -95,7 +96,7 @@ export class PeerDiscovery {
                 if (this.config.bucket.count() === 0) {
                     this.rejoinDht(entryPointDescriptor).catch(() => {})
                 } else {
-                    scheduleAtInterval(() => this.getClosestPeersFromBucket(), 60000, true, this.abortController.signal)
+                    await scheduleAtInterval(() => this.getClosestPeersFromBucket(), 60000, true, this.abortController.signal)
                 }
             }
         } catch (_e) {
