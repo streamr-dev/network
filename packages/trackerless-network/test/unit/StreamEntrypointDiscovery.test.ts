@@ -20,7 +20,8 @@ describe('StreamEntryPointDiscovery', () => {
     const mockData: DataEntry = {
         data: Any.pack(peerDescriptor, PeerDescriptor),
         ttl: 1000,
-        storer: peerDescriptor
+        storer: peerDescriptor,
+        kademliaId: Uint8Array.from([1, 2, 3])
     }
 
     const stream = 'stream#0'
