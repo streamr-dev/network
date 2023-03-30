@@ -19,7 +19,7 @@ import {
     PingResponse
 } from '../proto/packages/dht/protos/DhtRpc'
 import * as Err from '../helpers/errors'
-import { ITransport, TransportEvents } from '../transport/ITransport'
+import { DisconnectionType, ITransport, TransportEvents } from '../transport/ITransport'
 import { ConnectionManager, ConnectionManagerConfig } from '../connection/ConnectionManager'
 import { DhtRpcServiceClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import {
@@ -246,7 +246,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             storeHighestTtl: this.config.storeHighestTtl,
             storeMaxTtl: this.config.storeMaxTtl,
             storeNumberOfCopies: this.config.storeNumberOfCopies,
-            localDataStore: this.localDataStore
+            localDataStore: this.localDataStore,
+            dhtNodeEmitter: this,
+            getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => {
+                return this.bucket!.closest(id, n)
+            }
         })
     }
 
@@ -285,7 +289,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.emit('newOpenInternetContact', peerDescriptor, activeContacts)
         )
         this.transportLayer!.on('connected', (peerDescriptor: PeerDescriptor) => this.onTransportConnected(peerDescriptor))
-        this.transportLayer!.on('disconnected', (peerDescriptor: PeerDescriptor) => this.onTransportDisconnected(peerDescriptor))
+
+        this.transportLayer!.on('disconnected', (peerDescriptor: PeerDescriptor, disonnectionType: DisconnectionType) => {
+            this.onTransportDisconnected(peerDescriptor, disonnectionType)
+        })
+
         this.transportLayer!.getAllConnectionPeerDescriptors().map((peer) => {
             const peerId = peerIdFromPeerDescriptor(peer)
             const dhtPeer = new DhtPeer(
@@ -294,6 +302,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
                 this.config.serviceId
             )
+            if (peerId.equals(this.ownPeerId!)) {
+                logger.error('own peerdescriptor added to connections in initKBucket')
+            }
+
             this.connections.set(peerId.toKey(), dhtPeer)
         })
         this.randomPeers = new RandomContactList(selfId, this.config.maxNeighborListSize)
@@ -306,6 +318,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     private onTransportConnected(peerDescriptor: PeerDescriptor): void {
+
+        if (this.ownPeerId!.equals(PeerID.fromValue(peerDescriptor.kademliaId))) {
+            console.error('onTransportConnected() to self')
+        }
+
         const dhtPeer = new DhtPeer(
             this.ownPeerDescriptor!,
             peerDescriptor,
@@ -316,19 +333,27 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.connections.set(PeerID.fromValue(dhtPeer.id).toKey(), dhtPeer)
         }
         if (this.ownPeerDescriptor!.nodeName === 'entrypoint') {
-            logger.info("connected: " + this.ownPeerDescriptor!.nodeName + ", " + peerDescriptor.nodeName + ' ' + this.connections.size)
+            logger.trace("connected: " + this.ownPeerDescriptor!.nodeName + ", " + peerDescriptor.nodeName + ' ' + this.connections.size)
         }
         this.emit('connected', peerDescriptor)
     }
 
-    private onTransportDisconnected(peerDescriptor: PeerDescriptor): void {
+    private onTransportDisconnected(peerDescriptor: PeerDescriptor, dicsonnectionType: DisconnectionType): void {
         logger.trace('disconnected: ' + this.config.nodeName + ', ' + peerDescriptor.nodeName + ' ')
         this.connections.delete(keyFromPeerDescriptor(peerDescriptor))
         // only remove from bucket if we are on layer 0
         if (this.connectionManager) {
             this.bucket!.remove(peerDescriptor.kademliaId)
+
+            if (dicsonnectionType == 'OUTGOING_GRACEFUL_LEAVE' || dicsonnectionType == 'INCOMING_GRACEFUL_LEAVE') {
+                logger.trace( this.config.nodeName + ', ' + peerDescriptor.nodeName + ' ' + 'onTransportDisconnected with type ' + dicsonnectionType)
+                this.removeContact(peerDescriptor, true)
+            } else {
+                logger.trace( this.config.nodeName + ', ' + peerDescriptor.nodeName + ' ' + 'onTransportDisconnected with type ' + dicsonnectionType)
+            }
         }
-        this.emit('disconnected', peerDescriptor)
+
+        this.emit('disconnected', peerDescriptor, dicsonnectionType)
     }
 
     private bindDefaultServerMethods(): void {
@@ -529,7 +554,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.openInternetPeers!.removeContact(peerId)
         }
     }
-    
+
     public async send(msg: Message, _doNotConnect?: boolean): Promise<void> {
         if (!this.started || this.stopped) {
             return

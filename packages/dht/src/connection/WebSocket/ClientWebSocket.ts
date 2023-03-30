@@ -2,6 +2,7 @@ import { IConnection, ConnectionID, ConnectionType, ConnectionEvents } from '../
 import { w3cwebsocket as WebSocket, ICloseEvent, IMessageEvent } from 'websocket'
 import EventEmitter from 'eventemitter3'
 import { Logger } from '@streamr/utils'
+import { DisconnectionType } from '../../transport/ITransport'
 
 const logger = new Logger(module)
 
@@ -43,7 +44,7 @@ export class ClientWebSocket extends EventEmitter<ConnectionEvents> implements I
             this.socket.onclose = (event: ICloseEvent) => {
                 if (!this.stopped) {
                     logger.trace('Websocket Closed')
-                    this.doDisconnect(event.code, event.reason)
+                    this.doDisconnect('OTHER', event.code, event.reason)
                 }
             }
 
@@ -61,12 +62,12 @@ export class ClientWebSocket extends EventEmitter<ConnectionEvents> implements I
         }
     }
 
-    private doDisconnect(code?: number, reason?: string) {
+    private doDisconnect(disconnectionType: DisconnectionType, code?: number, reason?: string) {
         this.stopped = true
         this.stopListening()
         this.socket = undefined
 
-        this.emit('disconnected', code, reason)
+        this.emit('disconnected', disconnectionType, code, reason)
         this.removeAllListeners()
     }
 

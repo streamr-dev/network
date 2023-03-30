@@ -117,7 +117,7 @@ export class ConnectivityChecker {
             }
         }
         if (outgoingConnection) {
-            outgoingConnection.close()
+            outgoingConnection.close('OTHER')
             logger.trace("Connectivity test produced positive result, communicating reply to the requester")
             connectivityResponseMessage = {
                 openInternet: true,

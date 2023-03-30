@@ -4,7 +4,7 @@ import { PeerDescriptor } from "../../proto/packages/dht/protos/DhtRpc"
 import { ConnectionSourceEvents } from "../IConnectionSource"
 import { SimulatorConnector } from "./SimulatorConnector"
 import { SimulatorConnection } from "./SimulatorConnection"
-import { ConnectionID } from "../IConnection"
+import { ConnectionID, ConnectionIDKey } from "../IConnection"
 import { Logger } from "@streamr/utils"
 import { getRegionDelayMatrix } from "../../../test/data/pings"
 import { v4 } from "uuid"
@@ -15,11 +15,13 @@ const logger = new Logger(module)
 export enum LatencyType { NONE = 'NONE', RANDOM = 'RANDOM', REAL = 'REAL', FIXED = 'FIXED' }
 
 export class Simulator extends EventEmitter<ConnectionSourceEvents> {
+    private stopped = false
     private connectors: Map<PeerIDKey, SimulatorConnector> = new Map()
     private latencyTable?: Array<Array<number>>
     private associations: Map<ConnectionID, SimulatorConnection> = new Map()
 
     private timeouts: Map<string, NodeJS.Timeout> = new Map()
+    private timeoutsBySourceConnection: Map<ConnectionIDKey, string[]> = new Map()
 
     private latencyType: LatencyType
     private fixedLatency?: number
@@ -35,6 +37,29 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
 
         if (this.latencyType == LatencyType.FIXED && !this.fixedLatency) {
             throw new Error('LatencyType.FIXED requires the desired latency to be given as second parameter')
+        }
+    }
+
+    private recordTimeoutBySourceConnection(sourceConnectionId: ConnectionIDKey, timeoutId: string) {
+        if (!this.timeoutsBySourceConnection.has(sourceConnectionId)) {
+            this.timeoutsBySourceConnection.set(sourceConnectionId, [])
+        }
+
+        this.timeoutsBySourceConnection.get(sourceConnectionId)!.push(timeoutId)
+    }
+
+    private clearTimeoutsBySourceConnection(sourceConnectionId: ConnectionIDKey) {
+        const timeoutIds = this.timeoutsBySourceConnection.get(sourceConnectionId)
+        if (timeoutIds) {
+            // eslint-disable-next-line @typescript-eslint/prefer-for-of
+            for (let i = 0; i < timeoutIds.length; i++) {
+                const timeoutId = this.timeouts.get(timeoutIds[i])
+                if (timeoutId) {
+                    clearTimeout(timeoutId)
+                    this.timeouts.delete(timeoutIds[i])
+                }
+            }
+            this.timeoutsBySourceConnection.set(sourceConnectionId, [])
         }
     }
 
@@ -71,6 +96,12 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     }
 
     public connect(sourceConnection: SimulatorConnection, targetDescriptor: PeerDescriptor, connectedCallback: (error?: string) => void): void {
+        
+        if (this.stopped) {
+            console.error('connect() called on a stopped simulator ' + (new Error().stack))
+            return
+        }
+
         const target = this.connectors.get(keyFromPeerDescriptor(targetDescriptor))
 
         if (!target) {
@@ -83,8 +114,8 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
         const timeout = setTimeout(() => {
             this.timeouts.delete(timeoutId)
 
-            logger.trace('connect() calling hadleIncomingConnection()')
-
+            logger.trace('connect() calling hadleIncomingConnection() ')
+            
             target!.handleIncomingConnection(sourceConnection)
         
             connectedCallback()
@@ -92,9 +123,17 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
         }, latency)
 
         this.timeouts.set(timeoutId, timeout)
+        this.recordTimeoutBySourceConnection(sourceConnection.connectionId.toMapKey(), timeoutId)
     }
 
     async disconnect(sourceConnection: SimulatorConnection): Promise<void> {
+        if (this.stopped) {
+            console.error('disconnect() called on a stopped simulator ' + (new Error().stack))
+            return
+        }
+
+        this.clearTimeoutsBySourceConnection(sourceConnection.connectionId.toMapKey())
+        
         const target = this.associations.get(sourceConnection.connectionId)
         if (target) {
 
@@ -115,6 +154,11 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     }
   
     public send(sourceConnection: SimulatorConnection, data: Uint8Array): void {
+        if (this.stopped) {
+            console.error('send() called on a stopped simulator ' + (new Error().stack))
+            return
+        }
+
         const target = this.associations.get(sourceConnection.connectionId)
 
         logger.trace('send()')
@@ -133,7 +177,7 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     }
 
     stop(): void {
-
+        this.stopped = true
         logger.info(this.associations.size + ' associations in the beginning of stop()')
         this.timeouts.forEach((timeoutref) => {
             clearTimeout(timeoutref)

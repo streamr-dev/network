@@ -4,6 +4,7 @@ import { Message, PeerDescriptor } from "../../proto/packages/dht/protos/DhtRpc"
 import { Connection } from "../Connection"
 import { Logger } from "@streamr/utils"
 import { protoToString } from "../../helpers/protoToString"
+import { DisconnectionType } from "../../transport/ITransport"
 
 const logger = new Logger(module)
 
@@ -39,43 +40,54 @@ export class SimulatorConnection extends Connection implements IConnection {
     public send(data: Uint8Array): void {
         logger.trace('send()')
         if (!this.stopped) {
-            
+
             this.simulator.send(this, data)
-            
+
         } else {
-            logger.error('tried to send() on a stopped connection')
+            logger.error(' ' + this.ownPeerDescriptor.nodeName + ', ' + (this.targetPeerDescriptor.nodeName!) +
+                'tried to send() on a stopped connection')
         }
     }
 
-    public async close(): Promise<void> {
+    public async close(disconnectionType: DisconnectionType): Promise<void> {
+        logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + (this.targetPeerDescriptor.nodeName!) + ' close()')
+
         if (!this.stopped) {
-            logger.trace(this.ownPeerDescriptor.nodeName + ' close()')
+            logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + (this.targetPeerDescriptor.nodeName!) + ' close() not stopped')
             this.stopped = true
 
             try {
+                logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + (this.targetPeerDescriptor.nodeName!) +
+                    ' close() calling simulator.disconnect()')
                 await this.simulator.disconnect(this)
-            } catch (_e) {
-                console.error('close aborted')
+                logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + (this.targetPeerDescriptor.nodeName!) +
+                    ' close() simulator.disconnect returned')
+            } catch (e) {
+                logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + (this.targetPeerDescriptor.nodeName!) +
+                    'close aborted' + e)
             } finally {
-                this.doDisconnect()
+                logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + (this.targetPeerDescriptor.nodeName!) +
+                    ' calling this.doDisconnect')
+                this.doDisconnect(disconnectionType)
             }
-            
+
         } else {
-            logger.trace('tried to close() a stopped connection')
+            logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + (this.targetPeerDescriptor.nodeName!) +
+                ' close() tried to close a stopped connection')
         }
     }
 
     public connect(): void {
         if (!this.stopped) {
             logger.trace('connect() called')
-            
+
             this.simulator.connect(this, this.targetPeerDescriptor, (error?: string) => {
                 if (error) {
                     logger.trace(error)
-                    this.doDisconnect()
+                    this.doDisconnect('OTHER')
                 } else {
                     this.emit('connected')
-                } 
+                }
             })
         } else {
             logger.trace('tried to connect() a stopped connection')
@@ -96,7 +108,7 @@ export class SimulatorConnection extends Connection implements IConnection {
         if (!this.stopped) {
             logger.trace(this.ownPeerDescriptor.nodeName + ' handleIncomingDisconnection()')
             this.stopped = true
-            this.doDisconnect()
+            this.doDisconnect('OTHER')
         } else {
             logger.trace('tried to call handleIncomingDisconnection() a stopped connection')
         }
@@ -106,16 +118,19 @@ export class SimulatorConnection extends Connection implements IConnection {
         if (!this.stopped) {
             logger.trace(this.ownPeerDescriptor.nodeName + ' destroy()')
             this.removeAllListeners()
-            this.close().catch((_e) => { })
+            this.close('OTHER').catch((_e) => { })
         } else {
             logger.trace(this.ownPeerDescriptor.nodeName + ' tried to call destroy() a stopped connection')
         }
     }
 
-    private doDisconnect() {
+    private doDisconnect(disconnectionType: DisconnectionType) {
         logger.trace(this.ownPeerDescriptor.nodeName + ' doDisconnect()')
         this.stopped = true
-        this.emit('disconnected')
-        this.removeAllListeners()
+
+        logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + (this.targetPeerDescriptor.nodeName!) + ' doDisconnect emitting')
+
+        this.emit('disconnected', disconnectionType)
+
     }
 }

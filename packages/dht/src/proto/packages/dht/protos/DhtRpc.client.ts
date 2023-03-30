@@ -17,6 +17,8 @@ import type { WebSocketConnectionRequest } from "./DhtRpc";
 import { RecursiveFindSessionService } from "./DhtRpc";
 import type { RecursiveFindReport } from "./DhtRpc";
 import { StoreService } from "./DhtRpc";
+import type { MigrateDataResponse } from "./DhtRpc";
+import type { MigrateDataRequest } from "./DhtRpc";
 import type { StoreDataResponse } from "./DhtRpc";
 import type { StoreDataRequest } from "./DhtRpc";
 import { RoutingService } from "./DhtRpc";
@@ -138,6 +140,10 @@ export interface IStoreServiceClient {
      * @generated from protobuf rpc: storeData(dht.StoreDataRequest) returns (dht.StoreDataResponse);
      */
     storeData(input: StoreDataRequest, options?: RpcOptions): UnaryCall<StoreDataRequest, StoreDataResponse>;
+    /**
+     * @generated from protobuf rpc: migrateData(dht.MigrateDataRequest) returns (dht.MigrateDataResponse);
+     */
+    migrateData(input: MigrateDataRequest, options?: RpcOptions): UnaryCall<MigrateDataRequest, MigrateDataResponse>;
 }
 /**
  * @generated from protobuf service dht.StoreService
@@ -154,6 +160,13 @@ export class StoreServiceClient implements IStoreServiceClient, ServiceInfo {
     storeData(input: StoreDataRequest, options?: RpcOptions): UnaryCall<StoreDataRequest, StoreDataResponse> {
         const method = this.methods[0], opt = this._transport.mergeOptions(options);
         return stackIntercept<StoreDataRequest, StoreDataResponse>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: migrateData(dht.MigrateDataRequest) returns (dht.MigrateDataResponse);
+     */
+    migrateData(input: MigrateDataRequest, options?: RpcOptions): UnaryCall<MigrateDataRequest, MigrateDataResponse> {
+        const method = this.methods[1], opt = this._transport.mergeOptions(options);
+        return stackIntercept<MigrateDataRequest, MigrateDataResponse>("unary", this._transport, method, opt, input);
     }
 }
 /**
