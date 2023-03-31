@@ -50,38 +50,91 @@ export interface EthereumNetworkConfig {
 export interface StreamrClientConfig {
     /** Custom human-readable debug id for client. Used in logging. */
     id?: string
-    logLevel?: LogLevel
+
     /**
-    * Authentication: identity used by this StreamrClient instance.
-    * Can contain member privateKey or (window.)ethereum
+     * Override the default logging level.
+     */
+    logLevel?: LogLevel
+
+    /**
+    * The Ethereum identity to be used by the client. Either a private key
+     * or a window.ethereum object.
     */
     auth?: PrivateKeyAuthConfig | ProviderAuthConfig
 
-    /** Attempt to order messages */
+    /**
+     * Set to true to enable message ordering.
+     *
+     * Due to the distributed nature of the network, messages may occasionally
+     * arrive out-of-order to the client. By enabling message ordering, the
+     * client will reorder the received messages in the intended order for you.
+     *
+     * */
     orderMessages?: boolean
-    gapFill?: boolean
-    maxGapRequests?: number
-    retryResendAfter?: number
-    gapFillTimeout?: number
 
     /**
-     * Message encryption/decryption
+     * Set to true to enable gap filling.
+     *
+     * Some messages may occasionally not reach the client due to networking
+     * issues. Missing messages form gaps that are often detectable and
+     * retrievable on demand. By enabling gap filling, you enable the client to
+     * detect and fix gaps automatically for you.
+     */
+    gapFill?: boolean
+
+    /**
+     * When gap filling is enabled, this option controls the maximum amount of
+     * times a gap will try to be filled before giving up and proceeding
+     * forwards.
+     */
+    maxGapRequests?: number
+
+    /**
+     * When gap filling is enabled and a gap is encountered, the amount of time
+     * to wait before attempting to _actively_ fill in the gap.
+     *
+     * Rationale: the data may just be arriving out-of-order and the missing
+     * messages may be on their way. For efficiency, it makes sense to wait a
+     * little before actively attempting to fill in the gap, as this involves
+     * a resend request to (and response from) a storage node.
+     */
+    gapFillTimeout?: number
+
+    retryResendAfter?: number
+
+    /**
+     * Controls how messages encryption and decryption should be handled.
      */
     encryption?: {
         /**
          * Enable experimental Lit Protocol key exchange.
          *
-         * When enabled encryption key storing and fetching will be primarily done through the Lit Protocol and
+         * When enabled encryption key storing and fetching will primarily be done through the Lit Protocol and
          * secondarily through the standard Streamr key-exchange system.
          */
         litProtocolEnabled?: boolean
+
         /**
          * Enable log messages of the Lit Protocol library to be printed to stdout.
          */
         litProtocolLogging?: boolean
+
         // TODO keyRequestTimeout and maxKeyRequestsPerSecond config options could be applied
         // to lit protocol key requests (both encryption and decryption?)
+        /**
+         * When requesting an encryption key using the standard Streamr
+         * key-exchange system, how long should a response be awaited for.
+         */
         keyRequestTimeout?: number
+
+        /**
+         * The maximum amount of encryption key requests that should be sent via
+         * the standard Streamr key-exchange system per second.
+         *
+         * In streams with 1000+ publishers, it is important to limit the amount
+         * of control message traffic that gets generated to avoid network buffers
+         * from overflowing.
+         */
         maxKeyRequestsPerSecond?: number
     }
 
