@@ -35,6 +35,7 @@
     "@streamr/utils": "8.1.0",
     "eventemitter3": "^4.0.7",
     "lodash": "^4.17.21",
+    "wtfnode": "^0.9.1",
     "yallist": "^4.0.0"
   },
   "devDependencies": {
