@@ -164,6 +164,7 @@ export class Router implements IRouter {
             clearTimeout(entry.timeout)
         })
         this.forwardingTable.clear()
+        this.routerDuplicateDetector.clear()
     }
     
     // IRoutingService method
