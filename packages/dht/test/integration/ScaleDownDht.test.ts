@@ -3,7 +3,9 @@ import { DhtNode } from '../../src/dht/DhtNode'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils/utils'
 import { isSamePeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
-import { waitForCondition } from '@streamr/utils'
+import { Logger, waitForCondition } from '@streamr/utils'
+
+const logger = new Logger(module)
 
 describe('Scaling down a Dht network', () => {
     let entryPoint: DhtNode
@@ -27,7 +29,7 @@ describe('Scaling down a Dht network', () => {
             nodeName: entryPointId
         }
 
-        nodes.push(entryPoint)
+        //nodes.push(entryPoint)
 
         for (let i = 1; i < NUM_NODES; i++) {
             const nodeId = `${i}`
@@ -57,6 +59,9 @@ describe('Scaling down a Dht network', () => {
                 await waitForCondition(() =>
                     nodes.every((node) =>
                         node.getAllConnectionPeerDescriptors().every((peer) => {
+                            if (isSamePeerDescriptor(peer, stoppingPeerDescriptor)) {
+                                logger.trace(' ' + node.getNodeName() + ', ' + stoppingPeerDescriptor.nodeName + ' cleaning up failed')
+                            }
                             return !isSamePeerDescriptor(peer, stoppingPeerDescriptor)
                         })
                     )
@@ -69,7 +74,7 @@ describe('Scaling down a Dht network', () => {
                 , 0)
                 failedCleanUps += failures
             }
-            expect(failedCleanUps).toBeLessThan(3)
+            expect(failedCleanUps).toBeLessThan(1)
         }
     }, 180000)
 })

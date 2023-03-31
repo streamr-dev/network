@@ -36,6 +36,24 @@ export interface StoreDataResponse {
     error: string;
 }
 /**
+ * @generated from protobuf message dht.MigrateDataRequest
+ */
+export interface MigrateDataRequest {
+    /**
+     * @generated from protobuf field: dht.DataEntry dataEntry = 1;
+     */
+    dataEntry?: DataEntry;
+}
+/**
+ * @generated from protobuf message dht.MigrateDataResponse
+ */
+export interface MigrateDataResponse {
+    /**
+     * @generated from protobuf field: string error = 1;
+     */
+    error: string;
+}
+/**
  * @generated from protobuf message dht.DataEntry
  */
 export interface DataEntry {
@@ -44,15 +62,19 @@ export interface DataEntry {
      */
     storer?: PeerDescriptor;
     /**
-     * @generated from protobuf field: google.protobuf.Any data = 2;
+     * @generated from protobuf field: bytes kademliaId = 2;
+     */
+    kademliaId: Uint8Array;
+    /**
+     * @generated from protobuf field: google.protobuf.Any data = 3;
      */
     data?: Any;
     /**
-     * @generated from protobuf field: google.protobuf.Timestamp storedAt = 3;
+     * @generated from protobuf field: google.protobuf.Timestamp storedAt = 4;
      */
     storedAt?: Timestamp;
     /**
-     * @generated from protobuf field: uint32 ttl = 4;
+     * @generated from protobuf field: uint32 ttl = 5;
      */
     ttl: number; // milliseconds
 }
@@ -609,6 +631,10 @@ export interface DisconnectNotice {
      * @generated from protobuf field: dht.PeerDescriptor peerDescriptor = 2;
      */
     peerDescriptor?: PeerDescriptor;
+    /**
+     * @generated from protobuf field: dht.DisconnectMode disconnecMode = 3;
+     */
+    disconnecMode: DisconnectMode;
 }
 /**
  * @generated from protobuf enum dht.FindMode
@@ -692,6 +718,19 @@ export enum MessageType {
      */
     RECURSIVE_FIND_REQUEST = 5
 }
+/**
+ * @generated from protobuf enum dht.DisconnectMode
+ */
+export enum DisconnectMode {
+    /**
+     * @generated from protobuf enum value: NORMAL = 0;
+     */
+    NORMAL = 0,
+    /**
+     * @generated from protobuf enum value: LEAVING = 1;
+     */
+    LEAVING = 1
+}
 // @generated message type with reflection information, may provide speed optimized methods
 class StoreDataRequest$Type extends MessageType$<StoreDataRequest> {
     constructor() {
@@ -719,13 +758,38 @@ class StoreDataResponse$Type extends MessageType$<StoreDataResponse> {
  */
 export const StoreDataResponse = new StoreDataResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class MigrateDataRequest$Type extends MessageType$<MigrateDataRequest> {
+    constructor() {
+        super("dht.MigrateDataRequest", [
+            { no: 1, name: "dataEntry", kind: "message", T: () => DataEntry }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message dht.MigrateDataRequest
+ */
+export const MigrateDataRequest = new MigrateDataRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class MigrateDataResponse$Type extends MessageType$<MigrateDataResponse> {
+    constructor() {
+        super("dht.MigrateDataResponse", [
+            { no: 1, name: "error", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message dht.MigrateDataResponse
+ */
+export const MigrateDataResponse = new MigrateDataResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class DataEntry$Type extends MessageType$<DataEntry> {
     constructor() {
         super("dht.DataEntry", [
             { no: 1, name: "storer", kind: "message", T: () => PeerDescriptor },
-            { no: 2, name: "data", kind: "message", T: () => Any },
-            { no: 3, name: "storedAt", kind: "message", T: () => Timestamp },
-            { no: 4, name: "ttl", kind: "scalar", T: 13 /*ScalarType.UINT32*/ }
+            { no: 2, name: "kademliaId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 3, name: "data", kind: "message", T: () => Any },
+            { no: 4, name: "storedAt", kind: "message", T: () => Timestamp },
+            { no: 5, name: "ttl", kind: "scalar", T: 13 /*ScalarType.UINT32*/ }
         ]);
     }
 }
@@ -1130,7 +1194,8 @@ class DisconnectNotice$Type extends MessageType$<DisconnectNotice> {
     constructor() {
         super("dht.DisconnectNotice", [
             { no: 1, name: "protocolVersion", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor }
+            { no: 2, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor },
+            { no: 3, name: "disconnecMode", kind: "enum", T: () => ["dht.DisconnectMode", DisconnectMode] }
         ]);
     }
 }
@@ -1158,7 +1223,8 @@ export const RoutingService = new ServiceType("dht.RoutingService", [
  * @generated ServiceType for protobuf service dht.StoreService
  */
 export const StoreService = new ServiceType("dht.StoreService", [
-    { name: "storeData", options: {}, I: StoreDataRequest, O: StoreDataResponse }
+    { name: "storeData", options: {}, I: StoreDataRequest, O: StoreDataResponse },
+    { name: "migrateData", options: {}, I: MigrateDataRequest, O: MigrateDataResponse }
 ]);
 /**
  * @generated ServiceType for protobuf service dht.RecursiveFindSessionService

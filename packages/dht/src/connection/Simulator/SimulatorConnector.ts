@@ -97,7 +97,7 @@ export class SimulatorConnector {
         const conns = Array.from(this.connectingConnections.values())
         logger.trace('CONNECTING conns.length in STOP ' + conns.length)
         await Promise.allSettled(conns.map((conn) =>
-            conn.close()
+            conn.close('OTHER')
         ))
     }
 }

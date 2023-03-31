@@ -217,10 +217,10 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         this.rpcCommunicator.stop()
 
         const requests = Array.from(this.ongoingConnectRequests.values())
-        await Promise.allSettled(requests.map((conn) => conn.close()))
+        await Promise.allSettled(requests.map((conn) => conn.close('OTHER')))
         
         const attempts = Array.from(this.connectingConnections.values())
-        await Promise.allSettled(attempts.map((conn) => conn.close()))
+        await Promise.allSettled(attempts.map((conn) => conn.close('OTHER')))
 
         await this.webSocketServer?.stop()
     }

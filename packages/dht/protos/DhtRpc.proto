@@ -22,6 +22,7 @@ service RoutingService {
 
 service StoreService {
   rpc storeData (StoreDataRequest) returns (StoreDataResponse);
+  rpc migrateData (MigrateDataRequest) returns (MigrateDataResponse);
 }
 
 service RecursiveFindSessionService {
@@ -57,11 +58,20 @@ message StoreDataResponse {
   string error = 1;
 }
 
+message MigrateDataRequest {
+  DataEntry dataEntry = 1;
+}
+  
+message MigrateDataResponse {
+  string error = 1;
+}
+
 message DataEntry {
   PeerDescriptor storer = 1;
-  google.protobuf.Any data = 2;
-  google.protobuf.Timestamp storedAt = 3; 
-  uint32 ttl = 4;   // milliseconds
+  bytes kademliaId = 2;
+  google.protobuf.Any data = 3;
+  google.protobuf.Timestamp storedAt = 4; 
+  uint32 ttl = 5;   // milliseconds
 }
 
 message ClosestPeersRequest {
@@ -277,7 +287,13 @@ message LockResponse {
   optional bool reason = 2;
 }
 
+enum DisconnectMode {
+  NORMAL = 0;
+  LEAVING = 1;
+}
+
 message DisconnectNotice {
   string protocolVersion = 1;
   PeerDescriptor peerDescriptor = 2;
+  DisconnectMode disconnecMode = 3;
 }
