@@ -4,6 +4,9 @@ import { PeerID } from '../../src/helpers/PeerID'
 import { Simulator } from '../../src/connection/Simulator/Simulator'
 import { createPeerDescriptor } from "../../src/dht/DhtNode"
 import { RpcMessage } from "../../src/proto/packages/proto-rpc/protos/ProtoRpc"
+import { Logger } from "@streamr/utils"
+
+const logger = new Logger(module)
 
 describe('ConnectionManager', () => {
     const serviceId = 'demo'
@@ -198,12 +201,14 @@ describe('ConnectionManager', () => {
 
         const disconnectedPromise1 = new Promise<void>((resolve, _reject) => {
             connectionManager1.on('disconnected', (_peerDescriptor: PeerDescriptor) => {
+                logger.info('disconnectedPromise1')
                 resolve()
             })
         })
 
         const disconnectedPromise2 = new Promise<void>((resolve, _reject) => {
             connectionManager2.on('disconnected', (_peerDescriptor: PeerDescriptor) => {
+                logger.info('disconnectedPromise2')
                 resolve()
             })
         })

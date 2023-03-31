@@ -2,6 +2,7 @@ import EventEmitter from 'eventemitter3'
 import { IConnection, ConnectionID, ConnectionEvents, ConnectionType } from '../IConnection'
 import { connection as WsConnection } from 'websocket'
 import { Logger } from '@streamr/utils'
+import { DisconnectionType } from '../../transport/ITransport'
 
 const logger = new Logger(module)
 
@@ -45,7 +46,7 @@ export class ServerWebSocket extends EventEmitter<ConnectionEvents> implements I
         socket.on('close', (reasonCode, description) => {
             if (!this.stopped) {
                 logger.trace(' Peer ' + socket.remoteAddress + ' disconnected.')
-                this.doDisconnect(reasonCode, description)
+                this.doDisconnect('OTHER', reasonCode, description)
             }
         })
 
@@ -58,12 +59,12 @@ export class ServerWebSocket extends EventEmitter<ConnectionEvents> implements I
         this.socket = socket
     }
 
-    private doDisconnect(reasonCode: number, description: string): void {
+    private doDisconnect(disconnectionType: DisconnectionType, reasonCode: number, description: string): void {
         this.stopped = true
         this.socket?.removeAllListeners()
         this.socket = undefined
 
-        this.emit('disconnected', reasonCode, description)
+        this.emit('disconnected', disconnectionType, reasonCode, description)
         this.removeAllListeners()
     }
 

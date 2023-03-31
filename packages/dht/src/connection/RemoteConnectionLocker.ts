@@ -1,7 +1,7 @@
 import { Logger } from '@streamr/utils'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
 import { IConnectionLockerClient } from '../proto/packages/dht/protos/DhtRpc.client'
-import { LockRequest, UnlockRequest, PeerDescriptor, DisconnectNotice } from '../proto/packages/dht/protos/DhtRpc'
+import { LockRequest, UnlockRequest, PeerDescriptor, DisconnectNotice, DisconnectMode } from '../proto/packages/dht/protos/DhtRpc'
 import { DhtRpcOptions } from '../rpc-protocol/DhtRpcOptions'
 import { PeerID } from '../helpers/PeerID'
 
@@ -68,23 +68,22 @@ export class RemoteConnectionLocker {
         })
     }
 
-    public async gracefulDisconnect(): Promise<void> {
+    public async gracefulDisconnect(disconnecMode: DisconnectMode): Promise<void> {
         logger.trace(`Notifying a graceful disconnect to ${this.targetPeerDescriptor.kademliaId.toString()}`)
         const request: DisconnectNotice = {
             peerDescriptor: this.ownPeerDescriptor,
-            protocolVersion: this.protocolVersion
+            protocolVersion: this.protocolVersion,
+            disconnecMode: disconnecMode
         }
         const options = {
             sourceDescriptor: this.ownPeerDescriptor,
             targetDescriptor: this.targetPeerDescriptor,
             notification: true,
-            doNotConnect: true
+            doNotConnect: true,
+            doNotMindStopped: true
         }
 
-        try {
-            await this.client.gracefulDisconnect(request, options)
-        } catch (e) {
-            logger.warn('Failed to send gracefulDisconnect' + e)
-        }
+        await this.client.gracefulDisconnect(request, options)
+
     }
 }

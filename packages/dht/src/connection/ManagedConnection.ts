@@ -2,10 +2,11 @@ import { ConnectionEvents, ConnectionID, ConnectionType, IConnection } from "./I
 import * as Err from '../helpers/errors'
 import { Handshaker } from "./Handshaker"
 import { PeerDescriptor } from "../proto/packages/dht/protos/DhtRpc"
-import { Logger, raceEvents3 } from "@streamr/utils"
+import { Logger, raceEvents3, RunAndRaceEventsReturnType } from "@streamr/utils"
 import EventEmitter from "eventemitter3"
 import { PeerIDKey } from "../helpers/PeerID"
 import { keyFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
+import { DisconnectionType } from "../transport/ITransport"
 
 export interface ManagedConnectionEvents {
     managedData: (bytes: Uint8Array, remotePeerDescriptor: PeerDescriptor) => void
@@ -57,6 +58,8 @@ export class ManagedConnection extends EventEmitter<Events> {
         super()
         this.objectId = ManagedConnection.objectCounter
         ManagedConnection.objectCounter++
+
+        this.send = this.send.bind(this)
 
         this.ownPeerDescriptor = ownPeerDescriptor
         this.protocolVersion = protocolVersion
@@ -214,12 +217,29 @@ export class ManagedConnection extends EventEmitter<Events> {
 
     }
 
-    private onDisconnected(code?: number, reason?: string): void {
-        logger.trace('onDisconnected ' + code + ' ' + reason)
-        this.doDisconnect()
+    private onDisconnected(disconnectionType: DisconnectionType, _code?: number, _reason?: string): void {
+        
+        logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + ' onDisconnected() ' + disconnectionType )
+        if (this.bufferSentbyOtherConnection) {
+            //logger.error('onDisconnected called on replaced connection')
+            return
+        }
+
+        this.doDisconnect(disconnectionType)
     }
 
     async send(data: Uint8Array, doNotConnect = false): Promise<void> {
+
+        if (this.stopped) {
+            logger.error('send() called on stopped connection')
+            return
+        }
+
+        if (this.closing) {
+            logger.error('send() called on closing connection')
+            return
+        }
+
         this.lastUsed = Date.now()
 
         if (doNotConnect && !this.implementation) {
@@ -230,8 +250,16 @@ export class ManagedConnection extends EventEmitter<Events> {
             logger.trace('adding data to outputBuffer objectId: ' + this.objectId)
             this.outputBuffer.push(data)
 
-            const result = await raceEvents3<Events>(this, ['handshakeCompleted', 'handshakeFailed',
-                'bufferSentByOtherConnection', 'closing', 'disconnected'], 15000)
+            let result: RunAndRaceEventsReturnType<Events>
+
+            try {
+                result = await raceEvents3<Events>(this, ['handshakeCompleted', 'handshakeFailed',
+                    'bufferSentByOtherConnection', 'closing', 'disconnected'], 15000)
+            } catch (e) {
+                logger.error('Exception from raceEvents3 ' + e)
+                //const dataString = protoToString(Message.fromBinary(data), Message)
+                throw e
+            }
 
             if (result.winnerName == 'closing' || result.winnerName == 'disconnected') {
                 throw new Err.ConnectionFailed("Disconnected before send")
@@ -245,9 +273,16 @@ export class ManagedConnection extends EventEmitter<Events> {
                     logger.trace('bufferSentByOtherConnection already true')
                     this.destroy()
                 } else {
-                    const result2 = await raceEvents3<Events>(this,
-                        ['bufferSentByOtherConnection', 'closing'], 15000)
+                    let result2: RunAndRaceEventsReturnType<Events>
 
+                    try {
+                        result2 = await raceEvents3<Events>(this,
+                            ['bufferSentByOtherConnection', 'closing'], 15000)
+                    } catch (ex) {
+                        logger.error('Exception from raceEvents3 while waiting bufferSentByOtherConnection or closing ' + ex)
+                        //const dataString = protoToString(Message.fromBinary(data), Message)
+                        throw ex
+                    }
                     if (result2.winnerName == 'bufferSentByOtherConnection') {
                         logger.trace('bufferSentByOtherConnection received')
                         this.destroy()
@@ -281,7 +316,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
     public reportBufferSendingByOtherConnectionFailed(): void {
         logger.trace('IL reportBufferSendingByOtherConnectionFailed')
-        this.doDisconnect()
+        this.doDisconnect('OTHER')
     }
 
     public acceptHandshake(): void {
@@ -305,24 +340,34 @@ export class ManagedConnection extends EventEmitter<Events> {
         this.handshaker!.sendHandshakeResponse(errorMessage)
     }
 
-    private doDisconnect() {
-        this.emit('disconnected')
-        this.removeAllListeners()
+    private doDisconnect(disconnectionType: DisconnectionType) {
+        logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + ' doDisconnect() emitting' )
+        this.emit('disconnected', disconnectionType)
     }
 
-    public async close(): Promise<void> {
+    public async close(disconnectionType: DisconnectionType): Promise<void> {
+        if (this.replacedByOtherConnection) {
+            logger.trace('close() called on replaced connection')
+        }
         this.closing = true
         this.emit('closing')
 
         if (this.implementation) {
-            await this.implementation?.close()
+            logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + ' calling close() implmentation' )
+            await this.implementation?.close(disconnectionType)
+            logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + ' called close() implmentation' )
         } else if (this.outgoingConnection) {
-            await this.outgoingConnection?.close()
+            logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + ' calling close() outgoingconnection' )
+            await this.outgoingConnection?.close(disconnectionType)
+            logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + ' called close() outgoingconnection' )
         } else if (this.incomingConnection) {
-            await this.incomingConnection?.close()
+            logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + ' calling close() incomingconnection' )
+            await this.incomingConnection?.close(disconnectionType)
+            logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + ' called close() implmentation' )
         } else {
+            logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + ' close() not called' )
             logger.trace('IL close')
-            this.doDisconnect()
+            this.doDisconnect(disconnectionType)
         }
     }
 

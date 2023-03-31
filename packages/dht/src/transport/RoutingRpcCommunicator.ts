@@ -6,7 +6,7 @@ import { RpcMessage } from "../proto/packages/proto-rpc/protos/ProtoRpc"
 
 export class RoutingRpcCommunicator extends RpcCommunicator {
     private ownServiceId: string
-    private sendFn: (msg: Message, doNotConnect?: boolean) => Promise<void>
+    private sendFn: (msg: Message, doNotConnect?: boolean, doNotMindStopped?: boolean) => Promise<void>
 
     constructor(
         ownServiceId: string,
@@ -38,7 +38,9 @@ export class RoutingRpcCommunicator extends RpcCommunicator {
                 targetDescriptor: targetDescriptor
             }
 
-            if (msg.header.response || callContext && callContext.doNotConnect) {
+            if (msg.header.response || callContext && callContext.doNotConnect && callContext.doNotMindStopped ) {
+                return this.sendFn(message, true, true)
+            } else if (msg.header.response || callContext && callContext.doNotConnect) {
                 return this.sendFn(message, true)
             } else {
                 return this.sendFn(message)

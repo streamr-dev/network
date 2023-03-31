@@ -3,6 +3,8 @@ import {
     ClosestPeersRequest,
     ClosestPeersResponse,
     LeaveNotice,
+    MigrateDataRequest,
+    MigrateDataResponse,
     NodeType,
     PeerDescriptor,
     PingRequest,
@@ -219,6 +221,9 @@ export const MockStoreService: IStoreServiceWithError = {
         return {
             error: 'Mock'
         }
+    },
+    async migrateData(_request: MigrateDataRequest, _context: ServerCallContext): Promise<MigrateDataResponse> {
+        return MigrateDataResponse.create()
     }
 }
 
@@ -262,6 +267,13 @@ export const waitConnectionManagersReadyForTesting = async (connectionManagers: 
     } catch (_err) {
         // did not successfully meet condition but network should be in a stable non-star state
     }
+}
+
+export const waitNodesReadyForTesting = async (nodes: DhtNode[], limit: number = 10000): Promise<void> => {
+    return waitConnectionManagersReadyForTesting(
+        nodes.map((node) => {
+            return (node.getTransport() as ConnectionManager)
+        }), limit)
 }
 
 function garbageCollectConnections(connectionManager: ConnectionManager, limit: number): void {
