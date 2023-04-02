@@ -29,10 +29,14 @@ describe('RemoteHandshaker', () => {
         type: 1
     }
 
+    let simulator: Simulator
+    let mockConnectionManager1: SimulatorTransport
+    let mockConnectionManager2: SimulatorTransport
+
     beforeEach(() => {
-        const simulator = new Simulator()
-        const mockConnectionManager1 = new SimulatorTransport(serverPeer, simulator)
-        const mockConnectionManager2 = new SimulatorTransport(clientPeer, simulator)
+        simulator = new Simulator()
+        mockConnectionManager1 = new SimulatorTransport(serverPeer, simulator)
+        mockConnectionManager2 = new SimulatorTransport(clientPeer, simulator)
 
         mockServerRpc = new ListeningRpcCommunicator('test', mockConnectionManager1)
         clientRpc = new ListeningRpcCommunicator('test', mockConnectionManager2)
@@ -57,9 +61,12 @@ describe('RemoteHandshaker', () => {
         )
     })
 
-    afterEach(() => {
+    afterEach(async () => {
         clientRpc.stop()
         mockServerRpc.stop()
+        await mockConnectionManager1.stop()
+        await mockConnectionManager2.stop()
+        simulator.stop()
     })
 
     it('handshake', async () => {

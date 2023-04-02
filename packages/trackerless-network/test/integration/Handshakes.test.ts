@@ -64,11 +64,16 @@ describe('Handshakes', () => {
         return response
     }
 
+    let simulator: Simulator
+    let simulatorTransport1: SimulatorTransport
+    let simulatorTransport2: SimulatorTransport
+    let simulatorTransport3: SimulatorTransport
+
     beforeEach(() => {
-        const simulator = new Simulator()
-        const simulatorTransport1 = new SimulatorTransport(peerDescriptor1, simulator)
-        const simulatorTransport2 = new SimulatorTransport(peerDescriptor2, simulator)
-        const simulatorTransport3 = new SimulatorTransport(peerDescriptor3, simulator)
+        simulator = new Simulator()
+        simulatorTransport1 = new SimulatorTransport(peerDescriptor1, simulator)
+        simulatorTransport2 = new SimulatorTransport(peerDescriptor2, simulator)
+        simulatorTransport3 = new SimulatorTransport(peerDescriptor3, simulator)
 
         rpcCommunicator1 = new ListeningRpcCommunicator(randomGraphId, simulatorTransport1)
         rpcCommunicator2 = new ListeningRpcCommunicator(randomGraphId, simulatorTransport2)
@@ -90,10 +95,14 @@ describe('Handshakes', () => {
 
     })
 
-    afterEach(() => {
+    afterEach(async () => {
         rpcCommunicator1.stop()
         rpcCommunicator2.stop()
         rpcCommunicator3.stop()
+        await simulatorTransport1.stop()
+        await simulatorTransport2.stop()
+        await simulatorTransport3.stop()
+        simulator.stop()
     })
 
     it('Two peers can handshake', async () => {

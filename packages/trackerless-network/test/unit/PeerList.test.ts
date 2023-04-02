@@ -24,17 +24,21 @@ describe('PeerList', () => {
     const ownId = PeerID.fromString('test')
     const graphId = 'test'
     let peerList: PeerList
-    const simulator = new Simulator()
+    let simulator: Simulator
+    let mockTransports: SimulatorTransport[]
 
     const createRemoteGraphNode = (peerDescriptor: PeerDescriptor) => {
         const mockTransport = new SimulatorTransport(peerDescriptor, simulator)
         const mockCommunicator = new ListeningRpcCommunicator(`layer2-${ graphId }`, mockTransport)
         const mockClient = mockCommunicator.getRpcClientTransport()
         
+        mockTransports.push(mockTransport)
         return new RemoteRandomGraphNode(peerDescriptor, graphId, toProtoRpcClient(new NetworkRpcClient(mockClient)))
     }
 
     beforeEach(() => {
+        simulator = new Simulator()
+        mockTransports = []
         peerList = new PeerList(ownId, 6)
         ids.forEach((peerId) => {
             const peerDescriptor: PeerDescriptor = {
@@ -43,6 +47,14 @@ describe('PeerList', () => {
             }
             peerList.add(createRemoteGraphNode(peerDescriptor))
         })
+    })
+
+    afterEach(async ()=> {
+        // eslint-disable-next-line @typescript-eslint/prefer-for-of
+        for (let i = 0; i < mockTransports.length; i++) {
+            await mockTransports[i].stop()
+        }
+        simulator.stop()
     })
 
     it('add', () => {

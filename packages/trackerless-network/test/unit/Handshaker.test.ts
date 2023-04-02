@@ -20,9 +20,12 @@ describe('Handshaker', () => {
     let nearbyContactPool: PeerList
     let randomContactPool: PeerList
 
+    let simulator: Simulator
+    let simulatorTransport: SimulatorTransport
+    
     beforeEach(() => {
-        const simulator = new Simulator()
-        const simulatorTransport = new SimulatorTransport(peerDescriptor, simulator)
+        simulator = new Simulator()
+        simulatorTransport = new SimulatorTransport(peerDescriptor, simulator)
         const rpcCommunicator = new ListeningRpcCommunicator(stream, simulatorTransport)
 
         targetNeighbors = new PeerList(peerId, 10)
@@ -39,6 +42,11 @@ describe('Handshaker', () => {
             rpcCommunicator,
             N
         })
+    })
+
+    afterEach(async () => {
+        await simulatorTransport.stop()
+        simulator.stop()
     })
 
     it('attemptHandshakesOnContact works with empty structures', async () => {
