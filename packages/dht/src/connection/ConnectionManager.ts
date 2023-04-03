@@ -249,6 +249,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         } else {
             await this.simulatorConnector!.stop()
         }
+        this.messageDuplicateDetector.clear()
     }
 
     public getConnectionTo(id: PeerIDKey): ManagedConnection {

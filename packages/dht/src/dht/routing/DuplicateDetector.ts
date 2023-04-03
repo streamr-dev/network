@@ -45,4 +45,9 @@ export class DuplicateDetector {
         return this.values.size
     }
 
+    public clear(): void {
+        this.values.clear()
+        this.queue = []
+    }
+
 }
