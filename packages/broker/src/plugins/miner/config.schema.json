@@ -1,0 +1,8 @@
+{
+  "$id": "config.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "description": "Miner plugin configuration",
+  "additionalProperties": false,
+  "properties": {}
+}

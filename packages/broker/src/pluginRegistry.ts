@@ -6,6 +6,7 @@ import { MqttPlugin } from './plugins/mqtt/MqttPlugin'
 import { StoragePlugin } from './plugins/storage/StoragePlugin'
 import { SubscriberPlugin } from './plugins/subscriber/SubscriberPlugin'
 import { InfoPlugin } from './plugins/info/InfoPlugin'
+import { MinerPlugin } from './plugins/miner/MinerPlugin'
 
 export const createPlugin = (name: string, pluginOptions: PluginOptions): Plugin<any> | never => {
     switch (name) {
@@ -19,6 +20,8 @@ export const createPlugin = (name: string, pluginOptions: PluginOptions): Plugin
             return new MqttPlugin(pluginOptions)
         case 'storage':
             return new StoragePlugin(pluginOptions)
+        case 'miner':
+            return new MinerPlugin(pluginOptions)
         case 'subscriber':
             return new SubscriberPlugin(pluginOptions)
         case 'info':
