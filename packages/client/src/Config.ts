@@ -58,7 +58,7 @@ export interface StreamrClientConfig {
 
     /**
     * The Ethereum identity to be used by the client. Either a private key
-     * or a window.ethereum object.
+    * or a window.ethereum object.
     */
     auth?: PrivateKeyAuthConfig | ProviderAuthConfig
 
@@ -66,8 +66,8 @@ export interface StreamrClientConfig {
      * Set to true to enable message ordering.
      *
      * Due to the distributed nature of the network, messages may occasionally
-     * arrive out-of-order to the client. By enabling message ordering, the
-     * client will reorder the received messages in the intended order for you.
+     * arrive to the client out-of-order. By enabling message ordering, the
+     * client will reorder received messages to the intended order for you.
      *
      * */
     orderMessages?: boolean
@@ -77,33 +77,35 @@ export interface StreamrClientConfig {
      *
      * Some messages may occasionally not reach the client due to networking
      * issues. Missing messages form gaps that are often detectable and
-     * retrievable on demand. By enabling gap filling, you enable the client to
-     * detect and fix gaps automatically for you.
+     * retrievable on demand. By enabling gap filling, the client will detect
+     * and fix gaps automatically for you.
      */
     gapFill?: boolean
 
     /**
      * When gap filling is enabled, this option controls the maximum amount of
-     * times a gap will try to be filled before giving up and proceeding
-     * forwards.
+     * times a gap will try to be actively filled before giving up and
+     * proceeding forwards.
      */
     maxGapRequests?: number
 
     /**
-     * When gap filling is enabled and a gap is encountered, the amount of time
-     * to wait before attempting to _actively_ fill in the gap.
+     * When gap filling is enabled and a gap is encountered, this option
+     * defines the amount of time to wait before attempting to _actively_ fill
+     * in the gap.
      *
-     * Rationale: the data may just be arriving out-of-order and the missing
-     * messages may be on their way. For efficiency, it makes sense to wait a
-     * little before actively attempting to fill in the gap, as this involves
-     * a resend request to (and response from) a storage node.
+     * Rationale: data may just be arriving out-of-order and the missing
+     * message(s) may be on their way. For efficiency, it makes sense to wait a
+     * little before actively attempting to fill in a gap, as this involves
+     * a resend request / response interaction with a storage node.
      */
     gapFillTimeout?: number
 
     retryResendAfter?: number
 
     /**
-     * Controls how messages encryption and decryption should be handled.
+     * Controls how messages encryption and decryption should be handled and
+     * how encryption keys should be exchanged.
      */
     encryption?: {
         /**
@@ -123,7 +125,8 @@ export interface StreamrClientConfig {
         // to lit protocol key requests (both encryption and decryption?)
         /**
          * When requesting an encryption key using the standard Streamr
-         * key-exchange system, how long should a response be awaited for.
+         * key-exchange system, defines how long should a response be awaited
+         * for.
          */
         keyRequestTimeout?: number
 
@@ -138,29 +141,144 @@ export interface StreamrClientConfig {
         maxKeyRequestsPerSecond?: number
     }
 
+    /**
+     * These settings apply to the network node of the client.
+     */
     network?: {
-        id?: string
-        acceptProxyConnections?: boolean
-        trackers?: TrackerRegistryRecord[] | TrackerRegistryContract
-        trackerPingInterval?: number
-        trackerConnectionMaintenanceInterval?: number
-        webrtcDisallowPrivateAddresses?: boolean
-        newWebrtcConnectionTimeout?: number
-        webrtcDatachannelBufferThresholdLow?: number
-        webrtcDatachannelBufferThresholdHigh?: number
-        webrtcMaxMessageSize?: number
-        webrtcPortRange?: WebRtcPortRange
         /**
-         * The maximum amount of outgoing messages to be buffered on a single WebRTC connection.
+         * The network-wide identifier of this node. Should be unique
+         * within the Streamr Network.
+         */
+        id?: string
+
+        /**
+         * Whether to accept proxy connections. Enabling this option allows
+         * the network node to act as proxy on behalf of other nodes / clients.
+         */
+        acceptProxyConnections?: boolean
+
+        /**
+         * Defines the trackers that should be used for peer discovery and
+         * connection forming.
+         *
+         * Generally not intended to be configured by the end-user unless a
+         * custom network is being formed.
+         */
+        trackers?: TrackerRegistryRecord[] | TrackerRegistryContract
+
+        /**
+         * Defines how often to ping connected tracker(s) to determine
+         * connection aliveness.
+         */
+        trackerPingInterval?: number
+
+        /**
+         * Determines how often tracker connections should be maintained. This
+         * involves connecting to any relevant trackers to which a connection
+         * does not yet exist and disconnecting from irrelevant ones.
+         */
+        trackerConnectionMaintenanceInterval?: number
+
+        /**
+         * When set to true private addresses will not be probed when forming
+         * WebRTC connections.
+         *
+         * Probing private addresses can trigger false-positive incidents in
+         * some port scanning detection systems employed by web hosting
+         * providers. Disallowing private addresses may prevent direct
+         * connections from being formed between nodes using IPv4 addresses
+         * on a local network.
+         *
+         * Details: https://github.com/streamr-dev/network/wiki/WebRTC-private-addresses
+         */
+        webrtcDisallowPrivateAddresses?: boolean
+
+        /**
+         * Defines WebRTC connection establishment timeout.
+         *
+         * When attempting to form a new connection, if not established within
+         * this timeout, the attempt is considered as failed and further
+         * waiting for it will cease.
+         */
+        newWebrtcConnectionTimeout?: number
+
+        /**
+         * Sets the low-water mark used by send buffers of WebRTC connections.
+         */
+        webrtcDatachannelBufferThresholdLow?: number
+
+        /**
+         * Sets the high-water mark used by send buffers of WebRTC connections.
+         */
+        webrtcDatachannelBufferThresholdHigh?: number
+
+        /**
+         * The maximum outgoing message size accepted by WebRTC connections.
+         * Messages exceeding the maximum size are simply discarded.
+         */
+        webrtcMaxMessageSize?: number
+
+        /**
+         * Defines a custom UDP port range to be used for WebRTC connections.
+         * This port range should not be restricted by enclosing firewalls
+         * or VPC configurations.
+         */
+        webrtcPortRange?: WebRtcPortRange
+
+        /**
+         * The maximum amount of messages retained in the send queue of a WebRTC
+         * connection.
+         *
+         * When the send queue becomes full, oldest messages are discarded
+         * first to make room for new.
          */
         webrtcSendBufferMaxMessageCount?: number
+
+        /**
+         * Determines how long to keep non-relevant neighbor connections
+         * around for before disconnecting them.
+         *
+         * A connection with another node is relevant when the two share
+         * one or more streams and thus have messages to propagate to one
+         * another. When this no longer holds, the connection may be cut.
+         *
+         * During the topology re-organization process, sometimes a neighbor
+         * node may cease to be our neighbor only to become one once again in
+         * a short period of time. For this reason, it can be beneficial not to
+         * disconnect non-relevant neighbors right away.
+         */
         disconnectionWaitTime?: number
+
+        /**
+         * Defines how often to ping connected nodes to determine connection
+         * aliveness.
+         */
         peerPingInterval?: number
+
+        /**
+         * Determines how often, at most, to include RTT statistics in status
+         * updates to trackers.
+         */
         rttUpdateTimeout?: number
+
+        /**
+         * The list of STUN and TURN servers to use in ICE protocol when
+         * forming WebRTC connections.
+         */
         iceServers?: ReadonlyArray<IceServer>
+
+        /**
+         * Defines an explicit geographic location for this node (overriding Geo
+         * IP lookup).
+         */
         location?: Location
     }
 
+    /**
+     * The smart contract addresses and RPC urls to be used in the client.
+     * Generally not intended to be configured by the end-user unless a
+     * custom network is being formed.
+     */
     contracts?: {
         streamRegistryChainAddress?: string
         streamStorageRegistryChainAddress?: string
@@ -174,6 +292,12 @@ export interface StreamrClientConfig {
         maxConcurrentCalls?: number
     }
 
+    /**
+     * Determines the telemetry metrics that are sent to the Streamr Network
+     * at regular intervals.
+     *
+     * By setting this to false, you disable the feature.
+     */
     metrics?: {
         periods?: {
             streamId: string
@@ -182,6 +306,9 @@ export interface StreamrClientConfig {
         maxPublishDelay?: number
     } | boolean
 
+    /**
+     * Determines caching behaviour for certain repeated smart contract queries.
+     */
     cache?: {
         maxSize?: number
         maxAge?: number
