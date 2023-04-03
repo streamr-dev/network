@@ -101,6 +101,12 @@ export interface StreamrClientConfig {
      */
     gapFillTimeout?: number
 
+    /**
+     * When gap filling is enabled and a gap is encountered, a resend request
+     * will be sent to a storage node in an attempt to _actively_ fill in the
+     * gap. This option controls how long to wait for a resend response from
+     * the storage node before proceeding to the next attempt.
+     */
     retryResendAfter?: number
 
     /**
