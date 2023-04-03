@@ -198,6 +198,9 @@ export class StreamrNode extends EventEmitter<Events> {
             layer1: layer1,
             connectionLocker: this.connectionLocker!,
             ownPeerDescriptor: this.layer0!.getPeerDescriptor(),
+            minPropagationTargets: this.config.layer2MinPropagationTargets,
+            numOfTargetNeighbors: this.config.layer2NumOfTargetNeighbors,
+            maxNumberOfContacts: this.config.layer2MaxNumberOfContact,
             nodeName: this.config.nodeName
         })
     }

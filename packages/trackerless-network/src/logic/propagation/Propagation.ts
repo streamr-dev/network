@@ -11,7 +11,7 @@ interface ConstructorOptions {
     maxMessages?: number
 }
 
-const DEFAULT_MAX_MESSAGES = 30
+const DEFAULT_MAX_MESSAGES = 50
 const DEFAULT_TTL = 30 * 1000
 
 /**

@@ -1,7 +1,6 @@
-import { ConnectionManager, DhtNode } from '@streamr/dht'
+import { ConnectionManager, DhtNode, DhtNodeOptions } from '@streamr/dht'
 import { StreamrNode, StreamrNodeOpts } from './logic/StreamrNode'
 import { MetricsContext } from '@streamr/utils'
-import { DhtNodeOptions } from '@streamr/dht/dist/src/dht/DhtNode'
 
 export interface NetworkOptions {
     layer0: DhtNodeOptions

@@ -1,6 +1,5 @@
 import { StreamEntryPointDiscovery } from '../../src/logic/StreamEntryPointDiscovery'
-import { PeerDescriptor, RecursiveFindResult } from '@streamr/dht'
-import { PeerID } from '../..'
+import { PeerDescriptor, RecursiveFindResult, PeerID } from '@streamr/dht'
 import { StreamObject } from '../../src/logic/StreamrNode'
 import { DataEntry } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { Any } from '../../src/proto/google/protobuf/any'
