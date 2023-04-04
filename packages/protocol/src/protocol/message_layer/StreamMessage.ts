@@ -45,19 +45,11 @@ export interface StreamMessageOptions<T> {
 
 /**
  * Encrypted StreamMessage.
- * @internal
  */
-export type StreamMessageEncrypted<T> = StreamMessage<T> & {
-    encryptionType: EncryptionType.RSA | EncryptionType.AES
+export type StreamMessageAESEncrypted<T = unknown> = StreamMessage<T> & {
+    encryptionType: EncryptionType.AES
     groupKeyId: string
     parsedContent: never
-}
-/**
- * Unencrypted StreamMessage.
- * @internal
- */
-export type StreamMessageUnencrypted<T> = StreamMessage<T> & {
-    encryptionType: EncryptionType.NONE
 }
 
 export default class StreamMessage<T = unknown> {
@@ -125,7 +117,7 @@ export default class StreamMessage<T = unknown> {
         StreamMessage.validateEncryptionType(encryptionType)
         this.encryptionType = encryptionType
 
-        validateIsString('groupKeyId', groupKeyId, true)
+        validateIsString('groupKeyId', groupKeyId, this.encryptionType !== EncryptionType.AES)
         this.groupKeyId = groupKeyId
 
         validateIsType('newGroupKey', newGroupKey, 'EncryptedGroupKey', EncryptedGroupKey, true)
@@ -332,11 +324,7 @@ export default class StreamMessage<T = unknown> {
         }
     }
 
-    static isEncrypted<T = unknown>(msg: StreamMessage<T>): msg is StreamMessageEncrypted<T> {
-        return !!(msg && msg.encryptionType !== EncryptionType.NONE)
-    }
-
-    static isUnencrypted<T = unknown>(msg: StreamMessage<T>): msg is StreamMessageUnencrypted<T> {
-        return !this.isEncrypted(msg)
+    static isAESEncrypted<T = unknown>(msg: StreamMessage<T>): msg is StreamMessageAESEncrypted<T> {
+        return msg.encryptionType === EncryptionType.AES
     }
 }
