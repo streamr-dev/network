@@ -7,7 +7,6 @@ import { randomEthereumAddress } from '@streamr/test-utils'
 describe('NetworkNode', () => {
     let tracker: Tracker
     let node: NetworkNode
-    let node2: NetworkNode | undefined
 
     beforeEach(async () => {
         tracker = await startTestTracker({
@@ -22,7 +21,6 @@ describe('NetworkNode', () => {
     afterEach(async () => {
         await tracker.stop()
         await node.stop()
-        await node2?.stop()
     })
 
     it('has id & peerInfo', () => {
@@ -32,17 +30,21 @@ describe('NetworkNode', () => {
     })
 
     it('setProxies throws error if acceptProxyConnections=true (NET-950)', async () => {
-        node2 = createTestNetworkNode({
-            id: 'node-1',
+        const node = createTestNetworkNode({
+            id: 'node-2',
             trackers: [tracker.getConfigRecord()],
             acceptProxyConnections: true
         })
-        await expect(() => node2!.setProxies(
-            toStreamPartID(toStreamID('/foobar', randomEthereumAddress()), 0),
-            ['0xa', '0xb'],
-            ProxyDirection.SUBSCRIBE,
-            () => Promise.resolve(''),
-            1
-        )).rejects.toThrow('cannot set proxies when acceptProxyConnections=true')
+        try {
+            await expect(() => node!.setProxies(
+                toStreamPartID(toStreamID('/foobar', randomEthereumAddress()), 0),
+                ['0xa', '0xb'],
+                ProxyDirection.SUBSCRIBE,
+                () => Promise.resolve(''),
+                1
+            )).rejects.toThrow('cannot set proxies when acceptProxyConnections=true')
+        } finally {
+            await node.stop()
+        }
     })
 })
