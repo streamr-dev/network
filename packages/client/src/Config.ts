@@ -89,8 +89,8 @@ export interface StreamrClientConfig {
 
     /**
      * When gap filling is enabled and a gap is encountered, this option
-     * defines the amount of time to wait before attempting to _actively_ fill
-     * in the gap.
+     * defines the amount of time in milliseconds to wait before attempting to
+     * _actively_ fill in the gap.
      *
      * Rationale: data may just be arriving out-of-order and the missing
      * message(s) may be on their way. For efficiency, it makes sense to wait a
@@ -102,8 +102,9 @@ export interface StreamrClientConfig {
     /**
      * When gap filling is enabled and a gap is encountered, a resend request
      * may eventually be sent to a storage node in an attempt to _actively_
-     * fill in the gap. This option controls how long to wait for a resend
-     * response from the storage node before proceeding to the next attempt.
+     * fill in the gap. This option controls how long to wait for, in
+     * milliseconds, for a resend response from the storage node before
+     * proceeding to the next attempt.
      */
     retryResendAfter?: number
 
@@ -130,8 +131,8 @@ export interface StreamrClientConfig {
         // to lit protocol key requests (both encryption and decryption?)
         /**
          * When requesting an encryption key using the standard Streamr
-         * key-exchange system, defines how long should a response be awaited
-         * for.
+         * key-exchange system, defines how many milliseconds should a response
+         * be awaited for.
          */
         keyRequestTimeout?: number
 
@@ -173,15 +174,16 @@ export interface StreamrClientConfig {
         trackers?: TrackerRegistryRecord[] | TrackerRegistryContract
 
         /**
-         * Defines how often to ping connected tracker(s) to determine
-         * connection aliveness.
+         * Defines how often, in milliseconds, to ping connected tracker(s) to
+         * determine connection aliveness.
          */
         trackerPingInterval?: number
 
         /**
-         * Determines how often tracker connections should be maintained. This
-         * involves connecting to any relevant trackers to which a connection
-         * does not yet exist and disconnecting from irrelevant ones.
+         * Determines how often, in milliseconds, should tracker connections be
+         * maintained. This involves connecting to any relevant trackers to
+         * which a connection does not yet exist and disconnecting from
+         * irrelevant ones.
          */
         trackerConnectionMaintenanceInterval?: number
 
@@ -200,7 +202,7 @@ export interface StreamrClientConfig {
         webrtcDisallowPrivateAddresses?: boolean
 
         /**
-         * Defines WebRTC connection establishment timeout.
+         * Defines WebRTC connection establishment timeout in milliseconds.
          *
          * When attempting to form a new connection, if not established within
          * this timeout, the attempt is considered as failed and further
@@ -219,8 +221,9 @@ export interface StreamrClientConfig {
         webrtcDatachannelBufferThresholdHigh?: number
 
         /**
-         * The maximum outgoing message size accepted by WebRTC connections.
-         * Messages exceeding the maximum size are simply discarded.
+         * The maximum outgoing message size (in bytes) accepted by WebRTC
+         * connections. Messages exceeding the maximum size are simply
+         * discarded.
          */
         webrtcMaxMessageSize?: number
 
@@ -241,8 +244,8 @@ export interface StreamrClientConfig {
         webrtcSendBufferMaxMessageCount?: number
 
         /**
-         * Determines how long to keep non-relevant neighbor connections
-         * around for before disconnecting them.
+         * Determines how long, in milliseconds, to keep non-relevant neighbor
+         * connections around for before disconnecting them.
          *
          * A connection with another node is relevant when the two share
          * one or more streams and thus have messages to propagate to one
@@ -256,14 +259,14 @@ export interface StreamrClientConfig {
         disconnectionWaitTime?: number
 
         /**
-         * Defines how often to ping connected nodes to determine connection
-         * aliveness.
+         * Defines how often, in milliseconds, to ping connected nodes to
+         * determine connection aliveness.
          */
         peerPingInterval?: number
 
         /**
-         * Determines how often, at most, to include round-trip time (RTT)
-         * statistics in status updates to trackers.
+         * Determines how often, in milliseconds, at most, to include
+         * round-trip time (RTT) statistics in status updates to trackers.
          */
         rttUpdateTimeout?: number
 
