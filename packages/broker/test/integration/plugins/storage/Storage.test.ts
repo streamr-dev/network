@@ -38,7 +38,8 @@ export function buildMsg({
     return new StreamMessage({
         messageId: new MessageID(toStreamID(streamId), streamPartition, timestamp, sequenceNumber, publisherId, msgChainId),
         content: JSON.stringify(content),
-        signature: 'signature'
+        signature: 'signature',
+        groupKeyId: 'groupKeyId'
     })
 }
 
