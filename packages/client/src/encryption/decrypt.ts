@@ -1,4 +1,4 @@
-import { StreamMessage } from '@streamr/protocol'
+import { StreamMessage, StreamMessageAESEncrypted } from '@streamr/protocol'
 import { EncryptionUtil, DecryptError } from '../encryption/EncryptionUtil'
 import { DestroySignal } from '../DestroySignal'
 import { GroupKey } from '../encryption/GroupKey'
@@ -8,7 +8,7 @@ import { GroupKeyManager } from '../encryption/GroupKeyManager'
 // and not to return the original encrypted message?
 // - e.g. StoppedError, which is not visible to end-user
 export const decrypt = async (
-    streamMessage: StreamMessage,
+    streamMessage: StreamMessageAESEncrypted,
     groupKeyManager: GroupKeyManager,
     destroySignal: DestroySignal,
 ): Promise<StreamMessage> => {

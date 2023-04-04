@@ -45,9 +45,8 @@ export interface StreamMessageOptions<T> {
 
 /**
  * Encrypted StreamMessage.
- * @internal
  */
-export type StreamMessageAESEncrypted<T> = StreamMessage<T> & {
+export type StreamMessageAESEncrypted<T = unknown> = StreamMessage<T> & {
     encryptionType: EncryptionType.AES
     groupKeyId: string
     parsedContent: never
