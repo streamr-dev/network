@@ -103,7 +103,19 @@ export class SubscriptionSession {
             return
         }
 
-        await this.pipeline.push(msg)
+        const tasks = []
+        let hasNormalSubscriptions = false
+        for (const sub of this.subscriptions.values()) {
+            if (sub.isRaw) {
+                tasks.push(sub.push(msg))
+            } else {
+                hasNormalSubscriptions = true
+            }
+        }
+        if (hasNormalSubscriptions) {
+            tasks.push(this.pipeline.push(msg))
+        }
+        await Promise.all(tasks)
     }
 
     private async subscribe(): Promise<NetworkNodeStub> {

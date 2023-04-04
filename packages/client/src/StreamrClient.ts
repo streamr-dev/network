@@ -36,7 +36,7 @@ import { ErrorCode } from './HttpUtil'
 import omit from 'lodash/omit'
 import { StreamrClientError } from './StreamrClientError'
 
-export type SubscribeOptions = StreamDefinition & { resend?: ResendOptions }
+export type SubscribeOptions = StreamDefinition & { resend?: ResendOptions, isRaw?: boolean }
 
 /**
  * The main API used to interact with Streamr.
@@ -165,6 +165,9 @@ export class StreamrClient {
         options: SubscribeOptions,
         onMessage?: MessageListener
     ): Promise<Subscription> {
+        if ((options.isRaw === true) && (options.resend !== undefined)) {
+            throw new Error('Raw subscriptions are not supported for resend')
+        }
         const streamPartId = await this.streamIdBuilder.toStreamPartID(options)
         const sub = (options.resend !== undefined)
             ? new ResendSubscription(
@@ -174,7 +177,7 @@ export class StreamrClient {
                 this.loggerFactory,
                 this.config
             )
-            : new Subscription(streamPartId, this.loggerFactory)
+            : new Subscription(streamPartId, options.isRaw ?? false, this.loggerFactory)
         await this.subscriber.add(sub)
         if (onMessage !== undefined) {
             sub.useLegacyOnMessageHandler(onMessage)
