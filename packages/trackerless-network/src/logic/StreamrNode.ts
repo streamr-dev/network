@@ -119,7 +119,6 @@ export class StreamrNode extends EventEmitter<Events> {
             this.joinStream(streamPartID, knownEntryPointDescriptors)
                 .catch((err) => {
                     logger.warn(`Failed to subscribe to stream ${streamPartID} with error: ${err}`)
-                    this.subscribeToStream(streamPartID, knownEntryPointDescriptors)
                 })
         }
     }
