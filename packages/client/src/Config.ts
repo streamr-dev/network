@@ -63,11 +63,9 @@ export interface StreamrClientConfig {
     auth?: PrivateKeyAuthConfig | ProviderAuthConfig
 
     /**
-     * Set to true to enable message ordering.
-     *
      * Due to the distributed nature of the network, messages may occasionally
-     * arrive to the client out-of-order. By enabling message ordering, the
-     * client will reorder received messages to the intended order for you.
+     * arrive to the client out-of-order. Set this option to `true` if you want
+     * the client to reorder received messages to the intended order.
      *
      * */
     orderMessages?: boolean
@@ -117,8 +115,9 @@ export interface StreamrClientConfig {
         /**
          * Enable experimental Lit Protocol key exchange.
          *
-         * When enabled encryption key storing and fetching will primarily be done through the Lit Protocol and
-         * secondarily through the standard Streamr key-exchange system.
+         * When enabled encryption key storing and fetching will primarily be done through the
+         * [Lit Protocol](https://litprotocol.com/) and secondarily through the standard Streamr
+         * key-exchange system.
          */
         litProtocolEnabled?: boolean
 
@@ -148,7 +147,8 @@ export interface StreamrClientConfig {
     }
 
     /**
-     * These settings apply to the network node of the client.
+     * These settings determine how the client performs and interacts with the
+     * Streamr Network.
      */
     network?: {
         /**
@@ -159,7 +159,7 @@ export interface StreamrClientConfig {
 
         /**
          * Whether to accept proxy connections. Enabling this option allows
-         * the network node to act as proxy on behalf of other nodes / clients.
+         * this network node to act as proxy on behalf of other nodes / clients.
          */
         acceptProxyConnections?: boolean
 
@@ -227,7 +227,7 @@ export interface StreamrClientConfig {
         /**
          * Defines a custom UDP port range to be used for WebRTC connections.
          * This port range should not be restricted by enclosing firewalls
-         * or VPC configurations.
+         * or virtual private cloud configurations.
          */
         webrtcPortRange?: WebRtcPortRange
 
@@ -262,8 +262,8 @@ export interface StreamrClientConfig {
         peerPingInterval?: number
 
         /**
-         * Determines how often, at most, to include RTT statistics in status
-         * updates to trackers.
+         * Determines how often, at most, to include round-trip time (RTT)
+         * statistics in status updates to trackers.
          */
         rttUpdateTimeout?: number
 
