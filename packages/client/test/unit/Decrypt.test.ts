@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { StreamPartIDUtils } from '@streamr/protocol'
+import { StreamPartIDUtils, StreamMessageAESEncrypted } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
 import { DestroySignal } from '../../src/DestroySignal'
 import { GroupKey } from '../../src/encryption/GroupKey'
@@ -20,6 +20,6 @@ describe('Decrypt', () => {
             publisher: wallet,
             encryptionKey: groupKey
         })
-        await expect(() => decrypt(msg, groupKeyManager, destroySignal)).rejects.toThrow(`Decrypt error: Could not get GroupKey ${groupKey.id}`)
+        await expect(() => decrypt(msg as StreamMessageAESEncrypted, groupKeyManager, destroySignal)).rejects.toThrow(`Decrypt error: Could not get GroupKey ${groupKey.id}`)
     })
 })
