@@ -1,4 +1,4 @@
-import { EncryptionType, StreamMessage } from '@streamr/protocol'
+import { StreamMessage } from '@streamr/protocol'
 import { EncryptionUtil, DecryptError } from '../encryption/EncryptionUtil'
 import { DestroySignal } from '../DestroySignal'
 import { GroupKey } from '../encryption/GroupKey'
@@ -41,9 +41,4 @@ export const decrypt = async (
         )
     }
     return clone
-}
-
-// TODO this could be in protocol (and validate that if type==AES, we always have groupKeyId)
-export const isEncrypted = (streamMessage: StreamMessage): boolean => {
-    return ((streamMessage.encryptionType === EncryptionType.AES) && (streamMessage.groupKeyId !== null))
 }

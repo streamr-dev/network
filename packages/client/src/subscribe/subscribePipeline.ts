@@ -1,4 +1,3 @@
-import { isEncrypted } from './../encryption/decrypt'
 /**
  * Subscription message processing pipeline
  */
@@ -61,7 +60,7 @@ export const createSubscribePipeline = (opts: SubscriptionPipelineOptions): Mess
     const messageStream = new MessageStream()
     const msgChainUtil = new MsgChainUtil(async (msg) => {
         await validate.validate(msg)
-        if (isEncrypted(msg)) {
+        if (StreamMessage.isAESEncrypted(msg)) {
             try {
                 return decrypt(msg, opts.groupKeyManager, opts.destroySignal)
             } catch (err) {
