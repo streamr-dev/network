@@ -97,7 +97,7 @@ describe('Subscriber', () => {
                 public: true
             })
     
-            const sub = await subscriber.subscribe({ streamId: stream.id, isRaw: true })
+            const sub = await subscriber.subscribe({ streamId: stream.id, raw: true })
     
             const publisherNode = environment.startNode(publisherWallet.address)
             publisherNode.publish(await createMockMessage({
@@ -124,7 +124,7 @@ describe('Subscriber', () => {
             })
             await publisher.addEncryptionKey(groupKey, toEthereumAddress(publisherWallet.address))
     
-            const sub = await subscriber.subscribe({ streamId: stream.id, isRaw: true })
+            const sub = await subscriber.subscribe({ streamId: stream.id, raw: true })
     
             const publisherNode = await publisher.getNode()
             publisherNode.publish(await createMockMessage({
