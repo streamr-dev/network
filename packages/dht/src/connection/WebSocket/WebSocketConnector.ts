@@ -12,7 +12,7 @@ import {
     WebSocketConnectionResponse
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { WebSocketConnectorServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
-import { Logger } from '@streamr/utils'
+import { Logger, wait } from '@streamr/utils'
 import { IWebSocketConnectorService } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ManagedConnection } from '../ManagedConnection'
@@ -84,38 +84,47 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         }
     }
 
-    public async checkConnectivity(): Promise<ConnectivityResponse> {
+    public async checkConnectivity(reattempt = 0): Promise<ConnectivityResponse> {
+        try {
+            const noServerConnectivityResponse: ConnectivityResponse = {
+                openInternet: false,
+                ip: '127.0.0.1',
+                natType: NatType.UNKNOWN
+            }
 
-        const noServerConnectivityResponse: ConnectivityResponse = {
-            openInternet: false,
-            ip: '127.0.0.1',
-            natType: NatType.UNKNOWN
-        }
-
-        if (!this.webSocketServer) {
-            // If no websocket server, return openInternet: false     
-            return noServerConnectivityResponse
-        } else {
-            if (!this.entrypoints || this.entrypoints.length < 1) {
-                // return connectivity info given in config
-
-                const preconfiguredConnectivityResponse: ConnectivityResponse = {
-                    openInternet: true,
-                    ip: this.webSocketHost!,
-                    natType: NatType.OPEN_INTERNET,
-                    websocket: { ip: this.webSocketHost!, port: this.webSocketPort! }
-                }
-                return preconfiguredConnectivityResponse
+            if (!this.webSocketServer) {
+                // If no websocket server, return openInternet: false
+                return noServerConnectivityResponse
             } else {
-                // Do real connectivity checking
+                if (!this.entrypoints || this.entrypoints.length < 1) {
+                    // return connectivity info given in config
 
-                let response = noServerConnectivityResponse
+                    const preconfiguredConnectivityResponse: ConnectivityResponse = {
+                        openInternet: true,
+                        ip: this.webSocketHost!,
+                        natType: NatType.OPEN_INTERNET,
+                        websocket: { ip: this.webSocketHost!, port: this.webSocketPort! }
+                    }
+                    return preconfiguredConnectivityResponse
+                } else {
+                    // Do real connectivity checking
 
-                response = await this.connectivityChecker.sendConnectivityRequest(this.entrypoints[0])
+                    let response = noServerConnectivityResponse
 
-                return response
+                    response = await this.connectivityChecker.sendConnectivityRequest(this.entrypoints[0])
+
+                    return response
+                }
+            }
+        } catch (err) {
+            if (reattempt < 5) {
+                await wait(2000)
+                return this.checkConnectivity(reattempt + 1)
+            } else {
+                throw err
             }
         }
+
     }
 
     public connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {

@@ -70,7 +70,7 @@ describe('ConnectionManager', () => {
         })).rejects.toThrow('Failed to connect to the entrypoints')
 
         await connectionManager.stop()
-    })
+    }, 15000)
 
     it('Can probe connectivity in open internet', async () => {
         const connectionManager1 = new ConnectionManager({ transportLayer: mockTransport, webSocketHost: '127.0.0.1', webSocketPort: 9993 })

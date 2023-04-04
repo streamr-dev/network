@@ -8,14 +8,14 @@ import { PeerID, PeerIDKey } from '../helpers/PeerID'
 import {
     ClosestPeersRequest,
     ClosestPeersResponse,
-    ConnectivityResponse,
-    FindMode,
     LeaveNotice,
+    ConnectivityResponse,
     Message,
     NodeType,
     PeerDescriptor,
     PingRequest,
-    PingResponse
+    PingResponse,
+    FindMode,
 } from '../proto/packages/dht/protos/DhtRpc'
 import * as Err from '../helpers/errors'
 import { DisconnectionType, ITransport, TransportEvents } from '../transport/ITransport'
@@ -77,20 +77,6 @@ export interface DhtNodeOptions {
 }
 
 export class DhtNodeConfig {
-    transportLayer?: ITransport
-    peerDescriptor?: PeerDescriptor
-    entryPoints?: PeerDescriptor[]
-    webSocketHost?: string
-    webSocketPort?: number
-    peerIdString?: string
-    nodeName?: string
-    rpcRequestTimeout?: number
-    iceServers?: IceServer[]
-    webrtcDisallowPrivateAddresses?: boolean
-    webrtcDatachannelBufferThresholdLow?: number
-    webrtcDatachannelBufferThresholdHigh?: number
-    newWebrtcConnectionTimeout?: number
-
     serviceId = 'layer0'
     parallelism = 3
     maxNeighborListSize = 200
@@ -105,7 +91,21 @@ export class DhtNodeConfig {
     storeNumberOfCopies = 5
     metricsContext = new MetricsContext()
 
-    constructor(conf: Partial<DhtNodeConfig>) {
+    transportLayer?: ITransport
+    peerDescriptor?: PeerDescriptor
+    entryPoints?: PeerDescriptor[]
+    webSocketHost?: string
+    webSocketPort?: number
+    peerIdString?: string
+    nodeName?: string
+    rpcRequestTimeout?: number
+    iceServers?: IceServer[]
+    webrtcDisallowPrivateAddresses?: boolean
+    webrtcDatachannelBufferThresholdLow?: number
+    webrtcDatachannelBufferThresholdHigh?: number
+    newWebrtcConnectionTimeout?: number
+
+    constructor(conf: Partial<DhtNodeOptions>) {
         // assign given non-undefined config vars over defaults
         let k: keyof typeof conf
         for (k in conf) {
@@ -187,6 +187,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 entryPoints: this.config.entryPoints,
                 iceServers: this.config.iceServers,
                 metricsContext: this.config.metricsContext,
+                webrtcDisallowPrivateAddresses: this.config.webrtcDisallowPrivateAddresses,
+                webrtcDatachannelBufferThresholdLow: this.config.webrtcDatachannelBufferThresholdLow,
+                webrtcDatachannelBufferThresholdHigh: this.config.webrtcDatachannelBufferThresholdHigh,
+                newWebrtcConnectionTimeout: this.config.newWebrtcConnectionTimeout,
                 nodeName: this.getNodeName(),
                 maxConnections: this.config.maxConnections
             }

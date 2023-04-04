@@ -2,9 +2,7 @@ import { DiscoverySession } from './DiscoverySession'
 import { DhtPeer } from '../DhtPeer'
 import crypto from "crypto"
 import * as Err from '../../helpers/errors'
-import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
-import { DhtRpcServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { isSamePeerDescriptor, keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { Logger, scheduleAtInterval } from '@streamr/utils'
 import KBucket from 'k-bucket'
@@ -56,9 +54,7 @@ export class PeerDiscovery {
             `Joining ${this.config.serviceId === 'layer0' ? 'The Streamr Network' : `Control Layer for ${this.config.serviceId}`}`
             + ` via entrypoint ${keyFromPeerDescriptor(entryPointDescriptor)}`
         )
-        const entryPointClient = toProtoRpcClient(new DhtRpcServiceClient(this.config.rpcCommunicator.getRpcClientTransport()))
-        const entryPoint = new DhtPeer(this.config.ownPeerDescriptor, entryPointDescriptor, entryPointClient, this.config.serviceId)
-        if (this.config.ownPeerId!.equals(entryPoint.getPeerId())) {
+        if (isSamePeerDescriptor(entryPointDescriptor, this.config.ownPeerDescriptor)) {
             return
         }
         this.config.connectionManager?.lockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)

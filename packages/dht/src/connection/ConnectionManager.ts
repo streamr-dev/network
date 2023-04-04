@@ -42,14 +42,14 @@ export class ConnectionManagerConfig {
     webSocketHost?: string
     webSocketPort?: number
     entryPoints?: PeerDescriptor[]
+    nodeName?: string
+    maxConnections: number = 80
     iceServers?: IceServer[]
     metricsContext?: MetricsContext
     webrtcDisallowPrivateAddresses?: boolean
     webrtcDatachannelBufferThresholdLow?: number
     webrtcDatachannelBufferThresholdHigh?: number
     newWebrtcConnectionTimeout?: number
-    nodeName?: string
-    maxConnections: number = 80
 
     // the following fields are used in simulation only
     simulator?: Simulator
@@ -178,12 +178,6 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             (req: UnlockRequest, context) => this.unlockRequest(req, context))
         this.rpcCommunicator.registerRpcNotification(DisconnectNotice, 'gracefulDisconnect',
             (req: DisconnectNotice, context) => this.gracefulDisconnect(req, context))
-        // Garbage collection of connections
-        this.disconnectorIntervalRef = setInterval(() => {
-            logger.trace('disconnectorInterval')
-            const LAST_USED_LIMIT = 20000
-            this.garbageCollectConnections(this.config.maxConnections, LAST_USED_LIMIT)
-        }, 5000)
     }
 
     public garbageCollectConnections(maxConnections: number, lastUsedLimit: number): void {
@@ -214,6 +208,12 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         }
         this.started = true
         logger.trace(`Starting ConnectionManager...`)
+        // Garbage collection of connections
+        this.disconnectorIntervalRef = setInterval(() => {
+            logger.trace('disconnectorInterval')
+            const LAST_USED_LIMIT = 20000
+            this.garbageCollectConnections(this.config.maxConnections, LAST_USED_LIMIT)
+        }, 5000)
         if (!this.config.simulator) {
             await this.webSocketConnector!.start()
             const connectivityResponse = await this.webSocketConnector!.checkConnectivity()
