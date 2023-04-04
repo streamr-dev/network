@@ -108,6 +108,10 @@ export class StreamrNode extends EventEmitter<Events> {
         await this.layer0!.stop()
         await this.P2PTransport!.stop()
         await this.streamEntryPointDiscovery!.destroy()
+        this.layer0 = undefined
+        this.P2PTransport = undefined
+        this.streamEntryPointDiscovery = undefined
+        this.connectionLocker = undefined
     }
 
     subscribeToStream(streamPartID: string, knownEntryPointDescriptors: PeerDescriptor[]): void {

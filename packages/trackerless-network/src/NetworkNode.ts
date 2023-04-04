@@ -11,7 +11,7 @@ Convenience wrapper for building client-facing functionality. Used by client.
 export class NetworkNode {
 
     readonly stack: NetworkStack
-
+    private stopped = false
     constructor(opts: NetworkOptions) {
         this.stack = new NetworkStack(opts)
     }
@@ -61,6 +61,9 @@ export class NetworkNode {
     }
 
     removeMessageListener<T>(cb: (msg: StreamMessage<T>) => void): void {
+        if (this.stopped) {
+            return
+        }
         this.stack.getStreamrNode().off('newMessage', (msg) => {
             const translated = StreamMessageTranslator.toClientProtocol<T>(msg)
             return cb(translated)
@@ -86,6 +89,9 @@ export class NetworkNode {
     }
 
     unsubscribe(streamPartId: StreamPartID): void {
+        if (this.stopped) {
+            return
+        }
         this.stack.getStreamrNode().unsubscribeFromStream(streamPartId)
     }
 
@@ -118,6 +124,7 @@ export class NetworkNode {
     }
 
     async stop(): Promise<void> {
+        this.stopped = true
         await this.stack.stop()
     }
 
