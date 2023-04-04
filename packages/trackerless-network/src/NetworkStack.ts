@@ -11,8 +11,8 @@ export interface NetworkOptions {
 export class NetworkStack {
 
     private connectionManager?: ConnectionManager
-    private readonly layer0DhtNode: DhtNode
-    private readonly streamrNode: StreamrNode
+    private layer0DhtNode?: DhtNode
+    private streamrNode?: StreamrNode
     private readonly metricsContext: MetricsContext
     private readonly options: NetworkOptions
 
@@ -30,16 +30,16 @@ export class NetworkStack {
     }
 
     async start(): Promise<void> {
-        await this.layer0DhtNode.start()
-        this.connectionManager = this.layer0DhtNode.getTransport() as ConnectionManager
+        await this.layer0DhtNode!.start()
+        this.connectionManager = this.layer0DhtNode!.getTransport() as ConnectionManager
         await Promise.all([
-            this.layer0DhtNode.joinDht(this.options.layer0.entryPoints![0]),
-            this.streamrNode.start(this.layer0DhtNode, this.connectionManager, this.connectionManager)
+            this.layer0DhtNode!.joinDht(this.options.layer0.entryPoints![0]),
+            this.streamrNode!.start(this.layer0DhtNode!, this.connectionManager!, this.connectionManager!)
         ])
     }
 
     getStreamrNode(): StreamrNode {
-        return this.streamrNode
+        return this.streamrNode!
     }
 
     getConnectionManager(): ConnectionManager | undefined {
@@ -47,7 +47,7 @@ export class NetworkStack {
     }
 
     getLayer0DhtNode(): DhtNode {
-        return this.layer0DhtNode
+        return this.layer0DhtNode!
     }
 
     getMetricsContext(): MetricsContext {
@@ -55,7 +55,10 @@ export class NetworkStack {
     }
 
     async stop(): Promise<void> {
-        await this.streamrNode.destroy()
+        await this.streamrNode!.destroy()
+        this.streamrNode = undefined
+        this.layer0DhtNode = undefined
+        this.connectionManager = undefined
     }
 
 }
