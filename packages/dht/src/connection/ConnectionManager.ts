@@ -244,12 +244,18 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         this.rpcCommunicator!.stop()
         if (!this.config.simulator) {
             await this.webSocketConnector!.stop()
+            this.webSocketConnector = undefined
             await this.webrtcConnector!.stop()
+            this.webrtcConnector = undefined
             WEB_RTC_CLEANUP.cleanUp()
         } else {
             await this.simulatorConnector!.stop()
+            this.simulatorConnector = undefined
         }
+        this.config.transportLayer = undefined
         this.messageDuplicateDetector.clear()
+        this.locks.clear()
+        this.removeAllListeners()
     }
 
     public getConnectionTo(id: PeerIDKey): ManagedConnection {

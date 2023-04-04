@@ -40,7 +40,6 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     private entrypoints?: PeerDescriptor[]
 
     private readonly protocolVersion: string
-    private readonly rpcTransport: ITransport
     private ownPeerDescriptor?: PeerDescriptor
     private connectingConnections: Map<PeerIDKey, ManagedConnection> = new Map()
     private stopped = false
@@ -55,7 +54,6 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         entrypoints?: PeerDescriptor[]
     ) {
         this.protocolVersion = protocolVersion
-        this.rpcTransport = rpcTransport
         this.webSocketServer = webSocketPort ? new WebSocketServer() : undefined
         this.connectivityChecker = new ConnectivityChecker(webSocketPort)
         this.incomingConnectionCallback = incomingConnectionCallback
@@ -65,7 +63,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
 
         this.canConnectFunction = fnCanConnect.bind(this)
 
-        this.rpcCommunicator = new ListeningRpcCommunicator(WebSocketConnector.WEBSOCKET_CONNECTOR_SERVICE_ID, this.rpcTransport, {
+        this.rpcCommunicator = new ListeningRpcCommunicator(WebSocketConnector.WEBSOCKET_CONNECTOR_SERVICE_ID, rpcTransport, {
             rpcRequestTimeout: 15000
         })
 

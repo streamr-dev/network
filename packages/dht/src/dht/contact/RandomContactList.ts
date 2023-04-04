@@ -79,4 +79,14 @@ export class RandomContactList<Contact extends IContact> extends EventEmitter<Ev
         })
         return ret.splice(0, limit)
     }
+
+    public clear(): void {
+        this.contactsById.clear()
+        this.contactIds.splice(0, this.contactIds.length)
+    }
+
+    public stop(): void {
+        this.removeAllListeners()
+        this.clear()
+    }
 }

@@ -188,4 +188,9 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
         this.contactsById.clear()
         this.contactIds.splice(0, this.contactIds.length)
     }
+
+    public stop(): void {
+        this.removeAllListeners()
+        this.clear()
+    }
 }

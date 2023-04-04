@@ -199,8 +199,9 @@ export class RandomGraphNode extends EventEmitter<Events> {
         this.config.layer1.off('newRandomContact', (peerDescriptor, randomPeers) => this.newRandomContact(peerDescriptor, randomPeers))
         this.config.layer1.off('randomContactRemoved', (peerDescriptor, randomPeers) => this.removedRandomContact(peerDescriptor, randomPeers))
         this.config.P2PTransport.off('disconnected', (peerDescriptor: PeerDescriptor) => this.onPeerDisconnected(peerDescriptor))
-        this.config.nearbyContactPool.clear()
-        this.config.targetNeighbors.clear()
+        this.config.nearbyContactPool.stop()
+        this.config.targetNeighbors.stop()
+        this.config.randomContactPool.stop()
         this.config.neighborFinder.stop()
         this.config.neighborUpdateManager.stop()
     }

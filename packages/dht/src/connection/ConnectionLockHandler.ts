@@ -100,4 +100,10 @@ export class ConnectionLockHandler {
         this.remoteLocks.delete(id)
         this.weakLocks.delete(id)
     }
+
+    public clear(): void {
+        this.localLocks.clear()
+        this.remoteLocks.clear()
+        this.weakLocks.clear()
+    }
 }

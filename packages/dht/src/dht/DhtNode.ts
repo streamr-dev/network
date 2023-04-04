@@ -218,9 +218,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             { rpcRequestTimeout: this.config.rpcRequestTimeout }
         )
 
-        this.transportLayer.on('message', (message: Message) => {
-            this.handleMessage(message)
-        })
+        this.transportLayer.on('message', (message: Message) => this.handleMessage(message))
 
         this.bindDefaultServerMethods()
         this.ownPeerId = peerIdFromPeerDescriptor(this.ownPeerDescriptor!)
@@ -296,6 +294,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         })
         this.neighborList = new SortedContactList(selfId, this.config.maxNeighborListSize)
         this.neighborList.on('contactRemoved', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) => {
+            if (this.stopped) {
+                return
+            }
             this.emit('contactRemoved', peerDescriptor, activeContacts)
             this.randomPeers!.addContact(
                 new DhtPeer(
@@ -663,13 +664,20 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public async stop(): Promise<void> {
+        if (this.stopped) {
+            return
+        }
         logger.trace('stop()')
         if (!this.started) {
             throw new Err.CouldNotStop('Cannot not stop() before start()')
         }
         this.stopped = true
 
+        this.bucket!.toArray().map((dhtPeer: DhtPeer) => this.bucket!.remove(dhtPeer.id))
         this.bucket!.removeAllListeners()
+        this.neighborList!.stop()
+        this.randomPeers!.stop()
+        this.openInternetPeers!.stop()
         this.rpcCommunicator!.stop()
         this.router!.stop()
         this.recursiveFinder!.stop()
@@ -677,6 +685,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (this.connectionManager) {
             await this.connectionManager.stop()
         }
+        this.transportLayer = undefined
+        this.connectionManager = undefined
+        this.connections.clear()
+        this.removeAllListeners()
     }
 
     // IDHTRpcService implementation

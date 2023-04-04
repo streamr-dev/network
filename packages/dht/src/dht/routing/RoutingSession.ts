@@ -178,6 +178,8 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
 
     public stop(): void {
         this.stopped = true
+        this.contactList.stop()
+        this.removeAllListeners()
         this.emit('stopped', this.sessionId)
     }
 

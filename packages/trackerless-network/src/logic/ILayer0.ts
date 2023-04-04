@@ -6,4 +6,5 @@ export interface ILayer0 extends ITransport {
     getNodeId(): PeerID
     getDataFromDht(key: Uint8Array): Promise<RecursiveFindResult>
     storeDataToDht(key: Uint8Array, data: Any): Promise<PeerDescriptor[]>
+    stop(): Promise<void>
 }
