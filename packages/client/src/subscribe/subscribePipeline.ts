@@ -9,7 +9,7 @@ import {
 import { OrderMessages } from './OrderMessages'
 import { MessageStream } from './MessageStream'
 import { Validator } from '../Validator'
-import { Decrypt } from './Decrypt'
+import { decrypt } from '../encryption/decrypt'
 import { StrictStreamrClientConfig } from '../Config'
 import { Resends } from './Resends'
 import { DestroySignal } from '../DestroySignal'
@@ -29,6 +29,9 @@ export interface SubscriptionPipelineOptions {
 }
 
 export const createSubscribePipeline = (opts: SubscriptionPipelineOptions): MessageStream => {
+
+    const logger = opts.loggerFactory.createLogger(module)
+
     const validate = new Validator(
         opts.streamRegistryCached
     )
@@ -54,17 +57,17 @@ export const createSubscribePipeline = (opts: SubscriptionPipelineOptions): Mess
         throw error
     }
 
-    const decrypt = new Decrypt(
-        opts.groupKeyManager,
-        opts.streamRegistryCached,
-        opts.destroySignal,
-        opts.loggerFactory
-    )
-
     const messageStream = new MessageStream()
     const msgChainUtil = new MsgChainUtil(async (msg) => {
         await validate.validate(msg)
-        return decrypt.decrypt(msg)
+        try {
+            return decrypt(msg, opts.groupKeyManager, opts.destroySignal)
+        } catch (err) {
+            logger.debug('failed to decrypt message %j, reason: %s', msg.getMessageID(), err)
+            // clear cached permissions if cannot decrypt, likely permissions need updating
+            opts.streamRegistryCached.clearStream(msg.getStreamId())
+            throw err
+        }
     }, messageStream.onError)
 
     // collect messages that fail validation/parsixng, do not push out of pipeline
