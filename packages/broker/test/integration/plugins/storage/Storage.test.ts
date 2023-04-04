@@ -38,8 +38,7 @@ export function buildMsg({
     return new StreamMessage({
         messageId: new MessageID(toStreamID(streamId), streamPartition, timestamp, sequenceNumber, publisherId, msgChainId),
         content: JSON.stringify(content),
-        signature: 'signature',
-        groupKeyId: 'groupKeyId'
+        signature: 'signature'
     })
 }
 
@@ -64,7 +63,8 @@ function buildEncryptedMsg({
         messageId: new MessageID(toStreamID(streamId), streamPartition, timestamp, sequenceNumber, publisherId, msgChainId),
         content,
         encryptionType: EncryptionType.AES,
-        signature: 'signature'
+        signature: 'signature',
+        groupKeyId: 'groupKeyId'
     })
 }
 
