@@ -52,13 +52,6 @@ export type StreamMessageEncrypted<T> = StreamMessage<T> & {
     groupKeyId: string
     parsedContent: never
 }
-/**
- * Unencrypted StreamMessage.
- * @internal
- */
-export type StreamMessageUnencrypted<T> = StreamMessage<T> & {
-    encryptionType: EncryptionType.NONE
-}
 
 export default class StreamMessage<T = unknown> {
     static LATEST_VERSION = LATEST_VERSION
@@ -334,9 +327,5 @@ export default class StreamMessage<T = unknown> {
 
     static isEncrypted<T = unknown>(msg: StreamMessage<T>): msg is StreamMessageEncrypted<T> {
         return !!(msg && msg.encryptionType !== EncryptionType.NONE)
-    }
-
-    static isUnencrypted<T = unknown>(msg: StreamMessage<T>): msg is StreamMessageUnencrypted<T> {
-        return !this.isEncrypted(msg)
     }
 }

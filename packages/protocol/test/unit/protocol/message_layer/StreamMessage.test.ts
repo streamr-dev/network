@@ -95,7 +95,6 @@ describe('StreamMessage', () => {
                 signature: 'something'
             })
             expect(StreamMessage.isEncrypted(streamMessage)).toBe(false)
-            expect(StreamMessage.isUnencrypted(streamMessage)).toBe(true)
             const encryptedMessage = new StreamMessage({
                 messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
                 content: JSON.stringify(content),
@@ -104,7 +103,6 @@ describe('StreamMessage', () => {
             })
 
             expect(StreamMessage.isEncrypted(encryptedMessage)).toBe(true)
-            expect(StreamMessage.isUnencrypted(encryptedMessage)).toBe(false)
         })
 
         it('should throw if required fields are not defined', () => {
