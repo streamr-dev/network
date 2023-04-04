@@ -145,5 +145,6 @@ export class DiscoverySession {
     public stop(): void {
         this.stopped = true
         this.emitter.emit('discoveryCompleted')
+        this.emitter.removeAllListeners()
     }
 }

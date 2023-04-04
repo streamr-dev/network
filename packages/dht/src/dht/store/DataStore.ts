@@ -41,18 +41,38 @@ const logger = new Logger(module)
 
 export class DataStore implements IStoreService {
 
-    private readonly config: DataStoreConfig
+    private readonly rpcCommunicator: RoutingRpcCommunicator
+    private readonly router: IRouter
+    private readonly recursiveFinder: IRecursiveFinder
+    private readonly ownPeerDescriptor: PeerDescriptor
+    private readonly localDataStore: LocalDataStore
+    private readonly serviceId: string
+    private readonly storeMaxTtl: number
+    private readonly storeHighestTtl: number
+    private readonly storeNumberOfCopies: number
+    private readonly dhtNodeEmitter: EventEmitter<Events>
+    private readonly getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => DhtPeer[]
 
     constructor(config: DataStoreConfig) {
-        this.config = config
         this.storeData = this.storeData.bind(this)
         this.migrateData = this.migrateData.bind(this)
-        this.config.rpcCommunicator!.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData', this.storeData)
-        this.config.rpcCommunicator!.registerRpcMethod(MigrateDataRequest, MigrateDataResponse, 'migrateData', this.migrateData)
+        this.rpcCommunicator = config.rpcCommunicator
+        this.router = config.router
+        this.recursiveFinder = config.recursiveFinder
+        this.ownPeerDescriptor = config.ownPeerDescriptor
+        this.localDataStore = config.localDataStore
+        this.serviceId = config.serviceId
+        this.storeMaxTtl = config.storeMaxTtl
+        this.storeHighestTtl = config.storeHighestTtl
+        this.storeNumberOfCopies = config.storeNumberOfCopies
+        this.dhtNodeEmitter = config.dhtNodeEmitter
+        this.getNodesClosestToIdFromBucket = config.getNodesClosestToIdFromBucket
+        this.rpcCommunicator!.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData', this.storeData)
+        this.rpcCommunicator!.registerRpcMethod(MigrateDataRequest, MigrateDataResponse, 'migrateData', this.migrateData)
 
-        this.config.dhtNodeEmitter.on('newContact', (peerDescriptor: PeerDescriptor, _closestPeers: PeerDescriptor[]) => {
+        this.dhtNodeEmitter.on('newContact', (peerDescriptor: PeerDescriptor, _closestPeers: PeerDescriptor[]) => {
 
-            this.config.localDataStore.store.forEach((dataMap, _dataKey) => {
+            this.localDataStore.store.forEach((dataMap, _dataKey) => {
                 dataMap.forEach((dataEntry) => {
                     //if (this.isFurtherFromDataThan(dataEntry, contact) &&
                     //    this.isFurtherstStorerOf(dataEntry)) 
@@ -70,12 +90,12 @@ export class DataStore implements IStoreService {
 
         const dataId = PeerID.fromValue(dataEntry.kademliaId)
         const newNodeId = PeerID.fromValue(newNode.kademliaId)
-        const ownPeerId = PeerID.fromValue(this.config.ownPeerDescriptor.kademliaId)
+        const ownPeerId = PeerID.fromValue(this.ownPeerDescriptor.kademliaId)
 
-        const closestToData = this.config.getNodesClosestToIdFromBucket(dataEntry.kademliaId, 10)
+        const closestToData = this.getNodesClosestToIdFromBucket(dataEntry.kademliaId, 10)
 
         const sortedList = new SortedContactList<Contact>(dataId, 20, undefined, true)
-        sortedList.addContact(new Contact(this.config.ownPeerDescriptor!))
+        sortedList.addContact(new Contact(this.ownPeerDescriptor!))
 
         closestToData.forEach((con) => {
             if (!newNodeId.equals(PeerID.fromValue(con.getPeerDescriptor().kademliaId))) {
@@ -114,10 +134,10 @@ export class DataStore implements IStoreService {
 
     private async migrateDataToContact(dataEntry: DataEntry, contact: PeerDescriptor, doNotConnect: boolean = false): Promise<void> {
         const remoteStore = new RemoteStore(
-            this.config.ownPeerDescriptor,
+            this.ownPeerDescriptor,
             contact,
-            toProtoRpcClient(new StoreServiceClient(this.config.rpcCommunicator.getRpcClientTransport())),
-            this.config.serviceId
+            toProtoRpcClient(new StoreServiceClient(this.rpcCommunicator.getRpcClientTransport())),
+            this.serviceId
         )
         try {
             const response = await remoteStore.migrateData({ dataEntry }, doNotConnect)
@@ -130,25 +150,25 @@ export class DataStore implements IStoreService {
     }
 
     public async storeDataToDht(key: Uint8Array, data: Any): Promise<PeerDescriptor[]> {
-        logger.info(`Storing data to DHT ${this.config.serviceId} with key ${PeerID.fromValue(key)}`)
-        const result = await this.config.recursiveFinder!.startRecursiveFind(key)
+        logger.info(`Storing data to DHT ${this.serviceId} with key ${PeerID.fromValue(key)}`)
+        const result = await this.recursiveFinder!.startRecursiveFind(key)
         const closestNodes = result.closestNodes
         const successfulNodes: PeerDescriptor[] = []
-        const ttl = this.config.storeHighestTtl // ToDo: make TTL decrease according to some nice curve
+        const ttl = this.storeHighestTtl // ToDo: make TTL decrease according to some nice curve
         for (let i = 0; i < closestNodes.length && successfulNodes.length < 5; i++) {
-            if (isSamePeerDescriptor(this.config.ownPeerDescriptor, closestNodes[i])) {
-                this.config.localDataStore.storeEntry({
-                    kademliaId: key, storer: this.config.ownPeerDescriptor,
+            if (isSamePeerDescriptor(this.ownPeerDescriptor, closestNodes[i])) {
+                this.localDataStore.storeEntry({
+                    kademliaId: key, storer: this.ownPeerDescriptor,
                     ttl, storedAt: Timestamp.now(), data
                 })
                 successfulNodes.push(closestNodes[i])
                 continue
             }
             const remoteStore = new RemoteStore(
-                this.config.ownPeerDescriptor,
+                this.ownPeerDescriptor,
                 closestNodes[i],
-                toProtoRpcClient(new StoreServiceClient(this.config.rpcCommunicator.getRpcClientTransport())),
-                this.config.serviceId
+                toProtoRpcClient(new StoreServiceClient(this.rpcCommunicator.getRpcClientTransport())),
+                this.serviceId
             )
             try {
                 const response = await remoteStore.storeData({ kademliaId: key, data, ttl })
@@ -167,41 +187,41 @@ export class DataStore implements IStoreService {
 
     // RPC service implementation
     async storeData(request: StoreDataRequest, context: ServerCallContext): Promise<StoreDataResponse> {
-        const ttl = Math.min(request.ttl, this.config.storeMaxTtl)
+        const ttl = Math.min(request.ttl, this.storeMaxTtl)
         const { incomingSourceDescriptor } = context as DhtCallContext
         const { kademliaId, data } = request
 
-        this.config.localDataStore.storeEntry({ kademliaId: kademliaId, storer: incomingSourceDescriptor!, ttl, storedAt: Timestamp.now(), data })
+        this.localDataStore.storeEntry({ kademliaId: kademliaId, storer: incomingSourceDescriptor!, ttl, storedAt: Timestamp.now(), data })
 
-        logger.trace(this.config.ownPeerDescriptor.nodeName + ' storeData()')
+        logger.trace(this.ownPeerDescriptor.nodeName + ' storeData()')
         return StoreDataResponse.create()
     }
 
     // RPC service implementation
     public async migrateData(request: MigrateDataRequest, context: ServerCallContext): Promise<MigrateDataResponse> {
-        logger.info(this.config.ownPeerDescriptor.nodeName + ' server-side migrateData()')
+        logger.info(this.ownPeerDescriptor.nodeName + ' server-side migrateData()')
         const dataEntry = request.dataEntry!
 
-        this.config.localDataStore.storeEntry(dataEntry)
+        this.localDataStore.storeEntry(dataEntry)
 
         this.migrateDataToNeighborsIfNeeded((context as DhtCallContext).incomingSourceDescriptor!, request.dataEntry!)
 
-        logger.info(this.config.ownPeerDescriptor.nodeName + ' server-side migrateData() at end')
+        logger.info(this.ownPeerDescriptor.nodeName + ' server-side migrateData() at end')
         return MigrateDataResponse.create()
     }
 
     private migrateDataToNeighborsIfNeeded(incomingPeer: PeerDescriptor, dataEntry: DataEntry): void {
 
         // sort own contact list according to data id
-        const ownPeerId = PeerID.fromValue(this.config.ownPeerDescriptor!.kademliaId)
+        const ownPeerId = PeerID.fromValue(this.ownPeerDescriptor!.kademliaId)
         const dataId = PeerID.fromValue(dataEntry.kademliaId)
         const incomingPeerId = PeerID.fromValue(incomingPeer.kademliaId)
-        const closestToData = this.config.getNodesClosestToIdFromBucket(dataEntry.kademliaId, 10)
+        const closestToData = this.getNodesClosestToIdFromBucket(dataEntry.kademliaId, 10)
         // this.getNeighborList().getAllContacts() // this.bucket!.closest(dataEntry.kademliaId, 10)
         //this.getNeighborList().getAllContacts() // this.bucket!.closest(dataEntry.kademliaId, 10)
 
         const sortedList = new SortedContactList<Contact>(dataId, 5, undefined, true)
-        sortedList.addContact(new Contact(this.config.ownPeerDescriptor!))
+        sortedList.addContact(new Contact(this.ownPeerDescriptor!))
 
         closestToData.forEach((con) => {
             sortedList.addContact(new Contact(con.getPeerDescriptor()))

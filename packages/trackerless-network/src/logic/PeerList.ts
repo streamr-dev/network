@@ -102,4 +102,9 @@ export class PeerList extends EventEmitter<Events> {
     values(): RemoteRandomGraphNode[] {
         return Array.from(this.peers.values())
     }
+
+    stop(): void {
+        this.clear()
+        this.removeAllListeners()
+    }
 }

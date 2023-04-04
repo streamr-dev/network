@@ -27,8 +27,12 @@ export interface RecursiveFindSessionConfig {
 }
 
 export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvents> implements IRecursiveFindSessionService {
+    private readonly serviceId: string
+    private readonly rpcTransport: ITransport
+    private readonly kademliaIdToFind: Uint8Array
+    private readonly ownPeerID: PeerID
+    private readonly routingPaths: number
     private readonly rpcCommunicator: ListeningRpcCommunicator
-    private readonly config: RecursiveFindSessionConfig
     private results: SortedContactList<Contact>
     private foundData: Map<string, DataEntry> = new Map()
     private allKnownHops: Set<PeerIDKey> = new Set()
@@ -39,9 +43,13 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
 
     constructor(config: RecursiveFindSessionConfig) {
         super()
-        this.config = config
-        this.results = new SortedContactList(PeerID.fromValue(config.kademliaIdToFind), 10)
-        this.rpcCommunicator = new ListeningRpcCommunicator(config.serviceId, config.rpcTransport, {
+        this.serviceId = config.serviceId
+        this.rpcTransport = config.rpcTransport
+        this.kademliaIdToFind = config.kademliaIdToFind
+        this.ownPeerID = config.ownPeerID
+        this.routingPaths = config.routingPaths
+        this.results = new SortedContactList(PeerID.fromValue(this.kademliaIdToFind), 10)
+        this.rpcCommunicator = new ListeningRpcCommunicator(this.serviceId, this.rpcTransport, {
             rpcRequestTimeout: 15000
         })
         this.rpcCommunicator.registerRpcNotification(RecursiveFindReport, 'reportRecursiveFindResult',
@@ -53,7 +61,7 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
         this.reportedHops.forEach((id) => {
             unreportedHops.delete(id)
         })
-        if (this.noCloserNodesReceivedCounter >= this.config.routingPaths && unreportedHops.size == 0) {
+        if (this.noCloserNodesReceivedCounter >= this.routingPaths && unreportedHops.size == 0) {
             return true
         }
         return false
@@ -81,7 +89,7 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
     private addKnownHops(routingPath: PeerDescriptor[]) {
         routingPath.forEach((desc) => {
             const newPeerId = PeerID.fromValue(desc.kademliaId)
-            if (!this.config.ownPeerID.equals(newPeerId)) {
+            if (!this.ownPeerID.equals(newPeerId)) {
                 this.allKnownHops.add(newPeerId.toKey())
             }
         })
@@ -89,7 +97,7 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
 
     private setHopAsReported(desc: PeerDescriptor) {
         const newPeerId = PeerID.fromValue(desc.kademliaId)
-        if (!this.config.ownPeerID.equals(newPeerId)) {
+        if (!this.ownPeerID.equals(newPeerId)) {
             this.reportedHops.add(newPeerId.toKey())
         }
         if (this.isFindCompleted()) {

@@ -44,7 +44,7 @@ export class MockLayer0 extends EventEmitter implements ILayer0 {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    stop(): void {
+    async stop(): Promise<void> {
 
     }
 

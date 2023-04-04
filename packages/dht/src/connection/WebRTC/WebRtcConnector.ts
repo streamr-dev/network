@@ -51,7 +51,6 @@ export class WebRtcConnector implements IWebRtcConnectorService {
     private static readonly WEBRTC_CONNECTOR_SERVICE_ID = 'system/webrtc_connector'
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly ongoingConnectAttempts: Map<PeerIDKey, ManagedWebRtcConnection> = new Map()
-    private readonly rpcTransport: ITransport
     private ownPeerDescriptor?: PeerDescriptor
     private stopped = false
     private static objectCounter = 0
@@ -71,11 +70,11 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         WebRtcConnector.objectCounter++
         this.objectId = WebRtcConnector.objectCounter
 
-        this.rpcTransport = config.rpcTransport
         this.iceServers = config.iceServers || []
         this.disallowPrivateAddresses = config.disallowPrivateAddresses || false
         this.incomingConnectionCallback = incomingConnectionCallback
-        this.rpcCommunicator = new ListeningRpcCommunicator(WebRtcConnector.WEBRTC_CONNECTOR_SERVICE_ID, this.rpcTransport, {
+
+        this.rpcCommunicator = new ListeningRpcCommunicator(WebRtcConnector.WEBRTC_CONNECTOR_SERVICE_ID, config.rpcTransport, {
             rpcRequestTimeout: 15000
         })
         this.rpcCommunicator.registerRpcNotification(RtcOffer, 'rtcOffer',
