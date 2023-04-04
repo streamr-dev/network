@@ -15,17 +15,11 @@ export const decrypt = async (
     if (destroySignal.isDestroyed()) {
         return streamMessage
     }
-    if (!streamMessage.groupKeyId) {
-        return streamMessage
-    }
-    if (streamMessage.encryptionType !== EncryptionType.AES) {
-        return streamMessage
-    }
     let groupKey: GroupKey | undefined
     try {
         groupKey = await groupKeyManager.fetchKey(
             streamMessage.getStreamPartID(),
-            streamMessage.groupKeyId,
+            streamMessage.groupKeyId!,
             streamMessage.getPublisherId()
         )
     } catch (e: any) {
@@ -47,4 +41,9 @@ export const decrypt = async (
         )
     }
     return clone
+}
+
+// TODO this could be in protocol (and validate that if type==AES, we always have groupKeyId)
+export const isEncrypted = (streamMessage: StreamMessage): boolean => {
+    return ((streamMessage.encryptionType === EncryptionType.AES) && (streamMessage.groupKeyId !== null))
 }

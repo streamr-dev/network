@@ -1,3 +1,4 @@
+import { isEncrypted } from './../encryption/decrypt'
 /**
  * Subscription message processing pipeline
  */
@@ -60,13 +61,18 @@ export const createSubscribePipeline = (opts: SubscriptionPipelineOptions): Mess
     const messageStream = new MessageStream()
     const msgChainUtil = new MsgChainUtil(async (msg) => {
         await validate.validate(msg)
-        try {
-            return decrypt(msg, opts.groupKeyManager, opts.destroySignal)
-        } catch (err) {
-            logger.debug('failed to decrypt message %j, reason: %s', msg.getMessageID(), err)
-            // clear cached permissions if cannot decrypt, likely permissions need updating
-            opts.streamRegistryCached.clearStream(msg.getStreamId())
-            throw err
+        if (isEncrypted(msg)) {
+            try {
+                return decrypt(msg, opts.groupKeyManager, opts.destroySignal)
+            } catch (err) {
+                // TODO log this in onError? if we want to log all errors?
+                logger.debug('failed to decrypt message %j, reason: %s', msg.getMessageID(), err)
+                // clear cached permissions if cannot decrypt, likely permissions need updating
+                opts.streamRegistryCached.clearStream(msg.getStreamId())
+                throw err
+            }    
+        } else {
+            return msg
         }
     }, messageStream.onError)
 
