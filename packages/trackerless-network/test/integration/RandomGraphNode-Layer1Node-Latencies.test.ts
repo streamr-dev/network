@@ -117,10 +117,7 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
             dhtNodes[i].joinDht(entrypointDescriptor)
         }))
         await Promise.all(graphNodes.map((node) =>
-            Promise.all([
-                waitForCondition(() => node.getNearbyContactPoolIds().length >= 8, 10000),
-                waitForCondition(() => node.getTargetNeighborStringIds().length >= 3, 10000)
-            ])
+            waitForCondition(() => node.getTargetNeighborStringIds().length >= 4, 10000)
         ))
         await waitForCondition(() => {
             const avg = graphNodes.reduce((acc, curr) => {
