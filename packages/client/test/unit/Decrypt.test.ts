@@ -20,6 +20,11 @@ describe('Decrypt', () => {
             publisher: wallet,
             encryptionKey: groupKey
         })
-        await expect(() => decrypt(msg as StreamMessageAESEncrypted, groupKeyManager, destroySignal)).rejects.toThrow(`Decrypt error: Could not get GroupKey ${groupKey.id}`)
+        await expect(() => {
+            return decrypt(
+                msg as StreamMessageAESEncrypted,
+                groupKeyManager,
+                destroySignal)
+        }).rejects.toThrow(`Decrypt error: Could not get GroupKey ${groupKey.id}`)
     })
 })
