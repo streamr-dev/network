@@ -73,7 +73,6 @@ export class StreamrNode extends EventEmitter<Events> {
             publishBytesPerSecond: new RateMetric()
         }
         this.metricsContext.addMetrics('node', this.metrics)
-        this.config = config
     }
 
     async start(startedAndJoinedLayer0: ILayer0, transport: ITransport, connectionLocker: ConnectionLocker): Promise<void> {
