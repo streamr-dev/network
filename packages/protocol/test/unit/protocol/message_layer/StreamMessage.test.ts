@@ -100,6 +100,7 @@ describe('StreamMessage', () => {
                 content: JSON.stringify(content),
                 signature: 'something',
                 encryptionType: EncryptionType.AES,
+                groupKeyId: 'mock-id'
             })
 
             expect(StreamMessage.isAESEncrypted(encryptedMessage)).toBe(true)
@@ -124,6 +125,7 @@ describe('StreamMessage', () => {
                 // @ts-expect-error TODO
                 content: 'encrypted content',
                 encryptionType: EncryptionType.AES,
+                groupKeyId: 'mock-id'
             }))
         })
 
@@ -139,6 +141,13 @@ describe('StreamMessage', () => {
                 // @ts-expect-error TODO
                 newGroupKey: 'foo', // invalid
             }), ValidationError)
+        })
+
+        it('Throws with an no group key for AES encrypted message', () => {
+            assert.throws(() => msg({
+                encryptionType: EncryptionType.AES,
+                groupKeyId: null
+            } as any), ValidationError)
         })
 
         describe('prevMsgRef validation', () => {

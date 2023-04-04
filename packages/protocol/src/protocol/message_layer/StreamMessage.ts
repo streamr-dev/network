@@ -118,7 +118,7 @@ export default class StreamMessage<T = unknown> {
         StreamMessage.validateEncryptionType(encryptionType)
         this.encryptionType = encryptionType
 
-        validateIsString('groupKeyId', groupKeyId, true)
+        validateIsString('groupKeyId', groupKeyId, (this.encryptionType !== EncryptionType.AES))
         this.groupKeyId = groupKeyId
 
         validateIsType('newGroupKey', newGroupKey, 'EncryptedGroupKey', EncryptedGroupKey, true)
