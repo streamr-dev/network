@@ -344,7 +344,7 @@ export class StreamrClient {
      *
      * @param term - a search term that should be part of the stream id of a result
      * @param permissionFilter - permissions that should be in effect for a result
-     * @param sort - sorting options, default is asc by stream id field
+     * @param orderBy - the default is ascending order by stream id field
      */
     searchStreams(
         term: string | undefined,
