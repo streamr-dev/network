@@ -4,7 +4,7 @@ import { fastWallet } from '@streamr/test-utils'
 import { Broker } from '../../../../src/broker'
 import { startBroker } from '../../../utils'
 
-describe('MinerPlugin', () => {
+describe('OperatorPlugin', () => {
     let brokerWallet: Wallet
     let broker: Broker
 
@@ -18,12 +18,12 @@ describe('MinerPlugin', () => {
         ])
     })
 
-    it('can start broker with miner plugin', async () => {
+    it('can start broker with operator plugin', async () => {
         const promise = startBroker({
             privateKey: brokerWallet.privateKey,
             trackerPort: 12345,
             extraPlugins: {
-                miner: {}
+                operator: {}
             }
         })
         await expect(promise).toResolve()
