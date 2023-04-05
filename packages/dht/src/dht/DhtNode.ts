@@ -37,6 +37,7 @@ import { DataStore } from './store/DataStore'
 import { PeerDiscovery } from './discovery/PeerDiscovery'
 import { LocalDataStore } from './store/LocalDataStore'
 import { IceServer } from '../connection/WebRTC/WebRtcConnector'
+import { debugVars } from '../helpers/debugHelpers'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -429,7 +430,13 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     private getClosestPeerDescriptors(kademliaId: Uint8Array, limit: number): PeerDescriptor[] {
         const closestPeers = this.bucket!.closest(kademliaId, limit)
-        return closestPeers.map((dhtPeer: DhtPeer) => dhtPeer.getPeerDescriptor())
+        
+        return closestPeers.map((dhtPeer: DhtPeer) => {
+            if (debugVars['stoppedNodes'].includes(dhtPeer.getPeerDescriptor().nodeName)) {
+                logger.error('bucket.closest() returned a stopped node')
+            }
+            return dhtPeer.getPeerDescriptor()
+        })
     }
 
     private onKBucketPing(oldContacts: DhtPeer[], newContact: DhtPeer): void {

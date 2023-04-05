@@ -10,6 +10,7 @@ import { PeerID } from '../../src/exports'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { Contact } from '../../src/dht/contact/Contact'
+import { debugVars } from '../../src/helpers/debugHelpers'
 
 const logger = new Logger(module)
 
@@ -156,6 +157,8 @@ describe('Migrating data from node to node in DHT', () => {
 
     it.only('Data migrates to the last remaining node if all other nodes leave gracefully', async () => {
 
+        debugVars['stoppedNodes'] = []
+
         const dataKey = PeerID.fromString('3232323e12r31r3')
         const data = Any.pack(entrypointDescriptor, PeerDescriptor)
 
@@ -193,6 +196,8 @@ describe('Migrating data from node to node in DHT', () => {
                 (nodes[nodeIndex].localDataStore.getEntry(dataKey) ? ', has data' : ' does not have data'))
 
             await nodes[nodeIndex].stop()
+            
+            debugVars['stoppedNodes'].push(nodes[nodeIndex].getNodeName())
         }
 
         logger.info('after random graceful leaving, node ' + randomIndices[0] + ' is left')
