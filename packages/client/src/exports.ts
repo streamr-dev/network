@@ -20,7 +20,7 @@ export {
 } from './permission'
 export { StorageNodeAssignmentEvent } from './registry/StreamStorageRegistry'
 export { StorageNodeMetadata } from './registry/StorageNodeRegistry'
-export { SearchStreamsPermissionFilter } from './registry/searchStreams'
+export { SearchStreamsPermissionFilter, SearchStreamsOrderBy } from './registry/searchStreams'
 export {
     StreamrClientConfig,
     TrackerRegistryContract,
@@ -61,6 +61,3 @@ export {
 
 export type { ConnectionInfo } from '@ethersproject/web'
 export type { ExternalProvider } from '@ethersproject/providers'
-
-export { StreamSortOptions } from './utils/StreamSortOptions'
-export { SortDirection } from './utils/SortDirection'

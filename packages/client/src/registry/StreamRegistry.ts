@@ -12,7 +12,7 @@ import { NotFoundError } from '../HttpUtil'
 import { StreamID, StreamIDUtils } from '@streamr/protocol'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { SynchronizedGraphQLClient } from '../utils/SynchronizedGraphQLClient'
-import { searchStreams as _searchStreams, SearchStreamsPermissionFilter } from './searchStreams'
+import { searchStreams as _searchStreams, SearchStreamsPermissionFilter, SearchStreamsOrderBy } from './searchStreams'
 import { filter, map } from '../utils/GeneratorUtils'
 import { ObservableContract, queryAllReadonlyContracts, waitForTx } from '../utils/contract'
 import {
@@ -36,8 +36,6 @@ import { LoggerFactory } from '../utils/LoggerFactory'
 import { StreamFactory } from './../StreamFactory'
 import { GraphQLQuery } from '../utils/GraphQLClient'
 import { collect } from '../utils/iterators'
-import { StreamSortOptions } from '../utils/StreamSortOptions'
-import { SortDirection } from '../utils/SortDirection'
 
 /*
  * On-chain registry of stream metadata and permissions.
@@ -214,12 +212,12 @@ export class StreamRegistry {
     searchStreams(
         term: string | undefined,
         permissionFilter: SearchStreamsPermissionFilter | undefined,
-        sort: { sortBy: StreamSortOptions, sortDirection: SortDirection }
+        orderBy: SearchStreamsOrderBy
     ): AsyncIterable<Stream> {
         return _searchStreams(
             term,
             permissionFilter,
-            sort,
+            orderBy,
             this.graphQLClient,
             (id: StreamID, metadata: string) => this.parseStream(id, metadata),
             this.logger)

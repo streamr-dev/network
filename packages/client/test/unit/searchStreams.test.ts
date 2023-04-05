@@ -8,8 +8,6 @@ import { Stream } from '../../src/Stream'
 import { collect } from '../../src/utils/iterators'
 import { SynchronizedGraphQLClient } from '../../src/utils/SynchronizedGraphQLClient'
 import { mockLoggerFactory } from '../test-utils/utils'
-import { StreamSortOptions } from '../../src/utils/StreamSortOptions'
-import { SortDirection } from '../../src/utils/SortDirection'
 
 const MOCK_USER = randomEthereumAddress()
 
@@ -39,6 +37,27 @@ const createMockGraphQLClient = (resultItems: SearchStreamsResultItem[]): Pick<S
 
 describe('searchStreams', () => {
 
+    it('results in order', async () => {
+        const stream = toStreamID('/path', MOCK_USER)
+        const graphQLClient = createMockGraphQLClient([
+            createMockResultItem(stream, JSON.stringify({ partitions: 11 })),
+        ])
+        jest.spyOn(graphQLClient, 'fetchPaginatedResults')
+        const orderBy = { field: 'updatedAt', direction: 'desc' } as const
+
+        await collect(searchStreams(
+            '/',
+            undefined,
+            orderBy,
+            graphQLClient as any,
+            () => ({} as any),
+            mockLoggerFactory().createLogger(module),
+        ))
+
+        const graphQLquery = ((graphQLClient as any).fetchPaginatedResults as jest.Mock).mock.calls[0][0]()
+        expect(graphQLquery.query).toMatch(new RegExp(`orderBy: "stream__${orderBy.field}",\\s*orderDirection: "${orderBy.direction}"`))
+    })
+
     it('invalid metadata', async () => {
         const stream1 = toStreamID('/1', MOCK_USER)
         const stream2 = toStreamID('/2', MOCK_USER)
@@ -48,8 +67,6 @@ describe('searchStreams', () => {
             createMockResultItem(stream2, 'invalid-json'),
             createMockResultItem(stream3, JSON.stringify({ partitions: 33 }))
         ])
-        const sort = { sortBy: StreamSortOptions.updatedAt, sortDirection: SortDirection.desc }
-        jest.spyOn(graphQLClient, 'fetchPaginatedResults')
         const parseStream = (id: StreamID, metadata: string): Stream => {
             const props = Stream.parseMetadata(metadata)
             return {
@@ -63,20 +80,16 @@ describe('searchStreams', () => {
         const streams = await collect(searchStreams(
             '/',
             undefined,
-            sort,
+            { field: 'id', direction: 'asc' },
             graphQLClient as any,
             parseStream,
             mockLoggerFactory().createLogger(module),
         ))
-
-        const queryBuilder = (graphQLClient.fetchPaginatedResults as jest.Mock).mock.calls[0][0]
-        const queryData = queryBuilder('abc', 2)
 
         expect(streams).toHaveLength(2)
         expect(streams[0].id).toBe(stream1)
         expect(streams[0].getMetadata().partitions).toBe(11)
         expect(streams[1].id).toBe(stream3)
         expect(streams[1].getMetadata().partitions).toBe(33)
-        expect(queryData.query).toContain(`orderBy: "stream__${sort.sortBy}", orderDirection: "${sort.sortDirection}"`)
     })
 })

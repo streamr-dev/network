@@ -7,13 +7,6 @@ import { filter, map, unique } from '../utils/GeneratorUtils'
 import { SynchronizedGraphQLClient } from '../utils/SynchronizedGraphQLClient'
 import { Stream } from '../Stream'
 import { EthereumAddress, Logger, toEthereumAddress } from '@streamr/utils'
-import { StreamSortOptions } from '../utils/StreamSortOptions'
-import { SortDirection } from '../utils/SortDirection'
-
-export const DEFAULT_STREAM_SORT = {
-    sortBy: StreamSortOptions.id,
-    sortDirection: SortDirection.asc
-}
 
 export interface SearchStreamsPermissionFilter {
     user: string
@@ -25,6 +18,11 @@ export interface SearchStreamsPermissionFilter {
     allowPublic: boolean
 }
 
+export interface SearchStreamsOrderBy {
+    field: 'id' | 'createdAt' | 'updatedAt'
+    direction: 'asc' | 'desc'
+}
+
 export type SearchStreamsResultItem = {
     id: string
     userAddress: EthereumAddress
@@ -34,7 +32,7 @@ export type SearchStreamsResultItem = {
 export const searchStreams = (
     term: string | undefined,
     permissionFilter: SearchStreamsPermissionFilter | undefined,
-    sort: { sortBy: StreamSortOptions, sortDirection: SortDirection },
+    orderBy: SearchStreamsOrderBy,
     graphQLClient: SynchronizedGraphQLClient,
     parseStream: (id: StreamID, metadata: string) => Stream,
     logger: Logger,
@@ -44,7 +42,7 @@ export const searchStreams = (
     }
     logger.debug('search streams with term="%s" and permissions=%j', term, permissionFilter)
     return map(
-        fetchSearchStreamsResultFromTheGraph(term, permissionFilter, sort, graphQLClient),
+        fetchSearchStreamsResultFromTheGraph(term, permissionFilter, orderBy, graphQLClient),
         (item: SearchStreamsResultItem) => parseStream(toStreamID(item.stream.id), item.stream.metadata),
         (err: Error, item: SearchStreamsResultItem) => {
             logger.debug('omitting stream %s from result, reason: %s', item.stream.id, err.message)
@@ -55,11 +53,11 @@ export const searchStreams = (
 async function* fetchSearchStreamsResultFromTheGraph(
     term: string | undefined,
     permissionFilter: SearchStreamsPermissionFilter | undefined,
-    sort: { sortBy: StreamSortOptions, sortDirection: SortDirection },
+    orderBy: SearchStreamsOrderBy,
     graphQLClient: SynchronizedGraphQLClient,
 ): AsyncGenerator<SearchStreamsResultItem> {
     const backendResults = graphQLClient.fetchPaginatedResults<SearchStreamsResultItem>(
-        (lastId: string, pageSize: number) => buildQuery(term, permissionFilter, sort, lastId, pageSize)
+        (lastId: string, pageSize: number) => buildQuery(term, permissionFilter, orderBy, lastId, pageSize)
     )
     /*
      * There can be orphaned permission entities if a stream is deleted (currently
@@ -105,7 +103,7 @@ async function* fetchSearchStreamsResultFromTheGraph(
 const buildQuery = (
     term: string | undefined,
     permissionFilter: SearchStreamsPermissionFilter | undefined,
-    sort: { sortBy: StreamSortOptions, sortDirection: SortDirection },
+    orderBy: SearchStreamsOrderBy,
     lastId: string,
     pageSize: number
 ): GraphQLQuery => {
@@ -138,8 +136,12 @@ const buildQuery = (
             $canGrant: Boolean
             $id_gt: String
         ) {
-            permissions (first: ${pageSize}, orderBy: "stream__${sort.sortBy}", orderDirection: "${sort.sortDirection}", \
-${GraphQLClient.createWhereClause(variables)}) {
+            permissions (
+                first: ${pageSize},
+                orderBy: "stream__${orderBy.field}",
+                orderDirection: "${orderBy.direction}", 
+                ${GraphQLClient.createWhereClause(variables)}
+            ) {
                 id
                 stream {
                     id
