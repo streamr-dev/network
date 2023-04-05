@@ -8,9 +8,9 @@ import { MaintainTopologyService } from './MaintainTopologyService'
 import { VoteOnSuspectNodeService } from './VoteOnSuspectNodeService'
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface MinerPluginConfig {}
+export interface OperatorPluginConfig {}
 
-export class MinerPlugin extends Plugin<MinerPluginConfig> {
+export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     private readonly announceNodeService = new AnnounceNodeService()
     private readonly inspectRandomNodeService = new InspectRandomNodeService()
     private readonly maintainOperatorContractService = new MaintainOperatorContractService()
