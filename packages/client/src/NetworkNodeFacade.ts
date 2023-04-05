@@ -220,15 +220,14 @@ export class NetworkNodeFacade {
         // Will call cachedNode.publish immediately if cachedNode is set.
         // Otherwise will wait for node to start.
         this.destroySignal.assertNotDestroyed()
-        const entryPoints = this.getEntryPoints()
         if (this.isStarting()) {
             // use .then instead of async/await so
             // this.cachedNode.publish call can be sync
             return this.startNodeTask().then((node) => {
-                return node.publish(streamMessage, entryPoints)
+                return node.publish(streamMessage, [])
             })
         }
-        return this.cachedNode!.publish(streamMessage, entryPoints)
+        return this.cachedNode!.publish(streamMessage, [])
     }
     //
     // async setProxies(
