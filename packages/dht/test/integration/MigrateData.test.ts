@@ -109,7 +109,7 @@ describe('Migrating data from node to node in DHT', () => {
         closest.forEach((contact) => {
             const node = nodesById.get(PeerID.fromValue(contact.getPeerDescriptor().kademliaId).toKey())!
             let hasDataMarker = ''
-            
+
             // @ts-expect-error private field
             if (node.localDataStore.getEntry(dataKey)) {
                 hasDataMarker = '<-'
@@ -154,7 +154,6 @@ describe('Migrating data from node to node in DHT', () => {
         expect(closestNode.localDataStore.getEntry(dataKey)).toBeTruthy()
     }, 180000)
 
-    /*
     it.only('Data migrates to the last remaining node if all other nodes leave gracefully', async () => {
 
         const dataKey = PeerID.fromString('3232323e12r31r3')
@@ -189,16 +188,20 @@ describe('Migrating data from node to node in DHT', () => {
             const nodeIndex = randomIndices[index]
             randomIndices.splice(index, 1)
 
-            logger.info('Stopping node ' + nodeIndex + ' ' + (nodes[nodeIndex].doGetData(dataKey) ? ', has data' : ' does not have data'))
+            logger.info('Stopping node ' + nodeIndex + ' ' +
+                // @ts-expect-error private field
+                (nodes[nodeIndex].localDataStore.getEntry(dataKey) ? ', has data' : ' does not have data'))
 
             await nodes[nodeIndex].stop()
         }
 
         logger.info('after random graceful leaving, node ' + randomIndices[0] + ' is left')
-        logger.info('data of ' + randomIndices[0] + ' was ' + nodes[randomIndices[0]].doGetData(dataKey))
 
-        expect(nodes[randomIndices[0]].doGetData(dataKey)).toBeTruthy()
+        // @ts-expect-error private field
+        logger.info('data of ' + randomIndices[0] + ' was ' + nodes[randomIndices[0]].localDataStore.getEntry(dataKey))
+
+        // @ts-expect-error private field
+        expect(nodes[randomIndices[0]].localDataStore.getEntry(dataKey)).toBeTruthy()
 
     }, 180000)
-    */
 })

@@ -84,6 +84,7 @@ export class DataStore implements IStoreService {
                 })
             })
         })
+        
     }
 
     private shouldMigrateDataToNewNode(dataEntry: DataEntry, newNode: PeerDescriptor): boolean {
@@ -129,6 +130,35 @@ export class DataStore implements IStoreService {
             return true
         } else {
             return false
+        }
+    }
+
+    public async migrateAllDataUponStop(): Promise<void> {
+        const promises: Promise<PeerDescriptor[]>[] = []
+        this.localDataStore.store.forEach((dataMap, _dataKey) => {
+            dataMap.forEach((dataEntry) => {
+                
+                promises.push(this.storeDataToDht(dataEntry.kademliaId, dataEntry.data!))
+                /*
+                const targetNode = this.findPeerToMigrateDataToUponStop(PeerID.fromValue(dataEntry.kademliaId))
+                if (targetNode) {
+                    promises.push(this.migrateDataToContact(dataEntry, targetNode, true))
+                }
+                */
+                
+            })
+        })
+
+        await Promise.allSettled(promises)
+    }
+
+    private findPeerToMigrateDataToUponStop(dataId: PeerID): PeerDescriptor | undefined {
+        const sorted = this.getNodesClosestToIdFromBucket(dataId.value, 6)
+        
+        if (sorted && sorted.length > 0) {
+            return sorted[sorted.length - 1].getPeerDescriptor()
+        } else {
+            return undefined
         }
     }
 

@@ -671,8 +671,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (!this.started) {
             throw new Err.CouldNotStop('Cannot not stop() before start()')
         }
-        this.stopped = true
+        
+        await this.dataStore!.migrateAllDataUponStop()
 
+        this.stopped = true
+        
         this.bucket!.toArray().map((dhtPeer: DhtPeer) => this.bucket!.remove(dhtPeer.id))
         this.bucket!.removeAllListeners()
         this.neighborList!.stop()
