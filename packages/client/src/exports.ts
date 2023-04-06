@@ -52,6 +52,7 @@ export type {
     MessageRef,
     StreamMessage,
     StreamMessageOptions,
+    StreamMessageAESEncrypted
 } from '@streamr/protocol'
 export {
     ContentType,
