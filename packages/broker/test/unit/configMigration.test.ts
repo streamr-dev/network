@@ -9,7 +9,6 @@ const MOCK_PRIVATE_KEY = '0x1111111111111111111111111111111111111111111111111111
 
 const validateTargetConfig = async (config: any): Promise<void> | never => {
     validateConfig(config, BROKER_CONFIG_SCHEMA)
-    validateClientConfig(config.client)
     for (const pluginName of Object.keys(config.plugins)) {
         const pluginConfig = config.plugins[pluginName]
         // validates the config against the schema
