@@ -69,7 +69,7 @@ export class RemoteConnectionLocker {
     }
 
     public async gracefulDisconnect(disconnecMode: DisconnectMode): Promise<void> {
-        logger.trace(`Notifying a graceful disconnect to ${this.targetPeerDescriptor.kademliaId.toString()}`)
+        logger.info(`Notifying a graceful disconnect to ${this.targetPeerDescriptor.nodeName} from ${this.ownPeerDescriptor.nodeName}`)
         const request: DisconnectNotice = {
             peerDescriptor: this.ownPeerDescriptor,
             protocolVersion: this.protocolVersion,
@@ -78,9 +78,9 @@ export class RemoteConnectionLocker {
         const options = {
             sourceDescriptor: this.ownPeerDescriptor,
             targetDescriptor: this.targetPeerDescriptor,
-            notification: true,
             doNotConnect: true,
-            doNotMindStopped: true
+            doNotMindStopped: true,
+            timeout: 2000
         }
 
         await this.client.gracefulDisconnect(request, options)

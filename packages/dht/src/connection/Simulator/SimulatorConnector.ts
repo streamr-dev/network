@@ -95,7 +95,7 @@ export class SimulatorConnector {
     public async stop(): Promise<void> {
         this.stopped = true
         const conns = Array.from(this.connectingConnections.values())
-        logger.trace('CONNECTING conns.length in STOP ' + conns.length)
+        logger.info('CONNECTING conns.length in STOP ' + conns.length)
         await Promise.allSettled(conns.map((conn) =>
             conn.close('OTHER')
         ))
