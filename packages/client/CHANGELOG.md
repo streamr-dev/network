@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add optional parameter to `.searchStreams` for defining order of the result set
+
 ### Changed
 
 - Increase default timeout of stream creation when ENS domains are used

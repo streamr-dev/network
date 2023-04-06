@@ -21,7 +21,7 @@ import { StreamrClientEventEmitter, StreamrClientEvents } from './events'
 import { ProxyDirection } from '@streamr/protocol'
 import { MessageStream, MessageListener } from './subscribe/MessageStream'
 import { Stream, StreamMetadata } from './Stream'
-import { SearchStreamsPermissionFilter } from './registry/searchStreams'
+import { SearchStreamsPermissionFilter, SearchStreamsOrderBy } from './registry/searchStreams'
 import { PermissionAssignment, PermissionQuery } from './permission'
 import { MetricsPublisher } from './MetricsPublisher'
 import { PublishMetadata } from '../src/publish/Publisher'
@@ -344,9 +344,14 @@ export class StreamrClient {
      *
      * @param term - a search term that should be part of the stream id of a result
      * @param permissionFilter - permissions that should be in effect for a result
+     * @param orderBy - the default is ascending order by stream id field
      */
-    searchStreams(term: string | undefined, permissionFilter: SearchStreamsPermissionFilter | undefined): AsyncIterable<Stream> {
-        return this.streamRegistry.searchStreams(term, permissionFilter)
+    searchStreams(
+        term: string | undefined,
+        permissionFilter: SearchStreamsPermissionFilter | undefined,
+        orderBy: SearchStreamsOrderBy = { field: 'id', direction: 'asc' }
+    ): AsyncIterable<Stream> {
+        return this.streamRegistry.searchStreams(term, permissionFilter, orderBy)
     }
 
     // --------------------------------------------------------------------------------------------
