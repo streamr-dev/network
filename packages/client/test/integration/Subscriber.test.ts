@@ -89,7 +89,7 @@ describe('Subscriber', () => {
 
     })
 
-    describe('normal subscription', () => {
+    describe('raw subscription', () => {
 
         it('without encryption', async () => {
             await stream.grantPermissions({
