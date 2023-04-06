@@ -36,7 +36,15 @@ import { ErrorCode } from './HttpUtil'
 import omit from 'lodash/omit'
 import { StreamrClientError } from './StreamrClientError'
 
-export type SubscribeOptions = StreamDefinition & { resend?: ResendOptions, raw?: boolean }
+export type SubscribeOptions = StreamDefinition & {
+    resend?: ResendOptions
+
+    /**
+     * Subscribe raw with validation, permission checking, ordering, gap filling,
+     * and decryption _disabled_.
+     */
+    raw?: boolean
+}
 
 /**
  * The main API used to interact with Streamr.
