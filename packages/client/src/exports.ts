@@ -20,7 +20,7 @@ export {
 } from './permission'
 export { StorageNodeAssignmentEvent } from './registry/StreamStorageRegistry'
 export { StorageNodeMetadata } from './registry/StorageNodeRegistry'
-export { SearchStreamsPermissionFilter } from './registry/searchStreams'
+export { SearchStreamsPermissionFilter, SearchStreamsOrderBy } from './registry/searchStreams'
 export {
     StreamrClientConfig,
     TrackerRegistryContract,
@@ -52,6 +52,7 @@ export type {
     MessageRef,
     StreamMessage,
     StreamMessageOptions,
+    StreamMessageAESEncrypted
 } from '@streamr/protocol'
 export {
     ContentType,
