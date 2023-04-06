@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add boolean option `raw` to method `.subscribe` to allow raw subscription a stream
+
 ### Changed
 
 - Increase default timeout of stream creation when ENS domains are used
