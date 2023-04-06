@@ -86,6 +86,7 @@ jobs:
       command: |
         npm run test-unit
         npm run test-integration
+        npm run docs
   client-e2e:
     needs: build
     uses: ./.github/workflows/test-setup.yml
