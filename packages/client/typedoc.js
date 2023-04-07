@@ -10,5 +10,6 @@ module.exports = {
     excludeInternal: true,
     includeVersion: true,
     disableSources: true,
-    categorizeByGroup: false
+    categorizeByGroup: false,
+    treatWarningsAsErrors: true
 }

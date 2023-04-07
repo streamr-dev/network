@@ -1,32 +1,33 @@
-import { get, set, createStore, UseStore } from 'idb-keyval'
-import { Persistence } from './Persistence'
-import { StreamID } from '@streamr/protocol'
-import { memoize } from 'lodash'
+import { openDB, IDBPDatabase } from 'idb'
+import { PersistenceContext, PersistenceContextOptions } from './PersistenceContext'
 
-export default class BrowserPersistence implements Persistence<string, string> {
-    private getStore: (streamId: StreamID) => UseStore
+export default class BrowserPersistence implements PersistenceContext {
+    
+    private readonly db: IDBPDatabase
 
-    constructor({ clientId }: { clientId: string }) {
-        this.getStore = memoize((streamId: StreamID) => {
-            const dbName = `streamr-client::${clientId}::${streamId}`
-            return createStore(dbName, 'GroupKeys')
+    static async createInstance(opts: PersistenceContextOptions): Promise<BrowserPersistence> {
+        const db = await openDB(`streamr-client::${opts.clientId}`, 1, {
+            upgrade(db) {
+                opts.namespaces.forEach((namespace) => db.createObjectStore(namespace))
+            }
         })
+        return new BrowserPersistence(db)
     }
 
-    async get(key: string, streamId: StreamID): Promise<string | undefined> {
-        return get(key, this.getStore(streamId))
+    private constructor(db: IDBPDatabase) {
+        this.db = db
     }
 
-    async set(key: string, value: string, streamId: StreamID): Promise<void> {
-        await set(key, value, this.getStore(streamId))
+    async get(key: string, namespace: string): Promise<string | undefined> {
+        return this.db.get(namespace, key)
+    }
+
+    async set(key: string, value: string, namespace: string): Promise<void> {
+        await this.db.put(namespace, value, key)
     }
 
     // eslint-disable-next-line class-methods-use-this
     async close(): Promise<void> {
         // noop
-    }
-
-    get [Symbol.toStringTag](): string {
-        return this.constructor.name
     }
 }

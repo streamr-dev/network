@@ -1,15 +1,14 @@
 import { Logger, toEthereumAddress } from '@streamr/utils'
-import StreamrClient, { validateConfig as validateClientConfig, NetworkNodeStub } from 'streamr-client'
+import StreamrClient, { NetworkNodeStub } from 'streamr-client'
 import { Server as HttpServer } from 'http'
 import { Server as HttpsServer } from 'https'
 import { createPlugin } from './pluginRegistry'
 import { validateConfig } from './config/validateConfig'
 import { version as CURRENT_VERSION } from '../package.json'
 import { Config } from './config/config'
-import { Plugin, PluginOptions } from './Plugin'
+import { HttpServerEndpoint, Plugin, PluginOptions } from './Plugin'
 import { startServer as startHttpServer, stopServer } from './httpServer'
 import BROKER_CONFIG_SCHEMA from './config/config.schema.json'
-import { createApiAuthenticator } from './apiAuthenticator'
 import { generateMnemonicFromAddress } from './helpers/generateMnemonicFromAddress'
 
 const logger = new Logger(module)
@@ -22,16 +21,12 @@ export interface Broker {
 
 export const createBroker = async (configWithoutDefaults: Config): Promise<Broker> => {
     const config = validateConfig(configWithoutDefaults, BROKER_CONFIG_SCHEMA)
-    validateClientConfig(config.client)
-
     const streamrClient = new StreamrClient(config.client)
-    const apiAuthenticator = createApiAuthenticator(config)
 
     const plugins: Plugin<any>[] = Object.keys(config.plugins).map((name) => {
         const pluginOptions: PluginOptions = {
             name,
             streamrClient,
-            apiAuthenticator,
             brokerConfig: config
         }
         return createPlugin(name, pluginOptions)
@@ -52,9 +47,13 @@ export const createBroker = async (configWithoutDefaults: Config): Promise<Broke
         start: async () => {
             logger.info(`Starting broker version ${CURRENT_VERSION}`)
             await Promise.all(plugins.map((plugin) => plugin.start()))
-            const httpServerRoutes = plugins.flatMap((plugin) => plugin.getHttpServerRoutes())
-            if (httpServerRoutes.length > 0) {
-                httpServer = await startHttpServer(httpServerRoutes, config.httpServer, apiAuthenticator)
+            const httpServerEndpoints = plugins.flatMap((plugin: Plugin<any>) => {
+                return plugin.getHttpServerEndpoints().map((endpoint: HttpServerEndpoint) => {
+                    return { ...endpoint, apiAuthentication: plugin.getApiAuthentication() }
+                })
+            })
+            if (httpServerEndpoints.length > 0) {
+                httpServer = await startHttpServer(httpServerEndpoints, config.httpServer)
             }
 
             const nodeId = (await streamrClient.getNode()).getNodeId()

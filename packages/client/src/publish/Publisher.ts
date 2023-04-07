@@ -6,7 +6,7 @@ import { StreamIDBuilder } from '../StreamIDBuilder'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { MessageFactory } from './MessageFactory'
-import { isString } from 'lodash'
+import isString from 'lodash/isString'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { Mapping } from '../utils/Mapping'
@@ -57,7 +57,7 @@ export class Publisher {
             return this.createMessageFactory(streamId)
         })
         this.groupKeyQueues = new Mapping(async (streamId: StreamID) => {
-            return new GroupKeyQueue(streamId, groupKeyManager)
+            return GroupKeyQueue.createInstance(streamId, this.authentication, groupKeyManager)
         })
     }
 

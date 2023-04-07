@@ -1,6 +1,6 @@
 import MessageID from "./MessageID"
 import MessageRef from "./MessageRef"
-import StreamMessage from "./StreamMessage"
+import StreamMessage, { StreamMessageAESEncrypted } from "./StreamMessage"
 import { StreamMessageType } from "./StreamMessage"
 import GroupKeyRequest, { GroupKeyRequestSerialized } from "./GroupKeyRequest"
 import GroupKeyResponse, { GroupKeyResponseSerialized } from "./GroupKeyResponse"
@@ -18,6 +18,7 @@ export {
     MessageRef,
     StreamMessage,
     StreamMessageType,
+    StreamMessageAESEncrypted,
     GroupKeyMessage,
     GroupKeyRequest,
     GroupKeyRequestSerialized,

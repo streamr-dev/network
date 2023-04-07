@@ -27,7 +27,7 @@ const waitMessagesReceived = async (
         const receivedCount = Object.values(received).flat().length
         const publishedCount = Object.values(published).flat().length
         return receivedCount === publishedCount
-    })
+    }, 10 * 1000)
 }
 
 describe('PubSub with multiple clients', () => {
@@ -173,7 +173,7 @@ describe('PubSub with multiple clients', () => {
 
             checkMessages(published, receivedMessagesMain)
             checkMessages(published, receivedMessagesOther)
-        })
+        }, 10 * 1000)
 
         // late subscriber test is super unreliable. Doesn't seem to be a good way to make the
         // late subscriber reliably get all of both realtime and resent messages

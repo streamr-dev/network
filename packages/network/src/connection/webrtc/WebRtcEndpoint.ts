@@ -3,7 +3,7 @@ import { Event, IWebRtcEndpoint } from './IWebRtcEndpoint'
 import { Logger } from "@streamr/utils"
 import { PeerId, PeerInfo } from '../PeerInfo'
 import { DeferredConnectionAttempt } from './DeferredConnectionAttempt'
-import { WebRtcConnection, ConstructorOptions, isOffering, IceServer } from './WebRtcConnection'
+import { WebRtcConnection, ConstructorOptions, isOffering, IceServer, WebRtcPortRange } from './WebRtcConnection'
 import { CountMetric, LevelMetric, Metric, MetricsContext, MetricsDefinition, RateMetric } from '@streamr/utils'
 import {
     AnswerOptions,
@@ -56,6 +56,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     private readonly sendBufferMaxMessageCount: number
     private readonly disallowPrivateAddresses: boolean
     private readonly maxMessageSize: number
+    private readonly portRange: WebRtcPortRange
 
     private statusReportTimer?: NodeJS.Timeout
 
@@ -72,7 +73,8 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         webrtcDatachannelBufferThresholdHigh: number,
         webrtcSendBufferMaxMessageCount: number,
         webrtcDisallowPrivateAddresses: boolean,
-        maxMessageSize = 1048576,
+        portRange: WebRtcPortRange,
+        maxMessageSize: number,
     ) {
         super()
         this.peerInfo = peerInfo
@@ -90,6 +92,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         this.sendBufferMaxMessageCount = webrtcSendBufferMaxMessageCount
         this.disallowPrivateAddresses = webrtcDisallowPrivateAddresses
         this.maxMessageSize = maxMessageSize
+        this.portRange = portRange
 
         this.connectionFactory.registerWebRtcEndpoint()
 
@@ -175,6 +178,8 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             deferredConnectionAttempt: deferredConnectionAttempt || new DeferredConnectionAttempt(),
             newConnectionTimeout: this.newConnectionTimeout,
             pingInterval: this.pingInterval,
+            portRange: this.portRange,
+            maxMessageSize: this.maxMessageSize
         }
 
         const connection = this.connectionFactory.createConnection(connectionOptions)

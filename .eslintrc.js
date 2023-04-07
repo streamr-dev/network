@@ -60,6 +60,7 @@ module.exports = {
         'prefer-arrow-callback': ['error'],
         'promise/no-promise-in-callback': ['error'],
         //'@typescript-eslint/no-empty-function': 'error',
-        'no-multi-spaces': ["error", { ignoreEOLComments: true }]
+        'no-multi-spaces': ["error", { ignoreEOLComments: true }],
+        'default-case': ['error']
     }
 }

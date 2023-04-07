@@ -70,7 +70,7 @@ describe('Storage: lots of data', () => {
                 timestamp: 1000000 + (i + 1),
                 sequenceNumber: 0,
                 publisherId: toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
-                content: randomBuffer.toString('hex')
+                content: randomBuffer.toString('hex'),
             })
             storePromises.push(() => storage.store(msg))
         }

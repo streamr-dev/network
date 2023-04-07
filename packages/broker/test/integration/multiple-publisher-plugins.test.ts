@@ -8,7 +8,8 @@ import { Broker } from '../../src/broker'
 import { startBroker, createClient, createTestStream, startTestTracker } from '../utils'
 import { fastPrivateKey } from '@streamr/test-utils'
 import { wait, waitForEvent, waitForCondition } from '@streamr/utils'
-import { range, sample } from 'lodash'
+import sample from 'lodash/sample'
+import range from 'lodash/range'
 
 const MESSAGE_COUNT = 120
 const trackerPort = 13610

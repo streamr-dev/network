@@ -83,7 +83,7 @@ export class Node extends EventEmitter {
     private readonly metricsContext: MetricsContext
     private readonly metrics: Metrics
     protected extraMetadata: Record<string, unknown> = {}
-    private readonly acceptProxyConnections: boolean
+    protected readonly acceptProxyConnections: boolean
     private readonly proxyStreamConnectionClient: ProxyStreamConnectionClient
     private readonly proxyStreamConnectionServer: ProxyStreamConnectionServer
 
@@ -163,7 +163,6 @@ export class Node extends EventEmitter {
                 version: "brubeck-1.0"
             }),
             {
-                subscribeToStreamPartIfHaveNotYet: this.subscribeToStreamIfHaveNotYet.bind(this),
                 subscribeToStreamPartOnNodes: this.subscribeToStreamPartOnNodes.bind(this),
                 unsubscribeFromStreamPartOnNode: this.unsubscribeFromStreamPartOnNode.bind(this),
                 emitJoinCompleted: this.emitJoinCompleted.bind(this),
@@ -247,8 +246,11 @@ export class Node extends EventEmitter {
     // Null source is used when a message is published by the node itself
     onDataReceived(streamMessage: StreamMessage, source: NodeId | null = null): void | never {
         const streamPartId = streamMessage.getStreamPartID()
+
+        if (!this.streamPartManager.isSetUp(streamPartId)) {
+            return
         // Check if the stream is set as one-directional and has inbound connection if message is content typed
-        if (source
+        } else if (source
             && this.streamPartManager.isSetUp(streamPartId)
             && this.streamPartManager.isBehindProxy(streamPartId)
             && streamMessage.messageType === StreamMessageType.MESSAGE
@@ -258,7 +260,6 @@ export class Node extends EventEmitter {
         }
 
         this.emit(Event.MESSAGE_RECEIVED, streamMessage, source)
-        this.subscribeToStreamIfHaveNotYet(streamPartId)
 
         // Check duplicate
         let isUnseen

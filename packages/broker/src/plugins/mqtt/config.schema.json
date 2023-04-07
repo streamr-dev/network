@@ -18,6 +18,9 @@
             "type": "boolean",
             "description": "The format of payloads: payload is wrapped as { content, metadata } or is a plain content JSON",
             "default": false
+        },
+        "apiAuthentication": {
+            "$ref": "definitions.schema.json#/definitions/apiAuthenticationOverride"
         }
     }
 }
