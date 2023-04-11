@@ -74,7 +74,7 @@
     "terser-webpack-plugin": "^5.2.5",
     "ts-essentials": "^9.3.0",
     "ts-loader": "^9.3.1",
-    "typedoc": "^0.23.20",
+    "typedoc": "^0.23.28",
     "util": "^0.12.4",
     "weak-napi": "^2.0.2",
     "webpack": "^5.75.0",

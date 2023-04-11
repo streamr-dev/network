@@ -20,7 +20,7 @@ export {
 } from './permission'
 export { StorageNodeAssignmentEvent } from './registry/StreamStorageRegistry'
 export { StorageNodeMetadata } from './registry/StorageNodeRegistry'
-export { SearchStreamsPermissionFilter } from './registry/searchStreams'
+export { SearchStreamsPermissionFilter, SearchStreamsOrderBy } from './registry/searchStreams'
 export {
     StreamrClientConfig,
     TrackerRegistryContract,
@@ -29,7 +29,6 @@ export {
     ProviderAuthConfig,
     PrivateKeyAuthConfig,
     STREAMR_STORAGE_NODE_GERMANY,
-    validateConfig
 } from './Config'
 export { GroupKey as EncryptionKey } from './encryption/GroupKey'
 export { UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
@@ -52,6 +51,7 @@ export type {
     MessageRef,
     StreamMessage,
     StreamMessageOptions,
+    StreamMessageAESEncrypted
 } from '@streamr/protocol'
 export {
     ContentType,

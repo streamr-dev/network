@@ -37,6 +37,27 @@ const createMockGraphQLClient = (resultItems: SearchStreamsResultItem[]): Pick<S
 
 describe('searchStreams', () => {
 
+    it('results in order', async () => {
+        const stream = toStreamID('/path', MOCK_USER)
+        const graphQLClient = createMockGraphQLClient([
+            createMockResultItem(stream, JSON.stringify({ partitions: 11 })),
+        ])
+        jest.spyOn(graphQLClient, 'fetchPaginatedResults')
+        const orderBy = { field: 'updatedAt', direction: 'desc' } as const
+
+        await collect(searchStreams(
+            '/',
+            undefined,
+            orderBy,
+            graphQLClient as any,
+            () => ({} as any),
+            mockLoggerFactory().createLogger(module),
+        ))
+
+        const graphQLquery = ((graphQLClient as any).fetchPaginatedResults as jest.Mock).mock.calls[0][0]()
+        expect(graphQLquery.query).toMatch(new RegExp(`orderBy: "stream__${orderBy.field}",\\s*orderDirection: "${orderBy.direction}"`))
+    })
+
     it('invalid metadata', async () => {
         const stream1 = toStreamID('/1', MOCK_USER)
         const stream2 = toStreamID('/2', MOCK_USER)
@@ -59,9 +80,10 @@ describe('searchStreams', () => {
         const streams = await collect(searchStreams(
             '/',
             undefined,
+            { field: 'id', direction: 'asc' },
             graphQLClient as any,
             parseStream,
-            mockLoggerFactory().createLogger(module)
+            mockLoggerFactory().createLogger(module),
         ))
 
         expect(streams).toHaveLength(2)
