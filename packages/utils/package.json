@@ -22,14 +22,12 @@
   "dependencies": {
     "eventemitter3": "^4.0.7",
     "lodash": "^4.17.21",
-    "pino": "^6.11.3",
-    "pino-pretty": "^5.0.2"
+    "pino": "^8.11.0",
+    "pino-pretty": "^10.0.0"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.175",
     "@types/node-fetch": "^2.5.12",
-    "@types/pino": "^6.3.8",
-    "@types/pino-pretty": "^4.7.0",
     "electron": "^20.0.3",
     "electron-rebuild": "^3.2.9",
     "express": "^4.17.1",
