@@ -36,7 +36,11 @@ import { ErrorCode } from './HttpUtil'
 import omit from 'lodash/omit'
 import { StreamrClientError } from './StreamrClientError'
 
-export type SubscribeOptions = StreamDefinition & {
+// TODO: this type only exists to enable tsdoc to generate proper documentation
+export type SubscribeOptions = StreamDefinition & ExtraSubscribeOptions
+
+// TODO: this type only exists to enable tsdoc to generate proper documentation
+export interface ExtraSubscribeOptions {
     resend?: ResendOptions
 
     /**
