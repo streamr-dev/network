@@ -2,8 +2,16 @@ module.exports = {
     extends: [
         "eslint:recommended",
         "plugin:@typescript-eslint/eslint-recommended",
+        'plugin:@typescript-eslint/recommended-requiring-type-checking',
         'eslint-config-streamr-ts'
     ],
+    plugins: ['@typescript-eslint'],
+    parser: '@typescript-eslint/parser',
+    parserOptions: {
+        project: ['./tsconfig.jest.json', './packages/*/tsconfig.jest.json'],
+        tsconfigRootDir: __dirname,
+    },
+    root: true,
     env: {
         node: true
     },
@@ -61,6 +69,20 @@ module.exports = {
         'promise/no-promise-in-callback': ['error'],
         //'@typescript-eslint/no-empty-function': 'error',
         'no-multi-spaces': ["error", { ignoreEOLComments: true }],
-        'default-case': ['error']
+        'default-case': ['error'],
+        /* TODO select which rules we should disable
+         @typescript-eslint/require-await': 'off',
+        '@typescript-eslint/no-floating-promises': 'off',
+        '@typescript-eslint/await-thenable': 'off',
+        '@typescript-eslint/no-misused-promises': 'off',
+        '@typescript-eslint/no-unsafe-return': 'off',
+        '@typescript-eslint/no-unsafe-argument': 'off',
+        '@typescript-eslint/no-unsafe-assignment': 'off',
+        '@typescript-eslint/no-unsafe-member-access': 'off',
+        '@typescript-eslint/no-unsafe-call': 'off',
+        '@typescript-eslint/no-unnecessary-type-assertion': 'off',
+        '@typescript-eslint/restrict-template-expressions': 'off',
+        '@typescript-eslint/restrict-plus-operands': 'off',
+        '@typescript-eslint/unbound-method': 'off'*/
     }
 }
