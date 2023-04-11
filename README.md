@@ -151,11 +151,12 @@ All the above packages should be released at the same time.
 10. `git tag client/vX.Y.Z`
 11. `git tag cli-tools/vX.Y.Z`
 12. Push main and tags: `git push --atomic origin main client/vX.Y.Z cli-tools/vX.Y.Z`
-13. At this point we are to do the actual release
-14. Clean and rebuild project with `npm run clean && npm run bootstrap`
-15. Then we do actual publishing of packages with `./release.sh <NPM_TAG>`. Use argument `beta` if publishing a
+13. Wait & ensure the pushed main branch passes CI tests
+14. At this point we are to do the actual release
+15. Clean and rebuild project with `npm run clean && npm run bootstrap`
+16. Then we do actual publishing of packages with `./release.sh <NPM_TAG>`. Use argument `beta` if publishing a
 beta version. Use `latest` instead when publishing a stable version.
-16. Update client docs if major or minor change:
+17. Update client docs if major or minor change:
 ```bash
 
 # Generate & upload API docs (if a major/minor version update)
