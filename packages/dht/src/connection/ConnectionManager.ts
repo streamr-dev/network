@@ -210,7 +210,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     public async start(peerDescriptorGeneratorCallback?: PeerDescriptorGeneratorCallback): Promise<void> {
-        if (this.state === ConnectionManagerState.RUNNING || this.state === ConnectionManagerState.STOPPED) {
+        if (this.state === ConnectionManagerState.RUNNING || this.state === ConnectionManagerState.STOPPED) {
             throw new Err.CouldNotStart(`Cannot start already ${this.state} module`)
         }
         this.state = ConnectionManagerState.RUNNING
@@ -232,7 +232,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     public async stop(): Promise<void> {
-        if (this.state === ConnectionManagerState.STOPPED || this.state === ConnectionManagerState.STOPPING) {
+        if (this.state === ConnectionManagerState.STOPPED || this.state === ConnectionManagerState.STOPPING) {
             return
         }
         this.state = ConnectionManagerState.STOPPING
@@ -250,12 +250,10 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             await this.simulatorConnector!.stop()
             this.simulatorConnector = undefined
         }
-        logger.info('stopping connections')
         await Promise.allSettled(Array.from(this.connections.values()).map((peer) => {
             return this.gracefullyDisconnectAsync(peer.getPeerDescriptor()!, DisconnectMode.LEAVING)
         }))
         this.state = ConnectionManagerState.STOPPED
-        logger.info('stopped connections')
         this.rpcCommunicator!.stop()
         this.config.transportLayer = undefined
         this.messageDuplicateDetector.clear()
@@ -561,7 +559,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         try {
             await remoteConnectionLocker.gracefulDisconnect(disconnectMode)
         } catch (ex) {
-            logger.warn(' ' + this.ownPeerDescriptor?.nodeName + ', ' + targetDescriptor.nodeName +
+            logger.debug(' ' + this.ownPeerDescriptor?.nodeName + ', ' + targetDescriptor.nodeName +
                 ' remoteConnectionLocker.gracefulDisconnect() failed' + ex)
         }
         try {
@@ -607,7 +605,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
     // IConnectionLocker server implementation
     private async gracefulDisconnect(disconnectNotice: DisconnectNotice, _context: ServerCallContext): Promise<DisconnectNoticeResponse> {
-        logger.info(' ' + this.config.nodeName + ', ' + disconnectNotice.peerDescriptor?.nodeName
+        logger.trace(' ' + this.config.nodeName + ', ' + disconnectNotice.peerDescriptor?.nodeName
             + ' received gracefulDisconnect notice')
 
         setImmediate(async () => {

@@ -3,7 +3,7 @@ import { DhtNode } from '../../src/dht/DhtNode'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils/utils'
 import { isSamePeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
-import { Logger, waitForCondition } from '@streamr/utils'
+import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 
@@ -48,7 +48,6 @@ describe('Scaling down a Dht network', () => {
         for (let i = 1; i < nodes.length; i++) {
             randomIndices.push(i)
         }
-        let failedCleanUps = 0
         while (randomIndices.length > 1) {
             const index = Math.floor(Math.random() * randomIndices.length)
             const nodeIndex = randomIndices[index]
@@ -58,32 +57,12 @@ describe('Scaling down a Dht network', () => {
             const nodeIsCleaned = nodes.every((node) =>
                 node.getAllConnectionPeerDescriptors().every((peer) => {
                     if (isSamePeerDescriptor(peer, stoppingPeerDescriptor)) {
-                        console.log(' ' + node.getNodeName() + ', ' + stoppingPeerDescriptor.nodeName + ' cleaning up failed')
+                        logger.error(' ' + node.getNodeName() + ', ' + stoppingPeerDescriptor.nodeName + ' cleaning up failed')
                     }
                     return !isSamePeerDescriptor(peer, stoppingPeerDescriptor)
                 })
             )
             expect(nodeIsCleaned).toEqual(true)
-            // try {
-            //     await waitForCondition(() =>
-            //         nodes.every((node) =>
-            //             node.getAllConnectionPeerDescriptors().every((peer) => {
-            //                 if (isSamePeerDescriptor(peer, stoppingPeerDescriptor)) {
-            //                     logger.trace(' ' + node.getNodeName() + ', ' + stoppingPeerDescriptor.nodeName + ' cleaning up failed')
-            //                 }
-            //                 return !isSamePeerDescriptor(peer, stoppingPeerDescriptor)
-            //             })
-            //         )
-            //     )
-            // } catch (err) {
-            //     const failures = nodes.reduce((total, node) =>
-            //         total + node.getAllConnectionPeerDescriptors().reduce((acc, peer) =>
-            //             isSamePeerDescriptor(peer, stoppingPeerDescriptor) ? acc + 1 : acc
-            //         , 0)
-            //     , 0)
-            //     failedCleanUps += failures
-            // }
-            // expect(failedCleanUps).toBeLessThan(1)
         }
     }, 180000)
 })
