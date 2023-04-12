@@ -2,7 +2,6 @@ import pino from 'pino'
 import path from 'path'
 import without from 'lodash/without'
 import padEnd from 'lodash/padEnd'
-import pinoPretty from 'pino-pretty'
 
 export type LogLevel = 'silent' | 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace'
 
@@ -18,6 +17,23 @@ const parseBoolean = (value: string | undefined) => {
             throw new Error('Invalid boolean value: ${value}')
     }
 }
+
+declare let window: any
+
+const rootLogger = pino({
+    name: 'rootLogger',
+    enabled: !process.env.NOLOG,
+    level: process.env.LOG_LEVEL ?? 'info',
+    transport: typeof window === 'object' ? undefined : {
+        target: 'pino-pretty',
+        options: {
+            colorize: parseBoolean(process.env.LOG_COLORS) ?? true,
+            translateTime: 'yyyy-mm-dd"T"HH:MM:ss.l',
+            ignore: 'pid,hostname',
+            levelFirst: true,
+        }
+    }
+})
 
 export class Logger {
     static NAME_LENGTH = 20
@@ -40,26 +56,12 @@ export class Logger {
     constructor(
         module: NodeJS.Module,
         context?: string,
-        defaultLogLevel: LogLevel = 'info',
-        destinationStream?: { write(msg: string): void }
+        defaultLogLevel: LogLevel = 'info'
     ) {
-        const options: pino.LoggerOptions = {
+        this.logger = rootLogger.child({
             name: Logger.createName(module, context),
-            enabled: !process.env.NOLOG,
-            level: process.env.LOG_LEVEL ?? defaultLogLevel,
-            // explicitly pass prettifier, otherwise pino may try to lazy require it,
-            // which can fail when under jest+typescript, due to some CJS/ESM
-            // incompatibility leading to throwing an error like:
-            // "prettyFactory is not a function"
-            prettifier: pinoPretty,
-            prettyPrint: {
-                colorize: parseBoolean(process.env.LOG_COLORS) ?? true,
-                translateTime: 'yyyy-mm-dd"T"HH:MM:ss.l',
-                ignore: 'pid,hostname',
-                levelFirst: true,
-            }
-        }
-        this.logger = destinationStream !== undefined ? pino(options, destinationStream) : pino(options)
+            level: process.env.LOG_LEVEL ?? defaultLogLevel
+        })
     }
 
     fatal(msg: string, ...args: any[]): void {
@@ -97,12 +99,5 @@ export class Logger {
 
     trace(msg: string, ...args: any[]): void {
         this.logger.trace(msg, ...args)
-    }
-
-    getFinalLogger(): { error: (error: any, origin?: string) => void } {
-        const finalLogger = pino.final(this.logger)
-        return {
-            error: (error: any, origin?: string) => finalLogger.error(error, origin)
-        }
     }
 }
