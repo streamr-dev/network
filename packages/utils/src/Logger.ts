@@ -24,7 +24,12 @@ const rootLogger = pino({
     name: 'rootLogger',
     enabled: !process.env.NOLOG,
     level: process.env.LOG_LEVEL ?? 'info',
-    transport: typeof window === 'object' ? undefined : {
+    formatters: {
+        level: (label) => {
+            return { level: label } // log level as string instead of number
+        }
+    },
+    transport: (typeof window === 'object' || process.env.DISABLE_PRETTY_LOG) ? undefined : {
         target: 'pino-pretty',
         options: {
             colorize: parseBoolean(process.env.LOG_COLORS) ?? true,
@@ -46,9 +51,9 @@ export class Logger {
             const parts = parsedPath.dir.split(path.sep)
             fileId = parts[parts.length - 1]
         }
-        const appId = process.env.STREAMR_APPLICATION_ID
-        const longName = without([appId, context, fileId], undefined).join(':')
-        return padEnd(longName.substring(0, this.NAME_LENGTH), this.NAME_LENGTH, ' ')
+        const longName = without([process.env.STREAMR_APPLICATION_ID, context, fileId], undefined).join(':')
+        return process.env.DISABLE_PRETTY_LOG ?
+            longName : padEnd(longName.substring(0, this.NAME_LENGTH), this.NAME_LENGTH, ' ')
     }
 
     private readonly logger: pino.Logger
