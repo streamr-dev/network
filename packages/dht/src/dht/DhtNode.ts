@@ -433,7 +433,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         
         return closestPeers.map((dhtPeer: DhtPeer) => {
             if (debugVars['stoppedNodes'].includes(dhtPeer.getPeerDescriptor().nodeName)) {
-                logger.error('bucket.closest() returned a stopped node')
+            
+                const inConnections = this.connections.has(dhtPeer.getPeerId().toKey())
+                logger.error(' ' + this.ownPeerDescriptor?.nodeName + ', '+ dhtPeer.getPeerDescriptor().nodeName +' bucket.closest() returned a stopped node, nodeInConnections: ' + inConnections)
+            
             }
             return dhtPeer.getPeerDescriptor()
         })
