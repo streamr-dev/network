@@ -20,25 +20,19 @@ const parseBoolean = (value: string | undefined) => {
 
 declare let window: any
 
-const NOLOG = process.env.NOLOG
-const LOG_LEVEL = process.env.LOG_LEVEL
-const DISABLE_PRETTY_LOG = process.env.DISABLE_PRETTY_LOG
-const LOG_COLORS = process.env.LOG_COLORS
-const STREAMR_APPLICATION_ID = process.env.STREAMR_APPLICATION_ID
-
 const rootLogger = pino({
     name: 'rootLogger',
-    enabled: !NOLOG,
-    level: LOG_LEVEL ?? 'info',
+    enabled: !process.env.NOLOG,
+    level: process.env.LOG_LEVEL ?? 'info',
     formatters: {
         level: (label) => {
             return { level: label } // log level as string instead of number
         }
     },
-    transport: (typeof window === 'object' || DISABLE_PRETTY_LOG) ? undefined : {
+    transport: (typeof window === 'object' || process.env.DISABLE_PRETTY_LOG) ? undefined : {
         target: 'pino-pretty',
         options: {
-            colorize: parseBoolean(LOG_COLORS) ?? true,
+            colorize: parseBoolean(process.env.LOG_COLORS) ?? true,
             translateTime: 'yyyy-mm-dd"T"HH:MM:ss.l',
             ignore: 'pid,hostname',
             levelFirst: true,
@@ -57,8 +51,9 @@ export class Logger {
             const parts = parsedPath.dir.split(path.sep)
             fileId = parts[parts.length - 1]
         }
-        const longName = without([STREAMR_APPLICATION_ID, context, fileId], undefined).join(':')
-        return DISABLE_PRETTY_LOG ? longName : padEnd(longName.substring(0, this.NAME_LENGTH), this.NAME_LENGTH, ' ')
+        const longName = without([process.env.STREAMR_APPLICATION_ID, context, fileId], undefined).join(':')
+        return process.env.DISABLE_PRETTY_LOG ?
+            longName : padEnd(longName.substring(0, this.NAME_LENGTH), this.NAME_LENGTH, ' ')
     }
 
     private readonly logger: pino.Logger
@@ -70,7 +65,7 @@ export class Logger {
     ) {
         this.logger = rootLogger.child({
             name: Logger.createName(module, context),
-            level: LOG_LEVEL ?? defaultLogLevel
+            level: process.env.LOG_LEVEL ?? defaultLogLevel
         })
     }
 
