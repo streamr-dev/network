@@ -232,7 +232,7 @@ export class Stream {
         const normalizedNodeAddress = toEthereumAddress(storageNodeAddress)
         try {
             const streamPartId = toStreamPartID(formStorageNodeAssignmentStreamId(normalizedNodeAddress), DEFAULT_PARTITION)
-            assignmentSubscription = new Subscription(streamPartId, this._loggerFactory)
+            assignmentSubscription = new Subscription(streamPartId, false, this._loggerFactory)
             await this._subscriber.add(assignmentSubscription)
             const propagationPromise = waitForAssignmentsToPropagate(assignmentSubscription, {
                 id: this.id,
