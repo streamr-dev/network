@@ -24,6 +24,9 @@ export interface PluginAnswers extends Answers {
     mqttPort?: string
     httpPort?: string
     enableMinerPlugin: boolean
+    wantToSetBeneficiaryAddress?: boolean
+    beneficiaryAddress?: string
+
 }
 
 export interface StorageAnswers extends Answers {
@@ -153,7 +156,41 @@ const createPluginPrompts = (): Array<inquirer.Question | inquirer.ListQuestion 
         default: true
     }
 
-    return [selectApiPluginsPrompt, ...portPrompts, minerPluginPrompt]
+    const wantToSetBeneficiaryAddressPrompt: inquirer.DistinctQuestion = {
+        type: 'confirm',
+        name: 'wantToSetBeneficiaryAddress',
+        // eslint-disable-next-line max-len
+        message: `By default the generated / imported Ethereum identity will be used for staking, would you like to change this to a different address (i.e. set a beneficiary address)?`,
+        default: false,
+        when: (answers: inquirer.Answers) => {
+            return answers.enableMinerPlugin
+        }
+    }
+
+    const beneficiaryAddressPrompt: inquirer.DistinctQuestion = {
+        type: 'input',
+        name: 'beneficiaryAddress',
+        message: `Please provide a beneficiary (Ethereum) address`,
+        when: (answers: inquirer.Answers) => {
+            return answers.wantToSetBeneficiaryAddress
+        },
+        validate: (input: string): string | boolean => {
+            try {
+                toEthereumAddress(input)
+                return true
+            } catch (e: any) {
+                return 'Invalid Ethereum address provided.'
+            }
+        }
+    }
+
+    return [
+        selectApiPluginsPrompt,
+        ...portPrompts,
+        minerPluginPrompt,
+        wantToSetBeneficiaryAddressPrompt,
+        beneficiaryAddressPrompt
+    ]
 }
 
 export const PROMPTS = {
@@ -202,6 +239,11 @@ export const getConfig = (privateKey: string, pluginsAnswers: PluginAnswers): an
 
     if (pluginsAnswers.enableMinerPlugin) {
         config.plugins.brubeckMiner = {}
+        if (pluginsAnswers.beneficiaryAddress !== undefined) {
+            config.plugins.brubeckMiner = {
+                beneficiaryAddress: pluginsAnswers.beneficiaryAddress
+            }
+        }
     }
 
     return config
