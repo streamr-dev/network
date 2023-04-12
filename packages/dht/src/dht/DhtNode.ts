@@ -376,10 +376,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.bucket!.remove(peerDescriptor.kademliaId)
 
             if (dicsonnectionType == 'OUTGOING_GRACEFUL_LEAVE' || dicsonnectionType == 'INCOMING_GRACEFUL_LEAVE') {
-                logger.trace( this.config.nodeName + ', ' + peerDescriptor.nodeName + ' ' + 'onTransportDisconnected with type ' + dicsonnectionType)
+                logger.trace(this.config.nodeName + ', ' + peerDescriptor.nodeName + ' ' + 'onTransportDisconnected with type ' + dicsonnectionType)
                 this.removeContact(peerDescriptor, true)
             } else {
-                logger.trace( this.config.nodeName + ', ' + peerDescriptor.nodeName + ' ' + 'onTransportDisconnected with type ' + dicsonnectionType)
+                logger.trace(this.config.nodeName + ', ' + peerDescriptor.nodeName + ' ' + 'onTransportDisconnected with type ' + dicsonnectionType)
             }
         }
 
@@ -430,13 +430,14 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     private getClosestPeerDescriptors(kademliaId: Uint8Array, limit: number): PeerDescriptor[] {
         const closestPeers = this.bucket!.closest(kademliaId, limit)
-        
+
         return closestPeers.map((dhtPeer: DhtPeer) => {
             if (debugVars['stoppedNodes'].includes(dhtPeer.getPeerDescriptor().nodeName)) {
-            
+
                 const inConnections = this.connections.has(dhtPeer.getPeerId().toKey())
-                logger.error(' ' + this.ownPeerDescriptor?.nodeName + ', '+ dhtPeer.getPeerDescriptor().nodeName +' bucket.closest() returned a stopped node, nodeInConnections: ' + inConnections)
-            
+                logger.error(' ' + this.ownPeerDescriptor?.nodeName + ', ' + dhtPeer.getPeerDescriptor().nodeName +
+                    ' bucket.closest() returned a stopped node, nodeInConnections: ' + inConnections)
+
             }
             return dhtPeer.getPeerDescriptor()
         })
@@ -681,11 +682,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (!this.started) {
             throw new Err.CouldNotStop('Cannot not stop() before start()')
         }
-        
+
         await this.dataStore!.migrateAllDataUponStop()
 
         this.stopped = true
-        
+
         this.bucket!.toArray().map((dhtPeer: DhtPeer) => this.bucket!.remove(dhtPeer.id))
         this.bucket!.removeAllListeners()
         this.neighborList!.stop()
