@@ -60,7 +60,7 @@ export class PublisherKeyExchange {
                 const authenticatedUser = await this.authentication.getAddress()
                 const { recipient, requestId, rsaPublicKey, groupKeyIds } = GroupKeyRequest.fromStreamMessage(request) as GroupKeyRequest
                 if (recipient === authenticatedUser) {
-                    this.logger.debug('handling group key request %s', requestId)
+                    this.logger.debug({ requestId }, 'handling group key request...')
                     await this.validator.validate(request)
                     const keys = without(
                         await Promise.all(groupKeyIds.map((id: string) => this.store.get(id, authenticatedUser))),
@@ -74,13 +74,19 @@ export class PublisherKeyExchange {
                             requestId)
                         const node = await this.networkNodeFacade.getNode()
                         node.publish(response)
-                        this.logger.debug('sent group keys %s to %s', keys.map((k) => k.id).join(), request.getPublisherId())
+                        this.logger.debug({
+                            groupKeyIds: keys.map((k) => k.id).join(),
+                            recipient: request.getPublisherId()
+                        }, 'group key request handled; sent relevant group keys')
                     } else {
-                        this.logger.debug('found no group keys to send to %s', request.getPublisherId())
+                        this.logger.debug({
+                            requestId,
+                            recipient: request.getPublisherId()
+                        }, 'group key request handled; found no group keys to send')
                     }
                 }
             } catch (e: any) {
-                this.logger.debug('error processing group key, reason: %s', e.message)
+                this.logger.debug(e, 'failed to handle group key request')
             }
         }
     }

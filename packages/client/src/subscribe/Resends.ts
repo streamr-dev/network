@@ -9,7 +9,7 @@ import random from 'lodash/random'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { HttpUtil } from '../HttpUtil'
 import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
-import { EthereumAddress, Logger, toEthereumAddress, wait } from '@streamr/utils'
+import { EthereumAddress, Logger, randomString, toEthereumAddress, wait } from '@streamr/utils'
 import { DestroySignal } from '../DestroySignal'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { LoggerFactory } from '../utils/LoggerFactory'
@@ -141,8 +141,13 @@ export class Resends {
         streamPartId: StreamPartID,
         query: QueryDict = {}
     ): Promise<MessageStream> {
-        const loggerIdx = counterId('fetchStream')
-        this.logger.debug('[%s] fetching resend %s for %s with options %o', loggerIdx, endpointSuffix, streamPartId, query)
+        const traceId = randomString(5)
+        this.logger.debug({
+            loggerIdx: traceId,
+            resendType: endpointSuffix,
+            streamPartId,
+            query
+        }, 'fetching resend data')
         const streamId = StreamPartIDUtils.getStreamID(streamPartId)
         const nodeAddresses = await this.streamStorageRegistry.getStorageNodes(streamId)
         if (!nodeAddresses.length) {
@@ -164,7 +169,7 @@ export class Resends {
 
         const dataStream = this.httpUtil.fetchHttpStream(url)
         messageStream.pull(counting(dataStream, (count: number) => {
-            this.logger.debug('[%s] total of %d messages received for resend fetch', loggerIdx, count)
+            this.logger.debug({ loggerIdx: traceId, messageCount: count }, 'resend finished')
         }))
         return messageStream
     }
@@ -247,10 +252,10 @@ export class Resends {
         while (!found) {
             const duration = Date.now() - start
             if (duration > timeout) {
-                this.logger.debug('timed out waiting for storage to have message %j', {
+                this.logger.debug({
                     expected: message.streamMessage.getMessageID(),
                     lastReceived: last?.map((l) => l.streamMessage.getMessageID()),
-                })
+                }, 'timed out waiting for storage to contain message', )
                 throw new Error(`timed out after ${duration}ms waiting for message`)
             }
 
@@ -264,10 +269,10 @@ export class Resends {
                 }
             }
 
-            this.logger.debug('message not found, retrying... %j', {
-                msg: message.streamMessage.getMessageID(),
-                'last 3': last.slice(-3).map((l) => l.streamMessage.getMessageID())
-            })
+            this.logger.debug({
+                expected: message.streamMessage.getMessageID(),
+                'last-3': last.slice(-3).map((l) => l.streamMessage.getMessageID())
+            }, 'message not found, retrying...')
 
             await wait(interval)
         }

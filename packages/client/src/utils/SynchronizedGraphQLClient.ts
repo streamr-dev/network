@@ -53,7 +53,7 @@ class IndexingState {
     }
 
     async waitUntilIndexed(blockNumber: number): Promise<void> {
-        this.logger.debug('waiting until The Graph is synchronized to block %d', blockNumber)
+        this.logger.debug({ blockTarget: blockNumber }, 'waiting until The Graph is synchronized')
         const gate = this.getOrCreateGate(blockNumber)
         try {
             await withTimeout(
@@ -88,7 +88,7 @@ class IndexingState {
             const newBlockNumber = await this.getCurrentBlockNumber()
             if (newBlockNumber !== this.blockNumber) {
                 this.blockNumber = newBlockNumber
-                this.logger.trace('poll result is blockNumber=%d', this.blockNumber)
+                this.logger.trace({ blockNumber: this.blockNumber }, 'polled')
                 this.gates.forEach((gate) => {
                     if (gate.blockNumber <= this.blockNumber) {
                         gate.open()

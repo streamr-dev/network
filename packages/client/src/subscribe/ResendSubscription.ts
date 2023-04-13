@@ -55,7 +55,7 @@ export class ResendSubscription extends Subscription {
         } catch (err) {
             if (err.code === 'NO_STORAGE_NODES') {
                 const streamId = StreamPartIDUtils.getStreamID(this.streamPartId)
-                this.logger.warn(`no storage assigned: ${streamId}`)
+                this.logger.warn({ streamId }, 'no storage assigned to stream, skipping resend')
             } else {
                 await this.handleError(err)
             }

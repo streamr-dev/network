@@ -67,7 +67,7 @@ export class Subscriber {
         subSession.onRetired.listen(() => {
             this.subSessions.delete(streamPartId)
         })
-        this.logger.debug('created new SubscriptionSession for stream part %s', streamPartId)
+        this.logger.debug({ streamPartId }, 'created new SubscriptionSession')
         return subSession
     }
 

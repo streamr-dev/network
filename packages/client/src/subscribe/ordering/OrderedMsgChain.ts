@@ -219,11 +219,10 @@ class OrderedMsgChain extends MsgChainEmitter {
         if (this.isStaleMessage(unorderedStreamMessage)) {
             const msgRef = unorderedStreamMessage.getMessageRef()
             // Prevent double-processing of messages for any reason
-            logger.trace(
-                'Ignoring message: %j. Message was already enqueued or we already processed a newer message: %j.',
-                msgRef,
-                this.lastOrderedMsgRef
-            )
+            logger.trace({
+                ignoredMsgRef: msgRef,
+                lastMsgRef: this.lastOrderedMsgRef
+            }, 'Ignoring message; was already enqueued or we already processed a newer message.')
             return
         }
 
@@ -257,7 +256,7 @@ class OrderedMsgChain extends MsgChainEmitter {
         }
 
         if (this.isGapHandlingEnabled()) {
-            logger.trace('marking message %j', streamMessage.getMessageRef())
+            logger.trace({ msgRef: streamMessage.getMessageRef() }, 'marking message')
         }
 
         this.markedExplicitly.add(streamMessage)
@@ -342,7 +341,7 @@ class OrderedMsgChain extends MsgChainEmitter {
         // emit drain after clearing a block. If only a single item was in the
         // queue, the queue was never blocked, so it doesn't need to 'drain'.
         if (processedMessages > 1) {
-            logger.trace('queue drained %d %j', processedMessages, this.lastOrderedMsgRef)
+            logger.trace({ processedMessages, lastMsgRef: this.lastOrderedMsgRef }, 'queue drained')
             this.clearGap()
             this.emit('drain', processedMessages)
         }
@@ -360,7 +359,7 @@ class OrderedMsgChain extends MsgChainEmitter {
                 this.markedExplicitly.delete(msg)
 
                 if (this.isGapHandlingEnabled()) {
-                    logger.trace('skipping message %j', msg.getMessageRef())
+                    logger.trace({ msgRef: msg.getMessageRef() }, 'skipping message')
                     this.emit('skip', msg)
                     return msg
                 }
@@ -387,7 +386,7 @@ class OrderedMsgChain extends MsgChainEmitter {
             return
         }
 
-        logger.trace('scheduleGap in %d ms', this.propagationTimeout)
+        logger.trace({ timeoutMs: this.propagationTimeout }, 'scheduleGap')
         const nextGap = (timeout: number) => {
             clearTimeout(this.nextGaps!)
             this.nextGaps = setTimeout(async () => {
@@ -420,10 +419,12 @@ class OrderedMsgChain extends MsgChainEmitter {
         const from = new MessageRef(lastOrderedMsgRef.timestamp, lastOrderedMsgRef.sequenceNumber + 1)
         const { gapRequestCount, maxGapRequests } = this
         if (gapRequestCount < maxGapRequests) {
-            logger.trace('requestGapFill %d of %d: %j', gapRequestCount + 1, maxGapRequests, {
+            logger.trace({
+                attemptNo: gapRequestCount + 1,
+                maxAttempts: maxGapRequests,
                 from,
                 to,
-            })
+            }, 'requestGapFill')
             this.gapRequestCount += 1
             try {
                 await this.gapHandler(from, to, this.publisherId, this.msgChainId)
@@ -445,10 +446,11 @@ class OrderedMsgChain extends MsgChainEmitter {
         const to = msg.prevMsgRef
         const from = new MessageRef(lastOrderedMsgRef.timestamp, lastOrderedMsgRef.sequenceNumber + 1)
         if (this.isGapHandlingEnabled()) {
-            logger.trace('requestGapFill failed after %d attempts: %o', maxGapRequests, {
+            logger.trace({
+                maxGapRequests,
                 from,
-                to,
-            })
+                to
+            }, 'requestGapFill failed after reaching max attempts')
             this.debugStatus()
         }
 
@@ -465,7 +467,8 @@ class OrderedMsgChain extends MsgChainEmitter {
     }
 
     debugStatus(): void {
-        logger.trace('Up to %j: %j', this.lastOrderedMsgRef, {
+        logger.trace({
+            lastMsgRef: this.lastOrderedMsgRef,
             gapRequestCount: this.gapRequestCount,
             maxGapRequests: this.maxGapRequests,
             size: this.queue.size(),
