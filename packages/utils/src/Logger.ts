@@ -43,6 +43,13 @@ const rootLogger = pino({
 export class Logger {
     static NAME_LENGTH = 20
 
+    fatal: pino.LogFn
+    error: pino.LogFn
+    warn: pino.LogFn
+    info: pino.LogFn
+    debug: pino.LogFn
+    trace: pino.LogFn
+
     static createName(module: NodeJS.Module, context?: string): string {
         const parsedPath = path.parse(String(module.id))
         let fileId = parsedPath.name
@@ -67,42 +74,11 @@ export class Logger {
             name: Logger.createName(module, context),
             level: process.env.LOG_LEVEL ?? defaultLogLevel
         })
-    }
-
-    fatal(msg: string, ...args: any[]): void {
-        this.logger.fatal(msg, ...args)
-    }
-
-    error(msg: string, ...args: any[]): void {
-        const errorInstance = args.find((arg) => (arg.constructor.name === 'Error'
-            || arg.constructor.name === 'AggregateError'
-            || arg.constructor.name === 'EvalError'
-            || arg.constructor.name === 'RangeError'
-            || arg.constructor.name === 'ReferenceError'
-            || arg.constructor.name === 'SyntaxError'
-            || arg.constructor.name === 'TypeError'
-            || arg.constructor.name === 'URIError'
-        ))
-        if (errorInstance !== undefined) {
-            this.logger.error({ err: errorInstance }, msg, ...args)
-        } else {
-            this.logger.error(msg, ...args)
-        }
-    }
-
-    warn(msg: string, ...args: any[]): void {
-        this.logger.warn(msg, ...args)
-    }
-
-    info(msg: string, ...args: any[]): void {
-        this.logger.info(msg, ...args)
-    }
-
-    debug(msg: string, ...args: any[]): void {
-        this.logger.debug(msg, ...args)
-    }
-
-    trace(msg: string, ...args: any[]): void {
-        this.logger.trace(msg, ...args)
+        this.fatal = this.logger.fatal.bind(this.logger)
+        this.error = this.logger.error.bind(this.logger)
+        this.warn = this.logger.warn.bind(this.logger)
+        this.info = this.logger.info.bind(this.logger)
+        this.debug = this.logger.debug.bind(this.logger)
+        this.trace = this.logger.trace.bind(this.logger)
     }
 }
