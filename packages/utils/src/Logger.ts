@@ -33,6 +33,7 @@ const rootLogger = pino({
         target: 'pino-pretty',
         options: {
             colorize: parseBoolean(process.env.LOG_COLORS) ?? true,
+            singleLine: true,
             translateTime: 'yyyy-mm-dd"T"HH:MM:ss.l',
             ignore: 'pid,hostname',
             levelFirst: true,
