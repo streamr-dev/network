@@ -44,9 +44,10 @@ export interface NodeToTracker {
 
 export type UUID = string
 
+const logger = new Logger(module)
+
 export class NodeToTracker extends EventEmitter {
     private readonly endpoint: AbstractClientWsEndpoint<AbstractWsConnection>
-    private readonly logger: Logger
 
     constructor(endpoint: AbstractClientWsEndpoint<AbstractWsConnection>) {
         super()
@@ -54,7 +55,6 @@ export class NodeToTracker extends EventEmitter {
         this.endpoint.on(WsEndpointEvent.PEER_CONNECTED, (peerInfo) => this.onPeerConnected(peerInfo))
         this.endpoint.on(WsEndpointEvent.PEER_DISCONNECTED, (peerInfo) => this.onPeerDisconnected(peerInfo))
         this.endpoint.on(WsEndpointEvent.MESSAGE_RECEIVED, (peerInfo, message) => this.onMessageReceived(peerInfo, message))
-        this.logger = new Logger(module)
     }
 
     async sendStatus(trackerId: TrackerId, status: Status): Promise<UUID> {
@@ -161,7 +161,7 @@ export class NodeToTracker extends EventEmitter {
             if (message != null) {
                 this.emit(eventPerType[message.type], message, peerInfo.peerId)
             } else {
-                this.logger.warn('invalid message from %s: "%s"', peerInfo, rawMessage)
+                logger.warn({ sender: peerInfo.peerId, rawMessage }, 'ignoring received invalid message')
             }
         }
     }
@@ -175,8 +175,8 @@ export class NodeToTracker extends EventEmitter {
     }
 
     onPeerConnected(peerInfo: PeerInfo): void {
-        this.logger.debug(`Peer connected: ${NameDirectory.getName(peerInfo.peerId)}`)
         if (peerInfo.isTracker()) {
+            logger.debug({ trackerId: NameDirectory.getName(peerInfo.peerId) }, 'connected to tracker')
             this.emit(Event.CONNECTED_TO_TRACKER, peerInfo.peerId)
         }
     }

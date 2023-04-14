@@ -50,7 +50,11 @@ export const retry = async <T>(task: () => Promise<T>, description: string, abor
             const result = await task()
             return result
         } catch (e: any) {
-            logger.warn(`${description} failed, retrying in ${delay} ms`)
+            logger.warn({
+                description,
+                delayInMs: delay
+
+            }, 'failed, retrying after delay')
         }
         await wait(delay, abortSignal)
     }
@@ -90,7 +94,7 @@ export class ProxyStreamConnectionClient extends EventEmitter {
         getUserId: () => Promise<string>,
         connectionCount?: number
     ): Promise<void> {
-        logger.trace(`Set proxies on ${streamPartId}`)
+        logger.trace({ streamPartId }, 'Set proxies on')
         if (connectionCount !== undefined && connectionCount > nodeIds.length) {
             throw Error('Cannot set connectionCount above the size of the configured array of nodes')
         }
@@ -168,11 +172,20 @@ export class ProxyStreamConnectionClient extends EventEmitter {
         direction: ProxyDirection,
         userId: string
     ): Promise<void> {
-        logger.info(`Open proxy connection to ${targetNodeId} on ${streamPartId}`)
+        logger.info({
+            targetNodeId,
+            streamPartId
+        }, 'Open proxy connection')
         try {
             await this.connectAndHandshake(streamPartId, targetNodeId, direction, userId)
         } catch (err) {
-            logger.warn(`Failed to create a proxy ${direction} stream connection to ${targetNodeId} for stream ${streamPartId}:\n${err}`)
+            logger.warn({
+                direction,
+                targetNodeId,
+                streamPartId,
+                err
+
+            }, 'Failed to create a proxy stream connection')
             this.emit(Event.CONNECTION_REJECTED, targetNodeId, streamPartId, direction, err)
         } finally {
             this.trackerManager.removeSignallingOnlySession(streamPartId, targetNodeId)
@@ -195,7 +208,10 @@ export class ProxyStreamConnectionClient extends EventEmitter {
         if (this.getConnections(streamPartId).has(targetNodeId)
             && this.streamPartManager.hasOnewayConnection(streamPartId, targetNodeId)
         ) {
-            logger.info(`Close proxy connection to ${targetNodeId} on ${streamPartId}`)
+            logger.info({
+                targetNodeId,
+                streamPartId
+            }, 'Close proxy connection')
             await this.nodeToNode.leaveStreamOnNode(targetNodeId, streamPartId)
             this.node.emit(NodeEvent.ONE_WAY_CONNECTION_CLOSED, targetNodeId, streamPartId)
             this.removeConnection(streamPartId, targetNodeId)

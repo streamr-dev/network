@@ -79,7 +79,10 @@ export class ProxyStreamConnectionServer {
         const streamPartId = message.getStreamPartID()
         this.removeConnection(streamPartId, nodeId)
         this.node.emit(Event.ONE_WAY_CONNECTION_CLOSED, nodeId, streamPartId)
-        logger.info(`Proxy node ${nodeId} closed one-way stream connection for ${streamPartId}`)
+        logger.info({
+            nodeId,
+            streamPartId
+        }, 'Proxy node closed one-way stream connection')
     }
 
     private removeConnection(streamPartId: StreamPartID, nodeId: NodeId): void {

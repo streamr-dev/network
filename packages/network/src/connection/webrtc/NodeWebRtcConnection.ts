@@ -144,7 +144,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
                 this.connection.setRemoteDescription(description, type)
                 this.remoteDescriptionSet = true
             } catch (err) {
-                this.logger.warn('setRemoteDescription failed, reason: %s', err)
+                this.logger.warn(err, 'setRemoteDescription failed')
             }
         } else {
             this.logger.warn('skipped setRemoteDescription, connection is null')
@@ -157,7 +157,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
                 try {
                     this.connection.addRemoteCandidate(candidate, mid)
                 } catch (err) {
-                    this.logger.warn('addRemoteCandidate failed, reason: %s', err)
+                    this.logger.warn(err, 'addRemoteCandidate failed')
                     this.close(new Error('addRemoteCandidate failed, closing'))
                 }
             } else {
@@ -182,7 +182,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
             try {
                 this.connection.close()
             } catch (e) {
-                this.logger.warn('conn.close() errored: %s', e)
+                this.logger.warn(e, 'conn.close() errored')
             }
         }
 
@@ -190,7 +190,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
             try {
                 this.dataChannel.close()
             } catch (e) {
-                this.logger.warn('dc.close() errored: %s', e)
+                this.logger.warn(e, 'dc.close() errored')
             }
         }
 
@@ -233,7 +233,10 @@ export class NodeWebRtcConnection extends WebRtcConnection {
     }
 
     private onStateChange(state: string): void {
-        this.logger.trace('conn.onStateChange: %s -> %s', this.lastState, state)
+        this.logger.trace({
+            lastState: this.lastState,
+            state
+        }, 'conn.onStateChange')
 
         this.lastState = state
 
@@ -247,7 +250,10 @@ export class NodeWebRtcConnection extends WebRtcConnection {
     }
 
     private onGatheringStateChange(state: string): void {
-        this.logger.trace('conn.onGatheringStateChange: %s -> %s', this.lastGatheringState, state)
+        this.logger.trace({
+            lastState: this.lastGatheringState,
+            state
+        }, 'conn.onGatheringStateChange')
         this.lastGatheringState = state
     }
 
@@ -279,7 +285,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
         })
 
         this.dataChannelEmitter.on('error', (err) => {
-            this.logger.warn('dc.onError: %s', err)
+            this.logger.warn(err, 'dc.onError')
         })
 
         this.dataChannelEmitter.on('bufferedAmountLow', () => {

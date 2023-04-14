@@ -33,16 +33,20 @@ export class PingPongWs {
     private pingConnections(): void {
         this.getConnections().forEach((connection) => {
             if (!connection.getRespondedPong()) {
-                logger.warn(`terminate connection to %s because didn't receive pong`, connection.getPeerId())
+                logger.warn({ peerId: connection.getPeerId() }, 'terminating connection due to not receiving pong')
                 connection.terminate()
             } else {
                 try {
                     connection.ping()
-                    logger.trace('pinging %s (current rtt %s)', connection.getPeerId(), connection.getRtt())
-                } catch (e) {
-                    logger.warn(`terminating connection because error thrown when attempting to ping %s: %s`,
-                        connection.getPeerId(), e
-                    )
+                    logger.trace({
+                        peerId: connection.getPeerId(),
+                        rtt: connection.getRtt()
+                    }, 'ping sent')
+                } catch (err) {
+                    logger.warn({
+                        peerId: connection.getPeerId(),
+                        err
+                    }, `terminating connection due to error thrown when attempting to ping`,)
                     connection.terminate()
                 }
             }

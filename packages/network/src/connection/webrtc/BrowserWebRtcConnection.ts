@@ -43,7 +43,10 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
         }
 
         this.peerConnection.onicegatheringstatechange = () => {
-            this.logger.trace('conn.onGatheringStateChange: %s -> %s', this.lastGatheringState, this.peerConnection?.iceGatheringState)
+            this.logger.trace({
+                oldState: this.lastGatheringState,
+                newState: this.peerConnection?.iceGatheringState
+            }, 'conn.onGatheringStateChange')
             this.lastGatheringState = this.peerConnection?.iceGatheringState
         }
 
@@ -81,13 +84,13 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
 
     protected doClose(err?: Error): void {
         if (err !== undefined) {
-            this.logger.warn('Closing BrowserWebRTCConnection with error: %s', err)
+            this.logger.warn(err, 'Closing BrowserWebRTCConnection with error')
         }
         if (this.dataChannel) {
             try {
                 this.dataChannel.close()
-            } catch (e) {
-                this.logger.warn('dc.close() errored: %s', e)
+            } catch (err) {
+                this.logger.warn(err, 'dc.close() errored')
             }
         }
 
@@ -96,8 +99,8 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
         if (this.peerConnection) {
             try {
                 this.peerConnection.close()
-            } catch (e) {
-                this.logger.warn('conn.close() errored: %s', e)
+            } catch (err) {
+                this.logger.warn(err, 'conn.close() errored')
             }
         }
 
@@ -191,7 +194,7 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
         }
 
         dataChannel.onerror = (err) => {
-            this.logger.warn('dc.onError: %o', err)
+            this.logger.warn(err, 'dc.onError')
         }
 
         dataChannel.onbufferedamountlow = () => {

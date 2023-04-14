@@ -10,6 +10,8 @@ type Queue = Record<StreamPartID, {
 
 type HandleFn = (instructionMessage: InstructionMessage, trackerId: TrackerId) => Promise<void>
 
+const logger = new Logger(module)
+
 /**
  * InstructionThrottler makes sure that
  *  1. no more than one instruction is handled at a time
@@ -17,7 +19,6 @@ type HandleFn = (instructionMessage: InstructionMessage, trackerId: TrackerId) =
  *     way where only the most latest instruction per stream part is kept in queue.
  */
 export class InstructionThrottler {
-    private readonly logger: Logger
     private readonly handleFn: HandleFn
     private queue: Queue = {}
     private instructionCounter: Record<StreamPartID, number> = {}
@@ -28,7 +29,6 @@ export class InstructionThrottler {
     private stopped: boolean
 
     constructor(handleFn: HandleFn) {
-        this.logger = new Logger(module)
         this.handleFn = handleFn
         this.ongoingPromises = {}
         this.stopped = false
@@ -54,7 +54,7 @@ export class InstructionThrottler {
             }
             if (!this.ongoingPromises[streamPartId].handling) {
                 this.invokeHandleFnWithLock(streamPartId).catch((err) => {
-                    this.logger.warn("error handling instruction, reason: %s", err)
+                    logger.warn(err, 'failed to handle instruction')
                 })
             }
         }
@@ -108,7 +108,7 @@ export class InstructionThrottler {
             this.ongoingPromises[streamPartId].promise = cancelable(this.handleFn(instructionMessage, trackerId))
             await this.ongoingPromises[streamPartId].promise
         } catch (err) {
-            this.logger.warn('handling InstructionMessage threw, error %j', err)
+            logger.warn(err, 'handling InstructionMessage threw')
         } finally {
             this.invokeHandleFnWithLock(streamPartId)
         }

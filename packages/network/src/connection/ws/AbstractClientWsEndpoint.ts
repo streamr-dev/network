@@ -3,6 +3,7 @@ import { PeerId, PeerInfo } from '../PeerInfo'
 import { AbstractWsEndpoint, DisconnectionCode, DisconnectionReason } from "./AbstractWsEndpoint"
 import { AbstractWsConnection, ReadyState } from "./AbstractWsConnection"
 import { IMessageEvent, w3cwebsocket } from "websocket"
+import { Logger } from '@streamr/utils'
 
 export type ServerUrl = string
 export type SupportedWs = WebSocket | w3cwebsocket
@@ -11,6 +12,8 @@ export interface HandshakeValues { uuid: string, peerId: PeerId }
 export interface WebSocketConnectionFactory<C extends AbstractWsConnection> {
     createConnection(socket: SupportedWs, peerInfo: PeerInfo): C
 }
+
+const logger = new Logger(module)
 
 export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> extends AbstractWsEndpoint<C> {
     protected readonly connectionsByServerUrl: Map<ServerUrl, C>
@@ -51,10 +54,10 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
             if (existingConnection.getReadyState() === 1 as ReadyState) {
                 return Promise.resolve(existingConnection.getPeerId())
             }
-            this.logger.trace('supposedly connected to %s but readyState is %s, closing connection',
+            logger.trace({
                 serverUrl,
-                existingConnection.getReadyState()
-            )
+                readyState: existingConnection.getReadyState()
+            }, 'supposedly connected but readyState not connected, closing connection',)
             this.close(
                 existingConnection.getPeerId(),
                 DisconnectionCode.DEAD_CONNECTION,
@@ -69,7 +72,7 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
         }
 
         // Perform connection
-        this.logger.trace('connecting to %s', serverUrl)
+        logger.trace({ serverUrl }, 'connecting to server')
         const p = this.doConnect(serverUrl, serverPeerInfo).finally(() => {
             this.pendingConnections.delete(serverUrl)
         })
@@ -91,7 +94,7 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
         const peerId = serverPeerInfo.peerId
         this.handshakeTimeoutRefs[peerId] = setTimeout(() => {
             ws.close(DisconnectionCode.FAILED_HANDSHAKE, `Handshake not received from ${peerId}`)
-            this.logger.warn(`Handshake not received from ${peerId}`)
+            logger.warn({ peerId }, 'Handshake not received from peer')
             delete this.handshakeTimeoutRefs[peerId]
             reject(`Handshake not received from ${peerId}`)
         }, this.handshakeTimer)
@@ -114,25 +117,28 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
                 this.doHandshakeResponse(uuid, peerId, ws)
                 resolve(this.setUpConnection(ws, serverPeerInfo, serverUrl))
             } else {
-                this.logger.trace('Expected a handshake message got %s: ', message)
+                logger.trace({ gotInstead: message?.toString() }, 'Expected a handshake message')
             }
         } catch (err) {
-            this.logger.trace(err)
+            logger.trace(err)
         }
     }
 
+    // eslint-disable-next-line class-methods-use-this
     protected onHandshakeError(serverUrl: string, error: Error, reject: (reason?: any) => void): void {
-        this.logger.trace('failed to connect to %s, error: %o', serverUrl, error)
+        logger.trace({ serverUrl, error }, 'failed to connect to server')
         reject(error)
     }
 
+    // eslint-disable-next-line class-methods-use-this
     protected onHandshakeClosed(serverUrl: string, code: number, reason: string, reject: (reason?: any) => void): void {
-        this.logger.trace(`Connection to ${serverUrl} closed during handshake with code: ${code}, reason ${reason}`)
+        logger.trace({ serverUrl, code, reason }, 'Connection to server closed during handshake')
         reject(reason)
     }
 
+    // eslint-disable-next-line class-methods-use-this
     protected ongoingConnectionError(serverPeerId: PeerId, error: Error, connection: AbstractWsConnection): void {
-        this.logger.trace('Connection to %s failed, error: %o', serverPeerId, error)
+        logger.trace({ serverPeerId, error }, 'Connection to server failed')
         connection.terminate()
     }
 

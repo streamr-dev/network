@@ -11,6 +11,7 @@ import { once } from 'events'
 import { v4 } from 'uuid'
 import { AbstractWsConnection } from '../connection/ws/AbstractWsConnection'
 import { ISimulatedWsEndpoint } from './ISimulatedWsEndpoint'
+import { Logger } from '@streamr/utils'
 
 interface HostPort {
     hostname: string
@@ -19,6 +20,8 @@ interface HostPort {
 type UnixSocket = string
 
 export type HttpServerConfig = HostPort | UnixSocket
+
+const logger = new Logger(module)
 
 export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> implements ISimulatedWsEndpoint {
     private readonly serverUrl: string
@@ -77,13 +80,13 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> imp
                         Simulator.instance().wsDisconnect(this.ownAddress, this.peerInfo, fromAddress, DisconnectionCode.DUPLICATE_SOCKET, 
                             failedMessage)
 
-                        this.logger.warn(failedMessage + " " + data)
+                        logger.warn(failedMessage + " " + data)
                     }
                 } else {
-                    this.logger.trace('Expected a handshake message got: ' + data.toString())
+                    logger.trace('Expected a handshake message got: ' + data.toString())
                 }
             } catch (err) {
-                this.logger.trace(err)
+                logger.trace(err)
             }
         }
 
@@ -93,7 +96,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> imp
 
             //ws.close(DisconnectionCode.FAILED_HANDSHAKE, `Handshake not received from connection behind UUID ${handshakeUUID}`)
 
-            this.logger.warn(`Server: Handshake not received from connection behind UUID ${handshakeUUID}`)
+            logger.warn(`Server: Handshake not received from connection behind UUID ${handshakeUUID}`)
 
             delete this.handshakeTimeoutRefs[handshakeUUID]
         }, this.handshakeTimer)
@@ -132,7 +135,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> imp
 
             } catch (err) {
                 const connection = this.getConnectionByPeerId(fromInfo.peerId) as AbstractWsConnection
-                this.logger.trace(err)
+                logger.trace(err)
                 this.onReceive(connection, data.toString())
             }
         } else {
@@ -222,7 +225,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> imp
             return new Promise((resolve, reject) => {
                 this.httpServer?.close((err?) => {
                     if (err) {
-                        this.logger.error('error closing http server: %s', err)
+                        logger.error('error closing http server: %s', err)
                         reject(err)
                     } else {
                         resolve()
