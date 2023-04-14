@@ -39,12 +39,12 @@ export class StorageEventListener {
         }
     }
 
-    async start(): Promise<void> {
+    start(): void {
         this.streamrClient.on('addToStorageNode', this.onAddToStorageNode)
         this.streamrClient.on('removeFromStorageNode', this.onRemoveFromStorageNode)
     }
 
-    async destroy(): Promise<void> {
+    destroy(): void {
         this.streamrClient.off('addToStorageNode', this.onAddToStorageNode)
         this.streamrClient.off('removeFromStorageNode', this.onRemoveFromStorageNode)
     }

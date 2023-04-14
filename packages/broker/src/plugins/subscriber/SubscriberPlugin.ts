@@ -31,11 +31,9 @@ export class SubscriberPlugin extends Plugin<SubscriberPluginConfig> {
 
     private async subscribeToStreamParts(): Promise<void> {
         const node = await this.streamrClient!.getNode()
-        await Promise.all([
-            ...this.streamParts.map(async (streamPart) => {
-                node.subscribe(streamPart)
-            })
-        ])
+        this.streamParts.forEach((streamPart) => {
+            node.subscribe(streamPart)
+        })
     }
 
     private async subscriptionIntervalFn(): Promise<void> {

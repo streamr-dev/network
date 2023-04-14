@@ -66,15 +66,13 @@ export class StorageConfig {
     }
 
     async start(): Promise<void> {
-        await Promise.all([
-            this.storagePoller.start(this.abortController.signal),
-            this.storageEventListener.start()
-        ])
+        this.storageEventListener.start()
+        await this.storagePoller.start(this.abortController.signal)
     }
 
     async destroy(): Promise<void> {
         this.abortController.abort()
-        await this.storageEventListener.destroy()
+        this.storageEventListener.destroy()
     }
 
     hasStreamPart(streamPart: StreamPartID): boolean {

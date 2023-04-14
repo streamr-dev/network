@@ -65,7 +65,7 @@ export default class StreamMessageValidator {
             throw new ValidationError('Falsey argument passed to validate()!')
         }
 
-        await this.assertSignatureIsValid(streamMessage)
+        this.assertSignatureIsValid(streamMessage)
 
         switch (streamMessage.messageType) {
             case StreamMessageType.MESSAGE:
@@ -88,7 +88,7 @@ export default class StreamMessageValidator {
      * @param streamMessage the StreamMessage to validate.
      * @param verifyFn function(address, payload, signature): return true if the address and payload match the signature
      */
-    private async assertSignatureIsValid(streamMessage: StreamMessage): Promise<void> {
+    private assertSignatureIsValid(streamMessage: StreamMessage): void {
         const payload = createSignaturePayload({
             messageId: streamMessage.getMessageID(),
             serializedContent: streamMessage.getSerializedContent(),
