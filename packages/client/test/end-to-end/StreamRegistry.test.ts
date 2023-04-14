@@ -86,7 +86,7 @@ describe('StreamRegistry', () => {
         describe('ENS', () => {
 
             it('domain owned by user', async () => {
-                const streamId = 'testdomain1.eth/foobar/' + Date.now()
+                const streamId = `testdomain1.eth/foobar/${Date.now()}`
                 const ensOwnerClient = new StreamrClient({
                     ...CONFIG_TEST,
                     auth: {
