@@ -16,7 +16,7 @@ createMessagingPluginTest('mqtt',
                 username: '',
                 password: apiKey
             } : undefined
-            return mqtt.connectAsync('mqtt://localhost:' + MQTT_PORT, opts)
+            return mqtt.connectAsync(`mqtt://localhost:${MQTT_PORT}`, opts)
         },
         closeClient: async (client: AsyncMqttClient): Promise<void> => {
             await client.end(true)
