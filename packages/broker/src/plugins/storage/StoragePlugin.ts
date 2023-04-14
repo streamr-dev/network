@@ -109,9 +109,14 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
                         await assignmentStream.publish({
                             streamPart
                         })
-                        logger.debug('published message to assignment stream %s', assignmentStream.id)
-                    } catch (e) {
-                        logger.warn('failed to publish to assignment stream %s, reason: %s', assignmentStream.id, e)
+                        logger.debug({
+                            assignmentStreamId: assignmentStream.id
+                        }, 'published message to assignment stream')
+                    } catch (err) {
+                        logger.warn({
+                            assignmentStreamId: assignmentStream.id,
+                            err
+                        }, 'failed to publish to assignment stream')
                     }
                 },
                 onStreamPartRemoved: (streamPart) => {

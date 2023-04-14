@@ -59,7 +59,6 @@ export class BatchManager extends EventEmitter {
 
         this.cassandraClient = cassandraClient
         this.insertStatement = this.opts.useTtl ? INSERT_STATEMENT_WITH_TTL : INSERT_STATEMENT
-        this.logger.trace('create %o', this.opts)
     }
 
     store(bucketId: BucketId, streamMessage: StreamMessage, doneCb?: DoneCallback): void {
@@ -130,22 +129,24 @@ export class BatchManager extends EventEmitter {
                 prepare: true
             })
 
-            this.logger.trace(`inserted batch id:${batch.getId()}`)
+            this.logger.trace({ batchId: batch.getId() }, 'Inserted batch')
             batch.done()
             batch.clear()
             delete this.pendingBatches[batch.getId()]
         } catch (err) {
-            this.logger.trace(`failed to insert batch, error ${err}`)
+            this.logger.trace(err, 'Failed to insert batch')
             if (this.opts.logErrors) {
-                this.logger.error(`Failed to insert batchId: (${batchId})`)
-                this.logger.error(err)
+                this.logger.error({ batchId, err }, 'Failed to insert batch')
             }
 
             // stop if reached max retries
             // TODO: This probably belongs in Batch
             if (batch.reachedMaxRetries()) {
                 if (this.opts.logErrors) {
-                    this.logger.error(`Batch %s reached max retries %s, dropping batch`, batch.getId(), batch.retries)
+                    this.logger.error({
+                        batchId: batch.getId(),
+                        retries: batch.retries
+                    }, 'Batch reached max retries, dropping batch')
                 }
                 batch.clear()
                 delete this.pendingBatches[batch.getId()]

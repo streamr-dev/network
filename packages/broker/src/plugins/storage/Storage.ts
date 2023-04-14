@@ -76,13 +76,13 @@ export class Storage extends EventEmitter {
     }
 
     async store(streamMessage: StreamMessage): Promise<boolean> {
-        logger.debug('Store message')
+        logger.debug({ msgId: streamMessage.messageId }, 'Store message')
 
         const bucketId = this.bucketManager.getBucketId(streamMessage.getStreamId(), streamMessage.getStreamPartition(), streamMessage.getTimestamp())
 
         return new Promise((resolve, reject) => {
             if (bucketId) {
-                logger.trace(`found bucketId: ${bucketId}`)
+                logger.trace({ bucketId }, 'Found bucket')
 
                 this.bucketManager.incrementBucket(bucketId, Buffer.byteLength(streamMessage.serialize()))
                 setImmediate(() => this.batchManager.store(bucketId, streamMessage, (err?: Error) => {
@@ -95,7 +95,7 @@ export class Storage extends EventEmitter {
                 }))
             } else {
                 const messageId = streamMessage.messageId.serialize()
-                logger.trace(`bucket not found, put ${messageId} to pendingMessages`)
+                logger.trace({ messageId }, 'bucket not found, put to pendingMessages')
 
                 const uuid = uuidv1()
                 const timeout = setTimeout(() => {
@@ -113,7 +113,11 @@ export class Storage extends EventEmitter {
             limit = MAX_RESEND_LAST
         }
 
-        logger.trace('requestLast %o', { streamId, partition, limit })
+        logger.trace({
+            streamId,
+            partition,
+            limit
+        }, 'requestLast')
 
         const GET_LAST_N_MESSAGES = 'SELECT payload FROM stream_data WHERE '
             + 'stream_id = ? AND partition = ? AND bucket_id IN ? '
@@ -192,7 +196,13 @@ export class Storage extends EventEmitter {
     }
 
     requestFrom(streamId: string, partition: number, fromTimestamp: number, fromSequenceNo: number, publisherId?: string): Readable {
-        logger.trace('requestFrom %o', { streamId, partition, fromTimestamp, fromSequenceNo, publisherId })
+        logger.trace({
+            streamId,
+            partition,
+            fromTimestamp,
+            fromSequenceNo,
+            publisherId
+        },'requestFrom')
 
         return this.fetchRange(
             streamId,
@@ -215,7 +225,16 @@ export class Storage extends EventEmitter {
         publisherId: string | undefined,
         msgChainId: string | undefined
     ): Readable {
-        logger.trace('requestRange %o', { streamId, partition, fromTimestamp, fromSequenceNo, toTimestamp, toSequenceNo, publisherId, msgChainId })
+        logger.trace({
+            streamId,
+            partition,
+            fromTimestamp,
+            fromSequenceNo,
+            toTimestamp,
+            toSequenceNo,
+            publisherId,
+            msgChainId
+        }, 'requestRange')
 
         // TODO is there any reason why we shouldn't allow range queries which contain publisherId, but not msgChainId?
         // (or maybe even queries with msgChain but without publisherId)
@@ -361,7 +380,9 @@ export class Storage extends EventEmitter {
 
     private parseRow(row: types.Row, debugInfo: ResendDebugInfo): StreamMessage | null {
         if (row.payload === null) {
-            logger.error(`Found message with NULL payload on cassandra; debug info: ${JSON.stringify(debugInfo)}`)
+            logger.error({
+                debugInfo
+            }, 'Found message with NULL payload on cassandra')
             return null
         }
 

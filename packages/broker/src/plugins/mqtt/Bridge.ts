@@ -40,7 +40,7 @@ export class Bridge implements MqttServerListener {
         try {
             message = this.payloadFormat.createMessage(payload)
         } catch (err) {
-            logger.warn(`Unable to publish message: ${err.message}`)
+            logger.warn(err, 'Unable to form message')
             return
         }
         const { content, metadata } = message
@@ -51,12 +51,12 @@ export class Bridge implements MqttServerListener {
             })
             this.publishMessageChains.add(createMessageChainKey(publishedMessage))
         } catch (err: any) {
-            logger.warn('Unable to publish, reason: %s', err)
+            logger.warn(err, 'Unable to publish message')
         }
     }
 
     async onSubscribed(topic: string, clientId: string): Promise<void> {
-        logger.info('Client subscribed: ' + topic)
+        logger.info({ clientId, topic }, 'Client subscribed')
         const streamId = this.getStreamId(topic)
         const existingSubscription = this.getSubscription(streamId)
         if (existingSubscription === undefined) {
@@ -101,7 +101,7 @@ export class Bridge implements MqttServerListener {
     }
 
     onUnsubscribed(topic: string, clientId: string): void {
-        logger.info('Client unsubscribed: ' + topic)
+        logger.info({ clientId, topic }, 'Client unsubscribed')
         const streamId = this.getStreamId(topic)
         const existingSubscription = this.getSubscription(streamId)
         if (existingSubscription !== undefined) {

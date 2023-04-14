@@ -44,7 +44,7 @@ export class PublishConnection implements Connection {
                         msgChainId
                     })
                 } catch (err: any) {
-                    logger.warn('Unable to publish, reason: %s', err)
+                    logger.warn(err, 'Unable to publish')
                 }
             }
         })

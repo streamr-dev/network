@@ -72,7 +72,7 @@ export class BucketManager {
         const key = toKey(streamId, partition)
 
         if (this.streamParts[key]) {
-            logger.trace(`stream ${key} found`)
+            logger.trace({ key }, 'stream found')
             bucketId = this.findBucketId(key, timestamp)
 
             if (!bucketId) {
@@ -80,7 +80,7 @@ export class BucketManager {
                 stream.minTimestamp = stream.minTimestamp !== undefined ? Math.min(stream.minTimestamp, timestamp) : timestamp
             }
         } else {
-            logger.trace(`stream ${key} not found, create new`)
+            logger.trace({ key }, 'stream not found, create new')
 
             this.streamParts[key] = {
                 streamId,
@@ -98,7 +98,7 @@ export class BucketManager {
         if (bucket) {
             bucket.incrementBucket(size)
         } else {
-            logger.warn(`${bucketId} not found`)
+            logger.warn({ bucketId }, 'bucket not found')
         }
     }
 
@@ -112,7 +112,10 @@ export class BucketManager {
 
     private findBucketId(key: StreamPartKey, timestamp: number): string | undefined {
         let bucketId
-        logger.trace(`checking stream: ${key}, timestamp: ${timestamp} in BucketManager state`)
+        logger.trace({
+            key,
+            timestamp
+        }, 'checking stream in BucketManager state')
 
         const stream = this.streamParts[key]
         if (stream) {
@@ -139,7 +142,10 @@ export class BucketManager {
         }
 
         // just for logger.debugging
-        logger.trace(`bucketId ${bucketId ? 'FOUND' : ' NOT FOUND'} for stream: ${key}, timestamp: ${timestamp}`)
+        logger.trace({
+            key,
+            timestamp
+        }, `bucketId %s`, bucketId ? ' found' : ' not found')
         return bucketId
     }
 
@@ -195,7 +201,7 @@ export class BucketManager {
             }
 
             if (insertNewBucket) {
-                logger.trace(`bucket for timestamp: ${minTimestamp} not found, create new bucket`)
+                logger.trace({ minTimestamp }, `bucket for timestamp not found, creating new bucket`)
 
                 // we create first in memory, so don't wait for database, then _storeBuckets inserts bucket into database
                 const newBucket = new Bucket(

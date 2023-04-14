@@ -66,8 +66,11 @@ export class WebsocketServer {
             try {
                 connectionUrl = this.parseUrl(request.url!)
                 connection = this.createConnection(connectionUrl)
-            } catch (e) {
-                logger.warn(`Unable to create connection: ${e.message} ${request.url}`)
+            } catch (err) {
+                logger.warn({
+                    requestUrl: request.url,
+                    err
+                }, 'Unable to create connection')
                 sendHttpError('400 Bad Request', socket)
                 return
             }

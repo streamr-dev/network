@@ -75,7 +75,7 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
     }
 
     private async onRewardCodeReceived(rewardCode: string): Promise<void> {
-        logger.info(`Reward code received: ${rewardCode}`)
+        logger.info({ rewardCode }, 'Reward code received')
         const peers = await this.getPeers()
         const delay = Math.floor(Math.random() * this.pluginConfig.maxClaimDelay)
         await wait(delay) 
@@ -105,8 +105,8 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
             }
         })
         subscription.on('error', (err) => {
-            logger.warn('Failed to claim reward code due to error %s', err?.message)
-            logger.debug('', err)
+            logger.warn({ reason: err?.message }, 'Failed to claim reward code')
+            logger.debug(err)
         })
     }
 
@@ -140,12 +140,18 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
                 }
             })
             const resBody = await res.json()
-            logger.info(`Reward claimed successfully, current stake ${resBody.stake} on block ${resBody.latestBlock}`)
+            logger.info({
+                currentStake: resBody.stake,
+                latestBlock: resBody.latestBlock
+            }, 'Reward claimed successfully')
             if (resBody.alert) {
-                logger.info(`Claim alert: ${resBody.alert}`)
+                logger.info({ alert: resBody.alert }, 'Claim alert: %s', resBody.alert)
             }
-        } catch (e) {
-            logger.error(`Unable to claim reward: code=${rewardCode}`, e)
+        } catch (err) {
+            logger.error({
+                rewardCode,
+                err
+            }, 'Unable to claim reward')
         }
     }
 
@@ -168,10 +174,14 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
                 sampleCount: NAT_ANALYSIS_SAMPLE_COUNT,
                 stunHost: this.pluginConfig.stunServerHost!
             }), NAT_ANALYSIS_TIMEOUT.maxWaitTime)
-            logger.info(`NAT type: ${result}`)
+            logger.info({
+                result
+            }, 'NAT type analyzed')
             return result
         } catch (e) {
-            logger.warn(`Unable to analyze NAT type: ${e.message}`)
+            logger.warn({
+                reason: e.message
+            }, 'Unable to analyze NAT type')
             return NAT_TYPE_UNKNOWN
         }
     }

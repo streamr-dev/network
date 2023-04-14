@@ -30,12 +30,12 @@ export class StorageEventListener {
         if (event.nodeAddress !== this.clusterId) {
             return
         }
-        logger.info('received StorageNodeAssignmentEvent type=%s: %j', type, event)
+        logger.info({ type, event }, 'received StorageNodeAssignmentEvent')
         try {
             const stream = await this.streamrClient.getStream(event.streamId)
             this.onEvent(stream, type, event.blockNumber)
-        } catch (e) {
-            logger.warn('chainEventsListener: %s', e)
+        } catch (err) {
+            logger.warn(err, 'chainEventsListener')
         }
     }
 
