@@ -41,15 +41,20 @@ const rootLogger = pino({
     }
 })
 
+interface LogMethod {
+    (obj: unknown, msg?: string, ...args: any[]): void
+    (msg: string, ...args: any[]): void
+}
+
 export class Logger {
     static NAME_LENGTH = 20
 
-    fatal: pino.LogFn
-    error: pino.LogFn
-    warn: pino.LogFn
-    info: pino.LogFn
-    debug: pino.LogFn
-    trace: pino.LogFn
+    fatal: LogMethod
+    error: LogMethod
+    warn: LogMethod
+    info: LogMethod
+    debug: LogMethod
+    trace: LogMethod
 
     static createName(module: NodeJS.Module, context?: string): string {
         const parsedPath = path.parse(String(module.id))
@@ -71,7 +76,7 @@ export class Logger {
         context?: string,
         defaultLogLevel: LogLevel = 'info'
     ) {
-        this.logger = rootLogger.child({
+        this.logger = rootLogger.child({}, {
             name: Logger.createName(module, context),
             level: process.env.LOG_LEVEL ?? defaultLogLevel
         })
