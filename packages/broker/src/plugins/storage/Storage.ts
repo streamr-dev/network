@@ -202,7 +202,7 @@ export class Storage extends EventEmitter {
             fromTimestamp,
             fromSequenceNo,
             publisherId
-        },'requestFrom')
+        }, 'requestFrom')
 
         return this.fetchRange(
             streamId,
