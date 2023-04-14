@@ -72,13 +72,13 @@ export class DataStore implements IStoreService {
 
         this.dhtNodeEmitter.on('newContact', (peerDescriptor: PeerDescriptor, _closestPeers: PeerDescriptor[]) => {
 
-            this.localDataStore.store.forEach((dataMap, _dataKey) => {
+            this.localDataStore.getStore().forEach((dataMap, _dataKey) => {
                 dataMap.forEach((dataEntry) => {
                     //if (this.isFurtherFromDataThan(dataEntry, contact) &&
                     //    this.isFurtherstStorerOf(dataEntry)) 
-                    if (this.shouldMigrateDataToNewNode(dataEntry, peerDescriptor)) {
+                    if (this.shouldMigrateDataToNewNode(dataEntry.dataEntry, peerDescriptor)) {
 
-                        this.migrateDataToContact(dataEntry, peerDescriptor)
+                        this.migrateDataToContact(dataEntry.dataEntry, peerDescriptor)
 
                     }
                 })

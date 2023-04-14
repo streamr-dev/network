@@ -86,8 +86,8 @@ export class DhtNodeConfig {
     dhtJoinTimeout = 60000
     getClosestContactsLimit = 5
     maxConnections = 80
-    storeHighestTtl = 10000
-    storeMaxTtl = 10000
+    storeHighestTtl = 60000
+    storeMaxTtl = 60000
     storeNumberOfCopies = 5
     metricsContext = new MetricsContext()
 
@@ -675,6 +675,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
         this.bucket!.toArray().map((dhtPeer: DhtPeer) => this.bucket!.remove(dhtPeer.id))
         this.bucket!.removeAllListeners()
+        this.localDataStore.clear()
         this.neighborList!.stop()
         this.randomPeers!.stop()
         this.openInternetPeers!.stop()

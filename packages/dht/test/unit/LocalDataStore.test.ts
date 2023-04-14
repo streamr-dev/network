@@ -5,6 +5,7 @@ import {
     peerIdFromPeerDescriptor
 } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { LocalDataStore } from '../../src/dht/store/LocalDataStore'
+import { wait } from '@streamr/utils'
 
 describe('LocalDataStore', () => {
     let localDataStore: LocalDataStore
@@ -23,6 +24,10 @@ describe('LocalDataStore', () => {
 
     beforeEach(() => {
         localDataStore = new LocalDataStore()
+    })
+
+    afterEach(() => {
+        localDataStore.clear()
     })
 
     it('can store', () => {
@@ -56,6 +61,14 @@ describe('LocalDataStore', () => {
             const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
             expect(isSamePeerDescriptor(fetchedDescriptor, storer2)).toBeTrue()
         })
+    })
+
+    it('data is deleted after TTL', async () => {
+        const dataKey = peerIdFromPeerDescriptor(storer1)
+        localDataStore.storeEntry({ storer: storer1, kademliaId: dataKey.value, data: data1, ttl: 1000 })
+        await wait(1100)
+        const fetchedData = localDataStore.getEntry(dataKey)
+        expect(fetchedData).toBeUndefined()
     })
 
 })
