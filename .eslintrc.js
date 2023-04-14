@@ -70,8 +70,8 @@ module.exports = {
         //'@typescript-eslint/no-empty-function': 'error',
         'no-multi-spaces': ["error", { ignoreEOLComments: true }],
         'default-case': ['error'],
-        /* TODO select which rules we should disable
-         @typescript-eslint/require-await': 'off',
+        // select which rules we should disable
+        '@typescript-eslint/require-await': 'off',
         '@typescript-eslint/no-floating-promises': 'off',
         '@typescript-eslint/await-thenable': 'off',
         '@typescript-eslint/no-misused-promises': 'off',
@@ -83,6 +83,6 @@ module.exports = {
         '@typescript-eslint/no-unnecessary-type-assertion': 'off',
         '@typescript-eslint/restrict-template-expressions': 'off',
         '@typescript-eslint/restrict-plus-operands': 'off',
-        '@typescript-eslint/unbound-method': 'off'*/
+        '@typescript-eslint/unbound-method': 'off'
     }
 }
