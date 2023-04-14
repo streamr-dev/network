@@ -140,14 +140,25 @@ export class InstructionAndStatusAckSender {
                     if (isInstruction(entry)) {
                         const { nodeId, streamPartId, newNeighbors, counterValue } = entry
                         await this.sendInstruction(nodeId, streamPartId, newNeighbors, counterValue)
-                        logger.debug('instruction %o sent to node %o', newNeighbors, { counterValue, streamPartId, nodeId })
+                        logger.debug({
+                            newNeighbors,
+                            counterValue,
+                            nodeId,
+                            streamPartId
+                        }, 'instruction sent to node')
                     } else {
                         const { nodeId, streamPartId } = entry
                         await this.sendStatusAck(nodeId, streamPartId)
-                        logger.debug('statusAck %s sent to node %s', streamPartId, nodeId)
+                        logger.debug({
+                            nodeId,
+                            streamPartId
+                        }, 'statusAck sent to node')
                     }
                 } catch (err) {
-                    logger.warn('failed to send instructions / ack %j, reason: %s', entry, err)
+                    logger.warn({
+                        entry,
+                        err
+                    }, 'failed to send instructions / ack to node')
                 }
             })
         await Promise.allSettled(promises)
