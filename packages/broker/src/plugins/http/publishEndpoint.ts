@@ -32,7 +32,7 @@ const createHandler = (msgChainId: string, streamrClient: StreamrClient): Reques
             })
             return
         }
-        const streamId = req.params.streamId as string
+        const streamId = req.params.streamId
         const streamPartDefinition = {
             streamId,
             streamPartition: partition

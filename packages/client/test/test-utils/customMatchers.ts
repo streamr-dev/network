@@ -51,7 +51,7 @@ const toThrowStreamError = (
     }
 
     if (!(actualError instanceof StreamrClientError)) {
-        return formError('Class name', 'StreamrClientError', (actualError as any).constructor.name)
+        return formError('Class name', 'StreamrClientError', actualError.constructor.name)
     }
     if (actualError.code !== expectedError.code) {
         return formError('StreamrClientError.code', expectedError.code, actualError.code)

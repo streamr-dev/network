@@ -95,7 +95,7 @@ export class PublisherKeyExchange {
         const encryptedGroupKeys = await Promise.all(keys.map((key) => {
             const encryptedGroupKeyHex = EncryptionUtil.encryptWithRSAPublicKey(key.data, rsaPublicKey, true)
             return new EncryptedGroupKey(key.id, encryptedGroupKeyHex)
-        })) as EncryptedGroupKey[]
+        }))
         const responseContent = new GroupKeyResponse({
             recipient,
             requestId,

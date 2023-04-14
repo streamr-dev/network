@@ -101,7 +101,7 @@ export class Storage extends EventEmitter {
                 const timeout = setTimeout(() => {
                     this.pendingStores.delete(uuid)
                     this.store(streamMessage).then(resolve, reject)
-                }, this.opts.retriesIntervalMilliseconds!)
+                }, this.opts.retriesIntervalMilliseconds)
                 this.pendingStores.set(uuid, timeout)
             }
         })
@@ -249,7 +249,7 @@ export class Storage extends EventEmitter {
         const keys = [...this.pendingStores.keys()]
         keys.forEach((key) => {
             const timeout = this.pendingStores.get(key)
-            clearTimeout(timeout!)
+            clearTimeout(timeout)
             this.pendingStores.delete(key)
         })
 
