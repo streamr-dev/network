@@ -74,11 +74,13 @@ export class Logger {
     constructor(
         module: NodeJS.Module,
         context?: string,
-        defaultLogLevel: LogLevel = 'info'
+        defaultLogLevel: LogLevel = 'info',
+        parentLogger: pino.Logger = rootLogger
     ) {
-        this.logger = rootLogger.child({}, {
-            name: Logger.createName(module, context),
-            level: process.env.LOG_LEVEL ?? defaultLogLevel
+        this.logger = parentLogger.child({
+            name: Logger.createName(module, context)
+        }, {
+            level: process.env.LOG_LEVEL as (string | undefined) ?? defaultLogLevel
         })
         this.fatal = this.logger.fatal.bind(this.logger)
         this.error = this.logger.error.bind(this.logger)
