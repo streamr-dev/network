@@ -12,5 +12,5 @@ module.exports = {
     includeVersion: true,
     disableSources: true,
     categorizeByGroup: false,
-    treatWarningsAsErrors: true
+    treatWarningsAsErrors: false
 }

@@ -525,15 +525,11 @@ export class StreamrClient {
 
     /**
      * @deprecated This in an internal method
-     * @internal
      */
     getNode(): Promise<NetworkNodeStub> {
         return this.node.getNode()
     }
 
-    /**
-     *  @internal This in an internal method 
-     */
     getEntryPoints(): PeerDescriptor[] {
         return this.node.getEntryPoints()
     }

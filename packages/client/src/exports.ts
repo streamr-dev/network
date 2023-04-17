@@ -61,7 +61,7 @@ export {
     StreamMessageType
 } from '@streamr/protocol'
 
-export { StreamrNodeOpts } from '@streamr/trackerless-network'
-export { IceServer, PeerDescriptor } from '@streamr/dht' 
+export type { StreamrNodeOpts } from '@streamr/trackerless-network'
+export type { IceServer, PeerDescriptor } from '@streamr/dht' 
 export type { ConnectionInfo } from '@ethersproject/web'
 export type { ExternalProvider } from '@ethersproject/providers'
