@@ -9,7 +9,7 @@ const sideChainConfig = {
     name: 'streamr',
     chainId: 8997,
     rpcs: [{
-        url: process.env.SIDECHAIN_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8546`,
+        url: process.env.SIDECHAIN_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:8546`,
         timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000,
     }]
 }
@@ -44,12 +44,12 @@ export const CONFIG_TEST: StreamrClientConfig = {
             name: 'dev_ethereum',
             chainId: 8995,
             rpcs: [{
-                url: process.env.ETHEREUM_SERVER_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8545`,
+                url: process.env.ETHEREUM_SERVER_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:8545`,
                 timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000
             }]
         },
         streamRegistryChainRPCs: sideChainConfig,
-        theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-contracts`,
+        theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:8000/subgraphs/name/streamr-dev/network-contracts`,
     },
     _timeouts: {
         theGraph: {
@@ -60,7 +60,7 @@ export const CONFIG_TEST: StreamrClientConfig = {
             timeout: 60 * 1000,
             retryInterval: 500
         },
-        jsonRpc: {
+        ensStreamCreation: {
             timeout: 20 * 1000,
             retryInterval: 500
         },

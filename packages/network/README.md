@@ -6,13 +6,8 @@
 
 # @streamr/network-node
 
-An extendable Streamr Network node implementation. The package implements and exports a fully-operational
-minimal network node implementation that can be further refined by the library's user. It is used as the main building
-block in `streamr-client` for publishing and subscribing to streams.
-
-## Table of Contents
-- [Install](#install)
-- [Develop](#develop)
+A bare minimum operational Streamr Network node implementation that can be further extended by the user.
+Used by package `streamr-client` as the main building block for publishing and subscribing to stream partitions.
 
 ## Install
 ```

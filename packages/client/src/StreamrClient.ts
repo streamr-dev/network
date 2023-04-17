@@ -21,7 +21,7 @@ import { StreamrClientEventEmitter, StreamrClientEvents } from './events'
 import { ProxyDirection } from '@streamr/protocol'
 import { MessageStream, MessageListener } from './subscribe/MessageStream'
 import { Stream, StreamMetadata } from './Stream'
-import { SearchStreamsPermissionFilter } from './registry/searchStreams'
+import { SearchStreamsPermissionFilter, SearchStreamsOrderBy } from './registry/searchStreams'
 import { PermissionAssignment, PermissionQuery } from './permission'
 import { MetricsPublisher } from './MetricsPublisher'
 import { PublishMetadata } from '../src/publish/Publisher'
@@ -36,6 +36,20 @@ import { ErrorCode } from './HttpUtil'
 import { PeerDescriptor } from '@streamr/dht'
 import omit from 'lodash/omit'
 import { StreamrClientError } from './StreamrClientError'
+
+// TODO: this type only exists to enable tsdoc to generate proper documentation
+export type SubscribeOptions = StreamDefinition & ExtraSubscribeOptions
+
+// TODO: this type only exists to enable tsdoc to generate proper documentation
+export interface ExtraSubscribeOptions {
+    resend?: ResendOptions
+
+    /**
+     * Subscribe raw with validation, permission checking, ordering, gap filling,
+     * and decryption _disabled_.
+     */
+    raw?: boolean
+}
 
 /**
  * The main API used to interact with Streamr.
@@ -161,9 +175,12 @@ export class StreamrClient {
      * @returns a {@link Subscription} that can be used to manage the subscription etc.
      */
     async subscribe(
-        options: StreamDefinition & { resend?: ResendOptions },
+        options: SubscribeOptions,
         onMessage?: MessageListener
     ): Promise<Subscription> {
+        if ((options.raw === true) && (options.resend !== undefined)) {
+            throw new Error('Raw subscriptions are not supported for resend')
+        }
         const streamPartId = await this.streamIdBuilder.toStreamPartID(options)
         const sub = (options.resend !== undefined)
             ? new ResendSubscription(
@@ -173,7 +190,7 @@ export class StreamrClient {
                 this.loggerFactory,
                 this.config
             )
-            : new Subscription(streamPartId, this.loggerFactory)
+            : new Subscription(streamPartId, options.raw ?? false, this.loggerFactory)
         await this.subscriber.add(sub)
         if (onMessage !== undefined) {
             sub.useLegacyOnMessageHandler(onMessage)
@@ -289,6 +306,8 @@ export class StreamrClient {
      *
      * @param propsOrStreamIdOrPath - the stream id to be used for the new stream, and optionally, any
      * associated metadata
+     *
+     * @remarks when creating a stream with an ENS domain, the returned promise can take several minutes to settle
      */
     async createStream(propsOrStreamIdOrPath: Partial<StreamMetadata> & { id: string } | string): Promise<Stream> {
         const props = typeof propsOrStreamIdOrPath === 'object' ? propsOrStreamIdOrPath : { id: propsOrStreamIdOrPath }
@@ -305,6 +324,8 @@ export class StreamrClient {
      * @category Important
      *
      * @param props - the stream id to get or create. Field `partitions` is only used if creating the stream.
+     *
+     * @remarks when creating a stream with an ENS domain, the returned promise can take several minutes to settle
      */
     async getOrCreateStream(props: { id: string, partitions?: number }): Promise<Stream> {
         try {
@@ -339,9 +360,14 @@ export class StreamrClient {
      *
      * @param term - a search term that should be part of the stream id of a result
      * @param permissionFilter - permissions that should be in effect for a result
+     * @param orderBy - the default is ascending order by stream id field
      */
-    searchStreams(term: string | undefined, permissionFilter: SearchStreamsPermissionFilter | undefined): AsyncIterable<Stream> {
-        return this.streamRegistry.searchStreams(term, permissionFilter)
+    searchStreams(
+        term: string | undefined,
+        permissionFilter: SearchStreamsPermissionFilter | undefined,
+        orderBy: SearchStreamsOrderBy = { field: 'id', direction: 'asc' }
+    ): AsyncIterable<Stream> {
+        return this.streamRegistry.searchStreams(term, permissionFilter, orderBy)
     }
 
     // --------------------------------------------------------------------------------------------

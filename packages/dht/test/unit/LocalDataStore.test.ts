@@ -5,6 +5,7 @@ import {
     peerIdFromPeerDescriptor
 } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { LocalDataStore } from '../../src/dht/store/LocalDataStore'
+import { wait } from '@streamr/utils'
 
 describe('LocalDataStore', () => {
     let localDataStore: LocalDataStore
@@ -23,6 +24,10 @@ describe('LocalDataStore', () => {
 
     beforeEach(() => {
         localDataStore = new LocalDataStore()
+    })
+
+    afterEach(() => {
+        localDataStore.clear()
     })
 
     it('can store', () => {
@@ -56,6 +61,26 @@ describe('LocalDataStore', () => {
             const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
             expect(isSamePeerDescriptor(fetchedDescriptor, storer2)).toBeTrue()
         })
+    })
+
+    it('can remove all data entries', () => {
+        const dataKey = peerIdFromPeerDescriptor(storer1)
+        localDataStore.storeEntry({ storer: storer1, kademliaId: dataKey.value, data: data1, ttl: 10000 })
+        localDataStore.storeEntry({ storer: storer2, kademliaId: dataKey.value, data: data2, ttl: 10000 })
+        localDataStore.deleteEntry(dataKey, storer1)
+        localDataStore.deleteEntry(dataKey, storer2)
+        const fetchedData = localDataStore.getEntry(dataKey)
+        expect(fetchedData.size).toBe(0)
+    })
+
+    it('data is deleted after TTL', async () => {
+        const dataKey = peerIdFromPeerDescriptor(storer1)
+        localDataStore.storeEntry({ storer: storer1, kademliaId: dataKey.value, data: data1, ttl: 1000 })
+        const intitialStore = localDataStore.getEntry(dataKey)
+        expect(intitialStore.size).toBe(1)
+        await wait(1100)
+        const fetchedData = localDataStore.getEntry(dataKey)
+        expect(fetchedData.size).toBe(0)
     })
 
 })
