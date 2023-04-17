@@ -26,7 +26,6 @@
   "dependencies": {
     "@streamr/network-node": "8.2.1",
     "@streamr/protocol": "8.2.1",
-    "@streamr/slackbot": "^1.1.0",
     "@streamr/utils": "8.2.1",
     "ajv": "^8.8.2",
     "commander": "^8.3.0",
