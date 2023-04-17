@@ -34,6 +34,8 @@ export class UnknownPeerError extends Error {
     readonly code = UnknownPeerError.CODE
 }
 
+const logger = new Logger(module)
+
 export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends EventEmitter {
     private readonly pingPongWs: PingPongWs
     private readonly connectionById: Map<PeerId, C> = new Map<PeerId, C>()
@@ -41,7 +43,6 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
 
     protected handshakeTimeoutRefs: Record<PeerId, NodeJS.Timeout>
     protected readonly peerInfo: PeerInfo
-    protected readonly logger: Logger
     protected readonly handshakeTimer: number
 
     protected constructor(
@@ -51,7 +52,6 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
         super()
 
         this.peerInfo = peerInfo
-        this.logger = new Logger(module)
         this.pingPongWs = new PingPongWs(() => this.getConnections(), pingInterval)
         this.handshakeTimeoutRefs = {}
         this.handshakeTimer = 15 * 1000
@@ -67,14 +67,13 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
                 connection.evaluateBackPressure()
                 await connection.send(message)
             } catch (err) {
-                this.logger.debug('sending to %s failed, reason %s', recipientId, err)
+                logger.debug('Failed to send message', { recipientId, err })
                 connection.terminate()
                 throw err
             }
 
-            this.logger.trace('sent to %s message "%s"', recipientId, message)
+            logger.trace('Sent message', { recipientId, size: message.length })
         } else {
-            this.logger.trace('cannot send to %s, not connected', recipientId)
             throw new UnknownPeerError(`cannot send to ${recipientId} because not connected`)
         }
     }
@@ -83,10 +82,10 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
         const connection = this.getConnectionByPeerId(recipientId)
         if (connection !== undefined) {
             try {
-                this.logger.trace('closing connection to %s, reason %s', recipientId, reason)
+                logger.trace('Close connection', { recipientId, reason })
                 connection.close(code, reason)
-            } catch (e) {
-                this.logger.warn('closing connection to %s failed because of %s', recipientId, e)
+            } catch (err) {
+                logger.warn('Failed to close connection', { recipientId, err })
             }
         }
     }
@@ -148,7 +147,7 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
             }
         )
         this.connectionById.set(connection.getPeerId(), connection)
-        this.logger.trace('added %s to connection list', connection.getPeerId())
+        logger.trace('Added peer to connection list', { peerId: connection.getPeerId() })
         this.emit(Event.PEER_CONNECTED, peerInfo)
     }
 
@@ -159,7 +158,10 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
         if (this.stopped) {
             return
         }
-        this.logger.trace('<== received from %s message "%s"', connection.getPeerInfo(), message)
+        logger.trace('Received message', {
+            size: message.length,
+            sender: connection.getPeerInfo()
+        })
         this.emit(Event.MESSAGE_RECEIVED, connection.getPeerInfo(), message)
     }
 
@@ -167,7 +169,7 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
      * Implementer should invoke this whenever a connection is closed.
      */
     protected onClose(connection: C, code: DisconnectionCode, reason: DisconnectionReason): void {
-        this.logger.trace('socket to %s closed (code %d, reason %s)', connection.getPeerId(), code, reason)
+        logger.trace('onClose', { peerId: connection.getPeerId(), code, reason })
         this.connectionById.delete(connection.getPeerId())
         try {
             this.doClose(connection, code, reason)

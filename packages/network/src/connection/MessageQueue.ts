@@ -72,8 +72,8 @@ export class MessageQueue<M> {
 
     add(message: M): Promise<void> {
         if (this.size() === this.maxSize) {
-            this.logger.warn("queue is full, dropping message")
-            this.pop().immediateFail("Message queue full, dropping message.")
+            this.logger.warn('Discard oldest message (queue is full)', { maxSize: this.maxSize })
+            this.pop().immediateFail('Message queue full, dropping message.')
         }
         return new Promise((resolve, reject) => {
             this.heap.push(new QueueItem(message, resolve, reject))

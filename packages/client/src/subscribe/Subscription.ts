@@ -38,12 +38,9 @@ export class Subscription extends MessageStream {
         this.isRaw = isRaw
         this.eventEmitter = new EventEmitter<SubscriptionEvents>()
         this.logger = loggerFactory.createLogger(module)
-        this.onMessage.listen((msg) => {
-            this.logger.debug('onMessage %j', msg.serializedContent)
-        })
         this.onError.listen((err) => {
             this.eventEmitter.emit('error', err)
-            this.logger.debug('onError %s', err)
+            this.logger.debug('Encountered error', { err })
         })
     }
 

@@ -24,7 +24,7 @@ function retryFlakyTest(fn: () => Promise<unknown>, isFlakyError: (e: Error) => 
                 return
             } catch (e) {
                 if (isFlakyError(e)) {
-                    logger.warn('Flaky test run detected %d/%d run', i, maxRuns)
+                    logger.warn(`Detected flaky test run (attempt ${i}/${maxRuns})`)
                     if (i === maxRuns) {
                         throw e
                     }

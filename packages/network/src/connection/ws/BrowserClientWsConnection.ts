@@ -5,7 +5,7 @@ import { DisconnectionCode, DisconnectionReason } from './AbstractWsEndpoint'
 import { Logger } from "@streamr/utils"
 import { WebSocketConnectionFactory } from "./AbstractClientWsEndpoint"
 
-const staticLogger = new Logger(module)
+const logger = new Logger(module)
 
 export const BrowserWebSocketConnectionFactory: WebSocketConnectionFactory<BrowserClientWsConnection> = Object.freeze({
     createConnection(socket: w3cwebsocket, peerInfo: PeerInfo): BrowserClientWsConnection {
@@ -24,16 +24,16 @@ export class BrowserClientWsConnection extends AbstractWsConnection {
     close(code: DisconnectionCode, reason: DisconnectionReason): void {
         try {
             this.socket.close(code, reason)
-        } catch (e) {
-            staticLogger.error('failed to close ws, reason: %s', e)
+        } catch (err) {
+            logger.error('Failed to close connection', err)
         }
     }
 
     terminate(): void {
         try {
             this.socket.close()
-        } catch (e) {
-            staticLogger.error('failed to terminate ws, reason %s', e)
+        } catch (err) {
+            logger.error('Failed to terminate connection', err)
         }
     }
 

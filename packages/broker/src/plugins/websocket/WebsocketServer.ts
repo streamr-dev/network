@@ -66,8 +66,11 @@ export class WebsocketServer {
             try {
                 connectionUrl = this.parseUrl(request.url!)
                 connection = this.createConnection(connectionUrl)
-            } catch (e) {
-                logger.warn(`Unable to create connection: ${e.message} ${request.url}`)
+            } catch (err) {
+                logger.warn('Unable to create connection', {
+                    requestUrl: request.url,
+                    err
+                })
                 sendHttpError('400 Bad Request', socket)
                 return
             }
@@ -91,7 +94,7 @@ export class WebsocketServer {
 
         this.httpServer.listen(port)
         await once(this.httpServer, 'listening')
-        logger.info('Websocket server listening on ' + port)
+        logger.info(`Started Websocket server (port ${port})`)
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -128,6 +131,6 @@ export class WebsocketServer {
         }
         this.httpServer!.close()
         await once(this.httpServer!, 'close')
-        logger.info('WebSocket server stopped')
+        logger.info('Stopped Websocket server')
     }
 }

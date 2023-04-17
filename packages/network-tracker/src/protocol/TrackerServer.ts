@@ -40,9 +40,10 @@ export interface NodeToTracker {
     on(event: Event.RELAY_MESSAGE_RECEIVED, listener: (msg: RelayMessage, nodeId: NodeId) => void): this
 }
 
+const logger = new Logger(module)
+
 export class TrackerServer extends EventEmitter {
     private readonly endpoint: ServerWsEndpoint
-    private readonly logger: Logger
 
     constructor(endpoint: ServerWsEndpoint) {
         super()
@@ -50,7 +51,6 @@ export class TrackerServer extends EventEmitter {
         endpoint.on(WsEndpointEvent.PEER_CONNECTED, (peerInfo) => this.onPeerConnected(peerInfo))
         endpoint.on(WsEndpointEvent.PEER_DISCONNECTED, (peerInfo) => this.onPeerDisconnected(peerInfo))
         endpoint.on(WsEndpointEvent.MESSAGE_RECEIVED, (peerInfo, message) => this.onMessageReceived(peerInfo, message))
-        this.logger = new Logger(module)
     }
 
     async sendInstruction(
@@ -90,7 +90,10 @@ export class TrackerServer extends EventEmitter {
     }
 
     async send<T>(receiverNodeId: NodeId, message: T & TrackerMessage): Promise<void> {
-        this.logger.debug(`Send ${TrackerMessageType[message.type]} to ${NameDirectory.getName(receiverNodeId)}`)
+        logger.debug('Send message to node', {
+            msgType: TrackerMessageType[message.type],
+            nodeId: NameDirectory.getName(receiverNodeId)
+        })
         await this.endpoint.send(receiverNodeId, message.serialize())
     }
 
@@ -134,7 +137,10 @@ export class TrackerServer extends EventEmitter {
             if (message != null) {
                 this.emit(eventPerType[message.type], message, peerInfo.peerId)
             } else {
-                this.logger.warn('invalid message from %s: %s', peerInfo, rawMessage)
+                logger.warn('Drop invalid message', {
+                    sender: peerInfo.peerId,
+                    rawMessage
+                })
             }
         }
     }

@@ -31,12 +31,12 @@ class MockClaimServer {
         const app = express()
         app.use(express.json())
         app.post('/claim', (req: Request, res: Response) => {
-            logger.info('Claim endpoint called')
+            logger.info('Called /claim endpoint')
             this.claimRequestBody = req.body
             res.status(200).end()
         })
         app.get('/ping', (_req: Request, res: Response) => {
-            logger.info('Ping endpoint called')
+            logger.info('Called /ping endpoint')
             this.pingEndpointCalled = true
             res.status(200).end()
         })

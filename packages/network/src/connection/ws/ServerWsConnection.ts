@@ -6,7 +6,7 @@ import WebSocket from 'ws'
 import util from 'util'
 import stream from 'stream'
 
-export const staticLogger = new Logger(module)
+export const logger = new Logger(module)
 
 export class ServerWsConnection extends AbstractWsConnection {
     private readonly socket: WebSocket
@@ -24,7 +24,7 @@ export class ServerWsConnection extends AbstractWsConnection {
         try {
             this.socket.close(code, reason)
         } catch (e) {
-            staticLogger.error('failed to close ws, reason: %s', e)
+            logger.error('Failed to close connection', e)
         }
     }
 
@@ -32,7 +32,7 @@ export class ServerWsConnection extends AbstractWsConnection {
         try {
             this.socket.terminate()
         } catch (e) {
-            staticLogger.error('failed to terminate ws, reason %s', e)
+            logger.error('Failed to terminate connection', e)
         }
     }
 
