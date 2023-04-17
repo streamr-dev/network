@@ -69,7 +69,7 @@
     "git-revision-webpack-plugin": "^5.0.0",
     "jest-leak-detector": "^27.3.1",
     "lodash-webpack-plugin": "^0.11.6",
-    "nightwatch": "^1.7.12",
+    "nightwatch": "^2.6.20",
     "node-polyfill-webpack-plugin": "^1.1.4",
     "terser-webpack-plugin": "^5.2.5",
     "ts-essentials": "^9.3.0",
