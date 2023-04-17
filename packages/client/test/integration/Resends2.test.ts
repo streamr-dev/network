@@ -218,12 +218,12 @@ describe('Resends2', () => {
                 expect(receivedMsgs.map((m) => m.signature)).toEqual(publishedMessages.map((m) => m.signature))
                 expect(onError).toHaveBeenCalledTimes(0)
                 expect(onResent).toHaveBeenCalledTimes(1)
-                expect(environment.getLogger().warn).toHaveBeenLastCalledWith({
+                expect(environment.getLogger().warn).toHaveBeenLastCalledWith('Skip resend (no storage assigned to stream)', {
                     streamPartId: toStreamPartID(nonStoredStream.id, 0),
                     resendOptions: {
                         last: 100
                     }
-                }, 'Skip resend (no storage assigned to stream)')
+                })
                 expect(await client.getSubscriptions(nonStoredStream.id)).toHaveLength(0)
             })
         })
