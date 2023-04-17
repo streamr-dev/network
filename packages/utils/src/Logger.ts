@@ -48,23 +48,32 @@ const rootLogger = pino({
     }
 })
 
+/**
+ * This whole monstrosity exists only because pino in browser environment will not print a log message
+ * when invoking `logger.info(undefined, 'msg') instead you need to call `logger.info(msg)`.
+ */
+function wrappedMethodCall(
+    wrappedPinoMethod: pino.LogFn,
+): (msg: string, metadata?: Record<string, unknown>) => void {
+    return (msg, metadata) => {
+        if (metadata !== undefined) {
+            wrappedPinoMethod(metadata, msg)
+        } else {
+            wrappedPinoMethod(msg)
+        }
+    }
+}
+
 export class Logger {
     static NAME_LENGTH = 20
 
-    static createName(module: NodeJS.Module): string {
-        const parsedPath = path.parse(String(module.id))
-        let fileId = parsedPath.name
-        if (fileId === 'index') {
-            // file with name "foobar/index.ts" -> "foobar"
-            const parts = parsedPath.dir.split(path.sep)
-            fileId = parts[parts.length - 1]
-        }
-        const longName = without([process.env.STREAMR_APPLICATION_ID, fileId], undefined).join(':')
-        return isPrettyPrintDisabled() ?
-            longName : padEnd(longName.substring(0, this.NAME_LENGTH), this.NAME_LENGTH, ' ')
-    }
-
     private readonly logger: pino.Logger
+    fatal: (msg: string, metadata?: Record<string, unknown>) => void
+    error: (msg: string, metadata?: Record<string, unknown>) => void
+    warn: (msg: string, metadata?: Record<string, unknown>) => void
+    info: (msg: string, metadata?: Record<string, unknown>) => void
+    debug: (msg: string, metadata?: Record<string, unknown>) => void
+    trace: (msg: string, metadata?: Record<string, unknown>) => void
 
     constructor(
         module: NodeJS.Module,
@@ -78,29 +87,24 @@ export class Logger {
         }, {
             level: process.env.LOG_LEVEL as (string | undefined) ?? defaultLogLevel
         })
+        this.fatal = wrappedMethodCall(this.logger.fatal.bind(this.logger))
+        this.error = wrappedMethodCall(this.logger.error.bind(this.logger))
+        this.warn = wrappedMethodCall(this.logger.warn.bind(this.logger))
+        this.info = wrappedMethodCall(this.logger.info.bind(this.logger))
+        this.debug = wrappedMethodCall(this.logger.debug.bind(this.logger))
+        this.trace = wrappedMethodCall(this.logger.trace.bind(this.logger))
     }
 
-    fatal(msg: string, metadata?: Record<string, unknown>): void {
-        this.logger.fatal(metadata, msg)
-    }
-
-    error(msg: string, metadata?: Record<string, unknown>): void {
-        this.logger.error(metadata, msg)
-    }
-
-    warn(msg: string, metadata?: Record<string, unknown>): void {
-        this.logger.warn(metadata, msg)
-    }
-
-    info(msg: string, metadata?: Record<string, unknown>): void {
-        this.logger.info(metadata, msg)
-    }
-
-    debug(msg: string, metadata?: Record<string, unknown>): void {
-        this.logger.debug(metadata, msg)
-    }
-
-    trace(msg: string, metadata?: Record<string, unknown>): void {
-        this.logger.trace(metadata, msg)
+    static createName(module: NodeJS.Module): string {
+        const parsedPath = path.parse(String(module.id))
+        let fileId = parsedPath.name
+        if (fileId === 'index') {
+            // file with name "foobar/index.ts" -> "foobar"
+            const parts = parsedPath.dir.split(path.sep)
+            fileId = parts[parts.length - 1]
+        }
+        const longName = without([process.env.STREAMR_APPLICATION_ID, fileId], undefined).join(':')
+        return isPrettyPrintDisabled() ?
+            longName : padEnd(longName.substring(0, this.NAME_LENGTH), this.NAME_LENGTH, ' ')
     }
 }
