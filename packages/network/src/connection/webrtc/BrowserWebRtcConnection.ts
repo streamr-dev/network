@@ -25,8 +25,9 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
 
     constructor(opts: ConstructorOptions) {
         super(opts)
-        this.logger = new Logger(module, `${NameDirectory.getName(this.getPeerId())}/${this.id}`)
+        this.logger = new Logger(module, { connection: `${NameDirectory.getName(this.getPeerId())}/${this.id}` })
     }
+
     protected doConnect(): void {
 
         const urls: RTCIceServer[] = this.iceServers.map(({ url, port, username, password }) => ({
