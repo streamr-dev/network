@@ -29,7 +29,7 @@
     "dependencies": {
         "@commitlint/cli": "^12.1.4",
         "@commitlint/config-conventional": "^12.1.4",
-        "@manypkg/cli": "^0.19.1",
+        "@manypkg/cli": "^0.20.0",
         "@tsconfig/node16": "^1.0.2",
         "@types/jest": "^28.1.2",
         "@types/node": "^18.11.9",

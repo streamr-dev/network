@@ -51,7 +51,6 @@
     "@types/websocket": "^1.0.3",
     "@types/ws": "^8.5.4",
     "@types/yallist": "^4.0.1",
-    "browserify-fs": "^1.0.0",
     "electron": "^20.0.3",
     "electron-rebuild": "^3.2.9",
     "expect": "^28.1.3",
