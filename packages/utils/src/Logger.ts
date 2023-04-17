@@ -48,17 +48,8 @@ const rootLogger = pino({
     }
 })
 
-type LogMethod = (obj: unknown, msg?: string) => void
-
 export class Logger {
     static NAME_LENGTH = 20
-
-    fatal: LogMethod
-    error: LogMethod
-    warn: LogMethod
-    info: LogMethod
-    debug: LogMethod
-    trace: LogMethod
 
     static createName(module: NodeJS.Module): string {
         const parsedPath = path.parse(String(module.id))
@@ -87,11 +78,29 @@ export class Logger {
         }, {
             level: process.env.LOG_LEVEL as (string | undefined) ?? defaultLogLevel
         })
-        this.fatal = this.logger.fatal.bind(this.logger)
-        this.error = this.logger.error.bind(this.logger)
-        this.warn = this.logger.warn.bind(this.logger)
-        this.info = this.logger.info.bind(this.logger)
-        this.debug = this.logger.debug.bind(this.logger)
-        this.trace = this.logger.trace.bind(this.logger)
+    }
+
+    fatal(obj: unknown, msg?: string): void {
+        this.logger.fatal(obj, msg)
+    }
+
+    error(obj: unknown, msg?: string): void {
+        this.logger.error(obj, msg)
+    }
+
+    warn(obj: unknown, msg?: string): void {
+        this.logger.warn(obj, msg)
+    }
+
+    info(obj: unknown, msg?: string): void {
+        this.logger.info(obj, msg)
+    }
+
+    debug(obj: unknown, msg?: string): void {
+        this.logger.debug(obj, msg)
+    }
+
+    trace(obj: unknown, msg?: string): void {
+        this.logger.trace(obj, msg)
     }
 }
