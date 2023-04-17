@@ -20,6 +20,13 @@ const parseBoolean = (value: string | undefined) => {
 
 declare let window: any
 
+/**
+ * Disabled when in browser or when environment variable DISABLE_PRETTY_LOG is set to true.
+ */
+function isPrettyPrintDisabled(): boolean {
+    return typeof window === 'object' || (parseBoolean(process.env.DISABLE_PRETTY_LOG) ?? false)
+}
+
 const rootLogger = pino({
     name: 'rootLogger',
     enabled: !process.env.NOLOG,
@@ -29,7 +36,7 @@ const rootLogger = pino({
             return { level: label } // log level as string instead of number
         }
     },
-    transport: (typeof window === 'object' || process.env.DISABLE_PRETTY_LOG) ? undefined : {
+    transport: isPrettyPrintDisabled() ? undefined : {
         target: 'pino-pretty',
         options: {
             colorize: parseBoolean(process.env.LOG_COLORS) ?? true,
@@ -65,7 +72,7 @@ export class Logger {
             fileId = parts[parts.length - 1]
         }
         const longName = without([process.env.STREAMR_APPLICATION_ID, context, fileId], undefined).join(':')
-        return process.env.DISABLE_PRETTY_LOG ?
+        return isPrettyPrintDisabled() ?
             longName : padEnd(longName.substring(0, this.NAME_LENGTH), this.NAME_LENGTH, ' ')
     }
 
