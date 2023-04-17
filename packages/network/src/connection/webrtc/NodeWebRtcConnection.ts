@@ -100,7 +100,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
     constructor(opts: ConstructorOptions) {
         super(opts)
 
-        this.logger = new Logger(module, `${NameDirectory.getName(this.getPeerId())}/${this.id}`)
+        this.logger = new Logger(module, { id: `${NameDirectory.getName(this.getPeerId())}/${this.id}` })
         this.connection = null
         this.dataChannel = null
         this.onStateChange = this.onStateChange.bind(this)

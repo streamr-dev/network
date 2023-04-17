@@ -71,7 +71,7 @@ export class Bucket {
         this.records = records
         this.dateCreate = dateCreate
 
-        this.logger = new Logger(module, `${this.id}`)
+        this.logger = new Logger(module, { id: this.id })
         this.logger.trace({
             id: this.getId(),
             dateCreate: this.dateCreate

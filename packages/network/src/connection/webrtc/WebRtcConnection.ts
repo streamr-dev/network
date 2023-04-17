@@ -157,7 +157,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         this.messageQueue = messageQueue
         this.deferredConnectionAttempt = deferredConnectionAttempt
         this.portRange = portRange
-        this.baseLogger = new Logger(module, `${NameDirectory.getName(this.getPeerId())}/${ID}`)
+        this.baseLogger = new Logger(module, { id: `${NameDirectory.getName(this.getPeerId())}/${ID}` })
         this.isFinished = false
         this.paused = false
 

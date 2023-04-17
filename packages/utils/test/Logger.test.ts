@@ -85,18 +85,6 @@ describe('Logger', () => {
                 : 'Logger.test'
             expect(Logger.createName(module)).toBe(expected)
         })
-        it('short with context', () => {
-            const expected = typeof _streamr_electron_test === 'undefined'
-                ? 'foobar:Logger.test  '
-                : 'foobar:Logger.test'
-            expect(Logger.createName(module, 'foobar')).toBe(expected)
-        })
-        it('long with context', () => {
-            const expected = typeof _streamr_electron_test === 'undefined'
-                ? 'loremipsum:Logger.te'
-                : 'loremipsum:Logger.test'
-            expect(Logger.createName(module, 'loremipsum')).toBe(expected)
-        })
         it('application id', () => {
             const expected = typeof _streamr_electron_test === 'undefined'
                 ? 'APP:Logger.test     '

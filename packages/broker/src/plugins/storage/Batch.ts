@@ -66,7 +66,7 @@ export class Batch extends EventEmitter {
         this.state = Batch.states.OPENED
         this.doneCbs = []
 
-        this.logger = new Logger(module, `${this.getId()}`)
+        this.logger = new Logger(module, { id: this.id })
 
         this.maxSize = maxSize
         this.maxRecords = maxRecords

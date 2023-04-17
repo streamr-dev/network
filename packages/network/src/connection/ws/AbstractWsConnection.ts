@@ -22,7 +22,7 @@ export abstract class AbstractWsConnection {
 
     protected constructor(peerInfo: PeerInfo) {
         this.peerInfo = peerInfo
-        this.logger = new Logger(module, peerInfo.peerId)
+        this.logger = new Logger(module, { peerId: peerInfo.peerId })
     }
 
     setBackPressureHandlers(onLowBackPressure: () => void, onHighBackPressure: () => void): void | never {
