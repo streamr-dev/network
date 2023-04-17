@@ -36,7 +36,7 @@ export class BatchManager extends EventEmitter {
     constructor(cassandraClient: Client, opts: Partial<BatchManagerOptions> = {}) {
         super()
         ID += 1
-        this.logger = new Logger(module, `${ID}`)
+        this.logger = new Logger(module, { id: `${ID}` })
 
         const defaultOptions = {
             useTtl: false,
@@ -69,7 +69,7 @@ export class BatchManager extends EventEmitter {
         }
 
         if (this.batches[bucketId] === undefined) {
-            this.logger.trace('creating new batch')
+            this.logger.trace('Create new batch')
 
             const newBatch = new Batch(
                 bucketId,
@@ -97,7 +97,6 @@ export class BatchManager extends EventEmitter {
     }
 
     private moveFullBatch(bucketId: BucketId, batch: Batch): void {
-        this.logger.trace('moving batch to pendingBatches')
         const batchId = batch.getId()
         this.pendingBatches[batchId] = batch
         batch.scheduleInsert()
@@ -129,12 +128,11 @@ export class BatchManager extends EventEmitter {
                 prepare: true
             })
 
-            this.logger.trace({ batchId: batch.getId() }, 'Inserted batch')
+            this.logger.trace({ batchId: batch.getId() }, 'Insert batch')
             batch.done()
             batch.clear()
             delete this.pendingBatches[batch.getId()]
         } catch (err) {
-            this.logger.trace(err, 'Failed to insert batch')
             if (this.opts.logErrors) {
                 this.logger.error({ batchId, err }, 'Failed to insert batch')
             }
@@ -146,7 +144,7 @@ export class BatchManager extends EventEmitter {
                     this.logger.error({
                         batchId: batch.getId(),
                         retries: batch.retries
-                    }, 'Batch reached max retries, dropping batch')
+                    }, 'Drop batch (max retries reached)')
                 }
                 batch.clear()
                 delete this.pendingBatches[batch.getId()]

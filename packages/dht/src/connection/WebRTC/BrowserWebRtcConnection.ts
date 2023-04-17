@@ -41,7 +41,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
         }
 
         this.peerConnection.onicegatheringstatechange = () => {
-            logger.trace('conn.onGatheringStateChange: %s -> %s', this.peerConnection?.iceGatheringState)
+            logger.trace(`conn.onGatheringStateChange: ${this.peerConnection?.iceGatheringState}`)
         }
 
         if (isOffering) {
@@ -124,7 +124,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
             try {
                 this.dataChannel.close()
             } catch (e) {
-                logger.warn('dc.close() errored: %s', e)
+                logger.warn(`dc.close() errored: ${e}`)
             }
         }
 
@@ -134,7 +134,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
             try {
                 this.peerConnection.close()
             } catch (e) {
-                logger.warn('conn.close() errored: %s', e)
+                logger.warn(`conn.close() errored: ${e}`)
             }
         }
 
@@ -161,7 +161,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
         }
 
         dataChannel.onerror = (err) => {
-            logger.warn('dc.onError: %o', err)
+            logger.warn(`dc.onError: ${err}`)
         }
 
         dataChannel.onbufferedamountlow = () => {

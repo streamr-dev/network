@@ -30,7 +30,7 @@ export default class BrowserClientWsEndpoint extends AbstractClientWsEndpoint<Br
                 }
 
             } catch (err) {
-                logger.trace({ serverUrl, err }, 'failed to connect to server')
+                logger.trace({ serverUrl, err }, 'Failed to connect to server')
                 reject(err)
             }
         })
@@ -51,9 +51,9 @@ export default class BrowserClientWsEndpoint extends AbstractClientWsEndpoint<Br
         ws.onclose = (event) => {
             this.onClose(connection, event.code, event.reason as DisconnectionReason)
             if (event.code === DisconnectionCode.DUPLICATE_SOCKET) {
-                logger.warn('Connection refused: Duplicate nodeId detected, are you running multiple nodes with the same private key?')
+                logger.warn('Refused connection (Duplicate nodeId detected, are you running multiple nodes with the same private key?)')
             } else if (event.code === DisconnectionCode.INVALID_PROTOCOL_MESSAGE) {
-                logger.warn('Connection refused: Invalid protocol message format detected, are you running an outdated version?')
+                logger.warn('Refused connection (Invalid protocol message format detected, are you running an outdated version?)')
             }
         }
 

@@ -63,7 +63,7 @@ export class Logger {
     debug: LogMethod
     trace: LogMethod
 
-    static createName(module: NodeJS.Module, context?: string): string {
+    static createName(module: NodeJS.Module): string {
         const parsedPath = path.parse(String(module.id))
         let fileId = parsedPath.name
         if (fileId === 'index') {
@@ -71,7 +71,7 @@ export class Logger {
             const parts = parsedPath.dir.split(path.sep)
             fileId = parts[parts.length - 1]
         }
-        const longName = without([process.env.STREAMR_APPLICATION_ID, context, fileId], undefined).join(':')
+        const longName = without([process.env.STREAMR_APPLICATION_ID, fileId], undefined).join(':')
         return isPrettyPrintDisabled() ?
             longName : padEnd(longName.substring(0, this.NAME_LENGTH), this.NAME_LENGTH, ' ')
     }
@@ -80,12 +80,13 @@ export class Logger {
 
     constructor(
         module: NodeJS.Module,
-        context?: string,
+        contextBindings?: Record<string, unknown>,
         defaultLogLevel: LogLevel = 'info',
         parentLogger: pino.Logger = rootLogger
     ) {
         this.logger = parentLogger.child({
-            name: Logger.createName(module, context)
+            name: Logger.createName(module),
+            ...contextBindings
         }, {
             level: process.env.LOG_LEVEL as (string | undefined) ?? defaultLogLevel
         })

@@ -73,7 +73,7 @@ export class OrderMessages {
             msgChainId,
             from,
             to,
-        }, 'gap detected')
+        }, 'Encountered gap')
 
         let resendMessageStream!: MessageStream
 

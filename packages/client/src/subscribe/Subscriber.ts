@@ -67,7 +67,7 @@ export class Subscriber {
         subSession.onRetired.listen(() => {
             this.subSessions.delete(streamPartId)
         })
-        this.logger.debug({ streamPartId }, 'created new SubscriptionSession')
+        this.logger.debug({ streamPartId }, 'Created new SubscriptionSession')
         return subSession
     }
 
@@ -78,7 +78,7 @@ export class Subscriber {
         try {
             await subSession.add(sub)
         } catch (err) {
-            this.logger.debug('failed to add Subscription to SubscriptionSession, reason: %s', err)
+            this.logger.debug(err, 'Failed to add Subscription to SubscriptionSession')
             // clean up if fail
             await this.remove(sub)
             throw err

@@ -50,7 +50,7 @@ export class MqttServer {
     async start(): Promise<void> {
         this.server = net.createServer(this.aedes.handle)
         await util.promisify((callback: any) => this.server!.listen(this.port, callback))()
-        logger.info(`MQTT server listening on port ${this.port}`)
+        logger.info(`Started MQTT server (port ${this.port})`)
     }
 
     async stop(): Promise<void> {
@@ -58,7 +58,7 @@ export class MqttServer {
             const closeAedes = util.promisify((callback: any) => this.aedes.close(callback))()
             const closeServer = util.promisify((callback: any) => this.server!.close(callback))()
             await Promise.all([closeAedes, closeServer])
-            logger.info('MQTT server stopped')
+            logger.info('Stopped MQTT server')
         }
     }
 
@@ -73,7 +73,7 @@ export class MqttServer {
         }
         this.aedes.publish(packet, (error?: Error) => {
             if (error) {
-                logger.warn(error, 'Failed to publish')
+                logger.warn({ error, topic }, 'Failed to publish')
             }
         })
     }

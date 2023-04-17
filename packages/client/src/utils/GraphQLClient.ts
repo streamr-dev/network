@@ -27,7 +27,7 @@ export class GraphQLClient {
     }
 
     async sendQuery(query: GraphQLQuery): Promise<any> {
-        this.logger.debug({ query }, 'sending GraphQL query')
+        this.logger.trace({ query }, 'Send GraphQL query')
         const res = await this.httpFetcher.fetch(this.config.contracts.theGraphUrl, {
             method: 'POST',
             headers: {
@@ -43,7 +43,7 @@ export class GraphQLClient {
         } catch {
             throw new Error(`GraphQL query failed with "${resText}", check that your theGraphUrl="${this.config.contracts.theGraphUrl}" is correct`)
         }
-        this.logger.debug({ resJson }, 'received GraphQL response')
+        this.logger.trace({ resJson }, 'Received GraphQL response')
         if (!resJson.data) {
             if (resJson.errors && resJson.errors.length > 0) {
                 throw new Error('GraphQL query failed: ' + JSON.stringify(resJson.errors.map((e: any) => e.message)))

@@ -30,7 +30,7 @@ const isTransaction = (returnValue: any): returnValue is ContractTransaction => 
 const createLogger = (eventEmitter: EventEmitter<ContractEvent>, loggerFactory: LoggerFactory): void => {
     const logger = loggerFactory.createLogger(module)
     eventEmitter.on('onMethodExecute', (methodName: string) => {
-        logger.debug({ methodName }, 'onMethodExecute')
+        logger.debug({ methodName }, 'Execute method')
     })
     eventEmitter.on('onTransactionSubmit', (methodName: string, tx: ContractTransaction) => {
         logger.debug({
@@ -40,7 +40,7 @@ const createLogger = (eventEmitter: EventEmitter<ContractEvent>, loggerFactory: 
             nonce: tx.nonce,
             gasLimit: tx.gasLimit.toNumber(),
             gasPrice: tx.gasPrice?.toNumber()
-        }, 'transaction submitted')
+        }, 'Submit transaction')
     })
     eventEmitter.on('onTransactionConfirm', (methodName: string, tx: ContractTransaction, receipt: ContractReceipt) => {
         logger.debug({
@@ -50,7 +50,7 @@ const createLogger = (eventEmitter: EventEmitter<ContractEvent>, loggerFactory: 
             confirmations: receipt.confirmations,
             gasUsed: receipt.gasUsed.toNumber(),
             events: (receipt.events || []).map((e) => e.event)
-        }, 'transaction confirmed')
+        }, 'Received transaction confirmation')
     })
 }
 

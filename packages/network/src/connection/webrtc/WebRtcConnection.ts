@@ -157,7 +157,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         this.messageQueue = messageQueue
         this.deferredConnectionAttempt = deferredConnectionAttempt
         this.portRange = portRange
-        this.baseLogger = new Logger(module, `${NameDirectory.getName(this.getPeerId())}/${ID}`)
+        this.baseLogger = new Logger(module, { id: `${NameDirectory.getName(this.getPeerId())}/${ID}` })
         this.isFinished = false
         this.paused = false
 
@@ -173,7 +173,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
             selfId: this.selfId,
             messageQueue: this.messageQueue.size(),
             peerInfo: this.peerInfo,
-        }, 'create')
+        }, 'Create')
     }
 
     connect(): void {
@@ -206,9 +206,9 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         this.isFinished = true
 
         if (err) {
-            this.baseLogger.debug(err, 'conn.close()')
+            this.baseLogger.debug(err, 'Close connection')
         } else {
-            this.baseLogger.trace('conn.close()')
+            this.baseLogger.trace('close()')
         }
 
         if (this.flushRef) {
@@ -232,7 +232,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         try {
             this.doClose(err)
         } catch (e) {
-            this.baseLogger.warn(e, 'doClose (subclass) threw')
+            this.baseLogger.warn(e, 'Encountered error in doClose')
         }
 
         if (!this.hasOpened) {
@@ -296,7 +296,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
                 }
                 this.baseLogger.debug({
                     maxAttempts: this.maxPingPongAttempts
-                }, 'failed to receive any pong after max ping attempts, closing connection')
+                }, 'Close connection (failed to receive pong after ping attempts)')
                 this.close(new Error('pong not received'))
                 return
             } else {
@@ -309,7 +309,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
                     this.baseLogger.debug({
                         peerId: this.peerInfo.peerId,
                         err
-                    }, 'failed to send ping to peer with error')
+                    }, 'Failed to send ping')
                 }
                 this.pingAttempts += 1
             }
@@ -333,7 +333,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
             this.baseLogger.warn({
                 peerId: this.peerInfo.peerId,
                 err
-            }, 'failed to send pong to peer with error')
+            }, 'Failed to send pong')
         }
     }
 
@@ -362,7 +362,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
 
             const queueItem = this.messageQueue.peek()
             if (queueItem.isFailed()) {
-                this.baseLogger.debug({ queueItem, numOfSuccessSends }, 'popping failed')
+                this.baseLogger.debug({ queueItem, numOfSuccessSends }, 'Encountered failed queue item')
                 this.messageQueue.pop()
             } else if (queueItem.getMessage().length > this.getMaxMessageSize()) {
                 const errorMessage = 'Dropping message due to size '
@@ -406,7 +406,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
                         numOfSuccessSends,
                         queueItem,
                         messageQueueSize: this.messageQueue.size(),
-                    }, 'queue item was not sent')
+                    }, 'Failed to send queue item')
                     this.processFailedMessage(queueItem, new Error('sendMessage returned false'))
                 }
             }
@@ -424,7 +424,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
             this.baseLogger.warn({
                 maxTries: MessageQueue.MAX_TRIES,
                 infoText
-            }, 'failed to send message after multiple tires')
+            }, 'Discard message (all previous send attempts failed)')
             this.messageQueue.pop()
         }
         if (this.flushTimeoutRef === null) {

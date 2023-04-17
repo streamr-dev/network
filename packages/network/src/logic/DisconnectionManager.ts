@@ -58,7 +58,7 @@ export class DisconnectionManager {
             if (nonNeighborNodeIds.length > 0) {
                 logger.debug({
                     nodeCount: nonNeighborNodeIds.length
-                }, 'connectionCleanUpInterval: disconnecting from nodes')
+                }, 'Disconnect from nodes')
                 nonNeighborNodeIds.forEach((nodeId) => {
                     this.loggedDisconnect(nodeId)
                 })
@@ -85,7 +85,7 @@ export class DisconnectionManager {
             logger.trace({
                 nodeId,
                 delayInMs: this.disconnectionDelayInMs
-            }, 'scheduled disconnection from node')
+            }, 'Schedule disconnection from node')
         }
     }
 
@@ -94,7 +94,7 @@ export class DisconnectionManager {
         if (timeout !== undefined) {
             clearTimeout(timeout)
             this.disconnectionTimers.delete(nodeId)
-            logger.trace({ nodeId }, 'canceled scheduled disconnection from node')
+            logger.trace({ nodeId }, 'Cancel scheduled disconnection from node')
         }
     }
 

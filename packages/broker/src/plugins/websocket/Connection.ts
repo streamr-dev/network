@@ -37,7 +37,7 @@ export const addPingSender = (ws: WebSocket, sendInterval: number, disconnectTim
                 pendingStateChange = setTimeout(() => setState('disconnected'), disconnectTimeout)
             }
         } else if (state === 'disconnected') {
-            logger.debug('Terminating connection')
+            logger.debug('Terminate connection')
             ws.terminate()
         }
     }

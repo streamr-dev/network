@@ -190,7 +190,7 @@ export class StreamRegistry {
 
     private async streamExistsOnChain(streamIdOrPath: string): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        this.logger.debug({ streamId }, 'checking if stream exists on chain')
+        this.logger.debug({ streamId }, 'Check if stream exists on chain')
         return queryAllReadonlyContracts((contract: StreamRegistryContract) => {
             return contract.exists(streamId)
         }, this.streamRegistryContractsReadonly)

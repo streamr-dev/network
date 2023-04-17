@@ -140,7 +140,7 @@ export class TrackerServer extends EventEmitter {
                 logger.warn({
                     sender: peerInfo.peerId,
                     rawMessage
-                }, 'ignoring received invalid message')
+                }, 'Drop invalid message')
             }
         }
     }

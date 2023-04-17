@@ -15,14 +15,18 @@ export function attachMessageRelaying(trackerServer: TrackerServer): void {
             if (err.code === UnknownPeerError.CODE) {
                 trackerServer.sendUnknownPeerError(originator.peerId, requestId, targetNode)
                     .catch((err) => {
-                        logger.error(err, 'failed to sendUnknownPeerError')
+                        logger.error({
+                            err,
+                            destination: originator.peerId,
+                            unknownPeerId: targetNode
+                        }, 'Failed to send UNKNOWN_PEER error response')
                     })
             } else {
                 logger.warn({
                     subType,
                     targetNode,
                     err
-                }, 'failed to relay message')
+                }, 'Failed to relay message')
             }
         }
     })

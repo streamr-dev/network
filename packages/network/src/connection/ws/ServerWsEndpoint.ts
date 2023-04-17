@@ -49,15 +49,15 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
             server: this.httpServer,
             maxPayload: 1024 * 1024
         }).on('error', (err: Error) => {
-            logger.error(err, 'web socket server (wss) emitted error')
+            logger.error(err, 'Encountered error (emitted by WebSocket.Server)')
         }).on('listening', () => {
-            logger.trace({ url: this.getUrl() }, 'listening on url')
+            logger.trace({ url: this.getUrl() }, 'Started')
         }).on('connection', (ws: WebSocket, request: http.IncomingMessage) => {
             const handshakeUUID = v4()
 
             this.handshakeTimeoutRefs[handshakeUUID] = setTimeout(() => {
                 ws.close(DisconnectionCode.FAILED_HANDSHAKE, `Handshake not received from connection behind UUID ${handshakeUUID}`)
-                logger.warn({ handshakeUUID }, 'Handshake not received from connection behind UUID')
+                logger.warn({ handshakeUUID }, 'Timed out waiting for handshake from connection')
                 ws.terminate()
                 delete this.handshakeTimeoutRefs[handshakeUUID]
             }, this.handshakeTimer)
@@ -85,10 +85,10 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
                             ws.close(DisconnectionCode.DUPLICATE_SOCKET, failedMessage)
                             logger.warn({
                                 peerId
-                            }, `Connection to peer has already been established, rejecting duplicate`)
+                            }, 'Reject duplicate connection (connection to peer has already been established)')
                         }
                     } else {
-                        logger.trace({ message: data.toString() }, 'Expected a handshake message got instead message.')
+                        logger.trace({ message: data.toString() }, 'Received unexpected message (expected handshake message)')
                     }
                 } catch (err) {
                     logger.trace(err)
@@ -96,7 +96,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
             })
 
             ws.on('error', (err) => {
-                logger.warn({ otherNodeIdForLogging, err }, 'socket for connection emitted error')
+                logger.warn({ otherNodeIdForLogging, err }, 'Encountered error (emitted by socket)')
             })
         })
     }
@@ -123,7 +123,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
         })
 
         duplexStream.on('error', (error) => {
-            logger.error( { stack: error.stack as string }, 'Duplex stream error')
+            logger.error( { stack: error.stack as string }, 'Encountered error (emitted by DuplexStream)')
         })
 
         ws.on('pong', () => {
@@ -155,11 +155,11 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
             }
             this.wss.close((err?) => {
                 if (err) {
-                    logger.error(err, 'error on closing websocket server')
+                    logger.error(err, 'Encountered error (while closing WebSocket.Server)')
                 }
                 this.httpServer.close((err?) => {
                     if (err) {
-                        logger.error(err, 'error closing http server')
+                        logger.error(err, 'Encountered error (while closing httpServer)')
                         reject(err)
                     } else {
                         resolve()
@@ -184,7 +184,7 @@ function cleanSocket(httpServer: http.Server | https.Server, config: UnixSocket)
         // rethrow if unexpected error
         if (!err.message.includes('EADDRINUSE')) { throw err }
 
-        logger.info({ config }, 'socket in use, trying to recover')
+        logger.info({ config }, 'Try to recover used socket')
         const clientSocket = new net.Socket()
         // socket will automatically close on error
         clientSocket.on('error', (err: any) => {
@@ -195,7 +195,7 @@ function cleanSocket(httpServer: http.Server | https.Server, config: UnixSocket)
 
             // No other server listening
             try {
-                logger.trace({ config }, 'cleaning unused socket')
+                logger.trace({ config }, 'Clean unused socket')
                 fs.unlinkSync(config)
             } catch (unlinkErr) {
                 // ignore error if somehow file was already removed
@@ -210,7 +210,7 @@ function cleanSocket(httpServer: http.Server | https.Server, config: UnixSocket)
 
         clientSocket.once('connect', () => {
             // bad news if we are able to connect
-            logger.error({ config }, 'Another server already running on socket')
+            logger.error({ config }, 'Encountered unexpected reserved socket (another server already running?)')
             process.exit(1)
         })
         clientSocket.connect({ path: config })
@@ -241,15 +241,15 @@ export async function startHttpServer(
     try {
         httpServer.listen(config)
         await once(httpServer, 'listening')
-        logger.info({ details: JSON.stringify(config) }, 'listening')
+        logger.info({ details: JSON.stringify(config) }, 'Listen')
     } catch (err) {
         // Kill process if started on host/port, else wait for Unix Socket to be cleaned up
         if (typeof config !== "string") {
-            logger.error(err)
+            logger.error(err, 'Failed to start httpServer')
             process.exit(1)
         } else {
             await once(httpServer, 'listening')
-            logger.info({ details: JSON.stringify(config) }, `listening`)
+            logger.info({ details: JSON.stringify(config) }, `Listen`)
         }
     }
     return httpServer

@@ -57,7 +57,7 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
             logger.trace({
                 serverUrl,
                 readyState: existingConnection.getReadyState()
-            }, 'supposedly connected but readyState not connected, closing connection',)
+            }, 'Close connection (readyState not connected)')
             this.close(
                 existingConnection.getPeerId(),
                 DisconnectionCode.DEAD_CONNECTION,
@@ -72,7 +72,7 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
         }
 
         // Perform connection
-        logger.trace({ serverUrl }, 'connecting to server')
+        logger.trace({ serverUrl }, 'Connect to server')
         const p = this.doConnect(serverUrl, serverPeerInfo).finally(() => {
             this.pendingConnections.delete(serverUrl)
         })
@@ -94,7 +94,7 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
         const peerId = serverPeerInfo.peerId
         this.handshakeTimeoutRefs[peerId] = setTimeout(() => {
             ws.close(DisconnectionCode.FAILED_HANDSHAKE, `Handshake not received from ${peerId}`)
-            logger.warn({ peerId }, 'Handshake not received from peer')
+            logger.warn({ peerId }, 'Timed out waiting for handshake from peer')
             delete this.handshakeTimeoutRefs[peerId]
             reject(`Handshake not received from ${peerId}`)
         }, this.handshakeTimer)
@@ -117,28 +117,30 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
                 this.doHandshakeResponse(uuid, peerId, ws)
                 resolve(this.setUpConnection(ws, serverPeerInfo, serverUrl))
             } else {
-                logger.trace({ gotInstead: message?.toString() }, 'Expected a handshake message')
+                logger.trace({
+                    gotInstead: message?.toString()
+                }, 'Received unexpected message (expected a handshake message)')
             }
         } catch (err) {
-            logger.trace(err)
+            logger.trace(err, 'handshakeListener')
         }
     }
 
     // eslint-disable-next-line class-methods-use-this
     protected onHandshakeError(serverUrl: string, error: Error, reject: (reason?: any) => void): void {
-        logger.trace({ serverUrl, error }, 'failed to connect to server')
+        logger.trace({ serverUrl, error }, 'onHandshakeError')
         reject(error)
     }
 
     // eslint-disable-next-line class-methods-use-this
     protected onHandshakeClosed(serverUrl: string, code: number, reason: string, reject: (reason?: any) => void): void {
-        logger.trace({ serverUrl, code, reason }, 'Connection to server closed during handshake')
+        logger.trace({ serverUrl, code, reason }, 'onHandshakeClosed')
         reject(reason)
     }
 
     // eslint-disable-next-line class-methods-use-this
     protected ongoingConnectionError(serverPeerId: PeerId, error: Error, connection: AbstractWsConnection): void {
-        logger.trace({ serverPeerId, error }, 'Connection to server failed')
+        logger.trace({ serverPeerId, error }, 'ongoingConnectionError')
         connection.terminate()
     }
 

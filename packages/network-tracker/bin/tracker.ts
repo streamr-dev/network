@@ -49,7 +49,7 @@ if (slackBotToken && slackChannel) {
 }
 
 const logError = (err: any, errorType: string) => {
-    logger.fatal({ err, errorType }, 'error')
+    logger.fatal({ err, errorType }, 'Encountered error')
     if (slackbot !== undefined) {
         const message = `${errorType}: ${err}`
         slackbot.alert([message], slackAlertHeader)
@@ -93,7 +93,7 @@ async function main() {
         logger.info({
             id,
             ...trackerObj
-        }, 'started tracker')
+        }, 'Started')
     } catch (err) {
         logError(err, 'tracker bin catch')
         process.exit(1)

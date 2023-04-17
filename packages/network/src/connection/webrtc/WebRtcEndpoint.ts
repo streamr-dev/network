@@ -150,13 +150,12 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
                 }
             }
             if (connections.length > 0 && connections.length === undefinedStates.length) {
-                logger.warn('Cannot determine webrtc datachannel connection states')
+                logger.warn('Failed to determine WebRTC datachannel connection states')
             } else {
-                const suffix = (pendingPeerIds.length > 0) ? ', trying to connect to %d peers' : ''
-                logger.info(`Connected to %d peers${suffix}`,
-                    connectedPeerIds.length, pendingPeerIds.length)
+                const suffix = (pendingPeerIds.length > 0) ? ` (trying to connect to ${pendingPeerIds.length} peers)` : ''
+                logger.info(`Connected to ${connectedPeerIds.length} peers${suffix}`)
                 logger.debug(`Connected to peers: ${getPeerNameList(connectedPeerIds) || '[]'}`)
-                logger.debug(`Connecting to peers: ${getPeerNameList(pendingPeerIds) || '[]'}`)
+                logger.debug(`Connect to peers (pending): ${getPeerNameList(pendingPeerIds) || '[]'}`)
             }
         }, STATUS_REPORT_INTERVAL_MS)
     }
@@ -243,7 +242,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             try {
                 connection.connect()
             } catch (e) {
-                logger.warn(e)
+                logger.warn(e, 'Failed to connect (onRtcOfferFromSignaller)')
             }
             this.connections[peerId] = connection
             this.onConnectionCountChange()
@@ -262,13 +261,13 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         const { peerId } = originatorInfo
         const connection = this.connections[peerId]
         if (!connection) {
-            logger.debug({ peerId, description }, 'unexpected rtcAnswer')
+            logger.debug({ peerId, description }, 'Received unexpected rtcAnswer')
         } else if (connection.getConnectionId() !== connectionId) {
             logger.debug({
                 peerId,
                 currentConnectionId: connection.getConnectionId(),
                 sentConnectionId: connectionId
-            }, 'unexpected rtcAnswer (connectionId mismatch)')
+            }, 'Received unexpected rtcAnswer (connectionId mismatch)')
         } else {
             connection.setPeerInfo(PeerInfo.fromObject(originatorInfo))
             connection.setRemoteDescription(description, 'answer')
@@ -290,13 +289,13 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         const { peerId } = originatorInfo
         const connection = this.connections[peerId]
         if (!connection) {
-            logger.debug({ peerId, candidate }, 'unexpected iceCandidate (no connection)')
+            logger.debug({ peerId, candidate }, 'Received unexpected iceCandidate (no connection)')
         } else if (connection.getConnectionId() !== connectionId) {
             logger.debug({
                 peerId,
                 currentConnectionId: connection.getConnectionId(),
                 sentConnectionId: connectionId
-            }, 'unexpected iceCandidate (connectionId mismatch)')
+            }, 'Received unexpected iceCandidate (connectionId mismatch)')
         } else {
             if (this.isIceCandidateAllowed(candidate)) {
                 connection.addRemoteCandidate(candidate, mid)
@@ -319,10 +318,10 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             this.replaceConnection(peerId, routerId, uuidv4())
         } else {
             this.connect(peerId, routerId, true).then(() => {
-                logger.trace({ peerId }, 'unattended connectListener induced connection')
+                logger.trace({ peerId }, 'Failed to connect (unattended connectListener induced connection)')
                 return peerId
             }).catch((err) => {
-                logger.trace({ peerId, err }, 'connectListener induced connection failed')
+                logger.trace({ peerId, err }, 'Failed to connect (connectListener induced connection)')
             })
         }
     }
@@ -346,7 +345,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         try {
             connection.connect()
         } catch (e) {
-            logger.warn(e)
+            logger.warn(e, 'Failed to connect (replaceConnection)')
         }
         this.connections[peerId] = connection
         this.onConnectionCountChange()
@@ -369,11 +368,10 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             const deferredConnectionAttempt = connection.getDeferredConnectionAttempt()
 
             logger.trace({
+                role: isOffering(this.peerInfo.peerId, targetPeerId) ? 'offerer' : 'answerer',
                 targetPeerId: NameDirectory.getName(targetPeerId),
                 state: lastState
-            }, '%s has already connection for peer',
-            isOffering(this.peerInfo.peerId, targetPeerId) ? 'offerer' : 'answerer',
-            )
+            }, 'Found pre-existing connection for peer')
 
             if (lastState === 'connected') {
                 return Promise.resolve(targetPeerId)
@@ -432,7 +430,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
                 connection.getPeerInfo().messageLayerVersions
             )
         } catch (err) {
-            logger.debug(err)
+            logger.debug(err, 'Encountered error while negotiating protocol versions')
             this.close(connection.getPeerId(), `No shared protocol versions with node: ${connection.getPeerId()}`)
         }
     }
@@ -440,7 +438,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     close(receiverPeerId: PeerId, reason: string): void {
         const connection = this.connections[receiverPeerId]
         if (connection) {
-            logger.debug({ peerId: NameDirectory.getName(receiverPeerId), reason }, 'close connection')
+            logger.debug({ peerId: NameDirectory.getName(receiverPeerId), reason }, 'Close connection')
             delete this.connections[receiverPeerId]
             this.onConnectionCountChange()
             connection.close()

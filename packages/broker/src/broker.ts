@@ -45,7 +45,7 @@ export const createBroker = async (configWithoutDefaults: Config): Promise<Broke
     return {
         getNode,
         start: async () => {
-            logger.info(`Starting broker version ${CURRENT_VERSION}`)
+            logger.info(`Start broker version ${CURRENT_VERSION}`)
             await Promise.all(plugins.map((plugin) => plugin.start()))
             const httpServerEndpoints = plugins.flatMap((plugin: Plugin<any>) => {
                 return plugin.getHttpServerEndpoints().map((endpoint: HttpServerEndpoint) => {
@@ -86,11 +86,11 @@ export const createBroker = async (configWithoutDefaults: Config): Promise<Broke
 }
 
 process.on('uncaughtException', (err) => {
-    logger.fatal('uncaughtException', err)
+    logger.fatal(err, 'Encountered uncaughtException')
     process.exit(1)
 })
 
 process.on('unhandledRejection', (err) => {
-    logger.fatal('unhandledRejection', err)
+    logger.fatal(err, 'Encountered unhandledRejection')
     process.exit(1)
 })

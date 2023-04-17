@@ -60,7 +60,7 @@ export class SubscriberKeyExchange {
             this.rsaKeyPair = await RSAKeyPair.create()
             const node = await networkNodeFacade.getNode()
             node.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
-            this.logger.debug('started')
+            this.logger.debug('Started')
         })
         this.requestGroupKey = withThrottling((groupKeyId: string, publisherId: EthereumAddress, streamPartId: StreamPartID) => {
             return this.doRequestGroupKey(groupKeyId, publisherId, streamPartId)
@@ -83,7 +83,7 @@ export class SubscriberKeyExchange {
             groupKeyId,
             requestId,
             publisherId
-        }, 'sent a group key request, waiting for response...')
+        }, 'Sent group key request (waiting for response)')
     }
 
     private async createRequest(
@@ -121,7 +121,7 @@ export class SubscriberKeyExchange {
                 const authenticatedUser = await this.authentication.getAddress()
                 const { requestId, recipient, encryptedGroupKeys } = GroupKeyResponse.fromStreamMessage(msg) as GroupKeyResponse
                 if ((recipient === authenticatedUser) && (this.pendingRequests.has(requestId))) {
-                    this.logger.debug({ requestId }, 'handling group key response')
+                    this.logger.debug({ requestId }, 'Handle group key response')
                     this.pendingRequests.delete(requestId)
                     await this.validator.validate(msg)
                     await Promise.all(encryptedGroupKeys.map(async (encryptedKey) => {
@@ -129,8 +129,8 @@ export class SubscriberKeyExchange {
                         await this.store.set(key.id, msg.getPublisherId(), key.data)
                     }))
                 }
-            } catch (e: any) {
-                this.logger.debug(e, 'error handling group key response')
+            } catch (err: any) {
+                this.logger.debug(err, 'Failed to handle group key response')
             }
         }
     }

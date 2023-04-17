@@ -95,7 +95,7 @@ export class Storage extends EventEmitter {
                 }))
             } else {
                 const messageId = streamMessage.messageId.serialize()
-                logger.trace({ messageId }, 'bucket not found, put to pendingMessages')
+                logger.trace({ messageId }, 'Move message to pending messages (bucket not found)')
 
                 const uuid = uuidv1()
                 const timeout = setTimeout(() => {
@@ -112,12 +112,6 @@ export class Storage extends EventEmitter {
             // eslint-disable-next-line no-param-reassign
             limit = MAX_RESEND_LAST
         }
-
-        logger.trace({
-            streamId,
-            partition,
-            limit
-        }, 'requestLast')
 
         const GET_LAST_N_MESSAGES = 'SELECT payload FROM stream_data WHERE '
             + 'stream_id = ? AND partition = ? AND bucket_id IN ? '
@@ -196,14 +190,6 @@ export class Storage extends EventEmitter {
     }
 
     requestFrom(streamId: string, partition: number, fromTimestamp: number, fromSequenceNo: number, publisherId?: string): Readable {
-        logger.trace({
-            streamId,
-            partition,
-            fromTimestamp,
-            fromSequenceNo,
-            publisherId
-        }, 'requestFrom')
-
         return this.fetchRange(
             streamId,
             partition,
@@ -225,17 +211,6 @@ export class Storage extends EventEmitter {
         publisherId: string | undefined,
         msgChainId: string | undefined
     ): Readable {
-        logger.trace({
-            streamId,
-            partition,
-            fromTimestamp,
-            fromSequenceNo,
-            toTimestamp,
-            toSequenceNo,
-            publisherId,
-            msgChainId
-        }, 'requestRange')
-
         // TODO is there any reason why we shouldn't allow range queries which contain publisherId, but not msgChainId?
         // (or maybe even queries with msgChain but without publisherId)
         const isValidRequest = (publisherId !== undefined && msgChainId !== undefined) || (publisherId === undefined && msgChainId === undefined)
@@ -382,7 +357,7 @@ export class Storage extends EventEmitter {
         if (row.payload === null) {
             logger.error({
                 debugInfo
-            }, 'Found message with NULL payload on cassandra')
+            }, 'Found unexpected message with NULL payload in Cassandra')
             return null
         }
 
@@ -563,7 +538,9 @@ export const startCassandraStorage = async ({
         slowThreshold: 10 * 1000, // 10 secs
     })
     // @ts-expect-error 'emitter' field is missing in type definition file
-    requestLogger.emitter.on('slow', (message: Todo) => logger.warn(message))
+    requestLogger.emitter.on('slow', (message: Todo) => {
+        logger.warn({ message }, 'Encountered "slow" event from cassandraClient')
+    })
     const cassandraClient = new Client({
         contactPoints,
         localDataCenter,

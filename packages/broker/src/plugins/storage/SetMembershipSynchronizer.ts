@@ -44,7 +44,7 @@ export class SetMembershipSynchronizer<E extends string> {
             logger.warn({
                 sequenceNo,
                 lastSnapshotSequenceNo: this.lastSnapshotSequenceNo
-            }, 'ignoring snapshot due to stale sequenceNo')
+            }, 'Ignore snapshot (stale sequenceNo)')
             return EMPTY_DIFF
         }
 

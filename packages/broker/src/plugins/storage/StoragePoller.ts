@@ -33,12 +33,12 @@ export class StoragePoller {
     }
 
     async poll(): Promise<void> {
-        logger.info('Polling...')
+        logger.info('Polling')
         const { streams, blockNumber } = await this.streamrClient.getStoredStreams(this.clusterId)
         logger.info({
             foundStreams: streams.length,
             blockNumber
-        }, 'Poll update')
+        }, 'Polled')
         this.onNewSnapshot(streams, blockNumber)
     }
 

@@ -53,7 +53,7 @@ export class InstructionRetryManager {
             // First and every nth instruction retries will always send status messages to tracker
             await this.handleFn(instructionMessage, trackerId, this.instructionRetryIntervals[streamPartId].counter !== 0)
         } catch (err) {
-            logger.warn(err, 'instruction retry threw error')
+            logger.warn(err, 'Encountered error handling instruction')
         }
         // Check that stream has not been removed
         if (this.instructionRetryIntervals[streamPartId]) {
@@ -77,7 +77,7 @@ export class InstructionRetryManager {
         if (streamPartId in this.instructionRetryIntervals) {
             clearTimeout(this.instructionRetryIntervals[streamPartId].interval)
             delete this.instructionRetryIntervals[streamPartId]
-            logger.debug(streamPartId, 'stream part successfully removed')
+            logger.debug(streamPartId, 'Removed')
         }
     }
 
