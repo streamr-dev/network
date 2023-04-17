@@ -1,6 +1,6 @@
 import { inject } from 'tsyringe'
 import { Subscription } from './Subscription'
-import { StreamMessage, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
+import { StreamMessage, StreamPartID } from '@streamr/protocol'
 import { ConfigInjectionToken } from '../Config'
 import { OrderMessages } from './OrderMessages'
 import { ResendOptions, Resends } from './Resends'
