@@ -31,7 +31,7 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
                 Simulator.instance().wsConnect(this.ownAddress, this.peerInfo, serverUrl as string)
 
             } catch (err) {
-                logger.trace('failed to connect to %s, error: %o', serverUrl, err)
+                logger.trace(`failed to connect to ${serverUrl}, error: ${err}`)
                 reject(err)
             }
         })

@@ -64,10 +64,7 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
             if (existingConnection.getReadyState() === 1 as ReadyState) {
                 return Promise.resolve(existingConnection.getPeerId())
             }
-            logger.trace('supposedly connected to %s but readyState is %s, closing connection',
-                serverUrl,
-                existingConnection.getReadyState()
-            )
+            logger.trace(`supposedly connected to ${serverUrl} but readyState is ${existingConnection.getReadyState()}, closing connection`)
             this.close(
                 existingConnection.getPeerId(),
                 DisconnectionCode.DEAD_CONNECTION,
@@ -82,7 +79,7 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
         }
 
         // Perform connection
-        logger.trace('connecting to %s', serverUrl)
+        logger.trace(`connecting to ${serverUrl}`)
         const p = this.doConnect(serverUrl, serverPeerInfo).then((peerId) => {
             if (this.connectionsByServerUrl.get(serverUrl)) {
                 this.onNewConnection(this.connectionsByServerUrl.get(serverUrl)!)
@@ -149,7 +146,7 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
 
     // eslint-disable-next-line class-methods-use-this
     protected onHandshakeError(serverUrl: string, error: Error, reject: (reason?: any) => void): void {
-        logger.trace('failed to connect to %s, error: %o', serverUrl, error)
+        logger.trace(`failed to connect to ${serverUrl}, error: ${error}`)
         reject(error)
     }
 
@@ -161,7 +158,7 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
 
     // eslint-disable-next-line class-methods-use-this
     protected ongoingConnectionError(serverPeerId: PeerId, error: Error, connection: AbstractWsConnection): void {
-        logger.trace('Connection to %s failed, error: %o', serverPeerId, error)
+        logger.trace(`Connection to ${serverPeerId} failed, error: ${error}`)
         connection.terminate()
     }
 

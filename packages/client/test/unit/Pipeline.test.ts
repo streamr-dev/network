@@ -476,7 +476,7 @@ describe('Pipeline', () => {
                 let count = 0
                 const onError = jest.fn((error) => {
                     count += 1
-                    logger.debug('onError %d', count)
+                    logger.debug(`onError ${count}`)
                     if (count === 3) {
                         logger.debug('throwing last')
                         throw error
