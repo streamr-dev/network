@@ -31,50 +31,50 @@ describe('Logger', () => {
     })
 
     it('delegates call to fatal to pino.Logger#fatal', async () => {
-        logger.fatal('disaster %s!', 123)
+        logger.fatal('mock message')
         expect(logs[0]).toEqual({
             level: 60,
-            msg: 'disaster 123!'
+            msg: 'mock message'
         })
     })
 
     it('delegates call to error to pino.Logger#error', () => {
-        logger.error('an error or something %s', 123)
+        logger.error('mock message')
         expect(logs[0]).toEqual({
             level: 50,
-            msg: 'an error or something 123'
+            msg: 'mock message'
         })
     })
 
     it('delegates call to warn to pino.Logger#warn', () => {
-        logger.warn('a warning %s!', 123)
+        logger.warn('mock message')
         expect(logs[0]).toEqual({
             level: 40,
-            msg: 'a warning 123!'
+            msg: 'mock message'
         })
     })
 
     it('delegates call to info to pino.Logger#info', () => {
-        logger.info('here be information %s!', 123)
+        logger.info('mock message')
         expect(logs[0]).toEqual({
             level: 30,
-            msg: 'here be information 123!'
+            msg: 'mock message'
         })
     })
 
     it('delegates call to debug to pino.Logger#debug', () => {
-        logger.debug('debugging internals %s...', 123)
+        logger.debug('mock message')
         expect(logs[0]).toEqual({
             level: 20,
-            msg: 'debugging internals 123...'
+            msg: 'mock message'
         })
     })
 
     it('delegates call to trace to pino.Logger#trace', () => {
-        logger.trace('tracing %s...', 123)
+        logger.trace('mock message')
         expect(logs[0]).toEqual({
             level: 10,
-            msg: 'tracing 123...'
+            msg: 'mock message'
         })
     })
 
