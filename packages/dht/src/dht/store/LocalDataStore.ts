@@ -58,10 +58,7 @@ export class LocalDataStore {
         return this.store
     }
 
-    public getEntry(key: PeerID): Map<PeerIDKey, DataEntry> | undefined {
-        if (!this.store.has(key.toKey())) {
-            return undefined
-        }
+    public getEntry(key: PeerID): Map<PeerIDKey, DataEntry> {
         const dataEntries = new Map<PeerIDKey, DataEntry>
         this.store.get(key.toKey())?.forEach((value, key) => {
             dataEntries.set(key, value.dataEntry)
