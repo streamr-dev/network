@@ -199,14 +199,14 @@ export class DataStore implements IStoreService {
 
     // RPC service implementation
     public async migrateData(request: MigrateDataRequest, context: ServerCallContext): Promise<MigrateDataResponse> {
-        logger.info(this.ownPeerDescriptor.nodeName + ' server-side migrateData()')
+        logger.trace(this.ownPeerDescriptor.nodeName + ' server-side migrateData()')
         const dataEntry = request.dataEntry!
 
         this.localDataStore.storeEntry(dataEntry)
 
         this.migrateDataToNeighborsIfNeeded((context as DhtCallContext).incomingSourceDescriptor!, request.dataEntry!)
 
-        logger.info(this.ownPeerDescriptor.nodeName + ' server-side migrateData() at end')
+        logger.trace(this.ownPeerDescriptor.nodeName + ' server-side migrateData() at end')
         return MigrateDataResponse.create()
     }
 
@@ -243,7 +243,7 @@ export class DataStore implements IStoreService {
             if (!incomingPeerId.equals(contactPeerId) &&
                 !ownPeerId.equals(contactPeerId)) {
                 this.migrateDataToContact(dataEntry, contact.getPeerDescriptor()).then(() => {
-                    logger.info('migrateDataToContact() returned when migrating to only the closest contact')
+                    logger.trace('migrateDataToContact() returned when migrating to only the closest contact')
                 }).catch((e) => {
                     logger.error('migrating data to only the closest contact failed ' + e)
                 })
@@ -256,18 +256,12 @@ export class DataStore implements IStoreService {
                 if (!incomingPeerId.equals(contactPeerId) &&
                     !ownPeerId.equals(contactPeerId)) {
                     this.migrateDataToContact(dataEntry, contact.getPeerDescriptor()).then(() => {
-                        logger.info('migrateDataToContact() returned')
+                        logger.trace('migrateDataToContact() returned')
                     }).catch((e) => {
                         logger.error('migrating data to one of the closest contacts failed ' + e)
                     })
                 }
             })
         }
-
-        logger.info('migrateDataToNeighborsIfNeeded() sortedContacts')
-        sortedList.getAllContacts().forEach((contact) => {
-            logger.info('' + contact.getPeerDescriptor().nodeName)
-        })
-
     }
 }

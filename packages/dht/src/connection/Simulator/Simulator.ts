@@ -131,9 +131,8 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
             console.error('disconnect() called on a stopped simulator ' + (new Error().stack))
             return
         }
-
-        this.clearTimeoutsBySourceConnection(sourceConnection.connectionId.toMapKey())
         
+        this.clearTimeoutsBySourceConnection(sourceConnection.connectionId.toMapKey())
         const target = this.associations.get(sourceConnection.connectionId)
         if (target) {
 
