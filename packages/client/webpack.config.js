@@ -126,6 +126,7 @@ module.exports = (env, argv) => {
                 https: false,
                 express: false,
                 ws: false,
+                '@web3modal/standalone': false
             }
         },
         plugins: [

@@ -1,7 +1,6 @@
 /**
  * Makes OrderingUtil more compatible with use in pipeline.
  */
-import { injectable } from 'tsyringe'
 import { StreamMessage, StreamPartID, MessageRef } from '@streamr/protocol'
 
 import { PushBuffer } from '../utils/PushBuffer'
@@ -18,7 +17,6 @@ import { LoggerFactory } from '../utils/LoggerFactory'
  * Wraps OrderingUtil into a PushBuffer.
  * Implements gap filling
  */
-@injectable()
 export class OrderMessages {
 
     private config: StrictStreamrClientConfig

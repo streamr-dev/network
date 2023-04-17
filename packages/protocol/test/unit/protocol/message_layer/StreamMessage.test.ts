@@ -94,17 +94,16 @@ describe('StreamMessage', () => {
                 content: JSON.stringify(content),
                 signature: 'something'
             })
-            expect(StreamMessage.isEncrypted(streamMessage)).toBe(false)
-            expect(StreamMessage.isUnencrypted(streamMessage)).toBe(true)
+            expect(StreamMessage.isAESEncrypted(streamMessage)).toBe(false)
             const encryptedMessage = new StreamMessage({
                 messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
                 content: JSON.stringify(content),
                 signature: 'something',
-                encryptionType: EncryptionType.RSA,
+                encryptionType: EncryptionType.AES,
+                groupKeyId: 'mock-id'
             })
 
-            expect(StreamMessage.isEncrypted(encryptedMessage)).toBe(true)
-            expect(StreamMessage.isUnencrypted(encryptedMessage)).toBe(false)
+            expect(StreamMessage.isAESEncrypted(encryptedMessage)).toBe(true)
         })
 
         it('should throw if required fields are not defined', () => {
@@ -126,6 +125,7 @@ describe('StreamMessage', () => {
                 // @ts-expect-error TODO
                 content: 'encrypted content',
                 encryptionType: EncryptionType.AES,
+                groupKeyId: 'mock-id'
             }))
         })
 
@@ -141,6 +141,13 @@ describe('StreamMessage', () => {
                 // @ts-expect-error TODO
                 newGroupKey: 'foo', // invalid
             }), ValidationError)
+        })
+
+        it('Throws with an no group key for AES encrypted message', () => {
+            assert.throws(() => msg({
+                encryptionType: EncryptionType.AES,
+                groupKeyId: null
+            } as any), ValidationError)
         })
 
         describe('prevMsgRef validation', () => {

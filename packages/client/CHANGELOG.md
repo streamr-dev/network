@@ -20,6 +20,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 
+## [8.2.1] - 2023-04-13
+
+### Fixed
+
+- Fix crashing issue in network library when `acceptProxyConnections` is enabled
+
+
+## [8.2.0] - 2023-04-11
+
+### Added
+
+- Add new option `raw` to method `.subscribe`
+- Add optional parameter to `.searchStreams` for defining order of the result set
+
+### Changed
+
+- Increase default timeout of stream creation when ENS domains are used
+
+
 ## [8.1.0] - 2023-03-23
 
 ### Added
@@ -319,7 +338,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed an import so that the client successfully loads in a web browser environment (NET-721)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/client/v8.1.0...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/client/v8.2.1...HEAD
+[8.2.1]: https://github.com/streamr-dev/network/compare/client/v8.2.0...client/v8.2.1
+[8.2.0]: https://github.com/streamr-dev/network/compare/client/v8.1.0...client/v8.2.0
 [8.1.0]: https://github.com/streamr-dev/network/compare/client/v8.0.4...client/v8.1.0
 [8.0.4]: https://github.com/streamr-dev/network/compare/client/v8.0.3...client/v8.0.4
 [8.0.3]: https://github.com/streamr-dev/network/compare/client/v8.0.2...client/v8.0.3

@@ -71,39 +71,101 @@ export interface EthereumNetworkConfig {
 export interface StreamrClientConfig {
     /** Custom human-readable debug id for client. Used in logging. */
     id?: string
-    logLevel?: LogLevel
+
     /**
-    * Authentication: identity used by this StreamrClient instance.
-    * Can contain member privateKey or (window.)ethereum
+     * Override the default logging level.
+     */
+    logLevel?: LogLevel
+
+    /**
+    * The Ethereum identity to be used by the client. Either a private key
+    * or a window.ethereum object.
     */
     auth?: PrivateKeyAuthConfig | ProviderAuthConfig
 
-    /** Attempt to order messages */
+    /**
+     * Due to the distributed nature of the network, messages may occasionally
+     * arrive to the client out-of-order. Set this option to `true` if you want
+     * the client to reorder received messages to the intended order.
+     *
+     * */
     orderMessages?: boolean
+
+    /**
+     * Set to true to enable gap filling.
+     *
+     * Some messages may occasionally not reach the client due to networking
+     * issues. Missing messages form gaps that are often detectable and
+     * retrievable on demand. By enabling gap filling, the client will detect
+     * and fix gaps automatically for you.
+     */
     gapFill?: boolean
+
+    /**
+     * When gap filling is enabled, this option controls the maximum amount of
+     * times a gap will try to be actively filled before giving up and
+     * proceeding forwards.
+     */
     maxGapRequests?: number
-    retryResendAfter?: number
+
+    /**
+     * When gap filling is enabled and a gap is encountered, this option
+     * defines the amount of time in milliseconds to wait before attempting to
+     * _actively_ fill in the gap.
+     *
+     * Rationale: data may just be arriving out-of-order and the missing
+     * message(s) may be on their way. For efficiency, it makes sense to wait a
+     * little before actively attempting to fill in a gap, as this involves
+     * a resend request / response interaction with a storage node.
+     */
     gapFillTimeout?: number
 
     network?: NetworkConfig
     /**
-     * Message encryption/decryption
+     * When gap filling is enabled and a gap is encountered, a resend request
+     * may eventually be sent to a storage node in an attempt to _actively_
+     * fill in the gap. This option controls how long to wait for, in
+     * milliseconds, for a resend response from the storage node before
+     * proceeding to the next attempt.
+     */
+    retryResendAfter?: number
+
+    /**
+     * Controls how messages encryption and decryption should be handled and
+     * how encryption keys should be exchanged.
      */
     encryption?: {
         /**
          * Enable experimental Lit Protocol key exchange.
          *
-         * When enabled encryption key storing and fetching will be primarily done through the Lit Protocol and
-         * secondarily through the standard Streamr key-exchange system.
+         * When enabled encryption key storing and fetching will primarily be done through the
+         * [Lit Protocol](https://litprotocol.com/) and secondarily through the standard Streamr
+         * key-exchange system.
          */
         litProtocolEnabled?: boolean
+
         /**
          * Enable log messages of the Lit Protocol library to be printed to stdout.
          */
         litProtocolLogging?: boolean
+
         // TODO keyRequestTimeout and maxKeyRequestsPerSecond config options could be applied
         // to lit protocol key requests (both encryption and decryption?)
+        /**
+         * When requesting an encryption key using the standard Streamr
+         * key-exchange system, defines how many milliseconds should a response
+         * be awaited for.
+         */
         keyRequestTimeout?: number
+
+        /**
+         * The maximum amount of encryption key requests that should be sent via
+         * the standard Streamr key-exchange system per second.
+         *
+         * In streams with 1000+ publishers, it is important to limit the amount
+         * of control message traffic that gets generated to avoid network buffers
+         * from overflowing.
+         */
         maxKeyRequestsPerSecond?: number
     }
 
@@ -120,6 +182,12 @@ export interface StreamrClientConfig {
         maxConcurrentCalls?: number
     }
 
+    /**
+     * Determines the telemetry metrics that are sent to the Streamr Network
+     * at regular intervals.
+     *
+     * By setting this to false, you disable the feature.
+     */
     metrics?: {
         periods?: {
             streamId: string
@@ -128,6 +196,9 @@ export interface StreamrClientConfig {
         maxPublishDelay?: number
     } | boolean
 
+    /**
+     * Determines caching behaviour for certain repeated smart contract queries.
+     */
     cache?: {
         maxSize?: number
         maxAge?: number
@@ -143,7 +214,7 @@ export interface StreamrClientConfig {
             timeout?: number
             retryInterval?: number
         }
-        jsonRpc?: {
+        ensStreamCreation?: {
             timeout?: number
             retryInterval?: number
         }

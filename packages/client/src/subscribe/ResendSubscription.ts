@@ -22,7 +22,7 @@ export class ResendSubscription extends Subscription {
         loggerFactory: LoggerFactory,
         @inject(ConfigInjectionToken) config: StrictStreamrClientConfig
     ) {
-        super(streamPartId, loggerFactory)
+        super(streamPartId, false, loggerFactory)
         this.resendOptions = resendOptions
         this.resends = resends
         this.orderMessages = new OrderMessages(

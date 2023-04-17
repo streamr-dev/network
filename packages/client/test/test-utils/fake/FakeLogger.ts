@@ -1,32 +1,14 @@
 import { Logger, LogLevel } from '@streamr/utils'
+import * as util from 'util'
 
 interface LogEntry {
     message: string
     level: LogLevel
 }
 
-const LOG_LINE_PREFIX_LENGTH = 56 // Logger prefixes each line with level, timestamp and context
-
-export class FakeLogger implements Omit<Logger, 'getFinalLogger'> {
-
+// @ts-expect-error not implementing logger
+export class FakeLogger implements Logger {
     private readonly entries: LogEntry[] = []
-    private readonly format: (pattern: string, args: any[], cb: (message: string) => void) => void
-
-    constructor() {
-        // format escape sequences (%s, %o etc.) using real Logger
-        this.format = (pattern: string, args: any[], cb: (message: string) => void) => {
-            const logger = new Logger(module, undefined, 'trace', {
-                write: (line: string) => {
-                    // eslint-disable-next-line
-                    const withoutColors = line.replace(/\x1b\[[0-9]+m/gi, '')
-                    const withoutPrefix = withoutColors.substring(LOG_LINE_PREFIX_LENGTH)
-                    const withoutLinefeed = withoutPrefix.substring(0, withoutPrefix.length - 1)
-                    cb(withoutLinefeed)
-                }
-            })
-            logger.trace(pattern, ...args)
-        }
-    }
 
     fatal(pattern: string, ...args: any[]): void {
         this.addEntry(pattern, args, 'fatal')
@@ -53,8 +35,9 @@ export class FakeLogger implements Omit<Logger, 'getFinalLogger'> {
     }
 
     private addEntry(pattern: string, args: any[], level: LogLevel) {
-        this.format(pattern, args, (message: string) => {
-            this.entries.push({ message, level })
+        this.entries.push({
+            message: util.format(pattern, ...args), // pino.Logger probably not using util.format internally...
+            level
         })
     }
 
