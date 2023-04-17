@@ -49,7 +49,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
             server: this.httpServer,
             maxPayload: 1024 * 1024
         }).on('error', (err: Error) => {
-            logger.error(err, 'web socket server (wss) emitted error')
+            logger.error(err, 'Encountered error (emitted by WebSocket.Server)')
         }).on('listening', () => {
             logger.trace({ url: this.getUrl() }, 'listening on url')
         }).on('connection', (ws: WebSocket, request: http.IncomingMessage) => {
@@ -123,7 +123,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
         })
 
         duplexStream.on('error', (error) => {
-            logger.error( { stack: error.stack as string }, 'Duplex stream error')
+            logger.error( { stack: error.stack as string }, 'Encountered error (emitted by DuplexStream)')
         })
 
         ws.on('pong', () => {
@@ -155,11 +155,11 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
             }
             this.wss.close((err?) => {
                 if (err) {
-                    logger.error(err, 'error on closing websocket server')
+                    logger.error(err, 'Encountered error (while closing WebSocket.Server)')
                 }
                 this.httpServer.close((err?) => {
                     if (err) {
-                        logger.error(err, 'error closing http server')
+                        logger.error(err, 'Encountered error (while closing httpServer)')
                         reject(err)
                     } else {
                         resolve()
@@ -210,7 +210,7 @@ function cleanSocket(httpServer: http.Server | https.Server, config: UnixSocket)
 
         clientSocket.once('connect', () => {
             // bad news if we are able to connect
-            logger.error({ config }, 'Another server already running on socket')
+            logger.error({ config }, 'Encountered unexpected reserved socket (another server already running?)')
             process.exit(1)
         })
         clientSocket.connect({ path: config })
@@ -245,7 +245,7 @@ export async function startHttpServer(
     } catch (err) {
         // Kill process if started on host/port, else wait for Unix Socket to be cleaned up
         if (typeof config !== "string") {
-            logger.error(err)
+            logger.error(err, 'Failed to start httpServer')
             process.exit(1)
         } else {
             await once(httpServer, 'listening')

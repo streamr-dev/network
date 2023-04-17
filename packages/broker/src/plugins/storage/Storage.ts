@@ -382,7 +382,7 @@ export class Storage extends EventEmitter {
         if (row.payload === null) {
             logger.error({
                 debugInfo
-            }, 'Found message with NULL payload on cassandra')
+            }, 'Found unexpected message with NULL payload in Cassandra')
             return null
         }
 

@@ -118,7 +118,7 @@ export class DeleteExpiredCmd {
                         partition: stream.partition,
                         storageDays: streamFromChain.getMetadata().storageDays ?? 365
                     }
-                } catch (err) { logger.error(err) }
+                } catch (err) { logger.error({ err }, 'Failed to fetch stream info') }
             })
         })
 
@@ -139,7 +139,7 @@ export class DeleteExpiredCmd {
             return this.limit(async () => {
                 const resultSet = await this.cassandraClient.execute(query, params, {
                     prepare: true,
-                }).catch((err) => logger.error(err))
+                }).catch((err) => logger.error({ err, query }, 'Failed to execute query'))
 
                 if (resultSet) {
                     resultSet.rows.forEach((row: cassandra.types.Row) => {
@@ -174,7 +174,7 @@ export class DeleteExpiredCmd {
             return this.limit(async () => {
                 const resultSet = await this.cassandraClient.execute(query, params, {
                     prepare: true,
-                }).catch((err) => logger.error(err))
+                }).catch((err) => logger.error({ err, query }, 'Failed to execute query'))
 
                 if (resultSet && (
                     resultSet.rows.length === 0
@@ -208,7 +208,7 @@ export class DeleteExpiredCmd {
             return this.limit(async () => {
                 await this.cassandraClient.batch(queries, {
                     prepare: true
-                }).catch((err) => logger.error(err))
+                }).catch((err) => logger.error({ err, queries }, 'Failed to delete expired buckets'))
                 return undefined
             })
         })

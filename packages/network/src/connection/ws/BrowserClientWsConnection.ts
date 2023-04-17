@@ -25,7 +25,7 @@ export class BrowserClientWsConnection extends AbstractWsConnection {
         try {
             this.socket.close(code, reason)
         } catch (err) {
-            logger.error(err, 'failed to close connection')
+            logger.error(err, 'Failed to close connection')
         }
     }
 
@@ -33,7 +33,7 @@ export class BrowserClientWsConnection extends AbstractWsConnection {
         try {
             this.socket.close()
         } catch (err) {
-            logger.error(err, 'failed to terminate connection')
+            logger.error(err, 'Failed to terminate connection')
         }
     }
 

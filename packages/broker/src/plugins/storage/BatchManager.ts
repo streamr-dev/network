@@ -134,7 +134,6 @@ export class BatchManager extends EventEmitter {
             batch.clear()
             delete this.pendingBatches[batch.getId()]
         } catch (err) {
-            this.logger.trace(err, 'Failed to insert batch')
             if (this.opts.logErrors) {
                 this.logger.error({ batchId, err }, 'Failed to insert batch')
             }
@@ -146,7 +145,7 @@ export class BatchManager extends EventEmitter {
                     this.logger.error({
                         batchId: batch.getId(),
                         retries: batch.retries
-                    }, 'Batch reached max retries, dropping batch')
+                    }, 'Dropping batch (max retries reached)')
                 }
                 batch.clear()
                 delete this.pendingBatches[batch.getId()]

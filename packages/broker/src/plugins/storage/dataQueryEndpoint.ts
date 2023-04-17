@@ -75,14 +75,13 @@ const sendSuccess = (data: Readable, format: Format, version: number | undefined
                 logger.error({
                     streamId,
                     err
-                }, 'Pipeline error in DataQueryEndpoints')
+                }, 'Encountered error in pipeline')
             }
         }
     )
 }
 
 const sendError = (message: string, res: Response) => {
-    logger.error(message)
     res.status(400).json({
         error: message
     })
