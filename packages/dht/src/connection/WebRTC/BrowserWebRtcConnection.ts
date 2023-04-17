@@ -161,7 +161,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
         }
 
         dataChannel.onerror = (err) => {
-            logger.warn('dc.onError: %o', err)
+            logger.warn(`dc.onError: ${err}`)
         }
 
         dataChannel.onbufferedamountlow = () => {
