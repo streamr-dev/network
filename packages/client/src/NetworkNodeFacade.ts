@@ -20,7 +20,9 @@ import { DestroySignal } from './DestroySignal'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
 
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
-/** @deprecated This in an internal interface */
+/** @deprecated This in an internal interface 
+ * @internal
+*/
 export interface NetworkNodeStub {
     getNodeId: () => string
     addMessageListener: (listener: (msg: StreamMessage) => void) => void

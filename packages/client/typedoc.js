@@ -5,6 +5,7 @@ module.exports = {
     tsconfig: 'tsconfig.node.json',
     name: "Streamr Client",
     readme: 'none',
+    exclude: ['**/dht/dist/**'],
     excludePrivate: true,
     excludeProtected: true,
     excludeInternal: true,

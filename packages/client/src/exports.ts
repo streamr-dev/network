@@ -27,8 +27,11 @@ export {
     EthereumNetworkConfig,
     ProviderAuthConfig,
     PrivateKeyAuthConfig,
-    JsonPeerDescriptor,
     STREAMR_STORAGE_NODE_GERMANY,
+    NetworkConfig,
+    layer0Config,
+    JsonPeerDescriptor,
+    ConnectivityMethod
 } from './Config'
 export { GroupKey as EncryptionKey } from './encryption/GroupKey'
 export { UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
@@ -58,5 +61,7 @@ export {
     StreamMessageType
 } from '@streamr/protocol'
 
+export { StreamrNodeOpts } from '@streamr/trackerless-network'
+export { IceServer, PeerDescriptor } from '@streamr/dht' 
 export type { ConnectionInfo } from '@ethersproject/web'
 export type { ExternalProvider } from '@ethersproject/providers'
