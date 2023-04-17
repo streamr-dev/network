@@ -91,8 +91,7 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
                 logger.warn({
                     reason: err?.message,
                     rewardStreamId: this.streamId
-                }, 'Failed to (re-)subscribe to reward stream (retrying in %d seconds)',
-                this.subscriptionRetryInterval / 1000)
+                }, `Failed to (re-)subscribe to reward stream (retrying in ${this.subscriptionRetryInterval / 1000} seconds)`)
             }
         }
     }
