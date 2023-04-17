@@ -48,10 +48,7 @@ const rootLogger = pino({
     }
 })
 
-interface LogMethod {
-    (obj: unknown, msg?: string, ...args: any[]): void
-    (msg: string, ...args: any[]): void
-}
+type LogMethod = (obj: unknown, msg?: string) => void
 
 export class Logger {
     static NAME_LENGTH = 20
