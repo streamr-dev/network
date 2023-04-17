@@ -85,13 +85,13 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
 
     protected doClose(err?: Error): void {
         if (err !== undefined) {
-            this.logger.warn('Close BrowserWebRTCConnection', err)
+            this.logger.warn('Close BrowserWebRTCConnection', { err })
         }
         if (this.dataChannel) {
             try {
                 this.dataChannel.close()
             } catch (err) {
-                this.logger.warn('Encountered error while closing dataChannel', err)
+                this.logger.warn('Encountered error while closing dataChannel', { err })
             }
         }
 
@@ -101,7 +101,7 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
             try {
                 this.peerConnection.close()
             } catch (err) {
-                this.logger.warn('Encountered error while closing peerConnection', err)
+                this.logger.warn('Encountered error while closing peerConnection', { err })
             }
         }
 
@@ -195,7 +195,7 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
         }
 
         dataChannel.onerror = (err) => {
-            this.logger.warn('Encountered error (emitted by dataChannel.onerror)', err)
+            this.logger.warn('Encountered error (emitted by dataChannel.onerror)', { err })
         }
 
         dataChannel.onbufferedamountlow = () => {
