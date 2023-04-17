@@ -136,7 +136,7 @@ async function fetchResponse(
         options.headers['Content-Type'] = 'application/json'
     }
 
-    logger.debug({ url, opts }, 'sending HTTP request')
+    logger.debug({ url, opts }, 'Send HTTP request')
 
     const response: Response = await fetchFn(url, opts)
     const timeEnd = Date.now()
@@ -145,7 +145,7 @@ async function fetchResponse(
         status: response.status,
         statusText: response.statusText,
         timeTakenInMs: timeEnd - timeStart
-    }, 'HTTP response received')
+    }, 'Received HTTP response')
 
     if (response.ok) {
         return response

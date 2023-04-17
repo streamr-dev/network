@@ -58,7 +58,7 @@ export class DisconnectionManager {
             if (nonNeighborNodeIds.length > 0) {
                 logger.debug({
                     nodeCount: nonNeighborNodeIds.length
-                }, 'connectionCleanUpInterval: disconnecting from nodes')
+                }, 'Disconnect from nodes')
                 nonNeighborNodeIds.forEach((nodeId) => {
                     this.loggedDisconnect(nodeId)
                 })

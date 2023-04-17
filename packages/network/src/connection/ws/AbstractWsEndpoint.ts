@@ -67,7 +67,7 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
                 connection.evaluateBackPressure()
                 await connection.send(message)
             } catch (err) {
-                logger.debug({ recipientId, err }, 'failed to send message')
+                logger.debug({ recipientId, err }, 'Failed to send message')
                 connection.terminate()
                 throw err
             }

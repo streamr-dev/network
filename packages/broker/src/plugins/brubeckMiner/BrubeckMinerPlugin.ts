@@ -113,7 +113,6 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
                 reason: err?.message,
                 rewardStreamId: this.streamId
             }, 'Failed to claim reward code')
-            logger.debug(err)
         })
     }
 

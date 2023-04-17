@@ -21,7 +21,7 @@ export class HttpFetcher {
     fetch(url: string, init?: Record<string, unknown>): Promise<Response> {
         // eslint-disable-next-line no-underscore-dangle
         const timeout = this.config._timeouts.httpFetchTimeout
-        this.logger.debug({ url, timeout }, 'fetching')
+        this.logger.debug({ url, timeout }, 'Fetch')
         return fetch(url, {
             timeout,
             ...init

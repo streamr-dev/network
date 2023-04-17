@@ -111,7 +111,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
                         })
                         logger.debug({
                             assignmentStreamId: assignmentStream.id
-                        }, 'published message to assignment stream')
+                        }, 'Published message to assignment stream')
                     } catch (err) {
                         logger.warn({
                             assignmentStreamId: assignmentStream.id,

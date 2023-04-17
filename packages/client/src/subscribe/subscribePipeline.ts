@@ -65,7 +65,7 @@ export const createSubscribePipeline = (opts: SubscriptionPipelineOptions): Mess
                 return decrypt(msg, opts.groupKeyManager, opts.destroySignal)
             } catch (err) {
                 // TODO log this in onError? if we want to log all errors?
-                logger.debug({ messageId: msg.getMessageID(), err }, 'failed to decrypt message')
+                logger.debug({ messageId: msg.getMessageID(), err }, 'Failed to decrypt')
                 // clear cached permissions if cannot decrypt, likely permissions need updating
                 opts.streamRegistryCached.clearStream(msg.getStreamId())
                 throw err

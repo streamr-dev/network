@@ -77,7 +77,7 @@ export class InstructionRetryManager {
         if (streamPartId in this.instructionRetryIntervals) {
             clearTimeout(this.instructionRetryIntervals[streamPartId].interval)
             delete this.instructionRetryIntervals[streamPartId]
-            logger.debug(streamPartId, 'stream part successfully removed')
+            logger.debug(streamPartId, 'Removed')
         }
     }
 

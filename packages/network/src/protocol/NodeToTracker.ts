@@ -176,7 +176,7 @@ export class NodeToTracker extends EventEmitter {
 
     onPeerConnected(peerInfo: PeerInfo): void {
         if (peerInfo.isTracker()) {
-            logger.debug({ trackerId: NameDirectory.getName(peerInfo.peerId) }, 'connected to tracker')
+            logger.debug({ trackerId: NameDirectory.getName(peerInfo.peerId) }, 'Connected to tracker')
             this.emit(Event.CONNECTED_TO_TRACKER, peerInfo.peerId)
         }
     }

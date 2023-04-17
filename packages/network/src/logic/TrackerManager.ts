@@ -224,7 +224,7 @@ export class TrackerManager {
                 logger.debug({
                     nodeId: NameDirectory.getName(nodeIds[i]),
                     reason: res.reason
-                }, 'failed to subscribe to node')
+                }, 'Failed to subscribe to node')
             }
         })
         if (!reattempt || failedInstructions) {

@@ -176,7 +176,7 @@ export class Tracker extends EventEmitter {
     }
 
     onNodeDisconnected(node: NodeId): void {
-        logger.debug({ node }, 'node disconnected')
+        logger.debug({ node }, 'Disconnected from node')
         this.metrics.nodeDisconnected.record(1)
         this.removeNode(node)
     }

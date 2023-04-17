@@ -262,13 +262,13 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         const { peerId } = originatorInfo
         const connection = this.connections[peerId]
         if (!connection) {
-            logger.debug({ peerId, description }, 'unexpected rtcAnswer')
+            logger.debug({ peerId, description }, 'Received unexpected rtcAnswer')
         } else if (connection.getConnectionId() !== connectionId) {
             logger.debug({
                 peerId,
                 currentConnectionId: connection.getConnectionId(),
                 sentConnectionId: connectionId
-            }, 'unexpected rtcAnswer (connectionId mismatch)')
+            }, 'Received unexpected rtcAnswer (connectionId mismatch)')
         } else {
             connection.setPeerInfo(PeerInfo.fromObject(originatorInfo))
             connection.setRemoteDescription(description, 'answer')
@@ -290,13 +290,13 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         const { peerId } = originatorInfo
         const connection = this.connections[peerId]
         if (!connection) {
-            logger.debug({ peerId, candidate }, 'unexpected iceCandidate (no connection)')
+            logger.debug({ peerId, candidate }, 'Received unexpected iceCandidate (no connection)')
         } else if (connection.getConnectionId() !== connectionId) {
             logger.debug({
                 peerId,
                 currentConnectionId: connection.getConnectionId(),
                 sentConnectionId: connectionId
-            }, 'unexpected iceCandidate (connectionId mismatch)')
+            }, 'Received unexpected iceCandidate (connectionId mismatch)')
         } else {
             if (this.isIceCandidateAllowed(candidate)) {
                 connection.addRemoteCandidate(candidate, mid)
@@ -432,7 +432,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
                 connection.getPeerInfo().messageLayerVersions
             )
         } catch (err) {
-            logger.debug(err)
+            logger.debug(err, 'Encountered error while negotiating protocol versions')
             this.close(connection.getPeerId(), `No shared protocol versions with node: ${connection.getPeerId()}`)
         }
     }
@@ -440,7 +440,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     close(receiverPeerId: PeerId, reason: string): void {
         const connection = this.connections[receiverPeerId]
         if (connection) {
-            logger.debug({ peerId: NameDirectory.getName(receiverPeerId), reason }, 'close connection')
+            logger.debug({ peerId: NameDirectory.getName(receiverPeerId), reason }, 'Close connection')
             delete this.connections[receiverPeerId]
             this.onConnectionCountChange()
             connection.close()

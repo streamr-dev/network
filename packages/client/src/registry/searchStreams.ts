@@ -40,12 +40,15 @@ export const searchStreams = (
     if ((term === undefined) && (permissionFilter === undefined)) {
         throw new Error('Requires a search term or a permission filter')
     }
-    logger.debug({ term, permissionFilter }, 'searching for streams')
+    logger.debug({ term, permissionFilter }, 'Search for streams')
     return map(
         fetchSearchStreamsResultFromTheGraph(term, permissionFilter, orderBy, graphQLClient),
         (item: SearchStreamsResultItem) => parseStream(toStreamID(item.stream.id), item.stream.metadata),
         (err: Error, item: SearchStreamsResultItem) => {
-            logger.debug({ streamId: item.stream.id, reason: err.message }, 'omitting stream from search result')
+            logger.debug({
+                streamId: item.stream.id,
+                reason: err?.message
+            }, 'Omit stream from search result (invalid data)')
         }
     )
 }

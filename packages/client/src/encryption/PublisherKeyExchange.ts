@@ -50,7 +50,7 @@ export class PublisherKeyExchange {
         networkNodeFacade.once('start', async () => {
             const node = await networkNodeFacade.getNode()
             node.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
-            this.logger.debug('started')
+            this.logger.debug('Started')
         })
     }
 
@@ -60,7 +60,7 @@ export class PublisherKeyExchange {
                 const authenticatedUser = await this.authentication.getAddress()
                 const { recipient, requestId, rsaPublicKey, groupKeyIds } = GroupKeyRequest.fromStreamMessage(request) as GroupKeyRequest
                 if (recipient === authenticatedUser) {
-                    this.logger.debug({ requestId }, 'handling group key request...')
+                    this.logger.debug({ requestId }, 'Handling group key request')
                     await this.validator.validate(request)
                     const keys = without(
                         await Promise.all(groupKeyIds.map((id: string) => this.store.get(id, authenticatedUser))),
@@ -77,16 +77,16 @@ export class PublisherKeyExchange {
                         this.logger.debug({
                             groupKeyIds: keys.map((k) => k.id).join(),
                             recipient: request.getPublisherId()
-                        }, 'group key request handled; sent relevant group keys')
+                        }, 'Handled group key request (found keys)')
                     } else {
                         this.logger.debug({
                             requestId,
                             recipient: request.getPublisherId()
-                        }, 'group key request handled; found no group keys to send')
+                        }, 'Handled group key request (no keys found)')
                     }
                 }
-            } catch (e: any) {
-                this.logger.debug(e, 'failed to handle group key request')
+            } catch (err: any) {
+                this.logger.debug(err, 'Failed to handle group key request')
             }
         }
     }

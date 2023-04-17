@@ -114,7 +114,7 @@ export class LitProtocolFacade {
 
     async store(streamId: StreamID, symmetricKey: Uint8Array): Promise<GroupKey | undefined> {
         const traceId = randomString(5)
-        this.logger.debug({ streamId, traceId }, 'storing key...')
+        this.logger.debug({ streamId, traceId }, 'Storing key')
         try {
             const authSig = await signAuthMessage(this.authentication)
             const client = await this.getLitNodeClient()
@@ -128,7 +128,7 @@ export class LitProtocolFacade {
                 return undefined
             }
             const groupKeyId = LitJsSdk.uint8arrayToString(encryptedSymmetricKey, 'base16')
-            this.logger.debug({ traceId, streamId, groupKeyId }, 'stored key')
+            this.logger.debug({ traceId, streamId, groupKeyId }, 'Stored key')
             return new GroupKey(groupKeyId, Buffer.from(symmetricKey))
         } catch (err) {
             logger.warn({ traceId, err, streamId }, 'Failed to store key')
@@ -137,7 +137,7 @@ export class LitProtocolFacade {
     }
 
     async get(streamId: StreamID, groupKeyId: string): Promise<GroupKey | undefined> {
-        this.logger.debug({ groupKeyId, streamId }, 'get key')
+        this.logger.debug({ groupKeyId, streamId }, 'Getting key')
         try {
             const authSig = await signAuthMessage(this.authentication)
             const client = await this.getLitNodeClient()
@@ -150,7 +150,7 @@ export class LitProtocolFacade {
             if (symmetricKey === undefined) {
                 return undefined
             }
-            this.logger.debug({ groupKeyId, streamId }, 'got key')
+            this.logger.debug({ groupKeyId, streamId }, 'Got key')
             return new GroupKey(groupKeyId, Buffer.from(symmetricKey))
         } catch (err) {
             logger.warn({ err, streamId, groupKeyId }, 'Failed to get key')

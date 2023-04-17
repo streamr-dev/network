@@ -145,14 +145,14 @@ export class InstructionAndStatusAckSender {
                             counterValue,
                             nodeId,
                             streamPartId
-                        }, 'instruction sent to node')
+                        }, 'Sent instruction')
                     } else {
                         const { nodeId, streamPartId } = entry
                         await this.sendStatusAck(nodeId, streamPartId)
                         logger.debug({
                             nodeId,
                             streamPartId
-                        }, 'statusAck sent to node')
+                        }, 'Sent status ack')
                     }
                 } catch (err) {
                     logger.warn({
