@@ -220,7 +220,7 @@ describe('Resends2', () => {
                 expect(onResent).toHaveBeenCalledTimes(1)
                 expect(environment.getLogger().warn).toHaveBeenLastCalledWith({
                     streamId: nonStoredStream.id
-                }, 'no storage assigned to stream, skipping resend')
+                }, 'Skip resend (no storage assigned to stream)')
                 expect(await client.getSubscriptions(nonStoredStream.id)).toHaveLength(0)
             })
         })
