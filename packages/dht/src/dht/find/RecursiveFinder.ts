@@ -155,7 +155,7 @@ export class RecursiveFinder implements IRecursiveFinder {
     ): boolean {
         if (findMode === FindMode.DATA) {
             const data = this.localDataStore.getEntry(PeerID.fromValue(idToFind))
-            if (data) {
+            if (data.size > 0) {
                 this.reportRecursiveFindResult(routingPath, sourcePeer, sessionId, [], data, true)
                 return true
             }
