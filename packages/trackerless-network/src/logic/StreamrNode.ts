@@ -146,6 +146,7 @@ export class StreamrNode extends EventEmitter<Events> {
             stream.layer1.stop()
             this.streams.delete(streamPartID)
         }
+        this.streamEntryPointDiscovery!.stopRecaching(streamPartID)
     }
 
     async joinStream(streamPartID: string, knownEntryPointDescriptors: PeerDescriptor[]): Promise<void> {
