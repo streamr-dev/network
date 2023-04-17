@@ -94,7 +94,7 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
         const peerId = serverPeerInfo.peerId
         this.handshakeTimeoutRefs[peerId] = setTimeout(() => {
             ws.close(DisconnectionCode.FAILED_HANDSHAKE, `Handshake not received from ${peerId}`)
-            logger.warn({ peerId }, 'Handshake not received from peer')
+            logger.warn({ peerId }, 'Timed out waiting for handshake from peer')
             delete this.handshakeTimeoutRefs[peerId]
             reject(`Handshake not received from ${peerId}`)
         }, this.handshakeTimer)

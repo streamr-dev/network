@@ -130,8 +130,8 @@ export class LitProtocolFacade {
             const groupKeyId = LitJsSdk.uint8arrayToString(encryptedSymmetricKey, 'base16')
             this.logger.debug({ traceId, streamId, groupKeyId }, 'stored key')
             return new GroupKey(groupKeyId, Buffer.from(symmetricKey))
-        } catch (e) {
-            logger.warn(e, 'failed to store key on lit-protocol')
+        } catch (err) {
+            logger.warn({ traceId, err, streamId }, 'Failed to store key')
             return undefined
         }
     }
@@ -152,8 +152,8 @@ export class LitProtocolFacade {
             }
             this.logger.debug({ groupKeyId, streamId }, 'got key')
             return new GroupKey(groupKeyId, Buffer.from(symmetricKey))
-        } catch (e) {
-            logger.warn(e, 'failed to get key from lit-protocol')
+        } catch (err) {
+            logger.warn({ err, streamId, groupKeyId }, 'Failed to get key')
             return undefined
         }
     }

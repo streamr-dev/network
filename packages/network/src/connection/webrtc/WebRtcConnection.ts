@@ -232,7 +232,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         try {
             this.doClose(err)
         } catch (e) {
-            this.baseLogger.warn(e, 'doClose (subclass) threw')
+            this.baseLogger.warn(e, 'Encountered error in doClose')
         }
 
         if (!this.hasOpened) {
@@ -333,7 +333,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
             this.baseLogger.warn({
                 peerId: this.peerInfo.peerId,
                 err
-            }, 'failed to send pong to peer with error')
+            }, 'Failed to send pong')
         }
     }
 
@@ -424,7 +424,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
             this.baseLogger.warn({
                 maxTries: MessageQueue.MAX_TRIES,
                 infoText
-            }, 'failed to send message after multiple tires')
+            }, 'Discard message (all previous send attempts failed)')
             this.messageQueue.pop()
         }
         if (this.flushTimeoutRef === null) {

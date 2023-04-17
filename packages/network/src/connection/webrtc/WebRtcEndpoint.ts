@@ -150,7 +150,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
                 }
             }
             if (connections.length > 0 && connections.length === undefinedStates.length) {
-                logger.warn('Cannot determine webrtc datachannel connection states')
+                logger.warn('Failed to determine WebRTC datachannel connection states')
             } else {
                 const suffix = (pendingPeerIds.length > 0) ? ', trying to connect to %d peers' : ''
                 logger.info(`Connected to %d peers${suffix}`,
@@ -243,7 +243,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             try {
                 connection.connect()
             } catch (e) {
-                logger.warn(e)
+                logger.warn(e, 'Failed to connect (onRtcOfferFromSignaller)')
             }
             this.connections[peerId] = connection
             this.onConnectionCountChange()
@@ -346,7 +346,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         try {
             connection.connect()
         } catch (e) {
-            logger.warn(e)
+            logger.warn(e, 'Failed to connect (replaceConnection)')
         }
         this.connections[peerId] = connection
         this.onConnectionCountChange()

@@ -88,7 +88,11 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
             try {
                 await this.subscribe()
             } catch (err) {
-                logger.warn(`Subscription retry failed, retrying in ${this.subscriptionRetryInterval / 1000} seconds`)
+                logger.warn({
+                    reason: err?.message,
+                    rewardStreamId: this.streamId
+                }, 'Failed to (re-)subscribe to reward stream (retrying in %d seconds)',
+                this.subscriptionRetryInterval / 1000)
             }
         }
     }
@@ -105,7 +109,10 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
             }
         })
         subscription.on('error', (err) => {
-            logger.warn({ reason: err?.message }, 'Failed to claim reward code')
+            logger.warn({
+                reason: err?.message,
+                rewardStreamId: this.streamId
+            }, 'Failed to claim reward code')
             logger.debug(err)
         })
     }
@@ -179,9 +186,7 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
             }, 'NAT type analyzed')
             return result
         } catch (e) {
-            logger.warn({
-                reason: e.message
-            }, 'Unable to analyze NAT type')
+            logger.warn({ reason: e.message }, 'Unable to analyze NAT type')
             return NAT_TYPE_UNKNOWN
         }
     }

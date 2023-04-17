@@ -90,7 +90,7 @@ export class RtcSignaller {
                     originatorInfo: originator,
                 })
             } else {
-                logger.warn({ subType, content: relayMessage }, 'unrecognized subtype')
+                logger.warn({ subType, content: relayMessage }, 'Encountered unrecognized subtype')
             }
         })
         nodeToTracker.on(NodeToTrackerEvent.RTC_ERROR_RECEIVED, (message: RtcErrorMessage, source: TrackerId) => {

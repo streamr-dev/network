@@ -563,7 +563,9 @@ export const startCassandraStorage = async ({
         slowThreshold: 10 * 1000, // 10 secs
     })
     // @ts-expect-error 'emitter' field is missing in type definition file
-    requestLogger.emitter.on('slow', (message: Todo) => logger.warn(message))
+    requestLogger.emitter.on('slow', (message: Todo) => {
+        logger.warn({ message }, 'Encountered "slow" event from cassandraClient')
+    })
     const cassandraClient = new Client({
         contactPoints,
         localDataCenter,

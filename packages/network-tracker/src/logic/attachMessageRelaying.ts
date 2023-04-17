@@ -26,7 +26,7 @@ export function attachMessageRelaying(trackerServer: TrackerServer): void {
                     subType,
                     targetNode,
                     err
-                }, 'failed to relay message')
+                }, 'Failed to relay message')
             }
         }
     })

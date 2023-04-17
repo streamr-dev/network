@@ -158,7 +158,7 @@ export class InstructionAndStatusAckSender {
                     logger.warn({
                         entry,
                         err
-                    }, 'failed to send instructions / ack to node')
+                    }, 'Failed to send instructions or ack')
                 }
             })
         await Promise.allSettled(promises)

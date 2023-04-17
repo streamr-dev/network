@@ -144,10 +144,10 @@ export class NodeWebRtcConnection extends WebRtcConnection {
                 this.connection.setRemoteDescription(description, type)
                 this.remoteDescriptionSet = true
             } catch (err) {
-                this.logger.warn(err, 'setRemoteDescription failed')
+                this.logger.warn(err, 'Failed to set remote description')
             }
         } else {
-            this.logger.warn('skipped setRemoteDescription, connection is null')
+            this.logger.warn('Skipped setting remote description (connection is null)')
         }
     }
 
@@ -157,15 +157,15 @@ export class NodeWebRtcConnection extends WebRtcConnection {
                 try {
                     this.connection.addRemoteCandidate(candidate, mid)
                 } catch (err) {
-                    this.logger.warn(err, 'addRemoteCandidate failed')
-                    this.close(new Error('addRemoteCandidate failed, closing'))
+                    this.logger.warn(err, 'Failed to add remote candidate')
+                    this.close(new Error('addRemoteCandidate failed'))
                 }
             } else {
-                this.logger.warn("Tried setting remoteCandidate before remote description, closing")
-                this.close(new Error('Tried setting remoteCandidate before remote description, closing'))
+                this.logger.warn("Close connection (tried setting remote candidate before remote description)")
+                this.close(new Error('Tried setting remoteCandidate before remote description'))
             }
         } else {
-            this.logger.warn('skipped addRemoteCandidate, connection is null')
+            this.logger.warn('Skipped adding remote candidate (connection is null)')
         }
     }
 
@@ -182,7 +182,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
             try {
                 this.connection.close()
             } catch (e) {
-                this.logger.warn(e, 'conn.close() errored')
+                this.logger.warn(e, 'Encountered error while closing connection')
             }
         }
 
@@ -190,7 +190,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
             try {
                 this.dataChannel.close()
             } catch (e) {
-                this.logger.warn(e, 'dc.close() errored')
+                this.logger.warn(e, 'Encountered error while closing dataChannel')
             }
         }
 
@@ -285,7 +285,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
         })
 
         this.dataChannelEmitter.on('error', (err) => {
-            this.logger.warn(err, 'dc.onError')
+            this.logger.warn(err, 'Encountered error (emitted by dataChannelEmitter)')
         })
 
         this.dataChannelEmitter.on('bufferedAmountLow', () => {

@@ -35,7 +35,7 @@ export class StorageEventListener {
             const stream = await this.streamrClient.getStream(event.streamId)
             this.onEvent(stream, type, event.blockNumber)
         } catch (err) {
-            logger.warn(err, 'chainEventsListener')
+            logger.warn({ err, event, type }, 'Encountered error handling StorageNodeAssignmentEvent')
         }
     }
 

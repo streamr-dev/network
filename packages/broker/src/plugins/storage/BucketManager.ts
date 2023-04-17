@@ -98,7 +98,7 @@ export class BucketManager {
         if (bucket) {
             bucket.incrementBucket(size)
         } else {
-            logger.warn({ bucketId }, 'bucket not found')
+            logger.warn({ bucketId }, 'Failed to increment bucket (bucket not found)')
         }
     }
 

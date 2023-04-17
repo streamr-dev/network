@@ -191,7 +191,7 @@ export class TrackerManager {
             logger.warn({
                 expectedTrackerId,
                 trackerId
-            }, 'got instructions from unexpected tracker')
+            }, 'Received instructions from unexpected tracker')
             return
         }
 

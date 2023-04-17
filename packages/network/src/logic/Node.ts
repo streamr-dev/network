@@ -124,7 +124,7 @@ export class Node extends EventEmitter {
                         consecutiveFails: this.consecutiveDeliveryFailures[neighborId] || 0,
                         neighbor: neighborId,
                         reason: err
-                    }, 'failed to propagate message to neighbor')
+                    }, 'Failed to propagate message to neighbor')
 
                     // TODO: this is hack to get around the issue where `StreamStateManager` believes that we are
                     //  connected to a neighbor whilst `WebRtcEndpoint` knows that we are not. In this situation, the
@@ -145,7 +145,7 @@ export class Node extends EventEmitter {
                     if (this.consecutiveDeliveryFailures[neighborId] >= 100) {
                         logger.warn({
                             neighbor: neighborId
-                        }, 'disconnecting from neighbor due to 100 consecutive delivery failures')
+                        }, 'Disconnect from neighbor (encountered 100 consecutive delivery failures)')
                         this.onNodeDisconnected(neighborId) // force disconnect
                         this.consecutiveDeliveryFailures[neighborId] = 0
                     }
@@ -260,7 +260,7 @@ export class Node extends EventEmitter {
             logger.warn({
                 source,
                 streamPartId
-            }, 'Unexpected message received on outbound proxy stream')
+            }, 'Received unexpected message on outbound proxy stream')
             return
         }
 
@@ -286,7 +286,7 @@ export class Node extends EventEmitter {
                     source,
                     messageId: streamMessage.messageId,
                     err
-                }, 'received from node data with gap mismatch detected')
+                }, 'Received data with gap mismatch')
                 return
             }
             throw err

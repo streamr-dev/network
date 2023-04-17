@@ -57,7 +57,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
 
             this.handshakeTimeoutRefs[handshakeUUID] = setTimeout(() => {
                 ws.close(DisconnectionCode.FAILED_HANDSHAKE, `Handshake not received from connection behind UUID ${handshakeUUID}`)
-                logger.warn({ handshakeUUID }, 'Handshake not received from connection behind UUID')
+                logger.warn({ handshakeUUID }, 'Timed out waiting for handshake from connection')
                 ws.terminate()
                 delete this.handshakeTimeoutRefs[handshakeUUID]
             }, this.handshakeTimer)
@@ -85,7 +85,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
                             ws.close(DisconnectionCode.DUPLICATE_SOCKET, failedMessage)
                             logger.warn({
                                 peerId
-                            }, `Connection to peer has already been established, rejecting duplicate`)
+                            }, 'Reject duplicate connection (connection to peer has already been established)')
                         }
                     } else {
                         logger.trace({ message: data.toString() }, 'Expected a handshake message got instead message.')
@@ -96,7 +96,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
             })
 
             ws.on('error', (err) => {
-                logger.warn({ otherNodeIdForLogging, err }, 'socket for connection emitted error')
+                logger.warn({ otherNodeIdForLogging, err }, 'Encountered error (emitted by socket)')
             })
         })
     }

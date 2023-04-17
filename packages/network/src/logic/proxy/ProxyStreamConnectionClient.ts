@@ -51,10 +51,8 @@ export const retry = async <T>(task: () => Promise<T>, description: string, abor
             return result
         } catch (e: any) {
             logger.warn({
-                description,
                 delayInMs: delay
-
-            }, 'failed, retrying after delay')
+            }, 'Failed %s (retrying after delay)', description)
         }
         await wait(delay, abortSignal)
     }
@@ -180,11 +178,11 @@ export class ProxyStreamConnectionClient extends EventEmitter {
             await this.connectAndHandshake(streamPartId, targetNodeId, direction, userId)
         } catch (err) {
             logger.warn({
-                direction,
-                targetNodeId,
                 streamPartId,
+                targetNodeId,
+                direction,
+                userId,
                 err
-
             }, 'Failed to create a proxy stream connection')
             this.emit(Event.CONNECTION_REJECTED, targetNodeId, streamPartId, direction, err)
         } finally {
@@ -264,7 +262,7 @@ export class ProxyStreamConnectionClient extends EventEmitter {
 
     async onNodeDisconnected(streamPartId: StreamPartID, nodeId: NodeId): Promise<void> {
         this.removeConnection(streamPartId, nodeId)
-        await retry(() => this.updateConnections(streamPartId), 'Updating proxy connections', this.abortController.signal)
+        await retry(() => this.updateConnections(streamPartId), 'updating proxy connections', this.abortController.signal)
     }
 
     isProxiedStreamPart(streamPartId: StreamPartID, direction: ProxyDirection): boolean {

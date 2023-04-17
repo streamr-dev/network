@@ -86,7 +86,7 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
                 logger.trace({ recipientId, reason }, 'closing connection')
                 connection.close(code, reason)
             } catch (err) {
-                logger.warn({ recipientId, err }, 'failed to close connection')
+                logger.warn({ recipientId, err }, 'Failed to close connection')
             }
         }
     }

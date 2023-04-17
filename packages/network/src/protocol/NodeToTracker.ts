@@ -161,7 +161,7 @@ export class NodeToTracker extends EventEmitter {
             if (message != null) {
                 this.emit(eventPerType[message.type], message, peerInfo.peerId)
             } else {
-                logger.warn({ sender: peerInfo.peerId, rawMessage }, 'ignoring received invalid message')
+                logger.warn({ sender: peerInfo.peerId, rawMessage }, 'Drop invalid message')
             }
         }
     }

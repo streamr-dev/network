@@ -40,7 +40,7 @@ export class Bridge implements MqttServerListener {
         try {
             message = this.payloadFormat.createMessage(payload)
         } catch (err) {
-            logger.warn(err, 'Unable to form message')
+            logger.warn({ err, topic, clientId }, 'Unable to form message')
             return
         }
         const { content, metadata } = message
@@ -51,7 +51,7 @@ export class Bridge implements MqttServerListener {
             })
             this.publishMessageChains.add(createMessageChainKey(publishedMessage))
         } catch (err: any) {
-            logger.warn(err, 'Unable to publish message')
+            logger.warn({ err, topic, clientId }, 'Unable to publish message')
         }
     }
 
