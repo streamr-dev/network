@@ -72,9 +72,8 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
                 throw err
             }
 
-            logger.trace({ recipientId, message }, 'sent message')
+            logger.trace({ recipientId, size: message.length }, 'Sent message')
         } else {
-            logger.trace({ recipientId }, 'cannot send, not connected')
             throw new UnknownPeerError(`cannot send to ${recipientId} because not connected`)
         }
     }
@@ -83,7 +82,7 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
         const connection = this.getConnectionByPeerId(recipientId)
         if (connection !== undefined) {
             try {
-                logger.trace({ recipientId, reason }, 'closing connection')
+                logger.trace({ recipientId, reason }, 'Close connection')
                 connection.close(code, reason)
             } catch (err) {
                 logger.warn({ recipientId, err }, 'Failed to close connection')
@@ -148,7 +147,7 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
             }
         )
         this.connectionById.set(connection.getPeerId(), connection)
-        logger.trace({ peerId: connection.getPeerId() }, 'peer added to connection list')
+        logger.trace({ peerId: connection.getPeerId() }, 'Added peer to connection list')
         this.emit(Event.PEER_CONNECTED, peerInfo)
     }
 
@@ -159,7 +158,10 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
         if (this.stopped) {
             return
         }
-        logger.trace({ sender: connection.getPeerInfo(), message }, 'received message')
+        logger.trace({
+            size: message.length,
+            sender: connection.getPeerInfo()
+        }, 'Received message')
         this.emit(Event.MESSAGE_RECEIVED, connection.getPeerInfo(), message)
     }
 
@@ -167,7 +169,7 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
      * Implementer should invoke this whenever a connection is closed.
      */
     protected onClose(connection: C, code: DisconnectionCode, reason: DisconnectionReason): void {
-        logger.trace({ peerId: connection.getPeerId(), code, reason }, 'connection closed')
+        logger.trace({ peerId: connection.getPeerId(), code, reason }, 'onClose')
         this.connectionById.delete(connection.getPeerId())
         try {
             this.doClose(connection, code, reason)

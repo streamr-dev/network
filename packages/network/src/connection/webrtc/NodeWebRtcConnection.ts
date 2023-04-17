@@ -236,7 +236,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
         this.logger.trace({
             lastState: this.lastState,
             state
-        }, 'conn.onStateChange')
+        }, 'onStateChange')
 
         this.lastState = state
 
@@ -253,7 +253,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
         this.logger.trace({
             lastState: this.lastGatheringState,
             state
-        }, 'conn.onGatheringStateChange')
+        }, 'onGatheringStateChange')
         this.lastGatheringState = state
     }
 
@@ -275,12 +275,12 @@ export class NodeWebRtcConnection extends WebRtcConnection {
         this.dataChannelEmitter = DataChannelEmitter(dataChannel)
         dataChannel.setBufferedAmountLowThreshold(this.bufferThresholdLow)
         this.dataChannelEmitter.on('open', () => {
-            this.logger.trace('dc.onOpen')
+            this.logger.trace('dataChannelEmitter.onOpen')
             this.openDataChannel(dataChannel)
         })
 
         this.dataChannelEmitter.on('closed', () => {
-            this.logger.trace('dc.onClosed')
+            this.logger.trace('dataChannelEmitter.onClosed')
             this.close()
         })
 
@@ -293,7 +293,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
         })
 
         this.dataChannelEmitter.on('message', (msg) => {
-            this.logger.trace('dc.onmessage')
+            this.logger.trace('dataChannelEmitter.onmessage')
             this.emitMessage(msg.toString())
         })
     }

@@ -92,7 +92,7 @@ export class ProxyStreamConnectionClient extends EventEmitter {
         getUserId: () => Promise<string>,
         connectionCount?: number
     ): Promise<void> {
-        logger.trace({ streamPartId }, 'Set proxies on')
+        logger.trace({ streamPartId }, 'setProxies')
         if (connectionCount !== undefined && connectionCount > nodeIds.length) {
             throw Error('Cannot set connectionCount above the size of the configured array of nodes')
         }

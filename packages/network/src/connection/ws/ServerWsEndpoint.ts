@@ -51,7 +51,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
         }).on('error', (err: Error) => {
             logger.error(err, 'Encountered error (emitted by WebSocket.Server)')
         }).on('listening', () => {
-            logger.trace({ url: this.getUrl() }, 'listening on url')
+            logger.trace({ url: this.getUrl() }, 'Started')
         }).on('connection', (ws: WebSocket, request: http.IncomingMessage) => {
             const handshakeUUID = v4()
 
@@ -88,7 +88,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
                             }, 'Reject duplicate connection (connection to peer has already been established)')
                         }
                     } else {
-                        logger.trace({ message: data.toString() }, 'Expected a handshake message got instead message.')
+                        logger.trace({ message: data.toString() }, 'Received unexpected message (expected handshake message)')
                     }
                 } catch (err) {
                     logger.trace(err)
@@ -195,7 +195,7 @@ function cleanSocket(httpServer: http.Server | https.Server, config: UnixSocket)
 
             // No other server listening
             try {
-                logger.trace({ config }, 'cleaning unused socket')
+                logger.trace({ config }, 'Clean unused socket')
                 fs.unlinkSync(config)
             } catch (unlinkErr) {
                 // ignore error if somehow file was already removed

@@ -200,19 +200,19 @@ export class Node extends EventEmitter {
 
     subscribeToStreamIfHaveNotYet(streamPartId: StreamPartID, sendStatus = true): void {
         if (!this.streamPartManager.isSetUp(streamPartId)) {
-            logger.trace({ streamPartId }, 'add to streams')
+            logger.trace({ streamPartId }, 'subscribeToStreamIfHaveNotYet')
             this.streamPartManager.setUpStreamPart(streamPartId)
             this.trackerManager.onNewStreamPart(streamPartId) // TODO: perhaps we should react based on event from StreamManager?
             if (sendStatus) {
                 this.trackerManager.sendStreamPartStatus(streamPartId)
             }
         } else if (this.streamPartManager.isSetUp(streamPartId) && this.streamPartManager.isBehindProxy(streamPartId)) {
-            logger.trace({ streamPartId }, 'Could not join stream as stream is set to be behind proxy')
+            logger.trace({ streamPartId }, 'Failed to join stream as stream is set to be behind proxy')
         }
     }
 
     unsubscribeFromStream(streamPartId: StreamPartID, sendStatus = true): void {
-        logger.trace({ streamPartId }, 'remove from streams')
+        logger.trace({ streamPartId }, 'unsubscribeFromStream')
         this.streamPartManager.removeStreamPart(streamPartId)
         this.trackerManager.onUnsubscribeFromStreamPart(streamPartId)
         if (sendStatus) {
@@ -278,7 +278,7 @@ export class Node extends EventEmitter {
                 logger.trace({
                     source,
                     messageId: streamMessage.messageId
-                }, 'received from node data with invalid numbering')
+                }, 'Received message with invalid numbering')
                 return
             }
             if (err instanceof GapMisMatchError) {
@@ -296,7 +296,7 @@ export class Node extends EventEmitter {
             logger.trace({
                 source,
                 messageId: streamMessage.messageId
-            }, 'received from node data')
+            }, 'Received message')
             const propagationTargets = this.getPropagationTargets(streamMessage)
             this.emit(Event.UNSEEN_MESSAGE_RECEIVED, streamMessage, source)
             this.propagation.feedUnseenMessage(streamMessage, propagationTargets, source)
@@ -308,7 +308,7 @@ export class Node extends EventEmitter {
             logger.trace({
                 source,
                 messageId: streamMessage.messageId
-            }, 'ignoring duplicate data')
+            }, 'Ignored duplicate message')
             this.emit(Event.DUPLICATE_MESSAGE_RECEIVED, streamMessage, source)
         }
     }
@@ -352,7 +352,7 @@ export class Node extends EventEmitter {
 
     private unsubscribeFromStreamPartOnNode(node: NodeId, streamPartId: StreamPartID, sendStatus = true): void {
         this.streamPartManager.removeNodeFromStreamPart(streamPartId, node)
-        logger.trace({ node, streamPartId }, 'node unsubscribed from stream')
+        logger.trace({ node, streamPartId }, 'unsubscribeFromStreamPartOnNode')
         this.emit(Event.NODE_UNSUBSCRIBED, node, streamPartId)
         this.disconnectionManager.scheduleDisconnectionIfNoSharedStreamParts(node)
         if (sendStatus) {
@@ -362,7 +362,7 @@ export class Node extends EventEmitter {
 
     private onNodeDisconnected(node: NodeId): void {
         const [streams, proxiedStreams] = this.streamPartManager.removeNodeFromAllStreamParts(node)
-        logger.trace({ node }, 'removed all subscriptions of node')
+        logger.trace({ node }, 'Remove all subscriptions of node')
         streams.forEach((s) => {
             this.trackerManager.sendStreamPartStatus(s)
         })

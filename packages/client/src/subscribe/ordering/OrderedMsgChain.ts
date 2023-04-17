@@ -222,7 +222,7 @@ class OrderedMsgChain extends MsgChainEmitter {
             logger.trace({
                 ignoredMsgRef: msgRef,
                 lastMsgRef: this.lastOrderedMsgRef
-            }, 'Ignoring message; was already enqueued or we already processed a newer message.')
+            }, 'Ignore message (already enqueued or processed a newer message)')
             return
         }
 
@@ -256,7 +256,7 @@ class OrderedMsgChain extends MsgChainEmitter {
         }
 
         if (this.isGapHandlingEnabled()) {
-            logger.trace({ msgRef: streamMessage.getMessageRef() }, 'marking message')
+            logger.trace({ msgRef: streamMessage.getMessageRef() }, 'markMessage')
         }
 
         this.markedExplicitly.add(streamMessage)
@@ -341,7 +341,7 @@ class OrderedMsgChain extends MsgChainEmitter {
         // emit drain after clearing a block. If only a single item was in the
         // queue, the queue was never blocked, so it doesn't need to 'drain'.
         if (processedMessages > 1) {
-            logger.trace({ processedMessages, lastMsgRef: this.lastOrderedMsgRef }, 'queue drained')
+            logger.trace({ processedMessages, lastMsgRef: this.lastOrderedMsgRef }, 'Drained queue')
             this.clearGap()
             this.emit('drain', processedMessages)
         }
@@ -359,7 +359,7 @@ class OrderedMsgChain extends MsgChainEmitter {
                 this.markedExplicitly.delete(msg)
 
                 if (this.isGapHandlingEnabled()) {
-                    logger.trace({ msgRef: msg.getMessageRef() }, 'skipping message')
+                    logger.trace({ msgRef: msg.getMessageRef() }, 'Skipped message')
                     this.emit('skip', msg)
                     return msg
                 }
@@ -475,7 +475,7 @@ class OrderedMsgChain extends MsgChainEmitter {
             isEmpty: this.isEmpty(),
             hasPendingGap: this.hasPendingGap,
             markedExplicitly: this.markedExplicitly.size()
-        })
+        }, 'Update debug status')
     }
 }
 

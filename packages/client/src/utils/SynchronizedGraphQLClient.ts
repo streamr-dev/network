@@ -83,12 +83,12 @@ class IndexingState {
     }
 
     private async startPolling(): Promise<void> {
-        this.logger.trace('start polling')
+        this.logger.trace('Start polling')
         while (this.gates.size > 0) {
             const newBlockNumber = await this.getCurrentBlockNumber()
             if (newBlockNumber !== this.blockNumber) {
                 this.blockNumber = newBlockNumber
-                this.logger.trace({ blockNumber: this.blockNumber }, 'polled')
+                this.logger.trace({ blockNumber: this.blockNumber }, 'Polled')
                 this.gates.forEach((gate) => {
                     if (gate.blockNumber <= this.blockNumber) {
                         gate.open()
@@ -100,7 +100,7 @@ class IndexingState {
                 await wait(this.pollRetryInterval)
             }
         }
-        this.logger.trace('stop polling')
+        this.logger.trace('Stop polling')
     }
 }
 

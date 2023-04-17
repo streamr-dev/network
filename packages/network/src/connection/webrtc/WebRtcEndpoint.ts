@@ -318,10 +318,10 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             this.replaceConnection(peerId, routerId, uuidv4())
         } else {
             this.connect(peerId, routerId, true).then(() => {
-                logger.trace({ peerId }, 'unattended connectListener induced connection')
+                logger.trace({ peerId }, 'Failed to connect (unattended connectListener induced connection)')
                 return peerId
             }).catch((err) => {
-                logger.trace({ peerId, err }, 'connectListener induced connection failed')
+                logger.trace({ peerId, err }, 'Failed to connect (connectListener induced connection)')
             })
         }
     }
@@ -368,11 +368,10 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             const deferredConnectionAttempt = connection.getDeferredConnectionAttempt()
 
             logger.trace({
+                role: isOffering(this.peerInfo.peerId, targetPeerId) ? 'offerer' : 'answerer',
                 targetPeerId: NameDirectory.getName(targetPeerId),
                 state: lastState
-            }, '%s has already connection for peer',
-            isOffering(this.peerInfo.peerId, targetPeerId) ? 'offerer' : 'answerer',
-            )
+            }, 'Found pre-existing connection for peer')
 
             if (lastState === 'connected') {
                 return Promise.resolve(targetPeerId)

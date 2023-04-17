@@ -104,7 +104,10 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
             } if (message.info) {
                 logger.info(`Received notification: ${message.info}`)
             } else {
-                logger.trace(`Dummy message (#${this.dummyMessagesReceived}) received: ${message}`)
+                logger.trace({
+                    dummyMessageNo: this.dummyMessagesReceived,
+                    message
+                }, 'Received dummy message')
                 this.dummyMessagesReceived += 1
             }
         })

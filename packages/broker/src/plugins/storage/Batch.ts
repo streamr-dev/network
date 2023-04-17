@@ -118,7 +118,7 @@ export class Batch extends EventEmitter {
     }
 
     clear(): void {
-        this.logger.trace('cleared')
+        this.logger.trace('clear')
         clearTimeout(this.timeout)
         this.streamMessages = []
         this.setState(Batch.states.INSERTED)
@@ -142,7 +142,7 @@ export class Batch extends EventEmitter {
 
     private setState(state: State): void {
         this.state = state
-        this.logger.trace({ state }, 'emit state')
+        this.logger.trace({ state }, 'setState')
         this.emit(this.state, this.getBucketId(), this.getId(), this.state, this.size, this.getNumberOfMessages())
     }
 }

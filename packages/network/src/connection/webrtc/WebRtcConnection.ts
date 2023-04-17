@@ -173,7 +173,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
             selfId: this.selfId,
             messageQueue: this.messageQueue.size(),
             peerInfo: this.peerInfo,
-        }, 'create')
+        }, 'Create')
     }
 
     connect(): void {
@@ -208,7 +208,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         if (err) {
             this.baseLogger.debug(err, 'Close connection')
         } else {
-            this.baseLogger.trace('conn.close()')
+            this.baseLogger.trace('close()')
         }
 
         if (this.flushRef) {

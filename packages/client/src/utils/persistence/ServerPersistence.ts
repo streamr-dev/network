@@ -75,7 +75,7 @@ export default class ServerPersistence implements PersistenceContext {
                 this.logger.trace({
                     retryNo: maxRetries - retriesLeft + 1,
                     maxRetries
-                }, 'database busy')
+                }, 'Retry opening database after delay (database busy)')
                 return this.tryExec(async () => {
                     // wait random time and retry
                     await wait(10 + Math.random() * 500)
@@ -118,7 +118,7 @@ export default class ServerPersistence implements PersistenceContext {
             await this.onInit?.(store)
             this.store = store
         } catch (err) {
-            this.logger.trace(err, 'failed to open database')
+            this.logger.trace(err, 'Failed to open database')
             if (!this.error) {
                 this.error = err
             }
@@ -128,7 +128,7 @@ export default class ServerPersistence implements PersistenceContext {
             throw this.error
         }
 
-        this.logger.trace('database initialized')
+        this.logger.trace('Initialized database')
     }
 
     async get(key: string, namespace: string): Promise<string | undefined> {
@@ -164,6 +164,5 @@ export default class ServerPersistence implements PersistenceContext {
 
         await this.init()
         await this.store!.close()
-        this.logger.trace('closed')
     }
 }
