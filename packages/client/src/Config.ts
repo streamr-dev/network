@@ -120,6 +120,9 @@ export interface StreamrClientConfig {
      */
     gapFillTimeout?: number
 
+    /**
+     * Config for the decentralized network layer.
+     */
     network?: NetworkConfig
     /**
      * When gap filling is enabled and a gap is encountered, a resend request
