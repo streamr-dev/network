@@ -49,7 +49,7 @@ if (slackBotToken && slackChannel) {
 }
 
 const logError = (err: any, errorType: string) => {
-    logger.fatal({ err, errorType }, 'error')
+    logger.fatal({ err, errorType }, 'Encountered error')
     if (slackbot !== undefined) {
         const message = `${errorType}: ${err}`
         slackbot.alert([message], slackAlertHeader)
