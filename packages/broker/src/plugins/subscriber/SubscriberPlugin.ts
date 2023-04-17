@@ -54,7 +54,7 @@ export class SubscriberPlugin extends Plugin<SubscriberPluginConfig> {
     async start(): Promise<void> {
         await this.subscribeToStreamParts()
         this.subscriptionIntervalRef = setTimeout(() => this.subscriptionIntervalFn(), this.subscriptionRetryInterval)
-        logger.info('Subscriber plugin started')
+        logger.info('Started subscriber plugin')
     }
 
     async stop(): Promise<void> {
@@ -62,7 +62,7 @@ export class SubscriberPlugin extends Plugin<SubscriberPluginConfig> {
             clearTimeout(this.subscriptionIntervalRef)
             this.subscriptionIntervalRef = null
         }
-        logger.info('Subscriber plugin stopped')
+        logger.info('Stopped subscriber plugin')
     }
 
 }

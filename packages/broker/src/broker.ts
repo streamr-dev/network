@@ -45,7 +45,7 @@ export const createBroker = async (configWithoutDefaults: Config): Promise<Broke
     return {
         getNode,
         start: async () => {
-            logger.info(`Starting broker version ${CURRENT_VERSION}`)
+            logger.info(`Start broker version ${CURRENT_VERSION}`)
             await Promise.all(plugins.map((plugin) => plugin.start()))
             const httpServerEndpoints = plugins.flatMap((plugin: Plugin<any>) => {
                 return plugin.getHttpServerEndpoints().map((endpoint: HttpServerEndpoint) => {

@@ -98,6 +98,6 @@ export class StorageConfig {
         logger.info({
             added,
             removed
-        }, 'State updated')
+        }, 'Updated state')
     }
 }

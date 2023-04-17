@@ -82,7 +82,7 @@ export class ProxyStreamConnectionServer {
         logger.info({
             nodeId,
             streamPartId
-        }, 'Proxy node closed one-way stream connection')
+        }, 'Processed leave request by proxy node')
     }
 
     private removeConnection(streamPartId: StreamPartID, nodeId: NodeId): void {

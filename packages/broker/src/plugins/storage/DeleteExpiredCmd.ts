@@ -79,16 +79,16 @@ export class DeleteExpiredCmd {
 
         const streamsInfo = await this.fetchStreamsInfo(streams, client)
         const potentialBuckets = await this.getPotentiallyExpiredBuckets(streamsInfo)
-        logger.info('Found %d potentially expired buckets', potentialBuckets.length)
+        logger.info(`Found ${potentialBuckets.length} potentially expired buckets`)
 
         const cutPotentialBuckets = potentialBuckets.slice(0, this.bucketLimit)
-        logger.info('Left with %d potentially expired buckets after cutting', cutPotentialBuckets.length)
+        logger.info(`Left with ${cutPotentialBuckets.length} potentially expired buckets after cutting`)
 
         const expiredBuckets = await this.filterExpiredBuckets(cutPotentialBuckets)
-        logger.info('Found %d expired buckets (total records %d and size %d MB)',
-            expiredBuckets.length,
-            totalNumOfRecords(expiredBuckets),
-            totalSizeOfBuckets(expiredBuckets))
+        logger.info({
+            totalRecords: totalNumOfRecords(expiredBuckets),
+            totalSizeOfBucketsInMb: totalSizeOfBuckets(expiredBuckets)
+        }, `Found ${expiredBuckets.length} expired buckets`)
 
         if (!this.dryRun) {
             await this.deleteExpired(expiredBuckets)
@@ -203,7 +203,7 @@ export class DeleteExpiredCmd {
                 }
             ]
 
-            logger.info('Deleting expired bucket [%s, %d, %s]', streamId, partition, bucketId)
+            logger.info({ streamId, partition, bucketId }, 'Delete expired bucket')
 
             return this.limit(async () => {
                 await this.cassandraClient.batch(queries, {

@@ -184,7 +184,7 @@ function cleanSocket(httpServer: http.Server | https.Server, config: UnixSocket)
         // rethrow if unexpected error
         if (!err.message.includes('EADDRINUSE')) { throw err }
 
-        logger.info({ config }, 'socket in use, trying to recover')
+        logger.info({ config }, 'Try to recover used socket')
         const clientSocket = new net.Socket()
         // socket will automatically close on error
         clientSocket.on('error', (err: any) => {
@@ -241,7 +241,7 @@ export async function startHttpServer(
     try {
         httpServer.listen(config)
         await once(httpServer, 'listening')
-        logger.info({ details: JSON.stringify(config) }, 'listening')
+        logger.info({ details: JSON.stringify(config) }, 'Listen')
     } catch (err) {
         // Kill process if started on host/port, else wait for Unix Socket to be cleaned up
         if (typeof config !== "string") {
@@ -249,7 +249,7 @@ export async function startHttpServer(
             process.exit(1)
         } else {
             await once(httpServer, 'listening')
-            logger.info({ details: JSON.stringify(config) }, `listening`)
+            logger.info({ details: JSON.stringify(config) }, `Listen`)
         }
     }
     return httpServer

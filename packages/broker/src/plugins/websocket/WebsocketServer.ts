@@ -94,7 +94,7 @@ export class WebsocketServer {
 
         this.httpServer.listen(port)
         await once(this.httpServer, 'listening')
-        logger.info('Websocket server listening on ' + port)
+        logger.info(`Started Websocket server (port ${port})`)
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -131,6 +131,6 @@ export class WebsocketServer {
         }
         this.httpServer!.close()
         await once(this.httpServer!, 'close')
-        logger.info('WebSocket server stopped')
+        logger.info('Stopped Websocket server')
     }
 }

@@ -71,11 +71,11 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
             this.abortController.signal
         )
 
-        logger.info('Brubeck miner plugin started')
+        logger.info('Started Brubeck miner plugin')
     }
 
     private async onRewardCodeReceived(rewardCode: string): Promise<void> {
-        logger.info({ rewardCode }, 'Reward code received')
+        logger.info({ rewardCode }, 'Received reward code')
         const peers = await this.getPeers()
         const delay = Math.floor(Math.random() * this.pluginConfig.maxClaimDelay)
         await wait(delay) 
@@ -102,7 +102,7 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
             if (message.rewardCode) {
                 this.onRewardCodeReceived(message.rewardCode)
             } if (message.info) {
-                logger.info(message.info)
+                logger.info(`Received notification: ${message.info}`)
             } else {
                 logger.trace(`Dummy message (#${this.dummyMessagesReceived}) received: ${message}`)
                 this.dummyMessagesReceived += 1
@@ -150,9 +150,9 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
             logger.info({
                 currentStake: resBody.stake,
                 latestBlock: resBody.latestBlock
-            }, 'Reward claimed successfully')
+            }, 'Claimed successfully')
             if (resBody.alert) {
-                logger.info({ alert: resBody.alert }, 'Claim alert: %s', resBody.alert)
+                logger.info(`Received claim alert: ${resBody.alert}`)
             }
         } catch (err) {
             logger.error({
@@ -181,9 +181,7 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
                 sampleCount: NAT_ANALYSIS_SAMPLE_COUNT,
                 stunHost: this.pluginConfig.stunServerHost!
             }), NAT_ANALYSIS_TIMEOUT.maxWaitTime)
-            logger.info({
-                result
-            }, 'NAT type analyzed')
+            logger.info({ result }, 'Analyzed NAT type')
             return result
         } catch (e) {
             logger.warn({ reason: e.message }, 'Unable to analyze NAT type')

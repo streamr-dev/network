@@ -93,7 +93,7 @@ async function main() {
         logger.info({
             id,
             ...trackerObj
-        }, 'started tracker')
+        }, 'Started')
     } catch (err) {
         logError(err, 'tracker bin catch')
         process.exit(1)
