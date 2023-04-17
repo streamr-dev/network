@@ -90,10 +90,10 @@ export class TrackerServer extends EventEmitter {
     }
 
     async send<T>(receiverNodeId: NodeId, message: T & TrackerMessage): Promise<void> {
-        logger.debug({
+        logger.debug('Send message to node', {
             msgType: TrackerMessageType[message.type],
             nodeId: NameDirectory.getName(receiverNodeId)
-        }, 'Send message to node')
+        })
         await this.endpoint.send(receiverNodeId, message.serialize())
     }
 
@@ -137,10 +137,10 @@ export class TrackerServer extends EventEmitter {
             if (message != null) {
                 this.emit(eventPerType[message.type], message, peerInfo.peerId)
             } else {
-                logger.warn({
+                logger.warn('Drop invalid message', {
                     sender: peerInfo.peerId,
                     rawMessage
-                }, 'Drop invalid message')
+                })
             }
         }
     }

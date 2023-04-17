@@ -100,9 +100,9 @@ export class Batch extends EventEmitter {
 
     scheduleInsert(): void {
         clearTimeout(this.timeout)
-        this.logger.trace({
+        this.logger.trace('scheduleRetry', {
             retries: this.retries
-        }, 'scheduleRetry')
+        })
 
         this.timeout = setTimeout(() => {
             if (this.retries < this.maxRetries) {
@@ -142,7 +142,7 @@ export class Batch extends EventEmitter {
 
     private setState(state: State): void {
         this.state = state
-        this.logger.trace({ state }, 'setState')
+        this.logger.trace('setState', { state })
         this.emit(this.state, this.getBucketId(), this.getId(), this.state, this.size, this.getNumberOfMessages())
     }
 }

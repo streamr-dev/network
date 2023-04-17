@@ -54,7 +54,7 @@ export class InstructionThrottler {
             }
             if (!this.ongoingPromises[streamPartId].handling) {
                 this.invokeHandleFnWithLock(streamPartId).catch((err) => {
-                    logger.warn(err, 'Failed to handle instruction')
+                    logger.warn('Failed to handle instruction', err)
                 })
             }
         }
@@ -108,7 +108,7 @@ export class InstructionThrottler {
             this.ongoingPromises[streamPartId].promise = cancelable(this.handleFn(instructionMessage, trackerId))
             await this.ongoingPromises[streamPartId].promise
         } catch (err) {
-            logger.warn(err, 'Encountered error handling instruction')
+            logger.warn('Encountered error handling instruction', err)
         } finally {
             this.invokeHandleFnWithLock(streamPartId)
         }

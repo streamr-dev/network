@@ -72,7 +72,7 @@ export class BucketManager {
         const key = toKey(streamId, partition)
 
         if (this.streamParts[key]) {
-            logger.trace({ key }, 'Found stream')
+            logger.trace('Found stream', { key })
             bucketId = this.findBucketId(key, timestamp)
 
             if (!bucketId) {
@@ -80,7 +80,7 @@ export class BucketManager {
                 stream.minTimestamp = stream.minTimestamp !== undefined ? Math.min(stream.minTimestamp, timestamp) : timestamp
             }
         } else {
-            logger.trace({ key }, 'Create new (stream not found)')
+            logger.trace('Create new (stream not found)', { key })
 
             this.streamParts[key] = {
                 streamId,
@@ -98,7 +98,7 @@ export class BucketManager {
         if (bucket) {
             bucket.incrementBucket(size)
         } else {
-            logger.warn({ bucketId }, 'Failed to increment bucket (bucket not found)')
+            logger.warn('Failed to increment bucket (bucket not found)', { bucketId })
         }
     }
 
@@ -112,10 +112,10 @@ export class BucketManager {
 
     private findBucketId(key: StreamPartKey, timestamp: number): string | undefined {
         let bucketId
-        logger.trace({
+        logger.trace('Check stream in state', {
             key,
             timestamp
-        }, 'Check stream in state')
+        })
 
         const stream = this.streamParts[key]
         if (stream) {
@@ -195,7 +195,7 @@ export class BucketManager {
             }
 
             if (insertNewBucket) {
-                logger.trace({ minTimestamp }, 'Create new bucket (existing bucket for timestamp not found)')
+                logger.trace('Create new bucket (existing bucket for timestamp not found)', { minTimestamp })
 
                 // we create first in memory, so don't wait for database, then _storeBuckets inserts bucket into database
                 const newBucket = new Bucket(

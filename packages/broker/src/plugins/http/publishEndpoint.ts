@@ -45,7 +45,7 @@ const createHandler = (msgChainId: string, streamrClient: StreamrClient): Reques
             })
             return res.sendStatus(200)
         } catch (err) {
-            logger.error({ streamId, err }, 'Unable to publish to message')
+            logger.error('Unable to publish to message', { streamId, err })
             return res.sendStatus(500)
         }
     }

@@ -48,18 +48,18 @@ export abstract class AbstractWsConnection {
     evaluateBackPressure(): void {
         const bufferedAmount = this.getBufferedAmount()
         if (!this.highBackPressure && bufferedAmount > HIGH_BACK_PRESSURE) {
-            this.logger.debug({
+            this.logger.debug('Encountered high back pressure', {
                 peerId: this.getPeerInfo().peerId, bufferedAmount
-            }, 'Encountered high back pressure')
+            })
             this.highBackPressure = true
             if (this.onHighBackPressure === undefined) {
                 throw new Error('onHighBackPressure listener not set')
             }
             this.onHighBackPressure()
         } else if (this.highBackPressure && bufferedAmount < LOW_BACK_PRESSURE) {
-            this.logger.debug({
+            this.logger.debug('Encountered low back pressure', {
                 peerId: this.getPeerInfo().peerId, bufferedAmount
-            }, 'Encountered low back pressure')
+            })
             this.highBackPressure = false
             if (this.onLowBackPressure === undefined) {
                 throw new Error('onLowBackPressure listener not set')

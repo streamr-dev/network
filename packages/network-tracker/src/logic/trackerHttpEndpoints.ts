@@ -37,7 +37,7 @@ const validateStreamId = (req: express.Request, res: express.Response): StreamID
 const validatePartition = (req: express.Request, res: express.Response): number | null => {
     const partition = Number.parseInt(req.params.partition, 10)
     if (!Number.isSafeInteger(partition) || partition < 0) {
-        logger.warn({ askedPartition: partition }, '422 partition must be a positive integer')
+        logger.warn('422 partition must be a positive integer', { askedPartition: partition })
         respondWithError(res, `partition must be a positive integer (was ${partition})`)
         return null
     }
@@ -55,7 +55,7 @@ const cachedJsonGet = (
         json: string
     }
     return app.get(endpoint, (_req: express.Request, res: express.Response) => {
-        logger.debug({ endpoint }, 'Request to endpoint')
+        logger.debug('Request to endpoint', { endpoint })
         if ((cache === undefined) || (Date.now() > (cache.timestamp + maxAge))) {
             cache = {
                 json: JSON.stringify(jsonFactory()),

@@ -136,16 +136,16 @@ async function fetchResponse(
         options.headers['Content-Type'] = 'application/json'
     }
 
-    logger.debug({ url, opts }, 'Send HTTP request')
+    logger.debug('Send HTTP request', { url, opts })
 
     const response: Response = await fetchFn(url, opts)
     const timeEnd = Date.now()
-    logger.debug({
+    logger.debug('Received HTTP response', {
         url,
         status: response.status,
         statusText: response.statusText,
         timeTakenInMs: timeEnd - timeStart
-    }, 'Received HTTP response')
+    })
 
     if (response.ok) {
         return response

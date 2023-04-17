@@ -84,7 +84,7 @@ export class TrackerManager {
         )
 
         this.nodeToTracker.on(NodeToTrackerEvent.CONNECTED_TO_TRACKER, (trackerId) => {
-            logger.trace({ trackerId }, 'Connected to tracker')
+            logger.trace('Connected to tracker', { trackerId })
             this.getStreamPartsForTracker(trackerId).forEach((streamPart) => {
                 this.sendStatus(streamPart, trackerId)
             })
@@ -99,7 +99,7 @@ export class TrackerManager {
             this.instructionThrottler.add(instructionMessage, trackerId)
         })
         this.nodeToTracker.on(NodeToTrackerEvent.TRACKER_DISCONNECTED, (trackerId) => {
-            logger.trace({ trackerId }, 'Disconnected from tracker')
+            logger.trace('Disconnected from tracker', { trackerId })
         })
     }
 
@@ -145,7 +145,7 @@ export class TrackerManager {
     private shouldIncludeRttInfo(trackerId: TrackerId): boolean {
         if (!(trackerId in this.rttUpdateTimeoutsOnTrackers)) {
             this.rttUpdateTimeoutsOnTrackers[trackerId] = setTimeout(() => {
-                logger.trace({ trackerId }, 'Triggered RTT update timeout to tracker')
+                logger.trace('Triggered RTT update timeout to tracker', { trackerId })
                 delete this.rttUpdateTimeoutsOnTrackers[trackerId]
             }, this.rttUpdateInterval)
             return true
@@ -162,12 +162,12 @@ export class TrackerManager {
             }
             try {
                 await this.nodeToTracker.sendStatus(trackerId, status)
-                logger.trace({
+                logger.trace('Sent status to tracker', {
                     streamPartId: status.streamPart,
                     trackerId
-                }, 'Sent status to tracker')
+                })
             } catch (err) {
-                logger.trace({ err, trackerId }, 'Failed to send status to tracker')
+                logger.trace('Failed to send status to tracker', { err, trackerId })
             }
         }
     }
@@ -188,14 +188,14 @@ export class TrackerManager {
         // Check that tracker matches expected tracker
         const expectedTrackerId = this.getTrackerId(streamPartId)
         if (trackerId !== expectedTrackerId) {
-            logger.warn({
+            logger.warn('Received instructions from unexpected tracker', {
                 expectedTrackerId,
                 trackerId
-            }, 'Received instructions from unexpected tracker')
+            })
             return
         }
 
-        logger.trace({ streamPartId, nodeIds }, 'Receive instructions')
+        logger.trace('Receive instructions', { streamPartId, nodeIds })
 
         const currentNodes = this.streamPartManager.getNeighborsForStreamPart(streamPartId)
 
@@ -221,10 +221,10 @@ export class TrackerManager {
                 subscribedNodeIds.push(res.value)
             } else {
                 failedInstructions = true
-                logger.debug({
+                logger.debug('Failed to subscribe to node', {
                     nodeId: NameDirectory.getName(nodeIds[i]),
                     reason: res.reason
-                }, 'Failed to subscribe to node')
+                })
             }
         })
         if (!reattempt || failedInstructions) {
@@ -241,13 +241,13 @@ export class TrackerManager {
             }
         }
 
-        logger.trace({
+        logger.trace('Fulfilled tracker instructions', {
             subscribedNodeIds,
             unsubscribedNodeIds,
             streamPartId,
             counter,
             fullFilledAll: subscribedNodeIds.length === nodeIds.length
-        }, 'Fulfilled tracker instructions')
+        })
     }
 
     getTrackerId(streamPartId: StreamPartID): TrackerId {

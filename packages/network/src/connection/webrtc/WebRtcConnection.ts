@@ -169,11 +169,11 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         this.rtt = null
         this.rttStart = null
 
-        this.baseLogger.trace({
+        this.baseLogger.trace('Create', {
             selfId: this.selfId,
             messageQueue: this.messageQueue.size(),
             peerInfo: this.peerInfo,
-        }, 'Create')
+        })
     }
 
     connect(): void {
@@ -206,7 +206,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         this.isFinished = true
 
         if (err) {
-            this.baseLogger.debug(err, 'Close connection')
+            this.baseLogger.debug('Close connection', { err })
         } else {
             this.baseLogger.trace('close()')
         }
@@ -232,7 +232,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         try {
             this.doClose(err)
         } catch (e) {
-            this.baseLogger.warn(e, 'Encountered error in doClose')
+            this.baseLogger.warn('Encountered error in doClose', e)
         }
 
         if (!this.hasOpened) {
@@ -294,9 +294,9 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
                     clearTimeout(this.pingTimeoutRef)
                     this.pingTimeoutRef = null
                 }
-                this.baseLogger.debug({
+                this.baseLogger.debug('Close connection (failed to receive pong after ping attempts)', {
                     maxAttempts: this.maxPingPongAttempts
-                }, 'Close connection (failed to receive pong after ping attempts)')
+                })
                 this.close(new Error('pong not received'))
                 return
             } else {
@@ -306,10 +306,10 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
                         this.doSendMessage('ping')
                     }
                 } catch (err) {
-                    this.baseLogger.debug({
+                    this.baseLogger.debug('Failed to send ping', {
                         peerId: this.peerInfo.peerId,
                         err
-                    }, 'Failed to send ping')
+                    })
                 }
                 this.pingAttempts += 1
             }
@@ -330,10 +330,10 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
                 this.doSendMessage('pong')
             }
         } catch (err) {
-            this.baseLogger.warn({
+            this.baseLogger.warn('Failed to send pong', {
                 peerId: this.peerInfo.peerId,
                 err
-            }, 'Failed to send pong')
+            })
         }
     }
 
@@ -362,7 +362,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
 
             const queueItem = this.messageQueue.peek()
             if (queueItem.isFailed()) {
-                this.baseLogger.debug({ queueItem, numOfSuccessSends }, 'Encountered failed queue item')
+                this.baseLogger.debug('Encountered failed queue item', { queueItem, numOfSuccessSends })
                 this.messageQueue.pop()
             } else if (queueItem.getMessage().length > this.getMaxMessageSize()) {
                 const errorMessage = 'Dropping message due to size '
@@ -370,10 +370,10 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
                     + ' exceeding the limit of '
                     + this.getMaxMessageSize()
                 queueItem.immediateFail(errorMessage)
-                this.baseLogger.warn({
+                this.baseLogger.warn('Dropping message due to size', {
                     size: queueItem.getMessage().length,
                     limit: this.getMaxMessageSize()
-                }, 'Dropping message due to size')
+                })
                 this.messageQueue.pop()
             } else if (this.paused || this.getBufferedAmount() >= this.bufferThresholdHigh) {
                 if (!this.paused) {
@@ -401,12 +401,12 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
                     queueItem.delivered()
                     numOfSuccessSends += 1
                 } else {
-                    this.baseLogger.debug({
+                    this.baseLogger.debug('Failed to send queue item', {
                         wasOpen: isOpen,
                         numOfSuccessSends,
                         queueItem,
                         messageQueueSize: this.messageQueue.size(),
-                    }, 'Failed to send queue item')
+                    })
                     this.processFailedMessage(queueItem, new Error('sendMessage returned false'))
                 }
             }
@@ -421,10 +421,10 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         })
         if (queueItem.isFailed()) {
             const infoText = queueItem.getErrorInfos().map((i) => JSON.stringify(i)).join('\n\t')
-            this.baseLogger.warn({
+            this.baseLogger.warn('Discard message (all previous send attempts failed)', {
                 maxTries: MessageQueue.MAX_TRIES,
                 infoText
-            }, 'Discard message (all previous send attempts failed)')
+            })
             this.messageQueue.pop()
         }
         if (this.flushTimeoutRef === null) {

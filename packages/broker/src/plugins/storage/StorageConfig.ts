@@ -95,9 +95,9 @@ export class StorageConfig {
     private handleDiff({ added, removed }: Diff<StreamPartID>): void {
         added.forEach((streamPart) => this.listener.onStreamPartAdded(streamPart))
         removed.forEach((streamPart) => this.listener.onStreamPartRemoved(streamPart))
-        logger.info({
+        logger.info('Updated state', {
             added,
             removed
-        }, 'Updated state')
+        })
     }
 }

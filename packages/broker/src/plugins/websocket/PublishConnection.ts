@@ -44,13 +44,13 @@ export class PublishConnection implements Connection {
                         msgChainId
                     })
                 } catch (err: any) {
-                    logger.warn({
+                    logger.warn('Unable to publish', {
                         err,
                         streamId: this.streamId,
                         partition: this.partition,
                         partitionKey: this.partitionKey,
                         msgChainId,
-                    }, 'Unable to publish')
+                    })
                 }
             }
         })

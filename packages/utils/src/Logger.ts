@@ -80,27 +80,27 @@ export class Logger {
         })
     }
 
-    fatal(obj: unknown, msg?: string): void {
-        this.logger.fatal(obj, msg)
+    fatal(msg: string, metadata?: Record<string, unknown>): void {
+        this.logger.fatal(metadata, msg)
     }
 
-    error(obj: unknown, msg?: string): void {
-        this.logger.error(obj, msg)
+    error(msg: string, metadata?: Record<string, unknown>): void {
+        this.logger.error(metadata, msg)
     }
 
-    warn(obj: unknown, msg?: string): void {
-        this.logger.warn(obj, msg)
+    warn(msg: string, metadata?: Record<string, unknown>): void {
+        this.logger.warn(metadata, msg)
     }
 
-    info(obj: unknown, msg?: string): void {
-        this.logger.info(obj, msg)
+    info(msg: string, metadata?: Record<string, unknown>): void {
+        this.logger.info(metadata, msg)
     }
 
-    debug(obj: unknown, msg?: string): void {
-        this.logger.debug(obj, msg)
+    debug(msg: string, metadata?: Record<string, unknown>): void {
+        this.logger.debug(metadata, msg)
     }
 
-    trace(obj: unknown, msg?: string): void {
-        this.logger.trace(obj, msg)
+    trace(msg: string, metadata?: Record<string, unknown>): void {
+        this.logger.trace(metadata, msg)
     }
 }

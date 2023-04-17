@@ -141,12 +141,12 @@ export class Resends {
         query: QueryDict = {}
     ): Promise<MessageStream> {
         const traceId = randomString(5)
-        this.logger.debug({
+        this.logger.debug('Fetch resend data', {
             loggerIdx: traceId,
             resendType: endpointSuffix,
             streamPartId,
             query
-        }, 'Fetch resend data')
+        })
         const streamId = StreamPartIDUtils.getStreamID(streamPartId)
         const nodeAddresses = await this.streamStorageRegistry.getStorageNodes(streamId)
         if (!nodeAddresses.length) {
@@ -168,7 +168,7 @@ export class Resends {
 
         const dataStream = this.httpUtil.fetchHttpStream(url)
         messageStream.pull(counting(dataStream, (count: number) => {
-            this.logger.debug({ loggerIdx: traceId, messageCount: count }, 'Finished resend')
+            this.logger.debug('Finished resend', { loggerIdx: traceId, messageCount: count })
         }))
         return messageStream
     }
@@ -251,10 +251,10 @@ export class Resends {
         while (!found) {
             const duration = Date.now() - start
             if (duration > timeout) {
-                this.logger.debug({
+                this.logger.debug('Timed out waiting for storage to contain message', {
                     expected: message.streamMessage.getMessageID(),
                     lastReceived: last?.map((l) => l.streamMessage.getMessageID()),
-                }, 'Timed out waiting for storage to contain message')
+                })
                 throw new Error(`timed out after ${duration}ms waiting for message`)
             }
 
@@ -268,11 +268,11 @@ export class Resends {
                 }
             }
 
-            this.logger.debug({
+            this.logger.debug('Retry after delay (matching message not found)', {
                 expected: message.streamMessage.getMessageID(),
                 'last-3': last.slice(-3).map((l) => l.streamMessage.getMessageID()),
                 delayInMs: interval
-            }, 'Retry after delay (matching message not found)')
+            })
 
             await wait(interval)
         }

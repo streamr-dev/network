@@ -114,7 +114,7 @@ export class LitProtocolFacade {
 
     async store(streamId: StreamID, symmetricKey: Uint8Array): Promise<GroupKey | undefined> {
         const traceId = randomString(5)
-        this.logger.debug({ streamId, traceId }, 'Storing key')
+        this.logger.debug('Storing key', { streamId, traceId })
         try {
             const authSig = await signAuthMessage(this.authentication)
             const client = await this.getLitNodeClient()
@@ -128,16 +128,16 @@ export class LitProtocolFacade {
                 return undefined
             }
             const groupKeyId = LitJsSdk.uint8arrayToString(encryptedSymmetricKey, 'base16')
-            this.logger.debug({ traceId, streamId, groupKeyId }, 'Stored key')
+            this.logger.debug('Stored key', { traceId, streamId, groupKeyId })
             return new GroupKey(groupKeyId, Buffer.from(symmetricKey))
         } catch (err) {
-            logger.warn({ traceId, err, streamId }, 'Failed to store key')
+            logger.warn('Failed to store key', { traceId, err, streamId })
             return undefined
         }
     }
 
     async get(streamId: StreamID, groupKeyId: string): Promise<GroupKey | undefined> {
-        this.logger.debug({ groupKeyId, streamId }, 'Getting key')
+        this.logger.debug('Getting key', { groupKeyId, streamId })
         try {
             const authSig = await signAuthMessage(this.authentication)
             const client = await this.getLitNodeClient()
@@ -150,10 +150,10 @@ export class LitProtocolFacade {
             if (symmetricKey === undefined) {
                 return undefined
             }
-            this.logger.debug({ groupKeyId, streamId }, 'Got key')
+            this.logger.debug('Got key', { groupKeyId, streamId })
             return new GroupKey(groupKeyId, Buffer.from(symmetricKey))
         } catch (err) {
-            logger.warn({ err, streamId, groupKeyId }, 'Failed to get key')
+            logger.warn('Failed to get key', { err, streamId, groupKeyId })
             return undefined
         }
     }

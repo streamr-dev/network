@@ -79,11 +79,11 @@ export class SubscriberKeyExchange {
         const node = await this.networkNodeFacade.getNode()
         node.publish(request)
         this.pendingRequests.add(requestId)
-        this.logger.debug({
+        this.logger.debug('Sent group key request (waiting for response)', {
             groupKeyId,
             requestId,
             publisherId
-        }, 'Sent group key request (waiting for response)')
+        })
     }
 
     private async createRequest(
@@ -121,7 +121,7 @@ export class SubscriberKeyExchange {
                 const authenticatedUser = await this.authentication.getAddress()
                 const { requestId, recipient, encryptedGroupKeys } = GroupKeyResponse.fromStreamMessage(msg) as GroupKeyResponse
                 if ((recipient === authenticatedUser) && (this.pendingRequests.has(requestId))) {
-                    this.logger.debug({ requestId }, 'Handle group key response')
+                    this.logger.debug('Handle group key response', { requestId })
                     this.pendingRequests.delete(requestId)
                     await this.validator.validate(msg)
                     await Promise.all(encryptedGroupKeys.map(async (encryptedKey) => {
@@ -130,7 +130,7 @@ export class SubscriberKeyExchange {
                     }))
                 }
             } catch (err: any) {
-                this.logger.debug(err, 'Failed to handle group key response')
+                this.logger.debug('Failed to handle group key response', { err })
             }
         }
     }

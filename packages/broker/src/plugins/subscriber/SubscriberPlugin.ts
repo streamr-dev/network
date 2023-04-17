@@ -43,9 +43,9 @@ export class SubscriberPlugin extends Plugin<SubscriberPluginConfig> {
             try {
                 await this.subscribeToStreamParts()
             } catch (err) {
-                logger.warn({
+                logger.warn(`Failed to (re-)subscribe (retrying in ${this.subscriptionRetryInterval / 1000} seconds)`, {
                     err
-                }, `Failed to (re-)subscribe (retrying in ${this.subscriptionRetryInterval / 1000} seconds)`)
+                })
             }
         }
         this.subscriptionIntervalRef = setTimeout(() => this.subscriptionIntervalFn(), this.subscriptionRetryInterval)

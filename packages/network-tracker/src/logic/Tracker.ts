@@ -147,7 +147,7 @@ export class Tracker extends EventEmitter {
             if (valid) {
                 this.processNodeStatus(statusMessage, nodeId)
             } else {
-                logger.warn({ nodeId }, 'Received status message with invalid format')
+                logger.warn('Received status message with invalid format', { nodeId })
                 this.trackerServer.disconnectFromPeer(
                     nodeId,
                     DisconnectionCode.INVALID_PROTOCOL_MESSAGE,
@@ -176,7 +176,7 @@ export class Tracker extends EventEmitter {
     }
 
     onNodeDisconnected(node: NodeId): void {
-        logger.debug({ node }, 'Disconnected from node')
+        logger.debug('Disconnected from node', { node })
         this.metrics.nodeDisconnected.record(1)
         this.removeNode(node)
     }

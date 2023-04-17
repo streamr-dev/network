@@ -73,7 +73,7 @@ export class MqttServer {
         }
         this.aedes.publish(packet, (error?: Error) => {
             if (error) {
-                logger.warn({ error, topic }, 'Failed to publish')
+                logger.warn('Failed to publish', { error, topic })
             }
         })
     }

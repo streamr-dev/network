@@ -67,13 +67,13 @@ export class OrderMessages {
 
     async onGap(from: MessageRef, to: MessageRef, publisherId: EthereumAddress, msgChainId: string): Promise<void> {
         if (this.done || !this.enabled) { return }
-        this.logger.debug({
+        this.logger.debug('Encountered gap', {
             streamPartId: this.streamPartId,
             publisherId,
             msgChainId,
             from,
             to,
-        }, 'Encountered gap')
+        })
 
         let resendMessageStream!: MessageStream
 

@@ -44,10 +44,10 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
         }
 
         this.peerConnection.onicegatheringstatechange = () => {
-            this.logger.trace({
+            this.logger.trace('conn.onGatheringStateChange', {
                 oldState: this.lastGatheringState,
                 newState: this.peerConnection?.iceGatheringState
-            }, 'conn.onGatheringStateChange')
+            })
             this.lastGatheringState = this.peerConnection?.iceGatheringState
         }
 
@@ -59,7 +59,7 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
                         try {
                             await this.peerConnection.setLocalDescription()
                         } catch (err) {
-                            this.logger.warn(err, 'Failed to set local description')
+                            this.logger.warn('Failed to set local description', err)
                         }
                         if (this.peerConnection.localDescription) {
                             this.emitLocalDescription(this.peerConnection.localDescription?.sdp, this.peerConnection.localDescription?.type)
@@ -85,13 +85,13 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
 
     protected doClose(err?: Error): void {
         if (err !== undefined) {
-            this.logger.warn(err, 'Close BrowserWebRTCConnection')
+            this.logger.warn('Close BrowserWebRTCConnection', err)
         }
         if (this.dataChannel) {
             try {
                 this.dataChannel.close()
             } catch (err) {
-                this.logger.warn(err, 'Encountered error while closing dataChannel')
+                this.logger.warn('Encountered error while closing dataChannel', err)
             }
         }
 
@@ -101,7 +101,7 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
             try {
                 this.peerConnection.close()
             } catch (err) {
-                this.logger.warn(err, 'Encountered error while closing peerConnection')
+                this.logger.warn('Encountered error while closing peerConnection', err)
             }
         }
 
@@ -118,14 +118,14 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
         try {
             await this.peerConnection?.setRemoteDescription({ sdp:description, type: type as RTCSdpType })
         } catch (err) {
-            this.logger.warn(err, 'Failed to set remote description')
+            this.logger.warn('Failed to set remote description', err)
         }
 
         if (type == "offer" && this.peerConnection) {
             try {
                 await this.peerConnection.setLocalDescription()
             } catch (err) {
-                this.logger.warn(err, 'Failed to set local description')
+                this.logger.warn('Failed to set local description', err)
             }
             if (this.peerConnection.localDescription) {
                 this.emitLocalDescription(this.peerConnection.localDescription.sdp, this.peerConnection.localDescription.type )
@@ -143,10 +143,10 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
                 .then(() => {
                     return
                 }).catch((err: any) => {
-                    this.logger.warn({ err }, 'Failed to add ice candidate (#1)')
+                    this.logger.warn('Failed to add ice candidate (#1)', { err })
                 })
         } catch (err) {
-            this.logger.warn({ err }, 'Failed to add ice candidate (#2)')
+            this.logger.warn('Failed to add ice candidate (#2)', { err })
         }
     }
 
@@ -195,7 +195,7 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
         }
 
         dataChannel.onerror = (err) => {
-            this.logger.warn(err, 'Encountered error (emitted by dataChannel.onerror)')
+            this.logger.warn('Encountered error (emitted by dataChannel.onerror)', err)
         }
 
         dataChannel.onbufferedamountlow = () => {

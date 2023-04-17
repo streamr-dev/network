@@ -76,13 +76,13 @@ export class Storage extends EventEmitter {
     }
 
     async store(streamMessage: StreamMessage): Promise<boolean> {
-        logger.debug({ msgId: streamMessage.messageId }, 'Store message')
+        logger.debug('Store message', { msgId: streamMessage.messageId })
 
         const bucketId = this.bucketManager.getBucketId(streamMessage.getStreamId(), streamMessage.getStreamPartition(), streamMessage.getTimestamp())
 
         return new Promise((resolve, reject) => {
             if (bucketId) {
-                logger.trace({ bucketId }, 'Found bucket')
+                logger.trace('Found bucket', { bucketId })
 
                 this.bucketManager.incrementBucket(bucketId, Buffer.byteLength(streamMessage.serialize()))
                 setImmediate(() => this.batchManager.store(bucketId, streamMessage, (err?: Error) => {
@@ -95,7 +95,7 @@ export class Storage extends EventEmitter {
                 }))
             } else {
                 const messageId = streamMessage.messageId.serialize()
-                logger.trace({ messageId }, 'Move message to pending messages (bucket not found)')
+                logger.trace('Move message to pending messages (bucket not found)', { messageId })
 
                 const uuid = uuidv1()
                 const timeout = setTimeout(() => {
@@ -355,9 +355,7 @@ export class Storage extends EventEmitter {
 
     private parseRow(row: types.Row, debugInfo: ResendDebugInfo): StreamMessage | null {
         if (row.payload === null) {
-            logger.error({
-                debugInfo
-            }, 'Found unexpected message with NULL payload in Cassandra')
+            logger.error('Found unexpected message with NULL payload in Cassandra', { debugInfo })
             return null
         }
 
@@ -539,7 +537,7 @@ export const startCassandraStorage = async ({
     })
     // @ts-expect-error 'emitter' field is missing in type definition file
     requestLogger.emitter.on('slow', (message: Todo) => {
-        logger.warn({ message }, 'Encountered "slow" event from cassandraClient')
+        logger.warn('Encountered "slow" event from cassandraClient', { message })
     })
     const cassandraClient = new Client({
         contactPoints,

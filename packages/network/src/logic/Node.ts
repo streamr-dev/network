@@ -119,12 +119,12 @@ export class Node extends EventEmitter {
                     this.consecutiveDeliveryFailures[neighborId] = 0
                 } catch (err) {
                     const serializedMsgId = streamMessage.getMessageID().serialize()
-                    logger.warn({
+                    logger.warn('Failed to propagate message to neighbor', {
                         messageId: serializedMsgId,
                         consecutiveFails: this.consecutiveDeliveryFailures[neighborId] || 0,
                         neighbor: neighborId,
                         reason: err
-                    }, 'Failed to propagate message to neighbor')
+                    })
 
                     // TODO: this is hack to get around the issue where `StreamStateManager` believes that we are
                     //  connected to a neighbor whilst `WebRtcEndpoint` knows that we are not. In this situation, the
@@ -143,9 +143,9 @@ export class Node extends EventEmitter {
                     }
                     this.consecutiveDeliveryFailures[neighborId] += 1
                     if (this.consecutiveDeliveryFailures[neighborId] >= 100) {
-                        logger.warn({
+                        logger.warn('Disconnect from neighbor (encountered 100 consecutive delivery failures)', {
                             neighbor: neighborId
-                        }, 'Disconnect from neighbor (encountered 100 consecutive delivery failures)')
+                        })
                         this.onNodeDisconnected(neighborId) // force disconnect
                         this.consecutiveDeliveryFailures[neighborId] = 0
                     }
@@ -200,19 +200,19 @@ export class Node extends EventEmitter {
 
     subscribeToStreamIfHaveNotYet(streamPartId: StreamPartID, sendStatus = true): void {
         if (!this.streamPartManager.isSetUp(streamPartId)) {
-            logger.trace({ streamPartId }, 'subscribeToStreamIfHaveNotYet')
+            logger.trace('subscribeToStreamIfHaveNotYet', { streamPartId })
             this.streamPartManager.setUpStreamPart(streamPartId)
             this.trackerManager.onNewStreamPart(streamPartId) // TODO: perhaps we should react based on event from StreamManager?
             if (sendStatus) {
                 this.trackerManager.sendStreamPartStatus(streamPartId)
             }
         } else if (this.streamPartManager.isSetUp(streamPartId) && this.streamPartManager.isBehindProxy(streamPartId)) {
-            logger.trace({ streamPartId }, 'Failed to join stream as stream is set to be behind proxy')
+            logger.trace('Failed to join stream as stream is set to be behind proxy', { streamPartId })
         }
     }
 
     unsubscribeFromStream(streamPartId: StreamPartID, sendStatus = true): void {
-        logger.trace({ streamPartId }, 'unsubscribeFromStream')
+        logger.trace('unsubscribeFromStream', { streamPartId })
         this.streamPartManager.removeStreamPart(streamPartId)
         this.trackerManager.onUnsubscribeFromStreamPart(streamPartId)
         if (sendStatus) {
@@ -257,10 +257,10 @@ export class Node extends EventEmitter {
             && this.streamPartManager.isBehindProxy(streamPartId)
             && streamMessage.messageType === StreamMessageType.MESSAGE
             && !this.streamPartManager.hasInboundConnection(streamPartId, source)) {
-            logger.warn({
+            logger.warn('Received unexpected message on outbound proxy stream', {
                 source,
                 streamPartId
-            }, 'Received unexpected message on outbound proxy stream')
+            })
             return
         }
 
@@ -275,28 +275,28 @@ export class Node extends EventEmitter {
             )
         } catch (err) {
             if (err instanceof InvalidNumberingError) {
-                logger.trace({
+                logger.trace('Received message with invalid numbering', {
                     source,
                     messageId: streamMessage.messageId
-                }, 'Received message with invalid numbering')
+                })
                 return
             }
             if (err instanceof GapMisMatchError) {
-                logger.warn({
+                logger.warn('Received data with gap mismatch', {
                     source,
                     messageId: streamMessage.messageId,
                     err
-                }, 'Received data with gap mismatch')
+                })
                 return
             }
             throw err
         }
 
         if (isUnseen) {
-            logger.trace({
+            logger.trace('Received message', {
                 source,
                 messageId: streamMessage.messageId
-            }, 'Received message')
+            })
             const propagationTargets = this.getPropagationTargets(streamMessage)
             this.emit(Event.UNSEEN_MESSAGE_RECEIVED, streamMessage, source)
             this.propagation.feedUnseenMessage(streamMessage, propagationTargets, source)
@@ -305,10 +305,10 @@ export class Node extends EventEmitter {
                 this.metrics.publishBytesPerSecond.record(streamMessage.getSerializedContent().length)
             }
         } else {
-            logger.trace({
+            logger.trace('Ignored duplicate message', {
                 source,
                 messageId: streamMessage.messageId
-            }, 'Ignored duplicate message')
+            })
             this.emit(Event.DUPLICATE_MESSAGE_RECEIVED, streamMessage, source)
         }
     }
@@ -352,7 +352,7 @@ export class Node extends EventEmitter {
 
     private unsubscribeFromStreamPartOnNode(node: NodeId, streamPartId: StreamPartID, sendStatus = true): void {
         this.streamPartManager.removeNodeFromStreamPart(streamPartId, node)
-        logger.trace({ node, streamPartId }, 'unsubscribeFromStreamPartOnNode')
+        logger.trace('unsubscribeFromStreamPartOnNode', { node, streamPartId })
         this.emit(Event.NODE_UNSUBSCRIBED, node, streamPartId)
         this.disconnectionManager.scheduleDisconnectionIfNoSharedStreamParts(node)
         if (sendStatus) {
@@ -362,7 +362,7 @@ export class Node extends EventEmitter {
 
     private onNodeDisconnected(node: NodeId): void {
         const [streams, proxiedStreams] = this.streamPartManager.removeNodeFromAllStreamParts(node)
-        logger.trace({ node }, 'Remove all subscriptions of node')
+        logger.trace('Remove all subscriptions of node', { node })
         streams.forEach((s) => {
             this.trackerManager.sendStreamPartStatus(s)
         })

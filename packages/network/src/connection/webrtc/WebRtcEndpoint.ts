@@ -242,7 +242,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             try {
                 connection.connect()
             } catch (e) {
-                logger.warn(e, 'Failed to connect (onRtcOfferFromSignaller)')
+                logger.warn('Failed to connect (onRtcOfferFromSignaller)', e)
             }
             this.connections[peerId] = connection
             this.onConnectionCountChange()
@@ -261,13 +261,13 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         const { peerId } = originatorInfo
         const connection = this.connections[peerId]
         if (!connection) {
-            logger.debug({ peerId, description }, 'Received unexpected rtcAnswer')
+            logger.debug('Received unexpected rtcAnswer', { peerId, description })
         } else if (connection.getConnectionId() !== connectionId) {
-            logger.debug({
+            logger.debug('Received unexpected rtcAnswer (connectionId mismatch)', {
                 peerId,
                 currentConnectionId: connection.getConnectionId(),
                 sentConnectionId: connectionId
-            }, 'Received unexpected rtcAnswer (connectionId mismatch)')
+            })
         } else {
             connection.setPeerInfo(PeerInfo.fromObject(originatorInfo))
             connection.setRemoteDescription(description, 'answer')
@@ -289,13 +289,13 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         const { peerId } = originatorInfo
         const connection = this.connections[peerId]
         if (!connection) {
-            logger.debug({ peerId, candidate }, 'Received unexpected iceCandidate (no connection)')
+            logger.debug('Received unexpected iceCandidate (no connection)', { peerId, candidate })
         } else if (connection.getConnectionId() !== connectionId) {
-            logger.debug({
+            logger.debug('Received unexpected iceCandidate (connectionId mismatch)', {
                 peerId,
                 currentConnectionId: connection.getConnectionId(),
                 sentConnectionId: connectionId
-            }, 'Received unexpected iceCandidate (connectionId mismatch)')
+            })
         } else {
             if (this.isIceCandidateAllowed(candidate)) {
                 connection.addRemoteCandidate(candidate, mid)
@@ -318,10 +318,10 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             this.replaceConnection(peerId, routerId, uuidv4())
         } else {
             this.connect(peerId, routerId, true).then(() => {
-                logger.trace({ peerId }, 'Failed to connect (unattended connectListener induced connection)')
+                logger.trace('Failed to connect (unattended connectListener induced connection)', { peerId })
                 return peerId
             }).catch((err) => {
-                logger.trace({ peerId, err }, 'Failed to connect (connectListener induced connection)')
+                logger.trace('Failed to connect (connectListener induced connection)', { peerId, err })
             })
         }
     }
@@ -345,7 +345,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         try {
             connection.connect()
         } catch (e) {
-            logger.warn(e, 'Failed to connect (replaceConnection)')
+            logger.warn('Failed to connect (replaceConnection)', e)
         }
         this.connections[peerId] = connection
         this.onConnectionCountChange()
@@ -367,11 +367,11 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             const lastState = connection.getLastState()
             const deferredConnectionAttempt = connection.getDeferredConnectionAttempt()
 
-            logger.trace({
+            logger.trace('Found pre-existing connection for peer', {
                 role: isOffering(this.peerInfo.peerId, targetPeerId) ? 'offerer' : 'answerer',
                 targetPeerId: NameDirectory.getName(targetPeerId),
                 state: lastState
-            }, 'Found pre-existing connection for peer')
+            })
 
             if (lastState === 'connected') {
                 return Promise.resolve(targetPeerId)
@@ -430,7 +430,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
                 connection.getPeerInfo().messageLayerVersions
             )
         } catch (err) {
-            logger.debug(err, 'Encountered error while negotiating protocol versions')
+            logger.debug('Encountered error while negotiating protocol versions', err)
             this.close(connection.getPeerId(), `No shared protocol versions with node: ${connection.getPeerId()}`)
         }
     }
@@ -438,7 +438,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     close(receiverPeerId: PeerId, reason: string): void {
         const connection = this.connections[receiverPeerId]
         if (connection) {
-            logger.debug({ peerId: NameDirectory.getName(receiverPeerId), reason }, 'Close connection')
+            logger.debug('Close connection', { peerId: NameDirectory.getName(receiverPeerId), reason })
             delete this.connections[receiverPeerId]
             this.onConnectionCountChange()
             connection.close()

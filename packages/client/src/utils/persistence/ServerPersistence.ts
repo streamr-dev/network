@@ -72,10 +72,10 @@ export default class ServerPersistence implements PersistenceContext {
             return await fn()
         } catch (err) {
             if (retriesLeft > 0 && err.code === 'SQLITE_BUSY') {
-                this.logger.trace({
+                this.logger.trace('Retry opening database after delay (database busy)', {
                     retryNo: maxRetries - retriesLeft + 1,
                     maxRetries
-                }, 'Retry opening database after delay (database busy)')
+                })
                 return this.tryExec(async () => {
                     // wait random time and retry
                     await wait(10 + Math.random() * 500)
@@ -118,7 +118,7 @@ export default class ServerPersistence implements PersistenceContext {
             await this.onInit?.(store)
             this.store = store
         } catch (err) {
-            this.logger.trace(err, 'Failed to open database')
+            this.logger.trace('Failed to open database', err)
             if (!this.error) {
                 this.error = err
             }

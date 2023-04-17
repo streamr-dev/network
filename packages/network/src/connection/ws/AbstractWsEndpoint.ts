@@ -67,12 +67,12 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
                 connection.evaluateBackPressure()
                 await connection.send(message)
             } catch (err) {
-                logger.debug({ recipientId, err }, 'Failed to send message')
+                logger.debug('Failed to send message', { recipientId, err })
                 connection.terminate()
                 throw err
             }
 
-            logger.trace({ recipientId, size: message.length }, 'Sent message')
+            logger.trace('Sent message', { recipientId, size: message.length })
         } else {
             throw new UnknownPeerError(`cannot send to ${recipientId} because not connected`)
         }
@@ -82,10 +82,10 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
         const connection = this.getConnectionByPeerId(recipientId)
         if (connection !== undefined) {
             try {
-                logger.trace({ recipientId, reason }, 'Close connection')
+                logger.trace('Close connection', { recipientId, reason })
                 connection.close(code, reason)
             } catch (err) {
-                logger.warn({ recipientId, err }, 'Failed to close connection')
+                logger.warn('Failed to close connection', { recipientId, err })
             }
         }
     }
@@ -147,7 +147,7 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
             }
         )
         this.connectionById.set(connection.getPeerId(), connection)
-        logger.trace({ peerId: connection.getPeerId() }, 'Added peer to connection list')
+        logger.trace('Added peer to connection list', { peerId: connection.getPeerId() })
         this.emit(Event.PEER_CONNECTED, peerInfo)
     }
 
@@ -158,10 +158,10 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
         if (this.stopped) {
             return
         }
-        logger.trace({
+        logger.trace('Received message', {
             size: message.length,
             sender: connection.getPeerInfo()
-        }, 'Received message')
+        })
         this.emit(Event.MESSAGE_RECEIVED, connection.getPeerInfo(), message)
     }
 
@@ -169,7 +169,7 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
      * Implementer should invoke this whenever a connection is closed.
      */
     protected onClose(connection: C, code: DisconnectionCode, reason: DisconnectionReason): void {
-        logger.trace({ peerId: connection.getPeerId(), code, reason }, 'onClose')
+        logger.trace('onClose', { peerId: connection.getPeerId(), code, reason })
         this.connectionById.delete(connection.getPeerId())
         try {
             this.doClose(connection, code, reason)

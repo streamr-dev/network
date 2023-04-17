@@ -35,10 +35,10 @@ export class StoragePoller {
     async poll(): Promise<void> {
         logger.info('Polling')
         const { streams, blockNumber } = await this.streamrClient.getStoredStreams(this.clusterId)
-        logger.info({
+        logger.info('Polled', {
             foundStreams: streams.length,
             blockNumber
-        }, 'Polled')
+        })
         this.onNewSnapshot(streams, blockNumber)
     }
 
@@ -46,7 +46,7 @@ export class StoragePoller {
         try {
             await this.poll()
         } catch (err) {
-            logger.warn(err, 'Failed to poll full state')
+            logger.warn('Failed to poll full state', err)
         }
     }
 }

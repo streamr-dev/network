@@ -219,10 +219,10 @@ class OrderedMsgChain extends MsgChainEmitter {
         if (this.isStaleMessage(unorderedStreamMessage)) {
             const msgRef = unorderedStreamMessage.getMessageRef()
             // Prevent double-processing of messages for any reason
-            logger.trace({
+            logger.trace('Ignore message (already enqueued or processed a newer message)', {
                 ignoredMsgRef: msgRef,
                 lastMsgRef: this.lastOrderedMsgRef
-            }, 'Ignore message (already enqueued or processed a newer message)')
+            })
             return
         }
 
@@ -256,7 +256,7 @@ class OrderedMsgChain extends MsgChainEmitter {
         }
 
         if (this.isGapHandlingEnabled()) {
-            logger.trace({ msgRef: streamMessage.getMessageRef() }, 'markMessage')
+            logger.trace('markMessage', { msgRef: streamMessage.getMessageRef() })
         }
 
         this.markedExplicitly.add(streamMessage)
@@ -341,7 +341,7 @@ class OrderedMsgChain extends MsgChainEmitter {
         // emit drain after clearing a block. If only a single item was in the
         // queue, the queue was never blocked, so it doesn't need to 'drain'.
         if (processedMessages > 1) {
-            logger.trace({ processedMessages, lastMsgRef: this.lastOrderedMsgRef }, 'Drained queue')
+            logger.trace('Drained queue', { processedMessages, lastMsgRef: this.lastOrderedMsgRef })
             this.clearGap()
             this.emit('drain', processedMessages)
         }
@@ -359,7 +359,7 @@ class OrderedMsgChain extends MsgChainEmitter {
                 this.markedExplicitly.delete(msg)
 
                 if (this.isGapHandlingEnabled()) {
-                    logger.trace({ msgRef: msg.getMessageRef() }, 'Skipped message')
+                    logger.trace('Skipped message', { msgRef: msg.getMessageRef() })
                     this.emit('skip', msg)
                     return msg
                 }
@@ -386,7 +386,7 @@ class OrderedMsgChain extends MsgChainEmitter {
             return
         }
 
-        logger.trace({ timeoutMs: this.propagationTimeout }, 'scheduleGap')
+        logger.trace('scheduleGap', { timeoutMs: this.propagationTimeout })
         const nextGap = (timeout: number) => {
             clearTimeout(this.nextGaps!)
             this.nextGaps = setTimeout(async () => {
@@ -419,12 +419,12 @@ class OrderedMsgChain extends MsgChainEmitter {
         const from = new MessageRef(lastOrderedMsgRef.timestamp, lastOrderedMsgRef.sequenceNumber + 1)
         const { gapRequestCount, maxGapRequests } = this
         if (gapRequestCount < maxGapRequests) {
-            logger.trace({
+            logger.trace('requestGapFill', {
                 attemptNo: gapRequestCount + 1,
                 maxAttempts: maxGapRequests,
                 from,
                 to,
-            }, 'requestGapFill')
+            })
             this.gapRequestCount += 1
             try {
                 await this.gapHandler(from, to, this.publisherId, this.msgChainId)
@@ -446,11 +446,11 @@ class OrderedMsgChain extends MsgChainEmitter {
         const to = msg.prevMsgRef
         const from = new MessageRef(lastOrderedMsgRef.timestamp, lastOrderedMsgRef.sequenceNumber + 1)
         if (this.isGapHandlingEnabled()) {
-            logger.trace({
+            logger.trace('requestGapFill failed after reaching max attempts', {
                 maxGapRequests,
                 from,
                 to
-            }, 'requestGapFill failed after reaching max attempts')
+            })
             this.debugStatus()
         }
 
@@ -467,7 +467,7 @@ class OrderedMsgChain extends MsgChainEmitter {
     }
 
     debugStatus(): void {
-        logger.trace({
+        logger.trace('Update debug status', {
             lastMsgRef: this.lastOrderedMsgRef,
             gapRequestCount: this.gapRequestCount,
             maxGapRequests: this.maxGapRequests,
@@ -475,7 +475,7 @@ class OrderedMsgChain extends MsgChainEmitter {
             isEmpty: this.isEmpty(),
             hasPendingGap: this.hasPendingGap,
             markedExplicitly: this.markedExplicitly.size()
-        }, 'Update debug status')
+        })
     }
 }
 

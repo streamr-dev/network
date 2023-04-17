@@ -72,10 +72,10 @@ const sendSuccess = (data: Readable, format: Format, version: number | undefined
         res,
         (err) => {
             if ((err !== undefined) && (err !== null)) {
-                logger.error({
+                logger.error('Encountered error in pipeline', {
                     streamId,
                     err
-                }, 'Encountered error in pipeline')
+                })
             }
         }
     )

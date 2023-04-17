@@ -40,7 +40,7 @@ export class Subscription extends MessageStream {
         this.logger = loggerFactory.createLogger(module)
         this.onError.listen((err) => {
             this.eventEmitter.emit('error', err)
-            this.logger.debug(err, 'Encountered error')
+            this.logger.debug('Encountered error', { err })
         })
     }
 

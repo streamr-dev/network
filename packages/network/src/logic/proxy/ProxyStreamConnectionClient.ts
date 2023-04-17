@@ -50,9 +50,9 @@ export const retry = async <T>(task: () => Promise<T>, description: string, abor
             const result = await task()
             return result
         } catch (e: any) {
-            logger.warn({
+            logger.warn(`Failed ${description} (retrying after delay)`, {
                 delayInMs: delay
-            }, `Failed ${description} (retrying after delay)`)
+            })
         }
         await wait(delay, abortSignal)
     }
@@ -92,7 +92,7 @@ export class ProxyStreamConnectionClient extends EventEmitter {
         getUserId: () => Promise<string>,
         connectionCount?: number
     ): Promise<void> {
-        logger.trace({ streamPartId }, 'setProxies')
+        logger.trace('setProxies', { streamPartId })
         if (connectionCount !== undefined && connectionCount > nodeIds.length) {
             throw Error('Cannot set connectionCount above the size of the configured array of nodes')
         }
@@ -170,20 +170,20 @@ export class ProxyStreamConnectionClient extends EventEmitter {
         direction: ProxyDirection,
         userId: string
     ): Promise<void> {
-        logger.info({
+        logger.info('Open proxy connection', {
             targetNodeId,
             streamPartId
-        }, 'Open proxy connection')
+        })
         try {
             await this.connectAndHandshake(streamPartId, targetNodeId, direction, userId)
         } catch (err) {
-            logger.warn({
+            logger.warn('Failed to create a proxy stream connection', {
                 streamPartId,
                 targetNodeId,
                 direction,
                 userId,
                 err
-            }, 'Failed to create a proxy stream connection')
+            })
             this.emit(Event.CONNECTION_REJECTED, targetNodeId, streamPartId, direction, err)
         } finally {
             this.trackerManager.removeSignallingOnlySession(streamPartId, targetNodeId)
@@ -206,10 +206,10 @@ export class ProxyStreamConnectionClient extends EventEmitter {
         if (this.getConnections(streamPartId).has(targetNodeId)
             && this.streamPartManager.hasOnewayConnection(streamPartId, targetNodeId)
         ) {
-            logger.info({
+            logger.info('Close proxy connection', {
                 targetNodeId,
                 streamPartId
-            }, 'Close proxy connection')
+            })
             await this.nodeToNode.leaveStreamOnNode(targetNodeId, streamPartId)
             this.node.emit(NodeEvent.ONE_WAY_CONNECTION_CLOSED, targetNodeId, streamPartId)
             this.removeConnection(streamPartId, targetNodeId)

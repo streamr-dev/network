@@ -30,7 +30,7 @@ export default class BrowserClientWsEndpoint extends AbstractClientWsEndpoint<Br
                 }
 
             } catch (err) {
-                logger.trace({ serverUrl, err }, 'Failed to connect to server')
+                logger.trace('Failed to connect to server', { serverUrl, err })
                 reject(err)
             }
         })
