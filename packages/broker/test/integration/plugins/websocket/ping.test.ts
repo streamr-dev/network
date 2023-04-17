@@ -79,8 +79,8 @@ describe('ping', () => {
         })
 
         it('happy path', async () => {
-            const PING_SEND_INTERVAL = 100
-            const DISCONNECT_TIMEOUT = 200
+            const PING_SEND_INTERVAL = 200
+            const DISCONNECT_TIMEOUT = 400
             await startServer(PING_SEND_INTERVAL, DISCONNECT_TIMEOUT)
             const client = new WebSocket(`ws://localhost:${WEBSOCKET_PORT}/streams/${encodeURIComponent(STREAM_ID)}/publish`)
             await waitForEvent(client, 'open')

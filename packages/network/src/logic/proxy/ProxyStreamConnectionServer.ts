@@ -97,8 +97,8 @@ export class ProxyStreamConnectionServer {
     }
 
     public getNodeIdsForUserId(streamPartId: StreamPartID, userId: string): NodeId[] {
-        const connections = this.connections.get(streamPartId)!
-        return Array.from(connections.keys()).filter((nodeId) => connections.get(nodeId)!.userId === userId)
+        const connections = this.connections.get(streamPartId)
+        return connections ? Array.from(connections.keys()).filter((nodeId) => connections.get(nodeId)!.userId === userId) : []
     }
 
     stop(): void {
