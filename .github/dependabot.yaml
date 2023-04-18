@@ -22,7 +22,7 @@ updates:
   - package-ecosystem: npm
     directory: /
     schedule:
-      interval: hourly
+      interval: daily
     reviewers:
       - harbu
   - package-ecosystem: docker
