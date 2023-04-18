@@ -37,7 +37,7 @@
   },
   "devDependencies": {
     "@types/easy-table": "0.0.32",
-    "@types/event-stream": "^3.3.34",
+    "@types/event-stream": "^4.0.0",
     "@types/lodash": "^4.14.175"
   }
 }
