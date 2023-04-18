@@ -36,7 +36,7 @@
     "streamr-client": "8.2.1"
   },
   "devDependencies": {
-    "@types/easy-table": "0.0.32",
+    "@types/easy-table": "1.2.0",
     "@types/event-stream": "^4.0.0",
     "@types/lodash": "^4.14.175"
   }
