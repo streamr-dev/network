@@ -27,6 +27,7 @@ import { TimeoutError, withTimeout } from './withTimeout'
 import { composeAbortSignals } from './composeAbortSignals'
 import { waitForCondition } from './waitForCondition'
 import { withRateLimit } from './withRateLimit'
+import { Events, ObservableEventEmitter, initEventGateway } from './events'
 
 export {
     BrandedString,
@@ -55,6 +56,9 @@ export {
     waitForEvent,
     withRateLimit,
     withTimeout,
+    Events,
+    ObservableEventEmitter,
+    initEventGateway
 }
 
 export {
