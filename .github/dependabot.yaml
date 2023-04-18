@@ -21,6 +21,8 @@ updates:
       - DaisyDomergue
   - package-ecosystem: npm
     directory: /
+    schedule:
+      interval: hourly
     reviewers:
       - harbu
   - package-ecosystem: docker
