@@ -18,7 +18,7 @@ const externals = (env) => {
 
 const fallbacks = (env) => {
     const fallbacks = {
-        'fs': require.resolve('browserify-fs'),
+        'fs': false,
         'module': false,
         'net': false
     }

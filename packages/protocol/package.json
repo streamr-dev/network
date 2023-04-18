@@ -19,9 +19,7 @@
   "author": "Streamr Network AG <contact@streamr.network>",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@streamr/test-utils": "8.2.1",
-    "@types/sinon": "^10.0.4",
-    "sinon": "^11.1.2"
+    "@streamr/test-utils": "8.2.1"
   },
   "dependencies": {
     "@streamr/utils": "8.2.1"

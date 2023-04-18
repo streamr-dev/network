@@ -1,6 +1,6 @@
 import assert from 'assert'
 
-import shuffle from 'array-shuffle'
+import { shuffle } from 'lodash'
 import { MessageID, MessageRef, StreamMessage, toStreamID } from '@streamr/protocol'
 import OrderedMsgChain from '../../src/subscribe/ordering/OrderedMsgChain'
 import GapFillFailedError from '../../src/subscribe/ordering/GapFillFailedError'

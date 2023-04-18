@@ -26,7 +26,6 @@
   "dependencies": {
     "@streamr/network-node": "8.2.1",
     "@streamr/protocol": "8.2.1",
-    "@streamr/slackbot": "^1.1.0",
     "@streamr/utils": "8.2.1",
     "ajv": "^8.8.2",
     "commander": "^8.3.0",
@@ -37,7 +36,7 @@
     "geoip-lite": "^1.4.2",
     "lodash": "^4.17.21",
     "morgan": "^1.10.0",
-    "uuid": "^8.3.2"
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@streamr/test-utils": "8.2.1",
@@ -47,7 +46,7 @@
     "@types/geoip-lite": "^1.4.1",
     "@types/lodash": "^4.14.175",
     "@types/morgan": "^1.9.3",
-    "@types/uuid": "^8.3.1"
+    "@types/uuid": "^9.0.1"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.5",
