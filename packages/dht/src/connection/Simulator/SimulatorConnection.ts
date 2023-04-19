@@ -59,7 +59,7 @@ export class SimulatorConnection extends Connection implements IConnection {
             try {
                 logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + (this.targetPeerDescriptor.nodeName!) +
                     ' close() calling simulator.disconnect()')
-                await this.simulator.disconnect(this)
+                this.simulator.close(this)
                 logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + (this.targetPeerDescriptor.nodeName!) +
                     ' close() simulator.disconnect returned')
             } catch (e) {

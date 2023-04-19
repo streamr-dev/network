@@ -73,7 +73,7 @@ export class PeerID {
     hasSmallerHashThan(other: PeerID): boolean {
         const myId = this.toKey()
         const theirId = other.toKey()
-        return PeerID.offeringHash(myId + theirId) < PeerID.offeringHash(theirId + myId)
+        return PeerID.offeringHash(myId + ',' + theirId) < PeerID.offeringHash(theirId + ',' + myId)
     }
 
     private static offeringHash(idPair: string): number {

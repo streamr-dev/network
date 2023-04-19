@@ -43,7 +43,7 @@ service WebRtcConnectorService {
 service ConnectionLocker {
   rpc lockRequest (LockRequest) returns (LockResponse);
   rpc unlockRequest (UnlockRequest) returns (google.protobuf.Empty);
-  rpc gracefulDisconnect (DisconnectNotice) returns (DisconnectNoticeResponse);
+  rpc gracefulDisconnect (DisconnectNotice) returns (google.protobuf.Empty);
 }
 
 // Used inside RpcMessage

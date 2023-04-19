@@ -3,7 +3,6 @@ import {
     ConnectivityResponse,
     DisconnectMode,
     DisconnectNotice,
-    DisconnectNoticeResponse,
     LockRequest,
     LockResponse,
     Message,
@@ -16,10 +15,10 @@ import { PeerIDKey } from '../helpers/PeerID'
 import { protoToString } from '../helpers/protoToString'
 import { DisconnectionType, ITransport, TransportEvents } from '../transport/ITransport'
 import { IceServer, WebRtcConnector } from './WebRTC/WebRtcConnector'
-import { CountMetric, LevelMetric, Logger, Metric, MetricsContext, MetricsDefinition, RateMetric } from '@streamr/utils'
+import { CountMetric, LevelMetric, Logger, Metric, MetricsContext, MetricsDefinition, RateMetric, waitForEvent3 } from '@streamr/utils'
 import * as Err from '../helpers/errors'
 import { WEB_RTC_CLEANUP } from './WebRTC/NodeWebRtcConnection'
-import { ManagedConnection } from './ManagedConnection'
+import { ManagedConnection, Events as ManagedConnectionEvents } from './ManagedConnection'
 import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { ConnectionLockerClient } from '../proto/packages/dht/protos/DhtRpc.client'
@@ -183,7 +182,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             (req: LockRequest, context) => this.lockRequest(req, context))
         this.rpcCommunicator.registerRpcNotification(UnlockRequest, 'unlockRequest',
             (req: UnlockRequest, context) => this.unlockRequest(req, context))
-        this.rpcCommunicator.registerRpcMethod(DisconnectNotice, DisconnectNoticeResponse, 'gracefulDisconnect',
+        this.rpcCommunicator.registerRpcNotification(DisconnectNotice, 'gracefulDisconnect',
             (req: DisconnectNotice, context) => this.gracefulDisconnect(req, context))
     }
 
@@ -250,9 +249,41 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             await this.simulatorConnector!.stop()
             this.simulatorConnector = undefined
         }
+
+        /*
+        const conns = Array.from(this.connections.values())
+        for (let i = 0; i < conns.length; i++) {
+            try {
+                if (conns[i].isHandshakeCompleted()) {
+                    await this.gracefullyDisconnectAsync(conns[i].getPeerDescriptor()!, DisconnectMode.LEAVING)
+                }
+            } catch (e) {
+                logger.error('gracefullyDisconnectAsync failed ' + e)
+            }
+        }
+        */
+
         await Promise.allSettled(Array.from(this.connections.values()).map((peer) => {
-            return this.gracefullyDisconnectAsync(peer.getPeerDescriptor()!, DisconnectMode.LEAVING)
+            return new Promise<void>((resolve, _reject) => {
+                // eslint-disable-next-line promise/catch-or-return 
+                waitForEvent3<ManagedConnectionEvents>(peer, 'disconnected', 1000).then(() => { return })
+                    .catch((_e) => { peer.close('OUTGOING_GRACEFUL_LEAVE') })
+                    .finally(() => {
+                        resolve()
+                    })
+                if (peer.isHandshakeCompleted()) {
+
+                    this.gracefullyDisconnectAsync(peer.getPeerDescriptor()!, DisconnectMode.LEAVING)
+                        .then(() => { return })
+                        .catch((e) => {
+                            console.error(e)
+                        })
+                } else {
+                    peer.close('OTHER')
+                }
+            })
         }))
+
         this.state = ConnectionManagerState.STOPPED
         this.rpcCommunicator!.stop()
         this.config.transportLayer = undefined
@@ -400,7 +431,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     private onDisconnected = (connection: ManagedConnection, disconnectionType: DisconnectionType) => {
-        logger.trace(' ' + this.config.nodeName + ', ' + connection.getPeerDescriptor()?.nodeName +
+        logger.info(' ' + this.config.nodeName + ', ' + connection.getPeerDescriptor()?.nodeName +
             ' onDisconnected() ' + disconnectionType)
 
         const hexKey = keyFromPeerDescriptor(connection.getPeerDescriptor()!)
@@ -448,23 +479,38 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     private acceptIncomingConnection(newConnection: ManagedConnection): boolean {
+        logger.info(" " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName + ' acceptIncomingConnection()')
         const newPeerID = peerIdFromPeerDescriptor(newConnection.getPeerDescriptor()!)
         const hexKey = keyFromPeerDescriptor(newConnection.getPeerDescriptor()!)
         if (this.connections.has(hexKey)) {
+            logger.info(" " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName + ' acceptIncomingConnection() has hexkey')
             if (newPeerID.hasSmallerHashThan(peerIdFromPeerDescriptor(this.ownPeerDescriptor!))) {
+                logger.info(" " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName +
+                    ' acceptIncomingConnection() newPeerID hexkey was smaller')
+                logger.info(" " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName +
+                    ' acceptIncomingConnection() replace current connection')
                 // replace the current connection
                 const oldConnection = this.connections.get(newPeerID.toKey())!
                 logger.trace("replaced: " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName + ' ')
                 const buffer = oldConnection!.stealOutputBuffer()
+                logger.info(" " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName +
+                    ' acceptIncomingConnection() sending data on new connection')
                 for (const data of buffer) {
                     newConnection.sendNoWait(data)
                 }
+                logger.info(" " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName +
+                    ' acceptIncomingConnection() reporting buffer sent on old connection')
                 oldConnection!.reportBufferSentByOtherConnection()
                 oldConnection.replacedByOtherConnection = true
             } else {
+                logger.info(" " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName +
+                    ' acceptIncomingConnection() newPeerID hexkey was bigger')
                 newConnection.rejectedAsIncoming = true
                 return false
             }
+        } else {
+            logger.info(" " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName +
+                ' acceptIncomingConnection() does not have hexkey')
         }
 
         logger.trace(' ' + this.ownPeerDescriptor?.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName +
@@ -604,21 +650,18 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     // IConnectionLocker server implementation
-    private async gracefulDisconnect(disconnectNotice: DisconnectNotice, _context: ServerCallContext): Promise<DisconnectNoticeResponse> {
+    private async gracefulDisconnect(disconnectNotice: DisconnectNotice, _context: ServerCallContext): Promise<Empty> {
         logger.trace(' ' + this.config.nodeName + ', ' + disconnectNotice.peerDescriptor?.nodeName
             + ' received gracefulDisconnect notice')
 
-        setImmediate(async () => {
-            if (disconnectNotice.disconnecMode === DisconnectMode.LEAVING) {
-                await this.closeConnection(disconnectNotice.peerDescriptor!, 'INCOMING_GRACEFUL_LEAVE', 'graceful leave notified')
-            } else {
-                await this.closeConnection(disconnectNotice.peerDescriptor!, 'INCOMING_GRACEFUL_DISCONNECT', 'graceful disconnect notified')
-            }
-        })
-        
-        return {
-            protocolVersion: ConnectionManager.PROTOCOL_VERSION
+        //setImmediate(() => {
+        if (disconnectNotice.disconnecMode === DisconnectMode.LEAVING) {
+            this.closeConnection(disconnectNotice.peerDescriptor!, 'INCOMING_GRACEFUL_LEAVE', 'graceful leave notified')
+        } else {
+            this.closeConnection(disconnectNotice.peerDescriptor!, 'INCOMING_GRACEFUL_DISCONNECT', 'graceful disconnect notified')
         }
+        //})
+        return {}
     }
 
     private onConnectionCountChange() {
