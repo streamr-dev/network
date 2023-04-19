@@ -71,7 +71,6 @@ export class DataStore implements IStoreService {
         this.rpcCommunicator!.registerRpcMethod(MigrateDataRequest, MigrateDataResponse, 'migrateData', this.migrateData)
 
         this.dhtNodeEmitter.on('newContact', (peerDescriptor: PeerDescriptor, _closestPeers: PeerDescriptor[]) => {
-
             this.localDataStore.getStore().forEach((dataMap, _dataKey) => {
                 dataMap.forEach((dataEntry) => {
                     //if (this.isFurtherFromDataThan(dataEntry, contact) &&
@@ -199,7 +198,7 @@ export class DataStore implements IStoreService {
 
     // RPC service implementation
     public async migrateData(request: MigrateDataRequest, context: ServerCallContext): Promise<MigrateDataResponse> {
-        logger.trace(this.ownPeerDescriptor.nodeName + ' server-side migrateData()')
+        logger.info(this.ownPeerDescriptor.nodeName + ' server-side migrateData()')
         const dataEntry = request.dataEntry!
 
         this.localDataStore.storeEntry(dataEntry)
