@@ -62,10 +62,12 @@ describe('searchStreams', () => {
         const stream1 = toStreamID('/1', MOCK_USER)
         const stream2 = toStreamID('/2', MOCK_USER)
         const stream3 = toStreamID('/3', MOCK_USER)
+        const stream4 = toStreamID('/4', MOCK_USER)
         const graphQLClient = createMockGraphQLClient([
             createMockResultItem(stream1, JSON.stringify({ partitions: 11 })),
             createMockResultItem(stream2, 'invalid-json'),
-            createMockResultItem(stream3, JSON.stringify({ partitions: 33 }))
+            createMockResultItem(stream3, JSON.stringify({ partitions: 150 })),
+            createMockResultItem(stream4, JSON.stringify({ partitions: 44 }))
         ])
         const parseStream = (id: StreamID, metadata: string): Stream => {
             const props = Stream.parseMetadata(metadata)
@@ -89,7 +91,7 @@ describe('searchStreams', () => {
         expect(streams).toHaveLength(2)
         expect(streams[0].id).toBe(stream1)
         expect(streams[0].getMetadata().partitions).toBe(11)
-        expect(streams[1].id).toBe(stream3)
-        expect(streams[1].getMetadata().partitions).toBe(33)
+        expect(streams[1].id).toBe(stream4)
+        expect(streams[1].getMetadata().partitions).toBe(44)
     })
 })
