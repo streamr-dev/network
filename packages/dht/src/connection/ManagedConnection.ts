@@ -224,8 +224,8 @@ export class ManagedConnection extends EventEmitter<Events> {
 
     private onDisconnected(disconnectionType: DisconnectionType, _code?: number, _reason?: string): void {
 
-        logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + ' onDisconnected() ' + disconnectionType)
         this.disconnectReceived = true
+        logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + ' onDisconnected() ' + disconnectionType)
         if (this.bufferSentbyOtherConnection) {
             //logger.error('onDisconnected called on replaced connection')
             return
@@ -237,8 +237,10 @@ export class ManagedConnection extends EventEmitter<Events> {
 
     }
 
+    private sendCallCounter = 0
     async send(data: Uint8Array, doNotConnect = false): Promise<void> {
-
+        const counter = this.sendCallCounter
+        this.sendCallCounter++
         if (this.stopped) {
             logger.error('send() called on stopped connection')
             return
@@ -267,7 +269,7 @@ export class ManagedConnection extends EventEmitter<Events> {
                 result = await runAndRaceEvents3<Events>([() => { this.outputBuffer.push(data) }], this, ['handshakeCompleted', 'handshakeFailed',
                     'bufferSentByOtherConnection', 'closing', 'internal_disconnected'], 15000)
             } catch (e) {
-                logger.error('Exception from raceEvents3 ' + e)
+                logger.error('Exception from raceEvents3 ' + counter + ' error: ' + e)
                 //const dataString = protoToString(Message.fromBinary(data), Message)
                 throw e
             }
@@ -277,7 +279,8 @@ export class ManagedConnection extends EventEmitter<Events> {
                 this.doDisconnect('OTHER')
                 //throw new Err.ConnectionFailed("Disconnected before send")
             } else if (result.winnerName == 'handshakeFailed') {
-                logger.info(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + ' handshakeFailed received')
+                logger.info(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName 
+                    + ' handshakeFailed received ' + this.connectionId + " " + counter)
 
                 if (this.bufferSentbyOtherConnection) {
                     logger.trace('bufferSentByOtherConnection already true')
@@ -291,9 +294,10 @@ export class ManagedConnection extends EventEmitter<Events> {
                         result2 = await raceEvents3<Events>(this,
                             ['bufferSentByOtherConnection', 'closing', 'disconnected'], 15000)
                     } catch (ex) {
-                        logger.error(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName +
-                            ' Exception from raceEvents3 while waiting bufferSentByOtherConnection or closing ' + ex)
-                        logger.info(this.connectionId + ' Exception from raceEvents3 while waiting bufferSentByOtherConnection')
+                        logger.error(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName 
+                            + ' Exception from raceEvents3 while waiting bufferSentByOtherConnection or closing ' 
+                            + this.connectionId + " " + counter + " " + ex)
+                        logger.info(this.connectionId + ' Exception from raceEvents3 while waiting bufferSentByOtherConnection ' + counter)
                         //const dataString = protoToString(Message.fromBinary(data), Message)
                         throw ex
                     }
@@ -310,9 +314,12 @@ export class ManagedConnection extends EventEmitter<Events> {
                         //throw new Err.ConnectionFailed("Closing before buffer sent by duplicate onnection")
                     }
                 }
-            } else {
-                this.doNotEmitDisconnected = false
             }
+            this.doNotEmitDisconnected = false
+            if (this.disconnectReceived) {
+                this.doDisconnect('OTHER')
+            }
+            
         }
     }
 
@@ -327,7 +334,8 @@ export class ManagedConnection extends EventEmitter<Events> {
     }
 
     public reportBufferSentByOtherConnection(): void {
-        logger.info(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + " reportBufferSentByOtherConnection")
+        logger.info(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName 
+            + " reportBufferSentByOtherConnection " + this.connectionId)
         if (this.handshaker) {
             this.handshaker.removeAllListeners()
         }
@@ -366,7 +374,7 @@ export class ManagedConnection extends EventEmitter<Events> {
         logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + ' doDisconnect() emitting')
 
         if (!this.doNotEmitDisconnected) {
-            logger.info(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + ' emitting disconnected')
+            logger.info(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + ' emitting disconnected ' + this.connectionId)
             this.emit('disconnected', disconnectionType)
         } else {
             logger.info(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName +

@@ -1274,5 +1274,5 @@ export const WebRtcConnectorService = new ServiceType("dht.WebRtcConnectorServic
 export const ConnectionLocker = new ServiceType("dht.ConnectionLocker", [
     { name: "lockRequest", options: {}, I: LockRequest, O: LockResponse },
     { name: "unlockRequest", options: {}, I: UnlockRequest, O: Empty },
-    { name: "gracefulDisconnect", options: {}, I: DisconnectNotice, O: Empty }
+    { name: "gracefulDisconnect", options: {}, I: DisconnectNotice, O: DisconnectNoticeResponse }
 ]);

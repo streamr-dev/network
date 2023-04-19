@@ -80,7 +80,7 @@ export class RemoteConnectionLocker {
             targetDescriptor: this.targetPeerDescriptor,
             doNotConnect: true,
             doNotMindStopped: true,
-            timeout: 2000
+            timeout: 2500
         }
 
         await this.client.gracefulDisconnect(request, options)
