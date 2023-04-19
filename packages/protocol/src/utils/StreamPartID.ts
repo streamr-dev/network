@@ -6,8 +6,8 @@ export const MAX_PARTITION_COUNT = 100
 
 export type StreamPartID = BrandedString<'StreamPartID'>
 
-function ensureValidStreamPartition(streamPartition: number): void | never {
-    if (!Number.isSafeInteger(streamPartition) || streamPartition < 0 || streamPartition >= MAX_PARTITION_COUNT) {
+export function ensureValidStreamPartition(streamPartition: number | undefined): void | never {
+    if (!Number.isSafeInteger(streamPartition) || streamPartition! < 0 || streamPartition! >= MAX_PARTITION_COUNT) {
         throw new Error(`invalid streamPartition value: ${streamPartition}`)
     }
 }
