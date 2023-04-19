@@ -42,7 +42,7 @@
     "yallist": "^4.0.0"
   },
   "devDependencies": {
-    "@jest/fake-timers": "^27.0.5",
+    "@jest/fake-timers": "^29.5.0",
     "@streamr/network-tracker": "8.2.1",
     "@streamr/test-utils": "8.2.1",
     "@types/heap": "^0.2.28",
