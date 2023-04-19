@@ -20,13 +20,15 @@ import { randomString } from './randomString'
 import { scheduleAtFixedRate } from './scheduleAtFixedRate'
 import { scheduleAtInterval } from './scheduleAtInterval'
 import { toEthereumAddressOrENSName } from './toEthereumAddressOrENSName'
-import { BrandedString } from './types'
+import { Events, BrandedString } from './types'
 import { wait } from './wait'
 import { waitForEvent } from './waitForEvent'
 import { TimeoutError, withTimeout } from './withTimeout'
 import { composeAbortSignals } from './composeAbortSignals'
 import { waitForCondition } from './waitForCondition'
 import { withRateLimit } from './withRateLimit'
+import { ObservableEventEmitter } from './ObservableEventEmitter'
+import { initEventGateway } from './initEventGateway'
 
 export {
     BrandedString,
@@ -55,6 +57,9 @@ export {
     waitForEvent,
     withRateLimit,
     withTimeout,
+    Events,
+    ObservableEventEmitter,
+    initEventGateway
 }
 
 export {
