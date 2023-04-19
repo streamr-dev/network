@@ -1,3 +1,4 @@
+import { initEventGateway } from '@streamr/utils'
 import { Contract, ContractReceipt, ContractTransaction } from '@ethersproject/contracts'
 import EventEmitter from 'eventemitter3'
 import { NameDirectory } from '@streamr/network-node'
@@ -5,6 +6,7 @@ import pLimit from 'p-limit'
 import { LoggerFactory } from './LoggerFactory'
 import { tryInSequence } from './promises'
 import shuffle from 'lodash/shuffle'
+import { StreamrClientEventEmitter, InternalEvents, StreamrClientEvents } from '../events'
 
 export interface ContractEvent {
     onMethodExecute: (methodName: string) => void
@@ -145,5 +147,36 @@ export const queryAllReadonlyContracts = <T, C>(
         shuffle(contracts).map((contract: C) => {
             return () => call(contract)
         })
+    )
+}
+
+export const initContractEventGateway = <
+    TSourcePayload extends any[],
+    TSourceEvent extends string,
+    TTargetEvent extends keyof (StreamrClientEvents & InternalEvents)
+>(opts: {
+    sourceName: TSourceEvent
+    targetName: TTargetEvent
+    sourceEmitter: {
+        on: (name: TSourceEvent, listener: (...args: TSourcePayload) => void) => void
+        off: (name: TSourceEvent, listener: (...args: TSourcePayload) => void) => void
+    }
+    targetEmitter: StreamrClientEventEmitter
+    transformation: (...args: TSourcePayload) => Parameters<(StreamrClientEvents & InternalEvents)[TTargetEvent]>[0]
+}): void => {
+    type Listener = (...args: TSourcePayload) => void
+    initEventGateway(
+        opts.targetName,
+        (emit: (payload: Parameters<(StreamrClientEvents & InternalEvents)[TTargetEvent]>[0]) => void) => {
+            const listener = (...args: TSourcePayload) => {
+                emit(opts.transformation(...args))
+            }
+            opts.sourceEmitter.on(opts.sourceName, listener)
+            return listener
+        },
+        (listener: Listener) => {
+            opts.sourceEmitter.off(opts.sourceName, listener)
+        },
+        opts.targetEmitter
     )
 }
