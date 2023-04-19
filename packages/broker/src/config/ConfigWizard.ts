@@ -160,7 +160,7 @@ const createPluginPrompts = (): Array<inquirer.Question | inquirer.ListQuestion 
         type: 'confirm',
         name: 'wantToSetBeneficiaryAddress',
         // eslint-disable-next-line max-len
-        message: `By default the generated / imported Ethereum identity will be used for staking, would you like to change this to a different address (i.e. set a beneficiary address)?`,
+        message: 'It is recommended to set a separate beneficiary address for security reasons. Would you like to set one?',
         default: false,
         when: (answers: inquirer.Answers) => {
             return answers.enableMinerPlugin
@@ -170,7 +170,7 @@ const createPluginPrompts = (): Array<inquirer.Question | inquirer.ListQuestion 
     const beneficiaryAddressPrompt: inquirer.DistinctQuestion = {
         type: 'input',
         name: 'beneficiaryAddress',
-        message: `Please provide a beneficiary (Ethereum) address`,
+        message: 'Please provide a beneficiary address (public key)',
         when: (answers: inquirer.Answers) => {
             return answers.wantToSetBeneficiaryAddress
         },
