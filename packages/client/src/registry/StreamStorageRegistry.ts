@@ -76,7 +76,7 @@ export class StreamStorageRegistry {
 
     private initStreamAssignmentEventListeners(eventEmitter: StreamrClientEventEmitter) {
         const primaryReadonlyContract = this.streamStorageRegistryContractsReadonly[0]
-        const transformation = (streamId: string, nodeAddress: string, extra: any): StorageNodeAssignmentEvent => ({
+        const transformation = (streamId: string, nodeAddress: string, extra: any) => ({
             streamId: toStreamID(streamId),
             nodeAddress: toEthereumAddress(nodeAddress),
             blockNumber: extra.blockNumber
