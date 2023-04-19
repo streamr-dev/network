@@ -1,8 +1,10 @@
 import { ObservableEventEmitter } from '@streamr/utils'
 import { Lifecycle, scoped } from 'tsyringe'
+import { StreamCreationEvent } from './registry/StreamRegistry'
 import { StorageNodeAssignmentEvent } from './registry/StreamStorageRegistry'
 
 export interface StreamrClientEvents {
+    createStream: (payload: StreamCreationEvent) => void
     addToStorageNode: (payload: StorageNodeAssignmentEvent) => void
     removeFromStorageNode: (payload: StorageNodeAssignmentEvent) => void
     /** @internal */

@@ -8,7 +8,7 @@ import { CONFIG_TEST } from '../../src/ConfigTest'
 import { toStreamID } from '@streamr/protocol'
 import { collect } from '../../src/utils/iterators'
 import { fetchPrivateKeyWithGas, randomEthereumAddress } from '@streamr/test-utils'
-import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
+import { EthereumAddress, toEthereumAddress, waitForCondition } from '@streamr/utils'
 
 jest.setTimeout(20000)
 const PARTITION_COUNT = 3
@@ -81,6 +81,32 @@ describe('StreamRegistry', () => {
         it('legacy format', async () => {
             const streamId = '7wa7APtlTq6EC5iTCBy6dw'
             await expect(async () => client.createStream({ id: streamId })).rejects.toThrow(`stream id "${streamId}" not valid`)
+        })
+
+        it('listener', async () => {
+            const path = createRelativeTestStreamId(module)
+            const onCreateSteam = jest.fn()
+            client.on('createStream', onCreateSteam)
+            const newStream = await client.createStream({
+                id: path,
+                partitions: 3,
+                description: 'Foobar'
+            })
+            const getReceivedEvent = () => {
+                const events = onCreateSteam.mock.calls.map((c) => c[0])
+                return events.find((e) => e.streamId === newStream.id)
+            }
+            await waitForCondition(() => getReceivedEvent() !== undefined)
+            client.off('createStream', onCreateSteam)
+            const receivedEvent = getReceivedEvent()
+            expect(receivedEvent).toMatchObject({
+                streamId: newStream.id,
+                metadata: {
+                    partitions: 3,
+                    description: 'Foobar'
+                },
+                blockNumber: expect.any(Number)
+            })
         })
 
         describe('ENS', () => {
