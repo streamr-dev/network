@@ -14,6 +14,6 @@ export class LoggerFactory {
     }
 
     createLogger(module: NodeJS.Module): Logger {
-        return new Logger(module, this.config.id, this.config.logLevel)
+        return new Logger(module, { id: this.config.id }, this.config.logLevel)
     }
 }

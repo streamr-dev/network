@@ -116,7 +116,7 @@ export class StreamStorageRegistry {
 
     async addStreamToStorageNode(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        this.logger.debug('adding stream %s to node %s', streamId, nodeAddress)
+        this.logger.debug('Add stream to storage node', { streamId, nodeAddress })
         await this.connectToContract()
         const ethersOverrides = getStreamRegistryOverrides(this.config)
         await waitForTx(this.streamStorageRegistryContract!.addStorageNode(streamId, nodeAddress, ethersOverrides))
@@ -124,7 +124,7 @@ export class StreamStorageRegistry {
 
     async removeStreamFromStorageNode(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        this.logger.debug('removing stream %s from node %s', streamId, nodeAddress)
+        this.logger.debug('Remove stream from storage node', { streamId, nodeAddress })
         await this.connectToContract()
         const ethersOverrides = getStreamRegistryOverrides(this.config)
         await waitForTx(this.streamStorageRegistryContract!.removeStorageNode(streamId, nodeAddress, ethersOverrides))
@@ -132,14 +132,14 @@ export class StreamStorageRegistry {
 
     async isStoredStream(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        this.logger.debug('querying if stream %s is stored in storage node %s', streamId, nodeAddress)
+        this.logger.debug('Check if stream is stored in storage node', { streamId, nodeAddress })
         return queryAllReadonlyContracts((contract: StreamStorageRegistryContract) => {
             return contract.isStorageNodeOf(streamId, nodeAddress)
         }, this.streamStorageRegistryContractsReadonly)
     }
 
     async getStoredStreams(nodeAddress: EthereumAddress): Promise<{ streams: Stream[], blockNumber: number }> {
-        this.logger.debug('getting stored streams of node %s', nodeAddress)
+        this.logger.debug('Get stored streams of storage node', { nodeAddress })
         const blockNumbers: number[] = []
         const res = await collect(this.graphQLClient.fetchPaginatedResults(
             (lastId: string, pageSize: number) => {
@@ -181,7 +181,7 @@ export class StreamStorageRegistry {
         let queryResults: NodeQueryResult[]
         if (streamIdOrPath !== undefined) {
             const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-            this.logger.debug('getting storage nodes of stream %s', streamId)
+            this.logger.debug('Get storage nodes of stream', { streamId })
             queryResults = await collect(this.graphQLClient.fetchPaginatedResults<NodeQueryResult>(
                 (lastId: string, pageSize: number) => {
                     const query = `{
@@ -202,7 +202,7 @@ export class StreamStorageRegistry {
                 }
             ))
         } else {
-            this.logger.debug('getting all storage nodes')
+            this.logger.debug('Get all storage nodes')
             queryResults = await collect(this.graphQLClient.fetchPaginatedResults<NodeQueryResult>(
                 (lastId: string, pageSize: number) => {
                     const query = `{

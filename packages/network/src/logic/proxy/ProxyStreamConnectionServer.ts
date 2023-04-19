@@ -79,7 +79,10 @@ export class ProxyStreamConnectionServer {
         const streamPartId = message.getStreamPartID()
         this.removeConnection(streamPartId, nodeId)
         this.node.emit(Event.ONE_WAY_CONNECTION_CLOSED, nodeId, streamPartId)
-        logger.info(`Proxy node ${nodeId} closed one-way stream connection for ${streamPartId}`)
+        logger.info('Processed leave request by proxy node', {
+            nodeId,
+            streamPartId
+        })
     }
 
     private removeConnection(streamPartId: StreamPartID, nodeId: NodeId): void {
@@ -97,8 +100,8 @@ export class ProxyStreamConnectionServer {
     }
 
     public getNodeIdsForUserId(streamPartId: StreamPartID, userId: string): NodeId[] {
-        const connections = this.connections.get(streamPartId)!
-        return Array.from(connections.keys()).filter((nodeId) => connections.get(nodeId)!.userId === userId)
+        const connections = this.connections.get(streamPartId)
+        return connections ? Array.from(connections.keys()).filter((nodeId) => connections.get(nodeId)!.userId === userId) : []
     }
 
     stop(): void {

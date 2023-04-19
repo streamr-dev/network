@@ -30,29 +30,27 @@ const isTransaction = (returnValue: any): returnValue is ContractTransaction => 
 const createLogger = (eventEmitter: EventEmitter<ContractEvent>, loggerFactory: LoggerFactory): void => {
     const logger = loggerFactory.createLogger(module)
     eventEmitter.on('onMethodExecute', (methodName: string) => {
-        logger.debug('execute %s', methodName)
+        logger.debug('Execute method', { methodName })
     })
     eventEmitter.on('onTransactionSubmit', (methodName: string, tx: ContractTransaction) => {
-        logger.debug(
-            'transaction submitted { method=%s, tx=%s, to=%s, nonce=%d, gasLimit=%d, gasPrice=%d }',
-            methodName,
-            tx.hash,
-            NameDirectory.getName(tx.to),
-            tx.nonce,
-            tx.gasLimit,
-            tx.gasPrice
-        )
+        logger.debug('Submit transaction', {
+            method: methodName,
+            tx: tx.hash,
+            to: NameDirectory.getName(tx.to),
+            nonce: tx.nonce,
+            gasLimit: tx.gasLimit.toNumber(),
+            gasPrice: tx.gasPrice?.toNumber()
+        })
     })
     eventEmitter.on('onTransactionConfirm', (methodName: string, tx: ContractTransaction, receipt: ContractReceipt) => {
-        logger.debug(
-            'transaction confirmed { method=%s, tx=%s, block=%d, confirmations=%d, gasUsed=%d, events=%j }',
-            methodName,
-            tx.hash,
-            receipt.blockNumber,
-            receipt.confirmations,
-            receipt.gasUsed,
-            (receipt.events || []).map((e) => e.event)
-        )
+        logger.debug('Received transaction confirmation', {
+            method: methodName,
+            tx: tx.hash,
+            block: receipt.blockNumber,
+            confirmations: receipt.confirmations,
+            gasUsed: receipt.gasUsed.toNumber(),
+            events: (receipt.events || []).map((e) => e.event)
+        })
     })
 }
 

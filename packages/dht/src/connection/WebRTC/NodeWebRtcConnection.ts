@@ -159,7 +159,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
             this.close()
         })
 
-        dataChannel.onError((err) => logger.error(err))
+        dataChannel.onError((err) => logger.error('error', { err }))
 
         dataChannel.onBufferedAmountLow( () => {
             logger.trace(`dc.onBufferedAmountLow`)

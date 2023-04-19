@@ -1,7 +1,5 @@
 import assert from 'assert'
 
-import sinon from 'sinon'
-
 import ControlMessage from '../../../../src/protocol/control_layer/ControlMessage'
 import UnsupportedTypeError from '../../../../src/errors/UnsupportedTypeError'
 import UnsupportedVersionError from '../../../../src/errors/UnsupportedVersionError'
@@ -23,8 +21,8 @@ describe('ControlMessage', () => {
 
     beforeEach(() => {
         serializer = {
-            fromArray: sinon.stub(),
-            toArray: sinon.stub(),
+            fromArray: jest.fn(),
+            toArray: jest.fn(),
         }
         ControlMessage.registerSerializer(VERSION, TYPE, serializer)
     })
@@ -67,13 +65,13 @@ describe('ControlMessage', () => {
         })
         it('throws if the Serializer does not implement fromArray', () => {
             const invalidSerializer: any = {
-                toArray: sinon.stub()
+                toArray: jest.fn()
             }
             assert.throws(() => ControlMessage.registerSerializer(VERSION, TYPE, invalidSerializer))
         })
         it('throws if the Serializer does not implement toArray', () => {
             const invalidSerializer: any = {
-                fromArray: sinon.stub()
+                fromArray: jest.fn()
             }
             assert.throws(() => ControlMessage.registerSerializer(VERSION, TYPE, invalidSerializer))
         })
@@ -82,9 +80,9 @@ describe('ControlMessage', () => {
     describe('serialize', () => {
         it('calls toArray() on the configured serializer and stringifies it', () => {
             const m = msg()
-            serializer.toArray = sinon.stub().returns([12345])
+            serializer.toArray = jest.fn().mockReturnValue([12345])
             assert.strictEqual(m.serialize(), '[12345]')
-            assert((serializer.toArray as any).calledWith(m))
+            expect(serializer.toArray).toBeCalledWith(m)
         })
 
         it('should throw on unsupported version', () => {
@@ -110,9 +108,9 @@ describe('ControlMessage', () => {
         it('parses the input, reads version and type, and calls fromArray() on the configured serializer', () => {
             const arr = [VERSION, TYPE]
             const m = msg()
-            serializer.fromArray = sinon.stub().returns(m)
+            serializer.fromArray = jest.fn().mockReturnValue(m)
             assert.strictEqual(ControlMessage.deserialize(JSON.stringify(arr)), m)
-            assert((serializer.fromArray as any).calledWith(arr))
+            expect(serializer.fromArray).toBeCalledWith(arr)
         })
 
         it('should throw on unsupported version', () => {

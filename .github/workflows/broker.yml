@@ -20,7 +20,7 @@ jobs:
     name: Unit Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.5.0
+      - uses: actions/checkout@v3.5.2
       - uses: actions/setup-node@v3.6.0
         with:
           cache: 'npm'
@@ -43,7 +43,7 @@ jobs:
     if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
 
     steps:
-      - uses: actions/checkout@v3.5.0
+      - uses: actions/checkout@v3.5.2
       - name: Cache Docker layers
         uses: actions/cache@v3.3.1
         with:
@@ -63,7 +63,7 @@ jobs:
 
       - name: Docker meta
         id: docker_meta_failure
-        uses: docker/metadata-action@v4.3.0
+        uses: docker/metadata-action@v4.4.0
         # if test steps failed, push sha anyway
         if: ${{ always() && (needs.test-unit.result == 'failure' || needs.test-integration.result == 'failure' || needs.test-docker.result == 'failure') }}
         with:

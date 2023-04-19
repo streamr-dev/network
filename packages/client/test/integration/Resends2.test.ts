@@ -3,7 +3,7 @@ import 'reflect-metadata'
 import { Wallet } from '@ethersproject/wallet'
 import fs from 'fs'
 import path from 'path'
-import { StreamID } from '@streamr/protocol'
+import { StreamID, toStreamPartID } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -218,9 +218,11 @@ describe('Resends2', () => {
                 expect(receivedMsgs.map((m) => m.signature)).toEqual(publishedMessages.map((m) => m.signature))
                 expect(onError).toHaveBeenCalledTimes(0)
                 expect(onResent).toHaveBeenCalledTimes(1)
-                expect(environment.getLogger().getEntries()).toContainEqual({
-                    message: `no storage assigned: ${nonStoredStream.id}`,
-                    level: 'warn'
+                expect(environment.getLogger().warn).toHaveBeenLastCalledWith('Skip resend (no storage assigned to stream)', {
+                    streamPartId: toStreamPartID(nonStoredStream.id, 0),
+                    resendOptions: {
+                        last: 100
+                    }
                 })
                 expect(await client.getSubscriptions(nonStoredStream.id)).toHaveLength(0)
             })

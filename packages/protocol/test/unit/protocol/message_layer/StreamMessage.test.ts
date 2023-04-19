@@ -1,6 +1,5 @@
 import { toEthereumAddress } from '@streamr/utils'
 import assert from 'assert'
-import sinon from 'sinon'
 import UnsupportedVersionError from '../../../../src/errors/UnsupportedVersionError'
 import ValidationError from '../../../../src/errors/ValidationError'
 import EncryptedGroupKey from '../../../../src/protocol/message_layer/EncryptedGroupKey'
@@ -259,8 +258,8 @@ describe('StreamMessage', () => {
 
         beforeEach(() => {
             serializer = {
-                fromArray: sinon.stub(),
-                toArray: sinon.stub(),
+                fromArray: jest.fn(),
+                toArray: jest.fn(),
             }
             StreamMessage.unregisterSerializer(VERSION)
             StreamMessage.registerSerializer(VERSION, serializer)
@@ -286,13 +285,13 @@ describe('StreamMessage', () => {
             })
             it('throws if the Serializer does not implement fromArray', () => {
                 const invalidSerializer: any = {
-                    toArray: sinon.stub()
+                    toArray: jest.fn()
                 }
                 assert.throws(() => StreamMessage.registerSerializer(VERSION, invalidSerializer))
             })
             it('throws if the Serializer does not implement toArray', () => {
                 const invalidSerializer: any = {
-                    fromArray: sinon.stub()
+                    fromArray: jest.fn()
                 }
                 assert.throws(() => StreamMessage.registerSerializer(VERSION, invalidSerializer))
             })
@@ -302,9 +301,9 @@ describe('StreamMessage', () => {
             const m = msg()
 
             it('calls toArray() on the configured serializer and stringifies it', () => {
-                serializer.toArray = sinon.stub().returns([12345])
+                serializer.toArray = jest.fn().mockReturnValue([12345])
                 assert.strictEqual(m.serialize(VERSION), '[12345]')
-                assert((serializer.toArray as any).calledWith(m))
+                expect(serializer.toArray).toBeCalledWith(m)
             })
 
             it('should throw on unsupported version', () => {
@@ -320,9 +319,9 @@ describe('StreamMessage', () => {
             it('parses the input, reads version, and calls fromArray() on the configured serializer', () => {
                 const arr = [VERSION]
                 const m = msg()
-                serializer.fromArray = sinon.stub().returns(m)
+                serializer.fromArray = jest.fn().mockReturnValue(m)
                 assert.strictEqual(StreamMessage.deserialize(JSON.stringify(arr)), m)
-                assert((serializer.fromArray as any).calledWith(arr))
+                expect(serializer.fromArray).toBeCalledWith(arr)
             })
 
             it('should throw on unsupported version', () => {

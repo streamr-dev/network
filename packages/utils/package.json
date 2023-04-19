@@ -1,6 +1,6 @@
 {
   "name": "@streamr/utils",
-  "version": "8.1.0",
+  "version": "8.2.1",
   "description": "A collection of shared common utilities",
   "repository": {
     "type": "git",
@@ -20,17 +20,15 @@
   "author": "Streamr Network AG <contact@streamr.network>",
   "license": "Apache-2.0",
   "dependencies": {
-    "eventemitter3": "^4.0.7",
+    "eventemitter3": "^5.0.0",
     "lodash": "^4.17.21",
-    "pino": "^6.11.3",
-    "pino-pretty": "^5.0.2"
+    "pino": "^8.11.0",
+    "pino-pretty": "^10.0.0"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.175",
     "@types/node-fetch": "^2.5.12",
-    "@types/pino": "^6.3.8",
-    "@types/pino-pretty": "^4.7.0",
-    "electron": "^20.0.3",
+    "electron": "^24.1.2",
     "electron-rebuild": "^3.2.9",
     "express": "^4.17.1",
     "karma": "^6.4.0",
@@ -38,7 +36,7 @@
     "karma-electron": "^7.3.0",
     "karma-jasmine": "^5.1.0",
     "karma-sourcemap-loader": "^0.3.8",
-    "karma-spec-reporter": "^0.0.34",
+    "karma-spec-reporter": "^0.0.36",
     "karma-webpack": "^5.0.0",
     "node-fetch": "^2.6.6",
     "node-module-polyfill": "^1.0.1",
