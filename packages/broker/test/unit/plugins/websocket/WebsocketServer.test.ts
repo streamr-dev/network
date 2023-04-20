@@ -1,7 +1,7 @@
 import WebSocket from 'ws'
 import qs from 'qs'
 import StreamrClient, { Subscription } from 'streamr-client'
-import { waitForEvent, waitForCondition } from '@streamr/utils'
+import { waitForEvent, waitForCondition, wait } from '@streamr/utils'
 import { WebsocketServer } from '../../../../src/plugins/websocket/WebsocketServer'
 import { PlainPayloadFormat } from '../../../../src/helpers/PayloadFormat'
 import { mock, MockProxy } from 'jest-mock-extended'
@@ -171,6 +171,26 @@ describe('WebsocketServer', () => {
             onMessageCallback(MOCK_MESSAGE, {})
             const firstPayload = (await payloadPromise)[0]
             expect(JSON.parse(firstPayload as string)).toEqual(MOCK_MESSAGE)
+        })
+
+        it('if client#subscribe throws, passed subscriptions are cleaned', async () => {
+            const singletonSubscription = mock<Subscription>()
+            streamrClient.subscribe
+                .mockResolvedValueOnce(singletonSubscription)
+                .mockResolvedValueOnce(singletonSubscription)
+                .mockRejectedValue(new Error('bad partition'))
+            wsClient = createTestClient(PATH_SUBSCRIBE_MOCK_STREAM, { partitions: '0,2,350' })
+            await waitForEvent(wsClient, 'close')
+            expect(singletonSubscription.unsubscribe).toHaveBeenCalledTimes(2)
+        })
+
+        it('on client disconnect subscriptions are cleaned', async () => {
+            const singletonSubscription = mock<Subscription>()
+            streamrClient.subscribe.mockResolvedValue(singletonSubscription)
+            wsClient = createTestClient(PATH_SUBSCRIBE_MOCK_STREAM, { partitions: '0,2,5' })
+            await waitForEvent(wsClient, 'open')
+            wsClient.close()
+            await waitForCondition(() => singletonSubscription.unsubscribe.mock.calls.length === 3)
         })
     })
 
