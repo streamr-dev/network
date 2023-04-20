@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add method `.getDiagnosticInfo` for getting diagnostic information for debugging purposes
+
 ### Changed
 
 - Validate `partitions` when parsing contract metadata

@@ -179,4 +179,8 @@ export class NodeToNode extends EventEmitter {
     getAllConnectionNodeIds(): NodeId[] {
         return this.endpoint.getAllConnectionNodeIds()
     }
+
+    getDiagnosticInfo(): Record<string, unknown> {
+        return this.endpoint.getDiagnosticInfo()
+    }
 }

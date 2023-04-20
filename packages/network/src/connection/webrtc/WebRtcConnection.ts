@@ -125,6 +125,14 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
     protected readonly bufferThresholdLow: number
     protected readonly portRange: WebRtcPortRange
 
+    // diagnostic info
+    private messagesSent = 0
+    private messagesRecv = 0
+    private bytesSent = 0
+    private bytesRecv = 0
+    private sendFailures = 0
+    private openSince: number | null = null
+
     constructor({
         selfId,
         targetPeerId,
@@ -252,6 +260,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
             this.deferredConnectionAttempt = null
             def.reject(reason)
         }
+        this.openSince = null
         this.emit('close')
     }
 
@@ -341,6 +350,29 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         return isOffering(this.selfId, this.peerInfo.peerId)
     }
 
+    getDiagnosticInfo(): Record<string, unknown> {
+        return {
+            connectionId: this.getConnectionId(),
+            peerId: this.getPeerId(),
+            rtt: this.getRtt(),
+            ageInSec: this.openSince !== null ? Math.round((Date.now() - this.openSince) / 1000) : null,
+            messageQueueLength: this.messageQueue.size(),
+            bufferedAmount: this.getBufferedAmount(),
+            messagesSent: this.messagesSent,
+            messagesRecv: this.messagesRecv,
+            bytesSend: this.bytesSent,
+            bytesRecv: this.bytesRecv,
+            sendFailures: this.sendFailures,
+            open: this.isOpen(),
+            paused: this.paused,
+            finished: this.isFinished,
+            pingAttempts: this.pingAttempts,
+            isOffering: this.isOffering(),
+            lastState: this.getLastState(),
+            lastGatheringState: this.getLastGatheringState(),
+        }
+    }
+
     private setFlushRef(): void {
         if (this.flushRef === null) {
             this.flushRef = setImmediate(() => {
@@ -391,7 +423,10 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
                     sent = this.isOpen() && this.doSendMessage(queueItem.getMessage())
                     isOpen = this.isOpen()
                     sent = sent && isOpen
+                    this.messagesSent += 1
+                    this.bytesSent += queueItem.getMessage().length
                 } catch (e) {
+                    this.sendFailures += 1
                     this.processFailedMessage(queueItem, e)
                     return // method rescheduled by `this.flushTimeoutRef`
                 }
@@ -465,6 +500,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
             this.deferredConnectionAttempt = null
             def.resolve(this.peerInfo.peerId)
         }
+        this.openSince = Date.now()
         this.hasOpened = true
         this.setFlushRef()
         this.emit('open')
@@ -494,6 +530,8 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
             this.pingAttempts = 0
             this.rtt = Date.now() - this.rttStart!
         } else {
+            this.messagesRecv += 1
+            this.bytesRecv += msg.length
             this.emit('message', msg)
         }
     }

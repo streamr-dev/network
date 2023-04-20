@@ -257,4 +257,8 @@ export class TrackerManager {
     getTrackerAddress(streamPartId: StreamPartID): TrackerId {
         return this.trackerRegistry.getTracker(streamPartId).ws
     }
+
+    getDiagnosticInfo(): Record<string, unknown> {
+        return this.nodeToTracker.getDiagnosticInfo()
+    }
 }

@@ -582,6 +582,15 @@ export class StreamrClient {
         await Promise.all(tasks)
     })
 
+    /**
+     * Get diagnostic info about the underlying network. Useful for debugging issues.
+     *
+     * @remark returned object's structure can change without semver considerations
+     */
+    async getDiagnosticInfo(): Promise<Record<string, unknown>> {
+        return (await this.node.getNode()).getDiagnosticInfo()
+    }
+
     // --------------------------------------------------------------------------------------------
     // Events
     // --------------------------------------------------------------------------------------------

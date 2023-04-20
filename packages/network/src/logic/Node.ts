@@ -94,7 +94,7 @@ export class Node extends EventEmitter {
         this.peerInfo = opts.peerInfo
         this.nodeConnectTimeout = opts.nodeConnectTimeout || 15000
         this.consecutiveDeliveryFailures = {}
-        this.started = new Date().toLocaleString()
+        this.started = new Date().toISOString()
         this.acceptProxyConnections = opts.acceptProxyConnections
 
         this.metricsContext = opts.metricsContext || new MetricsContext()
@@ -386,6 +386,21 @@ export class Node extends EventEmitter {
 
     getMetricsContext(): MetricsContext {
         return this.metricsContext
+    }
+
+    getDiagnosticInfo(): Record<string, unknown> {
+        return {
+            nodeId: this.getNodeId(),
+            started: this.started,
+            nodeToNode: this.nodeToNode.getDiagnosticInfo(),
+            trackers: this.trackerManager.getDiagnosticInfo(),
+            node: {
+                streamParts: [...this.getStreamParts()],
+                neighbors: this.getNeighbors(),
+                assignments: this.streamPartManager.getDiagnosticInfo(),
+                activePropagationTasks: this.propagation.numOfActivePropagationTasks()
+            }
+        }
     }
 
     async subscribeAndWaitForJoinOperation(streamPartId: StreamPartID, timeout = this.nodeConnectTimeout): Promise<number> {
