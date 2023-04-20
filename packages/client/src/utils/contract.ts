@@ -151,26 +151,26 @@ export const queryAllReadonlyContracts = <T, C>(
 }
 
 export const initContractEventGateway = <
-    TSourcePayload extends any[],
-    TSourceEvent extends string,
-    TTargetEvent extends keyof (StreamrClientEvents & InternalEvents)
+    TSourcePayloads extends any[],
+    TSourceName extends string,
+    TTargetName extends keyof (StreamrClientEvents & InternalEvents)
 >(opts: {
-    sourceName: TSourceEvent
-    targetName: TTargetEvent
+    sourceName: TSourceName
+    targetName: TTargetName
     sourceEmitter: {
-        on: (name: TSourceEvent, listener: (...args: TSourcePayload) => void) => void
-        off: (name: TSourceEvent, listener: (...args: TSourcePayload) => void) => void
+        on: (name: TSourceName, listener: (...args: TSourcePayloads) => void) => void
+        off: (name: TSourceName, listener: (...args: TSourcePayloads) => void) => void
     }
     targetEmitter: StreamrClientEventEmitter
-    transformation: (...args: TSourcePayload) => Parameters<(StreamrClientEvents & InternalEvents)[TTargetEvent]>[0]
+    transformation: (...args: TSourcePayloads) => Parameters<(StreamrClientEvents & InternalEvents)[TTargetName]>[0]
     loggerFactory: LoggerFactory
 }): void => {
     const logger = opts.loggerFactory.createLogger(module)
-    type Listener = (...args: TSourcePayload) => void
+    type Listener = (...args: TSourcePayloads) => void
     initEventGateway(
         opts.targetName,
-        (emit: (payload: Parameters<(StreamrClientEvents & InternalEvents)[TTargetEvent]>[0]) => void) => {
-            const listener = (...args: TSourcePayload) => {
+        (emit: (payload: Parameters<(StreamrClientEvents & InternalEvents)[TTargetName]>[0]) => void) => {
+            const listener = (...args: TSourcePayloads) => {
                 let targetEvent
                 try {
                     targetEvent = opts.transformation(...args)
