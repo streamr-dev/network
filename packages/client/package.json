@@ -115,7 +115,7 @@
     "p-memoize": "4.0.3",
     "p-throttle": "4.0.0",
     "quick-lru": "^6.0.1",
-    "readable-stream": "^3.6.0",
+    "readable-stream": "^4.3.0",
     "reflect-metadata": "^0.1.13",
     "secp256k1": "^5.0.0",
     "sha3": "^2.1.4",
