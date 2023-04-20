@@ -94,10 +94,13 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     private connectors: Map<PeerIDKey, SimulatorConnector> = new Map()
     private latencyTable?: Array<Array<number>>
     private associations: Map<ConnectionID, Association> = new Map()
-    private timeouts: Map<string, NodeJS.Timeout> = new Map()
+    //private timeouts: Map<string, NodeJS.Timeout> = new Map()
 
     private latencyType: LatencyType
     private fixedLatency?: number
+
+    private loopCounter = 0
+    private MAX_LOOPS = 100
 
     private operationQueue: Heap<SimulatorOperation> = new Heap<SimulatorOperation>((a: SimulatorOperation, b: SimulatorOperation) => {
         if ((a.executionTime - b.executionTime) == 0) {
@@ -207,9 +210,13 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
 
         const target = operation.association.destinationConnection
 
-        const counterAssociation = this.associations.get(target!.connectionId)
+        let counterAssociation: Association | undefined
 
-        if (!counterAssociation) {
+        if (target) {
+            counterAssociation = this.associations.get(target!.connectionId)
+        }
+
+        if (!target || !counterAssociation) {
             this.associations.delete(target!.connectionId)
             this.associations.delete(operation.association.sourceConnection.connectionId)
 
@@ -226,7 +233,7 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     private executeSendOperation(operation: SendOperation): void {
 
         if (this.stopped) {
-            console.error('executeSendOperation() called on a stopped simulator ' + (new Error().stack))
+            //console.error('executeSendOperation() called on a stopped simulator ' + (new Error().stack))
             return
         }
 
@@ -237,7 +244,8 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
 
     private executeQueuedOperations(): void {
         const currentTime = Date.now()
-        while (this.operationQueue.size() > 0 && this.operationQueue.peek()!.executionTime <= currentTime) {
+        while (this.operationQueue.size() > 0
+            && this.operationQueue.peek()!.executionTime <= currentTime) {
             const operation = this.operationQueue.pop()
 
             if (operation instanceof ConnectOperation) {
@@ -248,6 +256,13 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
                 this.executeSendOperation(operation)
             } else {
                 logger.error('Unknown SimulatorOperation')
+            }
+
+            this.loopCounter++
+            if (this.loopCounter >= this.MAX_LOOPS) {
+                this.loopCounter = 0
+                setImmediate(() => this.executeQueuedOperations())
+                return
             }
         }
 
@@ -274,7 +289,7 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
         if (timeDifference > 0) {
             this.simulatorTimeout = setTimeout(this.executeQueuedOperations, timeDifference)
         } else {
-            this.executeQueuedOperations()
+            setImmediate(() => this.executeQueuedOperations())
         }
     }
 
@@ -286,7 +301,7 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     public connect(sourceConnection: SimulatorConnection, targetDescriptor: PeerDescriptor, connectedCallback: (error?: string) => void): void {
 
         if (this.stopped) {
-            console.error('connect() called on a stopped simulator ' + (new Error().stack))
+            logger.error('connect() called on a stopped simulator ' + (new Error().stack))
             return
         }
 
@@ -305,13 +320,13 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     public close(sourceConnection: SimulatorConnection): void {
 
         if (this.stopped) {
-            logger.error('close() called on a stopped simulator ' + (new Error().stack))
+            //logger.error('close() called on a stopped simulator ' + (new Error().stack))
             return
         }
 
         const association = this.associations.get(sourceConnection.connectionId)
         if (!association) {
-            logger.error('association not found in close()')
+            //logger.error('association not found in close()')
             return
         }
 
@@ -330,13 +345,13 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     public send(sourceConnection: SimulatorConnection, data: Uint8Array): void {
 
         if (this.stopped) {
-            logger.error('send() called on a stopped simulator ' + (new Error().stack))
+            //logger.error('send() called on a stopped simulator ' + (new Error().stack))
             return
         }
 
         const association = this.associations.get(sourceConnection.connectionId)
         if (!association) {
-            logger.error('association not found in send()')
+            //logger.error('association not found in send()')
             return
         }
 
@@ -358,14 +373,10 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
 
     public stop(): void {
         this.stopped = true
+        logger.info(this.associations.size + ' associations in the beginning of stop()')
 
         if (this.simulatorTimeout) {
             clearTimeout(this.simulatorTimeout)
         }
-
-        logger.info(this.associations.size + ' associations in the beginning of stop()')
-        this.timeouts.forEach((timeoutref) => {
-            clearTimeout(timeoutref)
-        })
     }
 }

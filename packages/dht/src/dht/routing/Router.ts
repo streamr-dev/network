@@ -124,9 +124,16 @@ export class Router implements IRouter {
         this.addRoutingSession(session)
         try {
             // eslint-disable-next-line promise/catch-or-return
-            raceEvents3<RoutingSessionEvents>(session, ['routingSucceeded', 'routingFailed', 'stopped'], 10000)
-                .then(() => this.removeRoutingSession(session.sessionId))
-                .catch(() => this.removeRoutingSession(session.sessionId))
+            logger.trace('starting to raceEvents from routingSession: ' + session.sessionId)
+            raceEvents3<RoutingSessionEvents>(session, ['routingSucceeded', 'routingFailed', 'stopped', 'noCandidatesFound'], 10000)
+                .then(() => {
+                    logger.trace('raceEvents ended from routingSession: ' + session.sessionId)
+                    this.removeRoutingSession(session.sessionId)
+                })
+                .catch(() => {
+                    logger.error('raceEvents timed out for routingSession ' + session.sessionId) 
+                    this.removeRoutingSession(session.sessionId) 
+                })
             session.start()
         } catch (e) {
             if (peerIdFromPeerDescriptor(routedMessage.sourcePeer!).equals(this.ownPeerId!)) {

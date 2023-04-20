@@ -263,12 +263,18 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         }
         */
 
-        await Promise.allSettled(Array.from(this.connections.values()).map((peer) => {
+        await Promise.all(Array.from(this.connections.values()).map((peer) => {
             return new Promise<void>((resolve, _reject) => {
                 // eslint-disable-next-line promise/catch-or-return 
-                waitForEvent3<ManagedConnectionEvents>(peer, 'disconnected', 1000).then(() => { return })
-                    .catch((_e) => { peer.close('OUTGOING_GRACEFUL_LEAVE') })
+                waitForEvent3<ManagedConnectionEvents>(peer, 'disconnected', 1000).then(() => {
+                    logger.info('waitForEvent3 returned')
+                })
+                    .catch((_e) => {
+                        logger.info('force-closing connection after timeout')
+                        peer.close('OUTGOING_GRACEFUL_LEAVE')
+                    })
                     .finally(() => {
+                        logger.info('resolving after receiving disconnected event')
                         resolve()
                     })
                 if (peer.isHandshakeCompleted()) {
@@ -276,9 +282,10 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                     this.gracefullyDisconnectAsync(peer.getPeerDescriptor()!, DisconnectMode.LEAVING)
                         .then(() => { return })
                         .catch((e) => {
-                            console.error(e)
+                            logger.error(e)
                         })
                 } else {
+                    logger.info('handshake of connection not completed, force-closing')
                     peer.close('OTHER')
                 }
             })
@@ -421,12 +428,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     private onConnected = (connection: ManagedConnection) => {
         const peerDescriptor = connection.getPeerDescriptor()!
         this.emit('connected', peerDescriptor)
-        logger.trace(
-            'connectedPeerId: '
-            + peerIdFromPeerDescriptor(peerDescriptor).toString()
-            + ', ' + peerIdFromPeerDescriptor(this.ownPeerDescriptor!).toString()
-            + ', ' + this.connections.size
-        )
+        logger.info(' ' + this.ownPeerDescriptor?.nodeName + ', ' + peerDescriptor.nodeName + ' onConnected()')
         this.onConnectionCountChange()
     }
 
@@ -608,7 +610,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             logger.debug(' ' + this.ownPeerDescriptor?.nodeName + ', ' + targetDescriptor.nodeName +
                 ' remoteConnectionLocker.gracefulDisconnect() failed' + ex)
         }
-        
+
         /*
         try {
             if (disconnectMode === DisconnectMode.LEAVING) {
