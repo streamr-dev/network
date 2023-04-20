@@ -94,7 +94,7 @@ export class Node extends EventEmitter {
         this.peerInfo = opts.peerInfo
         this.nodeConnectTimeout = opts.nodeConnectTimeout || 15000
         this.consecutiveDeliveryFailures = {}
-        this.started = new Date().toLocaleString()
+        this.started = new Date().toISOString()
         this.acceptProxyConnections = opts.acceptProxyConnections
 
         this.metricsContext = opts.metricsContext || new MetricsContext()
