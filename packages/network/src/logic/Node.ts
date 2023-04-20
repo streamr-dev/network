@@ -394,7 +394,7 @@ export class Node extends EventEmitter {
             started: this.started,
             nodeToNode: this.nodeToNode.getDiagnosticInfo(),
             trackers: this.trackerManager.getDiagnosticInfo(),
-            streamState: {
+            node: {
                 streamParts: [...this.getStreamParts()],
                 neighbors: this.getNeighbors(),
                 assignments: this.streamPartManager.getDiagnosticInfo(),
