@@ -139,27 +139,21 @@ as you expect e.g. `^X.Y.Z` vs `X.Y.Z`
 
 All the above packages should be released at the same time.
 
-1. `git checkout main`
-2. `git pull`
+1. `git checkout main && git pull`
+2. Look at client and cli-tool CHANGELOG.md, decide new version and make edits.
+    - Skip editing CHANGELOG.md if releasing beta
 3. `./update-versions.sh <SEMVER>` E.g. `./update-versions.sh 7.1.1`
 4. `npm run clean && npm install && npm run build && npm run versions`
-5. Look at the output of the above and ensure all versions are linked properly (i.e. no yellow or red markers)
-6. Update client and cli-tool CHANGELOG.md
-7. If releasing a major / minor version, update API docs link in *packages/client/README.md*.
-8. Add relevant files to git staging
-9. `git commit -m "release(client, cli-tools): vX.Y.Z"`
-10. `git tag client/vX.Y.Z`
-11. `git tag cli-tools/vX.Y.Z`
-12. Push main and tags: `git push --atomic origin main client/vX.Y.Z cli-tools/vX.Y.Z`
-13. Wait & ensure the pushed main branch passes CI tests
-14. At this point we are to do the actual release
-15. Clean and rebuild project with `npm run clean && npm run bootstrap`
-16. Then we do actual publishing of packages with `./release.sh <NPM_TAG>`. Use argument `beta` if publishing a
-beta version. Use `latest` instead when publishing a stable version.
-17. Update client docs if major or minor change:
+   - Ensure output does not contain yellow or red markers
+5. If releasing a major or minor version update API docs link in *packages/client/README.md*.
+6. `./release-git-tags.sh <SEMVER>` E.g. `./release-git-tags.sh 7.1.1`
+7. Wait & ensure the pushed main branch passes CI tests
+8. Clean and rebuild project with `npm run clean && npm run bootstrap`
+9. Publish packages `./release.sh <NPM_TAG>`
+    - Use argument `beta` if publishing a beta version
+    - Use argument `latest` if publishing a stable version
+10. Update client docs if major or minor change:
 ```bash
-
-# Generate & upload API docs (if a major/minor version update)
 cd packages/client
 npm run docs
 aws s3 cp ./docs s3://api-docs.streamr.network/client/vX.Y --recursive --profile streamr-api-docs-upload
