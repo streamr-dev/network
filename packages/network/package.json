@@ -33,7 +33,7 @@
     "heap": "^0.2.6",
     "ipaddr.js": "^2.0.1",
     "lodash": "^4.17.21",
-    "node-datachannel": "^0.4.0",
+    "node-datachannel": "^0.4.2",
     "setimmediate": "^1.0.5",
     "strict-event-emitter-types": "^2.0.0",
     "uuid": "^9.0.0",
