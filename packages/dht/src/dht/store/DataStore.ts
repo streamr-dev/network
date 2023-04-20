@@ -71,7 +71,6 @@ export class DataStore implements IStoreService {
         this.rpcCommunicator!.registerRpcMethod(MigrateDataRequest, MigrateDataResponse, 'migrateData', this.migrateData)
 
         this.dhtNodeEmitter.on('newContact', (peerDescriptor: PeerDescriptor, _closestPeers: PeerDescriptor[]) => {
-
             this.localDataStore.getStore().forEach((dataMap, _dataKey) => {
                 dataMap.forEach((dataEntry) => {
                     //if (this.isFurtherFromDataThan(dataEntry, contact) &&
@@ -199,13 +198,13 @@ export class DataStore implements IStoreService {
 
     // RPC service implementation
     public async migrateData(request: MigrateDataRequest, context: ServerCallContext): Promise<MigrateDataResponse> {
-        logger.trace(this.ownPeerDescriptor.nodeName + ' server-side migrateData()')
+        logger.info(this.ownPeerDescriptor.nodeName + ' server-side migrateData()')
         const dataEntry = request.dataEntry!
-
-        this.localDataStore.storeEntry(dataEntry)
-
-        this.migrateDataToNeighborsIfNeeded((context as DhtCallContext).incomingSourceDescriptor!, request.dataEntry!)
-
+        // const isKnownEntry = this.localDataStore.hasEntry(PeerID.fromValue(dataEntry.kademliaId).toKey()) 
+        const wasStored = this.localDataStore.storeEntry(dataEntry)
+        if (wasStored) {
+            this.migrateDataToNeighborsIfNeeded((context as DhtCallContext).incomingSourceDescriptor!, request.dataEntry!)
+        }
         logger.trace(this.ownPeerDescriptor.nodeName + ' server-side migrateData() at end')
         return MigrateDataResponse.create()
     }
@@ -240,8 +239,7 @@ export class DataStore implements IStoreService {
 
             const contact = sortedList.getAllContacts()[0]
             const contactPeerId = PeerID.fromValue(contact.getPeerDescriptor().kademliaId)
-            if (!incomingPeerId.equals(contactPeerId) &&
-                !ownPeerId.equals(contactPeerId)) {
+            if (!incomingPeerId.equals(contactPeerId) && !ownPeerId.equals(contactPeerId)) {
                 this.migrateDataToContact(dataEntry, contact.getPeerDescriptor()).then(() => {
                     logger.trace('migrateDataToContact() returned when migrating to only the closest contact')
                 }).catch((e) => {
@@ -253,8 +251,7 @@ export class DataStore implements IStoreService {
 
             sortedList.getAllContacts().forEach((contact) => {
                 const contactPeerId = PeerID.fromValue(contact.getPeerDescriptor().kademliaId)
-                if (!incomingPeerId.equals(contactPeerId) &&
-                    !ownPeerId.equals(contactPeerId)) {
+                if (!incomingPeerId.equals(contactPeerId) && !ownPeerId.equals(contactPeerId)) {
                     this.migrateDataToContact(dataEntry, contact.getPeerDescriptor()).then(() => {
                         logger.trace('migrateDataToContact() returned')
                     }).catch((e) => {

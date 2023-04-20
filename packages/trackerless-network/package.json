@@ -31,6 +31,7 @@
     "@protobuf-ts/runtime-rpc": "^2.8.2",
     "@streamr/dht": "8.2.1",
     "@streamr/proto-rpc": "8.2.1",
+    "@streamr/protocol": "8.2.1",
     "@streamr/test-utils": "8.2.1",
     "@streamr/utils": "8.2.1",
     "eventemitter3": "^4.0.7",

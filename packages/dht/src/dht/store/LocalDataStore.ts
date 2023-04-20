@@ -26,7 +26,7 @@ export class LocalDataStore {
     // PeerID of the storer of the data
     private store: Map<PeerIDKey, Map<PeerIDKey, LocalDataEntry>> = new Map()
 
-    public storeEntry(dataEntry: DataEntry): void {
+    public storeEntry(dataEntry: DataEntry): boolean {
         const publisherKey = PeerID.fromValue(dataEntry.storer!.kademliaId!).toKey()
         const dataKey = PeerID.fromValue(dataEntry.kademliaId).toKey()
         
@@ -40,8 +40,8 @@ export class LocalDataStore {
             const oldStoredMillis = (oldLocalEntry.dataEntry.storedAt!.seconds * 1000) + (oldLocalEntry.dataEntry.storedAt!.nanos / 1000000)
         
             // do nothing if old entry is newer than the one being migrated
-            if (oldStoredMillis > storedMillis) {
-                return
+            if (oldStoredMillis >= storedMillis) {
+                return false
             } else {
                 clearTimeout(oldLocalEntry.ttlTimeout)
             }
@@ -52,6 +52,7 @@ export class LocalDataStore {
                 this.deleteEntry(PeerID.fromValue(dataEntry.kademliaId), dataEntry.storer!)
             }, createTtlValue(dataEntry.ttl))
         })
+        return true
     }
 
     public getStore(): Map<PeerIDKey, Map<PeerIDKey, LocalDataEntry>> {
