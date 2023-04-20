@@ -121,7 +121,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getDiagnosticData(): Record<string, unknown> {
+    getDiagnosticInfo(): Record<string, unknown> {
         return {}
     }
 }
