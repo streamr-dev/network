@@ -57,7 +57,7 @@ interface StreamPublisherOrSubscriberItem {
 
 export interface StreamCreationEvent {
     readonly streamId: StreamID
-    readonly metadata: Partial<StreamMetadata>
+    readonly metadata: StreamMetadata
     readonly blockNumber: number
 }
 
