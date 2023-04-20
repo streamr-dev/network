@@ -118,9 +118,10 @@ export class StreamRegistry {
             targetEmitter: eventEmitter,
             transformation: (streamId: string, metadata: string, extra: any) => ({
                 streamId: toStreamID(streamId),
-                metadata: Stream.parseMetadata(metadata), // TODO error handling
+                metadata: Stream.parseMetadata(metadata),
                 blockNumber: extra.blockNumber
-            })
+            }),
+            loggerFactory
         })
     }
 

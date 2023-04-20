@@ -71,10 +71,10 @@ export class StreamStorageRegistry {
                 'streamStorageRegistry'
             ) as StreamStorageRegistryContract
         })
-        this.initStreamAssignmentEventListeners(eventEmitter)
+        this.initStreamAssignmentEventListeners(eventEmitter, loggerFactory)
     }
 
-    private initStreamAssignmentEventListeners(eventEmitter: StreamrClientEventEmitter) {
+    private initStreamAssignmentEventListeners(eventEmitter: StreamrClientEventEmitter, loggerFactory: LoggerFactory) {
         const primaryReadonlyContract = this.streamStorageRegistryContractsReadonly[0]
         const transformation = (streamId: string, nodeAddress: string, extra: any) => ({
             streamId: toStreamID(streamId),
@@ -86,14 +86,16 @@ export class StreamStorageRegistry {
             sourceEmitter: primaryReadonlyContract,
             targetName: 'addToStorageNode',
             targetEmitter: eventEmitter,
-            transformation
+            transformation,
+            loggerFactory
         })
         initContractEventGateway({
             sourceName: 'Removed', 
             sourceEmitter: primaryReadonlyContract,
             targetName: 'removeFromStorageNode',
             targetEmitter: eventEmitter,
-            transformation
+            transformation,
+            loggerFactory
         })
     }
 

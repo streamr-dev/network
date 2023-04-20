@@ -84,29 +84,32 @@ describe('StreamRegistry', () => {
         })
 
         it('listener', async () => {
-            const path = createRelativeTestStreamId(module)
             const onCreateSteam = jest.fn()
             client.on('createStream', onCreateSteam)
-            const newStream = await client.createStream({
-                id: path,
+            const invalidStream = await client.createStream({
+                id: createRelativeTestStreamId(module, 'invalid'),
+                partitions: 150
+            })
+            const validStream = await client.createStream({
+                id: createRelativeTestStreamId(module, 'valid'),
                 partitions: 3,
                 description: 'Foobar'
             })
-            const getReceivedEvent = () => {
-                const events = onCreateSteam.mock.calls.map((c) => c[0])
-                return events.find((e) => e.streamId === newStream.id)
+            const hasBeenCalledFor = (stream: Stream) => {
+                const streamIds = onCreateSteam.mock.calls.map((c) => c[0].streamId)
+                return streamIds.includes(stream.id)
             }
-            await waitForCondition(() => getReceivedEvent() !== undefined)
+            await waitForCondition(() => hasBeenCalledFor(validStream))
             client.off('createStream', onCreateSteam)
-            const receivedEvent = getReceivedEvent()
-            expect(receivedEvent).toMatchObject({
-                streamId: newStream.id,
+            expect(onCreateSteam).toHaveBeenCalledWith({
+                streamId: validStream.id,
                 metadata: {
                     partitions: 3,
                     description: 'Foobar'
                 },
                 blockNumber: expect.any(Number)
             })
+            expect(hasBeenCalledFor(invalidStream)).toBeFalse()
         })
 
         describe('ENS', () => {

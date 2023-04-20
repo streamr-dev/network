@@ -163,13 +163,25 @@ export const initContractEventGateway = <
     }
     targetEmitter: StreamrClientEventEmitter
     transformation: (...args: TSourcePayload) => Parameters<(StreamrClientEvents & InternalEvents)[TTargetEvent]>[0]
+    loggerFactory: LoggerFactory
 }): void => {
+    const logger = opts.loggerFactory.createLogger(module)
     type Listener = (...args: TSourcePayload) => void
     initEventGateway(
         opts.targetName,
         (emit: (payload: Parameters<(StreamrClientEvents & InternalEvents)[TTargetEvent]>[0]) => void) => {
             const listener = (...args: TSourcePayload) => {
-                emit(opts.transformation(...args))
+                let targetEvent
+                try {
+                    targetEvent = opts.transformation(...args)
+                } catch (err) {
+                    logger.debug('Skip emit event', {
+                        eventName: opts.targetName,
+                        reason: err?.message
+                    })
+                    return
+                }
+                emit(targetEvent)
             }
             opts.sourceEmitter.on(opts.sourceName, listener)
             return listener
