@@ -85,11 +85,20 @@ export abstract class AbstractWsConnection {
     }
 
     getDiagnosticInfo(): Record<string, unknown> {
+        const getHumanReadableReadyState = (n: number): string => {
+            switch (n) {
+                case 0: return 'connecting'
+                case 1: return 'open'
+                case 2: return 'closing'
+                case 3: return 'closed'
+                default: return `unknown (${n})`
+            }
+        }
         return {
             peerId: this.getPeerId(),
             rtt: this.getRtt(),
             respondedPong: this.getRespondedPong(),
-            readyState: this.getReadyState(),
+            readyState: getHumanReadableReadyState(this.getReadyState()),
             bufferedAmount: this.getBufferedAmount(),
             highBackPressure: this.highBackPressure,
         }
