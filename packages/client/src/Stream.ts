@@ -6,7 +6,7 @@ import {
     StreamID,
     StreamPartID,
     toStreamPartID,
-    ensureValidStreamPartition
+    ensureValidStreamPartitionCount
 } from '@streamr/protocol'
 import range from 'lodash/range'
 import { StrictStreamrClientConfig } from './Config'
@@ -287,7 +287,7 @@ export class Stream {
             // TODO we could pick the fields of StreamMetadata explicitly, so that this
             // object can't contain extra fields
             const json = JSON.parse(metadata)
-            ensureValidStreamPartition(json.partitions)
+            ensureValidStreamPartitionCount(json.partitions)
             return json
         } catch (error) {
             throw new Error(`Could not parse properties from onchain metadata: ${metadata}`)
