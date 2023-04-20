@@ -608,6 +608,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             logger.debug(' ' + this.ownPeerDescriptor?.nodeName + ', ' + targetDescriptor.nodeName +
                 ' remoteConnectionLocker.gracefulDisconnect() failed' + ex)
         }
+        
+        /*
         try {
             if (disconnectMode === DisconnectMode.LEAVING) {
                 await this.closeConnection(targetDescriptor, 'OUTGOING_GRACEFUL_LEAVE')
@@ -617,7 +619,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
         } catch (e) {
             logger.error(' closeConnection() threw an exception ' + e)
-        }
+        }*/
     }
 
     public getAllConnectionPeerDescriptors(): PeerDescriptor[] {
