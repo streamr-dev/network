@@ -388,7 +388,7 @@ export class Node extends EventEmitter {
         return this.metricsContext
     }
 
-    getDiagnosticData(): Record<string, unknown> {
+    getDiagnosticInfo(): Record<string, unknown> {
         return {
             nodeId: this.getNodeId(),
             started: this.started,
@@ -397,7 +397,7 @@ export class Node extends EventEmitter {
             streamState: {
                 streamParts: [...this.getStreamParts()],
                 neighbors: this.getNeighbors(),
-                assignments: this.streamPartManager.getDiagnosticData(),
+                assignments: this.streamPartManager.getDiagnosticInfo(),
                 activePropagationTasks: this.propagation.numOfActivePropagationTasks()
             }
         }

@@ -588,7 +588,7 @@ export class StreamrClient {
      * @remark returned object's structure can change without semver considerations
      */
     async getDiagnosticInfo(): Promise<Record<string, unknown>> {
-        return (await this.node.getNode()).getDiagnosticData()
+        return (await this.node.getNode()).getDiagnosticInfo()
     }
 
     // --------------------------------------------------------------------------------------------

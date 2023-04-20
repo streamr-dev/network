@@ -207,7 +207,7 @@ export class StreamPartManager {
         return this.isSetUp(streamPartId) && this.streamParts.get(streamPartId)!.isBehindProxy
     }
 
-    getDiagnosticData(): Record<string, unknown> {
+    getDiagnosticInfo(): Record<string, unknown> {
         const state: Record<string, unknown> = {}
         for (const streamPartId of this.getStreamParts()) {
             state[streamPartId] = this.getNeighborsForStreamPart(streamPartId)
