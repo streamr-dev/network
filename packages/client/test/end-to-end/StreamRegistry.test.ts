@@ -8,7 +8,7 @@ import { CONFIG_TEST } from '../../src/ConfigTest'
 import { toStreamID } from '@streamr/protocol'
 import { collect } from '../../src/utils/iterators'
 import { fetchPrivateKeyWithGas, randomEthereumAddress } from '@streamr/test-utils'
-import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
+import { EthereumAddress, toEthereumAddress, waitForCondition } from '@streamr/utils'
 
 jest.setTimeout(20000)
 const PARTITION_COUNT = 3
@@ -81,6 +81,35 @@ describe('StreamRegistry', () => {
         it('legacy format', async () => {
             const streamId = '7wa7APtlTq6EC5iTCBy6dw'
             await expect(async () => client.createStream({ id: streamId })).rejects.toThrow(`stream id "${streamId}" not valid`)
+        })
+
+        it('listener', async () => {
+            const onCreateSteam = jest.fn()
+            client.on('createStream', onCreateSteam)
+            const invalidStream = await client.createStream({
+                id: createRelativeTestStreamId(module, 'invalid'),
+                partitions: 150
+            })
+            const validStream = await client.createStream({
+                id: createRelativeTestStreamId(module, 'valid'),
+                partitions: 3,
+                description: 'Foobar'
+            })
+            const hasBeenCalledFor = (stream: Stream) => {
+                const streamIds = onCreateSteam.mock.calls.map((c) => c[0].streamId)
+                return streamIds.includes(stream.id)
+            }
+            await waitForCondition(() => hasBeenCalledFor(validStream))
+            client.off('createStream', onCreateSteam)
+            expect(onCreateSteam).toHaveBeenCalledWith({
+                streamId: validStream.id,
+                metadata: {
+                    partitions: 3,
+                    description: 'Foobar'
+                },
+                blockNumber: expect.any(Number)
+            })
+            expect(hasBeenCalledFor(invalidStream)).toBeFalse()
         })
 
         describe('ENS', () => {

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Add method `.getDiagnosticInfo` for getting diagnostic information for debugging purposes
+- Add support for observing stream creation events with `.on('createStream')`
 
 ### Changed
 
