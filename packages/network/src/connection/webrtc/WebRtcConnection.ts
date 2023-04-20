@@ -341,6 +341,23 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         return isOffering(this.selfId, this.peerInfo.peerId)
     }
 
+    getDiagnosticInfo(): Record<string, unknown> {
+        return {
+            connectionId: this.getConnectionId(),
+            peerId: this.getPeerId(),
+            rtt: this.getRtt(),
+            isOffering: this.isOffering(),
+            messageQueueLength: this.messageQueue.size(),
+            bufferedAmount: this.getBufferedAmount(),
+            open: this.isOpen(),
+            paused: this.paused,
+            finished: this.isFinished,
+            lastState: this.getLastState(),
+            lastGatheringState: this.getLastGatheringState(),
+            pingAttempts: this.pingAttempts
+        }
+    }
+
     private setFlushRef(): void {
         if (this.flushRef === null) {
             this.flushRef = setImmediate(() => {

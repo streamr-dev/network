@@ -508,6 +508,12 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         return Object.keys(this.connections)
     }
 
+    getDiagnosticInfo(): Record<string, unknown> {
+        return {
+            connections: Object.values(this.connections).map((c) => c.getDiagnosticInfo())
+        }
+    }
+
     private onConnectionCountChange() {
         this.metrics.connectionAverageCount.record(Object.keys(this.connections).length)
     }

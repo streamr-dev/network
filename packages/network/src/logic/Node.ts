@@ -388,6 +388,19 @@ export class Node extends EventEmitter {
         return this.metricsContext
     }
 
+    getDiagnosticData(): Record<string, unknown> {
+        return {
+            nodeId: this.getNodeId(),
+            started: this.started,
+            webrtc: this.nodeToNode.getDiagnosticInfo(),
+            ws: this.trackerManager.getDiagnosticInfo(),
+            streamParts: [...this.getStreamParts()],
+            neighbors: this.getNeighbors(),
+            streamStates: this.streamPartManager.getDiagnosticData(),
+            consecutiveDeliveryFailures: this.consecutiveDeliveryFailures
+        }
+    }
+
     async subscribeAndWaitForJoinOperation(streamPartId: StreamPartID, timeout = this.nodeConnectTimeout): Promise<number> {
         if (this.streamPartManager.isSetUp(streamPartId)) {
             return this.streamPartManager.getAllNodesForStreamPart(streamPartId).length

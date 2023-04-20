@@ -84,6 +84,17 @@ export abstract class AbstractWsConnection {
         return this.getPeerInfo().peerId
     }
 
+    getDiagnosticInfo(): Record<string, unknown> {
+        return {
+            peerId: this.getPeerId(),
+            rtt: this.getRtt(),
+            respondedPong: this.getRespondedPong(),
+            readyState: this.getReadyState(),
+            bufferedAmount: this.getBufferedAmount(),
+            highBackPressure: this.highBackPressure,
+        }
+    }
+
     abstract sendPing(): void
     abstract getBufferedAmount(): number
     abstract send(message: string): Promise<void>
