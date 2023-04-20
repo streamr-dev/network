@@ -6,7 +6,7 @@ import { once } from 'events'
 import { Socket } from 'net'
 import qs, { ParsedQs } from 'qs'
 import StreamrClient from 'streamr-client'
-import { Logger } from '@streamr/utils'
+import { Logger, randomString } from '@streamr/utils'
 import { addPingSender, addPingListener, Connection } from './Connection'
 import { ApiAuthentication, isValidAuthentication } from '../../apiAuthentication'
 import { PublishConnection } from './PublishConnection'
@@ -67,15 +67,20 @@ export class WebsocketServer {
                 connectionUrl = this.parseUrl(request.url!)
                 connection = this.createConnection(connectionUrl)
             } catch (err) {
-                logger.warn('Unable to create connection', {
+                logger.warn('Reject incoming connection', {
                     requestUrl: request.url,
-                    err
+                    reason: err?.message
                 })
                 sendHttpError('400 Bad Request', socket)
                 return
             }
             const apiKey = connectionUrl.queryParams.apiKey as string | undefined
             if (!isValidAuthentication(apiKey, apiAuthentication)) {
+                logger.warn('Reject incoming connection', {
+                    requestUrl: request.url,
+                    includesApiKey: apiKey !== undefined,
+                    reason: 'Invalid authentication'
+                })
                 sendHttpError((apiKey === undefined) ? '401 Unauthorized' : '403 Forbidden', socket)
                 return
             }
@@ -85,11 +90,17 @@ export class WebsocketServer {
         })
 
         this.wss.on('connection', (ws: WebSocket, _request: http.IncomingMessage, connection: Connection) => {
-            connection.init(ws, this.streamrClient, payloadFormat)
-            addPingListener(ws)
-            if (this.pingSendInterval !== 0) {
-                addPingSender(ws, this.pingSendInterval, this.disconnectTimeout)
-            }
+            const socketId = randomString(5)
+            connection.init(ws, socketId, this.streamrClient, payloadFormat).then(() => {
+                addPingListener(ws)
+                if (this.pingSendInterval !== 0) {
+                    addPingSender(ws, socketId, this.pingSendInterval, this.disconnectTimeout)
+                }
+                return
+            }, (err) => {
+                logger.warn('Close connection', { socketId, reason: err?.message })
+                ws.close()
+            })
         })
 
         this.httpServer.listen(port)
