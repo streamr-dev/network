@@ -119,6 +119,11 @@ export class FakeNetworkNode implements NetworkNodeStub {
     ): Promise<void> {
         throw new Error('not implemented')
     }
+
+    // eslint-disable-next-line class-methods-use-this
+    getDiagnosticInfo(): Record<string, unknown> {
+        return {}
+    }
 }
 
 @scoped(Lifecycle.ContainerScoped)

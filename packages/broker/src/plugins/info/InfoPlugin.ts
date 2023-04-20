@@ -13,10 +13,7 @@ export class InfoPlugin extends Plugin<ApiPluginConfig> {
             path: '/info',
             method: 'get',
             requestHandlers: [async (_req: Request, res: Response) => {
-                const node = await this.streamrClient.getNode()
-                res.json({
-                    nodeId: node.getNodeId()
-                })
+                res.json(await this.streamrClient.getDiagnosticInfo())
             }]
         }
     }

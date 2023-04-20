@@ -167,4 +167,12 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
         this.onNewConnection(connection)
         return connection.getPeerId()
     }
+
+    getDiagnosticInfo(): Record<string, unknown> {
+        return {
+            connections: this.getConnections().map((c) => c.getDiagnosticInfo()),
+            serverUrls: Object.fromEntries(this.serverUrlByPeerId),
+            pendingConnections: Object.keys(this.pendingConnections)
+        }
+    }
 }
