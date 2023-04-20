@@ -91,6 +91,7 @@ export class WebsocketServer {
 
         this.wss.on('connection', (ws: WebSocket, _request: http.IncomingMessage, connection: Connection) => {
             const socketId = randomString(5)
+            logger.info('Accept connection', { socketId })
             connection.init(ws, socketId, this.streamrClient, payloadFormat).then(() => {
                 addPingListener(ws)
                 if (this.pingSendInterval !== 0) {

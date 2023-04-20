@@ -1,9 +1,10 @@
 import WebSocket from 'ws'
 import qs from 'qs'
-import StreamrClient from 'streamr-client'
+import StreamrClient, { Subscription } from 'streamr-client'
 import { waitForEvent, waitForCondition } from '@streamr/utils'
 import { WebsocketServer } from '../../../../src/plugins/websocket/WebsocketServer'
 import { PlainPayloadFormat } from '../../../../src/helpers/PayloadFormat'
+import { mock, MockProxy } from 'jest-mock-extended'
 
 const PORT = 12398
 const MOCK_STREAM_ID = '0x1234567890123456789012345678901234567890/mock-path'
@@ -26,7 +27,7 @@ describe('WebsocketServer', () => {
 
     let wsServer: WebsocketServer
     let wsClient: WebSocket
-    let streamrClient: Partial<StreamrClient>
+    let streamrClient: MockProxy<StreamrClient>
 
     const assertConnectionError = async (expectedHttpStatus: number) => {
         const [ error ] = await waitForEvent(wsClient, 'error')
@@ -34,11 +35,9 @@ describe('WebsocketServer', () => {
     }
 
     beforeEach(async () => {
-        streamrClient = {
-            publish: jest.fn().mockResolvedValue(undefined),
-            subscribe: jest.fn().mockResolvedValue(undefined),
-        } as Partial<StreamrClient>
-        wsServer = new WebsocketServer(streamrClient as StreamrClient, 0, 0)
+        streamrClient = mock<StreamrClient>()
+        streamrClient.subscribe.mockResolvedValue(mock<Subscription>())
+        wsServer = new WebsocketServer(streamrClient, 0, 0)
         await wsServer.start(PORT, new PlainPayloadFormat(), {
             keys: [REQUIRED_API_KEY]
         })
@@ -62,15 +61,15 @@ describe('WebsocketServer', () => {
 
     describe('publish', () => {
 
-        const publish = async (queryParams?: any) => {
+        const connectAndPublish = async (queryParams?: any) => {
             wsClient = createTestClient(PATH_PUBLISH_MOCK_STREAM, queryParams)
             await waitForEvent(wsClient, 'open')
             wsClient.send(JSON.stringify(MOCK_MESSAGE))
-            await waitForCondition(() => ((streamrClient.publish as any).mock.calls.length === 1))
+            await waitForCondition(() => (streamrClient.publish.mock.calls.length === 1))
         }
 
         it('without parameters', async () => {
-            await publish()
+            await connectAndPublish()
             expect(streamrClient.publish).toBeCalledWith(
                 {
                     id: MOCK_STREAM_ID,
@@ -84,11 +83,11 @@ describe('WebsocketServer', () => {
         })
 
         it('valid partition', async () => {
-            await publish({ partition: 123 })
+            await connectAndPublish({ partition: 50 })
             expect(streamrClient.publish).toBeCalledWith(
                 {
                     id: MOCK_STREAM_ID,
-                    partition: 123
+                    partition: 50
                 }, 
                 MOCK_MESSAGE,
                 {
@@ -98,7 +97,7 @@ describe('WebsocketServer', () => {
         })
 
         it('valid partitionKey', async () => {
-            await publish({ partitionKey: 'mock-key' })
+            await connectAndPublish({ partitionKey: 'mock-key' })
             expect(streamrClient.publish).toBeCalledWith(
                 {
                     id: MOCK_STREAM_ID,
@@ -113,7 +112,7 @@ describe('WebsocketServer', () => {
         })
 
         it('valid partitionKeyField', async () => {
-            await publish({ partitionKeyField: 'foo' })
+            await connectAndPublish({ partitionKeyField: 'foo' })
             expect(streamrClient.publish).toBeCalledWith(
                 {
                     id: MOCK_STREAM_ID,
@@ -170,10 +169,9 @@ describe('WebsocketServer', () => {
             const payloadPromise = waitForEvent(wsClient, 'message')
             const onMessageCallback = (streamrClient.subscribe as any).mock.calls[0][1]
             onMessageCallback(MOCK_MESSAGE, {})
-            const firstPayload = (await payloadPromise)[0] as string
-            expect(JSON.parse(firstPayload)).toEqual(MOCK_MESSAGE)
+            const firstPayload = (await payloadPromise)[0]
+            expect(JSON.parse(firstPayload as string)).toEqual(MOCK_MESSAGE)
         })
-
     })
 
 })

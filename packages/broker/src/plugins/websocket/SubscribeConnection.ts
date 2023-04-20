@@ -40,18 +40,28 @@ export class SubscribeConnection implements Connection {
                     ws.send(payload)
                 })
             } catch (err) {
-                await this.unsubAll()
+                await this.unsubAll(logger)
                 throw err
             }
             this.subscriptions.push(sub)
         }
+        ws.once('close', async () => {
+            try {
+                await this.unsubAll(logger)
+            } finally {
+                logger.info('Disconnected from client', { socketId })
+            }
+        })
         logger.debug('Subscribed to stream partitions', {
             streamId: this.streamId,
             partitions: this.partitions
         })
     }
 
-    private async unsubAll(): Promise<void> {
+    private async unsubAll(logger: Logger): Promise<void> {
+        logger.debug('Unsubscribe from streams', {
+            subscriptions: this.subscriptions.map(({ streamPartId }) => streamPartId)
+        })
         await Promise.all(this.subscriptions.map((sub) => sub.unsubscribe()))
     }
 }
