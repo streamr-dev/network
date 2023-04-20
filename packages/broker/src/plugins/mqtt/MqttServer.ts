@@ -50,7 +50,7 @@ export class MqttServer {
     async start(): Promise<void> {
         this.server = net.createServer(this.aedes.handle)
         await util.promisify((callback: any) => this.server!.listen(this.port, callback))()
-        logger.info(`Started MQTT server (port ${this.port})`)
+        logger.info(`Started MQTT server on port ${this.port}`)
     }
 
     async stop(): Promise<void> {
