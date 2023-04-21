@@ -244,48 +244,37 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             this.webSocketConnector = undefined
             await this.webrtcConnector!.stop()
             this.webrtcConnector = undefined
-            WEB_RTC_CLEANUP.cleanUp()
+            //WEB_RTC_CLEANUP.cleanUp()
         } else {
             await this.simulatorConnector!.stop()
             this.simulatorConnector = undefined
         }
 
-        /*
-        const conns = Array.from(this.connections.values())
-        for (let i = 0; i < conns.length; i++) {
-            try {
-                if (conns[i].isHandshakeCompleted()) {
-                    await this.gracefullyDisconnectAsync(conns[i].getPeerDescriptor()!, DisconnectMode.LEAVING)
-                }
-            } catch (e) {
-                logger.error('gracefullyDisconnectAsync failed ' + e)
-            }
-        }
-        */
-
         await Promise.all(Array.from(this.connections.values()).map((peer) => {
             return new Promise<void>((resolve, _reject) => {
                 // eslint-disable-next-line promise/catch-or-return 
-                waitForEvent3<ManagedConnectionEvents>(peer, 'disconnected', 1000).then(() => {
-                    logger.info('waitForEvent3 returned')
-                })
-                    .catch((_e) => {
-                        logger.info('force-closing connection after timeout')
-                        peer.close('OUTGOING_GRACEFUL_LEAVE')
-                    })
-                    .finally(() => {
-                        logger.info('resolving after receiving disconnected event')
-                        resolve()
-                    })
+
                 if (peer.isHandshakeCompleted()) {
 
                     this.gracefullyDisconnectAsync(peer.getPeerDescriptor()!, DisconnectMode.LEAVING)
-                        .then(() => { return })
+                        .then(() => { resolve() })
                         .catch((e) => {
                             logger.error(e)
+                            resolve()
                         })
                 } else {
                     logger.info('handshake of connection not completed, force-closing')
+
+                    waitForEvent3<ManagedConnectionEvents>(peer!, 'disconnected', 2000)
+                        .then(() => {
+                            logger.info('resolving after receiving disconnected event from non-handshaked connection')
+                            resolve()
+                        })
+                        .catch((e) => {
+                            logger.info('force-closing non-handshaked connection timed out ' + e)
+                            resolve()
+                        })
+
                     peer.close('OTHER')
                 }
             })
@@ -297,6 +286,10 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         this.messageDuplicateDetector.clear()
         this.locks.clear()
         this.removeAllListeners()
+        if (!this.config.simulator) {
+
+            WEB_RTC_CLEANUP.cleanUp()
+        }
     }
 
     public getConnectionTo(id: PeerIDKey): ManagedConnection {
@@ -428,7 +421,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     private onConnected = (connection: ManagedConnection) => {
         const peerDescriptor = connection.getPeerDescriptor()!
         this.emit('connected', peerDescriptor)
-        logger.info(' ' + this.ownPeerDescriptor?.nodeName + ', ' + peerDescriptor.nodeName + ' onConnected()')
+        logger.info(' ' + this.ownPeerDescriptor?.nodeName + ', ' + peerDescriptor.nodeName + ' onConnected() ' + connection.connectionType)
         this.onConnectionCountChange()
     }
 
@@ -597,6 +590,40 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     private async gracefullyDisconnectAsync(targetDescriptor: PeerDescriptor, disconnectMode: DisconnectMode): Promise<void> {
+
+        const connection = this.connections.get(peerIdFromPeerDescriptor(targetDescriptor).toKey())
+
+        if (!connection) {
+            logger.debug('gracefullyDisconnectedAsync() tried on a non-existing connection')
+            return
+        }
+
+        const promise = new Promise<void>((resolve, _reject) => {
+            // eslint-disable-next-line promise/catch-or-return
+            waitForEvent3<ManagedConnectionEvents>(connection!, 'disconnected', 2000).then(() => {
+                logger.info('disconnected event received in gracefullyDisconnectAsync()')
+                return
+            })
+                .catch((e) => {
+                    logger.info('force-closing connection after timeout ' + e)
+                    connection.close('OTHER')
+                })
+                .finally(() => {
+                    logger.info('resolving after receiving disconnected event')
+                    resolve()
+                })
+        })
+
+        this.doGracefullyDisconnectAsync(targetDescriptor, disconnectMode)
+            .then(() => { return })
+            .catch((e) => {
+                logger.error(e)
+            })
+
+        await promise
+    }
+
+    private async doGracefullyDisconnectAsync(targetDescriptor: PeerDescriptor, disconnectMode: DisconnectMode): Promise<void> {
         logger.trace(' ' + this.ownPeerDescriptor?.nodeName + ', ' + targetDescriptor.nodeName + ' gracefullyDisconnectAsync()')
         const remoteConnectionLocker = new RemoteConnectionLocker(
             this.ownPeerDescriptor!,

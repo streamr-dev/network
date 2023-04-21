@@ -204,7 +204,7 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     private executeCloseOperation(operation: CloseOperation): void {
 
         if (this.stopped) {
-            console.error('executeCloseOperation() called on a stopped simulator ' + (new Error().stack))
+            //logger.error('executeCloseOperation() called on a stopped simulator ' + (new Error().stack))
             return
         }
 
@@ -217,7 +217,7 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
         }
 
         if (!target || !counterAssociation) {
-            this.associations.delete(target!.connectionId)
+            //this.associations.delete(target!.connectionId)
             this.associations.delete(operation.association.sourceConnection.connectionId)
 
         } else if (!counterAssociation!.isClosing()) {

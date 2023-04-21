@@ -142,7 +142,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
             try {
                 this.dataChannel!.sendMessageBinary(data as Buffer)
             } catch (err) {
-                logger.warn('Failed to send binary message to ' + keyFromPeerDescriptor(this.remotePeerDescriptor))
+                logger.warn('Failed to send binary message to ' + keyFromPeerDescriptor(this.remotePeerDescriptor) + err)
             }
         }
     }
@@ -153,7 +153,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
 
     private doClose(disconnectionType: DisconnectionType, reason?: string): void {
         if (!this.closed) {
-            logger.trace(
+            logger.info(
                 `Closing Node WebRTC Connection to ${keyFromPeerDescriptor(this.remotePeerDescriptor)}`
                 + `${reason ? `, reason: ${reason}` : ''}`
             )
@@ -169,6 +169,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
 
             if (this.dataChannel) {
                 try {
+                    logger.info('closing datachannel')
                     this.dataChannel.close()
                 } catch (e) {
                     logger.warn('dc.close() errored: %s', e)
@@ -198,12 +199,12 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
     private setupDataChannel(dataChannel: DataChannel): void {
         dataChannel.setBufferedAmountLowThreshold(this.bufferThresholdLow)
         dataChannel.onOpen(() => {
-            logger.trace(`dc.onOpened`)
+            logger.info(`dc.onOpened`)
             this.openDataChannel(dataChannel)
         })
 
         dataChannel.onClosed(() => {
-            logger.trace(`dc.closed`)
+            logger.info(`dc.closed`)
             this.doClose('OTHER', 'DataChannel closed')
         })
 
@@ -214,7 +215,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
         })
 
         dataChannel.onMessage((msg) => {
-            logger.trace(`dc.onMessage`)
+            logger.info(`dc.onMessage`)
             this.emit('data', msg as Buffer)
         })
     }
@@ -229,6 +230,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
     }
 
     private onStateChange(state: string): void {
+        logger.info('onStateChange ' + state)
         if (!Object.keys(RTCPeerConnectionStateEnum).filter((s) => isNaN(+s)).includes(state)) {
             throw new IllegalRTCPeerConnectionState('NodeWebRtcConnection used an unknown state: ' + state)
         } else {
