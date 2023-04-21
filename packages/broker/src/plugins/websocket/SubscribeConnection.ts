@@ -12,7 +12,7 @@ export class SubscribeConnection implements Connection {
     private readonly partitions?: number[]
     private readonly subscriptions: Subscription[]
 
-    constructor( streamId: string, queryParams: ParsedQs) {
+    constructor(streamId: string, queryParams: ParsedQs) {
         this.streamId = streamId
         this.partitions = parseQueryParameterArray('partitions', queryParams, parsePositiveInteger)
         this.subscriptions = []
