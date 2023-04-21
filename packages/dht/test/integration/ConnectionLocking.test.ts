@@ -24,8 +24,10 @@ describe('Connection Locking', () => {
     let connectionManager1: ConnectionManager
     let connectionManager2: ConnectionManager
 
+    let simulator: Simulator
+
     beforeEach(async () => {
-        const simulator = new Simulator()
+        simulator = new Simulator()
         mockConnectorTransport1 = new SimulatorTransport(mockPeerDescriptor1, simulator)
         mockConnectorTransport2 = new SimulatorTransport(mockPeerDescriptor2, simulator)
 
@@ -47,6 +49,7 @@ describe('Connection Locking', () => {
             connectionManager1.stop(),
             connectionManager2.stop()
         ])
+        simulator.stop()
     })
 
     it('can lock connections', async () => {

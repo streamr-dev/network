@@ -1,30 +1,115 @@
+/* eslint-disable @typescript-eslint/parameter-properties */
 import EventEmitter from "eventemitter3"
 import { PeerIDKey } from "../../helpers/PeerID"
 import { PeerDescriptor } from "../../proto/packages/dht/protos/DhtRpc"
 import { ConnectionSourceEvents } from "../IConnectionSource"
 import { SimulatorConnector } from "./SimulatorConnector"
 import { SimulatorConnection } from "./SimulatorConnection"
-import { ConnectionID, ConnectionIDKey } from "../IConnection"
+import { ConnectionID } from "../IConnection"
 import { Logger } from "@streamr/utils"
 import { getRegionDelayMatrix } from "./pings"
-import { v4 } from "uuid"
 import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import Heap from 'heap'
 
 const logger = new Logger(module)
 
 export enum LatencyType { NONE = 'NONE', RANDOM = 'RANDOM', REAL = 'REAL', FIXED = 'FIXED' }
 
+// One-way 'pipe' of messages
+
+class Association {
+    public sourceConnection: SimulatorConnection
+    public destinationConnection?: SimulatorConnection
+    private lastOperationAt: number = 0
+    private closing = false
+
+    constructor(sourceConnection: SimulatorConnection,
+        destinationConnection?: SimulatorConnection,
+        public connectedCallback?: (error?: string) => void
+    ) {
+        this.sourceConnection = sourceConnection
+        this.destinationConnection = destinationConnection
+    }
+
+    public setDestinationConnection(connection: SimulatorConnection) {
+        this.destinationConnection = connection
+    }
+
+    public getLastOperationAt(): number {
+        return this.lastOperationAt
+    }
+
+    public setLastOperationAt(executionTime: number): void {
+        this.lastOperationAt = executionTime
+    }
+
+    public setClosing(): void {
+        this.closing = true
+    }
+
+    public isClosing(): boolean {
+        return this.closing
+    }
+}
+
+class SimulatorOperation {
+    private static objectCounter = 0
+    public objectId = 0
+
+    constructor(
+        public executionTime: number,
+        public association: Association
+    ) {
+        this.objectId = SimulatorOperation.objectCounter
+        SimulatorOperation.objectCounter++
+    }
+}
+
+class ConnectOperation extends SimulatorOperation {
+    constructor(
+        executionTime: number,
+        association: Association,
+        public sourceConnection: SimulatorConnection,
+        public targetDescriptor: PeerDescriptor) {
+
+        super(executionTime, association)
+    }
+}
+
+class SendOperation extends SimulatorOperation {
+    constructor(
+        executionTime: number,
+        association: Association,
+        public data: Uint8Array
+    ) {
+        super(executionTime, association)
+    }
+}
+
+class CloseOperation extends SimulatorOperation {
+}
+
 export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     private stopped = false
     private connectors: Map<PeerIDKey, SimulatorConnector> = new Map()
     private latencyTable?: Array<Array<number>>
-    private associations: Map<ConnectionID, SimulatorConnection> = new Map()
-
-    private timeouts: Map<string, NodeJS.Timeout> = new Map()
-    private timeoutsBySourceConnection: Map<ConnectionIDKey, string[]> = new Map()
+    private associations: Map<ConnectionID, Association> = new Map()
 
     private latencyType: LatencyType
     private fixedLatency?: number
+
+    private loopCounter = 0
+    private MAX_LOOPS = 100
+
+    private operationQueue: Heap<SimulatorOperation> = new Heap<SimulatorOperation>((a: SimulatorOperation, b: SimulatorOperation) => {
+        if ((a.executionTime - b.executionTime) == 0) {
+            return (a.objectId - b.objectId)
+        } else {
+            return (a.executionTime - b.executionTime)
+        }
+    })
+
+    private simulatorTimeout?: NodeJS.Timeout
 
     constructor(latencyType: LatencyType = LatencyType.NONE, fixedLatency?: number) {
         super()
@@ -38,29 +123,27 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
         if (this.latencyType == LatencyType.FIXED && !this.fixedLatency) {
             throw new Error('LatencyType.FIXED requires the desired latency to be given as second parameter')
         }
+
+        this.generateExecutionTime = this.generateExecutionTime.bind(this)
+        this.getLatency = this.getLatency.bind(this)
+        this.executeCloseOperation = this.executeCloseOperation.bind(this)
+        this.executeConnectOperation = this.executeConnectOperation.bind(this)
+        this.executeSendOperation = this.executeSendOperation.bind(this)
+        this.executeQueuedOperations = this.executeQueuedOperations.bind(this)
+        this.accept = this.accept.bind(this)
+        this.send = this.send.bind(this)
+        this.close = this.close.bind(this)
+        this.scheduleNextTimeout = this.scheduleNextTimeout.bind(this)
+        this.scheduleOperation = this.scheduleOperation.bind(this)
     }
 
-    private recordTimeoutBySourceConnection(sourceConnectionId: ConnectionIDKey, timeoutId: string) {
-        if (!this.timeoutsBySourceConnection.has(sourceConnectionId)) {
-            this.timeoutsBySourceConnection.set(sourceConnectionId, [])
+    private generateExecutionTime(association: Association, sourceRegion: number | undefined, targetRegion: number | undefined): number {
+        let executionTime = Date.now() + this.getLatency(sourceRegion, targetRegion)
+        if (association.getLastOperationAt() > executionTime) {
+            executionTime = association.getLastOperationAt()
         }
 
-        this.timeoutsBySourceConnection.get(sourceConnectionId)!.push(timeoutId)
-    }
-
-    private clearTimeoutsBySourceConnection(sourceConnectionId: ConnectionIDKey) {
-        const timeoutIds = this.timeoutsBySourceConnection.get(sourceConnectionId)
-        if (timeoutIds) {
-            // eslint-disable-next-line @typescript-eslint/prefer-for-of
-            for (let i = 0; i < timeoutIds.length; i++) {
-                const timeoutId = this.timeouts.get(timeoutIds[i])
-                if (timeoutId) {
-                    clearTimeout(timeoutId)
-                    this.timeouts.delete(timeoutIds[i])
-                }
-            }
-            this.timeoutsBySourceConnection.set(sourceConnectionId, [])
-        }
+        return executionTime
     }
 
     private getLatency(sourceRegion: number | undefined, targetRegion: number | undefined): number {
@@ -86,100 +169,206 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
         return latency
     }
 
-    accept(sourceConnection: SimulatorConnection, targetConnection: SimulatorConnection): void {
-        this.associations.set(sourceConnection.connectionId, targetConnection)
-        this.associations.set(targetConnection.connectionId, sourceConnection)
+    public accept(sourceConnection: SimulatorConnection, targetConnection: SimulatorConnection): void {
+
+        const sourceAssociation = this.associations.get(sourceConnection.connectionId)
+
+        if (!sourceAssociation) {
+            logger.error('source association not found in accept()')
+            return
+        }
+        sourceAssociation!.setDestinationConnection(targetConnection)
+
+        const targetAssociation = new Association(targetConnection, sourceConnection)
+        this.associations.set(targetConnection.connectionId, targetAssociation)
+
+        sourceAssociation.connectedCallback!()
     }
 
-    addConnector(connector: SimulatorConnector): void {
+    public addConnector(connector: SimulatorConnector): void {
         this.connectors.set(keyFromPeerDescriptor(connector.getPeerDescriptor()), connector)
     }
 
-    public connect(sourceConnection: SimulatorConnection, targetDescriptor: PeerDescriptor, connectedCallback: (error?: string) => void): void {
-        
-        if (this.stopped) {
-            console.error('connect() called on a stopped simulator ' + (new Error().stack))
-            return
-        }
-
-        const target = this.connectors.get(keyFromPeerDescriptor(targetDescriptor))
+    private executeConnectOperation(operation: ConnectOperation): void {
+        const target = this.connectors.get(keyFromPeerDescriptor(operation.targetDescriptor))
 
         if (!target) {
-            return connectedCallback('Traget connector not found')
+            logger.error('Traget connector not found when executing connect operation')
+            return operation.association.connectedCallback!('Traget connector not found')
         }
-        
-        const timeoutId = v4()
-        const latency = 5 * this.getLatency(sourceConnection.ownPeerDescriptor.region, targetDescriptor.region)
-        
-        const timeout = setTimeout(() => {
-            this.timeouts.delete(timeoutId)
 
-            logger.trace('connect() calling hadleIncomingConnection() ')
-            
-            target!.handleIncomingConnection(sourceConnection)
-        
-            connectedCallback()
-
-        }, latency)
-
-        this.timeouts.set(timeoutId, timeout)
-        this.recordTimeoutBySourceConnection(sourceConnection.connectionId.toMapKey(), timeoutId)
+        target!.handleIncomingConnection(operation.sourceConnection)
     }
 
-    async disconnect(sourceConnection: SimulatorConnection): Promise<void> {
+    private executeCloseOperation(operation: CloseOperation): void {
+
         if (this.stopped) {
-            console.error('disconnect() called on a stopped simulator ' + (new Error().stack))
             return
         }
-        
-        this.clearTimeoutsBySourceConnection(sourceConnection.connectionId.toMapKey())
-        const target = this.associations.get(sourceConnection.connectionId)
+
+        const target = operation.association.destinationConnection
+
+        let counterAssociation: Association | undefined
+
         if (target) {
+            counterAssociation = this.associations.get(target!.connectionId)
+        }
 
-            const timeoutId = v4()
-            const latency = this.getLatency(sourceConnection.ownPeerDescriptor.region, target!.ownPeerDescriptor.region)
-            const timeout = setTimeout(() => {
-                this.timeouts.delete(timeoutId)
+        if (!target || !counterAssociation) {
+            this.associations.delete(operation.association.sourceConnection.connectionId)
 
-                logger.trace('disconnect() calling hadleIncomingDisconnection()')
-
-                this.associations.delete(sourceConnection.connectionId)
-                this.associations.delete(target!.connectionId)
-                target!.handleIncomingDisconnection()
-            }, latency)
-
-            this.timeouts.set(timeoutId, timeout)
+        } else if (!counterAssociation!.isClosing()) {
+            target!.handleIncomingDisconnection()
+            this.close(target!)
+        } else {
+            // this is the 'ack' of the CloseOperation to the original closer
+            this.associations.delete(target!.connectionId)
+            this.associations.delete(operation.association.sourceConnection.connectionId)
         }
     }
-  
+
+    private executeSendOperation(operation: SendOperation): void {
+
+        if (this.stopped) {
+            return
+        }
+
+        const target = operation.association.destinationConnection
+        target!.handleIncomingData(operation.data)
+
+    }
+
+    private executeQueuedOperations(): void {
+        const currentTime = Date.now()
+        while (this.operationQueue.size() > 0
+            && this.operationQueue.peek()!.executionTime <= currentTime) {
+            const operation = this.operationQueue.pop()
+
+            if (operation instanceof ConnectOperation) {
+                this.executeConnectOperation(operation)
+            } else if (operation instanceof CloseOperation) {
+                this.executeCloseOperation(operation)
+            } else if (operation instanceof SendOperation) {
+                this.executeSendOperation(operation)
+            } else {
+                logger.error('Unknown SimulatorOperation')
+            }
+
+            this.loopCounter++
+            if (this.loopCounter >= this.MAX_LOOPS) {
+                this.loopCounter = 0
+                setImmediate(() => this.executeQueuedOperations())
+                return
+            }
+        }
+
+        this.scheduleNextTimeout()
+    }
+
+    private scheduleNextTimeout(): void {
+        if (this.simulatorTimeout) {
+            clearTimeout(this.simulatorTimeout)
+            this.simulatorTimeout = undefined
+        }
+
+        const currentTime = Date.now()
+
+        const firstOperation = this.operationQueue.peek()
+
+        if (!firstOperation) {
+            return
+        }
+
+        const firstOperationTime = firstOperation!.executionTime
+        const timeDifference = firstOperationTime - currentTime
+
+        if (timeDifference > 0) {
+            this.simulatorTimeout = setTimeout(this.executeQueuedOperations, timeDifference)
+        } else {
+            setImmediate(() => this.executeQueuedOperations())
+        }
+    }
+
+    private scheduleOperation(operation: SimulatorOperation) {
+        this.operationQueue.push(operation)
+        this.scheduleNextTimeout()
+    }
+
+    public connect(sourceConnection: SimulatorConnection, targetDescriptor: PeerDescriptor, connectedCallback: (error?: string) => void): void {
+
+        if (this.stopped) {
+            logger.error('connect() called on a stopped simulator ' + (new Error().stack))
+            return
+        }
+
+        const association = new Association(sourceConnection, undefined, connectedCallback)
+        this.associations.set(sourceConnection.connectionId, association)
+
+        const executionTime = this.generateExecutionTime(association, sourceConnection.ownPeerDescriptor.region, targetDescriptor.region)
+        association.setLastOperationAt(executionTime)
+
+        const operation = new ConnectOperation(executionTime, association,
+            sourceConnection, targetDescriptor)
+
+        this.scheduleOperation(operation)
+    }
+
+    public close(sourceConnection: SimulatorConnection): void {
+
+        if (this.stopped) {
+            return
+        }
+
+        const association = this.associations.get(sourceConnection.connectionId)
+        if (!association) {
+            return
+        }
+
+        association.setClosing()
+
+        const executionTime = this.generateExecutionTime(association,
+            sourceConnection.ownPeerDescriptor.region,
+            association.destinationConnection?.ownPeerDescriptor.region)
+        association.setLastOperationAt(executionTime)
+
+        const operation = new CloseOperation(executionTime, association)
+
+        this.scheduleOperation(operation)
+    }
+
     public send(sourceConnection: SimulatorConnection, data: Uint8Array): void {
+
         if (this.stopped) {
-            console.error('send() called on a stopped simulator ' + (new Error().stack))
             return
         }
 
-        const target = this.associations.get(sourceConnection.connectionId)
-
-        logger.trace('send()')
-
-        if (target) {
-            const timeoutId = v4()
-            const latency = this.getLatency(sourceConnection.ownPeerDescriptor.region, target!.ownPeerDescriptor.region)
-            const timeout = setTimeout(() => {
-                this.timeouts.delete(timeoutId)
-                logger.trace('send() calling handleIncomingData()')
-                target!.handleIncomingData(data)
-            }, latency)
-
-            this.timeouts.set(timeoutId, timeout)
+        const association = this.associations.get(sourceConnection.connectionId)
+        if (!association) {
+            return
         }
+
+        if (association.isClosing()) {
+            logger.trace('Tried to call send() on a closing association')
+            return
+        }
+
+        const executionTime = this.generateExecutionTime(association,
+            sourceConnection.ownPeerDescriptor.region,
+            association.destinationConnection!.ownPeerDescriptor.region)
+
+        association.setLastOperationAt(executionTime)
+
+        const operation = new SendOperation(executionTime, association, data)
+
+        this.scheduleOperation(operation)
     }
 
-    stop(): void {
+    public stop(): void {
         this.stopped = true
         logger.info(this.associations.size + ' associations in the beginning of stop()')
-        this.timeouts.forEach((timeoutref) => {
-            clearTimeout(timeoutref)
-        })
+
+        if (this.simulatorTimeout) {
+            clearTimeout(this.simulatorTimeout)
+        }
     }
 }

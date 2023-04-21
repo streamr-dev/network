@@ -12,8 +12,10 @@ describe('Storing data in DHT with two peers', () => {
     let entryPoint: DhtNode
     let otherNode: DhtNode
 
+    let simulator: Simulator | undefined
+
     beforeEach(async () => {
-        const simulator = new Simulator()
+        simulator = new Simulator()
         const entryPointId = 'node0'
         const otherNodeId = 'other-node'
         entryPoint = await createMockConnectionDhtNode(
@@ -35,6 +37,7 @@ describe('Storing data in DHT with two peers', () => {
     afterEach(async () => {
         await entryPoint.stop()
         await otherNode.stop()
+        simulator?.stop()
     })
 
     it('Node can store on two peer DHT', async () => {
