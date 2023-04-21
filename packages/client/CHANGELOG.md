@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Handling of `undefined` partition in `.createStream`
+
 ### Security
 
 
