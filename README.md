@@ -98,13 +98,6 @@ top-level **`node_modules`**:
 npm run clean
 ```
 
-### Install git hooks
-To install git hooks (e.g. Husky for conventional commit validation):
-
-```bash
-npm run install-git-hooks
-```
-
 ### Add a dependency into a sub-package
 
 Manually add the entry to the `package.json` of the sub-package and 
