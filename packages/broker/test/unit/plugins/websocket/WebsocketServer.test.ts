@@ -1,7 +1,7 @@
 import WebSocket from 'ws'
 import qs from 'qs'
 import StreamrClient, { Subscription } from 'streamr-client'
-import { waitForEvent, waitForCondition, wait } from '@streamr/utils'
+import { waitForEvent, waitForCondition } from '@streamr/utils'
 import { WebsocketServer } from '../../../../src/plugins/websocket/WebsocketServer'
 import { PlainPayloadFormat } from '../../../../src/helpers/PayloadFormat'
 import { mock, MockProxy } from 'jest-mock-extended'
