@@ -52,7 +52,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
             }
         }
         const node = await this.streamrClient.getNode()
-        await node.subscribeAndWaitForJoin(toStreamPartID(assignmentStream.id, 0), this.streamrClient.getEntryPoints())
+        await node.subscribeAndWaitForJoin(toStreamPartID(assignmentStream.id, 0), [])
         node.addMessageListener(this.messageListener)
         this.addHttpServerEndpoint(createDataQueryEndpoint(this.cassandra, metricsContext))
         this.addHttpServerEndpoint(createDataMetadataEndpoint(this.cassandra))
@@ -102,7 +102,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
             {
                 onStreamPartAdded: async (streamPart) => {
                     try {
-                        await node.subscribeAndWaitForJoin(streamPart, this.streamrClient.getEntryPoints()) // best-effort, can time out
+                        await node.subscribeAndWaitForJoin(streamPart, []) // best-effort, can time out
                     } catch (_e) {
                         // no-op
                     }

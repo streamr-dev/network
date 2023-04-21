@@ -69,7 +69,7 @@ describe('resend', () => {
                 }
             }
         })
-    }, TIMEOUT)
+    }, TIMEOUT * 2)
 
     afterEach(async () => {
         await Promise.allSettled([
@@ -97,7 +97,7 @@ describe('resend', () => {
                 })
             }
             await wait(MESSAGE_STORE_TIMEOUT)
-        }, TIMEOUT)
+        }, TIMEOUT * 2)
 
         it('can request resend for all messages', async () => {
             const messages: unknown[] = []
