@@ -479,36 +479,26 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         const newPeerID = peerIdFromPeerDescriptor(newConnection.getPeerDescriptor()!)
         const hexKey = keyFromPeerDescriptor(newConnection.getPeerDescriptor()!)
         if (this.connections.has(hexKey)) {
-            logger.trace(" " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName + ' acceptIncomingConnection() has hexkey')
             if (newPeerID.hasSmallerHashThan(peerIdFromPeerDescriptor(this.ownPeerDescriptor!))) {
-                logger.trace(" " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName +
-                    ' acceptIncomingConnection() newPeerID hexkey was smaller')
                 logger.trace(" " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName +
                     ' acceptIncomingConnection() replace current connection')
                 // replace the current connection
                 const oldConnection = this.connections.get(newPeerID.toKey())!
                 logger.trace("replaced: " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName + ' ')
                 const buffer = oldConnection!.stealOutputBuffer()
-                logger.trace(" " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName +
-                    ' acceptIncomingConnection() sending data on new connection')
+                
                 for (const data of buffer) {
                     newConnection.sendNoWait(data)
                 }
-                logger.trace(" " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName +
-                    ' acceptIncomingConnection() reporting buffer sent on old connection')
+                
                 oldConnection!.reportBufferSentByOtherConnection()
                 oldConnection.replacedByOtherConnection = true
             } else {
-                logger.trace(" " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName +
-                    ' acceptIncomingConnection() newPeerID hexkey was bigger')
                 newConnection.rejectedAsIncoming = true
                 return false
             }
-        } else {
-            logger.trace(" " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName +
-                ' acceptIncomingConnection() does not have hexkey')
-        }
-
+        } 
+        
         logger.trace(' ' + this.ownPeerDescriptor?.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName +
             ' added to connections at acceptIncomingConnection')
         this.connections.set(hexKey, newConnection)

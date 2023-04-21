@@ -382,20 +382,12 @@ export class ManagedConnection extends EventEmitter<Events> {
         this.emit('closing')
         this.doNotEmitDisconnected = false
         if (this.implementation) {
-            logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + ' calling close() implmentation')
             await this.implementation?.close(disconnectionType)
-            logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + ' called close() implmentation')
         } else if (this.outgoingConnection) {
-            logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + ' calling close() outgoingconnection')
             await this.outgoingConnection?.close(disconnectionType)
-            logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + ' called close() outgoingconnection')
         } else if (this.incomingConnection) {
-            logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + ' calling close() incomingconnection')
             await this.incomingConnection?.close(disconnectionType)
-            logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + ' called close() implmentation')
         } else {
-            logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + ' close() not called')
-            logger.trace('IL close')
             this.doDisconnect(disconnectionType)
         }
     }
