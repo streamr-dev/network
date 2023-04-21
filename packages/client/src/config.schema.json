@@ -326,6 +326,9 @@
                 "maxConcurrentCalls": {
                     "type": "number",
                     "default": 10
+                },
+                "pollInterval": {
+                    "type": "number"
                 }
             },
             "default": {}
