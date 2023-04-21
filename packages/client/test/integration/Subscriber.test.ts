@@ -37,51 +37,106 @@ describe('Subscriber', () => {
         await environment.destroy()
     })
 
-    it('without encryption', async () => {
-        await stream.grantPermissions({
-            permissions: [StreamPermission.PUBLISH],
-            public: true
+    describe('normal subscription', () => {
+
+        it('without encryption', async () => {
+            await stream.grantPermissions({
+                permissions: [StreamPermission.PUBLISH],
+                public: true
+            })
+    
+            const sub = await subscriber.subscribe(stream.id)
+    
+            const publisherNode = environment.startNode(publisherWallet.address)
+            publisherNode.publish(await createMockMessage({
+                stream,
+                publisher: publisherWallet,
+                content: MOCK_CONTENT
+            }))
+    
+            const receivedMessage = await nextValue(sub[Symbol.asyncIterator]())
+            expect(receivedMessage!.content).toEqual(MOCK_CONTENT)
+        })
+    
+        it('with encryption', async () => {
+            await stream.grantPermissions({
+                permissions: [StreamPermission.PUBLISH],
+                user: publisherWallet.address
+            })
+    
+            const groupKey = GroupKey.generate()
+            const publisher = environment.createClient({
+                auth: {
+                    privateKey: publisherWallet.privateKey
+                }
+            })
+            await publisher.addEncryptionKey(groupKey, toEthereumAddress(publisherWallet.address))
+    
+            const sub = await subscriber.subscribe(stream.id)
+    
+            const publisherNode = await publisher.getNode()
+            publisherNode.publish(await createMockMessage({
+                stream,
+                publisher: publisherWallet,
+                content: MOCK_CONTENT,
+                encryptionKey: groupKey
+            }))
+    
+            const receivedMessage = await nextValue(sub[Symbol.asyncIterator]())
+            expect(receivedMessage!.content).toEqual(MOCK_CONTENT)
+            expect(receivedMessage!.streamMessage.groupKeyId).toEqual(groupKey.id)
         })
 
-        const sub = await subscriber.subscribe(stream.id)
-
-        const publisherNode = environment.startNode(publisherWallet.address)
-        publisherNode.publish(await createMockMessage({
-            stream,
-            publisher: publisherWallet,
-            content: MOCK_CONTENT
-        }))
-
-        const receivedMessage = await nextValue(sub[Symbol.asyncIterator]())
-        expect(receivedMessage!.content).toEqual(MOCK_CONTENT)
     })
 
-    it('with encryption', async () => {
-        await stream.grantPermissions({
-            permissions: [StreamPermission.PUBLISH],
-            user: publisherWallet.address
+    describe('raw subscription', () => {
+
+        it('without encryption', async () => {
+            await stream.grantPermissions({
+                permissions: [StreamPermission.PUBLISH],
+                public: true
+            })
+    
+            const sub = await subscriber.subscribe({ streamId: stream.id, raw: true })
+    
+            const publisherNode = environment.startNode(publisherWallet.address)
+            publisherNode.publish(await createMockMessage({
+                stream,
+                publisher: publisherWallet,
+                content: MOCK_CONTENT
+            }))
+    
+            const receivedMessage = await nextValue(sub[Symbol.asyncIterator]())
+            expect(receivedMessage!.content).toEqual(MOCK_CONTENT)
         })
-
-        const groupKey = GroupKey.generate()
-        const publisher = environment.createClient({
-            auth: {
-                privateKey: publisherWallet.privateKey
-            }
+    
+        it('with encryption', async () => {
+            await stream.grantPermissions({
+                permissions: [StreamPermission.PUBLISH],
+                user: publisherWallet.address
+            })
+    
+            const groupKey = GroupKey.generate()
+            const publisher = environment.createClient({
+                auth: {
+                    privateKey: publisherWallet.privateKey
+                }
+            })
+            await publisher.addEncryptionKey(groupKey, toEthereumAddress(publisherWallet.address))
+    
+            const sub = await subscriber.subscribe({ streamId: stream.id, raw: true })
+    
+            const publisherNode = await publisher.getNode()
+            publisherNode.publish(await createMockMessage({
+                stream,
+                publisher: publisherWallet,
+                content: MOCK_CONTENT,
+                encryptionKey: groupKey
+            }))
+    
+            const receivedMessage = await nextValue(sub[Symbol.asyncIterator]())
+            expect(receivedMessage!.content).toBeString()
+            expect(receivedMessage!.streamMessage.groupKeyId).toEqual(groupKey.id)
         })
-        await publisher.addEncryptionKey(groupKey, toEthereumAddress(publisherWallet.address))
-
-        const sub = await subscriber.subscribe(stream.id)
-
-        const publisherNode = await publisher.getNode()
-        publisherNode.publish(await createMockMessage({
-            stream,
-            publisher: publisherWallet,
-            content: MOCK_CONTENT,
-            encryptionKey: groupKey
-        }))
-
-        const receivedMessage = await nextValue(sub[Symbol.asyncIterator]())
-        expect(receivedMessage!.content).toEqual(MOCK_CONTENT)
-        expect(receivedMessage!.streamMessage.groupKeyId).toEqual(groupKey.id)
     })
 })

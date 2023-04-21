@@ -82,7 +82,7 @@ export class Node extends EventEmitter {
     private readonly metricsContext: MetricsContext
     private readonly metrics: Metrics
     protected extraMetadata: Record<string, unknown> = {}
-    private readonly acceptProxyConnections: boolean
+    protected readonly acceptProxyConnections: boolean
     private readonly proxyStreamConnectionClient: ProxyStreamConnectionClient
     private readonly proxyStreamConnectionServer: ProxyStreamConnectionServer
 

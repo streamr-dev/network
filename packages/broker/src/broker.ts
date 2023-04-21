@@ -1,5 +1,5 @@
 import { Logger, toEthereumAddress } from '@streamr/utils'
-import StreamrClient, { validateConfig as validateClientConfig, NetworkNodeStub } from 'streamr-client'
+import StreamrClient, { NetworkNodeStub } from 'streamr-client'
 import { Server as HttpServer } from 'http'
 import { Server as HttpsServer } from 'https'
 import { createPlugin } from './pluginRegistry'
@@ -21,8 +21,6 @@ export interface Broker {
 
 export const createBroker = async (configWithoutDefaults: Config): Promise<Broker> => {
     const config = validateConfig(configWithoutDefaults, BROKER_CONFIG_SCHEMA)
-    validateClientConfig(config.client)
-
     const streamrClient = new StreamrClient(config.client)
 
     const plugins: Plugin<any>[] = Object.keys(config.plugins).map((name) => {
@@ -88,11 +86,11 @@ export const createBroker = async (configWithoutDefaults: Config): Promise<Broke
 }
 
 process.on('uncaughtException', (err) => {
-    logger.getFinalLogger().error(err, 'uncaughtException')
+    logger.fatal('uncaughtException', err)
     process.exit(1)
 })
 
 process.on('unhandledRejection', (err) => {
-    logger.getFinalLogger().error(err, 'unhandledRejection')
+    logger.fatal('unhandledRejection', err)
     process.exit(1)
 })

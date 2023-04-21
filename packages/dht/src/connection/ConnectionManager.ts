@@ -3,6 +3,7 @@ import {
     ConnectivityResponse,
     DisconnectMode,
     DisconnectNotice,
+    DisconnectNoticeResponse,
     LockRequest,
     LockResponse,
     Message,
@@ -182,7 +183,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             (req: LockRequest, context) => this.lockRequest(req, context))
         this.rpcCommunicator.registerRpcNotification(UnlockRequest, 'unlockRequest',
             (req: UnlockRequest, context) => this.unlockRequest(req, context))
-        this.rpcCommunicator.registerRpcNotification(DisconnectNotice, 'gracefulDisconnect',
+        this.rpcCommunicator.registerRpcMethod(DisconnectNotice, DisconnectNoticeResponse, 'gracefulDisconnect',
             (req: DisconnectNotice, context) => this.gracefulDisconnect(req, context))
     }
 
@@ -439,10 +440,10 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             this.emit('disconnected', connection.getPeerDescriptor()!, disconnectionType)
             this.onConnectionCountChange()
         } else {
-            logger.error(' ' + this.config.nodeName + ', ' + connection.getPeerDescriptor()?.nodeName +
+            logger.trace(' ' + this.config.nodeName + ', ' + connection.getPeerDescriptor()?.nodeName +
                 ' onDisconnected() did nothing, no such connection in connectionManager')
             if (storedConnection) {
-                logger.error(this.config.nodeName + ', ' + connection.getPeerDescriptor()?.nodeName +
+                logger.trace(this.config.nodeName + ', ' + connection.getPeerDescriptor()?.nodeName +
                     ' connectionIds do not match ' + storedConnection.connectionId + ' ' + connection.connectionId)
             }
         }
@@ -685,13 +686,11 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         logger.trace(' ' + this.config.nodeName + ', ' + disconnectNotice.peerDescriptor?.nodeName
             + ' received gracefulDisconnect notice')
 
-        //setImmediate(() => {
         if (disconnectNotice.disconnecMode === DisconnectMode.LEAVING) {
             this.closeConnection(disconnectNotice.peerDescriptor!, 'INCOMING_GRACEFUL_LEAVE', 'graceful leave notified')
         } else {
             this.closeConnection(disconnectNotice.peerDescriptor!, 'INCOMING_GRACEFUL_DISCONNECT', 'graceful disconnect notified')
         }
-        //})
         return {}
     }
 

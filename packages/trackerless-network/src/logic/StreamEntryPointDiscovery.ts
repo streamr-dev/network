@@ -57,15 +57,20 @@ interface StreamEntryPointDiscoveryConfig {
     ownPeerDescriptor: PeerDescriptor
     getEntryPointData: (key: Uint8Array) => Promise<RecursiveFindResult>
     storeEntryPointData: (key: Uint8Array, data: Any) => Promise<PeerDescriptor[]>
+    cacheInterval?: number
 }
 
 export class StreamEntryPointDiscovery {
     private readonly abortController: AbortController
     private readonly config: StreamEntryPointDiscoveryConfig
+    private readonly cacheIntervalRefs: Map<string, NodeJS.Timeout>
+    private readonly cacheInterval: number
 
     constructor(config: StreamEntryPointDiscoveryConfig) {
         this.config = config
         this.abortController = new AbortController()
+        this.cacheInterval = this.config.cacheInterval || 40000
+        this.cacheIntervalRefs = new Map()
     }
 
     async discoverEntryPointsFromDht(streamPartID: string, knownEntryPointCount: number): Promise<FindEntryPointsResult> {
@@ -126,9 +131,35 @@ export class StreamEntryPointDiscovery {
         const dataToStore = Any.pack(ownPeerDescriptor, PeerDescriptor)
         try {
             await this.config.storeEntryPointData(streamPartIdToDataKey(streamPartId), dataToStore)
+            this.keepSelfAsEntryPoint(streamPartId)
         } catch (err) {
             logger.warn(`Failed to store self (${peerIdFromPeerDescriptor(this.config.ownPeerDescriptor)}) as entrypoint for ${streamPartId}`)
         }
+    }
+
+    private keepSelfAsEntryPoint(streamPartId: string): void {
+        if (!this.config.streams.has(streamPartId) || this.cacheIntervalRefs.has(streamPartId)) {
+            return
+        }
+        this.cacheIntervalRefs.set(streamPartId, setTimeout(async () => {
+            if (!this.config.streams.has(streamPartId)) {
+                this.cacheIntervalRefs.delete(streamPartId)
+                return
+            }
+            logger.trace(`Attempting to keep self as entrypoint for ${streamPartId}`)
+            try {
+                const discovered = await this.discoverEntrypoints(streamPartId)
+                if (discovered.length < ENTRYPOINT_STORE_LIMIT) {
+                    await this.storeSelfAsEntryPoint(streamPartId)
+                    this.cacheIntervalRefs.delete(streamPartId)
+                    this.keepSelfAsEntryPoint(streamPartId)
+                } else {
+                    this.cacheIntervalRefs.delete(streamPartId)
+                }
+            } catch (err) {
+                logger.debug(`Failed to keep self as entrypoint for ${streamPartId}`)
+            }
+        }, this.cacheInterval))
     }
 
     private async avoidNetworkSplit(streamPartID: string): Promise<void> {
@@ -151,7 +182,18 @@ export class StreamEntryPointDiscovery {
         logger.info(`Network split avoided`)
     }
 
+    stopRecaching(streamPartId: string): void {
+        if (this.cacheIntervalRefs.has(streamPartId)) {
+            clearTimeout(this.cacheIntervalRefs.get(streamPartId)!)
+            this.cacheIntervalRefs.delete(streamPartId)
+        }
+    }
+
     destroy(): void {
+        this.cacheIntervalRefs.forEach((timeout) => {
+            clearTimeout(timeout)
+        })
+        this.cacheIntervalRefs.clear()
         this.abortController.abort()
     }
 
