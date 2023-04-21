@@ -22,6 +22,7 @@ export interface RoutingSessionEvents {
     // through, and none of them responds with a success ack
     routingFailed: (sessionId: string) => void
     stopped: (sessionId: string) => void
+    noCandidatesFound: (sessionId: string) => void
 }
 
 export enum RoutingMode { ROUTE, FORWARD, RECURSIVE_FIND }
@@ -71,6 +72,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     }
 
     private onRequestFailed(peerId: PeerID) {
+        logger.trace('onRequestFailed() sessionId: ' + this.sessionId)
         if (this.stopped) {
             return
         }
@@ -79,15 +81,17 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         }
         const contacts = this.findMoreContacts()
         if (contacts.length < 1 && this.ongoingRequests.size < 1) {
+            logger.trace('routing failed, emitting routingFailed sessionId: ' + this.sessionId)
             this.stopped = true
             this.emit('routingFailed', this.sessionId)
         } else {
-            logger.trace('routing failed, retrying to route')
+            logger.trace('routing failed, retrying to route sessionId: ' + this.sessionId)
             this.sendMoreRequests(contacts)
         }
     }
 
     private onRequestSucceeded(_peerId: PeerID) {
+        logger.trace('onRequestSucceeded() sessionId: ' + this.sessionId)
         if (this.stopped) {
             return
         }
@@ -96,6 +100,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     }
 
     private async sendRouteMessageRequest(contact: RemoteRouter): Promise<boolean> {
+        logger.trace('sendRouteMessageRequest() sessionId: ' + this.sessionId)
         logger.trace(`Sending routeMessage request from ${this.ownPeerDescriptor.kademliaId} to contact: ${contact.getPeerId()}`)
         this.contactList.setContacted(contact.getPeerId())
         this.ongoingRequests.add(contact.getPeerId().toKey())
@@ -118,6 +123,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     }
 
     private findMoreContacts(): RemoteRouter[] {
+        logger.trace('findMoreContacts() sessionId: ' + this.sessionId)
         // the contents of the connections might have changed between the rounds
         // addContacts() will only add new contacts that were not there yet
         const contacts = Array.from(this.connections.values())
@@ -139,6 +145,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     }
 
     private sendMoreRequests(uncontacted: RemoteRouter[]) {
+        logger.trace('sendMoreRequests() sessionId: ' + this.sessionId)
         if (this.stopped) {
             return
         }
@@ -169,8 +176,13 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     }
 
     public start(): void {
+        logger.trace('start() sessionId: ' + this.sessionId)
         const contacts = this.findMoreContacts()
         if (contacts.length < 1) {
+            logger.trace('start() throwing noCandidatesFound sessionId: ' + this.sessionId)
+            
+            this.stopped = true
+            this.emit('noCandidatesFound', this.sessionId)
             throw new Error('noCandidatesFound ' + this.sessionId)
         }
         this.sendMoreRequests(contacts)
@@ -179,8 +191,9 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     public stop(): void {
         this.stopped = true
         this.contactList.stop()
-        this.removeAllListeners()
+
         this.emit('stopped', this.sessionId)
+        this.removeAllListeners()
     }
 
 }
