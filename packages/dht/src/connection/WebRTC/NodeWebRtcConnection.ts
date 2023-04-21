@@ -142,7 +142,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
             try {
                 this.dataChannel!.sendMessageBinary(data as Buffer)
             } catch (err) {
-                logger.warn('Failed to send binary message to ' + keyFromPeerDescriptor(this.remotePeerDescriptor))
+                logger.warn('Failed to send binary message to ' + keyFromPeerDescriptor(this.remotePeerDescriptor) + err)
             }
         }
     }
@@ -169,6 +169,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
 
             if (this.dataChannel) {
                 try {
+                    logger.trace('closing datachannel')
                     this.dataChannel.close()
                 } catch (e) {
                     logger.warn('dc.close() errored: %s', e)
@@ -229,6 +230,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
     }
 
     private onStateChange(state: string): void {
+        logger.trace('onStateChange ' + state)
         if (!Object.keys(RTCPeerConnectionStateEnum).filter((s) => isNaN(+s)).includes(state)) {
             throw new IllegalRTCPeerConnectionState('NodeWebRtcConnection used an unknown state: ' + state)
         } else {

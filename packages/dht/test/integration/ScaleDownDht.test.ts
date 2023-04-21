@@ -40,8 +40,8 @@ describe('Scaling down a Dht network', () => {
     }, 60000)
 
     afterEach(async () => {
-        await Promise.all(nodes.map(async (node) => await node.stop()))
-    })
+        await Promise.all(nodes.map((node) => node.stop()))
+    }, 10000)
 
     it('Remaining nodes cleaned up stopped nodes from states', async () => {
         const randomIndices = []
