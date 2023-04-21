@@ -29,7 +29,7 @@
     "@streamr/protocol": "8.3.0-beta.0",
     "@streamr/utils": "8.3.0-beta.0",
     "cancelable-promise": "^3.2.3",
-    "commander": "^8.3.0",
+    "commander": "^10.0.1",
     "heap": "^0.2.6",
     "ipaddr.js": "^2.0.1",
     "lodash": "^4.17.21",
