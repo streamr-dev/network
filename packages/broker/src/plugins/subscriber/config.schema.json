@@ -24,6 +24,7 @@
     },
     "subscriptionRetryInterval": {
       "type": "number",
+      "description": "DEPRECATED",
       "default": 30000
     }
   }

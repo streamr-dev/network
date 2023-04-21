@@ -10,7 +10,6 @@ interface ConfigStream {
 
 export interface SubscriberPluginConfig {
     streams: ConfigStream[]
-    subscriptionRetryInterval: number
 }
 
 const logger = new Logger(module)
