@@ -131,8 +131,6 @@ describe('Migrating data from node to node in DHT', () => {
 
         await waitNodesReadyForTesting(nodes)
 
-        //await wait(10000)
-
         logger.info('After join of 99 nodes: nodes sorted according to distance to data with storing nodes marked are: ')
 
         closest.forEach((contact) => {
@@ -155,9 +153,6 @@ describe('Migrating data from node to node in DHT', () => {
     }, 180000)
 
     it('Data migrates to the last remaining node if all other nodes leave gracefully', async () => {
-
-        //debugVars['stoppedNodes'] = []
-
         const dataKey = PeerID.fromString('3232323e12r31r3')
         const data = Any.pack(entrypointDescriptor, PeerDescriptor)
 
@@ -195,8 +190,6 @@ describe('Migrating data from node to node in DHT', () => {
                 (nodes[nodeIndex].localDataStore.getEntry(dataKey) ? ', has data' : ' does not have data'))
 
             await nodes[nodeIndex].stop()
-            
-            //debugVars['stoppedNodes'].push(nodes[nodeIndex].getNodeName())
         }
 
         logger.info('after random graceful leaving, node ' + randomIndices[0] + ' is left')

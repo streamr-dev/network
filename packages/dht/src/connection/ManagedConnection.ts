@@ -36,6 +36,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
     private handshaker?: Handshaker
     private handshakeCompleted = false
+    private doNotEmitDisconnected = false
 
     private lastUsed: number = Date.now()
     private stopped = false
@@ -216,25 +217,15 @@ export class ManagedConnection extends EventEmitter<Events> {
 
         impl.off('disconnected', this.onDisconnected)
         impl.on('disconnected', this.onDisconnected)
-
     }
 
-    private doNotEmitDisconnected = false
-    private disconnectReceived = false
-
     private onDisconnected(disconnectionType: DisconnectionType, _code?: number, _reason?: string): void {
-
         logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + ' onDisconnected() ' + disconnectionType)
-        this.disconnectReceived = true
         if (this.bufferSentbyOtherConnection) {
-            //logger.error('onDisconnected called on replaced connection')
             return
         }
-
         this.emit('internal_disconnected')
-
         this.doDisconnect(disconnectionType)
-
     }
 
     async send(data: Uint8Array, doNotConnect = false): Promise<void> {
@@ -260,7 +251,6 @@ export class ManagedConnection extends EventEmitter<Events> {
 
             let result: RunAndRaceEventsReturnType<Events>
 
-            //this.outgoingConnection!.off('disconnected', this.onDisconnected)
             this.doNotEmitDisconnected = true
 
             try {
@@ -268,20 +258,17 @@ export class ManagedConnection extends EventEmitter<Events> {
                     'bufferSentByOtherConnection', 'closing', 'internal_disconnected'], 15000)
             } catch (e) {
                 logger.error('Exception from raceEvents3 ' + e)
-                //const dataString = protoToString(Message.fromBinary(data), Message)
                 throw e
             }
 
             if (result.winnerName == 'internal_disconnected') {
                 this.doNotEmitDisconnected = false
                 this.doDisconnect('OTHER')
-                //throw new Err.ConnectionFailed("Disconnected before send")
             } else if (result.winnerName == 'handshakeFailed') {
                 logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + ' handshakeFailed received')
 
                 if (this.bufferSentbyOtherConnection) {
                     logger.trace('bufferSentByOtherConnection already true')
-                    //this.destroy()
                     this.doNotEmitDisconnected = false
                     this.doDisconnect('OTHER')
                 } else {
@@ -294,20 +281,16 @@ export class ManagedConnection extends EventEmitter<Events> {
                         logger.error(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName +
                             ' Exception from raceEvents3 while waiting bufferSentByOtherConnection or closing ' + ex)
                         logger.trace(this.connectionId + ' Exception from raceEvents3 while waiting bufferSentByOtherConnection')
-                        //const dataString = protoToString(Message.fromBinary(data), Message)
                         throw ex
                     }
                     if (result2.winnerName == 'bufferSentByOtherConnection') {
                         logger.trace('bufferSentByOtherConnection received')
-                        //this.destroy()
                         this.doNotEmitDisconnected = false
                         this.doDisconnect('OTHER')
                     } else if (result2.winnerName == 'closing') {
                         logger.trace('bufferSentByOtherConnection not received, instead received a closing event')
-                        //throw new Err.ConnectionFailed("Closing before buffer sent by duplicate onnection")
                     } else if (result2.winnerName == 'disconnected') {
                         logger.trace('disconnected while in raceEvents3')
-                        //throw new Err.ConnectionFailed("Closing before buffer sent by duplicate onnection")
                     }
                 }
             } else {

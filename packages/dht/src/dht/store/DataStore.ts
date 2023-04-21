@@ -200,7 +200,6 @@ export class DataStore implements IStoreService {
     public async migrateData(request: MigrateDataRequest, context: ServerCallContext): Promise<MigrateDataResponse> {
         logger.trace(this.ownPeerDescriptor.nodeName + ' server-side migrateData()')
         const dataEntry = request.dataEntry!
-        // const isKnownEntry = this.localDataStore.hasEntry(PeerID.fromValue(dataEntry.kademliaId).toKey()) 
         const wasStored = this.localDataStore.storeEntry(dataEntry)
         if (wasStored) {
             this.migrateDataToNeighborsIfNeeded((context as DhtCallContext).incomingSourceDescriptor!, request.dataEntry!)
@@ -216,8 +215,6 @@ export class DataStore implements IStoreService {
         const dataId = PeerID.fromValue(dataEntry.kademliaId)
         const incomingPeerId = PeerID.fromValue(incomingPeer.kademliaId)
         const closestToData = this.getNodesClosestToIdFromBucket(dataEntry.kademliaId, 10)
-        // this.getNeighborList().getAllContacts() // this.bucket!.closest(dataEntry.kademliaId, 10)
-        //this.getNeighborList().getAllContacts() // this.bucket!.closest(dataEntry.kademliaId, 10)
 
         const sortedList = new SortedContactList<Contact>(dataId, 5, undefined, true)
         sortedList.addContact(new Contact(this.ownPeerDescriptor!))
@@ -225,13 +222,6 @@ export class DataStore implements IStoreService {
         closestToData.forEach((con) => {
             sortedList.addContact(new Contact(con.getPeerDescriptor()))
         })
-
-        /*
-        if (!sortedList.getAllContacts()[0].peerId.equals(this.ownPeerId!)) {
-            // If we are not the closest node to the data, do not migrate
-            return false
-        }
-        */
 
         if (!sortedList.getAllContacts()[0].getPeerId().equals(ownPeerId)) {
             // If we are not the closest node to the data, migrate only to the 

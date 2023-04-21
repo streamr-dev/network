@@ -94,7 +94,6 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     private connectors: Map<PeerIDKey, SimulatorConnector> = new Map()
     private latencyTable?: Array<Array<number>>
     private associations: Map<ConnectionID, Association> = new Map()
-    //private timeouts: Map<string, NodeJS.Timeout> = new Map()
 
     private latencyType: LatencyType
     private fixedLatency?: number
@@ -204,7 +203,6 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     private executeCloseOperation(operation: CloseOperation): void {
 
         if (this.stopped) {
-            //logger.error('executeCloseOperation() called on a stopped simulator ' + (new Error().stack))
             return
         }
 
@@ -217,7 +215,6 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
         }
 
         if (!target || !counterAssociation) {
-            //this.associations.delete(target!.connectionId)
             this.associations.delete(operation.association.sourceConnection.connectionId)
 
         } else if (!counterAssociation!.isClosing()) {
@@ -233,7 +230,6 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     private executeSendOperation(operation: SendOperation): void {
 
         if (this.stopped) {
-            //console.error('executeSendOperation() called on a stopped simulator ' + (new Error().stack))
             return
         }
 
@@ -320,13 +316,11 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     public close(sourceConnection: SimulatorConnection): void {
 
         if (this.stopped) {
-            //logger.error('close() called on a stopped simulator ' + (new Error().stack))
             return
         }
 
         const association = this.associations.get(sourceConnection.connectionId)
         if (!association) {
-            //logger.error('association not found in close()')
             return
         }
 
@@ -345,13 +339,11 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     public send(sourceConnection: SimulatorConnection, data: Uint8Array): void {
 
         if (this.stopped) {
-            //logger.error('send() called on a stopped simulator ' + (new Error().stack))
             return
         }
 
         const association = this.associations.get(sourceConnection.connectionId)
         if (!association) {
-            //logger.error('association not found in send()')
             return
         }
 
