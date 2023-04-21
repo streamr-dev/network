@@ -18,16 +18,20 @@ export const generateEthereumAccount = (): { address: string, privateKey: string
 }
 
 export const getMainnetProviders = (config: Pick<StrictStreamrClientConfig, 'contracts'>): Provider[] => {
-    return getRpcProviders(config.contracts.mainChainRPCs)
+    return getRpcProviders(config.contracts.mainChainRPCs, config.contracts.pollInterval)
 }
 
 export const getStreamRegistryChainProviders = (config: Pick<StrictStreamrClientConfig, 'contracts'>): Provider[] => {
-    return getRpcProviders(config.contracts.streamRegistryChainRPCs)
+    return getRpcProviders(config.contracts.streamRegistryChainRPCs, config.contracts.pollInterval)
 }
 
-const getRpcProviders = (connectionInfo: ChainConnectionInfo): Provider[] => {
+const getRpcProviders = (connectionInfo: ChainConnectionInfo, pollInterval?: number): Provider[] => {
     return connectionInfo.rpcs.map((c: ConnectionInfo) => {
-        return new JsonRpcProvider(c)
+        const provider = new JsonRpcProvider(c)
+        if (pollInterval !== undefined) {
+            provider.pollingInterval = pollInterval
+        }
+        return provider
     })
 }
 
