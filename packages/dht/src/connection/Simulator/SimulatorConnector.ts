@@ -67,7 +67,7 @@ export class SimulatorConnector {
     }
 
     public handleIncomingConnection(sourceConnection: SimulatorConnection): void {
-        logger.info(' ' + this.ownPeerDescriptor.nodeName + ', ' + sourceConnection.ownPeerDescriptor.nodeName +
+        logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + sourceConnection.ownPeerDescriptor.nodeName +
             ' incoming connection, stopped: ' + this.stopped)
         if (this.stopped) {
             return
@@ -81,11 +81,11 @@ export class SimulatorConnector {
         logger.trace('connected, objectId: ' + managedConnection.objectId)
 
         managedConnection.once('handshakeRequest', (_peerDescriptor: PeerDescriptor) => {
-            logger.info(' ' + this.ownPeerDescriptor.nodeName + ', ' + sourceConnection.ownPeerDescriptor.nodeName + ' incoming handshake request')
+            logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + sourceConnection.ownPeerDescriptor.nodeName + ' incoming handshake request')
             logger.trace('incoming handshake request objectId: ' + managedConnection.objectId)
 
             if (this.incomingConnectionCallback(managedConnection)) {
-                logger.info(' ' + this.ownPeerDescriptor.nodeName + ', ' + sourceConnection.ownPeerDescriptor.nodeName + ' calling acceptHandshake')
+                logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + sourceConnection.ownPeerDescriptor.nodeName + ' calling acceptHandshake')
                 managedConnection.acceptHandshake()
             } else {
                 managedConnection.rejectHandshake('Duplicate connection')

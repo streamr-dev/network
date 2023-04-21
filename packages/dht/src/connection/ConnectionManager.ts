@@ -263,15 +263,15 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                             resolve()
                         })
                 } else {
-                    logger.info('handshake of connection not completed, force-closing')
+                    logger.trace('handshake of connection not completed, force-closing')
 
                     waitForEvent3<ManagedConnectionEvents>(peer!, 'disconnected', 2000)
                         .then(() => {
-                            logger.info('resolving after receiving disconnected event from non-handshaked connection')
+                            logger.trace('resolving after receiving disconnected event from non-handshaked connection')
                             resolve()
                         })
                         .catch((e) => {
-                            logger.info('force-closing non-handshaked connection timed out ' + e)
+                            logger.trace('force-closing non-handshaked connection timed out ' + e)
                             resolve()
                         })
 
@@ -421,12 +421,12 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     private onConnected = (connection: ManagedConnection) => {
         const peerDescriptor = connection.getPeerDescriptor()!
         this.emit('connected', peerDescriptor)
-        logger.info(' ' + this.ownPeerDescriptor?.nodeName + ', ' + peerDescriptor.nodeName + ' onConnected() ' + connection.connectionType)
+        logger.trace(' ' + this.ownPeerDescriptor?.nodeName + ', ' + peerDescriptor.nodeName + ' onConnected() ' + connection.connectionType)
         this.onConnectionCountChange()
     }
 
     private onDisconnected = (connection: ManagedConnection, disconnectionType: DisconnectionType) => {
-        logger.info(' ' + this.config.nodeName + ', ' + connection.getPeerDescriptor()?.nodeName +
+        logger.trace(' ' + this.config.nodeName + ', ' + connection.getPeerDescriptor()?.nodeName +
             ' onDisconnected() ' + disconnectionType)
 
         const hexKey = keyFromPeerDescriptor(connection.getPeerDescriptor()!)
@@ -474,37 +474,37 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     private acceptIncomingConnection(newConnection: ManagedConnection): boolean {
-        logger.info(" " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName + ' acceptIncomingConnection()')
+        logger.trace(" " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName + ' acceptIncomingConnection()')
         const newPeerID = peerIdFromPeerDescriptor(newConnection.getPeerDescriptor()!)
         const hexKey = keyFromPeerDescriptor(newConnection.getPeerDescriptor()!)
         if (this.connections.has(hexKey)) {
-            logger.info(" " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName + ' acceptIncomingConnection() has hexkey')
+            logger.trace(" " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName + ' acceptIncomingConnection() has hexkey')
             if (newPeerID.hasSmallerHashThan(peerIdFromPeerDescriptor(this.ownPeerDescriptor!))) {
-                logger.info(" " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName +
+                logger.trace(" " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName +
                     ' acceptIncomingConnection() newPeerID hexkey was smaller')
-                logger.info(" " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName +
+                logger.trace(" " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName +
                     ' acceptIncomingConnection() replace current connection')
                 // replace the current connection
                 const oldConnection = this.connections.get(newPeerID.toKey())!
                 logger.trace("replaced: " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName + ' ')
                 const buffer = oldConnection!.stealOutputBuffer()
-                logger.info(" " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName +
+                logger.trace(" " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName +
                     ' acceptIncomingConnection() sending data on new connection')
                 for (const data of buffer) {
                     newConnection.sendNoWait(data)
                 }
-                logger.info(" " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName +
+                logger.trace(" " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName +
                     ' acceptIncomingConnection() reporting buffer sent on old connection')
                 oldConnection!.reportBufferSentByOtherConnection()
                 oldConnection.replacedByOtherConnection = true
             } else {
-                logger.info(" " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName +
+                logger.trace(" " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName +
                     ' acceptIncomingConnection() newPeerID hexkey was bigger')
                 newConnection.rejectedAsIncoming = true
                 return false
             }
         } else {
-            logger.info(" " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName +
+            logger.trace(" " + this.config.nodeName + ', ' + newConnection.getPeerDescriptor()?.nodeName +
                 ' acceptIncomingConnection() does not have hexkey')
         }
 
@@ -601,15 +601,15 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         const promise = new Promise<void>((resolve, _reject) => {
             // eslint-disable-next-line promise/catch-or-return
             waitForEvent3<ManagedConnectionEvents>(connection!, 'disconnected', 2000).then(() => {
-                logger.info('disconnected event received in gracefullyDisconnectAsync()')
+                logger.trace('disconnected event received in gracefullyDisconnectAsync()')
                 return
             })
                 .catch((e) => {
-                    logger.info('force-closing connection after timeout ' + e)
+                    logger.trace('force-closing connection after timeout ' + e)
                     connection.close('OTHER')
                 })
                 .finally(() => {
-                    logger.info('resolving after receiving disconnected event')
+                    logger.trace('resolving after receiving disconnected event')
                     resolve()
                 })
         })
