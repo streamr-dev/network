@@ -229,17 +229,12 @@ export class ManagedConnection extends EventEmitter<Events> {
     }
 
     async send(data: Uint8Array, doNotConnect = false): Promise<void> {
-
         if (this.stopped) {
-            logger.error('send() called on stopped connection')
             return
         }
-
         if (this.closing) {
-            logger.error('send() called on closing connection')
             return
         }
-
         this.lastUsed = Date.now()
 
         if (doNotConnect && !this.implementation) {
@@ -278,7 +273,7 @@ export class ManagedConnection extends EventEmitter<Events> {
                         result2 = await raceEvents3<Events>(this,
                             ['bufferSentByOtherConnection', 'closing', 'disconnected'], 15000)
                     } catch (ex) {
-                        logger.error(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName +
+                        logger.debug(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName +
                             ' Exception from raceEvents3 while waiting bufferSentByOtherConnection or closing ' + ex)
                         logger.trace(this.connectionId + ' Exception from raceEvents3 while waiting bufferSentByOtherConnection')
                         throw ex

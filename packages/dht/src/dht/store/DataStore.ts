@@ -149,7 +149,7 @@ export class DataStore implements IStoreService {
     }
 
     public async storeDataToDht(key: Uint8Array, data: Any): Promise<PeerDescriptor[]> {
-        logger.info(`Storing data to DHT ${this.serviceId} with key ${PeerID.fromValue(key)}`)
+        logger.debug(`Storing data to DHT ${this.serviceId}`)
         const result = await this.recursiveFinder!.startRecursiveFind(key)
         const closestNodes = result.closestNodes
         const successfulNodes: PeerDescriptor[] = []
