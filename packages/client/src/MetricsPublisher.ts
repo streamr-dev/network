@@ -6,7 +6,7 @@ import { Publisher } from './publish/Publisher'
 import { ConfigInjectionToken, StreamrClientConfig, ProviderAuthConfig } from './Config'
 import { pOnce } from './utils/promises'
 import { MetricsReport, wait } from '@streamr/utils'
-import merge from 'lodash/merge'
+import { merge } from '@streamr/utils'
 
 type NormalizedConfig = NonNullable<Required<Exclude<StreamrClientConfig['metrics'], boolean>>>
 

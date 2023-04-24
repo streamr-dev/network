@@ -21,7 +21,7 @@ import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
 import { DestroySignal } from '../../src/DestroySignal'
 import { MessageMetadata } from '../../src/Message'
 import { AuthenticationInjectionToken, createAuthentication } from '../../src/Authentication'
-import merge from 'lodash/merge'
+import { merge } from '@streamr/utils'
 
 const Dependencies = {
     NetworkNodeFacade,

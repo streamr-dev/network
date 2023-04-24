@@ -13,7 +13,7 @@ import { Config } from '../src/config/config'
 import { StreamPartID } from '@streamr/protocol'
 import { EthereumAddress, MetricsContext, toEthereumAddress } from '@streamr/utils'
 import { TEST_CONFIG } from '@streamr/network-node'
-import merge from 'lodash/merge'
+import { merge } from '@streamr/utils'
 
 export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
 

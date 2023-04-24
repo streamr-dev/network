@@ -5,7 +5,7 @@ import { StreamDefinition } from '../../src/types'
 import { PublishMetadata } from '../../src/publish/Publisher'
 import { uid } from './utils'
 import { Message } from './../../src/Message'
-import merge from 'lodash/merge'
+import { merge } from '@streamr/utils'
 
 export function Msg<T extends object = object>(opts?: T): any {
     return merge(

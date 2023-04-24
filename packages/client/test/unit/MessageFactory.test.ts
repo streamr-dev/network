@@ -6,10 +6,10 @@ import { createPrivateKeyAuthentication } from '../../src/Authentication'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { PublishMetadata } from '../../src/publish/Publisher'
 import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
-import { MessageFactory } from '../../src/publish/MessageFactory'
+import { MessageFactory, MessageFactoryOptions } from '../../src/publish/MessageFactory'
 import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
 import { createGroupKeyQueue, createStreamRegistryCached } from '../test-utils/utils'
-import merge from 'lodash/merge'
+import { merge } from '@streamr/utils'
 
 const WALLET = fastWallet()
 const STREAM_ID = toStreamID('/path', toEthereumAddress(WALLET.address))
@@ -24,7 +24,7 @@ const createMessageFactory = async (opts?: {
 }) => {
     const authentication = createPrivateKeyAuthentication(WALLET.privateKey, undefined as any)
     return new MessageFactory(
-        merge(
+        merge<MessageFactoryOptions>(
             {
                 streamId: STREAM_ID,
                 authentication,

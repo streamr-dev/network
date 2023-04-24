@@ -1,5 +1,5 @@
 import fetch, { RequestInit, Response } from 'node-fetch'
-import merge from 'lodash/merge'
+import { merge } from '@streamr/utils'
 
 const DEFAULT_TIMEOUT = 30 * 1000
 

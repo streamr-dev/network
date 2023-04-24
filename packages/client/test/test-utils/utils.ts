@@ -25,7 +25,7 @@ import { LitProtocolFacade } from '../../src/encryption/LitProtocolFacade'
 import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
 import { DestroySignal } from '../../src/DestroySignal'
 import { PersistenceManager } from '../../src/PersistenceManager'
-import merge from 'lodash/merge'
+import { merge } from '@streamr/utils'
 
 const logger = new Logger(module)
 

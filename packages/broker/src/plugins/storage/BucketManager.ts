@@ -3,7 +3,7 @@ import Heap from 'heap'
 import { types as cassandraTypes } from 'cassandra-driver'
 import { Logger } from '@streamr/utils'
 import { Bucket, BucketId } from './Bucket'
-import merge from 'lodash/merge'
+import { merge } from '@streamr/utils'
 
 const { TimeUuid } = cassandraTypes
 

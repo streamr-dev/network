@@ -8,7 +8,7 @@ import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { getWaitForStorage } from '../test-utils/publish'
 import { createTestStream, uid } from '../test-utils/utils'
 import { Message } from '../../src/Message'
-import merge from 'lodash/merge'
+import { merge } from '@streamr/utils'
 
 const Msg = (opts?: any) => {
     return merge(

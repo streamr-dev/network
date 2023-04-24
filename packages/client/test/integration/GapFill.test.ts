@@ -9,7 +9,7 @@ import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { createTestStream } from '../test-utils/utils'
-import merge from 'lodash/merge'
+import { merge } from '@streamr/utils'
 
 const MAX_MESSAGES = 10
 

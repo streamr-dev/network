@@ -5,7 +5,7 @@ import { waitForEvent, waitForCondition } from '@streamr/utils'
 import { WebsocketServer } from '../../../../src/plugins/websocket/WebsocketServer'
 import { PlainPayloadFormat } from '../../../../src/helpers/PayloadFormat'
 import { mock, MockProxy } from 'jest-mock-extended'
-import merge from 'lodash/merge'
+import { merge } from '@streamr/utils'
 
 const PORT = 12398
 const MOCK_STREAM_ID = '0x1234567890123456789012345678901234567890/mock-path'

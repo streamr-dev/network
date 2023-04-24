@@ -24,7 +24,7 @@ import { Subscription } from './subscribe/Subscription'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { Message } from './Message'
 import { convertStreamMessageToMessage } from './Message'
-import merge from 'lodash/merge'
+import { merge } from '@streamr/utils'
 
 export interface StreamMetadata {
     /**

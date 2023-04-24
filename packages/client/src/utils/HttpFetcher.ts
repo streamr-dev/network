@@ -3,7 +3,7 @@ import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import fetch, { Response } from 'node-fetch'
 import { Logger } from '@streamr/utils'
 import { LoggerFactory } from './LoggerFactory'
-import merge from 'lodash/merge'
+import { merge } from '@streamr/utils'
 
 @scoped(Lifecycle.ContainerScoped)
 export class HttpFetcher {

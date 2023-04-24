@@ -13,7 +13,7 @@ import {
     createTestStream
 } from '../test-utils/utils'
 import { Message } from '../../src/Message'
-import merge from 'lodash/merge'
+import { merge } from '@streamr/utils'
 
 // this has publisher & subscriber clients
 // publisher begins publishing `maxMessages` messages
