@@ -38,7 +38,7 @@ const exponentialRunOff = async (
         try {
             await task()
         } catch (e: any) {
-            logger.warn(`${description} failed, retrying in ${delay} ms`)
+            logger.trace(`${description} failed, retrying in ${delay} ms`)
         }
         try { // Abort controller throws unexpected errors in destroy?
             await wait(delay, abortSignal)
@@ -179,7 +179,7 @@ export class StreamEntryPointDiscovery {
                 }
             }
         }, 'avoid network split', this.abortController.signal)
-        logger.info(`Network split avoided`)
+        logger.trace(`Network split avoided`)
     }
 
     stopRecaching(streamPartId: string): void {
