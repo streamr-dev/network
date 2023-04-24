@@ -1,3 +1,4 @@
+import { allOrCleanup } from './allOrCleanup'
 import { AbortError, asAbortable } from './asAbortable'
 import { setAbortableInterval, setAbortableTimeout } from './abortableTimers'
 import { Defer } from './Defer'
@@ -40,6 +41,7 @@ export {
     Multimap,
     AbortError,
     TimeoutError,
+    allOrCleanup,
     asAbortable,
     composeAbortSignals,
     isENSName,
