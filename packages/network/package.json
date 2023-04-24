@@ -62,7 +62,7 @@
     "karma-jasmine": "^5.1.0",
     "karma-spec-reporter": "^0.0.36",
     "karma-webpack": "^5.0.0",
-    "node-polyfill-webpack-plugin": "^1.1.4",
+    "node-polyfill-webpack-plugin": "^2.0.1",
     "ts-loader": "^9.3.1",
     "webpack": "^5.64.1",
     "webpack-cli": "^5.0.1"

@@ -63,7 +63,7 @@
     "karma-spec-reporter": "^0.0.36",
     "karma-webpack": "^5.0.0",
     "node-module-polyfill": "^1.0.1",
-    "node-polyfill-webpack-plugin": "^1.1.4",
+    "node-polyfill-webpack-plugin": "^2.0.1",
     "patch-package": "^6.4.7",
     "path-browserify": "^1.0.1",
     "process": "^0.11.10",
