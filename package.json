@@ -49,5 +49,8 @@
         "typescript": "^4.9.3",
         "yarn": "^1.22.17",
         "zx": "^1.14.1"
+    },
+    "devDependencies": {
+        "typedoc": "^0.24.1"
     }
 }

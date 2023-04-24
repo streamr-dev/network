@@ -1,0 +1,50 @@
+.linkList {
+    width: 100%;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    column-gap: 1rem;
+}
+
+.link {
+    display: flex;
+    justify-content: center;
+
+    position: relative;
+    cursor: pointer;
+    flex-direction: column;
+    padding: 1rem;
+    border: solid 1px #efefef;
+    border-radius: 16px;
+    background-color: var(--ifm-card-background-color);
+    margin-bottom: 1rem;
+    padding-left: 3.2rem;
+}
+
+.link::before {
+    content: "";
+    left: 1rem;
+    position: absolute;
+    display: block;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-color: var(--ifm-color-primary);
+    border: 1px;
+    border: solid;
+    border-radius: 0.25rem;
+}
+
+.classType::before {
+    content: "C";
+}
+
+.interfaceType::before {
+    content: "I";
+}
+
+.enumType::before {
+    content: "E";
+}

@@ -1,14 +1,14 @@
 module.exports = {
-    entryPoints: [
-        'src/exports.ts'
-    ],
-    tsconfig: 'tsconfig.node.json',
-    name: "Streamr Client",
-    readme: 'none',
+    entryPoints: ["src/exports.ts"],
+    tsconfig: "tsconfig.node.json",
+    name: "⚙️ Streamr SDK",
+    readme: "none",
+    entryDocument: "",
     excludePrivate: true,
     excludeProtected: true,
     excludeInternal: true,
     includeVersion: true,
     disableSources: true,
-    categorizeByGroup: false
+    categorizeByGroup: true,
+    hideInPageTOC: true,
 }
