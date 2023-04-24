@@ -66,17 +66,7 @@ module.exports = (env, argv) => {
             ],
         },
         plugins: [
-            new NodePolyfillPlugin({
-                includeAliases: [
-                    'constants',
-                    'crypto',
-                    'path',
-                    'stream'
-                ]
-            }),
-            new webpack.ProvidePlugin({
-                Buffer: ['buffer', 'Buffer']
-            }),
+            new NodePolyfillPlugin(),
             new webpack.ProvidePlugin({
                 process: 'process/browser',
             })
