@@ -37,7 +37,7 @@
     "karma-mocha-reporter": "^2.2.5",
     "lodash": "^4.17.21",
     "node-datachannel": "^0.4.2",
-    "p-queue": "6.3.0",
+    "p-queue": "7.3.4",
     "uuid": "^9.0.0",
     "websocket": "^1.0.34"
   },
