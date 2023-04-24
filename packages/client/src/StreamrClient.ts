@@ -34,6 +34,7 @@ import { LoggerFactory } from './utils/LoggerFactory'
 import { convertStreamMessageToMessage, Message } from './Message'
 import { ErrorCode } from './HttpUtil'
 import omit from 'lodash/omit'
+import merge from 'lodash/merge'
 import { StreamrClientError } from './StreamrClientError'
 
 // TODO: this type only exists to enable tsdoc to generate proper documentation
@@ -311,10 +312,7 @@ export class StreamrClient {
     async createStream(propsOrStreamIdOrPath: Partial<StreamMetadata> & { id: string } | string): Promise<Stream> {
         const props = typeof propsOrStreamIdOrPath === 'object' ? propsOrStreamIdOrPath : { id: propsOrStreamIdOrPath }
         const streamId = await this.streamIdBuilder.toStreamID(props.id)
-        return this.streamRegistry.createStream(streamId, {
-            partitions: 1,
-            ...omit(props, 'id')
-        })
+        return this.streamRegistry.createStream(streamId, merge({ partitions: 1 }, omit(props, 'id') ))
     }
 
     /**

@@ -29,7 +29,7 @@
     "@streamr/protocol": "8.3.0-beta.0",
     "@streamr/utils": "8.3.0-beta.0",
     "cancelable-promise": "^3.2.3",
-    "commander": "^8.3.0",
+    "commander": "^10.0.1",
     "heap": "^0.2.6",
     "ipaddr.js": "^2.0.1",
     "lodash": "^4.17.21",
@@ -65,7 +65,7 @@
     "node-polyfill-webpack-plugin": "^1.1.4",
     "ts-loader": "^9.3.1",
     "webpack": "^5.64.1",
-    "webpack-cli": "^4.9.1"
+    "webpack-cli": "^5.0.1"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.5",
