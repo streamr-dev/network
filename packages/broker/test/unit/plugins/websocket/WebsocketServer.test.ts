@@ -4,6 +4,7 @@ import StreamrClient from 'streamr-client'
 import { waitForEvent, waitForCondition } from '@streamr/utils'
 import { WebsocketServer } from '../../../../src/plugins/websocket/WebsocketServer'
 import { PlainPayloadFormat } from '../../../../src/helpers/PayloadFormat'
+import merge from 'lodash/merge'
 
 const PORT = 12398
 const MOCK_STREAM_ID = '0x1234567890123456789012345678901234567890/mock-path'
@@ -15,10 +16,14 @@ const PATH_SUBSCRIBE_MOCK_STREAM = `/streams/${encodeURIComponent(MOCK_STREAM_ID
 const REQUIRED_API_KEY = 'required-api-key'
 
 const createTestClient = (path: string, queryParams?: any): WebSocket => {
-    const queryParamsSuffix = qs.stringify({
-        apiKey: REQUIRED_API_KEY,
-        ...queryParams
-    })
+    const queryParamsSuffix = qs.stringify(
+        merge(
+            {
+                apiKey: REQUIRED_API_KEY
+            },
+            queryParams
+        )
+    )
     return new WebSocket(`ws://localhost:${PORT}${path}?${queryParamsSuffix}`)
 }
 

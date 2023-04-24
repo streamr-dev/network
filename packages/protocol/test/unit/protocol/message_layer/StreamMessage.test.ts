@@ -10,6 +10,7 @@ import '../../../../src/protocol/message_layer/StreamMessageSerializerV32'
 import { Serializer } from '../../../../src/Serializer'
 import { toStreamID } from '../../../../src/utils/StreamID'
 import { StreamPartIDUtils } from '../../../../src/utils/StreamPartID'
+import merge from 'lodash/merge'
 
 const content = {
     hello: 'world',
@@ -18,16 +19,20 @@ const content = {
 const newGroupKey = new EncryptedGroupKey('groupKeyId', 'encryptedGroupKeyHex')
 
 const msg = ({ timestamp = 1564046332168, sequenceNumber = 10, ...overrides } = {}) => {
-    return new StreamMessage({
-        messageId: new MessageID(toStreamID('streamId'), 0, timestamp, sequenceNumber, PUBLISHER_ID, 'msgChainId'),
-        prevMsgRef: new MessageRef(timestamp, 5),
-        content: JSON.stringify(content),
-        messageType: StreamMessageType.MESSAGE,
-        encryptionType: EncryptionType.NONE,
-        signature: 'signature',
-        newGroupKey,
-        ...overrides
-    })
+    return new StreamMessage(
+        merge(
+            {
+                messageId: new MessageID(toStreamID('streamId'), 0, timestamp, sequenceNumber, PUBLISHER_ID, 'msgChainId'),
+                prevMsgRef: new MessageRef(timestamp, 5),
+                content: JSON.stringify(content),
+                messageType: StreamMessageType.MESSAGE,
+                encryptionType: EncryptionType.NONE,
+                signature: 'signature',
+                newGroupKey
+            },
+            overrides
+        )
+    )
 }
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')

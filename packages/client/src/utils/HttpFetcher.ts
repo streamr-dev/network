@@ -3,6 +3,7 @@ import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import fetch, { Response } from 'node-fetch'
 import { Logger } from '@streamr/utils'
 import { LoggerFactory } from './LoggerFactory'
+import merge from 'lodash/merge'
 
 @scoped(Lifecycle.ContainerScoped)
 export class HttpFetcher {
@@ -22,9 +23,6 @@ export class HttpFetcher {
         // eslint-disable-next-line no-underscore-dangle
         const timeout = this.config._timeouts.httpFetchTimeout
         this.logger.debug('Fetch', { url, timeout })
-        return fetch(url, {
-            timeout,
-            ...init
-        } as any)
+        return fetch(url, merge({ timeout }, init))
     }
 }

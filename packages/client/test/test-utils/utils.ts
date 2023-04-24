@@ -25,6 +25,7 @@ import { LitProtocolFacade } from '../../src/encryption/LitProtocolFacade'
 import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
 import { DestroySignal } from '../../src/DestroySignal'
 import { PersistenceManager } from '../../src/PersistenceManager'
+import merge from 'lodash/merge'
 
 const logger = new Logger(module)
 
@@ -70,14 +71,16 @@ export const getCreateClient = (
         } else {
             key = await fetchPrivateKeyWithGas()
         }
-        const client = new StreamrClient({
-            ...CONFIG_TEST,
-            auth: {
-                privateKey: key,
+        const client = new StreamrClient(merge(
+            CONFIG_TEST,
+            {
+                auth: {
+                    privateKey: key,
+                }
             },
-            ...defaultOpts,
-            ...opts,
-        }, defaultParentContainer ?? parentContainer)
+            defaultOpts,
+            opts,
+        ), defaultParentContainer ?? parentContainer)
 
         addAfter(async () => {
             await wait(0)
