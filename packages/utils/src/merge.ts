@@ -1,4 +1,4 @@
-export const merge = (...sources: readonly (Record<string, unknown> | undefined)[]): Record<string, unknown> => {
+export const merge = (...sources: (object | undefined)[]): Record<PropertyKey, unknown>  => {
     const result: Record<string, unknown> = {}
     for (const source of sources) {
         if (source !== undefined) {
