@@ -1,10 +1,10 @@
 import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 import { Wallet } from '@ethersproject/wallet'
 import { fetchPrivateKeyWithGas, randomEthereumAddress } from '@streamr/test-utils'
-import { CONFIG_TEST, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
-import { createTestStream } from '../test-utils/utils'
+import { createTestStream, createTestClient } from '../test-utils/utils'
 
 jest.setTimeout(30000)
 
@@ -19,59 +19,9 @@ describe('StorageNodeRegistry2', () => {
     let storageNodeAddress: EthereumAddress
 
     beforeAll(async () => {
-        client = new StreamrClient({
-            ...CONFIG_TEST,
-            auth: {
-                privateKey: await fetchPrivateKeyWithGas()
-            },
-            network: {
-                layer0: {
-                    entryPoints: [{
-                        kademliaId: "entryPointBroker",
-                        type: 0,
-                        websocket: {
-                            ip: "127.0.0.1",
-                            port: 40401
-                        }
-                    }],
-                    peerDescriptor: {
-                        kademliaId: "storage-node-registry-2-client",
-                        type: 0,
-                        websocket: {
-                            ip: 'localhost',
-                            port: 43237
-                        }
-                    }
-                }
-            }
-        })
+        client = createTestClient(await fetchPrivateKeyWithGas(), 'storage-node-registry-2-client', 43236)
         const storageNodeWallet = new Wallet(await fetchPrivateKeyWithGas())
-        storageNodeClient = new StreamrClient({
-            ...CONFIG_TEST,
-            auth: {
-                privateKey: storageNodeWallet.privateKey
-            },
-            network: {
-                layer0: {
-                    entryPoints: [{
-                        kademliaId: "entryPointBroker",
-                        type: 0,
-                        websocket: {
-                            ip: "127.0.0.1",
-                            port: 40401
-                        }
-                    }],
-                    peerDescriptor: {
-                        kademliaId: "storage-node-registry-2-storage-node-client",
-                        type: 0,
-                        websocket: {
-                            ip: 'localhost',
-                            port: 43236
-                        }
-                    }
-                }
-            }
-        })
+        storageNodeClient = createTestClient(storageNodeWallet.privateKey, 'storage-node-registry-2-storage-node', 43237)
         storageNodeAddress = toEthereumAddress(storageNodeWallet.address)
         createdStream = await createTestStream(client, module)
     })

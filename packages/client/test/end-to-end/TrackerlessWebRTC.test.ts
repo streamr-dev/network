@@ -4,9 +4,8 @@ import { CONFIG_TEST } from '../../src/ConfigTest'
 import { PermissionAssignment, StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
-import { createTestStream } from '../test-utils/utils'
+import { createTestStream, createTestClient } from '../test-utils/utils'
 import { waitForCondition } from '@streamr/utils'
-import { PeerID } from '@streamr/dht'
 
 const TIMEOUT = 60 * 1000
 
@@ -36,68 +35,15 @@ describe('publish-subscribe', () => {
     let publisherPk: string
     let publisherClient: StreamrClient
     let subscriberClient: StreamrClient
-    let entryPointWallet: Wallet
-    let entryPointClient: StreamrClient
 
     beforeAll(async () => {
         subscriberWallet = fastWallet()
         publisherPk = await fetchPrivateKeyWithGas()
-        entryPointWallet = new Wallet((await fetchPrivateKeyWithGas()))
     })
 
     beforeEach(async () => {
-        const entryPoint = {
-            kademliaId: PeerID.fromString('entryPoint').toString(),
-            type: 0,
-            websocket: {
-                ip: 'localhost',
-                port: 15655
-            }
-        }
-
-        entryPointClient = new StreamrClient({
-            ...CONFIG_TEST,
-            auth: {
-                privateKey: entryPointWallet.privateKey
-            },
-            network: {
-                layer0: {
-                    entryPoints: [entryPoint],
-                    peerDescriptor: entryPoint
-                }
-            }
-        })
-
-        publisherClient = new StreamrClient({
-            ...CONFIG_TEST,
-            auth: {
-                privateKey: publisherPk
-            },
-            network: {
-                layer0: {
-                    entryPoints: [entryPoint],
-                    peerDescriptor: {
-                        kademliaId: 'publisher',
-                        type: 0
-                    }
-                }
-            }
-        })
-        subscriberClient = new StreamrClient({
-            ...CONFIG_TEST,
-            auth: {
-                privateKey: subscriberWallet.privateKey
-            },
-            network: {
-                layer0: {
-                    entryPoints: [entryPoint],
-                    peerDescriptor: {
-                        kademliaId: 'subscriber',
-                        type: 0
-                    }
-                }
-            }
-        })
+        publisherClient = createTestClient(publisherPk, 'webrtc-publisher')
+        subscriberClient = createTestClient(subscriberWallet.privateKey, 'webrtc-subscriber')
 
     }, TIMEOUT)
 
@@ -120,8 +66,6 @@ describe('publish-subscribe', () => {
         }, TIMEOUT)
 
         it('subscriber is able to receive and decrypt messages', async () => {
-            await entryPointClient.subscribe(stream.id, (_msg: any) => {})
-
             const messages: any[] = []
             await publisherClient.publish(stream.id, PAYLOAD)
             const sub = await subscriberClient.subscribe(stream.id, (msg: any) => {

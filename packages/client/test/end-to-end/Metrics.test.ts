@@ -3,8 +3,8 @@ import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
-import { getCreateClient } from '../test-utils/utils'
-import { PeerID } from '@streamr/dht'
+import { getCreateClient, createTestClient } from '../test-utils/utils'
+import { CONFIG_TEST } from '../../src/ConfigTest'
 
 const NUM_OF_PARTITIONS = 10
 
@@ -17,14 +17,6 @@ describe('NodeMetrics', () => {
     beforeAll(async () => {
         const streamPath = `/metrics/${Date.now()}`
         const generatorClientPrivateKey = await fetchPrivateKeyWithGas()
-        const subscriberDescriptor = {
-            kademliaId: PeerID.fromString('subscriber').toString(),
-            type: 0,
-            websocket: {
-                ip: 'localhost',
-                port: 15653
-            }
-        }
         generatorClient = await createClient({
             auth: {
                 privateKey: generatorClientPrivateKey
@@ -40,7 +32,7 @@ describe('NodeMetrics', () => {
             },
             network: {
                 layer0: {
-                    entryPoints: [subscriberDescriptor],
+                    ...CONFIG_TEST.network!.layer0,
                     stringKademliaId: 'generator'
                 }
             }
@@ -50,15 +42,8 @@ describe('NodeMetrics', () => {
             partitions: NUM_OF_PARTITIONS
         })
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
-        subscriberClient = await createClient({
-            network: {
-                layer0: {
-                    entryPoints: [subscriberDescriptor],
-                    peerDescriptor: subscriberDescriptor
-                }
-            }
-        })
-    }, 20 * 1000)
+        subscriberClient = createTestClient(await fetchPrivateKeyWithGas(), 'subscriber', 15653)
+    }, 30 * 1000)
 
     afterAll(async () => {
         await Promise.allSettled([
@@ -84,7 +69,7 @@ describe('NodeMetrics', () => {
         const dummyStream = await generatorClient.createStream(`/${Date.now()}`)
         await generatorClient.subscribe(dummyStream, () => {})
 
-        await waitForCondition(() => report !== undefined)
+        await waitForCondition(() => report !== undefined, 15000)
         expect(report!).toMatchObject({
             node: {
                 publishMessagesPerSecond: expect.any(Number),
@@ -101,5 +86,5 @@ describe('NodeMetrics', () => {
                 end: expect.any(Number)
             }
         })
-    }, 20 * 1000)
+    }, 30 * 1000)
 })

@@ -59,7 +59,7 @@ describe('MemoryLeaks', () => {
         expect(leaksDetector).toBeTruthy()
         if (!leaksDetector) { return }
         const detector = leaksDetector
-        await wait(5000)
+        await wait(15000)
         snapshot()
         await detector.checkNoLeaks() // this is very slow
         detector.clear()

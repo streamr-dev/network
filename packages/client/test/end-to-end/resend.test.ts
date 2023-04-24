@@ -1,7 +1,7 @@
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { createTestStream } from '../test-utils/utils'
+import { createTestStream, createTestClient } from '../test-utils/utils'
 import range from 'lodash/range'
-import { CONFIG_TEST, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { wait, waitForCondition } from '@streamr/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamPermission } from '../../src/permission'
@@ -16,60 +16,9 @@ describe('resend', () => {
     let resendClient: StreamrClient
 
     beforeEach(async () => {
-        publisherClient = new StreamrClient({
-            ...CONFIG_TEST,
-            auth: {
-                privateKey: await fetchPrivateKeyWithGas()
-            },
-            network: {
-                layer0: {
-                    entryPoints: [{
-                        kademliaId: "entryPointBroker",
-                        type: 0,
-                        websocket: {
-                            ip: "127.0.0.1",
-                            port: 40401
-                        }
-                    }],
-                    peerDescriptor: {
-                        kademliaId: "resend-e2e-publisher-client",
-                        type: 0,
-                        websocket: {
-                            ip: '127.0.0.1',
-                            port: 43232
-                        }
-                    }
-                }
-            },
-
-        })
-        resendClient = new StreamrClient({
-            ...CONFIG_TEST,
-            auth: {
-                privateKey: fastPrivateKey()
-            },
-            network: {
-                layer0: {
-                    entryPoints: [{
-                        kademliaId: "entryPointBroker",
-                        type: 0,
-                        websocket: {
-                            ip: "127.0.0.1",
-                            port: 40401
-                        }
-                    }],
-                    peerDescriptor: {
-                        kademliaId: "resend-e2e-resend-client",
-                        type: 0,
-                        websocket: {
-                            ip: '127.0.0.1',
-                            port: 43233
-                        }
-                    }
-                }
-            }
-        })
-    }, TIMEOUT * 2)
+        publisherClient = createTestClient(await fetchPrivateKeyWithGas(), 'resend-e2e-publisher-client', 43232)
+        resendClient = createTestClient(fastPrivateKey(), 'resend-e2e-resend-client', 43233)
+    }, TIMEOUT)
 
     afterEach(async () => {
         await Promise.allSettled([

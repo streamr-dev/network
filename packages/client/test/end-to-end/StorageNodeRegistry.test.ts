@@ -5,7 +5,7 @@ import { CONFIG_TEST, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { until } from '../../src/utils/promises'
-import { createTestStream } from '../test-utils/utils'
+import { createTestStream, createTestClient } from '../test-utils/utils'
 
 const TEST_TIMEOUT = 60 * 1000
 
@@ -19,58 +19,8 @@ describe('StorageNodeRegistry', () => {
     beforeAll(async () => {
         creatorWallet = new Wallet(await fetchPrivateKeyWithGas())
         listenerWallet = new Wallet(await fetchPrivateKeyWithGas())
-        creatorClient = new StreamrClient({
-            ...CONFIG_TEST,
-            auth: {
-                privateKey: creatorWallet.privateKey,
-            },
-            network: {
-                layer0: {
-                    entryPoints: [{
-                        kademliaId: "entryPointBroker",
-                        type: 0,
-                        websocket: {
-                            ip: "127.0.0.1",
-                            port: 40401
-                        }
-                    }],
-                    peerDescriptor: {
-                        kademliaId: "storage-node-registry-1-creator",
-                        type: 0,
-                        websocket: {
-                            ip: 'localhost',
-                            port: 43235
-                        }
-                    }
-                }
-            }
-        })
-        listenerClient = new StreamrClient({
-            ...CONFIG_TEST,
-            auth: {
-                privateKey: listenerWallet.privateKey,
-            },
-            network: {
-                layer0: {
-                    entryPoints: [{
-                        kademliaId: "entryPointBroker",
-                        type: 0,
-                        websocket: {
-                            ip: "127.0.0.1",
-                            port: 40401
-                        }
-                    }],
-                    peerDescriptor: {
-                        kademliaId: "storage-node-registry-1-listener",
-                        type: 0,
-                        websocket: {
-                            ip: 'localhost',
-                            port: 43234
-                        }
-                    }
-                }
-            }
-        })
+        creatorClient = createTestClient(creatorWallet.privateKey, 'storage-node-registry-1-creator', 43235)
+        listenerClient = createTestClient(listenerWallet.privateKey, 'storage-node-registry-1-listener', 43234)
     }, TEST_TIMEOUT)
 
     afterAll(async () => {
@@ -158,5 +108,5 @@ describe('StorageNodeRegistry', () => {
             nodeAddress: DOCKER_DEV_STORAGE_NODE,
             streamId: stream.id,
         })
-    }, TEST_TIMEOUT)
+    }, TEST_TIMEOUT * 2)
 })
