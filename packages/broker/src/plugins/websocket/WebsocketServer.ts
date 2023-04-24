@@ -89,19 +89,19 @@ export class WebsocketServer {
             })
         })
 
-        this.wss.on('connection', (ws: WebSocket, _request: http.IncomingMessage, connection: Connection) => {
+        this.wss.on('connection', async (ws: WebSocket, _request: http.IncomingMessage, connection: Connection) => {
             const socketId = randomString(5)
             logger.info('Accept connection', { socketId })
-            connection.init(ws, socketId, this.streamrClient, payloadFormat).then(() => {
+            try {
+                await connection.init(ws, socketId, this.streamrClient, payloadFormat)
                 addPingListener(ws)
                 if (this.pingSendInterval !== 0) {
                     addPingSender(ws, socketId, this.pingSendInterval, this.disconnectTimeout)
                 }
-                return
-            }, (err) => {
+            } catch (err) {
                 logger.warn('Close connection', { socketId, reason: err?.message })
                 ws.close()
-            })
+            }
         })
 
         this.httpServer.listen(port)
