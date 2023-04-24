@@ -85,4 +85,16 @@ describe('merge', () => {
             }
         })
     })
+
+    it('undefineds are skipped', () => {
+        const o1 = {
+            foo: 1,
+        }
+        const o2 = {
+            foo: 2,
+        }
+        expect(merge(undefined, o1, undefined, o2, undefined)).toEqual({
+            foo: 2
+        })
+    })
 })
