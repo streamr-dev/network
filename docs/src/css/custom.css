@@ -68,6 +68,7 @@ thead {
     font-size: 0.9rem;
 }
 
-.hidden {
+.hide-expandable-sidebar button,
+.hide-expandable-sidebar ul {
     display: none !important;
 }

@@ -78,7 +78,7 @@ async function readFolderRecursive(directory) {
 
 const refineAPIRef = async () => {
     const sourceFilePath = "docs/api/modules.md"
-    const destinationFilePath = "docs/api/index.mdx"
+    const destinationFilePath = "docs/api/modules.mdx"
 
     // replaces index content with module content
     // index is by default the readme, which we don't want
@@ -105,6 +105,7 @@ const refineAPIRef = async () => {
         ""
     )
 
+    // Add the featured links and navigation
     newContent = newContent.replace(
         /sidebar_position: 0.5\ncustom_edit_url: null\n---/,
         `sidebar_position: 5\ncustom_edit_url: null\n---\n\nimport FeaturedLinks from 
@@ -123,6 +124,11 @@ const refineAPIRef = async () => {
 
     // Write the modified content back to the file
     fs.writeFileSync(destinationFilePath, newContent)
+
+    // remove sidebar items
+    const categoryMetadata =
+        'label: "⚙️ API"\nlink:\n    type: "doc"\n    id: "modules"\nclassName: "hide-expandable-sidebar"\n'
+    fs.writeFileSync("docs/api/_category_.yml", categoryMetadata)
 }
 
 refineAPIRef()
