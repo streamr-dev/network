@@ -1,6 +1,5 @@
 import { DiscoverySession } from './DiscoverySession'
 import { DhtPeer } from '../DhtPeer'
-import crypto from "crypto"
 import * as Err from '../../helpers/errors'
 import { isSamePeerDescriptor, keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
@@ -76,7 +75,7 @@ export class PeerDiscovery {
         const session = new DiscoverySession(sessionOptions)
         const randomSession = doRandomJoin ? new DiscoverySession({
             ...sessionOptions,
-            targetId: crypto.randomBytes(8),
+            targetId: PeerID.generateRandom().value,
             nodeName: this.config.ownPeerDescriptor.nodeName + '-random'
         }) : null
         this.ongoingDiscoverySessions.set(session.sessionId, session)
@@ -86,7 +85,7 @@ export class PeerDiscovery {
         try {
             await session.findClosestNodes(this.config.joinTimeout)
             if (randomSession) {
-                await randomSession.findClosestNodes(this.config.joinTimeout)
+                await randomSession.findClosestNodes(this.config.joinTimeout + 1)
             }
             if (!this.stopped) {
                 if (this.config.bucket.count() === 0) {
@@ -95,8 +94,8 @@ export class PeerDiscovery {
                     await scheduleAtInterval(() => this.getClosestPeersFromBucket(), 60000, true, this.abortController.signal)
                 }
             }
-        } catch (_e) {
-            throw new Err.DhtJoinTimeout('join timed out')
+        } catch (e) {
+            throw new Err.DhtJoinTimeout('join timed out', e)
         } finally {
             this.ongoingDiscoverySessions.delete(session.sessionId)
             if (randomSession) {

@@ -26,7 +26,8 @@
     "test-end-to-end": "jest test/end-to-end",
     "benchmark": "jest test/benchmark",
     "prepare-kademlia-simulation": "cd test/data && node --max-old-space-size=8096 -- ../../../../node_modules/.bin/ts-node -P ../../tsconfig.node.json generateGroundTruthData.ts",
-    "run-kademlia-simulation": "ts-node --project tsconfig.node.json $NODE_DEBUG_OPTION --files test/benchmark/kademlia-simulation/KademliaSimulation.ts"
+    "run-kademlia-simulation": "ts-node --project tsconfig.node.json $NODE_DEBUG_OPTION --files test/benchmark/kademlia-simulation/KademliaSimulation.ts",
+    "run-joining-benchmark": "node --max-old-space-size=8096 -- ../../node_modules/.bin/ts-node -P tsconfig.node.json test/benchmark/experiments/JoiningTimeLayer0.ts"
   },
   "dependencies": {
     "@protobuf-ts/runtime": "^2.8.2",
