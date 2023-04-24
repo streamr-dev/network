@@ -1,5 +1,5 @@
 import { Plugin, PluginOptions } from '../../Plugin'
-import { Logger } from '@streamr/utils'
+import { allOrCleanup, Logger } from '@streamr/utils'
 import { StreamPartIDUtils, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { Subscription } from 'streamr-client'
 
@@ -30,9 +30,9 @@ export class SubscriberPlugin extends Plugin<SubscriberPluginConfig> {
     }
 
     private async subscribeToStreamParts(): Promise<void> {
-        this.subscriptions = await Promise.all(this.streamParts.map(({ id, partition }) => (
+        this.subscriptions = await allOrCleanup(this.streamParts.map(({ id, partition }) => (
             this.streamrClient.subscribe({ id, partition, raw: true })
-        )))
+        )), (sub) => sub.unsubscribe())
     }
 
     async start(): Promise<void> {
