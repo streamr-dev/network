@@ -44,7 +44,10 @@ const rootLogger = pino({
             translateTime: 'yyyy-mm-dd"T"HH:MM:ss.l',
             ignore: 'pid,hostname',
             levelFirst: true,
-        }
+        },
+    },
+    browser: {
+        asObject: true
     }
 })
 
