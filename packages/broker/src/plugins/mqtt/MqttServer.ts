@@ -1,9 +1,10 @@
 import * as aedes from 'aedes'
 import * as net from 'net'
 import util from 'util'
-import { ISubscription, IPublishPacket } from 'mqtt-packet'
+import { ISubscription } from 'mqtt-packet'
 import { Logger } from '@streamr/utils'
 import { ApiAuthentication, isValidAuthentication } from '../../apiAuthentication'
+import Aedes from 'aedes'
 
 const logger = new Logger(module)
 
@@ -20,16 +21,16 @@ export class MqttServer {
     private static NOT_AUTHORIZED = 5
 
     private readonly port: number
-    private readonly aedes: aedes.Aedes
+    private readonly aedes: Aedes
     private server?: net.Server
     private listener?: MqttServerListener
 
     constructor(port: number, apiAuthentication?: ApiAuthentication) {
         this.port = port
-        this.aedes = aedes.Server({
+        this.aedes = new Aedes({
             authenticate: MqttServer.createAuthenicationHandler(apiAuthentication)
         })
-        this.aedes.on('publish', (packet: IPublishPacket, client: aedes.Client) => {
+        this.aedes.on('publish', (packet, client) => {
             if (client !== null) {  // is null if the this server sent the message
                 this.listener?.onMessageReceived(packet.topic, packet.payload.toString(), client.id)
             }
