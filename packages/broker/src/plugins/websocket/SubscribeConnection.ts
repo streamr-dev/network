@@ -1,10 +1,10 @@
 import WebSocket from 'ws'
-import { StreamrClient, Subscription } from 'streamr-client'
+import { MessageMetadata, StreamrClient, Subscription } from 'streamr-client'
 import { Connection } from './Connection'
 import { parsePositiveInteger, parseQueryParameterArray } from '../../helpers/parser'
 import { ParsedQs } from 'qs'
 import { PayloadFormat } from '../../helpers/PayloadFormat'
-import { Logger } from '@streamr/utils'
+import { allOrCleanup, Logger } from '@streamr/utils'
 
 export class SubscribeConnection implements Connection {
 
@@ -28,23 +28,20 @@ export class SubscribeConnection implements Connection {
         const streamPartDefinitions = (this.partitions !== undefined)
             ? this.partitions.map((partition: number) => ({ id: this.streamId, partition }))
             : [{ id: this.streamId }]
+
         logger.debug('Subscribing to stream partitions', {
             streamId: this.streamId,
             partitions: this.partitions
         })
-        for (const streamDefinition of streamPartDefinitions) {
-            let sub: Subscription
-            try {
-                sub = await streamrClient.subscribe(streamDefinition, (content, metadata) => {
-                    const payload = payloadFormat.createPayload(content as any, metadata)
-                    ws.send(payload)
-                })
-            } catch (err) {
-                await this.unsubAll(logger)
-                throw err
-            }
-            this.subscriptions.push(sub)
+        const msgCallback = (content: unknown, metadata: MessageMetadata) => {
+            const payload = payloadFormat.createPayload(content as any, metadata)
+            ws.send(payload)
         }
+        this.subscriptions.push(...await allOrCleanup(
+            streamPartDefinitions.map((sd) => streamrClient.subscribe(sd, msgCallback)),
+            (sub) => sub.unsubscribe()
+        ))
+
         ws.once('close', async () => {
             try {
                 await this.unsubAll(logger)
@@ -52,6 +49,7 @@ export class SubscribeConnection implements Connection {
                 logger.info('Disconnected from client', { socketId })
             }
         })
+
         logger.debug('Subscribed to stream partitions', {
             streamId: this.streamId,
             partitions: this.partitions
