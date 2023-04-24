@@ -1,4 +1,4 @@
-export const merge = (...sources: (object | undefined)[]): Record<PropertyKey, unknown>  => {
+export const merge = <TTarget>(...sources: (Partial<TTarget> | undefined)[]): TTarget => {
     const result: Record<string, unknown> = {}
     for (const source of sources) {
         if (source !== undefined) {
@@ -9,5 +9,5 @@ export const merge = (...sources: (object | undefined)[]): Record<PropertyKey, u
             }
         }
     }
-    return result
+    return result as TTarget
 }

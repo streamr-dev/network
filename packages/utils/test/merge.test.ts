@@ -63,19 +63,23 @@ describe('merge', () => {
     })
 
     it('not deeply', () => {
+        interface Bar {
+            lorem: number | undefined
+            ipsum: number | undefined
+        }
         const o1 = {
             foo: 1,
             bar: {
                 lorem: undefined,
                 ipsum: 1
-            }
+            } as Bar
         }
         const o2 = {
             foo: 2,
             bar: {
                 lorem: 2,
                 ipsum: undefined
-            }
+            } as Bar
         }
         expect(merge(o1, o2)).toEqual({
             foo: 2,
