@@ -218,3 +218,25 @@ export const waitForCalls = async (mockFunction: jest.Mock<any>, n: number): Pro
         return `Timeout while waiting for calls: got ${mockFunction.mock.calls.length} out of ${n}`
     })
 }
+
+export const createTestClient = (privateKey: string, stringKademliaId: string, wsPort?: number): StreamrClient => {
+    return new StreamrClient({
+        ...CONFIG_TEST,
+        auth: {
+            privateKey
+        },
+        network: {
+            layer0: {
+                ...CONFIG_TEST.network!.layer0,
+                peerDescriptor: {
+                    kademliaId: stringKademliaId,
+                    type: 0,
+                    websocket: wsPort ? {
+                        ip: 'localhost',
+                        port: wsPort
+                    } : undefined
+                }
+            }
+        }
+    })
+}
