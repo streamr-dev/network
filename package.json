@@ -28,7 +28,7 @@
     "dependencies": {
         "@manypkg/cli": "^0.20.0",
         "@tsconfig/node16": "^1.0.2",
-        "@types/jest": "^28.1.2",
+        "@types/jest": "^29.5.1",
         "@types/node": "^18.11.9",
         "@typescript-eslint/eslint-plugin": "^5.46.0",
         "@typescript-eslint/parser": "^5.46.0",
