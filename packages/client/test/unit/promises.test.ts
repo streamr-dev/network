@@ -1,6 +1,6 @@
 import { wait } from '@streamr/utils'
 import { pOrderedResolve, pOnce, pLimitFn, pOne, until, tryInSequence } from '../../src/utils/promises'
-import { CacheAsyncFn, CacheFn } from '../../src/utils/caches'
+import { CacheAsyncFn } from '../../src/utils/caches'
 
 const WAIT_TIME = 25
 
@@ -270,42 +270,6 @@ describe('CacheAsyncFn', () => {
         await wait(200)
         expect(fn).toHaveBeenCalledTimes(2)
         expect(calledWith).toEqual([taskId1, taskId2])
-    })
-})
-
-describe('cacheFn', () => {
-    it('adopts type of wrapped function', async () => {
-        // actually checking via ts-expect-error
-        // assertions don't matter,
-        function fn(_s: string): number {
-            return 3
-        }
-
-        const cachedFn = CacheFn(fn)
-        const a: number = cachedFn('abc') // ok
-        expect(a).toEqual(3)
-        // @ts-expect-error not enough args
-        cachedFn()
-        // @ts-expect-error too many args
-        cachedFn('abc', 3)
-        // @ts-expect-error wrong argument type
-        cachedFn(3)
-
-        // @ts-expect-error wrong return type
-        const c: string = cachedFn('abc')
-        expect(c).toEqual(3)
-        cachedFn.clearMatching((_d: string) => true)
-        // @ts-expect-error wrong match argument type
-        cachedFn.clearMatching((_d: number) => true)
-        const cachedFn2 = CacheFn(fn, {
-            cacheKey: ([s]) => {
-                return s.length
-            }
-        })
-
-        cachedFn2.clearMatching((_d: number) => true)
-        // @ts-expect-error wrong match argument type
-        cachedFn2.clearMatching((_d: string) => true)
     })
 })
 
