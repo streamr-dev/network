@@ -10,7 +10,7 @@ import '../../../../src/protocol/message_layer/StreamMessageSerializerV32'
 import { Serializer } from '../../../../src/Serializer'
 import { toStreamID } from '../../../../src/utils/StreamID'
 import { StreamPartIDUtils } from '../../../../src/utils/StreamPartID'
-import merge from 'lodash/merge'
+import { merge } from '@streamr/utils'
 
 const content = {
     hello: 'world',
