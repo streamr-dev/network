@@ -7,8 +7,6 @@ import { parsePositiveInteger, parseQueryParameter } from '../../helpers/parser'
 import { Connection, PING_PAYLOAD } from './Connection'
 import { PayloadFormat } from '../../helpers/PayloadFormat'
 
-const logger = new Logger(module)
-
 export class PublishConnection implements Connection {
 
     streamId: string
@@ -27,7 +25,13 @@ export class PublishConnection implements Connection {
         }
     }
 
-    init(ws: WebSocket, streamrClient: StreamrClient, payloadFormat: PayloadFormat): void {
+    async init(
+        ws: WebSocket,
+        socketId: string,
+        streamrClient: StreamrClient,
+        payloadFormat: PayloadFormat
+    ): Promise<void> {
+        const logger = new Logger(module, { socketId })
         const msgChainId = uuid()
         ws.on('message', async (data: WebSocket.RawData) => {
             const payload = data.toString()
@@ -44,7 +48,13 @@ export class PublishConnection implements Connection {
                         msgChainId
                     })
                 } catch (err: any) {
-                    logger.warn('Unable to publish, reason: %s', err)
+                    logger.warn('Unable to publish', {
+                        err,
+                        streamId: this.streamId,
+                        partition: this.partition,
+                        partitionKey: this.partitionKey,
+                        msgChainId,
+                    })
                 }
             }
         })

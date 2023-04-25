@@ -20,7 +20,7 @@ import { randomString } from './randomString'
 import { scheduleAtFixedRate } from './scheduleAtFixedRate'
 import { scheduleAtInterval } from './scheduleAtInterval'
 import { toEthereumAddressOrENSName } from './toEthereumAddressOrENSName'
-import { BrandedString } from './types'
+import { Events, BrandedString } from './types'
 import { wait } from './wait'
 import { waitForEvent } from './waitForEvent'
 import { DuplicateMessageDetector, NumberPair, GapMisMatchError, InvalidNumberingError } from './DuplicateMessageDetector'
@@ -29,6 +29,8 @@ import { composeAbortSignals } from './composeAbortSignals'
 import { waitForCondition } from './waitForCondition'
 import { waitForEvent3, runAndWaitForEvents3, raceEvents3, runAndRaceEvents3, RunAndRaceEventsReturnType } from './waitForEvent3'
 import { withRateLimit } from './withRateLimit'
+import { ObservableEventEmitter } from './ObservableEventEmitter'
+import { initEventGateway } from './initEventGateway'
 
 export {
     BrandedString,
@@ -65,7 +67,10 @@ export {
     runAndWaitForEvents3,
     raceEvents3,
     runAndRaceEvents3,
-    RunAndRaceEventsReturnType
+    RunAndRaceEventsReturnType,
+    Events,
+    ObservableEventEmitter,
+    initEventGateway
 }
 
 export {

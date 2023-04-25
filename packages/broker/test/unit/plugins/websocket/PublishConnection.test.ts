@@ -1,6 +1,7 @@
 import StreamrClient from 'streamr-client'
 import { PlainPayloadFormat } from '../../../../src/helpers/PayloadFormat'
 import { PublishConnection } from '../../../../src/plugins/websocket/PublishConnection'
+import { mock, MockProxy } from 'jest-mock-extended'
 
 const MOCK_STREAM_ID = 'streamId'
 const MOCK_CONTENT1 = {
@@ -10,30 +11,28 @@ const MOCK_CONTENT2 = {
     foo: 2
 }
 
-const createConnection = (streamrClient: Pick<StreamrClient, 'publish'>): (payload: string) => void => {
-    let onWebsocketMessage: (payload: string) => void
-    const connection = new PublishConnection(MOCK_STREAM_ID, {})
+const createConnection = async (streamrClient: StreamrClient): Promise<(payload: string) => void> => {
+    let capturedOnMessageListener: (payload: string) => void
     const mockWebSocket = {
         on: (_event: 'message', listener: (payload: string) => void) => {
-            onWebsocketMessage = listener
+            capturedOnMessageListener = listener
         }
     }
-    connection.init(mockWebSocket as any, streamrClient as any, new PlainPayloadFormat())
-    return onWebsocketMessage!
+    const connection = new PublishConnection(MOCK_STREAM_ID, {})
+    await connection.init(mockWebSocket as any, 'socketId', streamrClient, new PlainPayloadFormat())
+    return capturedOnMessageListener!
 }
 
 describe('PublishConnection', () => {
 
-    let mockStreamrClient: Pick<StreamrClient, 'publish'>
+    let mockStreamrClient: MockProxy<StreamrClient>
     
     beforeEach(() => {
-        mockStreamrClient = {
-            publish: jest.fn()
-        }
+        mockStreamrClient = mock<StreamrClient>()
     })
 
-    it('msgChainId constant between publish calls', () => {
-        const onWebsocketMessage = createConnection(mockStreamrClient)
+    it('msgChainId constant between publish calls', async () => {
+        const onWebsocketMessage = await createConnection(mockStreamrClient)
         onWebsocketMessage(JSON.stringify(MOCK_CONTENT1))
         onWebsocketMessage(JSON.stringify(MOCK_CONTENT2))
         expect(mockStreamrClient.publish).toHaveBeenNthCalledWith(1, { id: MOCK_STREAM_ID }, MOCK_CONTENT1, { msgChainId: expect.any(String) })
@@ -41,9 +40,9 @@ describe('PublishConnection', () => {
         expect(mockStreamrClient.publish).toHaveBeenNthCalledWith(2, { id: MOCK_STREAM_ID }, MOCK_CONTENT2, { msgChainId: firstMessageMsgChainId })
     })
 
-    it('msgChainId different for each connection', () => {
-        const onWebsocketMessage1 = createConnection(mockStreamrClient)
-        const onWebsocketMessage2 = createConnection(mockStreamrClient)
+    it('msgChainId different for each connection', async () => {
+        const onWebsocketMessage1 = await createConnection(mockStreamrClient)
+        const onWebsocketMessage2 = await createConnection(mockStreamrClient)
         onWebsocketMessage1(JSON.stringify(MOCK_CONTENT1))
         onWebsocketMessage2(JSON.stringify(MOCK_CONTENT2))
         expect(mockStreamrClient.publish).toHaveBeenNthCalledWith(1, { id: MOCK_STREAM_ID }, MOCK_CONTENT1, { msgChainId: expect.any(String) })

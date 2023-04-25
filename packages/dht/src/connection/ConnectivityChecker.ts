@@ -108,8 +108,8 @@ export class ConnectivityChecker {
                 host: connection.getRemoteAddress(),
                 port: connectivityRequest.port, timeoutMs: 1000
             })
-        } catch (e) {
-            logger.trace("Connectivity test produced negative result, communicating reply to the requester")
+        } catch (err) {
+            logger.debug('error', { err })
             connectivityResponseMessage = {
                 openInternet: false,
                 ip: (connection as ServerWebSocket).getRemoteAddress(),

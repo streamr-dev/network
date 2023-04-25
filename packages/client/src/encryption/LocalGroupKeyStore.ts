@@ -88,14 +88,14 @@ export class LocalGroupKeyStore {
 
     async set(keyId: string, publisherId: EthereumAddress, data: Buffer): Promise<void> {
         const persistence = await this.persistenceManager.getPersistence(NAMESPACES.ENCRYPTION_KEYS)
-        this.logger.debug('add key %s', keyId)
         await persistence.set(formLookupKey1(keyId, publisherId), Buffer.from(data).toString('hex'))
+        this.logger.debug('Set key', { keyId, publisherId })
         this.eventEmitter.emit('storeEncryptionKeyToLocalStore', keyId)
     }
 
     async setLatestEncryptionKeyId(keyId: string, publisherId: EthereumAddress, streamId: StreamID): Promise<void> {
         const persistence = await this.persistenceManager.getPersistence(NAMESPACES.LATEST_ENCRYPTION_KEY_IDS)
-        this.logger.debug('set latest encryptionKey id %s', keyId)
+        this.logger.debug('Set latest encryptionKeyId', { keyId, publisherId, streamId })
         await persistence.set(formLookupKey2(publisherId, streamId), keyId)
     }
 

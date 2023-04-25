@@ -7,7 +7,7 @@ import { StreamID } from '@streamr/protocol'
 import { StreamPermission, streamPermissionToSolidityType } from '../permission'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { GroupKey } from './GroupKey'
-import { Logger, withRateLimit } from '@streamr/utils'
+import { Logger, randomString, withRateLimit } from '@streamr/utils'
 import { LoggerFactory } from '../utils/LoggerFactory'
 
 const logger = new Logger(module)
@@ -113,7 +113,8 @@ export class LitProtocolFacade {
     }
 
     async store(streamId: StreamID, symmetricKey: Uint8Array): Promise<GroupKey | undefined> {
-        this.logger.debug('storing key: %j', { streamId })
+        const traceId = randomString(5)
+        this.logger.debug('Storing key', { streamId, traceId })
         try {
             const authSig = await signAuthMessage(this.authentication)
             const client = await this.getLitNodeClient()
@@ -127,16 +128,16 @@ export class LitProtocolFacade {
                 return undefined
             }
             const groupKeyId = LitJsSdk.uint8arrayToString(encryptedSymmetricKey, 'base16')
-            this.logger.debug('stored key: %j', { groupKeyId, streamId })
+            this.logger.debug('Stored key', { traceId, streamId, groupKeyId })
             return new GroupKey(groupKeyId, Buffer.from(symmetricKey))
-        } catch (e) {
-            logger.warn('encountered error when trying to store key on lit-protocol: %s', e?.message)
+        } catch (err) {
+            logger.warn('Failed to store key', { traceId, err, streamId })
             return undefined
         }
     }
 
     async get(streamId: StreamID, groupKeyId: string): Promise<GroupKey | undefined> {
-        this.logger.debug('get key: %j', { groupKeyId, streamId })
+        this.logger.debug('Getting key', { groupKeyId, streamId })
         try {
             const authSig = await signAuthMessage(this.authentication)
             const client = await this.getLitNodeClient()
@@ -149,10 +150,10 @@ export class LitProtocolFacade {
             if (symmetricKey === undefined) {
                 return undefined
             }
-            this.logger.debug('got key: %j', { groupKeyId, streamId })
+            this.logger.debug('Got key', { groupKeyId, streamId })
             return new GroupKey(groupKeyId, Buffer.from(symmetricKey))
-        } catch (e) {
-            logger.warn('encountered error when trying to get key from lit-protocol: %s', e?.message)
+        } catch (err) {
+            logger.warn('Failed to get key', { err, streamId, groupKeyId })
             return undefined
         }
     }

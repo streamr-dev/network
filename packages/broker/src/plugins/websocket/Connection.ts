@@ -9,7 +9,7 @@ export const PING_PAYLOAD = 'ping'
 const PONG_PAYLOAD = 'pong'
 
 export interface Connection {
-    init: (ws: WebSocket, streamrClient: StreamrClient, payloadFormat: PayloadFormat) => void
+    init(ws: WebSocket, socketId: string, streamrClient: StreamrClient, payloadFormat: PayloadFormat): Promise<void>
 }
 
 // Implements application layer ping support. We have this feature because 
@@ -23,7 +23,12 @@ export const addPingListener = (ws: WebSocket): void => {
     })
 }
 
-export const addPingSender = (ws: WebSocket, sendInterval: number, disconnectTimeout: number): void => {
+export const addPingSender = (
+    ws: WebSocket,
+    socketId: string,
+    sendInterval: number,
+    disconnectTimeout: number
+): void => {
     let pendingStateChange: NodeJS.Timeout
     type State = 'active' | 'idle' | 'disconnected'
 
@@ -37,7 +42,7 @@ export const addPingSender = (ws: WebSocket, sendInterval: number, disconnectTim
                 pendingStateChange = setTimeout(() => setState('disconnected'), disconnectTimeout)
             }
         } else if (state === 'disconnected') {
-            logger.debug('Terminate connection  ')
+            logger.debug('Terminate connection', { socketId })
             ws.terminate()
         }
     }

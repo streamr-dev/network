@@ -9,13 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add method `.getDiagnosticInfo` for getting diagnostic information for debugging purposes
+- Add support for observing stream creation events with `.on('createStream')`
+- Add optional config option `contracts.pollInterval`
+
 ### Changed
+
+- Validate `partitions` when parsing contract metadata
 
 ### Deprecated
 
 ### Removed
 
 ### Fixed
+
+- Handling of `undefined` partition in `.createStream`
 
 ### Security
 

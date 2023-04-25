@@ -46,9 +46,10 @@ export interface NodeToNode {
        listener: (message: UnsubscribeRequest, nodeId: NodeId) => void): this
 }
 
+const logger = new Logger(module)
+
 export class NodeToNode extends EventEmitter {
     private readonly endpoint: IWebRtcEndpoint
-    private readonly logger: Logger
 
     constructor(endpoint: IWebRtcEndpoint) {
         super()
@@ -58,7 +59,6 @@ export class NodeToNode extends EventEmitter {
         endpoint.on(WebRtcEndpointEvent.MESSAGE_RECEIVED, (peerInfo, message) => this.onMessageReceived(peerInfo, message))
         endpoint.on(WebRtcEndpointEvent.LOW_BACK_PRESSURE, (peerInfo) => this.onLowBackPressure(peerInfo))
         endpoint.on(WebRtcEndpointEvent.HIGH_BACK_PRESSURE, (peerInfo) => this.onHighBackPressure(peerInfo))
-        this.logger = new Logger(module)
     }
 
     connectToNode(
@@ -114,7 +114,7 @@ export class NodeToNode extends EventEmitter {
             if (message != null) {
                 this.emit(eventPerType[message.type], message, peerInfo.peerId)
             } else {
-                this.logger.warn('invalid message from %s: %s', peerInfo, rawMessage)
+                logger.warn('Drop invalid message', { sender: peerInfo.peerId, rawMessage })
             }
         }
     }
@@ -178,5 +178,9 @@ export class NodeToNode extends EventEmitter {
 
     getAllConnectionNodeIds(): NodeId[] {
         return this.endpoint.getAllConnectionNodeIds()
+    }
+
+    getDiagnosticInfo(): Record<string, unknown> {
+        return this.endpoint.getDiagnosticInfo()
     }
 }

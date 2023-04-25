@@ -65,7 +65,7 @@ export const startServer = async (
     }
     const server = serverFactory.listen(config.port)
     await once(server, 'listening')
-    logger.info(`HTTP server listening on ${config.port}`)
+    logger.info(`Started HTTP server on port ${config.port}`)
     return server
 }
 

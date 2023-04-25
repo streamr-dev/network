@@ -5,6 +5,7 @@ import { AbstractWsConnection, ReadyState } from '../connection/ws/AbstractWsCon
 import { Simulator, cleanAddress } from './Simulator'
 import { v4 } from 'uuid'
 import WebSocket from 'ws'
+import { Logger } from '@streamr/utils'
 
 export type ServerUrl = string
 //export type SupportedWs = WebSocket | w3cwebsocket
@@ -15,6 +16,8 @@ export interface WebSocketConnectionFactory<C extends AbstractWsConnection> {
     createConnection(peerInfo: PeerInfo): C
 }
 */
+
+const logger = new Logger(module)
 
 export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> extends AbstractWsEndpoint<C> {
     protected readonly connectionsByServerUrl: Map<ServerUrl, C>
@@ -61,10 +64,7 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
             if (existingConnection.getReadyState() === 1 as ReadyState) {
                 return Promise.resolve(existingConnection.getPeerId())
             }
-            this.logger.trace('supposedly connected to %s but readyState is %s, closing connection',
-                serverUrl,
-                existingConnection.getReadyState()
-            )
+            logger.trace(`supposedly connected to ${serverUrl} but readyState is ${existingConnection.getReadyState()}, closing connection`)
             this.close(
                 existingConnection.getPeerId(),
                 DisconnectionCode.DEAD_CONNECTION,
@@ -79,7 +79,7 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
         }
 
         // Perform connection
-        this.logger.trace('connecting to %s', serverUrl)
+        logger.trace(`connecting to ${serverUrl}`)
         const p = this.doConnect(serverUrl, serverPeerInfo).then((peerId) => {
             if (this.connectionsByServerUrl.get(serverUrl)) {
                 this.onNewConnection(this.connectionsByServerUrl.get(serverUrl)!)
@@ -114,7 +114,7 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
             
             Simulator.instance().wsDisconnect(this.ownAddress, this.peerInfo, serverAddress, DisconnectionCode.FAILED_HANDSHAKE, 
                 `Handshake not received from ${peerId}` )
-            this.logger.warn(`Client: Handshake not received from ${peerId}`)
+            logger.warn(`Client: Handshake not received from ${peerId}`)
             delete this.handshakeTimeoutRefs[peerId]
             reject(`Handshake not received from ${peerId}`)
         }, this.handshakeTimer)
@@ -137,25 +137,28 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
                 this.doHandshakeResponse(uuid, peerId, serverUrl)
                 resolve(id)
             } else {
-                this.logger.trace('Expected a handshake message got: ' + message)
+                logger.trace('Expected a handshake message got: ' + message)
             }
         } catch (err) {
-            this.logger.trace(err)
+            logger.trace(err)
         }
     }
 
+    // eslint-disable-next-line class-methods-use-this
     protected onHandshakeError(serverUrl: string, error: Error, reject: (reason?: any) => void): void {
-        this.logger.trace('failed to connect to %s, error: %o', serverUrl, error)
+        logger.trace(`failed to connect to ${serverUrl}, error: ${error}`)
         reject(error)
     }
 
+    // eslint-disable-next-line class-methods-use-this
     protected onHandshakeClosed(serverUrl: string, code: number, reason: string, reject: (reason?: any) => void): void {
-        this.logger.trace(`Connection to ${serverUrl} closed during handshake with code: ${code}, reason ${reason}`)
+        logger.trace(`Connection to ${serverUrl} closed during handshake with code: ${code}, reason ${reason}`)
         reject(reason)
     }
 
+    // eslint-disable-next-line class-methods-use-this
     protected ongoingConnectionError(serverPeerId: PeerId, error: Error, connection: AbstractWsConnection): void {
-        this.logger.trace('Connection to %s failed, error: %o', serverPeerId, error)
+        logger.trace(`Connection to ${serverPeerId} failed, error: ${error}`)
         connection.terminate()
     }
 

@@ -33,6 +33,7 @@ const createMockLogger = () => {
 describe('ConfigWizard', () => {
     const importPrivateKeyPrompt = PROMPTS.privateKey[1]
     const portPrompt = PROMPTS.plugins[1]
+    const beneficiaryAddressPrompt = PROMPTS.plugins[6]
 
     describe('importPrivateKey validate', () => {
         it('happy path, prefixed', () => {
@@ -81,6 +82,18 @@ describe('ConfigWizard', () => {
             const validate = portPrompt.validate!
             const port = 'Not A Number!'
             expect(validate(port)).toBe(`Non-numeric value provided`)
+        })
+    })
+
+    describe('beneficiary address validation', () => {
+        it('happy path, prefixed', () => {
+            const validate = beneficiaryAddressPrompt.validate!
+            expect(validate('0x535620aa186d3243A10b929c8A854510dE00bf77')).toBe(true)
+        })
+
+        it('invalid data', () => {
+            const validate = beneficiaryAddressPrompt.validate!
+            expect(validate('0xloremipsum')).toEqual('Invalid Ethereum address provided.')
         })
     })
 
@@ -269,6 +282,24 @@ describe('ConfigWizard', () => {
                     expect(config.plugins.brubeckMiner).toEqual({})
                     expect(config.plugins.http).toMatchObject({})
                     expect(config.httpServer.port).toBe(parseInt(pluginAnswers.httpPort!))
+                }
+            )
+        })
+
+        it('miner with beneficiaryAddress enabled', async () => {
+            const pluginAnswers: PluginAnswers = {
+                enabledApiPlugins: [],
+                enableMinerPlugin: true,
+                wantToSetBeneficiaryAddress: true,
+                beneficiaryAddress: '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+            }
+            await assertValidFlow(
+                pluginAnswers,
+                (config: any) => {
+                    expect(Object.keys(config.plugins)).toIncludeSameMembers(['brubeckMiner'])
+                    expect(config.plugins.brubeckMiner).toEqual({
+                        beneficiaryAddress: '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+                    })
                 }
             )
         })

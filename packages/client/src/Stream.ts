@@ -5,7 +5,8 @@ import { StreamRegistryCached } from './registry/StreamRegistryCached'
 import {
     StreamID,
     StreamPartID,
-    toStreamPartID
+    toStreamPartID,
+    ensureValidStreamPartitionCount
 } from '@streamr/protocol'
 import range from 'lodash/range'
 import { StrictStreamrClientConfig } from './Config'
@@ -281,13 +282,13 @@ export class Stream {
     }
 
     /** @internal */
-    static parseMetadata(metadata: string): Partial<StreamMetadata> {
+    static parseMetadata(metadata: string): StreamMetadata {
         try {
             // TODO we could pick the fields of StreamMetadata explicitly, so that this
             // object can't contain extra fields
-            // TODO we should maybe also check that partitions field is available
-            // (if we do that we can return StreamMetadata instead of Partial<StreamMetadata>)
-            return JSON.parse(metadata)
+            const json = JSON.parse(metadata)
+            ensureValidStreamPartitionCount(json.partitions)
+            return json
         } catch (error) {
             throw new Error(`Could not parse properties from onchain metadata: ${metadata}`)
         }
