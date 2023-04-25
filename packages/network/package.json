@@ -42,6 +42,7 @@
     "yallist": "^4.0.0"
   },
   "devDependencies": {
+    "@electron/rebuild": "^3.2.9",
     "@jest/fake-timers": "^29.5.0",
     "@streamr/network-tracker": "8.3.0-beta.1",
     "@streamr/test-utils": "8.3.0-beta.1",
@@ -52,7 +53,6 @@
     "@types/ws": "^8.5.4",
     "@types/yallist": "^4.0.1",
     "electron": "^24.1.2",
-    "electron-rebuild": "^3.2.9",
     "expect": "^28.1.3",
     "express": "^4.17.1",
     "jest-mock": "^29.4.3",
