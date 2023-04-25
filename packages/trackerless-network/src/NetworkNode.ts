@@ -147,4 +147,9 @@ export class NetworkNode {
     getNeighbors(): string[] {
         return this.stack.getStreamrNode().getNeighbors()
     }
+
+    // eslint-disable-next-line class-methods-use-this
+    getDiagnosticInfo(): Record<string, unknown> {
+        return {}
+    }
 }
