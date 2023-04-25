@@ -28,7 +28,7 @@
   "dependencies": {
     "@streamr/protocol": "8.3.0-beta.1",
     "@streamr/utils": "8.3.0-beta.1",
-    "cancelable-promise": "^3.2.3",
+    "cancelable-promise": "^4.3.1",
     "commander": "^10.0.1",
     "heap": "^0.2.6",
     "ipaddr.js": "^2.0.1",
