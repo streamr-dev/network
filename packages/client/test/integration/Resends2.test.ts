@@ -69,7 +69,7 @@ describe('Resends2', () => {
             }, {
                 last: 5
             })
-        }).rejects.toThrowStreamError(new StreamrClientError(`no storage assigned: ${notStoredStream.id}`, 'NO_STORAGE_NODES'))
+        }).rejects.toThrowStreamrError(new StreamrClientError(`no storage assigned: ${notStoredStream.id}`, 'NO_STORAGE_NODES'))
     })
 
     it('throws error if bad partition', async () => {
