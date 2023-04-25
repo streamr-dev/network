@@ -51,7 +51,7 @@
     "@types/lodash": "^4.14.175",
     "@types/node-fetch": "^2.5.12",
     "@types/secp256k1": "^4.0.3",
-    "@types/split2": "^3.2.1",
+    "@types/split2": "^4.2.0",
     "@types/uuid": "^9.0.1",
     "babel-loader": "^9.1.2",
     "babel-plugin-add-module-exports": "^1.0.4",
