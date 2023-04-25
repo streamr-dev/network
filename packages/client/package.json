@@ -104,7 +104,7 @@
     "ajv-formats": "^2.1.1",
     "core-js": "^3.19.1",
     "env-paths": "^2.2.1",
-    "eventemitter3": "^5.0.0",
+    "eventemitter3": "^4.0.7",
     "heap": "^0.2.6",
     "idb": "^7.1.1",
     "lit-siwe": "^1.1.8",
