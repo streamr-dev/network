@@ -141,10 +141,10 @@ export class DataStore implements IStoreService {
         try {
             const response = await remoteStore.migrateData({ dataEntry }, doNotConnect)
             if (response.error) {
-                logger.error('RemoteStore::migrateData() returned error: ' + response.error)
+                logger.debug('RemoteStore::migrateData() returned error: ' + response.error)
             }
         } catch (e) {
-            logger.error('RemoteStore::migrateData() threw an exception ' + e)
+            logdebugger.error('RemoteStore::migrateData() threw an exception ' + e)
         }
     }
 
