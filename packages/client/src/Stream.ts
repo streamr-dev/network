@@ -24,6 +24,7 @@ import { Subscription } from './subscribe/Subscription'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { Message } from './Message'
 import { convertStreamMessageToMessage } from './Message'
+import { merge } from '@streamr/utils'
 import { StreamrClientError } from './StreamrClientError' 
 
 export interface StreamMetadata {
@@ -118,14 +119,16 @@ export class Stream {
         config: Pick<StrictStreamrClientConfig, '_timeouts'>
     ) {
         this.id = id
-        this.metadata = {
-            partitions: 1,
-            // TODO should we remove this default or make config as a required StreamMetadata field?
-            config: {
-                fields: []
+        this.metadata = merge(
+            {
+                partitions: 1,
+                // TODO should we remove this default or make config as a required StreamMetadata field?
+                config: {
+                    fields: []
+                }
             },
-            ...metadata
-        }
+            metadata
+        )
         this._resends = resends
         this._publisher = publisher
         this._subscriber = subscriber
@@ -141,10 +144,7 @@ export class Stream {
      * Updates the metadata of the stream by merging with the existing metadata.
      */
     async update(metadata: Partial<StreamMetadata>): Promise<void> {
-        const merged = {
-            ...this.getMetadata(),
-            ...metadata
-        }
+        const merged = merge(this.getMetadata(), metadata)
         try {
             await this._streamRegistry.updateStream(this.id, merged)
         } finally {
