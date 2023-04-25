@@ -144,7 +144,7 @@ export class DataStore implements IStoreService {
                 logger.debug('RemoteStore::migrateData() returned error: ' + response.error)
             }
         } catch (e) {
-            logdebugger.error('RemoteStore::migrateData() threw an exception ' + e)
+            logger.debug('RemoteStore::migrateData() threw an exception ' + e)
         }
     }
 
