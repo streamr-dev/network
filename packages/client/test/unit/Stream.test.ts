@@ -73,16 +73,30 @@ describe('Stream', () => {
     describe('parse metadata', () => {
         it('happy path', () => {
             const metadata = JSON.stringify({
-                partitions: 50
+                partitions: 50,
+                foo: 'bar'
             })
-            expect(Stream.parseMetadata(metadata).partitions).toBe(50)
+            expect(Stream.parseMetadata(metadata)).toEqual({
+                partitions: 50,
+                foo: 'bar'
+            })
         })
 
         it('no value in valid JSON', () => {
             const metadata = JSON.stringify({
                 foo: 'bar'
             })
-            expect(Stream.parseMetadata(metadata).partitions).toBe(1)
+            expect(Stream.parseMetadata(metadata)).toEqual({
+                partitions: 1,
+                foo: 'bar'
+            })
+        })
+
+        it('empty metadata', () => {
+            const metadata = ''
+            expect(Stream.parseMetadata(metadata)).toEqual({
+                partitions: 1
+            })
         })
 
         it('invalid value', () => {

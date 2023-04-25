@@ -286,6 +286,11 @@ export class Stream {
     static parseMetadata(metadata: string): StreamMetadata {
         // TODO we could pick the fields of StreamMetadata explicitly, so that this
         // object can't contain extra fields
+        if (metadata === '') {
+            return {
+                partitions: 1
+            }
+        }
         const err = new StreamrClientError(`Invalid stream metadata: ${metadata}`, 'INVALID_STREAM_METADATA')
         let json
         try {
@@ -302,6 +307,7 @@ export class Stream {
             }
         } else {
             return {
+                ...json,
                 partitions: 1
             }
         }
