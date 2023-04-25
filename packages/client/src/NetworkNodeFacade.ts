@@ -14,7 +14,8 @@ import {
 import { MetricsContext } from '@streamr/utils'
 import { uuid } from './utils/uuid'
 import { pOnce } from './utils/promises'
-import { ConfigInjectionToken, StrictStreamrClientConfig, JsonPeerDescriptor } from './Config'
+import { entryPointTranslator } from './utils/utils'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
 import { StreamMessage, StreamPartID, ProxyDirection } from '@streamr/protocol'
 import { DestroySignal } from './DestroySignal'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
@@ -216,7 +217,7 @@ export class NetworkNodeFacade {
      * but will be sync in case that node is already started.
      * Zalgo intentional. See below.
      */
-    publishToNode(streamMessage: StreamMessage): void | Promise<void> {
+    publishToNode(streamMessage: StreamMessage, knownEntryPoints: PeerDescriptor[]): void | Promise<void> {
         // NOTE: function is intentionally not async for performance reasons.
         // Will call cachedNode.publish immediately if cachedNode is set.
         // Otherwise will wait for node to start.
@@ -225,10 +226,10 @@ export class NetworkNodeFacade {
             // use .then instead of async/await so
             // this.cachedNode.publish call can be sync
             return this.startNodeTask().then((node) => {
-                return node.publish(streamMessage, [])
+                return node.publish(streamMessage, knownEntryPoints)
             })
         }
-        return this.cachedNode!.publish(streamMessage, [])
+        return this.cachedNode!.publish(streamMessage, knownEntryPoints)
     }
     //
     // async setProxies(
@@ -258,17 +259,7 @@ export class NetworkNodeFacade {
     }
 
     getEntryPoints(): PeerDescriptor[] {
-        return this.config.network.layer0!.entryPoints!.map((ep: JsonPeerDescriptor) => {
-            const peerDescriptor: PeerDescriptor = {
-                kademliaId: PeerID.fromString(ep.kademliaId).value,
-                type: ep.type,
-                openInternet: ep.openInternet,
-                udp: ep.udp,
-                tcp: ep.tcp,
-                websocket: ep.websocket
-            }
-            return peerDescriptor
-        })
+        return entryPointTranslator(this.config.network.layer0!.entryPoints!)
     }
 }
 

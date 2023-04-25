@@ -5,6 +5,8 @@ import pkg from '../../package.json'
 
 import { StreamID, toStreamID } from '@streamr/protocol'
 import { randomString, toEthereumAddress } from '@streamr/utils'
+import { JsonPeerDescriptor } from '../Config' 
+import { PeerDescriptor, PeerID } from '@streamr/dht'
 
 /**
  * Generates counter-based ids.
@@ -115,6 +117,20 @@ export class MaxSizedSet<T> {
     delete(value: T): void {
         this.delegate.delete(value)
     }
+}
+
+export function entryPointTranslator(json: JsonPeerDescriptor[]): PeerDescriptor[] {
+    return json.map((ep: JsonPeerDescriptor) => {
+        const peerDescriptor: PeerDescriptor = {
+            kademliaId: PeerID.fromString(ep.kademliaId).value,
+            type: ep.type,
+            openInternet: ep.openInternet,
+            udp: ep.udp,
+            tcp: ep.tcp,
+            websocket: ep.websocket
+        }
+        return peerDescriptor
+    })
 }
 
 export function generateClientId(): string {

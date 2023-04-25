@@ -10,13 +10,16 @@ import isString from 'lodash/isString'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { Mapping } from '../utils/Mapping'
+import { entryPointTranslator } from '../utils/utils'
 import { StreamrClientError } from '../StreamrClientError'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'
+import { JsonPeerDescriptor } from '../Config' 
 
 export interface PublishMetadata {
     timestamp?: string | number | Date
     partitionKey?: string | number
     msgChainId?: string
+    knownEntryPoints?: JsonPeerDescriptor[]
 }
 
 const parseTimestamp = (metadata?: PublishMetadata): number => {
@@ -67,6 +70,7 @@ export class Publisher {
         metadata?: PublishMetadata
     ): Promise<StreamMessage<T>> {
         const timestamp = parseTimestamp(metadata)
+        const entryPoints = metadata?.knownEntryPoints ? entryPointTranslator(metadata.knownEntryPoints) : []  
         /*
          * There are some steps in the publish process which need to be done sequentially:
          * - message chaining
@@ -94,8 +98,7 @@ export class Publisher {
                     },
                     partition
                 )
-                // console.log(message.getPreviousMessageRef(), message.getMessageRef())
-                await this.node.publishToNode(message)
+                await this.node.publishToNode(message, entryPoints)
                 return message
             } catch (e) {
                 const errorCode = (e instanceof StreamrClientError) ? e.code : 'UNKNOWN_ERROR'

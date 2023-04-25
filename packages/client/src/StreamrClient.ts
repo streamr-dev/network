@@ -4,7 +4,7 @@ import './utils/PatchTsyringe'
 import { container as rootContainer } from 'tsyringe'
 import { generateEthereumAccount as _generateEthereumAccount } from './Ethereum'
 import { pOnce } from './utils/promises'
-import { StreamrClientConfig, createStrictConfig, redactConfig, StrictStreamrClientConfig, ConfigInjectionToken } from './Config'
+import { StreamrClientConfig, createStrictConfig, redactConfig, StrictStreamrClientConfig, ConfigInjectionToken, JsonPeerDescriptor } from './Config'
 import { Publisher } from './publish/Publisher'
 import { Subscriber } from './subscribe/Subscriber'
 import { ResendOptions, Resends } from './subscribe/Resends'
@@ -50,6 +50,12 @@ export interface ExtraSubscribeOptions {
      * and decryption _disabled_.
      */
     raw?: boolean
+
+    /**
+     * Configure known entry points to the stream 
+     * (e.g. for private streams, or if you want to avoid DHT lookups).
+     */
+    entryPoints?: JsonPeerDescriptor[]
 }
 
 /**
@@ -192,7 +198,7 @@ export class StreamrClient {
                 this.config
             )
             : new Subscription(streamPartId, options.raw ?? false, this.loggerFactory)
-        await this.subscriber.add(sub)
+        await this.subscriber.add(sub, options.entryPoints)
         if (onMessage !== undefined) {
             sub.useLegacyOnMessageHandler(onMessage)
         }

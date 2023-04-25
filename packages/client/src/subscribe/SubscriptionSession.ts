@@ -4,6 +4,7 @@ import { StreamMessage, StreamMessageType, StreamPartID } from '@streamr/protoco
 
 import { Scaffold } from '../utils/Scaffold'
 import { Signal } from '../utils/Signal'
+import { entryPointTranslator } from '../utils/utils'
 import { MessageStream } from './MessageStream'
 
 import { Subscription } from './Subscription'
@@ -12,9 +13,10 @@ import { NetworkNodeFacade, NetworkNodeStub } from '../NetworkNodeFacade'
 import { Resends } from './Resends'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { DestroySignal } from '../DestroySignal'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import { ConfigInjectionToken, StrictStreamrClientConfig, JsonPeerDescriptor } from '../Config'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'
+import { PeerDescriptor } from '@streamr/dht'
 
 /**
  * Manages adding & removing subscriptions to node as needed.
@@ -30,7 +32,7 @@ export class SubscriptionSession {
     private readonly pendingRemoval: WeakSet<Subscription> = new WeakSet()
     private readonly pipeline: MessageStream
     private readonly node: NetworkNodeFacade
-
+    private readonly knownEntryPoints: PeerDescriptor[]
     constructor(
         streamPartId: StreamPartID,
         resends: Resends,
@@ -39,7 +41,8 @@ export class SubscriptionSession {
         node: NetworkNodeFacade,
         destroySignal: DestroySignal,
         loggerFactory: LoggerFactory,
-        @inject(ConfigInjectionToken) config: StrictStreamrClientConfig
+        @inject(ConfigInjectionToken) config: StrictStreamrClientConfig,
+        knownEntryPoints?: JsonPeerDescriptor[]
     ) {
         this.streamPartId = streamPartId
         this.distributeMessage = this.distributeMessage.bind(this)
@@ -63,6 +66,7 @@ export class SubscriptionSession {
                 }
             })
         this.pipeline.flow()
+        this.knownEntryPoints = knownEntryPoints ? entryPointTranslator(knownEntryPoints) : []
     }
 
     private async retire(): Promise<void> {

@@ -8,7 +8,7 @@ import { StreamDefinition } from '../types'
 import { Resends } from './Resends'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { DestroySignal } from '../DestroySignal'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import { ConfigInjectionToken, StrictStreamrClientConfig, JsonPeerDescriptor } from '../Config'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { Logger } from '@streamr/utils'
@@ -48,7 +48,7 @@ export class Subscriber {
         this.logger = loggerFactory.createLogger(module)
     }
 
-    getOrCreateSubscriptionSession(streamPartId: StreamPartID): SubscriptionSession {
+    getOrCreateSubscriptionSession(streamPartId: StreamPartID, knownEntryPoints?: JsonPeerDescriptor[]): SubscriptionSession {
         if (this.subSessions.has(streamPartId)) {
             return this.getSubscriptionSession(streamPartId)!
         }
@@ -60,7 +60,8 @@ export class Subscriber {
             this.node,
             this.destroySignal,
             this.loggerFactory,
-            this.config
+            this.config,
+            knownEntryPoints
         )
 
         this.subSessions.set(streamPartId, subSession)
@@ -71,8 +72,8 @@ export class Subscriber {
         return subSession
     }
 
-    async add(sub: Subscription): Promise<void> {
-        const subSession = this.getOrCreateSubscriptionSession(sub.streamPartId)
+    async add(sub: Subscription, knownEntryPoints?: JsonPeerDescriptor[]): Promise<void> {
+        const subSession = this.getOrCreateSubscriptionSession(sub.streamPartId, knownEntryPoints)
 
         // add subscription to subSession
         try {
