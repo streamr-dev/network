@@ -15,23 +15,11 @@ export interface SubscriberPluginConfig {
 const logger = new Logger(module)
 
 export class SubscriberPlugin extends Plugin<SubscriberPluginConfig> {
-    private readonly streamParts: { id: string, partition: number }[]
     private subscriptions: Subscription[] = []
 
-    constructor(options: PluginOptions) {
-        super(options)
-        this.streamParts = this.pluginConfig.streams.map((stream) => {
-            const streamPart = toStreamPartID(toStreamID(stream.streamId), stream.streamPartition)
-            return {
-                id: StreamPartIDUtils.getStreamID(streamPart),
-                partition: StreamPartIDUtils.getStreamPartition(streamPart)
-            }
-        })
-    }
-
     private async subscribeToStreamParts(): Promise<void> {
-        this.subscriptions = await allOrCleanup(this.streamParts.map(({ id, partition }) => (
-            this.streamrClient.subscribe({ id, partition, raw: true })
+        this.subscriptions = await allOrCleanup(this.pluginConfig.streams.map(({ streamId, streamPartition }) => (
+            this.streamrClient.subscribe({ id: streamId, partition: streamPartition, raw: true })
         )), (sub) => sub.unsubscribe())
     }
 
