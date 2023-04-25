@@ -43,7 +43,9 @@ export class SubscriberPlugin extends Plugin<SubscriberPluginConfig> {
             try {
                 await this.subscribeToStreamParts()
             } catch (err) {
-                logger.warn(`Subscription retry failed, retrying in ${this.subscriptionRetryInterval / 1000} seconds`)
+                logger.warn(`Failed to (re-)subscribe (retrying in ${this.subscriptionRetryInterval / 1000} seconds)`, {
+                    err
+                })
             }
         }
         this.subscriptionIntervalRef = setTimeout(() => this.subscriptionIntervalFn(), this.subscriptionRetryInterval)
@@ -52,7 +54,7 @@ export class SubscriberPlugin extends Plugin<SubscriberPluginConfig> {
     async start(): Promise<void> {
         await this.subscribeToStreamParts()
         this.subscriptionIntervalRef = setTimeout(() => this.subscriptionIntervalFn(), this.subscriptionRetryInterval)
-        logger.info('Subscriber plugin started')
+        logger.info('Started subscriber plugin')
     }
 
     async stop(): Promise<void> {
@@ -60,7 +62,7 @@ export class SubscriberPlugin extends Plugin<SubscriberPluginConfig> {
             clearTimeout(this.subscriptionIntervalRef)
             this.subscriptionIntervalRef = null
         }
-        logger.info('Subscriber plugin stopped')
+        logger.info('Stopped subscriber plugin')
     }
 
 }

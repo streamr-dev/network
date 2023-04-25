@@ -100,7 +100,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
     constructor(opts: ConstructorOptions) {
         super(opts)
 
-        this.logger = new Logger(module, `${NameDirectory.getName(this.getPeerId())}/${this.id}`)
+        this.logger = new Logger(module, { id: `${NameDirectory.getName(this.getPeerId())}/${this.id}` })
         this.connection = null
         this.dataChannel = null
         this.onStateChange = this.onStateChange.bind(this)
@@ -144,10 +144,10 @@ export class NodeWebRtcConnection extends WebRtcConnection {
                 this.connection.setRemoteDescription(description, type)
                 this.remoteDescriptionSet = true
             } catch (err) {
-                this.logger.warn('setRemoteDescription failed, reason: %s', err)
+                this.logger.warn('Failed to set remote description', err)
             }
         } else {
-            this.logger.warn('skipped setRemoteDescription, connection is null')
+            this.logger.warn('Skipped setting remote description (connection is null)')
         }
     }
 
@@ -157,15 +157,15 @@ export class NodeWebRtcConnection extends WebRtcConnection {
                 try {
                     this.connection.addRemoteCandidate(candidate, mid)
                 } catch (err) {
-                    this.logger.warn('addRemoteCandidate failed, reason: %s', err)
-                    this.close(new Error('addRemoteCandidate failed, closing'))
+                    this.logger.warn('Failed to add remote candidate', err)
+                    this.close(new Error('addRemoteCandidate failed'))
                 }
             } else {
-                this.logger.warn("Tried setting remoteCandidate before remote description, closing")
-                this.close(new Error('Tried setting remoteCandidate before remote description, closing'))
+                this.logger.warn("Close connection (tried setting remote candidate before remote description)")
+                this.close(new Error('Tried setting remoteCandidate before remote description'))
             }
         } else {
-            this.logger.warn('skipped addRemoteCandidate, connection is null')
+            this.logger.warn('Skipped adding remote candidate (connection is null)')
         }
     }
 
@@ -182,7 +182,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
             try {
                 this.connection.close()
             } catch (e) {
-                this.logger.warn('conn.close() errored: %s', e)
+                this.logger.warn('Encountered error while closing connection', e)
             }
         }
 
@@ -190,7 +190,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
             try {
                 this.dataChannel.close()
             } catch (e) {
-                this.logger.warn('dc.close() errored: %s', e)
+                this.logger.warn('Encountered error while closing dataChannel', e)
             }
         }
 
@@ -233,7 +233,10 @@ export class NodeWebRtcConnection extends WebRtcConnection {
     }
 
     private onStateChange(state: string): void {
-        this.logger.trace('conn.onStateChange: %s -> %s', this.lastState, state)
+        this.logger.trace('onStateChange', {
+            lastState: this.lastState,
+            state
+        })
 
         this.lastState = state
 
@@ -247,7 +250,10 @@ export class NodeWebRtcConnection extends WebRtcConnection {
     }
 
     private onGatheringStateChange(state: string): void {
-        this.logger.trace('conn.onGatheringStateChange: %s -> %s', this.lastGatheringState, state)
+        this.logger.trace('onGatheringStateChange', {
+            lastState: this.lastGatheringState,
+            state
+        })
         this.lastGatheringState = state
     }
 
@@ -269,17 +275,17 @@ export class NodeWebRtcConnection extends WebRtcConnection {
         this.dataChannelEmitter = DataChannelEmitter(dataChannel)
         dataChannel.setBufferedAmountLowThreshold(this.bufferThresholdLow)
         this.dataChannelEmitter.on('open', () => {
-            this.logger.trace('dc.onOpen')
+            this.logger.trace('dataChannelEmitter.onOpen')
             this.openDataChannel(dataChannel)
         })
 
         this.dataChannelEmitter.on('closed', () => {
-            this.logger.trace('dc.onClosed')
+            this.logger.trace('dataChannelEmitter.onClosed')
             this.close()
         })
 
         this.dataChannelEmitter.on('error', (err) => {
-            this.logger.warn('dc.onError: %s', err)
+            this.logger.warn('Encountered error (emitted by dataChannelEmitter)', err)
         })
 
         this.dataChannelEmitter.on('bufferedAmountLow', () => {
@@ -287,7 +293,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
         })
 
         this.dataChannelEmitter.on('message', (msg) => {
-            this.logger.trace('dc.onmessage')
+            this.logger.trace('dataChannelEmitter.onmessage')
             this.emitMessage(msg.toString())
         })
     }

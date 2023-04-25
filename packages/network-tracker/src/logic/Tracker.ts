@@ -95,6 +95,8 @@ export function convertTestNet3Status(statusMessage: StatusMessage): void {
     }
 }
 
+const logger = new Logger(module)
+
 export class Tracker extends EventEmitter {
     private readonly maxNeighborsPerNode: number
     private readonly trackerServer: TrackerServer
@@ -106,7 +108,6 @@ export class Tracker extends EventEmitter {
     private readonly instructionCounter: InstructionCounter
     private readonly instructionAndStatusAckSender: InstructionAndStatusAckSender
     private readonly extraMetadatas: Record<NodeId, Record<string, unknown>>
-    private readonly logger: Logger
     private readonly metrics: Metrics
     private readonly statusSchemaValidator: StatusValidator
     private stopped = false
@@ -127,7 +128,6 @@ export class Tracker extends EventEmitter {
         this.trackerServer = opts.protocols.trackerServer
         this.peerInfo = opts.peerInfo
 
-        this.logger = new Logger(module)
         this.overlayPerStreamPart = {}
         this.overlayConnectionRtts = {}
         this.locationManager = new LocationManager()
@@ -147,7 +147,7 @@ export class Tracker extends EventEmitter {
             if (valid) {
                 this.processNodeStatus(statusMessage, nodeId)
             } else {
-                this.logger.warn(`Status message with invalid format received from ${nodeId}`)
+                logger.warn('Received status message with invalid format', { nodeId })
                 this.trackerServer.disconnectFromPeer(
                     nodeId,
                     DisconnectionCode.INVALID_PROTOCOL_MESSAGE,
@@ -176,7 +176,7 @@ export class Tracker extends EventEmitter {
     }
 
     onNodeDisconnected(node: NodeId): void {
-        this.logger.debug('node %s disconnected', node)
+        logger.debug('Disconnected from node', { node })
         this.metrics.nodeDisconnected.record(1)
         this.removeNode(node)
     }
@@ -213,8 +213,6 @@ export class Tracker extends EventEmitter {
     }
 
     async stop(): Promise<void> {
-        this.logger.debug('stopping')
-
         this.instructionAndStatusAckSender.stop()
 
         await this.trackerServer.stop()

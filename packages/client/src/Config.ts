@@ -183,6 +183,7 @@ export interface StreamrClientConfig {
         /** Some TheGraph instance, that indexes the streamr registries */
         theGraphUrl?: string
         maxConcurrentCalls?: number
+        pollInterval?: number
     }
 
     /**

@@ -125,6 +125,14 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
     protected readonly bufferThresholdLow: number
     protected readonly portRange: WebRtcPortRange
 
+    // diagnostic info
+    private messagesSent = 0
+    private messagesRecv = 0
+    private bytesSent = 0
+    private bytesRecv = 0
+    private sendFailures = 0
+    private openSince: number | null = null
+
     constructor({
         selfId,
         targetPeerId,
@@ -157,7 +165,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         this.messageQueue = messageQueue
         this.deferredConnectionAttempt = deferredConnectionAttempt
         this.portRange = portRange
-        this.baseLogger = new Logger(module, `${NameDirectory.getName(this.getPeerId())}/${ID}`)
+        this.baseLogger = new Logger(module, { id: `${NameDirectory.getName(this.getPeerId())}/${ID}` })
         this.isFinished = false
         this.paused = false
 
@@ -169,7 +177,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         this.rtt = null
         this.rttStart = null
 
-        this.baseLogger.trace('create %o', {
+        this.baseLogger.trace('Create', {
             selfId: this.selfId,
             messageQueue: this.messageQueue.size(),
             peerInfo: this.peerInfo,
@@ -206,9 +214,9 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         this.isFinished = true
 
         if (err) {
-            this.baseLogger.debug('conn.close(): %s', err)
+            this.baseLogger.debug('Close connection', { err })
         } else {
-            this.baseLogger.trace('conn.close()')
+            this.baseLogger.trace('close()')
         }
 
         if (this.flushRef) {
@@ -232,7 +240,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         try {
             this.doClose(err)
         } catch (e) {
-            this.baseLogger.warn(`doClose (subclass) threw: %s`, e)
+            this.baseLogger.warn('Encountered error in doClose', e)
         }
 
         if (!this.hasOpened) {
@@ -252,6 +260,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
             this.deferredConnectionAttempt = null
             def.reject(reason)
         }
+        this.openSince = null
         this.emit('close')
     }
 
@@ -294,7 +303,9 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
                     clearTimeout(this.pingTimeoutRef)
                     this.pingTimeoutRef = null
                 }
-                this.baseLogger.debug(`failed to receive any pong after ${this.maxPingPongAttempts} ping attempts, closing connection`)
+                this.baseLogger.debug('Close connection (failed to receive pong after ping attempts)', {
+                    maxAttempts: this.maxPingPongAttempts
+                })
                 this.close(new Error('pong not received'))
                 return
             } else {
@@ -303,8 +314,11 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
                     if (this.isOpen()) {
                         this.doSendMessage('ping')
                     }
-                } catch (e) {
-                    this.baseLogger.debug(`failed to send ping to ${this.peerInfo.peerId} with error: ${e}`)
+                } catch (err) {
+                    this.baseLogger.debug('Failed to send ping', {
+                        peerId: this.peerInfo.peerId,
+                        err
+                    })
                 }
                 this.pingAttempts += 1
             }
@@ -324,13 +338,39 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
             if (this.isOpen()) {
                 this.doSendMessage('pong')
             }
-        } catch (e) {
-            this.baseLogger.warn(`failed to send pong to ${this.peerInfo.peerId} with error: ${e}`)
+        } catch (err) {
+            this.baseLogger.warn('Failed to send pong', {
+                peerId: this.peerInfo.peerId,
+                err
+            })
         }
     }
 
     isOffering(): boolean {
         return isOffering(this.selfId, this.peerInfo.peerId)
+    }
+
+    getDiagnosticInfo(): Record<string, unknown> {
+        return {
+            connectionId: this.getConnectionId(),
+            peerId: this.getPeerId(),
+            rtt: this.getRtt(),
+            ageInSec: this.openSince !== null ? Math.round((Date.now() - this.openSince) / 1000) : null,
+            messageQueueLength: this.messageQueue.size(),
+            bufferedAmount: this.getBufferedAmount(),
+            messagesSent: this.messagesSent,
+            messagesRecv: this.messagesRecv,
+            bytesSend: this.bytesSent,
+            bytesRecv: this.bytesRecv,
+            sendFailures: this.sendFailures,
+            open: this.isOpen(),
+            paused: this.paused,
+            finished: this.isFinished,
+            pingAttempts: this.pingAttempts,
+            isOffering: this.isOffering(),
+            lastState: this.getLastState(),
+            lastGatheringState: this.getLastGatheringState(),
+        }
     }
 
     private setFlushRef(): void {
@@ -354,7 +394,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
 
             const queueItem = this.messageQueue.peek()
             if (queueItem.isFailed()) {
-                this.baseLogger.debug('popping failed queue item: %o', queueItem, numOfSuccessSends)
+                this.baseLogger.debug('Encountered failed queue item', { queueItem, numOfSuccessSends })
                 this.messageQueue.pop()
             } else if (queueItem.getMessage().length > this.getMaxMessageSize()) {
                 const errorMessage = 'Dropping message due to size '
@@ -362,7 +402,10 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
                     + ' exceeding the limit of '
                     + this.getMaxMessageSize()
                 queueItem.immediateFail(errorMessage)
-                this.baseLogger.warn(errorMessage)
+                this.baseLogger.warn('Dropping message due to size', {
+                    size: queueItem.getMessage().length,
+                    limit: this.getMaxMessageSize()
+                })
                 this.messageQueue.pop()
             } else if (this.paused || this.getBufferedAmount() >= this.bufferThresholdHigh) {
                 if (!this.paused) {
@@ -380,7 +423,10 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
                     sent = this.isOpen() && this.doSendMessage(queueItem.getMessage())
                     isOpen = this.isOpen()
                     sent = sent && isOpen
+                    this.messagesSent += 1
+                    this.bytesSent += queueItem.getMessage().length
                 } catch (e) {
+                    this.sendFailures += 1
                     this.processFailedMessage(queueItem, e)
                     return // method rescheduled by `this.flushTimeoutRef`
                 }
@@ -390,7 +436,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
                     queueItem.delivered()
                     numOfSuccessSends += 1
                 } else {
-                    this.baseLogger.debug('queue item was not sent: %o', {
+                    this.baseLogger.debug('Failed to send queue item', {
                         wasOpen: isOpen,
                         numOfSuccessSends,
                         queueItem,
@@ -410,9 +456,10 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         })
         if (queueItem.isFailed()) {
             const infoText = queueItem.getErrorInfos().map((i) => JSON.stringify(i)).join('\n\t')
-            this.baseLogger.warn('failed to send message after %d tries due to\n\t%s',
-                MessageQueue.MAX_TRIES,
-                infoText)
+            this.baseLogger.warn('Discard message (all previous send attempts failed)', {
+                maxTries: MessageQueue.MAX_TRIES,
+                infoText
+            })
             this.messageQueue.pop()
         }
         if (this.flushTimeoutRef === null) {
@@ -453,6 +500,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
             this.deferredConnectionAttempt = null
             def.resolve(this.peerInfo.peerId)
         }
+        this.openSince = Date.now()
         this.hasOpened = true
         this.setFlushRef()
         this.emit('open')
@@ -482,6 +530,8 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
             this.pingAttempts = 0
             this.rtt = Date.now() - this.rttStart!
         } else {
+            this.messagesRecv += 1
+            this.bytesRecv += msg.length
             this.emit('message', msg)
         }
     }

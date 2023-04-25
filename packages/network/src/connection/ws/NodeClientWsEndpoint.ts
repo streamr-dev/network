@@ -3,6 +3,9 @@ import { PeerId, PeerInfo } from '../PeerInfo'
 import { DisconnectionCode, DisconnectionReason } from "./AbstractWsEndpoint"
 import { NodeClientWsConnection, NodeWebSocketConnectionFactory } from './NodeClientWsConnection'
 import { AbstractClientWsEndpoint, HandshakeValues, ServerUrl } from "./AbstractClientWsEndpoint"
+import { Logger } from '@streamr/utils'
+
+const logger = new Logger(module)
 
 export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeClientWsConnection> {
     protected doConnect(serverUrl: ServerUrl, serverPeerInfo: PeerInfo): Promise<PeerId> {
@@ -27,7 +30,7 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
                 })
 
             } catch (err) {
-                this.logger.trace('failed to connect to %s, error: %o', serverUrl, err)
+                logger.trace('Failed to connect to server', { serverUrl, err })
                 reject(err)
             }
         })
@@ -45,9 +48,9 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
         ws.once('close', (code: number, reason: string): void => {
             this.onClose(connection, code, reason as DisconnectionReason)
             if (code === DisconnectionCode.DUPLICATE_SOCKET) {
-                this.logger.warn('Connection refused: Duplicate nodeId detected, are you running multiple nodes with the same private key?')
+                logger.warn('Refused connection (Duplicate nodeId detected, are you running multiple nodes with the same private key?)')
             } else if (code === DisconnectionCode.INVALID_PROTOCOL_MESSAGE) {
-                this.logger.warn('Connection refused: Invalid protocol message format detected, are you running an outdated version?')
+                logger.warn('Refused connection (Invalid protocol message format detected, are you running an outdated version?)')
             }
         })
 

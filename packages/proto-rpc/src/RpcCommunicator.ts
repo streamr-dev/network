@@ -287,7 +287,7 @@ export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvents> {
         try {
             await this.rpcServerRegistry.handleNotification(rpcMessage, callContext)
         } catch (err) {
-            logger.debug(err)
+            logger.debug('error', { err })
         }
     }
 

@@ -25,8 +25,9 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
 
     constructor(opts: ConstructorOptions) {
         super(opts)
-        this.logger = new Logger(module, `${NameDirectory.getName(this.getPeerId())}/${this.id}`)
+        this.logger = new Logger(module, { connection: `${NameDirectory.getName(this.getPeerId())}/${this.id}` })
     }
+
     protected doConnect(): void {
 
         const urls: RTCIceServer[] = this.iceServers.map(({ url, port, username, password }) => ({
@@ -43,7 +44,10 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
         }
 
         this.peerConnection.onicegatheringstatechange = () => {
-            this.logger.trace('conn.onGatheringStateChange: %s -> %s', this.lastGatheringState, this.peerConnection?.iceGatheringState)
+            this.logger.trace('conn.onGatheringStateChange', {
+                oldState: this.lastGatheringState,
+                newState: this.peerConnection?.iceGatheringState
+            })
             this.lastGatheringState = this.peerConnection?.iceGatheringState
         }
 
@@ -55,7 +59,7 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
                         try {
                             await this.peerConnection.setLocalDescription()
                         } catch (err) {
-                            this.logger.warn(err)
+                            this.logger.warn('Failed to set local description', err)
                         }
                         if (this.peerConnection.localDescription) {
                             this.emitLocalDescription(this.peerConnection.localDescription?.sdp, this.peerConnection.localDescription?.type)
@@ -81,13 +85,13 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
 
     protected doClose(err?: Error): void {
         if (err !== undefined) {
-            this.logger.warn('Closing BrowserWebRTCConnection with error: %s', err)
+            this.logger.warn('Close BrowserWebRTCConnection', { err })
         }
         if (this.dataChannel) {
             try {
                 this.dataChannel.close()
-            } catch (e) {
-                this.logger.warn('dc.close() errored: %s', e)
+            } catch (err) {
+                this.logger.warn('Encountered error while closing dataChannel', { err })
             }
         }
 
@@ -96,8 +100,8 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
         if (this.peerConnection) {
             try {
                 this.peerConnection.close()
-            } catch (e) {
-                this.logger.warn('conn.close() errored: %s', e)
+            } catch (err) {
+                this.logger.warn('Encountered error while closing peerConnection', { err })
             }
         }
 
@@ -114,14 +118,14 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
         try {
             await this.peerConnection?.setRemoteDescription({ sdp:description, type: type as RTCSdpType })
         } catch (err) {
-            this.logger.warn(err)
+            this.logger.warn('Failed to set remote description', err)
         }
 
         if (type == "offer" && this.peerConnection) {
             try {
                 await this.peerConnection.setLocalDescription()
             } catch (err) {
-                this.logger.warn(err)
+                this.logger.warn('Failed to set local description', err)
             }
             if (this.peerConnection.localDescription) {
                 this.emitLocalDescription(this.peerConnection.localDescription.sdp, this.peerConnection.localDescription.type )
@@ -139,10 +143,10 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
                 .then(() => {
                     return
                 }).catch((err: any) => {
-                    this.logger.warn(err)
+                    this.logger.warn('Failed to add ice candidate (#1)', { err })
                 })
-        } catch (e) {
-            this.logger.warn(e)
+        } catch (err) {
+            this.logger.warn('Failed to add ice candidate (#2)', { err })
         }
     }
 
@@ -191,7 +195,7 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
         }
 
         dataChannel.onerror = (err) => {
-            this.logger.warn('dc.onError: %o', err)
+            this.logger.warn('Encountered error (emitted by dataChannel.onerror)', { err })
         }
 
         dataChannel.onbufferedamountlow = () => {

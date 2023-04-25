@@ -14,7 +14,7 @@ import { StreamIDBuilder } from '../StreamIDBuilder'
 import { SynchronizedGraphQLClient } from '../utils/SynchronizedGraphQLClient'
 import { searchStreams as _searchStreams, SearchStreamsPermissionFilter, SearchStreamsOrderBy } from './searchStreams'
 import { filter, map } from '../utils/GeneratorUtils'
-import { ObservableContract, queryAllReadonlyContracts, waitForTx } from '../utils/contract'
+import { ObservableContract, queryAllReadonlyContracts, waitForTx, initContractEventGateway } from '../utils/contract'
 import {
     ChainPermissions,
     convertChainPermissionsToStreamPermissions,
@@ -32,10 +32,12 @@ import { StreamRegistryCached } from './StreamRegistryCached'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ContractFactory } from '../ContractFactory'
 import { EthereumAddress, isENSName, Logger, toEthereumAddress } from '@streamr/utils'
+import { toStreamID } from '@streamr/protocol'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { StreamFactory } from './../StreamFactory'
 import { GraphQLQuery } from '../utils/GraphQLClient'
 import { collect } from '../utils/iterators'
+import { StreamrClientEventEmitter } from '../events'
 
 /*
  * On-chain registry of stream metadata and permissions.
@@ -51,6 +53,12 @@ export interface StreamQueryResult {
 interface StreamPublisherOrSubscriberItem {
     id: string
     userAddress: EthereumAddress
+}
+
+export interface StreamCreationEvent {
+    readonly streamId: StreamID
+    readonly metadata: StreamMetadata
+    readonly blockNumber: number
 }
 
 const streamContractErrorProcessor = (err: any, streamId: StreamID, registry: string): never => {
@@ -82,6 +90,7 @@ export class StreamRegistry {
         streamFactory: StreamFactory,
         @inject(SynchronizedGraphQLClient) graphQLClient: SynchronizedGraphQLClient,
         @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
+        @inject(StreamrClientEventEmitter) eventEmitter: StreamrClientEventEmitter,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
     ) {
@@ -101,6 +110,18 @@ export class StreamRegistry {
                 provider,
                 'streamRegistry'
             )
+        })
+        initContractEventGateway({
+            sourceName: 'StreamCreated', 
+            sourceEmitter: this.streamRegistryContractsReadonly[0],
+            targetName: 'createStream',
+            targetEmitter: eventEmitter,
+            transformation: (streamId: string, metadata: string, extra: any) => ({
+                streamId: toStreamID(streamId),
+                metadata: Stream.parseMetadata(metadata),
+                blockNumber: extra.blockNumber
+            }),
+            loggerFactory
         })
     }
 
@@ -190,7 +211,7 @@ export class StreamRegistry {
 
     private async streamExistsOnChain(streamIdOrPath: string): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        this.logger.debug('checking if stream "%s" exists on chain', streamId)
+        this.logger.debug('Check if stream exists on chain', { streamId })
         return queryAllReadonlyContracts((contract: StreamRegistryContract) => {
             return contract.exists(streamId)
         }, this.streamRegistryContractsReadonly)

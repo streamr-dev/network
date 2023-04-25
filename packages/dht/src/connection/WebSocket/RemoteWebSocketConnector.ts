@@ -36,7 +36,9 @@ export class RemoteWebSocketConnector {
             const res = await this.client.requestConnection(request, options)
             
             if (res.reason) {
-                logger.debug('WebSocketConnectionRequest Rejected', new Err.WebSocketConnectionRequestRejected(res.reason).stack)
+                logger.debug('WebSocketConnectionRequest Rejected', {
+                    stack: new Err.WebSocketConnectionRequestRejected(res.reason).stack
+                })
             }
             return res.accepted
         } catch (err) {

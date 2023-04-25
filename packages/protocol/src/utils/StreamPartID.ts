@@ -1,19 +1,13 @@
 import { StreamID, toStreamID } from "./StreamID"
 import { BrandedString } from '@streamr/utils'
+import { ensureValidStreamPartitionIndex } from './partition'
 
 const DELIMITER = '#'
-export const MAX_PARTITION_COUNT = 100
 
 export type StreamPartID = BrandedString<'StreamPartID'>
 
-function ensureValidStreamPartition(streamPartition: number): void | never {
-    if (!Number.isSafeInteger(streamPartition) || streamPartition < 0 || streamPartition >= MAX_PARTITION_COUNT) {
-        throw new Error(`invalid streamPartition value: ${streamPartition}`)
-    }
-}
-
 export function toStreamPartID(streamId: StreamID, streamPartition: number): StreamPartID | never {
-    ensureValidStreamPartition(streamPartition)
+    ensureValidStreamPartitionIndex(streamPartition)
     return `${streamId}${DELIMITER}${streamPartition}` as StreamPartID
 }
 
@@ -25,7 +19,7 @@ export class StreamPartIDUtils {
             throw new Error(`invalid streamPartID string: ${streamPartIdAsStr}`)
         }
         toStreamID(streamId) // throws if not valid
-        ensureValidStreamPartition(streamPartition)
+        ensureValidStreamPartitionIndex(streamPartition)
         return streamPartIdAsStr as StreamPartID
     }
 

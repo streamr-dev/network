@@ -18,6 +18,7 @@ export {
     UserPermissionAssignment,
     PublicPermissionAssignment
 } from './permission'
+export { StreamCreationEvent } from './registry/StreamRegistry'
 export { StorageNodeAssignmentEvent } from './registry/StreamStorageRegistry'
 export { StorageNodeMetadata } from './registry/StorageNodeRegistry'
 export { SearchStreamsPermissionFilter, SearchStreamsOrderBy } from './registry/searchStreams'

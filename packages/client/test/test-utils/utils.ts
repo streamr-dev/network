@@ -82,9 +82,9 @@ export const getCreateClient = (
         addAfter(async () => {
             await wait(0)
             if (!client) { return }
-            logger.debug('disconnecting after test >> (clientId=%s)', client.id)
+            logger.debug(`disconnecting after test >> (clientId=${client.id})`)
             await client.destroy()
-            logger.debug('disconnecting after test << (clientId=%s)', client.id)
+            logger.debug(`disconnecting after test << (clientId=${client.id})`)
         })
 
         return client

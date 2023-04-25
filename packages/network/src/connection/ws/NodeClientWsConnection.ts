@@ -6,7 +6,7 @@ import util from 'util'
 import { Logger } from "@streamr/utils"
 import { WebSocketConnectionFactory } from "./AbstractClientWsEndpoint"
 
-const staticLogger = new Logger(module)
+const logger = new Logger(module)
 
 export const NodeWebSocketConnectionFactory: WebSocketConnectionFactory<NodeClientWsConnection> = Object.freeze({
     createConnection(socket: WebSocket, peerInfo: PeerInfo): NodeClientWsConnection {
@@ -26,7 +26,7 @@ export class NodeClientWsConnection extends AbstractWsConnection {
         try {
             this.socket.close(code, reason)
         } catch (e) {
-            staticLogger.error('failed to close ws, reason: %s', e)
+            logger.error('Failed to close connection', e)
         }
     }
 
@@ -34,7 +34,7 @@ export class NodeClientWsConnection extends AbstractWsConnection {
         try {
             this.socket.terminate()
         } catch (e) {
-            staticLogger.error('failed to terminate ws, reason %s', e)
+            logger.error('Failed to terminate connection', e)
         }
     }
 
@@ -45,8 +45,6 @@ export class NodeClientWsConnection extends AbstractWsConnection {
     getReadyState(): ReadyState {
         return this.socket.readyState
     }
-
-    // TODO: toString() representation for logging
 
     sendPing(): void {
         this.socket.ping()

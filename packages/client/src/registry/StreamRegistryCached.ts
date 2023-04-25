@@ -87,7 +87,7 @@ export class StreamRegistryCached {
      * Clear cache for streamId
      */
     clearStream(streamId: StreamID): void {
-        this.logger.debug('clearing caches matching streamId="%s"', streamId)
+        this.logger.debug('Clear caches matching stream', { streamId })
         // include separator so startsWith(streamid) doesn't match streamid-something
         const target = `${streamId}${SEPARATOR}`
         const matchTarget = (s: string) => s.startsWith(target)

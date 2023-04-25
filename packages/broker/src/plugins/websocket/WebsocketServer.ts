@@ -6,7 +6,7 @@ import { once } from 'events'
 import { Socket } from 'net'
 import qs, { ParsedQs } from 'qs'
 import StreamrClient from 'streamr-client'
-import { Logger } from '@streamr/utils'
+import { Logger, randomString } from '@streamr/utils'
 import { addPingSender, addPingListener, Connection } from './Connection'
 import { ApiAuthentication, isValidAuthentication } from '../../apiAuthentication'
 import { PublishConnection } from './PublishConnection'
@@ -66,13 +66,21 @@ export class WebsocketServer {
             try {
                 connectionUrl = this.parseUrl(request.url!)
                 connection = this.createConnection(connectionUrl)
-            } catch (e) {
-                logger.warn(`Unable to create connection: ${e.message} ${request.url}`)
+            } catch (err) {
+                logger.warn('Reject incoming connection', {
+                    requestUrl: request.url,
+                    reason: err?.message
+                })
                 sendHttpError('400 Bad Request', socket)
                 return
             }
             const apiKey = connectionUrl.queryParams.apiKey as string | undefined
             if (!isValidAuthentication(apiKey, apiAuthentication)) {
+                logger.warn('Reject incoming connection', {
+                    requestUrl: request.url,
+                    includesApiKey: apiKey !== undefined,
+                    reason: 'Invalid authentication'
+                })
                 sendHttpError((apiKey === undefined) ? '401 Unauthorized' : '403 Forbidden', socket)
                 return
             }
@@ -81,17 +89,24 @@ export class WebsocketServer {
             })
         })
 
-        this.wss.on('connection', (ws: WebSocket, _request: http.IncomingMessage, connection: Connection) => {
-            connection.init(ws, this.streamrClient, payloadFormat)
-            addPingListener(ws)
-            if (this.pingSendInterval !== 0) {
-                addPingSender(ws, this.pingSendInterval, this.disconnectTimeout)
+        this.wss.on('connection', async (ws: WebSocket, _request: http.IncomingMessage, connection: Connection) => {
+            const socketId = randomString(5)
+            logger.info('Accept connection', { socketId })
+            try {
+                await connection.init(ws, socketId, this.streamrClient, payloadFormat)
+                addPingListener(ws)
+                if (this.pingSendInterval !== 0) {
+                    addPingSender(ws, socketId, this.pingSendInterval, this.disconnectTimeout)
+                }
+            } catch (err) {
+                logger.warn('Close connection', { socketId, reason: err?.message })
+                ws.close()
             }
         })
 
         this.httpServer.listen(port)
         await once(this.httpServer, 'listening')
-        logger.info('Websocket server listening on ' + port)
+        logger.info(`Started Websocket server on port ${port}`)
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -128,6 +143,6 @@ export class WebsocketServer {
         }
         this.httpServer!.close()
         await once(this.httpServer!, 'close')
-        logger.info('WebSocket server stopped')
+        logger.info('Stopped Websocket server')
     }
 }
