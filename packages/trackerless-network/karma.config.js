@@ -41,7 +41,7 @@ module.exports = function (config) {
                 }
             }
         },
-        browserDisconnectTimeout: 30000,
+        browserDisconnectTimeout: 45000,
         browserNoActivityTimeout: 400000,
         browsers: ['CustomElectron'],
         client: {
