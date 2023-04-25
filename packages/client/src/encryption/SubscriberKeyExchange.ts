@@ -77,7 +77,7 @@ export class SubscriberKeyExchange {
             this.rsaKeyPair!.getPublicKey(),
             requestId)
         const node = await this.networkNodeFacade.getNode()
-        node.publish(request, this.networkNodeFacade.getEntryPoints())
+        node.publish(request, [])
         this.pendingRequests.add(requestId)
         this.logger.debug('Sent group key request (waiting for response)', {
             groupKeyId,
