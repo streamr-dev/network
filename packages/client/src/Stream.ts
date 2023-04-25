@@ -24,6 +24,7 @@ import { Subscription } from './subscribe/Subscription'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { Message } from './Message'
 import { convertStreamMessageToMessage } from './Message'
+import { StreamrClientError } from './StreamrClientError' 
 
 export interface StreamMetadata {
     /**
@@ -285,7 +286,7 @@ export class Stream {
     static parseMetadata(metadata: string): StreamMetadata {
         // TODO we could pick the fields of StreamMetadata explicitly, so that this
         // object can't contain extra fields
-        const err = new Error(`Could not parse properties from onchain metadata: ${metadata}`)
+        const err = new StreamrClientError(`Invalid stream metadata: ${metadata}`, 'INVALID_STREAM_METADATA')
         let json
         try {
             json = JSON.parse(metadata)

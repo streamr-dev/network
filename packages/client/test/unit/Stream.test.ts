@@ -89,12 +89,18 @@ describe('Stream', () => {
             const metadata = JSON.stringify({
                 partitions: 150
             })
-            expect(() => Stream.parseMetadata(metadata)).toThrowError('Could not parse properties from onchain metadata: {\"partitions\":150}')
+            expect(() => Stream.parseMetadata(metadata)).toThrowStreamrError({
+                message: 'Invalid stream metadata: {"partitions":150}',
+                code: 'INVALID_STREAM_METADATA'
+            })
         })
 
         it('invalid JSON', () => {
             const metadata = 'invalid-json'
-            expect(() => Stream.parseMetadata(metadata)).toThrowError('Could not parse properties from onchain metadata: invalid-json')
+            expect(() => Stream.parseMetadata(metadata)).toThrowStreamrError({
+                message: 'Invalid stream metadata: invalid-json',
+                code: 'INVALID_STREAM_METADATA'
+            })
         })
     })
 })
