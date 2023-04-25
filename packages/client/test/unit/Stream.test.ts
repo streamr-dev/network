@@ -1,9 +1,10 @@
 import 'reflect-metadata'
 
 import { toStreamID } from '@streamr/protocol'
+import { Stream } from '../../src/Stream'
+import { StreamFactory } from '../../src/StreamFactory'
 import { StreamRegistry } from '../../src/registry/StreamRegistry'
 import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
-import { StreamFactory } from './../../src/StreamFactory'
 
 const createStreamFactory = (streamRegistry?: StreamRegistry, streamRegistryCached?: StreamRegistryCached) => {
     return new StreamFactory(
@@ -66,6 +67,34 @@ describe('Stream', () => {
             }).rejects.toThrow('mock-error')
             expect(stream.getMetadata().description).toBe('original-description')
             expect(clearStream).toBeCalledWith('mock-id')
+        })
+    })
+
+    describe('parse metadata', () => {
+        it('happy path', () => {
+            const metadata = JSON.stringify({
+                partitions: 50
+            })
+            expect(Stream.parseMetadata(metadata).partitions).toBe(50)
+        })
+
+        it('no value in valid JSON', () => {
+            const metadata = JSON.stringify({
+                foo: 'bar'
+            })
+            expect(Stream.parseMetadata(metadata).partitions).toBe(1)
+        })
+
+        it('invalid value', () => {
+            const metadata = JSON.stringify({
+                partitions: 150
+            })
+            expect(() => Stream.parseMetadata(metadata)).toThrowError('Could not parse properties from onchain metadata: {\"partitions\":150}')
+        })
+
+        it('invalid JSON', () => {
+            const metadata = 'invalid-json'
+            expect(() => Stream.parseMetadata(metadata)).toThrowError('Could not parse properties from onchain metadata: invalid-json')
         })
     })
 })

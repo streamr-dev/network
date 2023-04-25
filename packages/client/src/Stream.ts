@@ -283,14 +283,26 @@ export class Stream {
 
     /** @internal */
     static parseMetadata(metadata: string): StreamMetadata {
+        // TODO we could pick the fields of StreamMetadata explicitly, so that this
+        // object can't contain extra fields
+        const err = new Error(`Could not parse properties from onchain metadata: ${metadata}`)
+        let json
         try {
-            // TODO we could pick the fields of StreamMetadata explicitly, so that this
-            // object can't contain extra fields
-            const json = JSON.parse(metadata)
-            ensureValidStreamPartitionCount(json.partitions)
-            return json
-        } catch (error) {
-            throw new Error(`Could not parse properties from onchain metadata: ${metadata}`)
+            json = JSON.parse(metadata)
+        } catch (_ignored) {
+            throw err
+        }
+        if (json.partitions !== undefined) {
+            try {
+                ensureValidStreamPartitionCount(json.partitions)
+                return json
+            } catch (_ignored) {
+                throw err
+            }
+        } else {
+            return {
+                partitions: 1
+            }
         }
     }
 
