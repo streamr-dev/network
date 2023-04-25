@@ -29,6 +29,7 @@ import { waitForCondition } from './waitForCondition'
 import { withRateLimit } from './withRateLimit'
 import { ObservableEventEmitter } from './ObservableEventEmitter'
 import { initEventGateway } from './initEventGateway'
+import { merge } from './merge'
 
 export {
     BrandedString,
@@ -59,7 +60,8 @@ export {
     withTimeout,
     Events,
     ObservableEventEmitter,
-    initEventGateway
+    initEventGateway,
+    merge
 }
 
 export {

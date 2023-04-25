@@ -8,11 +8,16 @@ import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { getWaitForStorage } from '../test-utils/publish'
 import { createTestStream, uid } from '../test-utils/utils'
 import { Message } from '../../src/Message'
+import { merge } from '@streamr/utils'
 
-const Msg = (opts?: any) => ({
-    value: uid('msg'),
-    ...opts,
-})
+const Msg = (opts?: any) => {
+    return merge(
+        {
+            value: uid('msg')
+        },
+        opts
+    )
+}
 
 function toSeq(requests: Message[], ts = Date.now()) {
     return requests.map((msg) => {
