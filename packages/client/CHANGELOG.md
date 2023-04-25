@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Validate `partitions` when parsing contract metadata
+- Use default partition count if there is no information in contract metadata
 
 ### Deprecated
 

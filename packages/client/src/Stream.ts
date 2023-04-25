@@ -25,6 +25,7 @@ import { LoggerFactory } from './utils/LoggerFactory'
 import { Message } from './Message'
 import { convertStreamMessageToMessage } from './Message'
 import { merge } from '@streamr/utils'
+import { StreamrClientError } from './StreamrClientError' 
 
 export interface StreamMetadata {
     /**
@@ -283,14 +284,32 @@ export class Stream {
 
     /** @internal */
     static parseMetadata(metadata: string): StreamMetadata {
+        // TODO we could pick the fields of StreamMetadata explicitly, so that this
+        // object can't contain extra fields
+        if (metadata === '') {
+            return {
+                partitions: 1
+            }
+        }
+        const err = new StreamrClientError(`Invalid stream metadata: ${metadata}`, 'INVALID_STREAM_METADATA')
+        let json
         try {
-            // TODO we could pick the fields of StreamMetadata explicitly, so that this
-            // object can't contain extra fields
-            const json = JSON.parse(metadata)
-            ensureValidStreamPartitionCount(json.partitions)
-            return json
-        } catch (error) {
-            throw new Error(`Could not parse properties from onchain metadata: ${metadata}`)
+            json = JSON.parse(metadata)
+        } catch (_ignored) {
+            throw err
+        }
+        if (json.partitions !== undefined) {
+            try {
+                ensureValidStreamPartitionCount(json.partitions)
+                return json
+            } catch (_ignored) {
+                throw err
+            }
+        } else {
+            return {
+                ...json,
+                partitions: 1
+            }
         }
     }
 
