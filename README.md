@@ -138,7 +138,7 @@ All the above packages should be released at the same time.
 3. `./update-versions.sh <SEMVER>` E.g. `./update-versions.sh 7.1.1`
 4. `npm run clean && npm install && npm run build && npm run versions`
    - Ensure output does not contain yellow or red markers
-5. Add files to staging `git tag -p`
+5. Add files to staging `git add .`
 6. If releasing a major or minor version update API docs link in *packages/client/README.md*.
 7. `./release-git-tags.sh <SEMVER>` E.g. `./release-git-tags.sh 7.1.1`
 8. Wait & ensure the pushed main branch passes CI tests
