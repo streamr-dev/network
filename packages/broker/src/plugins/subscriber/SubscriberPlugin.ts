@@ -1,6 +1,5 @@
-import { Plugin, PluginOptions } from '../../Plugin'
-import { allOrCleanup, Logger } from '@streamr/utils'
-import { StreamPartIDUtils, toStreamID, toStreamPartID } from '@streamr/protocol'
+import { Plugin } from '../../Plugin'
+import { pTransaction, Logger } from '@streamr/utils'
 import { Subscription } from 'streamr-client'
 
 interface ConfigStream {
@@ -18,7 +17,7 @@ export class SubscriberPlugin extends Plugin<SubscriberPluginConfig> {
     private subscriptions: Subscription[] = []
 
     private async subscribeToStreamParts(): Promise<void> {
-        this.subscriptions = await allOrCleanup(this.pluginConfig.streams.map(({ streamId, streamPartition }) => (
+        this.subscriptions = await pTransaction(this.pluginConfig.streams.map(({ streamId, streamPartition }) => (
             this.streamrClient.subscribe({ id: streamId, partition: streamPartition, raw: true })
         )), (sub) => sub.unsubscribe())
     }

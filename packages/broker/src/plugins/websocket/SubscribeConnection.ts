@@ -4,7 +4,7 @@ import { Connection } from './Connection'
 import { parsePositiveInteger, parseQueryParameterArray } from '../../helpers/parser'
 import { ParsedQs } from 'qs'
 import { PayloadFormat } from '../../helpers/PayloadFormat'
-import { allOrCleanup, Logger } from '@streamr/utils'
+import { pTransaction, Logger } from '@streamr/utils'
 
 export class SubscribeConnection implements Connection {
 
@@ -37,7 +37,7 @@ export class SubscribeConnection implements Connection {
             const payload = payloadFormat.createPayload(content as any, metadata)
             ws.send(payload)
         }
-        this.subscriptions.push(...await allOrCleanup(
+        this.subscriptions.push(...await pTransaction(
             streamPartDefinitions.map((sd) => streamrClient.subscribe(sd, msgCallback)),
             (sub) => sub.unsubscribe()
         ))
