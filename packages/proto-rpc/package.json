@@ -38,7 +38,7 @@
     "@types/uuid": "^9.0.1",
     "console-browserify": "^1.2.0",
     "electron": "^24.1.2",
-    "electron-rebuild": "^3.2.9",
+    "@electron/rebuild": "^3.2.9",
     "expect": "^28.1.3",
     "express": "^4.17.1",
     "jest-mock": "^29.4.3",

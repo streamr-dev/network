@@ -29,7 +29,7 @@
     "@types/lodash": "^4.14.175",
     "@types/node-fetch": "^2.5.12",
     "electron": "^24.1.2",
-    "electron-rebuild": "^3.2.9",
+    "@electron/rebuild": "^3.2.9",
     "express": "^4.17.1",
     "karma": "^6.4.0",
     "karma-chrome-launcher": "^3.1.1",
