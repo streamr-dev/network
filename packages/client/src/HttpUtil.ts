@@ -1,6 +1,5 @@
 import fetch, { Response } from 'node-fetch'
 import { AbortSignal } from 'node-fetch/externals'
-import { getVersionString } from './utils/utils'
 import { Readable } from 'stream'
 import { WebStreamToNodeStream } from './utils/WebStreamToNodeStream'
 import split2 from 'split2'
