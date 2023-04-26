@@ -16,7 +16,7 @@ import { ModernFakeTimers } from '@jest/fake-timers'
 import * as jestExtendedMatchers from 'jest-extended'
 
 let jest = jestMock
-const timers = new ModernFakeTimers({global: window, config: null })
+const timers = new ModernFakeTimers({ global: window, config: null })
 
 // prevent navigation
 // without this karma fails the suite with "Some of your tests did a full page reload!"

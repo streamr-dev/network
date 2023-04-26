@@ -14,11 +14,11 @@ module.exports = function(webpackConfig, testPath) {
             reporters: ['spec'],
             files: [
                 karmaSetupJs,
-                './' + testPath + '/*.ts'
+                './' + testPath + '/**/*.ts'
             ],
             preprocessors: {
                 [karmaSetupJs]: ['webpack'],
-                './test/*.ts': ['webpack', 'sourcemap'],
+                ['./' + testPath + '/**/*.ts']: ['webpack', 'sourcemap'],
             },
             customLaunchers: {
                 CustomElectron: {
@@ -43,7 +43,7 @@ module.exports = function(webpackConfig, testPath) {
             },
             singleRun: true,   //set to false to leave electron window open
             webpack: {
-                ...webpackConfig('test'),
+                ...webpackConfig(),
                 entry: {}
             }
         })
