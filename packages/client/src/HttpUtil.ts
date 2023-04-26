@@ -1,5 +1,5 @@
 import fetch, { Response } from 'node-fetch'
-
+import { AbortSignal } from 'node-fetch/externals'
 import { getVersionString } from './utils/utils'
 import { Readable } from 'stream'
 import { WebStreamToNodeStream } from './utils/WebStreamToNodeStream'
@@ -77,7 +77,7 @@ export class HttpUtil {
         abortController = new AbortController()
     ): AsyncIterable<StreamMessage> {
         const response = await fetchResponse(url, this.logger, {
-            signal: abortController.signal
+            signal: abortController.signal as AbortSignal  // cast is needed until this is fixed: https://github.com/node-fetch/node-fetch/issues/1652
         })
         if (!response.body) {
             throw new Error('No Response Body')
@@ -115,7 +115,7 @@ export class HttpUtil {
 async function fetchResponse(
     url: string,
     logger: Logger,
-    opts?: any // eslint-disable-line @typescript-eslint/explicit-module-boundary-types
+    opts: { signal: AbortSignal }
 ): Promise<Response> {
     const timeStart = Date.now()
 
