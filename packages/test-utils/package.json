@@ -1,6 +1,6 @@
 {
   "name": "@streamr/test-utils",
-  "version": "8.2.1",
+  "version": "8.3.0-beta.1",
   "description": "A collection of shared test utilities",
   "repository": {
     "type": "git",
@@ -20,7 +20,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@ethersproject/wallet": "^5.5.0",
-    "@streamr/utils": "8.2.1",
+    "@streamr/utils": "8.3.0-beta.1",
     "cors": "^2.8.5",
     "express": "^4.17.1"
   },

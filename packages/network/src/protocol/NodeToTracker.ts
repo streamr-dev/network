@@ -151,6 +151,10 @@ export class NodeToTracker extends EventEmitter {
         return this.endpoint.getServerUrlByPeerId(trackerId)
     }
 
+    getDiagnosticInfo(): Record<string, unknown> {
+        return this.endpoint.getDiagnosticInfo()
+    }
+
     stop(): Promise<void> {
         return this.endpoint.stop()
     }

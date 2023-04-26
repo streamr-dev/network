@@ -89,7 +89,7 @@ describe('Resends', () => {
                 messageMatchFn: () => {
                     return true
                 }
-            })).rejects.toThrowStreamError(new StreamrClientError(`no storage assigned: ${stream.id}`, 'NO_STORAGE_NODES'))
+            })).rejects.toThrowStreamrError(new StreamrClientError(`no storage assigned: ${stream.id}`, 'NO_STORAGE_NODES'))
         })
     })
 })

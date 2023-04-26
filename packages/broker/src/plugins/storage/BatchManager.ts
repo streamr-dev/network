@@ -4,6 +4,7 @@ import { Logger } from '@streamr/utils'
 import type { StreamMessage } from '@streamr/protocol'
 import { Batch, BatchId, DoneCallback } from './Batch'
 import { BucketId } from './Bucket'
+import { merge } from '@streamr/utils'
 
 const INSERT_STATEMENT = 'INSERT INTO stream_data '
     + '(stream_id, partition, bucket_id, ts, sequence_no, publisher_id, msg_chain_id, payload) '
@@ -47,10 +48,7 @@ export class BatchManager extends EventEmitter {
             batchMaxRetries: 1000 // in total max ~16 minutes timeout
         }
 
-        this.opts = {
-            ...defaultOptions,
-            ...opts
-        }
+        this.opts = merge(defaultOptions, opts)
 
         // bucketId => batch
         this.batches = Object.create(null)

@@ -13,11 +13,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Info plugin provides more detailed diagnostic info
+- Websocket plugin includes more logging
+
 ### Deprecated
+
+- Deprecate config option `subscriptionRetryInterval` in `subscriber` plugin
 
 ### Removed
 
 ### Fixed
+
+- Websocket plugin cleans up subscriptions on client disconnect
 
 ### Security
 

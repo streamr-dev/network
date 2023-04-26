@@ -6,6 +6,7 @@ import { Broker } from '../../src/broker'
 import { Message } from '../../src/helpers/PayloadFormat'
 import { createClient, startBroker, createTestStream, startTestTracker } from '../utils'
 import { wait } from '@streamr/utils'
+import { merge } from '@streamr/utils'
 
 interface MessagingPluginApi<T> {
     createClient: (action: 'publish' | 'subscribe', streamId: string, apiKey?: string) => Promise<T>
@@ -67,14 +68,16 @@ export const createMessagingPluginTest = <T>(
                 privateKey: brokerUser.privateKey,
                 trackerPort: ports.tracker,
                 extraPlugins: {
-                    [pluginName]: {
-                        port: ports.plugin,
-                        payloadMetadata: true,
-                        apiAuthentication: {
-                            keys: [MOCK_API_KEY]
+                    [pluginName]: merge(
+                        {
+                            port: ports.plugin,
+                            payloadMetadata: true,
+                            apiAuthentication: {
+                                keys: [MOCK_API_KEY]
+                            }
                         },
-                        ...pluginConfig
-                    }
+                        pluginConfig
+                    )
                 }
             })
         })

@@ -1,6 +1,6 @@
 {
   "name": "@streamr/network-node",
-  "version": "8.2.1",
+  "version": "8.3.0-beta.1",
   "description": "Minimal and extendable implementation of the Streamr Network network node",
   "repository": {
     "type": "git",
@@ -26,14 +26,14 @@
     "test-unit": "jest test/unit"
   },
   "dependencies": {
-    "@streamr/protocol": "8.2.1",
-    "@streamr/utils": "8.2.1",
-    "cancelable-promise": "^3.2.3",
-    "commander": "^8.3.0",
+    "@streamr/protocol": "8.3.0-beta.1",
+    "@streamr/utils": "8.3.0-beta.1",
+    "cancelable-promise": "^4.3.1",
+    "commander": "^10.0.1",
     "heap": "^0.2.6",
     "ipaddr.js": "^2.0.1",
     "lodash": "^4.17.21",
-    "node-datachannel": "^0.4.0",
+    "node-datachannel": "^0.4.2",
     "setimmediate": "^1.0.5",
     "strict-event-emitter-types": "^2.0.0",
     "uuid": "^9.0.0",
@@ -42,9 +42,10 @@
     "yallist": "^4.0.0"
   },
   "devDependencies": {
-    "@jest/fake-timers": "^27.0.5",
-    "@streamr/network-tracker": "8.2.1",
-    "@streamr/test-utils": "8.2.1",
+    "@electron/rebuild": "^3.2.9",
+    "@jest/fake-timers": "^29.5.0",
+    "@streamr/network-tracker": "8.3.0-beta.1",
+    "@streamr/test-utils": "8.3.0-beta.1",
     "@types/heap": "^0.2.28",
     "@types/lodash": "^4.14.175",
     "@types/uuid": "^9.0.1",
@@ -52,8 +53,7 @@
     "@types/ws": "^8.5.4",
     "@types/yallist": "^4.0.1",
     "electron": "^24.1.2",
-    "electron-rebuild": "^3.2.9",
-    "expect": "^28.1.3",
+    "expect": "^29.5.0",
     "express": "^4.17.1",
     "jest-mock": "^29.4.3",
     "karma": "^6.4.0",
@@ -62,13 +62,13 @@
     "karma-jasmine": "^5.1.0",
     "karma-spec-reporter": "^0.0.36",
     "karma-webpack": "^5.0.0",
-    "node-polyfill-webpack-plugin": "^1.1.4",
+    "node-polyfill-webpack-plugin": "^2.0.1",
     "ts-loader": "^9.3.1",
     "webpack": "^5.64.1",
-    "webpack-cli": "^4.9.1"
+    "webpack-cli": "^5.0.1"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.5",
-    "utf-8-validate": "^5.0.7"
+    "utf-8-validate": "^6.0.3"
   }
 }

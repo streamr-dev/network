@@ -207,6 +207,14 @@ export class StreamPartManager {
         return this.isSetUp(streamPartId) && this.streamParts.get(streamPartId)!.isBehindProxy
     }
 
+    getDiagnosticInfo(): Record<string, unknown> {
+        const state: Record<string, unknown> = {}
+        for (const streamPartId of this.getStreamParts()) {
+            state[streamPartId] = this.getNeighborsForStreamPart(streamPartId)
+        }
+        return state
+    }
+
     private ensureThatIsSetUp(streamPartId: StreamPartID): void | never {
         if (!this.isSetUp(streamPartId)) {
             throw new Error(`Stream part ${streamPartId} is not set up`)

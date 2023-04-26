@@ -1,3 +1,4 @@
+import { pTransaction } from './pTransaction'
 import { AbortError, asAbortable } from './asAbortable'
 import { setAbortableInterval, setAbortableTimeout } from './abortableTimers'
 import { Defer } from './Defer'
@@ -20,13 +21,16 @@ import { randomString } from './randomString'
 import { scheduleAtFixedRate } from './scheduleAtFixedRate'
 import { scheduleAtInterval } from './scheduleAtInterval'
 import { toEthereumAddressOrENSName } from './toEthereumAddressOrENSName'
-import { BrandedString } from './types'
+import { Events, BrandedString } from './types'
 import { wait } from './wait'
 import { waitForEvent } from './waitForEvent'
 import { TimeoutError, withTimeout } from './withTimeout'
 import { composeAbortSignals } from './composeAbortSignals'
 import { waitForCondition } from './waitForCondition'
 import { withRateLimit } from './withRateLimit'
+import { ObservableEventEmitter } from './ObservableEventEmitter'
+import { initEventGateway } from './initEventGateway'
+import { merge } from './merge'
 
 export {
     BrandedString,
@@ -38,6 +42,7 @@ export {
     Multimap,
     AbortError,
     TimeoutError,
+    pTransaction,
     asAbortable,
     composeAbortSignals,
     isENSName,
@@ -55,6 +60,10 @@ export {
     waitForEvent,
     withRateLimit,
     withTimeout,
+    Events,
+    ObservableEventEmitter,
+    initEventGateway,
+    merge
 }
 
 export {

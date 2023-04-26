@@ -5,7 +5,8 @@ import { StreamRegistryCached } from './registry/StreamRegistryCached'
 import {
     StreamID,
     StreamPartID,
-    toStreamPartID
+    toStreamPartID,
+    ensureValidStreamPartitionCount
 } from '@streamr/protocol'
 import range from 'lodash/range'
 import { StrictStreamrClientConfig } from './Config'
@@ -23,6 +24,8 @@ import { Subscription } from './subscribe/Subscription'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { Message } from './Message'
 import { convertStreamMessageToMessage } from './Message'
+import { merge } from '@streamr/utils'
+import { StreamrClientError } from './StreamrClientError' 
 
 export interface StreamMetadata {
     /**
@@ -116,14 +119,16 @@ export class Stream {
         config: Pick<StrictStreamrClientConfig, '_timeouts'>
     ) {
         this.id = id
-        this.metadata = {
-            partitions: 1,
-            // TODO should we remove this default or make config as a required StreamMetadata field?
-            config: {
-                fields: []
+        this.metadata = merge(
+            {
+                partitions: 1,
+                // TODO should we remove this default or make config as a required StreamMetadata field?
+                config: {
+                    fields: []
+                }
             },
-            ...metadata
-        }
+            metadata
+        )
         this._resends = resends
         this._publisher = publisher
         this._subscriber = subscriber
@@ -139,10 +144,7 @@ export class Stream {
      * Updates the metadata of the stream by merging with the existing metadata.
      */
     async update(metadata: Partial<StreamMetadata>): Promise<void> {
-        const merged = {
-            ...this.getMetadata(),
-            ...metadata
-        }
+        const merged = merge(this.getMetadata(), metadata)
         try {
             await this._streamRegistry.updateStream(this.id, merged)
         } finally {
@@ -281,15 +283,33 @@ export class Stream {
     }
 
     /** @internal */
-    static parseMetadata(metadata: string): Partial<StreamMetadata> {
+    static parseMetadata(metadata: string): StreamMetadata {
+        // TODO we could pick the fields of StreamMetadata explicitly, so that this
+        // object can't contain extra fields
+        if (metadata === '') {
+            return {
+                partitions: 1
+            }
+        }
+        const err = new StreamrClientError(`Invalid stream metadata: ${metadata}`, 'INVALID_STREAM_METADATA')
+        let json
         try {
-            // TODO we could pick the fields of StreamMetadata explicitly, so that this
-            // object can't contain extra fields
-            // TODO we should maybe also check that partitions field is available
-            // (if we do that we can return StreamMetadata instead of Partial<StreamMetadata>)
-            return JSON.parse(metadata)
-        } catch (error) {
-            throw new Error(`Could not parse properties from onchain metadata: ${metadata}`)
+            json = JSON.parse(metadata)
+        } catch (_ignored) {
+            throw err
+        }
+        if (json.partitions !== undefined) {
+            try {
+                ensureValidStreamPartitionCount(json.partitions)
+                return json
+            } catch (_ignored) {
+                throw err
+            }
+        } else {
+            return {
+                ...json,
+                partitions: 1
+            }
         }
     }
 

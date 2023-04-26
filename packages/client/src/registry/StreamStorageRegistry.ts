@@ -7,9 +7,9 @@ import { Stream } from '../Stream'
 import { getStreamRegistryChainProviders, getStreamRegistryOverrides } from '../Ethereum'
 import { StreamID, toStreamID } from '@streamr/protocol'
 import { StreamIDBuilder } from '../StreamIDBuilder'
-import { waitForTx, queryAllReadonlyContracts } from '../utils/contract'
+import { waitForTx, queryAllReadonlyContracts, initContractEventGateway } from '../utils/contract'
 import { SynchronizedGraphQLClient } from '../utils/SynchronizedGraphQLClient'
-import { StreamrClientEventEmitter, StreamrClientEvents, initEventGateway } from '../events'
+import { StreamrClientEventEmitter } from '../events'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ContractFactory } from '../ContractFactory'
 import { EthereumAddress, Logger, toEthereumAddress } from '@streamr/utils'
@@ -71,35 +71,32 @@ export class StreamStorageRegistry {
                 'streamStorageRegistry'
             ) as StreamStorageRegistryContract
         })
-        this.initStreamAssignmentEventListener('addToStorageNode', 'Added', eventEmitter)
-        this.initStreamAssignmentEventListener('removeFromStorageNode', 'Removed', eventEmitter)
+        this.initStreamAssignmentEventListeners(eventEmitter, loggerFactory)
     }
 
-    private initStreamAssignmentEventListener(
-        clientEvent: keyof StreamrClientEvents,
-        contractEvent: string,
-        eventEmitter: StreamrClientEventEmitter
-    ) {
+    private initStreamAssignmentEventListeners(eventEmitter: StreamrClientEventEmitter, loggerFactory: LoggerFactory) {
         const primaryReadonlyContract = this.streamStorageRegistryContractsReadonly[0]
-        type Listener = (streamId: string, nodeAddress: string, extra: any) => void
-        initEventGateway(
-            clientEvent,
-            (emit: (payload: StorageNodeAssignmentEvent) => void) => {
-                const listener = (streamId: string, nodeAddress: string, extra: any) => {
-                    emit({
-                        streamId: toStreamID(streamId),
-                        nodeAddress: toEthereumAddress(nodeAddress),
-                        blockNumber: extra.blockNumber
-                    })
-                }
-                primaryReadonlyContract.on(contractEvent, listener)
-                return listener
-            },
-            (listener: Listener) => {
-                primaryReadonlyContract.off(contractEvent, listener)
-            },
-            eventEmitter
-        )
+        const transformation = (streamId: string, nodeAddress: string, extra: any) => ({
+            streamId: toStreamID(streamId),
+            nodeAddress: toEthereumAddress(nodeAddress),
+            blockNumber: extra.blockNumber
+        })
+        initContractEventGateway({
+            sourceName: 'Added', 
+            sourceEmitter: primaryReadonlyContract,
+            targetName: 'addToStorageNode',
+            targetEmitter: eventEmitter,
+            transformation,
+            loggerFactory
+        })
+        initContractEventGateway({
+            sourceName: 'Removed', 
+            sourceEmitter: primaryReadonlyContract,
+            targetName: 'removeFromStorageNode',
+            targetEmitter: eventEmitter,
+            transformation,
+            loggerFactory
+        })
     }
 
     private async connectToContract() {
