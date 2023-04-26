@@ -115,14 +115,13 @@ export class HttpUtil {
 async function fetchResponse(
     url: string,
     logger: Logger,
-    opts?: any, // eslint-disable-line @typescript-eslint/explicit-module-boundary-types
-    fetchFn: typeof fetch = fetch
+    opts?: any // eslint-disable-line @typescript-eslint/explicit-module-boundary-types
 ): Promise<Response> {
     const timeStart = Date.now()
 
     logger.debug('Send HTTP request', { url, opts })
 
-    const response: Response = await fetchFn(url, opts)
+    const response: Response = await fetch(url, opts)
     const timeEnd = Date.now()
     logger.debug('Received HTTP response', {
         url,
