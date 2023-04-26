@@ -64,7 +64,7 @@
     "karma-webpack": "^5.0.0",
     "node-module-polyfill": "^1.0.1",
     "node-polyfill-webpack-plugin": "^2.0.1",
-    "patch-package": "^6.4.7",
+    "patch-package": "^7.0.0",
     "path-browserify": "^1.0.1",
     "process": "^0.11.10",
     "setimmediate": "^1.0.5",
