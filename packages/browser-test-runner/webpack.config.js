@@ -3,7 +3,7 @@ const path = require('path')
 const webpack = require('webpack')
 const NodePolyfillPlugin = require('node-polyfill-webpack-plugin')
 
-module.exports = function(entry, libraryName) {
+module.exports = function(entry, libraryName, customAliases = {}) {
     return (env, argv) => {
         return {
             cache: {
@@ -36,12 +36,16 @@ module.exports = function(entry, libraryName) {
                 }),
                 new webpack.ProvidePlugin({
                     process: 'process/browser'
-                })
+                }),
+                new webpack.ProvidePlugin({
+                    Buffer: ['buffer', 'Buffer']
+                }),
             ],
             resolve: {
                 extensions: ['.tsx', '.ts', '.js'],
                 alias: {
-                    'process': 'process/browser'
+                    'process': 'process/browser',
+                    ...customAliases
                 },
                 fallback: {
                     'fs': false,
@@ -54,7 +58,7 @@ module.exports = function(entry, libraryName) {
                 sourceMapFilename: `[name].[contenthash].js.map`,
                 chunkFilename: '[id].[contenthash].js',
                 path: path.resolve('.', 'dist'),
-                library: 'utils',
+                library: libraryName,
                 libraryTarget: 'umd2',
                 umdNamedDefine: true,
             },

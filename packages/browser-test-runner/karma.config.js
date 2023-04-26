@@ -1,4 +1,4 @@
-module.exports = function(webpackConfig, testPath) {
+module.exports = function(webpackConfig, testPaths) {
     const karmaSetupJs = __dirname + '/karma-setup.js'
     return (config) => {
         config.set({
@@ -14,12 +14,11 @@ module.exports = function(webpackConfig, testPath) {
             reporters: ['spec'],
             files: [
                 karmaSetupJs,
-                './' + testPath + '/**/*.ts'
+                ...testPaths
             ],
-            preprocessors: {
-                [karmaSetupJs]: ['webpack'],
-                ['./' + testPath + '/**/*.ts']: ['webpack', 'sourcemap'],
-            },
+            preprocessors: testPaths.reduce((mem, el) => { mem[el] = ['webpack', 'sourcemap']; return mem }, {
+                [karmaSetupJs]: ['webpack']
+            }),
             customLaunchers: {
                 CustomElectron: {
                     base: 'Electron',
