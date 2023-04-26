@@ -119,7 +119,7 @@ async function fetchResponse(
 ): Promise<Response> {
     const timeStart = Date.now()
 
-    logger.debug('Send HTTP request', { url, opts })
+    logger.debug('Send HTTP request', { url })
 
     const response: Response = await fetch(url, opts)
     const timeEnd = Date.now()
