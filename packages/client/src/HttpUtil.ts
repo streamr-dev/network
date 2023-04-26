@@ -15,10 +15,6 @@ export enum ErrorCode {
     UNKNOWN = 'UNKNOWN'
 }
 
-export const DEFAULT_HEADERS = {
-    'Streamr-Client': `streamr-client-javascript/${getVersionString()}`,
-}
-
 export class HttpError extends Error {
     public response?: Response
     public body?: any
@@ -123,18 +119,6 @@ async function fetchResponse(
     fetchFn: typeof fetch = fetch
 ): Promise<Response> {
     const timeStart = Date.now()
-
-    const options = {
-        ...opts,
-        headers: {
-            ...DEFAULT_HEADERS,
-            ...(opts && opts.headers),
-        },
-    }
-    // add default 'Content-Type: application/json' header for all POST and PUT requests
-    if (!options.headers['Content-Type'] && (options.method === 'POST' || options.method === 'PUT')) {
-        options.headers['Content-Type'] = 'application/json'
-    }
 
     logger.debug('Send HTTP request', { url, opts })
 
