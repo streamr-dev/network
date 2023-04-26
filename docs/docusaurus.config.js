@@ -36,6 +36,7 @@ const config = {
             {
                 entryPoints: ["../packages/client"],
                 entryPointStrategy: "packages",
+                watch: process.env.TYPEDOC_WATCH,
                 sidebar: {
                     categoryLabel: "⚙️ API",
                 },

@@ -4,9 +4,9 @@
     "private": true,
     "scripts": {
         "docusaurus": "docusaurus",
-        "start": "docusaurus start",
+        "start": "TYPEDOC_WATCH=false docusaurus start",
         "refine": "node refine-api-reference.ts",
-        "build": "docusaurus build && node refine-api-reference.ts",
+        "build": "TYPEDOC_WATCH=false docusaurus build",
         "swizzle": "docusaurus swizzle",
         "deploy": "docusaurus deploy",
         "clear": "docusaurus clear",
