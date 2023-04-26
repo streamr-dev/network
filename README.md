@@ -133,20 +133,17 @@ as you expect e.g. `^X.Y.Z` vs `X.Y.Z`
 All the above packages should be released at the same time.
 
 1. `git checkout main && git pull`
-2. Look at client and cli-tool CHANGELOG.md, decide new version and make edits.
-    - Skip editing CHANGELOG.md if releasing beta
+2. (skip if beta release) Look at client and cli-tool CHANGELOG.md, decide new version and make edits.
 3. `./update-versions.sh <SEMVER>` E.g. `./update-versions.sh 7.1.1`
 4. `npm run clean && npm install && npm run build && npm run versions`
    - Ensure output does not contain yellow or red markers
-5. Add files to staging `git add .`
-6. If releasing a major or minor version update API docs link in *packages/client/README.md*.
-7. `./release-git-tags.sh <SEMVER>` E.g. `./release-git-tags.sh 7.1.1`
-8. Wait & ensure the pushed main branch passes CI tests
-9. Clean and rebuild project with `npm run clean && npm run bootstrap`
-10. Publish packages `./release.sh <NPM_TAG>`
+5. Add files to staging `git add . -p`
+6. `./release-git-tags.sh <SEMVER>` E.g. `./release-git-tags.sh 7.1.1`
+7. Wait & ensure the pushed main branch passes CI tests
+8. Publish packages `./release.sh <NPM_TAG>`
     - Use argument `beta` if publishing a beta version
     - Use argument `latest` if publishing a stable version
-11. Update client docs if major or minor change:
+9. Update client docs if major or minor change:
 ```bash
 cd packages/client
 npm run docs
