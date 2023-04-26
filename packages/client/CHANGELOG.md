@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+
+## [8.3.0] - 2023-04-26
+
+### Added
+
 - Add method `.getDiagnosticInfo` for getting diagnostic information for debugging purposes
 - Add support for observing stream creation events with `.on('createStream')`
 - Add optional config option `contracts.pollInterval`
@@ -18,15 +33,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Validate `partitions` when parsing contract metadata
 - Use default partition count if there is no information in contract metadata
 
-### Deprecated
-
-### Removed
-
 ### Fixed
 
 - Handling of `undefined` partition in `.createStream`
-
-### Security
 
 
 ## [8.2.1] - 2023-04-13
@@ -347,7 +356,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed an import so that the client successfully loads in a web browser environment (NET-721)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/client/v8.2.1...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/client/v8.3.0...HEAD
+[8.3.0]: https://github.com/streamr-dev/network/compare/client/v8.2.1...client/v8.3.0
 [8.2.1]: https://github.com/streamr-dev/network/compare/client/v8.2.0...client/v8.2.1
 [8.2.0]: https://github.com/streamr-dev/network/compare/client/v8.1.0...client/v8.2.0
 [8.1.0]: https://github.com/streamr-dev/network/compare/client/v8.0.4...client/v8.1.0
