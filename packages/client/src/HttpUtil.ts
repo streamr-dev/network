@@ -76,9 +76,8 @@ export class HttpUtil {
         url: string,
         abortController = new AbortController()
     ): AsyncIterable<StreamMessage> {
-        const response = await fetchResponse(url, this.logger, {
-            signal: abortController.signal as AbortSignal  // cast is needed until this is fixed: https://github.com/node-fetch/node-fetch/issues/1652
-        })
+        // cast is needed until this is fixed: https://github.com/node-fetch/node-fetch/issues/1652
+        const response = await fetchResponse(url, this.logger, abortController.signal as AbortSignal)
         if (!response.body) {
             throw new Error('No Response Body')
         }
@@ -115,13 +114,15 @@ export class HttpUtil {
 async function fetchResponse(
     url: string,
     logger: Logger,
-    opts: { signal: AbortSignal }
+    abortSignal: AbortSignal
 ): Promise<Response> {
     const timeStart = Date.now()
 
     logger.debug('Send HTTP request', { url })
 
-    const response: Response = await fetch(url, opts)
+    const response: Response = await fetch(url, {
+        signal: abortSignal
+    })
     const timeEnd = Date.now()
     logger.debug('Received HTTP response', {
         url,
