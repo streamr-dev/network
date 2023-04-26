@@ -14,6 +14,7 @@
   "dependencies": {},
   "devDependencies": {
     "@electron/rebuild": "^3.2.9",
+    "@jest/fake-timers": "^29.5.0",
     "buffer": "^6.0.3",
     "electron": "^24.1.2",
     "expect": "^29.5.0",

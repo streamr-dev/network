@@ -63,11 +63,14 @@ module.exports = function(entry, libraryName, customAliases = {}) {
                 umdNamedDefine: true,
             },
             externals: {
+                'geoip-lite': 'commonjs geoip-lite',
                 'node-datachannel': 'commonjs node-datachannel',
                 'http': 'HTTP',
                 'https': 'HTTPS',
                 'express': 'Express',
-                'process': 'process'
+                'process': 'process',
+                'ws': 'WebSocket',
+                '@streamr/network-tracker': 'StreamrNetworkTracker'
             }
         }
     }

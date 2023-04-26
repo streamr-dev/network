@@ -1,53 +1,20 @@
-const webpackConfig = require('./webpack.config')
+const buildConfig = require("@streamr/browser-test-runner")
+const path = require("path")
 
-module.exports = function (config) {
-    config.set({
-        plugins: [
-            'karma-electron',
-            'karma-webpack',
-            'karma-jasmine',
-            'karma-spec-reporter'
-        ],
-        basePath: '.',
-        frameworks: ['jasmine'],
-        reporters: ['spec'],
-        files: [
-            './karma-setup.js',
-            './test/browser/BrowserWebRtcConnection.test.ts',
-            './test/browser/IntegrationBrowserWebRtcConnection.test.ts',
-            './test/integration/**/!(NodeWebRtcConnection*|tracker*|nodeMessageBuffering*|UnixSocketWsServer*|message-duplication*).ts/',
-            './test/unit/**/!(LocationManager*|NodeWebRtcConnection*|WebRtcEndpoint*|Speedometer*|deprecated-tracker-status*).ts',
-        ],
-        preprocessors: {
-            './karma-setup.js': ['webpack'],
-            './test/browser/BrowserWebRtcConnection.test.ts': ['webpack'],
-            './test/browser/IntegrationBrowserWebRtcConnection.test.ts': ['webpack'],
-            './test/integration/**/!(NodeWebRtcConnection*|tracker*|nodeMessageBuffering*|UnixSocketWsServer*|message-duplication*).ts/': ['webpack'],
-            './test/unit/**/!(LocationManager*|NodeWebRtcConnection*|WebRtcEndpoint*|Speedometer*|deprecated-tracker-status*).ts': ['webpack'],
-        },
-        customLaunchers: {
-            CustomElectron: {
-                base: 'Electron',
-                browserWindowOptions: {
-                    webPreferences: {
-                        contextIsolation: false,
-                        preload: __dirname + '/preload.js',
-                        webSecurity: false,
-                        sandbox: false
-                    },
-                }
-            }
-        },
-
-        browsers: ['CustomElectron'],
-        client: {
-            clearContext: false, // leave Jasmine Spec Runner output visible in browser
-            useIframe: false
-        },
-        singleRun: true,
-        webpack: {
-            ...webpackConfig('test'),
-            entry: {}
-        }
+module.exports = buildConfig(
+    './src/exports-browser.ts',
+    'network-node',
+    [
+        './test/browser/BrowserWebRtcConnection.test.ts',
+        './test/browser/IntegrationBrowserWebRtcConnection.test.ts',
+        './test/integration/**/!(NodeWebRtcConnection*|tracker*|nodeMessageBuffering*|UnixSocketWsServer*|message-duplication*).ts/',
+        './test/unit/**/!(LocationManager*|NodeWebRtcConnection*|WebRtcEndpoint*|Speedometer*|deprecated-tracker-status*).ts'
+    ],
+    {
+        [path.resolve(__dirname, 'src/connection/webrtc/NodeWebRtcConnection.ts')]:
+            path.resolve(__dirname, 'src/connection/webrtc/BrowserWebRtcConnection.ts'),
+        [path.resolve(__dirname, 'src/connection/ws/NodeClientWsEndpoint.ts')]:
+            path.resolve(__dirname, 'src/connection/ws/BrowserClientWsEndpoint.ts'),
+        [path.resolve(__dirname, 'src/connection/ws/NodeClientWsConnection.ts')]:
+            path.resolve(__dirname, 'src/connection/ws/BrowserClientWsConnection.ts'),
     })
-}
