@@ -41,7 +41,7 @@ module.exports = function({ entry, libraryName, alias = {} }) {
                 }),
             ],
             resolve: {
-                extensions: ['.tsx', '.ts', '.js'],
+                extensions: ['.ts', '.js'],
                 alias: {
                     'process': 'process/browser',
                     ...alias

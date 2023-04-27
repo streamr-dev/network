@@ -1,3 +1,5 @@
+const DEBUG_MODE = process.env.BROWSER_TEST_DEBUG_MODE ?? false
+
 module.exports = function(testPaths, webpackConfig) {
     const karmaSetupJs = __dirname + '/karma-setup.js'
     return (config) => {
@@ -29,7 +31,7 @@ module.exports = function(testPaths, webpackConfig) {
                             webSecurity: false,
                             sandbox: false
                         },
-                        show: false // set to true to show the electron window
+                        show: DEBUG_MODE // set to true to show the electron window
                     }
                 }
             },
@@ -40,7 +42,7 @@ module.exports = function(testPaths, webpackConfig) {
                 clearContext: false, // leave Jasmine Spec Runner output visible in browser
                 useIframe: false,
             },
-            singleRun: true,   //set to false to leave electron window open
+            singleRun: !DEBUG_MODE,   //set to false to leave electron window open
             webpack: {
                 ...webpackConfig(),
                 entry: {}
