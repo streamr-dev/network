@@ -3,7 +3,7 @@ import uniqueId from 'lodash/uniqueId'
 
 export const SEPARATOR = '-'
 
-let UUID: string
+let UUID: string | undefined
 
 export function uuid(label = ''): string {
     if (typeof UUID === 'undefined') {

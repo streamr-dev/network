@@ -1,14 +1,21 @@
 import 'reflect-metadata'
 
-import { finished } from 'stream/promises'
+import { promises } from 'stream'
 import { WebStreamToNodeStream } from '../../src/utils/WebStreamToNodeStream'
 import { Msg } from '../test-utils/publish'
+import { isRunningInElectron } from '@streamr/test-utils'
 
 const version = process.version.slice(1).split('.').map((v) => Number.parseInt(v, 10))
+
 describe('WebStreamToNodeStream', () => {
     // webstreams only in 16.5+
     if (version[0] < 16 && version[1] < 5) {
         test.skip('node version too low, requires v16.5+')
+        return
+    }
+
+    if (isRunningInElectron()) {
+        it.skip('skipping...')
         return
     }
 
@@ -106,7 +113,7 @@ describe('WebStreamToNodeStream', () => {
                 received.push(msg)
             }
         }).rejects.toThrow(err)
-        await expect(finished(nodeStream)).rejects.toThrow(err)
+        await expect(promises.finished(nodeStream)).rejects.toThrow(err)
         expect(received).toEqual(published.slice(0, 3))
         expect(nodeStream.readable).not.toBeTruthy()
         expect(nodeStream.destroyed).toBeTruthy()

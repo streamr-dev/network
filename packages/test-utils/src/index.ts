@@ -4,7 +4,7 @@ import http from 'http'
 import express from 'express'
 import cors from 'cors'
 import crypto from 'crypto'
-import { Wallet } from '@ethersproject/wallet'
+import { Wallet } from 'ethers'
 import { EthereumAddress, toEthereumAddress, waitForCondition, waitForEvent } from '@streamr/utils'
 import fetch from 'node-fetch'
 
@@ -186,6 +186,13 @@ export function fastWallet(): Wallet {
 
 export function randomEthereumAddress(): EthereumAddress {
     return toEthereumAddress('0x' + crypto.randomBytes(20).toString('hex'))
+}
+
+// eslint-disable-next-line no-underscore-dangle
+declare let _streamr_electron_test: any
+export function isRunningInElectron(): boolean {
+    // eslint-disable-next-line no-underscore-dangle
+    return typeof _streamr_electron_test !== 'undefined'
 }
 
 /**

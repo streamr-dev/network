@@ -1,5 +1,5 @@
 import { Database } from 'sqlite'
-import { randomEthereumAddress } from '@streamr/test-utils'
+import { isRunningInElectron, randomEthereumAddress } from '@streamr/test-utils'
 import ServerPersistence from '../../src/utils/persistence/ServerPersistence'
 import { mockLoggerFactory } from '../test-utils/utils'
 
@@ -41,6 +41,9 @@ describe('ServerPersistence', () => {
     })
 
     it('database does not exist until value set', async () => {
+        if (isRunningInElectron()) {
+            return
+        }
         expect(await persistence.exists()).toBeFalse()
         expect(await persistence.get('mock-key', NAMESPACE)).toBeUndefined()
         expect(await persistence.exists()).toBeFalse()

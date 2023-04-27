@@ -1,7 +1,9 @@
 import {
     waitForStreamToEnd,
     toReadableStream,
-    eventsToArray, eventsWithArgsToArray
+    eventsToArray,
+    eventsWithArgsToArray,
+    isRunningInElectron
 } from "../src"
 import { Readable } from "stream"
 import { EventEmitter } from "events"
@@ -147,5 +149,11 @@ describe(toReadableStream, () => {
         readable.once("end", () => {
             fail("should not hit 'end' event")
         })
+    })
+})
+
+describe(isRunningInElectron, () => {
+    it("returns false", () => {
+        expect(isRunningInElectron()).toEqual(false)
     })
 })

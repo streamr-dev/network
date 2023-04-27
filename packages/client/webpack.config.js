@@ -7,7 +7,6 @@ const fs = require('fs')
 
 const webpack = require('webpack')
 const TerserPlugin = require('terser-webpack-plugin')
-const LodashWebpackPlugin = require('lodash-webpack-plugin')
 const { merge } = require('webpack-merge')
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
 const { GitRevisionPlugin } = require('git-revision-webpack-plugin')
@@ -17,10 +16,8 @@ const pkg = require('./package.json')
 
 const gitRevisionPlugin = new GitRevisionPlugin()
 
-const libraryName = pkg.name
-
 module.exports = (env, argv) => {
-    const isProduction = argv.mode === 'production' || process.env.NODE_ENV === 'production'
+    const isProduction = (argv !== undefined && argv.mode === 'production') || process.env.NODE_ENV === 'production'
 
     const analyze = !!process.env.BUNDLE_ANALYSIS
 
@@ -107,9 +104,10 @@ module.exports = (env, argv) => {
                 http: path.resolve('./src/shim/http-https.ts'),
                 '@ethersproject/wordlists': require.resolve('@ethersproject/wordlists/lib/browser-wordlists.js'),
                 https: path.resolve('./src/shim/http-https.ts'),
-                crypto: require.resolve('crypto-browserify'),
                 buffer: require.resolve('buffer/'),
                 'node-fetch': path.resolve('./src/shim/node-fetch.ts'),
+                '@streamr/test-utils': path.resolve('../test-utils/src/index.ts'),
+                '@streamr/utils': path.resolve('../utils/src/exports.ts'),
                 '@streamr/protocol': path.resolve('../protocol/src/exports.ts'),
                 '@streamr/network-node': path.resolve('../network/src/exports-browser.ts'),
                 [path.join(__dirname, '../network/src/connection/webrtc/NodeWebRtcConnection.ts$')]: require.resolve('@streamr/network-node/src/connection/webrtc/BrowserWebRtcConnection.ts'),
@@ -147,7 +145,6 @@ module.exports = (env, argv) => {
             new NodePolyfillPlugin({
                 excludeAliases: ['console'],
             }),
-            new LodashWebpackPlugin(),
             ...(analyze ? [
                 new BundleAnalyzerPlugin({
                     analyzerMode: 'static',
@@ -155,7 +152,10 @@ module.exports = (env, argv) => {
                     generateStatsFile: true,
                 })
             ] : [])
-        ]
+        ],
+        externals: {
+            'express': 'Express',
+        }
     })
 
     let clientMinifiedConfig
@@ -182,5 +182,5 @@ module.exports = (env, argv) => {
             },
         })
     }
-    return [clientConfig, clientMinifiedConfig].filter(Boolean)
+    return [clientConfig, clientMinifiedConfig].filter(Boolean)[0]
 }

@@ -15,6 +15,9 @@ import { ModernFakeTimers } from '@jest/fake-timers'
 // prevents tests failing due to global.expect not being set
 import * as jestExtendedMatchers from 'jest-extended'
 
+import { toThrowStreamrError } from './custom-matcher'
+import { format } from 'util'
+
 let jest = jestMock
 const timers = new ModernFakeTimers({ global: window, config: null })
 
@@ -44,14 +47,17 @@ jest._checkFakeTimers = timers._checkFakeTimers
 Object.assign(jest, timers)
 
 expect.extend(jestExtendedMatchers)
+expect.extend({ toThrowStreamrError })
 
 // Add missing Jest functions
 window.test = window.it
 window.test.each = (inputs) => (testName, test) =>
-    inputs.forEach((args) => window.it(testName, () => test(...args)))
+    inputs.forEach((args) => window.it(format(testName, args), () => test(args)))
 window.test.todo = function() {
     return undefined
 }
+window.it.skip = window.xit
+window.describe.skip = window.xdescribe
 
 window.expect = expect
 window.setImmediate = setTimeout

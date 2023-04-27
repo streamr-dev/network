@@ -111,7 +111,7 @@ jobs:
       package: client
       docker-services: init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph
       run-brokers-and-trackers: true
-      command: npm run test-browser
+      command: xvfb-run --auto-servernum npm run test-browser
   cli-tools:
     needs: build
     uses: ./.github/workflows/test-setup.yml
