@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add config option `lighterGapFill` (true by default) to control gap filling strategy
+
 ### Changed
 
 ### Deprecated
