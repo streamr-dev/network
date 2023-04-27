@@ -8,6 +8,7 @@ export default class OrderingUtil extends MsgChainEmitter {
     propagationTimeout?: number
     resendTimeout?: number
     maxGapRequests?: number
+    lighterGapFill?: boolean
     orderedChains: Record<string, OrderedMsgChain>
 
     constructor(
@@ -15,7 +16,8 @@ export default class OrderingUtil extends MsgChainEmitter {
         gapHandler: GapHandler,
         propagationTimeout?: number,
         resendTimeout?: number,
-        maxGapRequests?: number
+        maxGapRequests?: number,
+        lighterGapFill?: boolean
     ) {
         super()
         this.inOrderHandler = inOrderHandler
@@ -23,6 +25,7 @@ export default class OrderingUtil extends MsgChainEmitter {
         this.propagationTimeout = propagationTimeout
         this.resendTimeout = resendTimeout
         this.maxGapRequests = maxGapRequests
+        this.lighterGapFill = lighterGapFill
         this.orderedChains = {}
     }
 
@@ -35,8 +38,14 @@ export default class OrderingUtil extends MsgChainEmitter {
         const key = publisherId + msgChainId
         if (!this.orderedChains[key]) {
             const chain = new OrderedMsgChain(
-                publisherId, msgChainId, this.inOrderHandler, this.gapHandler,
-                this.propagationTimeout, this.resendTimeout, this.maxGapRequests
+                publisherId,
+                msgChainId,
+                this.inOrderHandler,
+                this.gapHandler,
+                this.propagationTimeout,
+                this.resendTimeout,
+                this.maxGapRequests,
+                this.lighterGapFill
             )
             chain.on('error', (...args) => this.emit('error', ...args))
             chain.on('skip', (...args) => this.emit('skip', ...args))

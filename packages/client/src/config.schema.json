@@ -58,6 +58,10 @@
             "type": "number",
             "default": 5000
         },
+        "lighterGapFill": {
+            "type": "boolean",
+            "default": true
+        },
         "network": {
             "type": "object",
             "additionalProperties": false,
