@@ -3,6 +3,8 @@ import { Logger } from "@streamr/utils"
 
 type ErrorInfo = Record<string, unknown>
 
+const MAX_ERROR_INFOS = 10
+
 export class QueueItem<M> {
     private static nextNumber = 0
 
@@ -42,7 +44,12 @@ export class QueueItem<M> {
 
     incrementTries(info: ErrorInfo): void | never {
         this.tries += 1
-        this.errorInfos.push(info)
+        if (this.errorInfos.length <= MAX_ERROR_INFOS) {
+            this.errorInfos.push(info)
+            if (this.errorInfos.length === MAX_ERROR_INFOS) {
+                this.errorInfos.push({ limit: `showing first ${MAX_ERROR_INFOS} collected errors` })
+            }
+        }
         if (this.tries >= MessageQueue.MAX_TRIES) {
             this.failed = true
         }
@@ -58,7 +65,7 @@ export class QueueItem<M> {
 }
 
 export class MessageQueue<M> {
-    public static readonly MAX_TRIES = 10
+    public static readonly MAX_TRIES = 5000
 
     private readonly heap: Heap<QueueItem<M>>
     private readonly logger: Logger
