@@ -39,6 +39,7 @@
     "yallist": "^4.0.0"
   },
   "devDependencies": {
+    "@streamr/browser-test-runner": "^0.0.1",
     "@streamr/network-tracker": "8.3.0",
     "@streamr/test-utils": "8.3.0",
     "@types/heap": "^0.2.28",

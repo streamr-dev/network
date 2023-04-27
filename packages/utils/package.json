@@ -26,6 +26,7 @@
     "pino-pretty": "^10.0.0"
   },
   "devDependencies": {
+    "@streamr/browser-test-runner": "^0.0.1",
     "@types/lodash": "^4.14.175",
     "@types/node-fetch": "^2.5.12",
     "express": "^4.17.1",

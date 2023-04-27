@@ -32,6 +32,7 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
+    "@streamr/browser-test-runner": "^0.0.1",
     "@streamr/test-utils": "8.3.0",
     "@types/express": "^4.17.13",
     "@types/lodash": "^4.14.175",
