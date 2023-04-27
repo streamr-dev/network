@@ -43,7 +43,7 @@ const config = {
                 includeVersion: true,
                 categorizeByGroup: true,
                 treatWarningsAsErrors: true,
-                //watch: process.env.TYPEDOC_WATCH,
+                watch: process.env.TYPEDOC_WATCH,
                 sidebar: {
                     categoryLabel: "⚙️ API",
                 },
