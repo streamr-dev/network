@@ -30,6 +30,13 @@ cd ../..
 # Publishing client is a bit more complicated
 cd packages/client
 npm run build-production
+if [ $? -ne 0 ] 
+then
+    echo
+    echo 'Client build failed, did not publish all packages!'
+    echo
+    exit 1
+fi
 cd dist
 npm publish --tag $NPM_TAG
 cd ../../..

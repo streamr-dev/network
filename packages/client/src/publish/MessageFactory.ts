@@ -1,4 +1,4 @@
-import { random } from 'lodash'
+import random from 'lodash/random'
 import {
     createSignaturePayload,
     EncryptedGroupKey,
@@ -18,6 +18,7 @@ import { Mapping } from '../utils/Mapping'
 import { Authentication } from '../Authentication'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { formLookupKey } from '../utils/utils'
+import { StreamrClientError } from '../StreamrClientError'
 
 export interface MessageFactoryOptions {
     streamId: StreamID
@@ -72,7 +73,7 @@ export class MessageFactory {
         const publisherId = await this.authentication.getAddress()
         const isPublisher = await this.streamRegistry.isStreamPublisher(this.streamId, publisherId)
         if (!isPublisher) {
-            throw new Error(`${publisherId} is not a publisher on stream ${this.streamId}`)
+            throw new StreamrClientError(`You don't have permission to publish to this stream. Using address: ${publisherId}`, 'MISSING_PERMISSION')
         }
 
         const partitionCount = (await this.streamRegistry.getStream(this.streamId)).getMetadata().partitions

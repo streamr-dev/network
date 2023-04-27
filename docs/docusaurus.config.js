@@ -34,8 +34,16 @@ const config = {
 
             // Plugin / TypeDoc options
             {
-                entryPoints: ["../packages/client"],
-                entryPointStrategy: "packages",
+                entryPoints: ["../packages/client/src/exports.ts"],
+                disableSources: true,
+                name: "⚙️ Streamr SDK",
+                excludePrivate: true,
+                excludeProtected: true,
+                excludeInternal: true,
+                includeVersion: true,
+                categorizeByGroup: true,
+                treatWarningsAsErrors: true,
+                watch: process.env.TYPEDOC_WATCH,
                 sidebar: {
                     categoryLabel: "⚙️ API",
                 },

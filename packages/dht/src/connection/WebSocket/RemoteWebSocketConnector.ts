@@ -11,7 +11,13 @@ import { ProtoRpcClient } from '@streamr/proto-rpc'
 const logger = new Logger(module)
 
 export class RemoteWebSocketConnector {
-    constructor(private peerDescriptor: PeerDescriptor, private client: ProtoRpcClient<IWebSocketConnectorServiceClient>) {
+
+    private peerDescriptor: PeerDescriptor
+    private client: ProtoRpcClient<IWebSocketConnectorServiceClient>
+
+    constructor(peerDescriptor: PeerDescriptor, client: ProtoRpcClient<IWebSocketConnectorServiceClient>) {
+        this.peerDescriptor = peerDescriptor
+        this.client = client
     }
 
     async requestConnection(sourceDescriptor: PeerDescriptor, ip: string, port: number): Promise<boolean> {
@@ -30,7 +36,9 @@ export class RemoteWebSocketConnector {
             const res = await this.client.requestConnection(request, options)
             
             if (res.reason) {
-                logger.debug('WebSocketConnectionRequest Rejected', new Err.WebSocketConnectionRequestRejected(res.reason).stack)
+                logger.debug('WebSocketConnectionRequest Rejected', {
+                    stack: new Err.WebSocketConnectionRequestRejected(res.reason).stack
+                })
             }
             return res.accepted
         } catch (err) {

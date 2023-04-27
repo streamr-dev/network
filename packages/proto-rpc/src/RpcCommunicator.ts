@@ -36,10 +36,13 @@ interface IRpcIo {
 }
 
 class OngoingRequest {
+
+    private deferredPromises: ResultParts
     private timeoutRef: NodeJS.Timeout
 
-    constructor(private deferredPromises: ResultParts,
+    constructor(deferredPromises: ResultParts,
         timeout: number) {
+        this.deferredPromises = deferredPromises
         this.timeoutRef = setTimeout(() => {
             const error = new Err.RpcTimeout('Rpc request timed out', new Error())
             this.rejectDeferredPromises(error, StatusCode.DEADLINE_EXCEEDED)
@@ -217,7 +220,7 @@ export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvents> impleme
         try {
             await this.rpcServerRegistry.handleNotification(rpcMessage, callContext)
         } catch (err) {
-            logger.debug(err)
+            logger.debug('error', { err })
         }
     }
 

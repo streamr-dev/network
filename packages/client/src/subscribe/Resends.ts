@@ -5,22 +5,19 @@ import { MessageStream } from './MessageStream'
 import { createSubscribePipeline } from './subscribePipeline'
 
 import { StorageNodeRegistry } from '../registry/StorageNodeRegistry'
-import { random } from 'lodash'
+import random from 'lodash/random'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { HttpUtil } from '../HttpUtil'
 import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
-import { EthereumAddress, Logger, toEthereumAddress, wait } from '@streamr/utils'
-import { GroupKeyStore } from '../encryption/GroupKeyStore'
-import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'
-import { StreamrClientEventEmitter } from '../events'
+import { EthereumAddress, Logger, randomString, toEthereumAddress, wait } from '@streamr/utils'
 import { DestroySignal } from '../DestroySignal'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { LoggerFactory } from '../utils/LoggerFactory'
-import { counterId } from '../utils/utils'
 import { StreamrClientError } from '../StreamrClientError'
 import { collect } from '../utils/iterators'
 import { counting } from '../utils/GeneratorUtils'
 import { Message } from '../Message'
+import { GroupKeyManager } from '../encryption/GroupKeyManager'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 
@@ -75,29 +72,31 @@ function isResendRange<T extends ResendRangeOptions>(options: any): options is T
 
 @scoped(Lifecycle.ContainerScoped)
 export class Resends {
-    private readonly groupKeyStore: GroupKeyStore
-    private readonly subscriberKeyExchange: SubscriberKeyExchange
-    private readonly streamrClientEventEmitter: StreamrClientEventEmitter
+    private readonly streamStorageRegistry: StreamStorageRegistry
+    private readonly storageNodeRegistry: StorageNodeRegistry
+    private readonly streamRegistryCached: StreamRegistryCached
+    private readonly httpUtil: HttpUtil
+    private readonly groupKeyManager: GroupKeyManager
     private readonly destroySignal: DestroySignal
     private readonly config: StrictStreamrClientConfig
     private readonly loggerFactory: LoggerFactory
     private readonly logger: Logger
 
     constructor(
-        @inject(StreamStorageRegistry) private streamStorageRegistry: StreamStorageRegistry,
-        @inject(delay(() => StorageNodeRegistry)) private storageNodeRegistry: StorageNodeRegistry,
-        @inject(delay(() => StreamRegistryCached)) private streamRegistryCached: StreamRegistryCached,
-        @inject(HttpUtil) private httpUtil: HttpUtil,
-        groupKeyStore: GroupKeyStore,
-        subscriberKeyExchange: SubscriberKeyExchange,
-        streamrClientEventEmitter: StreamrClientEventEmitter,
+        streamStorageRegistry: StreamStorageRegistry,
+        @inject(delay(() => StorageNodeRegistry)) storageNodeRegistry: StorageNodeRegistry,
+        @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
+        httpUtil: HttpUtil,
+        groupKeyManager: GroupKeyManager,
         destroySignal: DestroySignal,
         @inject(ConfigInjectionToken) config: StrictStreamrClientConfig,
-        @inject(LoggerFactory) loggerFactory: LoggerFactory
+        loggerFactory: LoggerFactory
     ) {
-        this.groupKeyStore = groupKeyStore
-        this.subscriberKeyExchange = subscriberKeyExchange
-        this.streamrClientEventEmitter = streamrClientEventEmitter
+        this.streamStorageRegistry = streamStorageRegistry
+        this.storageNodeRegistry = storageNodeRegistry
+        this.streamRegistryCached = streamRegistryCached
+        this.httpUtil = httpUtil
+        this.groupKeyManager = groupKeyManager
         this.destroySignal = destroySignal
         this.config = config
         this.loggerFactory = loggerFactory
@@ -141,8 +140,13 @@ export class Resends {
         streamPartId: StreamPartID,
         query: QueryDict = {}
     ): Promise<MessageStream> {
-        const loggerIdx = counterId('fetchStream')
-        this.logger.debug('[%s] fetching resend %s for %s with options %o', loggerIdx, endpointSuffix, streamPartId, query)
+        const traceId = randomString(5)
+        this.logger.debug('Fetch resend data', {
+            loggerIdx: traceId,
+            resendType: endpointSuffix,
+            streamPartId,
+            query
+        })
         const streamId = StreamPartIDUtils.getStreamID(streamPartId)
         const nodeAddresses = await this.streamStorageRegistry.getStorageNodes(streamId)
         if (!nodeAddresses.length) {
@@ -155,10 +159,8 @@ export class Resends {
         const messageStream = createSubscribePipeline({
             streamPartId,
             resends: this,
-            groupKeyStore: this.groupKeyStore,
-            subscriberKeyExchange: this.subscriberKeyExchange,
+            groupKeyManager: this.groupKeyManager,
             streamRegistryCached: this.streamRegistryCached,
-            streamrClientEventEmitter: this.streamrClientEventEmitter,
             destroySignal: this.destroySignal,
             config: this.config,
             loggerFactory: this.loggerFactory
@@ -166,7 +168,7 @@ export class Resends {
 
         const dataStream = this.httpUtil.fetchHttpStream(url)
         messageStream.pull(counting(dataStream, (count: number) => {
-            this.logger.debug('[%s] total of %d messages received for resend fetch', loggerIdx, count)
+            this.logger.debug('Finished resend', { loggerIdx: traceId, messageCount: count })
         }))
         return messageStream
     }
@@ -249,7 +251,7 @@ export class Resends {
         while (!found) {
             const duration = Date.now() - start
             if (duration > timeout) {
-                this.logger.debug('timed out waiting for storage to have message %j', {
+                this.logger.debug('Timed out waiting for storage to contain message', {
                     expected: message.streamMessage.getMessageID(),
                     lastReceived: last?.map((l) => l.streamMessage.getMessageID()),
                 })
@@ -261,14 +263,15 @@ export class Resends {
             for (const lastMsg of last) {
                 if (messageMatchFn(message, lastMsg)) {
                     found = true
-                    this.logger.debug('message found')
+                    this.logger.debug('Found matching message')
                     return
                 }
             }
 
-            this.logger.debug('message not found, retrying... %j', {
-                msg: message.streamMessage.getMessageID(),
-                'last 3': last.slice(-3).map((l) => l.streamMessage.getMessageID())
+            this.logger.debug('Retry after delay (matching message not found)', {
+                expected: message.streamMessage.getMessageID(),
+                'last-3': last.slice(-3).map((l) => l.streamMessage.getMessageID()),
+                delayInMs: interval
             })
 
             await wait(interval)

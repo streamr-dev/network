@@ -6,7 +6,7 @@
         "docusaurus": "docusaurus",
         "start": "docusaurus start",
         "refine": "node refine-api-reference.ts",
-        "build": "docusaurus build && node refine-api-reference.ts",
+        "build": "docusaurus build",
         "swizzle": "docusaurus swizzle",
         "deploy": "docusaurus deploy",
         "clear": "docusaurus clear",

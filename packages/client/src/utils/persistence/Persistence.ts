@@ -1,7 +1,4 @@
-import { StreamID } from "@streamr/protocol"
-
-export interface Persistence<K, V> {
-    get(key: K, streamId: StreamID): Promise<V | undefined>
-    set(key: K, value: V, streamId: StreamID): Promise<void>
-    close(): Promise<void>
+export interface Persistence {
+    get(key: string): Promise<string | undefined>
+    set(key: string, value: string): Promise<void>
 }

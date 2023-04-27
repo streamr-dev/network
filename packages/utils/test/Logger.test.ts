@@ -1,112 +1,105 @@
-import path from 'path'
 import { Logger } from '../src/Logger'
-import Mock = jest.Mock
+import pino from 'pino'
+import path from 'path'
+import { pick } from 'lodash'
 
 // eslint-disable-next-line no-underscore-dangle
 declare let _streamr_electron_test: any
 
 describe('Logger', () => {
     let logger: Logger
-    let fatalFn: Mock
-    let errorFn: Mock
-    let warnFn: Mock
-    let infoFn: Mock
-    let debugFn: Mock
-    let traceFn: Mock
+    let logs: Array<{ level: unknown, msg: unknown }>
 
-    beforeAll(() => {
-        logger = new Logger(module)
-        // @ts-expect-error accessing-private
-        fatalFn = logger.logger.fatal = jest.fn()
-        // @ts-expect-error accessing-private
-        errorFn = logger.logger.error = jest.fn()
-        // @ts-expect-error accessing-private
-        warnFn = logger.logger.warn = jest.fn()
-        // @ts-expect-error accessing-private
-        infoFn = logger.logger.info = jest.fn()
-        // @ts-expect-error accessing-private
-        debugFn = logger.logger.debug = jest.fn()
-        // @ts-expect-error accessing-private
-        traceFn = logger.logger.trace = jest.fn()
+    beforeEach(() => {
+        logs = []
+        const dest = {
+            write: (data: string) => {
+                logs.push(pick(JSON.parse(data), ['level', 'msg']))
+            }
+        }
+        logger = new Logger(module, undefined, 'trace', pino({
+            level: 'trace',
+            browser: {
+                write: (o) => {
+                    logs.push({
+                        level: (o as any).level,
+                        msg: (o as any).msg
+                    })
+                }
+            }
+        }, dest))
     })
 
-    it('delegates call to fatal to pino.Logger#fatal', () => {
-        logger.fatal('disaster %s!', 123)
-        expect(fatalFn).toBeCalledTimes(1)
+    it('delegates call to fatal to pino.Logger#fatal', async () => {
+        logger.fatal('mock message')
+        expect(logs[0]).toEqual({
+            level: 60,
+            msg: 'mock message'
+        })
     })
 
     it('delegates call to error to pino.Logger#error', () => {
-        logger.error('an error or something %s', 123)
-        expect(errorFn).toBeCalledTimes(1)
+        logger.error('mock message')
+        expect(logs[0]).toEqual({
+            level: 50,
+            msg: 'mock message'
+        })
     })
 
     it('delegates call to warn to pino.Logger#warn', () => {
-        logger.warn('a warning %s!', 123)
-        expect(warnFn).toBeCalledTimes(1)
+        logger.warn('mock message')
+        expect(logs[0]).toEqual({
+            level: 40,
+            msg: 'mock message'
+        })
     })
 
     it('delegates call to info to pino.Logger#info', () => {
-        logger.info('here be information %s!', 123)
-        expect(infoFn).toBeCalledTimes(1)
+        logger.info('mock message')
+        expect(logs[0]).toEqual({
+            level: 30,
+            msg: 'mock message'
+        })
     })
 
     it('delegates call to debug to pino.Logger#debug', () => {
-        logger.debug('debugging internals %s...', 123)
-        expect(debugFn).toBeCalledTimes(1)
+        logger.debug('mock message')
+        expect(logs[0]).toEqual({
+            level: 20,
+            msg: 'mock message'
+        })
     })
 
     it('delegates call to trace to pino.Logger#trace', () => {
-        logger.trace('tracing %s...', 123)
-        expect(traceFn).toBeCalledTimes(1)
+        logger.trace('mock message')
+        expect(logs[0]).toEqual({
+            level: 10,
+            msg: 'mock message'
+        })
     })
 
     describe('name', () => {
         it('short', () => {
-            expect(Logger.createName(module)).toBe('Logger.test         ')
-        })
-        it('short with context', () => {
-            expect(Logger.createName(module, 'foobar')).toBe('foobar:Logger.test  ')
-        })
-        it('long with context', () => {
-            expect(Logger.createName(module, 'loremipsum')).toBe('loremipsum:Logger.te')
+            const expected = typeof _streamr_electron_test === 'undefined'
+                ? 'Logger.test         '
+                : 'Logger.test'
+            expect(Logger.createName(module)).toBe(expected)
         })
         it('application id', () => {
+            const expected = typeof _streamr_electron_test === 'undefined'
+                ? 'APP:Logger.test     '
+                : 'APP:Logger.test'
             process.env.STREAMR_APPLICATION_ID = 'APP'
-            expect(Logger.createName(module)).toBe('APP:Logger.test     ')
+            expect(Logger.createName(module)).toBe(expected)
             delete process.env.STREAMR_APPLICATION_ID
         })
         it('index', () => {
+            const expected = typeof _streamr_electron_test === 'undefined'
+                ? 'mock                '
+                : 'mock'
             expect(Logger.createName({
                 id: ['foo', 'bar', 'mock', 'index'].join(path.sep)
-            } as any)).toBe('mock                ')
+            } as any)).toBe(expected)
         })
-    })
-
-    test('error object', async () => {
-        // According to the pino documentation
-        // "However, there are some special instances where pino.destination
-        // is not used as the default: When something, e.g a process manager,
-        // has monkey-patched process.stdout.write." This is the case
-        // in our browser tests.
-
-        if (typeof _streamr_electron_test !== 'undefined') {
-            return
-        }
-
-        let lines: string[]
-        const logger = new Logger(module, '', undefined, {
-            write: (msg: string) => {
-                lines = msg.split('\n').map((line) => line.trim())
-            }
-        })
-        logger.error('log message', new SyntaxError('error message'))
-        expect(lines!.length >= 7)
-        // eslint-disable-next-line
-        const [ main, _errorTag, errorType, errorMessage, _stackTag, _errorDescription, firstStackFrame ] = lines!
-        expect(main.includes('ERROR')).toBeTruthy()
-        expect(main.includes('log message')).toBeTruthy()
-        expect(errorType.includes('SyntaxError'))
-        expect(errorMessage.includes('error message'))
-        expect(firstStackFrame.startsWith('at ')).toBeTruthy()
     })
 })

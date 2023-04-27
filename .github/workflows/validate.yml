@@ -2,16 +2,11 @@ name: validate
 
 on:
   push:
-    tags:
-      - '*'
     branches:
       - main
   pull_request:
     branches:
       - '*'
-  schedule:
-    # run every day at 00:00
-    - cron: '0 0 * * *'
   workflow_dispatch:
 
 concurrency:
@@ -22,7 +17,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.3.0
+      - uses: actions/checkout@v3.5.2
       - name: build
         uses: ./.github/workflows/reusable/cached-build
       - run: npm run versions
@@ -91,6 +86,7 @@ jobs:
       command: |
         npm run test-unit
         npm run test-integration
+        npm run docs
   client-e2e:
     needs: build
     uses: ./.github/workflows/test-setup.yml

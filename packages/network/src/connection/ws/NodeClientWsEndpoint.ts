@@ -3,6 +3,9 @@ import { PeerId, PeerInfo } from '../PeerInfo'
 import { DisconnectionCode, DisconnectionReason } from "./AbstractWsEndpoint"
 import { NodeClientWsConnection, NodeWebSocketConnectionFactory } from './NodeClientWsConnection'
 import { AbstractClientWsEndpoint, HandshakeValues, ServerUrl } from "./AbstractClientWsEndpoint"
+import { Logger } from '@streamr/utils'
+
+const logger = new Logger(module)
 
 export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeClientWsConnection> {
     protected doConnect(serverUrl: ServerUrl, serverPeerInfo: PeerInfo): Promise<PeerId> {
@@ -14,12 +17,12 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
                     this.handshakeInit(ws, serverPeerInfo, reject)
                 })
 
-                ws.on('message', (message: string | Buffer | Buffer[]) => {
+                ws.on('message', (message: WebSocket.RawData) => {
                     this.handshakeListener(ws, serverPeerInfo, serverUrl, message, resolve)
                 })
 
-                ws.on('close', (code: number, reason: string): void => {
-                    this.onHandshakeClosed(serverUrl, code, reason, reject)
+                ws.on('close', (code: number, reason: Buffer): void => {
+                    this.onHandshakeClosed(serverUrl, code, reason.toString(), reject)
                 })
 
                 ws.on('error', (err) => {
@@ -27,7 +30,7 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
                 })
 
             } catch (err) {
-                this.logger.trace('failed to connect to %s, error: %o', serverUrl, err)
+                logger.trace('Failed to connect to server', { serverUrl, err })
                 reject(err)
             }
         })
@@ -45,9 +48,9 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
         ws.once('close', (code: number, reason: string): void => {
             this.onClose(connection, code, reason as DisconnectionReason)
             if (code === DisconnectionCode.DUPLICATE_SOCKET) {
-                this.logger.warn('Connection refused: Duplicate nodeId detected, are you running multiple nodes with the same private key?')
+                logger.warn('Refused connection (Duplicate nodeId detected, are you running multiple nodes with the same private key?)')
             } else if (code === DisconnectionCode.INVALID_PROTOCOL_MESSAGE) {
-                this.logger.warn('Connection refused: Invalid protocol message format detected, are you running an outdated version?')
+                logger.warn('Refused connection (Invalid protocol message format detected, are you running an outdated version?)')
             }
         })
 
@@ -64,7 +67,7 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
     }
 
     // eslint-disable-next-line class-methods-use-this
-    protected doHandshakeParse(message: string | Buffer | Buffer[]): HandshakeValues {
+    protected doHandshakeParse(message: WebSocket.RawData): HandshakeValues {
         const { uuid, peerId } = JSON.parse(message.toString())
         return {
             uuid,

@@ -82,7 +82,7 @@ describe('WebRtcEndpoint: back pressure handling', () => {
         inflictHighBackPressure()
     })
 
-    it('emits LOW_BACK_PRESSURE after high back pressure',  (done) => {
+    it('emits LOW_BACK_PRESSURE after high back pressure', (done) => {
         ep1.once(Event.HIGH_BACK_PRESSURE, () => {
             ep1.once(Event.LOW_BACK_PRESSURE, (peerInfo: PeerInfo) => {
                 expect(peerInfo.peerId).toEqual('ep2')

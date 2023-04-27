@@ -1,4 +1,4 @@
-import { without } from 'lodash'
+import without from 'lodash/without'
 import {
     EncryptedGroupKey,
     EncryptionType,
@@ -19,7 +19,7 @@ import { createSignedMessage } from '../publish/MessageFactory'
 import { Validator } from '../Validator'
 import { EncryptionUtil } from './EncryptionUtil'
 import { GroupKey } from './GroupKey'
-import { GroupKeyStore } from './GroupKeyStore'
+import { LocalGroupKeyStore } from './LocalGroupKeyStore'
 import { EthereumAddress, Logger } from '@streamr/utils'
 import { LoggerFactory } from '../utils/LoggerFactory'
 
@@ -30,13 +30,13 @@ import { LoggerFactory } from '../utils/LoggerFactory'
 @scoped(Lifecycle.ContainerScoped)
 export class PublisherKeyExchange {
     private readonly logger: Logger
-    private readonly store: GroupKeyStore
+    private readonly store: LocalGroupKeyStore
     private readonly networkNodeFacade: NetworkNodeFacade
     private readonly authentication: Authentication
     private readonly validator: Validator
 
     constructor(
-        store: GroupKeyStore,
+        store: LocalGroupKeyStore,
         networkNodeFacade: NetworkNodeFacade,
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
@@ -50,7 +50,7 @@ export class PublisherKeyExchange {
         networkNodeFacade.once('start', async () => {
             const node = await networkNodeFacade.getNode()
             node.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
-            this.logger.debug('started')
+            this.logger.debug('Started')
         })
     }
 
@@ -60,10 +60,10 @@ export class PublisherKeyExchange {
                 const authenticatedUser = await this.authentication.getAddress()
                 const { recipient, requestId, rsaPublicKey, groupKeyIds } = GroupKeyRequest.fromStreamMessage(request) as GroupKeyRequest
                 if (recipient === authenticatedUser) {
-                    this.logger.debug('handling group key request %s', requestId)
+                    this.logger.debug('Handling group key request', { requestId })
                     await this.validator.validate(request)
                     const keys = without(
-                        await Promise.all(groupKeyIds.map((id: string) => this.store.get(id, request.getStreamId()))),
+                        await Promise.all(groupKeyIds.map((id: string) => this.store.get(id, authenticatedUser))),
                         undefined) as GroupKey[]
                     if (keys.length > 0) {
                         const response = await this.createResponse(
@@ -74,13 +74,19 @@ export class PublisherKeyExchange {
                             requestId)
                         const node = await this.networkNodeFacade.getNode()
                         node.publish(response)
-                        this.logger.debug('sent group keys %s to %s', keys.map((k) => k.id).join(), request.getPublisherId())
+                        this.logger.debug('Handled group key request (found keys)', {
+                            groupKeyIds: keys.map((k) => k.id).join(),
+                            recipient: request.getPublisherId()
+                        })
                     } else {
-                        this.logger.debug('found no group keys to send to %s', request.getPublisherId())
+                        this.logger.debug('Handled group key request (no keys found)', {
+                            requestId,
+                            recipient: request.getPublisherId()
+                        })
                     }
                 }
-            } catch (e: any) {
-                this.logger.debug('error processing group key, reason: %s', e.message)
+            } catch (err: any) {
+                this.logger.debug('Failed to handle group key request', err)
             }
         }
     }

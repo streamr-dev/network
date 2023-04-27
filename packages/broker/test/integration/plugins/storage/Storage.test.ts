@@ -63,7 +63,8 @@ function buildEncryptedMsg({
         messageId: new MessageID(toStreamID(streamId), streamPartition, timestamp, sequenceNumber, publisherId, msgChainId),
         content,
         encryptionType: EncryptionType.AES,
-        signature: 'signature'
+        signature: 'signature',
+        groupKeyId: 'groupKeyId'
     })
 }
 

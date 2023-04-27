@@ -27,7 +27,7 @@ describe('update encryption key', () => {
         environment = new FakeEnvironment()
         publisher = environment.createClient()
         subscriber = environment.createClient({
-            decryption: {
+            encryption: {
                 keyRequestTimeout: 200
             }
         })

@@ -1,11 +1,11 @@
 import StreamrClient, {
-    ConfigTest,
+    CONFIG_TEST,
     Stream,
     StreamPermission,
     StreamMetadata,
     StreamrClientConfig
 } from 'streamr-client'
-import _ from 'lodash'
+import padEnd from 'lodash/padEnd'
 import { Wallet } from 'ethers'
 import { Tracker, startTracker } from '@streamr/network-tracker'
 import { Broker, createBroker } from '../src/broker'
@@ -13,6 +13,7 @@ import { Config } from '../src/config/config'
 import { StreamPartID } from '@streamr/protocol'
 import { EthereumAddress, MetricsContext, toEthereumAddress } from '@streamr/utils'
 import { TEST_CONFIG } from '@streamr/network-node'
+import { merge } from '@streamr/utils'
 
 export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
 
@@ -55,7 +56,7 @@ export const formConfig = ({
 
     return {
         client: {
-            ...ConfigTest,
+            ...CONFIG_TEST,
             auth: {
                 privateKey
             },
@@ -104,7 +105,7 @@ export const startBroker = async (testConfig: TestConfig): Promise<Broker> => {
 }
 
 export const createEthereumAddress = (id: number): EthereumAddress => {
-    return toEthereumAddress('0x' + _.padEnd(String(id), 40, '0'))
+    return toEthereumAddress('0x' + padEnd(String(id), 40, '0'))
 }
 
 export const createClient = async (
@@ -112,19 +113,23 @@ export const createClient = async (
     privateKey: string,
     clientOptions?: StreamrClientConfig
 ): Promise<StreamrClient> => {
-    const networkOptions = {
-        ...ConfigTest?.network,
-        trackers: [tracker.getConfigRecord()],
-        ...clientOptions?.network
-    }
-    return new StreamrClient({
-        ...ConfigTest,
-        auth: {
-            privateKey
+    const opts = merge(
+        CONFIG_TEST,
+        {
+            auth: {
+                privateKey
+            },
+            network: merge(
+                CONFIG_TEST?.network,
+                { 
+                    trackers: [tracker.getConfigRecord()]
+                },
+                clientOptions?.network
+            )
         },
-        network: networkOptions,
-        ...clientOptions,
-    })
+        clientOptions
+    )
+    return new StreamrClient(opts)
 }
 
 export const getTestName = (module: NodeModule): string => {
@@ -163,7 +168,7 @@ export async function startStorageNode(
     trackerPort: number
 ): Promise<Broker> {
     const client = new StreamrClient({
-        ...ConfigTest,
+        ...CONFIG_TEST,
         auth: {
             privateKey: storageNodePrivateKey
         },

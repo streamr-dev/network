@@ -11,10 +11,19 @@ const TRACKER_PORT = 12402
 
 createMessagingPluginTest('websocket', 
     {
-        createClient: async (action: 'publish' | 'subscribe', streamId: string, apiKey: string): Promise<WebSocket> => {
-            const client = new WebSocket(`ws://localhost:${WEBSOCKET_PORT}/streams/${encodeURIComponent(streamId)}/${action}?apiKey=${apiKey}`)
-            await waitForEvent(client, 'open')
-            return client
+        createClient: async (action: 'publish' | 'subscribe', streamId: string, apiKey?: string): Promise<WebSocket> => {
+            const apiKeySuffix = (apiKey !== undefined) ? `?apiKey=${apiKey}` : ''
+            const client = new WebSocket(`ws://localhost:${WEBSOCKET_PORT}/streams/${encodeURIComponent(streamId)}/${action}${apiKeySuffix}`)
+            return Promise.race([
+                (async () => {
+                    await waitForEvent(client, 'open')
+                    return client
+                })(),
+                (async () => {
+                    const errors = await waitForEvent(client, 'error')
+                    throw errors[0]
+                })()
+            ])
         },
         closeClient: async (client: WebSocket): Promise<void> => {
             client.close()
@@ -23,7 +32,14 @@ createMessagingPluginTest('websocket',
             client.send(JSON.stringify(msg))
         },
         subscribe: async (messageQueue: Queue<Message>, _streamId: string, client: WebSocket): Promise<void> => {
-            client.on('message', (payload: string) => messageQueue.push(JSON.parse(payload)))
+            client.on('message', (data: WebSocket.RawData) => {
+                const payload = data.toString()
+                messageQueue.push(JSON.parse(payload))
+            })
+        },
+        errors: {
+            unauthorized: 'Unexpected server response: 401',
+            forbidden: 'Unexpected server response: 403'
         }
     },
     {

@@ -30,7 +30,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
     constructor(opts: ConstructorOptions) {
         super(opts)
 
-        this.logger = new Logger(module, `${NameDirectory.getName(this.getPeerId())}/${this.id}`)
+        this.logger = new Logger(module, { id: `${NameDirectory.getName(this.getPeerId())}/${this.id}` })
         Simulator.instance().addWebRtcConnection(this.selfId, this.getPeerId(), this)
     }
 

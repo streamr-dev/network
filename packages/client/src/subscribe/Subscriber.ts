@@ -6,26 +6,22 @@ import { StreamPartID } from '@streamr/protocol'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamDefinition } from '../types'
 import { Resends } from './Resends'
-import { GroupKeyStore } from '../encryption/GroupKeyStore'
-import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
-import { StreamrClientEventEmitter } from '../events'
 import { DestroySignal } from '../DestroySignal'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { Logger } from '@streamr/utils'
+import { GroupKeyManager } from '../encryption/GroupKeyManager'
 
 @scoped(Lifecycle.ContainerScoped)
 export class Subscriber {
     private readonly subSessions: Map<StreamPartID, SubscriptionSession> = new Map()
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly resends: Resends
-    private readonly groupKeyStore: GroupKeyStore
-    private readonly subscriberKeyExchange: SubscriberKeyExchange
+    private readonly groupKeyManager: GroupKeyManager
     private readonly streamRegistryCached: StreamRegistryCached
     private readonly node: NetworkNodeFacade
-    private readonly streamrClientEventEmitter: StreamrClientEventEmitter
     private readonly destroySignal: DestroySignal
     private readonly config: StrictStreamrClientConfig
     private readonly loggerFactory: LoggerFactory
@@ -34,22 +30,18 @@ export class Subscriber {
     constructor(
         streamIdBuilder: StreamIDBuilder,
         resends: Resends,
-        groupKeyStore: GroupKeyStore,
-        subscriberKeyExchange: SubscriberKeyExchange,
+        groupKeyManager: GroupKeyManager,
         @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
         node: NetworkNodeFacade,
-        streamrClientEventEmitter: StreamrClientEventEmitter,
         destroySignal: DestroySignal,
         @inject(ConfigInjectionToken) config: StrictStreamrClientConfig,
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
     ) {
         this.streamIdBuilder = streamIdBuilder
         this.resends = resends
-        this.groupKeyStore = groupKeyStore
-        this.subscriberKeyExchange = subscriberKeyExchange
+        this.groupKeyManager = groupKeyManager
         this.streamRegistryCached = streamRegistryCached
         this.node = node
-        this.streamrClientEventEmitter = streamrClientEventEmitter
         this.destroySignal = destroySignal
         this.config = config
         this.loggerFactory = loggerFactory
@@ -63,11 +55,9 @@ export class Subscriber {
         const subSession = new SubscriptionSession(
             streamPartId,
             this.resends,
-            this.groupKeyStore,
-            this.subscriberKeyExchange,
+            this.groupKeyManager,
             this.streamRegistryCached,
             this.node,
-            this.streamrClientEventEmitter,
             this.destroySignal,
             this.loggerFactory,
             this.config
@@ -77,7 +67,7 @@ export class Subscriber {
         subSession.onRetired.listen(() => {
             this.subSessions.delete(streamPartId)
         })
-        this.logger.debug('created new SubscriptionSession for stream part %s', streamPartId)
+        this.logger.debug('Created new SubscriptionSession', { streamPartId })
         return subSession
     }
 
@@ -88,7 +78,7 @@ export class Subscriber {
         try {
             await subSession.add(sub)
         } catch (err) {
-            this.logger.debug('failed to add Subscription to SubscriptionSession, reason: %s', err)
+            this.logger.debug('Failed to add Subscription to SubscriptionSession', err)
             // clean up if fail
             await this.remove(sub)
             throw err

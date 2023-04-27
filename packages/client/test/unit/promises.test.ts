@@ -1,6 +1,6 @@
 import { wait } from '@streamr/utils'
-import { pOrderedResolve, pOnce, pLimitFn, pOne, until } from '../../src/utils/promises'
-import { CacheAsyncFn, CacheFn } from '../../src/utils/caches'
+import { pOrderedResolve, pOnce, pLimitFn, pOne, until, tryInSequence } from '../../src/utils/promises'
+import { CacheAsyncFn } from '../../src/utils/caches'
 
 const WAIT_TIME = 25
 
@@ -273,42 +273,6 @@ describe('CacheAsyncFn', () => {
     })
 })
 
-describe('cacheFn', () => {
-    it('adopts type of wrapped function', async () => {
-        // actually checking via ts-expect-error
-        // assertions don't matter,
-        function fn(_s: string): number {
-            return 3
-        }
-
-        const cachedFn = CacheFn(fn)
-        const a: number = cachedFn('abc') // ok
-        expect(a).toEqual(3)
-        // @ts-expect-error not enough args
-        cachedFn()
-        // @ts-expect-error too many args
-        cachedFn('abc', 3)
-        // @ts-expect-error wrong argument type
-        cachedFn(3)
-
-        // @ts-expect-error wrong return type
-        const c: string = cachedFn('abc')
-        expect(c).toEqual(3)
-        cachedFn.clearMatching((_d: string) => true)
-        // @ts-expect-error wrong match argument type
-        cachedFn.clearMatching((_d: number) => true)
-        const cachedFn2 = CacheFn(fn, {
-            cacheKey: ([s]) => {
-                return s.length
-            }
-        })
-
-        cachedFn2.clearMatching((_d: number) => true)
-        // @ts-expect-error wrong match argument type
-        cachedFn2.clearMatching((_d: string) => true)
-    })
-})
-
 describe('pOnce', () => {
     it('works', async () => {
         let count = 0
@@ -483,5 +447,39 @@ describe('pOne', () => {
         expect(await Promise.all([wrappedFn(), wrappedFn(), wrappedFn()])).toEqual([3, 3, 3])
         // can call again immediately after resolved
         expect(await (wrappedFn().then(() => wrappedFn()))).toEqual(5)
+    })
+})
+
+describe('tryInSequence', () => {
+    it('all resolve', () => {
+        expect(
+            tryInSequence([
+                () => Promise.resolve(123)
+            ])
+        ).resolves.toEqual(123)
+    })
+
+    it('some resolves', () => {
+        expect(
+            tryInSequence([
+                () => Promise.reject(new Error('dummy')),
+                () => Promise.resolve(123)
+            ])
+        ).resolves.toEqual(123)
+    })
+
+    it('all reject', () => {
+        expect(
+            tryInSequence([
+                () => Promise.reject(new Error('mock-error')),
+                () => Promise.reject(new Error('dummy')),
+            ])
+        ).rejects.toThrow('mock-error')
+    })
+
+    it('no tasks', () => {
+        expect(
+            tryInSequence([])
+        ).rejects.toThrow('no tasks')
     })
 })

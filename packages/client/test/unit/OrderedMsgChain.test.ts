@@ -1,6 +1,6 @@
 import assert from 'assert'
 
-import shuffle from 'array-shuffle'
+import { shuffle } from 'lodash'
 import { MessageID, MessageRef, StreamMessage, toStreamID } from '@streamr/protocol'
 import OrderedMsgChain from '../../src/subscribe/ordering/OrderedMsgChain'
 import GapFillFailedError from '../../src/subscribe/ordering/GapFillFailedError'
@@ -182,7 +182,7 @@ describe('OrderedMsgChain', () => {
                     util.add(unchainedMsg4) // bonus: also check it drops duplicate unchained
                     break
                 }
-                case 2:  {
+                case 2: {
                     // 3. on retry, filling first gap completes sequence
                     util.add(unchainedMsg2)
                     break

@@ -49,8 +49,11 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     private webSocketConnector: WebSocketConnector
     private webrtcConnector: WebRtcConnector
 
-    constructor(private config: ConnectionManagerConfig) {
+    private config: ConnectionManagerConfig
+
+    constructor(config: ConnectionManagerConfig) {
         super()
+        this.config = config
 
         logger.trace(`Creating WebSocket Connector`)
         this.webSocketConnector = new WebSocketConnector(ConnectionManager.PROTOCOL_VERSION, this.config.transportLayer,

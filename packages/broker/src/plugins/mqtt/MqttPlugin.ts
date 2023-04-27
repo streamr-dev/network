@@ -1,11 +1,11 @@
-import { Plugin } from '../../Plugin'
+import { ApiPluginConfig, Plugin } from '../../Plugin'
 import { getPayloadFormat } from '../../helpers/PayloadFormat'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { MqttServer } from './MqttServer'
 import { Bridge } from './Bridge'
 import { Schema } from 'ajv'
 
-export interface MqttPluginConfig {
+export interface MqttPluginConfig extends ApiPluginConfig {
     port: number
     streamIdDomain?: string
     payloadMetadata: boolean
@@ -15,7 +15,7 @@ export class MqttPlugin extends Plugin<MqttPluginConfig> {
     private server?: MqttServer
 
     async start(): Promise<void> {
-        this.server = new MqttServer(this.pluginConfig.port, this.apiAuthenticator)
+        this.server = new MqttServer(this.pluginConfig.port, this.getApiAuthentication())
         const bridge = new Bridge(
             this.streamrClient!, 
             this.server, 

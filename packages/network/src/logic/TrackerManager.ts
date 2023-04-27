@@ -24,7 +24,6 @@ interface NodeDescriptor {
 }
 
 interface Subscriber {
-    subscribeToStreamPartIfHaveNotYet: (streamPartId: StreamPartID, sendStatus?: boolean) => void
     subscribeToStreamPartOnNodes: (
         nodeIds: NodeId[],
         streamPartId: StreamPartID,
@@ -64,7 +63,7 @@ export class TrackerManager {
         getNodeDescriptor: GetNodeDescriptor,
         subscriber: Subscriber
     ) {
-        this.nodeToTracker =  nodeToTracker
+        this.nodeToTracker = nodeToTracker
         this.streamPartManager = streamPartManager
         this.trackerRegistry = createTrackerRegistry<TrackerRegistryRecord>(opts.trackers)
         this.getNodeDescriptor = getNodeDescriptor
@@ -85,7 +84,7 @@ export class TrackerManager {
         )
 
         this.nodeToTracker.on(NodeToTrackerEvent.CONNECTED_TO_TRACKER, (trackerId) => {
-            logger.trace('connected to tracker %s', trackerId)
+            logger.trace('Connected to tracker', { trackerId })
             this.getStreamPartsForTracker(trackerId).forEach((streamPart) => {
                 this.sendStatus(streamPart, trackerId)
             })
@@ -100,7 +99,7 @@ export class TrackerManager {
             this.instructionThrottler.add(instructionMessage, trackerId)
         })
         this.nodeToTracker.on(NodeToTrackerEvent.TRACKER_DISCONNECTED, (trackerId) => {
-            logger.trace('disconnected from tracker %s', trackerId)
+            logger.trace('Disconnected from tracker', { trackerId })
         })
     }
 
@@ -113,12 +112,12 @@ export class TrackerManager {
         this.trackerConnector.onNewStreamPart(streamPartId)
     }
 
-    async connectToSignallingOnlyTracker(trackerId: TrackerId, trackerAddress: string): Promise<void> {
-        await this.trackerConnector.createSignallingOnlyTrackerConnection(trackerId, trackerAddress)
+    async addSignallingOnlySession(streamPartId: StreamPartID, nodeToSignal: NodeId): Promise<void> {
+        await this.trackerConnector.addSignallingOnlySession(streamPartId, nodeToSignal)
     }
 
-    disconnectFromSignallingOnlyTracker(trackerId: string): void {
-        this.trackerConnector.removeSignallingOnlyTrackerConnection(trackerId)
+    removeSignallingOnlySession(streamPartId: StreamPartID, nodeToSignal: NodeId): void {
+        this.trackerConnector.removeSignallingOnlySession(streamPartId, nodeToSignal)
     }
 
     onUnsubscribeFromStreamPart(streamPartId: StreamPartID): void {
@@ -146,7 +145,7 @@ export class TrackerManager {
     private shouldIncludeRttInfo(trackerId: TrackerId): boolean {
         if (!(trackerId in this.rttUpdateTimeoutsOnTrackers)) {
             this.rttUpdateTimeoutsOnTrackers[trackerId] = setTimeout(() => {
-                logger.trace(`RTT timeout to ${trackerId} triggered, RTTs to connections will be updated with the next status message`)
+                logger.trace('Triggered RTT update timeout to tracker', { trackerId })
                 delete this.rttUpdateTimeoutsOnTrackers[trackerId]
             }, this.rttUpdateInterval)
             return true
@@ -163,10 +162,12 @@ export class TrackerManager {
             }
             try {
                 await this.nodeToTracker.sendStatus(trackerId, status)
-                logger.trace('sent status %j to tracker %s', status.streamPart, trackerId)
-            } catch (e) {
-                const error = `failed to send status to tracker ${trackerId}, reason: ${e}`
-                logger.trace(error)
+                logger.trace('Sent status to tracker', {
+                    streamPartId: status.streamPart,
+                    trackerId
+                })
+            } catch (err) {
+                logger.trace('Failed to send status to tracker', { err, trackerId })
             }
         }
     }
@@ -177,20 +178,25 @@ export class TrackerManager {
         reattempt = false
     ): Promise<void> {
         const streamPartId = instructionMessage.getStreamPartID()
-        const { nodeIds, counter } = instructionMessage
+        if (!this.streamPartManager.isSetUp(streamPartId)) {
+            return
+        }
 
+        const { nodeIds, counter } = instructionMessage
         this.instructionRetryManager.add(instructionMessage, trackerId)
 
         // Check that tracker matches expected tracker
         const expectedTrackerId = this.getTrackerId(streamPartId)
         if (trackerId !== expectedTrackerId) {
-            logger.warn(`got instructions from unexpected tracker. Expected ${expectedTrackerId}, got from ${trackerId}`)
+            logger.warn('Received instructions from unexpected tracker', {
+                expectedTrackerId,
+                trackerId
+            })
             return
         }
 
-        logger.trace('received instructions for %s, nodes to connect %o', streamPartId, nodeIds)
+        logger.trace('Receive instructions', { streamPartId, nodeIds })
 
-        this.subscriber.subscribeToStreamPartIfHaveNotYet(streamPartId, false)
         const currentNodes = this.streamPartManager.getNeighborsForStreamPart(streamPartId)
 
         const nodesToUnsubscribeFrom = currentNodes.filter((nodeId) => !nodeIds.includes(nodeId))
@@ -215,7 +221,10 @@ export class TrackerManager {
                 subscribedNodeIds.push(res.value)
             } else {
                 failedInstructions = true
-                logger.debug('failed to subscribe (or connect) to %s, reason: %s', NameDirectory.getName(nodeIds[i]), res.reason)
+                logger.debug('Failed to subscribe to node', {
+                    nodeId: NameDirectory.getName(nodeIds[i]),
+                    reason: res.reason
+                })
             }
         })
         if (!reattempt || failedInstructions) {
@@ -232,14 +241,13 @@ export class TrackerManager {
             }
         }
 
-        logger.trace('subscribed to %j and unsubscribed from %j (streamPartId=%s, counter=%d)',
-            subscribedNodeIds, unsubscribedNodeIds, streamPartId, counter)
-
-        if (subscribedNodeIds.length !== nodeIds.length) {
-            logger.trace('error: failed to fulfill all tracker instructions (streamPartId=%s, counter=%d)', streamPartId, counter)
-        } else {
-            logger.trace('Tracker instructions fulfilled (streamPartId=%s, counter=%d)', streamPartId, counter)
-        }
+        logger.trace('Fulfilled tracker instructions', {
+            subscribedNodeIds,
+            unsubscribedNodeIds,
+            streamPartId,
+            counter,
+            fullFilledAll: subscribedNodeIds.length === nodeIds.length
+        })
     }
 
     getTrackerId(streamPartId: StreamPartID): TrackerId {
@@ -248,5 +256,9 @@ export class TrackerManager {
 
     getTrackerAddress(streamPartId: StreamPartID): TrackerId {
         return this.trackerRegistry.getTracker(streamPartId).ws
+    }
+
+    getDiagnosticInfo(): Record<string, unknown> {
+        return this.nodeToTracker.getDiagnosticInfo()
     }
 }

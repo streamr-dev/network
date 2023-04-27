@@ -1,11 +1,14 @@
 import Ajv, { Schema, ErrorObject } from 'ajv'
 import addFormats from 'ajv-formats'
+import { StrictConfig } from './config'
+import DEFINITIONS_SCHEMA from './definitions.schema.json'
 
-export const validateConfig = (data: unknown, schema: Schema, contextName?: string, useDefaults = true): void | never => {
+export const validateConfig = (data: unknown, schema: Schema, contextName?: string, useDefaults = true): StrictConfig => {
     const ajv = new Ajv({
         useDefaults
     })
     addFormats(ajv)
+    ajv.addSchema(DEFINITIONS_SCHEMA)
     if (!ajv.validate(schema, data)) {
         const prefix = (contextName !== undefined) ? (contextName + ': ') : ''
         throw new Error(prefix + ajv.errors!.map((e: ErrorObject) => {
@@ -16,6 +19,7 @@ export const validateConfig = (data: unknown, schema: Schema, contextName?: stri
             return text
         }).join('\n'))
     }
+    return data as StrictConfig
 }
 
 export const isValidConfig = (data: unknown, schema: Schema): boolean => {

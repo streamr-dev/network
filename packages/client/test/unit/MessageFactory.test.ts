@@ -1,14 +1,15 @@
 import { keyToArrayIndex, toEthereumAddress } from '@streamr/utils'
-import { random } from 'lodash'
+import random from 'lodash/random'
 import { ContentType, EncryptionType, MAX_PARTITION_COUNT, StreamMessage, StreamMessageType, toStreamID } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
 import { createPrivateKeyAuthentication } from '../../src/Authentication'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { PublishMetadata } from '../../src/publish/Publisher'
 import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
-import { MessageFactory } from '../../src/publish/MessageFactory'
+import { MessageFactory, MessageFactoryOptions } from '../../src/publish/MessageFactory'
 import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
 import { createGroupKeyQueue, createStreamRegistryCached } from '../test-utils/utils'
+import { merge } from '@streamr/utils'
 
 const WALLET = fastWallet()
 const STREAM_ID = toStreamID('/path', toEthereumAddress(WALLET.address))
@@ -21,27 +22,34 @@ const createMessageFactory = async (opts?: {
     streamRegistry?: StreamRegistryCached
     groupKeyQueue?: GroupKeyQueue
 }) => {
-    return new MessageFactory({
-        streamId: STREAM_ID,
-        authentication: createPrivateKeyAuthentication(WALLET.privateKey, undefined as any),
-        streamRegistry: createStreamRegistryCached({
-            partitionCount: PARTITION_COUNT,
-            isPublicStream: false,
-            isStreamPublisher: true
-        }),
-        groupKeyQueue: await createGroupKeyQueue(GROUP_KEY),
-        ...opts
-    })
+    const authentication = createPrivateKeyAuthentication(WALLET.privateKey, undefined as any)
+    return new MessageFactory(
+        merge<MessageFactoryOptions>(
+            {
+                streamId: STREAM_ID,
+                authentication,
+                streamRegistry: createStreamRegistryCached({
+                    partitionCount: PARTITION_COUNT,
+                    isPublicStream: false,
+                    isStreamPublisher: true
+                }),
+                groupKeyQueue: await createGroupKeyQueue(authentication, GROUP_KEY)
+            },
+            opts
+        )
+    )
 }
 
 const createMessage = async (
     opts: Omit<PublishMetadata, 'timestamp'> & { timestamp?: number, explicitPartition?: number },
     messageFactory: MessageFactory
 ): Promise<StreamMessage> => {
-    return messageFactory.createMessage(CONTENT, {
-        timestamp: TIMESTAMP,
-        ...opts
-    }, opts.explicitPartition)
+    return messageFactory.createMessage(CONTENT, merge(
+        {
+            timestamp: TIMESTAMP
+        },
+        opts
+    ), opts.explicitPartition)
 }
 
 describe('MessageFactory', () => {
@@ -102,7 +110,7 @@ describe('MessageFactory', () => {
     it('next group key', async () => {
         const nextGroupKey = GroupKey.generate()
         const messageFactory = await createMessageFactory({
-            groupKeyQueue: await createGroupKeyQueue(GROUP_KEY, nextGroupKey)
+            groupKeyQueue: await createGroupKeyQueue(createPrivateKeyAuthentication(WALLET.privateKey, undefined as any), GROUP_KEY, nextGroupKey)
         })
         const msg = await createMessage({}, messageFactory)
         expect(msg.groupKeyId).toBe(GROUP_KEY.id)
@@ -121,7 +129,7 @@ describe('MessageFactory', () => {
         })
         return expect(() =>
             createMessage({}, messageFactory)
-        ).rejects.toThrow(/is not a publisher on stream/)
+        ).rejects.toThrow(/You don't have permission to publish to this stream/)
     })
 
     describe('partitions', () => {

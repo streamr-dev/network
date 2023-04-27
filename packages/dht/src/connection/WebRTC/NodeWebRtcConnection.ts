@@ -29,7 +29,7 @@ export interface Params {
 // Re-defined accoring to https://github.com/microsoft/TypeScript/blob/main/src/lib/dom.generated.d.ts
 // because importing single dom definitions in not possible
 
-enum RTCPeerConnectionStateEnum {closed, connected, connecting, disconnected, failed,  new}
+enum RTCPeerConnectionStateEnum {closed, connected, connecting, disconnected, failed, new}
 type RTCPeerConnectionState = keyof typeof RTCPeerConnectionStateEnum  
 
 type Events = WebRtcConnectionEvents | ConnectionEvents
@@ -159,7 +159,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
             this.close()
         })
 
-        dataChannel.onError((err) => logger.error(err))
+        dataChannel.onError((err) => logger.error('error', { err }))
 
         dataChannel.onBufferedAmountLow( () => {
             logger.trace(`dc.onBufferedAmountLow`)

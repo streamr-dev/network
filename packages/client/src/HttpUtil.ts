@@ -34,10 +34,6 @@ export class HttpError extends Error {
         this.body = body
         this.code = errorCode || ErrorCode.UNKNOWN
         this.errorCode = this.code
-
-        if (Error.captureStackTrace) {
-            Error.captureStackTrace(this, this.constructor)
-        }
     }
 }
 
@@ -140,11 +136,16 @@ async function fetchResponse(
         options.headers['Content-Type'] = 'application/json'
     }
 
-    logger.debug('fetching %s with options %j', url, opts)
+    logger.debug('Send HTTP request', { url, opts })
 
     const response: Response = await fetchFn(url, opts)
     const timeEnd = Date.now()
-    logger.debug('%s responded with %d %s %s in %d ms', url, response.status, response.statusText, timeEnd - timeStart)
+    logger.debug('Received HTTP response', {
+        url,
+        status: response.status,
+        statusText: response.statusText,
+        timeTakenInMs: timeEnd - timeStart
+    })
 
     if (response.ok) {
         return response

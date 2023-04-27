@@ -33,7 +33,7 @@ Monorepo containing all the main components of Streamr Network.
 
 The monorepo is managed using [npm workspaces](https://docs.npmjs.com/cli/v7/using-npm/workspaces).
 
-Installation on an Apple Silicon Mac requires additional steps, see [install-on-apple-silicon.md](/install-on-apple-silicon).
+Installation on an Apple Silicon Mac requires additional steps, see [install-on-apple-silicon.md](/internal-docs/install-on-apple-silicon.md).
 
 **Important:** Do not use `npm ci` or `npm install` directly in the sub-package directories.
 
@@ -98,13 +98,6 @@ top-level **`node_modules`**:
 npm run clean
 ```
 
-### Install git hooks
-To install git hooks (e.g. Husky for conventional commit validation):
-
-```bash
-npm run install-git-hooks
-```
-
 ### Add a dependency into a sub-package
 
 Manually add the entry to the `package.json` of the sub-package and 
@@ -139,28 +132,19 @@ as you expect e.g. `^X.Y.Z` vs `X.Y.Z`
 
 All the above packages should be released at the same time.
 
-1. `git checkout main`
-2. `git pull`
-3. `./update-versions.sh <SEMVER>` E.g. `./update-versions 7.1.1`
+1. `git checkout main && git pull`
+2. (skip if beta release) Look at client and cli-tool CHANGELOG.md, decide new version and make edits.
+3. `./update-versions.sh <SEMVER>` E.g. `./update-versions.sh 7.1.1`
 4. `npm run clean && npm install && npm run build && npm run versions`
-5. Look at the output of the above and ensure all versions are linked properly (i.e. no yellow or red markers)
-6. Update client and cli-tool CHANGELOG.md
-7. If releasing a major / minor version, update API docs link in *packages/client/README.md*.
-8. Add relevant files to git staging
-9. `git commit -m "release(client, cli-tools): vX.Y.Z"`
-10. `git tag client/vX.Y.Z`
-11. `git tag cli-tools/vX.Y.Z`
-12. Push to main `git push origin`
-13. Push to tag `git push origin client/vX.Y.Z`
-14. Push to tag `git push origin cli-tools/vX.Y.Z`
-15. At this point we are to do the actual release
-16. Clean and rebuild project with `npm run clean && npm run bootstrap`
-17. Then we do actual publishing of packages with `./release.sh <NPM_TAG>`. Use argument `beta` if publishing a
-beta version. Use `latest` instead when publishing a stable version.
-18. Update client docs if major or minor change:
+   - Ensure output does not contain yellow or red markers
+5. Add files to staging `git add . -p`
+6. `./release-git-tags.sh <SEMVER>` E.g. `./release-git-tags.sh 7.1.1`
+7. Wait & ensure the pushed main branch passes CI tests
+8. Publish packages `./release.sh <NPM_TAG>`
+    - Use argument `beta` if publishing a beta version
+    - Use argument `latest` if publishing a stable version
+9. Update client docs if major or minor change:
 ```bash
-
-# Generate & upload API docs (if a major/minor version update)
 cd packages/client
 npm run docs
 aws s3 cp ./docs s3://api-docs.streamr.network/client/vX.Y --recursive --profile streamr-api-docs-upload
@@ -175,11 +159,10 @@ for the time being.
 git checkout main
 cd packages/broker
 npm version <SEMVER_OPTION>
-git add package.json
+git add package.json package-lock.json
 git commit -m "release(broker): vX.Y.Z"
 git tag broker/vX.Y.Z
-git push origin
-git push origin broker/vX.Y.Z
+git push --atomic origin main broker/vX.Y.Z
 
 npm run build
 npm publish
@@ -187,9 +170,29 @@ npm publish
 
 #### Docker release
 
-1. Go to https://github.com/streamr-dev/network/actions/workflows/release.yml
-2. From "run workflow" dropdown:
-   - select `main` branch
-   - click "Run workflow"
-3. You can manually cancel other queued workflows (triggered by possible previous commits to `main`)
-4. After ~1 hour a new release is ready, annotated with `latest` tag: https://hub.docker.com/r/streamr/broker-node/tags
+After pushing the broker tag, GitHub Actions will build and publish the Docker image automatically if
+tests pass.
+
+##### Tag `latest`
+
+GitHub Actions will not update the `latest` tag. This must be done manually. Keep in mind that `latest` should
+always refer to the latest _stable_ version.
+
+To update `latest` do the following.
+
+1. Find out the sha256 digests of both the amd64 and arm64 builds for a `vX.Y.Z` tag. This can be
+done via command-line `docker buildx imagetools inspect streamr/broker-node:vX.Y.Z` or you can check
+this from docker hub website under https://hub.docker.com/r/streamr/broker-node/tags.
+2. Then we shall create the manifest by running the below. Remember to replace `<SHA-AMD64>` and `<SHA-ARM64>`
+with real values.
+```
+docker manifest create streamr/broker-node:latest \
+    --amend streamr/broker-node@sha256:<SHA-AMD64> \
+    --amend streamr/broker-node@sha256:<SHA-ARM64>
+```
+3. Then we publish the manifest with
+```
+docker manifest push streamr/broker-node:latest
+```
+4. Then we are ready. It would be wise to double-check this by checking
+https://hub.docker.com/r/streamr/broker-node/tags.

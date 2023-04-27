@@ -4,6 +4,7 @@ import { MessageQueue } from '../../src/connection/MessageQueue'
 import { BrowserWebRtcConnection } from '../../src/connection/webrtc/BrowserWebRtcConnection'
 import { DeferredConnectionAttempt } from '../../src/connection/webrtc/DeferredConnectionAttempt'
 import { ConstructorOptions } from "../../src/connection/webrtc/WebRtcConnection"
+import { TEST_CONFIG } from '../../src/createNetworkNode'
 /**
  * Test that Connections can be established and message sent between them successfully. Tracker
  * is "abstracted away" by local functions.
@@ -23,8 +24,10 @@ describe('Connection', () => {
             routerId: 'tracker',
             iceServers: [],
             pingInterval: 5000,
-            messageQueue: new MessageQueue<string>(),
-            deferredConnectionAttempt: new DeferredConnectionAttempt()
+            messageQueue: new MessageQueue<string>(TEST_CONFIG.webrtcSendBufferMaxMessageCount),
+            deferredConnectionAttempt: new DeferredConnectionAttempt(),
+            portRange: TEST_CONFIG.webrtcPortRange,
+            maxMessageSize: TEST_CONFIG.webrtcMaxMessageSize
         }
 
         const connectionOpts2: ConstructorOptions = {
@@ -33,8 +36,10 @@ describe('Connection', () => {
             routerId: 'tracker',
             iceServers: [],
             pingInterval: 5000,
-            messageQueue: new MessageQueue<string>(),
-            deferredConnectionAttempt: new DeferredConnectionAttempt()
+            messageQueue: new MessageQueue<string>(TEST_CONFIG.webrtcSendBufferMaxMessageCount),
+            deferredConnectionAttempt: new DeferredConnectionAttempt(),
+            portRange: TEST_CONFIG.webrtcPortRange,
+            maxMessageSize: TEST_CONFIG.webrtcMaxMessageSize
         }
 
         conn1 = new BrowserWebRtcConnection(connectionOpts1)
@@ -71,7 +76,7 @@ describe('Connection', () => {
         }
     })
 
-    afterEach(()  => {
+    afterEach(() => {
         conn1.close()
         conn2.close()
     })

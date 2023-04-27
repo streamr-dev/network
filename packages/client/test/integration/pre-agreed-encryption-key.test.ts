@@ -25,7 +25,7 @@ describe('pre-agreed encryption key', () => {
             streamId: stream.id,
             distributionMethod: 'rekey'
         })
-        await subscriber.addEncryptionKey(key, stream.id)
+        await subscriber.addEncryptionKey(key, await publisher.getAddress())
         const sub = await subscriber.subscribe(stream.id)
         await publisher.publish(stream.id, { foo: 'bar' })
         const receivedMessage = await nextValue(sub[Symbol.asyncIterator]())

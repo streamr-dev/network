@@ -16,8 +16,9 @@ export class SimulationNode {
     private numberOfOutgoingRpcCalls = 0
 
     private neighborList: SortedContactList<Contact>
+    private ownId: PeerID
 
-    constructor(private ownId: PeerID) {
+    constructor(ownId: PeerID) {
         this.ownId = ownId
         this.ownContact = new Contact(this.ownId, this)
         this.bucket = new KBucket({

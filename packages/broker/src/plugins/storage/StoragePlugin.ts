@@ -1,8 +1,8 @@
 import { StreamMessage, StreamMessageType } from '@streamr/protocol'
-import { router as dataQueryEndpoints } from './DataQueryEndpoints'
-import { router as dataMetadataEndpoint } from './DataMetadataEndpoints'
-import { router as storageConfigEndpoints } from './StorageConfigEndpoints'
-import { Plugin } from '../../Plugin'
+import { createDataQueryEndpoint } from './dataQueryEndpoint'
+import { createDataMetadataEndpoint } from './dataMetadataEndpoint'
+import { createStorageConfigEndpoint } from './storageConfigEndpoint'
+import { ApiPluginConfig, Plugin } from '../../Plugin'
 import { Storage, startCassandraStorage } from './Storage'
 import { StorageConfig } from './StorageConfig'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
@@ -12,7 +12,7 @@ import { formStorageNodeAssignmentStreamId, Stream } from 'streamr-client'
 
 const logger = new Logger(module)
 
-export interface StoragePluginConfig {
+export interface StoragePluginConfig extends ApiPluginConfig {
     cassandra: {
         hosts: string[]
         username: string
@@ -53,9 +53,9 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
         }
         const node = await this.streamrClient.getNode()
         node.addMessageListener(this.messageListener)
-        this.addHttpServerRouter(dataQueryEndpoints(this.cassandra, metricsContext))
-        this.addHttpServerRouter(dataMetadataEndpoint(this.cassandra))
-        this.addHttpServerRouter(storageConfigEndpoints(this.storageConfig))
+        this.addHttpServerEndpoint(createDataQueryEndpoint(this.cassandra, metricsContext))
+        this.addHttpServerEndpoint(createDataMetadataEndpoint(this.cassandra))
+        this.addHttpServerEndpoint(createStorageConfigEndpoint(this.storageConfig))
     }
 
     async stop(): Promise<void> {
@@ -109,9 +109,14 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
                         await assignmentStream.publish({
                             streamPart
                         })
-                        logger.debug('published message to assignment stream %s', assignmentStream.id)
-                    } catch (e) {
-                        logger.warn('failed to publish to assignment stream %s, reason: %s', assignmentStream.id, e)
+                        logger.debug('Published message to assignment stream', {
+                            assignmentStreamId: assignmentStream.id
+                        })
+                    } catch (err) {
+                        logger.warn('Failed to publish to assignment stream', {
+                            assignmentStreamId: assignmentStream.id,
+                            err
+                        })
                     }
                 },
                 onStreamPartRemoved: (streamPart) => {
