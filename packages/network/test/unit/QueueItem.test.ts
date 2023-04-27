@@ -1,4 +1,4 @@
-import { MessageQueue, QueueItem } from '../../src/connection/MessageQueue'
+import { MAX_ERROR_INFOS, MessageQueue, QueueItem } from '../../src/connection/MessageQueue'
 import Mock = jest.Mock
 
 describe(QueueItem, () => {
@@ -22,7 +22,12 @@ describe(QueueItem, () => {
             item.incrementTries({ error: 'error' })
         }
         expect(item.isFailed()).toEqual(true)
-        expect(item.getErrorInfos()).toEqual(Array(MessageQueue.MAX_TRIES).fill({ error: 'error' }))
+        expect(item.getErrorInfos()).toEqual(
+            [
+                ...Array(MAX_ERROR_INFOS).fill({ error: 'error' }),
+                { limit: 'showing first 10 collected errors' }
+            ]
+        )
     })
 
     it('becomes failed immediately if immediateFail invoked', () => {

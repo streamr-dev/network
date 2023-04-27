@@ -3,7 +3,7 @@ import { Logger } from "@streamr/utils"
 
 type ErrorInfo = Record<string, unknown>
 
-const MAX_ERROR_INFOS = 10
+export const MAX_ERROR_INFOS = 10
 
 export class QueueItem<M> {
     private static nextNumber = 0
