@@ -139,6 +139,34 @@
                     "type": "number",
                     "default": 131072
                 },
+                "webrtcSendBufferMaxMessageCount": {
+                    "type": "number",
+                    "default": 500
+                },
+                "webrtcMaxMessageSize": {
+                    "type": "number",
+                    "default": 1048576
+                },
+                "webrtcPortRange": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                        "min",
+                        "max"
+                    ],
+                    "properties": {
+                        "min": {
+                            "type": "number"
+                        },
+                        "max": {
+                            "type": "number"
+                        }
+                    },
+                    "default": {
+                        "min": 6000,
+                        "max": 65535
+                    }
+                },
                 "disconnectionWaitTime": {
                     "type": "number",
                     "default": 200
@@ -172,6 +200,9 @@
                             },
                             "password": {
                                 "type": "string"
+                            },
+                            "tcp": {
+                                "type": "boolean"
                             }
                         }
                     },
@@ -185,6 +216,13 @@
                             "port": 5349,
                             "username": "BrubeckTurn1",
                             "password": "MIlbgtMw4nhpmbgqRrht1Q=="
+                        },
+                        {
+                            "url": "turn:turn.streamr.network",
+                            "port": 5349,
+                            "username": "BrubeckTurn1",
+                            "password": "MIlbgtMw4nhpmbgqRrht1Q==",
+                            "tcp": true
                         }
                     ]
                 },
@@ -288,14 +326,25 @@
                 "maxConcurrentCalls": {
                     "type": "number",
                     "default": 10
+                },
+                "pollInterval": {
+                    "type": "number"
                 }
             },
             "default": {}
         },
-        "decryption": {
+        "encryption": {
             "type": "object",
             "additionalProperties": false,
             "properties": {
+                "litProtocolEnabled": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "litProtocolLogging": {
+                    "type": "boolean",
+                    "default": false
+                },
                 "keyRequestTimeout": {
                     "type": "number",
                     "default": 30000
@@ -390,13 +439,13 @@
                     },
                     "default": {}
                 },
-                "jsonRpc": {
+                "ensStreamCreation": {
                     "type": "object",
                     "additionalProperties": false,
                     "properties": {
                         "timeout": {
                             "type": "number",
-                            "default": 30000
+                            "default": 180000
                         },
                         "retryInterval": {
                             "type": "number",

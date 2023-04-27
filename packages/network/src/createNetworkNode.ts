@@ -9,7 +9,7 @@ import NodeClientWsEndpoint from './connection/ws/NodeClientWsEndpoint'
 import { WebRtcEndpoint } from './connection/webrtc/WebRtcEndpoint'
 import { webRtcConnectionFactory } from './connection/webrtc/NodeWebRtcConnection'
 import { TrackerRegistryRecord } from '@streamr/protocol'
-import { IceServer } from './connection/webrtc/WebRtcConnection'
+import { IceServer, WebRtcPortRange } from './connection/webrtc/WebRtcConnection'
 
 export interface NetworkNodeOptions extends AbstractNodeOptions {
     trackers: TrackerRegistryRecord[]
@@ -18,11 +18,14 @@ export interface NetworkNodeOptions extends AbstractNodeOptions {
     newWebrtcConnectionTimeout: number
     webrtcDatachannelBufferThresholdLow: number
     webrtcDatachannelBufferThresholdHigh: number
+    webrtcSendBufferMaxMessageCount: number
     iceServers: ReadonlyArray<IceServer>
     rttUpdateTimeout: number
     trackerConnectionMaintenanceInterval: number
     webrtcDisallowPrivateAddresses: boolean
     acceptProxyConnections: boolean
+    webrtcMaxMessageSize: number
+    webrtcPortRange: WebRtcPortRange
 }
 
 export const TEST_CONFIG: Omit<NetworkNodeOptions, 'id' | 'trackers' | 'metricsContext'> = {
@@ -31,12 +34,18 @@ export const TEST_CONFIG: Omit<NetworkNodeOptions, 'id' | 'trackers' | 'metricsC
     newWebrtcConnectionTimeout: 15 * 1000,
     webrtcDatachannelBufferThresholdLow: 2 ** 15,
     webrtcDatachannelBufferThresholdHigh: 2 ** 17,
+    webrtcSendBufferMaxMessageCount: 500,
     iceServers: [],
     rttUpdateTimeout: 15 * 1000,
     trackerConnectionMaintenanceInterval: 5 * 1000,
     webrtcDisallowPrivateAddresses: false,
     acceptProxyConnections: false,
-    trackerPingInterval: 60 * 1000
+    trackerPingInterval: 60 * 1000,
+    webrtcPortRange: {
+        min: 6000,
+        max: 65535
+    },
+    webrtcMaxMessageSize: 1048576
 }
 
 export const createNetworkNode = ({
@@ -51,10 +60,13 @@ export const createNetworkNode = ({
     rttUpdateTimeout,
     webrtcDatachannelBufferThresholdLow,
     webrtcDatachannelBufferThresholdHigh,
+    webrtcSendBufferMaxMessageCount,
     iceServers,
     trackerConnectionMaintenanceInterval,
     webrtcDisallowPrivateAddresses,
-    acceptProxyConnections
+    acceptProxyConnections,
+    webrtcPortRange,
+    webrtcMaxMessageSize,
 }: NetworkNodeOptions): NetworkNode => {
     const peerInfo = PeerInfo.newNode(id, undefined, undefined, location)
     const endpoint = new NodeClientWsEndpoint(peerInfo, trackerPingInterval)
@@ -73,7 +85,10 @@ export const createNetworkNode = ({
         peerPingInterval,
         webrtcDatachannelBufferThresholdLow,
         webrtcDatachannelBufferThresholdHigh,
-        webrtcDisallowPrivateAddresses
+        webrtcSendBufferMaxMessageCount,
+        webrtcDisallowPrivateAddresses,
+        webrtcPortRange,
+        webrtcMaxMessageSize
     ))
 
     return new NetworkNode({

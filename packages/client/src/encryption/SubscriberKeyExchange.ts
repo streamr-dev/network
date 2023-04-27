@@ -20,7 +20,7 @@ import { withThrottling, pOnce } from '../utils/promises'
 import { MaxSizedSet } from '../utils/utils'
 import { Validator } from '../Validator'
 import { GroupKey } from './GroupKey'
-import { GroupKeyStore } from './GroupKeyStore'
+import { LocalGroupKeyStore } from './LocalGroupKeyStore'
 import { RSAKeyPair } from './RSAKeyPair'
 import { EthereumAddress, Logger } from '@streamr/utils'
 import { LoggerFactory } from '../utils/LoggerFactory'
@@ -36,7 +36,7 @@ export class SubscriberKeyExchange {
     private readonly logger: Logger
     private rsaKeyPair: RSAKeyPair | undefined
     private readonly networkNodeFacade: NetworkNodeFacade
-    private readonly store: GroupKeyStore
+    private readonly store: LocalGroupKeyStore
     private readonly authentication: Authentication
     private readonly validator: Validator
     private readonly pendingRequests: MaxSizedSet<string> = new MaxSizedSet(MAX_PENDING_REQUEST_COUNT)
@@ -45,11 +45,11 @@ export class SubscriberKeyExchange {
 
     constructor(
         networkNodeFacade: NetworkNodeFacade,
-        store: GroupKeyStore,
+        store: LocalGroupKeyStore,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         validator: Validator,
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
-        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'decryption'>
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'encryption'>
     ) {
         this.logger = loggerFactory.createLogger(module)
         this.networkNodeFacade = networkNodeFacade
@@ -60,11 +60,11 @@ export class SubscriberKeyExchange {
             this.rsaKeyPair = await RSAKeyPair.create()
             const node = await networkNodeFacade.getNode()
             node.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
-            this.logger.debug('started')
+            this.logger.debug('Started')
         })
         this.requestGroupKey = withThrottling((groupKeyId: string, publisherId: EthereumAddress, streamPartId: StreamPartID) => {
             return this.doRequestGroupKey(groupKeyId, publisherId, streamPartId)
-        }, config.decryption.maxKeyRequestsPerSecond)
+        }, config.encryption.maxKeyRequestsPerSecond)
     }
 
     private async doRequestGroupKey(groupKeyId: string, publisherId: EthereumAddress, streamPartId: StreamPartID): Promise<void> {
@@ -79,7 +79,11 @@ export class SubscriberKeyExchange {
         const node = await this.networkNodeFacade.getNode()
         node.publish(request)
         this.pendingRequests.add(requestId)
-        this.logger.debug('sent a group key %s with requestId %s to %s', groupKeyId, requestId, publisherId)
+        this.logger.debug('Sent group key request (waiting for response)', {
+            groupKeyId,
+            requestId,
+            publisherId
+        })
     }
 
     private async createRequest(
@@ -117,16 +121,16 @@ export class SubscriberKeyExchange {
                 const authenticatedUser = await this.authentication.getAddress()
                 const { requestId, recipient, encryptedGroupKeys } = GroupKeyResponse.fromStreamMessage(msg) as GroupKeyResponse
                 if ((recipient === authenticatedUser) && (this.pendingRequests.has(requestId))) {
-                    this.logger.debug('handling group key response %s', requestId)
+                    this.logger.debug('Handle group key response', { requestId })
                     this.pendingRequests.delete(requestId)
                     await this.validator.validate(msg)
                     await Promise.all(encryptedGroupKeys.map(async (encryptedKey) => {
                         const key = GroupKey.decryptRSAEncrypted(encryptedKey, this.rsaKeyPair!.getPrivateKey())
-                        await this.store.add(key, msg.getStreamId())
+                        await this.store.set(key.id, msg.getPublisherId(), key.data)
                     }))
                 }
-            } catch (e: any) {
-                this.logger.debug('error handling group key response, reason: %s', e.message)
+            } catch (err: any) {
+                this.logger.debug('Failed to handle group key response', { err })
             }
         }
     }

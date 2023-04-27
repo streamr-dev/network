@@ -1,10 +1,9 @@
 import { Database } from 'sqlite'
-import { toStreamID } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import ServerPersistence from '../../src/utils/persistence/ServerPersistence'
 import { mockLoggerFactory } from '../test-utils/utils'
 
-const streamId = toStreamID('0x0000000000000000000000000000000000000001/path')
+const NAMESPACE = 'MockTable'
 
 describe('ServerPersistence', () => {
 
@@ -12,13 +11,12 @@ describe('ServerPersistence', () => {
 
     beforeEach(async () => {
         const clientId = randomEthereumAddress()
-        persistence = new ServerPersistence({
+        persistence = await ServerPersistence.createInstance({
             loggerFactory: mockLoggerFactory(),
-            tableName: 'MockTable',
-            valueColumnName: 'mockValue',
             clientId,
+            namespaces: [NAMESPACE],
             onInit: async (db: Database) => {
-                await db.exec('CREATE TABLE IF NOT EXISTS MockTable (id TEXT, mockValue TEXT, streamId TEXT);')
+                await db.exec(`CREATE TABLE IF NOT EXISTS ${NAMESPACE} (key_ TEXT NOT NULL PRIMARY KEY, value_ TEXT);`)
             }
         })
     })
@@ -27,38 +25,28 @@ describe('ServerPersistence', () => {
         await persistence.close()
     })
 
-    it('happy path', async () => {
-        await persistence.set('foo', 'bar', streamId)
-        expect(await persistence.get('foo', streamId)).toBe('bar')
+    it('set and get', async () => {
+        await persistence.set('foo', 'bar', NAMESPACE)
+        expect(await persistence.get('foo', NAMESPACE)).toBe('bar')
+    })
+
+    it('overwrite', async () => {
+        await persistence.set('foo', 'value1', NAMESPACE)
+        await persistence.set('foo', 'value2', NAMESPACE)
+        expect(await persistence.get('foo', NAMESPACE)).toBe('value2')
     })
 
     it('no value', async () => {
-        expect(await persistence.get('non-existing', streamId)).toBeUndefined()
+        expect(await persistence.get('non-existing', NAMESPACE)).toBeUndefined()
     })
 
-    it('can get and set', async () => {
-        const key = 'mock-key'
-        const value = 'mock-value'
-        expect(await persistence.exists()).toBeFalsy()
-        expect(await persistence.get(key, streamId)).toBeFalsy()
-        expect(await persistence.exists()).toBeFalsy()
-        expect(await persistence.exists()).toBeFalsy()
-        expect(await persistence.close()).toBeFalsy()
-        expect(await persistence.exists()).toBeFalsy()
-        // should only start existing now
-        await persistence.set(key, value, streamId)
-        expect(await persistence.exists()).toBeTruthy()
-    })
-
-    it('does not exist until write', async () => {
-        const key = 'mock-key'
-        expect(await persistence.exists()).toBeFalsy()
-        expect(await persistence.get(key, streamId)).toBeUndefined()
-        expect(await persistence.exists()).toBeFalsy()
-        expect(await persistence.close()).toBeFalsy()
-        expect(await persistence.exists()).toBeFalsy()
-        // should only start existing now
-        await persistence.set(key, 'dummy', streamId)
-        expect(await persistence.exists()).toBeTruthy()
+    it('database does not exist until value set', async () => {
+        expect(await persistence.exists()).toBeFalse()
+        expect(await persistence.get('mock-key', NAMESPACE)).toBeUndefined()
+        expect(await persistence.exists()).toBeFalse()
+        await persistence.close()
+        expect(await persistence.exists()).toBeFalse()
+        await persistence.set('mock-key', 'mock-value', NAMESPACE)
+        expect(await persistence.exists()).toBeTrue()
     })
 })

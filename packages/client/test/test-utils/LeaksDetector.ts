@@ -142,7 +142,7 @@ export class LeaksDetector {
     }
 
     async getLeaks(): Promise<Record<string, string>> {
-        logger.debug('checking for leaks with %d items >>', this.leakDetectors.size)
+        logger.debug(`checking for leaks with ${this.leakDetectors.size} items >>`)
         await wait(10) // wait a moment for gc to run?
         const outstanding = new Set<string>()
         this.resetGC()
@@ -159,8 +159,8 @@ export class LeaksDetector {
             [id]: [...(this.idToPaths.get(id) || [])],
         }), {})
 
-        logger.debug('checking for leaks with %d items <<', this.leakDetectors.size)
-        logger.debug('%d leaks.', results.length)
+        logger.debug(`checking for leaks with ${this.leakDetectors.size} items <<`)
+        logger.debug(`${results.length} leaks.`)
         return leaks
     }
 

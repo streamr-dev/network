@@ -1,6 +1,6 @@
 import { inject } from 'tsyringe'
 import { Subscription } from './Subscription'
-import { StreamMessage, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
+import { StreamMessage, StreamPartID } from '@streamr/protocol'
 import { ConfigInjectionToken } from '../Config'
 import { OrderMessages } from './OrderMessages'
 import { ResendOptions, Resends } from './Resends'
@@ -9,17 +9,22 @@ import { StrictStreamrClientConfig } from './../Config'
 import { MessageStream } from './MessageStream'
 
 export class ResendSubscription extends Subscription {
+
+    private resendOptions: ResendOptions
+    private resends: Resends
     private orderMessages: OrderMessages
 
     /** @internal */
     constructor(
         streamPartId: StreamPartID,
-        private resendOptions: ResendOptions,
-        private resends: Resends,
+        resendOptions: ResendOptions,
+        resends: Resends,
         loggerFactory: LoggerFactory,
         @inject(ConfigInjectionToken) config: StrictStreamrClientConfig
     ) {
-        super(streamPartId, loggerFactory)
+        super(streamPartId, false, loggerFactory)
+        this.resendOptions = resendOptions
+        this.resends = resends
         this.orderMessages = new OrderMessages(
             config,
             resends,
@@ -49,8 +54,10 @@ export class ResendSubscription extends Subscription {
             yield* (await this.getResent()).getStreamMessages()
         } catch (err) {
             if (err.code === 'NO_STORAGE_NODES') {
-                const streamId = StreamPartIDUtils.getStreamID(this.streamPartId)
-                this.logger.warn(`no storage assigned: ${streamId}`)
+                this.logger.warn('Skip resend (no storage assigned to stream)', {
+                    streamPartId: this.streamPartId,
+                    resendOptions: this.resendOptions
+                })
             } else {
                 await this.handleError(err)
             }

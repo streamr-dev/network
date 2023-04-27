@@ -22,7 +22,7 @@ export abstract class AbstractWsConnection {
 
     protected constructor(peerInfo: PeerInfo) {
         this.peerInfo = peerInfo
-        this.logger = new Logger(module, peerInfo.peerId)
+        this.logger = new Logger(module, { peerId: peerInfo.peerId })
     }
 
     setBackPressureHandlers(onLowBackPressure: () => void, onHighBackPressure: () => void): void | never {
@@ -48,14 +48,18 @@ export abstract class AbstractWsConnection {
     evaluateBackPressure(): void {
         const bufferedAmount = this.getBufferedAmount()
         if (!this.highBackPressure && bufferedAmount > HIGH_BACK_PRESSURE) {
-            this.logger.trace('Back pressure HIGH for %s at %d', this.getPeerInfo(), bufferedAmount)
+            this.logger.debug('Encountered high back pressure', {
+                peerId: this.getPeerInfo().peerId, bufferedAmount
+            })
             this.highBackPressure = true
             if (this.onHighBackPressure === undefined) {
                 throw new Error('onHighBackPressure listener not set')
             }
             this.onHighBackPressure()
         } else if (this.highBackPressure && bufferedAmount < LOW_BACK_PRESSURE) {
-            this.logger.trace('Back pressure LOW for %s at %d', this.getPeerInfo(), bufferedAmount)
+            this.logger.debug('Encountered low back pressure', {
+                peerId: this.getPeerInfo().peerId, bufferedAmount
+            })
             this.highBackPressure = false
             if (this.onLowBackPressure === undefined) {
                 throw new Error('onLowBackPressure listener not set')
@@ -78,6 +82,26 @@ export abstract class AbstractWsConnection {
 
     getPeerId(): PeerId {
         return this.getPeerInfo().peerId
+    }
+
+    getDiagnosticInfo(): Record<string, unknown> {
+        const getHumanReadableReadyState = (n: number): string => {
+            switch (n) {
+                case 0: return 'connecting'
+                case 1: return 'open'
+                case 2: return 'closing'
+                case 3: return 'closed'
+                default: return `unknown (${n})`
+            }
+        }
+        return {
+            peerId: this.getPeerId(),
+            rtt: this.getRtt(),
+            respondedPong: this.getRespondedPong(),
+            readyState: getHumanReadableReadyState(this.getReadyState()),
+            bufferedAmount: this.getBufferedAmount(),
+            highBackPressure: this.highBackPressure,
+        }
     }
 
     abstract sendPing(): void

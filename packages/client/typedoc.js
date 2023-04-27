@@ -11,4 +11,5 @@ module.exports = {
     disableSources: true,
     categorizeByGroup: true,
     hideInPageTOC: true,
+    treatWarningsAsErrors: true,
 }

@@ -9,30 +9,29 @@ import {
 import { OrderMessages } from './OrderMessages'
 import { MessageStream } from './MessageStream'
 import { Validator } from '../Validator'
-import { Decrypt } from './Decrypt'
+import { decrypt } from '../encryption/decrypt'
 import { StrictStreamrClientConfig } from '../Config'
 import { Resends } from './Resends'
 import { DestroySignal } from '../DestroySignal'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { MsgChainUtil } from './MsgChainUtil'
-import { GroupKeyStore } from '../encryption/GroupKeyStore'
-import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'
-import { StreamrClientEventEmitter } from '../events'
 import { LoggerFactory } from '../utils/LoggerFactory'
+import { GroupKeyManager } from '../encryption/GroupKeyManager'
 
 export interface SubscriptionPipelineOptions {
     streamPartId: StreamPartID
     loggerFactory: LoggerFactory
     resends: Resends
-    groupKeyStore: GroupKeyStore
-    subscriberKeyExchange: SubscriberKeyExchange
+    groupKeyManager: GroupKeyManager
     streamRegistryCached: StreamRegistryCached
-    streamrClientEventEmitter: StreamrClientEventEmitter
     destroySignal: DestroySignal
     config: StrictStreamrClientConfig
 }
 
 export const createSubscribePipeline = (opts: SubscriptionPipelineOptions): MessageStream => {
+
+    const logger = opts.loggerFactory.createLogger(module)
+
     const validate = new Validator(
         opts.streamRegistryCached
     )
@@ -58,20 +57,22 @@ export const createSubscribePipeline = (opts: SubscriptionPipelineOptions): Mess
         throw error
     }
 
-    const decrypt = new Decrypt(
-        opts.groupKeyStore,
-        opts.subscriberKeyExchange,
-        opts.streamRegistryCached,
-        opts.destroySignal,
-        opts.loggerFactory,
-        opts.streamrClientEventEmitter,
-        opts.config,
-    )
-
     const messageStream = new MessageStream()
     const msgChainUtil = new MsgChainUtil(async (msg) => {
         await validate.validate(msg)
-        return decrypt.decrypt(msg)
+        if (StreamMessage.isAESEncrypted(msg)) {
+            try {
+                return decrypt(msg, opts.groupKeyManager, opts.destroySignal)
+            } catch (err) {
+                // TODO log this in onError? if we want to log all errors?
+                logger.debug('Failed to decrypt', { messageId: msg.getMessageID(), err })
+                // clear cached permissions if cannot decrypt, likely permissions need updating
+                opts.streamRegistryCached.clearStream(msg.getStreamId())
+                throw err
+            }    
+        } else {
+            return msg
+        }
     }, messageStream.onError)
 
     // collect messages that fail validation/parsixng, do not push out of pipeline

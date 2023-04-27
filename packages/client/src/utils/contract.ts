@@ -1,8 +1,12 @@
+import { initEventGateway } from '@streamr/utils'
 import { Contract, ContractReceipt, ContractTransaction } from '@ethersproject/contracts'
 import EventEmitter from 'eventemitter3'
 import { NameDirectory } from '@streamr/network-node'
 import pLimit from 'p-limit'
 import { LoggerFactory } from './LoggerFactory'
+import { tryInSequence } from './promises'
+import shuffle from 'lodash/shuffle'
+import { StreamrClientEventEmitter, InternalEvents, StreamrClientEvents } from '../events'
 
 export interface ContractEvent {
     onMethodExecute: (methodName: string) => void
@@ -28,29 +32,27 @@ const isTransaction = (returnValue: any): returnValue is ContractTransaction => 
 const createLogger = (eventEmitter: EventEmitter<ContractEvent>, loggerFactory: LoggerFactory): void => {
     const logger = loggerFactory.createLogger(module)
     eventEmitter.on('onMethodExecute', (methodName: string) => {
-        logger.debug('execute %s', methodName)
+        logger.debug('Execute method', { methodName })
     })
     eventEmitter.on('onTransactionSubmit', (methodName: string, tx: ContractTransaction) => {
-        logger.debug(
-            'transaction submitted { method=%s, tx=%s, to=%s, nonce=%d, gasLimit=%d, gasPrice=%d }',
-            methodName,
-            tx.hash,
-            NameDirectory.getName(tx.to),
-            tx.nonce,
-            tx.gasLimit,
-            tx.gasPrice
-        )
+        logger.debug('Submit transaction', {
+            method: methodName,
+            tx: tx.hash,
+            to: NameDirectory.getName(tx.to),
+            nonce: tx.nonce,
+            gasLimit: tx.gasLimit.toNumber(),
+            gasPrice: tx.gasPrice?.toNumber()
+        })
     })
     eventEmitter.on('onTransactionConfirm', (methodName: string, tx: ContractTransaction, receipt: ContractReceipt) => {
-        logger.debug(
-            'transaction confirmed { method=%s, tx=%s, block=%d, confirmations=%d, gasUsed=%d, events=%j }',
-            methodName,
-            tx.hash,
-            receipt.blockNumber,
-            receipt.confirmations,
-            receipt.gasUsed,
-            (receipt.events || []).map((e) => e.event)
-        )
+        logger.debug('Received transaction confirmation', {
+            method: methodName,
+            tx: tx.hash,
+            block: receipt.blockNumber,
+            confirmations: receipt.confirmations,
+            gasUsed: receipt.gasUsed.toNumber(),
+            events: (receipt.events || []).map((e) => e.event)
+        })
     })
 }
 
@@ -135,4 +137,58 @@ export const createDecoratedContract = <T extends Contract>(
         result[key] = methods[key] !== undefined ? methods[key] : contract[key]
     }
     return result
+}
+
+export const queryAllReadonlyContracts = <T, C>(
+    call: (contract: C) => Promise<T>,
+    contracts: C[]
+): Promise<T> => {
+    return tryInSequence(
+        shuffle(contracts).map((contract: C) => {
+            return () => call(contract)
+        })
+    )
+}
+
+export const initContractEventGateway = <
+    TSourcePayloads extends any[],
+    TSourceName extends string,
+    TTargetName extends keyof (StreamrClientEvents & InternalEvents)
+>(opts: {
+    sourceName: TSourceName
+    targetName: TTargetName
+    sourceEmitter: {
+        on: (name: TSourceName, listener: (...args: TSourcePayloads) => void) => void
+        off: (name: TSourceName, listener: (...args: TSourcePayloads) => void) => void
+    }
+    targetEmitter: StreamrClientEventEmitter
+    transformation: (...args: TSourcePayloads) => Parameters<(StreamrClientEvents & InternalEvents)[TTargetName]>[0]
+    loggerFactory: LoggerFactory
+}): void => {
+    const logger = opts.loggerFactory.createLogger(module)
+    type Listener = (...args: TSourcePayloads) => void
+    initEventGateway(
+        opts.targetName,
+        (emit: (payload: Parameters<(StreamrClientEvents & InternalEvents)[TTargetName]>[0]) => void) => {
+            const listener = (...args: TSourcePayloads) => {
+                let targetEvent
+                try {
+                    targetEvent = opts.transformation(...args)
+                } catch (err) {
+                    logger.debug('Skip emit event', {
+                        eventName: opts.targetName,
+                        reason: err?.message
+                    })
+                    return
+                }
+                emit(targetEvent)
+            }
+            opts.sourceEmitter.on(opts.sourceName, listener)
+            return listener
+        },
+        (listener: Listener) => {
+            opts.sourceEmitter.off(opts.sourceName, listener)
+        },
+        opts.targetEmitter
+    )
 }

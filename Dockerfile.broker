@@ -1,8 +1,5 @@
 FROM node:18-bullseye as build
 WORKDIR /usr/src/network
-RUN npm config set \
-	unsafe-perm=true \
-	python="$(which python3)"
 COPY . .
 RUN --mount=type=cache,target=/root/.npm \
 	npm run bootstrap-pkg --package=streamr-client && \

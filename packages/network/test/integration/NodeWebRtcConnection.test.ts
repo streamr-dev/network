@@ -5,6 +5,7 @@ import { NodeWebRtcConnection } from '../../src/connection/webrtc/NodeWebRtcConn
 import { DeferredConnectionAttempt } from '../../src/connection/webrtc/DeferredConnectionAttempt'
 import { runAndWaitForEvents } from '@streamr/test-utils'
 import { wait, waitForCondition } from '@streamr/utils'
+import { TEST_CONFIG } from '../../src/createNetworkNode'
 
 /**
  * Test that Connections can be established and message sent between them successfully. Tracker
@@ -41,8 +42,8 @@ describe('Connection', () => {
                 connectionOne.addRemoteCandidate(candidate, mid)
             },
         }
-        const messageQueueOne = new MessageQueue<string>()
-        const messageQueueTwo = new MessageQueue<string>()
+        const messageQueueOne = new MessageQueue<string>(TEST_CONFIG.webrtcSendBufferMaxMessageCount)
+        const messageQueueTwo = new MessageQueue<string>(TEST_CONFIG.webrtcSendBufferMaxMessageCount)
         const deferredConnectionAttemptOne = new DeferredConnectionAttempt()
         const deferredConnectionAttemptTwo = new DeferredConnectionAttempt()
         connectionOne = new NodeWebRtcConnection({
@@ -52,7 +53,9 @@ describe('Connection', () => {
             pingInterval: 5000,
             iceServers: [],
             messageQueue: messageQueueOne,
-            deferredConnectionAttempt: deferredConnectionAttemptOne
+            deferredConnectionAttempt: deferredConnectionAttemptOne,
+            portRange: TEST_CONFIG.webrtcPortRange,
+            maxMessageSize: TEST_CONFIG.webrtcMaxMessageSize
         })
         connectionOne.on('localDescription', (...args) => oneFunctions.onLocalDescription(...args))
         connectionOne.on('localCandidate', (...args) => oneFunctions.onLocalCandidate(...args))
@@ -64,7 +67,9 @@ describe('Connection', () => {
             pingInterval: 5000,
             iceServers: [],
             messageQueue: messageQueueTwo,
-            deferredConnectionAttempt: deferredConnectionAttemptTwo
+            deferredConnectionAttempt: deferredConnectionAttemptTwo,
+            portRange: TEST_CONFIG.webrtcPortRange,
+            maxMessageSize: TEST_CONFIG.webrtcMaxMessageSize
         })
 
         connectionTwo.on('localDescription', (...args) => twoFunctions.onLocalDescription(...args))
@@ -87,7 +92,7 @@ describe('Connection', () => {
         }
     })
 
-    afterEach(()  => {
+    afterEach(() => {
         connectionOne.close()
         connectionTwo.close()
     })

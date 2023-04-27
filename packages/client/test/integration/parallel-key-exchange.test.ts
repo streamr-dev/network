@@ -1,8 +1,8 @@
 import 'reflect-metadata'
 
 import { Wallet } from '@ethersproject/wallet'
-import { wait } from '@streamr/utils'
-import { range } from 'lodash'
+import { wait, toEthereumAddress } from '@streamr/utils'
+import range from 'lodash/range'
 import { StreamMessageType } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
 import { createPrivateKeyAuthentication } from '../../src/Authentication'
@@ -49,7 +49,7 @@ describe('parallel key exchange', () => {
                     privateKey: publisher.wallet.privateKey
                 }
             })
-            await publisher.client.addEncryptionKey(publisher.groupKey, stream.id)
+            await publisher.client.addEncryptionKey(publisher.groupKey, toEthereumAddress(publisher.wallet.address))
         }))
     }, 20000)
 
@@ -57,15 +57,16 @@ describe('parallel key exchange', () => {
         const sub = await subscriber.subscribe(stream.id)
 
         for (const publisher of PUBLISHERS) {
+            const authentication = createPrivateKeyAuthentication(publisher.wallet.privateKey, undefined as any)
             const messageFactory = new MessageFactory({
                 streamId: stream.id,
-                authentication: createPrivateKeyAuthentication(publisher.wallet.privateKey, undefined as any),
+                authentication,
                 streamRegistry: createStreamRegistryCached({
                     partitionCount: 1,
                     isPublicStream: false,
                     isStreamPublisher: true
                 }),
-                groupKeyQueue: await createGroupKeyQueue(publisher.groupKey)
+                groupKeyQueue: await createGroupKeyQueue(authentication, publisher.groupKey)
             })
             for (let i = 0; i < MESSAGE_COUNT_PER_PUBLISHER; i++) {
                 const msg = await messageFactory.createMessage({

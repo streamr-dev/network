@@ -1,4 +1,5 @@
-import _ from 'lodash'
+import debounce from 'lodash/debounce'
+import type { DebouncedFunc } from 'lodash'
 import { StreamPartID } from '@streamr/protocol'
 import { NodeId } from '@streamr/network-node'
 import { Logger, MetricsContext, MetricsDefinition, Metric, RateMetric } from '@streamr/utils'
@@ -43,10 +44,10 @@ function isInstruction(entry: Instruction | StatusAck): entry is Instruction {
 
 class Buffer {
     private readonly entries = new Map<NodeId, Instruction | StatusAck>()
-    private readonly debouncedOnReady: _.DebouncedFunc<() => void>
+    private readonly debouncedOnReady: DebouncedFunc<() => void>
 
     constructor(options: TopologyStabilizationOptions, onReady: () => void) {
-        this.debouncedOnReady = _.debounce(onReady, options.debounceWait, {
+        this.debouncedOnReady = debounce(onReady, options.debounceWait, {
             maxWait: options.maxWait
         })
     }
@@ -139,14 +140,25 @@ export class InstructionAndStatusAckSender {
                     if (isInstruction(entry)) {
                         const { nodeId, streamPartId, newNeighbors, counterValue } = entry
                         await this.sendInstruction(nodeId, streamPartId, newNeighbors, counterValue)
-                        logger.debug('instruction %o sent to node %o', newNeighbors, { counterValue, streamPartId, nodeId })
+                        logger.debug('Sent instruction', {
+                            newNeighbors,
+                            counterValue,
+                            nodeId,
+                            streamPartId
+                        })
                     } else {
                         const { nodeId, streamPartId } = entry
                         await this.sendStatusAck(nodeId, streamPartId)
-                        logger.debug('statusAck %s sent to node %s', streamPartId, nodeId)
+                        logger.debug('Sent status ack', {
+                            nodeId,
+                            streamPartId
+                        })
                     }
                 } catch (err) {
-                    logger.warn('failed to send instructions / ack %j, reason: %s', entry, err)
+                    logger.warn('Failed to send instructions or ack', {
+                        entry,
+                        err
+                    })
                 }
             })
         await Promise.allSettled(promises)

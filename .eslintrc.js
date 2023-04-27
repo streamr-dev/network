@@ -46,6 +46,7 @@ module.exports = {
         '@typescript-eslint/no-unused-expressions': ['error'],
         '@typescript-eslint/no-useless-constructor': ['error'],
         '@typescript-eslint/object-curly-spacing': ['error', 'always'],
+        '@typescript-eslint/parameter-properties': ['error'],
         '@typescript-eslint/space-before-blocks': ['error'],
         '@typescript-eslint/space-before-function-paren': ['error', {
             'anonymous': 'never',
@@ -57,7 +58,9 @@ module.exports = {
         '@typescript-eslint/no-unused-vars': ['error', { 'vars': 'all', 'args': 'all', 'argsIgnorePattern': '^_', 'varsIgnorePattern': '^_', 'caughtErrorsIgnorePattern': '^_' }],
         'class-methods-use-this': ['error'],
         'prefer-arrow-callback': ['error'],
-        'promise/no-promise-in-callback': ['error']
+        'promise/no-promise-in-callback': ['error'],
         //'@typescript-eslint/no-empty-function': 'error',
+        'no-multi-spaces': ["error", { ignoreEOLComments: true }],
+        'default-case': ['error']
     }
 }

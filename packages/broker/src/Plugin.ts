@@ -1,30 +1,33 @@
-import { Config } from './config/config'
-import express from 'express'
+import { StrictConfig } from './config/config'
 import { validateConfig } from './config/validateConfig'
 import { Schema } from 'ajv'
 import { StreamrClient } from 'streamr-client'
-import { ApiAuthenticator } from './apiAuthenticator'
+import { Endpoint } from './httpServer'
+import { ApiAuthentication } from './apiAuthentication'
 
 export interface PluginOptions {
     name: string
     streamrClient: StreamrClient
-    apiAuthenticator: ApiAuthenticator
-    brokerConfig: Config
+    brokerConfig: StrictConfig
 }
 
-export abstract class Plugin<T> {
+export interface ApiPluginConfig {
+    apiAuthentication?: ApiAuthentication | null
+}
+
+export type HttpServerEndpoint = Omit<Endpoint, 'apiAuthentication'>
+
+export abstract class Plugin<T extends object> {
 
     readonly name: string
     readonly streamrClient: StreamrClient
-    readonly apiAuthenticator: ApiAuthenticator
-    readonly brokerConfig: Config
+    readonly brokerConfig: StrictConfig
     readonly pluginConfig: T
-    private readonly httpServerRouters: express.Router[] = []
+    private readonly httpServerEndpoints: HttpServerEndpoint[] = []
 
     constructor(options: PluginOptions) {
         this.name = options.name
         this.streamrClient = options.streamrClient
-        this.apiAuthenticator = options.apiAuthenticator
         this.brokerConfig = options.brokerConfig
         this.pluginConfig = options.brokerConfig.plugins[this.name]
         const configSchema = this.getConfigSchema()
@@ -33,12 +36,20 @@ export abstract class Plugin<T> {
         }
     }
 
-    addHttpServerRouter(router: express.Router): void {
-        this.httpServerRouters.push(router)
+    getApiAuthentication(): ApiAuthentication | undefined {
+        if ('apiAuthentication' in this.pluginConfig) {
+            return (this.pluginConfig.apiAuthentication as (ApiAuthentication | null)) ?? undefined
+        } else {
+            return this.brokerConfig.apiAuthentication
+        }
     }
 
-    getHttpServerRoutes(): express.Router[] {
-        return this.httpServerRouters
+    addHttpServerEndpoint(endpoint: HttpServerEndpoint): void {
+        this.httpServerEndpoints.push(endpoint)
+    }
+
+    getHttpServerEndpoints(): HttpServerEndpoint[] {
+        return this.httpServerEndpoints
     }
 
     /**

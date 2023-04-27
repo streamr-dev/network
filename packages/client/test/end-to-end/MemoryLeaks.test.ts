@@ -17,10 +17,11 @@ import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
 import { Resends } from '../../src/subscribe/Resends'
 import { Publisher } from '../../src/publish/Publisher'
 import { Subscriber } from '../../src/subscribe/Subscriber'
-import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
+import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
 import { DestroySignal } from '../../src/DestroySignal'
 import { MessageMetadata } from '../../src/Message'
 import { AuthenticationInjectionToken, createAuthentication } from '../../src/Authentication'
+import { merge } from '@streamr/utils'
 
 const Dependencies = {
     NetworkNodeFacade,
@@ -29,7 +30,7 @@ const Dependencies = {
     Resends,
     Publisher,
     Subscriber,
-    GroupKeyStore,
+    LocalGroupKeyStore,
     DestroySignal
 }
 
@@ -72,13 +73,17 @@ describe('MemoryLeaks', () => {
                 config: StrictStreamrClientConfig
                 childContainer: DependencyContainer
             }> => {
-                const config = createStrictConfig({
-                    ...CONFIG_TEST,
-                    auth: {
-                        privateKey: await fetchPrivateKeyWithGas(),
-                    },
-                    ...opts,
-                })
+                const config = createStrictConfig(
+                    merge(
+                        CONFIG_TEST,
+                        {
+                            auth: {
+                                privateKey: await fetchPrivateKeyWithGas(),
+                            }
+                        },
+                        opts
+                    )
+                )
                 const childContainer = rootContainer.createChildContainer()
                 childContainer.register(AuthenticationInjectionToken, { useValue: createAuthentication(config) })
                 childContainer.register(ConfigInjectionToken, { useValue: config })
@@ -113,13 +118,17 @@ describe('MemoryLeaks', () => {
         let createClient: () => Promise<StreamrClient>
         beforeAll(() => {
             createClient = async (opts: any = {}) => {
-                const c = new StreamrClient({
-                    ...CONFIG_TEST,
-                    auth: {
-                        privateKey: await fetchPrivateKeyWithGas(),
-                    },
-                    ...opts,
-                })
+                const c = new StreamrClient(
+                    merge(
+                        CONFIG_TEST,
+                        {
+                            auth: {
+                                privateKey: await fetchPrivateKeyWithGas(),
+                            }
+                        },
+                        opts
+                    )
+                )
                 return c
             }
         })

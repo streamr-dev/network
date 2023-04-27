@@ -1,7 +1,6 @@
 /**
  * Makes OrderingUtil more compatible with use in pipeline.
  */
-import { injectable } from 'tsyringe'
 import { StreamMessage, StreamPartID, MessageRef } from '@streamr/protocol'
 
 import { PushBuffer } from '../utils/PushBuffer'
@@ -18,8 +17,11 @@ import { LoggerFactory } from '../utils/LoggerFactory'
  * Wraps OrderingUtil into a PushBuffer.
  * Implements gap filling
  */
-@injectable()
 export class OrderMessages {
+
+    private config: StrictStreamrClientConfig
+    private resends: Resends
+    private readonly streamPartId: StreamPartID
     private readonly logger: Logger
     private stopSignal = Signal.once()
     private done = false
@@ -31,11 +33,14 @@ export class OrderMessages {
     private orderingUtil
 
     constructor(
-        private config: StrictStreamrClientConfig,
-        private resends: Resends,
-        private readonly streamPartId: StreamPartID,
+        config: StrictStreamrClientConfig,
+        resends: Resends,
+        streamPartId: StreamPartID,
         loggerFactory: LoggerFactory
     ) {
+        this.config = config
+        this.resends = resends
+        this.streamPartId = streamPartId
         this.logger = loggerFactory.createLogger(module)
         this.stopSignal.listen(() => {
             this.done = true
@@ -62,7 +67,7 @@ export class OrderMessages {
 
     async onGap(from: MessageRef, to: MessageRef, publisherId: EthereumAddress, msgChainId: string): Promise<void> {
         if (this.done || !this.enabled) { return }
-        this.logger.debug('gap detected on %j', {
+        this.logger.debug('Encountered gap', {
             streamPartId: this.streamPartId,
             publisherId,
             msgChainId,

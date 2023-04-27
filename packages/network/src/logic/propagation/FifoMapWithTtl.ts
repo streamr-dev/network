@@ -101,4 +101,8 @@ export class FifoMapWithTtl<K, V> {
         }
         return item.value
     }
+
+    size(): number {
+        return this.items.size
+    }
 }

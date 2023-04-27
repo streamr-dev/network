@@ -1,4 +1,4 @@
-import _ from 'lodash'
+import without from 'lodash/without'
 import { MessageMetadata, StreamrClient, Subscription } from 'streamr-client'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { Logger } from '@streamr/utils'
@@ -40,7 +40,7 @@ export class Bridge implements MqttServerListener {
         try {
             message = this.payloadFormat.createMessage(payload)
         } catch (err) {
-            logger.warn(`Unable to publish message: ${err.message}`)
+            logger.warn('Unable to form message', { err, topic, clientId })
             return
         }
         const { content, metadata } = message
@@ -51,12 +51,12 @@ export class Bridge implements MqttServerListener {
             })
             this.publishMessageChains.add(createMessageChainKey(publishedMessage))
         } catch (err: any) {
-            logger.warn('Unable to publish, reason: %s', err)
+            logger.warn('Unable to publish message', { err, topic, clientId })
         }
     }
 
     async onSubscribed(topic: string, clientId: string): Promise<void> {
-        logger.info('Client subscribed: ' + topic)
+        logger.info('Handle client subscribe', { clientId, topic })
         const streamId = this.getStreamId(topic)
         const existingSubscription = this.getSubscription(streamId)
         if (existingSubscription === undefined) {
@@ -101,14 +101,14 @@ export class Bridge implements MqttServerListener {
     }
 
     onUnsubscribed(topic: string, clientId: string): void {
-        logger.info('Client unsubscribed: ' + topic)
+        logger.info('Handle client unsubscribe', { clientId, topic })
         const streamId = this.getStreamId(topic)
         const existingSubscription = this.getSubscription(streamId)
         if (existingSubscription !== undefined) {
-            existingSubscription.clientIds = _.without(existingSubscription.clientIds, clientId)
+            existingSubscription.clientIds = without(existingSubscription.clientIds, clientId)
             if (existingSubscription.clientIds.length === 0) {
                 existingSubscription.streamrClientSubscription.unsubscribe()
-                this.subscriptions = _.without(this.subscriptions, existingSubscription)
+                this.subscriptions = without(this.subscriptions, existingSubscription)
             }
         }
     }

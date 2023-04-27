@@ -1,5 +1,4 @@
-import { merge } from 'lodash'
-import { validateConfig as validateClientConfig } from 'streamr-client'
+import merge from 'lodash/merge'
 import { createMigratedConfig, CURRENT_CONFIGURATION_VERSION, formSchemaUrl, needsMigration } from '../../src/config/migration'
 import BROKER_CONFIG_SCHEMA from '../../src/config/config.schema.json'
 import { validateConfig } from '../../src/config/validateConfig'
@@ -9,7 +8,6 @@ const MOCK_PRIVATE_KEY = '0x1111111111111111111111111111111111111111111111111111
 
 const validateTargetConfig = async (config: any): Promise<void> | never => {
     validateConfig(config, BROKER_CONFIG_SCHEMA)
-    validateClientConfig(config.client)
     for (const pluginName of Object.keys(config.plugins)) {
         const pluginConfig = config.plugins[pluginName]
         // validates the config against the schema
@@ -17,7 +15,6 @@ const validateTargetConfig = async (config: any): Promise<void> | never => {
             ...pluginConfig,
             name: pluginName,
             streamrClient: undefined,
-            apiAuthenticator: undefined,
             brokerConfig: config
         })
     }

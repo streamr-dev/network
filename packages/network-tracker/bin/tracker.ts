@@ -4,9 +4,6 @@ import pkg from '../package.json'
 import { startTracker } from '../src/startTracker'
 import { MetricsContext, Logger } from '@streamr/utils'
 import { Wallet } from 'ethers'
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore no declaration file for module
-import { SlackBot } from '@streamr/slackbot'
 
 const logger = new Logger(module)
 
@@ -24,8 +21,6 @@ program
     .option('--certFileName <certFileName>', 'cert filename', undefined)
     .option('--topologyStabilizationDebounceWait <topologyStabilizationDebounceWait>', 'topologyStabilizationDebounceWait')
     .option('--topologyStabilizationMaxWait <topologyStabilizationMaxWait>', 'topologyStabilizationMaxWait')
-    .option('--slackBotToken <slackBotToken>', 'slack API token', '')
-    .option('--slackChannel <slackChannel>', 'slack channel for alerts', '#network-log')
 
     .description('Run Streamr Tracker')
     .parse(process.argv)
@@ -41,19 +36,8 @@ const listen = program.opts().unixSocket ? program.opts().unixSocket : {
     port: program.opts().port
 }
 
-const { slackBotToken, slackChannel } = program.opts()
-let slackbot: SlackBot
-const slackAlertHeader = `Tracker ${id}`
-if (slackBotToken && slackChannel) {
-    slackbot = new SlackBot(slackChannel, slackBotToken)
-}
-
 const logError = (err: any, errorType: string) => {
-    logger.getFinalLogger().error(err, errorType)
-    if (slackbot !== undefined) {
-        const message = `${errorType}: ${err}`
-        slackbot.alert([message], slackAlertHeader)
-    }
+    logger.fatal('Encountered error', { err, errorType })
 }
 
 const getTopologyStabilization = () => {
@@ -90,7 +74,7 @@ async function main() {
             trackerObj[prop] = program.opts()[prop]
         })
 
-        logger.info('started tracker: %o', {
+        logger.info('Started', {
             id,
             ...trackerObj
         })

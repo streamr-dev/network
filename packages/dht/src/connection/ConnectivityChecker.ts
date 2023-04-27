@@ -19,8 +19,10 @@ export class ConnectivityChecker {
     private static readonly CONNECTIVITY_CHECKER_SERVICE_ID = 'system/connectivitychecker'
     private static readonly CONNECTIVITY_CHECKER_TIMEOUT = 5000
     private stopped = false
+    private webSocketPort?: number
 
-    constructor(private webSocketPort?: number) {
+    constructor(webSocketPort?: number) {
+        this.webSocketPort = webSocketPort
     }
 
     public async sendConnectivityRequest(entryPoint: PeerDescriptor): Promise<ConnectivityResponseMessage> {
@@ -102,9 +104,9 @@ export class ConnectivityChecker {
                 host: connection.getRemoteAddress(),
                 port: connectivityRequest.port, timeoutMs: 1000
             })
-        } catch (e) {
+        } catch (err) {
             logger.trace("Connectivity test produced negative result, communicating reply to the requester")
-            logger.debug(e)
+            logger.debug('error', { err })
 
             connectivityResponseMessage = {
                 openInternet: false,

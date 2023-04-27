@@ -23,7 +23,7 @@ class MockRpcClient implements IDhtRpcServiceClient, ServiceInfo {
     ]
     options = {}
     getClosestPeers(_input: ClosestPeersRequest, _options?: RpcOptions): UnaryCall<ClosestPeersRequest, ClosestPeersResponse> {
-        return {} as  UnaryCall<ClosestPeersRequest, ClosestPeersResponse>
+        return {} as UnaryCall<ClosestPeersRequest, ClosestPeersResponse>
     }
     ping(_input: PingRequest, _options?: RpcOptions): UnaryCall <PingRequest, PingResponse> {
         return {} as UnaryCall<PingRequest, PingResponse>

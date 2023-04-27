@@ -1,5 +1,3 @@
-import { Logger } from '@streamr/utils'
-
 export type BucketId = string
 
 export class Bucket {
@@ -15,7 +13,6 @@ export class Bucket {
     private keepAliveSeconds: number
     ttl: Date
     private stored: boolean
-    logger: Logger
 
     constructor(
         id: BucketId,
@@ -71,9 +68,6 @@ export class Bucket {
         this.records = records
         this.dateCreate = dateCreate
 
-        this.logger = new Logger(module, `${this.id}`)
-        this.logger.trace(`init bucket: ${this.getId()}, dateCreate: ${this.dateCreate}`)
-
         this.maxSize = maxSize
         this.maxRecords = maxRecords
         this.keepAliveSeconds = keepAliveSeconds
@@ -94,11 +88,6 @@ export class Bucket {
     private checkSize(percentDeduction = 0): boolean {
         const maxPercentSize = (this.maxSize * (100 - percentDeduction)) / 100
         const maxRecords = (this.maxRecords * (100 - percentDeduction)) / 100
-        const { size, records } = this
-        this.logger.trace(
-            `_checkSize: ${size >= maxPercentSize || records >= maxRecords} => ${size} >= ${maxPercentSize} || ${records} >= ${maxRecords}`
-        )
-
         return this.size >= maxPercentSize || this.records >= maxRecords
     }
 
@@ -113,9 +102,6 @@ export class Bucket {
     incrementBucket(size: number): void {
         this.size += size
         this.records += 1
-
-        this.logger.trace(`incremented bucket => size: ${this.size}, records: ${this.records}`)
-
         this.stored = false
         this.updateTTL()
     }
@@ -123,13 +109,10 @@ export class Bucket {
     private updateTTL(): void {
         this.ttl = new Date()
         this.ttl.setSeconds(this.ttl.getSeconds() + this.keepAliveSeconds)
-        this.logger.trace(`new ttl: ${this.ttl}`)
     }
 
     isAlive(): boolean {
         const now = new Date()
-        const isAlive = this.ttl >= now
-        this.logger.trace(`isAlive: ${isAlive}, ${this.ttl} >= ${now}`)
         return this.ttl >= now
     }
 }

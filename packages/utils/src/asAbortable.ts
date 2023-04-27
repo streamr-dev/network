@@ -4,9 +4,6 @@ export class AbortError extends Error {
         super(customErrorContext === undefined
             ? `aborted`
             : `${customErrorContext} aborted`)
-        if (Error.captureStackTrace) {
-            Error.captureStackTrace(this, AbortError)
-        }
     }
 }
 

@@ -22,9 +22,6 @@ on:
       build_platforms:
         type: string
         required: true
-      test_success:
-        description: required when pushing images
-        type: boolean
 
     secrets:
       dockerhub_username:
@@ -37,9 +34,9 @@ jobs:
   build:
     runs-on: ${{ inputs.host_machine_platform }}
     steps:
-      - uses: actions/checkout@v3.3.0
+      - uses: actions/checkout@v3.5.2
       - name: Cache Docker layers
-        uses: actions/cache@v3.2.3
+        uses: actions/cache@v3.3.1
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-buildx-v1-${{ github.sha }}
@@ -51,7 +48,7 @@ jobs:
         with:
           platforms: arm64
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2.2.1
+        uses: docker/setup-buildx-action@v2.5.0
         with:
           driver-opts: |
             network=host
@@ -61,26 +58,27 @@ jobs:
           username: ${{ secrets.dockerhub_username }}
           password: ${{ secrets.dockerhub_token }}
 
+      - name: Get current Broker git tag (for Docker meta)
+        run: |
+          git fetch --tags origin --force
+          echo "broker_head_tag=$(git tag --points-at HEAD --list 'broker/v*')" >> $GITHUB_ENV
+
+
       - name: Docker meta
         id: docker_meta_success
-        uses: docker/metadata-action@v4.1.1
+        uses: docker/metadata-action@v4.4.0
         if: ${{inputs.push_image}}
         with:
           images: ${{inputs.image_name}}
+          flavor: |
+            latest=false
           tags: |
-            type=sha
-            type=ref,event=branch
-            type=semver,pattern=v{{version}}
-            type=raw,value=dev,enable=${{ inputs.test_success }}
-            type=raw,value=debug,enable=${{ !inputs.test_success }}
-            type=raw,value=latest,enable=${{ github.event_name == 'workflow_dispatch' }}
-            type=semver,pattern={{major}}.{{minor}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.0.') }}
-            type=semver,pattern={{major}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.') }}
-            type=schedule,pattern=nightly
+            type=match,pattern=broker/(v.*),group=1,value=${{ env.broker_head_tag }}
+            type=raw,value=dev,enable=${{ github.ref == 'refs/heads/main' }}
 
       - name: Build
         if: ${{!inputs.push_image}}
-        uses: docker/build-push-action@v3.2.0
+        uses: docker/build-push-action@v4.0.0
         with:
           context: .
           file: ${{inputs.docker_file}}
@@ -105,7 +103,7 @@ jobs:
 
       - name: Build & Push
         if: ${{inputs.push_image}}
-        uses: docker/build-push-action@v3.2.0
+        uses: docker/build-push-action@v4.0.0
         with:
           context: .
           file: ${{inputs.docker_file}}

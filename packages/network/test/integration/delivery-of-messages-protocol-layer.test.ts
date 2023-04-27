@@ -61,7 +61,7 @@ describe('delivery of messages in protocol layer', () => {
             new NegotiatedProtocolVersions(peerInfo1),
             webRtcConnectionFactory
         )
-        const wrtcEndpoint2 =  createTestWebRtcEndpoint(
+        const wrtcEndpoint2 = createTestWebRtcEndpoint(
             peerInfo2,
             [],
             new RtcSignaller(peerInfo2, nodeToTracker2),

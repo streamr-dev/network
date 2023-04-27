@@ -4,8 +4,14 @@ import { ITransport, TransportEvents } from '../transport/ITransport'
 import { Simulator } from './Simulator'
 
 export class SimulatorTransport extends EventEmitter<TransportEvents> implements ITransport {
-    constructor(private ownPeerDescriptor: PeerDescriptor, private simulator: Simulator) {
+
+    private ownPeerDescriptor: PeerDescriptor
+    private simulator: Simulator
+
+    constructor(ownPeerDescriptor: PeerDescriptor, simulator: Simulator) {
         super()
+        this.ownPeerDescriptor = ownPeerDescriptor
+        this.simulator = simulator
         this.simulator.addConnectionManager(this)
     }
 

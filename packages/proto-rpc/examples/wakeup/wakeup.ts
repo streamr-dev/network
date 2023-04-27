@@ -7,9 +7,14 @@ import { Empty } from './proto/google/protobuf/empty'
 
 // Rpc service
 class WakeUpService implements IWakeUpRpcService {
-    constructor(public nodeId: string) {
+
+    public nodeId: string
+
+    constructor(nodeId: string) {
+        this.nodeId = nodeId
         this.wakeUp = this.wakeUp.bind(this)
     }
+
     // You always have return google.protobuf.Empty from notifications
     async wakeUp(request: WakeUpRequest, _context: ServerCallContext): Promise<Empty> {
         // eslint-disable-next-line no-console
@@ -20,11 +25,14 @@ class WakeUpService implements IWakeUpRpcService {
 }
 
 class Node {
+
+    public nodeId: string
     public communicator: RpcCommunicator
     private client: ProtoRpcClient<WakeUpRpcServiceClient>
     private service: WakeUpService
 
-    constructor(public nodeId: string) {
+    constructor(nodeId: string) {
+        this.nodeId = nodeId
         this.communicator = new RpcCommunicator()
         this.client = toProtoRpcClient(new WakeUpRpcServiceClient(this.communicator.getRpcClientTransport()))
         this.service = new WakeUpService(nodeId)

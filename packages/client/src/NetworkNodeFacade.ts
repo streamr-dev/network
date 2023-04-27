@@ -7,13 +7,11 @@ import { NetworkNodeOptions, createNetworkNode as _createNetworkNode } from '@st
 import { MetricsContext } from '@streamr/utils'
 import { uuid } from './utils/uuid'
 import { pOnce } from './utils/promises'
-import { ConfigInjectionToken, TrackerRegistryContract, StrictStreamrClientConfig } from './Config'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
 import { StreamMessage, StreamPartID, ProxyDirection } from '@streamr/protocol'
 import { DestroySignal } from './DestroySignal'
-import { getMainnetProvider } from './Ethereum'
-import { getTrackerRegistryFromContract } from './registry/getTrackerRegistryFromContract'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
-import { toEthereumAddress } from '@streamr/utils'
+import { getTrackers } from './registry/trackerRegistry'
 
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
 /** @deprecated This in an internal interface */
@@ -32,16 +30,22 @@ export interface NetworkNodeStub {
     getRtt: (nodeId: string) => number | undefined
     setExtraMetadata: (metadata: Record<string, unknown>) => void
     getMetricsContext: () => MetricsContext
+    getDiagnosticInfo: () => Record<string, unknown>
     hasStreamPart: (streamPartId: StreamPartID) => boolean
+    /** @internal */
     hasProxyConnection: (streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection) => boolean
     /** @internal */
     start: () => void
     /** @internal */
     stop: () => Promise<unknown>
     /** @internal */
-    openProxyConnection: (streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection, userId: string) => Promise<void>
-    /** @internal */
-    closeProxyConnection: (streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection) => Promise<void>
+    setProxies: (
+        streamPartId: StreamPartID,
+        nodeIds: string[],
+        direction: ProxyDirection,
+        getUserId: () => Promise<string>,
+        connectionCount?: number
+    ) => Promise<void>
 }
 
 export const getEthereumAddressFromNodeId = (nodeId: string): string => {
@@ -70,6 +74,10 @@ export class NetworkNodeFactory {
  */
 @scoped(Lifecycle.ContainerScoped)
 export class NetworkNodeFacade {
+
+    private destroySignal: DestroySignal
+    private networkNodeFactory: NetworkNodeFactory
+    private authentication: Authentication
     private cachedNode?: NetworkNodeStub
     private startNodeCalled = false
     private startNodeComplete = false
@@ -77,11 +85,14 @@ export class NetworkNodeFacade {
     private readonly eventEmitter: EventEmitter<Events>
 
     constructor(
-        private destroySignal: DestroySignal,
-        private networkNodeFactory: NetworkNodeFactory,
-        @inject(AuthenticationInjectionToken) private authentication: Authentication,
+        destroySignal: DestroySignal,
+        networkNodeFactory: NetworkNodeFactory,
+        @inject(AuthenticationInjectionToken) authentication: Authentication,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'network' | 'contracts'>
     ) {
+        this.destroySignal = destroySignal
+        this.networkNodeFactory = networkNodeFactory
+        this.authentication = authentication
         this.config = config
         this.eventEmitter = new EventEmitter<Events>()
         destroySignal.onDestroy.listen(this.destroy)
@@ -101,16 +112,11 @@ export class NetworkNodeFacade {
                 throw new Error(`given node id ${id} not compatible with authenticated wallet ${ethereumAddress}`)
             }
         }
-        const trackers = ('contractAddress' in this.config.network.trackers)
-            ? (await getTrackerRegistryFromContract({
-                contractAddress: toEthereumAddress((this.config.network.trackers as TrackerRegistryContract).contractAddress),
-                jsonRpcProvider: getMainnetProvider(this.config)
-            })).getAllTrackers()
-            : this.config.network.trackers
+        
         return {
             ...this.config.network,
             id,
-            trackers,
+            trackers: await getTrackers(this.config),
             metricsContext: new MetricsContext()
         }
     }
@@ -205,18 +211,22 @@ export class NetworkNodeFacade {
         return this.cachedNode!.publish(streamMessage)
     }
 
-    async openProxyConnection(streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection): Promise<void> {
+    async setProxies(
+        streamPartId: StreamPartID,
+        nodeIds: string[],
+        direction: ProxyDirection,
+        connectionCount?: number
+    ): Promise<void> {
         if (this.isStarting()) {
             await this.startNodeTask()
         }
-        await this.cachedNode!.openProxyConnection(streamPartId, nodeId, direction, (await this.authentication.getAddress()))
-    }
-
-    async closeProxyConnection(streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection): Promise<void> {
-        if (this.isStarting()) {
-            return
-        }
-        await this.cachedNode!.closeProxyConnection(streamPartId, nodeId, direction)
+        await this.cachedNode!.setProxies(
+            streamPartId,
+            nodeIds,
+            direction,
+            () => this.authentication.getAddress(),
+            connectionCount
+        )
     }
 
     private isStarting(): boolean {

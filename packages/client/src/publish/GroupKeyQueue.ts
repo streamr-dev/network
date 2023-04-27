@@ -1,6 +1,7 @@
 import { StreamID } from '@streamr/protocol'
 import { GroupKey } from '../encryption/GroupKey'
-import { GroupKeyStore } from '../encryption/GroupKeyStore'
+import { GroupKeyManager } from '../encryption/GroupKeyManager'
+import { Authentication } from '../Authentication'
 
 export interface GroupKeySequence {
     current: GroupKey
@@ -12,11 +13,26 @@ export class GroupKeyQueue {
     private currentGroupKey: GroupKey | undefined
     private queuedGroupKey: GroupKey | undefined // a group key queued to be rotated into use after the call to useGroupKey
     private readonly streamId: StreamID
-    private readonly store: GroupKeyStore
+    private readonly authentication: Authentication
+    private readonly groupKeyManager: GroupKeyManager
 
-    constructor(streamId: StreamID, store: GroupKeyStore) {
+    static async createInstance(
+        streamId: StreamID,
+        authentication: Authentication,
+        groupKeyManager: GroupKeyManager
+    ): Promise<GroupKeyQueue> {
+        const instance = new GroupKeyQueue(streamId, authentication, groupKeyManager)
+        instance.currentGroupKey = await instance.groupKeyManager.fetchLatestEncryptionKey(
+            await authentication.getAddress(),
+            streamId,
+        )
+        return instance
+    }
+
+    private constructor(streamId: StreamID, authentication: Authentication, groupKeyManager: GroupKeyManager) {
         this.streamId = streamId
-        this.store = store
+        this.authentication = authentication
+        this.groupKeyManager = groupKeyManager
     }
 
     async useGroupKey(): Promise<GroupKeySequence> {
@@ -38,14 +54,16 @@ export class GroupKeyQueue {
         return result
     }
 
-    async rotate(newKey = GroupKey.generate()): Promise<GroupKey> {
+    async rotate(newKey?: GroupKey): Promise<GroupKey> {
+        const publisherId = await this.authentication.getAddress()
+        newKey = await this.groupKeyManager.storeKey(newKey, publisherId, this.streamId)
         this.queuedGroupKey = newKey
-        await this.store.add(newKey, this.streamId)
         return newKey
     }
 
-    async rekey(newKey = GroupKey.generate()): Promise<GroupKey> {
-        await this.store.add(newKey, this.streamId)
+    async rekey(newKey?: GroupKey): Promise<GroupKey> {
+        const publisherId = await this.authentication.getAddress()
+        newKey = await this.groupKeyManager.storeKey(newKey, publisherId, this.streamId)
         this.currentGroupKey = newKey
         this.queuedGroupKey = undefined
         return newKey

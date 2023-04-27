@@ -1,6 +1,6 @@
-import { Plugin, PluginOptions } from '../../Plugin'
-import { Logger } from '@streamr/utils'
-import { StreamPartID, toStreamID, toStreamPartID } from '@streamr/protocol'
+import { Plugin } from '../../Plugin'
+import { pTransaction, Logger } from '@streamr/utils'
+import { Subscription } from 'streamr-client'
 
 interface ConfigStream {
     streamId: string
@@ -9,58 +9,27 @@ interface ConfigStream {
 
 export interface SubscriberPluginConfig {
     streams: ConfigStream[]
-    subscriptionRetryInterval: number
 }
 
 const logger = new Logger(module)
 
 export class SubscriberPlugin extends Plugin<SubscriberPluginConfig> {
-
-    private readonly streamParts: StreamPartID[]
-    private readonly subscriptionRetryInterval: number
-    private subscriptionIntervalRef: NodeJS.Timeout | null
-
-    constructor(options: PluginOptions) {
-        super(options)
-        this.streamParts = this.pluginConfig.streams.map((stream) => {
-            return toStreamPartID(toStreamID(stream.streamId), stream.streamPartition)
-        })
-        this.subscriptionRetryInterval = this.pluginConfig.subscriptionRetryInterval
-        this.subscriptionIntervalRef = null
-    }
+    private subscriptions: Subscription[] = []
 
     private async subscribeToStreamParts(): Promise<void> {
-        const node = await this.streamrClient!.getNode()
-        await Promise.all([
-            ...this.streamParts.map(async (streamPart) => {
-                node.subscribe(streamPart)
-            })
-        ])
-    }
-
-    private async subscriptionIntervalFn(): Promise<void> {
-        if (this.streamrClient) {
-            try {
-                await this.subscribeToStreamParts()
-            } catch (err) {
-                logger.warn(`Subscription retry failed, retrying in ${this.subscriptionRetryInterval / 1000} seconds`)
-            }
-        }
-        this.subscriptionIntervalRef = setTimeout(() => this.subscriptionIntervalFn(), this.subscriptionRetryInterval)
+        this.subscriptions = await pTransaction(this.pluginConfig.streams.map(({ streamId, streamPartition }) => (
+            this.streamrClient.subscribe({ id: streamId, partition: streamPartition, raw: true })
+        )), (sub) => sub.unsubscribe())
     }
 
     async start(): Promise<void> {
         await this.subscribeToStreamParts()
-        this.subscriptionIntervalRef = setTimeout(() => this.subscriptionIntervalFn(), this.subscriptionRetryInterval)
-        logger.info('Subscriber plugin started')
+        logger.info('Started subscriber plugin')
     }
 
     async stop(): Promise<void> {
-        if (this.subscriptionIntervalRef) {
-            clearTimeout(this.subscriptionIntervalRef)
-            this.subscriptionIntervalRef = null
-        }
-        logger.info('Subscriber plugin stopped')
+        logger.info('Stop subscriber plugin')
+        await Promise.all(this.subscriptions.map((sub) => sub.unsubscribe()))
     }
 
 }

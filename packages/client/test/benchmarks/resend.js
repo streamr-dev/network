@@ -11,7 +11,7 @@ const StreamrClient = require('../../dist')
 
 const keyserver = new KeyServer()
 
-const { StorageNode, ConfigTest: clientOptions } = StreamrClient
+const { StorageNode, CONFIG_TEST: clientOptions } = StreamrClient
 async function getPrivateKey() {
     const response = await fetch('http://localhost:45454/key')
     return response.text()

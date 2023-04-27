@@ -6,33 +6,12 @@ import { StreamIDBuilder } from '../StreamIDBuilder'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { MessageFactory } from './MessageFactory'
-import { isString } from 'lodash'
+import isString from 'lodash/isString'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
-import { GroupKeyStore } from '../encryption/GroupKeyStore'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { Mapping } from '../utils/Mapping'
-
-export class PublishError extends Error {
-
-    public readonly streamId: StreamID
-    public readonly timestamp: number
-
-    constructor(streamId: StreamID, timestamp: number, cause: Error) {
-        // Currently Node and Firefox show the full error chain (this error and
-        // the message and the stack of the "cause" variable) when an error is printed
-        // to console.log. Chrome shows only the root error.
-        // TODO: Remove the cause suffix from the error message when Chrome adds the support:
-        // https://bugs.chromium.org/p/chromium/issues/detail?id=1211260
-        // eslint-disable-next-line max-len
-        // @ts-expect-error typescript definitions don't support error cause
-        super(`Failed to publish to stream ${streamId} (timestamp=${timestamp}), cause: ${cause.message}`, { cause })
-        this.streamId = streamId
-        this.timestamp = timestamp
-        if (Error.captureStackTrace) {
-            Error.captureStackTrace(this, this.constructor)
-        }
-    }
-}
+import { StreamrClientError } from '../StreamrClientError'
+import { GroupKeyManager } from '../encryption/GroupKeyManager'
 
 export interface PublishMetadata {
     timestamp?: string | number | Date
@@ -67,7 +46,7 @@ export class Publisher {
         streamIdBuilder: StreamIDBuilder,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         streamRegistryCached: StreamRegistryCached,
-        groupKeyStore: GroupKeyStore,
+        groupKeyManager: GroupKeyManager,
         node: NetworkNodeFacade
     ) {
         this.streamIdBuilder = streamIdBuilder
@@ -78,7 +57,7 @@ export class Publisher {
             return this.createMessageFactory(streamId)
         })
         this.groupKeyQueues = new Mapping(async (streamId: StreamID) => {
-            return new GroupKeyQueue(streamId, groupKeyStore)
+            return GroupKeyQueue.createInstance(streamId, this.authentication, groupKeyManager)
         })
     }
 
@@ -118,7 +97,8 @@ export class Publisher {
                 await this.node.publishToNode(message)
                 return message
             } catch (e) {
-                throw new PublishError(streamId, timestamp, e)
+                const errorCode = (e instanceof StreamrClientError) ? e.code : 'UNKNOWN_ERROR'
+                throw new StreamrClientError(`Failed to publish to stream ${streamId}. Cause: ${e.message}`, errorCode)
             }
         })
     }

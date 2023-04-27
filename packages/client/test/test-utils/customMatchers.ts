@@ -1,7 +1,6 @@
 import { expect } from '@jest/globals'
-import type { MatcherState } from 'expect'
 import { printExpected, printReceived } from 'jest-matcher-utils'
-import { isFunction } from 'lodash'
+import isFunction from 'lodash/isFunction'
 import { StreamrClientError, StreamrClientErrorCode } from './../../src/StreamrClientError'
 
 interface ExpectationResult {
@@ -20,7 +19,7 @@ declare global {
     // eslint-disable-next-line @typescript-eslint/no-namespace
     namespace jest {
         interface Matchers<R> {
-            toThrowStreamError(expectedError: PartialStreamrClientError): R
+            toThrowStreamrError(expectedError: PartialStreamrClientError): R
         }
     }
 }
@@ -32,11 +31,10 @@ const formError = (description: string, expected: string, actual: string): Expec
     }
 }
 
-const toThrowStreamError = function(
-    this: MatcherState,
+const toThrowStreamrError = (
     actual: unknown, // should be (() => StreamrClientError) | StreamrClientError
     expectedError: PartialStreamrClientError
-): ExpectationResult {
+): ExpectationResult => {
     let actualError
     if (isFunction(actual)) {
         try {
@@ -68,5 +66,5 @@ const toThrowStreamError = function(
 }
 
 expect.extend({
-    toThrowStreamError
+    toThrowStreamrError
 })

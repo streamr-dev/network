@@ -64,4 +64,8 @@ export class PropagationTaskStore {
         }
         return tasks
     }
+
+    size(): number {
+        return this.tasks.size()
+    }
 }

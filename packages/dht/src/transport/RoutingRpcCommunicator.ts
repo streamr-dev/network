@@ -6,8 +6,13 @@ import { DhtCallContext } from "../rpc-protocol/DhtCallContext"
 
 export class RoutingRpcCommunicator extends RpcCommunicator {
     
-    constructor(private ownServiceId: string, private transport: ITransport, config?: RpcCommunicatorConfig) {
+    private ownServiceId: string
+    private transport: ITransport
+
+    constructor(ownServiceId: string, transport: ITransport, config?: RpcCommunicatorConfig) {
         super(config)
+        this.ownServiceId = ownServiceId
+        this.transport = transport
         transport.on('data', (message: Message, peerDescriptor: PeerDescriptor) => {
             if (message.serviceId == this.ownServiceId) {
                 const context = new DhtCallContext()

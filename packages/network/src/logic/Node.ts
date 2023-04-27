@@ -19,7 +19,8 @@ import { DEFAULT_MAX_NEIGHBOR_COUNT } from '../constants'
 import { TrackerManager, TrackerManagerOptions } from './TrackerManager'
 import { Propagation } from './propagation/Propagation'
 import { DisconnectionManager } from './DisconnectionManager'
-import { ProxyStreamConnectionManager } from './ProxyStreamConnectionManager'
+import { ProxyStreamConnectionClient } from './proxy/ProxyStreamConnectionClient'
+import { ProxyStreamConnectionServer } from './proxy/ProxyStreamConnectionServer'
 
 const logger = new Logger(module)
 
@@ -31,8 +32,6 @@ export enum Event {
     DUPLICATE_MESSAGE_RECEIVED = 'streamr:node:duplicate-message-received',
     NODE_SUBSCRIBED = 'streamr:node:subscribed-successfully',
     NODE_UNSUBSCRIBED = 'streamr:node:node-unsubscribed',
-    PROXY_CONNECTION_ACCEPTED = 'streamr:node:proxy-connection-accepted',
-    PROXY_CONNECTION_REJECTED = 'streamr:node:proxy-connection-rejected',
     ONE_WAY_CONNECTION_CLOSED = 'stream:node-one-way-connection-closed',
     JOIN_COMPLETED = 'stream:node-stream-join-operation-completed',
     JOIN_FAILED = 'stream:node-stream-join-operation-failed'
@@ -65,9 +64,6 @@ export interface Node {
     on<T>(event: Event.DUPLICATE_MESSAGE_RECEIVED, listener: (msg: StreamMessage<T>, nodeId: NodeId | null) => void): this
     on(event: Event.NODE_SUBSCRIBED, listener: (nodeId: NodeId, streamPartId: StreamPartID) => void): this
     on(event: Event.NODE_UNSUBSCRIBED, listener: (nodeId: NodeId, streamPartId: StreamPartID) => void): this
-    on(event: Event.PROXY_CONNECTION_ACCEPTED, listener: (nodeId: NodeId, streamPartId: StreamPartID, direction: ProxyDirection) => void): this
-    on(event: Event.PROXY_CONNECTION_REJECTED,
-       listener: (nodeId: NodeId, streamPartId: StreamPartID, direction: ProxyDirection, reason?: string) => void): this
     on(event: Event.ONE_WAY_CONNECTION_CLOSED, listener: (nodeId: NodeId, streamPartId: StreamPartID) => void): this
     on(event: Event.JOIN_COMPLETED, listener: (streamPartId: StreamPartID, numOfNeighbors: number) => void): this
     on(event: Event.JOIN_FAILED, listener: (streamPartId: StreamPartID, error: string) => void): this
@@ -87,8 +83,9 @@ export class Node extends EventEmitter {
     private readonly metricsContext: MetricsContext
     private readonly metrics: Metrics
     protected extraMetadata: Record<string, unknown> = {}
-    private readonly acceptProxyConnections: boolean
-    private readonly proxyStreamConnectionManager: ProxyStreamConnectionManager
+    protected readonly acceptProxyConnections: boolean
+    private readonly proxyStreamConnectionClient: ProxyStreamConnectionClient
+    private readonly proxyStreamConnectionServer: ProxyStreamConnectionServer
 
     constructor(opts: NodeOptions) {
         super()
@@ -97,7 +94,7 @@ export class Node extends EventEmitter {
         this.peerInfo = opts.peerInfo
         this.nodeConnectTimeout = opts.nodeConnectTimeout || 15000
         this.consecutiveDeliveryFailures = {}
-        this.started = new Date().toLocaleString()
+        this.started = new Date().toISOString()
         this.acceptProxyConnections = opts.acceptProxyConnections
 
         this.metricsContext = opts.metricsContext || new MetricsContext()
@@ -120,13 +117,14 @@ export class Node extends EventEmitter {
                 try {
                     await this.nodeToNode.sendData(neighborId, streamMessage)
                     this.consecutiveDeliveryFailures[neighborId] = 0
-                } catch (e) {
+                } catch (err) {
                     const serializedMsgId = streamMessage.getMessageID().serialize()
-                    logger.warn('failed to propagate %s (consecutiveFails=%d) to subscriber %s, reason: %s',
-                        serializedMsgId,
-                        this.consecutiveDeliveryFailures[neighborId] || 0,
-                        neighborId,
-                        e)
+                    logger.warn('Failed to propagate message to neighbor', {
+                        messageId: serializedMsgId,
+                        consecutiveFails: this.consecutiveDeliveryFailures[neighborId] || 0,
+                        neighbor: neighborId,
+                        reason: err
+                    })
 
                     // TODO: this is hack to get around the issue where `StreamStateManager` believes that we are
                     //  connected to a neighbor whilst `WebRtcEndpoint` knows that we are not. In this situation, the
@@ -145,11 +143,13 @@ export class Node extends EventEmitter {
                     }
                     this.consecutiveDeliveryFailures[neighborId] += 1
                     if (this.consecutiveDeliveryFailures[neighborId] >= 100) {
-                        logger.warn(`disconnecting from ${neighborId} due to 100 consecutive delivery failures`)
+                        logger.warn('Disconnect from neighbor (encountered 100 consecutive delivery failures)', {
+                            neighbor: neighborId
+                        })
                         this.onNodeDisconnected(neighborId) // force disconnect
                         this.consecutiveDeliveryFailures[neighborId] = 0
                     }
-                    throw e
+                    throw err
                 }
             },
             minPropagationTargets: Math.floor(DEFAULT_MAX_NEIGHBOR_COUNT / 2)
@@ -166,58 +166,53 @@ export class Node extends EventEmitter {
                 version: "brubeck-1.0"
             }),
             {
-                subscribeToStreamPartIfHaveNotYet: this.subscribeToStreamIfHaveNotYet.bind(this),
                 subscribeToStreamPartOnNodes: this.subscribeToStreamPartOnNodes.bind(this),
                 unsubscribeFromStreamPartOnNode: this.unsubscribeFromStreamPartOnNode.bind(this),
                 emitJoinCompleted: this.emitJoinCompleted.bind(this),
                 emitJoinFailed: this.emitJoinFailed.bind(this)
             }
         )
-        this.proxyStreamConnectionManager = new ProxyStreamConnectionManager({
+        this.proxyStreamConnectionClient = new ProxyStreamConnectionClient({
             trackerManager: this.trackerManager,
             streamPartManager: this.streamPartManager,
             propagation: this.propagation,
             node: this,
             nodeToNode: this.nodeToNode,
-            acceptProxyConnections: this.acceptProxyConnections,
             nodeConnectTimeout: this.nodeConnectTimeout
+        })
+
+        this.proxyStreamConnectionServer = new ProxyStreamConnectionServer({
+            streamPartManager: this.streamPartManager,
+            propagation: this.propagation,
+            node: this,
+            nodeToNode: this.nodeToNode,
+            acceptProxyConnections: this.acceptProxyConnections,
         })
 
         this.nodeToNode.on(NodeToNodeEvent.NODE_CONNECTED, (nodeId) => this.emit(Event.NODE_CONNECTED, nodeId))
         this.nodeToNode.on(NodeToNodeEvent.DATA_RECEIVED, (broadcastMessage, nodeId) => this.onDataReceived(broadcastMessage.streamMessage, nodeId))
         this.nodeToNode.on(NodeToNodeEvent.NODE_DISCONNECTED, (nodeId) => this.onNodeDisconnected(nodeId))
-        this.nodeToNode.on(NodeToNodeEvent.PROXY_CONNECTION_REQUEST_RECEIVED, (message,  nodeId) => {
-            this.proxyStreamConnectionManager.processProxyConnectionRequest(message, nodeId)
-        })
-        this.nodeToNode.on(NodeToNodeEvent.PROXY_CONNECTION_RESPONSE_RECEIVED, (message, nodeId) => {
-            this.proxyStreamConnectionManager.processProxyConnectionResponse(message, nodeId)
-        })
-
-        this.nodeToNode.on(NodeToNodeEvent.LEAVE_REQUEST_RECEIVED, (message, nodeId) => {
-            this.proxyStreamConnectionManager.processLeaveRequest(message, nodeId)
-        })
     }
 
     start(): void {
-        logger.trace('started')
         this.trackerManager.start()
     }
 
     subscribeToStreamIfHaveNotYet(streamPartId: StreamPartID, sendStatus = true): void {
         if (!this.streamPartManager.isSetUp(streamPartId)) {
-            logger.trace('add %s to streams', streamPartId)
+            logger.trace('subscribeToStreamIfHaveNotYet', { streamPartId })
             this.streamPartManager.setUpStreamPart(streamPartId)
             this.trackerManager.onNewStreamPart(streamPartId) // TODO: perhaps we should react based on event from StreamManager?
             if (sendStatus) {
                 this.trackerManager.sendStreamPartStatus(streamPartId)
             }
         } else if (this.streamPartManager.isSetUp(streamPartId) && this.streamPartManager.isBehindProxy(streamPartId)) {
-            logger.trace(`Could not join stream ${streamPartId} as stream is set to be behind proxy`)
+            logger.trace('Failed to join stream as stream is set to be behind proxy', { streamPartId })
         }
     }
 
     unsubscribeFromStream(streamPartId: StreamPartID, sendStatus = true): void {
-        logger.trace('remove %s from streams', streamPartId)
+        logger.trace('unsubscribeFromStream', { streamPartId })
         this.streamPartManager.removeStreamPart(streamPartId)
         this.trackerManager.onUnsubscribeFromStreamPart(streamPartId)
         if (sendStatus) {
@@ -240,53 +235,36 @@ export class Node extends EventEmitter {
         return Promise.allSettled(subscribePromises)
     }
 
-    async addProxyConnection(streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection, userId: string): Promise<void> {
-        let resolveHandler: any
-        let rejectHandler: any
-        await Promise.all([
-            new Promise<void>((resolve, reject) => {
-                resolveHandler = (node: string, stream: StreamPartID, eventDirection: ProxyDirection) => {
-                    if (node === contactNodeId && stream === streamPartId && direction === eventDirection) {
-                        resolve()
-                    }
-                }
-                rejectHandler = (node: string, stream: StreamPartID, eventDirection: ProxyDirection, reason?: string) => {
-                    if (node === contactNodeId && stream === streamPartId && direction === eventDirection) {
-                        reject(new Error(
-                            `Joining stream as proxy ${direction} failed on contact-node ${contactNodeId} for stream ${streamPartId}`
-                            + ` reason: ${reason}`
-                        ))
-                    }
-                }
-                this.on(Event.PROXY_CONNECTION_ACCEPTED, resolveHandler)
-                this.on(Event.PROXY_CONNECTION_REJECTED, rejectHandler)
-            }),
-            this.proxyStreamConnectionManager.openProxyConnection(streamPartId, contactNodeId, direction, userId)
-        ]).finally(() => {
-            this.off(Event.PROXY_CONNECTION_ACCEPTED, resolveHandler)
-            this.off(Event.PROXY_CONNECTION_REJECTED, rejectHandler)
-        })
-    }
-
-    async removeProxyConnection(streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection): Promise<void> {
-        await this.proxyStreamConnectionManager.closeProxyConnection(streamPartId, contactNodeId, direction)
+    async doSetProxies(
+        streamPartId: StreamPartID,
+        contactNodeIds: NodeId[],
+        direction: ProxyDirection,
+        getUserId: () => Promise<string>,
+        connectionCount?: number
+    ): Promise<void> {
+        await this.proxyStreamConnectionClient.setProxies(streamPartId, contactNodeIds, direction, getUserId, connectionCount)
     }
 
     // Null source is used when a message is published by the node itself
     onDataReceived(streamMessage: StreamMessage, source: NodeId | null = null): void | never {
         const streamPartId = streamMessage.getStreamPartID()
+
+        if (!this.streamPartManager.isSetUp(streamPartId)) {
+            return
         // Check if the stream is set as one-directional and has inbound connection if message is content typed
-        if (source
+        } else if (source
             && this.streamPartManager.isSetUp(streamPartId)
             && this.streamPartManager.isBehindProxy(streamPartId)
             && streamMessage.messageType === StreamMessageType.MESSAGE
             && !this.streamPartManager.hasInboundConnection(streamPartId, source)) {
-            logger.warn(`Unexpected message received on outbound proxy stream from node ${source} on stream ${streamPartId}`)
+            logger.warn('Received unexpected message on outbound proxy stream', {
+                source,
+                streamPartId
+            })
             return
         }
 
         this.emit(Event.MESSAGE_RECEIVED, streamMessage, source)
-        this.subscribeToStreamIfHaveNotYet(streamPartId)
 
         // Check duplicate
         let isUnseen
@@ -295,21 +273,30 @@ export class Node extends EventEmitter {
                 streamMessage.messageId,
                 streamMessage.prevMsgRef
             )
-        } catch (e) {
-            if (e instanceof InvalidNumberingError) {
-                logger.trace('received from %s data %j with invalid numbering', source, streamMessage.messageId)
+        } catch (err) {
+            if (err instanceof InvalidNumberingError) {
+                logger.trace('Received message with invalid numbering', {
+                    source,
+                    messageId: streamMessage.messageId
+                })
                 return
             }
-            if (e instanceof GapMisMatchError) {
-                logger.warn('received from %s data %j with gap mismatch detected: %j',
-                    source, streamMessage.messageId, e)
+            if (err instanceof GapMisMatchError) {
+                logger.warn('Received data with gap mismatch', {
+                    source,
+                    messageId: streamMessage.messageId,
+                    err
+                })
                 return
             }
-            throw e
+            throw err
         }
 
         if (isUnseen) {
-            logger.trace('received from %s data %j', source, streamMessage.messageId)
+            logger.trace('Received message', {
+                source,
+                messageId: streamMessage.messageId
+            })
             const propagationTargets = this.getPropagationTargets(streamMessage)
             this.emit(Event.UNSEEN_MESSAGE_RECEIVED, streamMessage, source)
             this.propagation.feedUnseenMessage(streamMessage, propagationTargets, source)
@@ -318,13 +305,17 @@ export class Node extends EventEmitter {
                 this.metrics.publishBytesPerSecond.record(streamMessage.getSerializedContent().length)
             }
         } else {
-            logger.trace('ignoring duplicate data %j (from %s)', streamMessage.messageId, source)
+            logger.trace('Ignored duplicate message', {
+                source,
+                messageId: streamMessage.messageId
+            })
             this.emit(Event.DUPLICATE_MESSAGE_RECEIVED, streamMessage, source)
         }
     }
 
     stop(): Promise<unknown> {
-        this.proxyStreamConnectionManager.stop()
+        this.proxyStreamConnectionClient.stop()
+        this.proxyStreamConnectionServer.stop()
         this.disconnectionManager.stop()
         this.nodeToNode.stop()
         return this.trackerManager.stop()
@@ -338,11 +329,11 @@ export class Node extends EventEmitter {
         if (this.acceptProxyConnections) {
             if (GroupKeyRequest.is(streamMessage) || GroupKeyResponse.is(streamMessage)) {
                 const { recipient } = GroupKeyRequest.fromStreamMessage(streamMessage) as GroupKeyRequest | GroupKeyResponse
-                propagationTargets = propagationTargets.concat(this.proxyStreamConnectionManager.getNodeIdsForUserId(streamPartId, recipient))
+                propagationTargets = propagationTargets.concat(this.proxyStreamConnectionServer.getNodeIdsForUserId(streamPartId, recipient))
             }
         } else if (
             this.streamPartManager.isBehindProxy(streamMessage.getStreamPartID())
-            && this.proxyStreamConnectionManager.isProxiedStreamPart(streamMessage.getStreamPartID(), ProxyDirection.SUBSCRIBE)
+            && this.proxyStreamConnectionClient.isProxiedStreamPart(streamMessage.getStreamPartID(), ProxyDirection.SUBSCRIBE)
         ) {
             propagationTargets = propagationTargets.concat([...this.streamPartManager.getInboundNodesForStreamPart(streamPartId)])
         }
@@ -361,7 +352,7 @@ export class Node extends EventEmitter {
 
     private unsubscribeFromStreamPartOnNode(node: NodeId, streamPartId: StreamPartID, sendStatus = true): void {
         this.streamPartManager.removeNodeFromStreamPart(streamPartId, node)
-        logger.trace('node %s unsubscribed from stream %s', node, streamPartId)
+        logger.trace('unsubscribeFromStreamPartOnNode', { node, streamPartId })
         this.emit(Event.NODE_UNSUBSCRIBED, node, streamPartId)
         this.disconnectionManager.scheduleDisconnectionIfNoSharedStreamParts(node)
         if (sendStatus) {
@@ -371,12 +362,12 @@ export class Node extends EventEmitter {
 
     private onNodeDisconnected(node: NodeId): void {
         const [streams, proxiedStreams] = this.streamPartManager.removeNodeFromAllStreamParts(node)
-        logger.trace('removed all subscriptions of node %s', node)
+        logger.trace('Remove all subscriptions of node', { node })
         streams.forEach((s) => {
             this.trackerManager.sendStreamPartStatus(s)
         })
         proxiedStreams.forEach((s) => {
-            this.proxyStreamConnectionManager.reconnect(node, s)
+            setImmediate(async () => this.proxyStreamConnectionClient.onNodeDisconnected(s, node))
         })
         this.emit(Event.NODE_DISCONNECTED, node)
     }
@@ -395,6 +386,21 @@ export class Node extends EventEmitter {
 
     getMetricsContext(): MetricsContext {
         return this.metricsContext
+    }
+
+    getDiagnosticInfo(): Record<string, unknown> {
+        return {
+            nodeId: this.getNodeId(),
+            started: this.started,
+            nodeToNode: this.nodeToNode.getDiagnosticInfo(),
+            trackers: this.trackerManager.getDiagnosticInfo(),
+            node: {
+                streamParts: [...this.getStreamParts()],
+                neighbors: this.getNeighbors(),
+                assignments: this.streamPartManager.getDiagnosticInfo(),
+                activePropagationTasks: this.propagation.numOfActivePropagationTasks()
+            }
+        }
     }
 
     async subscribeAndWaitForJoinOperation(streamPartId: StreamPartID, timeout = this.nodeConnectTimeout): Promise<number> {
@@ -435,6 +441,6 @@ export class Node extends EventEmitter {
     }
 
     isProxiedStreamPart(streamPartId: StreamPartID, direction: ProxyDirection): boolean {
-        return this.streamPartManager.isBehindProxy(streamPartId) && this.proxyStreamConnectionManager.isProxiedStreamPart(streamPartId, direction)
+        return this.streamPartManager.isBehindProxy(streamPartId) && this.proxyStreamConnectionClient.isProxiedStreamPart(streamPartId, direction)
     }
 }

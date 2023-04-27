@@ -4,6 +4,7 @@ import { NodeToTracker, Event as NodeToTrackerEvent } from '../../src/protocol/N
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { Status } from '../../src/identifiers'
 import { createTestNodeClientWsEndpoint, startTestTracker } from '../utils'
+import { waitForCondition } from '@streamr/utils'
 
 describe('Tracker disconnects from node if node sends invalid status data', () => {
     let tracker: Tracker
@@ -24,7 +25,8 @@ describe('Tracker disconnects from node if node sends invalid status data', () =
             [nodeToTracker, NodeToTrackerEvent.CONNECTED_TO_TRACKER]
         ])
     })
-    beforeEach(async () => {
+
+    afterEach(async () => {
         await Promise.allSettled([
             tracker?.stop(),
             nodeToTracker?.stop()
@@ -43,8 +45,9 @@ describe('Tracker disconnects from node if node sends invalid status data', () =
         await runAndWaitForEvents([() => {
             nodeToTracker.sendStatus(tracker.getTrackerId(), faultyStatus as Status)
         }], [
-            [nodeToTracker, 'streamr:tracker-node:tracker-disconnected']
+            [nodeToTracker, NodeToTrackerEvent.TRACKER_DISCONNECTED],
         ])
+        await waitForCondition(() => tracker.getNodes().length === 0, 4998)
         expect(tracker.getNodes().length).toEqual(0)
     })
 })

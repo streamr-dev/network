@@ -2,14 +2,13 @@ import http from 'http'
 import https from 'https'
 import fs from 'fs'
 import WebSocket from 'ws'
-import util from 'util'
 import { once } from 'events'
 import { Socket } from 'net'
 import qs, { ParsedQs } from 'qs'
 import StreamrClient from 'streamr-client'
-import { Logger } from '@streamr/utils'
-import { Connection } from './Connection'
-import { ApiAuthenticator } from '../../apiAuthenticator'
+import { Logger, randomString } from '@streamr/utils'
+import { addPingSender, addPingListener, Connection } from './Connection'
+import { ApiAuthentication, isValidAuthentication } from '../../apiAuthentication'
 import { PublishConnection } from './PublishConnection'
 import { SubscribeConnection } from './SubscribeConnection'
 import { PayloadFormat } from '../../helpers/PayloadFormat'
@@ -38,15 +37,19 @@ export class WebsocketServer {
     private wss?: WebSocket.Server
     private httpServer?: http.Server | https.Server
     private streamrClient: StreamrClient
+    private pingSendInterval: number
+    private disconnectTimeout: number
 
-    constructor(streamrClient: StreamrClient) {
+    constructor(streamrClient: StreamrClient, pingSendInterval: number, disconnectTimeout: number) {
         this.streamrClient = streamrClient
+        this.pingSendInterval = pingSendInterval
+        this.disconnectTimeout = disconnectTimeout
     }
 
     async start(
         port: number, 
         payloadFormat: PayloadFormat,
-        apiAuthenticator: ApiAuthenticator, 
+        apiAuthentication?: ApiAuthentication, 
         sslCertificateConfig?: WebsocketPluginConfig['sslCertificate']
     ): Promise<void> {
         this.httpServer = (sslCertificateConfig !== undefined) 
@@ -63,13 +66,21 @@ export class WebsocketServer {
             try {
                 connectionUrl = this.parseUrl(request.url!)
                 connection = this.createConnection(connectionUrl)
-            } catch (e) {
-                logger.warn(`Unable to create connection: ${e.message} ${request.url}`)
+            } catch (err) {
+                logger.warn('Reject incoming connection', {
+                    requestUrl: request.url,
+                    reason: err?.message
+                })
                 sendHttpError('400 Bad Request', socket)
                 return
             }
             const apiKey = connectionUrl.queryParams.apiKey as string | undefined
-            if (!apiAuthenticator.isValidAuthentication(apiKey)) {
+            if (!isValidAuthentication(apiKey, apiAuthentication)) {
+                logger.warn('Reject incoming connection', {
+                    requestUrl: request.url,
+                    includesApiKey: apiKey !== undefined,
+                    reason: 'Invalid authentication'
+                })
                 sendHttpError((apiKey === undefined) ? '401 Unauthorized' : '403 Forbidden', socket)
                 return
             }
@@ -78,13 +89,24 @@ export class WebsocketServer {
             })
         })
 
-        this.wss.on('connection', (ws: WebSocket, _request: http.IncomingMessage, connection: Connection) => {
-            connection.init(ws, this.streamrClient, payloadFormat)
+        this.wss.on('connection', async (ws: WebSocket, _request: http.IncomingMessage, connection: Connection) => {
+            const socketId = randomString(5)
+            logger.info('Accept connection', { socketId })
+            try {
+                await connection.init(ws, socketId, this.streamrClient, payloadFormat)
+                addPingListener(ws)
+                if (this.pingSendInterval !== 0) {
+                    addPingSender(ws, socketId, this.pingSendInterval, this.disconnectTimeout)
+                }
+            } catch (err) {
+                logger.warn('Close connection', { socketId, reason: err?.message })
+                ws.close()
+            }
         })
 
         this.httpServer.listen(port)
         await once(this.httpServer, 'listening')
-        logger.info('Websocket server listening on ' + port)
+        logger.info(`Started Websocket server on port ${port}`)
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -115,9 +137,12 @@ export class WebsocketServer {
     }
 
     async stop(): Promise<void> {
-        await util.promisify((cb: any) => this.wss!.close(cb))()
+        this.wss!.close()
+        for (const ws of this.wss!.clients) {
+            ws.terminate()
+        }
         this.httpServer!.close()
         await once(this.httpServer!, 'close')
-        logger.info('WebSocket server stopped')
+        logger.info('Stopped Websocket server')
     }
 }

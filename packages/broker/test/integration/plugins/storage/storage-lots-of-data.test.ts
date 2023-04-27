@@ -24,7 +24,7 @@ function retryFlakyTest(fn: () => Promise<unknown>, isFlakyError: (e: Error) => 
                 return
             } catch (e) {
                 if (isFlakyError(e)) {
-                    logger.warn('Flaky test run detected %d/%d run', i, maxRuns)
+                    logger.warn(`Detected flaky test run (attempt ${i}/${maxRuns})`)
                     if (i === maxRuns) {
                         throw e
                     }
@@ -70,7 +70,7 @@ describe('Storage: lots of data', () => {
                 timestamp: 1000000 + (i + 1),
                 sequenceNumber: 0,
                 publisherId: toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
-                content: randomBuffer.toString('hex')
+                content: randomBuffer.toString('hex'),
             })
             storePromises.push(() => storage.store(msg))
         }

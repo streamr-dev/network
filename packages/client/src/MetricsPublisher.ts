@@ -6,6 +6,7 @@ import { Publisher } from './publish/Publisher'
 import { ConfigInjectionToken, StreamrClientConfig, ProviderAuthConfig } from './Config'
 import { pOnce } from './utils/promises'
 import { MetricsReport, wait } from '@streamr/utils'
+import { merge } from '@streamr/utils'
 
 type NormalizedConfig = NonNullable<Required<Exclude<StreamrClientConfig['metrics'], boolean>>>
 
@@ -27,7 +28,7 @@ export const DEFAULTS = {
     maxPublishDelay: 30000
 }
 
-const getNormalizedConfig = (config: Pick<StreamrClientConfig, 'metrics' | 'auth'>): NormalizedConfig  => {
+const getNormalizedConfig = (config: Pick<StreamrClientConfig, 'metrics' | 'auth'>): NormalizedConfig => {
     if (config.metrics === true) {
         return DEFAULTS
     } else if (config.metrics === false) {
@@ -36,10 +37,7 @@ const getNormalizedConfig = (config: Pick<StreamrClientConfig, 'metrics' | 'auth
             periods: []
         }
     } else if (config.metrics !== undefined) {
-        return {
-            ...DEFAULTS,
-            ...config.metrics
-        }
+        return merge(DEFAULTS, config.metrics)
     } else {
         const isEthereumAuth = ((config.auth as ProviderAuthConfig)?.ethereum !== undefined)
         return {

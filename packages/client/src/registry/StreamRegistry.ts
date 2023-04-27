@@ -3,8 +3,8 @@ import type { StreamRegistryV4 as StreamRegistryContract } from '../ethereumArti
 import StreamRegistryArtifact from '../ethereumArtifacts/StreamRegistryV4Abi.json'
 import { BigNumber } from '@ethersproject/bignumber'
 import { Provider } from '@ethersproject/providers'
-import { scoped, Lifecycle, inject, delay } from 'tsyringe'
-import { getAllStreamRegistryChainProviders, getStreamRegistryOverrides } from '../Ethereum'
+import { delay, inject, Lifecycle, scoped } from 'tsyringe'
+import { getStreamRegistryChainProviders, getStreamRegistryOverrides } from '../Ethereum'
 import { until } from '../utils/promises'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { Stream, StreamMetadata } from '../Stream'
@@ -12,11 +12,11 @@ import { NotFoundError } from '../HttpUtil'
 import { StreamID, StreamIDUtils } from '@streamr/protocol'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { SynchronizedGraphQLClient } from '../utils/SynchronizedGraphQLClient'
-import { searchStreams as _searchStreams, SearchStreamsPermissionFilter } from './searchStreams'
+import { searchStreams as _searchStreams, SearchStreamsPermissionFilter, SearchStreamsOrderBy } from './searchStreams'
 import { filter, map } from '../utils/GeneratorUtils'
-import { ObservableContract, waitForTx } from '../utils/contract'
+import { ObservableContract, queryAllReadonlyContracts, waitForTx, initContractEventGateway } from '../utils/contract'
 import {
-    StreamPermission,
+    ChainPermissions,
     convertChainPermissionsToStreamPermissions,
     convertStreamPermissionsToChainPermission,
     isPublicPermissionAssignment,
@@ -25,17 +25,19 @@ import {
     PermissionQuery,
     PermissionQueryResult,
     PUBLIC_PERMISSION_ADDRESS,
-    streamPermissionToSolidityType,
-    ChainPermissions
+    StreamPermission,
+    streamPermissionToSolidityType
 } from '../permission'
 import { StreamRegistryCached } from './StreamRegistryCached'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ContractFactory } from '../ContractFactory'
 import { EthereumAddress, isENSName, Logger, toEthereumAddress } from '@streamr/utils'
+import { toStreamID } from '@streamr/protocol'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { StreamFactory } from './../StreamFactory'
 import { GraphQLQuery } from '../utils/GraphQLClient'
 import { collect } from '../utils/iterators'
+import { StreamrClientEventEmitter } from '../events'
 
 /*
  * On-chain registry of stream metadata and permissions.
@@ -53,36 +55,54 @@ interface StreamPublisherOrSubscriberItem {
     userAddress: EthereumAddress
 }
 
+export interface StreamCreationEvent {
+    readonly streamId: StreamID
+    readonly metadata: StreamMetadata
+    readonly blockNumber: number
+}
+
 const streamContractErrorProcessor = (err: any, streamId: StreamID, registry: string): never => {
-    if (err.errors) {
-        if (err.errors.some((e: any) => e.reason?.code === 'CALL_EXCEPTION')) {
-            throw new NotFoundError('Stream not found: id=' + streamId)
-        } else {
-            throw new Error(`Could not reach the ${registry} Smart Contract: ${err.errors[0]}`)
-        }
+    if (err.reason?.code === 'CALL_EXCEPTION') {
+        throw new NotFoundError('Stream not found: id=' + streamId)
     } else {
-        throw new Error(err)
+        throw new Error(`Could not reach the ${registry} Smart Contract: ${err.message}`)
     }
 }
 
 @scoped(Lifecycle.ContainerScoped)
 export class StreamRegistry {
+
+    private contractFactory: ContractFactory
+    private streamIdBuilder: StreamIDBuilder
+    private streamFactory: StreamFactory
+    private graphQLClient: SynchronizedGraphQLClient
+    private streamRegistryCached: StreamRegistryCached
+    private authentication: Authentication
+    private config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
     private readonly logger: Logger
     private streamRegistryContract?: ObservableContract<StreamRegistryContract>
     private streamRegistryContractsReadonly: ObservableContract<StreamRegistryContract>[]
 
     constructor(
-        private contractFactory: ContractFactory,
+        contractFactory: ContractFactory,
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
-        @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
-        private streamFactory: StreamFactory,
-        @inject(SynchronizedGraphQLClient) private graphQLClient: SynchronizedGraphQLClient,
-        @inject(delay(() => StreamRegistryCached)) private streamRegistryCached: StreamRegistryCached,
-        @inject(AuthenticationInjectionToken) private authentication: Authentication,
-        @inject(ConfigInjectionToken) private config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
+        @inject(StreamIDBuilder) streamIdBuilder: StreamIDBuilder,
+        streamFactory: StreamFactory,
+        @inject(SynchronizedGraphQLClient) graphQLClient: SynchronizedGraphQLClient,
+        @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
+        @inject(StreamrClientEventEmitter) eventEmitter: StreamrClientEventEmitter,
+        @inject(AuthenticationInjectionToken) authentication: Authentication,
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
     ) {
+        this.contractFactory = contractFactory
+        this.streamIdBuilder = streamIdBuilder
+        this.streamFactory = streamFactory
+        this.graphQLClient = graphQLClient
+        this.streamRegistryCached = streamRegistryCached
+        this.authentication = authentication
+        this.config = config
         this.logger = loggerFactory.createLogger(module)
-        const chainProviders = getAllStreamRegistryChainProviders(config)
+        const chainProviders = getStreamRegistryChainProviders(config)
         this.streamRegistryContractsReadonly = chainProviders.map((provider: Provider) => {
             return this.contractFactory.createReadContract<StreamRegistryContract>(
                 toEthereumAddress(this.config.contracts.streamRegistryChainAddress),
@@ -90,6 +110,18 @@ export class StreamRegistry {
                 provider,
                 'streamRegistry'
             )
+        })
+        initContractEventGateway({
+            sourceName: 'StreamCreated', 
+            sourceEmitter: this.streamRegistryContractsReadonly[0],
+            targetName: 'createStream',
+            targetEmitter: eventEmitter,
+            transformation: (streamId: string, metadata: string, extra: any) => ({
+                streamId: toStreamID(streamId),
+                metadata: Stream.parseMetadata(metadata),
+                blockNumber: extra.blockNumber
+            }),
+            loggerFactory
         })
     }
 
@@ -133,9 +165,9 @@ export class StreamRegistry {
                 await until(
                     async () => this.streamExistsOnChain(streamId),
                     // eslint-disable-next-line no-underscore-dangle
-                    this.config._timeouts.jsonRpc.timeout,
+                    this.config._timeouts.ensStreamCreation.timeout,
                     // eslint-disable-next-line no-underscore-dangle
-                    this.config._timeouts.jsonRpc.retryInterval
+                    this.config._timeouts.ensStreamCreation.retryInterval
                 )
             } catch (e) {
                 throw new Error(`unable to create stream "${streamId}"`)
@@ -179,31 +211,34 @@ export class StreamRegistry {
 
     private async streamExistsOnChain(streamIdOrPath: string): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        this.logger.debug('checking if stream "%s" exists on chain', streamId)
-        return Promise.any([
-            ...this.streamRegistryContractsReadonly.map((contract: StreamRegistryContract) => {
-                return contract.exists(streamId)
-            })
-        ])
+        this.logger.debug('Check if stream exists on chain', { streamId })
+        return queryAllReadonlyContracts((contract: StreamRegistryContract) => {
+            return contract.exists(streamId)
+        }, this.streamRegistryContractsReadonly)
     }
 
     async getStream(streamIdOrPath: string): Promise<Stream> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         let metadata
         try {
-            metadata = await this.queryAllReadonlyContracts((contract: StreamRegistryContract) => {
+            metadata = await queryAllReadonlyContracts((contract: StreamRegistryContract) => {
                 return contract.getStreamMetadata(streamId)
-            })
+            }, this.streamRegistryContractsReadonly)
         } catch (err) {
             return streamContractErrorProcessor(err, streamId, 'StreamRegistry')
         }
         return this.parseStream(streamId, metadata)
     }
 
-    searchStreams(term: string | undefined, permissionFilter: SearchStreamsPermissionFilter | undefined): AsyncIterable<Stream> {
+    searchStreams(
+        term: string | undefined,
+        permissionFilter: SearchStreamsPermissionFilter | undefined,
+        orderBy: SearchStreamsOrderBy
+    ): AsyncIterable<Stream> {
         return _searchStreams(
             term,
             permissionFilter,
+            orderBy,
             this.graphQLClient,
             (id: StreamID, metadata: string) => this.parseStream(id, metadata),
             this.logger)
@@ -270,7 +305,7 @@ export class StreamRegistry {
     /* eslint-disable no-else-return */
     async hasPermission(query: PermissionQuery): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(query.streamId)
-        return this.queryAllReadonlyContracts((contract) => {
+        return queryAllReadonlyContracts((contract) => {
             const permissionType = streamPermissionToSolidityType(query.permission)
             if (isPublicPermissionQuery(query)) {
                 return contract.hasPublicPermission(streamId, permissionType)
@@ -279,7 +314,7 @@ export class StreamRegistry {
             } else {
                 return contract.hasDirectPermission(streamId, toEthereumAddress(query.user), permissionType)
             }
-        })
+        }, this.streamRegistryContractsReadonly)
     }
 
     async getPermissions(streamIdOrPath: string): Promise<PermissionAssignment[]> {
@@ -405,9 +440,9 @@ export class StreamRegistry {
     async isStreamPublisher(streamIdOrPath: string, userAddress: EthereumAddress): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         try {
-            return await this.queryAllReadonlyContracts((contract) => {
+            return await queryAllReadonlyContracts((contract) => {
                 return contract.hasPermission(streamId, userAddress, streamPermissionToSolidityType(StreamPermission.PUBLISH))
-            })
+            }, this.streamRegistryContractsReadonly)
         } catch (err) {
             return streamContractErrorProcessor(err, streamId, 'StreamPermission')
         }
@@ -416,23 +451,11 @@ export class StreamRegistry {
     async isStreamSubscriber(streamIdOrPath: string, userAddress: EthereumAddress): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         try {
-            return await this.queryAllReadonlyContracts((contract) => {
+            return await queryAllReadonlyContracts((contract) => {
                 return contract.hasPermission(streamId, userAddress, streamPermissionToSolidityType(StreamPermission.SUBSCRIBE))
-            })
+            }, this.streamRegistryContractsReadonly)
         } catch (err) {
             return streamContractErrorProcessor(err, streamId, 'StreamPermission')
         }
-    }
-
-    // --------------------------------------------------------------------------------------------
-    // Helpers
-    // --------------------------------------------------------------------------------------------
-
-    private queryAllReadonlyContracts<T>(call: (contract: StreamRegistryContract) => Promise<T>): any {
-        return Promise.any([
-            ...this.streamRegistryContractsReadonly.map((contract: StreamRegistryContract) => {
-                return call(contract)
-            })
-        ])
     }
 }
