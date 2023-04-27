@@ -10,5 +10,6 @@ process.once("loaded", () => {
     window.NodeJsBuffer = Buffer
     window.Buffer = require('buffer/').Buffer
     // maybe we can set this karma-setup
+    // eslint-disable-next-line no-underscore-dangle
     window._streamr_electron_test = true
 })

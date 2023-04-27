@@ -3,7 +3,7 @@ const webpack = require('webpack')
 const NodePolyfillPlugin = require('node-polyfill-webpack-plugin')
 
 module.exports = function({ entry, libraryName, alias = {} }) {
-    return (env, argv) => {
+    return () => {
         return {
             cache: {
                 type: 'filesystem',

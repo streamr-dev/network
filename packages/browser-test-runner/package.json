@@ -9,7 +9,9 @@
     "directory": "packages/browser-test-runner"
   },
   "main": "./index.js",
-  "scripts": {},
+  "scripts": {
+    "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '**/*.{js,ts}'"
+  },
   "author": "Streamr Network AG <contact@streamr.network>",
   "license": "Apache-2.0",
   "dependencies": {},
