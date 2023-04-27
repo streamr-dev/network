@@ -156,12 +156,6 @@ export const getStreamParts = async (broker: Broker): Promise<StreamPartID[]> =>
     return Array.from(node.getStreamParts())
 }
 
-export async function sleep(ms = 0): Promise<void> {
-    return new Promise((resolve) => {
-        setTimeout(resolve, ms)
-    })
-}
-
 export async function startStorageNode(
     storageNodePrivateKey: string,
     httpPort: number,
