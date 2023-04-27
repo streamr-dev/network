@@ -1,3 +1,6 @@
 {
-  "extends": "../../.eslintrc.js"
+  "extends": "../../.eslintrc.js",
+  "rules": {
+    "@typescript-eslint/no-require-imports": "off"
+  }
 }

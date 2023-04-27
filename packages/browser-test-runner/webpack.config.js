@@ -1,9 +1,8 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 const path = require('path')
 const webpack = require('webpack')
 const NodePolyfillPlugin = require('node-polyfill-webpack-plugin')
 
-module.exports = function(entry, libraryName, customAliases = {}) {
+module.exports = function({ entry, libraryName, alias = {} }) {
     return (env, argv) => {
         return {
             cache: {
@@ -45,7 +44,7 @@ module.exports = function(entry, libraryName, customAliases = {}) {
                 extensions: ['.tsx', '.ts', '.js'],
                 alias: {
                     'process': 'process/browser',
-                    ...customAliases
+                    ...alias
                 },
                 fallback: {
                     'fs': false,

@@ -1,4 +1,4 @@
-module.exports = function(webpackConfig, testPaths) {
+module.exports = function(testPaths, webpackConfig) {
     const karmaSetupJs = __dirname + '/karma-setup.js'
     return (config) => {
         config.set({

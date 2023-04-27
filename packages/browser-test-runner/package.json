@@ -1,13 +1,14 @@
 {
   "name": "@streamr/browser-test-runner",
-  "version": "8.3.0",
+  "version": "0.0.1",
+  "private": true,
   "description": "A browser test runner for Jest tests",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/streamr-dev/network.git",
     "directory": "packages/browser-test-runner"
   },
-  "main": "./buildConfig.js",
+  "main": "./index.js",
   "scripts": {},
   "author": "Streamr Network AG <contact@streamr.network>",
   "license": "Apache-2.0",
