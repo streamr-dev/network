@@ -104,7 +104,7 @@ function calculateNumberOfUnfillableGaps(messageInfosInOrder: MessageInfo[]): nu
 }
 
 describe(OrderingUtil, () => {
-    it('randomized "worst-case" scenario with unavailable messages and gap fill needs', async () => {
+    it('randomized "worst-case" scenario with unavailable messages and gap fill needs (lightGapFill disabled)', async () => {
         const groundTruthMessages: Record<string, MessageInfo[]> = {}
         const actual: Record<string, number[]> = {}
         const expected: Record<string, number[]> = {}
@@ -136,7 +136,7 @@ describe(OrderingUtil, () => {
         }
 
         const errorHandler = jest.fn()
-        const util = new OrderingUtil(inOrderHandler, gapHandler, PROPAGATION_TIMEOUT, RESEND_TIMEOUT, MAX_GAP_REQUESTS)
+        const util = new OrderingUtil(inOrderHandler, gapHandler, PROPAGATION_TIMEOUT, RESEND_TIMEOUT, MAX_GAP_REQUESTS, false)
         util.on('error', errorHandler)
 
         // supply 1st message of chain always to set gap detection to work from 1st message onwards
