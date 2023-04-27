@@ -3,10 +3,10 @@
 
 import * as jestMock from 'jest-mock'
 
-// The following lines need to use the require syntax to fix
-// process.stdout dependency in expect v. 28+
-process.stdout = require('./dummy-stdout')
-const expect = require ('expect').default
+// The following lines need to use the require syntax to fix 
+// process.stdout dependency in expect v. 28+ 
+process.stdout = {}
+const expect = require('expect').default
 
 import { ModernFakeTimers } from '@jest/fake-timers'
 
@@ -16,7 +16,7 @@ import { ModernFakeTimers } from '@jest/fake-timers'
 import * as jestExtendedMatchers from 'jest-extended'
 
 let jest = jestMock
-const timers = new ModernFakeTimers({global: window, config: null })
+const timers = new ModernFakeTimers({ global: window, config: null })
 
 // prevent navigation
 // without this karma fails the suite with "Some of your tests did a full page reload!"
@@ -36,6 +36,7 @@ jest.runOnlyPendingTimers = timers.runOnlyPendingTimers
 jest.setSystemTime = timers.setSystemTime
 jest.useFakeTimers = timers.useFakeTimers
 jest.useRealTimers = timers.useRealTimers
+// eslint-disable-next-line no-undef
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 15000
 // eslint-disable-next-line no-underscore-dangle
 jest._checkFakeTimers = timers._checkFakeTimers
@@ -48,7 +49,7 @@ expect.extend(jestExtendedMatchers)
 window.test = window.it
 window.test.each = (inputs) => (testName, test) =>
     inputs.forEach((args) => window.it(testName, () => test(...args)))
-window.test.todo = function () {
+window.test.todo = function() {
     return undefined
 }
 

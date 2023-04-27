@@ -11,6 +11,7 @@ Monorepo containing all the main components of Streamr Network.
 ## Table of Contents
 - [Packages](#packages)
 - [NPM scripts](#npm-scripts)
+- [Environment variables](#environment-variables)
 - [Release](#release)
 
 ## Packages
@@ -125,6 +126,14 @@ prints the version ranges so you can double-check that they're formatted
 as you expect e.g. `^X.Y.Z` vs `X.Y.Z`
 
 ![image](https://user-images.githubusercontent.com/43438/135347920-97d6e0e7-b86c-40ff-bfc9-91f160ae975c.png)
+
+## Environment variables
+
+| Variable                  | Description                                         | Packages |
+|---------------------------|-----------------------------------------------------|----------|
+| `BROWSER_TEST_DEBUG_MODE` | Leaves the Electron window open while running tests | all      |
+|                           |                                                     |          |
+|                           |                                                     |          |
 
 ## Release
 

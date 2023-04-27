@@ -10,17 +10,14 @@
   "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
   "author": "Streamr Network AG <contact@streamr.network>",
   "main": "dist/src/exports.js",
-  "browser": "dist/streamr-network-node.web.js",
   "types": "dist/src/exports.d.ts",
   "scripts": {
     "build": "tsc -b tsconfig.node.json",
-    "build-browser": "webpack --mode=development --progress",
     "check": "tsc -p ./tsconfig.jest.json --noEmit",
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
-    "prepublishOnly": "npm run clean && tsc -b tsconfig.node.json && NODE_ENV=production webpack --mode=production",
     "test": "jest",
-    "test-browser": "npm run build-browser && karma start karma.config.js",
+    "test-browser": "karma start karma.config.js",
     "test-integration": "jest test/integration/",
     "test-simulator": "jest --projects simulator.jest.config.js -- test/",
     "test-unit": "jest test/unit"
@@ -42,8 +39,7 @@
     "yallist": "^4.0.0"
   },
   "devDependencies": {
-    "@electron/rebuild": "^3.2.9",
-    "@jest/fake-timers": "^29.5.0",
+    "@streamr/browser-test-runner": "^0.0.1",
     "@streamr/network-tracker": "8.3.0",
     "@streamr/test-utils": "8.3.0",
     "@types/heap": "^0.2.28",
@@ -52,20 +48,7 @@
     "@types/websocket": "^1.0.3",
     "@types/ws": "^8.5.4",
     "@types/yallist": "^4.0.1",
-    "electron": "^24.1.2",
-    "expect": "^29.5.0",
-    "express": "^4.17.1",
-    "jest-mock": "^29.4.3",
-    "karma": "^6.4.0",
-    "karma-chrome-launcher": "^3.1.1",
-    "karma-electron": "^7.3.0",
-    "karma-jasmine": "^5.1.0",
-    "karma-spec-reporter": "^0.0.36",
-    "karma-webpack": "^5.0.0",
-    "node-polyfill-webpack-plugin": "^2.0.1",
-    "ts-loader": "^9.3.1",
-    "webpack": "^5.64.1",
-    "webpack-cli": "^5.0.1"
+    "express": "^4.17.1"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.5",

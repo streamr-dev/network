@@ -1,0 +1,37 @@
+{
+  "name": "@streamr/browser-test-runner",
+  "version": "0.0.1",
+  "private": true,
+  "description": "A browser test runner for Jest tests",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/streamr-dev/network.git",
+    "directory": "packages/browser-test-runner"
+  },
+  "main": "./index.js",
+  "scripts": {
+    "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '**/*.{js,ts}'"
+  },
+  "author": "Streamr Network AG <contact@streamr.network>",
+  "license": "Apache-2.0",
+  "dependencies": {},
+  "devDependencies": {
+    "@electron/rebuild": "^3.2.9",
+    "@jest/fake-timers": "^29.5.0",
+    "buffer": "^6.0.3",
+    "electron": "^24.1.2",
+    "expect": "^29.5.0",
+    "jest-mock": "^29.4.3",
+    "karma": "^6.4.0",
+    "karma-chrome-launcher": "^3.1.1",
+    "karma-electron": "^7.3.0",
+    "karma-jasmine": "^5.1.0",
+    "karma-sourcemap-loader": "^0.4.0",
+    "karma-spec-reporter": "^0.0.36",
+    "karma-webpack": "^5.0.0",
+    "node-module-polyfill": "^1.0.1",
+    "node-polyfill-webpack-plugin": "^2.0.1",
+    "webpack": "^5.64.1",
+    "webpack-cli": "^5.0.1"
+  }
+}
