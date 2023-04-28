@@ -8,10 +8,10 @@ In this quickstart guide, you'll be using Streamr in a **ReactJS** web applicati
 
 **Prerequisites:**
 
-- NPM v8 or greater
-- NodeJS 16.13.x or greater
-- A basic understanding of ReactJS or NextJS
-- A small amount of `MATIC` to pay for gas on Polygon mainnet. You can reachout to us on the #dev channel of [Discord](https://discord.gg/gZAm8P7hK8) for some tokens.
+-   NPM v8 or greater
+-   NodeJS 16.13.x or greater
+-   A basic understanding of ReactJS or NextJS
+-   A small amount of `MATIC` to pay for gas on Polygon mainnet. You can reachout to us on the #dev channel of [Discord](https://discord.gg/gZAm8P7hK8) for some tokens.
 
 ## Setup & installation
 
@@ -27,7 +27,7 @@ The client is available on [NPM](https://www.npmjs.com/package/streamr-client) a
 $ npm install streamr-client
 ```
 
-Having trouble installing the client? Maybe our [troubleshooting](../usage/Streamr%20JS%20Client/how-to-use#Troubleshooting) section will help.
+Having trouble installing the client? Maybe our [troubleshooting](../usage/streamr-js-client/how-to-use#Troubleshooting) section will help.
 
 ## Subscribe to data of a stream
 
@@ -43,23 +43,23 @@ If you have created your own stream, set the `SUBSCRIBE` permission to public or
 :::
 
 ```ts
-import StreamrClient from 'streamr-client';
-declare var window: any;
+import StreamrClient from "streamr-client"
+declare var window: any
 
 export const startSubscribing = () => {
-  const streamId =
-    '0x8ed334e44265a0c89b7739cb66a8f19675a5fc7a/ultrasound.money/fees/burn-categories';
-  // Add a browser wallet (e.g. Metamask) to check if the address has permission to read the stream
-  const streamr = new StreamrClient({
-    auth: { ethereum: window.ethereum },
-    // if you don't want to make your users connect a wallet use this instead:
-    // auth: { privateKey: process.env.PRIVATE_KEY },
-  });
+    const streamId =
+        "0x8ed334e44265a0c89b7739cb66a8f19675a5fc7a/ultrasound.money/fees/burn-categories"
+    // Add a browser wallet (e.g. Metamask) to check if the address has permission to read the stream
+    const streamr = new StreamrClient({
+        auth: { ethereum: window.ethereum },
+        // if you don't want to make your users connect a wallet use this instead:
+        // auth: { privateKey: process.env.PRIVATE_KEY },
+    })
 
-  streamr.subscribe(streamId, (message) => {
-    console.log(message);
-  });
-};
+    streamr.subscribe(streamId, (message) => {
+        console.log(message)
+    })
+}
 ```
 
 ## Use our React hooks
@@ -77,44 +77,44 @@ The `Provider` component holds its own StreamrClient instance and makes it avail
 Add a private key to your options and have a global StreamrClient instance. It will interact with the desired streams under the hood.
 
 ```tsx title="/src/App.tsx"
-import Provider from 'streamr-client-react';
-import StreamrExample from './streamr-example';
+import Provider from "streamr-client-react"
+import StreamrExample from "./streamr-example"
 
 function App() {
-  const options = {
-    auth: { privateKey: process.env.PRIVATE_KEY },
-    // or authenticate with user wallet
-    // auth: { ethereum: window.ethereum }
-  };
+    const options = {
+        auth: { privateKey: process.env.PRIVATE_KEY },
+        // or authenticate with user wallet
+        // auth: { ethereum: window.ethereum }
+    }
 
-  return (
-    <Provider {...options}>
-      <StreamrExample></StreamrExample>
-    </Provider>
-  );
+    return (
+        <Provider {...options}>
+            <StreamrExample></StreamrExample>
+        </Provider>
+    )
 }
 
-export default App;
+export default App
 ```
 
 You can now add `useSubscribe` in your components to read from your desired streams. In this case, we are reading from a `PUBLIC` stream to which the current Ethereum 2.0 burn rate is getting streamed.
 
 ```tsx title="/src/streamr-example.tsx"
-import { useSubscribe } from 'streamr-client-react';
+import { useSubscribe } from "streamr-client-react"
 
 const StreamrExample = () => {
-  const streamId =
-    '0x8ed334e44265a0c89b7739cb66a8f19675a5fc7a/ultrasound.money/fees/burn-categories';
+    const streamId =
+        "0x8ed334e44265a0c89b7739cb66a8f19675a5fc7a/ultrasound.money/fees/burn-categories"
 
-  useSubscribe(streamId, {
-    onMessage: (msg) => {
-      console.log(msg.getContent());
-    },
-  });
-  return <h1>Wow! That was easy!</h1>;
-};
+    useSubscribe(streamId, {
+        onMessage: (msg) => {
+            console.log(msg.getContent())
+        },
+    })
+    return <h1>Wow! That was easy!</h1>
+}
 
-export default StreamrExample;
+export default StreamrExample
 ```
 
 The result should look something like this:
@@ -125,9 +125,9 @@ The result should look something like this:
 
 Congratulations! You accomplished:
 
-- Published data to the Streamr Network using the Streamr client
-- Subscribed to flowing data on the Streamr Network using the Streamr client
-- Authenticated your users via Metamask
-- Learned how to use the React hooks with the Streamr client
+-   Published data to the Streamr Network using the Streamr client
+-   Subscribed to flowing data on the Streamr Network using the Streamr client
+-   Authenticated your users via Metamask
+-   Learned how to use the React hooks with the Streamr client
 
 If you had any problems along the way, please drop a message to the core team on the #dev channel of our [Discord](https://discord.gg/gZAm8P7hK8).

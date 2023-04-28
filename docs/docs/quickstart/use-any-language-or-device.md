@@ -8,11 +8,11 @@ This tutorial will show you how to publish data into the Streamr Network from in
 
 **Prerequisites:**
 
-- NPM v8 or greater
-- NodeJS 16.13.x or greater
-- MacOS/Linux environments (Windows environments may require minor adjustments)
-- A small amount of `MATIC` to pay for gas on Polygon mainnet. You can reachout to us on the #dev channel of [Discord](https://discord.gg/gZAm8P7hK8) for some tokens.
-- A MQTT library of your choice (this tutorial uses [MQTT.js](https://www.npmjs.com/package/mqtt))
+-   NPM v8 or greater
+-   NodeJS 16.13.x or greater
+-   MacOS/Linux environments (Windows environments may require minor adjustments)
+-   A small amount of `MATIC` to pay for gas on Polygon mainnet. You can reachout to us on the #dev channel of [Discord](https://discord.gg/gZAm8P7hK8) for some tokens.
+-   A MQTT library of your choice (this tutorial uses [MQTT.js](https://www.npmjs.com/package/mqtt))
 
 If you have a Helium setup, you may benefit from reading this blog post first, [Helium x Streamr](https://blog.helium.com/helium-x-streamr-ea89c4b61a14)
 
@@ -64,7 +64,7 @@ The client is available on [NPM](https://www.npmjs.com/package/streamr-client) a
 $ npm install streamr-client
 ```
 
-Having trouble installing the client? Maybe our [troubleshooting](../usage/Streamr%20JS%20Client/how-to-use#Troubleshooting) section will help.
+Having trouble installing the client? Maybe our [troubleshooting](../usage/streamr-js-client/how-to-use#Troubleshooting) section will help.
 
 :::note
 Make sure the `PRIVATE_KEY` you add has a small amount of `MATIC` (the native token of the Polygon blockchain) in its wallet to pay for gas to create the stream and make the permission assignment.
@@ -74,19 +74,19 @@ TODO: ** Create a stream widget **
 
 ```ts
 // Import the Streamr client
-import StreamrClient from 'streamr-client';
-const PRIVATE_KEY = '';
+import StreamrClient from "streamr-client"
+const PRIVATE_KEY = ""
 
 // Initialize the client with an Ethereum account
 const streamr = new StreamrClient({
-  auth: {
-    privateKey: PRIVATE_KEY,
-  },
-});
+    auth: {
+        privateKey: PRIVATE_KEY,
+    },
+})
 
 const stream = await streamr.getOrCreateStream({
-  id: '/sensor/firehose',
-});
+    id: "/sensor/firehose",
+})
 ```
 
 #### Assign permission to your Broker node
@@ -99,9 +99,9 @@ Take care to not confuse `stream` with `streamr` ;)
 
 ```ts
 await stream.grantPermissions({
-  user: BrokerNodeAddress,
-  permissions: [StreamPermission.PUBLISH, StreamPermission.SUBSCRIBE],
-});
+    user: BrokerNodeAddress,
+    permissions: [StreamPermission.PUBLISH, StreamPermission.SUBSCRIBE],
+})
 ```
 
 ## Push data
@@ -135,10 +135,10 @@ In the code sample below, we provide the URL (the IP or address to your Broker n
 ```ts
 // Node.js example
 
-const mqttClient = mqtt.connect('mqtt://localhost:1883', {
-  username: '',
-  password: ApiKey,
-});
+const mqttClient = mqtt.connect("mqtt://localhost:1883", {
+    username: "",
+    password: ApiKey,
+})
 ```
 
 :::note
@@ -160,9 +160,9 @@ Push valid JSON! Invalid JSON may silently fail so be sure to run your payload t
 
 ```ts
 // Node.js example
-const StreamId = stream.id;
+const StreamId = stream.id
 
-await mqttClient.publish(StreamId, JSON.stringify({ foo: bar }));
+await mqttClient.publish(StreamId, JSON.stringify({ foo: bar }))
 ```
 
 If everything has been configured correctly so far then the data should now be flowing to the Broker node, which will receive and sign the data, then publish it to the to the Streamr Network stream.
@@ -198,7 +198,7 @@ mqttClient.on('connect', () => {
 
 The most common issues are:
 
-- TODO
+-   TODO
 
 To include more verbose logging you could run the Broker with these additional flags:
 
@@ -210,9 +210,9 @@ $ LOG_LEVEL=trace DEBUG=Streamr* streamr-broker
 
 Congratulations! You accomplished:
 
-- Running a Broker node on the Streamr Network
-- Created a stream and modified its access control
-- Published data to the Streamr Network using the MQTT interface of your running Broker node
-- Subscribed to flowing data on the Streamr Network using the MQTT interface of your running Broker node
+-   Running a Broker node on the Streamr Network
+-   Created a stream and modified its access control
+-   Published data to the Streamr Network using the MQTT interface of your running Broker node
+-   Subscribed to flowing data on the Streamr Network using the MQTT interface of your running Broker node
 
 If you had any problems along the way, please drop a message to the core team on the #dev channel of our [Discord](https://discord.gg/gZAm8P7hK8).
