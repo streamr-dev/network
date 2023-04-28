@@ -22,7 +22,7 @@ jobs:
           cache: npm
           cache-dependency-path: 'package-lock.json'
       - name: Install dependencies
-        run: npm ci
+        run: npm run bootstrap
       - name: Build network client
         working-directory: ./packages/client
         run: npm ci && npm run build
