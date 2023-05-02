@@ -1,0 +1,9 @@
+{
+  "extends": "../../.eslintrc.js",
+  "rules": {
+    "@typescript-eslint/no-require-imports": "off"
+  },
+  "env": {
+    "browser": true
+  }
+}

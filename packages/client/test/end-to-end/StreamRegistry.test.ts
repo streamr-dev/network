@@ -112,6 +112,7 @@ describe('StreamRegistry', () => {
             expect(hasBeenCalledFor(invalidStream)).toBeFalse()
         })
 
+        // skipped until fix by smart contract
         describe('ENS', () => {
 
             it('domain owned by user', async () => {
