@@ -113,7 +113,7 @@ describe('StreamRegistry', () => {
         })
 
         // skipped until fix by smart contract
-        describe.skip('ENS', () => {
+        describe('ENS', () => {
 
             it('domain owned by user', async () => {
                 const streamId = 'testdomain1.eth/foobar/' + Date.now()
