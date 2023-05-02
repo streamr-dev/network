@@ -414,38 +414,38 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
                 }
                 return // method eventually re-scheduled by `onBufferedAmountLow`
             } else {
-                let sent = false
-                let isOpen
-                try {
-                    if (this.isOpen()) {
+                let sent: boolean
+                let caughtError: Error | undefined = undefined
+                if (this.isOpen()) {
+                    try {
                         this.doSendMessage(queueItem.getMessage())
-                        sent = true
+                        // this.isOpen() is checked immediately after the call to node-datachannel.sendMessage() as if
+                        // this.isOpen() returns false after a "successful" send, the message is lost with a near 100% chance.
+                        // This does not work as expected if this.isOpen() is checked before sending a message
+                        sent = this.isOpen()
+                    } catch (e) {
+                        caughtError = e
+                        sent = false
                     }
-                    // this.isOpen() is checked immediately after the call to node-datachannel.sendMessage() as if
-                    // this.isOpen() returns false after a "successful" send, the message is lost with a near 100% chance.
-                    // This does not work as expected if this.isOpen() is checked before sending a message
-                    isOpen = this.isOpen()
-                    sent = sent && isOpen
-                    this.messagesSent += 1
-                    this.bytesSent += queueItem.getMessage().length
-                } catch (e) {
-                    this.sendFailures += 1
-                    this.processFailedMessage(queueItem, e)
-                    return // method rescheduled by `this.flushTimeoutRef`
+                } else {
+                    sent = false
                 }
 
                 if (sent) {
                     this.messageQueue.pop()
                     queueItem.delivered()
                     numOfSuccessSends += 1
+                    this.messagesSent += 1
+                    this.bytesSent += queueItem.getMessage().length
                 } else {
                     this.baseLogger.debug('Failed to send queue item', {
-                        wasOpen: isOpen,
                         numOfSuccessSends,
                         queueItem,
                         messageQueueSize: this.messageQueue.size(),
                     })
-                    this.processFailedMessage(queueItem, new Error('sendMessage returned false'))
+                    this.sendFailures += 1
+                    this.processFailedMessage(queueItem, caughtError ?? new Error('failed to send message'))
+                    return // method rescheduled by `this.flushTimeoutRef`
                 }
             }
         }
