@@ -27,6 +27,7 @@ Monorepo containing all the main components of Streamr Network.
 * [protocol](packages/protocol/README.md) (@streamr/protocol)
 * [utils](packages/utils/README.md) (@streamr/utils)
 * [test-utils](packages/test-utils/README.md) (@streamr/test-utils)
+* [browser-test-runner](packages/browser-test-runner/index.js) (@streamr/browser-test-runner)
 
 ## NPM scripts
 | Node.js `16.13.x` is the minimum required version. Node.js `18.12.x`, NPM `8.x` and later versions are recommended. |
@@ -129,11 +130,17 @@ as you expect e.g. `^X.Y.Z` vs `X.Y.Z`
 
 ## Environment variables
 
-| Variable                  | Description                                         | Packages |
-|---------------------------|-----------------------------------------------------|----------|
-| `BROWSER_TEST_DEBUG_MODE` | Leaves the Electron window open while running tests | all      |
-|                           |                                                     |          |
-|                           |                                                     |          |
+| Variable                     | Description                                                                            | Packages                                    |
+|------------------------------|----------------------------------------------------------------------------------------|---------------------------------------------|
+| `BROWSER_TEST_DEBUG_MODE`    | Leaves the Electron window open while running browser tests                            | utils, proto-rpc, dht, network-node, client |
+| `STREAMR_DOCKER_DEV_HOST`    | Sets an alternative IP address for streamr-docker-dev in end-to-end tests              | client, broker                              |
+| `LOG_LEVEL`                  | Adjust logging level                                                                   | _all_                                       |
+| `DISABLE_PRETTY_LOG`         | Set to true to disable pretty printing of logs and print JSONL instead                 | _all_                                       |
+| `LOG_COLORS`                 | Set to false to disable coloring of log messages                                       | _all_                                       |
+| `NOLOG`                      | Set to true to disable all logging                                                     | _all_                                       |
+| `NODE_DATACHANNEL_LOG_LEVEL` | Adjust logging level of `node-datachannel` library                                     | network-node                                |
+| `BUNDLE_ANALYSIS`            | Whether to produce a bundle analysis when building client package for browser          | client (compile time)                       |
+| `STREAMR__BROKER__`          | Wildcard [set of variables](packages/broker/configuration.md) used to configure broker | broker                                      |
 
 ## Release
 
