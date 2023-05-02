@@ -34,9 +34,8 @@ export class NodeWebRtcConnection extends WebRtcConnection {
         Simulator.instance().addWebRtcConnection(this.selfId, this.getPeerId(), this)
     }
 
-    protected doSendMessage(message: string): boolean {
+    protected doSendMessage(message: string): void {
         Simulator.instance().webRtcSend(this.selfId, this.getPeerId(), message)
-        return true
         //return this.dataChannel!.sendMessage(message)
     }
 

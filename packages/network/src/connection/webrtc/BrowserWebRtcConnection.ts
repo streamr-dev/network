@@ -178,9 +178,8 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
         return this.lastGatheringState
     }
 
-    protected doSendMessage(message: string): boolean {
+    protected doSendMessage(message: string): void {
         this.dataChannel?.send(message)
-        return true
     }
 
     private setupDataChannel(dataChannel: RTCDataChannel): void {
