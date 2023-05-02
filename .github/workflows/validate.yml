@@ -92,7 +92,7 @@ jobs:
     uses: ./.github/workflows/test-setup.yml
     with:
       package: client
-      docker-services: cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph chainlink
+      docker-services: cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph ens-sync-script
       run-brokers-and-trackers: true
       command: npm run test-end-to-end
   broker:
