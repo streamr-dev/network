@@ -6,9 +6,8 @@ import StreamrClient, { Subscription } from 'streamr-client'
 import range from 'lodash/range'
 import { wait, waitForCondition } from '@streamr/utils'
 
-interface Fixture {
-    partitions: number
-    subscriptions: { unsubscribe: jest.MockedFn<Subscription['unsubscribe']> }[]
+interface MockSubscription {
+    unsubscribe: jest.MockedFn<Subscription['unsubscribe']>
 }
 
 const STREAM_A = toStreamID('STREAM_A')
@@ -19,29 +18,31 @@ const STREAM_E = toStreamID('STREAM_E')
 const STREAM_F = toStreamID('STREAM_F')
 const STREAM_NOT_EXIST = toStreamID('STREAM_NOT_EXIST')
 
-const NOTHING_HAPPENED_DELAY = 100
+const STREAM_PARTITIONS: Record<StreamID, number> = Object.freeze({
+    [STREAM_A]: 1,
+    [STREAM_B]: 3,
+    [STREAM_C]: 2,
+    [STREAM_D]: 2,
+    [STREAM_E]: 1,
+    [STREAM_F]: 4,
+    [STREAM_NOT_EXIST]: 3
+})
 
-function setUpFixturesAndMocks(streamrClient: MockProxy<StreamrClient>): Record<string, Fixture> {
-    const result: Record<string, Fixture> = {
-        STREAM_A: { partitions: 1, subscriptions: [] },
-        STREAM_B: { partitions: 3, subscriptions: [] },
-        STREAM_C: { partitions: 2, subscriptions: [] },
-        STREAM_D: { partitions: 2, subscriptions: [] },
-        STREAM_E: { partitions: 1, subscriptions: [] },
-        STREAM_F: { partitions: 4, subscriptions: [] },
-        STREAM_NOT_EXIST: { partitions: 3, subscriptions: [] } // subscriptions should never be invoked!
-    }
+const NOTHING_HAPPENED_DELAY = 250
+
+function setUpFixturesAndMocks(streamrClient: MockProxy<StreamrClient>): Record<StreamID, MockSubscription[]> {
+    const result: Record<StreamID, MockSubscription[]> = {}
 
     // Set up streamrClient#subscribe
-    for (const [streamId, { partitions }] of Object.entries(result)) {
-        result[streamId].subscriptions = range(partitions).map(() => ({ unsubscribe: jest.fn() } as any))
+    for (const [streamId, partitions] of Object.entries(STREAM_PARTITIONS)) {
+        result[toStreamID(streamId)] = range(partitions).map(() => ({ unsubscribe: jest.fn() }))
     }
     streamrClient.subscribe.mockImplementation(async (opts) => {
-        return result[(opts as any).id].subscriptions[(opts as any).partition] as any
+        return result[(opts as any).id][(opts as any).partition] as any
     })
 
     // Set up streamrClient#getStream
-    for (const [streamId, { partitions }] of Object.entries(result)) {
+    for (const [streamId, partitions] of Object.entries(STREAM_PARTITIONS)) {
         streamrClient.getStream.calledWith(streamId).mockResolvedValue({
             getStreamParts: () => range(partitions).map((p) => toStreamPartID(toStreamID(streamId), p))
         } as any)
@@ -55,7 +56,7 @@ const formRawSubscriptionParam = (id: StreamID, partition: number) => ({ id, par
 
 describe('MaintainTopologyService', () => {
     let streamrClient: MockProxy<StreamrClient>
-    let fixtures: Record<string, Fixture>
+    let fixtures: Record<string, MockSubscription[]>
     let operatorClient: FakeOperatorClient
     let service: MaintainTopologyService
 
@@ -111,7 +112,6 @@ describe('MaintainTopologyService', () => {
 
     it('handles addStakedStream event given non-existing stream', async () => {
         await setUpAndStart([STREAM_A, STREAM_B, STREAM_C])
-        streamrClient.getStream.mockClear()
         streamrClient.subscribe.mockClear()
 
         operatorClient.addStreamToState(STREAM_NOT_EXIST)
@@ -132,10 +132,8 @@ describe('MaintainTopologyService', () => {
 
     // TODO: client#subscribe throw on initial poll or event
 
-    function totalUnsubscribes(streamID: StreamID): number {
-        return fixtures[streamID]
-            .subscriptions
-            .reduce((total, sub) => total + sub.unsubscribe.mock.calls.length, 0)
+    function totalUnsubscribes(streamId: StreamID): number {
+        return fixtures[streamId].reduce((total, sub) => total + sub.unsubscribe.mock.calls.length, 0)
     }
 
     it('handles removeStakedStream event (happy path)', async () => {
@@ -144,8 +142,8 @@ describe('MaintainTopologyService', () => {
         operatorClient.removeStreamFromState(STREAM_C)
 
         await waitForCondition(() => totalUnsubscribes(STREAM_C) >= 2)
-        expect(fixtures[STREAM_C].subscriptions[0].unsubscribe).toHaveBeenCalledTimes(1)
-        expect(fixtures[STREAM_C].subscriptions[1].unsubscribe).toHaveBeenCalledTimes(1)
+        expect(fixtures[STREAM_C][0].unsubscribe).toHaveBeenCalledTimes(1)
+        expect(fixtures[STREAM_C][1].unsubscribe).toHaveBeenCalledTimes(1)
     })
 
     it('handles removeStakedStream event once even if triggered twice', async () => {
@@ -154,10 +152,11 @@ describe('MaintainTopologyService', () => {
         operatorClient.removeStreamFromState(STREAM_C)
         operatorClient.removeStreamFromState(STREAM_C)
 
+        await waitForCondition(() => totalUnsubscribes(STREAM_C) >= 2)
         await wait(NOTHING_HAPPENED_DELAY)
         expect(totalUnsubscribes(STREAM_C)).toEqual(2)
-        expect(fixtures[STREAM_C].subscriptions[0].unsubscribe).toHaveBeenCalledTimes(1)
-        expect(fixtures[STREAM_C].subscriptions[1].unsubscribe).toHaveBeenCalledTimes(1)
+        expect(fixtures[STREAM_C][0].unsubscribe).toHaveBeenCalledTimes(1)
+        expect(fixtures[STREAM_C][1].unsubscribe).toHaveBeenCalledTimes(1)
     })
 
     it('handles removeStakedStream event given non-existing stream', async () => {
