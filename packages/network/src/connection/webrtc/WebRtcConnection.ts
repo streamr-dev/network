@@ -417,10 +417,13 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
                 let sent = false
                 let isOpen
                 try {
+                    if (this.isOpen()) {
+                        this.doSendMessage(queueItem.getMessage())
+                        sent = true
+                    }
                     // this.isOpen() is checked immediately after the call to node-datachannel.sendMessage() as if
                     // this.isOpen() returns false after a "successful" send, the message is lost with a near 100% chance.
                     // This does not work as expected if this.isOpen() is checked before sending a message
-                    sent = this.isOpen() && this.doSendMessage(queueItem.getMessage())
                     isOpen = this.isOpen()
                     sent = sent && isOpen
                     this.messagesSent += 1
@@ -484,9 +487,8 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
      * Invoked when a message is ready to be sent. Connectivity is ensured
      * with a check to `isOpen` before invocation.
      * @param message - mesasge to be sent
-     * @return return false if the message could not be delivered
      */
-    protected abstract doSendMessage(message: string): boolean
+    protected abstract doSendMessage(message: string): void
 
     /**
      * Subclass should call this method when the connection has opened.
