@@ -193,8 +193,8 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
         const target = this.connectors.get(keyFromPeerDescriptor(operation.targetDescriptor))
 
         if (!target) {
-            logger.error('Traget connector not found when executing connect operation')
-            return operation.association.connectedCallback!('Traget connector not found')
+            logger.error('Target connector not found when executing connect operation')
+            return operation.association.connectedCallback!('Target connector not found')
         }
 
         target!.handleIncomingConnection(operation.sourceConnection)
