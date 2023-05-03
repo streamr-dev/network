@@ -9,6 +9,7 @@ import {
 import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
 import { RemoteHandshaker } from '../../src/logic/neighbor-discovery/RemoteHandshaker'
+import { NetworkNode } from '../../src/NetworkNode'
 
 export const mockConnectionLocker: ConnectionLocker = {
     lockConnection: () => {},
@@ -76,4 +77,19 @@ export const createMockRemoteHandshaker = (): RemoteHandshaker => {
         handshake: async () => {},
         interleaveNotice: async () => {}
     } as any)
+}
+
+export const createNetworkNodeWithSimulator = (peerDescriptor: PeerDescriptor, simulator: Simulator, entryPoints: PeerDescriptor[]) => {
+    const transport = new SimulatorTransport(peerDescriptor, simulator)
+    return new NetworkNode({
+        layer0: {
+            peerDescriptor,
+            entryPoints,
+            transportLayer: transport,
+            maxConnections: 25,
+            storeHighestTtl: 120000,
+            storeMaxTtl: 120000
+        },
+        networkNode: {}
+    })
 }
