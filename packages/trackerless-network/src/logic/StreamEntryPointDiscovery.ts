@@ -43,7 +43,7 @@ const exponentialRunOff = async (
         try { // Abort controller throws unexpected errors in destroy?
             await wait(delay, abortSignal)
         } catch (err) {
-            logger.trace(err)
+            logger.trace(`${err}`)
         }
     }
 }
@@ -69,7 +69,7 @@ export class StreamEntryPointDiscovery {
     constructor(config: StreamEntryPointDiscoveryConfig) {
         this.config = config
         this.abortController = new AbortController()
-        this.cacheInterval = this.config.cacheInterval || 40000
+        this.cacheInterval = this.config.cacheInterval || 60000
         this.cacheIntervalRefs = new Map()
     }
 
@@ -149,7 +149,8 @@ export class StreamEntryPointDiscovery {
             logger.trace(`Attempting to keep self as entrypoint for ${streamPartId}`)
             try {
                 const discovered = await this.discoverEntrypoints(streamPartId)
-                if (discovered.length < ENTRYPOINT_STORE_LIMIT) {
+                if (discovered.length < ENTRYPOINT_STORE_LIMIT 
+                    || discovered.some((peer) => isSamePeerDescriptor(peer, this.config.ownPeerDescriptor))) {
                     await this.storeSelfAsEntryPoint(streamPartId)
                     this.cacheIntervalRefs.delete(streamPartId)
                     this.keepSelfAsEntryPoint(streamPartId)
