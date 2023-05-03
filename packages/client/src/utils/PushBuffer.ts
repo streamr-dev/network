@@ -25,7 +25,6 @@ export type IPushBuffer<InType, OutType = InType> = {
     length: number
     isDone(): boolean
     clear(): void
-    collect(n?: number): Promise<OutType[]>
 } & AsyncGenerator<OutType>
 
 /**
@@ -102,17 +101,6 @@ export class PushBuffer<T> implements IPushBuffer<T> {
         const p = new PushBuffer(this.bufferSize)
         pull(G.reduce(this, fn, initialValue), p)
         return p
-    }
-
-    /**
-     * Collect n/all messages into an array.
-     */
-    async collect(n?: number): Promise<T[]> {
-        if (this.isIterating) {
-            // @ts-expect-error ts can't do this.constructor properly
-            throw new this.constructor.Error(this, 'Cannot collect if already iterating.')
-        }
-        return G.collect(this, n)
     }
 
     private updateWriteGate(): void {
