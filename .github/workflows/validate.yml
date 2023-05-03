@@ -35,7 +35,6 @@ jobs:
       package: utils
       command: |
         npm run test
-        sudo apt-get install xvfb
         xvfb-run --auto-servernum npm run test-browser
   protocol:
     needs: build
@@ -49,7 +48,6 @@ jobs:
       package: proto-rpc
       command: |
         npm run test
-        sudo apt-get install xvfb
         xvfb-run --auto-servernum npm run test-browser
   dht:
     needs: build
@@ -58,7 +56,6 @@ jobs:
       package: dht
       command: |
         npm run test
-        sudo apt-get install xvfb
         xvfb-run --auto-servernum npm run test-browser
   network:
     needs: build
@@ -71,7 +68,6 @@ jobs:
     with:
       package: network
       command: |
-        sudo apt-get install xvfb
         xvfb-run --auto-servernum npm run test-browser
   tracker:
     needs: build
