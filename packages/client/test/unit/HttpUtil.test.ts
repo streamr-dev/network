@@ -1,12 +1,12 @@
 import 'reflect-metadata'
 
+import { StreamPartIDUtils } from '@streamr/protocol'
+import { fastWallet } from '@streamr/test-utils'
+import { collect } from '@streamr/utils'
 import { once } from 'events'
 import express from 'express'
 import range from 'lodash/range'
-import { StreamPartIDUtils } from '@streamr/protocol'
-import { fastWallet } from '@streamr/test-utils'
 import { HttpUtil } from '../../src/HttpUtil'
-import { collect } from '../../src/utils/iterators'
 import { createMockMessage, mockLoggerFactory } from '../test-utils/utils'
 
 const MOCK_SERVER_PORT = 12345

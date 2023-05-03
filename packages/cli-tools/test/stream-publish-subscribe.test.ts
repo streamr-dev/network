@@ -1,7 +1,8 @@
 import { Wallet } from '@ethersproject/wallet'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { collect } from '@streamr/utils'
 import { StreamPermission } from 'streamr-client'
-import { collect, createTestClient, runCommand, startCommand } from './utils'
+import { createTestClient, runCommand, startCommand } from './utils'
 
 describe('publish and subscribe', () => {
 

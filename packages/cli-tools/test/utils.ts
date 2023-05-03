@@ -1,6 +1,7 @@
-import merge2 from 'merge2'
-import { StreamrClient, CONFIG_TEST } from 'streamr-client'
+import { collect } from '@streamr/utils'
 import { spawn } from 'child_process'
+import merge2 from 'merge2'
+import { CONFIG_TEST, StreamrClient } from 'streamr-client'
 
 export const DOCKER_DEV_STORAGE_NODE = '0xde1112f631486CfC759A50196853011528bC5FA0'
 
@@ -63,17 +64,6 @@ async function* lines(src: AsyncIterable<Buffer>): AsyncGenerator<string, any, a
     if (buffer !== '') {
         yield buffer
     }
-}
-
-export const collect = async <T>(source: AsyncIterable<T>, maxCount?: number): Promise<T[]> => {
-    const items: T[] = []
-    for await (const item of source) {
-        items.push(item)
-        if ((maxCount !== undefined) && (items.length >= maxCount)) {
-            break
-        }
-    }
-    return items
 }
 
 export const createTestClient = (privateKey?: string): StreamrClient => {
