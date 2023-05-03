@@ -230,8 +230,15 @@ export class Stream {
      * storage node assignment to go through eventually.
      */
     async addToStorageNode(storageNodeAddress: string, waitOptions: { timeout?: number } = {}): Promise<void> {
-        let assignmentSubscription
         const normalizedNodeAddress = toEthereumAddress(storageNodeAddress)
+        // check whether the stream is already stored: the assignment event listener logic requires that 
+        // there must not be an existing assignment (it timeouts if there is an existing assignment as the 
+        // storage node doesn't send an assignment event in that case)
+        const isAlreadyStored = await this._streamStorageRegistry.isStoredStream(this.id, normalizedNodeAddress)
+        if (isAlreadyStored) {
+            return
+        }
+        let assignmentSubscription
         try {
             const streamPartId = toStreamPartID(formStorageNodeAssignmentStreamId(normalizedNodeAddress), DEFAULT_PARTITION)
             assignmentSubscription = new Subscription(streamPartId, false, this._loggerFactory)
