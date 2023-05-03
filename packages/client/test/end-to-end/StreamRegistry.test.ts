@@ -1,14 +1,13 @@
 import { Wallet } from '@ethersproject/wallet'
-import { createTestStream, createRelativeTestStreamId } from '../test-utils/utils'
-import { until } from '../../src/utils/promises'
-import { NotFoundError } from '../../src/HttpUtil'
-import { StreamrClient } from '../../src/StreamrClient'
-import { Stream } from '../../src/Stream'
-import { CONFIG_TEST } from '../../src/ConfigTest'
 import { toStreamID } from '@streamr/protocol'
-import { collect } from '../../src/utils/iterators'
 import { fetchPrivateKeyWithGas, randomEthereumAddress } from '@streamr/test-utils'
-import { EthereumAddress, toEthereumAddress, waitForCondition } from '@streamr/utils'
+import { EthereumAddress, collect, toEthereumAddress, waitForCondition } from '@streamr/utils'
+import { CONFIG_TEST } from '../../src/ConfigTest'
+import { NotFoundError } from '../../src/HttpUtil'
+import { Stream } from '../../src/Stream'
+import { StreamrClient } from '../../src/StreamrClient'
+import { until } from '../../src/utils/promises'
+import { createRelativeTestStreamId, createTestStream } from '../test-utils/utils'
 
 jest.setTimeout(20000)
 const PARTITION_COUNT = 3

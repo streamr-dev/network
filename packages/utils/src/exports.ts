@@ -31,6 +31,7 @@ import { withRateLimit } from './withRateLimit'
 import { ObservableEventEmitter } from './ObservableEventEmitter'
 import { initEventGateway } from './initEventGateway'
 import { merge } from './merge'
+import { collect } from './collect'
 
 export {
     BrandedString,
@@ -63,7 +64,8 @@ export {
     Events,
     ObservableEventEmitter,
     initEventGateway,
-    merge
+    merge,
+    collect
 }
 
 export {

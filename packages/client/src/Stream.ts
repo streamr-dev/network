@@ -1,31 +1,28 @@
-import { Resends } from './subscribe/Resends'
-import { Publisher } from './publish/Publisher'
-import { StreamRegistry } from './registry/StreamRegistry'
-import { StreamRegistryCached } from './registry/StreamRegistryCached'
 import {
     StreamID,
     StreamPartID,
-    toStreamPartID,
-    ensureValidStreamPartitionCount
+    ensureValidStreamPartitionCount,
+    toStreamPartID
 } from '@streamr/protocol'
+import { collect, merge, toEthereumAddress, withTimeout } from '@streamr/utils'
 import range from 'lodash/range'
-import { StrictStreamrClientConfig } from './Config'
-import { PermissionAssignment, PublicPermissionQuery, UserPermissionQuery } from './permission'
-import { Subscriber } from './subscribe/Subscriber'
-import { formStorageNodeAssignmentStreamId } from './utils/utils'
-import { waitForAssignmentsToPropagate } from './utils/waitForAssignmentsToPropagate'
 import { PublishMetadata } from '../src/publish/Publisher'
-import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
-import { toEthereumAddress, withTimeout } from '@streamr/utils'
-import { StreamrClientEventEmitter } from './events'
-import { collect } from './utils/iterators'
+import { StrictStreamrClientConfig } from './Config'
+import { Message, convertStreamMessageToMessage } from './Message'
 import { DEFAULT_PARTITION } from './StreamIDBuilder'
+import { StreamrClientError } from './StreamrClientError'
+import { StreamrClientEventEmitter } from './events'
+import { PermissionAssignment, PublicPermissionQuery, UserPermissionQuery } from './permission'
+import { Publisher } from './publish/Publisher'
+import { StreamRegistry } from './registry/StreamRegistry'
+import { StreamRegistryCached } from './registry/StreamRegistryCached'
+import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
+import { Resends } from './subscribe/Resends'
+import { Subscriber } from './subscribe/Subscriber'
 import { Subscription } from './subscribe/Subscription'
 import { LoggerFactory } from './utils/LoggerFactory'
-import { Message } from './Message'
-import { convertStreamMessageToMessage } from './Message'
-import { merge } from '@streamr/utils'
-import { StreamrClientError } from './StreamrClientError' 
+import { formStorageNodeAssignmentStreamId } from './utils/utils'
+import { waitForAssignmentsToPropagate } from './utils/waitForAssignmentsToPropagate'
 
 export interface StreamMetadata {
     /**

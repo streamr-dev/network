@@ -1,5 +1,6 @@
+import { collect } from '@streamr/utils'
 import 'jest-extended'
-import { collect, startCommand } from './utils'
+import { startCommand } from './utils'
 
 describe('mock-data', () => {
 

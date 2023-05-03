@@ -1,16 +1,15 @@
 import 'reflect-metadata'
 
-import { Defer, waitForCondition } from '@streamr/utils'
 import { StreamID, StreamMessage } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
-import { StreamPermission } from '../../src/permission'
+import { Defer, collect, waitForCondition } from '@streamr/utils'
+import { Message, MessageMetadata } from '../../src/Message'
 import { StreamrClient } from '../../src/StreamrClient'
+import { StreamPermission } from '../../src/permission'
 import { Subscription } from '../../src/subscribe/Subscription'
-import { collect } from '../../src/utils/iterators'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { createTestStream } from '../test-utils/utils'
-import { Message, MessageMetadata } from '../../src/Message'
 
 const MAX_ITEMS = 3
 const NUM_MESSAGES = 8
