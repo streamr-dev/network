@@ -13,6 +13,8 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 
 const logger = new Logger(module)
 
+const MAX_FAILED_HOPS = 4
+
 export interface RoutingSessionEvents {
     // This event is emitted when a peer responds with a success ack
     // to routeMessage call
@@ -38,6 +40,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     private connections: Map<PeerIDKey, DhtPeer>
     private readonly parallelism: number
     private firstHopTimeout: number
+    private failedHopCounter = 0
     private readonly mode: RoutingMode = RoutingMode.ROUTE
     private stopped = false
 
@@ -81,11 +84,12 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         }
         const contacts = this.findMoreContacts()
         if (contacts.length < 1 && this.ongoingRequests.size < 1) {
-            logger.trace('routing failed, emitting routingFailed sessionId: ' + this.sessionId)
+            logger.debug('routing failed, emitting routingFailed sessionId: ' + this.sessionId)
             this.stopped = true
             this.emit('routingFailed', this.sessionId)
         } else {
-            logger.trace('routing failed, retrying to route sessionId: ' + this.sessionId)
+            this.failedHopCounter += 1
+            logger.debug('routing failed, retrying to route sessionId: ' + this.sessionId + ' failedHopCounter: ' + this.failedHopCounter)
             this.sendMoreRequests(contacts)
         }
     }
@@ -150,6 +154,11 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
             return
         }
         if (uncontacted.length < 1) {
+            this.emit('routingFailed', this.sessionId)
+            return
+        }
+        if (this.failedHopCounter >= MAX_FAILED_HOPS) {
+            logger.debug(`Stopping routing after ${MAX_FAILED_HOPS} failed attempts for sessionId: ${this.sessionId}`)
             this.emit('routingFailed', this.sessionId)
             return
         }
