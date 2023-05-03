@@ -8,14 +8,14 @@ import { getOptionType, OptionType } from '../src/common'
 
 interface Options extends BaseOptions {
     user?: string | true
-    public?: true
+    public: boolean
     all?: StreamPermission[]
     any?: StreamPermission[]
 }
 
 const createPermissionFilter = async (
-    user: string | boolean | undefined,
-    allowPublic: boolean | undefined,
+    user: string | true | undefined,
+    allowPublic: boolean,
     allOf: StreamPermission[] | undefined,
     anyOf: StreamPermission[] | undefined,
     client: StreamrClient
@@ -23,7 +23,7 @@ const createPermissionFilter = async (
     if (user !== undefined) {
         return {
             user: (getOptionType(user) === OptionType.ARGUMENT) ? user as string : await client.getAddress(),
-            allowPublic: allowPublic ?? false,
+            allowPublic,
             allOf,
             anyOf
         }
@@ -55,7 +55,7 @@ createClientCommand(async (client: StreamrClient, term: string | undefined, opti
     .arguments('[term]')
     .description('search streams')
     .option('--user [user]', 'a stream must have permissions for the given user, defaults to the authenticated user')
-    .option('--public', 'the permission can be implicit (a public permission to the stream)')
+    .option('--public', 'the permission can be implicit (a public permission to the stream)', false)
     .addOption(createPermissionListOption('all'))
     .addOption(createPermissionListOption('any'))
     .parseAsync()

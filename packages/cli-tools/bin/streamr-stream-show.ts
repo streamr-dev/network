@@ -5,7 +5,7 @@ import { createClientCommand, Options as BaseOptions } from '../src/command'
 import { getPermissionId } from '../src/permission'
 
 interface Options extends BaseOptions {
-    includePermissions?: true
+    includePermissions: boolean
 }
 
 createClientCommand(async (client: StreamrClient, streamId: string, options: Options) => {
@@ -24,5 +24,5 @@ createClientCommand(async (client: StreamrClient, streamId: string, options: Opt
 })
     .arguments('<streamId>')
     .description('show detailed information about a stream')
-    .option('--include-permissions', 'include list of permissions')
+    .option('--include-permissions', 'include list of permissions', false)
     .parseAsync()
