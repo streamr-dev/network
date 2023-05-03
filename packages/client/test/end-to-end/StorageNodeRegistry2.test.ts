@@ -85,6 +85,11 @@ describe('StorageNodeRegistry2', () => {
         await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
         const isStored = await client.isStoredStream(stream.id, DOCKER_DEV_STORAGE_NODE)
         expect(isStored).toEqual(true)
+
+        // assign again: no-op
+        await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
+        const isStored2 = await client.isStoredStream(stream.id, DOCKER_DEV_STORAGE_NODE)
+        expect(isStored2).toEqual(true)
     })
 
     it('delete a node', async () => {
