@@ -20,6 +20,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 
+## [8.3.1] - 2023-05-03
+
+### Fixed
+
+- Fix duplicate message sending issue in network library (https://github.com/streamr-dev/network/pull/1290)
+- Fix calculation of diagnostic info in network library (https://github.com/streamr-dev/network/pull/1300)
+
+
 ## [8.3.0] - 2023-04-26
 
 ### Added
@@ -356,7 +364,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed an import so that the client successfully loads in a web browser environment (NET-721)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/client/v8.3.0...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/client/v8.3.1...HEAD
+[8.3.1]: https://github.com/streamr-dev/network/compare/client/v8.3.0...client/v8.3.1
 [8.3.0]: https://github.com/streamr-dev/network/compare/client/v8.2.1...client/v8.3.0
 [8.2.1]: https://github.com/streamr-dev/network/compare/client/v8.2.0...client/v8.2.1
 [8.2.0]: https://github.com/streamr-dev/network/compare/client/v8.1.0...client/v8.2.0

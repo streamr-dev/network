@@ -17,9 +17,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Fix `stream create` ouput (now valid JSON without extra characters)
-
 ### Security
+
+
+## [8.3.1] - 2023-05-03
+
+### Fixed
+
+- Fix `stream create` ouput (now valid JSON without extra characters)
 
 
 ## [7.0.0] - 2022-11-15
@@ -151,7 +156,8 @@ ordering and gap filling.
 - Re-organize README.md and a few touches to Developing section paragraphs.
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/cli-tools%2fv7.0.0...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/cli-tools%2fv8.3.1...HEAD
+[8.3.1]: https://github.com/streamr-dev/network/compare/cli-tools%2fv7.0.0...cli-tools%2fv8.3.1
 [7.0.0]: https://github.com/streamr-dev/network/compare/cli-tools%2fv6.1.1...cli-tools%2fv7.0.0
 [6.1.1]: https://github.com/streamr-dev/network/compare/cli-tools%2fv6.1.0...cli-tools%2fv6.1.1
 [6.1.0]: https://github.com/streamr-dev/network/compare/cli-tools%2fv6.0.0...cli-tools%2fv6.1.0
