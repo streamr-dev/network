@@ -59,6 +59,8 @@ export interface DhtNodeOptions {
     routeMessageTimeout?: number
     dhtJoinTimeout?: number
     metricsContext?: MetricsContext
+    storeHighestTtl?: number
+    storeMaxTtl?: number
 
     transportLayer?: ITransport
     peerDescriptor?: PeerDescriptor
@@ -74,6 +76,7 @@ export interface DhtNodeOptions {
     webrtcDatachannelBufferThresholdLow?: number
     webrtcDatachannelBufferThresholdHigh?: number
     newWebrtcConnectionTimeout?: number
+    maxConnections?: number
 }
 
 export class DhtNodeConfig {
@@ -349,7 +352,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private onTransportConnected(peerDescriptor: PeerDescriptor): void {
 
         if (this.ownPeerId!.equals(PeerID.fromValue(peerDescriptor.kademliaId))) {
-            console.error('onTransportConnected() to self')
+            logger.error('onTransportConnected() to self')
         }
 
         const dhtPeer = new DhtPeer(
