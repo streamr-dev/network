@@ -101,11 +101,12 @@ export class RemoteRouter extends Remote<IRoutingServiceClient> {
         try {
             const ack = await this.client.findRecursively(message, options)
             if (ack.error!.length > 0) {
+                logger.debug('Next hop responded with error ' + ack.error)
                 return false
             }
         } catch (err) {
             const fromNode = params.previousPeer ? keyFromPeerDescriptor(params.previousPeer) : keyFromPeerDescriptor(params.sourcePeer!)
-            logger.debug(`Failed to send routeMessage from ${fromNode} to ${this.peerId.toKey()} with: ${err}`)
+            logger.debug(`Failed to send recursiveFind message from ${fromNode} to ${this.peerId.toKey()} with: ${err}`)
             return false
         }
         return true
