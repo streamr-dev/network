@@ -149,7 +149,8 @@ export class StreamEntryPointDiscovery {
             logger.trace(`Attempting to keep self as entrypoint for ${streamPartId}`)
             try {
                 const discovered = await this.discoverEntrypoints(streamPartId)
-                if (discovered.length < ENTRYPOINT_STORE_LIMIT || discovered.some((peer) => isSamePeerDescriptor(peer, this.config.ownPeerDescriptor))) {
+                if (discovered.length < ENTRYPOINT_STORE_LIMIT 
+                    || discovered.some((peer) => isSamePeerDescriptor(peer, this.config.ownPeerDescriptor))) {
                     await this.storeSelfAsEntryPoint(streamPartId)
                     this.cacheIntervalRefs.delete(streamPartId)
                     this.keepSelfAsEntryPoint(streamPartId)
