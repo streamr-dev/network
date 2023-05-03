@@ -27,7 +27,7 @@ jobs:
         run: npm run bootstrap
       - name: Build documentation
         working-directory: ./docs
-        run: npm ci && npm run build
+        run: npm ci && npm run build && npm run refine
       - name: Get version string from git tag name
         id: get_version
         run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
