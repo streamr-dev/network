@@ -9,7 +9,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { createTestStream } from '../test-utils/utils'
 import { waitForCondition, MetricsContext } from '@streamr/utils'
 
-const TIMEOUT = 20 * 1000
+const TIMEOUT = 30 * 1000
 
 const PAYLOAD = { hello: 'world' }
 

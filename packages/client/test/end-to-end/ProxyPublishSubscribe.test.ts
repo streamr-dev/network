@@ -8,7 +8,7 @@ import { wait } from '@streamr/utils'
 import { ProxyDirection, toStreamPartID } from '@streamr/protocol'
 import { until } from '../../src/utils/promises'
 
-jest.setTimeout(50000)
+const TIMEOUT = 50000
 const SUBSCRIBE_WAIT_TIME = 2000
 
 describe('PubSub with proxy connections', () => {
@@ -54,7 +54,7 @@ describe('PubSub with proxy connections', () => {
                 trackers: CONFIG_TEST.network!.trackers
             }
         })
-    }, 10000)
+    }, TIMEOUT)
 
     beforeEach(async () => {
         // @ts-expect-error private
@@ -73,7 +73,7 @@ describe('PubSub with proxy connections', () => {
                 { permissions: [StreamPermission.PUBLISH, StreamPermission.SUBSCRIBE], user: proxyUser2 }
             ]
         })
-    }, 60000)
+    }, TIMEOUT)
 
     it('Proxy publish connections work', async () => {
         const receivedMessagesProxy: any[] = []
@@ -102,7 +102,7 @@ describe('PubSub with proxy connections', () => {
         expect((await onewayClient.getNode())
             .hasProxyConnection(toStreamPartID(stream.id, 0), proxyNodeId1, ProxyDirection.PUBLISH))
             .toEqual(true)
-    }, 15000)
+    }, TIMEOUT)
 
     it('Open publish proxies, close publish proxies', async () => {
         const receivedMessagesProxy1: any[] = []
@@ -134,7 +134,7 @@ describe('PubSub with proxy connections', () => {
             .hasStreamPart(toStreamPartID(stream.id, 0)))
             .toEqual(false)
 
-    }, 15000)
+    }, TIMEOUT)
 
     it('Proxy subscribe connections work', async () => {
         const receivedMessages: any[] = []
@@ -164,7 +164,7 @@ describe('PubSub with proxy connections', () => {
         expect((await onewayClient.getNode())
             .hasProxyConnection(toStreamPartID(stream.id, 0), proxyNodeId1, ProxyDirection.SUBSCRIBE))
             .toEqual(true)
-    }, 15000)
+    }, TIMEOUT)
 
     it('open subscribe proxies, close subscribe proxies', async () => {
         await proxyClient1.subscribe(stream)
@@ -190,7 +190,7 @@ describe('PubSub with proxy connections', () => {
         expect((await onewayClient.getNode())
             .hasStreamPart(toStreamPartID(stream.id, 0)))
             .toEqual(false)
-    }, 15000)
+    }, TIMEOUT)
 
     it('Open proxies, close all proxies', async () => {
         const receivedMessagesProxy1: any[] = []
@@ -222,6 +222,6 @@ describe('PubSub with proxy connections', () => {
             .hasStreamPart(toStreamPartID(stream.id, 0)))
             .toEqual(false)
 
-    }, 15000)
+    }, TIMEOUT)
 
 })

@@ -6,7 +6,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { PermissionAssignment, StreamPermission } from '../../src/permission'
 import { SearchStreamsPermissionFilter } from '../../src/registry/searchStreams'
 
-jest.setTimeout(2 * 60 * 1000)
+const TIMEOUT = 2 * 60 * 1000
 
 const SEARCH_TERM = `mock-search-term-${Date.now()}`
 
@@ -73,7 +73,7 @@ describe('searchStreams', () => {
             { user: searcher.address, permissions: [StreamPermission.SUBSCRIBE] },
             { public: true, permissions: [StreamPermission.SUBSCRIBE] }
         )
-    })
+    }, TIMEOUT)
 
     afterAll(async () => {
         await client?.destroy()
@@ -88,18 +88,18 @@ describe('searchStreams', () => {
             streamWithUserAndPublicPermission.id,
             streamWithGrantedAndRevokedPermission.id,
         ])
-    })
+    }, TIMEOUT)
 
     it('no search term matches', async () => {
         const streamIds = await searchStreamIds(`no-matches-${Date.now()}`)
         expect(streamIds).toEqual([])
-    })
+    }, TIMEOUT)
 
     it('no filters', async () => {
         return expect(async () => {
             await client.searchStreams(undefined, undefined)
         }).rejects.toThrow('Requires a search term or a permission filter')
-    })
+    }, TIMEOUT)
 
     describe('permission filter', () => {
 
@@ -112,7 +112,7 @@ describe('searchStreams', () => {
                 streamWithUserPermission.id,
                 streamWithUserAndPublicPermission.id
             ])
-        })
+        }, TIMEOUT)
 
         it('user permissions and public permissions', async () => {
             const streamIds = await searchStreamIds(SEARCH_TERM, {
@@ -124,7 +124,7 @@ describe('searchStreams', () => {
                 streamWithPublicPermission.id,
                 streamWithUserAndPublicPermission.id
             ])
-        })
+        }, TIMEOUT)
 
         it('public permissions', async () => {
             const streamIds = await searchStreamIds(SEARCH_TERM, {
@@ -135,7 +135,7 @@ describe('searchStreams', () => {
                 streamWithPublicPermission.id,
                 streamWithUserAndPublicPermission.id
             ])
-        })
+        }, TIMEOUT)
 
         describe('all of', () => {
             it('match', async () => {
@@ -148,7 +148,7 @@ describe('searchStreams', () => {
                     streamWithUserPermission.id,
                     streamWithUserAndPublicPermission.id
                 ])
-            })
+            }, TIMEOUT)
 
             it('no match', async () => {
                 const streamIds = await searchStreamIds(SEARCH_TERM, {
@@ -157,7 +157,7 @@ describe('searchStreams', () => {
                     allowPublic: false
                 })
                 expect(streamIds).toEqual([])
-            })
+            }, TIMEOUT)
 
             it('all permission types match', async () => {
                 const streamIds = await searchStreamIds(SEARCH_TERM, {
@@ -169,7 +169,7 @@ describe('searchStreams', () => {
                     streamWithUserPermission.id,
                     streamWithUserAndPublicPermission.id
                 ])
-            })
+            }, TIMEOUT)
         })
 
         describe('any of', () => {
@@ -183,7 +183,7 @@ describe('searchStreams', () => {
                     streamWithUserPermission.id,
                     streamWithUserAndPublicPermission.id
                 ])
-            })
+            }, TIMEOUT)
 
             it('no match', async () => {
                 const streamIds = await searchStreamIds(SEARCH_TERM, {
@@ -192,7 +192,7 @@ describe('searchStreams', () => {
                     allowPublic: false
                 })
                 expect(streamIds).toEqual([])
-            })
+            }, TIMEOUT)
 
             it('no possible results', async () => {
                 const streamIds = await searchStreamIds(SEARCH_TERM, {
@@ -201,7 +201,7 @@ describe('searchStreams', () => {
                     allowPublic: false
                 })
                 expect(streamIds).toEqual([])
-            })
+            }, TIMEOUT)
         })
     })
 })

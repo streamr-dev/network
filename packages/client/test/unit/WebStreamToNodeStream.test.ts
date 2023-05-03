@@ -15,7 +15,7 @@ describe('WebStreamToNodeStream', () => {
     }
 
     if (isRunningInElectron()) {
-        it.skip('skipping...')
+        it.skip('skipping due to Electron environment...')
         return
     }
 

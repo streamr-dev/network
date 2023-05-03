@@ -11,7 +11,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { until } from '../../src/utils/promises'
 import { createRelativeTestStreamId, createTestStream } from '../test-utils/utils'
 
-jest.setTimeout(20000)
+const TIMEOUT = 20000
 const PARTITION_COUNT = 3
 
 const TIMEOUT_CONFIG = {
@@ -43,13 +43,13 @@ describe('StreamRegistry', () => {
             },
             _timeouts: TIMEOUT_CONFIG
         })
-    })
+    }, TIMEOUT)
 
     beforeAll(async () => {
         createdStream = await createTestStream(client, module, {
             partitions: PARTITION_COUNT
         })
-    })
+    }, TIMEOUT)
 
     describe('createStream', () => {
         it('creates a stream with correct values', async () => {
@@ -58,7 +58,7 @@ describe('StreamRegistry', () => {
                 id: path
             })
             expect(stream.id).toBe(toStreamID(path, await client.getAddress()))
-        })
+        }, TIMEOUT)
 
         it('valid id', async () => {
             const newId = `${publicAddress}/StreamRegistry-createStream-newId-${Date.now()}`
@@ -67,7 +67,7 @@ describe('StreamRegistry', () => {
             })
             expect(newStream.id).toEqual(newId)
             expect(await client.getStream(newId)).toBeDefined()
-        })
+        }, TIMEOUT)
 
         it('valid path', async () => {
             const newPath = `/StreamRegistry-createStream-newPath-${Date.now()}`
@@ -77,12 +77,12 @@ describe('StreamRegistry', () => {
             })
             expect(newStream.id).toEqual(expectedId)
             expect(await client.getStream(expectedId)).toBeDefined()
-        })
+        }, TIMEOUT)
 
         it('legacy format', async () => {
             const streamId = '7wa7APtlTq6EC5iTCBy6dw'
             await expect(async () => client.createStream({ id: streamId })).rejects.toThrow(`stream id "${streamId}" not valid`)
-        })
+        }, TIMEOUT)
 
         it('listener', async () => {
             const onCreateSteam = jest.fn()
@@ -111,7 +111,7 @@ describe('StreamRegistry', () => {
                 blockNumber: expect.any(Number)
             })
             expect(hasBeenCalledFor(invalidStream)).toBeFalse()
-        })
+        }, TIMEOUT)
 
         // skipped until fix by smart contract
         describe('ENS', () => {
@@ -132,17 +132,17 @@ describe('StreamRegistry', () => {
                 })
                 expect(newStream.id).toEqual(streamId)
                 expect(await client.getStream(streamId)).toBeDefined()
-            })
+            }, TIMEOUT)
 
             it('domain not owned by user', async () => {
                 const streamId = 'testdomain1.eth/foobar'
                 await expect(async () => client.createStream({ id: streamId })).rejects.toThrow()
-            })
+            }, TIMEOUT)
 
             it('domain not registered', async () => {
                 const streamId = 'some-non-registered-address.eth/foobar'
                 await expect(async () => client.createStream({ id: streamId })).rejects.toThrow()
-            })
+            }, TIMEOUT)
 
         })
     })
@@ -152,12 +152,12 @@ describe('StreamRegistry', () => {
             const stream = await createTestStream(client, module)
             const existingStream = await client.getStream(stream.id)
             expect(existingStream.id).toEqual(stream.id)
-        })
+        }, TIMEOUT)
 
         it('get a non-existing Stream', async () => {
             const streamId = `${publicAddress}/StreamRegistry-nonexisting-${Date.now()}`
             return expect(() => client.getStream(streamId)).rejects.toThrow(NotFoundError)
-        })
+        }, TIMEOUT)
     })
 
     describe('getOrCreateStream', () => {
@@ -166,7 +166,7 @@ describe('StreamRegistry', () => {
                 id: createdStream.id,
             })
             expect(existingStream.id).toBe(createdStream.id)
-        })
+        }, TIMEOUT)
 
         it('new Stream by id', async () => {
             const newId = `${publicAddress}/StreamRegistry-getOrCreate-newId-${Date.now()}`
@@ -174,7 +174,7 @@ describe('StreamRegistry', () => {
                 id: newId,
             })
             expect(newStream.id).toEqual(newId)
-        })
+        }, TIMEOUT)
 
         it('new Stream by path', async () => {
             const newPath = `/StreamRegistry-getOrCreate-newPath-${Date.now()}`
@@ -188,7 +188,7 @@ describe('StreamRegistry', () => {
                 id: newPath,
             })
             expect(sameStream.id).toEqual(newStream.id)
-        })
+        }, TIMEOUT)
 
         it('fails if stream prefixed with other users address', async () => {
             // can't create streams for other users
@@ -200,7 +200,7 @@ describe('StreamRegistry', () => {
                     id: `${otherAddress}${newPath}`,
                 })
             }).rejects.toThrow(`stream id "${otherAddress}${newPath}" not in namespace of authenticated user "${publicAddress}"`)
-        })
+        }, TIMEOUT)
     })
 
     describe('getStreamPublishers', () => {
@@ -208,7 +208,7 @@ describe('StreamRegistry', () => {
             const publishers = await collect(client.getStreamPublishers(createdStream.id))
             const address = await client.getAddress()
             return expect(publishers).toEqual([address])
-        })
+        }, TIMEOUT)
     })
 
     describe('isStreamPublisher', () => {
@@ -216,14 +216,14 @@ describe('StreamRegistry', () => {
             const address = await client.getAddress()
             const valid = await client.isStreamPublisher(createdStream.id, address)
             return expect(valid).toBe(true)
-        })
+        }, TIMEOUT)
         it('throws error for invalid address', async () => {
             return expect(() => client.isStreamPublisher(createdStream.id, 'some-invalid-address')).rejects.toThrow()
-        })
+        }, TIMEOUT)
         it('returns false for invalid publishers', async () => {
             const valid = await client.isStreamPublisher(createdStream.id, randomEthereumAddress())
             return expect(valid).toBe(false)
-        })
+        }, TIMEOUT)
     })
 
     describe('getStreamSubscribers', () => {
@@ -231,7 +231,7 @@ describe('StreamRegistry', () => {
             const subscribers = await collect(client.getStreamSubscribers(createdStream.id))
             const address = await client.getAddress()
             return expect(subscribers).toEqual([address])
-        })
+        }, TIMEOUT)
     })
 
     describe('isStreamSubscriber', () => {
@@ -239,14 +239,14 @@ describe('StreamRegistry', () => {
             const address = await client.getAddress()
             const valid = await client.isStreamSubscriber(createdStream.id, address)
             return expect(valid).toBe(true)
-        })
+        }, TIMEOUT)
         it('throws error for invalid address', async () => {
             return expect(() => client.isStreamSubscriber(createdStream.id, 'some-invalid-address')).rejects.toThrow()
-        })
+        }, TIMEOUT)
         it('returns false for invalid subscribers', async () => {
             const valid = await client.isStreamSubscriber(createdStream.id, randomEthereumAddress())
             return expect(valid).toBe(false)
-        })
+        }, TIMEOUT)
     })
 
     describe('update', () => {
@@ -264,7 +264,7 @@ describe('StreamRegistry', () => {
             // check that other fields not overwritten
             const updatedStream = await client.getStream(createdStream.id)
             expect(updatedStream.getMetadata().partitions).toBe(PARTITION_COUNT)
-        })
+        }, TIMEOUT)
     })
 
     describe('delete', () => {
@@ -281,6 +281,6 @@ describe('StreamRegistry', () => {
                 }
             }, 100000, 1000)
             return expect(client.getStream(stream.id)).rejects.toThrow()
-        })
+        }, TIMEOUT)
     })
 })

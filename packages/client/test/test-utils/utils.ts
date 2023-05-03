@@ -40,8 +40,9 @@ export const uid = (prefix?: string): string => counterId(`p${process.pid}${pref
 
 const getTestName = (module: NodeModule): string => {
     const fileNamePattern = new RegExp('.*/(.*).test\\...')
-    const groups = module.filename.match(fileNamePattern)
-    return (groups !== null) ? groups[1] : module.filename
+    const moduleFilename = (module.filename ?? module.id)
+    const groups = moduleFilename.match(fileNamePattern)
+    return (groups !== null) ? groups[1] : moduleFilename
 }
 
 const randomTestRunId = process.pid != null ? process.pid : crypto.randomBytes(4).toString('hex')

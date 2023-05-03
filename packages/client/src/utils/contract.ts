@@ -1,5 +1,5 @@
 import { initEventGateway } from '@streamr/utils'
-import { Contract, ContractReceipt, ContractTransaction } from '@ethersproject/contracts'
+import { Contract, ContractReceipt, ContractTransaction } from 'ethers'
 import EventEmitter from 'eventemitter3'
 import { NameDirectory } from '@streamr/network-node'
 import pLimit from 'p-limit'
@@ -132,8 +132,16 @@ export const createDecoratedContract = <T extends Contract>(
     const result: any = {
         eventEmitter
     }
+
+    function getAllPropertyNames(obj: object): string[] {
+        const proto = Object.getPrototypeOf(obj)
+        const inherited = (proto) ? getAllPropertyNames(proto) : []
+        return [...new Set(Object.getOwnPropertyNames(obj).concat(inherited))]
+    }
+
     // copy own properties and inherited properties (e.g. contract.removeAllListeners)
-    for (const key in contract) {
+    // eslint-disable-next-line no-prototype-builtins
+    for (const key of getAllPropertyNames(contract)) {
         result[key] = methods[key] !== undefined ? methods[key] : contract[key]
     }
     return result

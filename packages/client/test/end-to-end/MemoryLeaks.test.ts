@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { fetchPrivateKeyWithGas, isRunningInElectron } from '@streamr/test-utils'
 import { Defer, wait } from '@streamr/utils'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { LeaksDetector } from '../test-utils/LeaksDetector'
@@ -48,6 +48,11 @@ const TIMEOUT = 30000
 
 describe('MemoryLeaks', () => {
     let leaksDetector: LeaksDetector
+
+    if (isRunningInElectron()) {
+        it.skip('skipping due to Electron environment (LeaksDetector not supported)')
+        return
+    }
 
     beforeEach(() => {
         leaksDetector = new LeaksDetector()

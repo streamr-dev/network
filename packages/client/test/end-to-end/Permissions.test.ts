@@ -8,7 +8,7 @@ import { StreamPermission } from '../../src/permission'
 import { fastWallet, fetchPrivateKeyWithGas, randomEthereumAddress } from '@streamr/test-utils'
 import { toEthereumAddress } from '@streamr/utils'
 
-jest.setTimeout(40000)
+const TIMEOUT = 40000
 
 describe('Stream permissions', () => {
 
@@ -25,7 +25,7 @@ describe('Stream permissions', () => {
                 privateKey: wallet.privateKey,
             }
         })
-    })
+    }, TIMEOUT)
 
     afterAll(async () => {
         await client?.destroy()
@@ -35,7 +35,7 @@ describe('Stream permissions', () => {
         stream = await client.createStream({
             id: createRelativeTestStreamId(module)
         })
-    })
+    }, TIMEOUT)
 
     describe('happy path', () => {
         it('direct permissions', async () => {
@@ -67,7 +67,7 @@ describe('Stream permissions', () => {
                 user: otherUser.address,
                 allowPublic: false
             })).toBe(false)
-        })
+        }, TIMEOUT)
 
         it('public permissions', async () => {
             await stream.grantPermissions({
@@ -108,7 +108,7 @@ describe('Stream permissions', () => {
                 user: otherUser.address,
                 allowPublic: true
             })).toBe(false)
-        })
+        }, TIMEOUT)
     })
 
     it('get permissions', async () => {
@@ -128,7 +128,7 @@ describe('Stream permissions', () => {
             public: true,
             permissions: [StreamPermission.PUBLISH]
         }])
-    })
+    }, TIMEOUT)
 
     it('no permissions initially for other users', async () => {
         expect(await stream.hasPermission({
@@ -140,7 +140,7 @@ describe('Stream permissions', () => {
             public: true,
             permission: StreamPermission.SUBSCRIBE
         })).toBe(false)
-    })
+    }, TIMEOUT)
 
     it('can revoke non-existing permissions', async () => {
         await stream.revokePermissions({
@@ -151,7 +151,7 @@ describe('Stream permissions', () => {
             public: true,
             permissions: [StreamPermission.SUBSCRIBE]
         })
-    })
+    }, TIMEOUT)
 
     it('set permissions', async () => {
         const otherStream = await client.createStream({
@@ -194,7 +194,7 @@ describe('Stream permissions', () => {
         expect(await otherStream.hasPermission(
             { permission: StreamPermission.PUBLISH, allowPublic: true, user: randomEthereumAddress() }
         )).toBe(true)
-    })
+    }, TIMEOUT)
 
     it('grant same permission multiple times', async () => {
         await stream.grantPermissions({
@@ -208,7 +208,7 @@ describe('Stream permissions', () => {
         })
         const permissions = await stream.getPermissions()
         expect(permissions).toEqual(previousPermissions)
-    })
+    }, TIMEOUT)
 
     it('granting publish permission enables publishing (invalidates isStreamPublisher cache)', async () => {
         const otherUserClient = new StreamrClient({
@@ -228,5 +228,5 @@ describe('Stream permissions', () => {
         })
         await expect(() => otherUserClient.publish(stream.id, message)).resolves
         await otherUserClient.destroy()
-    })
+    }, TIMEOUT)
 })
