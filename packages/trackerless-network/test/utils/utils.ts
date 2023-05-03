@@ -79,7 +79,11 @@ export const createMockRemoteHandshaker = (): RemoteHandshaker => {
     } as any)
 }
 
-export const createNetworkNodeWithSimulator = (peerDescriptor: PeerDescriptor, simulator: Simulator, entryPoints: PeerDescriptor[]) => {
+export const createNetworkNodeWithSimulator = (
+    peerDescriptor: PeerDescriptor,
+    simulator: Simulator,
+    entryPoints: PeerDescriptor[]
+): NetworkNode => {
     const transport = new SimulatorTransport(peerDescriptor, simulator)
     return new NetworkNode({
         layer0: {
