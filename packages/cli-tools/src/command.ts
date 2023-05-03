@@ -3,6 +3,12 @@ import { StreamrClientConfig } from 'streamr-client'
 import pkg from '../package.json'
 import { createClient } from './client'
 
+export interface Options {
+    privateKey?: string
+    config?: string
+    dev?: true
+}
+
 export const createCommand = (): commander.Command => {
     return new Command()
         .version(pkg.version)

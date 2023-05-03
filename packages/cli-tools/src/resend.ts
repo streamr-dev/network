@@ -1,10 +1,11 @@
 import { StreamrClient, ResendOptions } from 'streamr-client'
 
-export const assertBothOrNoneDefined = (
-    option1: string,
-    option2: string,
+// eslint-disable-next-line @typescript-eslint/consistent-indexed-object-style
+export const assertBothOrNoneDefined = <T extends { [k: string]: any }>(
+    option1: keyof T,
+    option2: keyof T,
     errorMessage: string,
-    commandOptions: Record<string, unknown>
+    commandOptions: T
 ): void | never => { 
     if ((option1 in commandOptions && !(option2 in commandOptions)) || (option2 in commandOptions && !(option1 in commandOptions))) {
         console.error(`option ${errorMessage}`)

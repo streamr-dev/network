@@ -1,10 +1,15 @@
 #!/usr/bin/env node
 import '../src/logLevel'
 import StreamrClient from 'streamr-client'
-import { createClientCommand } from '../src/command'
+import { createClientCommand, Options as BaseOptions } from '../src/command'
 import { createFnParseInt } from '../src/common'
 
-createClientCommand(async (client: StreamrClient, streamId: string, options: any) => {
+interface Options extends BaseOptions {
+    partition: number
+    disableOrdering: boolean
+}
+
+createClientCommand(async (client: StreamrClient, streamId: string, options: Options) => {
     await client.subscribe({
         streamId,
         partition: options.partition,
