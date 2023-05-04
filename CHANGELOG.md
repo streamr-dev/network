@@ -9,7 +9,7 @@ found [here](packages/broker/CHANGELOG.md).
 
 ## [Unreleased]
 
-### streamr-client
+### client
 
 #### Added
 
@@ -23,7 +23,7 @@ found [here](packages/broker/CHANGELOG.md).
 
 #### Security
 
-### @streamr/cli-tools
+### cli-tools
 
 #### Added
 
@@ -40,7 +40,7 @@ found [here](packages/broker/CHANGELOG.md).
 
 ## [8.3.1] - 2023-05-03
 
-### streamr-client
+### client
 
 #### Fixed
 
@@ -50,7 +50,7 @@ found [here](packages/broker/CHANGELOG.md).
 
 ## [8.3.0] - 2023-04-26
 
-### streamr-client
+### client
 
 #### Added
 
@@ -68,7 +68,7 @@ found [here](packages/broker/CHANGELOG.md).
 - Handling of `undefined` partition in `.createStream`
 
 
-### @streamr/cli-tools
+### cli-tools
 
 #### Fixed
 
@@ -77,7 +77,7 @@ found [here](packages/broker/CHANGELOG.md).
 
 ## [8.2.1] - 2023-04-13
 
-### streamr-client
+### client
 
 #### Fixed
 
@@ -86,7 +86,7 @@ found [here](packages/broker/CHANGELOG.md).
 
 ## [8.2.0] - 2023-04-11
 
-### streamr-client
+### client
 
 #### Added
 
@@ -100,7 +100,7 @@ found [here](packages/broker/CHANGELOG.md).
 
 ## [8.1.0] - 2023-03-23
 
-### streamr-client
+### client
 
 #### Added
 
@@ -113,7 +113,7 @@ found [here](packages/broker/CHANGELOG.md).
 
 ## [8.0.4] - 2023-03-20
 
-### streamr-client
+### client
 
 #### Added
 
@@ -123,7 +123,7 @@ found [here](packages/broker/CHANGELOG.md).
 
 ## [8.0.3] - 2023-03-08
 
-### streamr-client
+### client
 
 #### Fixed 
 
@@ -132,7 +132,7 @@ found [here](packages/broker/CHANGELOG.md).
 
 ## [8.0.2] - 2023-02-27
 
-### streamr-client
+### client
 
 #### Changed 
 
@@ -141,7 +141,7 @@ found [here](packages/broker/CHANGELOG.md).
 
 ## [8.0.1] - 2023-02-20
 
-### streamr-client
+### client
 
 #### Fixed 
 
@@ -150,7 +150,7 @@ found [here](packages/broker/CHANGELOG.md).
 
 ## [8.0.0] - 2023-02-20
 
-### streamr-client
+### client
 
 #### Added
 
@@ -181,7 +181,7 @@ found [here](packages/broker/CHANGELOG.md).
 
 ## [7.3.0] - 2023-01-23
 
-### streamr-client
+### client
 
 #### Added
 
@@ -191,7 +191,7 @@ found [here](packages/broker/CHANGELOG.md).
 
 ## [7.2.1] - 2023-01-12
 
-### streamr-client
+### client
 
 #### Fixed
 
@@ -200,7 +200,7 @@ found [here](packages/broker/CHANGELOG.md).
 
 ## [7.2.0] - 2022-12-14
 
-### streamr-client
+### client
 
 #### Deprecated
 
@@ -209,7 +209,7 @@ found [here](packages/broker/CHANGELOG.md).
 
 ## [7.1.0] - 2022-11-25
 
-### streamr-client
+### client
 
 #### Deprecated
 
@@ -223,7 +223,7 @@ found [here](packages/broker/CHANGELOG.md).
 
 ## [7.0.3] - 2022-11-23
 
-### streamr-client
+### client
 
 #### Changed
 
@@ -232,7 +232,7 @@ found [here](packages/broker/CHANGELOG.md).
 
 ## [7.0.2] - 2022-11-22
 
-### streamr-client
+### client
 
 #### Deprecated
 
@@ -251,7 +251,7 @@ found [here](packages/broker/CHANGELOG.md).
 
 ## [7.0.1] - 2022-11-18
 
-### streamr-client
+### client
 
 #### Changed
 
@@ -275,7 +275,7 @@ found [here](packages/broker/CHANGELOG.md).
 
 ## [7.0.0] - 2022-11-15
 
-### streamr-client
+### client
 
 #### Added
 
@@ -355,7 +355,7 @@ found [here](packages/broker/CHANGELOG.md).
 - Fix timeout issue of method `stream.addToStorageNode()` when used with storage node cluster
 - Fix concurrency issue when encryption keys are added in parallel for multiple streams (`SQLITE_ERROR: no such table: GroupKeys`)
 
-### @streamr/cli-tools
+### cli-tools
 
 #### Changed
 
@@ -364,7 +364,7 @@ found [here](packages/broker/CHANGELOG.md).
 
 ## [6.0.10] - 2022-10-03
 
-### streamr-client
+### client
 
 #### Fixed
 
@@ -374,7 +374,7 @@ found [here](packages/broker/CHANGELOG.md).
 
 ## [6.0.9] - 2022-06-20
 
-### streamr-client
+### client
 
 #### Fixed
 
@@ -383,7 +383,7 @@ found [here](packages/broker/CHANGELOG.md).
 
 ## [6.0.8] - 2022-05-31
 
-### streamr-client
+### client
 
 #### Fixed
 
@@ -392,7 +392,7 @@ found [here](packages/broker/CHANGELOG.md).
 
 ## [6.0.7] - 2022-05-25
 
-### streamr-client
+### client
 
 #### Fixed
 
@@ -401,7 +401,7 @@ found [here](packages/broker/CHANGELOG.md).
 
 ## [6.0.6] - 2022-05-24
 
-### streamr-client
+### client
 
 #### Fixed
 
@@ -412,7 +412,7 @@ found [here](packages/broker/CHANGELOG.md).
 
 ## [6.0.5] - 2022-05-10
 
-### streamr-client
+### client
 
 #### Fixed
 
@@ -421,7 +421,7 @@ found [here](packages/broker/CHANGELOG.md).
 
 ## [6.0.4] - 2022-04-28
 
-### streamr-client
+### client
 
 #### Fixed
 - Update `streamr-network` library that includes a fix to Firefox compatibility
@@ -429,7 +429,7 @@ found [here](packages/broker/CHANGELOG.md).
 
 ## [6.0.3] - 2022-04-25
 
-### streamr-client
+### client
 
 #### Fixed
 - Fix stream encryption: messages weren't automatically encrypted if the local database didn't contain pre-existing encryption keys for a stream
@@ -437,7 +437,7 @@ found [here](packages/broker/CHANGELOG.md).
 
 ## [6.0.2] - 2022-03-04
 
-### streamr-client
+### client
 
 #### Fixed
 - Fixed an issue in which method `searchStreams` would throw on invalid metadata (NET-730)
@@ -445,7 +445,7 @@ found [here](packages/broker/CHANGELOG.md).
 
 ## [6.0.1] - 2022-02-24
 
-### streamr-client
+### client
 
 #### Fixed
 - Fixed an import so that the client successfully loads in a web browser environment (NET-721)
