@@ -34,5 +34,10 @@ describe('DhtNodeExternalApi', () => {
         const foundData = await remote.findDataViaPeer(key, dhtNode1.getPeerDescriptor())
         expect(Any.unpack(foundData[0].data!, PeerDescriptor)).toEqual(dhtNode1.getPeerDescriptor())
     })
+    
+    it('findData returns empty array if no data found', async () => {
+        const foundData = await remote.findDataViaPeer(PeerID.fromString('key').value, dhtNode1.getPeerDescriptor())
+        expect(foundData).toEqual([])
+    })
   
 })

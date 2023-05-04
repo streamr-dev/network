@@ -16,8 +16,6 @@ import {
     PingRequest,
     PingResponse,
     FindMode,
-    FindDataResponse,
-    FindDataRequest,
     DataEntry,
 } from '../proto/packages/dht/protos/DhtRpc'
 import * as Err from '../helpers/errors'
@@ -40,6 +38,7 @@ import { DataStore } from './store/DataStore'
 import { PeerDiscovery } from './discovery/PeerDiscovery'
 import { LocalDataStore } from './store/LocalDataStore'
 import { IceServer } from '../connection/WebRTC/WebRtcConnector'
+import { ExternalApi } from './ExternalApi'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -159,6 +158,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private localDataStore = new LocalDataStore()
     private recursiveFinder?: RecursiveFinder
     private peerDiscovery?: PeerDiscovery
+    private externalApi?: ExternalApi
 
     public connectionManager?: ConnectionManager
     private started = false
@@ -284,6 +284,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 return this.bucket!.closest(id, n)
             }
         })
+        this.externalApi = new ExternalApi(this)
     }
 
     private initKBuckets = (selfId: PeerID) => {
@@ -404,8 +405,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             (req: PingRequest, context) => this.ping(req, context))
         this.rpcCommunicator!.registerRpcNotification(LeaveNotice, 'leaveNotice',
             (req: LeaveNotice, context) => this.leaveNotice(req, context))
-        this.rpcCommunicator!.registerRpcMethod(FindDataRequest, FindDataResponse, 'findData', 
-            (req: FindDataRequest, context) => this.findData(req, context), { timeout: 10000 })
     }
 
     private isPeerCloserToIdThanSelf(peer1: PeerDescriptor, compareToId: PeerID): boolean {
@@ -708,6 +707,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
         this.transportLayer = undefined
         this.connectionManager = undefined
+        this.externalApi = undefined
         this.connections.clear()
         this.removeAllListeners()
     }
@@ -741,24 +741,5 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.removeContact((context as DhtCallContext).incomingSourceDescriptor!)
         }
         return {}
-    }
-
-    // IDHTRpcService method for external findRecursive calls
-    async findData(findDataRequest: FindDataRequest, _context: ServerCallContext): Promise<FindDataResponse> {
-        if (this.stopped) {
-            return FindDataResponse.create({ 
-                dataEntries: [],
-                error: 'findData() service is not running' 
-            })
-        }
-        const result = await this.startRecursiveFind(findDataRequest.kademliaId, FindMode.DATA)
-        if (result.dataEntries) {
-            return FindDataResponse.create({ dataEntries: result.dataEntries })
-        } else {
-            return FindDataResponse.create({ 
-                dataEntries: [],
-                error: 'Could not find data with the given key' 
-            })
-        }
     }
 }

@@ -12,7 +12,6 @@ service DhtRpcService {
   rpc getClosestPeers (ClosestPeersRequest) returns (ClosestPeersResponse);
   rpc ping (PingRequest) returns (PingResponse);
   rpc leaveNotice (LeaveNotice) returns (google.protobuf.Empty);
-  rpc findData (FindDataRequest) returns (FindDataResponse);
 }
 
 service RoutingService {
@@ -45,6 +44,10 @@ service ConnectionLocker {
   rpc lockRequest (LockRequest) returns (LockResponse);
   rpc unlockRequest (UnlockRequest) returns (google.protobuf.Empty);
   rpc gracefulDisconnect (DisconnectNotice) returns (DisconnectNoticeResponse);
+}
+
+service ExternalApiService {
+  rpc findData (FindDataRequest) returns (FindDataResponse);
 }
 
 // Used inside RpcMessage
