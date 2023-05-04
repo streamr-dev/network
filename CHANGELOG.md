@@ -28,6 +28,7 @@ found [here](packages/broker/CHANGELOG.md).
 #### Added
 
 - Add flag `--raw` (or shorthand `-r`) to command `stream subscribe` for raw subscription
+- Add flag `--with-metadata` (or shorthand `-m`) to command `stream subscribe` to include metadata in output
 
 #### Changed
 

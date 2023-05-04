@@ -57,4 +57,28 @@ describe('publish and subscribe', () => {
         subscriberAbortController.abort()
         expect(JSON.parse(receivedMessage)).toMatch(/[0-9a-fA-F]+/)
     })
+
+    it('with metadata', async () => {
+        const subscriberAbortController = new AbortController()
+        const subscriberOutputIterable = startCommand(`stream subscribe ${streamId} --with-metadata`, {
+            privateKey: subscriberPrivateKey,
+            abortSignal: subscriberAbortController.signal,
+        })
+        publishViaCliCommand()
+        const receivedMessage = (await collect(subscriberOutputIterable, 1))[0]
+        subscriberAbortController.abort()
+        expect(JSON.parse(receivedMessage)).toMatchObject({
+            message: {
+                foo: 123
+            },
+            metadata: {
+                streamId,
+                streamPartition: 0,
+                timestamp: expect.any(Number),
+                sequenceNumber: 0,
+                publisherId: '0x7e5f4552091a69125d5dfcb7b8c2659029395bdf',
+                msgChainId: expect.stringMatching(/[0-9a-zA-Z]+/)
+            }
+        })
+    })
 })

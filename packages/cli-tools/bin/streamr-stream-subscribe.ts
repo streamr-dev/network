@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import '../src/logLevel'
-import StreamrClient from 'streamr-client'
+import omit from 'lodash/omit'
+import StreamrClient, { MessageMetadata } from 'streamr-client'
 import { createClientCommand, Options as BaseOptions } from '../src/command'
 import { createFnParseInt } from '../src/common'
 
@@ -8,14 +9,18 @@ interface Options extends BaseOptions {
     partition: number
     disableOrdering: boolean
     raw: boolean
+    withMetadata: boolean
 }
 
 createClientCommand(async (client: StreamrClient, streamId: string, options: Options) => {
+    const formMessage = options.withMetadata
+        ? (message: unknown, metadata: MessageMetadata) => ({ message, metadata: omit(metadata, 'streamMessage') })
+        : (message: unknown) => message
     await client.subscribe({
         streamId,
         partition: options.partition,
         raw: options.raw
-    }, (message) => console.info(JSON.stringify(message)))
+    }, (message, metadata) => console.info(JSON.stringify(formMessage(message, metadata))))
 }, {
     autoDestroyClient: false,
     clientOptionsFactory: (options) => ({
@@ -27,4 +32,5 @@ createClientCommand(async (client: StreamrClient, streamId: string, options: Opt
     .option('-p, --partition [partition]', 'partition', createFnParseInt('--partition'), 0)
     .option('-d, --disable-ordering', 'disable ordering of messages by OrderingUtil', false)
     .option('-r, --raw', 'subscribe raw', false)
+    .option('-m, --with-metadata', 'print each message with its metadata included', false)
     .parseAsync()
