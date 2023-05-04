@@ -7,12 +7,14 @@ import { createFnParseInt } from '../src/common'
 interface Options extends BaseOptions {
     partition: number
     disableOrdering: boolean
+    raw: boolean
 }
 
 createClientCommand(async (client: StreamrClient, streamId: string, options: Options) => {
     await client.subscribe({
         streamId,
         partition: options.partition,
+        raw: options.raw
     }, (message) => console.info(JSON.stringify(message)))
 }, {
     autoDestroyClient: false,
@@ -24,4 +26,5 @@ createClientCommand(async (client: StreamrClient, streamId: string, options: Opt
     .description('subscribe to a stream, prints JSON messages to stdout line-by-line')
     .option('-p, --partition [partition]', 'partition', createFnParseInt('--partition'), 0)
     .option('-d, --disable-ordering', 'disable ordering of messages by OrderingUtil', false)
+    .option('-r, --raw', 'subscribe raw', false)
     .parseAsync()

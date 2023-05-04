@@ -27,6 +27,8 @@ found [here](packages/broker/CHANGELOG.md).
 
 #### Added
 
+- Add flag `--raw` (or shorthand `-r`) to command `stream subscribe` for raw subscription
+
 #### Changed
 
 #### Deprecated
