@@ -1,7 +1,6 @@
 import { StreamrClient, ResendOptions } from 'streamr-client'
 
-// eslint-disable-next-line @typescript-eslint/consistent-indexed-object-style
-export const assertBothOrNoneDefined = <T extends { [k: string]: any }>(
+export const assertBothOrNoneDefined = <T extends object>(
     option1: keyof T,
     option2: keyof T,
     errorMessage: string,
