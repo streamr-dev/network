@@ -1,38 +1,8 @@
-# Changelog
-All notable changes to this project will be documented in this file.
+# Old Changelog
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-
-## [Unreleased]
-
-### Added
-
-### Changed
-
-### Deprecated
-
-### Removed
-
-### Fixed
-
-### Security
-
-
-## [8.3.1] - 2023-05-03
-
-### Fixed
-
-- Fix `stream create` ouput (now valid JSON without extra characters)
-
-
-## [7.0.0] - 2022-11-15
-
-### Changed
-
-- Replace command `storage-node list-stream-parts` with `storage-node list-streams` and change the output format
-
+Versions before 7.0.0 and below are collected into this file. Changelogs for
+newer versions of the cli-tool are available at the root-level CHANGELOG.md
+file.
 
 ## [6.1.1] - 2022-11-03
 
