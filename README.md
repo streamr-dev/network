@@ -146,20 +146,20 @@ as you expect e.g. `^X.Y.Z` vs `X.Y.Z`
 
 ### utils, test-utils, protocol, network-tracker, network-node, client, cli-tools
 
-All the above packages should be released at the same time.
+All the above packages are released at the same time.
 
 1. `git checkout main && git pull`
-2. (skip if beta release) Look at client and cli-tool CHANGELOG.md, decide new version and make edits.
+2. (skip if beta) Read [CHANGELOG](CHANGELOG.md), decide new version, and edit file.
 3. `./update-versions.sh <SEMVER>` E.g. `./update-versions.sh 7.1.1`
 4. `npm run clean && npm install && npm run build && npm run versions`
    - Ensure output does not contain yellow or red markers
 5. Add files to staging `git add . -p`
 6. `./release-git-tags.sh <SEMVER>` E.g. `./release-git-tags.sh 7.1.1`
-7. Wait & ensure the pushed main branch passes CI tests
+7. Wait for pushed commit to pass CI validation
 8. Publish packages `./release.sh <NPM_TAG>`
     - Use argument `beta` if publishing a beta version
     - Use argument `latest` if publishing a stable version
-9. Update client docs if major or minor change:
+9. Update client API docs if major or minor change:
 ```bash
 cd packages/client
 npm run docs
@@ -171,11 +171,12 @@ aws s3 cp ./docs s3://api-docs.streamr.network/client/vX.Y --recursive --profile
 Broker is released independently of other packages because it follows its own versioning
 for the time being.
 
-```
-git checkout main
+```shell
+git checkout main && git pull
 cd packages/broker
+# Read CHANGELOG.md, decide new version, and edit file
 npm version <SEMVER_OPTION>
-git add package.json package-lock.json
+git add package.json ../../package-lock.json CHANGELOG.md
 git commit -m "release(broker): vX.Y.Z"
 git tag broker/vX.Y.Z
 git push --atomic origin main broker/vX.Y.Z
