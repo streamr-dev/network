@@ -27,8 +27,8 @@ found [here](packages/broker/CHANGELOG.md).
 
 #### Added
 
-- Add flag `--raw` (or shorthand `-r`) to command `stream subscribe` for raw subscription
-- Add flag `--with-metadata` (or shorthand `-m`) to command `stream subscribe` to include metadata in output
+- Add flag `--raw` (or shorthand `-r`) to command `stream subscribe` for raw subscription (https://github.com/streamr-dev/network/pull/1317)
+- Add flag `--with-metadata` (or shorthand `-m`) to command `stream subscribe` to include metadata in output (https://github.com/streamr-dev/network/pull/1317)
 
 #### Changed
 
