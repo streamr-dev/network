@@ -12,6 +12,7 @@ service DhtRpcService {
   rpc getClosestPeers (ClosestPeersRequest) returns (ClosestPeersResponse);
   rpc ping (PingRequest) returns (PingResponse);
   rpc leaveNotice (LeaveNotice) returns (google.protobuf.Empty);
+  rpc findData (FindDataRequest) returns (FindDataResponse);
 }
 
 service RoutingService {
@@ -300,4 +301,13 @@ message DisconnectNotice {
 
 message DisconnectNoticeResponse {
   string protocolVersion = 1;
+}
+
+message FindDataRequest {
+  bytes kademliaId = 1;
+}
+
+message FindDataResponse {
+  repeated DataEntry dataEntries = 1;
+  optional string error = 2;
 }

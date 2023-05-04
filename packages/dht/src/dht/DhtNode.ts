@@ -16,6 +16,9 @@ import {
     PingRequest,
     PingResponse,
     FindMode,
+    FindDataResponse,
+    FindDataRequest,
+    DataEntry,
 } from '../proto/packages/dht/protos/DhtRpc'
 import * as Err from '../helpers/errors'
 import { DisconnectionType, ITransport, TransportEvents } from '../transport/ITransport'
@@ -401,6 +404,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             (req: PingRequest, context) => this.ping(req, context))
         this.rpcCommunicator!.registerRpcNotification(LeaveNotice, 'leaveNotice',
             (req: LeaveNotice, context) => this.leaveNotice(req, context))
+        this.rpcCommunicator!.registerRpcMethod(FindDataRequest, FindDataResponse, 'findData', 
+            (req: FindDataRequest, context) => this.findData(req, context), { timeout: 10000 })
     }
 
     private isPeerCloserToIdThanSelf(peer1: PeerDescriptor, compareToId: PeerID): boolean {
@@ -616,6 +621,16 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return this.recursiveFinder!.startRecursiveFind(idToFind, FindMode.DATA)
     }
 
+    public async findDataViaPeer(idToFind: Uint8Array, peer: PeerDescriptor): Promise<DataEntry[]> {
+        const target = new DhtPeer(
+            this.ownPeerDescriptor!,
+            peer,
+            toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
+            this.config.serviceId
+        )
+        return await target.findData(idToFind)
+    }
+
     public getRpcCommunicator(): RoutingRpcCommunicator {
         return this.rpcCommunicator!
     }
@@ -728,4 +743,22 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return {}
     }
 
+    // IDHTRpcService method for external findRecursive calls
+    async findData(findDataRequest: FindDataRequest, _context: ServerCallContext): Promise<FindDataResponse> {
+        if (this.stopped) {
+            return FindDataResponse.create({ 
+                dataEntries: [],
+                error: 'findData() service is not running' 
+            })
+        }
+        const result = await this.startRecursiveFind(findDataRequest.kademliaId, FindMode.DATA)
+        if (result.dataEntries) {
+            return FindDataResponse.create({ dataEntries: result.dataEntries })
+        } else {
+            return FindDataResponse.create({ 
+                dataEntries: [],
+                error: 'Could not find data with the given key' 
+            })
+        }
+    }
 }
