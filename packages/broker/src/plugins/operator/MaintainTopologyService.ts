@@ -17,7 +17,10 @@ export class MaintainTopologyService {
 
     // eslint-disable-next-line class-methods-use-this
     async start(): Promise<void> {
-        this.operatorClient.on('addStakedStream', async (streamIdAsStr) => {
+        this.operatorClient.on('addStakedStream', async (streamIdAsStr, blockNumber) => {
+            if (blockNumber <= initialBlockNumber) {
+                return
+            }
             const streamId = toStreamID(streamIdAsStr) // shouldn't throw since value comes from contract
             if (this.subscriptions.get(streamId).length > 0) {
                 logger.warn('Ignore already subscribed stream', { streamId })
@@ -38,13 +41,16 @@ export class MaintainTopologyService {
                 }) // TODO: what if rejects?
             }
         })
-        this.operatorClient.on('removeStakedStream', async (streamIdAsStr) => {
+        this.operatorClient.on('removeStakedStream', async (streamIdAsStr, blockNumber) => {
+            if (blockNumber <= initialBlockNumber) {
+                return
+            }
             const streamId = toStreamID(streamIdAsStr) // shouldn't throw since value comes from contract
             const subscriptions = this.subscriptions.get(streamId)
             this.subscriptions.removeAll(streamId, subscriptions)
             await Promise.all(subscriptions.map((sub) => sub.unsubscribe())) // TODO: what if rejects?
         })
-        const { streamIds } = await this.operatorClient.getStakedStreams()
+        const { streamIds, blockNumber: initialBlockNumber } = await this.operatorClient.getStakedStreams()
         const streamParts = await Promise.all([...streamIds].map(async (streamId) => {
             try {
                 const stream = await this.streamrClient.getStream(streamId)
