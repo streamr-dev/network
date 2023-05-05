@@ -35,7 +35,7 @@ module.exports = function(testPaths, webpackConfig) {
                     }
                 }
             },
-            browserDisconnectTimeout: 45000,
+            browserDisconnectTimeout: 60000,
             browserNoActivityTimeout: 400000,
             browsers: ['CustomElectron'],
             client: {
