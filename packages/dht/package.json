@@ -43,8 +43,8 @@
     "websocket": "^1.0.34"
   },
   "devDependencies": {
-    "@streamr/test-utils": "8.3.1",
     "@streamr/browser-test-runner": "^0.0.1",
+    "@streamr/test-utils": "8.3.1",
     "@types/express": "^4.17.13",
     "@types/heap": "^0.2.28",
     "@types/k-bucket": "^5.0.1",
