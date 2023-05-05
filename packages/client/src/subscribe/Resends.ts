@@ -1,23 +1,22 @@
-import { inject, Lifecycle, scoped, delay } from 'tsyringe'
 import { StreamPartID, StreamPartIDUtils, toStreamPartID } from '@streamr/protocol'
+import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 
 import { MessageStream } from './MessageStream'
 import { createSubscribePipeline } from './subscribePipeline'
 
-import { StorageNodeRegistry } from '../registry/StorageNodeRegistry'
+import { EthereumAddress, Logger, collect, randomString, toEthereumAddress, wait } from '@streamr/utils'
 import random from 'lodash/random'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
-import { HttpUtil } from '../HttpUtil'
-import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
-import { EthereumAddress, Logger, randomString, toEthereumAddress, wait } from '@streamr/utils'
 import { DestroySignal } from '../DestroySignal'
-import { StreamRegistryCached } from '../registry/StreamRegistryCached'
-import { LoggerFactory } from '../utils/LoggerFactory'
-import { StreamrClientError } from '../StreamrClientError'
-import { collect } from '../utils/iterators'
-import { counting } from '../utils/GeneratorUtils'
+import { HttpUtil } from '../HttpUtil'
 import { Message } from '../Message'
+import { StreamrClientError } from '../StreamrClientError'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'
+import { StorageNodeRegistry } from '../registry/StorageNodeRegistry'
+import { StreamRegistryCached } from '../registry/StreamRegistryCached'
+import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
+import { counting } from '../utils/GeneratorUtils'
+import { LoggerFactory } from '../utils/LoggerFactory'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 

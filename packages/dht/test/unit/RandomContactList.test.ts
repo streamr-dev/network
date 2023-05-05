@@ -3,9 +3,8 @@ import type { ServiceInfo, MethodInfo } from "@protobuf-ts/runtime-rpc"
 import { PeerID } from '../../src/helpers/PeerID'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { IDhtRpcServiceClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
-import { LeaveNotice, NodeType, PeerDescriptor, RouteMessageAck, RouteMessageWrapper, 
-    StoreDataRequest, StoreDataResponse } from "../../src/proto/packages/dht/protos/DhtRpc"
-import type { PingResponse } from "../../src/proto/packages/dht/protos/DhtRpc"
+import { LeaveNotice, NodeType, PeerDescriptor } from "../../src/proto/packages/dht/protos/DhtRpc"
+import type { FindDataRequest, FindDataResponse, PingResponse } from "../../src/proto/packages/dht/protos/DhtRpc"
 import type { PingRequest } from "../../src/proto/packages/dht/protos/DhtRpc"
 import type { ClosestPeersResponse } from "../../src/proto/packages/dht/protos/DhtRpc"
 import type { ClosestPeersRequest } from "../../src/proto/packages/dht/protos/DhtRpc"
@@ -20,11 +19,7 @@ class MockRpcClient implements IDhtRpcServiceClient, ServiceInfo {
     methods: MethodInfo<any, any> [] = [
         { name: 'getClosestPeers', O: {} as IMessageType<ClosestPeersResponse> } as MethodInfo<any, any>,
         { name: 'ping', O: {} as IMessageType<PingResponse> } as MethodInfo<any, any>,
-        { name: 'routeMessage', O: {} as IMessageType<RouteMessageAck> } as MethodInfo<any, any>,
-        { name: 'findRecursively', O: {} as IMessageType<RouteMessageAck> } as MethodInfo<any, any>,
-        { name: 'findData', O: {} as IMessageType<RouteMessageAck> } as MethodInfo<any, any>,
-        { name: 'storeData', O: {} as IMessageType<StoreDataResponse> } as MethodInfo<any, any>,
-        { name: 'forwardMessage', O: {} as IMessageType<RouteMessageAck> } as MethodInfo<any, any>,
+        { name: 'findData', O: {} as IMessageType<FindDataRequest> } as MethodInfo<any, any>,
         { name: 'leaveNotice', O: {} as IMessageType<Empty> } as MethodInfo<any, any>
     ]
     options = {}
@@ -40,28 +35,8 @@ class MockRpcClient implements IDhtRpcServiceClient, ServiceInfo {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    routeMessage(_input: RouteMessageWrapper, _options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck> {
-        return {} as UnaryCall<RouteMessageWrapper, RouteMessageAck>
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    findRecursively(_input: RouteMessageWrapper, _options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck> {
-        return {} as UnaryCall<RouteMessageWrapper, RouteMessageAck>
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    findData(_input: RouteMessageWrapper, _options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck> {
-        return {} as UnaryCall<RouteMessageWrapper, RouteMessageAck>
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    storeData(_input: StoreDataRequest, _options?: RpcOptions): UnaryCall<StoreDataRequest, StoreDataResponse> {
-        return {} as UnaryCall<StoreDataRequest, StoreDataResponse>
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    forwardMessage(_input: RouteMessageWrapper, _options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck> {
-        return {} as UnaryCall<RouteMessageWrapper, RouteMessageAck>
+    findData(_input: FindDataRequest, _options?: RpcOptions): UnaryCall<FindDataRequest, FindDataResponse> {
+        return {} as UnaryCall<FindDataRequest, FindDataResponse>
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -107,7 +82,6 @@ describe('RandomContactList', () => {
         list.removeContact(id2)
         expect(list.getContact(id1)).toBeTruthy()
         expect(list.getSize()).toEqual(1)
-
     })
 
 })

@@ -2,9 +2,13 @@
 import '../src/logLevel'
 import { StreamrClient } from 'streamr-client'
 import EasyTable from 'easy-table'
-import { createClientCommand } from '../src/command'
+import { createClientCommand, Options as BaseOptions } from '../src/command'
 
-createClientCommand(async (client: StreamrClient, options: any) => {
+interface Options extends BaseOptions {
+    stream?: string
+}
+
+createClientCommand(async (client: StreamrClient, options: Options) => {
     const streamId = options.stream
     const addresses = await client.getStorageNodes(streamId)
     if (addresses.length > 0) {

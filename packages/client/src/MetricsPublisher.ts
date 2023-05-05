@@ -7,6 +7,7 @@ import { ConfigInjectionToken, StreamrClientConfig, ProviderAuthConfig } from '.
 import { pOnce } from './utils/promises'
 import { MetricsReport, wait } from '@streamr/utils'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
+import { merge } from '@streamr/utils'
 
 type NormalizedConfig = NonNullable<Required<Exclude<StreamrClientConfig['metrics'], boolean>>>
 
@@ -37,10 +38,7 @@ const getNormalizedConfig = (config: Pick<StreamrClientConfig, 'metrics' | 'auth
             periods: []
         }
     } else if (config.metrics !== undefined) {
-        return {
-            ...DEFAULTS,
-            ...config.metrics
-        }
+        return merge(DEFAULTS, config.metrics)
     } else {
         const isEthereumAuth = ((config.auth as ProviderAuthConfig)?.ethereum !== undefined)
         return {

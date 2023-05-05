@@ -28,6 +28,8 @@ import type { RouteMessageWrapper } from "./DhtRpc";
 import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
 import { DhtRpcService } from "./DhtRpc";
+import type { FindDataResponse } from "./DhtRpc";
+import type { FindDataRequest } from "./DhtRpc";
 import type { Empty } from "../../../google/protobuf/empty";
 import type { LeaveNotice } from "./DhtRpc";
 import type { PingResponse } from "./DhtRpc";
@@ -53,6 +55,10 @@ export interface IDhtRpcServiceClient {
      * @generated from protobuf rpc: leaveNotice(dht.LeaveNotice) returns (google.protobuf.Empty);
      */
     leaveNotice(input: LeaveNotice, options?: RpcOptions): UnaryCall<LeaveNotice, Empty>;
+    /**
+     * @generated from protobuf rpc: findData(dht.FindDataRequest) returns (dht.FindDataResponse);
+     */
+    findData(input: FindDataRequest, options?: RpcOptions): UnaryCall<FindDataRequest, FindDataResponse>;
 }
 /**
  * @generated from protobuf service dht.DhtRpcService
@@ -83,6 +89,13 @@ export class DhtRpcServiceClient implements IDhtRpcServiceClient, ServiceInfo {
     leaveNotice(input: LeaveNotice, options?: RpcOptions): UnaryCall<LeaveNotice, Empty> {
         const method = this.methods[2], opt = this._transport.mergeOptions(options);
         return stackIntercept<LeaveNotice, Empty>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: findData(dht.FindDataRequest) returns (dht.FindDataResponse);
+     */
+    findData(input: FindDataRequest, options?: RpcOptions): UnaryCall<FindDataRequest, FindDataResponse> {
+        const method = this.methods[3], opt = this._transport.mergeOptions(options);
+        return stackIntercept<FindDataRequest, FindDataResponse>("unary", this._transport, method, opt, input);
     }
 }
 /**

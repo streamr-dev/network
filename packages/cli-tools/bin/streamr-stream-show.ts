@@ -1,10 +1,14 @@
 #!/usr/bin/env node
 import '../src/logLevel'
 import StreamrClient from 'streamr-client'
-import { createClientCommand } from '../src/command'
+import { createClientCommand, Options as BaseOptions } from '../src/command'
 import { getPermissionId } from '../src/permission'
 
-createClientCommand(async (client: StreamrClient, streamId: string, options: any) => {
+interface Options extends BaseOptions {
+    includePermissions: boolean
+}
+
+createClientCommand(async (client: StreamrClient, streamId: string, options: Options) => {
     const stream = await client.getStream(streamId)
     const obj: any = { id: stream.id, ...stream.getMetadata() }
     if (options.includePermissions) {
@@ -20,5 +24,5 @@ createClientCommand(async (client: StreamrClient, streamId: string, options: any
 })
     .arguments('<streamId>')
     .description('show detailed information about a stream')
-    .option('--include-permissions', 'include list of permissions')
+    .option('--include-permissions', 'include list of permissions', false)
     .parseAsync()

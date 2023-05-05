@@ -9,6 +9,7 @@ import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { createTestStream } from '../test-utils/utils'
+import { merge } from '@streamr/utils'
 
 const MAX_MESSAGES = 10
 
@@ -41,12 +42,16 @@ describe('GapFill', () => {
     let environment: FakeEnvironment
 
     async function setupClient(opts: StreamrClientConfig) {
-        client = environment.createClient({
-            maxGapRequests: 2,
-            gapFillTimeout: 500,
-            retryResendAfter: 1000,
-            ...opts
-        })
+        client = environment.createClient(
+            merge(
+                {
+                    maxGapRequests: 2,
+                    gapFillTimeout: 500,
+                    retryResendAfter: 1000
+                },
+                opts
+            )
+        )
         stream = await createTestStream(client, module)
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
         await stream.addToStorageNode(storageNode.id)

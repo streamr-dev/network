@@ -1,6 +1,5 @@
 import { expected, MAX_ITEMS, IteratorTest } from './IteratorTest'
-import { Logger, wait } from '@streamr/utils'
-
+import { Logger, wait, collect } from '@streamr/utils'
 import { Pipeline } from '../../src/utils/Pipeline'
 import { PushPipeline } from '../../src/utils/PushPipeline'
 import { PushBuffer } from '../../src/utils/PushBuffer'
@@ -718,7 +717,7 @@ describe('Pipeline', () => {
                                 return value * 10
                             })
                         p.onFinally.listen(onFinally)
-                        const result = await p.collect()
+                        const result = await collect(p)
                         expect(result).toEqual(expected.map((v) => v * 10))
                     })
 
@@ -732,9 +731,8 @@ describe('Pipeline', () => {
                                 return value * 10
                             })
                         p.onFinally.listen(onFinally)
-                        const result = await p.collect()
+                        expect(await collect(p)).toEqual(expected.map((v) => v * 10))
                         expect(onFinally).toHaveBeenCalledTimes(1)
-                        expect(result).toEqual(expected.map((v) => v * 10))
                     })
                 })
 
@@ -749,8 +747,7 @@ describe('Pipeline', () => {
                                 count += 1
                             })
                         p.onFinally.listen(onFinally)
-                        const result = await p.collect()
-                        expect(result).toEqual(expected)
+                        expect(await collect(p)).toEqual(expected)
                         expect(items).toEqual(expected)
                     })
 
@@ -765,8 +762,7 @@ describe('Pipeline', () => {
                                 count += 1
                             })
                         p.onFinally.listen(onFinally)
-                        const result = await p.collect()
-                        expect(result).toEqual(expected)
+                        expect(await collect(p)).toEqual(expected)
                         expect(items).toEqual(expected)
                     })
                 })
@@ -781,8 +777,7 @@ describe('Pipeline', () => {
                                 return value % 2
                             })
                         p.onFinally.listen(onFinally)
-                        const result = await p.collect()
-                        expect(result).toEqual(expected.filter((v) => v % 2))
+                        expect(await collect(p)).toEqual(expected.filter((v) => v % 2))
                     })
 
                     it('works async', async () => {
@@ -795,8 +790,7 @@ describe('Pipeline', () => {
                                 return value % 2
                             })
                         p.onFinally.listen(onFinally)
-                        const result = await p.collect()
-                        expect(result).toEqual(expected.filter((v) => v % 2))
+                        expect(await collect(p)).toEqual(expected.filter((v) => v % 2))
                     })
                 })
 
@@ -807,7 +801,7 @@ describe('Pipeline', () => {
                                 return prev + value
                             }, 0)
                         p.onFinally.listen(onFinally)
-                        const results = await p.collect()
+                        const results = await collect(p)
                         expect(results[results.length - 1]).toEqual(expected.reduce((w, v) => w + v, 0))
                     })
                 })

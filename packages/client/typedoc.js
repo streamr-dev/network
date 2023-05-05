@@ -1,7 +1,5 @@
 module.exports = {
-    entryPoints: [
-        'src/exports.ts'
-    ],
+    entryPoints: ['src/exports.ts'],
     tsconfig: 'tsconfig.node.json',
     name: "Streamr Client",
     readme: 'none',

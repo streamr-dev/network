@@ -326,14 +326,3 @@ export const nextValue = async <T>(source: AsyncIterator<T>): Promise<T | undefi
     const item = source.next()
     return (await item).value
 }
-
-export const collect = async <T>(source: AsyncIterable<T>, maxCount?: number): Promise<T[]> => {
-    const items: T[] = []
-    for await (const item of source) {
-        items.push(item)
-        if ((maxCount !== undefined) && (items.length >= maxCount)) {
-            break
-        }
-    }
-    return items
-}

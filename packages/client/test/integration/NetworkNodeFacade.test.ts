@@ -117,7 +117,7 @@ describe('NetworkNodeFacade', () => {
                 await client.destroy()
                 await expect(async () => {
                     await client.getNode()
-                }).rejects.toThrowStreamError({ code: 'CLIENT_DESTROYED' })
+                }).rejects.toThrowStreamrError({ code: 'CLIENT_DESTROYED' })
             })
 
             it('can call destroy multiple times', async () => {
@@ -129,14 +129,14 @@ describe('NetworkNodeFacade', () => {
                 await client.destroy()
                 await expect(async () => {
                     await client.getNode()
-                }).rejects.toThrowStreamError({ code: 'CLIENT_DESTROYED' })
+                }).rejects.toThrowStreamrError({ code: 'CLIENT_DESTROYED' })
             })
 
             it('can destroy before start', async () => {
                 await client.destroy()
                 await expect(async () => {
                     await client.getNode()
-                }).rejects.toThrowStreamError({ code: 'CLIENT_DESTROYED' })
+                }).rejects.toThrowStreamrError({ code: 'CLIENT_DESTROYED' })
             })
 
             it('can destroy during start', async () => {
@@ -147,7 +147,7 @@ describe('NetworkNodeFacade', () => {
                     ]
                     await Promise.allSettled(tasks)
                     await Promise.all(tasks)
-                }).rejects.toThrowStreamError({ code: 'CLIENT_DESTROYED' })
+                }).rejects.toThrowStreamrError({ code: 'CLIENT_DESTROYED' })
             })
         })
     })

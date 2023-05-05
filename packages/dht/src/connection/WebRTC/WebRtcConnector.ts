@@ -241,7 +241,7 @@ export class WebRtcConnector implements IWebRtcConnectorService {
             logger.trace(`Ignoring RTC answer due to connectionId mismatch`)
             return
         }
-        connection.setRemoteDescription(description, DescriptionType.Answer)
+        connection.setRemoteDescription(description, 'answer')
     }
 
     private onConnectionRequest(targetPeerDescriptor: PeerDescriptor): void {

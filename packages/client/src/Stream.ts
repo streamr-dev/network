@@ -1,29 +1,28 @@
-import { Resends } from './subscribe/Resends'
-import { Publisher } from './publish/Publisher'
-import { StreamRegistry } from './registry/StreamRegistry'
-import { StreamRegistryCached } from './registry/StreamRegistryCached'
 import {
     StreamID,
     StreamPartID,
-    toStreamPartID,
-    ensureValidStreamPartitionCount
+    ensureValidStreamPartitionCount,
+    toStreamPartID
 } from '@streamr/protocol'
+import { collect, merge, toEthereumAddress, withTimeout } from '@streamr/utils'
 import range from 'lodash/range'
-import { StrictStreamrClientConfig } from './Config'
-import { PermissionAssignment, PublicPermissionQuery, UserPermissionQuery } from './permission'
-import { Subscriber } from './subscribe/Subscriber'
-import { formStorageNodeAssignmentStreamId } from './utils/utils'
-import { waitForAssignmentsToPropagate } from './utils/waitForAssignmentsToPropagate'
 import { PublishMetadata } from '../src/publish/Publisher'
-import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
-import { toEthereumAddress, withTimeout } from '@streamr/utils'
-import { StreamrClientEventEmitter } from './events'
-import { collect } from './utils/iterators'
+import { StrictStreamrClientConfig } from './Config'
+import { Message, convertStreamMessageToMessage } from './Message'
 import { DEFAULT_PARTITION } from './StreamIDBuilder'
+import { StreamrClientError } from './StreamrClientError'
+import { StreamrClientEventEmitter } from './events'
+import { PermissionAssignment, PublicPermissionQuery, UserPermissionQuery } from './permission'
+import { Publisher } from './publish/Publisher'
+import { StreamRegistry } from './registry/StreamRegistry'
+import { StreamRegistryCached } from './registry/StreamRegistryCached'
+import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
+import { Resends } from './subscribe/Resends'
+import { Subscriber } from './subscribe/Subscriber'
 import { Subscription } from './subscribe/Subscription'
 import { LoggerFactory } from './utils/LoggerFactory'
-import { Message } from './Message'
-import { convertStreamMessageToMessage } from './Message'
+import { formStorageNodeAssignmentStreamId } from './utils/utils'
+import { waitForAssignmentsToPropagate } from './utils/waitForAssignmentsToPropagate'
 
 export interface StreamMetadata {
     /**
@@ -117,14 +116,16 @@ export class Stream {
         config: Pick<StrictStreamrClientConfig, '_timeouts'>
     ) {
         this.id = id
-        this.metadata = {
-            partitions: 1,
-            // TODO should we remove this default or make config as a required StreamMetadata field?
-            config: {
-                fields: []
+        this.metadata = merge(
+            {
+                partitions: 1,
+                // TODO should we remove this default or make config as a required StreamMetadata field?
+                config: {
+                    fields: []
+                }
             },
-            ...metadata
-        }
+            metadata
+        )
         this._resends = resends
         this._publisher = publisher
         this._subscriber = subscriber
@@ -140,10 +141,7 @@ export class Stream {
      * Updates the metadata of the stream by merging with the existing metadata.
      */
     async update(metadata: Partial<StreamMetadata>): Promise<void> {
-        const merged = {
-            ...this.getMetadata(),
-            ...metadata
-        }
+        const merged = merge(this.getMetadata(), metadata)
         try {
             await this._streamRegistry.updateStream(this.id, merged)
         } finally {
@@ -229,8 +227,15 @@ export class Stream {
      * storage node assignment to go through eventually.
      */
     async addToStorageNode(storageNodeAddress: string, waitOptions: { timeout?: number } = {}): Promise<void> {
-        let assignmentSubscription
         const normalizedNodeAddress = toEthereumAddress(storageNodeAddress)
+        // check whether the stream is already stored: the assignment event listener logic requires that 
+        // there must not be an existing assignment (it timeouts if there is an existing assignment as the 
+        // storage node doesn't send an assignment event in that case)
+        const isAlreadyStored = await this._streamStorageRegistry.isStoredStream(this.id, normalizedNodeAddress)
+        if (isAlreadyStored) {
+            return
+        }
+        let assignmentSubscription
         try {
             const streamPartId = toStreamPartID(formStorageNodeAssignmentStreamId(normalizedNodeAddress), DEFAULT_PARTITION)
             assignmentSubscription = new Subscription(streamPartId, false, this._loggerFactory)
@@ -283,14 +288,32 @@ export class Stream {
 
     /** @internal */
     static parseMetadata(metadata: string): StreamMetadata {
+        // TODO we could pick the fields of StreamMetadata explicitly, so that this
+        // object can't contain extra fields
+        if (metadata === '') {
+            return {
+                partitions: 1
+            }
+        }
+        const err = new StreamrClientError(`Invalid stream metadata: ${metadata}`, 'INVALID_STREAM_METADATA')
+        let json
         try {
-            // TODO we could pick the fields of StreamMetadata explicitly, so that this
-            // object can't contain extra fields
-            const json = JSON.parse(metadata)
-            ensureValidStreamPartitionCount(json.partitions)
-            return json
-        } catch (error) {
-            throw new Error(`Could not parse properties from onchain metadata: ${metadata}`)
+            json = JSON.parse(metadata)
+        } catch (_ignored) {
+            throw err
+        }
+        if (json.partitions !== undefined) {
+            try {
+                ensureValidStreamPartitionCount(json.partitions)
+                return json
+            } catch (_ignored) {
+                throw err
+            }
+        } else {
+            return {
+                ...json,
+                partitions: 1
+            }
         }
     }
 

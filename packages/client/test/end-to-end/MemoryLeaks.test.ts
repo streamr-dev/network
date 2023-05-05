@@ -21,6 +21,7 @@ import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
 import { DestroySignal } from '../../src/DestroySignal'
 import { MessageMetadata } from '../../src/Message'
 import { AuthenticationInjectionToken, createAuthentication } from '../../src/Authentication'
+import { merge } from '@streamr/utils'
 
 const Dependencies = {
     NetworkNodeFacade,
@@ -72,13 +73,17 @@ describe('MemoryLeaks', () => {
                 config: StrictStreamrClientConfig
                 childContainer: DependencyContainer
             }> => {
-                const config = createStrictConfig({
-                    ...CONFIG_TEST,
-                    auth: {
-                        privateKey: await fetchPrivateKeyWithGas(),
-                    },
-                    ...opts,
-                })
+                const config = createStrictConfig(
+                    merge(
+                        CONFIG_TEST,
+                        {
+                            auth: {
+                                privateKey: await fetchPrivateKeyWithGas(),
+                            }
+                        },
+                        opts
+                    )
+                )
                 const childContainer = rootContainer.createChildContainer()
                 childContainer.register(AuthenticationInjectionToken, { useValue: createAuthentication(config) })
                 childContainer.register(ConfigInjectionToken, { useValue: config })
@@ -113,13 +118,17 @@ describe('MemoryLeaks', () => {
         let createClient: () => Promise<StreamrClient>
         beforeAll(() => {
             createClient = async (opts: any = {}) => {
-                const c = new StreamrClient({
-                    ...CONFIG_TEST,
-                    auth: {
-                        privateKey: await fetchPrivateKeyWithGas(),
-                    },
-                    ...opts,
-                })
+                const c = new StreamrClient(
+                    merge(
+                        CONFIG_TEST,
+                        {
+                            auth: {
+                                privateKey: await fetchPrivateKeyWithGas(),
+                            }
+                        },
+                        opts
+                    )
+                )
                 return c
             }
         })

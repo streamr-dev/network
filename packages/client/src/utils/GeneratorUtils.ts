@@ -117,29 +117,6 @@ export async function* reduce<InType, OutType>(
     }, onError)
 }
 
-// TODO many use cases could use collect() utility method
-// for AsyncIterables instead (iterators.ts)
-/**
- * Consume generator and collect results into an array.
- * Can take an optional number of items to consume.
- */
-export async function collect<InType>(
-    src: AsyncGenerator<InType>,
-    /** number of items to consume before ending, consumes all if undefined */
-    n?: number,
-    onError?: OnError<InType>
-): Promise<InType[]> {
-    const results: InType[] = []
-    await consume(src, async (value, index, srcGen) => {
-        results.push(value)
-        if (n != null && index === n - 1) {
-            await srcGen.return(undefined)
-        }
-    }, onError)
-
-    return results
-}
-
 /**
  * Start consuming generator.
  * Takes optional forEach function.

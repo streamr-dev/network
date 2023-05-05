@@ -4,7 +4,7 @@ import { fetchPrivateKeyWithGas, Queue } from '@streamr/test-utils'
 import { Broker } from '../../src/broker'
 import { Message } from '../../src/helpers/PayloadFormat'
 import { createClient, startBroker, createTestStream } from '../utils'
-import { toEthereumAddress, wait } from '@streamr/utils'
+import { toEthereumAddress, wait, merge } from '@streamr/utils'
 
 interface MessagingPluginApi<T> {
     createClient: (action: 'publish' | 'subscribe', streamId: string, apiKey?: string) => Promise<T>
@@ -66,14 +66,16 @@ export const createMessagingPluginTest = <T>(
                     keys: [MOCK_API_KEY]
                 },
                 extraPlugins: {
-                    [pluginName]: {
-                        port: ports.plugin,
-                        payloadMetadata: true,
-                        apiAuthentication: {
-                            keys: [MOCK_API_KEY]
+                    [pluginName]: merge(
+                        {
+                            port: ports.plugin,
+                            payloadMetadata: true,
+                            apiAuthentication: {
+                                keys: [MOCK_API_KEY]
+                            }
                         },
-                        ...pluginConfig
-                    }
+                        pluginConfig
+                    )            
                 },
                 wsServerPort: ports.brokerConnectionManager,
                 entryPoints: [{

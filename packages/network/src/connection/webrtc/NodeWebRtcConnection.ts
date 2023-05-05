@@ -111,8 +111,8 @@ export class NodeWebRtcConnection extends WebRtcConnection {
 
     }
 
-    protected doSendMessage(message: string): boolean {
-        return this.dataChannel!.sendMessage(message)
+    protected doSendMessage(message: string): void {
+        this.dataChannel!.sendMessage(message)
     }
 
     protected doConnect(): void {
