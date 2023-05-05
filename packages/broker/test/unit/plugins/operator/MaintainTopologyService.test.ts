@@ -5,7 +5,6 @@ import { mock, mockClear, MockProxy } from 'jest-mock-extended'
 import StreamrClient, { Subscription } from 'streamr-client'
 import range from 'lodash/range'
 import { wait, waitForCondition } from '@streamr/utils'
-import clearAllMocks = jest.clearAllMocks
 
 interface MockSubscription {
     unsubscribe: jest.MockedFn<Subscription['unsubscribe']>
@@ -159,6 +158,17 @@ describe('MaintainTopologyService', () => {
         expect(fixtures[STREAM_C][1].unsubscribe).toHaveBeenCalledTimes(1)
     })
 
+    it('handles removeStakedStream event for stream previously added by event (happy path)', async () => {
+        await setUpAndStart([STREAM_A, STREAM_B])
+
+        operatorClient.addStreamToState(STREAM_C, INITIAL_BLOCK + 1)
+        operatorClient.removeStreamFromState(STREAM_C, INITIAL_BLOCK + 2)
+
+        await waitForCondition(() => totalUnsubscribes(STREAM_C) >= 2)
+        expect(fixtures[STREAM_C][0].unsubscribe).toHaveBeenCalledTimes(1)
+        expect(fixtures[STREAM_C][1].unsubscribe).toHaveBeenCalledTimes(1)
+    })
+
     it('handles removeStakedStream event given old block', async () => {
         await setUpAndStart([STREAM_A, STREAM_B, STREAM_C])
 
@@ -204,6 +214,25 @@ describe('MaintainTopologyService', () => {
             sub.unsubscribe.mockClear()
         }
     }
+
+    it('handles concurrency properly', async () => {
+        await setUpAndStart([STREAM_C])
+        streamrClient.subscribe.mockClear()
+
+        for (let i = 1; i < 21; i += 2) {
+            operatorClient.removeStreamFromState(STREAM_C, INITIAL_BLOCK + i)
+            operatorClient.addStreamToState(STREAM_C, INITIAL_BLOCK + i + 1)
+        }
+
+        await waitForCondition(
+            () => totalUnsubscribes(STREAM_C) >= 10 * 2,
+            undefined,
+            undefined,
+            undefined,
+            () => `was ${totalUnsubscribes(STREAM_C)}`
+        )
+        expect(streamrClient.subscribe).toHaveBeenCalledTimes(10 * 2)
+    })
 
     it('complex block numbering case', async () => {
         await setUpAndStart([STREAM_A, STREAM_B, STREAM_C])
