@@ -16,29 +16,29 @@ export abstract class OperatorClient extends EventEmitter3<OperatorClientEvents>
 }
 
 export class FakeOperatorClient extends OperatorClient {
-    private readonly state = new Set<StreamID>()
+    private readonly initialState: Set<StreamID>
+    private readonly initialBlockNumber: number
 
-    constructor(initialState: StreamID[]) {
+    constructor(initialState: StreamID[], initialBlockNumber: number) {
         super()
-        this.state = new Set(initialState)
+        this.initialState = new Set(initialState)
+        this.initialBlockNumber = initialBlockNumber
     }
     getStakedStreams(): Promise<{ streamIds: Set<StreamID>, blockNumber: number }> {
         return Promise.resolve({
-            streamIds: new Set(this.state),
-            blockNumber: -1 // TODO
+            streamIds: new Set(this.initialState),
+            blockNumber: this.initialBlockNumber
         })
     }
 
     // Used to fake smart contract events
-    addStreamToState(streamId: StreamID): void {
-        this.state.add(streamId)
-        this.emit('addStakedStream', streamId, -1)
+    addStreamToState(streamId: StreamID, blockNumber: number): void {
+        this.emit('addStakedStream', streamId, blockNumber)
     }
 
     // Used to fake smart contract events
-    removeStreamFromState(streamId: StreamID): void {
-        this.state.delete(streamId)
-        this.emit('removeStakedStream', streamId, -1)
+    removeStreamFromState(streamId: StreamID, blockNumber: number): void {
+        this.emit('removeStakedStream', streamId, blockNumber)
     }
 
 }
