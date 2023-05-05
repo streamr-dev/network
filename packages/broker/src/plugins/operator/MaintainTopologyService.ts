@@ -2,13 +2,19 @@ import { Logger, Multimap } from '@streamr/utils'
 import { OperatorClient } from './FakeOperatorClient'
 import StreamrClient, { Stream, Subscription } from 'streamr-client'
 import { StreamID, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
+import { SetMembershipSynchronizer } from '../storage/SetMembershipSynchronizer'
 
 const logger = new Logger(module)
+
+function mapOverSet<T, U>(set: Set<T>, transformFn: (t: T) => U): Set<U> {
+    return new Set([...set].map(transformFn))
+}
 
 export class MaintainTopologyService {
     private readonly streamrClient: StreamrClient
     private readonly operatorClient: OperatorClient
     private readonly subscriptions = new Multimap<StreamID, Subscription>()
+    private readonly setMembershipSynchronizer = new SetMembershipSynchronizer<StreamID>()
 
     constructor(streamrClient: StreamrClient, operatorClient: OperatorClient) {
         this.streamrClient = streamrClient
@@ -18,10 +24,11 @@ export class MaintainTopologyService {
     // eslint-disable-next-line class-methods-use-this
     async start(): Promise<void> {
         this.operatorClient.on('addStakedStream', async (streamIdAsStr, blockNumber) => {
-            if (blockNumber <= initialBlockNumber) {
+            const { added } = this.setMembershipSynchronizer.ingestPatch(new Set([toStreamID(streamIdAsStr)]), 'added', blockNumber)
+            if (added.length !== 1) {
                 return
             }
-            const streamId = toStreamID(streamIdAsStr) // shouldn't throw since value comes from contract
+            const [streamId] = added
             if (this.subscriptions.get(streamId).length > 0) {
                 logger.warn('Ignore already subscribed stream', { streamId })
                 return
@@ -42,16 +49,18 @@ export class MaintainTopologyService {
             }
         })
         this.operatorClient.on('removeStakedStream', async (streamIdAsStr, blockNumber) => {
-            if (blockNumber <= initialBlockNumber) {
+            const { removed } = this.setMembershipSynchronizer.ingestPatch(new Set([toStreamID(streamIdAsStr)]), 'removed', blockNumber)
+            if (removed.length !== 1) {
                 return
             }
-            const streamId = toStreamID(streamIdAsStr) // shouldn't throw since value comes from contract
+            const [streamId] = removed
             const subscriptions = this.subscriptions.get(streamId)
             this.subscriptions.removeAll(streamId, subscriptions)
             await Promise.all(subscriptions.map((sub) => sub.unsubscribe())) // TODO: what if rejects?
         })
         const { streamIds, blockNumber: initialBlockNumber } = await this.operatorClient.getStakedStreams()
-        const streamParts = await Promise.all([...streamIds].map(async (streamId) => {
+        const { added } = this.setMembershipSynchronizer.ingestSnapshot(mapOverSet(streamIds, toStreamID), initialBlockNumber)
+        const streamParts = await Promise.all([...added].map(async (streamId) => {
             try {
                 const stream = await this.streamrClient.getStream(streamId)
                 return stream.getStreamParts()
