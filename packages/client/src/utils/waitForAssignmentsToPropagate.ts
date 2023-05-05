@@ -1,7 +1,8 @@
-import { collect, unique } from './GeneratorUtils'
 import { StreamID, StreamMessage, StreamPartIDUtils } from '@streamr/protocol'
+import { collect } from '@streamr/utils'
 import identity from 'lodash/identity'
 import { MessageStream } from '../subscribe/MessageStream'
+import { unique } from './GeneratorUtils'
 
 export function waitForAssignmentsToPropagate(
     messageStream: MessageStream,

@@ -5,6 +5,7 @@ export type StreamrClientErrorCode =
     'CLIENT_DESTROYED' | 
     'PIPELINE_ERROR' |
     'UNSUPPORTED_OPERATION' |
+    'INVALID_STREAM_METADATA' |
     'UNKNOWN_ERROR'
 
 export class StreamrClientError extends Error {

@@ -1,9 +1,10 @@
 import 'reflect-metadata'
 
 import { toStreamID } from '@streamr/protocol'
+import { Stream } from '../../src/Stream'
+import { StreamFactory } from '../../src/StreamFactory'
 import { StreamRegistry } from '../../src/registry/StreamRegistry'
 import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
-import { StreamFactory } from './../../src/StreamFactory'
 
 const createStreamFactory = (streamRegistry?: StreamRegistry, streamRegistryCached?: StreamRegistryCached) => {
     return new StreamFactory(
@@ -66,6 +67,54 @@ describe('Stream', () => {
             }).rejects.toThrow('mock-error')
             expect(stream.getMetadata().description).toBe('original-description')
             expect(clearStream).toBeCalledWith('mock-id')
+        })
+    })
+
+    describe('parse metadata', () => {
+        it('happy path', () => {
+            const metadata = JSON.stringify({
+                partitions: 50,
+                foo: 'bar'
+            })
+            expect(Stream.parseMetadata(metadata)).toEqual({
+                partitions: 50,
+                foo: 'bar'
+            })
+        })
+
+        it('no value in valid JSON', () => {
+            const metadata = JSON.stringify({
+                foo: 'bar'
+            })
+            expect(Stream.parseMetadata(metadata)).toEqual({
+                partitions: 1,
+                foo: 'bar'
+            })
+        })
+
+        it('empty metadata', () => {
+            const metadata = ''
+            expect(Stream.parseMetadata(metadata)).toEqual({
+                partitions: 1
+            })
+        })
+
+        it('invalid value', () => {
+            const metadata = JSON.stringify({
+                partitions: 150
+            })
+            expect(() => Stream.parseMetadata(metadata)).toThrowStreamrError({
+                message: 'Invalid stream metadata: {"partitions":150}',
+                code: 'INVALID_STREAM_METADATA'
+            })
+        })
+
+        it('invalid JSON', () => {
+            const metadata = 'invalid-json'
+            expect(() => Stream.parseMetadata(metadata)).toThrowStreamrError({
+                message: 'Invalid stream metadata: invalid-json',
+                code: 'INVALID_STREAM_METADATA'
+            })
         })
     })
 })

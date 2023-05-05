@@ -1,10 +1,10 @@
 import 'reflect-metadata'
-import { Message } from '../../src/Message'
 
+import { collect } from '@streamr/utils'
+import { Message } from '../../src/Message'
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
-import { collect } from '../../src/utils/iterators'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { getPublishTestStreamMessages, getWaitForStorage, Msg } from '../test-utils/publish'
 import { createTestStream } from '../test-utils/utils'

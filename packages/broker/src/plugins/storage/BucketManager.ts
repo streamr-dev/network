@@ -3,6 +3,8 @@ import Heap from 'heap'
 import { types as cassandraTypes } from 'cassandra-driver'
 import { Logger } from '@streamr/utils'
 import { Bucket, BucketId } from './Bucket'
+import { merge } from '@streamr/utils'
+
 const { TimeUuid } = cassandraTypes
 
 const logger = new Logger(module)
@@ -49,10 +51,7 @@ export class BucketManager {
             bucketKeepAliveSeconds: 60
         }
 
-        this.opts = {
-            ...defaultOptions,
-            ...opts
-        }
+        this.opts = merge(defaultOptions, opts)
 
         this.streamParts = Object.create(null)
         this.buckets = Object.create(null)

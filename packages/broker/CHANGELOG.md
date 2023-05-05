@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+
+## [33.2.0] - 2023-04-26
+
+### Added
+
 - Add beneficiary address prompt to config wizard
 
 ### Changed
@@ -17,6 +32,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Websocket plugin includes more logging
 
 ### Deprecated
+
+- Deprecate config option `subscriptionRetryInterval` in `subscriber` plugin
 
 ### Removed
 
@@ -85,7 +102,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Log output is always prettified (even when `NODE_ENV=production`)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/broker/v33.1.2...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/broker/v33.2.0...HEAD
+[33.2.0]: https://github.com/streamr-dev/network/compare/broker/v33.1.2...broker/v33.2.0
 [33.1.2]: https://github.com/streamr-dev/network/compare/broker/v33.1.1...broker/v33.1.2
 [33.1.1]: https://github.com/streamr-dev/network/compare/broker/v33.1.0...broker/v33.1.1
 [33.1.0]: https://github.com/streamr-dev/network/compare/broker/v33.0.0...broker/v33.1.0
