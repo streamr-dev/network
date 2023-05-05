@@ -646,6 +646,28 @@ export interface DisconnectNoticeResponse {
     protocolVersion: string;
 }
 /**
+ * @generated from protobuf message dht.FindDataRequest
+ */
+export interface FindDataRequest {
+    /**
+     * @generated from protobuf field: bytes kademliaId = 1;
+     */
+    kademliaId: Uint8Array;
+}
+/**
+ * @generated from protobuf message dht.FindDataResponse
+ */
+export interface FindDataResponse {
+    /**
+     * @generated from protobuf field: repeated dht.DataEntry dataEntries = 1;
+     */
+    dataEntries: DataEntry[];
+    /**
+     * @generated from protobuf field: optional string error = 2;
+     */
+    error?: string;
+}
+/**
  * @generated from protobuf enum dht.FindMode
  */
 export enum FindMode {
@@ -1224,13 +1246,39 @@ class DisconnectNoticeResponse$Type extends MessageType$<DisconnectNoticeRespons
  * @generated MessageType for protobuf message dht.DisconnectNoticeResponse
  */
 export const DisconnectNoticeResponse = new DisconnectNoticeResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class FindDataRequest$Type extends MessageType$<FindDataRequest> {
+    constructor() {
+        super("dht.FindDataRequest", [
+            { no: 1, name: "kademliaId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message dht.FindDataRequest
+ */
+export const FindDataRequest = new FindDataRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class FindDataResponse$Type extends MessageType$<FindDataResponse> {
+    constructor() {
+        super("dht.FindDataResponse", [
+            { no: 1, name: "dataEntries", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => DataEntry },
+            { no: 2, name: "error", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message dht.FindDataResponse
+ */
+export const FindDataResponse = new FindDataResponse$Type();
 /**
  * @generated ServiceType for protobuf service dht.DhtRpcService
  */
 export const DhtRpcService = new ServiceType("dht.DhtRpcService", [
     { name: "getClosestPeers", options: {}, I: ClosestPeersRequest, O: ClosestPeersResponse },
     { name: "ping", options: {}, I: PingRequest, O: PingResponse },
-    { name: "leaveNotice", options: {}, I: LeaveNotice, O: Empty }
+    { name: "leaveNotice", options: {}, I: LeaveNotice, O: Empty },
+    { name: "findData", options: {}, I: FindDataRequest, O: FindDataResponse }
 ]);
 /**
  * @generated ServiceType for protobuf service dht.RoutingService

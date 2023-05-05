@@ -16,6 +16,7 @@ import {
     PingRequest,
     PingResponse,
     FindMode,
+    DataEntry,
 } from '../proto/packages/dht/protos/DhtRpc'
 import * as Err from '../helpers/errors'
 import { DisconnectionType, ITransport, TransportEvents } from '../transport/ITransport'
@@ -37,6 +38,7 @@ import { DataStore } from './store/DataStore'
 import { PeerDiscovery } from './discovery/PeerDiscovery'
 import { LocalDataStore } from './store/LocalDataStore'
 import { IceServer } from '../connection/WebRTC/WebRtcConnector'
+import { ExternalApi } from './ExternalApi'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -156,6 +158,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private localDataStore = new LocalDataStore()
     private recursiveFinder?: RecursiveFinder
     private peerDiscovery?: PeerDiscovery
+    private externalApi?: ExternalApi
 
     public connectionManager?: ConnectionManager
     private started = false
@@ -281,6 +284,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 return this.bucket!.closest(id, n)
             }
         })
+        this.externalApi = new ExternalApi(this)
     }
 
     private initKBuckets = (selfId: PeerID) => {
@@ -616,6 +620,16 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return this.recursiveFinder!.startRecursiveFind(idToFind, FindMode.DATA)
     }
 
+    public async findDataViaPeer(idToFind: Uint8Array, peer: PeerDescriptor): Promise<DataEntry[]> {
+        const target = new DhtPeer(
+            this.ownPeerDescriptor!,
+            peer,
+            toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
+            this.config.serviceId
+        )
+        return await target.findData(idToFind)
+    }
+
     public getRpcCommunicator(): RoutingRpcCommunicator {
         return this.rpcCommunicator!
     }
@@ -693,6 +707,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
         this.transportLayer = undefined
         this.connectionManager = undefined
+        this.externalApi = undefined
         this.connections.clear()
         this.removeAllListeners()
     }
@@ -727,5 +742,4 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
         return {}
     }
-
 }
