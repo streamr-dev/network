@@ -48,7 +48,7 @@ export class MaintainTopologyService {
         })
 
         const { streamIds: rawStreamIds, blockNumber } = await this.operatorClient.getStakedStreams()
-        const streamIds = new Set(compact([...rawStreamIds].map((s) => toStreamIDSafe(s))))
+        const streamIds = new Set(compact([...rawStreamIds].map(toStreamIDSafe)))
         const { added } = this.synchronizer.ingestSnapshot(streamIds, blockNumber)
         for (const streamId of added) {
             await this.addStream(streamId, blockNumber)
