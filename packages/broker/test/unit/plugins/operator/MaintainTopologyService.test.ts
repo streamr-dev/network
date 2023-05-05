@@ -267,7 +267,10 @@ describe('MaintainTopologyService', () => {
         expect(streamrClient.subscribe).toHaveBeenCalledTimes(0)
 
         operatorClient.removeStreamFromState(STREAM_F, INITIAL_BLOCK + 55)
-        await wait(NOTHING_HAPPENED_DELAY)
         await waitForCondition(() => totalUnsubscribes(STREAM_F) >= 4)
+
+        operatorClient.addStreamToState(STREAM_E, INITIAL_BLOCK + 21)
+        await waitForCondition(() => streamrClient.subscribe.mock.calls.length >= 1)
+        expect(streamrClient.subscribe).toBeCalledWith(formRawSubscriptionParam(STREAM_E, 0))
     })
 })
