@@ -1,10 +1,11 @@
 import { MaintainTopologyService } from '../../../../src/plugins/operator/MaintainTopologyService'
 import { FakeOperatorClient } from '../../../../src/plugins/operator/FakeOperatorClient'
 import { StreamID, toStreamID, toStreamPartID } from '@streamr/protocol'
-import { mock, MockProxy } from 'jest-mock-extended'
+import { mock, mockClear, MockProxy } from 'jest-mock-extended'
 import StreamrClient, { Subscription } from 'streamr-client'
 import range from 'lodash/range'
 import { wait, waitForCondition } from '@streamr/utils'
+import clearAllMocks = jest.clearAllMocks
 
 interface MockSubscription {
     unsubscribe: jest.MockedFn<Subscription['unsubscribe']>
@@ -196,5 +197,48 @@ describe('MaintainTopologyService', () => {
 
         await wait(NOTHING_HAPPENED_DELAY)
         expect(totalUnsubscribes(STREAM_D)).toEqual(0)
+    })
+
+    function clearUnsubscribeMockCalls() {
+        for (const sub of Object.values(fixtures).flat()) {
+            sub.unsubscribe.mockClear()
+        }
+    }
+
+    it('complex block numbering case', async () => {
+        await setUpAndStart([STREAM_A, STREAM_B, STREAM_C])
+
+        operatorClient.addStreamToState(STREAM_D, INITIAL_BLOCK + 5)
+        operatorClient.removeStreamFromState(STREAM_A, INITIAL_BLOCK + 15)
+        operatorClient.addStreamToState(STREAM_C, INITIAL_BLOCK + 10)
+        operatorClient.addStreamToState(STREAM_F, INITIAL_BLOCK + 25)
+        operatorClient.removeStreamFromState(STREAM_E, INITIAL_BLOCK + 20)
+        operatorClient.removeStreamFromState(STREAM_C, INITIAL_BLOCK + 15)
+        operatorClient.addStreamToState(STREAM_C, INITIAL_BLOCK + 30)
+        await wait(0)
+        // State: -a=15, +b=10, +c=40, +d=15, +f=35, -e=30
+
+        mockClear(streamrClient)
+        clearUnsubscribeMockCalls()
+
+        operatorClient.addStreamToState(STREAM_A, INITIAL_BLOCK + 14)
+        await wait(NOTHING_HAPPENED_DELAY)
+        expect(streamrClient.subscribe).toHaveBeenCalledTimes(0)
+
+        operatorClient.removeStreamFromState(STREAM_B, INITIAL_BLOCK - 5)
+        await wait(NOTHING_HAPPENED_DELAY)
+        expect(totalUnsubscribes(STREAM_C)).toEqual(0)
+
+        operatorClient.removeStreamFromState(STREAM_C, INITIAL_BLOCK + 25)
+        await wait(NOTHING_HAPPENED_DELAY)
+        expect(totalUnsubscribes(STREAM_C)).toEqual(0)
+
+        operatorClient.addStreamToState(STREAM_E, INITIAL_BLOCK + 19)
+        await wait(NOTHING_HAPPENED_DELAY)
+        expect(streamrClient.subscribe).toHaveBeenCalledTimes(0)
+
+        operatorClient.removeStreamFromState(STREAM_F, INITIAL_BLOCK + 55)
+        await wait(NOTHING_HAPPENED_DELAY)
+        await waitForCondition(() => totalUnsubscribes(STREAM_F) >= 4)
     })
 })
