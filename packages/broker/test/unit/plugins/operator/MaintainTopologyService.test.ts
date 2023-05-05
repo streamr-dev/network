@@ -112,6 +112,16 @@ describe('MaintainTopologyService', () => {
         expect(streamrClient.subscribe).toBeCalledWith(formRawSubscriptionParam(STREAM_D, 1))
     })
 
+    it('handles addStakedStream event given old block', async () => {
+        await setUpAndStart([STREAM_A, STREAM_B, STREAM_C])
+        streamrClient.subscribe.mockClear()
+
+        operatorClient.addStreamToState(STREAM_D, INITIAL_BLOCK - 1)
+
+        await wait(NOTHING_HAPPENED_DELAY)
+        expect(streamrClient.subscribe).toHaveBeenCalledTimes(0)
+    })
+
     it('handles addStakedStream event given non-existing stream', async () => {
         await setUpAndStart([STREAM_A, STREAM_B, STREAM_C])
         streamrClient.subscribe.mockClear()
@@ -146,6 +156,15 @@ describe('MaintainTopologyService', () => {
         await waitForCondition(() => totalUnsubscribes(STREAM_C) >= 2)
         expect(fixtures[STREAM_C][0].unsubscribe).toHaveBeenCalledTimes(1)
         expect(fixtures[STREAM_C][1].unsubscribe).toHaveBeenCalledTimes(1)
+    })
+
+    it('handles removeStakedStream event given old block', async () => {
+        await setUpAndStart([STREAM_A, STREAM_B, STREAM_C])
+
+        operatorClient.removeStreamFromState(STREAM_C, INITIAL_BLOCK - 1)
+
+        await wait(NOTHING_HAPPENED_DELAY)
+        expect(totalUnsubscribes(STREAM_C)).toEqual(0)
     })
 
     it('handles removeStakedStream event once even if triggered twice', async () => {
