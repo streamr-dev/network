@@ -171,7 +171,7 @@ class OrderedMsgChain extends MsgChainEmitter {
     inOrderHandler: MessageHandler
     gapHandler: GapHandler
     gapFillTimeout: number
-    resendTimeout: number
+    retryResendAfter: number
     nextGaps: ReturnType<typeof setTimeout> | null = null
     markedExplicitly = new StreamMessageSet()
 
@@ -181,7 +181,7 @@ class OrderedMsgChain extends MsgChainEmitter {
         inOrderHandler: MessageHandler,
         gapHandler: GapHandler,
         gapFillTimeout = DEFAULT_PROPAGATION_TIMEOUT,
-        resendTimeout = DEFAULT_RESEND_TIMEOUT,
+        retryResendAfter = DEFAULT_RESEND_TIMEOUT,
         maxGapRequests = MAX_GAP_REQUESTS
     ) {
         super()
@@ -193,7 +193,7 @@ class OrderedMsgChain extends MsgChainEmitter {
         this.gapHandler = gapHandler
         this.lastOrderedMsgRef = null
         this.gapFillTimeout = gapFillTimeout
-        this.resendTimeout = resendTimeout
+        this.retryResendAfter = retryResendAfter
         this.maxGapRequests = maxGapRequests
     }
 
@@ -393,7 +393,7 @@ class OrderedMsgChain extends MsgChainEmitter {
                 if (!this.hasPendingGap) { return }
                 await this.requestGapFill()
                 if (!this.hasPendingGap) { return }
-                nextGap(this.resendTimeout)
+                nextGap(this.retryResendAfter)
             }, timeout)
         }
         nextGap(this.gapFillTimeout)
