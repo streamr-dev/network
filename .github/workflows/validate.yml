@@ -141,7 +141,7 @@ jobs:
       package: cli-tools
       docker-services: parity-node0 graph-deploy-streamregistry-subgraph
       run-brokers-and-trackers: true
-      command: npm run test
+      command: LOG_LEVEL= debug npm run test
   tracker-docker-image:
     uses: ./.github/workflows/docker-build.yml
     with:
