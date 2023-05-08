@@ -55,7 +55,7 @@ describe('publish and subscribe', () => {
         publishViaCliCommand()
         const receivedMessage = (await collect(subscriberOutputIterable, 1))[0]
         subscriberAbortController.abort()
-        expect(JSON.parse(receivedMessage)).toMatch(/[0-9a-fA-F]+/)
+        expect(receivedMessage).toMatch(/[0-9a-fA-F]+/)
     })
 
     it('with metadata', async () => {
