@@ -5,7 +5,7 @@ import { GlobalCommandLineArgs } from './common'
 import { getConfig } from './config'
 
 export const getClientConfig = (commandLineArgs: GlobalCommandLineArgs, overridenOptions: StreamrClientConfig = {}): StreamrClientConfig => {
-    const environmentOptions = (commandLineArgs.dev !== undefined) ? omit(CONFIG_TEST, 'auth') : undefined
+    const environmentOptions = commandLineArgs.dev ? omit(CONFIG_TEST, 'auth') : undefined
     const configFileJson = getConfig(commandLineArgs.config)?.client
     const authenticationOptions = (commandLineArgs.privateKey !== undefined) ? { auth: { privateKey: commandLineArgs.privateKey } } : undefined
     return merge(
