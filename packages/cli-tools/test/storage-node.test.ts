@@ -27,7 +27,6 @@ describe('storage node', () => {
 
     it('list nodes', async () => {
         const outputLines = await runCommand('storage-node list')
-        console.log(outputLines)
         expect(outputLines.length).toBeGreaterThan(3)
     })
 })

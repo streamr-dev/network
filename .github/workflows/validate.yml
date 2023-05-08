@@ -141,7 +141,7 @@ jobs:
       package: cli-tools
       docker-services: cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph
       run-brokers-and-trackers: true
-      command: LOG_LEVEL="debug" npm run test
+      command: npm run test
   tracker-docker-image:
     uses: ./.github/workflows/docker-build.yml
     with:
