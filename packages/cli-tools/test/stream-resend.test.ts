@@ -24,7 +24,7 @@ describe('resend stream', () => {
             const msg = await stream.publish({ msgId })
             messages.push(msg)
         }
-        await wait(1000)
+        await wait(5000)
         await client.destroy()
     }, 20 * 1000)
 

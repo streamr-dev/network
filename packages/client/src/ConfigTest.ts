@@ -1,5 +1,6 @@
 import { StreamrClientConfig } from './Config'
 import { toEthereumAddress } from '@streamr/utils'
+import { v4 as uuid } from 'uuid'
 
 function toNumber(value: any): number | undefined {
     return (value !== undefined) ? Number(value) : undefined
@@ -29,7 +30,7 @@ export const CONFIG_TEST: StreamrClientConfig = {
                 }
             }],
             peerDescriptor: {
-                kademliaId: 'local',
+                kademliaId: uuid(),
                 type: 0
             },
             iceServers: [],
