@@ -69,6 +69,9 @@ module.exports = (env, argv) => {
                 GIT_VERSION: gitRevisionPlugin.version(),
                 GIT_COMMITHASH: gitRevisionPlugin.commithash(),
                 GIT_BRANCH: gitRevisionPlugin.branch(),
+            }),
+            new webpack.optimize.LimitChunkCountPlugin({
+                maxChunks: 1
             })
         ],
         performance: {

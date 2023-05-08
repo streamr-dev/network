@@ -1,13 +1,13 @@
 import omit from 'lodash/omit'
 import merge from 'lodash/merge'
 import { StreamrClientConfig, StreamrClient, CONFIG_TEST } from 'streamr-client'
-import { GlobalCommandLineArgs } from './common'
+import { Options } from './command'
 import { getConfig } from './config'
 
-export const getClientConfig = (commandLineArgs: GlobalCommandLineArgs, overridenOptions: StreamrClientConfig = {}): StreamrClientConfig => {
-    const environmentOptions = (commandLineArgs.dev !== undefined) ? omit(CONFIG_TEST, 'auth') : undefined
-    const configFileJson = getConfig(commandLineArgs.config)?.client
-    const authenticationOptions = (commandLineArgs.privateKey !== undefined) ? { auth: { privateKey: commandLineArgs.privateKey } } : undefined
+export const getClientConfig = (commandOptions: Options, overridenOptions: StreamrClientConfig = {}): StreamrClientConfig => {
+    const environmentOptions = commandOptions.dev ? omit(CONFIG_TEST, 'auth') : undefined
+    const configFileJson = getConfig(commandOptions.config)?.client
+    const authenticationOptions = (commandOptions.privateKey !== undefined) ? { auth: { privateKey: commandOptions.privateKey } } : undefined
     return merge(
         environmentOptions,
         configFileJson,
@@ -27,8 +27,8 @@ const addInterruptHandler = (client: StreamrClient) => {
     })
 }
 
-export const createClient = (commandLineArgs: GlobalCommandLineArgs, overridenOptions: StreamrClientConfig = {}): StreamrClient => {
-    const config = getClientConfig(commandLineArgs, overridenOptions)
+export const createClient = (commandOptions: Options, overridenOptions: StreamrClientConfig = {}): StreamrClient => {
+    const config = getClientConfig(commandOptions, overridenOptions)
     const client = new StreamrClient(config)
     addInterruptHandler(client)
     return client
