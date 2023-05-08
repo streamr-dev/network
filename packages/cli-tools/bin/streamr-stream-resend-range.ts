@@ -1,10 +1,16 @@
 #!/usr/bin/env node
 import '../src/logLevel'
 import { StreamrClient } from 'streamr-client'
-import { createClientCommand } from '../src/command'
+import { createClientCommand, Options as BaseOptions } from '../src/command'
 import { assertBothOrNoneDefined, resend } from '../src/resend'
 
-createClientCommand(async (client: StreamrClient, from: string, to: string, streamId: string, options: any) => {
+interface Options extends BaseOptions {
+    publisherId?: string
+    msgChainId?: string
+    subscribe: boolean
+}
+
+createClientCommand(async (client: StreamrClient, from: string, to: string, streamId: string, options: Options) => {
     const resendOptions = {
         from: {
             timestamp: Date.parse(from),

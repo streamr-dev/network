@@ -1,2 +1,5 @@
 cli-tools.iml
 .idea
+jest.config.js
+jest.teardown.js
+tsconfig.jest.json
