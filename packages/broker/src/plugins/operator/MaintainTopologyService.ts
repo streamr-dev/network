@@ -12,7 +12,6 @@ function toStreamIDSafe(input: string): StreamID | undefined {
     try {
         return toStreamID(input)
     } catch (err) {
-        logger.warn('Encountered invalid streamId', { input, reason: err?.reason })
         return undefined
     }
 }
@@ -34,18 +33,8 @@ export class MaintainTopologyService {
     }
 
     async start(): Promise<void> {
-        this.operatorClient.on('addStakedStream', (streamIdAsStr, blockNumber) => {
-            const streamId = toStreamIDSafe(streamIdAsStr)
-            if (streamId !== undefined) {
-                this.concurrencyLimit(() => this.onAddStakedStream(streamId, blockNumber))
-            }
-        })
-        this.operatorClient.on('removeStakedStream', (streamIdAsStr, blockNumber) => {
-            const streamId = toStreamIDSafe(streamIdAsStr)
-            if (streamId !== undefined) {
-                this.concurrencyLimit(() => this.onRemoveStakedStream(streamId, blockNumber))
-            }
-        })
+        this.operatorClient.on('addStakedStream', this.onAddStakedStream)
+        this.operatorClient.on('removeStakedStream', this.onRemoveStakedStream)
 
         const { streamIds: rawStreamIds, blockNumber } = await this.operatorClient.getStakedStreams()
         const streamIds = new Set(compact([...rawStreamIds].map(toStreamIDSafe)))
@@ -61,7 +50,7 @@ export class MaintainTopologyService {
         logger.info('stopped')
     }
 
-    private async onAddStakedStream(streamId: StreamID, blockNumber: number): Promise<void> {
+    private onAddStakedStream = this.parseStreamIdWrapper(async (streamId: StreamID, blockNumber: number) => {
         const { added } = this.synchronizer.ingestPatch(singletonSet(streamId), 'added', blockNumber)
         if (added.length !== 1) {
             logger.warn('Ignore already subscribed stream', { streamId, blockNumber })
@@ -72,9 +61,9 @@ export class MaintainTopologyService {
             return
         }
         await this.addStream(streamId, blockNumber)
-    }
+    })
 
-    private async onRemoveStakedStream(streamId: StreamID, blockNumber: number): Promise<void> {
+    private onRemoveStakedStream = this.parseStreamIdWrapper(async (streamId: StreamID, blockNumber: number) => {
         const { removed } = this.synchronizer.ingestPatch(singletonSet(streamId), 'removed', blockNumber)
         if (removed.length !== 1) {
             logger.warn('Ignore already unsubscribed stream', { streamId, blockNumber })
@@ -83,7 +72,7 @@ export class MaintainTopologyService {
         const subscriptions = this.subscriptions.get(streamId)
         this.subscriptions.removeAll(streamId, subscriptions)
         await Promise.all(subscriptions.map((sub) => sub.unsubscribe())) // TODO: rejects?
-    }
+    })
 
     private async addStream(streamId: StreamID, blockNumber: number): Promise<void> {
         let stream: Stream
@@ -102,6 +91,19 @@ export class MaintainTopologyService {
                 raw: true
             }) // TODO: rejects?
             this.subscriptions.add(id, subscription)
+        }
+    }
+
+    private parseStreamIdWrapper(
+        fn: (streamId: StreamID, blockNumber: number) => Promise<void>
+    ): (streamIdAsStr: string, blockNumber: number) => void {
+        return (streamIdAsStr: string, blockNumber: number) => {
+            const streamId = toStreamIDSafe(streamIdAsStr)
+            if (streamId !== undefined) {
+                this.concurrencyLimit(() => fn(streamId, blockNumber))
+            } else {
+                logger.warn('Encountered invalid stream id', { streamIdAsStr })
+            }
         }
     }
 }
