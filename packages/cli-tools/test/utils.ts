@@ -29,7 +29,8 @@ export async function* startCommand(commandLine: string, opts?: StartCommandOpti
     const executable = spawn(`node`, args, {
         signal: opts?.abortSignal,
         env: {
-            PATH: process.env.PATH
+            PATH: process.env.PATH,
+            STREAMR_DOCKER_DEV_HOST: process.env.STREAMR_DOCKER_DEV_HOST
         }
     })
     executable.on('error', (err: any) => {
