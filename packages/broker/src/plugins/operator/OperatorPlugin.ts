@@ -15,7 +15,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     private readonly announceNodeService = new AnnounceNodeService()
     private readonly inspectRandomNodeService = new InspectRandomNodeService()
     private readonly maintainOperatorContractService = new MaintainOperatorContractService()
-    private readonly maintainTopologyService = new MaintainTopologyService(this.streamrClient, new FakeOperatorClient([]))
+    private readonly maintainTopologyService = new MaintainTopologyService(this.streamrClient, new FakeOperatorClient([], 0))
     private readonly voteOnSuspectNodeService = new VoteOnSuspectNodeService()
 
     async start(): Promise<void> {
