@@ -139,7 +139,7 @@ jobs:
     uses: ./.github/workflows/test-setup.yml
     with:
       package: cli-tools
-      docker-services: parity-node0 graph-deploy-streamregistry-subgraph
+      docker-services: cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph
       run-brokers-and-trackers: true
       command: npm run test
   tracker-docker-image:

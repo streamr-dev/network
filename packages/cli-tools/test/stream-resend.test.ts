@@ -24,9 +24,9 @@ describe('resend stream', () => {
             const msg = await stream.publish({ msgId })
             messages.push(msg)
         }
-        await wait(5000)
+        await wait(10000)
         await client.destroy()
-    }, 20 * 1000)
+    }, 30 * 1000)
 
     it('last', async () => {
         const outputLines = await runCommand(`stream resend last 3 ${stream.id}`, {
