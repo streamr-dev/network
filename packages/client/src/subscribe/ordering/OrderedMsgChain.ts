@@ -147,14 +147,6 @@ interface Events {
 // eslint-disable-next-line @typescript-eslint/prefer-function-type
 export const MsgChainEmitter = EventEmitter as { new(): StrictEventEmitter<EventEmitter, Events> }
 
-// The time it takes to propagate messages in the network. If we detect a gap, we first wait this amount of time because the missing
-// messages might still be propagated.
-const DEFAULT_PROPAGATION_TIMEOUT = 5000
-// The round trip time it takes to request a resend and receive the answer. If the messages are still missing after the propagation
-// delay, we request a resend and periodically wait this amount of time before requesting it again.
-const DEFAULT_RESEND_TIMEOUT = 5000
-const MAX_GAP_REQUESTS = 10
-
 let ID = 0
 
 const logger = new Logger(module)
@@ -180,9 +172,9 @@ class OrderedMsgChain extends MsgChainEmitter {
         msgChainId: string,
         inOrderHandler: MessageHandler,
         gapHandler: GapHandler,
-        gapFillTimeout = DEFAULT_PROPAGATION_TIMEOUT,
-        retryResendAfter = DEFAULT_RESEND_TIMEOUT,
-        maxGapRequests = MAX_GAP_REQUESTS
+        gapFillTimeout: number,
+        retryResendAfter: number,
+        maxGapRequests: number
     ) {
         super()
         ID += 1
