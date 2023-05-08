@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import '../src/logLevel'
 import omit from 'lodash/omit'
+import isString from 'lodash/isString'
 import StreamrClient, { MessageMetadata } from 'streamr-client'
 import { createClientCommand, Options as BaseOptions } from '../src/command'
 import { createFnParseInt } from '../src/common'
@@ -20,7 +21,10 @@ createClientCommand(async (client: StreamrClient, streamId: string, options: Opt
         streamId,
         partition: options.partition,
         raw: options.raw
-    }, (message, metadata) => console.info(JSON.stringify(formMessage(message, metadata))))
+    }, (message, metadata) => {
+        const output = formMessage(message, metadata)
+        console.info(isString(output) ? output : JSON.stringify(output))
+    })
 }, {
     autoDestroyClient: false,
     clientOptionsFactory: (options) => ({
