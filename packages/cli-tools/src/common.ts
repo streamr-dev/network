@@ -1,9 +1,3 @@
-export interface GlobalCommandLineArgs {
-    dev?: boolean
-    config?: string
-    privateKey?: string
-}
-
 export enum OptionType {
     FLAG, // e.g. "--enable"
     ARGUMENT  // e.g. "--private-key 0x1234"
