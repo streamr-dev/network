@@ -71,11 +71,11 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
             this.abortController.signal
         )
 
-        logger.info('Brubeck miner plugin started')
+        logger.info('Started Brubeck miner plugin')
     }
 
     private async onRewardCodeReceived(rewardCode: string): Promise<void> {
-        logger.info(`Reward code received: ${rewardCode}`)
+        logger.info('Received reward code', { rewardCode })
         const peers = await this.getPeers()
         const delay = Math.floor(Math.random() * this.pluginConfig.maxClaimDelay)
         await wait(delay) 
@@ -88,7 +88,10 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
             try {
                 await this.subscribe()
             } catch (err) {
-                logger.warn(`Subscription retry failed, retrying in ${this.subscriptionRetryInterval / 1000} seconds`)
+                logger.warn(`Failed to (re-)subscribe to reward stream (retrying in ${this.subscriptionRetryInterval / 1000} seconds)`, {
+                    reason: err?.message,
+                    rewardStreamId: this.streamId
+                })
             }
         }
     }
@@ -98,15 +101,20 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
             if (message.rewardCode) {
                 this.onRewardCodeReceived(message.rewardCode)
             } if (message.info) {
-                logger.info(message.info)
+                logger.info(`Received notification: ${message.info}`)
             } else {
-                logger.trace(`Dummy message (#${this.dummyMessagesReceived}) received: ${message}`)
+                logger.trace('Received dummy message', {
+                    dummyMessageNo: this.dummyMessagesReceived,
+                    message
+                })
                 this.dummyMessagesReceived += 1
             }
         })
         subscription.on('error', (err) => {
-            logger.warn('Failed to claim reward code due to error %s', err?.message)
-            logger.debug('', err)
+            logger.warn('Failed to claim reward code', {
+                reason: err?.message,
+                rewardStreamId: this.streamId
+            })
         })
     }
 
@@ -140,12 +148,18 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
                 }
             })
             const resBody = await res.json()
-            logger.info(`Reward claimed successfully, current stake ${resBody.stake} on block ${resBody.latestBlock}`)
+            logger.info('Claimed successfully', {
+                currentStake: resBody.stake,
+                latestBlock: resBody.latestBlock
+            })
             if (resBody.alert) {
-                logger.info(`Claim alert: ${resBody.alert}`)
+                logger.info(`Received claim alert: ${resBody.alert}`)
             }
-        } catch (e) {
-            logger.error(`Unable to claim reward: code=${rewardCode}`, e)
+        } catch (err) {
+            logger.error('Unable to claim reward', {
+                rewardCode,
+                err
+            })
         }
     }
 
@@ -168,10 +182,10 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
                 sampleCount: NAT_ANALYSIS_SAMPLE_COUNT,
                 stunHost: this.pluginConfig.stunServerHost!
             }), NAT_ANALYSIS_TIMEOUT.maxWaitTime)
-            logger.info(`NAT type: ${result}`)
+            logger.info('Analyzed NAT type', { result })
             return result
         } catch (e) {
-            logger.warn(`Unable to analyze NAT type: ${e.message}`)
+            logger.warn('Unable to analyze NAT type', { reason: e.message })
             return NAT_TYPE_UNKNOWN
         }
     }

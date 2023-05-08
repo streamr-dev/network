@@ -69,6 +69,9 @@ module.exports = (env, argv) => {
                 GIT_VERSION: gitRevisionPlugin.version(),
                 GIT_COMMITHASH: gitRevisionPlugin.commithash(),
                 GIT_BRANCH: gitRevisionPlugin.branch(),
+            }),
+            new webpack.optimize.LimitChunkCountPlugin({
+                maxChunks: 1
             })
         ],
         performance: {
@@ -125,6 +128,7 @@ module.exports = (env, argv) => {
                 https: false,
                 express: false,
                 ws: false,
+                '@web3modal/standalone': false
             }
         },
         plugins: [

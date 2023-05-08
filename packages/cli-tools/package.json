@@ -1,6 +1,6 @@
 {
   "name": "@streamr/cli-tools",
-  "version": "8.1.0",
+  "version": "8.3.1",
   "description": "Command line tools for Streamr",
   "repository": {
     "type": "git",
@@ -15,7 +15,7 @@
     "check": "tsc -p ./tsconfig.json --noEmit",
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "npm run build && jest --forceExit"
   },
   "keywords": [
     "streamr",
@@ -28,16 +28,18 @@
   "dependencies": {
     "@ethersproject/wallet": "^5.5.0",
     "@snapshot-labs/snapshot.js": "^0.4.43",
-    "@streamr/utils": "8.1.0",
-    "commander": "^8.3.0",
+    "@streamr/utils": "8.3.1",
+    "commander": "^10.0.1",
     "easy-table": "^1.1.1",
     "event-stream": "^4.0.1",
     "lodash": "^4.17.21",
-    "streamr-client": "8.1.0"
+    "streamr-client": "8.3.1"
   },
   "devDependencies": {
-    "@types/easy-table": "0.0.32",
-    "@types/event-stream": "^3.3.34",
-    "@types/lodash": "^4.14.175"
+    "@streamr/test-utils": "8.3.1",
+    "@types/event-stream": "^4.0.0",
+    "@types/lodash": "^4.14.175",
+    "@types/merge2": "^1.4.0",
+    "merge2": "^1.4.1"
   }
 }

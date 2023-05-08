@@ -1,19 +1,19 @@
 import 'reflect-metadata'
 
-import { Defer, wait } from '@streamr/utils'
-import fs from 'fs'
-import path from 'path'
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { fastPrivateKey, fastWallet } from '@streamr/test-utils'
-import { StreamPermission } from '../../src/permission'
+import { Defer, collect, wait } from '@streamr/utils'
+import fs from 'fs'
+import path from 'path'
+import { MessageMetadata } from '../../src/Message'
 import { StreamrClient } from '../../src/StreamrClient'
+import { StreamPermission } from '../../src/permission'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import {
-    getPublishTestStreamMessages, Msg
+    Msg,
+    getPublishTestStreamMessages
 } from '../test-utils/publish'
 import { createTestStream } from '../test-utils/utils'
-import { collect } from '../../src/utils/iterators'
-import { MessageMetadata } from '../../src/Message'
 
 // TODO rename this test to something more specific (and maybe divide to multiple test files?)
 

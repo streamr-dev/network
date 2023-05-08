@@ -1,20 +1,17 @@
+import { BigNumber } from '@ethersproject/bignumber'
 import { ContractTransaction } from '@ethersproject/contracts'
+import { Provider } from '@ethersproject/providers'
+import { StreamID, StreamIDUtils, toStreamID } from '@streamr/protocol'
+import { collect, EthereumAddress, isENSName, Logger, toEthereumAddress } from '@streamr/utils'
+import { delay, inject, Lifecycle, scoped } from 'tsyringe'
+import { Authentication, AuthenticationInjectionToken } from '../Authentication'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import { ContractFactory } from '../ContractFactory'
+import { getStreamRegistryChainProviders, getStreamRegistryOverrides } from '../Ethereum'
 import type { StreamRegistryV4 as StreamRegistryContract } from '../ethereumArtifacts/StreamRegistryV4'
 import StreamRegistryArtifact from '../ethereumArtifacts/StreamRegistryV4Abi.json'
-import { BigNumber } from '@ethersproject/bignumber'
-import { Provider } from '@ethersproject/providers'
-import { delay, inject, Lifecycle, scoped } from 'tsyringe'
-import { getStreamRegistryChainProviders, getStreamRegistryOverrides } from '../Ethereum'
-import { until } from '../utils/promises'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
-import { Stream, StreamMetadata } from '../Stream'
+import { StreamrClientEventEmitter } from '../events'
 import { NotFoundError } from '../HttpUtil'
-import { StreamID, StreamIDUtils } from '@streamr/protocol'
-import { StreamIDBuilder } from '../StreamIDBuilder'
-import { SynchronizedGraphQLClient } from '../utils/SynchronizedGraphQLClient'
-import { searchStreams as _searchStreams, SearchStreamsPermissionFilter, SearchStreamsOrderBy } from './searchStreams'
-import { filter, map } from '../utils/GeneratorUtils'
-import { ObservableContract, queryAllReadonlyContracts, waitForTx } from '../utils/contract'
 import {
     ChainPermissions,
     convertChainPermissionsToStreamPermissions,
@@ -28,14 +25,17 @@ import {
     StreamPermission,
     streamPermissionToSolidityType
 } from '../permission'
-import { StreamRegistryCached } from './StreamRegistryCached'
-import { Authentication, AuthenticationInjectionToken } from '../Authentication'
-import { ContractFactory } from '../ContractFactory'
-import { EthereumAddress, isENSName, Logger, toEthereumAddress } from '@streamr/utils'
-import { LoggerFactory } from '../utils/LoggerFactory'
-import { StreamFactory } from './../StreamFactory'
+import { Stream, StreamMetadata } from '../Stream'
+import { StreamIDBuilder } from '../StreamIDBuilder'
+import { initContractEventGateway, ObservableContract, queryAllReadonlyContracts, waitForTx } from '../utils/contract'
+import { filter, map } from '../utils/GeneratorUtils'
 import { GraphQLQuery } from '../utils/GraphQLClient'
-import { collect } from '../utils/iterators'
+import { LoggerFactory } from '../utils/LoggerFactory'
+import { until } from '../utils/promises'
+import { SynchronizedGraphQLClient } from '../utils/SynchronizedGraphQLClient'
+import { StreamFactory } from './../StreamFactory'
+import { searchStreams as _searchStreams, SearchStreamsOrderBy, SearchStreamsPermissionFilter } from './searchStreams'
+import { StreamRegistryCached } from './StreamRegistryCached'
 
 /*
  * On-chain registry of stream metadata and permissions.
@@ -51,6 +51,12 @@ export interface StreamQueryResult {
 interface StreamPublisherOrSubscriberItem {
     id: string
     userAddress: EthereumAddress
+}
+
+export interface StreamCreationEvent {
+    readonly streamId: StreamID
+    readonly metadata: StreamMetadata
+    readonly blockNumber: number
 }
 
 const streamContractErrorProcessor = (err: any, streamId: StreamID, registry: string): never => {
@@ -82,6 +88,7 @@ export class StreamRegistry {
         streamFactory: StreamFactory,
         @inject(SynchronizedGraphQLClient) graphQLClient: SynchronizedGraphQLClient,
         @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
+        @inject(StreamrClientEventEmitter) eventEmitter: StreamrClientEventEmitter,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
     ) {
@@ -101,6 +108,18 @@ export class StreamRegistry {
                 provider,
                 'streamRegistry'
             )
+        })
+        initContractEventGateway({
+            sourceName: 'StreamCreated', 
+            sourceEmitter: this.streamRegistryContractsReadonly[0],
+            targetName: 'createStream',
+            targetEmitter: eventEmitter,
+            transformation: (streamId: string, metadata: string, extra: any) => ({
+                streamId: toStreamID(streamId),
+                metadata: Stream.parseMetadata(metadata),
+                blockNumber: extra.blockNumber
+            }),
+            loggerFactory
         })
     }
 
@@ -190,7 +209,7 @@ export class StreamRegistry {
 
     private async streamExistsOnChain(streamIdOrPath: string): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        this.logger.debug('checking if stream "%s" exists on chain', streamId)
+        this.logger.debug('Check if stream exists on chain', { streamId })
         return queryAllReadonlyContracts((contract: StreamRegistryContract) => {
             return contract.exists(streamId)
         }, this.streamRegistryContractsReadonly)

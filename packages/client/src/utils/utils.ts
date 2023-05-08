@@ -1,8 +1,6 @@
 import LRU from '../../vendor/quick-lru'
 import { SEPARATOR } from './uuid'
 
-import pkg from '../../package.json'
-
 import { StreamID, toStreamID } from '@streamr/protocol'
 import { randomString, toEthereumAddress } from '@streamr/utils'
 
@@ -72,20 +70,6 @@ export interface AnyInstance {
 
 export function instanceId(instance: AnyInstance, suffix = ''): string {
     return counterId(instance.constructor.name) + suffix
-}
-
-function getVersion() {
-    // dev deps are removed for production build
-    const hasDevDependencies = !!(pkg.devDependencies && Object.keys(pkg.devDependencies).length)
-    const isProduction = process.env.NODE_ENV === 'production' || hasDevDependencies
-    return `${pkg.version}${!isProduction ? 'dev' : ''}`
-}
-
-// hardcode this at module exec time as can't change
-const versionString = getVersion()
-
-export function getVersionString(): string {
-    return versionString
 }
 
 export const getEndpointUrl = (baseUrl: string, ...pathParts: string[]): string => {

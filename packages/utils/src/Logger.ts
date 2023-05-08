@@ -2,7 +2,6 @@ import pino from 'pino'
 import path from 'path'
 import without from 'lodash/without'
 import padEnd from 'lodash/padEnd'
-import pinoPretty from 'pino-pretty'
 
 export type LogLevel = 'silent' | 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace'
 
@@ -19,10 +18,87 @@ const parseBoolean = (value: string | undefined) => {
     }
 }
 
+declare let window: any
+
+/**
+ * Disabled when in browser or when environment variable DISABLE_PRETTY_LOG is set to true.
+ */
+function isPrettyPrintDisabled(): boolean {
+    return typeof window === 'object' || (parseBoolean(process.env.DISABLE_PRETTY_LOG) ?? false)
+}
+
+const rootLogger = pino({
+    name: 'rootLogger',
+    enabled: !process.env.NOLOG,
+    level: process.env.LOG_LEVEL ?? 'info',
+    formatters: {
+        level: (label) => {
+            return { level: label } // log level as string instead of number
+        }
+    },
+    transport: isPrettyPrintDisabled() ? undefined : {
+        target: 'pino-pretty',
+        options: {
+            colorize: parseBoolean(process.env.LOG_COLORS) ?? true,
+            singleLine: true,
+            translateTime: 'yyyy-mm-dd"T"HH:MM:ss.l',
+            ignore: 'pid,hostname',
+            levelFirst: true,
+        },
+    },
+    browser: {
+        asObject: true
+    }
+})
+
+/**
+ * This whole monstrosity exists only because pino in browser environment will not print a log message
+ * when invoking `logger.info(undefined, 'msg') instead you need to call `logger.info(msg)`.
+ */
+function wrappedMethodCall(
+    wrappedPinoMethod: pino.LogFn,
+): (msg: string, metadata?: Record<string, unknown>) => void {
+    return (msg, metadata) => {
+        if (metadata !== undefined) {
+            wrappedPinoMethod(metadata, msg)
+        } else {
+            wrappedPinoMethod(msg)
+        }
+    }
+}
+
 export class Logger {
     static NAME_LENGTH = 20
 
-    static createName(module: NodeJS.Module, context?: string): string {
+    private readonly logger: pino.Logger
+    fatal: (msg: string, metadata?: Record<string, unknown>) => void
+    error: (msg: string, metadata?: Record<string, unknown>) => void
+    warn: (msg: string, metadata?: Record<string, unknown>) => void
+    info: (msg: string, metadata?: Record<string, unknown>) => void
+    debug: (msg: string, metadata?: Record<string, unknown>) => void
+    trace: (msg: string, metadata?: Record<string, unknown>) => void
+
+    constructor(
+        module: NodeJS.Module,
+        contextBindings?: Record<string, unknown>,
+        defaultLogLevel: LogLevel = 'info',
+        parentLogger: pino.Logger = rootLogger
+    ) {
+        this.logger = parentLogger.child({
+            name: Logger.createName(module),
+            ...contextBindings
+        }, {
+            level: process.env.LOG_LEVEL as (string | undefined) ?? defaultLogLevel
+        })
+        this.fatal = wrappedMethodCall(this.logger.fatal.bind(this.logger))
+        this.error = wrappedMethodCall(this.logger.error.bind(this.logger))
+        this.warn = wrappedMethodCall(this.logger.warn.bind(this.logger))
+        this.info = wrappedMethodCall(this.logger.info.bind(this.logger))
+        this.debug = wrappedMethodCall(this.logger.debug.bind(this.logger))
+        this.trace = wrappedMethodCall(this.logger.trace.bind(this.logger))
+    }
+
+    static createName(module: NodeJS.Module): string {
         const parsedPath = path.parse(String(module.id))
         let fileId = parsedPath.name
         if (fileId === 'index') {
@@ -30,79 +106,8 @@ export class Logger {
             const parts = parsedPath.dir.split(path.sep)
             fileId = parts[parts.length - 1]
         }
-        const appId = process.env.STREAMR_APPLICATION_ID
-        const longName = without([appId, context, fileId], undefined).join(':')
-        return padEnd(longName.substring(0, this.NAME_LENGTH), this.NAME_LENGTH, ' ')
-    }
-
-    private readonly logger: pino.Logger
-
-    constructor(
-        module: NodeJS.Module,
-        context?: string,
-        defaultLogLevel: LogLevel = 'info',
-        destinationStream?: { write(msg: string): void }
-    ) {
-        const options: pino.LoggerOptions = {
-            name: Logger.createName(module, context),
-            enabled: !process.env.NOLOG,
-            level: process.env.LOG_LEVEL ?? defaultLogLevel,
-            // explicitly pass prettifier, otherwise pino may try to lazy require it,
-            // which can fail when under jest+typescript, due to some CJS/ESM
-            // incompatibility leading to throwing an error like:
-            // "prettyFactory is not a function"
-            prettifier: pinoPretty,
-            prettyPrint: {
-                colorize: parseBoolean(process.env.LOG_COLORS) ?? true,
-                translateTime: 'yyyy-mm-dd"T"HH:MM:ss.l',
-                ignore: 'pid,hostname',
-                levelFirst: true,
-            }
-        }
-        this.logger = destinationStream !== undefined ? pino(options, destinationStream) : pino(options)
-    }
-
-    fatal(msg: string, ...args: any[]): void {
-        this.logger.fatal(msg, ...args)
-    }
-
-    error(msg: string, ...args: any[]): void {
-        const errorInstance = args.find((arg) => (arg.constructor.name === 'Error'
-            || arg.constructor.name === 'AggregateError'
-            || arg.constructor.name === 'EvalError'
-            || arg.constructor.name === 'RangeError'
-            || arg.constructor.name === 'ReferenceError'
-            || arg.constructor.name === 'SyntaxError'
-            || arg.constructor.name === 'TypeError'
-            || arg.constructor.name === 'URIError'
-        ))
-        if (errorInstance !== undefined) {
-            this.logger.error({ err: errorInstance }, msg, ...args)
-        } else {
-            this.logger.error(msg, ...args)
-        }
-    }
-
-    warn(msg: string, ...args: any[]): void {
-        this.logger.warn(msg, ...args)
-    }
-
-    info(msg: string, ...args: any[]): void {
-        this.logger.info(msg, ...args)
-    }
-
-    debug(msg: string, ...args: any[]): void {
-        this.logger.debug(msg, ...args)
-    }
-
-    trace(msg: string, ...args: any[]): void {
-        this.logger.trace(msg, ...args)
-    }
-
-    getFinalLogger(): { error: (error: any, origin?: string) => void } {
-        const finalLogger = pino.final(this.logger)
-        return {
-            error: (error: any, origin?: string) => finalLogger.error(error, origin)
-        }
+        const longName = without([process.env.STREAMR_APPLICATION_ID, fileId], undefined).join(':')
+        return isPrettyPrintDisabled() ?
+            longName : padEnd(longName.substring(0, this.NAME_LENGTH), this.NAME_LENGTH, ' ')
     }
 }

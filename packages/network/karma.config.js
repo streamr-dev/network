@@ -1,53 +1,29 @@
-const webpackConfig = require('./webpack.config')
+/* eslint-disable @typescript-eslint/no-require-imports */
+const path = require('path')
+const { createKarmaConfig, createWebpackConfig } = require('@streamr/browser-test-runner')
 
-module.exports = function (config) {
-    config.set({
-        plugins: [
-            'karma-electron',
-            'karma-webpack',
-            'karma-jasmine',
-            'karma-spec-reporter'
-        ],
-        basePath: '.',
-        frameworks: ['jasmine'],
-        reporters: ['spec'],
-        files: [
-            './karma-setup.js',
-            './test/browser/BrowserWebRtcConnection.test.ts',
-            './test/browser/IntegrationBrowserWebRtcConnection.test.ts',
-            './test/integration/**/!(NodeWebRtcConnection*|tracker*|nodeMessageBuffering*|UnixSocketWsServer*|message-duplication*).ts/',
-            './test/unit/**/!(LocationManager*|NodeWebRtcConnection*|WebRtcEndpoint*|Speedometer*|deprecated-tracker-status*).ts',
-        ],
-        preprocessors: {
-            './karma-setup.js': ['webpack'],
-            './test/browser/BrowserWebRtcConnection.test.ts': ['webpack'],
-            './test/browser/IntegrationBrowserWebRtcConnection.test.ts': ['webpack'],
-            './test/integration/**/!(NodeWebRtcConnection*|tracker*|nodeMessageBuffering*|UnixSocketWsServer*|message-duplication*).ts/': ['webpack'],
-            './test/unit/**/!(LocationManager*|NodeWebRtcConnection*|WebRtcEndpoint*|Speedometer*|deprecated-tracker-status*).ts': ['webpack'],
-        },
-        customLaunchers: {
-            CustomElectron: {
-                base: 'Electron',
-                browserWindowOptions: {
-                    webPreferences: {
-                        contextIsolation: false,
-                        preload: __dirname + '/preload.js',
-                        webSecurity: false,
-                        sandbox: false
-                    },
-                }
-            }
-        },
+const TEST_PATHS = [
+    './test/browser/BrowserWebRtcConnection.test.ts',
+    './test/browser/IntegrationBrowserWebRtcConnection.test.ts',
+    './test/integration/**/!(NodeWebRtcConnection*|tracker*|nodeMessageBuffering*|UnixSocketWsServer*|message-duplication*).ts/',
+    './test/unit/**/!(LocationManager*|NodeWebRtcConnection*|WebRtcEndpoint*|Speedometer*|deprecated-tracker-status*).ts'
+]
 
-        browsers: ['CustomElectron'],
-        client: {
-            clearContext: false, // leave Jasmine Spec Runner output visible in browser
-            useIframe: false
-        },
-        singleRun: true,
-        webpack: {
-            ...webpackConfig('test'),
-            entry: {}
-        }
-    })
-}
+const NodeWebRtcConnection = path.resolve(__dirname, 'src/connection/webrtc/NodeWebRtcConnection.ts')
+const BrowserWebRtcConnection = path.resolve(__dirname, 'src/connection/webrtc/BrowserWebRtcConnection.ts')
+
+const NodeClientWsEndpoint = path.resolve(__dirname, 'src/connection/ws/NodeClientWsEndpoint.ts')
+const BrowserClientWsEndpoint = path.resolve(__dirname, 'src/connection/ws/BrowserClientWsEndpoint.ts')
+
+const NodeClientWsConnection = path.resolve(__dirname, 'src/connection/ws/NodeClientWsConnection.ts')
+const BrowserClientWsConnection = path.resolve(__dirname, 'src/connection/ws/BrowserClientWsConnection.ts')
+
+module.exports = createKarmaConfig(TEST_PATHS, createWebpackConfig({
+    entry: './src/exports-browser.ts',
+    libraryName: 'network-node',
+    alias: {
+        [NodeWebRtcConnection]: BrowserWebRtcConnection,
+        [NodeClientWsEndpoint]: BrowserClientWsEndpoint,
+        [NodeClientWsConnection]: BrowserClientWsConnection
+    }
+}))

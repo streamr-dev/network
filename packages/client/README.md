@@ -12,7 +12,8 @@
 ![GitHub stars](https://img.shields.io/github/stars/streamr-dev/network-monorepo?style=social)
 [![Discord Chat](https://img.shields.io/discord/801574432350928907.svg?label=Discord&logo=Discord&colorB=7289da)](https://discord.gg/FVtAph9cvz)
 
-The Streamr Client library allows you to easily interact with the [Streamr Network](https://streamr.network) from JavaScript-based environments, such as browsers and [node.js](https://nodejs.org). The library wraps a Streamr light node for publishing and subscribing to messages. It also contains convenience functions for creating and managing streams.
+The Streamr Client library allows you to easily interact with the [Streamr Network](https://streamr.network) from
+JavaScript-based environments, such as browsers and [Node.js](https://nodejs.org). The library wraps a Streamr light node for publishing and subscribing to messages. It also contains convenience functions for creating and managing streams.
 
 **[Checkout our documentation](https://docs.streamr.network) for the full usage instructions.**
 
@@ -46,6 +47,10 @@ const { StreamrClient } = require('streamr-client')
 - Due to the stricter security rules inside browser extensions you must use the web build version of the Streamr Client.
 
 ## Usage
+
+### Full API reference
+For a full API reference visit https://api-docs.streamr.network/.
+
 ### Client creation
 In Streamr, Ethereum accounts are used for identity. You can generate an Ethereum private key using any Ethereum wallet, or you can use the utility function [`StreamrClient.generateEthereumAccount()`](#utility-functions), which returns the address and private key of a fresh Ethereum account. A private key is not required if you are only subscribing to public streams on the Network.
 
@@ -111,9 +116,6 @@ streamr.resend(streamId, { last: 10 }, (msgs) => {
   console.log("messages": msgs);
 });
 ```
-
-### API reference
-See https://api-docs.streamr.network/client/v8.1/index.html
 
 ___
 

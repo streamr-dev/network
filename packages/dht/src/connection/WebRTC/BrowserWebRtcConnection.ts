@@ -41,7 +41,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
         }
 
         this.peerConnection.onicegatheringstatechange = () => {
-            logger.trace('conn.onGatheringStateChange: %s -> %s', this.peerConnection?.iceGatheringState)
+            logger.trace(`conn.onGatheringStateChange: ${this.peerConnection?.iceGatheringState}`)
         }
 
         if (isOffering) {
@@ -52,14 +52,14 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
                         try {
                             await this.peerConnection.setLocalDescription()
                         } catch (err) {
-                            logger.warn(err)
+                            logger.warn('error', { err })
                         }
                         if (this.peerConnection.localDescription) {
                             this.emit('localDescription', this.peerConnection.localDescription?.sdp, this.peerConnection.localDescription?.type)
                         }
                     }
                 } catch (err) {
-                    logger.error(err)
+                    logger.error('error', { err })
                 } finally {
                     this.makingOffer = false
                 }
@@ -87,14 +87,14 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
         try {
             await this.peerConnection?.setRemoteDescription({ sdp: description, type: type.toLowerCase() as RTCSdpType })
         } catch (err) {
-            logger.warn(err)
+            logger.warn('error', { err })
         }
 
         if (type.toLowerCase() == RtcDescription.OFFER && this.peerConnection) {
             try {
                 await this.peerConnection.setLocalDescription()
             } catch (err) {
-                logger.warn(err)
+                logger.warn('error', { err })
             }
             if (this.peerConnection.localDescription) {
                 this.emit('localDescription', this.peerConnection.localDescription.sdp, this.peerConnection.localDescription.type)
@@ -105,10 +105,10 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
     addRemoteCandidate(candidate: string, mid: string): void {
         try {
             this.peerConnection?.addIceCandidate({ candidate: candidate, sdpMid: mid }).then(() => { return }).catch((err: any) => {
-                logger.warn(err)
+                logger.warn('error', { err })
             })
-        } catch (e) {
-            logger.warn(e)
+        } catch (err) {
+            logger.warn('error', { err })
         }
     }
 
@@ -124,7 +124,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
             try {
                 this.dataChannel.close()
             } catch (e) {
-                logger.warn('dc.close() errored: %s', e)
+                logger.warn(`dc.close() errored: ${e}`)
             }
         }
 
@@ -134,7 +134,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
             try {
                 this.peerConnection.close()
             } catch (e) {
-                logger.warn('conn.close() errored: %s', e)
+                logger.warn(`conn.close() errored: ${e}`)
             }
         }
 
@@ -161,7 +161,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
         }
 
         dataChannel.onerror = (err) => {
-            logger.warn('dc.onError: %o', err)
+            logger.warn(`dc.onError: ${err}`)
         }
 
         dataChannel.onbufferedamountlow = () => {

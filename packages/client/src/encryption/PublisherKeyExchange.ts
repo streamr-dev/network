@@ -50,7 +50,7 @@ export class PublisherKeyExchange {
         networkNodeFacade.once('start', async () => {
             const node = await networkNodeFacade.getNode()
             node.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
-            this.logger.debug('started')
+            this.logger.debug('Started')
         })
     }
 
@@ -60,7 +60,7 @@ export class PublisherKeyExchange {
                 const authenticatedUser = await this.authentication.getAddress()
                 const { recipient, requestId, rsaPublicKey, groupKeyIds } = GroupKeyRequest.fromStreamMessage(request) as GroupKeyRequest
                 if (recipient === authenticatedUser) {
-                    this.logger.debug('handling group key request %s', requestId)
+                    this.logger.debug('Handling group key request', { requestId })
                     await this.validator.validate(request)
                     const keys = without(
                         await Promise.all(groupKeyIds.map((id: string) => this.store.get(id, authenticatedUser))),
@@ -74,13 +74,19 @@ export class PublisherKeyExchange {
                             requestId)
                         const node = await this.networkNodeFacade.getNode()
                         node.publish(response)
-                        this.logger.debug('sent group keys %s to %s', keys.map((k) => k.id).join(), request.getPublisherId())
+                        this.logger.debug('Handled group key request (found keys)', {
+                            groupKeyIds: keys.map((k) => k.id).join(),
+                            recipient: request.getPublisherId()
+                        })
                     } else {
-                        this.logger.debug('found no group keys to send to %s', request.getPublisherId())
+                        this.logger.debug('Handled group key request (no keys found)', {
+                            requestId,
+                            recipient: request.getPublisherId()
+                        })
                     }
                 }
-            } catch (e: any) {
-                this.logger.debug('error processing group key, reason: %s', e.message)
+            } catch (err: any) {
+                this.logger.debug('Failed to handle group key request', err)
             }
         }
     }

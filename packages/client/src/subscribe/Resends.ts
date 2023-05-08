@@ -1,24 +1,22 @@
-import { inject, Lifecycle, scoped, delay } from 'tsyringe'
 import { StreamPartID, StreamPartIDUtils, toStreamPartID } from '@streamr/protocol'
+import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 
 import { MessageStream } from './MessageStream'
 import { createSubscribePipeline } from './subscribePipeline'
 
-import { StorageNodeRegistry } from '../registry/StorageNodeRegistry'
+import { EthereumAddress, Logger, collect, randomString, toEthereumAddress, wait } from '@streamr/utils'
 import random from 'lodash/random'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
-import { HttpUtil } from '../HttpUtil'
-import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
-import { EthereumAddress, Logger, toEthereumAddress, wait } from '@streamr/utils'
 import { DestroySignal } from '../DestroySignal'
-import { StreamRegistryCached } from '../registry/StreamRegistryCached'
-import { LoggerFactory } from '../utils/LoggerFactory'
-import { counterId } from '../utils/utils'
-import { StreamrClientError } from '../StreamrClientError'
-import { collect } from '../utils/iterators'
-import { counting } from '../utils/GeneratorUtils'
+import { HttpUtil } from '../HttpUtil'
 import { Message } from '../Message'
+import { StreamrClientError } from '../StreamrClientError'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'
+import { StorageNodeRegistry } from '../registry/StorageNodeRegistry'
+import { StreamRegistryCached } from '../registry/StreamRegistryCached'
+import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
+import { counting } from '../utils/GeneratorUtils'
+import { LoggerFactory } from '../utils/LoggerFactory'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 
@@ -141,8 +139,13 @@ export class Resends {
         streamPartId: StreamPartID,
         query: QueryDict = {}
     ): Promise<MessageStream> {
-        const loggerIdx = counterId('fetchStream')
-        this.logger.debug('[%s] fetching resend %s for %s with options %o', loggerIdx, endpointSuffix, streamPartId, query)
+        const traceId = randomString(5)
+        this.logger.debug('Fetch resend data', {
+            loggerIdx: traceId,
+            resendType: endpointSuffix,
+            streamPartId,
+            query
+        })
         const streamId = StreamPartIDUtils.getStreamID(streamPartId)
         const nodeAddresses = await this.streamStorageRegistry.getStorageNodes(streamId)
         if (!nodeAddresses.length) {
@@ -164,7 +167,7 @@ export class Resends {
 
         const dataStream = this.httpUtil.fetchHttpStream(url)
         messageStream.pull(counting(dataStream, (count: number) => {
-            this.logger.debug('[%s] total of %d messages received for resend fetch', loggerIdx, count)
+            this.logger.debug('Finished resend', { loggerIdx: traceId, messageCount: count })
         }))
         return messageStream
     }
@@ -247,7 +250,7 @@ export class Resends {
         while (!found) {
             const duration = Date.now() - start
             if (duration > timeout) {
-                this.logger.debug('timed out waiting for storage to have message %j', {
+                this.logger.debug('Timed out waiting for storage to contain message', {
                     expected: message.streamMessage.getMessageID(),
                     lastReceived: last?.map((l) => l.streamMessage.getMessageID()),
                 })
@@ -259,14 +262,15 @@ export class Resends {
             for (const lastMsg of last) {
                 if (messageMatchFn(message, lastMsg)) {
                     found = true
-                    this.logger.debug('message found')
+                    this.logger.debug('Found matching message')
                     return
                 }
             }
 
-            this.logger.debug('message not found, retrying... %j', {
-                msg: message.streamMessage.getMessageID(),
-                'last 3': last.slice(-3).map((l) => l.streamMessage.getMessageID())
+            this.logger.debug('Retry after delay (matching message not found)', {
+                expected: message.streamMessage.getMessageID(),
+                'last-3': last.slice(-3).map((l) => l.streamMessage.getMessageID()),
+                delayInMs: interval
             })
 
             await wait(interval)

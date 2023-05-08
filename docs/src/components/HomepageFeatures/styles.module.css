@@ -1,0 +1,33 @@
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+  gap: 1rem;
+  width: 100%;
+  padding-top: 1rem;
+  padding-bottom: 4rem;
+}
+
+.icon img {
+  width: 80px;
+  max-width: unset;
+  margin-right: 3rem;
+}
+
+.card {
+  display: flex;
+  padding: 3rem;
+  border: solid 1px #efefef;
+  border-radius: 16px;
+  transition: 300ms;
+  width: 100%;
+  height: 100%;
+  background-color: var(--ifm-card-background-color);
+}
+
+.card:hover {
+  text-decoration: none;
+}
+
+.header {
+  color: var(--ifm-color-primary);
+}

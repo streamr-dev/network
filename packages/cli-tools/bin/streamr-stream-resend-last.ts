@@ -1,10 +1,15 @@
 #!/usr/bin/env node
 import '../src/logLevel'
 import StreamrClient from 'streamr-client'
-import { createClientCommand } from '../src/command'
+import { createClientCommand, Options as BaseOptions } from '../src/command'
 import { resend } from '../src/resend'
 
-createClientCommand(async (client: StreamrClient, n: string, streamId: string, options: any) => {
+interface Options extends BaseOptions {
+    disableOrdering: boolean
+    subscribe: boolean
+}
+
+createClientCommand(async (client: StreamrClient, n: string, streamId: string, options: Options) => {
     if (isNaN(n as any)) {
         console.error('argument n is not a number')
         process.exit(1)

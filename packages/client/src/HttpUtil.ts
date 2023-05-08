@@ -1,6 +1,5 @@
 import fetch, { Response } from 'node-fetch'
-
-import { getVersionString } from './utils/utils'
+import { AbortSignal } from 'node-fetch/externals'
 import { Readable } from 'stream'
 import { WebStreamToNodeStream } from './utils/WebStreamToNodeStream'
 import split2 from 'split2'
@@ -13,10 +12,6 @@ export enum ErrorCode {
     NOT_FOUND = 'NOT_FOUND',
     VALIDATION_ERROR = 'VALIDATION_ERROR',
     UNKNOWN = 'UNKNOWN'
-}
-
-export const DEFAULT_HEADERS = {
-    'Streamr-Client': `streamr-client-javascript/${getVersionString()}`,
 }
 
 export class HttpError extends Error {
@@ -80,9 +75,8 @@ export class HttpUtil {
         url: string,
         abortController = new AbortController()
     ): AsyncIterable<StreamMessage> {
-        const response = await fetchResponse(url, this.logger, {
-            signal: abortController.signal
-        })
+        // cast is needed until this is fixed: https://github.com/node-fetch/node-fetch/issues/1652
+        const response = await fetchResponse(url, this.logger, abortController.signal as AbortSignal)
         if (!response.body) {
             throw new Error('No Response Body')
         }
@@ -119,28 +113,22 @@ export class HttpUtil {
 async function fetchResponse(
     url: string,
     logger: Logger,
-    opts?: any, // eslint-disable-line @typescript-eslint/explicit-module-boundary-types
-    fetchFn: typeof fetch = fetch
+    abortSignal: AbortSignal
 ): Promise<Response> {
     const timeStart = Date.now()
 
-    const options = {
-        ...opts,
-        headers: {
-            ...DEFAULT_HEADERS,
-            ...(opts && opts.headers),
-        },
-    }
-    // add default 'Content-Type: application/json' header for all POST and PUT requests
-    if (!options.headers['Content-Type'] && (options.method === 'POST' || options.method === 'PUT')) {
-        options.headers['Content-Type'] = 'application/json'
-    }
+    logger.debug('Send HTTP request', { url })
 
-    logger.debug('fetching %s with options %j', url, opts)
-
-    const response: Response = await fetchFn(url, opts)
+    const response: Response = await fetch(url, {
+        signal: abortSignal
+    })
     const timeEnd = Date.now()
-    logger.debug('%s responded with %d %s %s in %d ms', url, response.status, response.statusText, timeEnd - timeStart)
+    logger.debug('Received HTTP response', {
+        url,
+        status: response.status,
+        statusText: response.statusText,
+        timeTakenInMs: timeEnd - timeStart
+    })
 
     if (response.ok) {
         return response

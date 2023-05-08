@@ -34,9 +34,22 @@ import { LoggerFactory } from './utils/LoggerFactory'
 import { convertStreamMessageToMessage, Message } from './Message'
 import { ErrorCode } from './HttpUtil'
 import omit from 'lodash/omit'
+import merge from 'lodash/merge'
 import { StreamrClientError } from './StreamrClientError'
 
-export type SubscribeOptions = StreamDefinition & { resend?: ResendOptions }
+// TODO: this type only exists to enable tsdoc to generate proper documentation
+export type SubscribeOptions = StreamDefinition & ExtraSubscribeOptions
+
+// TODO: this type only exists to enable tsdoc to generate proper documentation
+export interface ExtraSubscribeOptions {
+    resend?: ResendOptions
+
+    /**
+     * Subscribe raw with validation, permission checking, ordering, gap filling,
+     * and decryption _disabled_.
+     */
+    raw?: boolean
+}
 
 /**
  * The main API used to interact with Streamr.
@@ -165,6 +178,9 @@ export class StreamrClient {
         options: SubscribeOptions,
         onMessage?: MessageListener
     ): Promise<Subscription> {
+        if ((options.raw === true) && (options.resend !== undefined)) {
+            throw new Error('Raw subscriptions are not supported for resend')
+        }
         const streamPartId = await this.streamIdBuilder.toStreamPartID(options)
         const sub = (options.resend !== undefined)
             ? new ResendSubscription(
@@ -174,7 +190,7 @@ export class StreamrClient {
                 this.loggerFactory,
                 this.config
             )
-            : new Subscription(streamPartId, this.loggerFactory)
+            : new Subscription(streamPartId, options.raw ?? false, this.loggerFactory)
         await this.subscriber.add(sub)
         if (onMessage !== undefined) {
             sub.useLegacyOnMessageHandler(onMessage)
@@ -296,10 +312,7 @@ export class StreamrClient {
     async createStream(propsOrStreamIdOrPath: Partial<StreamMetadata> & { id: string } | string): Promise<Stream> {
         const props = typeof propsOrStreamIdOrPath === 'object' ? propsOrStreamIdOrPath : { id: propsOrStreamIdOrPath }
         const streamId = await this.streamIdBuilder.toStreamID(props.id)
-        return this.streamRegistry.createStream(streamId, {
-            partitions: 1,
-            ...omit(props, 'id')
-        })
+        return this.streamRegistry.createStream(streamId, merge({ partitions: 1 }, omit(props, 'id') ))
     }
 
     /**
@@ -566,6 +579,15 @@ export class StreamrClient {
         await Promise.allSettled(tasks)
         await Promise.all(tasks)
     })
+
+    /**
+     * Get diagnostic info about the underlying network. Useful for debugging issues.
+     *
+     * @remark returned object's structure can change without semver considerations
+     */
+    async getDiagnosticInfo(): Promise<Record<string, unknown>> {
+        return (await this.node.getNode()).getDiagnosticInfo()
+    }
 
     // --------------------------------------------------------------------------------------------
     // Events

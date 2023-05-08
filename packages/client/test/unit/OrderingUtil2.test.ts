@@ -4,9 +4,9 @@ import {
     StreamMessage,
     toStreamID
 } from '@streamr/protocol'
-import shuffle from 'array-shuffle'
 import { EthereumAddress, toEthereumAddress, wait, waitForCondition } from '@streamr/utils'
 import OrderingUtil from '../../src/subscribe/ordering/OrderingUtil'
+import { shuffle } from 'lodash'
 
 const MESSAGES_PER_PUBLISHER = 1000
 const NUM_OF_DUPLICATE_MESSAGES = 500

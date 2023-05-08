@@ -6,9 +6,10 @@ import { createPrivateKeyAuthentication } from '../../src/Authentication'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { PublishMetadata } from '../../src/publish/Publisher'
 import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
-import { MessageFactory } from '../../src/publish/MessageFactory'
+import { MessageFactory, MessageFactoryOptions } from '../../src/publish/MessageFactory'
 import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
 import { createGroupKeyQueue, createStreamRegistryCached } from '../test-utils/utils'
+import { merge } from '@streamr/utils'
 
 const WALLET = fastWallet()
 const STREAM_ID = toStreamID('/path', toEthereumAddress(WALLET.address))
@@ -22,27 +23,33 @@ const createMessageFactory = async (opts?: {
     groupKeyQueue?: GroupKeyQueue
 }) => {
     const authentication = createPrivateKeyAuthentication(WALLET.privateKey, undefined as any)
-    return new MessageFactory({
-        streamId: STREAM_ID,
-        authentication,
-        streamRegistry: createStreamRegistryCached({
-            partitionCount: PARTITION_COUNT,
-            isPublicStream: false,
-            isStreamPublisher: true
-        }),
-        groupKeyQueue: await createGroupKeyQueue(authentication, GROUP_KEY),
-        ...opts
-    })
+    return new MessageFactory(
+        merge<MessageFactoryOptions>(
+            {
+                streamId: STREAM_ID,
+                authentication,
+                streamRegistry: createStreamRegistryCached({
+                    partitionCount: PARTITION_COUNT,
+                    isPublicStream: false,
+                    isStreamPublisher: true
+                }),
+                groupKeyQueue: await createGroupKeyQueue(authentication, GROUP_KEY)
+            },
+            opts
+        )
+    )
 }
 
 const createMessage = async (
     opts: Omit<PublishMetadata, 'timestamp'> & { timestamp?: number, explicitPartition?: number },
     messageFactory: MessageFactory
 ): Promise<StreamMessage> => {
-    return messageFactory.createMessage(CONTENT, {
-        timestamp: TIMESTAMP,
-        ...opts
-    }, opts.explicitPartition)
+    return messageFactory.createMessage(CONTENT, merge(
+        {
+            timestamp: TIMESTAMP
+        },
+        opts
+    ), opts.explicitPartition)
 }
 
 describe('MessageFactory', () => {

@@ -63,6 +63,10 @@ export class Propagation {
         }
     }
 
+    numOfActivePropagationTasks(): number {
+        return this.activeTaskStore.size()
+    }
+
     private sendAndAwaitThenMark({ message, source, handledNeighbors }: PropagationTask, neighborId: NodeId): void {
         if (!handledNeighbors.has(neighborId) && neighborId !== source) {
             (async () => {

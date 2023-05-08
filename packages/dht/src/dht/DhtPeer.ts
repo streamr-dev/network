@@ -51,7 +51,7 @@ export class DhtPeer implements KBucketContact {
             const peers = await this.dhtClient.getClosestPeers(request, options)
             return peers.peers
         } catch (err) {
-            logger.debug(err)
+            logger.debug('error', { err })
             return []
         }
 
@@ -71,7 +71,7 @@ export class DhtPeer implements KBucketContact {
                 return true
             }
         } catch (err) {
-            logger.debug(err)
+            logger.debug('error', { err })
         }
         return false
     }
@@ -94,7 +94,7 @@ export class DhtPeer implements KBucketContact {
                 return false
             }
         } catch (err) {
-            logger.debug(err)
+            logger.debug('error', { err })
             return false
         }
         return true
