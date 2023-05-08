@@ -5,7 +5,7 @@ import { EthereumAddress } from '@streamr/utils'
 export default class OrderingUtil extends MsgChainEmitter {
     inOrderHandler: MessageHandler
     gapHandler: GapHandler
-    propagationTimeout?: number
+    gapFillTimeout?: number
     resendTimeout?: number
     maxGapRequests?: number
     orderedChains: Record<string, OrderedMsgChain>
@@ -13,14 +13,14 @@ export default class OrderingUtil extends MsgChainEmitter {
     constructor(
         inOrderHandler: MessageHandler,
         gapHandler: GapHandler,
-        propagationTimeout?: number,
+        gapFillTimeout?: number,
         resendTimeout?: number,
         maxGapRequests?: number
     ) {
         super()
         this.inOrderHandler = inOrderHandler
         this.gapHandler = gapHandler
-        this.propagationTimeout = propagationTimeout
+        this.gapFillTimeout = gapFillTimeout
         this.resendTimeout = resendTimeout
         this.maxGapRequests = maxGapRequests
         this.orderedChains = {}
@@ -36,7 +36,7 @@ export default class OrderingUtil extends MsgChainEmitter {
         if (!this.orderedChains[key]) {
             const chain = new OrderedMsgChain(
                 publisherId, msgChainId, this.inOrderHandler, this.gapHandler,
-                this.propagationTimeout, this.resendTimeout, this.maxGapRequests
+                this.gapFillTimeout, this.resendTimeout, this.maxGapRequests
             )
             chain.on('error', (...args) => this.emit('error', ...args))
             chain.on('skip', (...args) => this.emit('skip', ...args))

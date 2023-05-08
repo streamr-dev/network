@@ -170,7 +170,7 @@ class OrderedMsgChain extends MsgChainEmitter {
     msgChainId: string
     inOrderHandler: MessageHandler
     gapHandler: GapHandler
-    propagationTimeout: number
+    gapFillTimeout: number
     resendTimeout: number
     nextGaps: ReturnType<typeof setTimeout> | null = null
     markedExplicitly = new StreamMessageSet()
@@ -180,7 +180,7 @@ class OrderedMsgChain extends MsgChainEmitter {
         msgChainId: string,
         inOrderHandler: MessageHandler,
         gapHandler: GapHandler,
-        propagationTimeout = DEFAULT_PROPAGATION_TIMEOUT,
+        gapFillTimeout = DEFAULT_PROPAGATION_TIMEOUT,
         resendTimeout = DEFAULT_RESEND_TIMEOUT,
         maxGapRequests = MAX_GAP_REQUESTS
     ) {
@@ -192,7 +192,7 @@ class OrderedMsgChain extends MsgChainEmitter {
         this.inOrderHandler = inOrderHandler
         this.gapHandler = gapHandler
         this.lastOrderedMsgRef = null
-        this.propagationTimeout = propagationTimeout
+        this.gapFillTimeout = gapFillTimeout
         this.resendTimeout = resendTimeout
         this.maxGapRequests = maxGapRequests
     }
@@ -386,7 +386,7 @@ class OrderedMsgChain extends MsgChainEmitter {
             return
         }
 
-        logger.trace('scheduleGap', { timeoutMs: this.propagationTimeout })
+        logger.trace('scheduleGap', { timeoutMs: this.gapFillTimeout })
         const nextGap = (timeout: number) => {
             clearTimeout(this.nextGaps!)
             this.nextGaps = setTimeout(async () => {
@@ -396,7 +396,7 @@ class OrderedMsgChain extends MsgChainEmitter {
                 nextGap(this.resendTimeout)
             }, timeout)
         }
-        nextGap(this.propagationTimeout)
+        nextGap(this.gapFillTimeout)
     }
 
     /**
