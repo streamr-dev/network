@@ -1,0 +1,5 @@
+label: "⚙️ API"
+link:
+    type: "doc"
+    id: "modules"
+className: "hide-expandable-sidebar"
