@@ -11,7 +11,7 @@ const logger = new Logger(module)
 function toStreamIDSafe(input: string): StreamID | undefined {
     try {
         return toStreamID(input)
-    } catch (err) {
+    } catch {
         return undefined
     }
 }
