@@ -283,7 +283,9 @@ export interface StreamrClientConfig {
         location?: Location
 
         /**
-         * Used to assign a custom external IP address for this nodes 
+         * Used to assign a custom external IP address for the node.
+         * Useful in cases where the node has a public IP address but
+         * the hosts network interface does not know of it
          */
         externalIp?: ExternalIP
     }
