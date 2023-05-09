@@ -47,6 +47,7 @@ const config = {
                 watch: process.env.TYPEDOC_WATCH,
                 sidebar: {
                     categoryLabel: "⚙️ API",
+                    indexLabel: " "
                 },
                 tsconfig: "../packages/client/tsconfig.json",
             },
@@ -64,6 +65,7 @@ const config = {
                     sidebarPath: require.resolve("./sidebars.js"),
                     editUrl:
                         "https://github.com/streamr-dev/documentation/blob/main",
+                    exclude: ['**api/modules.mdx']
                 },
                 blog: {
                     showReadingTime: true,

@@ -1,7 +1,7 @@
 const fs = require("fs")
 const path = require("path")
 
-module.exports = function(context, optons) {
+module.exports = function(context, options) {
 
     const extractImportantLinks = (content) => {
         const importantClassesRegex = /^## Important Classes([\s\S]*?)^##/m
@@ -56,7 +56,7 @@ module.exports = function(context, optons) {
                     const extension = path.extname(fullPath)
     
                     if (extension === ".md") {
-                        const relativePath = path.relative("docs/api", fullPath)
+                        const relativePath = path.relative("docs/api", fullPath).replace(/\\/g, '/')
                         switch (category) {
                             case "classes":
                             case "interfaces":
@@ -106,7 +106,6 @@ module.exports = function(context, optons) {
             /## Important Interfaces[\s\S]*?(?=##|$)/,
             ""
         )
-    
         // Add the featured links and navigation
         newContent = newContent.replace(
             /sidebar_position: 0.5\ncustom_edit_url: null\n---/,
@@ -123,22 +122,16 @@ module.exports = function(context, optons) {
                 APILinks.enums
             )}} category="enum" />`
         )
-    
-        // Write the modified content back to the file
-        fs.writeFileSync(destinationFilePath, newContent)
-    
-        // remove sidebar items
-        const categoryMetadata =
-            'label: "⚙️ API"\nlink:\n    type: "doc"\n    id: "modules"\nclassName: "hide-expandable-sidebar"\n'
-        fs.writeFileSync("docs/api/_category_.yml", categoryMetadata)
+        fs.writeFileSync("docs/api/index.md", newContent)
+        fs.writeFileSync(sourceFilePath, newContent)
+        fs.unlinkSync(destinationFilePath)
     }
     
     //refineAPIRef()
     return {
         name: 'refine-docs',
-        async loadContent() {
-            console.log('got here too')
+        async contentLoaded({content, actions}) {
             refineAPIRef()
-          },
+        },
     }
 }
