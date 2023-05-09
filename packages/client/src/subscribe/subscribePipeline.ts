@@ -45,7 +45,7 @@ export const createSubscribePipeline = (opts: SubscriptionPipelineOptions): Mess
 
     /* eslint-enable object-curly-newline */
 
-    const onError = async (error: Error | StreamMessageError, streamMessage?: StreamMessage) => {
+    const onError = (error: Error | StreamMessageError, streamMessage?: StreamMessage) => {
         if (streamMessage) {
             ignoreMessages.add(streamMessage)
         }
@@ -95,11 +95,11 @@ export const createSubscribePipeline = (opts: SubscriptionPipelineOptions): Mess
             yield* msgChainUtil
         })
         // parse content
-        .forEach(async (streamMessage: StreamMessage) => {
+        .forEach((streamMessage: StreamMessage) => {
             streamMessage.getParsedContent()
         })
         // ignore any failed messages
-        .filter(async (streamMessage: StreamMessage) => {
+        .filter((streamMessage: StreamMessage) => {
             return !ignoreMessages.has(streamMessage)
         })
         .onBeforeFinally.listen(async () => {

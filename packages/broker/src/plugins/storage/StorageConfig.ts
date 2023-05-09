@@ -70,7 +70,7 @@ export class StorageConfig {
         await this.storagePoller.start(this.abortController.signal)
     }
 
-    async destroy(): Promise<void> {
+    destroy(): void {
         this.abortController.abort()
         this.storageEventListener.destroy()
     }
