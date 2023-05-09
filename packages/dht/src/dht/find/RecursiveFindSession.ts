@@ -23,7 +23,7 @@ export interface RecursiveFindSessionConfig {
     rpcTransport: ITransport
     kademliaIdToFind: Uint8Array
     ownPeerID: PeerID
-    routingPaths: number
+    waitedRoutingPathCompletions: number
 }
 
 export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvents> implements IRecursiveFindSessionService {
@@ -31,7 +31,7 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
     private readonly rpcTransport: ITransport
     private readonly kademliaIdToFind: Uint8Array
     private readonly ownPeerID: PeerID
-    private readonly routingPaths: number
+    private readonly waitedRoutingPathCompletions: number
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private results: SortedContactList<Contact>
     private foundData: Map<string, DataEntry> = new Map()
@@ -47,7 +47,7 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
         this.rpcTransport = config.rpcTransport
         this.kademliaIdToFind = config.kademliaIdToFind
         this.ownPeerID = config.ownPeerID
-        this.routingPaths = config.routingPaths
+        this.waitedRoutingPathCompletions = config.waitedRoutingPathCompletions
         this.results = new SortedContactList(PeerID.fromValue(this.kademliaIdToFind), 10)
         this.rpcCommunicator = new ListeningRpcCommunicator(this.serviceId, this.rpcTransport, {
             rpcRequestTimeout: 15000
@@ -61,7 +61,7 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
         this.reportedHops.forEach((id) => {
             unreportedHops.delete(id)
         })
-        if (this.noCloserNodesReceivedCounter >= this.routingPaths && unreportedHops.size == 0) {
+        if (this.noCloserNodesReceivedCounter >= this.waitedRoutingPathCompletions && unreportedHops.size == 0) {
             return true
         }
         return false
