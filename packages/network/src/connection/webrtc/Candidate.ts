@@ -15,7 +15,7 @@ export class Candidate {
     private readonly type: CandidateType
 
     constructor(candidate: string) {
-        const split = candidate.split("")
+        const split = candidate.split(" ")
         this.id = split[0]
         this.component = split[1]
         this.protocol = split[2]
@@ -32,4 +32,5 @@ export class Candidate {
     getCandidateWithExternalIp(externalIp: string) {
         return `${this.id} ${this.component} ${this.protocol} ${this.priority} ${externalIp} ${this.port} typ ${this.type}`
     }
+
 } 
