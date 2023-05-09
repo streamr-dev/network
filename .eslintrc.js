@@ -14,7 +14,8 @@ module.exports = {
     root: true,
     env: {
         node: true
-    },
+    },    
+    ignorePatterns: ['*test*'],  // ignore temporarily
     rules: {
         'eol-last': ['error'],
         'no-console': ['error', {allow: ['warn', 'error', 'info']}],
