@@ -33,9 +33,7 @@ export class ResendSubscription extends Subscription {
         )
         this.pipe(this.resendThenRealtime.bind(this))
         this.pipe(this.orderMessages.transform())
-        this.onBeforeFinally.listen(async () => {
-            this.orderMessages.stop()
-        })
+        this.onBeforeFinally.listen(() => this.orderMessages.stop())
     }
 
     private async getResent(): Promise<MessageStream> {
