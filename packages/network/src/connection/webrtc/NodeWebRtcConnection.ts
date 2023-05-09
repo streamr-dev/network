@@ -6,9 +6,12 @@ import { Logger } from "@streamr/utils"
 import { NameDirectory } from "../../NameDirectory"
 import { WebRtcConnectionFactory } from "./WebRtcEndpoint"
 import { iceServerAsString } from './iceServerAsString'
+import { Candidate, CandidateType } from './Candidate'
 
 const loggerLevel = process.env.NODE_DATACHANNEL_LOG_LEVEL || 'Fatal'
 nodeDataChannel.initLogger(loggerLevel as LogLevel)
+
+const EXTERNAL_IP = process.env.EXTERNAL_IP || null
 
 /**
  * Parameters that would be passed to an event handler function
@@ -268,7 +271,13 @@ export class NodeWebRtcConnection extends WebRtcConnection {
     }
 
     private onLocalCandidate(candidate: string, mid: string): void {
-        this.emitLocalCandidate(candidate, mid)
+        this.logger.trace(`onLocalCandidate ${candidate} ${mid}`)
+        const parsedCandidate = new Candidate(candidate)
+        if (EXTERNAL_IP && parsedCandidate.getType() === CandidateType.HOST) {
+            this.emitLocalCandidate(parsedCandidate.getCandidateWithExternalIp(EXTERNAL_IP), mid)
+        } else {
+            this.emitLocalCandidate(candidate, mid)
+        }
     }
 
     private setupDataChannel(dataChannel: DataChannel): void {
