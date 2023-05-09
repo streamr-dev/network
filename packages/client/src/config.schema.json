@@ -186,7 +186,7 @@
                         },
                         {
                             "type": "string",
-                            "format": "ip"
+                            "format": "ipv4"
                         }
                     ],
                     "default": null
