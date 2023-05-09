@@ -274,7 +274,9 @@ export class NodeWebRtcConnection extends WebRtcConnection {
         this.logger.trace(`onLocalCandidate ${candidate} ${mid}`)
         const parsedCandidate = new Candidate(candidate)
         if (EXTERNAL_IP && parsedCandidate.getType() === CandidateType.HOST) {
-            this.emitLocalCandidate(parsedCandidate.getCandidateWithExternalIp(EXTERNAL_IP), mid)
+            const injectedCandidate = parsedCandidate.getCandidateWithExternalIp(EXTERNAL_IP)
+            this.logger.trace(`onLocalCandidate injected ip ${candidate} ${mid}`)
+            this.emitLocalCandidate(injectedCandidate, mid)
         } else {
             this.emitLocalCandidate(candidate, mid)
         }
