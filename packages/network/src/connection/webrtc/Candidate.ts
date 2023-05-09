@@ -29,8 +29,8 @@ export class Candidate {
         return this.type
     }
     
-    getCandidateWithExternalIp(externalIp: string) {
+    getCandidateWithExternalIp(externalIp: string): string {
         return `${this.id} ${this.component} ${this.protocol} ${this.priority} ${externalIp} ${this.port} typ ${this.type}`
     }
 
-} 
+}

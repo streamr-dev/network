@@ -25,6 +25,7 @@ export interface ConstructorOptions {
     deferredConnectionAttempt: DeferredConnectionAttempt
     portRange: WebRtcPortRange
     maxMessageSize: number
+    externalIp: ExternalIP
     bufferThresholdLow?: number
     bufferThresholdHigh?: number
     newConnectionTimeout?: number
@@ -36,6 +37,8 @@ export interface WebRtcPortRange {
     min: number
     max: number
 }
+
+export type ExternalIP = string | null
 
 let ID = 0
 
@@ -124,6 +127,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
     protected readonly bufferThresholdHigh: number
     protected readonly bufferThresholdLow: number
     protected readonly portRange: WebRtcPortRange
+    protected readonly externalIp: ExternalIP
 
     // diagnostic info
     private messagesSent = 0
@@ -142,11 +146,12 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         pingInterval,
         portRange,
         maxMessageSize,
+        externalIp,
         bufferThresholdHigh = 2 ** 17,
         bufferThresholdLow = 2 ** 15,
         newConnectionTimeout = 15000,
         maxPingPongAttempts = 5,
-        flushRetryTimeout = 500
+        flushRetryTimeout = 500,
     }: ConstructorOptions) {
         super()
 
@@ -164,6 +169,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         this.flushRetryTimeout = flushRetryTimeout
         this.messageQueue = messageQueue
         this.deferredConnectionAttempt = deferredConnectionAttempt
+        this.externalIp = externalIp
         this.portRange = portRange
         this.baseLogger = new Logger(module, { id: `${NameDirectory.getName(this.getPeerId())}/${ID}` })
         this.isFinished = false

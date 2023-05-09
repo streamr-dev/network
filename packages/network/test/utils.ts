@@ -57,6 +57,7 @@ export const createTestWebRtcEndpoint = (
         webrtcDisallowPrivateAddresses ?? false,
         TEST_CONFIG.webrtcPortRange,
         TEST_CONFIG.webrtcMaxMessageSize,
+        null
     )
 }
 

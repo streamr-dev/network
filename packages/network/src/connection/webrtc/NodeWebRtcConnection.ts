@@ -11,8 +11,6 @@ import { Candidate, CandidateType } from './Candidate'
 const loggerLevel = process.env.NODE_DATACHANNEL_LOG_LEVEL || 'Fatal'
 nodeDataChannel.initLogger(loggerLevel as LogLevel)
 
-const EXTERNAL_IP = process.env.EXTERNAL_IP || null
-
 /**
  * Parameters that would be passed to an event handler function
  * e.g.
@@ -273,8 +271,8 @@ export class NodeWebRtcConnection extends WebRtcConnection {
     private onLocalCandidate(candidate: string, mid: string): void {
         this.logger.trace(`onLocalCandidate ${candidate} ${mid}`)
         const parsedCandidate = new Candidate(candidate)
-        if (EXTERNAL_IP && parsedCandidate.getType() === CandidateType.HOST) {
-            const injectedCandidate = parsedCandidate.getCandidateWithExternalIp(EXTERNAL_IP)
+        if (this.externalIp && parsedCandidate.getType() === CandidateType.HOST) {
+            const injectedCandidate = parsedCandidate.getCandidateWithExternalIp(this.externalIp)
             this.logger.trace(`onLocalCandidate injected ip ${injectedCandidate} ${mid}`)
             this.emitLocalCandidate(injectedCandidate, mid)
         } else {

@@ -9,7 +9,7 @@ import NodeClientWsEndpoint from './connection/ws/NodeClientWsEndpoint'
 import { WebRtcEndpoint } from './connection/webrtc/WebRtcEndpoint'
 import { webRtcConnectionFactory } from './connection/webrtc/NodeWebRtcConnection'
 import { TrackerRegistryRecord } from '@streamr/protocol'
-import { IceServer, WebRtcPortRange } from './connection/webrtc/WebRtcConnection'
+import { ExternalIP, IceServer, WebRtcPortRange } from './connection/webrtc/WebRtcConnection'
 
 export interface NetworkNodeOptions extends AbstractNodeOptions {
     trackers: TrackerRegistryRecord[]
@@ -26,6 +26,7 @@ export interface NetworkNodeOptions extends AbstractNodeOptions {
     acceptProxyConnections: boolean
     webrtcMaxMessageSize: number
     webrtcPortRange: WebRtcPortRange
+    externalIp: ExternalIP
 }
 
 export const TEST_CONFIG: Omit<NetworkNodeOptions, 'id' | 'trackers' | 'metricsContext'> = {
@@ -45,7 +46,8 @@ export const TEST_CONFIG: Omit<NetworkNodeOptions, 'id' | 'trackers' | 'metricsC
         min: 6000,
         max: 65535
     },
-    webrtcMaxMessageSize: 1048576
+    webrtcMaxMessageSize: 1048576,
+    externalIp: null
 }
 
 export const createNetworkNode = ({
@@ -67,6 +69,7 @@ export const createNetworkNode = ({
     acceptProxyConnections,
     webrtcPortRange,
     webrtcMaxMessageSize,
+    externalIp
 }: NetworkNodeOptions): NetworkNode => {
     const peerInfo = PeerInfo.newNode(id, undefined, undefined, location)
     const endpoint = new NodeClientWsEndpoint(peerInfo, trackerPingInterval)
@@ -88,7 +91,8 @@ export const createNetworkNode = ({
         webrtcSendBufferMaxMessageCount,
         webrtcDisallowPrivateAddresses,
         webrtcPortRange,
-        webrtcMaxMessageSize
+        webrtcMaxMessageSize,
+        externalIp
     ))
 
     return new NetworkNode({

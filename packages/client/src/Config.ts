@@ -10,7 +10,7 @@ import CONFIG_SCHEMA from './config.schema.json'
 import { TrackerRegistryRecord } from '@streamr/protocol'
 import { LogLevel } from '@streamr/utils'
 
-import { IceServer, Location, WebRtcPortRange } from '@streamr/network-node'
+import { IceServer, Location, WebRtcPortRange, ExternalIP } from '@streamr/network-node'
 import type { ConnectionInfo } from '@ethersproject/web'
 import { generateClientId } from './utils/utils'
 
@@ -281,6 +281,11 @@ export interface StreamrClientConfig {
          * IP lookup).
          */
         location?: Location
+
+        /**
+         * Used to assign a custom external IP address for this nodes 
+         */
+        externalIp?: ExternalIP
     }
 
     /**

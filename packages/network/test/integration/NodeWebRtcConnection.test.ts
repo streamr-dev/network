@@ -55,7 +55,8 @@ describe('Connection', () => {
             messageQueue: messageQueueOne,
             deferredConnectionAttempt: deferredConnectionAttemptOne,
             portRange: TEST_CONFIG.webrtcPortRange,
-            maxMessageSize: TEST_CONFIG.webrtcMaxMessageSize
+            maxMessageSize: TEST_CONFIG.webrtcMaxMessageSize,
+            externalIp: null
         })
         connectionOne.on('localDescription', (...args) => oneFunctions.onLocalDescription(...args))
         connectionOne.on('localCandidate', (...args) => oneFunctions.onLocalCandidate(...args))
@@ -69,7 +70,8 @@ describe('Connection', () => {
             messageQueue: messageQueueTwo,
             deferredConnectionAttempt: deferredConnectionAttemptTwo,
             portRange: TEST_CONFIG.webrtcPortRange,
-            maxMessageSize: TEST_CONFIG.webrtcMaxMessageSize
+            maxMessageSize: TEST_CONFIG.webrtcMaxMessageSize,
+            externalIp: null
         })
 
         connectionTwo.on('localDescription', (...args) => twoFunctions.onLocalDescription(...args))
