@@ -19,7 +19,7 @@ export class WebsocketPlugin extends Plugin<WebsocketPluginConfig> {
     private server?: WebsocketServer
 
     async start(): Promise<void> {
-        this.server = new WebsocketServer(this.streamrClient!, this.pluginConfig.pingSendInterval, this.pluginConfig.disconnectTimeout)
+        this.server = new WebsocketServer(this.streamrClient, this.pluginConfig.pingSendInterval, this.pluginConfig.disconnectTimeout)
         await this.server.start(
             this.pluginConfig.port, 
             getPayloadFormat(this.pluginConfig.payloadMetadata),
