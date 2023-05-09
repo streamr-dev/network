@@ -119,6 +119,18 @@ module.exports = (env, argv) => {
                 [path.resolve('./src/utils/persistence/ServerPersistence.ts')]: (
                     path.resolve('./src/utils/persistence/BrowserPersistence.ts')
                 ),
+                '@walletconnect/ethereum-provider': false, // This and below brought in by @litprotocol/client-node but not actually used by our use case...
+                '@walletconnect/universal-provider': false,
+                '@walletconnect/core': false,
+                '@walletconnect/sign-client': false,
+                '@walletconnect/logger': false,
+                '@walletconnect/utils': false,
+                '@walletconnect/time': false,
+                '@walletconnect/keyvaluestorage': false,
+                '@walletconnect/heartbeat': false,
+                '@walletconnect/environment': false,
+                'ipfs-http-client': false,
+                'jszip': false,
             },
             fallback: {
                 module: false,
