@@ -125,7 +125,7 @@ export class Router implements IRouter {
         try {
             // eslint-disable-next-line promise/catch-or-return
             logger.trace('starting to raceEvents from routingSession: ' + session.sessionId)
-            raceEvents3<RoutingSessionEvents>(session, ['routingSucceeded', 'routingFailed', 'stopped', 'noCandidatesFound'], 10000)
+            raceEvents3<RoutingSessionEvents>(session, ['routingSucceeded', 'partialSuccess', 'routingFailed', 'stopped', 'noCandidatesFound'], 10000)
                 .then(() => {
                     logger.trace('raceEvents ended from routingSession: ' + session.sessionId)
                     this.removeRoutingSession(session.sessionId)
