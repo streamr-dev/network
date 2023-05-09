@@ -182,7 +182,7 @@
                 "externalIp": {
                     "anyOf": [
                         {
-                            "$ref": "#/definitions/chainConnectionInfoList"
+                            "type": "null"
                         },
                         {
                             "type": "string",
