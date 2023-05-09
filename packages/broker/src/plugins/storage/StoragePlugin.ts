@@ -64,10 +64,8 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
         this.storageConfig!.getStreamParts().forEach((streamPart) => {
             node.unsubscribe(streamPart)
         })
-        await Promise.all([
-            this.cassandra!.close(),
-            this.storageConfig!.destroy()
-        ])
+        await this.cassandra!.close()
+        this.storageConfig!.destroy()
     }
 
     // eslint-disable-next-line class-methods-use-this
