@@ -91,7 +91,7 @@ export const createNetworkNode = ({
         webrtcDisallowPrivateAddresses,
         webrtcPortRange,
         webrtcMaxMessageSize,
-        undefined
+        externalIp
     ))
 
     return new NetworkNode({
