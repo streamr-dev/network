@@ -45,7 +45,7 @@ export class RemoteRouter extends Remote<IRoutingServiceClient> {
         } catch (err) {
             const fromNode = params.previousPeer ?
                 peerIdFromPeerDescriptor(params.previousPeer) : keyFromPeerDescriptor(params.sourcePeer!)
-            logger.debug(`Failed to send routeMessage from ${fromNode} to ${this.peerId.toKey()} with: ${err}`)
+            logger.warn(`Failed to send routeMessage from ${fromNode} to ${this.peerId.toKey()} with: ${err}`)
             return false
         }
         return true
@@ -75,7 +75,7 @@ export class RemoteRouter extends Remote<IRoutingServiceClient> {
             const fromNode = params.previousPeer ?
                 keyFromPeerDescriptor(params.previousPeer) : keyFromPeerDescriptor(params.sourcePeer!)
 
-            logger.debug(
+            logger.warn(
                 `Failed to send forwardMessage from ${fromNode} to ${this.peerId.toKey()} with: ${err}`
             )
             return false

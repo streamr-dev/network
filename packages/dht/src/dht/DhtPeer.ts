@@ -3,6 +3,7 @@ import {
     ClosestPeersRequest,
     DataEntry,
     FindDataRequest,
+    FindDataResponse,
     LeaveNotice,
     PeerDescriptor,
     PingRequest
@@ -50,7 +51,7 @@ export class DhtPeer extends Remote<IDhtRpcServiceClient> implements KBucketCont
             const peers = await this.client.getClosestPeers(request, options)
             return peers.peers
         } catch (err) {
-            logger.debug('error', { err })
+            logger.trace(`getClosestPeers error ${this.serviceId}`, { err })
             throw err
         }
     }
@@ -93,15 +94,20 @@ export class DhtPeer extends Remote<IDhtRpcServiceClient> implements KBucketCont
 
     async findData(idToFind: Uint8Array): Promise<DataEntry[]> {
         const request: FindDataRequest = {
-            kademliaId: idToFind
+            kademliaId: idToFind,
+            requestor: this.ownPeerDescriptor,
         }
         const options: DhtRpcOptions = {
             sourceDescriptor: this.ownPeerDescriptor,
             targetDescriptor: this.peerDescriptor,
             timeout: 10000
         }
-        const data = await this.client.findData(request, options)
-        return data.dataEntries
+        try {
+            const data = await this.client.findData(request, options) as unknown as FindDataResponse
+            return data.dataEntries
+        } catch (err) {
+            return []
+        }
     }
 
     getPeerDescriptor(): PeerDescriptor {

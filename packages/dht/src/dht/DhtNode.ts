@@ -31,7 +31,7 @@ import { RandomContactList } from './contact/RandomContactList'
 import { Empty } from '../proto/google/protobuf/empty'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { Any } from '../proto/google/protobuf/any'
-import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
+import { isSamePeerDescriptor, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 import { Router } from './routing/Router'
 import { RecursiveFinder, RecursiveFindResult } from './find/RecursiveFinder'
 import { DataStore } from './store/DataStore'
@@ -163,6 +163,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     public connectionManager?: ConnectionManager
     private started = false
     private stopped = false
+    private entryPointDisconnectTimeout?: NodeJS.Timeout
 
     public contactAddCounter = 0
     public contactOnAddedCounter = 0
@@ -285,6 +286,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             }
         })
         this.externalApi = new ExternalApi(this)
+        if (this.connectionManager! && this.config.entryPoints && this.config.entryPoints.length > 0 
+            && !isSamePeerDescriptor(this.config.entryPoints[0], this.ownPeerDescriptor!)) {
+            this.connectToEntryPoint(this.config.entryPoints[0])
+        }
     }
 
     private initKBuckets = (selfId: PeerID) => {
@@ -579,6 +584,20 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
     }
 
+    private async connectToEntryPoint(entryPoint: PeerDescriptor): Promise<void> {
+        this.connectionManager!.lockConnection(entryPoint, 'temporary-layer0-connection')
+        const target = new DhtPeer(
+            this.ownPeerDescriptor!,
+            entryPoint,
+            toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
+            this.config.serviceId
+        )
+        await target.getClosestPeers(this.ownPeerId!.value)
+        this.entryPointDisconnectTimeout = setTimeout(() => {
+            this.connectionManager!.unlockConnection(entryPoint, 'temporary-layer0-connection')
+        }, 10 * 1000)
+    }
+
     public removeContact(contact: PeerDescriptor, removeFromOpenInternetPeers = false): void {
         if (!this.started || this.stopped) {
             return
@@ -682,6 +701,14 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
     }
 
+    public isJoinOngoing(): boolean {
+        return this.peerDiscovery!.isJoinOngoing()
+    }
+
+    public getKnownEntryPoints(): PeerDescriptor[] {
+        return this.config.entryPoints || []
+    }
+
     public async stop(): Promise<void> {
         if (this.stopped) {
             return
@@ -692,6 +719,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
         this.stopped = true
 
+        if (this.entryPointDisconnectTimeout) {
+            clearTimeout(this.entryPointDisconnectTimeout)
+        }
         this.bucket!.toArray().map((dhtPeer: DhtPeer) => this.bucket!.remove(dhtPeer.id))
         this.bucket!.removeAllListeners()
         this.localDataStore.clear()

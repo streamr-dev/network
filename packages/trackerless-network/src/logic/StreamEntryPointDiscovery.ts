@@ -6,7 +6,8 @@ import {
     Contact,
     SortedContactList,
     peerIdFromPeerDescriptor,
-    RecursiveFindResult
+    RecursiveFindResult,
+    DataEntry
 } from '@streamr/dht'
 import { Any } from '../proto/google/protobuf/any'
 import { Logger, wait } from '@streamr/utils'
@@ -56,6 +57,7 @@ interface StreamEntryPointDiscoveryConfig {
     streams: Map<string, StreamObject>
     ownPeerDescriptor: PeerDescriptor
     getEntryPointData: (key: Uint8Array) => Promise<RecursiveFindResult>
+    getEntryPointDataViaPeer: (key: Uint8Array, peer: PeerDescriptor) => Promise<DataEntry[]>
     storeEntryPointData: (key: Uint8Array, data: Any) => Promise<PeerDescriptor[]>
     cacheInterval?: number
 }
@@ -73,7 +75,7 @@ export class StreamEntryPointDiscovery {
         this.cacheIntervalRefs = new Map()
     }
 
-    async discoverEntryPointsFromDht(streamPartID: string, knownEntryPointCount: number): Promise<FindEntryPointsResult> {
+    async discoverEntryPointsFromDht(streamPartID: string, knownEntryPointCount: number, forwardingPeer?: PeerDescriptor): Promise<FindEntryPointsResult> {
         if (knownEntryPointCount > 0) {
             return {
                 joiningEmptyStream: false,
@@ -82,8 +84,9 @@ export class StreamEntryPointDiscovery {
             }
         }
         let joiningEmptyStream = false
-        const discoveredEntryPoints = await this.discoverEntrypoints(streamPartID)
+        const discoveredEntryPoints = await this.discoverEntryPoints(streamPartID, forwardingPeer)
         if (discoveredEntryPoints.length === 0) {
+            console.log("ÄÄÄÄÄÄÄ")
             joiningEmptyStream = true
             discoveredEntryPoints.push(this.config.ownPeerDescriptor)
         }
@@ -94,12 +97,32 @@ export class StreamEntryPointDiscovery {
         }
     }
 
-    private async discoverEntrypoints(streamPartId: string): Promise<PeerDescriptor[]> {
+    private async discoverEntryPoints(streamPartId: string, forwardingPeer?: PeerDescriptor): Promise<PeerDescriptor[]> {
         const dataKey = streamPartIdToDataKey(streamPartId)
+        return forwardingPeer ? 
+            this.queryEntryPointsViaPeer (dataKey, forwardingPeer) : await this.queryEntrypoints(dataKey)
+    }
+
+    private async queryEntrypoints(key: Uint8Array): Promise<PeerDescriptor[]> {
+        logger.info(`Finding data from dht peer ${this.config.ownPeerDescriptor!.nodeName}`)
         try {
-            const results = await this.config.getEntryPointData(dataKey)
+            const results = await this.config.getEntryPointData(key)
             if (results.dataEntries) {
-                return results.dataEntries!.map((entry) => entry.storer!)
+                return results.dataEntries!.map((entry) => Any.unpack(entry.data!, PeerDescriptor))
+            } else {
+                return []
+            }
+        } catch (err) {
+            return []
+        }
+    }
+
+    private async queryEntryPointsViaPeer(key: Uint8Array, peer: PeerDescriptor): Promise<PeerDescriptor[]> {
+        logger.info(`Finding datavia peer ${this.config.ownPeerDescriptor!.nodeName}`)
+        try {
+            const results = await this.config.getEntryPointDataViaPeer(key, peer)
+            if (results) {
+                return results.map((entry) => Any.unpack(entry.data!, PeerDescriptor))
             } else {
                 return []
             }
@@ -148,7 +171,7 @@ export class StreamEntryPointDiscovery {
             }
             logger.trace(`Attempting to keep self as entrypoint for ${streamPartId}`)
             try {
-                const discovered = await this.discoverEntrypoints(streamPartId)
+                const discovered = await this.discoverEntryPoints(streamPartId)
                 if (discovered.length < ENTRYPOINT_STORE_LIMIT 
                     || discovered.some((peer) => isSamePeerDescriptor(peer, this.config.ownPeerDescriptor))) {
                     await this.storeSelfAsEntryPoint(streamPartId)
@@ -167,7 +190,7 @@ export class StreamEntryPointDiscovery {
         await exponentialRunOff(async () => {
             if (this.config.streams.has(streamPartID)) {
                 const stream = this.config.streams.get(streamPartID)
-                const rediscoveredEntrypoints = await this.discoverEntrypoints(streamPartID)
+                const rediscoveredEntrypoints = await this.discoverEntryPoints(streamPartID)
                 const sortedEntrypoints = new SortedContactList(PeerID.fromString(streamPartID), 4)
                 sortedEntrypoints.addContacts(
                     rediscoveredEntrypoints

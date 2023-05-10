@@ -13,7 +13,7 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 
 const logger = new Logger(module)
 
-const MAX_FAILED_HOPS = 4
+const MAX_FAILED_HOPS = 2
 
 export interface RoutingSessionEvents {
     // This event is emitted when a peer responds with a success ack

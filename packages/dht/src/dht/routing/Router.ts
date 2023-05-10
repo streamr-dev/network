@@ -200,7 +200,7 @@ export class Router implements IRouter {
         }
         logger.trace(`Processing received routeMessage ${routedMessage.requestId}`)
         this.addContact(routedMessage.sourcePeer!, true)
-        this.addToDuplicateDetector(routedMessage.requestId, routedMessage.sourcePeer!.nodeName!)
+        this.addToDuplicateDetector(routedMessage.requestId, keyFromPeerDescriptor(routedMessage.sourcePeer!))
         if (this.ownPeerId!.equals(peerIdFromPeerDescriptor(routedMessage.destinationPeer!))) {
             logger.trace(`${this.ownPeerDescriptor.nodeName} routing message targeted to self ${routedMessage.requestId}`)
             this.setForwardingEntries(routedMessage)
@@ -240,7 +240,7 @@ export class Router implements IRouter {
         }
         logger.trace(`Processing received forward routeMessage ${forwardMessage.requestId}`)
         this.addContact(forwardMessage.sourcePeer!, true)
-        this.addToDuplicateDetector(forwardMessage.requestId, forwardMessage.sourcePeer!.nodeName!)
+        this.addToDuplicateDetector(forwardMessage.requestId, keyFromPeerDescriptor(forwardMessage.sourcePeer!))
         if (this.ownPeerId.equals(peerIdFromPeerDescriptor(forwardMessage.destinationPeer!))) {
             return this.forwardToDestination(forwardMessage)
         } else {

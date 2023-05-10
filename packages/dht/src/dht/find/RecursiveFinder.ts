@@ -107,10 +107,10 @@ export class RecursiveFinder implements IRecursiveFinder {
             await runAndWaitForEvents3<RecursiveFindSessionEvents>(
                 [() => this.doFindRecursevily(routeMessage)],
                 [[recursiveFindSession, 'findCompleted']],
-                30000
+                15000
             )
         } catch (err) {
-            logger.trace(`doFindRecursively failed with error ${err}`)
+            logger.warn(`doFindRecursively failed with error ${this.ownPeerDescriptor.nodeName} ${err}`)
         }
         this.findAndReportLocalData(idToFind, findMode, [], this.ownPeerDescriptor, sessionId)
         this.ongoingSessions.delete(sessionId)

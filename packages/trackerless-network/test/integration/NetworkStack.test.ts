@@ -16,7 +16,8 @@ describe('NetworkStack', () => {
     const epDescriptor: PeerDescriptor = {
         kademliaId: PeerID.fromString('entrypoint').value,
         type: NodeType.NODEJS,
-        websocket: { ip: 'localhost', port: 32222 }
+        websocket: { ip: 'localhost', port: 32222 },
+        nodeName: 'node2'
     }
 
     beforeEach(async () => {
@@ -31,7 +32,8 @@ describe('NetworkStack', () => {
             layer0: {
                 webSocketPort: 32223,
                 peerIdString: 'network-stack',
-                entryPoints: [epDescriptor]
+                entryPoints: [epDescriptor],
+                nodeName: 'node2'
             },
             networkNode: {}
         })
