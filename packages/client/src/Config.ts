@@ -10,7 +10,7 @@ import CONFIG_SCHEMA from './config.schema.json'
 import { TrackerRegistryRecord } from '@streamr/protocol'
 import { LogLevel } from '@streamr/utils'
 
-import { IceServer, Location, WebRtcPortRange } from '@streamr/network-node'
+import { IceServer, Location, WebRtcPortRange, ExternalIP } from '@streamr/network-node'
 import type { ConnectionInfo } from '@ethersproject/web'
 import { generateClientId } from './utils/utils'
 
@@ -281,6 +281,16 @@ export interface StreamrClientConfig {
          * IP lookup).
          */
         location?: Location
+
+        /**
+         * Used to assign a custom external IP address for the node.
+         * Useful in cases where the node has a public IP address but
+         * the hosts network interface does not know of it.
+         * 
+         * Works only if the Full Cone NAT that the node is behind preserves local   
+         * port mappings on the public side. 
+        */
+        externalIp?: ExternalIP
     }
 
     /**

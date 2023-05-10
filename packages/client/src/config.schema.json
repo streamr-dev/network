@@ -61,6 +61,7 @@
         "network": {
             "type": "object",
             "additionalProperties": false,
+            "required": [],
             "properties": {
                 "id": {
                     "type": "string"
@@ -178,6 +179,10 @@
                 "rttUpdateTimeout": {
                     "type": "number",
                     "default": 15000
+                },
+                "externalIp": {
+                    "type": "string",
+                    "format": "ipv4"
                 },
                 "iceServers": {
                     "type": "array",
