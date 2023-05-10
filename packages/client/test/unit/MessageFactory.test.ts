@@ -155,7 +155,7 @@ describe('MessageFactory', () => {
             const messageFactory = await createMessageFactory()
             const msg1 = await createMessage({}, messageFactory)
             const msg2 = await createMessage({}, messageFactory)
-            expect(msg1!.messageId.streamPartition).toBe(msg2!.messageId.streamPartition)
+            expect(msg1.messageId.streamPartition).toBe(msg2.messageId.streamPartition)
         })
 
         it('same partition key maps to same partition', async () => {
@@ -163,21 +163,21 @@ describe('MessageFactory', () => {
             const partitionKey = `mock-partition-key-${random(Number.MAX_SAFE_INTEGER)}`
             const msg1 = await createMessage({ partitionKey }, messageFactory)
             const msg2 = await createMessage({ partitionKey }, messageFactory)
-            expect(msg1!.messageId.streamPartition).toBe(msg2!.messageId.streamPartition)
+            expect(msg1.messageId.streamPartition).toBe(msg2.messageId.streamPartition)
         })
 
         it('numeric partition key maps to the partition if in range', async () => {
             const messageFactory = await createMessageFactory()
             const partitionKey = 10
             const msg = await createMessage({ partitionKey }, messageFactory)
-            expect(msg!.messageId.streamPartition).toBe(partitionKey)
+            expect(msg.messageId.streamPartition).toBe(partitionKey)
         })
 
         it('numeric partition key maps to partition range', async () => {
             const messageFactory = await createMessageFactory()
             const partitionOffset = 20
             const msg = await createMessage({ partitionKey: PARTITION_COUNT + partitionOffset }, messageFactory)
-            expect(msg!.messageId.streamPartition).toBe(partitionOffset)
+            expect(msg.messageId.streamPartition).toBe(partitionOffset)
         })
 
         it('selected random partition in range when partition count decreases', async () => {

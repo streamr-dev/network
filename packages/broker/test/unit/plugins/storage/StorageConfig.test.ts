@@ -61,8 +61,8 @@ describe(StorageConfig, () => {
         getStoredStreams.mockRejectedValue(new Error('results not available'))
     })
 
-    afterEach(async () => {
-        await storageConfig?.destroy()
+    afterEach(() => {
+        storageConfig?.destroy()
     })
 
     it('state starts empty', () => {
@@ -163,7 +163,7 @@ describe(StorageConfig, () => {
     it('updates do not occur after destroy has been invoked', async () => {
         await storageConfig.start()
         await wait(POLL_TIME)
-        await storageConfig.destroy()
+        storageConfig.destroy()
 
         getStoredStreams.mockClear()
         getStoredStreams.mockResolvedValue({

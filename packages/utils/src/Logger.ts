@@ -88,7 +88,7 @@ export class Logger {
             name: Logger.createName(module),
             ...contextBindings
         }, {
-            level: process.env.LOG_LEVEL as (string | undefined) ?? defaultLogLevel
+            level: process.env.LOG_LEVEL ?? defaultLogLevel
         })
         this.fatal = wrappedMethodCall(this.logger.fatal.bind(this.logger))
         this.error = wrappedMethodCall(this.logger.error.bind(this.logger))

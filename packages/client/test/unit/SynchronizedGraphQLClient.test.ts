@@ -35,7 +35,7 @@ class EmulatedTheGraphIndex {
     }
 
     stop(): void {
-        clearInterval(this.timer!)
+        clearInterval(this.timer)
     }
 }
 
@@ -75,7 +75,7 @@ describe('SynchronizedGraphQLClient', () => {
         }])
         sendQuery = jest.fn().mockImplementation((_query: string) => {
             const state = theGraphIndex.getState()
-            return state!.queryResult
+            return state.queryResult
         })
         getIndexBlockNumber = jest.fn().mockImplementation(() => {
             return theGraphIndex.getState().blockNumber

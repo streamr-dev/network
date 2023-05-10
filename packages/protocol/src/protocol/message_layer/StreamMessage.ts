@@ -196,7 +196,7 @@ export default class StreamMessage<T = unknown> {
 
             if (this.contentType === ContentType.JSON) {
                 try {
-                    this.parsedContent = JSON.parse(this.serializedContent!)
+                    this.parsedContent = JSON.parse(this.serializedContent)
                 } catch (err: any) {
                     throw new InvalidJsonError(
                         this.getStreamId(),

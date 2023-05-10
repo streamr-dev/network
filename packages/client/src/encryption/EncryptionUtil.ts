@@ -83,7 +83,7 @@ export class EncryptionUtil {
             }
         } catch (err) {
             streamMessage.encryptionType = EncryptionType.AES
-            throw new DecryptError(streamMessage, 'Could not decrypt new group key: ' + err.stack)
+            throw new DecryptError(streamMessage, `Could not decrypt new group key: ${err.stack}`)
         }
         /* eslint-enable no-param-reassign */
     }

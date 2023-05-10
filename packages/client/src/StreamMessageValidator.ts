@@ -65,7 +65,7 @@ export default class StreamMessageValidator {
             throw new ValidationError('Falsey argument passed to validate()!')
         }
 
-        await this.assertSignatureIsValid(streamMessage)
+        this.assertSignatureIsValid(streamMessage)
 
         switch (streamMessage.messageType) {
             case StreamMessageType.MESSAGE:
@@ -88,7 +88,7 @@ export default class StreamMessageValidator {
      * @param streamMessage the StreamMessage to validate.
      * @param verifyFn function(address, payload, signature): return true if the address and payload match the signature
      */
-    private async assertSignatureIsValid(streamMessage: StreamMessage): Promise<void> {
+    private assertSignatureIsValid(streamMessage: StreamMessage): void {
         const payload = createSignaturePayload({
             messageId: streamMessage.getMessageID(),
             serializedContent: streamMessage.getSerializedContent(),
@@ -97,7 +97,7 @@ export default class StreamMessageValidator {
         })
         let success
         try {
-            success = this.verify(streamMessage.getPublisherId(), payload, streamMessage.signature!)
+            success = this.verify(streamMessage.getPublisherId(), payload, streamMessage.signature)
         } catch (err) {
             throw new StreamMessageError(`An error occurred during address recovery from signature: ${err}`, streamMessage)
         }
@@ -131,7 +131,7 @@ export default class StreamMessageValidator {
         const recipient = groupKeyRequest.recipient
 
         // Check that the recipient of the request is a valid publisher of the stream
-        const recipientIsPublisher = await this.isPublisher(recipient!, streamId)
+        const recipientIsPublisher = await this.isPublisher(recipient, streamId)
         if (!recipientIsPublisher) {
             throw new StreamMessageError(`${recipient} is not a publisher on stream ${streamId}.`, streamMessage)
         }
@@ -160,7 +160,7 @@ export default class StreamMessageValidator {
 
         // permit publishers to send error responses to invalid subscribers
         // Check that the recipient of the request is a valid subscriber of the stream
-        const recipientIsSubscriber = await this.isSubscriber(recipient!, streamId)
+        const recipientIsSubscriber = await this.isSubscriber(recipient, streamId)
         if (!recipientIsSubscriber) {
             throw new StreamMessageError(
                 `${recipient} is not a subscriber on stream ${streamId}. ${streamMessage.messageType}`,
