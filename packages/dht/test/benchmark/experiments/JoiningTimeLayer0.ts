@@ -7,16 +7,16 @@ import { performance } from 'perf_hooks'
 import { PeerID } from '../../../src/helpers/PeerID'
 import fs from 'fs'
 import { debugVars } from '../../../src/helpers/debugHelpers'
-import { Logger, waitForEvent3 } from '@streamr/utils'
-import { ClientWebSocket } from '../../../src/connection/WebSocket/ClientWebSocket'
-import { ConnectionEvents } from '../../../src/connection/IConnection'
+import { Logger } from '@streamr/utils'
+// import { ClientWebSocket } from '../../../src/connection/WebSocket/ClientWebSocket'
+//import { ConnectionEvents } from '../../../src/connection/IConnection'
 
 const numNodes = 100000
 
 const logger = new Logger(module)
 let nodes: DhtNode[]
 let simulator: Simulator
-let clientWebSocket: ClientWebSocket
+//let clientWebSocket: ClientWebSocket
 
 const prepareNetwork = async () => {
     console.log('Preparing network')
@@ -31,12 +31,13 @@ const prepareNetwork = async () => {
 
     console.log('Entrypoint ready')
 
+    /*
     clientWebSocket = new ClientWebSocket()
 
     const promise = waitForEvent3<ConnectionEvents>(clientWebSocket, 'connected')
     clientWebSocket.connect('ws://127.0.0.1:9999')
     await promise
-
+    */
 }
 
 const shutdownNetwork = async () => {
@@ -44,7 +45,7 @@ const shutdownNetwork = async () => {
         ...nodes.map((node) => node.stop())
     ])
     simulator.stop()
-    await clientWebSocket.close()
+    //await clientWebSocket.close()
 }
 
 const measureJoiningTime = async () => {
@@ -57,21 +58,21 @@ const measureJoiningTime = async () => {
 
     const start = performance.now()
 
-    const startMessage = { type: 'start', start: start }
+    //const startMessage = { type: 'start', start: start }
 
     // convert message to Uint8Array
-    const startMessageBuffer = new TextEncoder().encode(JSON.stringify(startMessage))
+    //const startMessageBuffer = new TextEncoder().encode(JSON.stringify(startMessage))
 
-    clientWebSocket.send(startMessageBuffer)
+    //clientWebSocket.send(startMessageBuffer)
 
     await node.joinDht(randomNode.getPeerDescriptor())
 
     const end = performance.now()
 
-    const endMessage = { type: 'end', end: end }
-    const endMessageBuffer = new TextEncoder().encode(JSON.stringify(endMessage))
+    //const endMessage = { type: 'end', end: end }
+    //const endMessageBuffer = new TextEncoder().encode(JSON.stringify(endMessage))
     
-    clientWebSocket.send(endMessageBuffer)
+    //clientWebSocket.send(endMessageBuffer)
 
     await waitNodesReadyForTesting([node])
     nodes.push(node)
@@ -99,7 +100,7 @@ const run = async () => {
         console.log(`Joining time for ${i + 1} nodes network: ${time}ms`)
         fs.writeSync(logFile, `${i + 1}` + '\t' + `${Math.round(time)}` + '\t' + debugVars['nodesContacted'] +
             '\t' + debugVars['nodesContactedRandom'] + '\t' + debugVars['simulatorHeapSize'] + '\t' + heapUsed + '\n')
-        global.gc!()
+        //global.gc!()
     }
     fs.closeSync(logFile)
     await shutdownNetwork()
