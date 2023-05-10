@@ -65,7 +65,7 @@ const config = {
                     sidebarPath: require.resolve("./sidebars.js"),
                     editUrl:
                         "https://github.com/streamr-dev/documentation/blob/main",
-                    exclude: ['**api/modules.mdx']
+                    exclude: ['**api/modules.mdx', '**api/modules.md']
                 },
                 blog: {
                     showReadingTime: true,

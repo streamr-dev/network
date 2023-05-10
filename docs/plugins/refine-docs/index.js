@@ -32,6 +32,16 @@ module.exports = function(context, options) {
     
         return { classes, interfaces }
     }
+
+    async function replaceModulesMd(fullPath) {
+        const data = await fs.promises.readFile(fullPath, 'utf8')
+        const results = data.replace(new RegExp("modules.md", 'g'), "index.md")
+        try {
+            await fs.promises.writeFile(fullPath, results, 'utf8')
+        } catch (err) {
+            console.error(err)
+        }
+    }
     
     async function readFolderRecursive(directory) {
         const folderStructure = {
@@ -57,9 +67,23 @@ module.exports = function(context, options) {
     
                     if (extension === ".md") {
                         const relativePath = path.relative("docs/api", fullPath).replace(/\\/g, '/')
+                        const fullPathW = fullPath.replace(/\\/g, '/')
+                        //console.log('fullpwath', fullPathW)
                         switch (category) {
                             case "classes":
+                                folderStructure[category].push({
+                                    name,
+                                    path: relativePath,
+                                })
+                                await replaceModulesMd(fullPath)
+                                break
                             case "interfaces":
+                                folderStructure[category].push({
+                                    name,
+                                    path: relativePath,
+                                })
+                                await replaceModulesMd(fullPath)
+                                break
                             case "enums":
                                 folderStructure[category].push({
                                     name,
@@ -122,6 +146,8 @@ module.exports = function(context, options) {
                 APILinks.enums
             )}} category="enum" />`
         )
+
+        newContent = newContent.replace(new RegExp("modules.md", 'g'), "index.md")
         fs.writeFileSync("docs/api/index.md", newContent)
         fs.writeFileSync(sourceFilePath, newContent)
         fs.unlinkSync(destinationFilePath)
