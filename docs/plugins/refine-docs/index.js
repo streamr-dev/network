@@ -69,8 +69,6 @@ module.exports = function(context, options) {
     
                     if (extension === ".md") {
                         const relativePath = path.relative(relativeAPIDocPath, fullPath).replace(/\\/g, '/')
-                        const fullPathW = fullPath.replace(/\\/g, '/')
-                        //console.log('fullpwath', fullPathW)
                         switch (category) {
                             case "classes":
                                 folderStructure[category].push({

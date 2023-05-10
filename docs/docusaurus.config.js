@@ -46,7 +46,7 @@ const config = {
                 treatWarningsAsErrors: true,
                 watch: process.env.TYPEDOC_WATCH,
                 sidebar: {
-                    categoryLabel: "⚙️ API",
+                    categoryLabel: "API reference",
                     indexLabel: " "
                 },
                 out: "usage/streamr-js-client/api",
