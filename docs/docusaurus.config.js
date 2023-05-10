@@ -49,6 +49,7 @@ const config = {
                     categoryLabel: "⚙️ API",
                     indexLabel: " "
                 },
+                out: "usage/streamr-js-client/api",
                 tsconfig: "../packages/client/tsconfig.json",
             },
         ],
@@ -65,7 +66,7 @@ const config = {
                     sidebarPath: require.resolve("./sidebars.js"),
                     editUrl:
                         "https://github.com/streamr-dev/documentation/blob/main",
-                    exclude: ['**api/modules.mdx', '**api/modules.md']
+                    exclude: ['**usage/streamr-js-client/api/modules.mdx', '**usage/streamr-js-client/api/modules.md']
                 },
                 blog: {
                     showReadingTime: true,

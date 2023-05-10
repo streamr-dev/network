@@ -3,6 +3,8 @@ const path = require("path")
 
 module.exports = function(context, options) {
 
+    const relativeAPIDocPath = "docs/usage/streamr-js-client/api"
+
     const extractImportantLinks = (content) => {
         const importantClassesRegex = /^## Important Classes([\s\S]*?)^##/m
         const importantInterfacesRegex = /^## Important Interfaces([\s\S]*?)^##/m
@@ -66,7 +68,7 @@ module.exports = function(context, options) {
                     const extension = path.extname(fullPath)
     
                     if (extension === ".md") {
-                        const relativePath = path.relative("docs/api", fullPath).replace(/\\/g, '/')
+                        const relativePath = path.relative(relativeAPIDocPath, fullPath).replace(/\\/g, '/')
                         const fullPathW = fullPath.replace(/\\/g, '/')
                         //console.log('fullpwath', fullPathW)
                         switch (category) {
@@ -103,8 +105,8 @@ module.exports = function(context, options) {
     }
     
     const refineAPIRef = async () => {
-        const sourceFilePath = "docs/api/modules.md"
-        const destinationFilePath = "docs/api/modules.mdx"
+        const sourceFilePath = relativeAPIDocPath + "/modules.md"
+        const destinationFilePath = relativeAPIDocPath + "/modules.mdx"
     
         // replaces index content with module content
         // index is by default the readme, which we don't want
@@ -113,10 +115,10 @@ module.exports = function(context, options) {
             fs.writeFileSync(destinationFilePath, content)
     
             fs.unlinkSync(sourceFilePath)
-            fs.unlinkSync("docs/api/index.md")
+            fs.unlinkSync(relativeAPIDocPath + "/index.md")
         }
     
-        const APILinks = await readFolderRecursive("docs/api")
+        const APILinks = await readFolderRecursive(relativeAPIDocPath)
     
         const content = fs.readFileSync(destinationFilePath, "utf-8")
         const featuredLinks = extractImportantLinks(content)
@@ -149,7 +151,7 @@ module.exports = function(context, options) {
 
         newContent = newContent.replace(new RegExp("modules.md", 'g'), "index.md")
         newContent = newContent.replace(new RegExp("Ƭ", 'g'), "•")
-        fs.writeFileSync("docs/api/index.md", newContent)
+        fs.writeFileSync(relativeAPIDocPath + "/index.md", newContent)
         fs.writeFileSync(sourceFilePath, newContent)
         fs.unlinkSync(destinationFilePath)
     }
