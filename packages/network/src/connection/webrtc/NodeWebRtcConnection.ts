@@ -6,7 +6,7 @@ import { Logger } from "@streamr/utils"
 import { NameDirectory } from "../../NameDirectory"
 import { WebRtcConnectionFactory } from "./WebRtcEndpoint"
 import { iceServerAsString } from './iceServerAsString'
-import { Candidate, CandidateType } from './Candidate'
+import { ParsedLocalCandidate, CandidateType } from './ParsedLocalCandidate'
 
 const loggerLevel = process.env.NODE_DATACHANNEL_LOG_LEVEL || 'Fatal'
 nodeDataChannel.initLogger(loggerLevel as LogLevel)
@@ -270,10 +270,11 @@ export class NodeWebRtcConnection extends WebRtcConnection {
 
     private onLocalCandidate(candidate: string, mid: string): void {
         this.logger.trace(`onLocalCandidate ${candidate} ${mid}`)
-        const parsedCandidate = new Candidate(candidate)
+        const parsedCandidate = new ParsedLocalCandidate(candidate)
         if (this.externalIp && parsedCandidate.getType() === CandidateType.HOST) {
-            const injectedCandidate = parsedCandidate.getCandidateWithExternalIp(this.externalIp)
-            this.logger.trace(`onLocalCandidate injected ip ${injectedCandidate} ${mid}`)
+            parsedCandidate.setIp(this.externalIp)
+            const injectedCandidate = parsedCandidate.toString()
+            this.logger.trace(`onLocalCandidate injected external ip ${injectedCandidate} ${mid}`)
             this.emitLocalCandidate(injectedCandidate, mid)
         } else {
             this.emitLocalCandidate(candidate, mid)

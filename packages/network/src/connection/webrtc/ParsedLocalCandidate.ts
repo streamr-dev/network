@@ -5,12 +5,12 @@ export enum CandidateType {
     RELAY = 'relay'
 }
 
-export class Candidate {
+export class ParsedLocalCandidate {
     private readonly id: string
     private readonly component: string
     private readonly protocol: string
     private readonly priority: string
-    private readonly ip: string
+    private ip: string
     private readonly port: string
     private readonly type: CandidateType
 
@@ -29,8 +29,11 @@ export class Candidate {
         return this.type
     }
     
-    getCandidateWithExternalIp(externalIp: string): string {
-        return `${this.id} ${this.component} ${this.protocol} ${this.priority} ${externalIp} ${this.port} typ ${this.type}`
+    setIp(externalIp: string): void {
+        this.ip = externalIp
     }
 
+    toString(): string {
+        return `${this.id} ${this.component} ${this.protocol} ${this.priority} ${this.ip} ${this.port} typ ${this.type}`
+    }
 }
