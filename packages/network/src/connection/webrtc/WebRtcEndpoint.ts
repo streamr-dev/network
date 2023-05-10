@@ -58,7 +58,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     private readonly disallowPrivateAddresses: boolean
     private readonly maxMessageSize: number
     private readonly portRange: WebRtcPortRange
-    private readonly externalIp: ExternalIP
+    private readonly externalIp?: ExternalIP
 
     private statusReportTimer?: NodeJS.Timeout
 
@@ -77,7 +77,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         webrtcDisallowPrivateAddresses: boolean,
         portRange: WebRtcPortRange,
         maxMessageSize: number,
-        externalIp: ExternalIP
+        externalIp?: ExternalIP
     ) {
         super()
         this.peerInfo = peerInfo

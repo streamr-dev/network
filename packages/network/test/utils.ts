@@ -56,8 +56,7 @@ export const createTestWebRtcEndpoint = (
         TEST_CONFIG.webrtcSendBufferMaxMessageCount,
         webrtcDisallowPrivateAddresses ?? false,
         TEST_CONFIG.webrtcPortRange,
-        TEST_CONFIG.webrtcMaxMessageSize,
-        null
+        TEST_CONFIG.webrtcMaxMessageSize
     )
 }
 

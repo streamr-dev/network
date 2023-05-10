@@ -180,16 +180,8 @@
                     "default": 15000
                 },
                 "externalIp": {
-                    "anyOf": [
-                        {
-                            "type": "null"
-                        },
-                        {
-                            "type": "string",
-                            "format": "ipv4"
-                        }
-                    ],
-                    "default": null
+                    "type": "string",
+                    "format": "ipv4"
                 },
                 "iceServers": {
                     "type": "array",

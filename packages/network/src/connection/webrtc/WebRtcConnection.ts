@@ -25,7 +25,7 @@ export interface ConstructorOptions {
     deferredConnectionAttempt: DeferredConnectionAttempt
     portRange: WebRtcPortRange
     maxMessageSize: number
-    externalIp: ExternalIP
+    externalIp?: ExternalIP
     bufferThresholdLow?: number
     bufferThresholdHigh?: number
     newConnectionTimeout?: number
@@ -38,7 +38,7 @@ export interface WebRtcPortRange {
     max: number
 }
 
-export type ExternalIP = string | null
+export type ExternalIP = string
 
 let ID = 0
 
@@ -127,7 +127,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
     protected readonly bufferThresholdHigh: number
     protected readonly bufferThresholdLow: number
     protected readonly portRange: WebRtcPortRange
-    protected readonly externalIp: ExternalIP
+    protected readonly externalIp?: ExternalIP
 
     // diagnostic info
     private messagesSent = 0
@@ -151,7 +151,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         bufferThresholdLow = 2 ** 15,
         newConnectionTimeout = 15000,
         maxPingPongAttempts = 5,
-        flushRetryTimeout = 500,
+        flushRetryTimeout = 500
     }: ConstructorOptions) {
         super()
 

@@ -285,8 +285,11 @@ export interface StreamrClientConfig {
         /**
          * Used to assign a custom external IP address for the node.
          * Useful in cases where the node has a public IP address but
-         * the hosts network interface does not know of it
-         */
+         * the hosts network interface does not know of it.
+         * 
+         * Works only if the Full Cone NAT that the node is behind preserves local   
+         * port mappings on the public side. 
+        */
         externalIp?: ExternalIP
     }
 

@@ -26,7 +26,7 @@ export interface NetworkNodeOptions extends AbstractNodeOptions {
     acceptProxyConnections: boolean
     webrtcMaxMessageSize: number
     webrtcPortRange: WebRtcPortRange
-    externalIp: ExternalIP
+    externalIp?: ExternalIP
 }
 
 export const TEST_CONFIG: Omit<NetworkNodeOptions, 'id' | 'trackers' | 'metricsContext'> = {
@@ -46,8 +46,7 @@ export const TEST_CONFIG: Omit<NetworkNodeOptions, 'id' | 'trackers' | 'metricsC
         min: 6000,
         max: 65535
     },
-    webrtcMaxMessageSize: 1048576,
-    externalIp: null
+    webrtcMaxMessageSize: 1048576
 }
 
 export const createNetworkNode = ({
@@ -92,7 +91,7 @@ export const createNetworkNode = ({
         webrtcDisallowPrivateAddresses,
         webrtcPortRange,
         webrtcMaxMessageSize,
-        externalIp
+        undefined
     ))
 
     return new NetworkNode({
