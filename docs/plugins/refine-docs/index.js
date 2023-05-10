@@ -148,6 +148,7 @@ module.exports = function(context, options) {
         )
 
         newContent = newContent.replace(new RegExp("modules.md", 'g'), "index.md")
+        newContent = newContent.replace(new RegExp("Ƭ", 'g'), "•")
         fs.writeFileSync("docs/api/index.md", newContent)
         fs.writeFileSync(sourceFilePath, newContent)
         fs.unlinkSync(destinationFilePath)
