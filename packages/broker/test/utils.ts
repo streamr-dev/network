@@ -139,7 +139,7 @@ export const createTestStream = async (
     module: NodeModule,
     props?: Partial<StreamMetadata>
 ): Promise<Stream> => {
-    const id = (await streamrClient.getAddress()) + '/test/' + getTestName(module) + '/' + Date.now()
+    const id = `${await streamrClient.getAddress()}/test/${getTestName(module)}/${Date.now()}`
     const stream = await streamrClient.createStream({
         id,
         ...props

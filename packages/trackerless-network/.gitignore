@@ -12,3 +12,5 @@ bin/.idea
 docs
 .vscode
 coverage
+
+FirstMessageTime.log

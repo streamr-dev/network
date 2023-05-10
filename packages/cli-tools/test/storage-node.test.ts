@@ -27,6 +27,6 @@ describe('storage node', () => {
 
     it('list nodes', async () => {
         const outputLines = await runCommand('storage-node list')
-        expect(outputLines.length).toBeGreaterThan(3)
+        expect(outputLines.join()).toMatch(DOCKER_DEV_STORAGE_NODE.toLowerCase())
     })
 })

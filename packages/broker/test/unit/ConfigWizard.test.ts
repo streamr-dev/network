@@ -118,9 +118,9 @@ describe('ConfigWizard', () => {
         it('should throw when no permissions on path', async () => {
             const dirPath = '/home/'
             const configPath = dirPath + 'test-config.json'
-            await expect(createStorageFile(CONFIG, {
+            expect(() => createStorageFile(CONFIG, {
                 storagePath: configPath
-            })).rejects.toThrow()
+            })).toThrow()
         })
 
     })

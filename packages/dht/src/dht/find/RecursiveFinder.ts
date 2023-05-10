@@ -89,7 +89,7 @@ export class RecursiveFinder implements IRecursiveFinder {
             rpcTransport: this.sessionTransport,
             kademliaIdToFind: idToFind,
             ownPeerID: this.ownPeerId!,
-            routingPaths: this.connections.size > 1 ? 2 : 1
+            waitedRoutingPathCompletions: 1
         })
         if (this.connections.size === 0) {
             const data = this.localDataStore.getEntry(PeerID.fromValue(idToFind))

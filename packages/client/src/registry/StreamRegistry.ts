@@ -265,7 +265,7 @@ export class StreamRegistry {
         const validItems = filter<StreamPublisherOrSubscriberItem>(backendResults, (p) => (p as any).stream !== null)
         yield* map<StreamPublisherOrSubscriberItem, EthereumAddress>(
             validItems,
-            (item) => item.userAddress as EthereumAddress
+            (item) => item.userAddress
         )
     }
 

@@ -314,8 +314,8 @@ export class BucketManager {
     }
 
     stop(): void {
-        clearInterval(this.checkFullBucketsTimeout!)
-        clearInterval(this.storeBucketsTimeout!)
+        clearInterval(this.checkFullBucketsTimeout)
+        clearInterval(this.storeBucketsTimeout)
     }
 
     private async storeBuckets(): Promise<void> {

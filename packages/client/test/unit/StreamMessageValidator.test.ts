@@ -124,7 +124,7 @@ describe('StreamMessageValidator', () => {
         })
 
         it('rejects invalid signatures', async () => {
-            msg.signature = msg.signature!.replace('a', 'b')
+            msg.signature = msg.signature.replace('a', 'b')
 
             await assert.rejects(getValidator().validate(msg), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
@@ -206,7 +206,7 @@ describe('StreamMessageValidator', () => {
         })
 
         it('rejects invalid signatures', async () => {
-            groupKeyRequest.signature = groupKeyRequest.signature!.replace('a', 'b')
+            groupKeyRequest.signature = groupKeyRequest.signature.replace('a', 'b')
 
             await assert.rejects(getValidator().validate(groupKeyRequest), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
@@ -272,7 +272,7 @@ describe('StreamMessageValidator', () => {
         })
 
         it('rejects invalid signatures', async () => {
-            groupKeyResponse.signature = groupKeyResponse.signature!.replace('a', 'b')
+            groupKeyResponse.signature = groupKeyResponse.signature.replace('a', 'b')
 
             await assert.rejects(getValidator().validate(groupKeyResponse), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)

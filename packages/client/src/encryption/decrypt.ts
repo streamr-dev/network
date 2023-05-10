@@ -19,7 +19,7 @@ export const decrypt = async (
     try {
         groupKey = await groupKeyManager.fetchKey(
             streamMessage.getStreamPartID(),
-            streamMessage.groupKeyId!,
+            streamMessage.groupKeyId,
             streamMessage.getPublisherId()
         )
     } catch (e: any) {
