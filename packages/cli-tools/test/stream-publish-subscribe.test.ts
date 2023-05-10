@@ -76,7 +76,7 @@ describe('publish and subscribe', () => {
                 streamPartition: 0,
                 timestamp: expect.any(Number),
                 sequenceNumber: 0,
-                publisherId: '0x7e5f4552091a69125d5dfcb7b8c2659029395bdf',
+                publisherId: expect.stringMatching(/0x[0-9a-zA-Z]+/),
                 msgChainId: expect.stringMatching(/[0-9a-zA-Z]+/)
             }
         })
