@@ -13,6 +13,7 @@ import {
     createTestStream
 } from '../test-utils/utils'
 import { Message } from '../../src/Message'
+import { merge } from '@streamr/utils'
 
 // this has publisher & subscriber clients
 // publisher begins publishing `maxMessages` messages
@@ -61,24 +62,32 @@ describe('revoke permissions', () => {
         publisherPrivateKey = fastPrivateKey()
         subscriberPrivateKey = fastPrivateKey()
         // eslint-disable-next-line require-atomic-updates
-        publisher = environment.createClient({
-            id: 'publisher',
-            auth: {
-                privateKey: publisherPrivateKey
-            },
-            ...opts
-        })
+        publisher = environment.createClient(
+            merge(
+                {
+                    id: 'publisher',
+                    auth: {
+                        privateKey: publisherPrivateKey
+                    },
+                },
+                opts
+            )
+        )
         // eslint-disable-next-line require-atomic-updates
-        subscriber = environment.createClient({
-            id: 'subscriber',
-            auth: {
-                privateKey: subscriberPrivateKey
-            },
-            encryption: {
-                keyRequestTimeout: 200
-            },
-            ...opts
-        })
+        subscriber = environment.createClient(
+            merge(
+                {
+                    id: 'subscriber',
+                    auth: {
+                        privateKey: subscriberPrivateKey
+                    },
+                    encryption: {
+                        keyRequestTimeout: 200
+                    }
+                },
+                opts
+            )
+        )
     }
 
     async function testRevokeDuringSubscribe({

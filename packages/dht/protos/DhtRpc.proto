@@ -46,6 +46,10 @@ service ConnectionLocker {
   rpc gracefulDisconnect (DisconnectNotice) returns (DisconnectNoticeResponse);
 }
 
+service ExternalApiService {
+  rpc findData (FindDataRequest) returns (FindDataResponse);
+}
+
 // Used inside RpcMessage
 
 message StoreDataRequest {
@@ -300,4 +304,13 @@ message DisconnectNotice {
 
 message DisconnectNoticeResponse {
   string protocolVersion = 1;
+}
+
+message FindDataRequest {
+  bytes kademliaId = 1;
+}
+
+message FindDataResponse {
+  repeated DataEntry dataEntries = 1;
+  optional string error = 2;
 }

@@ -1,3 +1,4 @@
+import { pTransaction } from './pTransaction'
 import { AbortError, asAbortable } from './asAbortable'
 import { setAbortableInterval, setAbortableTimeout } from './abortableTimers'
 import { Defer } from './Defer'
@@ -31,6 +32,8 @@ import { waitForEvent3, runAndWaitForEvents3, raceEvents3, runAndRaceEvents3, Ru
 import { withRateLimit } from './withRateLimit'
 import { ObservableEventEmitter } from './ObservableEventEmitter'
 import { initEventGateway } from './initEventGateway'
+import { merge } from './merge'
+import { collect } from './collect'
 
 export {
     BrandedString,
@@ -42,6 +45,7 @@ export {
     Multimap,
     AbortError,
     TimeoutError,
+    pTransaction,
     asAbortable,
     composeAbortSignals,
     isENSName,
@@ -70,7 +74,9 @@ export {
     RunAndRaceEventsReturnType,
     Events,
     ObservableEventEmitter,
-    initEventGateway
+    initEventGateway,
+    merge,
+    collect
 }
 
 export {

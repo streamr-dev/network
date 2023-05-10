@@ -1,20 +1,20 @@
 import 'reflect-metadata'
 
 import { Wallet } from '@ethersproject/wallet'
-import fs from 'fs'
-import path from 'path'
 import { StreamID, toStreamPartID } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
+import { collect } from '@streamr/utils'
+import fs from 'fs'
+import path from 'path'
+import { Message, MessageMetadata } from '../../src/Message'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamrClientError } from '../../src/StreamrClientError'
-import { collect } from '../../src/utils/iterators'
-import { getPublishTestStreamMessages, getWaitForStorage, Msg } from '../test-utils/publish'
+import { Msg, getPublishTestStreamMessages, getWaitForStorage } from '../test-utils/publish'
 import { createTestStream } from '../test-utils/utils'
 import { StreamPermission } from './../../src/permission'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from './../test-utils/fake/FakeStorageNode'
-import { Message, MessageMetadata } from '../../src/Message'
 
 const MAX_MESSAGES = 5
 
@@ -69,7 +69,7 @@ describe('Resends2', () => {
             }, {
                 last: 5
             })
-        }).rejects.toThrowStreamError(new StreamrClientError(`no storage assigned: ${notStoredStream.id}`, 'NO_STORAGE_NODES'))
+        }).rejects.toThrowStreamrError(new StreamrClientError(`no storage assigned: ${notStoredStream.id}`, 'NO_STORAGE_NODES'))
     })
 
     it('throws error if bad partition', async () => {

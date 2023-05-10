@@ -19,6 +19,8 @@ import { StoreDataResponse } from "./DhtRpc";
 import { StoreDataRequest } from "./DhtRpc";
 import { RouteMessageAck } from "./DhtRpc";
 import { RouteMessageWrapper } from "./DhtRpc";
+import { FindDataResponse } from "./DhtRpc";
+import { FindDataRequest } from "./DhtRpc";
 import { Empty } from "../../../google/protobuf/empty";
 import { LeaveNotice } from "./DhtRpc";
 import { PingResponse } from "./DhtRpc";
@@ -42,6 +44,10 @@ export interface IDhtRpcService<T = ServerCallContext> {
      * @generated from protobuf rpc: leaveNotice(dht.LeaveNotice) returns (google.protobuf.Empty);
      */
     leaveNotice(request: LeaveNotice, context: T): Promise<Empty>;
+    /**
+     * @generated from protobuf rpc: findData(dht.FindDataRequest) returns (dht.FindDataResponse);
+     */
+    findData(request: FindDataRequest, context: T): Promise<FindDataResponse>;
 }
 /**
  * @generated from protobuf service dht.RoutingService

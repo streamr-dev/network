@@ -19,6 +19,7 @@ export interface RoutingSessionEvents {
     // This event is emitted when a peer responds with a success ack
     // to routeMessage call
     routingSucceeded: (sessionId: string) => void
+    partialSuccess: (sessionId: string) => void
 
     // This event is emitted when all the candidates have been gone
     // through, and none of them responds with a success ack
@@ -41,6 +42,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     private readonly parallelism: number
     private firstHopTimeout: number
     private failedHopCounter = 0
+    private successfulHopCounter = 0
     private readonly mode: RoutingMode = RoutingMode.ROUTE
     private stopped = false
 
@@ -86,11 +88,20 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         if (contacts.length < 1 && this.ongoingRequests.size < 1) {
             logger.debug('routing failed, emitting routingFailed sessionId: ' + this.sessionId)
             this.stopped = true
-            this.emit('routingFailed', this.sessionId)
+            this.emitFailure()
         } else {
             this.failedHopCounter += 1
             logger.debug('routing failed, retrying to route sessionId: ' + this.sessionId + ' failedHopCounter: ' + this.failedHopCounter)
             this.sendMoreRequests(contacts)
+        }
+    }
+
+    private emitFailure() {
+        if (this.successfulHopCounter >= 1) {
+            this.emit('partialSuccess', this.sessionId)
+
+        } else {
+            this.emit('routingFailed', this.sessionId)
         }
     }
 
@@ -99,8 +110,14 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         if (this.stopped) {
             return
         }
-        this.stopped = true
-        this.emit('routingSucceeded', this.sessionId)
+        this.successfulHopCounter += 1
+        const contacts = this.findMoreContacts()
+        if (this.successfulHopCounter >= this.parallelism || contacts.length < 1) {
+            this.stopped = true
+            this.emit('routingSucceeded', this.sessionId)
+        } else if (contacts.length > 0 && this.ongoingRequests.size < 1) {
+            this.sendMoreRequests(contacts)
+        }
     }
 
     private async sendRouteMessageRequest(contact: RemoteRouter): Promise<boolean> {
@@ -154,12 +171,12 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
             return
         }
         if (uncontacted.length < 1) {
-            this.emit('routingFailed', this.sessionId)
+            this.emitFailure()
             return
         }
         if (this.failedHopCounter >= MAX_FAILED_HOPS) {
             logger.debug(`Stopping routing after ${MAX_FAILED_HOPS} failed attempts for sessionId: ${this.sessionId}`)
-            this.emit('routingFailed', this.sessionId)
+            this.emitFailure()
             return
         }
         while (this.ongoingRequests.size < this.parallelism && uncontacted.length > 0) {

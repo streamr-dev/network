@@ -2,9 +2,15 @@
 import '../src/logLevel'
 import StreamrClient from 'streamr-client'
 import { createFnParseInt } from '../src/common'
-import { createClientCommand } from '../src/command'
+import { createClientCommand, Options as BaseOptions } from '../src/command'
 
-createClientCommand(async (client: StreamrClient, streamIdOrPath: string, options: any) => {
+interface Options extends BaseOptions {
+    description?: string
+    streamConfig?: any
+    partitions?: number
+}
+
+createClientCommand(async (client: StreamrClient, streamIdOrPath: string, options: Options) => {
     const body: any = {
         id: streamIdOrPath,
         description: options.description,
@@ -12,7 +18,7 @@ createClientCommand(async (client: StreamrClient, streamIdOrPath: string, option
         partitions: options.partitions
     }
     const stream = await client.createStream(body)
-    console.info({ id: stream.id, ...stream.getMetadata() }, null, 2)
+    console.info(JSON.stringify({ id: stream.id, ...stream.getMetadata() }, null, 2))
 })
     .arguments('<streamId>')
     .description('create a new stream')

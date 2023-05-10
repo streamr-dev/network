@@ -1,9 +1,9 @@
 import 'reflect-metadata'
 
-import { StreamPermission } from '../../src/permission'
+import { collect } from '@streamr/utils'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
-import { collect } from '../../src/utils/iterators'
+import { StreamPermission } from '../../src/permission'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { Msg, publishTestMessagesGenerator } from '../test-utils/publish'
 import { createTestStream } from './../test-utils/utils'

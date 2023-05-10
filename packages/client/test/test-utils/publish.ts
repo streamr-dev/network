@@ -5,12 +5,15 @@ import { StreamDefinition } from '../../src/types'
 import { PublishMetadata } from '../../src/publish/Publisher'
 import { uid } from './utils'
 import { Message } from './../../src/Message'
+import { merge } from '@streamr/utils'
 
 export function Msg<T extends object = object>(opts?: T): any {
-    return {
-        value: uid('msg'),
-        ...opts,
-    }
+    return merge(
+        {
+            value: uid('msg')
+        },
+        opts,
+    )
 }
 
 type TestMessageOptions = Partial<{
@@ -83,10 +86,7 @@ export function getPublishTestStreamMessages(
             waitForLastTimeout,
             retainMessages = true,
             ...options
-        } = {
-            ...defaultOpts,
-            ...opts,
-        }
+        } = merge(defaultOpts, opts)
 
         const publishStream = publishTestMessagesGenerator(client, streamDefinition, maxMessages, options)
         let streamMessages = []
@@ -120,9 +120,6 @@ export function getWaitForStorage(client: StreamrClient, defaultOpts = {}): (las
     messageMatchFn?: (msgTarget: Message, msgGot: Message) => boolean
 }) => Promise<void> {
     return async (lastPublished: Message, opts = {}) => {
-        return client.waitForStorage(lastPublished, {
-            ...defaultOpts,
-            ...opts,
-        })
+        return client.waitForStorage(lastPublished, merge(defaultOpts, opts))
     }
 }

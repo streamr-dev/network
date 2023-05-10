@@ -11,7 +11,7 @@ import {
     RpcErrorType
 } from './proto/ProtoRpc'
 import { Empty } from './proto/google/protobuf/empty'
-import { ServerRegistry } from './ServerRegistry'
+import { MethodOptions, ServerRegistry } from './ServerRegistry'
 import EventEmitter from 'eventemitter3'
 import { DeferredState } from '@protobuf-ts/runtime-rpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
@@ -149,18 +149,20 @@ export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvents> {
         requestClass: RequestClass,
         returnClass: ReturnClass,
         name: string,
-        fn: (rq: RequestType, _context: ServerCallContext) => Promise<ReturnType>
+        fn: (rq: RequestType, _context: ServerCallContext) => Promise<ReturnType>,
+        options: MethodOptions = {}
     ): void {
-        this.rpcServerRegistry.registerRpcMethod(requestClass, returnClass, name, fn)
+        this.rpcServerRegistry.registerRpcMethod(requestClass, returnClass, name, fn, options)
     }
 
     public registerRpcNotification<RequestClass extends IMessageType<RequestType>,
         RequestType extends object>(
         requestClass: RequestClass,
         name: string,
-        fn: (rq: RequestType, _context: ServerCallContext) => Promise<Empty>
+        fn: (rq: RequestType, _context: ServerCallContext) => Promise<Empty>,
+        options: MethodOptions = {}
     ): void {
-        this.rpcServerRegistry.registerRpcNotification(requestClass, name, fn)
+        this.rpcServerRegistry.registerRpcNotification(requestClass, name, fn, options)
     }
 
     public getRpcClientTransport(): ClientTransport {
