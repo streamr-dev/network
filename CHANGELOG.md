@@ -44,7 +44,7 @@ found [here](packages/broker/CHANGELOG.md).
 
 #### Added
 
-- Add config option `network.externalIp` to set a custom external IP address for the node.
+- Add config option `network.externalIp` to set a custom external IP address for the node (https://github.com/streamr-dev/network/pull/1357)
 
 
 ## [8.4.0] - 2023-05-09
