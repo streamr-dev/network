@@ -10,6 +10,7 @@ import { Logger } from "@streamr/utils"
 import { getRegionDelayMatrix } from "./pings"
 import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import Heap from 'heap'
+import { debugVars } from "../../helpers/debugHelpers"
 
 const logger = new Logger(module)
 
@@ -99,7 +100,7 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     private fixedLatency?: number
 
     private loopCounter = 0
-    private MAX_LOOPS = 100
+    private MAX_LOOPS = 1
 
     private operationQueue: Heap<SimulatorOperation> = new Heap<SimulatorOperation>((a: SimulatorOperation, b: SimulatorOperation) => {
         if ((a.executionTime - b.executionTime) == 0) {
@@ -300,6 +301,7 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
             logger.error('connect() called on a stopped simulator ' + (new Error().stack))
             return
         }
+        debugVars['simulatorHeapSize'] = this.operationQueue.size()
 
         const association = new Association(sourceConnection, undefined, connectedCallback)
         this.associations.set(sourceConnection.connectionId, association)

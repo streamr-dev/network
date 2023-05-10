@@ -27,7 +27,11 @@
     "benchmark": "jest test/benchmark",
     "prepare-kademlia-simulation": "cd test/data && node --max-old-space-size=8096 -- ../../../../node_modules/.bin/ts-node -P ../../tsconfig.node.json generateGroundTruthData.ts",
     "run-kademlia-simulation": "ts-node --project tsconfig.node.json $NODE_DEBUG_OPTION --files test/benchmark/kademlia-simulation/KademliaSimulation.ts",
-    "run-joining-benchmark": "node --max-old-space-size=8096 -- ../../node_modules/.bin/ts-node -P tsconfig.node.json test/benchmark/experiments/JoiningTimeLayer0.ts"
+    "run-joining-benchmark": "node --expose-gc --max-old-space-size=8096 dist/test/benchmark/experiments/JoiningChildProcess.js",
+    "run-nsolid-benchmark": "nsolid dist/test/benchmark/experiments/JoiningTimeLayer0.js"
+  },
+  "nsolid": {
+    "command": "localhost:9001"
   },
   "dependencies": {
     "@protobuf-ts/runtime": "^2.8.2",
@@ -76,7 +80,8 @@
     "ts-loader": "^9.3.1",
     "ts-node": "^10.9.1",
     "webpack": "^5.64.1",
-    "webpack-cli": "^4.9.1"
+    "webpack-cli": "^4.9.1",
+    "nsolid": "latest"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.5",

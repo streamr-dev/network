@@ -10,6 +10,7 @@ import { ConnectionManager } from '../../connection/ConnectionManager'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { RandomContactList } from '../contact/RandomContactList'
+import { debugVars } from '../../helpers/debugHelpers'
 
 interface PeerDiscoveryConfig {
     rpcCommunicator: RoutingRpcCommunicator
@@ -87,14 +88,20 @@ export class PeerDiscovery {
             if (randomSession) {
                 await randomSession.findClosestNodes(this.config.joinTimeout + 1)
             }
+
+            debugVars['nodesContacted'] = session.numNodesContacted
+            debugVars['nodesContactedRandom'] = randomSession?.numNodesContacted
+
             if (!this.stopped) {
                 if (this.config.bucket.count() === 0) {
-                    this.rejoinDht(entryPointDescriptor).catch(() => {})
+                    this.rejoinDht(entryPointDescriptor).catch(() => { })
                 } else {
                     await scheduleAtInterval(() => this.getClosestPeersFromBucket(), 60000, true, this.abortController.signal)
                 }
             }
         } catch (e) {
+            logger.error('Join timed out:\t' + debugVars['nodesContacted'] + '\t' + debugVars['nodesContactedRandom']
+                + '\t' + debugVars['simulatorHeapSize'])
             throw new Err.DhtJoinTimeout('join timed out', e)
         } finally {
             this.ongoingDiscoverySessions.delete(session.sessionId)

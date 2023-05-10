@@ -40,6 +40,10 @@ export class DiscoverySession {
     private readonly config: DiscoverySessionConfig
     private readonly ownPeerId: PeerID
 
+    // for debugging
+
+    public numNodesContacted = 0
+
     constructor(config: DiscoverySessionConfig) {
         this.config = config
         this.ownPeerId = peerIdFromPeerDescriptor(config.ownPeerDescriptor)
@@ -116,6 +120,7 @@ export class DiscoverySession {
             if (this.ongoingClosestPeersRequests.size >= this.config.parallelism) {
                 break
             }
+            this.numNodesContacted++
             this.ongoingClosestPeersRequests.add(nextPeer!.getPeerId().toKey())
             // eslint-disable-next-line promise/catch-or-return
             this.getClosestPeersFromContact(nextPeer!)

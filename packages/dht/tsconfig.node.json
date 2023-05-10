@@ -5,7 +5,9 @@
         "noImplicitOverride": false
     },
     "include": [
-        "src/**/*"
+        "src/**/*",
+        "test/benchmark/experiments/*",
+        "test/utils/utils.ts"       
     ],
     "exclude": [
         "src/connection/WebRTC/BrowserWebRtcConnection.ts"
