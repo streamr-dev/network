@@ -255,7 +255,7 @@ const selectStoragePath = async (): Promise<StorageAnswers> => {
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export const createStorageFile = async (config: any, answers: StorageAnswers): Promise<string> => {
+export const createStorageFile = (config: any, answers: StorageAnswers): string => {
     const dirPath = path.dirname(answers.storagePath)
     const dirExists = existsSync(dirPath)
     if (!dirExists) {
@@ -300,7 +300,7 @@ export const start = async (
         const pluginsAnswers = await getPluginAnswers()
         const config = getConfig(privateKey, pluginsAnswers)
         const storageAnswers = await getStorageAnswers()
-        const storagePath = await createStorageFile(config, storageAnswers)
+        const storagePath = createStorageFile(config, storageAnswers)
         logger.info('Welcome to the Streamr Network')
         const { mnemonic, networkExplorerUrl } = getNodeIdentity(privateKey)
         logger.info(`Your node's generated name is ${mnemonic}.`)
@@ -309,6 +309,6 @@ export const start = async (
         logger.info('You can start the broker now with')
         logger.info(`streamr-broker ${storagePath}`)
     } catch (e: any) {
-        logger.error("Broker Config Wizard encountered an error:\n" + e.message)
+        logger.error(`Broker Config Wizard encountered an error:\n${e.message}`)
     }
 }

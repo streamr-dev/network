@@ -60,7 +60,7 @@ describe('SubscriberKeyExchange', () => {
             encryptionType: EncryptionType.NONE,
             signature: expect.any(String)
         })
-        expect(request!.getParsedContent()).toEqual([
+        expect(request.getParsedContent()).toEqual([
             expect.any(String),
             expect.toEqualCaseInsensitive(publisherWallet.address),
             expect.any(String),
@@ -107,7 +107,7 @@ describe('SubscriberKeyExchange', () => {
             const request = await environment.getNetwork().waitForSentMessage({
                 messageType: StreamMessageType.GROUP_KEY_REQUEST
             })
-            await assertGroupKeyRequest(request!, [groupKey.id])
+            await assertGroupKeyRequest(request, [groupKey.id])
             const keyStore = getLocalGroupKeyStore(toEthereumAddress(subscriberWallet.address))
             await waitForCondition(async () => (await keyStore.get(groupKey.id, toEthereumAddress(publisherWallet.address))) !== undefined)
         })

@@ -104,7 +104,7 @@ describe('PublisherKeyExchange', () => {
             const response = await environment.getNetwork().waitForSentMessage({
                 messageType: StreamMessageType.GROUP_KEY_RESPONSE
             })
-            await assertValidResponse(response!, key)
+            await assertValidResponse(response, key)
         })
     })
 })

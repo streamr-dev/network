@@ -64,7 +64,7 @@ export class GraphQLClient {
          */
         parseItems: ((response: any) => T[]) = (response: any) => {
             const rootKey = Object.keys(response)[0]
-            return (response as any)[rootKey]
+            return response[rootKey]
         },
         pageSize = 1000
     ): AsyncGenerator<T, void, undefined> {

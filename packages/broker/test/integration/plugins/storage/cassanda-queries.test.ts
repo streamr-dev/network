@@ -11,7 +11,7 @@ const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'
 const keyspace = 'streamr_dev_v2'
 
-const MOCK_STREAM_ID = 'mock-stream-id-' + Date.now()
+const MOCK_STREAM_ID = `mock-stream-id-${Date.now()}`
 const MOCK_PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 const MOCK_MSG_CHAIN_ID = 'msgChainId'
 const createMockMessage = (i: number) => {
@@ -25,7 +25,7 @@ const createMockMessage = (i: number) => {
 }
 const MOCK_MESSAGES = [1, 2, 3].map((contentValue: number) => createMockMessage(contentValue))
 
-const EMPTY_STREAM_ID = 'empty-stream-id' + Date.now()
+const EMPTY_STREAM_ID = `empty-stream-id-${Date.now()}`
 
 const REQUEST_TYPE_FROM = 'requestFrom'
 const REQUEST_TYPE_RANGE = 'requestRange'

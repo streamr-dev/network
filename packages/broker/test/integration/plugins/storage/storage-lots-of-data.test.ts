@@ -52,7 +52,7 @@ describe('Storage: lots of data', () => {
                 bucketKeepAliveSeconds: 1
             }
         })
-        streamId = getTestName(module) + Date.now()
+        streamId = `${getTestName(module)}-${Date.now()}`
     })
 
     afterAll(async () => {

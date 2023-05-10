@@ -14,7 +14,7 @@ describe('publishEndpoint', () => {
         streamrClient = {
             publish: publishFn
         }
-        const endpoint = createEndpoint(streamrClient as any)
+        const endpoint = createEndpoint(streamrClient)
         app.route(endpoint.path)[endpoint.method](endpoint.requestHandlers)
         return app
     }
@@ -100,8 +100,8 @@ describe('publishEndpoint', () => {
             foo: 2
         }, {})
         expect(streamrClient.publish).toBeCalledTimes(2)
-        const firstMessageMsgChainId = (streamrClient.publish as any).mock.calls[0][2].msgChainId
-        const secondMessageMsgChainId = (streamrClient.publish as any).mock.calls[1][2].msgChainId
+        const firstMessageMsgChainId = streamrClient.publish.mock.calls[0][2].msgChainId
+        const secondMessageMsgChainId = streamrClient.publish.mock.calls[1][2].msgChainId
         expect(firstMessageMsgChainId).toBeDefined()
         expect(firstMessageMsgChainId).toBe(secondMessageMsgChainId)
     })

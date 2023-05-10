@@ -43,7 +43,7 @@ export class GroupKeyQueue {
         }
         // Always return an array consisting of currentGroupKey and queuedGroupKey (latter may be undefined)
         const result: GroupKeySequence = {
-            current: this.currentGroupKey!,
+            current: this.currentGroupKey,
             next: this.queuedGroupKey,
         }
         // Perform the rotate if there's a next key queued

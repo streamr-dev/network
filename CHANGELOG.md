@@ -38,6 +38,22 @@ found [here](packages/broker/CHANGELOG.md).
 #### Security
 
 
+## [8.4.0] - 2023-05-09
+
+### client
+
+#### Changed
+
+- Reduce browser bundle size (https://github.com/streamr-dev/network/pull/1343)
+
+### cli-tools
+
+#### Added
+
+- Add flag `--raw` (or shorthand `-r`) to command `stream subscribe` for raw subscription (https://github.com/streamr-dev/network/pull/1317)
+- Add flag `--with-metadata` (or shorthand `-m`) to command `stream subscribe` to include metadata in output (https://github.com/streamr-dev/network/pull/1317)
+
+
 ## [8.3.1] - 2023-05-03
 
 ### client
@@ -451,7 +467,8 @@ found [here](packages/broker/CHANGELOG.md).
 - Fixed an import so that the client successfully loads in a web browser environment (NET-721)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/client/v8.3.1...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/client/v8.4.0...HEAD
+[8.4.0]: https://github.com/streamr-dev/network/compare/client/v8.3.1...client/v8.4.0
 [8.3.1]: https://github.com/streamr-dev/network/compare/client/v8.3.0...client/v8.3.1
 [8.3.0]: https://github.com/streamr-dev/network/compare/client/v8.2.1...client/v8.3.0
 [8.2.1]: https://github.com/streamr-dev/network/compare/client/v8.2.0...client/v8.2.1
