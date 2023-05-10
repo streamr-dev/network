@@ -50,7 +50,7 @@ describe(waitForAssignmentsToPropagate, () => {
     beforeEach(() => {
         messageStream = new MessageStream()
         propagatePromiseState = 'pending'
-        propagatePromise = waitForAssignmentsToPropagate(messageStream, TARGET_STREAM)
+        propagatePromise = waitForAssignmentsToPropagate(messageStream.getStreamMessages(), TARGET_STREAM)
             .then((retValue) => {
                 propagatePromiseState = 'resolved'
                 return retValue
