@@ -158,7 +158,7 @@ class OrderedMsgChain extends MsgChainEmitter {
     hasPendingGap = false
     gapRequestCount = 0
     maxGapRequests: number
-    lighterGapFill: boolean
+    dropSubsequentGapsOnFailedGapFill: boolean
     publisherId: EthereumAddress
     msgChainId: string
     inOrderHandler: MessageHandler
@@ -176,7 +176,7 @@ class OrderedMsgChain extends MsgChainEmitter {
         gapFillTimeout: number,
         retryResendAfter: number,
         maxGapRequests: number,
-        lighterGapFill: boolean
+        dropSubsequentGapsOnFailedGapFill: boolean
     ) {
         super()
         ID += 1
@@ -189,7 +189,7 @@ class OrderedMsgChain extends MsgChainEmitter {
         this.gapFillTimeout = gapFillTimeout
         this.retryResendAfter = retryResendAfter
         this.maxGapRequests = maxGapRequests
-        this.lighterGapFill = lighterGapFill
+        this.dropSubsequentGapsOnFailedGapFill = dropSubsequentGapsOnFailedGapFill
     }
 
     /**
@@ -360,7 +360,7 @@ class OrderedMsgChain extends MsgChainEmitter {
                 }
             }
 
-            if (!this.lighterGapFill) {
+            if (!this.dropSubsequentGapsOnFailedGapFill) {
                 this.gapRequestCount = 0
             } else {
                 logger.trace('Skip any subsequent accumulated gaps')

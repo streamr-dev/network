@@ -109,8 +109,8 @@ export interface StreamrClientConfig {
     retryResendAfter?: number
 
     /**
-     * When gap filling is enabled, this option controls whether to enable a
-     * lighter gap fill strategy. (true by default)
+     * When gap filling is enabled, this setting controls whether to enable a
+     * light (default) or  full gap fill strategy.
      *
      * While filling a gap, new gaps may emerge further along the message
      * chain. After a gap has been filled, the gap filling mechanism will
@@ -121,12 +121,13 @@ export interface StreamrClientConfig {
      * up leading to permanently increased latency, and even dropped messages
      * (due to buffer overflows) further exacerbating the presence of gaps.
      *
-     * With this option enabled, when a gap cannot be successfully filled and
+     * With `light` strategy, when a gap cannot be successfully filled and
      * must be dropped, all subsequent accumulated gaps will be dropped as
      * well. This improves the ability to stay up-to-date at the cost of
-     * potentially missing messages.
+     * potentially missing messages. With `full` strategy the subsequent gaps
+     * will not be dropped.
      */
-    lighterGapFill?: boolean
+    gapFillStrategy?: 'light' | 'full'
 
     /**
      * Controls how messages encryption and decryption should be handled and

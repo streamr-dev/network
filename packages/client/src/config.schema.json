@@ -58,9 +58,13 @@
             "type": "number",
             "default": 5000
         },
-        "lighterGapFill": {
-            "type": "boolean",
-            "default": true
+        "gapFillStrategy": {
+            "type": "string",
+            "enum": [
+                "light",
+                "full"
+            ],
+            "default": "light"
         },
         "network": {
             "type": "object",

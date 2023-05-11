@@ -8,7 +8,7 @@ export default class OrderingUtil extends MsgChainEmitter {
     gapFillTimeout: number
     retryResendAfter: number
     maxGapRequests: number
-    lighterGapFill: boolean
+    dropSubsequentGapsOnFailedGapFill: boolean
     orderedChains: Record<string, OrderedMsgChain>
 
     constructor(
@@ -17,7 +17,7 @@ export default class OrderingUtil extends MsgChainEmitter {
         gapFillTimeout: number,
         retryResendAfter: number,
         maxGapRequests: number,
-        lighterGapFill: boolean
+        dropSubsequentGapsOnFailedGapFill: boolean
     ) {
         super()
         this.inOrderHandler = inOrderHandler
@@ -25,7 +25,7 @@ export default class OrderingUtil extends MsgChainEmitter {
         this.gapFillTimeout = gapFillTimeout
         this.retryResendAfter = retryResendAfter
         this.maxGapRequests = maxGapRequests
-        this.lighterGapFill = lighterGapFill
+        this.dropSubsequentGapsOnFailedGapFill = dropSubsequentGapsOnFailedGapFill
         this.orderedChains = {}
     }
 
@@ -45,7 +45,7 @@ export default class OrderingUtil extends MsgChainEmitter {
                 this.gapFillTimeout,
                 this.retryResendAfter,
                 this.maxGapRequests,
-                this.lighterGapFill
+                this.dropSubsequentGapsOnFailedGapFill
             )
             chain.on('error', (...args) => this.emit('error', ...args))
             chain.on('skip', (...args) => this.emit('skip', ...args))
