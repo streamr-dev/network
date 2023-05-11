@@ -110,7 +110,7 @@ export interface StreamrClientConfig {
 
     /**
      * When gap filling is enabled, this setting controls whether to enable a
-     * light (default) or  full gap fill strategy.
+     * lighter (default) or a full gap fill strategy.
      *
      * While filling a gap, new gaps may emerge further along the message
      * chain. After a gap has been filled, the gap filling mechanism will
