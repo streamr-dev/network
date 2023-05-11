@@ -156,7 +156,7 @@ describe('Pipeline', () => {
                         .pipe(async function* Step(src) {
                             yield* src
                         })
-                    p.onFinally.listen(onFinally)
+                    p.onBeforeFinally.listen(onFinally)
                     return p
                 })
 
@@ -172,7 +172,7 @@ describe('Pipeline', () => {
                                 yield msg - 2
                             }
                         })
-                    p.onFinally.listen(onFinally)
+                    p.onBeforeFinally.listen(onFinally)
                     return p
                 })
             })
@@ -205,7 +205,7 @@ describe('Pipeline', () => {
                             afterStep2()
                         }
                     })
-                p.onFinally.listen(onFinally)
+                p.onBeforeFinally.listen(onFinally)
 
                 const received = []
                 for await (const msg of p) {
@@ -253,7 +253,7 @@ describe('Pipeline', () => {
                             afterStep2()
                         }
                     })
-                p.onFinally.listen(onFinally)
+                p.onBeforeFinally.listen(onFinally)
 
                 const received = []
                 for await (const msg of p) {
@@ -301,7 +301,7 @@ describe('Pipeline', () => {
                             afterStep2()
                         }
                     })
-                p.onFinally.listen(onFinally)
+                p.onBeforeFinally.listen(onFinally)
 
                 const received: number[] = []
                 await expect(async () => {
@@ -329,7 +329,7 @@ describe('Pipeline', () => {
                         yield* s
                         yield await new Promise<number>(() => {}) // would wait forever
                     })
-                p.onFinally.listen(onFinally)
+                p.onBeforeFinally.listen(onFinally)
 
                 const received: number[] = []
                 await expect(async () => {
@@ -355,7 +355,7 @@ describe('Pipeline', () => {
                         yield* s
                         yield await new Promise<number>(() => {}) // would wait forever
                     })
-                p.onFinally.listen(onFinally)
+                p.onBeforeFinally.listen(onFinally)
 
                 const received: number[] = []
                 await expect(async () => {
@@ -381,7 +381,7 @@ describe('Pipeline', () => {
                         yield* s
                         yield await new Promise<number>(() => {}) // would wait forever
                     })
-                p.onFinally.listen(onFinally)
+                p.onBeforeFinally.listen(onFinally)
 
                 const received: number[] = []
                 await expect(async () => {
@@ -404,7 +404,7 @@ describe('Pipeline', () => {
                         yield* s
                         throw err
                     })
-                p.onFinally.listen(onFinally)
+                p.onBeforeFinally.listen(onFinally)
 
                 const received: number[] = []
                 await expect(async () => {
@@ -428,7 +428,7 @@ describe('Pipeline', () => {
                         yield* s
                         throw err
                     })
-                p.onFinally.listen(onFinally)
+                p.onBeforeFinally.listen(onFinally)
                 p.onError.listen(onError)
 
                 const received: number[] = []
@@ -456,7 +456,7 @@ describe('Pipeline', () => {
                             throw err
                         }
                     })
-                p.onFinally.listen(onFinally)
+                p.onBeforeFinally.listen(onFinally)
                 p.onError.listen(onError)
 
                 const received: number[] = []
@@ -492,7 +492,7 @@ describe('Pipeline', () => {
                             throw err
                         }
                     })
-                p.onFinally.listen(onFinally)
+                p.onBeforeFinally.listen(onFinally)
                 p.onError.listen(onError)
 
                 const received: number[] = []
@@ -525,7 +525,7 @@ describe('Pipeline', () => {
                     .pipe(async function* finallyFn(s) {
                         yield* iteratorFinally(s, onFinallyInner)
                     })
-                p.onFinally.listen(onFinally)
+                p.onBeforeFinally.listen(onFinally)
 
                 const received = []
                 for await (const msg of p) {
@@ -561,7 +561,7 @@ describe('Pipeline', () => {
                     .pipe(async function* finallyFn(s) {
                         yield* iteratorFinally(s, onFinallyInner)
                     })
-                p.onFinally.listen(onFinally)
+                p.onBeforeFinally.listen(onFinally)
 
                 const received: number[] = []
                 for await (const msg of p) {
@@ -598,7 +598,7 @@ describe('Pipeline', () => {
                     .pipe(async function* finallyFn(s) {
                         yield* iteratorFinally(s, onFinallyInner)
                     })
-                p.onFinally.listen(onFinally)
+                p.onBeforeFinally.listen(onFinally)
                 const received: number[] = []
                 await expect(async () => {
                     for await (const msg of p) {
@@ -631,7 +631,7 @@ describe('Pipeline', () => {
                                     yield msg
                                 }
                             })
-                        subPipeline.onFinally.listen(onFinallyInner)
+                        subPipeline.onBeforeFinally.listen(onFinallyInner)
                         yield* subPipeline
                     })
                     .pipe(async function* Step2(s) {
@@ -640,7 +640,7 @@ describe('Pipeline', () => {
                             yield msg
                         }
                     })
-                p.onFinally.listen(onFinally)
+                p.onBeforeFinally.listen(onFinally)
 
                 const received = []
                 for await (const msg of p) {
@@ -679,7 +679,7 @@ describe('Pipeline', () => {
                                     }
                                 }
                             })
-                        subPipeline.onFinally.listen(onFinallyInner)
+                        subPipeline.onBeforeFinally.listen(onFinallyInner)
                         yield* subPipeline
                     })
                     .pipe(async function* Step2(s) {
@@ -688,7 +688,7 @@ describe('Pipeline', () => {
                             yield msg
                         }
                     })
-                p.onFinally.listen(onFinally)
+                p.onBeforeFinally.listen(onFinally)
 
                 const received: number[] = []
 
@@ -716,7 +716,7 @@ describe('Pipeline', () => {
                                 count += 1
                                 return value * 10
                             })
-                        p.onFinally.listen(onFinally)
+                        p.onBeforeFinally.listen(onFinally)
                         const result = await collect(p)
                         expect(result).toEqual(expected.map((v) => v * 10))
                     })
@@ -730,7 +730,7 @@ describe('Pipeline', () => {
                                 count += 1
                                 return value * 10
                             })
-                        p.onFinally.listen(onFinally)
+                        p.onBeforeFinally.listen(onFinally)
                         expect(await collect(p)).toEqual(expected.map((v) => v * 10))
                         expect(onFinally).toHaveBeenCalledTimes(1)
                     })
@@ -746,7 +746,7 @@ describe('Pipeline', () => {
                                 items.push(value)
                                 count += 1
                             })
-                        p.onFinally.listen(onFinally)
+                        p.onBeforeFinally.listen(onFinally)
                         expect(await collect(p)).toEqual(expected)
                         expect(items).toEqual(expected)
                     })
@@ -761,7 +761,7 @@ describe('Pipeline', () => {
                                 items.push(value)
                                 count += 1
                             })
-                        p.onFinally.listen(onFinally)
+                        p.onBeforeFinally.listen(onFinally)
                         expect(await collect(p)).toEqual(expected)
                         expect(items).toEqual(expected)
                     })
@@ -776,7 +776,7 @@ describe('Pipeline', () => {
                                 count += 1
                                 return value % 2
                             })
-                        p.onFinally.listen(onFinally)
+                        p.onBeforeFinally.listen(onFinally)
                         expect(await collect(p)).toEqual(expected.filter((v) => v % 2))
                     })
 
@@ -789,20 +789,8 @@ describe('Pipeline', () => {
                                 count += 1
                                 return value % 2
                             })
-                        p.onFinally.listen(onFinally)
+                        p.onBeforeFinally.listen(onFinally)
                         expect(await collect(p)).toEqual(expected.filter((v) => v % 2))
-                    })
-                })
-
-                describe('reduce', () => {
-                    it('works', async () => {
-                        const p = new Pipeline(generate())
-                            .reduce((prev, value) => {
-                                return prev + value
-                            }, 0)
-                        p.onFinally.listen(onFinally)
-                        const results = await collect(p)
-                        expect(results[results.length - 1]).toEqual(expected.reduce((w, v) => w + v, 0))
                     })
                 })
             })
@@ -813,7 +801,7 @@ describe('Pipeline', () => {
                 const pipeline = new PushPipeline().pipe(async function* Step1(s) {
                     yield* s
                 })
-                pipeline.onFinally.listen(onFinally)
+                pipeline.onBeforeFinally.listen(onFinally)
 
                 pipeline.pull(generate())
                 return pipeline
@@ -824,7 +812,7 @@ describe('Pipeline', () => {
                 const pipeline = new PushPipeline<number>().pipe(async function* Step1(s) {
                     yield* s
                 })
-                pipeline.onFinally.listen(onFinally)
+                pipeline.onBeforeFinally.listen(onFinally)
 
                 pipeline.pull((async function* generateError() {
                     yield* generate()
@@ -845,7 +833,7 @@ describe('Pipeline', () => {
                 const pipeline = new PushPipeline().pipe(async function* Step1(s) {
                     yield* s
                 })
-                pipeline.onFinally.listen(onFinally)
+                pipeline.onBeforeFinally.listen(onFinally)
 
                 // eslint-disable-next-line require-yield
                 pipeline.pull((async function* generateError() {

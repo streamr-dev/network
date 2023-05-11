@@ -153,10 +153,6 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
         return this.pipe((src) => G.filter(src, fn, this.onError.trigger))
     }
 
-    reduce<NewOutType>(fn: G.GeneratorReduce<OutType, NewOutType>, initialValue: NewOutType): Pipeline<InType, NewOutType> {
-        return this.pipe((src) => G.reduce(src, fn, initialValue, this.onError.trigger))
-    }
-
     forEachBefore(fn: G.GeneratorForEach<InType>): Pipeline<InType, OutType> {
         return this.pipeBefore((src) => G.forEach(src, fn, this.onError.trigger))
     }

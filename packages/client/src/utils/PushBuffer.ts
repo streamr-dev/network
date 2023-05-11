@@ -97,12 +97,6 @@ export class PushBuffer<T> implements IPushBuffer<T> {
         return p
     }
 
-    reduce<NewOutType>(fn: G.GeneratorReduce<T, NewOutType>, initialValue: NewOutType): PushBuffer<unknown> {
-        const p = new PushBuffer(this.bufferSize)
-        pull(G.reduce(this, fn, initialValue), p)
-        return p
-    }
-
     private updateWriteGate(): void {
         this.writeGate.setOpenState(!this.isFull())
     }

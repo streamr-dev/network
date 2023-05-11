@@ -6,7 +6,7 @@ import { pull, PushBuffer } from './PushBuffer'
  */
 export class PullBuffer<InType> extends PushBuffer<InType> {
     private source: AsyncGenerator<InType>
-    
+
     constructor(source: AsyncGenerator<InType>, ...args: ConstructorParameters<typeof PushBuffer>) {
         super(...args)
         this.source = source
@@ -23,9 +23,5 @@ export class PullBuffer<InType> extends PushBuffer<InType> {
 
     override filter(fn: G.GeneratorFilter<InType>): PullBuffer<InType> {
         return new PullBuffer(G.filter(this, fn), this.bufferSize)
-    }
-
-    override reduce<NewOutType>(fn: G.GeneratorReduce<InType, NewOutType>, initialValue: NewOutType): PullBuffer<NewOutType> {
-        return new PullBuffer(G.reduce(this, fn, initialValue), this.bufferSize)
     }
 }
