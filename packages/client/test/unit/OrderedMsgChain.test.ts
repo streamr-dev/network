@@ -93,7 +93,7 @@ describe('OrderedMsgChain', () => {
             received.push(msg)
         }, () => {
             throw new Error('Unexpected gap')
-        }, DEFAULT_GAP_FILL_TIMEOUT, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS)
+        }, DEFAULT_GAP_FILL_TIMEOUT, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS, false)
         util.on('drain', onDrain)
         util.add(msg1)
         util.add(msg2)
@@ -107,7 +107,7 @@ describe('OrderedMsgChain', () => {
         const onDrain = jest.fn()
         util = new OrderedMsgChain(PUBLISHER_ID, 'msgChainId', (msg: StreamMessage) => {
             received.push(msg)
-        }, () => {}, DEFAULT_GAP_FILL_TIMEOUT, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS)
+        }, () => {}, DEFAULT_GAP_FILL_TIMEOUT, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS, false)
         util.on('drain', onDrain)
         util.add(msg1)
         util.add(msg2)
@@ -137,7 +137,7 @@ describe('OrderedMsgChain', () => {
         const received: StreamMessage[] = []
         util = new OrderedMsgChain(PUBLISHER_ID, 'msgChainId', (msg: StreamMessage) => {
             received.push(msg)
-        }, () => {}, DEFAULT_GAP_FILL_TIMEOUT, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS)
+        }, () => {}, DEFAULT_GAP_FILL_TIMEOUT, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS, false)
         util.on('drain', onDrain)
         util.add(msg1)
         util.add(m2)
@@ -155,7 +155,7 @@ describe('OrderedMsgChain', () => {
             received.push(msg)
         }, () => {
             util.add(unchainedMsg2)
-        }, 10, 10, DEFAULT_MAX_GAP_REQUESTS)
+        }, 10, 10, DEFAULT_MAX_GAP_REQUESTS, false)
 
         util.once('drain', () => {
             expect(received).toEqual([msg1, unchainedMsg2, msg3])
@@ -195,7 +195,7 @@ describe('OrderedMsgChain', () => {
                     // noop
                 }
             }
-        }, 10, 10, DEFAULT_MAX_GAP_REQUESTS)
+        }, 10, 10, DEFAULT_MAX_GAP_REQUESTS, false)
 
         util.once('drain', () => {
             expect(received).toEqual([msg1, unchainedMsg2, msg3, unchainedMsg4, msg5])
@@ -215,7 +215,7 @@ describe('OrderedMsgChain', () => {
             received.push(msg)
         }, () => {
             throw new Error('Unexpected gap')
-        }, DEFAULT_GAP_FILL_TIMEOUT, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS)
+        }, DEFAULT_GAP_FILL_TIMEOUT, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS, false)
         util.add(msg1)
         util.add(msg1)
         util.add(msg2)
@@ -236,7 +236,7 @@ describe('OrderedMsgChain', () => {
                 expect(onDrain).toHaveBeenCalledTimes(1) // nothing should have queued
                 done()
             }, 0)
-        }, 50, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS)
+        }, 50, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS, false)
         util.on('drain', onDrain)
         util.add(msg1)
         util.add(msg2)
@@ -258,7 +258,7 @@ describe('OrderedMsgChain', () => {
             assert.strictEqual(msgChainId, 'msgChainId')
             util.clearGap()
             done()
-        }, 50, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS)
+        }, 50, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS, false)
         util.add(msg1)
         util.add(msg2)
         util.add(msg5)
@@ -270,7 +270,7 @@ describe('OrderedMsgChain', () => {
             received.push(msg)
         }, () => {
             throw new Error('Unexpected gap')
-        }, 10000, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS)
+        }, 10000, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS, false)
         util.add(msg1)
         util.add(msg5)
         util.add(msg4)
@@ -291,7 +291,7 @@ describe('OrderedMsgChain', () => {
             count += 1
             await wait(WAIT * 3)
             util.add(msg2)
-        }, WAIT, WAIT, DEFAULT_MAX_GAP_REQUESTS)
+        }, WAIT, WAIT, DEFAULT_MAX_GAP_REQUESTS, false)
         util.on('drain', () => {
             try {
                 assert.strictEqual(count, 1)
@@ -319,7 +319,7 @@ describe('OrderedMsgChain', () => {
             } else {
                 throw new Error('Unexpected call to the gap handler')
             }
-        }, 100, 100, DEFAULT_MAX_GAP_REQUESTS)
+        }, 100, 100, DEFAULT_MAX_GAP_REQUESTS, false)
         util.add(msg1)
         util.add(msg3)
     })
@@ -345,7 +345,7 @@ describe('OrderedMsgChain', () => {
             } else {
                 throw new Error('Unexpected call to the gap handler')
             }
-        }, 100, 100, DEFAULT_MAX_GAP_REQUESTS)
+        }, 100, 100, DEFAULT_MAX_GAP_REQUESTS, false)
         util.add(msg1)
         util.add(msg3)
         util.add(msg5)
@@ -366,7 +366,7 @@ describe('OrderedMsgChain', () => {
             }
         }, () => {
             throw new Error('Unexpected call to the gap handler')
-        }, 100, 100, DEFAULT_MAX_GAP_REQUESTS)
+        }, 100, 100, DEFAULT_MAX_GAP_REQUESTS, false)
         util.disable()
         util.add(msg1)
         util.add(msg3)
@@ -391,7 +391,7 @@ describe('OrderedMsgChain', () => {
             if (to.timestamp === 4) {
                 util.add(msg4)
             }
-        }, 100, 100, DEFAULT_MAX_GAP_REQUESTS)
+        }, 100, 100, DEFAULT_MAX_GAP_REQUESTS, false)
         util.on('error', done)
 
         util.add(msg1)
@@ -425,7 +425,7 @@ describe('OrderedMsgChain', () => {
                     expect(gapHandler).toHaveBeenCalledTimes(2)
                     done()
                 }
-            }, gapHandler, 100, 100, DEFAULT_MAX_GAP_REQUESTS)
+            }, gapHandler, 100, 100, DEFAULT_MAX_GAP_REQUESTS, false)
 
             util.on('error', done)
 
@@ -459,7 +459,7 @@ describe('OrderedMsgChain', () => {
                     expect(skipped).toEqual([msg2, msg4])
                     done()
                 }
-            }, gapHandler, 100, 100, DEFAULT_MAX_GAP_REQUESTS)
+            }, gapHandler, 100, 100, DEFAULT_MAX_GAP_REQUESTS, false)
 
             util.on('skip', onSkip)
 
@@ -502,7 +502,7 @@ describe('OrderedMsgChain', () => {
                     expect(gapHandler).toHaveBeenCalledTimes(1)
                     done()
                 }
-            }, gapHandler, 100, 100, DEFAULT_MAX_GAP_REQUESTS)
+            }, gapHandler, 100, 100, DEFAULT_MAX_GAP_REQUESTS, false)
 
             util.on('error', done)
 
@@ -551,7 +551,7 @@ describe('OrderedMsgChain', () => {
                     expect(onSkip).toHaveBeenCalledWith(msg3)
                     done()
                 }, 0)
-            }, gapHandler, 10, 10, 3)
+            }, gapHandler, 10, 10, 3, false)
 
             util.on('skip', onSkip)
             util.on('error', (err) => {
@@ -582,7 +582,7 @@ describe('OrderedMsgChain', () => {
                     assert.strictEqual(msgChainId, 'msgChainId')
                     counter += 1
                 }, 
-                100, 100, DEFAULT_MAX_GAP_REQUESTS)
+                100, 100, DEFAULT_MAX_GAP_REQUESTS, false)
             util.once('error', (err: Error) => {
                 expect(err).toBeInstanceOf(GapFillFailedError)
                 if (err instanceof GapFillFailedError) {
@@ -602,7 +602,7 @@ describe('OrderedMsgChain', () => {
             const received: StreamMessage[] = []
             util = new OrderedMsgChain(PUBLISHER_ID, 'msgChainId', (msg: StreamMessage) => {
                 received.push(msg)
-            }, () => {}, 5, 5, DEFAULT_MAX_GAP_REQUESTS)
+            }, () => {}, 5, 5, DEFAULT_MAX_GAP_REQUESTS, false)
 
             util.add(msg1)
             util.add(msg3)
@@ -643,7 +643,7 @@ describe('OrderedMsgChain', () => {
         const received: StreamMessage[] = []
         util = new OrderedMsgChain(PUBLISHER_ID, 'msgChainId', (msg: StreamMessage) => {
             received.push(msg)
-        }, () => {}, 50, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS)
+        }, () => {}, 50, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS, false)
         util.add(msg1)
         shuffled.forEach((msg) => {
             util.add(msg)
@@ -743,7 +743,7 @@ describe('OrderedMsgChain', () => {
             }, 100)
         }, () => {
             next()
-        }, 10, 10, NUM_CHUNKS * 2)
+        }, 10, 10, NUM_CHUNKS * 2, false)
 
         util.on('drain', () => {
             next()
