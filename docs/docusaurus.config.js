@@ -37,7 +37,7 @@ const config = {
             {
                 entryPoints: ["../packages/client/src/exports.ts"],
                 disableSources: true,
-                name: "⚙️ Streamr SDK",
+                name: "API reference",
                 excludePrivate: true,
                 excludeProtected: true,
                 excludeInternal: true,

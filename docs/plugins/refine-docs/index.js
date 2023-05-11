@@ -133,8 +133,8 @@ module.exports = function(context, options) {
         // Add the featured links and navigation
         newContent = newContent.replace(
             /sidebar_position: 0.5\ncustom_edit_url: null\n---/,
-            `sidebar_position: 5\ncustom_edit_url: null\n---\n\nimport FeaturedLinks from 
-            "@site/src/components/FeaturedLinks";\n\n## Featured Classes \n\n<FeaturedLinks links={${JSON.stringify(
+            `sidebar_position: 99\ncustom_edit_url: null\n---\n\nimport FeaturedLinks from 
+            "@site/src/components/FeaturedLinks";\n\n### Streamr SDK version 8.5.0 \n\n## Featured Classes \n\n<FeaturedLinks links={${JSON.stringify(
                 featuredLinks.classes
             )}} category="class" />\n\n## Featured Interfaces\n\n<FeaturedLinks links={${JSON.stringify(
                 featuredLinks.interfaces
