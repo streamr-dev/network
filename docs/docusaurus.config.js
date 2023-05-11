@@ -47,7 +47,8 @@ const config = {
                 watch: process.env.TYPEDOC_WATCH,
                 sidebar: {
                     categoryLabel: "API reference",
-                    indexLabel: " "
+                    indexLabel: " ",
+                    position: 5
                 },
                 out: "usage/streamr-js-client/api",
                 tsconfig: "../packages/client/tsconfig.json",
