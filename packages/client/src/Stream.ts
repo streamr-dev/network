@@ -243,7 +243,7 @@ export class Stream {
             const propagationPromise = waitForAssignmentsToPropagate(assignmentSubscription.getStreamMessages(), {
                 id: this.id,
                 partitions: this.getMetadata().partitions
-            })
+            }, this._loggerFactory)
             await this._streamStorageRegistry.addStreamToStorageNode(this.id, normalizedNodeAddress)
             await withTimeout(
                 propagationPromise,
