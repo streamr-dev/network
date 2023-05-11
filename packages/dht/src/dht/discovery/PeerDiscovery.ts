@@ -3,7 +3,7 @@ import { DhtPeer } from '../DhtPeer'
 import * as Err from '../../helpers/errors'
 import { isSamePeerDescriptor, keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
-import { Logger, scheduleAtInterval } from '@streamr/utils'
+import { Logger } from '@streamr/utils'
 import KBucket from 'k-bucket'
 import { SortedContactList } from '../contact/SortedContactList'
 import { ConnectionManager } from '../../connection/ConnectionManager'
@@ -95,9 +95,9 @@ export class PeerDiscovery {
             if (!this.stopped) {
                 if (this.config.bucket.count() === 0) {
                     this.rejoinDht(entryPointDescriptor).catch(() => { })
-                } else {
+                } /*else {
                     await scheduleAtInterval(() => this.getClosestPeersFromBucket(), 60000, true, this.abortController.signal)
-                }
+                }*/
             }
         } catch (e) {
             logger.error('Join timed out:\t' + debugVars['nodesContacted'] + '\t' + debugVars['nodesContactedRandom']
