@@ -5,7 +5,7 @@ import { Schema } from 'ajv'
 
 export class HttpPlugin extends Plugin<ApiPluginConfig> {
     async start(): Promise<void> {
-        this.addHttpServerEndpoint(createEndpoint(this.streamrClient!))
+        this.addHttpServerEndpoint(createEndpoint(this.streamrClient))
     }
 
     // eslint-disable-next-line class-methods-use-this

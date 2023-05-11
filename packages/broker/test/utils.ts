@@ -143,7 +143,7 @@ export const createTestStream = async (
     module: NodeModule,
     props?: Partial<StreamMetadata>
 ): Promise<Stream> => {
-    const id = (await streamrClient.getAddress()) + '/test/' + getTestName(module) + '/' + Date.now()
+    const id = `${await streamrClient.getAddress()}/test/${getTestName(module)}/${Date.now()}`
     const stream = await streamrClient.createStream({
         id,
         ...props
@@ -154,12 +154,6 @@ export const createTestStream = async (
 export const getStreamParts = async (broker: Broker): Promise<StreamPartID[]> => {
     const node = await broker.getNode()
     return Array.from(node.getStreamParts())
-}
-
-export async function sleep(ms = 0): Promise<void> {
-    return new Promise((resolve) => {
-        setTimeout(resolve, ms)
-    })
 }
 
 export async function startStorageNode(

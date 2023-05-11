@@ -13,7 +13,7 @@ const TRACKER_PORT = 12471
 jest.setTimeout(30000)
 
 const createMqttClient = () => {
-    return mqtt.connectAsync('mqtt://localhost:' + MQTT_PLUGIN_PORT)
+    return mqtt.connectAsync(`mqtt://localhost:${MQTT_PLUGIN_PORT}`)
 }
 
 describe('MQTT Bridge', () => {

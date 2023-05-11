@@ -22,7 +22,7 @@ export const createMessageRef = (timestamp: number, prevMsgRef?: MessageRef): Me
         throw new Error('prevMessageRef must come before current')
     }
     const isSameTimestamp = (prevMsgRef !== undefined) && (prevMsgRef.timestamp === timestamp)
-    const nextSequenceNumber = isSameTimestamp ? prevMsgRef!.sequenceNumber + 1 : 0
+    const nextSequenceNumber = isSameTimestamp ? prevMsgRef.sequenceNumber + 1 : 0
     const createdMessageRef = new MessageRef(timestamp, nextSequenceNumber)
     return createdMessageRef
 }

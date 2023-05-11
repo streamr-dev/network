@@ -1,13 +1,12 @@
-import { toEthereumAddress, wait } from '@streamr/utils'
-import { counterId, instanceId } from '../../src/utils/utils'
-import { createRandomAuthentication } from '../test-utils/utils'
-import { Msg } from '../test-utils/publish'
-import { LeaksDetector } from '../test-utils/LeaksDetector'
-import { StreamMessage, MessageID, toStreamID } from '@streamr/protocol'
-import { createSignedMessage } from '../../src/publish/MessageFactory'
+import { MessageID, StreamMessage, toStreamID } from '@streamr/protocol'
+import { collect, toEthereumAddress, wait } from '@streamr/utils'
 import { Authentication } from '../../src/Authentication'
-import { collect } from '../../src/utils/iterators'
+import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { PushPipeline } from '../../src/utils/PushPipeline'
+import { counterId, instanceId } from '../../src/utils/utils'
+import { LeaksDetector } from '../test-utils/LeaksDetector'
+import { Msg } from '../test-utils/publish'
+import { createRandomAuthentication } from '../test-utils/utils'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 

@@ -1,6 +1,6 @@
 {
   "name": "@streamr/utils",
-  "version": "8.3.0",
+  "version": "8.5.0",
   "description": "A collection of shared common utilities",
   "repository": {
     "type": "git",
@@ -15,7 +15,7 @@
     "clean": "jest --clearCache || true; rm -rf dist vendor *.tsbuildinfo node_modules/.cache || true",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "test": "jest",
-    "test-browser": "webpack --mode=development --progress && karma start karma.config.js"
+    "test-browser": "karma start karma.config.js"
   },
   "author": "Streamr Network AG <contact@streamr.network>",
   "license": "Apache-2.0",
@@ -26,22 +26,10 @@
     "pino-pretty": "^10.0.0"
   },
   "devDependencies": {
-    "@electron/rebuild": "^3.2.9",
+    "@streamr/browser-test-runner": "^0.0.1",
     "@types/lodash": "^4.14.175",
     "@types/node-fetch": "^2.5.12",
-    "electron": "^24.1.2",
     "express": "^4.17.1",
-    "karma": "^6.4.0",
-    "karma-chrome-launcher": "^3.1.1",
-    "karma-electron": "^7.3.0",
-    "karma-jasmine": "^5.1.0",
-    "karma-sourcemap-loader": "^0.4.0",
-    "karma-spec-reporter": "^0.0.36",
-    "karma-webpack": "^5.0.0",
-    "node-fetch": "^2.6.6",
-    "node-module-polyfill": "^1.0.1",
-    "node-polyfill-webpack-plugin": "^2.0.1",
-    "webpack": "^5.64.1",
-    "webpack-cli": "^5.0.1"
+    "node-fetch": "^2.6.6"
   }
 }

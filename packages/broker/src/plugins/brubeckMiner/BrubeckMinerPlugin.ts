@@ -83,7 +83,7 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
     }
 
     private async subscriptionIntervalFn(): Promise<void> {
-        const isAlreadySubscribed = (await this.streamrClient!.getSubscriptions(this.streamId)).length > 0
+        const isAlreadySubscribed = (await this.streamrClient.getSubscriptions(this.streamId)).length > 0
         if (!isAlreadySubscribed) {
             try {
                 await this.subscribe()
@@ -97,7 +97,7 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
     }
 
     private async subscribe(): Promise<void> {
-        const subscription = await this.streamrClient!.subscribe(this.streamId, (message: any) => {
+        const subscription = await this.streamrClient.subscribe(this.streamId, (message: any) => {
             if (message.rewardCode) {
                 this.onRewardCodeReceived(message.rewardCode)
             } if (message.info) {

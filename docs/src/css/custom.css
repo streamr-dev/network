@@ -1,0 +1,74 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans&display=swap");
+
+/* You can override the default Infima variables here. */
+:root {
+    --ifm-color-primary: #0424ff;
+    --ifm-color-primary-dark: #001ee9;
+    --ifm-color-primary-darker: #001cdc;
+    --ifm-color-primary-darkest: #0017b5;
+    --ifm-color-primary-light: #1e3bff;
+    --ifm-color-primary-lighter: #2b46ff;
+    --ifm-color-primary-lightest: #5268ff;
+    --ifm-code-font-size: 95%;
+    --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+    --ifm-color-emphasis-200: "#EFEFEF";
+    --ifm-font-family-base: "IBM Plex Sans", sans-serif;
+    --ifm-heading-font-family: "IBM Plex Sans", sans-serif;
+    --ifm-heading-font-weight: 600;
+    --ifm-footer-background-color: #f8f8f8;
+}
+
+/* For readability concerns, you should choose a lighter palette in dark mode. */
+[data-theme="dark"] {
+    --ifm-color-primary: #4e89e8;
+    /* --ifm-font-color-base: '#A3A3A3'; */
+    --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+    --ifm-color-emphasis-200: "#333333";
+    --ifm-card-background-color: #292929;
+    --ifm-footer-background-color: #292929;
+}
+
+h1 {
+    font-weight: 700;
+}
+
+table,
+thead {
+    width: 100%;
+}
+
+.primary-button {
+    font-family: var(--ifm-font-family-base);
+    font-weight: 600;
+    background-color: "#EFEFEF";
+    padding: 0.8rem 1rem 0.8rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.primary-button:hover {
+    background-color: "#FFFFFF" !important;
+}
+
+.table-of-contents::before {
+    content: "ON THIS PAGE";
+    font-size: 0.8rem;
+    letter-spacing: 1.2px;
+    margin-left: var(--ifm-toc-padding-horizontal);
+}
+
+.navbar__title::after {
+    content: " DOCS";
+    color: #f65f08;
+}
+
+.theme-doc-sidebar-menu.menu__list .menu__link {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.hide-expandable-sidebar button,
+.hide-expandable-sidebar ul {
+    display: none !important;
+}

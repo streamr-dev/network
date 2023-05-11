@@ -10,6 +10,9 @@ docs:
 broker:
   - 'packages/broker/*'
   - 'packages/broker/**/*'
+browser-test-runner:
+  - 'package/browser-test-runner/*'
+  - 'package/browser-test-runner/**/*'
 network:
   - 'packages/network/*'
   - 'packages/network/**/*'

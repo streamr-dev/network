@@ -11,6 +11,7 @@ Monorepo containing all the main components of Streamr Network.
 ## Table of Contents
 - [Packages](#packages)
 - [NPM scripts](#npm-scripts)
+- [Environment variables](#environment-variables)
 - [Release](#release)
 
 ## Packages
@@ -26,6 +27,7 @@ Monorepo containing all the main components of Streamr Network.
 * [protocol](packages/protocol/README.md) (@streamr/protocol)
 * [utils](packages/utils/README.md) (@streamr/utils)
 * [test-utils](packages/test-utils/README.md) (@streamr/test-utils)
+* [browser-test-runner](packages/browser-test-runner/index.js) (@streamr/browser-test-runner)
 
 ## NPM scripts
 | Node.js `16.13.x` is the minimum required version. Node.js `18.12.x`, NPM `8.x` and later versions are recommended. |
@@ -126,24 +128,38 @@ as you expect e.g. `^X.Y.Z` vs `X.Y.Z`
 
 ![image](https://user-images.githubusercontent.com/43438/135347920-97d6e0e7-b86c-40ff-bfc9-91f160ae975c.png)
 
+## Environment variables
+
+| Variable                     | Description                                                                            | Packages                                    |
+|------------------------------|----------------------------------------------------------------------------------------|---------------------------------------------|
+| `BROWSER_TEST_DEBUG_MODE`    | Leaves the Electron window open while running browser tests                            | utils, proto-rpc, dht, network-node, client |
+| `STREAMR_DOCKER_DEV_HOST`    | Sets an alternative IP address for streamr-docker-dev in end-to-end tests              | client, broker                              |
+| `LOG_LEVEL`                  | Adjust logging level                                                                   | _all_                                       |
+| `DISABLE_PRETTY_LOG`         | Set to true to disable pretty printing of logs and print JSONL instead                 | _all_                                       |
+| `LOG_COLORS`                 | Set to false to disable coloring of log messages                                       | _all_                                       |
+| `NOLOG`                      | Set to true to disable all logging                                                     | _all_                                       |
+| `NODE_DATACHANNEL_LOG_LEVEL` | Adjust logging level of `node-datachannel` library                                     | network-node                                |
+| `BUNDLE_ANALYSIS`            | Whether to produce a bundle analysis when building client package for browser          | client (compile time)                       |
+| `STREAMR__BROKER__`          | Wildcard [set of variables](packages/broker/configuration.md) used to configure broker | broker                                      |
+
 ## Release
 
 ### utils, test-utils, protocol, network-tracker, network-node, client, cli-tools
 
-All the above packages should be released at the same time.
+All the above packages are released at the same time.
 
 1. `git checkout main && git pull`
-2. (skip if beta release) Look at client and cli-tool CHANGELOG.md, decide new version and make edits.
+2. (skip if beta) Read [CHANGELOG](CHANGELOG.md), decide new version, and edit file.
 3. `./update-versions.sh <SEMVER>` E.g. `./update-versions.sh 7.1.1`
 4. `npm run clean && npm install && npm run build && npm run versions`
    - Ensure output does not contain yellow or red markers
 5. Add files to staging `git add . -p`
 6. `./release-git-tags.sh <SEMVER>` E.g. `./release-git-tags.sh 7.1.1`
-7. Wait & ensure the pushed main branch passes CI tests
+7. Wait for pushed commit to pass CI validation
 8. Publish packages `./release.sh <NPM_TAG>`
     - Use argument `beta` if publishing a beta version
     - Use argument `latest` if publishing a stable version
-9. Update client docs if major or minor change:
+9. Update client API docs if major or minor change:
 ```bash
 cd packages/client
 npm run docs
@@ -155,11 +171,12 @@ aws s3 cp ./docs s3://api-docs.streamr.network/client/vX.Y --recursive --profile
 Broker is released independently of other packages because it follows its own versioning
 for the time being.
 
-```
-git checkout main
+```shell
+git checkout main && git pull
 cd packages/broker
+# Read CHANGELOG.md, decide new version, and edit file
 npm version <SEMVER_OPTION>
-git add package.json package-lock.json
+git add package.json ../../package-lock.json CHANGELOG.md
 git commit -m "release(broker): vX.Y.Z"
 git tag broker/vX.Y.Z
 git push --atomic origin main broker/vX.Y.Z

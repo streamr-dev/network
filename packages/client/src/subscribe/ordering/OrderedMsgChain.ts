@@ -147,14 +147,6 @@ interface Events {
 // eslint-disable-next-line @typescript-eslint/prefer-function-type
 export const MsgChainEmitter = EventEmitter as { new(): StrictEventEmitter<EventEmitter, Events> }
 
-// The time it takes to propagate messages in the network. If we detect a gap, we first wait this amount of time because the missing
-// messages might still be propagated.
-const DEFAULT_PROPAGATION_TIMEOUT = 5000
-// The round trip time it takes to request a resend and receive the answer. If the messages are still missing after the propagation
-// delay, we request a resend and periodically wait this amount of time before requesting it again.
-const DEFAULT_RESEND_TIMEOUT = 5000
-const MAX_GAP_REQUESTS = 10
-
 let ID = 0
 
 const logger = new Logger(module)
@@ -171,8 +163,8 @@ class OrderedMsgChain extends MsgChainEmitter {
     msgChainId: string
     inOrderHandler: MessageHandler
     gapHandler: GapHandler
-    propagationTimeout: number
-    resendTimeout: number
+    gapFillTimeout: number
+    retryResendAfter: number
     nextGaps: ReturnType<typeof setTimeout> | null = null
     markedExplicitly = new StreamMessageSet()
 
@@ -181,10 +173,10 @@ class OrderedMsgChain extends MsgChainEmitter {
         msgChainId: string,
         inOrderHandler: MessageHandler,
         gapHandler: GapHandler,
-        propagationTimeout = DEFAULT_PROPAGATION_TIMEOUT,
-        resendTimeout = DEFAULT_RESEND_TIMEOUT,
-        maxGapRequests = MAX_GAP_REQUESTS,
-        lighterGapFill = true
+        gapFillTimeout: number,
+        retryResendAfter: number,
+        maxGapRequests: number,
+        lighterGapFill: boolean
     ) {
         super()
         ID += 1
@@ -194,8 +186,8 @@ class OrderedMsgChain extends MsgChainEmitter {
         this.inOrderHandler = inOrderHandler
         this.gapHandler = gapHandler
         this.lastOrderedMsgRef = null
-        this.propagationTimeout = propagationTimeout
-        this.resendTimeout = resendTimeout
+        this.gapFillTimeout = gapFillTimeout
+        this.retryResendAfter = retryResendAfter
         this.maxGapRequests = maxGapRequests
         this.lighterGapFill = lighterGapFill
     }
@@ -394,17 +386,17 @@ class OrderedMsgChain extends MsgChainEmitter {
             return
         }
 
-        logger.trace('scheduleGap', { timeoutMs: this.propagationTimeout })
+        logger.trace('scheduleGap', { timeoutMs: this.gapFillTimeout })
         const nextGap = (timeout: number) => {
             clearTimeout(this.nextGaps!)
             this.nextGaps = setTimeout(async () => {
                 if (!this.hasPendingGap) { return }
                 await this.requestGapFill()
                 if (!this.hasPendingGap) { return }
-                nextGap(this.resendTimeout)
+                nextGap(this.retryResendAfter)
             }, timeout)
         }
-        nextGap(this.propagationTimeout)
+        nextGap(this.gapFillTimeout)
     }
 
     /**
