@@ -2,8 +2,7 @@ import { expected, MAX_ITEMS, IteratorTest } from './IteratorTest'
 import { Logger, wait, collect } from '@streamr/utils'
 import { Pipeline } from '../../src/utils/Pipeline'
 import { PushPipeline } from '../../src/utils/PushPipeline'
-import { PushBuffer } from '../../src/utils/PushBuffer'
-import { PullBuffer } from '../../src/utils/PullBuffer'
+import { PushBuffer, pull } from '../../src/utils/PushBuffer'
 import { iteratorFinally } from '../../src/utils/iterators'
 
 const logger = new Logger(module)
@@ -511,32 +510,6 @@ describe('Pipeline', () => {
                 expect(received).toEqual(expected.slice(0, -3))
             })
 
-            it('works with PullBuffer inputs', async () => {
-                const onFinallyInnerAfter = jest.fn()
-                const onFinallyInner = jest.fn(async () => {
-                    await wait(WAIT)
-                    onFinallyInnerAfter()
-                })
-                const inputStream = new PullBuffer(generate())
-                const p = new Pipeline(inputStream)
-                    .pipe(async function* Step1(s) {
-                        yield* s
-                    })
-                    .pipe(async function* finallyFn(s) {
-                        yield* iteratorFinally(s, onFinallyInner)
-                    })
-                p.onBeforeFinally.listen(onFinally)
-
-                const received = []
-                for await (const msg of p) {
-                    received.push(msg)
-                }
-
-                expect(onFinallyInner).toHaveBeenCalledTimes(1)
-                expect(onFinallyInnerAfter).toHaveBeenCalledTimes(1)
-                expect(received).toEqual(expected)
-            })
-
             it('works with PushBuffer inputs', async () => {
                 const onFinallyInnerAfter = jest.fn()
                 const onFinallyInner = jest.fn(async () => {
@@ -621,7 +594,8 @@ describe('Pipeline', () => {
                 const receivedStep1: number[] = []
                 const receivedStep2: number[] = []
 
-                const firstStream = new PullBuffer(generate())
+                const firstStream = new PushBuffer<number>()
+                await pull(generate(), firstStream)
                 const p = new Pipeline(firstStream)
                     .pipe(async function* Step2(src) {
                         const subPipeline = new Pipeline(src)
@@ -666,7 +640,8 @@ describe('Pipeline', () => {
                 const receivedStep2: number[] = []
                 const err = new Error('expected err')
 
-                const firstStream = new PullBuffer(generate())
+                const firstStream = new PushBuffer<number>()
+                await pull(generate(), firstStream)
                 const p = new Pipeline(firstStream)
                     .pipe(async function* Step2(src) {
                         const subPipeline = new Pipeline(src)
