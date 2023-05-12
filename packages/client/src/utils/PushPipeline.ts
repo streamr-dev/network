@@ -21,11 +21,6 @@ export class PushPipeline<InType, OutType = InType> extends Pipeline<InType, Out
         return this as PushPipeline<InType, unknown> as PushPipeline<InType, NewOutType>
     }
 
-    override filterBefore(fn: G.GeneratorFilter<InType>): PushPipeline<InType, OutType> {
-        // this method override just fixes the output type to be PushPipeline rather than Pipeline
-        return super.filterBefore(fn) as PushPipeline<InType, OutType>
-    }
-
     override filter(fn: G.GeneratorFilter<OutType>): PushPipeline<InType, OutType> {
         // this method override just fixes the output type to be PushPipeline rather than Pipeline
         return super.filter(fn) as PushPipeline<InType, OutType>
