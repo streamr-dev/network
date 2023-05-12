@@ -134,12 +134,6 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
      */
     onBeforeFinally = Signal.once()
 
-    /**
-     * Triggers once when pipeline starts flowing.
-     * Usage: `pipeline.onStart(callback)`
-     */
-    onStart = Signal.once()
-
     onMessage = Signal.create<[OutType]>()
 
     onError = ErrorSignal.create<[Error, (InType | OutType)?, number?]>()
@@ -210,7 +204,6 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
 
     private async* iterate(): AsyncGenerator<any, void, unknown> {
         this.isIterating = true
-        await this.onStart.trigger()
 
         // this.debug('iterate', this.definition.source)
         if (!this.definition.source) {
