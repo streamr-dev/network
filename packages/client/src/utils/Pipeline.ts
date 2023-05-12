@@ -19,7 +19,6 @@ export type IPipeline<InType, OutType = InType> = {
     pipe<NewOutType>(fn: PipelineTransform<OutType, NewOutType>): IPipeline<InType, NewOutType>
     filter(fn: G.GeneratorFilter<OutType>): IPipeline<InType, OutType>
     forEach(fn: G.GeneratorForEach<OutType>): IPipeline<InType, OutType>
-    forEachBefore(fn: G.GeneratorForEach<InType>): IPipeline<InType, OutType>
     filterBefore(fn: G.GeneratorForEach<InType>): IPipeline<InType, OutType>
     pipeBefore(fn: PipelineTransform<InType, InType>): IPipeline<InType, OutType>
 } & AsyncGenerator<OutType>
@@ -141,10 +140,6 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
 
     filter(fn: G.GeneratorFilter<OutType>): Pipeline<InType, OutType> {
         return this.pipe((src) => G.filter(src, fn, this.onError.trigger))
-    }
-
-    forEachBefore(fn: G.GeneratorForEach<InType>): Pipeline<InType, OutType> {
-        return this.pipeBefore((src) => G.forEach(src, fn, this.onError.trigger))
     }
 
     filterBefore(fn: G.GeneratorFilter<InType>): Pipeline<InType, OutType> {

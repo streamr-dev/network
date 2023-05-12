@@ -36,11 +36,6 @@ export class PushPipeline<InType, OutType = InType> extends Pipeline<InType, Out
         return super.forEach(fn) as PushPipeline<InType, OutType>
     }
 
-    override forEachBefore(fn: G.GeneratorForEach<InType>): PushPipeline<InType, OutType> {
-        // this method override just fixes the output type to be PushPipeline rather than Pipeline
-        return super.forEachBefore(fn) as PushPipeline<InType, OutType>
-    }
-
     pull(source: AsyncGenerator<InType>): Promise<void> {
         return pull(source, this)
     }
