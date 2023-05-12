@@ -95,11 +95,6 @@ export class MessageStream implements AsyncIterable<Message> {
     }
 
     /** @internal */
-    map<NewOutType>(fn: G.GeneratorMap<StreamMessage, NewOutType>): Pipeline<StreamMessage, NewOutType> {
-        return this.pipeline.map(fn)
-    }
-
-    /** @internal */
     forEach(fn: G.GeneratorForEach<StreamMessage>): Pipeline<StreamMessage, StreamMessage> {
         return this.pipeline.forEach(fn)
     }

@@ -13,10 +13,6 @@ export class PullBuffer<InType> extends PushBuffer<InType> {
         pull(this.source, this).catch(() => {})
     }
 
-    override map<NewOutType>(fn: G.GeneratorMap<InType, NewOutType>): PullBuffer<NewOutType> {
-        return new PullBuffer<NewOutType>(G.map(this, fn), this.bufferSize)
-    }
-
     override forEach(fn: G.GeneratorForEach<InType>): PullBuffer<InType> {
         return new PullBuffer(G.forEach(this, fn), this.bufferSize)
     }

@@ -707,35 +707,6 @@ describe('Pipeline', () => {
             })
 
             describe('Array-like methods', () => {
-                describe('map', () => {
-                    it('works', async () => {
-                        let count = 0
-                        const p = new Pipeline(generate())
-                            .map((value, index) => {
-                                expect(index).toEqual(count)
-                                count += 1
-                                return value * 10
-                            })
-                        p.onBeforeFinally.listen(onFinally)
-                        const result = await collect(p)
-                        expect(result).toEqual(expected.map((v) => v * 10))
-                    })
-
-                    it('works async', async () => {
-                        let count = 0
-                        const p = new Pipeline(generate())
-                            .map(async (value, index) => {
-                                await wait(Math.random() * WAIT)
-                                expect(index).toEqual(count)
-                                count += 1
-                                return value * 10
-                            })
-                        p.onBeforeFinally.listen(onFinally)
-                        expect(await collect(p)).toEqual(expected.map((v) => v * 10))
-                        expect(onFinally).toHaveBeenCalledTimes(1)
-                    })
-                })
-
                 describe('forEach', () => {
                     it('works', async () => {
                         const items: number[] = []
