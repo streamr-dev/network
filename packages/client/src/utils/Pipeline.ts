@@ -25,16 +25,13 @@ class PipelineDefinition<InType, OutType = InType> {
 
     public source: AsyncGeneratorWithId<InType>
     protected transforms: PipelineTransform[]
-    protected transformsBefore: PipelineTransform[]
 
     constructor(
         source: AsyncGenerator<InType>,
         transforms: PipelineTransform[] = [],
-        transformsBefore: PipelineTransform[] = []
     ) {
         this.source = this.setSource(source)
         this.transforms = transforms
-        this.transformsBefore = transformsBefore
     }
 
     /**
@@ -48,7 +45,6 @@ class PipelineDefinition<InType, OutType = InType> {
 
     clearTransforms() {
         this.transforms = []
-        this.transformsBefore = []
     }
 
     setSource(source: AsyncGenerator<InType> | AsyncGeneratorWithId<InType>) {
@@ -61,7 +57,7 @@ class PipelineDefinition<InType, OutType = InType> {
     }
 
     getTransforms() {
-        return [...this.transformsBefore, ...this.transforms]
+        return this.transforms
     }
 }
 
