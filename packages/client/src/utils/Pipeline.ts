@@ -28,7 +28,7 @@ export type IPipeline<InType, OutType = InType> = {
 } & AsyncGenerator<OutType>
 
 class PipelineDefinition<InType, OutType = InType> {
-    
+
     public source: AsyncGeneratorWithId<InType>
     protected transforms: PipelineTransform[]
     protected transformsBefore: PipelineTransform[]
@@ -121,19 +121,6 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
 
         this.definition.pipeBefore(fn)
         return this
-    }
-
-    /**
-     * Fires this callback the moment this part of the pipeline starts returning.
-     */
-    onConsumed(fn: () => void | Promise<void>): Pipeline<InType, Awaited<OutType>> {
-        return this.pipe(async function* onConsumed(src) {
-            try {
-                yield* src
-            } finally {
-                await fn()
-            }
-        })
     }
 
     /**

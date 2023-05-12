@@ -110,12 +110,6 @@ export class MessageStream implements AsyncIterable<Message> {
         await this.pipeline.consume(fn)
     }
 
-    // used only in tests
-    /** @internal */
-    onConsumed(fn: () => void | Promise<void>): void {
-        this.pipeline.onConsumed(fn)
-    }
-
     /** @internal */
     async pull(source: AsyncGenerator<StreamMessage>): Promise<void> {
         return this.pipeline.pull(source)
