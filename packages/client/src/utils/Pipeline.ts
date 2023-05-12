@@ -19,7 +19,6 @@ export type IPipeline<InType, OutType = InType> = {
     pipe<NewOutType>(fn: PipelineTransform<OutType, NewOutType>): IPipeline<InType, NewOutType>
     filter(fn: G.GeneratorFilter<OutType>): IPipeline<InType, OutType>
     forEach(fn: G.GeneratorForEach<OutType>): IPipeline<InType, OutType>
-    pipeBefore(fn: PipelineTransform<InType, InType>): IPipeline<InType, OutType>
 } & AsyncGenerator<OutType>
 
 class PipelineDefinition<InType, OutType = InType> {
@@ -45,15 +44,6 @@ class PipelineDefinition<InType, OutType = InType> {
     pipe<NewOutType>(fn: PipelineTransform<OutType, NewOutType>): PipelineDefinition<InType, NewOutType> {
         this.transforms.push(fn)
         return this as PipelineDefinition<InType, unknown> as PipelineDefinition<InType, NewOutType>
-    }
-
-    /**
-     * Inject pipeline step before other transforms.
-     * Note must return same type as source, otherwise we can't be type-safe.
-     */
-    pipeBefore(fn: PipelineTransform<InType, InType>): PipelineDefinition<InType, OutType> {
-        this.transformsBefore.push(fn)
-        return this
     }
 
     clearTransforms() {
@@ -103,19 +93,6 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
         // this allows .pipe chaining to be type aware
         // i.e. new Pipeline(Type1).pipe(Type1 => Type2).pipe(Type2 => Type3)
         return this as Pipeline<InType, unknown> as Pipeline<InType, NewOutType>
-    }
-
-    /**
-     * Inject pipeline step before other transforms.
-     * Note must return same type as source, otherwise we can't be type-safe.
-     */
-    pipeBefore(fn: PipelineTransform<InType, InType>): Pipeline<InType, OutType> {
-        if (this.isIterating) {
-            throw new StreamrClientError(`cannot pipe after already iterating: ${this.isIterating}`, 'PIPELINE_ERROR')
-        }
-
-        this.definition.pipeBefore(fn)
-        return this
     }
 
     /**

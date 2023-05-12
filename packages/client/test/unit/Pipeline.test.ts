@@ -74,13 +74,12 @@ describe('Pipeline', () => {
         }
 
         const p5 = new Pipeline(generate())
-            .pipe(async function* Step1(s) {
+            .pipe(async function* Step0(s) {
                 for await (const msg of s) {
                     yield String(msg) // change output type
                 }
             })
-            // @ts-expect-error expects same as input type
-            .pipeBefore(async function* Step0(s) {
+            .pipe(async function* Step1(s) {
                 for await (const msg of s) {
                     yield String(msg) // change output type
                 }
@@ -89,12 +88,7 @@ describe('Pipeline', () => {
         expect(p5).toBeTruthy() // avoid unused warning
 
         const p6 = new Pipeline(generate())
-            .pipe(async function* Step3(s) {
-                for await (const msg of s) {
-                    yield String(msg) // change output type
-                }
-            })
-            .pipeBefore(async function* Step0(s) {
+            .pipe(async function* Step0(s) {
                 for await (const msg of s) {
                     if (msg % 2) {
                         continue // remove every other item
@@ -103,14 +97,19 @@ describe('Pipeline', () => {
                     yield msg
                 }
             })
-            .pipeBefore(async function* Step2(s) {
+            .pipe(async function* Step1(s) {
                 for await (const msg of s) {
                     yield msg * 2
                 }
             })
-            .pipeBefore(async function* Step1(s) {
+            .pipe(async function* Step2(s) {
                 for await (const msg of s) {
                     yield msg - 1
+                }
+            })
+            .pipe(async function* Step3(s) {
+                for await (const msg of s) {
+                    yield String(msg) // change output type
                 }
             })
 

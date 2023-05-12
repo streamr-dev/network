@@ -88,12 +88,6 @@ export class MessageStream implements AsyncIterable<Message> {
         return this.pipeline.pipe(fn)
     }
 
-    // used only in tests
-    /** @internal */
-    pipeBefore(fn: PipelineTransform<StreamMessage, StreamMessage>): Pipeline<StreamMessage, StreamMessage> {
-        return this.pipeline.pipeBefore(fn)
-    }
-
     /** @internal */
     forEach(fn: G.GeneratorForEach<StreamMessage>): Pipeline<StreamMessage, StreamMessage> {
         return this.pipeline.forEach(fn)
