@@ -23,7 +23,6 @@ export type IPipeline<InType, OutType = InType> = {
     forEach(fn: G.GeneratorForEach<OutType>): IPipeline<InType, OutType>
     forEachBefore(fn: G.GeneratorForEach<InType>): IPipeline<InType, OutType>
     filterBefore(fn: G.GeneratorForEach<InType>): IPipeline<InType, OutType>
-    consume(): Promise<void>
     pipeBefore(fn: PipelineTransform<InType, InType>): IPipeline<InType, OutType>
 } & AsyncGenerator<OutType>
 
@@ -166,15 +165,11 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
         return this.pipeBefore((src) => G.filter(src, fn, this.onError.trigger))
     }
 
-    async consume(fn?: G.GeneratorForEach<OutType>): Promise<void> {
-        return G.consume(this, fn, this.handleError)
-    }
-
     flow(): this {
         setImmediate(() => {
             // consume if not already doing so
             if (!this.isIterating) {
-                this.consume()
+                G.consume(this)
             }
         })
 
