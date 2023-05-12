@@ -100,6 +100,7 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     private fixedLatency?: number
 
     private loopCounter = 0
+    private operationCounter = 0
     private MAX_LOOPS = 1
 
     private operationQueue: Heap<SimulatorOperation> = new Heap<SimulatorOperation>((a: SimulatorOperation, b: SimulatorOperation) => {
@@ -245,6 +246,8 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
             && this.operationQueue.peek()!.executionTime <= currentTime) {
             const operation = this.operationQueue.pop()
 
+            this.operationCounter++
+
             if (operation instanceof ConnectOperation) {
                 this.executeConnectOperation(operation)
             } else if (operation instanceof CloseOperation) {
@@ -266,6 +269,10 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
         this.scheduleNextTimeout()
     }
 
+    public getOperationCounter(): number {
+        return this.operationCounter
+    }
+    
     private scheduleNextTimeout(): void {
         if (this.simulatorTimeout) {
             clearTimeout(this.simulatorTimeout)

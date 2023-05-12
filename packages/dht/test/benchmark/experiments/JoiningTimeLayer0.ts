@@ -7,13 +7,13 @@ import { performance } from 'perf_hooks'
 import { PeerID } from '../../../src/helpers/PeerID'
 import fs from 'fs'
 import { debugVars } from '../../../src/helpers/debugHelpers'
-import { Logger } from '@streamr/utils'
+//import { Logger } from '@streamr/utils'
 // import { ClientWebSocket } from '../../../src/connection/WebSocket/ClientWebSocket'
 //import { ConnectionEvents } from '../../../src/connection/IConnection'
 
 const numNodes = 100000
 
-const logger = new Logger(module)
+//const logger = new Logger(module)
 let nodes: DhtNode[]
 let simulator: Simulator
 //let clientWebSocket: ClientWebSocket
@@ -71,7 +71,7 @@ const measureJoiningTime = async () => {
 
     //const endMessage = { type: 'end', end: end }
     //const endMessageBuffer = new TextEncoder().encode(JSON.stringify(endMessage))
-    
+
     //clientWebSocket.send(endMessageBuffer)
 
     await waitNodesReadyForTesting([node])
@@ -84,22 +84,32 @@ const run = async () => {
     await prepareNetwork()
     const logFile = fs.openSync('JoiningTimeLayer0.log', 'w')
 
-    fs.writeSync(logFile, 'Network size' + '\t' + 'Joining time (ms)' + '\n')
+    fs.writeSync(logFile, 'Network size' + '\t' + 'Joining time (ms)' +
+        '\t' + 'nodesContacted' + '\t' + 'nodesContactedRandom' + '\t' + 'simulatorHeapSize' + '\t'
+        + 'heapUsed' + '\t' + 'operationCount' + '\t' + 'operationCountDelta' + '\n')
 
     let lastIntervalAt = performance.now()
     setInterval(() => {
         const cur = performance.now()
-        logger.info('A second in milliseconds: ' + (cur - lastIntervalAt))
+        console.info('A second in milliseconds: ' + (cur - lastIntervalAt))
         lastIntervalAt = cur
     }, 1000)
 
+    let oldOperationCounter = 0
     for (let i = 0; i < numNodes; i++) {
 
         const time = await measureJoiningTime()
+
+        const count = simulator.getOperationCounter()
+        console.log('Operationcounter: ' + count + ', delta: ' + (count - oldOperationCounter))
+
         const heapUsed = process.memoryUsage().heapUsed / 1024 / 1024
         console.log(`Joining time for ${i + 1} nodes network: ${time}ms`)
         fs.writeSync(logFile, `${i + 1}` + '\t' + `${Math.round(time)}` + '\t' + debugVars['nodesContacted'] +
-            '\t' + debugVars['nodesContactedRandom'] + '\t' + debugVars['simulatorHeapSize'] + '\t' + heapUsed + '\n')
+            '\t' + debugVars['nodesContactedRandom'] + '\t' + debugVars['simulatorHeapSize'] + '\t'
+            + heapUsed + '\t' + count + '\t' + (count - oldOperationCounter) + '\n')
+
+        oldOperationCounter = count
         //global.gc!()
     }
     fs.closeSync(logFile)
