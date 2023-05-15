@@ -150,19 +150,19 @@ const logger = new Logger(module)
 
 export class OrderedMsgChain extends MsgChainEmitter {
 
-    private readonly queue = new MsgChainQueue()
     private lastOrderedMsgRef: MessageRef | null = null
     private hasPendingGap = false
     private gapRequestCount = 0
     private maxGapRequests: number
+    private nextGaps: ReturnType<typeof setTimeout> | null = null
+    private readonly queue = new MsgChainQueue()
+    private readonly markedExplicitly = new StreamMessageSet()
     private readonly publisherId: EthereumAddress
     private readonly msgChainId: string
     private readonly inOrderHandler: MessageHandler
     private readonly gapHandler: GapHandler
     private readonly gapFillTimeout: number
     private readonly retryResendAfter: number
-    private nextGaps: ReturnType<typeof setTimeout> | null = null
-    private readonly markedExplicitly = new StreamMessageSet()
 
     constructor(
         publisherId: EthereumAddress,

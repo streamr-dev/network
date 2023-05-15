@@ -4,12 +4,12 @@ import { GapHandler, MessageHandler, MsgChainEmitter, OrderedMsgChain } from './
 
 export default class OrderingUtil extends MsgChainEmitter {
 
+    private maxGapRequests: number
+    private readonly orderedChains: Record<string, OrderedMsgChain>
     private readonly inOrderHandler: MessageHandler
     private readonly gapHandler: GapHandler
     private readonly gapFillTimeout: number
     private readonly retryResendAfter: number
-    private maxGapRequests: number
-    private readonly orderedChains: Record<string, OrderedMsgChain>
 
     constructor(
         inOrderHandler: MessageHandler,

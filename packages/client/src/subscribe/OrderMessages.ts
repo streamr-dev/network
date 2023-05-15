@@ -19,18 +19,18 @@ import { LoggerFactory } from '../utils/LoggerFactory'
  */
 export class OrderMessages {
 
+    private done = false
+    private inputClosed = false
+    private enabled = true
+    private readonly resendStreams = new Set<MessageStream>() // holds outstanding resends for cleanup
+    private readonly outBuffer = new PushBuffer<StreamMessage>()
+    private readonly orderingUtil: OrderingUtil
+    private readonly stopSignal = Signal.once()
     private readonly config: StrictStreamrClientConfig
     private readonly resends: Resends
     private readonly streamPartId: StreamPartID
     private readonly logger: Logger
-    private readonly stopSignal = Signal.once()
-    private done = false
-    private readonly resendStreams = new Set<MessageStream>() // holds outstanding resends for cleanup
-    private readonly outBuffer = new PushBuffer<StreamMessage>()
-    private inputClosed = false
     private readonly orderMessages: boolean
-    private enabled = true
-    private readonly orderingUtil: OrderingUtil
 
     constructor(
         config: StrictStreamrClientConfig,
