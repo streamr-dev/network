@@ -223,16 +223,6 @@ export class OrderedMsgChain extends MsgChainEmitter {
     }
 
     /**
-     * Mark a message to have it be treated as the next message & not trigger gap fill
-     */
-    markMessageExplicitly(streamMessage: StreamMessage): void {
-        // only add if not stale
-        if (this.markMessage(streamMessage)) {
-            this.add(streamMessage)
-        }
-    }
-
-    /**
      * Adds message to set of marked messages.
      * Does nothing and returns false if message is stale.
      */

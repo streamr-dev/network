@@ -48,11 +48,6 @@ export default class OrderingUtil extends MsgChainEmitter {
         return this.orderedChains[key]
     }
 
-    private markMessageExplicitly(streamMessage: StreamMessage): void {
-        const chain = this.getChain(streamMessage.getPublisherId(), streamMessage.getMsgChainId())
-        chain.markMessageExplicitly(streamMessage)
-    }
-
     isEmpty(): boolean {
         return Object.values(this.orderedChains).every((chain) => (
             chain.isEmpty()
