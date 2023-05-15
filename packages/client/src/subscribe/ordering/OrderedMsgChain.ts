@@ -129,11 +129,6 @@ export type GapHandler = (from: MessageRef, to: MessageRef, publisherId: Ethereu
  */
 interface Events {
     /**
-     * Message was marked and is being skipped.
-     * Does not fire if maxGapRequests = 0
-     */
-    skip: MessageHandler
-    /**
      * Queue was drained after something was in it.
      */
     drain: (numMessages: number) => void
@@ -330,7 +325,6 @@ export class OrderedMsgChain extends MsgChainEmitter {
 
                 if (this.isGapHandlingEnabled()) {
                     logger.trace('Skipped message', { msgRef: msg.getMessageRef() })
-                    this.emit('skip', msg)
                     return msg
                 }
             }

@@ -40,7 +40,6 @@ export default class OrderingUtil extends MsgChainEmitter {
                 this.gapFillTimeout, this.retryResendAfter, this.maxGapRequests
             )
             chain.on('error', (...args) => this.emit('error', ...args))
-            chain.on('skip', (...args) => this.emit('skip', ...args))
             chain.on('drain', (...args) => this.emit('drain', ...args))
             this.orderedChains[key] = chain
 
