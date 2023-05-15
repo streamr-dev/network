@@ -1,17 +1,14 @@
 /**
  * Makes OrderingUtil more compatible with use in pipeline.
  */
-import { StreamMessage, StreamPartID, MessageRef } from '@streamr/protocol'
-
-import { PushBuffer } from '../utils/PushBuffer'
-import { Signal } from '../utils/Signal'
-
-import { Resends } from './Resends'
-import { MessageStream } from './MessageStream'
-import { StrictStreamrClientConfig } from '../Config'
-import OrderingUtil from './ordering/OrderingUtil'
+import { MessageRef, StreamMessage, StreamPartID } from '@streamr/protocol'
 import { EthereumAddress, Logger } from '@streamr/utils'
+import { StrictStreamrClientConfig } from '../Config'
 import { LoggerFactory } from '../utils/LoggerFactory'
+import { PushBuffer } from '../utils/PushBuffer'
+import { MessageStream } from './MessageStream'
+import { Resends } from './Resends'
+import OrderingUtil from './ordering/OrderingUtil'
 
 /**
  * Wraps OrderingUtil into a PushBuffer.
@@ -25,7 +22,6 @@ export class OrderMessages {
     private readonly resendStreams = new Set<MessageStream>() // holds outstanding resends for cleanup
     private readonly outBuffer = new PushBuffer<StreamMessage>()
     private readonly orderingUtil: OrderingUtil
-    private readonly stopSignal = Signal.once()
     private readonly config: StrictStreamrClientConfig
     private readonly resends: Resends
     private readonly streamPartId: StreamPartID
@@ -42,9 +38,6 @@ export class OrderMessages {
         this.resends = resends
         this.streamPartId = streamPartId
         this.logger = loggerFactory.createLogger(module)
-        this.stopSignal.listen(() => {
-            this.done = true
-        })
         this.onOrdered = this.onOrdered.bind(this)
         this.onGap = this.onGap.bind(this)
         this.maybeClose = this.maybeClose.bind(this)
@@ -122,8 +115,8 @@ export class OrderMessages {
         this.outBuffer.push(orderedMessage)
     }
 
-    stop(): Promise<void> {
-        return this.stopSignal.trigger()
+    stop(): void {
+        this.done = true
     }
 
     private maybeClose(): void {
