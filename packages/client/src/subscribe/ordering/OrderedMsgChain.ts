@@ -421,7 +421,6 @@ export class OrderedMsgChain extends MsgChainEmitter {
                 from,
                 to
             })
-            this.debugStatus()
         }
 
         // skip gap, allow queue processing to continue
@@ -433,18 +432,5 @@ export class OrderedMsgChain extends MsgChainEmitter {
         this.clearGap()
         // keep processing
         this.checkQueue()
-
-    }
-
-    private debugStatus(): void {
-        logger.trace('Update debug status', {
-            lastMsgRef: this.lastOrderedMsgRef,
-            gapRequestCount: this.gapRequestCount,
-            maxGapRequests: this.maxGapRequests,
-            size: this.queue.size(),
-            isEmpty: this.isEmpty(),
-            hasPendingGap: this.hasPendingGap,
-            markedExplicitly: this.markedExplicitly.size()
-        })
     }
 }

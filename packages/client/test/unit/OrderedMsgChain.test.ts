@@ -454,7 +454,6 @@ describe('OrderedMsgChain', () => {
                     util.once('error', (err2: Error) => {
                         if (!(err2 instanceof GapFillFailedError)) { throw err2 }
                         setImmediate(() => {
-                            util.debugStatus()
                             assert.deepStrictEqual(received, [msg1, msg3, msg4, msg6])
                             // @ts-expect-error private method
                             expect(util.queue.size()).toEqual(0)
@@ -529,7 +528,6 @@ describe('OrderedMsgChain', () => {
         // get next chunk or verify we're done
         function next() {
             const result = nextChunk()
-            util.debugStatus()
             if (result) {
                 return
             }
@@ -574,10 +572,6 @@ describe('OrderedMsgChain', () => {
         util = new OrderedMsgChain(PUBLISHER_ID, 'msgChainId', (msg: StreamMessage) => {
             received.push(msg)
             clearTimeout(debugTimer)
-            // log current status if waiting
-            debugTimer = setTimeout(() => {
-                util.debugStatus()
-            }, 100)
         }, () => {
             next()
         }, 10, 10, NUM_CHUNKS * 2)
