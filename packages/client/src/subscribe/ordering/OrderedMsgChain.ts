@@ -18,7 +18,7 @@ type ChainedMessage = StreamMessage & { prevMsgRef: NonNullable<StreamMessage['p
  */
 class StreamMessageSet {
 
-    private msgMap = new Map<MsgRefId, StreamMessage>()
+    private readonly msgMap = new Map<MsgRefId, StreamMessage>()
 
     has(streamMessage: StreamMessage) {
         return this.msgMap.has(toMsgRefId(streamMessage))
@@ -150,19 +150,19 @@ const logger = new Logger(module)
 
 export class OrderedMsgChain extends MsgChainEmitter {
 
-    private queue = new MsgChainQueue()
+    private readonly queue = new MsgChainQueue()
     private lastOrderedMsgRef: MessageRef | null = null
     private hasPendingGap = false
     private gapRequestCount = 0
     private maxGapRequests: number
-    private publisherId: EthereumAddress
-    private msgChainId: string
-    private inOrderHandler: MessageHandler
-    private gapHandler: GapHandler
-    private gapFillTimeout: number
-    private retryResendAfter: number
+    private readonly publisherId: EthereumAddress
+    private readonly msgChainId: string
+    private readonly inOrderHandler: MessageHandler
+    private readonly gapHandler: GapHandler
+    private readonly gapFillTimeout: number
+    private readonly retryResendAfter: number
     private nextGaps: ReturnType<typeof setTimeout> | null = null
-    private markedExplicitly = new StreamMessageSet()
+    private readonly markedExplicitly = new StreamMessageSet()
 
     constructor(
         publisherId: EthereumAddress,
