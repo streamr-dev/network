@@ -90,7 +90,7 @@ describe('StreamrClient', () => {
 
             // Publish after subscribed
             await client.publish(streamDefinition, msg)
-            await sub.consume()
+            await collect(sub)
             await done
         })
 

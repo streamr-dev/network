@@ -79,12 +79,6 @@ export class PushBuffer<T> implements IPushBuffer<T> {
         return this.writeGate.check()
     }
 
-    map<NewOutType>(fn: G.GeneratorMap<T, NewOutType>): PushBuffer<NewOutType> {
-        const p = new PushBuffer<NewOutType>(this.bufferSize)
-        pull(G.map(this, fn), p)
-        return p
-    }
-
     forEach(fn: G.GeneratorForEach<T>): PushBuffer<unknown> {
         const p = new PushBuffer(this.bufferSize)
         pull(G.forEach(this, fn), p)
@@ -94,12 +88,6 @@ export class PushBuffer<T> implements IPushBuffer<T> {
     filter(fn: G.GeneratorFilter<T>): PushBuffer<unknown> {
         const p = new PushBuffer(this.bufferSize)
         pull(G.filter(this, fn), p)
-        return p
-    }
-
-    reduce<NewOutType>(fn: G.GeneratorReduce<T, NewOutType>, initialValue: NewOutType): PushBuffer<unknown> {
-        const p = new PushBuffer(this.bufferSize)
-        pull(G.reduce(this, fn, initialValue), p)
         return p
     }
 
