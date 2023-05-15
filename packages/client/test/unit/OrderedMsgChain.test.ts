@@ -424,6 +424,7 @@ describe('OrderedMsgChain', () => {
                     expect(err.to.serialize()).toEqual('[2,0]')
                     expect(err.publisherId).toBe(PUBLISHER_ID)
                     expect(err.msgChainId).toBe('msgChainId')
+                    // @ts-expect-error private method
                     expect(counter).toBe(util.maxGapRequests)
                 }
                 done()
@@ -455,8 +456,10 @@ describe('OrderedMsgChain', () => {
                         setImmediate(() => {
                             util.debugStatus()
                             assert.deepStrictEqual(received, [msg1, msg3, msg4, msg6])
-                            expect(util.size()).toEqual(0)
+                            // @ts-expect-error private method
+                            expect(util.queue.size()).toEqual(0)
                             expect(util.isEmpty()).toEqual(true)
+                            // @ts-expect-error private method
                             expect(util.hasPendingGap).toEqual(false)
                             expect(onGap).toHaveBeenCalledTimes(2)
                             done()
