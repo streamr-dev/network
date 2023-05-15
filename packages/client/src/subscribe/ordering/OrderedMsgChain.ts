@@ -280,13 +280,6 @@ export class OrderedMsgChain extends MsgChainEmitter {
     }
 
     /**
-     * Number of enqueued messages.
-     */
-    private size(): number {
-        return this.queue.size()
-    }
-
-    /**
      * True if the next queued message is the next message in the chain.
      * Always true for first message and unchained messages i.e. messages without a prevMsgRef.
      */
