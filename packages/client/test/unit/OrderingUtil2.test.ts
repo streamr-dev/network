@@ -136,8 +136,7 @@ describe.skip(OrderingUtil, () => {
         }
 
         const errorHandler = jest.fn()
-        const util = new OrderingUtil(inOrderHandler, gapHandler, PROPAGATION_TIMEOUT, RESEND_TIMEOUT, MAX_GAP_REQUESTS)
-        util.on('error', errorHandler)
+        const util = new OrderingUtil(inOrderHandler, gapHandler, () => {}, errorHandler, PROPAGATION_TIMEOUT, RESEND_TIMEOUT, MAX_GAP_REQUESTS)
 
         // supply 1st message of chain always to set gap detection to work from 1st message onwards
         for (const publisherId of PUBLISHER_IDS) {

@@ -1,26 +1,31 @@
 import { StreamMessage } from '@streamr/protocol'
 import { EthereumAddress } from '@streamr/utils'
-import { GapHandler, MessageHandler, MsgChainEmitter, OrderedMsgChain } from './OrderedMsgChain'
+import { GapHandler, MessageHandler, OnDrain, OnError, OrderedMsgChain } from './OrderedMsgChain'
 
-export default class OrderingUtil extends MsgChainEmitter {
+export default class OrderingUtil {
 
     private maxGapRequests: number
     private readonly orderedChains: Record<string, OrderedMsgChain>
     private readonly inOrderHandler: MessageHandler
     private readonly gapHandler: GapHandler
+    private readonly onDrain: OnDrain
+    private readonly onError: OnError
     private readonly gapFillTimeout: number
     private readonly retryResendAfter: number
 
     constructor(
         inOrderHandler: MessageHandler,
         gapHandler: GapHandler,
+        onDrain: OnDrain,
+        onError: OnError,
         gapFillTimeout: number,
         retryResendAfter: number,
         maxGapRequests: number
     ) {
-        super()
         this.inOrderHandler = inOrderHandler
         this.gapHandler = gapHandler
+        this.onDrain = onDrain
+        this.onError = onError
         this.gapFillTimeout = gapFillTimeout
         this.retryResendAfter = retryResendAfter
         this.maxGapRequests = maxGapRequests
@@ -36,11 +41,9 @@ export default class OrderingUtil extends MsgChainEmitter {
         const key = publisherId + msgChainId
         if (!this.orderedChains[key]) {
             const chain = new OrderedMsgChain(
-                publisherId, msgChainId, this.inOrderHandler, this.gapHandler,
+                publisherId, msgChainId, this.inOrderHandler, this.gapHandler, this.onDrain, this.onError,
                 this.gapFillTimeout, this.retryResendAfter, this.maxGapRequests
             )
-            chain.on('error', (...args) => this.emit('error', ...args))
-            chain.on('drain', (...args) => this.emit('drain', ...args))
             this.orderedChains[key] = chain
 
         }

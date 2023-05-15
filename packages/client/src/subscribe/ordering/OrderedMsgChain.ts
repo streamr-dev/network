@@ -1,8 +1,6 @@
 import { MessageRef, StreamMessage } from '@streamr/protocol'
 import { EthereumAddress, Logger } from '@streamr/utils'
-import { EventEmitter } from 'events'
 import Heap from 'heap'
-import StrictEventEmitter from 'strict-event-emitter-types'
 import GapFillFailedError from './GapFillFailedError'
 
 function toMsgRefId(streamMessage: StreamMessage): MsgRefId {
@@ -123,27 +121,12 @@ class MsgChainQueue {
 
 export type MessageHandler = (msg: StreamMessage) => void
 export type GapHandler = (from: MessageRef, to: MessageRef, publisherId: EthereumAddress, msgChainId: string) => void | Promise<void>
-
-/**
- * Strict types for EventEmitter interface.
- */
-interface Events {
-    /**
-     * Queue was drained after something was in it.
-     */
-    drain: (numMessages: number) => void
-    /**
-     * Probably a GapFillFailedError.
-     */
-    error: (error: Error) => void
-}
-
-// eslint-disable-next-line @typescript-eslint/prefer-function-type
-export const MsgChainEmitter = EventEmitter as { new(): StrictEventEmitter<EventEmitter, Events> }
+export type OnDrain = (numMessages: number) => void
+export type OnError = (error: Error) => void
 
 const logger = new Logger(module)
 
-export class OrderedMsgChain extends MsgChainEmitter {
+export class OrderedMsgChain {
 
     private lastOrderedMsgRef: MessageRef | null = null
     private hasPendingGap = false
@@ -156,6 +139,8 @@ export class OrderedMsgChain extends MsgChainEmitter {
     private readonly msgChainId: string
     private readonly inOrderHandler: MessageHandler
     private readonly gapHandler: GapHandler
+    private readonly onDrain: OnDrain
+    private readonly onError: OnError
     private readonly gapFillTimeout: number
     private readonly retryResendAfter: number
 
@@ -164,15 +149,18 @@ export class OrderedMsgChain extends MsgChainEmitter {
         msgChainId: string,
         inOrderHandler: MessageHandler,
         gapHandler: GapHandler,
+        onDrain: OnDrain,
+        onError: OnError,
         gapFillTimeout: number,
         retryResendAfter: number,
         maxGapRequests: number
     ) {
-        super()
         this.publisherId = publisherId
         this.msgChainId = msgChainId
         this.inOrderHandler = inOrderHandler
         this.gapHandler = gapHandler
+        this.onDrain = onDrain
+        this.onError = onError
         this.lastOrderedMsgRef = null
         this.gapFillTimeout = gapFillTimeout
         this.retryResendAfter = retryResendAfter
@@ -308,7 +296,7 @@ export class OrderedMsgChain extends MsgChainEmitter {
         if (processedMessages > 1) {
             logger.trace('Drained queue', { processedMessages, lastMsgRef: this.lastOrderedMsgRef })
             this.clearGap()
-            this.emit('drain', processedMessages)
+            this.onDrain(processedMessages)
         }
     }
 
@@ -331,7 +319,7 @@ export class OrderedMsgChain extends MsgChainEmitter {
 
             this.inOrderHandler(msg)
         } catch (err: any) {
-            this.emit('error', err)
+            this.onError(err)
         }
         return msg
     }
@@ -393,7 +381,7 @@ export class OrderedMsgChain extends MsgChainEmitter {
             try {
                 await this.gapHandler(from, to, this.publisherId, this.msgChainId)
             } catch (err: any) {
-                this.emit('error', err)
+                this.onError(err)
             }
         } else {
             this.onGapFillsExhausted()
@@ -420,7 +408,7 @@ export class OrderedMsgChain extends MsgChainEmitter {
         // skip gap, allow queue processing to continue
         this.lastOrderedMsgRef = msg.getPreviousMessageRef()
         if (this.isGapHandlingEnabled()) {
-            this.emit('error', new GapFillFailedError(from, to, this.publisherId, this.msgChainId, maxGapRequests))
+            this.onError(new GapFillFailedError(from, to, this.publisherId, this.msgChainId, maxGapRequests))
         }
 
         this.clearGap()

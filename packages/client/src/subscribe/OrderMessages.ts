@@ -47,15 +47,12 @@ export class OrderMessages {
         this.orderingUtil = new OrderingUtil(
             this.onOrdered,
             this.onGap,
+            () => this.maybeClose(),
+            () => this.maybeClose(), // probably noop, TODO: handle gapfill errors without closing stream or logging
             gapFillTimeout,
             retryResendAfter,
             this.enabled ? maxGapRequests : 0
         )
-
-        this.orderingUtil.on('drain', this.maybeClose)
-
-        // TODO: handle gapfill errors without closing stream or logging
-        this.orderingUtil.on('error', this.maybeClose) // probably noop
     }
 
     async onGap(from: MessageRef, to: MessageRef, publisherId: EthereumAddress, msgChainId: string): Promise<void> {
