@@ -1,14 +1,15 @@
 import { StreamMessage } from '@streamr/protocol'
-import OrderedMsgChain, { GapHandler, MessageHandler, MsgChainEmitter } from './OrderedMsgChain'
 import { EthereumAddress } from '@streamr/utils'
+import { GapHandler, MessageHandler, MsgChainEmitter, OrderedMsgChain } from './OrderedMsgChain'
 
 export default class OrderingUtil extends MsgChainEmitter {
-    inOrderHandler: MessageHandler
-    gapHandler: GapHandler
-    gapFillTimeout: number
-    retryResendAfter: number
-    maxGapRequests: number
-    orderedChains: Record<string, OrderedMsgChain>
+
+    private inOrderHandler: MessageHandler
+    private gapHandler: GapHandler
+    private gapFillTimeout: number
+    private retryResendAfter: number
+    private maxGapRequests: number
+    private orderedChains: Record<string, OrderedMsgChain>
 
     constructor(
         inOrderHandler: MessageHandler,

@@ -2,7 +2,7 @@ import assert from 'assert'
 
 import { shuffle } from 'lodash'
 import { MessageID, MessageRef, StreamMessage, toStreamID } from '@streamr/protocol'
-import OrderedMsgChain from '../../src/subscribe/ordering/OrderedMsgChain'
+import { OrderedMsgChain } from '../../src/subscribe/ordering/OrderedMsgChain'
 import GapFillFailedError from '../../src/subscribe/ordering/GapFillFailedError'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { createRandomAuthentication } from '../test-utils/utils'

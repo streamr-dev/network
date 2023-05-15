@@ -1,11 +1,9 @@
+import { MessageRef, StreamMessage } from '@streamr/protocol'
+import { EthereumAddress, Logger } from '@streamr/utils'
 import { EventEmitter } from 'events'
-
 import Heap from 'heap'
 import StrictEventEmitter from 'strict-event-emitter-types'
-
-import { StreamMessage, MessageRef } from '@streamr/protocol'
 import GapFillFailedError from './GapFillFailedError'
-import { EthereumAddress, Logger } from '@streamr/utils'
 
 function toMsgRefId(streamMessage: StreamMessage): MsgRefId {
     return streamMessage.getMessageRef().serialize()
@@ -19,7 +17,8 @@ type ChainedMessage = StreamMessage & { prevMsgRef: NonNullable<StreamMessage['p
  * Set of StreamMessages, unique by serialized msgRef i.e. timestamp + sequence number.
  */
 class StreamMessageSet {
-    msgMap = new Map<MsgRefId, StreamMessage>()
+
+    private msgMap = new Map<MsgRefId, StreamMessage>()
 
     has(streamMessage: StreamMessage) {
         return this.msgMap.has(toMsgRefId(streamMessage))
@@ -151,21 +150,22 @@ let ID = 0
 
 const logger = new Logger(module)
 
-class OrderedMsgChain extends MsgChainEmitter {
-    id: number
-    queue = new MsgChainQueue()
-    lastOrderedMsgRef: MessageRef | null = null
-    hasPendingGap = false
-    gapRequestCount = 0
-    maxGapRequests: number
-    publisherId: EthereumAddress
-    msgChainId: string
-    inOrderHandler: MessageHandler
-    gapHandler: GapHandler
-    gapFillTimeout: number
-    retryResendAfter: number
-    nextGaps: ReturnType<typeof setTimeout> | null = null
-    markedExplicitly = new StreamMessageSet()
+export class OrderedMsgChain extends MsgChainEmitter {
+
+    private id: number
+    private queue = new MsgChainQueue()
+    private lastOrderedMsgRef: MessageRef | null = null
+    private hasPendingGap = false
+    private gapRequestCount = 0
+    private maxGapRequests: number
+    private publisherId: EthereumAddress
+    private msgChainId: string
+    private inOrderHandler: MessageHandler
+    private gapHandler: GapHandler
+    private gapFillTimeout: number
+    private retryResendAfter: number
+    private nextGaps: ReturnType<typeof setTimeout> | null = null
+    private markedExplicitly = new StreamMessageSet()
 
     constructor(
         publisherId: EthereumAddress,
@@ -470,5 +470,3 @@ class OrderedMsgChain extends MsgChainEmitter {
         })
     }
 }
-
-export default OrderedMsgChain
