@@ -11,6 +11,7 @@ import { getRegionDelayMatrix } from "./pings"
 import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import Heap from 'heap'
 import { debugVars } from "../../helpers/debugHelpers"
+import * as sinon from 'sinon'
 
 const logger = new Logger(module)
 
@@ -112,9 +113,12 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     })
 
     private simulatorTimeout?: NodeJS.Timeout
-
+    private clock: sinon.SinonFakeTimers
+    
     constructor(latencyType: LatencyType = LatencyType.NONE, fixedLatency?: number) {
         super()
+
+        this.clock = sinon.useFakeTimers()
         this.latencyType = latencyType
         this.fixedLatency = fixedLatency
 
@@ -295,6 +299,7 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
         } else {
             setImmediate(() => this.executeQueuedOperations())
         }
+        this.clock.runAllAsync()
     }
 
     private scheduleOperation(operation: SimulatorOperation) {

@@ -1,13 +1,10 @@
-/* eslint-disable */
-
-//import pino from 'pino'
-//import path from 'path'
-//import without from 'lodash/without'
-//import padEnd from 'lodash/padEnd'
+import pino from 'pino'
+import path from 'path'
+import without from 'lodash/without'
+import padEnd from 'lodash/padEnd'
 
 export type LogLevel = 'silent' | 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace'
 
-/*
 const parseBoolean = (value: string | undefined) => {
     switch (value) {
         case 'true':
@@ -108,34 +105,4 @@ export class Logger {
     trace(msg: string, ...args: any[]): void {
         this.logger.trace(msg, ...args)
     }
-} */
-
-export class Logger {
-   
-    constructor(
-        module: NodeJS.Module,
-        context?: string,
-        defaultLogLevel: LogLevel = 'info'
-    ) {
-       
 }
-
-    fatal(msg: string, ...args: any[]): void {
-    }
-
-    error(msg: string, ...args: any[]): void {
-    }
-
-    warn(msg: string, ...args: any[]): void {
-    }
-
-    info(msg: string, ...args: any[]): void {
-    }
-
-    debug(msg: string, ...args: any[]): void {
-    }
-
-    trace(msg: string, ...args: any[]): void {
-    }
-}
-
