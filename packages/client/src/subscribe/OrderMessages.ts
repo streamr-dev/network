@@ -126,7 +126,7 @@ export class OrderMessages {
         return this.stopSignal.trigger()
     }
 
-    maybeClose(): void {
+    private maybeClose(): void {
         // we can close when:
         // input has closed (i.e. all messages sent)
         // AND
@@ -139,7 +139,7 @@ export class OrderMessages {
         }
     }
 
-    async addToOrderingUtil(src: AsyncGenerator<StreamMessage>): Promise<void> {
+    private async addToOrderingUtil(src: AsyncGenerator<StreamMessage>): Promise<void> {
         try {
             for await (const msg of src) {
                 this.orderingUtil.add(msg)

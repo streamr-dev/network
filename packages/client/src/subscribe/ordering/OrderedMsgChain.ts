@@ -187,7 +187,7 @@ export class OrderedMsgChain extends MsgChainEmitter {
     /**
      * Messages are stale if they are already enqueued or last ordered message is newer.
      */
-    isStaleMessage(streamMessage: StreamMessage): boolean {
+    private isStaleMessage(streamMessage: StreamMessage): boolean {
         const msgRef = streamMessage.getMessageRef()
         return !!(
             // already enqueued
@@ -268,7 +268,7 @@ export class OrderedMsgChain extends MsgChainEmitter {
         this.checkQueue()
     }
 
-    isGapHandlingEnabled(): boolean {
+    private isGapHandlingEnabled(): boolean {
         return this.maxGapRequests > 0
     }
 
@@ -282,7 +282,7 @@ export class OrderedMsgChain extends MsgChainEmitter {
     /**
      * Number of enqueued messages.
      */
-    size(): number {
+    private size(): number {
         return this.queue.size()
     }
 
@@ -453,7 +453,7 @@ export class OrderedMsgChain extends MsgChainEmitter {
 
     }
 
-    debugStatus(): void {
+    private debugStatus(): void {
         logger.trace('Update debug status', {
             lastMsgRef: this.lastOrderedMsgRef,
             gapRequestCount: this.gapRequestCount,

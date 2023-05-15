@@ -48,7 +48,7 @@ export default class OrderingUtil extends MsgChainEmitter {
         return this.orderedChains[key]
     }
 
-    markMessageExplicitly(streamMessage: StreamMessage): void {
+    private markMessageExplicitly(streamMessage: StreamMessage): void {
         const chain = this.getChain(streamMessage.getPublisherId(), streamMessage.getMsgChainId())
         chain.markMessageExplicitly(streamMessage)
     }
