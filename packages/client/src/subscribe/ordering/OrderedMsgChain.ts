@@ -146,13 +146,10 @@ interface Events {
 // eslint-disable-next-line @typescript-eslint/prefer-function-type
 export const MsgChainEmitter = EventEmitter as { new(): StrictEventEmitter<EventEmitter, Events> }
 
-let ID = 0
-
 const logger = new Logger(module)
 
 export class OrderedMsgChain extends MsgChainEmitter {
 
-    private id: number
     private queue = new MsgChainQueue()
     private lastOrderedMsgRef: MessageRef | null = null
     private hasPendingGap = false
@@ -177,8 +174,6 @@ export class OrderedMsgChain extends MsgChainEmitter {
         maxGapRequests: number
     ) {
         super()
-        ID += 1
-        this.id = ID
         this.publisherId = publisherId
         this.msgChainId = msgChainId
         this.inOrderHandler = inOrderHandler
