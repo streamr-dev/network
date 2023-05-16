@@ -24,4 +24,3 @@ export function getAddressFromIceCandidate(candidate: string): string | undefine
     const fields = candidate.split(' ').filter((field) => field.length > 0)
     return fields.length >= 5 && ipaddr.isValid(fields[4]) ? fields[4] : undefined
 }
-

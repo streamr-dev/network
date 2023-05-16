@@ -21,7 +21,7 @@ import {
 import * as Err from '../helpers/errors'
 import { DisconnectionType, ITransport, TransportEvents } from '../transport/ITransport'
 import { ConnectionManager, ConnectionManagerConfig } from '../connection/ConnectionManager'
-import { DhtRpcServiceClient } from '../proto/packages/dht/protos/DhtRpc.client'
+import { DhtRpcServiceClient, ExternalApiServiceClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import {
     Logger,
     MetricsContext
@@ -31,7 +31,7 @@ import { RandomContactList } from './contact/RandomContactList'
 import { Empty } from '../proto/google/protobuf/empty'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { Any } from '../proto/google/protobuf/any'
-import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
+import { isSamePeerDescriptor, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 import { Router } from './routing/Router'
 import { RecursiveFinder, RecursiveFindResult } from './find/RecursiveFinder'
 import { DataStore } from './store/DataStore'
@@ -39,6 +39,7 @@ import { PeerDiscovery } from './discovery/PeerDiscovery'
 import { LocalDataStore } from './store/LocalDataStore'
 import { IceServer } from '../connection/WebRTC/WebRtcConnector'
 import { ExternalApi } from './ExternalApi'
+import { RemoteExternalApi } from './RemoteExternalApi'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -163,6 +164,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     public connectionManager?: ConnectionManager
     private started = false
     private stopped = false
+    private entryPointDisconnectTimeout?: NodeJS.Timeout
 
     public contactAddCounter = 0
     public contactOnAddedCounter = 0
@@ -285,6 +287,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             }
         })
         this.externalApi = new ExternalApi(this)
+        if (this.connectionManager! && this.config.entryPoints && this.config.entryPoints.length > 0 
+            && !isSamePeerDescriptor(this.config.entryPoints[0], this.ownPeerDescriptor!)) {
+            this.connectToEntryPoint(this.config.entryPoints[0])
+        }
     }
 
     private initKBuckets = (selfId: PeerID) => {
@@ -579,6 +585,20 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
     }
 
+    private async connectToEntryPoint(entryPoint: PeerDescriptor): Promise<void> {
+        this.connectionManager!.lockConnection(entryPoint, 'temporary-layer0-connection')
+        const target = new DhtPeer(
+            this.ownPeerDescriptor!,
+            entryPoint,
+            toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
+            this.config.serviceId
+        )
+        await target.getClosestPeers(this.ownPeerId!.value)
+        this.entryPointDisconnectTimeout = setTimeout(() => {
+            this.connectionManager!.unlockConnection(entryPoint, 'temporary-layer0-connection')
+        }, 10 * 1000)
+    }
+
     public removeContact(contact: PeerDescriptor, removeFromOpenInternetPeers = false): void {
         if (!this.started || this.stopped) {
             return
@@ -608,8 +628,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         await this.peerDiscovery!.joinDht(entryPointDescriptor, doRandomJoin)
     }
 
-    public async startRecursiveFind(idToFind: Uint8Array, findMode?: FindMode): Promise<RecursiveFindResult> {
-        return this.recursiveFinder!.startRecursiveFind(idToFind, findMode)
+    public async startRecursiveFind(idToFind: Uint8Array, findMode?: FindMode, excludedPeer?: PeerDescriptor): Promise<RecursiveFindResult> {
+        return this.recursiveFinder!.startRecursiveFind(idToFind, findMode, excludedPeer)
     }
 
     public async storeDataToDht(key: Uint8Array, data: Any): Promise<PeerDescriptor[]> {
@@ -621,10 +641,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public async findDataViaPeer(idToFind: Uint8Array, peer: PeerDescriptor): Promise<DataEntry[]> {
-        const target = new DhtPeer(
+        const target = new RemoteExternalApi(
             this.ownPeerDescriptor!,
             peer,
-            toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
+            toProtoRpcClient(new ExternalApiServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
             this.config.serviceId
         )
         return await target.findData(idToFind)
@@ -682,6 +702,14 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
     }
 
+    public isJoinOngoing(): boolean {
+        return this.peerDiscovery!.isJoinOngoing()
+    }
+
+    public getKnownEntryPoints(): PeerDescriptor[] {
+        return this.config.entryPoints || []
+    }
+
     public async stop(): Promise<void> {
         if (this.stopped) {
             return
@@ -692,6 +720,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
         this.stopped = true
 
+        if (this.entryPointDisconnectTimeout) {
+            clearTimeout(this.entryPointDisconnectTimeout)
+        }
         this.bucket!.toArray().map((dhtPeer: DhtPeer) => this.bucket!.remove(dhtPeer.id))
         this.bucket!.removeAllListeners()
         this.localDataStore.clear()

@@ -37,6 +37,7 @@ export class PeerDiscovery {
     private ongoingDiscoverySessions: Map<string, DiscoverySession> = new Map()
     private stopped = false
     private rejoinOngoing = false
+    private joinCalled = false
 
     private rejoinTimeoutRef?: NodeJS.Timeout
     private readonly abortController: AbortController
@@ -50,6 +51,7 @@ export class PeerDiscovery {
         if (this.stopped) {
             return
         }
+        this.joinCalled = true
         logger.info(
             `Joining ${this.config.serviceId === 'layer0' ? 'The Streamr Network' : `Control Layer for ${this.config.serviceId}`}`
             + ` via entrypoint ${keyFromPeerDescriptor(entryPointDescriptor)}`
@@ -139,7 +141,7 @@ export class PeerDiscovery {
     }
 
     public isJoinOngoing(): boolean {
-        return this.ongoingDiscoverySessions.size > 0
+        return !this.joinCalled ? true : this.ongoingDiscoverySessions.size > 0
     }
 
     public stop(): void {

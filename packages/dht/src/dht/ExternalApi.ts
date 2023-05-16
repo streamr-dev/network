@@ -15,7 +15,7 @@ export class ExternalApi {
 
     // IDHTRpcService method for external findRecursive calls
     async findData(findDataRequest: FindDataRequest, _context: ServerCallContext): Promise<FindDataResponse> {
-        const result = await this.dhtNode.startRecursiveFind(findDataRequest.kademliaId, FindMode.DATA)
+        const result = await this.dhtNode.startRecursiveFind(findDataRequest.kademliaId, FindMode.DATA, findDataRequest.requestor)
         if (result.dataEntries) {
             return FindDataResponse.create({ dataEntries: result.dataEntries })
         } else {

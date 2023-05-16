@@ -39,6 +39,7 @@
     "k-bucket": "^5.1.0",
     "lodash": "^4.17.21",
     "node-datachannel": "^0.4.2",
+    "sinon": "^15.0.4",
     "uuid": "^9.0.0",
     "websocket": "^1.0.34"
   },
@@ -49,6 +50,7 @@
     "@types/heap": "^0.2.28",
     "@types/k-bucket": "^5.0.1",
     "@types/lodash": "^4.14.175",
+    "@types/sinon": "^10.0.15",
     "@types/uuid": "^9.0.1",
     "@types/websocket": "^1.0.3",
     "express": "^4.17.1",

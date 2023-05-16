@@ -1,9 +1,9 @@
-import { DhtNode, PeerDescriptor, NodeType, ConnectionManager, PeerID, peerIdFromPeerDescriptor } from '@streamr/dht'
-import { StreamrNode } from '../../src/logic/StreamrNode'
+import { PeerDescriptor, NodeType, PeerID, peerIdFromPeerDescriptor, keyFromPeerDescriptor } from '@streamr/dht'
 import { range } from 'lodash'
 import { waitForCondition } from '@streamr/utils'
 import { ContentMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createStreamMessage } from '../utils/utils'
+import { NetworkStack } from '../../src/NetworkStack'
 
 describe('Full node network with WebSocket connections only', () => {
 
@@ -15,73 +15,61 @@ describe('Full node network with WebSocket connections only', () => {
         websocket: { ip: 'localhost', port: 15555 }
     }
     const randomGraphId = 'websocket-network'
-    let epConnectionManager: ConnectionManager
-    let epStreamrNode: StreamrNode
-    let connectionManagers: ConnectionManager[]
-    let streamrNodes: StreamrNode[]
-    let layer0Ep: DhtNode
-    let layer0DhtNodes: DhtNode[]
+
+    let entryPoint: NetworkStack
+
+    let nodes: NetworkStack[]
 
     beforeEach(async () => {
 
-        streamrNodes = []
-        connectionManagers = []
-        layer0DhtNodes = []
-        layer0Ep = new DhtNode({ peerDescriptor: epPeerDescriptor, nodeName: 'entrypoint', numberOfNodesPerKBucket: 4, routeMessageTimeout: 10000 })
-        await layer0Ep.start()
-        await layer0Ep.joinDht(epPeerDescriptor)
-        epConnectionManager = layer0Ep.getTransport() as ConnectionManager
-        epStreamrNode = new StreamrNode({})
-        await epStreamrNode.start(layer0Ep, epConnectionManager, epConnectionManager)
-        await epStreamrNode.joinStream(randomGraphId, [epPeerDescriptor])
-        await Promise.all(range(NUM_OF_NODES).map(async (i) => {
-            const layer0 = new DhtNode({
-                routeMessageTimeout: 10000,
+        nodes = []
+
+        entryPoint = new NetworkStack({
+            layer0: {
                 entryPoints: [epPeerDescriptor],
-                webSocketPort: 15556 + i,
-                webSocketHost: 'localhost',
-                peerIdString: `${i}`,
-                nodeName: `${i}`,
-                numberOfNodesPerKBucket: 4
+                peerDescriptor: epPeerDescriptor,
+            },
+            networkNode: {}
+        })
+        await entryPoint.start()
+        await entryPoint.getStreamrNode()!.joinStream(randomGraphId, [epPeerDescriptor])
+
+        await Promise.all(range(NUM_OF_NODES).map(async (i) => {
+            const node = new NetworkStack({
+                layer0: {
+                    entryPoints: [epPeerDescriptor],
+                    webSocketPort: 15556 + i,
+                    webSocketHost: 'localhost',
+                    peerIdString: `${i}`,
+                    nodeName: `${i}`,
+                    numberOfNodesPerKBucket: 4
+                }, 
+                networkNode: {}
             })
-            layer0DhtNodes.push(layer0)
-            await layer0.start()
-            await layer0.joinDht(epPeerDescriptor)
-            const connectionManager = layer0.getTransport() as ConnectionManager
-            const streamrNode = new StreamrNode({ nodeName: `${i}` })
-            await streamrNode.start(layer0, connectionManager, connectionManager)
-            return await streamrNode.joinStream(randomGraphId, [epPeerDescriptor]).then(() => {
-                streamrNode.subscribeToStream(randomGraphId, [epPeerDescriptor])
-                connectionManagers.push(connectionManager)
-                streamrNodes.push(streamrNode)
-                return
-            })
+            nodes.push(node)
+            await node.start()
+            await node.getStreamrNode().joinStream(randomGraphId, [epPeerDescriptor])
+            node.getStreamrNode!().subscribeToStream(randomGraphId, [epPeerDescriptor])
         }))
 
     }, 120000)
 
     afterEach(async () => {
         await Promise.all([
-            epStreamrNode.destroy(),
-            ...streamrNodes.map((streamrNode) => streamrNode.destroy()),
-            epConnectionManager.stop(),
-            ...connectionManagers.map((cm) => cm.stop()),
-            layer0Ep.stop(),
-            ...layer0DhtNodes.map((dhtNode) => dhtNode.stop())
+            entryPoint.stop(),
+            ...nodes.map((node) => node.stop())
         ])
     })
 
     it('happy path', async () => {
 
-        await Promise.all([...streamrNodes.map((streamrNode) =>
-            waitForCondition(() =>
-                streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length >= 3
-            , 160000)
-        )])
-
         let numOfMessagesReceived = 0
-        streamrNodes.map((streamrNode) => {
-            streamrNode.on('newMessage', () => numOfMessagesReceived += 1)
+        const successIds: string[] = []
+        nodes.map((node) => {
+            node.getStreamrNode()!.on('newMessage', () => {
+                successIds.push(keyFromPeerDescriptor(node.getStreamrNode()!.getPeerDescriptor()))
+                numOfMessagesReceived += 1
+            })
         })
         const content: ContentMessage = {
             body: JSON.stringify({ hello: "WORLD" })
@@ -91,7 +79,7 @@ describe('Full node network with WebSocket connections only', () => {
             randomGraphId,
             peerIdFromPeerDescriptor(epPeerDescriptor).toString()
         )
-        epStreamrNode.publishToStream(randomGraphId, [epPeerDescriptor], msg)
+        entryPoint.getStreamrNode()!.publishToStream(randomGraphId, [epPeerDescriptor], msg)
         await waitForCondition(() => numOfMessagesReceived === NUM_OF_NODES)
     }, 220000)
 

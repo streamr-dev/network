@@ -1,8 +1,6 @@
 import { IDhtRpcServiceClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import {
     ClosestPeersRequest,
-    DataEntry,
-    FindDataRequest,
     LeaveNotice,
     PeerDescriptor,
     PingRequest
@@ -50,7 +48,7 @@ export class DhtPeer extends Remote<IDhtRpcServiceClient> implements KBucketCont
             const peers = await this.client.getClosestPeers(request, options)
             return peers.peers
         } catch (err) {
-            logger.debug('error', { err })
+            logger.trace(`getClosestPeers error ${this.serviceId}`, { err })
             throw err
         }
     }
@@ -89,19 +87,6 @@ export class DhtPeer extends Remote<IDhtRpcServiceClient> implements KBucketCont
         this.client.leaveNotice(request, options).catch((e) => {
             logger.trace('Failed to send leaveNotice' + e)
         })
-    }
-
-    async findData(idToFind: Uint8Array): Promise<DataEntry[]> {
-        const request: FindDataRequest = {
-            kademliaId: idToFind
-        }
-        const options: DhtRpcOptions = {
-            sourceDescriptor: this.ownPeerDescriptor,
-            targetDescriptor: this.peerDescriptor,
-            timeout: 10000
-        }
-        const data = await this.client.findData(request, options)
-        return data.dataEntries
     }
 
     getPeerDescriptor(): PeerDescriptor {
