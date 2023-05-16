@@ -229,6 +229,13 @@ This way you can publish and subscribe to a stream by using only the path part o
 await client.publish('path-part', ...)  // publishes to a stream "0x1234567890123456789012345678901234567890/path-part"
 ```
 
+#### Partition
+
+By default the plugin publishes and subscribes to partition `0`. If you want to specify other partition, you can encode the information into the topic string, e.g.:
+```
+await client.publish('/foobar?partition=5', ...)
+```
+
 ## HTTP
 
 At the moment, only publishing is supported over HTTP. To subscribe, use one of the other protocol plugins as they allow a continuous streaming connection.
