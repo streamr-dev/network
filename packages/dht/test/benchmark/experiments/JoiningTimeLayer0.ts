@@ -56,7 +56,7 @@ const measureJoiningTime = async () => {
     // get random node from network to use as entrypoint
     const randomNode = nodes[Math.floor(Math.random() * nodes.length)]
 
-    const start = performance.now()
+    const start = Date.now()
 
     //const startMessage = { type: 'start', start: start }
 
@@ -67,7 +67,7 @@ const measureJoiningTime = async () => {
 
     await node.joinDht(randomNode.getPeerDescriptor())
 
-    const end = performance.now()
+    const end = Date.now()
 
     //const endMessage = { type: 'end', end: end }
     //const endMessageBuffer = new TextEncoder().encode(JSON.stringify(endMessage))
