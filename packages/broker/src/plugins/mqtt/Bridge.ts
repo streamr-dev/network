@@ -60,10 +60,10 @@ export class Bridge implements MqttServerListener {
 
     async onSubscribed(topic: string, clientId: string): Promise<void> {
         logger.info('Handle client subscribe', { clientId, topic })
-        const streamId = this.getStreamPartition(topic)
-        const existingSubscription = this.getSubscription(streamId)
+        const streamPart = this.getStreamPartition(topic)
+        const existingSubscription = this.getSubscription(streamPart)
         if (existingSubscription === undefined) {
-            const streamrClientSubscription = await this.streamrClient.subscribe(streamId, (content: any, metadata: MessageMetadata) => {
+            const streamrClientSubscription = await this.streamrClient.subscribe(streamPart, (content: any, metadata: MessageMetadata) => {
                 if (!this.isSelfPublishedMessage(metadata)) {
                     const payload = this.payloadFormat.createPayload(content, metadata)
                     this.mqttServer.publish(topic, payload)
