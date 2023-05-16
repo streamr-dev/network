@@ -31,5 +31,10 @@ describe('parse', () => {
             expect(base).toBe('foobar')
             expect(query).toEqual({})
         })
+        it('empty query', () => {
+            const { base, query } = parseQueryAndBase('foobar?')
+            expect(base).toBe('foobar')
+            expect(query).toEqual({})
+        })
     })
 })
