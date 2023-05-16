@@ -17,13 +17,9 @@ export class RemoteRandomGraphNode extends Remote<INetworkRpcClient> {
             targetDescriptor: this.remotePeerDescriptor as PeerDescriptor,
             notification: true
         }
-        try {
-            this.client.sendData(msg, options).catch(() => {
-                logger.trace('Failed to sendData')
-            })
-        } catch (err: any) {
-            logger.warn(err)
-        }
+        this.client.sendData(msg, options).catch(() => {
+            logger.trace('Failed to sendData')
+        })
     }
 
     leaveStreamNotice(ownPeerDescriptor: PeerDescriptor): void {

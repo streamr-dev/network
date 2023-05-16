@@ -34,6 +34,10 @@ describe('StreamEntryPointDiscovery', () => {
         }
     }
 
+    const mockGetEntryPointDataViaPeer = async (_key: Uint8Array, _peer: PeerDescriptor): Promise<DataEntry[]> => {
+        return [mockData]
+    }
+
     const mockStoreEntryPointData = async (_key: Uint8Array, _data: Any): Promise<PeerDescriptor[]> => {
         storeCalled++
         return [peerDescriptor]
@@ -54,6 +58,7 @@ describe('StreamEntryPointDiscovery', () => {
             ownPeerDescriptor: peerDescriptor,
             streams,
             getEntryPointData: mockGetEntryPointData,
+            getEntryPointDataViaPeer: mockGetEntryPointDataViaPeer,
             storeEntryPointData: mockStoreEntryPointData,
             cacheInterval: 2000
         })
@@ -61,6 +66,7 @@ describe('StreamEntryPointDiscovery', () => {
             ownPeerDescriptor: peerDescriptor,
             streams: new Map<string, StreamObject>(),
             getEntryPointData: emptyGetEntryPointData,
+            getEntryPointDataViaPeer: mockGetEntryPointDataViaPeer,
             storeEntryPointData: mockStoreEntryPointData,
             cacheInterval: 2000
         })

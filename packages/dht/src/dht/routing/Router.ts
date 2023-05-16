@@ -43,7 +43,7 @@ interface ForwardingTableEntry {
 }
 
 interface IRouterFunc {
-    doRouteMessage(routedMessage: RouteMessageWrapper, mode: RoutingMode): RouteMessageAck
+    doRouteMessage(routedMessage: RouteMessageWrapper, mode: RoutingMode, excludedPeer?: PeerDescriptor): RouteMessageAck
     send(msg: Message, reachableThrough: PeerDescriptor[]): Promise<void>
     checkDuplicate(messageId: string): boolean
     addToDuplicateDetector(messageId: string, senderId: string, message?: Message): void
@@ -113,14 +113,14 @@ export class Router implements IRouter {
         }
     }
 
-    public doRouteMessage(routedMessage: RouteMessageWrapper, mode = RoutingMode.ROUTE): RouteMessageAck {
+    public doRouteMessage(routedMessage: RouteMessageWrapper, mode = RoutingMode.ROUTE, excludedPeer?: PeerDescriptor): RouteMessageAck {
         if (this.stopped) {
             return createRouteMessageAck(routedMessage, RoutingErrors.STOPPED)
         }
         logger.trace(`Peer ${this.ownPeerId.value} routing message ${routedMessage.requestId} 
             from ${routedMessage.sourcePeer?.kademliaId} to ${routedMessage.destinationPeer?.kademliaId}`)
         routedMessage.routingPath.push(this.ownPeerDescriptor!)
-        const session = this.createRoutingSession(routedMessage, mode)
+        const session = this.createRoutingSession(routedMessage, mode, excludedPeer)
         this.addRoutingSession(session)
         try {
             // eslint-disable-next-line promise/catch-or-return
@@ -146,7 +146,11 @@ export class Router implements IRouter {
         return createRouteMessageAck(routedMessage)
     }
 
-    private createRoutingSession(routedMessage: RouteMessageWrapper, mode: RoutingMode): RoutingSession {
+    private createRoutingSession(routedMessage: RouteMessageWrapper, mode: RoutingMode, excludedPeer?: PeerDescriptor): RoutingSession {
+        const excludedPeers = routedMessage.routingPath.map((descriptor) => peerIdFromPeerDescriptor(descriptor))
+        if (excludedPeer) {
+            excludedPeers.push(peerIdFromPeerDescriptor(excludedPeer))
+        }
         return new RoutingSession(
             this.rpcCommunicator,
             this.ownPeerDescriptor!,
@@ -156,7 +160,7 @@ export class Router implements IRouter {
             this.routeMessageTimeout,
             mode,
             undefined,
-            routedMessage.routingPath.map((descriptor) => peerIdFromPeerDescriptor(descriptor))
+            excludedPeers
         )
     }
 
@@ -200,7 +204,7 @@ export class Router implements IRouter {
         }
         logger.trace(`Processing received routeMessage ${routedMessage.requestId}`)
         this.addContact(routedMessage.sourcePeer!, true)
-        this.addToDuplicateDetector(routedMessage.requestId, routedMessage.sourcePeer!.nodeName!)
+        this.addToDuplicateDetector(routedMessage.requestId, keyFromPeerDescriptor(routedMessage.sourcePeer!))
         if (this.ownPeerId!.equals(peerIdFromPeerDescriptor(routedMessage.destinationPeer!))) {
             logger.trace(`${this.ownPeerDescriptor.nodeName} routing message targeted to self ${routedMessage.requestId}`)
             this.setForwardingEntries(routedMessage)
@@ -240,7 +244,7 @@ export class Router implements IRouter {
         }
         logger.trace(`Processing received forward routeMessage ${forwardMessage.requestId}`)
         this.addContact(forwardMessage.sourcePeer!, true)
-        this.addToDuplicateDetector(forwardMessage.requestId, forwardMessage.sourcePeer!.nodeName!)
+        this.addToDuplicateDetector(forwardMessage.requestId, keyFromPeerDescriptor(forwardMessage.sourcePeer!))
         if (this.ownPeerId.equals(peerIdFromPeerDescriptor(forwardMessage.destinationPeer!))) {
             return this.forwardToDestination(forwardMessage)
         } else {

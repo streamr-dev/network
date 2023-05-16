@@ -1,6 +1,5 @@
 /* eslint-disable no-console */
 
-import { performance } from 'perf_hooks'
 import { PeerID, LatencyType, Simulator, getRandomRegion } from '@streamr/dht'
 import fs from 'fs'
 import { createNetworkNodeWithSimulator } from '../utils/utils'
@@ -10,7 +9,7 @@ import { StreamMessage, toStreamID, MessageID, StreamPartIDUtils, StreamMessageT
 import { waitForEvent3 } from '@streamr/utils'
 import { streamPartIdToDataKey } from '../../src/logic/StreamEntryPointDiscovery'
 
-const numNodes = 250
+const numNodes = 300
 
 let nodes: NetworkNode[]
 let simulator: Simulator
@@ -52,7 +51,7 @@ const prepareStream = async (streamId: string) => {
     const streamPartId = toStreamPartID(toStreamID(streamId), 0)
     const streamPublisher = createNetworkNodeWithSimulator(peerDescriptor, simulator, [layer0Ep])
     await streamPublisher.start()
-    await streamPublisher.subscribeAndWaitForJoin(streamPartId, [])
+    streamPublisher.subscribe(streamPartId, [])
     nodes.push(streamPublisher)
     streams.set(streamPartId, streamPublisher)
 }
@@ -99,8 +98,8 @@ const measureJoiningTime = async (count: number) => {
         streams.get(stream)!.publish(streamMessage, [])
     }, 1000)
     // get random node from network to use as entrypoint
-    const randomNode = nodes[Math.floor(Math.random() * nodes.length)]
-    const streamSubscriber = createNetworkNodeWithSimulator(peerDescriptor, simulator, [randomNode.stack.getLayer0DhtNode().getPeerDescriptor()])
+    // const randomNode = nodes[Math.floor(Math.random() * nodes.length)]
+    const streamSubscriber = createNetworkNodeWithSimulator(peerDescriptor, simulator, [layer0Ep])
     currentNode = streamSubscriber
     const start = performance.now()
     await streamSubscriber.start()
