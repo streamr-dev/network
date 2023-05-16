@@ -1,6 +1,6 @@
 {
   "name": "@streamr/proto-rpc",
-  "version": "8.4.0",
+  "version": "8.5.0",
   "description": "Proto-RPC",
   "repository": {
     "type": "git",
@@ -27,14 +27,14 @@
   "dependencies": {
     "@protobuf-ts/runtime": "^2.8.2",
     "@protobuf-ts/runtime-rpc": "^2.8.2",
-    "@streamr/utils": "8.4.0",
+    "@streamr/utils": "8.5.0",
     "eventemitter3": "^4.0.7",
     "lodash": "^4.17.21",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@streamr/browser-test-runner": "^0.0.1",
-    "@streamr/test-utils": "8.4.0",
+    "@streamr/test-utils": "8.5.0",
     "@types/express": "^4.17.13",
     "@types/lodash": "^4.14.175",
     "@types/uuid": "^9.0.1",

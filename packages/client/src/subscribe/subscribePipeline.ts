@@ -102,12 +102,9 @@ export const createSubscribePipeline = (opts: SubscriptionPipelineOptions): Mess
         .filter((streamMessage: StreamMessage) => {
             return !ignoreMessages.has(streamMessage)
         })
-        .onBeforeFinally.listen(async () => {
-            const tasks = [
-                gapFillMessages.stop(),
-                validate.stop(),
-            ]
-            await Promise.allSettled(tasks)
+        .onBeforeFinally.listen(() => {
+            gapFillMessages.stop()
+            validate.stop()
         })
     return messageStream
 }

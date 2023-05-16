@@ -3,7 +3,7 @@ import { Event, IWebRtcEndpoint } from './IWebRtcEndpoint'
 import { Logger } from "@streamr/utils"
 import { PeerId, PeerInfo } from '../PeerInfo'
 import { DeferredConnectionAttempt } from './DeferredConnectionAttempt'
-import { WebRtcConnection, ConstructorOptions, isOffering, IceServer, WebRtcPortRange } from './WebRtcConnection'
+import { WebRtcConnection, ConstructorOptions, isOffering, IceServer, WebRtcPortRange, ExternalIP } from './WebRtcConnection'
 import { CountMetric, LevelMetric, Metric, MetricsContext, MetricsDefinition, RateMetric } from '@streamr/utils'
 import {
     AnswerOptions,
@@ -58,6 +58,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     private readonly disallowPrivateAddresses: boolean
     private readonly maxMessageSize: number
     private readonly portRange: WebRtcPortRange
+    private readonly externalIp?: ExternalIP
 
     private statusReportTimer?: NodeJS.Timeout
 
@@ -76,6 +77,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         webrtcDisallowPrivateAddresses: boolean,
         portRange: WebRtcPortRange,
         maxMessageSize: number,
+        externalIp?: ExternalIP
     ) {
         super()
         this.peerInfo = peerInfo
@@ -93,6 +95,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         this.disallowPrivateAddresses = webrtcDisallowPrivateAddresses
         this.maxMessageSize = maxMessageSize
         this.portRange = portRange
+        this.externalIp = externalIp
 
         this.connectionFactory.registerWebRtcEndpoint()
 
@@ -178,7 +181,8 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             newConnectionTimeout: this.newConnectionTimeout,
             pingInterval: this.pingInterval,
             portRange: this.portRange,
-            maxMessageSize: this.maxMessageSize
+            maxMessageSize: this.maxMessageSize,
+            externalIp: this.externalIp
         }
 
         const connection = this.connectionFactory.createConnection(connectionOptions)
