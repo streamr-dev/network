@@ -62,7 +62,12 @@ describe('Full node network with WebSocket connections only', () => {
     })
 
     it('happy path', async () => {
-
+        await Promise.all(nodes.map((node) =>
+            waitForCondition(() => {
+                return node.getStreamrNode()!.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length >= 3
+            }
+            , 120000)
+        ))
         let numOfMessagesReceived = 0
         const successIds: string[] = []
         nodes.map((node) => {
