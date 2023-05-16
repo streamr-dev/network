@@ -15,7 +15,8 @@ import {
     StoreDataResponse,
     WebSocketConnectionRequest,
     WebSocketConnectionResponse,
-    RecursiveFindRequest, FindMode, FindDataResponse, FindDataRequest
+    RecursiveFindRequest, 
+    FindMode
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { PeerID } from '../../src/helpers/PeerID'
