@@ -36,7 +36,7 @@ Note that the Streamr protocol itself (used for communication between nodes) doe
 
 ## Websocket
 
-The `websocket` plugin provides a websocket interface for publishing and subscribing. 
+The `websocket` plugin provides a websocket interface for publishing and subscribing.
 
 To enable the Websocket plugin, define a `websocket` object in the `plugins` section of the Broker configuration file:
 
@@ -88,7 +88,7 @@ plugins: {
 
 #### Explicit metadata
 
-By default the payload is the plain content of a stream message. 
+By default the payload is the plain content of a stream message.
 
 If you want to provide some metadata for messages (e.g. explicit timestamps), set the `payloadMetadata` option to `true`:
 
@@ -125,7 +125,7 @@ If you want to publish or subscribe to a specific partition of a stream, you can
 - `/streams/:streamId/publish?partitionKey=foo`: use the given key to calculate the partition number, [see JS-client for details](https://github.com/streamr-dev/network-monorepo/blob/main/packages/client/README.md#publishing-to-partitioned-streams))
 - `/streams/:streamId/publish?partitionKeyField=customerId`: use the given field in a JSON to choose the `paritionKey` (e.g. `{ "customerId": "foo", ...  }` -> `paritionKey` is `foo`)
 
-By default, a random partition is selected.
+By default, partition `0` is selected.
 
 #### Secure connections
 
@@ -152,7 +152,7 @@ Websocket server supports standard protocol level ping and pong messages. If you
 
 In browser environment clients are not able to send pings, as there is no `ping()` method in the standard websocket API. Therefore the websocket plugin supports also application level ping-pong: if a client sends a message which has payload of `"ping"`, server responds to it with a message which has payload of `"pong"`.
 
-The server side has a built-it detection of broken connections. It sends a ping message if a connection has been idle for a while. All standard websocket clients respond automatically to the ping by sending a pong message. If the server doesn't receive a pong message (or other traffic) within 15 seconds, it closes the connection. 
+The server side has a built-it detection of broken connections. It sends a ping message if a connection has been idle for a while. All standard websocket clients respond automatically to the ping by sending a pong message. If the server doesn't receive a pong message (or other traffic) within 15 seconds, it closes the connection.
 - See also  `pingSendInterval` and `disconnectTimeout` config options
 
 ## MQTT
@@ -204,7 +204,7 @@ mqtt://any-username:my-secret-api-key@localhost:1883
 
 #### Port
 
-The default port is `1883`. You can change it with `port` config option. 
+The default port is `1883`. You can change it with `port` config option.
 
 #### Explicit metadata
 
@@ -254,7 +254,7 @@ curl \
 http://localhost:7171/streams/foo.eth%2fbar
 ```
 
-The endpoint returns HTTP 200 status if the message was published successfully. 
+The endpoint returns HTTP 200 status if the message was published successfully.
 
 
 ### Passing the API key
