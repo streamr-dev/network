@@ -1,9 +1,12 @@
+import { StreamPartID, toStreamID, toStreamPartID } from '@streamr/protocol'
+import { Logger } from '@streamr/utils'
 import without from 'lodash/without'
 import { MessageMetadata, StreamrClient, Subscription } from 'streamr-client'
-import { StreamPartIDUtils } from '@streamr/protocol'
-import { Logger } from '@streamr/utils'
 import { PayloadFormat } from '../../helpers/PayloadFormat'
+import { parsePositiveInteger, parseQueryAndBase, parseQueryParameter } from '../../helpers/parser'
 import { MqttServer, MqttServerListener } from './MqttServer'
+
+const DEFAULT_PARTITION = 0
 
 const logger = new Logger(module)
 
@@ -45,7 +48,7 @@ export class Bridge implements MqttServerListener {
         }
         const { content, metadata } = message
         try {
-            const publishedMessage = await this.streamrClient.publish(this.getStreamId(topic), content, {
+            const publishedMessage = await this.streamrClient.publish(this.getStreamPartition(topic), content, {
                 timestamp: metadata.timestamp,
                 msgChainId: clientId
             })
@@ -57,7 +60,7 @@ export class Bridge implements MqttServerListener {
 
     async onSubscribed(topic: string, clientId: string): Promise<void> {
         logger.info('Handle client subscribe', { clientId, topic })
-        const streamId = this.getStreamId(topic)
+        const streamId = this.getStreamPartition(topic)
         const existingSubscription = this.getSubscription(streamId)
         if (existingSubscription === undefined) {
             const streamrClientSubscription = await this.streamrClient.subscribe(streamId, (content: any, metadata: MessageMetadata) => {
@@ -102,8 +105,8 @@ export class Bridge implements MqttServerListener {
 
     onUnsubscribed(topic: string, clientId: string): void {
         logger.info('Handle client unsubscribe', { clientId, topic })
-        const streamId = this.getStreamId(topic)
-        const existingSubscription = this.getSubscription(streamId)
+        const streamPart = this.getStreamPartition(topic)
+        const existingSubscription = this.getSubscription(streamPart)
         if (existingSubscription !== undefined) {
             existingSubscription.clientIds = without(existingSubscription.clientIds, clientId)
             if (existingSubscription.clientIds.length === 0) {
@@ -113,18 +116,16 @@ export class Bridge implements MqttServerListener {
         }
     }
 
-    private getStreamId(topic: string): string {
-        if (this.streamIdDomain !== undefined) {
-            return this.streamIdDomain + '/' + topic
-        } else {
-            return topic
-        }
+    private getStreamPartition(topic: string): StreamPartID {
+        const { base, query } = parseQueryAndBase(topic)
+        const streamId = (this.streamIdDomain !== undefined) ? `${this.streamIdDomain}/${base}` : base
+        const partition = parseQueryParameter('partition', query, parsePositiveInteger)
+        return toStreamPartID(toStreamID(streamId), partition ?? DEFAULT_PARTITION)
     }
 
-    private getSubscription(streamId: string): StreamSubscription | undefined {
+    private getSubscription(streamPartId: StreamPartID): StreamSubscription | undefined {
         return this.subscriptions.find((s: StreamSubscription) => {
-            // TODO take partition into consideration?
-            return StreamPartIDUtils.getStreamID(s.streamrClientSubscription.streamPartId) === streamId
+            return s.streamrClientSubscription.streamPartId === streamPartId
         })
     }
 }
