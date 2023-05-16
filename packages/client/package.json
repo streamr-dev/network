@@ -121,7 +121,6 @@
     "split2": "^4.2.0",
     "sqlite": "^4.0.23",
     "sqlite3": "^5.0.3",
-    "strict-event-emitter-types": "^2.0.0",
     "ts-toolbelt": "^9.6.0",
     "tsyringe": "^4.6.0",
     "uuid": "^9.0.0"
