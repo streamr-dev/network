@@ -58,7 +58,7 @@ describe('MQTT Bridge', () => {
 
         it('onUnsubscribed', async () => {
             await bridge.onSubscribed(topic, MOCK_CLIENT_ID)
-            await bridge.onUnsubscribed(topic, MOCK_CLIENT_ID)
+            bridge.onUnsubscribed(topic, MOCK_CLIENT_ID)
             expect(subscription.unsubscribe).toBeCalled()
         })
     
