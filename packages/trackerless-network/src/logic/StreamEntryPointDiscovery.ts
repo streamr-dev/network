@@ -106,7 +106,7 @@ export class StreamEntryPointDiscovery {
     }
 
     private async queryEntrypoints(key: Uint8Array): Promise<PeerDescriptor[]> {
-        logger.info(`Finding data from dht peer ${this.config.ownPeerDescriptor!.nodeName}`)
+        logger.trace(`Finding data from dht peer ${this.config.ownPeerDescriptor!.nodeName}`)
         try {
             const results = await this.config.getEntryPointData(key)
             if (results.dataEntries) {
@@ -120,7 +120,7 @@ export class StreamEntryPointDiscovery {
     }
 
     private async queryEntryPointsViaPeer(key: Uint8Array, peer: PeerDescriptor): Promise<PeerDescriptor[]> {
-        logger.info(`Finding datavia peer ${this.config.ownPeerDescriptor!.nodeName}`)
+        logger.trace(`Finding data via peer ${this.config.ownPeerDescriptor!.nodeName}`)
         try {
             const results = await this.config.getEntryPointDataViaPeer(key, peer)
             if (results) {

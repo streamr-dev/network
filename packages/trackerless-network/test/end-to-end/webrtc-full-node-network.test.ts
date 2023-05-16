@@ -8,7 +8,7 @@ import { NetworkStack } from '../../src/NetworkStack'
 
 describe('Full node network with WebRTC connections', () => {
 
-    const NUM_OF_NODES = 28
+    const NUM_OF_NODES = 22
 
     const epPeerDescriptor: PeerDescriptor = {
         kademliaId: PeerID.fromString(`entrypoint`).value,

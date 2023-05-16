@@ -90,6 +90,6 @@ describe('NetworkNode', () => {
         })
         await node2.waitForJoinAndPublish(streamMessage, [pd1])
         await waitForCondition(() => msgCount === 1)
-    }, 30000)
+    })
 
 })

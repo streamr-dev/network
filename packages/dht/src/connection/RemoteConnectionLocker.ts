@@ -63,14 +63,10 @@ export class RemoteConnectionLocker {
             notification: true
         }
 
-        try {
-            this.client.unlockRequest(request, options).catch((_e) => {
-                logger.trace('failed to send unlockRequest')
-            })
-        } catch (err) {
-            console.error(err)
-        }
-        
+        this.client.unlockRequest(request, options).catch((_e) => {
+            logger.trace('failed to send unlockRequest')
+        })
+
     }
 
     public async gracefulDisconnect(disconnecMode: DisconnectMode): Promise<void> {
@@ -87,12 +83,6 @@ export class RemoteConnectionLocker {
             doNotMindStopped: true,
             timeout: 2000
         }
-
-        try {
-            await this.client.gracefulDisconnect(request, options)
-        } catch (err) {
-            logger.trace('error', { err })
-        }
-
+        await this.client.gracefulDisconnect(request, options)
     }
 }

@@ -114,7 +114,7 @@ export class RecursiveFinder implements IRecursiveFinder {
                 15000
             )
         } catch (err) {
-            logger.warn(`doFindRecursively failed with error ${this.ownPeerDescriptor.nodeName} ${err}`)
+            logger.debug(`doFindRecursively failed with error ${this.ownPeerDescriptor.nodeName} ${err}`)
         }
         this.findAndReportLocalData(idToFind, findMode, [], this.ownPeerDescriptor, sessionId)
         this.ongoingSessions.delete(sessionId)
