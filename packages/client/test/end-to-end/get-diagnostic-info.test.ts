@@ -3,6 +3,7 @@ import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { getCreateClient } from '../test-utils/utils'
+import { CONFIG_TEST } from '../../src/ConfigTest'
 
 describe('getDiagnosticInfo', () => {
     let client: StreamrClient
@@ -15,11 +16,24 @@ describe('getDiagnosticInfo', () => {
         client = await createClient({
             auth: {
                 privateKey: await fetchPrivateKeyWithGas()
+            },
+            network: {
+                layer0: {
+                    ...CONFIG_TEST.network!.layer0,
+                    stringKademliaId: 'get-diagnostics'
+                }
             }
         })
         stream = await client.createStream(streamPath)
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
-        otherClient = await createClient()
+        otherClient = await createClient({
+            network: {
+                layer0: {
+                    ...CONFIG_TEST.network!.layer0,
+                    stringKademliaId: 'get-diagnostics-other'
+                }
+            }
+        })
         await client.subscribe(stream.id)
         await otherClient.subscribe(stream.id)
     }, 30 * 1000)
