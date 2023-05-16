@@ -15,7 +15,8 @@ import {
     StoreDataResponse,
     WebSocketConnectionRequest,
     WebSocketConnectionResponse,
-    RecursiveFindRequest, FindMode, FindDataResponse, FindDataRequest
+    RecursiveFindRequest, 
+    FindMode
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { PeerID } from '../../src/helpers/PeerID'
@@ -163,9 +164,6 @@ export const MockDhtRpc: IDhtRpcWithError = {
     },
     async throwGetClosestPeersError(_urequest: ClosestPeersRequest, _context: ServerCallContext): Promise<ClosestPeersResponse> {
         throw new Error('Closest peers error')
-    },
-    async findData(_request: FindDataRequest, _context: ServerCallContext): Promise<FindDataResponse> {
-        throw new Error('Method not implemented.')
     }
 }
 

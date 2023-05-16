@@ -11,7 +11,7 @@ import range from 'lodash/range'
 import shuffle from 'lodash/shuffle'
 import { wait } from '@streamr/utils'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
-import { createRandomAuthentication } from '../test-utils/utils'
+import { createRandomAuthentication, mockLoggerFactory } from '../test-utils/utils'
 import { MessageStream } from '../../src/subscribe/MessageStream'
 
 const authentication = createRandomAuthentication()
@@ -50,7 +50,7 @@ describe(waitForAssignmentsToPropagate, () => {
     beforeEach(() => {
         messageStream = new MessageStream()
         propagatePromiseState = 'pending'
-        propagatePromise = waitForAssignmentsToPropagate(messageStream, TARGET_STREAM)
+        propagatePromise = waitForAssignmentsToPropagate(messageStream.getStreamMessages(), TARGET_STREAM, mockLoggerFactory())
             .then((retValue) => {
                 propagatePromiseState = 'resolved'
                 return retValue

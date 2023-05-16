@@ -653,6 +653,10 @@ export interface FindDataRequest {
      * @generated from protobuf field: bytes kademliaId = 1;
      */
     kademliaId: Uint8Array;
+    /**
+     * @generated from protobuf field: dht.PeerDescriptor requestor = 2;
+     */
+    requestor?: PeerDescriptor;
 }
 /**
  * @generated from protobuf message dht.FindDataResponse
@@ -1250,7 +1254,8 @@ export const DisconnectNoticeResponse = new DisconnectNoticeResponse$Type();
 class FindDataRequest$Type extends MessageType$<FindDataRequest> {
     constructor() {
         super("dht.FindDataRequest", [
-            { no: 1, name: "kademliaId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
+            { no: 1, name: "kademliaId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 2, name: "requestor", kind: "message", T: () => PeerDescriptor }
         ]);
     }
 }
@@ -1277,8 +1282,7 @@ export const FindDataResponse = new FindDataResponse$Type();
 export const DhtRpcService = new ServiceType("dht.DhtRpcService", [
     { name: "getClosestPeers", options: {}, I: ClosestPeersRequest, O: ClosestPeersResponse },
     { name: "ping", options: {}, I: PingRequest, O: PingResponse },
-    { name: "leaveNotice", options: {}, I: LeaveNotice, O: Empty },
-    { name: "findData", options: {}, I: FindDataRequest, O: FindDataResponse }
+    { name: "leaveNotice", options: {}, I: LeaveNotice, O: Empty }
 ]);
 /**
  * @generated ServiceType for protobuf service dht.RoutingService
@@ -1323,4 +1327,10 @@ export const ConnectionLocker = new ServiceType("dht.ConnectionLocker", [
     { name: "lockRequest", options: {}, I: LockRequest, O: LockResponse },
     { name: "unlockRequest", options: {}, I: UnlockRequest, O: Empty },
     { name: "gracefulDisconnect", options: {}, I: DisconnectNotice, O: DisconnectNoticeResponse }
+]);
+/**
+ * @generated ServiceType for protobuf service dht.ExternalApiService
+ */
+export const ExternalApiService = new ServiceType("dht.ExternalApiService", [
+    { name: "findData", options: {}, I: FindDataRequest, O: FindDataResponse }
 ]);

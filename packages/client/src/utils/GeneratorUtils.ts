@@ -3,9 +3,6 @@ import { MaybeAsync } from '../types'
 export type GeneratorForEach<InType> = MaybeAsync<(value: InType, index: number, src: AsyncGenerator<InType>) => void>
 export type GeneratorFilter<InType> = MaybeAsync<(value: InType, index: number, src: AsyncGenerator<InType>) => any>
 export type GeneratorMap<InType, OutType> = (value: InType, index: number, src: AsyncGenerator<InType>) => OutType | Promise<OutType>
-export type GeneratorReduce<InType, OutType> = (
-    prevValue: OutType, value: InType, index: number, src: AsyncGenerator<InType>
-) => OutType | Promise<OutType>
 
 type OnError<ValueType> = (err: Error, value: ValueType, index: number) => Promise<any> | any
 
@@ -96,25 +93,6 @@ export async function* filter<InType>(
             yield v
         }
     }
-}
-/**
- * Similar to Array#reduce, but more different than the other methods here.
- * This is perhaps more like an Array#map but it also passes the previous return value.
- * Still yields for each item, but passes previous return value to next iteration.
- * initialValue is passed as the previous value on first iteration.
- * Unlike Array#reduce, initialValue is required.
- */
-export async function* reduce<InType, OutType>(
-    src: AsyncGenerator<InType>,
-    fn: GeneratorReduce<InType, OutType>,
-    initialValue: OutType,
-    onError?: OnError<InType>
-): AsyncGenerator<OutType> {
-    let result = initialValue
-    yield* map(src, async (value, index, srcGen) => {
-        result = await fn(result, value, index, srcGen) // eslint-disable-line require-atomic-updates
-        return result
-    }, onError)
 }
 
 /**

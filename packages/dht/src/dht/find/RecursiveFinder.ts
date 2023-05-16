@@ -82,7 +82,11 @@ export class RecursiveFinder implements IRecursiveFinder {
             (routedMessage: RouteMessageWrapper) => this.findRecursively(routedMessage))
     }
 
-    public async startRecursiveFind(idToFind: Uint8Array, findMode: FindMode = FindMode.NODE): Promise<RecursiveFindResult> {
+    public async startRecursiveFind(
+        idToFind: Uint8Array,
+        findMode: FindMode = FindMode.NODE,
+        excludedPeer?: PeerDescriptor
+    ): Promise<RecursiveFindResult> {
         const sessionId = v4()
         const recursiveFindSession = new RecursiveFindSession({
             serviceId: sessionId,
@@ -105,12 +109,12 @@ export class RecursiveFinder implements IRecursiveFinder {
         this.ongoingSessions.set(sessionId, recursiveFindSession)
         try {
             await runAndWaitForEvents3<RecursiveFindSessionEvents>(
-                [() => this.doFindRecursevily(routeMessage)],
+                [() => this.doFindRecursevily(routeMessage, excludedPeer)],
                 [[recursiveFindSession, 'findCompleted']],
-                30000
+                15000
             )
         } catch (err) {
-            logger.trace(`doFindRecursively failed with error ${err}`)
+            logger.debug(`doFindRecursively failed with error ${this.ownPeerDescriptor.nodeName} ${err}`)
         }
         this.findAndReportLocalData(idToFind, findMode, [], this.ownPeerDescriptor, sessionId)
         this.ongoingSessions.delete(sessionId)
@@ -188,7 +192,7 @@ export class RecursiveFinder implements IRecursiveFinder {
         }
     }
 
-    private doFindRecursevily(routedMessage: RouteMessageWrapper): RouteMessageAck {
+    private doFindRecursevily(routedMessage: RouteMessageWrapper, excludedPeer?: PeerDescriptor): RouteMessageAck {
         if (this.stopped) {
             return createRouteMessageAck(routedMessage, 'DhtNode Stopped')
         }
@@ -205,7 +209,7 @@ export class RecursiveFinder implements IRecursiveFinder {
                 closestPeersToDestination, undefined, true)
             return createRouteMessageAck(routedMessage)
         }
-        const ack = this.router.doRouteMessage(routedMessage, RoutingMode.RECURSIVE_FIND)
+        const ack = this.router.doRouteMessage(routedMessage, RoutingMode.RECURSIVE_FIND, excludedPeer)
         if (ack.error === RoutingErrors.NO_CANDIDATES_FOUND) {
             logger.trace(`findRecursively Node ${this.ownPeerDescriptor.nodeName} found no candidates`)
             this.reportRecursiveFindResult(routedMessage.routingPath, routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,

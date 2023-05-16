@@ -1,17 +1,14 @@
 /**
  * Makes OrderingUtil more compatible with use in pipeline.
  */
-import { StreamMessage, StreamPartID, MessageRef } from '@streamr/protocol'
-
-import { PushBuffer } from '../utils/PushBuffer'
-import { Signal } from '../utils/Signal'
-
-import { Resends } from './Resends'
-import { MessageStream } from './MessageStream'
-import { StrictStreamrClientConfig } from '../Config'
-import OrderingUtil from './ordering/OrderingUtil'
+import { MessageRef, StreamMessage, StreamPartID } from '@streamr/protocol'
 import { EthereumAddress, Logger } from '@streamr/utils'
+import { StrictStreamrClientConfig } from '../Config'
 import { LoggerFactory } from '../utils/LoggerFactory'
+import { PushBuffer } from '../utils/PushBuffer'
+import { MessageStream } from './MessageStream'
+import { Resends } from './Resends'
+import OrderingUtil from './ordering/OrderingUtil'
 
 /**
  * Wraps OrderingUtil into a PushBuffer.
@@ -19,18 +16,17 @@ import { LoggerFactory } from '../utils/LoggerFactory'
  */
 export class OrderMessages {
 
-    private config: StrictStreamrClientConfig
-    private resends: Resends
+    private done = false
+    private inputClosed = false
+    private enabled = true
+    private readonly resendStreams = new Set<MessageStream>() // holds outstanding resends for cleanup
+    private readonly outBuffer = new PushBuffer<StreamMessage>()
+    private readonly orderingUtil: OrderingUtil
+    private readonly config: StrictStreamrClientConfig
+    private readonly resends: Resends
     private readonly streamPartId: StreamPartID
     private readonly logger: Logger
-    private stopSignal = Signal.once()
-    private done = false
-    private resendStreams = new Set<MessageStream>() // holds outstanding resends for cleanup
-    private outBuffer = new PushBuffer<StreamMessage>()
-    private inputClosed = false
-    private orderMessages: boolean
-    private enabled = true
-    private orderingUtil
+    private readonly orderMessages: boolean
 
     constructor(
         config: StrictStreamrClientConfig,
@@ -42,9 +38,6 @@ export class OrderMessages {
         this.resends = resends
         this.streamPartId = streamPartId
         this.logger = loggerFactory.createLogger(module)
-        this.stopSignal.listen(() => {
-            this.done = true
-        })
         this.onOrdered = this.onOrdered.bind(this)
         this.onGap = this.onGap.bind(this)
         this.maybeClose = this.maybeClose.bind(this)
@@ -54,15 +47,12 @@ export class OrderMessages {
         this.orderingUtil = new OrderingUtil(
             this.onOrdered,
             this.onGap,
+            () => this.maybeClose(),
+            () => this.maybeClose(), // probably noop, TODO: handle gapfill errors without closing stream or logging
             gapFillTimeout,
             retryResendAfter,
             this.enabled ? maxGapRequests : 0
         )
-
-        this.orderingUtil.on('drain', this.maybeClose)
-
-        // TODO: handle gapfill errors without closing stream or logging
-        this.orderingUtil.on('error', this.maybeClose) // probably noop
     }
 
     async onGap(from: MessageRef, to: MessageRef, publisherId: EthereumAddress, msgChainId: string): Promise<void> {
@@ -122,11 +112,11 @@ export class OrderMessages {
         this.outBuffer.push(orderedMessage)
     }
 
-    stop(): Promise<void> {
-        return this.stopSignal.trigger()
+    stop(): void {
+        this.done = true
     }
 
-    maybeClose(): void {
+    private maybeClose(): void {
         // we can close when:
         // input has closed (i.e. all messages sent)
         // AND
@@ -139,7 +129,7 @@ export class OrderMessages {
         }
     }
 
-    async addToOrderingUtil(src: AsyncGenerator<StreamMessage>): Promise<void> {
+    private async addToOrderingUtil(src: AsyncGenerator<StreamMessage>): Promise<void> {
         try {
             for await (const msg of src) {
                 this.orderingUtil.add(msg)
