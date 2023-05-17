@@ -1,6 +1,6 @@
 import { createClient } from '../../../utils'
 import { SubscriberPlugin } from '../../../../src/plugins/subscriber/SubscriberPlugin'
-import StreamrClient from 'streamr-client'
+import StreamrClient, { CONFIG_TEST } from 'streamr-client'
 import { fastWallet } from '@streamr/test-utils'
 import { waitForCondition } from '@streamr/utils'
 
@@ -11,6 +11,12 @@ const createMockPlugin = async (streamrClient: StreamrClient) => {
         client: {
             auth: {
                 privateKey: wallet.privateKey
+            },
+            network: {
+                layer0: {
+                    ...CONFIG_TEST.network!.layer0,
+                    stringKademliaId: 'subscriber-plugin'
+                }
             }
         },
         plugins: {
