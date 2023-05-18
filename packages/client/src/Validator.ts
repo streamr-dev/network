@@ -7,7 +7,6 @@ import {
     createSignaturePayload,
 } from '@streamr/protocol'
 import { EthereumAddress } from '@streamr/utils'
-import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { StreamRegistryCached } from './registry/StreamRegistryCached'
 import { pOrderedResolve } from './utils/promises'
 import { verify as verifyImpl } from './utils/signingUtils'
@@ -17,14 +16,13 @@ import { verify as verifyImpl } from './utils/signingUtils'
  * validation is guaranteed to resolve in the same order they were called
  * Handles caching remote calls
  */
-@scoped(Lifecycle.ContainerScoped)
 export class Validator {
     private readonly orderedValidate: ((msg: StreamMessage) => Promise<void>) & { clear: () => void }
     private isStopped = false
     private readonly streamRegistryCached: StreamRegistryCached
     private readonly verify: (address: EthereumAddress, payload: string, signature: string) => boolean
 
-    constructor(@inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached, verify = verifyImpl) {
+    constructor(streamRegistryCached: StreamRegistryCached, verify = verifyImpl) {
         this.streamRegistryCached = streamRegistryCached
         this.verify = verify
         this.orderedValidate = pOrderedResolve(async (msg: StreamMessage) => {

@@ -1,4 +1,3 @@
-import without from 'lodash/without'
 import {
     EncryptedGroupKey,
     EncryptionType,
@@ -11,17 +10,20 @@ import {
     StreamPartID,
     StreamPartIDUtils
 } from '@streamr/protocol'
-import { inject, Lifecycle, scoped, delay } from 'tsyringe'
+import { EthereumAddress, Logger } from '@streamr/utils'
+import without from 'lodash/without'
+import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
+import { DestroySignal } from '../DestroySignal'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
-import { createRandomMsgChainId } from '../publish/messageChain'
-import { createSignedMessage } from '../publish/MessageFactory'
 import { Validator } from '../Validator'
+import { createSignedMessage } from '../publish/MessageFactory'
+import { createRandomMsgChainId } from '../publish/messageChain'
+import { StreamRegistryCached } from '../registry/StreamRegistryCached'
+import { LoggerFactory } from '../utils/LoggerFactory'
 import { EncryptionUtil } from './EncryptionUtil'
 import { GroupKey } from './GroupKey'
 import { LocalGroupKeyStore } from './LocalGroupKeyStore'
-import { EthereumAddress, Logger } from '@streamr/utils'
-import { LoggerFactory } from '../utils/LoggerFactory'
 
 /*
  * Sends group key responses
@@ -40,18 +42,20 @@ export class PublisherKeyExchange {
         networkNodeFacade: NetworkNodeFacade,
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
-        @inject(delay(() => Validator)) validator: Validator
+        @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
+        destroySignal: DestroySignal
     ) {
         this.logger = loggerFactory.createLogger(module)
         this.store = store
         this.networkNodeFacade = networkNodeFacade
         this.authentication = authentication
-        this.validator = validator
+        this.validator = new Validator(streamRegistryCached)
         networkNodeFacade.once('start', async () => {
             const node = await networkNodeFacade.getNode()
             node.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
             this.logger.debug('Started')
         })
+        destroySignal.onDestroy.listen(() => this.validator.stop())
     }
 
     private async onMessage(request: StreamMessage): Promise<void> {

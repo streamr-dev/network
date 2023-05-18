@@ -9,21 +9,23 @@ import {
     StreamPartID,
     StreamPartIDUtils
 } from '@streamr/protocol'
-import { inject, Lifecycle, scoped, delay } from 'tsyringe'
+import { EthereumAddress, Logger } from '@streamr/utils'
+import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { v4 as uuidv4 } from 'uuid'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import { DestroySignal } from '../DestroySignal'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
-import { createRandomMsgChainId } from '../publish/messageChain'
-import { createSignedMessage } from '../publish/MessageFactory'
-import { withThrottling, pOnce } from '../utils/promises'
-import { MaxSizedSet } from '../utils/utils'
 import { Validator } from '../Validator'
+import { createSignedMessage } from '../publish/MessageFactory'
+import { createRandomMsgChainId } from '../publish/messageChain'
+import { StreamRegistryCached } from '../registry/StreamRegistryCached'
+import { LoggerFactory } from '../utils/LoggerFactory'
+import { pOnce, withThrottling } from '../utils/promises'
+import { MaxSizedSet } from '../utils/utils'
 import { GroupKey } from './GroupKey'
 import { LocalGroupKeyStore } from './LocalGroupKeyStore'
 import { RSAKeyPair } from './RSAKeyPair'
-import { EthereumAddress, Logger } from '@streamr/utils'
-import { LoggerFactory } from '../utils/LoggerFactory'
 
 const MAX_PENDING_REQUEST_COUNT = 50000 // just some limit, we can tweak the number if needed
 
@@ -47,7 +49,8 @@ export class SubscriberKeyExchange {
         networkNodeFacade: NetworkNodeFacade,
         store: LocalGroupKeyStore,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
-        @inject(delay(() => Validator)) validator: Validator,
+        @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
+        destroySignal: DestroySignal,
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'encryption'>
     ) {
@@ -55,7 +58,7 @@ export class SubscriberKeyExchange {
         this.networkNodeFacade = networkNodeFacade
         this.store = store
         this.authentication = authentication
-        this.validator = validator
+        this.validator = new Validator(streamRegistryCached)
         this.ensureStarted = pOnce(async () => {
             this.rsaKeyPair = await RSAKeyPair.create()
             const node = await networkNodeFacade.getNode()
@@ -65,6 +68,7 @@ export class SubscriberKeyExchange {
         this.requestGroupKey = withThrottling((groupKeyId: string, publisherId: EthereumAddress, streamPartId: StreamPartID) => {
             return this.doRequestGroupKey(groupKeyId, publisherId, streamPartId)
         }, config.encryption.maxKeyRequestsPerSecond)
+        destroySignal.onDestroy.listen(() => this.validator.stop())
     }
 
     private async doRequestGroupKey(groupKeyId: string, publisherId: EthereumAddress, streamPartId: StreamPartID): Promise<void> {
