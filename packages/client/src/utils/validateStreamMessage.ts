@@ -1,11 +1,11 @@
 import {
     GroupKeyMessage,
-    GroupKeyRequest,
     StreamMessage,
     StreamMessageError,
     StreamMessageType,
     createSignaturePayload,
 } from '@streamr/protocol'
+import { EthereumAddress } from '@streamr/utils'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { verify } from '../utils/signingUtils'
 
@@ -37,9 +37,19 @@ const doValidate = (streamMessage: StreamMessage, streamRegistry: StreamRegistry
         case StreamMessageType.MESSAGE:
             return validateMessage(streamMessage, streamRegistry)
         case StreamMessageType.GROUP_KEY_REQUEST:
-            return validateGroupKeyRequest(streamMessage, streamRegistry)
+            return validateGroupKeyMessage(
+                streamMessage,
+                GroupKeyMessage.fromStreamMessage(streamMessage).recipient,
+                streamMessage.getPublisherId(),
+                streamRegistry
+            )
         case StreamMessageType.GROUP_KEY_RESPONSE:
-            return validateGroupKeyResponse(streamMessage, streamRegistry)
+            return validateGroupKeyMessage(
+                streamMessage,
+                streamMessage.getPublisherId(),
+                GroupKeyMessage.fromStreamMessage(streamMessage).recipient,
+                streamRegistry
+            )
         default:
             throw new StreamMessageError(`Unknown message type: ${streamMessage.messageType}!`, streamMessage)
     }
@@ -69,45 +79,36 @@ const assertSignatureIsValid = (streamMessage: StreamMessage): void => {
     }
 }
 
-const validateMessage = async (streamMessage: StreamMessage, streamRegistry: StreamRegistryCached): Promise<void> => {
-    const stream = await streamRegistry.getStream(streamMessage.getStreamId())
+const validateMessage = async (
+    streamMessage: StreamMessage,
+    streamRegistry: StreamRegistryCached
+): Promise<void> => {
+    const streamId = streamMessage.getStreamId()
+    const stream = await streamRegistry.getStream(streamId)
     const partitionCount = stream.getMetadata().partitions
     if (streamMessage.getStreamPartition() < 0 || streamMessage.getStreamPartition() >= partitionCount) {
         throw new StreamMessageError(`Partition ${streamMessage.getStreamPartition()} is out of range (0..${partitionCount - 1})`, streamMessage)
     }
     const sender = streamMessage.getPublisherId()
-    const senderIsPublisher = await streamRegistry.isStreamPublisher(streamMessage.getStreamId(), sender)
-    if (!senderIsPublisher) {
-        throw new StreamMessageError(`${sender} is not a publisher on stream ${streamMessage.getStreamId()}.`, streamMessage)
+    const isPublisher = await streamRegistry.isStreamPublisher(streamId, sender)
+    if (!isPublisher) {
+        throw new StreamMessageError(`${sender} is not a publisher on stream ${streamId}`, streamMessage)
     }
 }
 
-const validateGroupKeyRequest = async (streamMessage: StreamMessage, streamRegistry: StreamRegistryCached): Promise<void> => {
-    const groupKeyRequest = GroupKeyRequest.fromStreamMessage(streamMessage)
-    const sender = streamMessage.getPublisherId()
+const validateGroupKeyMessage = async (
+    streamMessage: StreamMessage,
+    expectedPublisher: EthereumAddress,
+    expectedSubscriber: EthereumAddress,
+    streamRegistry: StreamRegistryCached
+): Promise<void> => {
     const streamId = streamMessage.getStreamId()
-    const recipient = groupKeyRequest.recipient
-    const recipientIsPublisher = await streamRegistry.isStreamPublisher(streamId, recipient)
-    if (!recipientIsPublisher) {
-        throw new StreamMessageError(`${recipient} is not a publisher on stream ${streamId}.`, streamMessage)
+    const isPublisher = await streamRegistry.isStreamPublisher(streamId, expectedPublisher)
+    if (!isPublisher) {
+        throw new StreamMessageError(`${expectedPublisher} is not a publisher on stream ${streamId}`, streamMessage)
     }
-    const senderIsSubscriber = await streamRegistry.isStreamSubscriber(streamId, sender)
-    if (!senderIsSubscriber) {
-        throw new StreamMessageError(`${sender} is not a subscriber on stream ${streamId}.`, streamMessage)
-    }
-}
-
-const validateGroupKeyResponse = async (streamMessage: StreamMessage, streamRegistry: StreamRegistryCached): Promise<void> => {
-    const groupKeyMessage = GroupKeyMessage.fromStreamMessage(streamMessage)
-    const sender = streamMessage.getPublisherId()
-    const streamId = streamMessage.getStreamId()
-    const recipient = groupKeyMessage.recipient
-    const senderIsPublisher = await streamRegistry.isStreamPublisher(streamId, sender)
-    if (!senderIsPublisher) {
-        throw new StreamMessageError(`${sender} is not a publisher on stream ${streamId}. ${streamMessage.messageType}`, streamMessage)
-    }
-    const recipientIsSubscriber = await streamRegistry.isStreamSubscriber(streamId, recipient)
-    if (!recipientIsSubscriber) {
-        throw new StreamMessageError(`${recipient} is not a subscriber on stream ${streamId}. ${streamMessage.messageType}`, streamMessage)
+    const isSubscriber = await streamRegistry.isStreamSubscriber(streamId, expectedSubscriber)
+    if (!isSubscriber) {
+        throw new StreamMessageError(`${expectedSubscriber} is not a subscriber on stream ${streamId}`, streamMessage)
     }
 }
