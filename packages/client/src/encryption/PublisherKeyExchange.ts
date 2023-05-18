@@ -14,7 +14,6 @@ import { EthereumAddress, Logger } from '@streamr/utils'
 import without from 'lodash/without'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
-import { DestroySignal } from '../DestroySignal'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { Validator } from '../Validator'
 import { createSignedMessage } from '../publish/MessageFactory'
@@ -43,7 +42,6 @@ export class PublisherKeyExchange {
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
-        destroySignal: DestroySignal
     ) {
         this.logger = loggerFactory.createLogger(module)
         this.store = store
@@ -55,7 +53,6 @@ export class PublisherKeyExchange {
             node.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
             this.logger.debug('Started')
         })
-        destroySignal.onDestroy.listen(() => this.validator.stop())
     }
 
     private async onMessage(request: StreamMessage): Promise<void> {

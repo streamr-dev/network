@@ -8,40 +8,28 @@ import {
 } from '@streamr/protocol'
 import { EthereumAddress } from '@streamr/utils'
 import { StreamRegistryCached } from './registry/StreamRegistryCached'
-import { pOrderedResolve } from './utils/promises'
 import { verify as verifyImpl } from './utils/signingUtils'
 
-/**
- * Wrap StreamMessageValidator in a way that ensures it can validate in parallel but
- * validation is guaranteed to resolve in the same order they were called
- * Handles caching remote calls
- */
 export class Validator {
-    private readonly orderedValidate: ((msg: StreamMessage) => Promise<void>) & { clear: () => void }
-    private isStopped = false
     private readonly streamRegistryCached: StreamRegistryCached
     private readonly verify: (address: EthereumAddress, payload: string, signature: string) => boolean
 
     constructor(streamRegistryCached: StreamRegistryCached, verify = verifyImpl) {
         this.streamRegistryCached = streamRegistryCached
         this.verify = verify
-        this.orderedValidate = pOrderedResolve(async (msg: StreamMessage) => {
-            if (this.isStopped) { return }
-            // In all other cases validate using the validator
-            // will throw with appropriate validation failure
-            await this.doValidate(msg).catch((err: any) => {
-                if (this.isStopped) { return }
-                if (!err.streamMessage) {
-                    err.streamMessage = msg
-                }
-                throw err
-            })
-        })
     }
 
     async validate(msg: StreamMessage): Promise<void> {
-        if (this.isStopped) { return }
-        await this.orderedValidate(msg)
+        await this.doValidate(msg).catch((err: any) => {
+            // all StreamMessageError already have this streamMessage, maybe this is 
+            // here if e.g. contract call fails? TODO is this really needed as
+            // the onError callback in subscribePipeline knows which message
+            // it is handling?
+            if (!err.streamMessage) {
+                err.streamMessage = msg
+            }
+            throw err
+        })
     }
 
     /**
@@ -153,10 +141,5 @@ export class Validator {
                 streamMessage
             )
         }
-    }
-
-    stop(): void {
-        this.isStopped = true
-        this.orderedValidate.clear()
     }
 }

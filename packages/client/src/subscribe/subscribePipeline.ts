@@ -104,7 +104,6 @@ export const createSubscribePipeline = (opts: SubscriptionPipelineOptions): Mess
         })
         .onBeforeFinally.listen(() => {
             gapFillMessages.stop()
-            validate.stop()
         })
     return messageStream
 }

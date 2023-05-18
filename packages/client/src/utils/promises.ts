@@ -5,25 +5,6 @@ import { MaybeAsync } from '../types'
 import { AggregatedError } from './AggregatedError'
 
 /**
- * Execute functions in parallel, but ensure they resolve in the order they were executed
- */
-export function pOrderedResolve<ArgsType extends unknown[], ReturnType>(
-    fn: (...args: ArgsType) => ReturnType
-): ((...args: ArgsType) => Promise<any>) & { clear(): void } {
-    const queue = pLimit(1)
-    return Object.assign(async (...args: ArgsType) => {
-        const d = new Defer<ReturnType>()
-        const done = queue(() => d)
-        await Promise.resolve(fn(...args)).then(d.resolve.bind(d), d.reject.bind(d))
-        return done
-    }, {
-        clear() {
-            queue.clearQueue()
-        }
-    })
-}
-
-/**
  * Returns a function that executes with limited concurrency.
  */
 export function pLimitFn<ArgsType extends unknown[], ReturnType>(

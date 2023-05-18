@@ -44,11 +44,7 @@ const validate = async (messageOptions: MessageOptions) => {
     if (messageOptions.signature !== undefined) {
         msg.signature = messageOptions.signature
     }
-    try {
-        await validator.validate(msg)
-    } finally {
-        validator.stop()
-    }
+    await validator.validate(msg)
 }
 
 describe('Validator', () => {

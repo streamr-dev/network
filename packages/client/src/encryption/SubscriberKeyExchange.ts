@@ -14,7 +14,6 @@ import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { v4 as uuidv4 } from 'uuid'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
-import { DestroySignal } from '../DestroySignal'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { Validator } from '../Validator'
 import { createSignedMessage } from '../publish/MessageFactory'
@@ -50,7 +49,6 @@ export class SubscriberKeyExchange {
         store: LocalGroupKeyStore,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
-        destroySignal: DestroySignal,
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'encryption'>
     ) {
@@ -68,7 +66,6 @@ export class SubscriberKeyExchange {
         this.requestGroupKey = withThrottling((groupKeyId: string, publisherId: EthereumAddress, streamPartId: StreamPartID) => {
             return this.doRequestGroupKey(groupKeyId, publisherId, streamPartId)
         }, config.encryption.maxKeyRequestsPerSecond)
-        destroySignal.onDestroy.listen(() => this.validator.stop())
     }
 
     private async doRequestGroupKey(groupKeyId: string, publisherId: EthereumAddress, streamPartId: StreamPartID): Promise<void> {
