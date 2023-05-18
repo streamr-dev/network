@@ -587,12 +587,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     private async connectToEntryPoint(entryPoint: PeerDescriptor): Promise<void> {
         this.connectionManager!.lockConnection(entryPoint, 'temporary-layer0-connection')
-        const target = new DhtPeer(
-            this.ownPeerDescriptor!,
-            entryPoint,
-            toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
-            this.config.serviceId
-        )
         this.entryPointDisconnectTimeout = setTimeout(() => {
             this.connectionManager!.unlockConnection(entryPoint, 'temporary-layer0-connection')
         }, 10 * 1000)
