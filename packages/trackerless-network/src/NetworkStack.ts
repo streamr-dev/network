@@ -34,7 +34,7 @@ export class NetworkStack {
         this.connectionManager = this.layer0DhtNode!.getTransport() as ConnectionManager
         const entryPoint = this.options.layer0.entryPoints![0]
         if (isSamePeerDescriptor(entryPoint, this.layer0DhtNode!.getPeerDescriptor())) {
-            this.layer0DhtNode!.joinDht(entryPoint)
+            await this.layer0DhtNode!.joinDht(entryPoint)
             await this.streamrNode!.start(this.layer0DhtNode!, this.connectionManager!, this.connectionManager!)
         } else {
             setImmediate(() => this.layer0DhtNode!.joinDht(this.options.layer0.entryPoints![0])) 
