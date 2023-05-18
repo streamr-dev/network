@@ -1,12 +1,14 @@
 import { ConnectionManager, DhtNode, DhtNodeOptions, isSamePeerDescriptor } from '@streamr/dht'
 import { StreamrNode, StreamrNodeOpts } from './logic/StreamrNode'
-import { MetricsContext, waitForCondition } from '@streamr/utils'
+import { Logger, MetricsContext, waitForCondition } from '@streamr/utils'
 
 export interface NetworkOptions {
     layer0: DhtNodeOptions
     networkNode: StreamrNodeOpts
     metricsContext?: MetricsContext
 }
+
+const logger = new Logger(module)
 
 export class NetworkStack {
 
@@ -37,8 +39,13 @@ export class NetworkStack {
             await this.layer0DhtNode!.joinDht(entryPoint)
             await this.streamrNode!.start(this.layer0DhtNode!, this.connectionManager!, this.connectionManager!)
         } else {
-            setImmediate(() => this.layer0DhtNode!.joinDht(this.options.layer0.entryPoints![0])) 
-            await waitForCondition(() => this.layer0DhtNode!.getNumberOfConnections() > 0, 15000)
+            setImmediate(() => this.layer0DhtNode!.joinDht(this.options.layer0.entryPoints![0]))
+            try {
+                await waitForCondition(() => this.layer0DhtNode!.getNumberOfConnections() > 0, 15000)
+            } catch (err) {
+                logger.error(`${this.layer0DhtNode!.getPeerDescriptor()} failed to connect to ${entryPoint} after 15s. ${err}`)
+                throw err
+            }
             await this.streamrNode!.start(this.layer0DhtNode!, this.connectionManager!, this.connectionManager!)
         }
         
