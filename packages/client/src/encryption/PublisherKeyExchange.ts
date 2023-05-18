@@ -11,7 +11,7 @@ import {
     StreamPartID,
     StreamPartIDUtils
 } from '@streamr/protocol'
-import { inject, Lifecycle, scoped } from 'tsyringe'
+import { inject, Lifecycle, scoped, delay } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { createRandomMsgChainId } from '../publish/messageChain'
@@ -40,7 +40,7 @@ export class PublisherKeyExchange {
         networkNodeFacade: NetworkNodeFacade,
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
-        validator: Validator
+        @inject(delay(() => Validator)) validator: Validator
     ) {
         this.logger = loggerFactory.createLogger(module)
         this.store = store

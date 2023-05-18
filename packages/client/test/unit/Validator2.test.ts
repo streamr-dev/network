@@ -1,21 +1,23 @@
-import assert from 'assert'
+import 'reflect-metadata'
 
 import {
-    toStreamID,
-    StreamMessage,
-    MessageID,
-    GroupKeyMessage,
-    MessageRef,
     EncryptedGroupKey,
+    GroupKeyMessage,
     GroupKeyRequest,
     GroupKeyResponse,
-    ValidationError
+    MessageID,
+    MessageRef,
+    StreamMessage,
+    ValidationError,
+    toStreamID
 } from '@streamr/protocol'
-import { Authentication } from '../../src/Authentication'
-import { createSignedMessage } from '../../src/publish/MessageFactory'
-import StreamMessageValidator from '../../src/StreamMessageValidator'
-import { createRandomAuthentication } from '../test-utils/utils'
 import { EthereumAddress } from '@streamr/utils'
+import assert from 'assert'
+import { Authentication } from '../../src/Authentication'
+import { Stream } from '../../src/Stream'
+import { Validator } from '../../src/Validator'
+import { createSignedMessage } from '../../src/publish/MessageFactory'
+import { createRandomAuthentication } from '../test-utils/utils'
 
 const groupKeyMessageToStreamMessage = async (
     groupKeyMessage: GroupKeyMessage,
@@ -35,8 +37,8 @@ const groupKeyMessageToStreamMessage = async (
 const publisherAuthentication = createRandomAuthentication()
 const subscriberAuthentication = createRandomAuthentication()
 
-describe('StreamMessageValidator', () => {
-    let getPartitionCount: (streamId: string) => Promise<number>
+describe('Validator2', () => {
+    let getStream: (streamId: string) => Promise<Stream>
     let isPublisher: (address: EthereumAddress, streamId: string) => Promise<boolean>
     let isSubscriber: (address: EthereumAddress, streamId: string) => Promise<boolean>
     let verify: ((address: EthereumAddress, payload: string, signature: string) => boolean) | undefined
@@ -46,13 +48,26 @@ describe('StreamMessageValidator', () => {
     let groupKeyRequest: StreamMessage
     let groupKeyResponse: StreamMessage
 
-    const getValidator = () => new StreamMessageValidator({ getPartitionCount, isPublisher, isSubscriber, verify })
+    const getValidator = () => new Validator(
+        { 
+            getStream,
+            isStreamPublisher: (streamId: string, address: EthereumAddress) => isPublisher(address, streamId),
+            isStreamSubscriber: (streamId: string, address: EthereumAddress) => isSubscriber(address, streamId)
+        } as any,
+        verify
+    )
 
     beforeEach(async () => {
         const publisher = await publisherAuthentication.getAddress()
         const subscriber = await subscriberAuthentication.getAddress()
         // Default stubs
-        getPartitionCount = jest.fn().mockResolvedValue(10)
+        getStream = async () => {
+            return {
+                getMetadata: () => ({
+                    partitions: 10
+                })
+            } as any
+        }
         isPublisher = async (address: EthereumAddress, streamId: string) => {
             return address === publisher && streamId === 'streamId'
         }
@@ -102,7 +117,7 @@ describe('StreamMessageValidator', () => {
 
     describe('validate(unknown message type)', () => {
         it('throws on unknown message type', async () => {
-            msg.messageType = 666
+            (msg as any).messageType = 666
             await assert.rejects(getValidator().validate(msg), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true
@@ -162,7 +177,7 @@ describe('StreamMessageValidator', () => {
 
         it('rejects if getStream rejects', async () => {
             const testError = new Error('test error')
-            getPartitionCount = jest.fn().mockRejectedValue(testError)
+            getStream = jest.fn().mockRejectedValue(testError)
 
             await assert.rejects(getValidator().validate(msg), (err: Error) => {
                 assert(err === testError)
