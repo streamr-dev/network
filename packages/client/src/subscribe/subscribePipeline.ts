@@ -8,7 +8,7 @@ import {
 } from '@streamr/protocol'
 import { OrderMessages } from './OrderMessages'
 import { MessageStream } from './MessageStream'
-import { Validator } from '../Validator'
+import { validateStreamMessage } from '../utils/validateStreamMessage'
 import { decrypt } from '../encryption/decrypt'
 import { StrictStreamrClientConfig } from '../Config'
 import { Resends } from './Resends'
@@ -31,10 +31,6 @@ export interface SubscriptionPipelineOptions {
 export const createSubscribePipeline = (opts: SubscriptionPipelineOptions): MessageStream => {
 
     const logger = opts.loggerFactory.createLogger(module)
-
-    const validate = new Validator(
-        opts.streamRegistryCached
-    )
 
     const gapFillMessages = new OrderMessages(
         opts.config,
@@ -59,7 +55,7 @@ export const createSubscribePipeline = (opts: SubscriptionPipelineOptions): Mess
 
     const messageStream = new MessageStream()
     const msgChainUtil = new MsgChainUtil(async (msg) => {
-        await validate.validate(msg)
+        await validateStreamMessage(msg, opts.streamRegistryCached)
         if (StreamMessage.isAESEncrypted(msg)) {
             try {
                 return decrypt(msg, opts.groupKeyManager, opts.destroySignal)

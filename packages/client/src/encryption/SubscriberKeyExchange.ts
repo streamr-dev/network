@@ -15,7 +15,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
-import { Validator } from '../Validator'
+import { validateStreamMessage } from '../utils/validateStreamMessage'
 import { createSignedMessage } from '../publish/MessageFactory'
 import { createRandomMsgChainId } from '../publish/messageChain'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
@@ -39,7 +39,7 @@ export class SubscriberKeyExchange {
     private readonly networkNodeFacade: NetworkNodeFacade
     private readonly store: LocalGroupKeyStore
     private readonly authentication: Authentication
-    private readonly validator: Validator
+    private readonly streamRegistryCached: StreamRegistryCached
     private readonly pendingRequests: MaxSizedSet<string> = new MaxSizedSet(MAX_PENDING_REQUEST_COUNT)
     private readonly ensureStarted: () => Promise<void>
     requestGroupKey: (groupKeyId: string, publisherId: EthereumAddress, streamPartId: StreamPartID) => Promise<void>
@@ -56,7 +56,7 @@ export class SubscriberKeyExchange {
         this.networkNodeFacade = networkNodeFacade
         this.store = store
         this.authentication = authentication
-        this.validator = new Validator(streamRegistryCached)
+        this.streamRegistryCached = streamRegistryCached
         this.ensureStarted = pOnce(async () => {
             this.rsaKeyPair = await RSAKeyPair.create()
             const node = await networkNodeFacade.getNode()
@@ -124,7 +124,7 @@ export class SubscriberKeyExchange {
                 if ((recipient === authenticatedUser) && (this.pendingRequests.has(requestId))) {
                     this.logger.debug('Handle group key response', { requestId })
                     this.pendingRequests.delete(requestId)
-                    await this.validator.validate(msg)
+                    await validateStreamMessage(msg, this.streamRegistryCached)
                     await Promise.all(encryptedGroupKeys.map(async (encryptedKey) => {
                         const key = GroupKey.decryptRSAEncrypted(encryptedKey, this.rsaKeyPair!.getPrivateKey())
                         await this.store.set(key.id, msg.getPublisherId(), key.data)

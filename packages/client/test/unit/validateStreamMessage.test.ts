@@ -5,15 +5,27 @@ import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 import { toStreamID, toStreamPartID } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
 import { StreamRegistry } from '../../src/registry/StreamRegistry'
-import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
 import { Stream } from '../../src/Stream'
-import { Validator } from '../../src/Validator'
-import { createMockMessage, mockLoggerFactory } from '../test-utils/utils'
+import { validateStreamMessage } from '../../src/utils/validateStreamMessage'
+import { createMockMessage } from '../test-utils/utils'
 
 const publisherWallet = fastWallet()
 const PARTITION_COUNT = 3
 
-const createMockValidator = () => {
+interface MessageOptions {
+    partition?: number
+    publisher?: Wallet
+    signature?: string
+}
+
+const validate = async (messageOptions: MessageOptions) => {
+    const msg = await createMockMessage({
+        streamPartId: toStreamPartID(toStreamID('streamId'), messageOptions.partition ?? 0),
+        publisher: messageOptions.publisher ?? publisherWallet,
+    })
+    if (messageOptions.signature !== undefined) {
+        msg.signature = messageOptions.signature
+    }
     const streamRegistry: Pick<StreamRegistry, 'getStream' | 'isStreamPublisher'> = {
         getStream: async (): Promise<Stream> => ({
             getMetadata: () => ({
@@ -24,27 +36,7 @@ const createMockValidator = () => {
             return userAddress === toEthereumAddress(publisherWallet.address)
         }
     }
-    return new Validator(
-        new StreamRegistryCached(mockLoggerFactory(), streamRegistry as any, {} as any) as any
-    )
-}
-
-interface MessageOptions {
-    partition?: number
-    publisher?: Wallet
-    signature?: string
-}
-
-const validate = async (messageOptions: MessageOptions) => {
-    const validator = createMockValidator()
-    const msg = await createMockMessage({
-        streamPartId: toStreamPartID(toStreamID('streamId'), messageOptions.partition ?? 0),
-        publisher: messageOptions.publisher ?? publisherWallet,
-    })
-    if (messageOptions.signature !== undefined) {
-        msg.signature = messageOptions.signature
-    }
-    await validator.validate(msg)
+    await validateStreamMessage(msg, streamRegistry as any)
 }
 
 describe('Validator', () => {

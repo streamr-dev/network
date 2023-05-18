@@ -13,7 +13,7 @@ import { EthereumAddress } from '@streamr/utils'
 import assert from 'assert'
 import { Authentication } from '../../src/Authentication'
 import { Stream } from '../../src/Stream'
-import { Validator } from '../../src/Validator'
+import { validateStreamMessage } from '../../src/utils/validateStreamMessage'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { createRandomAuthentication } from '../test-utils/utils'
 
@@ -45,13 +45,15 @@ describe('Validator2', () => {
     let groupKeyRequest: StreamMessage
     let groupKeyResponse: StreamMessage
 
-    const getValidator = () => new Validator(
-        { 
-            getStream,
-            isStreamPublisher: (streamId: string, address: EthereumAddress) => isPublisher(address, streamId),
-            isStreamSubscriber: (streamId: string, address: EthereumAddress) => isSubscriber(address, streamId)
-        } as any,
-    )
+    const getValidator = () => {
+        return {
+            validate: (msg: StreamMessage) => validateStreamMessage(msg, { 
+                getStream,
+                isStreamPublisher: (streamId: string, address: EthereumAddress) => isPublisher(address, streamId),
+                isStreamSubscriber: (streamId: string, address: EthereumAddress) => isSubscriber(address, streamId)
+            } as any)
+        }
+    }
 
     beforeEach(async () => {
         const publisher = await publisherAuthentication.getAddress()

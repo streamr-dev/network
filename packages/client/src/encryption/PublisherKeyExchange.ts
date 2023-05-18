@@ -15,7 +15,7 @@ import without from 'lodash/without'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
-import { Validator } from '../Validator'
+import { validateStreamMessage } from '../utils/validateStreamMessage'
 import { createSignedMessage } from '../publish/MessageFactory'
 import { createRandomMsgChainId } from '../publish/messageChain'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
@@ -34,7 +34,7 @@ export class PublisherKeyExchange {
     private readonly store: LocalGroupKeyStore
     private readonly networkNodeFacade: NetworkNodeFacade
     private readonly authentication: Authentication
-    private readonly validator: Validator
+    private readonly streamRegistryCached: StreamRegistryCached
 
     constructor(
         store: LocalGroupKeyStore,
@@ -47,7 +47,7 @@ export class PublisherKeyExchange {
         this.store = store
         this.networkNodeFacade = networkNodeFacade
         this.authentication = authentication
-        this.validator = new Validator(streamRegistryCached)
+        this.streamRegistryCached = streamRegistryCached
         networkNodeFacade.once('start', async () => {
             const node = await networkNodeFacade.getNode()
             node.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
@@ -62,7 +62,7 @@ export class PublisherKeyExchange {
                 const { recipient, requestId, rsaPublicKey, groupKeyIds } = GroupKeyRequest.fromStreamMessage(request) as GroupKeyRequest
                 if (recipient === authenticatedUser) {
                     this.logger.debug('Handling group key request', { requestId })
-                    await this.validator.validate(request)
+                    await validateStreamMessage(request, this.streamRegistryCached)
                     const keys = without(
                         await Promise.all(groupKeyIds.map((id: string) => this.store.get(id, authenticatedUser))),
                         undefined) as GroupKey[]
