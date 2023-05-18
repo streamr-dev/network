@@ -4,7 +4,6 @@ import {
     StreamMessage,
     StreamMessageError,
     StreamMessageType,
-    ValidationError,
     createSignaturePayload,
 } from '@streamr/protocol'
 import { EthereumAddress } from '@streamr/utils'
@@ -57,12 +56,7 @@ export class Validator {
      * @param streamMessage the StreamMessage to validate.
      */
     private async doValidate(streamMessage: StreamMessage): Promise<void> {
-        if (!streamMessage) {
-            throw new ValidationError('Falsey argument passed to validate()!')
-        }
-
         this.assertSignatureIsValid(streamMessage)
-
         switch (streamMessage.messageType) {
             case StreamMessageType.MESSAGE:
                 return this.validateMessage(streamMessage)
