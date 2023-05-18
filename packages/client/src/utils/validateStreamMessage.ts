@@ -73,13 +73,9 @@ const validateMessage = async (streamMessage: StreamMessage, streamRegistry: Str
     const stream = await streamRegistry.getStream(streamMessage.getStreamId())
     const partitionCount = stream.getMetadata().partitions
     if (streamMessage.getStreamPartition() < 0 || streamMessage.getStreamPartition() >= partitionCount) {
-        throw new StreamMessageError(
-            `Partition ${streamMessage.getStreamPartition()} is out of range (0..${partitionCount - 1})`,
-            streamMessage
-        )
+        throw new StreamMessageError(`Partition ${streamMessage.getStreamPartition()} is out of range (0..${partitionCount - 1})`, streamMessage)
     }
     const sender = streamMessage.getPublisherId()
-    // Check that the sender of the message is a valid publisher of the stream
     const senderIsPublisher = await streamRegistry.isStreamPublisher(streamMessage.getStreamId(), sender)
     if (!senderIsPublisher) {
         throw new StreamMessageError(`${sender} is not a publisher on stream ${streamMessage.getStreamId()}.`, streamMessage)
@@ -91,12 +87,10 @@ const validateGroupKeyRequest = async (streamMessage: StreamMessage, streamRegis
     const sender = streamMessage.getPublisherId()
     const streamId = streamMessage.getStreamId()
     const recipient = groupKeyRequest.recipient
-    // Check that the recipient of the request is a valid publisher of the stream
     const recipientIsPublisher = await streamRegistry.isStreamPublisher(streamId, recipient)
     if (!recipientIsPublisher) {
         throw new StreamMessageError(`${recipient} is not a publisher on stream ${streamId}.`, streamMessage)
     }
-    // Check that the sender of the request is a valid subscriber of the stream
     const senderIsSubscriber = await streamRegistry.isStreamSubscriber(streamId, sender)
     if (!senderIsSubscriber) {
         throw new StreamMessageError(`${sender} is not a subscriber on stream ${streamId}.`, streamMessage)
@@ -104,25 +98,16 @@ const validateGroupKeyRequest = async (streamMessage: StreamMessage, streamRegis
 }
 
 const validateGroupKeyResponse = async (streamMessage: StreamMessage, streamRegistry: StreamRegistryCached): Promise<void> => {
-    const groupKeyMessage = GroupKeyMessage.fromStreamMessage(streamMessage) // only streamId is read
+    const groupKeyMessage = GroupKeyMessage.fromStreamMessage(streamMessage)
     const sender = streamMessage.getPublisherId()
     const streamId = streamMessage.getStreamId()
     const recipient = groupKeyMessage.recipient
-    // Check that the sender of the request is a valid publisher of the stream
     const senderIsPublisher = await streamRegistry.isStreamPublisher(streamId, sender)
     if (!senderIsPublisher) {
-        throw new StreamMessageError(
-            `${sender} is not a publisher on stream ${streamId}. ${streamMessage.messageType}`,
-            streamMessage
-        )
+        throw new StreamMessageError(`${sender} is not a publisher on stream ${streamId}. ${streamMessage.messageType}`, streamMessage)
     }
-    // permit publishers to send error responses to invalid subscribers
-    // Check that the recipient of the request is a valid subscriber of the stream
     const recipientIsSubscriber = await streamRegistry.isStreamSubscriber(streamId, recipient)
     if (!recipientIsSubscriber) {
-        throw new StreamMessageError(
-            `${recipient} is not a subscriber on stream ${streamId}. ${streamMessage.messageType}`,
-            streamMessage
-        )
+        throw new StreamMessageError(`${recipient} is not a subscriber on stream ${streamId}. ${streamMessage.messageType}`, streamMessage)
     }
 }
