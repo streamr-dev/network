@@ -593,7 +593,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
             this.config.serviceId
         )
-        await target.getClosestPeers(this.ownPeerId!.value)
         this.entryPointDisconnectTimeout = setTimeout(() => {
             this.connectionManager!.unlockConnection(entryPoint, 'temporary-layer0-connection')
         }, 10 * 1000)

@@ -41,7 +41,7 @@ export class NetworkStack {
         } else {
             setImmediate(() => this.layer0DhtNode!.joinDht(this.options.layer0.entryPoints![0]))
             try {
-                await waitForCondition(() => this.layer0DhtNode!.getNumberOfConnections() > 0, 15000)
+                await waitForCondition(() => this.layer0DhtNode!.getNumberOfConnections() > 0, 5000)
             } catch (err) {
                 logger.error(`${this.layer0DhtNode!.getPeerDescriptor()} failed to connect to ${entryPoint} after 15s. ${err}`)
                 // throw err
