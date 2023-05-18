@@ -38,7 +38,7 @@ export class NetworkStack {
             await this.streamrNode!.start(this.layer0DhtNode!, this.connectionManager!, this.connectionManager!)
         } else {
             setImmediate(() => this.layer0DhtNode!.joinDht(this.options.layer0.entryPoints![0])) 
-            await waitForCondition(() => this.layer0DhtNode!.getNumberOfConnections() > 0)
+            await waitForCondition(() => this.layer0DhtNode!.getNumberOfConnections() > 0, 15000)
             await this.streamrNode!.start(this.layer0DhtNode!, this.connectionManager!, this.connectionManager!)
         }
         
