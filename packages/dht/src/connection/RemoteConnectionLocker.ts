@@ -70,7 +70,6 @@ export class RemoteConnectionLocker {
         } catch (err) {
             logger.trace(`unlockRequest error ${this.targetPeerDescriptor.nodeName}`, { err })
         }
-        
 
     }
 
