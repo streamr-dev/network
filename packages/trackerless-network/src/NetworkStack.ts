@@ -44,7 +44,7 @@ export class NetworkStack {
                 await waitForCondition(() => this.layer0DhtNode!.getNumberOfConnections() > 0, 15000)
             } catch (err) {
                 logger.error(`${this.layer0DhtNode!.getPeerDescriptor()} failed to connect to ${entryPoint} after 15s. ${err}`)
-                throw err
+                // throw err
             }
             await this.streamrNode!.start(this.layer0DhtNode!, this.connectionManager!, this.connectionManager!)
         }
