@@ -185,13 +185,13 @@ export class RandomGraphNode extends EventEmitter<Events> {
         })
     }
 
-    stop(): void {
+    async stop(): Promise<void> {
         if (!this.started) {
             return
         }
         this.stopped = true
         this.abortController.abort()
-        this.config.targetNeighbors.values().map((remote) => remote.leaveStreamNotice(this.config.ownPeerDescriptor))
+        await Promise.all(this.config.targetNeighbors.values().map((remote) => remote.leaveStreamNotice(this.config.ownPeerDescriptor)))
         this.config.rpcCommunicator.stop()
         this.removeAllListeners()
         this.config.layer1.off('newContact', (peerDescriptor, closestTen) => this.newContact(peerDescriptor, closestTen))

@@ -63,9 +63,14 @@ export class RemoteConnectionLocker {
             notification: true
         }
 
-        this.client.unlockRequest(request, options).catch((_e) => {
-            logger.trace('failed to send unlockRequest')
-        })
+        try {
+            this.client.unlockRequest(request, options).catch((_e) => {
+                logger.trace('failed to send unlockRequest')
+            })
+        } catch (err) {
+            logger.trace(`unlockRequest error ${this.targetPeerDescriptor.nodeName}`, { err })
+        }
+        
 
     }
 
@@ -83,6 +88,11 @@ export class RemoteConnectionLocker {
             doNotMindStopped: true,
             timeout: 2000
         }
-        await this.client.gracefulDisconnect(request, options)
+        try {
+            await this.client.gracefulDisconnect(request, options)
+        } catch (err) {
+            logger.trace(`gracefulDisconnect error ${this.targetPeerDescriptor.nodeName}`, { err })
+        }
+
     }
 }

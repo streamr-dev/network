@@ -17,12 +17,14 @@ export class RemoteRandomGraphNode extends Remote<INetworkRpcClient> {
             targetDescriptor: this.remotePeerDescriptor as PeerDescriptor,
             notification: true
         }
-        this.client.sendData(msg, options).catch(() => {
-            logger.trace('Failed to sendData')
-        })
+        try {
+            await this.client.sendData(msg, options)
+        } catch (err: any) {
+            logger.trace(`${err}`)
+        }
     }
 
-    leaveStreamNotice(ownPeerDescriptor: PeerDescriptor): void {
+    async leaveStreamNotice(ownPeerDescriptor: PeerDescriptor): Promise<void> {
         const options: DhtRpcOptions = {
             sourceDescriptor: ownPeerDescriptor as PeerDescriptor,
             targetDescriptor: this.remotePeerDescriptor as PeerDescriptor,
@@ -32,8 +34,10 @@ export class RemoteRandomGraphNode extends Remote<INetworkRpcClient> {
             senderId: keyFromPeerDescriptor(ownPeerDescriptor),
             randomGraphId: this.graphId
         }
-        this.client.leaveStreamNotice(notification, options).catch(() => {
-            logger.debug('Failed to send leaveStreamNotice')
-        })
+        try {
+            await this.client.leaveStreamNotice(notification, options)
+        } catch (err) {
+            logger.trace(`${err}`)
+        }
     }
 }
