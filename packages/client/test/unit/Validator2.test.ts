@@ -39,7 +39,6 @@ describe('Validator2', () => {
     let getStream: (streamId: string) => Promise<Stream>
     let isPublisher: (address: EthereumAddress, streamId: string) => Promise<boolean>
     let isSubscriber: (address: EthereumAddress, streamId: string) => Promise<boolean>
-    let verify: ((address: EthereumAddress, payload: string, signature: string) => boolean) | undefined
     let msg: StreamMessage
     let msgWithNewGroupKey: StreamMessage
     let msgWithPrevMsgRef: StreamMessage
@@ -52,7 +51,6 @@ describe('Validator2', () => {
             isStreamPublisher: (streamId: string, address: EthereumAddress) => isPublisher(address, streamId),
             isStreamSubscriber: (streamId: string, address: EthereumAddress) => isSubscriber(address, streamId)
         } as any,
-        verify
     )
 
     beforeEach(async () => {
@@ -72,7 +70,6 @@ describe('Validator2', () => {
         isSubscriber = async (address: EthereumAddress, streamId: string) => {
             return address === subscriber && streamId === 'streamId'
         }
-        verify = undefined // use default impl by default
 
         msg = await createSignedMessage({
             messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'),
@@ -191,17 +188,6 @@ describe('Validator2', () => {
                 return true
             })
         })
-
-        it('rejects with ValidationError if verify throws', async () => {
-            const testError = new Error('test error')
-            verify = jest.fn().mockImplementation(() => {
-                throw testError
-            })
-            await assert.rejects(getValidator().validate(msg), (err: Error) => {
-                assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
-                return true
-            })
-        })
     })
 
     describe('validate(group key request)', () => {
@@ -266,17 +252,6 @@ describe('Validator2', () => {
                 return true
             })
         })
-
-        it('rejects with ValidationError if verify throws', async () => {
-            const testError = new Error('test error')
-            verify = jest.fn().mockImplementation(() => {
-                throw testError
-            })
-            await assert.rejects(getValidator().validate(groupKeyRequest), (err: Error) => {
-                assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
-                return true
-            })
-        })
     })
 
     describe('validate(group key response)', () => {
@@ -338,17 +313,6 @@ describe('Validator2', () => {
             isSubscriber = jest.fn().mockRejectedValue(testError)
             await assert.rejects(getValidator().validate(groupKeyResponse), (err: Error) => {
                 assert(err === testError)
-                return true
-            })
-        })
-
-        it('rejects with ValidationError if verify throws', async () => {
-            const testError = new Error('test error')
-            verify = jest.fn().mockImplementation(() => {
-                throw testError
-            })
-            await assert.rejects(getValidator().validate(groupKeyResponse), (err: Error) => {
-                assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true
             })
         })

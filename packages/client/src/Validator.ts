@@ -6,17 +6,14 @@ import {
     StreamMessageType,
     createSignaturePayload,
 } from '@streamr/protocol'
-import { EthereumAddress } from '@streamr/utils'
 import { StreamRegistryCached } from './registry/StreamRegistryCached'
-import { verify as verifyImpl } from './utils/signingUtils'
+import { verify } from './utils/signingUtils'
 
 export class Validator {
     private readonly streamRegistryCached: StreamRegistryCached
-    private readonly verify: (address: EthereumAddress, payload: string, signature: string) => boolean
 
-    constructor(streamRegistryCached: StreamRegistryCached, verify = verifyImpl) {
+    constructor(streamRegistryCached: StreamRegistryCached) {
         this.streamRegistryCached = streamRegistryCached
-        this.verify = verify
     }
 
     async validate(msg: StreamMessage): Promise<void> {
@@ -61,6 +58,7 @@ export class Validator {
      *
      * @param streamMessage the StreamMessage to validate.
      */
+    // eslint-disable-next-line class-methods-use-this
     private assertSignatureIsValid(streamMessage: StreamMessage): void {
         const payload = createSignaturePayload({
             messageId: streamMessage.getMessageID(),
@@ -70,7 +68,7 @@ export class Validator {
         })
         let success
         try {
-            success = this.verify(streamMessage.getPublisherId(), payload, streamMessage.signature)
+            success = verify(streamMessage.getPublisherId(), payload, streamMessage.signature)
         } catch (err) {
             throw new StreamMessageError(`An error occurred during address recovery from signature: ${err}`, streamMessage)
         }
