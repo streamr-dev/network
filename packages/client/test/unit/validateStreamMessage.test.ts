@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { Wallet } from '@ethersproject/wallet'
 import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 import { toStreamID, toStreamPartID } from '@streamr/protocol'
