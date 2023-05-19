@@ -9,6 +9,7 @@ export interface GraphQLQuery {
 }
 
 class BlockNumberGate extends Gate {
+    
     blockNumber: number
 
     constructor(blockNumber: number) {
@@ -18,6 +19,7 @@ class BlockNumberGate extends Gate {
 }
 
 class IndexingState {
+
     private blockNumber = 0
     private gates: Set<BlockNumberGate> = new Set()
     private readonly getCurrentBlockNumber: () => Promise<number>
@@ -89,22 +91,6 @@ class IndexingState {
     }
 }
 
-/*
- * TheGraphClient is used to query The Graph index. It is very similar to the GraphQLClient class 
- * and has identical public API for executing queries.
- *
- * In this class there is an additional method `updateRequiredBlockNumber(n)`. If that method
- * is called, then any subsequent query will provide up-to-date data from The Graph (i.e. data
- * which has been indexed at least to that block number).
- *
- * If TheGraphClient is used, the client instance should be notified about any transaction which
- * writes to the blockchain indexed by The Graph. That way we can ensure that all read queries
- * from The Graph correspond the data written in those transactions.
- *
- * The notification can be done by calling the `updateRequiredBlockNumber(n)` method described above.
- * We can use the helper method `createWriteContract` to create a contract which automatically
- * updates the client when something is written to the blockchain via that contract.
- */
 export class TheGraphClient {
 
     private requiredBlockNumber = 0
@@ -162,6 +148,10 @@ export class TheGraphClient {
         } while (lastResultSet.length === pageSize)
     }
 
+    /*
+     * If this method is called, then any subsequent query will provide up-to-date data from The Graph (i.e. data
+     * which has been indexed at least to that block number).
+     */
     updateRequiredBlockNumber(blockNumber: number): void {
         this.requiredBlockNumber = Math.max(blockNumber, this.requiredBlockNumber)
     }

@@ -56,6 +56,8 @@ export class ContractFactory {
             999999
         )
         contract.eventEmitter.on('onTransactionConfirm', (_methodName: string, _tx: ContractTransaction, receipt: ContractReceipt) => {
+            // This ensures that all read queries from The Graph are up-to-date with this transaction (i.e. if a query targets
+            // an entity that is created/updated by this transaction, that data is available for the query)
             this.graphQLClient.updateRequiredBlockNumber(receipt.blockNumber)
         })
         return contract
