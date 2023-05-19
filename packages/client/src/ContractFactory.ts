@@ -1,12 +1,11 @@
-import { inject, Lifecycle, scoped } from 'tsyringe'
+import { Signer } from '@ethersproject/abstract-signer'
 import { Contract, ContractInterface, ContractReceipt, ContractTransaction } from '@ethersproject/contracts'
 import { Provider } from '@ethersproject/providers'
-import { Signer } from '@ethersproject/abstract-signer'
-import { ObservableContract, createDecoratedContract } from './utils/contract'
-import { TheGraphClient } from './utils/TheGraphClient'
-import { TheGraphClientFactory } from './TheGraphClientFactory'
+import { EthereumAddress, TheGraphClient } from '@streamr/utils'
+import { inject, Lifecycle, scoped } from 'tsyringe'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
-import { EthereumAddress } from '@streamr/utils'
+import { TheGraphClientFactory } from './TheGraphClientFactory'
+import { createDecoratedContract, ObservableContract } from './utils/contract'
 import { LoggerFactory } from './utils/LoggerFactory'
 
 @scoped(Lifecycle.ContainerScoped)

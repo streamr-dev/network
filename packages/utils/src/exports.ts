@@ -33,6 +33,7 @@ import { initEventGateway } from './initEventGateway'
 import { merge } from './merge'
 import { collect } from './collect'
 import { Gate } from './Gate'
+import { TheGraphClient, GraphQLQuery, FetchResponse } from './TheGraphClient'
 
 export {
     BrandedString,
@@ -67,7 +68,10 @@ export {
     initEventGateway,
     merge,
     collect,
-    Gate
+    Gate,
+    TheGraphClient,
+    GraphQLQuery,
+    FetchResponse
 }
 
 export {

@@ -14,7 +14,7 @@ import type { StreamStorageRegistryV2 as StreamStorageRegistryContract } from '.
 import StreamStorageRegistryArtifact from '../ethereumArtifacts/StreamStorageRegistryV2Abi.json'
 import { StreamrClientEventEmitter } from '../events'
 import { LoggerFactory } from '../utils/LoggerFactory'
-import { TheGraphClient } from '../utils/TheGraphClient'
+import { TheGraphClient } from '@streamr/utils'
 import { TheGraphClientFactory } from '../TheGraphClientFactory'
 import { initContractEventGateway, queryAllReadonlyContracts, waitForTx } from '../utils/contract'
 

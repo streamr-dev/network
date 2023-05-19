@@ -29,7 +29,7 @@ import {
 } from '../permission'
 import { filter, map } from '../utils/GeneratorUtils'
 import { LoggerFactory } from '../utils/LoggerFactory'
-import { GraphQLQuery, TheGraphClient } from '../utils/TheGraphClient'
+import { GraphQLQuery, TheGraphClient } from '@streamr/utils'
 import { TheGraphClientFactory } from '../TheGraphClientFactory'
 import { ObservableContract, initContractEventGateway, queryAllReadonlyContracts, waitForTx } from '../utils/contract'
 import { until } from '../utils/promises'

@@ -1,8 +1,8 @@
+import { TheGraphClient } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
 import { HttpFetcher } from './utils/HttpFetcher'
 import { LoggerFactory } from './utils/LoggerFactory'
-import { TheGraphClient } from './utils/TheGraphClient'
 
 // TODO maybe we could create an instance of TheGraphClient in client constructor,
 // and put that to DI there. ContractFactory could emit configContractEvent which
@@ -20,7 +20,7 @@ export class TheGraphClientFactory {
     ) {
         this.instance = new TheGraphClient(
             config.contracts.theGraphUrl,
-            loggerFactory,
+            loggerFactory.createLogger(module),
             (url: string, init?: Record<string, unknown>) => httpFetcher.fetch(url, init),
             {
                 // eslint-disable-next-line no-underscore-dangle

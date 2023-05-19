@@ -1,10 +1,16 @@
-import { Gate, Logger, TimeoutError, wait, withTimeout } from '@streamr/utils'
-import { Response } from 'node-fetch'
-import { LoggerFactory } from './LoggerFactory'
+import { Gate } from './Gate'
+import { Logger } from './Logger'
+import { wait } from './wait'
+import { TimeoutError, withTimeout } from './withTimeout'
 
 export interface GraphQLQuery {
     query: string
     variables?: Record<string, any>
+}
+
+// compatible with fetch and node-fetch (alternatively we could use Response from node-fetch if add that as a dependency)
+export interface FetchResponse {
+    text: () => Promise<string>
 }
 
 /** 
@@ -21,23 +27,23 @@ export class TheGraphClient {
     private requiredBlockNumber = 0
     private readonly indexingState: IndexingState
     private readonly serverUrl: string
-    private readonly fetch: (url: string, init?: Record<string, unknown>) => Promise<Response>
+    private readonly fetch: (url: string, init?: Record<string, unknown>) => Promise<FetchResponse>
     private readonly logger: Logger
 
     constructor(
         serverUrl: string,
-        loggerFactory: LoggerFactory,
-        fetch: (url: string, init?: Record<string, unknown>) => Promise<Response>,
+        logger: Logger,
+        fetch: (url: string, init?: Record<string, unknown>) => Promise<FetchResponse>,
         opts?: { indexTimeout?: number, indexPollInterval?: number }
     ) {
         this.serverUrl = serverUrl
-        this.logger = loggerFactory.createLogger(module)
+        this.logger = logger
         this.fetch = fetch
         this.indexingState = new IndexingState(
             () => this.getIndexBlockNumber(),
             opts?.indexTimeout ?? 60000,
             opts?.indexPollInterval ?? 1000,
-            loggerFactory
+            logger
         )
     }
 
@@ -142,12 +148,12 @@ class IndexingState {
         getCurrentBlockNumber: () => Promise<number>,
         timeout: number,
         pollInterval: number,
-        loggerFactory: LoggerFactory
+        logger: Logger
     ) {
         this.getCurrentBlockNumber = getCurrentBlockNumber
         this.timeout = timeout
         this.pollInterval = pollInterval
-        this.logger = loggerFactory.createLogger(module)
+        this.logger = logger
     }
 
     async waitUntilIndexed(blockNumber: number): Promise<void> {

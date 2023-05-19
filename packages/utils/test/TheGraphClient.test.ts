@@ -1,8 +1,6 @@
-import 'reflect-metadata'
-
 import { wait } from '@streamr/utils'
-import { TheGraphClient } from '../../src/utils/TheGraphClient'
-import { mockLoggerFactory } from '../test-utils/utils'
+import { TheGraphClient } from '../src/TheGraphClient'
+import { Logger } from '../src/Logger'
 
 const POLL_INTERVAL = 50
 const INDEXING_INTERVAL = 100
@@ -96,7 +94,7 @@ describe('TheGraphClient', () => {
         }
         client = new TheGraphClient(
             '',
-            mockLoggerFactory(),
+            new Logger(module),
             fetch as any,
             {
                 indexTimeout: 10 * INDEXING_INTERVAL,

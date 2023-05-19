@@ -6,7 +6,7 @@ import { randomEthereumAddress } from '@streamr/test-utils'
 import { collect } from '@streamr/utils'
 import { Stream } from '../../src/Stream'
 import { SearchStreamsResultItem, searchStreams } from '../../src/registry/searchStreams'
-import { TheGraphClient } from '../../src/utils/TheGraphClient'
+import { TheGraphClient } from '@streamr/utils'
 import { mockLoggerFactory } from '../test-utils/utils'
 
 const MOCK_USER = randomEthereumAddress()
