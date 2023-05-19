@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { wait } from '@streamr/utils'
-import { SynchronizedGraphQLClient } from '../../src/utils/SynchronizedGraphQLClient'
+import { TheGraphClient } from '../../src/utils/TheGraphClient'
 import { mockLoggerFactory } from '../test-utils/utils'
 
 const POLL_INTERVAL = 50
@@ -39,12 +39,12 @@ class EmulatedTheGraphIndex {
     }
 }
 
-describe('SynchronizedGraphQLClient', () => {
+describe('TheGraphClient', () => {
 
     let theGraphIndex: EmulatedTheGraphIndex
     let sendQuery: jest.Mock<Promise<any>, []>
     let getIndexBlockNumber: jest.Mock<Promise<number>, []>
-    let client: Pick<SynchronizedGraphQLClient, 'sendQuery' | 'updateRequiredBlockNumber'>
+    let client: Pick<TheGraphClient, 'sendQuery' | 'updateRequiredBlockNumber'>
 
     beforeEach(() => {
         theGraphIndex = new EmulatedTheGraphIndex([{
@@ -80,21 +80,23 @@ describe('SynchronizedGraphQLClient', () => {
         getIndexBlockNumber = jest.fn().mockImplementation(() => {
             return theGraphIndex.getState().blockNumber
         })
-        client = new SynchronizedGraphQLClient(
+        client = new TheGraphClient(
             mockLoggerFactory(),
-            {
-                sendQuery,
-                getIndexBlockNumber
-            } as any,
+            undefined as any,
             {
                 _timeouts: {
                     theGraph: {
                         timeout: 10 * INDEXING_INTERVAL,
                         retryInterval: POLL_INTERVAL
-                    }    
+                    }
                 }
             } as any
         )
+        // @ts-expect-error private
+        client.delegate = {
+            sendQuery,
+            getIndexBlockNumber
+        } as any
     })
 
     afterEach(() => {

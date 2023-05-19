@@ -1,12 +1,11 @@
 /* eslint-disable padding-line-between-statements */
 import { StreamID, toStreamID } from '@streamr/protocol'
-import { StreamQueryResult } from './StreamRegistry'
-import { StreamPermission, ChainPermissions, convertChainPermissionsToStreamPermissions, PUBLIC_PERMISSION_ADDRESS } from '../permission'
-import { GraphQLClient, GraphQLQuery } from '../utils/GraphQLClient'
-import { filter, map, unique } from '../utils/GeneratorUtils'
-import { SynchronizedGraphQLClient } from '../utils/SynchronizedGraphQLClient'
-import { Stream } from '../Stream'
 import { EthereumAddress, Logger, toEthereumAddress } from '@streamr/utils'
+import { Stream } from '../Stream'
+import { ChainPermissions, PUBLIC_PERMISSION_ADDRESS, StreamPermission, convertChainPermissionsToStreamPermissions } from '../permission'
+import { filter, map, unique } from '../utils/GeneratorUtils'
+import { GraphQLClient, GraphQLQuery, TheGraphClient } from '../utils/TheGraphClient'
+import { StreamQueryResult } from './StreamRegistry'
 
 export interface SearchStreamsPermissionFilter {
     user: string
@@ -33,7 +32,7 @@ export const searchStreams = (
     term: string | undefined,
     permissionFilter: SearchStreamsPermissionFilter | undefined,
     orderBy: SearchStreamsOrderBy,
-    graphQLClient: SynchronizedGraphQLClient,
+    graphQLClient: TheGraphClient,
     parseStream: (id: StreamID, metadata: string) => Stream,
     logger: Logger,
 ): AsyncGenerator<Stream> => {
@@ -57,7 +56,7 @@ async function* fetchSearchStreamsResultFromTheGraph(
     term: string | undefined,
     permissionFilter: SearchStreamsPermissionFilter | undefined,
     orderBy: SearchStreamsOrderBy,
-    graphQLClient: SynchronizedGraphQLClient,
+    graphQLClient: TheGraphClient,
 ): AsyncGenerator<SearchStreamsResultItem> {
     const backendResults = graphQLClient.fetchPaginatedResults<SearchStreamsResultItem>(
         (lastId: string, pageSize: number) => buildQuery(term, permissionFilter, orderBy, lastId, pageSize)

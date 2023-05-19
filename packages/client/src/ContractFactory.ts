@@ -3,19 +3,19 @@ import { Contract, ContractInterface, ContractReceipt, ContractTransaction } fro
 import { Provider } from '@ethersproject/providers'
 import { Signer } from '@ethersproject/abstract-signer'
 import { ObservableContract, createDecoratedContract } from './utils/contract'
-import { SynchronizedGraphQLClient } from './utils/SynchronizedGraphQLClient'
+import { TheGraphClient } from './utils/TheGraphClient'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
 import { EthereumAddress } from '@streamr/utils'
 import { LoggerFactory } from './utils/LoggerFactory'
 
 @scoped(Lifecycle.ContainerScoped)
 export class ContractFactory {
-    private readonly graphQLClient: SynchronizedGraphQLClient
+    private readonly graphQLClient: TheGraphClient
     private readonly loggerFactory: LoggerFactory
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts'>
 
     constructor(
-        graphQLClient: SynchronizedGraphQLClient,
+        graphQLClient: TheGraphClient,
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts'>
     ) {

@@ -14,7 +14,7 @@ import type { StreamStorageRegistryV2 as StreamStorageRegistryContract } from '.
 import StreamStorageRegistryArtifact from '../ethereumArtifacts/StreamStorageRegistryV2Abi.json'
 import { StreamrClientEventEmitter } from '../events'
 import { LoggerFactory } from '../utils/LoggerFactory'
-import { SynchronizedGraphQLClient } from '../utils/SynchronizedGraphQLClient'
+import { TheGraphClient } from '../utils/TheGraphClient'
 import { initContractEventGateway, queryAllReadonlyContracts, waitForTx } from '../utils/contract'
 
 export interface StorageNodeAssignmentEvent {
@@ -38,7 +38,7 @@ export class StreamStorageRegistry {
     private contractFactory: ContractFactory
     private streamFactory: StreamFactory
     private streamIdBuilder: StreamIDBuilder
-    private graphQLClient: SynchronizedGraphQLClient
+    private graphQLClient: TheGraphClient
     private authentication: Authentication
     private streamStorageRegistryContract?: StreamStorageRegistryContract
     private config: Pick<StrictStreamrClientConfig, 'contracts'>
@@ -49,7 +49,7 @@ export class StreamStorageRegistry {
         contractFactory: ContractFactory,
         @inject(delay(() => StreamFactory)) streamFactory: StreamFactory,
         @inject(StreamIDBuilder) streamIdBuilder: StreamIDBuilder,
-        @inject(SynchronizedGraphQLClient) graphQLClient: SynchronizedGraphQLClient,
+        @inject(TheGraphClient) graphQLClient: TheGraphClient,
         @inject(StreamrClientEventEmitter) eventEmitter: StreamrClientEventEmitter,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         @inject(LoggerFactory) loggerFactory: LoggerFactory,

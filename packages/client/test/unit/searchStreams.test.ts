@@ -6,7 +6,7 @@ import { randomEthereumAddress } from '@streamr/test-utils'
 import { collect } from '@streamr/utils'
 import { Stream } from '../../src/Stream'
 import { SearchStreamsResultItem, searchStreams } from '../../src/registry/searchStreams'
-import { SynchronizedGraphQLClient } from '../../src/utils/SynchronizedGraphQLClient'
+import { TheGraphClient } from '../../src/utils/TheGraphClient'
 import { mockLoggerFactory } from '../test-utils/utils'
 
 const MOCK_USER = randomEthereumAddress()
@@ -27,7 +27,7 @@ const createMockResultItem = (streamId: StreamID, metadata: string): SearchStrea
     }
 }
 
-const createMockGraphQLClient = (resultItems: SearchStreamsResultItem[]): Pick<SynchronizedGraphQLClient, 'fetchPaginatedResults'> => {
+const createMockGraphQLClient = (resultItems: SearchStreamsResultItem[]): Pick<TheGraphClient, 'fetchPaginatedResults'> => {
     return {
         fetchPaginatedResults: async function* () {
             yield* resultItems
