@@ -27,7 +27,7 @@ const createMockResultItem = (streamId: StreamID, metadata: string): SearchStrea
     }
 }
 
-const createMockGraphQLClient = (resultItems: SearchStreamsResultItem[]): Pick<TheGraphClient, 'fetchPaginatedResults'> => {
+const createMockGraphQLClient = (resultItems: SearchStreamsResultItem[]): Pick<TheGraphClient, 'queryEntities'> => {
     return {
         queryEntities: async function* () {
             yield* resultItems
@@ -42,7 +42,7 @@ describe('searchStreams', () => {
         const graphQLClient = createMockGraphQLClient([
             createMockResultItem(stream, JSON.stringify({ partitions: 11 })),
         ])
-        jest.spyOn(graphQLClient, 'fetchPaginatedResults')
+        jest.spyOn(graphQLClient, 'queryEntities')
         const orderBy = { field: 'updatedAt', direction: 'desc' } as const
 
         await collect(searchStreams(
@@ -54,7 +54,7 @@ describe('searchStreams', () => {
             mockLoggerFactory().createLogger(module),
         ))
 
-        const graphQLquery = ((graphQLClient as any).fetchPaginatedResults as jest.Mock).mock.calls[0][0]()
+        const graphQLquery = ((graphQLClient as any).queryEntities as jest.Mock).mock.calls[0][0]()
         expect(graphQLquery.query).toMatch(new RegExp(`orderBy: "stream__${orderBy.field}",\\s*orderDirection: "${orderBy.direction}"`))
     })
 
