@@ -8,89 +8,6 @@ export interface GraphQLQuery {
     variables?: Record<string, any>
 }
 
-class BlockNumberGate extends Gate {
-    
-    blockNumber: number
-
-    constructor(blockNumber: number) {
-        super()
-        this.blockNumber = blockNumber
-    }
-}
-
-class IndexingState {
-
-    private blockNumber = 0
-    private gates: Set<BlockNumberGate> = new Set()
-    private readonly getCurrentBlockNumber: () => Promise<number>
-    private readonly timeout: number
-    private readonly pollInterval: number
-    private readonly logger: Logger
-
-    constructor(
-        getCurrentBlockNumber: () => Promise<number>,
-        timeout: number,
-        pollInterval: number,
-        loggerFactory: LoggerFactory
-    ) {
-        this.getCurrentBlockNumber = getCurrentBlockNumber
-        this.timeout = timeout
-        this.pollInterval = pollInterval
-        this.logger = loggerFactory.createLogger(module)
-    }
-
-    async waitUntilIndexed(blockNumber: number): Promise<void> {
-        this.logger.debug('Wait until The Graph is synchronized', { blockTarget: blockNumber })
-        const gate = this.getOrCreateGate(blockNumber)
-        try {
-            await withTimeout(
-                gate.check(),
-                this.timeout,
-                `The Graph did not synchronize to block ${blockNumber}`
-            )
-        } catch (e) {
-            if (e instanceof TimeoutError) {
-                this.gates.delete(gate)
-            }
-            throw e
-        }
-    }
-
-    private getOrCreateGate(blockNumber: number): BlockNumberGate {
-        const gate: BlockNumberGate | undefined = new BlockNumberGate(blockNumber)
-        if (blockNumber > this.blockNumber) {
-            const isPolling = this.gates.size > 0
-            gate.close()
-            this.gates.add(gate)
-            if (!isPolling) {
-                this.startPolling()
-            }
-        }
-        return gate
-    }
-
-    private async startPolling(): Promise<void> {
-        this.logger.trace('Start polling')
-        while (this.gates.size > 0) {
-            const newBlockNumber = await this.getCurrentBlockNumber()
-            if (newBlockNumber !== this.blockNumber) {
-                this.blockNumber = newBlockNumber
-                this.logger.trace('Polled', { blockNumber: this.blockNumber })
-                this.gates.forEach((gate) => {
-                    if (gate.blockNumber <= this.blockNumber) {
-                        gate.open()
-                        this.gates.delete(gate)
-                    }
-                })
-            }
-            if (this.gates.size > 0) {
-                await wait(this.pollInterval)
-            }
-        }
-        this.logger.trace('Stop polling')
-    }
-}
-
 /** 
  * If we want to ensure that The Graph index is up-to-date, we can call the updateRequiredBlockNumber
  * method. In that case a queryEntity/queryEntities waits until The Graph has been indexed at least
@@ -198,5 +115,88 @@ export class TheGraphClient {
             .map((k) => k + ': $' + k)
             .join(' ')
         return `where: { ${parameterList} }`
+    }
+}
+
+class BlockNumberGate extends Gate {
+    
+    blockNumber: number
+
+    constructor(blockNumber: number) {
+        super()
+        this.blockNumber = blockNumber
+    }
+}
+
+class IndexingState {
+
+    private blockNumber = 0
+    private gates: Set<BlockNumberGate> = new Set()
+    private readonly getCurrentBlockNumber: () => Promise<number>
+    private readonly timeout: number
+    private readonly pollInterval: number
+    private readonly logger: Logger
+
+    constructor(
+        getCurrentBlockNumber: () => Promise<number>,
+        timeout: number,
+        pollInterval: number,
+        loggerFactory: LoggerFactory
+    ) {
+        this.getCurrentBlockNumber = getCurrentBlockNumber
+        this.timeout = timeout
+        this.pollInterval = pollInterval
+        this.logger = loggerFactory.createLogger(module)
+    }
+
+    async waitUntilIndexed(blockNumber: number): Promise<void> {
+        this.logger.debug('Wait until The Graph is synchronized', { blockTarget: blockNumber })
+        const gate = this.getOrCreateGate(blockNumber)
+        try {
+            await withTimeout(
+                gate.check(),
+                this.timeout,
+                `The Graph did not synchronize to block ${blockNumber}`
+            )
+        } catch (e) {
+            if (e instanceof TimeoutError) {
+                this.gates.delete(gate)
+            }
+            throw e
+        }
+    }
+
+    private getOrCreateGate(blockNumber: number): BlockNumberGate {
+        const gate: BlockNumberGate | undefined = new BlockNumberGate(blockNumber)
+        if (blockNumber > this.blockNumber) {
+            const isPolling = this.gates.size > 0
+            gate.close()
+            this.gates.add(gate)
+            if (!isPolling) {
+                this.startPolling()
+            }
+        }
+        return gate
+    }
+
+    private async startPolling(): Promise<void> {
+        this.logger.trace('Start polling')
+        while (this.gates.size > 0) {
+            const newBlockNumber = await this.getCurrentBlockNumber()
+            if (newBlockNumber !== this.blockNumber) {
+                this.blockNumber = newBlockNumber
+                this.logger.trace('Polled', { blockNumber: this.blockNumber })
+                this.gates.forEach((gate) => {
+                    if (gate.blockNumber <= this.blockNumber) {
+                        gate.open()
+                        this.gates.delete(gate)
+                    }
+                })
+            }
+            if (this.gates.size > 0) {
+                await wait(this.pollInterval)
+            }
+        }
+        this.logger.trace('Stop polling')
     }
 }
