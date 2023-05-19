@@ -90,7 +90,7 @@ export class StreamrClient {
         container.register(AuthenticationInjectionToken, { useValue: authentication })
         container.register(ConfigInjectionToken, { useValue: strictConfig })
         container.register(TheGraphClient, { useFactory: instancePerContainerCachingFactory<TheGraphClient>(() => {
-            return createTheGraphClient(container.resolve<LoggerFactory>(LoggerFactory), container.resolve<HttpFetcher>(HttpFetcher), strictConfig)
+            return createTheGraphClient(container.resolve<HttpFetcher>(HttpFetcher), strictConfig)
         }) })
         this.id = strictConfig.id
         this.config = strictConfig

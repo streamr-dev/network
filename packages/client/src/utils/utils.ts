@@ -3,7 +3,6 @@ import { TheGraphClient, randomString, toEthereumAddress } from '@streamr/utils'
 import LRU from '../../vendor/quick-lru'
 import { StrictStreamrClientConfig } from '../Config'
 import { HttpFetcher } from './HttpFetcher'
-import { LoggerFactory } from './LoggerFactory'
 import { SEPARATOR } from './uuid'
 
 /**
@@ -114,13 +113,12 @@ export const formLookupKey = <K extends (string | number)[]>(...args: K): string
 }
 
 export const createTheGraphClient = (
-    loggerFactory: LoggerFactory,
     httpFetcher: HttpFetcher,
     config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
 ): TheGraphClient => {
     return new TheGraphClient(
         config.contracts.theGraphUrl,
-        loggerFactory.createLogger(module),
+        undefined,
         (url: string, init?: Record<string, unknown>) => httpFetcher.fetch(url, init),
         {
             // eslint-disable-next-line no-underscore-dangle

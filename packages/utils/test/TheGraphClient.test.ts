@@ -1,4 +1,3 @@
-import { Logger } from '../src/Logger'
 import { TheGraphClient } from '../src/TheGraphClient'
 import { wait } from '../src/wait'
 
@@ -94,7 +93,7 @@ describe('TheGraphClient', () => {
         }
         client = new TheGraphClient(
             '',
-            new Logger(module),
+            undefined,
             fetch as any,
             {
                 indexTimeout: 10 * INDEXING_INTERVAL,

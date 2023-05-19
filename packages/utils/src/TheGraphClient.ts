@@ -32,18 +32,18 @@ export class TheGraphClient {
 
     constructor(
         serverUrl: string,
-        logger: Logger,
+        logger: Logger | undefined,
         fetch: (url: string, init?: Record<string, unknown>) => Promise<FetchResponse>,
         opts?: { indexTimeout?: number, indexPollInterval?: number }
     ) {
         this.serverUrl = serverUrl
-        this.logger = logger
+        this.logger = logger ?? new Logger(module)
         this.fetch = fetch
         this.indexingState = new IndexingState(
             () => this.getIndexBlockNumber(),
             opts?.indexTimeout ?? 60000,
             opts?.indexPollInterval ?? 1000,
-            logger
+            this.logger
         )
     }
 
