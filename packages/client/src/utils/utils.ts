@@ -116,15 +116,12 @@ export const createTheGraphClient = (
     httpFetcher: HttpFetcher,
     config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
 ): TheGraphClient => {
-    return new TheGraphClient(
-        config.contracts.theGraphUrl,
-        undefined,
-        (url: string, init?: Record<string, unknown>) => httpFetcher.fetch(url, init),
-        {
-            // eslint-disable-next-line no-underscore-dangle
-            indexTimeout: config._timeouts.theGraph.timeout,
-            // eslint-disable-next-line no-underscore-dangle
-            indexPollInterval: config._timeouts.theGraph.retryInterval
-        }
-    )
+    return new TheGraphClient({
+        serverUrl: config.contracts.theGraphUrl,
+        fetch: (url: string, init?: Record<string, unknown>) => httpFetcher.fetch(url, init),
+        // eslint-disable-next-line no-underscore-dangle
+        indexTimeout: config._timeouts.theGraph.timeout,
+        // eslint-disable-next-line no-underscore-dangle
+        indexPollInterval: config._timeouts.theGraph.retryInterval
+    })
 }

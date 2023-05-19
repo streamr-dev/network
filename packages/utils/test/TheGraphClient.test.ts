@@ -91,15 +91,12 @@ describe('TheGraphClient', () => {
                 }
             }
         }
-        client = new TheGraphClient(
-            '',
-            undefined,
-            fetch as any,
-            {
-                indexTimeout: 10 * INDEXING_INTERVAL,
-                indexPollInterval: POLL_INTERVAL
-            }
-        )
+        client = new TheGraphClient({
+            serverUrl: '',
+            fetch: fetch as any,
+            indexTimeout: 10 * INDEXING_INTERVAL,
+            indexPollInterval: POLL_INTERVAL
+        })
     })
 
     afterEach(() => {
