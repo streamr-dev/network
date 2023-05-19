@@ -114,7 +114,7 @@ describe('TheGraphClient', () => {
     })
 
     it('no synchronization', async () => {
-        const response = await client.query(MOCK_QUERY)
+        const response = await client.queryEntity(MOCK_QUERY)
         expect(response).toEqual({
             foo: 'result-0'
         })
@@ -123,7 +123,7 @@ describe('TheGraphClient', () => {
 
     it('happy path', async () => {
         client.updateRequiredBlockNumber(4)
-        const responsePromise = client.query(MOCK_QUERY)
+        const responsePromise = client.queryEntity(MOCK_QUERY)
         theGraphIndex.start()
         expect(await responsePromise).toEqual({
             foo: 'result-4'
@@ -133,7 +133,7 @@ describe('TheGraphClient', () => {
 
     it('required block number is not a poll result', async () => {
         client.updateRequiredBlockNumber(3)
-        const responsePromise = client.query(MOCK_QUERY)
+        const responsePromise = client.queryEntity(MOCK_QUERY)
         theGraphIndex.start()
         expect(await responsePromise).toEqual({
             foo: 'result-4'
@@ -144,8 +144,8 @@ describe('TheGraphClient', () => {
     it('multiple queries for same block', async () => {
         client.updateRequiredBlockNumber(7)
         const responsePromise = Promise.all([
-            client.query(MOCK_QUERY),
-            client.query(MOCK_QUERY)
+            client.queryEntity(MOCK_QUERY),
+            client.queryEntity(MOCK_QUERY)
         ])
         theGraphIndex.start()
         const responses = await responsePromise
@@ -161,9 +161,9 @@ describe('TheGraphClient', () => {
 
     it('multiple queries for different blocks', async () => {
         client.updateRequiredBlockNumber(7)
-        const responsePromise1 = client.query(MOCK_QUERY)
+        const responsePromise1 = client.queryEntity(MOCK_QUERY)
         client.updateRequiredBlockNumber(8)
-        const responsePromise2 = client.query(MOCK_QUERY)
+        const responsePromise2 = client.queryEntity(MOCK_QUERY)
         theGraphIndex.start()
         const responses = await Promise.all([responsePromise1, responsePromise2])
         expect(responses).toHaveLength(2)
@@ -179,14 +179,14 @@ describe('TheGraphClient', () => {
     it('timeout', async () => {
         client.updateRequiredBlockNumber(999999)
         theGraphIndex.start()
-        return expect(() => client.query(MOCK_QUERY)).rejects.toThrow('The Graph did not synchronize to block 999999 (timed out after 1000 ms)')
+        return expect(() => client.queryEntity(MOCK_QUERY)).rejects.toThrow('The Graph did not synchronize to block 999999 (timed out after 1000 ms)')
     })
 
     it('one query timeouts, another succeeds', async () => {
         client.updateRequiredBlockNumber(7)
-        const responsePromise1 = client.query(MOCK_QUERY)
+        const responsePromise1 = client.queryEntity(MOCK_QUERY)
         await wait(800)
-        const responsePromise2 = client.query(MOCK_QUERY)
+        const responsePromise2 = client.queryEntity(MOCK_QUERY)
         theGraphIndex.start()
         await expect(() => responsePromise1).rejects.toThrow('The Graph did not synchronize to block 7 (timed out after 1000 ms)')
         expect(await responsePromise2).toEqual({

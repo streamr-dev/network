@@ -116,13 +116,12 @@ export class TheGraphClient {
         )
     }
 
-    async query(query: GraphQLQuery): Promise<any> {
+    async queryEntity<T extends object>(query: GraphQLQuery): Promise<T> {
         await this.indexingState.waitUntilIndexed(this.requiredBlockNumber)
         return this.sendQuery(query)
     }
 
-    // TODO unify method naming (query vs. fetchPaginatedResults)
-    async* fetchPaginatedResults<T extends { id: string }>(
+    async* queryEntities<T extends { id: string }>(
         createQuery: (lastId: string, pageSize: number) => GraphQLQuery,
         /*
          * For simple queries there is one root level property, e.g. "streams" or "permissions"

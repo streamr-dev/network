@@ -138,7 +138,7 @@ export class StreamStorageRegistry {
     async getStoredStreams(nodeAddress: EthereumAddress): Promise<{ streams: Stream[], blockNumber: number }> {
         this.logger.debug('Get stored streams of storage node', { nodeAddress })
         const blockNumbers: number[] = []
-        const res = await collect(this.graphQLClient.fetchPaginatedResults(
+        const res = await collect(this.graphQLClient.queryEntities(
             (lastId: string, pageSize: number) => {
                 const query = `{
                     node (id: "${nodeAddress}") {
@@ -179,7 +179,7 @@ export class StreamStorageRegistry {
         if (streamIdOrPath !== undefined) {
             const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
             this.logger.debug('Get storage nodes of stream', { streamId })
-            queryResults = await collect(this.graphQLClient.fetchPaginatedResults<NodeQueryResult>(
+            queryResults = await collect(this.graphQLClient.queryEntities<NodeQueryResult>(
                 (lastId: string, pageSize: number) => {
                     const query = `{
                         stream (id: "${streamId}") {
@@ -200,7 +200,7 @@ export class StreamStorageRegistry {
             ))
         } else {
             this.logger.debug('Get all storage nodes')
-            queryResults = await collect(this.graphQLClient.fetchPaginatedResults<NodeQueryResult>(
+            queryResults = await collect(this.graphQLClient.queryEntities<NodeQueryResult>(
                 (lastId: string, pageSize: number) => {
                     const query = `{
                         nodes (first: ${pageSize} orderBy: "id" where: { id_gt: "${lastId}"}) {

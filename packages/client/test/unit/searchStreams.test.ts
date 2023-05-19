@@ -29,7 +29,7 @@ const createMockResultItem = (streamId: StreamID, metadata: string): SearchStrea
 
 const createMockGraphQLClient = (resultItems: SearchStreamsResultItem[]): Pick<TheGraphClient, 'fetchPaginatedResults'> => {
     return {
-        fetchPaginatedResults: async function* () {
+        queryEntities: async function* () {
             yield* resultItems
         } as any
     }

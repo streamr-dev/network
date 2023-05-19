@@ -252,7 +252,7 @@ export class StreamRegistry {
 
     private async* getStreamPublishersOrSubscribersList(streamIdOrPath: string, fieldName: string): AsyncIterable<EthereumAddress> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        const backendResults = this.graphQLClient.fetchPaginatedResults<StreamPublisherOrSubscriberItem>(
+        const backendResults = this.graphQLClient.queryEntities<StreamPublisherOrSubscriberItem>(
             (lastId: string, pageSize: number) => StreamRegistry.buildStreamPublishersOrSubscribersQuery(streamId, fieldName, lastId, pageSize)
         )
         /*
@@ -317,7 +317,7 @@ export class StreamRegistry {
 
     async getPermissions(streamIdOrPath: string): Promise<PermissionAssignment[]> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        const queryResults = await collect(this.graphQLClient.fetchPaginatedResults<PermissionQueryResult>(
+        const queryResults = await collect(this.graphQLClient.queryEntities<PermissionQueryResult>(
             (lastId: string, pageSize: number) => {
                 const query = `{
                     stream (id: "${streamId}") {

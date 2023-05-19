@@ -58,7 +58,7 @@ async function* fetchSearchStreamsResultFromTheGraph(
     orderBy: SearchStreamsOrderBy,
     graphQLClient: TheGraphClient,
 ): AsyncGenerator<SearchStreamsResultItem> {
-    const backendResults = graphQLClient.fetchPaginatedResults<SearchStreamsResultItem>(
+    const backendResults = graphQLClient.queryEntities<SearchStreamsResultItem>(
         (lastId: string, pageSize: number) => buildQuery(term, permissionFilter, orderBy, lastId, pageSize)
     )
     /*
