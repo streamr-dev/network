@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 import './utils/PatchTsyringe'
 
-import { container as rootContainer } from 'tsyringe'
+import { container as rootContainer, instancePerContainerCachingFactory } from 'tsyringe'
 import { generateEthereumAccount as _generateEthereumAccount } from './Ethereum'
 import { pOnce } from './utils/promises'
 import { StreamrClientConfig, createStrictConfig, redactConfig, StrictStreamrClientConfig, ConfigInjectionToken } from './Config'
@@ -36,6 +36,9 @@ import { ErrorCode } from './HttpUtil'
 import omit from 'lodash/omit'
 import merge from 'lodash/merge'
 import { StreamrClientError } from './StreamrClientError'
+import { TheGraphClient } from '@streamr/utils'
+import { createTheGraphClient } from './utils/utils'
+import { HttpFetcher } from './utils/HttpFetcher'
 
 // TODO: this type only exists to enable tsdoc to generate proper documentation
 export type SubscribeOptions = StreamDefinition & ExtraSubscribeOptions
@@ -86,6 +89,9 @@ export class StreamrClient {
         const container = parentContainer.createChildContainer()
         container.register(AuthenticationInjectionToken, { useValue: authentication })
         container.register(ConfigInjectionToken, { useValue: strictConfig })
+        container.register(TheGraphClient, { useFactory: instancePerContainerCachingFactory<TheGraphClient>(() => {
+            return createTheGraphClient(container.resolve<LoggerFactory>(LoggerFactory), container.resolve<HttpFetcher>(HttpFetcher), strictConfig)
+        }) })
         this.id = strictConfig.id
         this.config = strictConfig
         this.node = container.resolve<NetworkNodeFacade>(NetworkNodeFacade)

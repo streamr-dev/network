@@ -4,7 +4,6 @@ import { Provider } from '@ethersproject/providers'
 import { EthereumAddress, TheGraphClient } from '@streamr/utils'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
-import { TheGraphClientFactory } from './TheGraphClientFactory'
 import { createDecoratedContract, ObservableContract } from './utils/contract'
 import { LoggerFactory } from './utils/LoggerFactory'
 
@@ -15,11 +14,11 @@ export class ContractFactory {
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts'>
 
     constructor(
-        graphQLClientFactory: TheGraphClientFactory,
+        graphQLClient: TheGraphClient,
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts'>
     ) {
-        this.graphQLClient = graphQLClientFactory.getInstance()
+        this.graphQLClient = graphQLClient
         this.loggerFactory = loggerFactory
         this.config = config
     }

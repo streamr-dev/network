@@ -30,7 +30,6 @@ import {
 import { filter, map } from '../utils/GeneratorUtils'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { GraphQLQuery, TheGraphClient } from '@streamr/utils'
-import { TheGraphClientFactory } from '../TheGraphClientFactory'
 import { ObservableContract, initContractEventGateway, queryAllReadonlyContracts, waitForTx } from '../utils/contract'
 import { until } from '../utils/promises'
 import { StreamFactory } from './../StreamFactory'
@@ -86,7 +85,7 @@ export class StreamRegistry {
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
         @inject(StreamIDBuilder) streamIdBuilder: StreamIDBuilder,
         streamFactory: StreamFactory,
-        graphQLClientFactory: TheGraphClientFactory,
+        graphQLClient: TheGraphClient,
         @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
         @inject(StreamrClientEventEmitter) eventEmitter: StreamrClientEventEmitter,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
@@ -95,7 +94,7 @@ export class StreamRegistry {
         this.contractFactory = contractFactory
         this.streamIdBuilder = streamIdBuilder
         this.streamFactory = streamFactory
-        this.graphQLClient = graphQLClientFactory.getInstance()
+        this.graphQLClient = graphQLClient
         this.streamRegistryCached = streamRegistryCached
         this.authentication = authentication
         this.config = config

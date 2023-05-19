@@ -1,8 +1,10 @@
-import LRU from '../../vendor/quick-lru'
-import { SEPARATOR } from './uuid'
-
 import { StreamID, toStreamID } from '@streamr/protocol'
-import { randomString, toEthereumAddress } from '@streamr/utils'
+import { TheGraphClient, randomString, toEthereumAddress } from '@streamr/utils'
+import LRU from '../../vendor/quick-lru'
+import { StrictStreamrClientConfig } from '../Config'
+import { HttpFetcher } from './HttpFetcher'
+import { LoggerFactory } from './LoggerFactory'
+import { SEPARATOR } from './uuid'
 
 /**
  * Generates counter-based ids.
@@ -109,4 +111,22 @@ export function generateClientId(): string {
 // e.g. as a map key or a cache key.
 export const formLookupKey = <K extends (string | number)[]>(...args: K): string => {
     return args.join('|')
+}
+
+export const createTheGraphClient = (
+    loggerFactory: LoggerFactory,
+    httpFetcher: HttpFetcher,
+    config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
+): TheGraphClient => {
+    return new TheGraphClient(
+        config.contracts.theGraphUrl,
+        loggerFactory.createLogger(module),
+        (url: string, init?: Record<string, unknown>) => httpFetcher.fetch(url, init),
+        {
+            // eslint-disable-next-line no-underscore-dangle
+            indexTimeout: config._timeouts.theGraph.timeout,
+            // eslint-disable-next-line no-underscore-dangle
+            indexPollInterval: config._timeouts.theGraph.retryInterval
+        }
+    )
 }
