@@ -9,11 +9,13 @@ export interface GraphQLQuery {
 }
 
 /** 
- * If we want to ensure that The Graph index is up-to-date, we can call the updateRequiredBlockNumber
- * method. In that case a queryEntity/queryEntities waits until The Graph has been indexed at least
- * to that block number. 
+ * Query one entity with queryEntity method, and a list of entitities with queryEntities method.
+ * The queryEntities method does pagination automatically.
  * 
- * If the indexing takes longer than opts.indexTimeout, the query call rejects with a TimeoutError.
+ * If we want to ensure that The Graph index is up-to-date, we can call the updateRequiredBlockNumber()
+ * method. In that case a queryEntity()/queryEntities() waits until The Graph has been indexed at least
+ * to that block number. If the indexing takes longer than opts.indexTimeout, the query call rejects 
+ * with a TimeoutError.
  */
 export class TheGraphClient {
 
