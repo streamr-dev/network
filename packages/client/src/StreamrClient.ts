@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 import './utils/PatchTsyringe'
 
-import { container as rootContainer, instancePerContainerCachingFactory } from 'tsyringe'
+import { container as rootContainer } from 'tsyringe'
 import { generateEthereumAccount as _generateEthereumAccount } from './Ethereum'
 import { pOnce } from './utils/promises'
 import { StreamrClientConfig, createStrictConfig, redactConfig, StrictStreamrClientConfig, ConfigInjectionToken } from './Config'
@@ -89,9 +89,7 @@ export class StreamrClient {
         const container = parentContainer.createChildContainer()
         container.register(AuthenticationInjectionToken, { useValue: authentication })
         container.register(ConfigInjectionToken, { useValue: strictConfig })
-        container.register(TheGraphClient, { useFactory: instancePerContainerCachingFactory<TheGraphClient>(() => {
-            return createTheGraphClient(container.resolve<HttpFetcher>(HttpFetcher), strictConfig)
-        }) })
+        container.register(TheGraphClient, { useValue: createTheGraphClient(container.resolve<HttpFetcher>(HttpFetcher), strictConfig) })
         this.id = strictConfig.id
         this.config = strictConfig
         this.node = container.resolve<NetworkNodeFacade>(NetworkNodeFacade)
