@@ -46,10 +46,6 @@ describe('DataMetadataEndpoints', () => {
         client1 = await createClient(await fetchPrivateKeyWithGas(), {
             network: {
                 layer0: {
-                    peerDescriptor: {
-                        kademliaId: 'DataMetadataEndpoints-client',
-                        type: 0
-                    },
                     entryPoints
                 }
             }

@@ -99,10 +99,6 @@ export const createMessagingPluginTest = <T>(
             streamrClient = await createClient(brokerUser.privateKey, {
                 network: {
                     layer0: {
-                        peerDescriptor: {
-                            kademliaId: 'client',
-                            type: 0
-                        },
                         entryPoints: [{
                             kademliaId: (await broker.getAddress()),
                             type: 0,

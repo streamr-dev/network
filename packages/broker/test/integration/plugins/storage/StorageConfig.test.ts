@@ -57,11 +57,7 @@ describe('StorageConfig', () => {
         client = await createClient(publisherAccount.privateKey, {
             network: {
                 layer0: {
-                    entryPoints,
-                    peerDescriptor: {
-                        kademliaId: 'StorageConfig-client',
-                        type: 0
-                    }
+                    entryPoints
                 }
             }
         })
