@@ -1,6 +1,5 @@
-import { Logger, TimeoutError, wait, withTimeout } from '@streamr/utils'
+import { Gate, Logger, TimeoutError, wait, withTimeout } from '@streamr/utils'
 import { Response } from 'node-fetch'
-import { Gate } from './Gate'
 import { LoggerFactory } from './LoggerFactory'
 
 export interface GraphQLQuery {
@@ -125,7 +124,7 @@ class BlockNumberGate extends Gate {
     blockNumber: number
 
     constructor(blockNumber: number) {
-        super()
+        super(true)
         this.blockNumber = blockNumber
     }
 }
@@ -156,7 +155,7 @@ class IndexingState {
         const gate = this.getOrCreateGate(blockNumber)
         try {
             await withTimeout(
-                gate.check(),
+                gate.waitUntilOpen(),
                 this.timeout,
                 `The Graph did not synchronize to block ${blockNumber}`
             )
