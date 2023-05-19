@@ -15,6 +15,7 @@ import StreamStorageRegistryArtifact from '../ethereumArtifacts/StreamStorageReg
 import { StreamrClientEventEmitter } from '../events'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { TheGraphClient } from '../utils/TheGraphClient'
+import { TheGraphClientFactory } from '../TheGraphClientFactory'
 import { initContractEventGateway, queryAllReadonlyContracts, waitForTx } from '../utils/contract'
 
 export interface StorageNodeAssignmentEvent {
@@ -49,7 +50,7 @@ export class StreamStorageRegistry {
         contractFactory: ContractFactory,
         @inject(delay(() => StreamFactory)) streamFactory: StreamFactory,
         @inject(StreamIDBuilder) streamIdBuilder: StreamIDBuilder,
-        @inject(TheGraphClient) graphQLClient: TheGraphClient,
+        graphQLClientFactory: TheGraphClientFactory,
         @inject(StreamrClientEventEmitter) eventEmitter: StreamrClientEventEmitter,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
@@ -58,7 +59,7 @@ export class StreamStorageRegistry {
         this.contractFactory = contractFactory
         this.streamFactory = streamFactory
         this.streamIdBuilder = streamIdBuilder
-        this.graphQLClient = graphQLClient
+        this.graphQLClient = graphQLClientFactory.getInstance()
         this.authentication = authentication
         this.config = config
         this.logger = loggerFactory.createLogger(module)

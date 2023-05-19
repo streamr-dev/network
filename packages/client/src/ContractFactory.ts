@@ -4,6 +4,7 @@ import { Provider } from '@ethersproject/providers'
 import { Signer } from '@ethersproject/abstract-signer'
 import { ObservableContract, createDecoratedContract } from './utils/contract'
 import { TheGraphClient } from './utils/TheGraphClient'
+import { TheGraphClientFactory } from './TheGraphClientFactory'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
 import { EthereumAddress } from '@streamr/utils'
 import { LoggerFactory } from './utils/LoggerFactory'
@@ -15,11 +16,11 @@ export class ContractFactory {
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts'>
 
     constructor(
-        graphQLClient: TheGraphClient,
+        graphQLClientFactory: TheGraphClientFactory,
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts'>
     ) {
-        this.graphQLClient = graphQLClient
+        this.graphQLClient = graphQLClientFactory.getInstance()
         this.loggerFactory = loggerFactory
         this.config = config
     }
