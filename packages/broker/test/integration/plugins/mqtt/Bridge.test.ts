@@ -59,10 +59,6 @@ describe('MQTT Bridge', () => {
         streamrClient = await createClient(brokerUser.privateKey, {
             network: {
                 layer0: {
-                    peerDescriptor: {
-                        kademliaId: 'Bridge-client',
-                        type: 0
-                    },
                     entryPoints: [{
                         kademliaId: toEthereumAddress(await brokerUser.getAddress()),
                         type: 0,
