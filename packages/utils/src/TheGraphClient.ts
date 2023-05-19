@@ -13,13 +13,13 @@ export interface FetchResponse {
     text: () => Promise<string>
 }
 
-/** 
+/**
  * Query one entity with queryEntity method, and a list of entitities with queryEntities method.
  * The queryEntities method does pagination automatically.
- * 
+ *
  * If we want to ensure that The Graph index is up-to-date, we can call the updateRequiredBlockNumber()
  * method. In that case a queryEntity()/queryEntities() waits until The Graph has been indexed at least
- * to that block number. If the indexing takes longer than opts.indexTimeout, the query call rejects 
+ * to that block number. If the indexing takes longer than opts.indexTimeout, the query call rejects
  * with a TimeoutError.
  */
 export class TheGraphClient {
@@ -31,12 +31,12 @@ export class TheGraphClient {
     private readonly logger: Logger
 
     constructor(
-        opts: { 
-            serverUrl: string,
+        opts: {
+            serverUrl: string
             fetch: (url: string, init?: Record<string, unknown>) => Promise<FetchResponse>
-            logger?: Logger,
-            indexTimeout?: number, 
-            indexPollInterval?: number 
+            logger?: Logger
+            indexTimeout?: number
+            indexPollInterval?: number
         }
     ) {
         this.serverUrl = opts.serverUrl
@@ -60,7 +60,7 @@ export class TheGraphClient {
         /*
          * For simple queries there is one root level property, e.g. "streams" or "permissions"
          * which contain array of items. If the query contains more than one root level property
-         * or we want to return non-root elements as items, the caller must pass a custom 
+         * or we want to return non-root elements as items, the caller must pass a custom
          * function to parse the items.
          */
         parseItems: ((response: any) => T[]) = (response: any) => {
@@ -129,7 +129,7 @@ export class TheGraphClient {
 }
 
 class BlockNumberGate extends Gate {
-    
+
     blockNumber: number
 
     constructor(blockNumber: number) {
