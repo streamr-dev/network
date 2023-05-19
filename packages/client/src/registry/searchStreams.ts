@@ -4,7 +4,7 @@ import { EthereumAddress, Logger, toEthereumAddress } from '@streamr/utils'
 import { Stream } from '../Stream'
 import { ChainPermissions, PUBLIC_PERMISSION_ADDRESS, StreamPermission, convertChainPermissionsToStreamPermissions } from '../permission'
 import { filter, map, unique } from '../utils/GeneratorUtils'
-import { GraphQLClient, GraphQLQuery, TheGraphClient } from '../utils/TheGraphClient'
+import { GraphQLQuery, TheGraphClient } from '../utils/TheGraphClient'
 import { StreamQueryResult } from './StreamRegistry'
 
 export interface SearchStreamsPermissionFilter {
@@ -142,7 +142,7 @@ const buildQuery = (
                 first: ${pageSize},
                 orderBy: "stream__${orderBy.field}",
                 orderDirection: "${orderBy.direction}", 
-                ${GraphQLClient.createWhereClause(variables)}
+                ${TheGraphClient.createWhereClause(variables)}
             ) {
                 id
                 stream {

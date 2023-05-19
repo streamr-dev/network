@@ -19,8 +19,9 @@ export class TheGraphClientFactory {
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
     ) {
         this.instance = new TheGraphClient(
+            config.contracts.theGraphUrl,
             loggerFactory,
-            httpFetcher,
+            (url: string, init?: Record<string, unknown>) => httpFetcher.fetch(url, init),
             config
         )
     }
