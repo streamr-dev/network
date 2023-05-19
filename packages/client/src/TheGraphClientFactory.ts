@@ -22,7 +22,12 @@ export class TheGraphClientFactory {
             config.contracts.theGraphUrl,
             loggerFactory,
             (url: string, init?: Record<string, unknown>) => httpFetcher.fetch(url, init),
-            config
+            {
+                // eslint-disable-next-line no-underscore-dangle
+                indexPollInterval: config._timeouts.theGraph.retryInterval,
+                // eslint-disable-next-line no-underscore-dangle
+                indexPollTimeout: config._timeouts.theGraph.timeout
+            }
         )
     }
 

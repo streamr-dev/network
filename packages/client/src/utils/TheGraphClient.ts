@@ -1,7 +1,5 @@
 import { Logger, TimeoutError, wait, withTimeout } from '@streamr/utils'
 import { Response } from 'node-fetch'
-import { Lifecycle, inject, scoped } from 'tsyringe'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { Gate } from './Gate'
 import { LoggerFactory } from './LoggerFactory'
 
@@ -23,19 +21,19 @@ class IndexingState {
     private blockNumber = 0
     private gates: Set<BlockNumberGate> = new Set()
     private readonly getCurrentBlockNumber: () => Promise<number>
+    private readonly pollInterval: number
     private readonly pollTimeout: number
-    private readonly pollRetryInterval: number
     private readonly logger: Logger
 
     constructor(
         getCurrentBlockNumber: () => Promise<number>,
+        pollInterval: number,
         pollTimeout: number,
-        pollRetryInterval: number,
         loggerFactory: LoggerFactory
     ) {
         this.getCurrentBlockNumber = getCurrentBlockNumber
+        this.pollInterval = pollInterval
         this.pollTimeout = pollTimeout
-        this.pollRetryInterval = pollRetryInterval
         this.logger = loggerFactory.createLogger(module)
     }
 
@@ -84,7 +82,7 @@ class IndexingState {
                 })
             }
             if (this.gates.size > 0) {
-                await wait(this.pollRetryInterval)
+                await wait(this.pollInterval)
             }
         }
         this.logger.trace('Stop polling')
@@ -107,7 +105,6 @@ class IndexingState {
  * We can use the helper method `createWriteContract` to create a contract which automatically
  * updates the client when something is written to the blockchain via that contract.
  */
-@scoped(Lifecycle.ContainerScoped)
 export class TheGraphClient {
 
     private requiredBlockNumber = 0
@@ -116,22 +113,19 @@ export class TheGraphClient {
     private readonly fetch: (url: string, init?: Record<string, unknown>) => Promise<Response>
     private readonly logger: Logger
 
-    // TODO all dependencies without client-specific classes
     constructor(
         serverUrl: string,
         loggerFactory: LoggerFactory,
         fetch: (url: string, init?: Record<string, unknown>) => Promise<Response>,
-        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
+        opts: { indexPollInterval: number, indexPollTimeout: number }
     ) {
         this.serverUrl = serverUrl
         this.logger = loggerFactory.createLogger(module)
         this.fetch = fetch
         this.indexingState = new IndexingState(
             () => this.getIndexBlockNumber(),
-            // eslint-disable-next-line no-underscore-dangle
-            config._timeouts.theGraph.timeout,
-            // eslint-disable-next-line no-underscore-dangle
-            config._timeouts.theGraph.retryInterval,
+            opts.indexPollInterval,
+            opts.indexPollTimeout,
             loggerFactory
         )
     }
