@@ -23,19 +23,19 @@ class IndexingState {
     private blockNumber = 0
     private gates: Set<BlockNumberGate> = new Set()
     private readonly getCurrentBlockNumber: () => Promise<number>
+    private readonly timeout: number
     private readonly pollInterval: number
-    private readonly pollTimeout: number
     private readonly logger: Logger
 
     constructor(
         getCurrentBlockNumber: () => Promise<number>,
+        timeout: number,
         pollInterval: number,
-        pollTimeout: number,
         loggerFactory: LoggerFactory
     ) {
         this.getCurrentBlockNumber = getCurrentBlockNumber
+        this.timeout = timeout
         this.pollInterval = pollInterval
-        this.pollTimeout = pollTimeout
         this.logger = loggerFactory.createLogger(module)
     }
 
@@ -45,7 +45,7 @@ class IndexingState {
         try {
             await withTimeout(
                 gate.check(),
-                this.pollTimeout,
+                this.timeout,
                 `The Graph did not synchronize to block ${blockNumber}`
             )
         } catch (e) {
@@ -91,6 +91,13 @@ class IndexingState {
     }
 }
 
+/** 
+ * If we want to ensure that The Graph index is up-to-date, we can call the updateRequiredBlockNumber
+ * method. In that case a queryEntity/queryEntities waits until The Graph has been indexed at least
+ * to that block number. 
+ * 
+ * If the indexing takes longer than opts.indexTimeout, the query call rejects with a TimeoutError.
+ */
 export class TheGraphClient {
 
     private requiredBlockNumber = 0
@@ -103,15 +110,15 @@ export class TheGraphClient {
         serverUrl: string,
         loggerFactory: LoggerFactory,
         fetch: (url: string, init?: Record<string, unknown>) => Promise<Response>,
-        opts?: { indexPollInterval?: number, indexPollTimeout?: number }
+        opts?: { indexTimeout?: number, indexPollInterval?: number }
     ) {
         this.serverUrl = serverUrl
         this.logger = loggerFactory.createLogger(module)
         this.fetch = fetch
         this.indexingState = new IndexingState(
             () => this.getIndexBlockNumber(),
+            opts?.indexTimeout ?? 60000,
             opts?.indexPollInterval ?? 1000,
-            opts?.indexPollTimeout ?? 60000,
             loggerFactory
         )
     }
@@ -147,10 +154,6 @@ export class TheGraphClient {
         } while (lastResultSet.length === pageSize)
     }
 
-    /*
-     * If this method is called, then any subsequent query will provide up-to-date data from The Graph (i.e. data
-     * which has been indexed at least to that block number).
-     */
     updateRequiredBlockNumber(blockNumber: number): void {
         this.requiredBlockNumber = Math.max(blockNumber, this.requiredBlockNumber)
     }

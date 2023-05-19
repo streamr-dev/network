@@ -24,9 +24,9 @@ export class TheGraphClientFactory {
             (url: string, init?: Record<string, unknown>) => httpFetcher.fetch(url, init),
             {
                 // eslint-disable-next-line no-underscore-dangle
-                indexPollInterval: config._timeouts.theGraph.retryInterval,
+                indexTimeout: config._timeouts.theGraph.timeout,
                 // eslint-disable-next-line no-underscore-dangle
-                indexPollTimeout: config._timeouts.theGraph.timeout
+                indexPollInterval: config._timeouts.theGraph.retryInterval
             }
         )
     }

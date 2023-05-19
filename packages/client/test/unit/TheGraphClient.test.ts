@@ -99,13 +99,9 @@ describe('TheGraphClient', () => {
             mockLoggerFactory(),
             fetch as any,
             {
-                _timeouts: {
-                    theGraph: {
-                        timeout: 10 * INDEXING_INTERVAL,
-                        retryInterval: POLL_INTERVAL
-                    }
-                }
-            } as any
+                indexTimeout: 10 * INDEXING_INTERVAL,
+                indexPollInterval: POLL_INTERVAL
+            }
         )
     })
 
