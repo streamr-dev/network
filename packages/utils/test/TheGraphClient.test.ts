@@ -1,6 +1,6 @@
-import { wait } from '@streamr/utils'
-import { TheGraphClient } from '../src/TheGraphClient'
 import { Logger } from '../src/Logger'
+import { TheGraphClient } from '../src/TheGraphClient'
+import { wait } from '../src/wait'
 
 const POLL_INTERVAL = 50
 const INDEXING_INTERVAL = 100
