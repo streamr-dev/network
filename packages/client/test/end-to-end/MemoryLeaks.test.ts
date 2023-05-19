@@ -7,7 +7,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { container as rootContainer, DependencyContainer } from 'tsyringe'
 import { writeHeapSnapshot } from 'v8'
 import { Subscription } from '../../src/subscribe/Subscription'
-import { counterId, instanceId } from '../../src/utils/utils'
+import { counterId, instanceId, createTheGraphClient } from '../../src/utils/utils'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { createStrictConfig, ConfigInjectionToken, StrictStreamrClientConfig } from '../../src/Config'
 import * as ethersAbi from '@ethersproject/abi'
@@ -21,7 +21,8 @@ import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
 import { DestroySignal } from '../../src/DestroySignal'
 import { MessageMetadata } from '../../src/Message'
 import { AuthenticationInjectionToken, createAuthentication } from '../../src/Authentication'
-import { merge } from '@streamr/utils'
+import { merge, TheGraphClient } from '@streamr/utils'
+import { HttpFetcher } from '../../src/utils/HttpFetcher'
 
 const Dependencies = {
     NetworkNodeFacade,
@@ -87,6 +88,7 @@ describe('MemoryLeaks', () => {
                 const childContainer = rootContainer.createChildContainer()
                 childContainer.register(AuthenticationInjectionToken, { useValue: createAuthentication(config) })
                 childContainer.register(ConfigInjectionToken, { useValue: config })
+                childContainer.register(TheGraphClient, { useValue: createTheGraphClient(childContainer.resolve<HttpFetcher>(HttpFetcher), config ) })
                 return { config, childContainer }
             }
         })
