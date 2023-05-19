@@ -1,24 +1,26 @@
 import { Signer } from '@ethersproject/abstract-signer'
 import { Contract, ContractInterface, ContractReceipt, ContractTransaction } from '@ethersproject/contracts'
 import { Provider } from '@ethersproject/providers'
-import { EthereumAddress, TheGraphClient } from '@streamr/utils'
+import { EthereumAddress } from '@streamr/utils'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
+import { StreamrClientEventEmitter } from './events'
 import { createDecoratedContract, ObservableContract } from './utils/contract'
 import { LoggerFactory } from './utils/LoggerFactory'
 
 @scoped(Lifecycle.ContainerScoped)
 export class ContractFactory {
-    private readonly graphQLClient: TheGraphClient
+
+    private readonly eventEmitter: StreamrClientEventEmitter
     private readonly loggerFactory: LoggerFactory
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts'>
 
     constructor(
-        graphQLClient: TheGraphClient,
+        eventEmitter: StreamrClientEventEmitter,
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts'>
     ) {
-        this.graphQLClient = graphQLClient
+        this.eventEmitter = eventEmitter
         this.loggerFactory = loggerFactory
         this.config = config
     }
@@ -41,7 +43,7 @@ export class ContractFactory {
         address: EthereumAddress,
         contractInterface: ContractInterface,
         signer: Signer,
-        name: string
+        name: string,
     ): ObservableContract<T> {
         const contract = createDecoratedContract<T>(
             new Contract(address, contractInterface, signer),
@@ -53,10 +55,12 @@ export class ContractFactory {
             // because the concurrency limit covers only submits, not tx.wait() calls.
             999999
         )
-        contract.eventEmitter.on('onTransactionConfirm', (_methodName: string, _tx: ContractTransaction, receipt: ContractReceipt) => {
-            // This ensures that all read queries from The Graph are up-to-date with this transaction (i.e. if a query targets
-            // an entity that is created/updated by this transaction, that data is available for the query)
-            this.graphQLClient.updateRequiredBlockNumber(receipt.blockNumber)
+        contract.eventEmitter.on('onTransactionConfirm', (methodName: string, transaction: ContractTransaction, receipt: ContractReceipt) => {
+            this.eventEmitter.emit('confirmContractTransaction', {
+                methodName,
+                transaction,
+                receipt
+            })
         })
         return contract
     }

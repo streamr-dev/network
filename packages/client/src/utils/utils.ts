@@ -1,7 +1,9 @@
+import { ContractReceipt } from '@ethersproject/contracts'
 import { StreamID, toStreamID } from '@streamr/protocol'
 import { TheGraphClient, randomString, toEthereumAddress } from '@streamr/utils'
 import LRU from '../../vendor/quick-lru'
 import { StrictStreamrClientConfig } from '../Config'
+import { StreamrClientEventEmitter } from '../events'
 import { HttpFetcher } from './HttpFetcher'
 import { SEPARATOR } from './uuid'
 
@@ -114,9 +116,10 @@ export const formLookupKey = <K extends (string | number)[]>(...args: K): string
 
 export const createTheGraphClient = (
     httpFetcher: HttpFetcher,
+    eventEmitter: StreamrClientEventEmitter,
     config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
 ): TheGraphClient => {
-    return new TheGraphClient({
+    const instance = new TheGraphClient({
         serverUrl: config.contracts.theGraphUrl,
         fetch: (url: string, init?: Record<string, unknown>) => httpFetcher.fetch(url, init),
         // eslint-disable-next-line no-underscore-dangle
@@ -124,4 +127,8 @@ export const createTheGraphClient = (
         // eslint-disable-next-line no-underscore-dangle
         indexPollInterval: config._timeouts.theGraph.retryInterval
     })
+    eventEmitter.on('confirmContractTransaction', (payload: { receipt: ContractReceipt }) => {
+        instance.updateRequiredBlockNumber(payload.receipt.blockNumber)
+    })
+    return instance
 }

@@ -23,6 +23,7 @@ import { MessageMetadata } from '../../src/Message'
 import { AuthenticationInjectionToken, createAuthentication } from '../../src/Authentication'
 import { merge, TheGraphClient } from '@streamr/utils'
 import { HttpFetcher } from '../../src/utils/HttpFetcher'
+import { StreamrClientEventEmitter } from '../../src/events'
 
 const Dependencies = {
     NetworkNodeFacade,
@@ -88,7 +89,10 @@ describe('MemoryLeaks', () => {
                 const childContainer = rootContainer.createChildContainer()
                 childContainer.register(AuthenticationInjectionToken, { useValue: createAuthentication(config) })
                 childContainer.register(ConfigInjectionToken, { useValue: config })
-                childContainer.register(TheGraphClient, { useValue: createTheGraphClient(childContainer.resolve<HttpFetcher>(HttpFetcher), config ) })
+                childContainer.register(TheGraphClient, { useValue:
+                    // eslint-disable-next-line max-len
+                    createTheGraphClient(childContainer.resolve<HttpFetcher>(HttpFetcher), childContainer.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter), config)
+                })
                 return { config, childContainer }
             }
         })
