@@ -100,7 +100,7 @@ export class TheGraphClient {
         try {
             resJson = JSON.parse(resText)
         } catch {
-            throw new Error(`GraphQL query failed with "${resText}", check that your theGraphUrl="${this.serverUrl}" is correct`)
+            throw new Error(`GraphQL query failed with "${resText}"`)
         }
         this.logger.trace('Received GraphQL response', { resJson })
         if (!resJson.data) {
