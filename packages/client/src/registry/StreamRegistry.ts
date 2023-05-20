@@ -72,7 +72,7 @@ export class StreamRegistry {
     private contractFactory: ContractFactory
     private streamIdBuilder: StreamIDBuilder
     private streamFactory: StreamFactory
-    private graphQLClient: TheGraphClient
+    private theGraphClient: TheGraphClient
     private streamRegistryCached: StreamRegistryCached
     private authentication: Authentication
     private config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
@@ -85,7 +85,7 @@ export class StreamRegistry {
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
         @inject(StreamIDBuilder) streamIdBuilder: StreamIDBuilder,
         streamFactory: StreamFactory,
-        graphQLClient: TheGraphClient,
+        theGraphClient: TheGraphClient,
         @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
         @inject(StreamrClientEventEmitter) eventEmitter: StreamrClientEventEmitter,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
@@ -94,7 +94,7 @@ export class StreamRegistry {
         this.contractFactory = contractFactory
         this.streamIdBuilder = streamIdBuilder
         this.streamFactory = streamFactory
-        this.graphQLClient = graphQLClient
+        this.theGraphClient = theGraphClient
         this.streamRegistryCached = streamRegistryCached
         this.authentication = authentication
         this.config = config
@@ -236,7 +236,7 @@ export class StreamRegistry {
             term,
             permissionFilter,
             orderBy,
-            this.graphQLClient,
+            this.theGraphClient,
             (id: StreamID, metadata: string) => this.parseStream(id, metadata),
             this.logger)
     }
@@ -251,7 +251,7 @@ export class StreamRegistry {
 
     private async* getStreamPublishersOrSubscribersList(streamIdOrPath: string, fieldName: string): AsyncIterable<EthereumAddress> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        const backendResults = this.graphQLClient.queryEntities<StreamPublisherOrSubscriberItem>(
+        const backendResults = this.theGraphClient.queryEntities<StreamPublisherOrSubscriberItem>(
             (lastId: string, pageSize: number) => StreamRegistry.buildStreamPublishersOrSubscribersQuery(streamId, fieldName, lastId, pageSize)
         )
         /*
@@ -316,7 +316,7 @@ export class StreamRegistry {
 
     async getPermissions(streamIdOrPath: string): Promise<PermissionAssignment[]> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        const queryResults = await collect(this.graphQLClient.queryEntities<PermissionQueryResult>(
+        const queryResults = await collect(this.theGraphClient.queryEntities<PermissionQueryResult>(
             (lastId: string, pageSize: number) => {
                 const query = `{
                     stream (id: "${streamId}") {

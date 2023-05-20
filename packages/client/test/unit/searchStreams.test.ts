@@ -27,7 +27,7 @@ const createMockResultItem = (streamId: StreamID, metadata: string): SearchStrea
     }
 }
 
-const createMockGraphQLClient = (resultItems: SearchStreamsResultItem[]): Pick<TheGraphClient, 'queryEntities'> => {
+const createMockTheGraphClient = (resultItems: SearchStreamsResultItem[]): Pick<TheGraphClient, 'queryEntities'> => {
     return {
         queryEntities: async function* () {
             yield* resultItems
@@ -39,7 +39,7 @@ describe('searchStreams', () => {
 
     it('results in order', async () => {
         const stream = toStreamID('/path', MOCK_USER)
-        const graphQLClient = createMockGraphQLClient([
+        const graphQLClient = createMockTheGraphClient([
             createMockResultItem(stream, JSON.stringify({ partitions: 11 })),
         ])
         jest.spyOn(graphQLClient, 'queryEntities')
@@ -63,7 +63,7 @@ describe('searchStreams', () => {
         const stream2 = toStreamID('/2', MOCK_USER)
         const stream3 = toStreamID('/3', MOCK_USER)
         const stream4 = toStreamID('/4', MOCK_USER)
-        const graphQLClient = createMockGraphQLClient([
+        const graphQLClient = createMockTheGraphClient([
             createMockResultItem(stream1, JSON.stringify({ partitions: 11 })),
             createMockResultItem(stream2, 'invalid-json'),
             createMockResultItem(stream3, JSON.stringify({ partitions: 150 })),

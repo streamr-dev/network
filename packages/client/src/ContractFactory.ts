@@ -43,7 +43,7 @@ export class ContractFactory {
         address: EthereumAddress,
         contractInterface: ContractInterface,
         signer: Signer,
-        name: string,
+        name: string
     ): ObservableContract<T> {
         const contract = createDecoratedContract<T>(
             new Contract(address, contractInterface, signer),
