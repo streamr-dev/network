@@ -15,6 +15,7 @@ export class NetworkStack {
     private streamrNode?: StreamrNode
     private readonly metricsContext: MetricsContext
     private readonly options: NetworkOptions
+    private stopped = false
 
     constructor(options: NetworkOptions) {
         this.options = options
@@ -34,12 +35,12 @@ export class NetworkStack {
         this.connectionManager = this.layer0DhtNode!.getTransport() as ConnectionManager
         const entryPoint = this.options.layer0.entryPoints![0]
         if (isSamePeerDescriptor(entryPoint, this.layer0DhtNode!.getPeerDescriptor())) {
-            this.layer0DhtNode!.joinDht(entryPoint)
-            await this.streamrNode!.start(this.layer0DhtNode!, this.connectionManager!, this.connectionManager!)
+            await this.layer0DhtNode?.joinDht(entryPoint)
+            await this.streamrNode?.start(this.layer0DhtNode!, this.connectionManager!, this.connectionManager!)
         } else {
-            setImmediate(() => this.layer0DhtNode!.joinDht(this.options.layer0.entryPoints![0])) 
-            await waitForCondition(() => this.layer0DhtNode!.getNumberOfConnections() > 0)
-            await this.streamrNode!.start(this.layer0DhtNode!, this.connectionManager!, this.connectionManager!)
+            setImmediate(() => this.layer0DhtNode?.joinDht(this.options.layer0.entryPoints![0])) 
+            await waitForCondition(() => this.stopped || this.layer0DhtNode!.getNumberOfConnections() > 0)
+            await this.streamrNode?.start(this.layer0DhtNode!, this.connectionManager!, this.connectionManager!)
         }
         
     }
@@ -61,6 +62,7 @@ export class NetworkStack {
     }
 
     async stop(): Promise<void> {
+        this.stopped = true
         await this.streamrNode!.destroy()
         this.streamrNode = undefined
         this.layer0DhtNode = undefined
