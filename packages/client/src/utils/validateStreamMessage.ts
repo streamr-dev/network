@@ -23,7 +23,7 @@ export const validateStreamMessage = async (msg: StreamMessage, streamRegistry: 
 }
 
 /**
- * Checks that the given StreamMessage is satisfies the requirements of the protocol.
+ * Checks that the given StreamMessage satisfies the requirements of the protocol.
  * This includes checking permissions as well as signature. The method supports all
  * message types defined by the protocol.
  *
