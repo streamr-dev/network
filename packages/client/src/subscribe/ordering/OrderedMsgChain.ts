@@ -294,13 +294,9 @@ export class OrderedMsgChain {
             return
         }
 
-        // emit drain after clearing a block. If only a single item was in the
-        // queue, the queue was never blocked, so it doesn't need to 'drain'.
-        if (processedMessages > 1) {
-            logger.trace('Drained queue', { processedMessages, lastMsgRef: this.lastOrderedMsgRef })
-            this.clearGap()
-            this.onDrain(processedMessages)
-        }
+        logger.trace('Drained queue', { processedMessages, lastMsgRef: this.lastOrderedMsgRef })
+        this.clearGap()
+        this.onDrain(processedMessages)
     }
 
     /**
