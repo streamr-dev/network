@@ -2,12 +2,13 @@
  * Makes OrderingUtil more compatible with use in pipeline.
  */
 import { MessageRef, StreamMessage, StreamPartID } from '@streamr/protocol'
-import { EthereumAddress, Logger } from '@streamr/utils'
+import { Logger } from '@streamr/utils'
 import { StrictStreamrClientConfig } from '../Config'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { PushBuffer } from '../utils/PushBuffer'
 import { MessageStream } from './MessageStream'
 import { Resends } from './Resends'
+import { MsgChainContext } from './ordering/OrderedMsgChain'
 import OrderingUtil from './ordering/OrderingUtil'
 
 /**
@@ -45,6 +46,7 @@ export class OrderMessages {
         this.enabled = gapFill && (maxGapRequests > 0)
         this.orderMessages = orderMessages
         this.orderingUtil = new OrderingUtil(
+            this.streamPartId,
             this.onOrdered,
             this.onGap,
             () => this.maybeClose(),
@@ -55,12 +57,11 @@ export class OrderMessages {
         )
     }
 
-    async onGap(from: MessageRef, to: MessageRef, publisherId: EthereumAddress, msgChainId: string): Promise<void> {
+    async onGap(from: MessageRef, to: MessageRef, context: MsgChainContext): Promise<void> {
         if (this.done || !this.enabled) { return }
         this.logger.debug('Encountered gap', {
             streamPartId: this.streamPartId,
-            publisherId,
-            msgChainId,
+            context,
             from,
             to,
         })
@@ -73,8 +74,8 @@ export class OrderMessages {
                 toTimestamp: to.timestamp,
                 fromSequenceNumber: from.sequenceNumber,
                 toSequenceNumber: to.sequenceNumber,
-                publisherId,
-                msgChainId,
+                publisherId: context.publisherId,
+                msgChainId: context.msgChainId,
             })
             resendMessageStream.onFinally.listen(() => {
                 this.resendStreams.delete(resendMessageStream)
