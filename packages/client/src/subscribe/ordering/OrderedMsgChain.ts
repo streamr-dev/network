@@ -1,4 +1,4 @@
-import { MessageRef, StreamMessage } from '@streamr/protocol'
+import { MessageRef, StreamMessage, StreamPartID } from '@streamr/protocol'
 import { EthereumAddress, Logger } from '@streamr/utils'
 import Heap from 'heap'
 import GapFillFailedError from './GapFillFailedError'
@@ -10,6 +10,12 @@ function toMsgRefId(streamMessage: StreamMessage): MsgRefId {
 type MsgRefId = string
 
 type ChainedMessage = StreamMessage & { prevMsgRef: NonNullable<StreamMessage['prevMsgRef']> }
+
+export interface MsgChainContext {
+    streamPartId: StreamPartID
+    publisherId: EthereumAddress
+    msgChainId: string
+}
 
 /**
  * Set of StreamMessages, unique by serialized msgRef i.e. timestamp + sequence number.
@@ -120,7 +126,7 @@ class MsgChainQueue {
 }
 
 export type MessageHandler = (msg: StreamMessage) => void
-export type GapHandler = (from: MessageRef, to: MessageRef, publisherId: EthereumAddress, msgChainId: string) => void | Promise<void>
+export type GapHandler = (from: MessageRef, to: MessageRef, context: MsgChainContext) => void | Promise<void>
 export type OnDrain = (numMessages: number) => void
 export type OnError = (error: Error) => void
 
@@ -135,8 +141,7 @@ export class OrderedMsgChain {
     private nextGaps: ReturnType<typeof setTimeout> | null = null
     private readonly queue = new MsgChainQueue()
     private readonly markedExplicitly = new StreamMessageSet()
-    private readonly publisherId: EthereumAddress
-    private readonly msgChainId: string
+    private readonly context: MsgChainContext
     private readonly inOrderHandler: MessageHandler
     private readonly gapHandler: GapHandler
     private readonly onDrain: OnDrain
@@ -145,8 +150,7 @@ export class OrderedMsgChain {
     private readonly retryResendAfter: number
 
     constructor(
-        publisherId: EthereumAddress,
-        msgChainId: string,
+        context: MsgChainContext,
         inOrderHandler: MessageHandler,
         gapHandler: GapHandler,
         onDrain: OnDrain,
@@ -155,8 +159,7 @@ export class OrderedMsgChain {
         retryResendAfter: number,
         maxGapRequests: number
     ) {
-        this.publisherId = publisherId
-        this.msgChainId = msgChainId
+        this.context = context
         this.inOrderHandler = inOrderHandler
         this.gapHandler = gapHandler
         this.onDrain = onDrain
@@ -379,7 +382,7 @@ export class OrderedMsgChain {
             })
             this.gapRequestCount += 1
             try {
-                await this.gapHandler(from, to, this.publisherId, this.msgChainId)
+                await this.gapHandler(from, to, this.context)
             } catch (err: any) {
                 this.onError(err)
             }
@@ -408,7 +411,7 @@ export class OrderedMsgChain {
         // skip gap, allow queue processing to continue
         this.lastOrderedMsgRef = msg.getPreviousMessageRef()
         if (this.isGapHandlingEnabled()) {
-            this.onError(new GapFillFailedError(from, to, this.publisherId, this.msgChainId, maxGapRequests))
+            this.onError(new GapFillFailedError(from, to, this.context, maxGapRequests))
         }
 
         this.clearGap()
