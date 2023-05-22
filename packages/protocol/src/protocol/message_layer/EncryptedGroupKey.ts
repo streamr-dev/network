@@ -25,6 +25,7 @@ export default class EncryptedGroupKey {
         this.serialized = serialized
     }
 
+    /** @internal */
     toArray(): EncryptedGroupKeySerialized {
         return [this.groupKeyId, this.encryptedGroupKeyHex]
     }
@@ -41,7 +42,8 @@ export default class EncryptedGroupKey {
         const [groupKeyId, encryptedGroupKeyHex] = JSON.parse(json)
         return new EncryptedGroupKey(groupKeyId, encryptedGroupKeyHex, json)
     }
-
+    
+    /** @internal */
     static fromArray(arr: EncryptedGroupKeySerialized): EncryptedGroupKey {
         const [groupKeyId, encryptedGroupKeyHex] = arr
         return new EncryptedGroupKey(groupKeyId, encryptedGroupKeyHex)
