@@ -3,11 +3,12 @@ import { randomEthereumAddress } from '@streamr/test-utils'
 import { collect } from '@streamr/utils'
 import range from 'lodash/range'
 import without from 'lodash/without'
+import { StreamrClientError } from '../../src/StreamrClientError'
+import { OrderMessages } from '../../src/subscribe/OrderMessages'
+import { Resends } from '../../src/subscribe/Resends'
+import { fromArray } from '../../src/utils/GeneratorUtils'
+import { mockLoggerFactory } from '../test-utils/utils'
 import { MessageStream } from './../../src/subscribe/MessageStream'
-import { OrderMessages } from './../../src/subscribe/OrderMessages'
-import { Resends } from './../../src/subscribe/Resends'
-import { fromArray } from './../../src/utils/GeneratorUtils'
-import { mockLoggerFactory } from './../test-utils/utils'
 
 const MESSAGE_COUNT = 5
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
@@ -143,21 +144,21 @@ describe('OrderMessages', () => {
         )
     })
 
-    it('ignore missing message if no data in storage node', async () => {
+    it('ignore missing messages if no data in storage node', async () => {
         const msgs = await createMockMessages()
-        const missing = msgs.filter((m) => m.getTimestamp() === 3000)
+        const missing = msgs.filter((m) => m.getTimestamp() === 2000 || m.getTimestamp() === 4000)
         const resends = {
             range: jest.fn().mockImplementation(() => createMessageStream())
         }
         const transform = createTransform(resends)
         const output = transform(fromArray(without(msgs, ...missing)))
         expect(await collect(output)).toEqual(without(msgs, ...missing))
-        expect(resends.range).toBeCalledTimes(CONFIG.maxGapRequests)
+        expect(resends.range).toBeCalledTimes(2 * CONFIG.maxGapRequests)
     })
 
-    it('ignore missing message if gap filling disable', async () => {
+    it('ignore missing messages if gap filling disable', async () => {
         const msgs = await createMockMessages()
-        const missing = msgs.filter((m) => m.getTimestamp() === 3000)
+        const missing = msgs.filter((m) => m.getTimestamp() === 2000 || m.getTimestamp() === 4000)
         const resends = {
             range: jest.fn()
         }
@@ -167,5 +168,17 @@ describe('OrderMessages', () => {
         const output = transform(fromArray(without(msgs, ...missing)))
         expect(await collect(output)).toEqual(without(msgs, ...missing))
         expect(resends.range).toBeCalledTimes(0)
+    })
+
+    it('ignore missing messages if no storage node assigned', async () => {
+        const msgs = await createMockMessages()
+        const missing = msgs.filter((m) => m.getTimestamp() === 2000 || m.getTimestamp() === 4000)
+        const resends = {
+            range: jest.fn().mockRejectedValue(new StreamrClientError('', 'NO_STORAGE_NODES'))
+        }
+        const transform = createTransform(resends)
+        const output = transform(fromArray(without(msgs, ...missing)))
+        expect(await collect(output)).toEqual(without(msgs, ...missing))
+        expect(resends.range).toBeCalledTimes(1)
     })
 })
