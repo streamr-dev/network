@@ -2,40 +2,39 @@ import { BigNumber } from '@ethersproject/bignumber'
 import { ContractTransaction } from '@ethersproject/contracts'
 import { Provider } from '@ethersproject/providers'
 import { StreamID, StreamIDUtils, toStreamID } from '@streamr/protocol'
-import { collect, EthereumAddress, isENSName, Logger, toEthereumAddress } from '@streamr/utils'
-import { delay, inject, Lifecycle, scoped } from 'tsyringe'
+import { EthereumAddress, Logger, collect, isENSName, toEthereumAddress } from '@streamr/utils'
+import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { ContractFactory } from '../ContractFactory'
 import { getStreamRegistryChainProviders, getStreamRegistryOverrides } from '../Ethereum'
+import { NotFoundError } from '../HttpUtil'
+import { Stream, StreamMetadata } from '../Stream'
+import { StreamIDBuilder } from '../StreamIDBuilder'
 import type { StreamRegistryV4 as StreamRegistryContract } from '../ethereumArtifacts/StreamRegistryV4'
 import StreamRegistryArtifact from '../ethereumArtifacts/StreamRegistryV4Abi.json'
 import { StreamrClientEventEmitter } from '../events'
-import { NotFoundError } from '../HttpUtil'
 import {
     ChainPermissions,
+    PUBLIC_PERMISSION_ADDRESS,
+    PermissionAssignment,
+    PermissionQuery,
+    PermissionQueryResult,
+    StreamPermission,
     convertChainPermissionsToStreamPermissions,
     convertStreamPermissionsToChainPermission,
     isPublicPermissionAssignment,
     isPublicPermissionQuery,
-    PermissionAssignment,
-    PermissionQuery,
-    PermissionQueryResult,
-    PUBLIC_PERMISSION_ADDRESS,
-    StreamPermission,
     streamPermissionToSolidityType
 } from '../permission'
-import { Stream, StreamMetadata } from '../Stream'
-import { StreamIDBuilder } from '../StreamIDBuilder'
-import { initContractEventGateway, ObservableContract, queryAllReadonlyContracts, waitForTx } from '../utils/contract'
 import { filter, map } from '../utils/GeneratorUtils'
-import { GraphQLQuery } from '../utils/GraphQLClient'
 import { LoggerFactory } from '../utils/LoggerFactory'
+import { GraphQLQuery, TheGraphClient } from '@streamr/utils'
+import { ObservableContract, initContractEventGateway, queryAllReadonlyContracts, waitForTx } from '../utils/contract'
 import { until } from '../utils/promises'
-import { SynchronizedGraphQLClient } from '../utils/SynchronizedGraphQLClient'
 import { StreamFactory } from './../StreamFactory'
-import { searchStreams as _searchStreams, SearchStreamsOrderBy, SearchStreamsPermissionFilter } from './searchStreams'
 import { StreamRegistryCached } from './StreamRegistryCached'
+import { SearchStreamsOrderBy, SearchStreamsPermissionFilter, searchStreams as _searchStreams } from './searchStreams'
 
 /*
  * On-chain registry of stream metadata and permissions.
@@ -73,7 +72,7 @@ export class StreamRegistry {
     private contractFactory: ContractFactory
     private streamIdBuilder: StreamIDBuilder
     private streamFactory: StreamFactory
-    private graphQLClient: SynchronizedGraphQLClient
+    private theGraphClient: TheGraphClient
     private streamRegistryCached: StreamRegistryCached
     private authentication: Authentication
     private config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
@@ -86,7 +85,7 @@ export class StreamRegistry {
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
         @inject(StreamIDBuilder) streamIdBuilder: StreamIDBuilder,
         streamFactory: StreamFactory,
-        @inject(SynchronizedGraphQLClient) graphQLClient: SynchronizedGraphQLClient,
+        theGraphClient: TheGraphClient,
         @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
         @inject(StreamrClientEventEmitter) eventEmitter: StreamrClientEventEmitter,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
@@ -95,7 +94,7 @@ export class StreamRegistry {
         this.contractFactory = contractFactory
         this.streamIdBuilder = streamIdBuilder
         this.streamFactory = streamFactory
-        this.graphQLClient = graphQLClient
+        this.theGraphClient = theGraphClient
         this.streamRegistryCached = streamRegistryCached
         this.authentication = authentication
         this.config = config
@@ -237,7 +236,7 @@ export class StreamRegistry {
             term,
             permissionFilter,
             orderBy,
-            this.graphQLClient,
+            this.theGraphClient,
             (id: StreamID, metadata: string) => this.parseStream(id, metadata),
             this.logger)
     }
@@ -252,7 +251,7 @@ export class StreamRegistry {
 
     private async* getStreamPublishersOrSubscribersList(streamIdOrPath: string, fieldName: string): AsyncIterable<EthereumAddress> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        const backendResults = this.graphQLClient.fetchPaginatedResults<StreamPublisherOrSubscriberItem>(
+        const backendResults = this.theGraphClient.queryEntities<StreamPublisherOrSubscriberItem>(
             (lastId: string, pageSize: number) => StreamRegistry.buildStreamPublishersOrSubscribersQuery(streamId, fieldName, lastId, pageSize)
         )
         /*
@@ -317,7 +316,7 @@ export class StreamRegistry {
 
     async getPermissions(streamIdOrPath: string): Promise<PermissionAssignment[]> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        const queryResults = await collect(this.graphQLClient.fetchPaginatedResults<PermissionQueryResult>(
+        const queryResults = await collect(this.theGraphClient.queryEntities<PermissionQueryResult>(
             (lastId: string, pageSize: number) => {
                 const query = `{
                     stream (id: "${streamId}") {

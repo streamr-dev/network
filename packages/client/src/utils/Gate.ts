@@ -31,6 +31,10 @@
  */
 import { Defer } from '@streamr/utils'
 
+// This is similar to the Gate class of @streamr/utils, but implements also locking featute
+// TODO remove this class if the lock() feature is no longer needed and use the class 
+// from @streamr/utils instead
+
 export class Gate {
     public isLocked = false
     private pending?: Defer<undefined>
