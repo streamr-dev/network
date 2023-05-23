@@ -75,11 +75,13 @@ export class StreamRegistry {
     private theGraphClient: TheGraphClient
     private streamRegistryCached: StreamRegistryCached
     private authentication: Authentication
+    /** @internal */
     private config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
     private readonly logger: Logger
     private streamRegistryContract?: ObservableContract<StreamRegistryContract>
     private streamRegistryContractsReadonly: ObservableContract<StreamRegistryContract>[]
-
+    
+    /** @internal */
     constructor(
         contractFactory: ContractFactory,
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
