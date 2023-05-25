@@ -27,7 +27,6 @@ export class OrderMessages {
     private readonly resends: Resends
     private readonly streamPartId: StreamPartID
     private readonly logger: Logger
-    private readonly orderMessages: boolean
 
     constructor(
         config: StrictStreamrClientConfig,
@@ -42,9 +41,8 @@ export class OrderMessages {
         this.onOrdered = this.onOrdered.bind(this)
         this.onGap = this.onGap.bind(this)
         this.maybeClose = this.maybeClose.bind(this)
-        const { gapFillTimeout, retryResendAfter, maxGapRequests, orderMessages, gapFill } = this.config
+        const { gapFillTimeout, retryResendAfter, maxGapRequests, gapFill } = this.config
         this.enabled = gapFill && (maxGapRequests > 0)
-        this.orderMessages = orderMessages
         this.orderingUtil = new OrderingUtil(
             this.streamPartId,
             this.onOrdered,
@@ -144,11 +142,6 @@ export class OrderMessages {
 
     transform(): (src: AsyncGenerator<StreamMessage, any, unknown>) => AsyncGenerator<StreamMessage> {
         return async function* Transform(this: OrderMessages, src: AsyncGenerator<StreamMessage>) {
-            if (!this.orderMessages) {
-                yield* src
-                return
-            }
-
             try {
                 this.addToOrderingUtil(src)
                 yield* this.outBuffer
