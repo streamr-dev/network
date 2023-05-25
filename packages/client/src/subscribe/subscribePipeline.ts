@@ -32,13 +32,6 @@ export const createSubscribePipeline = (opts: SubscriptionPipelineOptions): Mess
 
     const logger = opts.loggerFactory.createLogger(module)
 
-    const gapFillMessages = new OrderMessages(
-        opts.config,
-        opts.resends,
-        opts.streamPartId,
-        opts.loggerFactory
-    )
-
     /* eslint-enable object-curly-newline */
 
     const onError = (error: Error | StreamMessageError, streamMessage?: StreamMessage) => {
@@ -78,7 +71,16 @@ export const createSubscribePipeline = (opts: SubscriptionPipelineOptions): Mess
     messageStream.onError.listen(onError)
     if (opts.config.orderMessages) {
         // order messages (fill gaps)
-        messageStream.pipe(gapFillMessages.transform())
+        const orderMessages = new OrderMessages(
+            opts.config,
+            opts.resends,
+            opts.streamPartId,
+            opts.loggerFactory
+        )
+        messageStream.pipe(orderMessages.transform())
+        messageStream.onBeforeFinally.listen(() => {
+            orderMessages.stop()
+        })
     }
     messageStream
         // validate & decrypt
@@ -99,9 +101,6 @@ export const createSubscribePipeline = (opts: SubscriptionPipelineOptions): Mess
         // ignore any failed messages
         .filter((streamMessage: StreamMessage) => {
             return !ignoreMessages.has(streamMessage)
-        })
-        .onBeforeFinally.listen(() => {
-            gapFillMessages.stop()
         })
     return messageStream
 }
