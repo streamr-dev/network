@@ -76,9 +76,11 @@ export const createSubscribePipeline = (opts: SubscriptionPipelineOptions): Mess
     // end up acting as gaps that we repeatedly try to fill.
     const ignoreMessages = new WeakSet()
     messageStream.onError.listen(onError)
-    messageStream
+    if (opts.config.orderMessages) {
         // order messages (fill gaps)
-        .pipe(gapFillMessages.transform())
+        messageStream.pipe(gapFillMessages.transform())
+    }
+    messageStream
         // validate & decrypt
         .pipe(async function* (src: AsyncGenerator<StreamMessage>) {
             setImmediate(async () => {

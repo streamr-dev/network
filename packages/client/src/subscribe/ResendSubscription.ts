@@ -12,7 +12,6 @@ export class ResendSubscription extends Subscription {
 
     private resendOptions: ResendOptions
     private resends: Resends
-    private orderMessages: OrderMessages
 
     /** @internal */
     constructor(
@@ -25,15 +24,17 @@ export class ResendSubscription extends Subscription {
         super(streamPartId, false, loggerFactory)
         this.resendOptions = resendOptions
         this.resends = resends
-        this.orderMessages = new OrderMessages(
-            config,
-            resends,
-            streamPartId,
-            loggerFactory
-        )
         this.pipe(this.resendThenRealtime.bind(this))
-        this.pipe(this.orderMessages.transform())
-        this.onBeforeFinally.listen(() => this.orderMessages.stop())
+        if (config.orderMessages) {
+            const orderMessages = new OrderMessages(
+                config,
+                resends,
+                streamPartId,
+                loggerFactory
+            )
+            this.pipe(orderMessages.transform())
+            this.onBeforeFinally.listen(() =>orderMessages.stop())
+        }
     }
 
     private async getResent(): Promise<MessageStream> {
