@@ -16,6 +16,7 @@ export class NetworkStack {
     private readonly metricsContext: MetricsContext
     private readonly options: NetworkOptions
     private stopped = false
+    private readonly firstConnectionTimeout: number
 
     constructor(options: NetworkOptions) {
         this.options = options
@@ -28,6 +29,7 @@ export class NetworkStack {
             ...options.networkNode,
             metricsContext: this.metricsContext
         })
+        this.firstConnectionTimeout = options.networkNode.firstConnectionTimeout || 5000
     }
 
     async start(): Promise<void> {
@@ -39,7 +41,7 @@ export class NetworkStack {
             await this.streamrNode?.start(this.layer0DhtNode!, this.connectionManager!, this.connectionManager!)
         } else {
             setImmediate(() => this.layer0DhtNode?.joinDht(this.options.layer0.entryPoints![0])) 
-            await waitForCondition(() => this.stopped || this.layer0DhtNode!.getNumberOfConnections() > 0)
+            await waitForCondition(() => this.stopped || this.layer0DhtNode!.getNumberOfConnections() > 0, this.firstConnectionTimeout)
             await this.streamrNode?.start(this.layer0DhtNode!, this.connectionManager!, this.connectionManager!)
         }
         
