@@ -48,6 +48,7 @@ export interface StreamrNodeOpts {
     layer2MaxNumberOfContact?: number
     layer2MinPropagationTargets?: number
     nodeName?: string
+    firstConnectionTimeout?: number
 }
 
 export class StreamrNode extends EventEmitter<Events> {
