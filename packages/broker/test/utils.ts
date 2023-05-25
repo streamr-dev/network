@@ -118,10 +118,18 @@ export const createClient = async (
             auth: {
                 privateKey
             },
-            network: merge(
-                CONFIG_TEST?.network,
-                clientOptions?.network
-            )
+            network: {
+                layer0:
+                    merge(
+                        CONFIG_TEST?.network?.layer0,
+                        clientOptions?.network?.layer0
+                    ),
+                networkNode:
+                    merge(
+                        CONFIG_TEST?.network?.networkNode,
+                        clientOptions?.network?.networkNode
+                    )
+            }
         },
         clientOptions
     )
