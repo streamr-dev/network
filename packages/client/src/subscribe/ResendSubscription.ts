@@ -33,7 +33,7 @@ export class ResendSubscription extends Subscription {
                 loggerFactory
             )
             this.pipe(orderMessages.transform())
-            this.onBeforeFinally.listen(() =>orderMessages.stop())
+            this.onBeforeFinally.listen(() => orderMessages.stop())
         }
     }
 
