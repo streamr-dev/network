@@ -38,6 +38,7 @@ export default class MessageID {
         this.msgChainId = msgChainId
     }
 
+    /** @internal */
     toArray(): MessageIDArray {
         return [
             this.streamId,
@@ -49,6 +50,7 @@ export default class MessageID {
         ]
     }
 
+    /** @internal */
     static fromArray(arr: MessageIDArray): MessageID {
         const [
             streamId,
