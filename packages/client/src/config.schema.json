@@ -172,6 +172,9 @@
                         },
                         "layer2MinPropagationTargets": {
                             "type": "number"
+                        },
+                        "firstConnectionTimeout": {
+                            "type": "number"
                         }
                     },
                     "default": {}

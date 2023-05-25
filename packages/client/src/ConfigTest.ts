@@ -35,6 +35,9 @@ export const CONFIG_TEST: StreamrClientConfig = {
             },
             iceServers: [],
             webrtcDisallowPrivateAddresses: false
+        },
+        networkNode: {
+            firstConnectionTimeout: 15 * 1000
         }
     },
     contracts: {
