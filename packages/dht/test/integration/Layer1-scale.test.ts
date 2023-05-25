@@ -8,6 +8,7 @@ import { expect } from 'expect'
 describe('Layer1', () => {
 
     let simulator: Simulator
+   
     const layer0EntryPointId = new UUID().toString()
 
     const entryPoint0Descriptor = {
@@ -24,7 +25,9 @@ describe('Layer1', () => {
     let layer1CleanUp: DhtNode[]
 
     beforeEach(async () => {
-        simulator = new Simulator()
+        Simulator.useFakeTimers()
+        simulator = new Simulator() //(LatencyType.RANDOM)
+
         layer0EntryPoint = await createMockConnectionDhtNode(layer0EntryPointId, simulator)
         await layer0EntryPoint.joinDht(entryPoint0Descriptor)
 
@@ -53,6 +56,12 @@ describe('Layer1', () => {
         await Promise.all(layer1CleanUp.map((node) => node.stop()))
         await layer0EntryPoint.stop()
         simulator.stop()
+
+        Simulator.useFakeTimers(false)
+       
+    })
+
+    afterAll(async () => {
     })
 
     it('single layer1 dht', async () => {

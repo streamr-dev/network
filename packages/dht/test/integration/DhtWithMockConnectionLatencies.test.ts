@@ -10,6 +10,8 @@ describe('Mock connection Dht joining with latencies', () => {
     let entrypointDescriptor: PeerDescriptor
     
     beforeEach(async () => {
+        Simulator.useFakeTimers()
+
         nodes = []
         simulator = new Simulator(LatencyType.RANDOM)
         const entryPointId = '0'
@@ -32,6 +34,7 @@ describe('Mock connection Dht joining with latencies', () => {
             ...nodes.map((node) => node.stop())
         ])
         simulator.stop()
+        Simulator.useFakeTimers(false)
     })
 
     it('Happy path', async () => {

@@ -102,7 +102,7 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
 
     private loopCounter = 0
     private operationCounter = 0
-    private MAX_LOOPS = 1
+    private MAX_LOOPS = 1000
 
     private operationQueue: Heap<SimulatorOperation> = new Heap<SimulatorOperation>((a: SimulatorOperation, b: SimulatorOperation) => {
         if ((a.executionTime - b.executionTime) == 0) {
@@ -113,12 +113,26 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     })
 
     private simulatorTimeout?: NodeJS.Timeout
-    private clock: sinon.SinonFakeTimers
-    
+    private static clock: sinon.SinonFakeTimers | undefined
+
+    static useFakeTimers(on = true): void {
+        if (on) {
+            if (!Simulator.clock) {
+                Simulator.clock = sinon.useFakeTimers()
+            }
+        } else {
+            if (Simulator.clock) {
+                //Simulator.clock.reset()
+                Simulator.clock.restore()
+                //sinon.restore()
+                Simulator.clock = undefined
+            }
+        }
+    }
+
     constructor(latencyType: LatencyType = LatencyType.NONE, fixedLatency?: number) {
         super()
 
-        this.clock = sinon.useFakeTimers()
         this.latencyType = latencyType
         this.fixedLatency = fixedLatency
 
@@ -265,7 +279,7 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
             this.loopCounter++
             if (this.loopCounter >= this.MAX_LOOPS) {
                 this.loopCounter = 0
-                setImmediate(() => this.executeQueuedOperations())
+                setTimeout(() => this.executeQueuedOperations(), 0)
                 return
             }
         }
@@ -276,7 +290,7 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     public getOperationCounter(): number {
         return this.operationCounter
     }
-    
+
     private scheduleNextTimeout(): void {
         if (this.simulatorTimeout) {
             clearTimeout(this.simulatorTimeout)
@@ -294,12 +308,11 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
         const firstOperationTime = firstOperation!.executionTime
         const timeDifference = firstOperationTime - currentTime
 
-        if (timeDifference > 0) {
-            this.simulatorTimeout = setTimeout(this.executeQueuedOperations, timeDifference)
-        } else {
-            setImmediate(() => this.executeQueuedOperations())
+        this.simulatorTimeout = setTimeout(this.executeQueuedOperations, timeDifference)
+       
+        if (Simulator.clock) {
+            Simulator.clock.runAllAsync()
         }
-        this.clock.runAllAsync()
     }
 
     private scheduleOperation(operation: SimulatorOperation) {
@@ -342,7 +355,8 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
 
         const executionTime = this.generateExecutionTime(association,
             sourceConnection.ownPeerDescriptor.region,
-            association.destinationConnection?.ownPeerDescriptor.region)
+            sourceConnection.getPeerDescriptor()?.region)
+        //association.destinationConnection?.ownPeerDescriptor.region)
         association.setLastOperationAt(executionTime)
 
         const operation = new CloseOperation(executionTime, association)

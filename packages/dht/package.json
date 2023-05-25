@@ -48,6 +48,7 @@
     "websocket": "^1.0.34"
   },
   "devDependencies": {
+    "@sinonjs/fake-timers": "10.0.2",
     "@streamr/test-utils": "8.2.1",
     "@types/express": "^4.17.13",
     "@types/heap": "^0.2.28",
@@ -72,6 +73,7 @@
     "karma-webpack": "^5.0.0",
     "node-module-polyfill": "^1.0.1",
     "node-polyfill-webpack-plugin": "^1.1.4",
+    "nsolid": "latest",
     "patch-package": "^6.4.7",
     "path-browserify": "^1.0.1",
     "process": "^0.11.10",
@@ -80,9 +82,7 @@
     "ts-loader": "^9.3.1",
     "ts-node": "^10.9.1",
     "webpack": "^5.64.1",
-    "webpack-cli": "^4.9.1",
-    "nsolid": "latest",
-    "@sinonjs/fake-timers": "10.0.2"
+    "webpack-cli": "^4.9.1"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.5",

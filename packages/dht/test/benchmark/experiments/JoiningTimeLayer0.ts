@@ -20,6 +20,7 @@ let simulator: Simulator
 
 const prepareNetwork = async () => {
     console.log('Preparing network')
+    Simulator.useFakeTimers()
     nodes = []
     simulator = new Simulator(LatencyType.REAL)
     const entryPointId = PeerID.generateRandom()
@@ -45,6 +46,7 @@ const shutdownNetwork = async () => {
         ...nodes.map((node) => node.stop())
     ])
     simulator.stop()
+    Simulator.useFakeTimers(false)
     //await clientWebSocket.close()
 }
 

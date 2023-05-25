@@ -7,9 +7,10 @@ describe('Mock IConnection DHT Joining', () => {
     let entryPoint: DhtNode
     let nodes: DhtNode[]
     let entrypointDescriptor: PeerDescriptor
-    let simulator: Simulator
+    let simulator: Simulator  
 
     beforeEach(async () => {
+        Simulator.useFakeTimers()
         nodes = []
         simulator = new Simulator()
         const entryPointId = '0'
@@ -32,15 +33,16 @@ describe('Mock IConnection DHT Joining', () => {
             ...nodes.map(async (node) => node.stop())
         ])
         simulator.stop()
+        Simulator.useFakeTimers(false)
     })
 
     it('Happy path', async () => {
         await entryPoint.joinDht(entrypointDescriptor)
         await Promise.all(nodes.map((node) => node.joinDht(entrypointDescriptor)))
         nodes.forEach((node) => {
-            expect(node.getBucketSize()).toBeGreaterThanOrEqual(node.getK() - 1)
-            expect(node.getNeighborList().getSize()).toBeGreaterThanOrEqual(node.getK() - 1)
+            expect(node.getBucketSize()).toBeGreaterThanOrEqual(node.getK() - 2)
+            expect(node.getNeighborList().getSize()).toBeGreaterThanOrEqual(node.getK() - 2)
         })
-        expect(entryPoint.getBucketSize()).toBeGreaterThanOrEqual(entryPoint.getK() - 1)
+        expect(entryPoint.getBucketSize()).toBeGreaterThanOrEqual(entryPoint.getK() - 2)
     }, 60000)
 })

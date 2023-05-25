@@ -17,6 +17,7 @@ describe('Scaling down a Dht network', () => {
     const K = 2
 
     beforeEach(async () => {
+        Simulator.useFakeTimers()
         nodes = []
         const entryPointId = '0'
         entryPoint = await createMockConnectionDhtNode(entryPointId, simulator,
@@ -41,6 +42,7 @@ describe('Scaling down a Dht network', () => {
 
     afterEach(async () => {
         await Promise.all(nodes.map((node) => node.stop()))
+        Simulator.useFakeTimers(false)
     }, 10000)
 
     it('Remaining nodes cleaned up stopped nodes from states', async () => {

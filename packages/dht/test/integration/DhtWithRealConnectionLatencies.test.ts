@@ -8,6 +8,7 @@ describe('Mock connection Dht joining with real latencies', () => {
     let entryPoint: DhtNode
     let nodes: DhtNode[]
     let simulator: Simulator
+    Simulator.useFakeTimers()
     let entrypointDescriptor: PeerDescriptor
     
     beforeEach(async () => {

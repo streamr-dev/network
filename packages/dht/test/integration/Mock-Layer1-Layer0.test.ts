@@ -8,6 +8,8 @@ const logger = new Logger(module)
 
 describe('Layer 1 on Layer 0 with mocked connections', () => {
     const simulator = new Simulator()
+    Simulator.useFakeTimers()
+    
     const layer0EntryPointId = 'layer0entrypoint'
 
     let layer0EntryPoint: DhtNode
