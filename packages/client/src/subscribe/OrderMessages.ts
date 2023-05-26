@@ -74,7 +74,7 @@ export class OrderMessages {
                 toSequenceNumber: to.sequenceNumber,
                 publisherId: context.publisherId,
                 msgChainId: context.msgChainId,
-            })
+            }, true)
             resendMessageStream.onFinally.listen(() => {
                 this.resendStreams.delete(resendMessageStream)
             })
