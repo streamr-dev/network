@@ -191,7 +191,8 @@ export class Stream {
             toStreamPartID(this.id, DEFAULT_PARTITION),
             {
                 count: 1,
-            }
+            },
+            false
         )
 
         const receivedMsgs = await collect(sub)

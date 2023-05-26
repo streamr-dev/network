@@ -106,7 +106,7 @@ export class Resends {
         if (isResendLast(options)) {
             return this.last(streamPartId, {
                 count: options.last,
-            })
+            }, false)
         }
 
         if (isResendRange(options)) {
@@ -117,7 +117,7 @@ export class Resends {
                 toSequenceNumber: options.to.sequenceNumber,
                 publisherId: options.publisherId !== undefined ? toEthereumAddress(options.publisherId) : undefined,
                 msgChainId: options.msgChainId,
-            })
+            }, false)
         }
 
         if (isResendFrom(options)) {
@@ -125,7 +125,7 @@ export class Resends {
                 fromTimestamp: new Date(options.from.timestamp).getTime(),
                 fromSequenceNumber: options.from.sequenceNumber,
                 publisherId: options.publisherId !== undefined ? toEthereumAddress(options.publisherId) : undefined,
-            })
+            }, false)
         }
 
         throw new StreamrClientError(
@@ -137,7 +137,8 @@ export class Resends {
     private async fetchStream(
         endpointSuffix: 'last' | 'range' | 'from',
         streamPartId: StreamPartID,
-        query: QueryDict = {}
+        query: QueryDict = {},
+        raw: boolean
     ): Promise<MessageStream> {
         const traceId = randomString(5)
         this.logger.debug('Fetch resend data', {
@@ -155,7 +156,7 @@ export class Resends {
         const nodeAddress = nodeAddresses[random(0, nodeAddresses.length - 1)]
         const nodeUrl = (await this.storageNodeRegistry.getStorageNodeMetadata(nodeAddress)).http
         const url = this.createUrl(nodeUrl, endpointSuffix, streamPartId, query)
-        const messageStream = createSubscribePipeline({
+        const messageStream = (raw === false) ? createSubscribePipeline({
             streamPartId,
             resends: this,
             groupKeyManager: this.groupKeyManager,
@@ -163,7 +164,7 @@ export class Resends {
             destroySignal: this.destroySignal,
             config: this.config,
             loggerFactory: this.loggerFactory
-        })
+        }) : new MessageStream()
 
         const dataStream = this.httpUtil.fetchHttpStream(url)
         messageStream.pull(counting(dataStream, (count: number) => {
@@ -172,7 +173,7 @@ export class Resends {
         return messageStream
     }
 
-    async last(streamPartId: StreamPartID, { count }: { count: number }): Promise<MessageStream> {
+    async last(streamPartId: StreamPartID, { count }: { count: number }, raw: boolean): Promise<MessageStream> {
         if (count <= 0) {
             const emptyStream = new MessageStream()
             emptyStream.endWrite()
@@ -181,7 +182,7 @@ export class Resends {
 
         return this.fetchStream('last', streamPartId, {
             count,
-        })
+        }, raw)
     }
 
     private async from(streamPartId: StreamPartID, {
@@ -192,12 +193,12 @@ export class Resends {
         fromTimestamp: number
         fromSequenceNumber?: number
         publisherId?: EthereumAddress
-    }): Promise<MessageStream> {
+    }, raw: boolean): Promise<MessageStream> {
         return this.fetchStream('from', streamPartId, {
             fromTimestamp,
             fromSequenceNumber,
             publisherId,
-        })
+        }, raw)
     }
 
     async range(streamPartId: StreamPartID, {
@@ -214,15 +215,15 @@ export class Resends {
         toSequenceNumber?: number
         publisherId?: EthereumAddress
         msgChainId?: string
-    }): Promise<MessageStream> {
+    }, raw: boolean): Promise<MessageStream> {
         return this.fetchStream('range', streamPartId, {
             fromTimestamp,
             fromSequenceNumber,
             toTimestamp,
             toSequenceNumber,
             publisherId,
-            msgChainId,
-        })
+            msgChainId
+        }, raw)
     }
 
     async waitForStorage(message: Message, {
