@@ -137,7 +137,7 @@ export class Resends {
     private async fetchStream(
         endpointSuffix: 'last' | 'range' | 'from',
         streamPartId: StreamPartID,
-        query: QueryDict = {},
+        query: QueryDict,
         raw: boolean
     ): Promise<MessageStream> {
         const traceId = randomString(5)
