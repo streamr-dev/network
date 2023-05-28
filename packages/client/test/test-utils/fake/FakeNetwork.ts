@@ -47,10 +47,7 @@ export class FakeNetwork {
         * TODO: should we change the serialization or the test? Or keep this hack?
         */
         recipients.forEach((n) => {
-            n.messageListeners.forEach((listener) => {
-                // return a clone as client mutates message when it decrypts messages
-                listener(msg.clone())
-            })
+            n.messageListeners.forEach((listener) => listener(msg))
         })
         this.sends.push({
             message: msg,
