@@ -3,14 +3,16 @@ import 'reflect-metadata'
 import { Wallet } from '@ethersproject/wallet'
 import { StreamMessage } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
-import { collect } from '@streamr/utils'
-import { StreamPermission } from '../../src/permission'
+import { collect, toEthereumAddress } from '@streamr/utils'
+import { GroupKey } from '../../src/encryption/GroupKey'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
-import { createTestStream } from '../test-utils/utils'
+import { createGroupKeyQueue, createStreamRegistryCached, createTestStream } from '../test-utils/utils'
 import { createPrivateKeyAuthentication } from './../../src/Authentication'
 import { Stream } from './../../src/Stream'
 import { MessageFactory } from './../../src/publish/MessageFactory'
 import { FakeStorageNode } from './../test-utils/fake/FakeStorageNode'
+
+const GROUP_KEY = GroupKey.generate()
 
 describe('gap fill', () => {
 
@@ -34,17 +36,13 @@ describe('gap fill', () => {
             }
         })
         stream = await createTestStream(publisher, module)
-        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
         await stream.addToStorageNode(storageNode.id)
+        const authentication = createPrivateKeyAuthentication(publisherWallet.privateKey, undefined as any)
         messageFactory = new MessageFactory({
-            authentication: createPrivateKeyAuthentication(publisherWallet.privateKey, undefined as any),
+            authentication,
             streamId: stream.id,
-            streamRegistry: {
-                getStream: () => stream,
-                isPublic: () => true,
-                isStreamPublisher: () => true
-            } as any,
-            groupKeyQueue: undefined as any
+            streamRegistry: createStreamRegistryCached(),
+            groupKeyQueue: await createGroupKeyQueue(authentication, GROUP_KEY)
         })
     })
 
@@ -52,6 +50,7 @@ describe('gap fill', () => {
         const subscriber = environment.createClient({
             gapFillTimeout: 50
         })
+        subscriber.addEncryptionKey(GROUP_KEY, toEthereumAddress(publisherWallet.address))
         const sub = await subscriber.subscribe(stream.id)
         const receivedMessages = collect(sub, 3)
         publish(await createMessage(1000))
