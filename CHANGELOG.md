@@ -21,7 +21,7 @@ found [here](packages/broker/CHANGELOG.md).
 
 #### Fixed
 
-- Gap fill for encrypted streams (https://github.com/streamr-dev/network/pull/1421)
+- Fix active gap fill for encrypted streams (https://github.com/streamr-dev/network/pull/1421)
 
 #### Security
 
