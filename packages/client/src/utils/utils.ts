@@ -8,7 +8,6 @@ import { HttpFetcher } from './HttpFetcher'
 import { SEPARATOR } from './uuid'
 import { PeerDescriptor, PeerID } from '@streamr/dht'
 
-
 /**
  * Generates counter-based ids.
  * Basically lodash.uniqueid but per-prefix.
