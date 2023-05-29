@@ -38,6 +38,16 @@ found [here](packages/broker/CHANGELOG.md).
 #### Security
 
 
+## [8.5.1] - 2023-05-29
+
+### client
+
+#### Fixed
+
+- Fix TypeScript definitions issue that caused build to fail with `skipLibCheck: false` (https://github.com/streamr-dev/network/pull/1403)
+- Fix active gap fill for encrypted streams (https://github.com/streamr-dev/network/pull/1421)
+
+
 ## [8.5.0] - 2023-05-10
 
 ### client
@@ -476,7 +486,8 @@ found [here](packages/broker/CHANGELOG.md).
 - Fixed an import so that the client successfully loads in a web browser environment (NET-721)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/client/v8.5.0...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/client/v8.5.1...HEAD
+[8.5.1]: https://github.com/streamr-dev/network/compare/client/v8.5.0...client/v8.5.1
 [8.5.0]: https://github.com/streamr-dev/network/compare/client/v8.4.0...client/v8.5.0
 [8.4.0]: https://github.com/streamr-dev/network/compare/client/v8.3.1...client/v8.4.0
 [8.3.1]: https://github.com/streamr-dev/network/compare/client/v8.3.0...client/v8.3.1

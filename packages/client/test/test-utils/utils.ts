@@ -155,7 +155,7 @@ export const createRandomAuthentication = (): Authentication => {
     return createPrivateKeyAuthentication(`0x${fastPrivateKey()}`, undefined as any)
 }
 
-export const createStreamRegistryCached = (opts: {
+export const createStreamRegistryCached = (opts?: {
     partitionCount?: number
     isPublicStream?: boolean
     isStreamPublisher?: boolean
@@ -168,13 +168,13 @@ export const createStreamRegistryCached = (opts: {
             })
         }),
         isPublic: async () => {
-            return opts.isPublicStream ?? false
+            return opts?.isPublicStream ?? false
         },
         isStreamPublisher: async () => {
-            return opts.isStreamPublisher ?? true
+            return opts?.isStreamPublisher ?? true
         },
         isStreamSubscriber: async () => {
-            return opts.isStreamSubscriber ?? true
+            return opts?.isStreamSubscriber ?? true
         },
     } as any
 }

@@ -1,4 +1,4 @@
-import { StreamMessage } from '@streamr/protocol'
+import { StreamMessage, StreamPartID } from '@streamr/protocol'
 import { EthereumAddress } from '@streamr/utils'
 import { GapHandler, MessageHandler, OnDrain, OnError, OrderedMsgChain } from './OrderedMsgChain'
 
@@ -6,6 +6,7 @@ export default class OrderingUtil {
 
     private maxGapRequests: number
     private readonly orderedChains: Record<string, OrderedMsgChain>
+    private readonly streamPartId: StreamPartID
     private readonly inOrderHandler: MessageHandler
     private readonly gapHandler: GapHandler
     private readonly onDrain: OnDrain
@@ -14,6 +15,7 @@ export default class OrderingUtil {
     private readonly retryResendAfter: number
 
     constructor(
+        streamPartId: StreamPartID,
         inOrderHandler: MessageHandler,
         gapHandler: GapHandler,
         onDrain: OnDrain,
@@ -22,6 +24,7 @@ export default class OrderingUtil {
         retryResendAfter: number,
         maxGapRequests: number
     ) {
+        this.streamPartId = streamPartId
         this.inOrderHandler = inOrderHandler
         this.gapHandler = gapHandler
         this.onDrain = onDrain
@@ -41,7 +44,7 @@ export default class OrderingUtil {
         const key = publisherId + msgChainId
         if (!this.orderedChains[key]) {
             const chain = new OrderedMsgChain(
-                publisherId, msgChainId, this.inOrderHandler, this.gapHandler, this.onDrain, this.onError,
+                { streamPartId: this.streamPartId, publisherId, msgChainId }, this.inOrderHandler, this.gapHandler, this.onDrain, this.onError,
                 this.gapFillTimeout, this.retryResendAfter, this.maxGapRequests
             )
             this.orderedChains[key] = chain

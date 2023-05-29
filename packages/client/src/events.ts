@@ -1,3 +1,4 @@
+import { ContractReceipt, ContractTransaction } from '@ethersproject/contracts'
 import { ObservableEventEmitter } from '@streamr/utils'
 import { Lifecycle, scoped } from 'tsyringe'
 import { StreamCreationEvent } from './registry/StreamRegistry'
@@ -9,6 +10,8 @@ export interface StreamrClientEvents {
     removeFromStorageNode: (payload: StorageNodeAssignmentEvent) => void
     /** @internal */
     storeEncryptionKeyToLocalStore: (keyId: string) => void
+    /** @internal */
+    confirmContractTransaction: (payload: { methodName: string, transaction: ContractTransaction, receipt: ContractReceipt }) => void
 }
 
 // events for internal communication between StreamrClient components

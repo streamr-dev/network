@@ -1,12 +1,11 @@
-import assert from 'assert'
-
-import { shuffle } from 'lodash'
-import { MessageID, MessageRef, StreamMessage, toStreamID } from '@streamr/protocol'
-import { OrderedMsgChain } from '../../src/subscribe/ordering/OrderedMsgChain'
-import GapFillFailedError from '../../src/subscribe/ordering/GapFillFailedError'
-import { createSignedMessage } from '../../src/publish/MessageFactory'
-import { createRandomAuthentication } from '../test-utils/utils'
+import { MessageID, MessageRef, StreamMessage, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
 import { Defer, EthereumAddress, toEthereumAddress } from '@streamr/utils'
+import assert from 'assert'
+import { shuffle } from 'lodash'
+import { createSignedMessage } from '../../src/publish/MessageFactory'
+import GapFillFailedError from '../../src/subscribe/ordering/GapFillFailedError'
+import { MsgChainContext, OrderedMsgChain } from '../../src/subscribe/ordering/OrderedMsgChain'
+import { createRandomAuthentication } from '../test-utils/utils'
 
 const DEFAULT_GAP_FILL_TIMEOUT = 5000
 const DEFAULT_RETRY_RESEND_AFTER = 5000
@@ -14,7 +13,11 @@ const DEFAULT_MAX_GAP_REQUESTS = 10
 
 const authentication = createRandomAuthentication()
 
-const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+const CONTEXT = {
+    streamPartId: StreamPartIDUtils.parse('stream#0'),
+    publisherId: toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
+    msgChainId: 'msgChainId'
+}
 
 /**
  * Split an array into numChunks chunks.
@@ -44,8 +47,8 @@ const createMsg = async ({
     prevTimestamp = null,
     prevSequenceNumber = 0,
     content = {},
-    publisherId = PUBLISHER_ID,
-    msgChainId = 'msgChainId'
+    publisherId = CONTEXT.publisherId,
+    msgChainId = CONTEXT.msgChainId
 }: {
     timestamp?: number
     sequenceNumber?: number
@@ -89,7 +92,7 @@ describe('OrderedMsgChain', () => {
     it('handles ordered messages in order', () => {
         const received: StreamMessage[] = []
         const onDrain = jest.fn()
-        util = new OrderedMsgChain(PUBLISHER_ID, 'msgChainId', (msg: StreamMessage) => {
+        util = new OrderedMsgChain(CONTEXT, (msg: StreamMessage) => {
             received.push(msg)
         }, () => {
             throw new Error('Unexpected gap')
@@ -104,7 +107,7 @@ describe('OrderedMsgChain', () => {
     it('handles unordered messages in order', () => {
         const received: StreamMessage[] = []
         const onDrain = jest.fn()
-        util = new OrderedMsgChain(PUBLISHER_ID, 'msgChainId', (msg: StreamMessage) => {
+        util = new OrderedMsgChain(CONTEXT, (msg: StreamMessage) => {
             received.push(msg)
         }, () => {}, onDrain, () => {}, DEFAULT_GAP_FILL_TIMEOUT, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS)
         util.add(msg1)
@@ -133,7 +136,7 @@ describe('OrderedMsgChain', () => {
         const m3 = await createMsg({ timestamp: 7, sequenceNumber: 0 })
         const m4 = await createMsg({ timestamp: 17, sequenceNumber: 0 })
         const received: StreamMessage[] = []
-        util = new OrderedMsgChain(PUBLISHER_ID, 'msgChainId', (msg: StreamMessage) => {
+        util = new OrderedMsgChain(CONTEXT, (msg: StreamMessage) => {
             received.push(msg)
         }, () => {}, onDrain, () => {}, DEFAULT_GAP_FILL_TIMEOUT, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS)
         util.add(msg1)
@@ -152,7 +155,7 @@ describe('OrderedMsgChain', () => {
             expect(received).toEqual([msg1, unchainedMsg2, msg3])
             done.resolve(undefined)
         }
-        util = new OrderedMsgChain(PUBLISHER_ID, 'msgChainId', (msg: StreamMessage) => {
+        util = new OrderedMsgChain(CONTEXT, (msg: StreamMessage) => {
             received.push(msg)
         }, () => {
             util.add(unchainedMsg2)
@@ -175,7 +178,7 @@ describe('OrderedMsgChain', () => {
             expect(received).toEqual([msg1, unchainedMsg2, msg3, unchainedMsg4, msg5])
             done.resolve(undefined)
         }
-        util = new OrderedMsgChain(PUBLISHER_ID, 'msgChainId', (msg: StreamMessage) => {
+        util = new OrderedMsgChain(CONTEXT, (msg: StreamMessage) => {
             received.push(msg)
         }, () => {
             count += 1
@@ -207,7 +210,7 @@ describe('OrderedMsgChain', () => {
 
     it('drops duplicates', () => {
         const received: StreamMessage[] = []
-        util = new OrderedMsgChain(PUBLISHER_ID, 'msgChainId', (msg: StreamMessage) => {
+        util = new OrderedMsgChain(CONTEXT, (msg: StreamMessage) => {
             received.push(msg)
         }, () => {
             throw new Error('Unexpected gap')
@@ -223,7 +226,7 @@ describe('OrderedMsgChain', () => {
     it('drops duplicates after gap', (done) => {
         const onDrain = jest.fn()
         const received: StreamMessage[] = []
-        util = new OrderedMsgChain(PUBLISHER_ID, 'msgChainId', (msg: StreamMessage) => {
+        util = new OrderedMsgChain(CONTEXT, (msg: StreamMessage) => {
             received.push(msg)
         }, () => {
             util.add(msg3) // fill gap
@@ -242,15 +245,14 @@ describe('OrderedMsgChain', () => {
 
     it('calls the gap handler', (done) => {
         const received: StreamMessage[] = []
-        util = new OrderedMsgChain(PUBLISHER_ID, 'msgChainId', (msg: StreamMessage) => {
+        util = new OrderedMsgChain(CONTEXT, (msg: StreamMessage) => {
             received.push(msg)
-        }, (from: MessageRef, to: MessageRef, publisherId: EthereumAddress, msgChainId: string) => {
+        }, (from: MessageRef, to: MessageRef, context: MsgChainContext) => {
             assert.deepStrictEqual(received, [msg1, msg2])
             assert.strictEqual(from.timestamp, msg2.getMessageRef().timestamp)
             assert.strictEqual(from.sequenceNumber, msg2.getMessageRef().sequenceNumber + 1)
             assert.deepStrictEqual(to, msg5.prevMsgRef)
-            assert.strictEqual(publisherId, PUBLISHER_ID)
-            assert.strictEqual(msgChainId, 'msgChainId')
+            assert.strictEqual(context, CONTEXT)
             util.clearGap()
             done()
         }, () => {}, () => {}, 50, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS)
@@ -261,7 +263,7 @@ describe('OrderedMsgChain', () => {
 
     it('does not call the gap handler (scheduled but resolved before timeout)', () => {
         const received: StreamMessage[] = []
-        util = new OrderedMsgChain(PUBLISHER_ID, 'msgChainId', (msg: StreamMessage) => {
+        util = new OrderedMsgChain(CONTEXT, (msg: StreamMessage) => {
             received.push(msg)
         }, () => {
             throw new Error('Unexpected gap')
@@ -289,7 +291,7 @@ describe('OrderedMsgChain', () => {
                 done(err)
             }
         }
-        util = new OrderedMsgChain(PUBLISHER_ID, 'msgChainId', (msg: StreamMessage) => {
+        util = new OrderedMsgChain(CONTEXT, (msg: StreamMessage) => {
             received.push(msg)
         }, async () => {
             count += 1
@@ -306,7 +308,7 @@ describe('OrderedMsgChain', () => {
 
     it('does not call the gap handler a second time if explicitly cleared', (done) => {
         let counter = 0
-        util = new OrderedMsgChain(PUBLISHER_ID, 'msgChainId', () => {}, () => {
+        util = new OrderedMsgChain(CONTEXT, () => {}, () => {
             if (counter === 0) {
                 counter += 1
                 util.clearGap()
@@ -322,7 +324,7 @@ describe('OrderedMsgChain', () => {
     it('does not call the gap handler again if disabled', (done) => {
         let counter = 0
         const msgs: StreamMessage[] = []
-        util = new OrderedMsgChain(PUBLISHER_ID, 'msgChainId', (msg) => {
+        util = new OrderedMsgChain(CONTEXT, (msg) => {
             msgs.push(msg)
             if (msgs.length === 3) {
                 try {
@@ -348,7 +350,7 @@ describe('OrderedMsgChain', () => {
 
     it('does not call the gap handler if disabled', (done) => {
         const msgs: StreamMessage[] = []
-        util = new OrderedMsgChain(PUBLISHER_ID, 'msgChainId', (msg) => {
+        util = new OrderedMsgChain(CONTEXT, (msg) => {
             msgs.push(msg)
             if (msgs.length === 3) {
                 try {
@@ -370,7 +372,7 @@ describe('OrderedMsgChain', () => {
 
     it('can handle multiple gaps', (done) => {
         const msgs: StreamMessage[] = []
-        util = new OrderedMsgChain(PUBLISHER_ID, 'msgChainId', (msg: StreamMessage) => {
+        util = new OrderedMsgChain(CONTEXT, (msg: StreamMessage) => {
             msgs.push(msg)
             if (msgs.length === 5) {
                 assert.deepStrictEqual(msgs, [msg1, msg2, msg3, msg4, msg5])
@@ -403,23 +405,20 @@ describe('OrderedMsgChain', () => {
                 if (err instanceof GapFillFailedError) {
                     expect(err.from.serialize()).toEqual('[1,1]')
                     expect(err.to.serialize()).toEqual('[2,0]')
-                    expect(err.publisherId).toBe(PUBLISHER_ID)
-                    expect(err.msgChainId).toBe('msgChainId')
+                    expect(err.context).toEqual(CONTEXT)
                     // @ts-expect-error private method
                     expect(counter).toBe(util.maxGapRequests)
                 }
                 done()
             }
             util = new OrderedMsgChain(
-                PUBLISHER_ID,
-                'msgChainId', 
+                CONTEXT, 
                 () => {}, 
-                (from: MessageRef, to: MessageRef, publisherId: EthereumAddress, msgChainId: string) => {
+                (from: MessageRef, to: MessageRef, context: MsgChainContext) => {
                     assert.strictEqual(from.timestamp, msg1.getMessageRef().timestamp)
                     assert.strictEqual(from.sequenceNumber, msg1.getMessageRef().sequenceNumber + 1)
                     assert.deepStrictEqual(to, msg3.prevMsgRef)
-                    assert.strictEqual(publisherId, PUBLISHER_ID)
-                    assert.strictEqual(msgChainId, 'msgChainId')
+                    assert.strictEqual(context, CONTEXT)
                     counter += 1
                 }, 
                 () => {}, onError, 100, 100, DEFAULT_MAX_GAP_REQUESTS)
@@ -452,7 +451,7 @@ describe('OrderedMsgChain', () => {
                 }
                 onErrorCallCount++
             }
-            util = new OrderedMsgChain(PUBLISHER_ID, 'msgChainId', (msg: StreamMessage) => {
+            util = new OrderedMsgChain(CONTEXT, (msg: StreamMessage) => {
                 received.push(msg)
             }, () => {}, () => {}, onError, 5, 5, DEFAULT_MAX_GAP_REQUESTS)
 
@@ -469,7 +468,7 @@ describe('OrderedMsgChain', () => {
         }
         const shuffled = shuffle(expected)
         const received: StreamMessage[] = []
-        util = new OrderedMsgChain(PUBLISHER_ID, 'msgChainId', (msg: StreamMessage) => {
+        util = new OrderedMsgChain(CONTEXT, (msg: StreamMessage) => {
             received.push(msg)
         }, () => {}, () => {}, () => {}, 50, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS)
         util.add(msg1)
@@ -561,7 +560,7 @@ describe('OrderedMsgChain', () => {
 
         const received: StreamMessage[] = []
 
-        util = new OrderedMsgChain(PUBLISHER_ID, 'msgChainId', (msg: StreamMessage) => {
+        util = new OrderedMsgChain(CONTEXT, (msg: StreamMessage) => {
             received.push(msg)
             clearTimeout(debugTimer)
         }, () => {
