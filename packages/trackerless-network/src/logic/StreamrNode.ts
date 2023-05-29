@@ -230,10 +230,15 @@ export class StreamrNode extends EventEmitter<Events> {
         return this.getStream(streamPartId)?.layer2.getTargetNeighborStringIds().length || 0
     }
 
-    async waitForJoinAndSubscribe(streamPartId: string, knownEntryPointDescriptors: PeerDescriptor[], timeout?: number): Promise<number> {
+    async waitForJoinAndSubscribe(
+        streamPartId: string,
+        knownEntryPointDescriptors: PeerDescriptor[],
+        timeout?: number,
+        expectedNeighbors = 1
+    ): Promise<number> {
         await this.joinStream(streamPartId, knownEntryPointDescriptors)
         if (this.getStream(streamPartId)!.layer1.getBucketSize() > 0) {
-            await waitForCondition(() => this.getStream(streamPartId)!.layer2.getTargetNeighborStringIds().length > 0, timeout)
+            await waitForCondition(() => this.getStream(streamPartId)!.layer2.getTargetNeighborStringIds().length >= expectedNeighbors, timeout)
         }
         this.subscribeToStream(streamPartId, knownEntryPointDescriptors)
         return this.getStream(streamPartId)?.layer2.getTargetNeighborStringIds().length || 0
