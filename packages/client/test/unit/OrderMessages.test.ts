@@ -81,7 +81,8 @@ describe('OrderMessages', () => {
                 toSequenceNumber: 0,
                 publisherId: PUBLISHER_ID,
                 msgChainId: MSG_CHAIN_ID
-            }
+            },
+            true
         )
     })
 
@@ -103,7 +104,8 @@ describe('OrderMessages', () => {
                 toSequenceNumber: 0,
                 publisherId: PUBLISHER_ID,
                 msgChainId: MSG_CHAIN_ID
-            }
+            },
+            true
         )
     })
 
@@ -128,7 +130,8 @@ describe('OrderMessages', () => {
                 toSequenceNumber: 0,
                 publisherId: PUBLISHER_ID,
                 msgChainId: MSG_CHAIN_ID
-            }
+            },
+            true
         )
         expect(resends.range).toHaveBeenNthCalledWith(2,
             STREAM_PART_ID,
@@ -139,7 +142,8 @@ describe('OrderMessages', () => {
                 toSequenceNumber: 0,
                 publisherId: PUBLISHER_ID,
                 msgChainId: MSG_CHAIN_ID
-            }
+            },
+            true
         )
     })
 
