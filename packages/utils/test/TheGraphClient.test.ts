@@ -1,8 +1,5 @@
-import 'reflect-metadata'
-
-import { wait } from '@streamr/utils'
-import { SynchronizedGraphQLClient } from '../../src/utils/SynchronizedGraphQLClient'
-import { mockLoggerFactory } from '../test-utils/utils'
+import { TheGraphClient } from '../src/TheGraphClient'
+import { wait } from '../src/wait'
 
 const POLL_INTERVAL = 50
 const INDEXING_INTERVAL = 100
@@ -39,12 +36,11 @@ class EmulatedTheGraphIndex {
     }
 }
 
-describe('SynchronizedGraphQLClient', () => {
+describe('TheGraphClient', () => {
 
     let theGraphIndex: EmulatedTheGraphIndex
-    let sendQuery: jest.Mock<Promise<any>, []>
-    let getIndexBlockNumber: jest.Mock<Promise<number>, []>
-    let client: Pick<SynchronizedGraphQLClient, 'sendQuery' | 'updateRequiredBlockNumber'>
+    let client: TheGraphClient
+    let fetchBlockNumbers: number[]
 
     beforeEach(() => {
         theGraphIndex = new EmulatedTheGraphIndex([{
@@ -73,28 +69,34 @@ describe('SynchronizedGraphQLClient', () => {
                 foo: 'result-8'
             }
         }])
-        sendQuery = jest.fn().mockImplementation((_query: string) => {
-            const state = theGraphIndex.getState()
-            return state.queryResult
-        })
-        getIndexBlockNumber = jest.fn().mockImplementation(() => {
-            return theGraphIndex.getState().blockNumber
-        })
-        client = new SynchronizedGraphQLClient(
-            mockLoggerFactory(),
-            {
-                sendQuery,
-                getIndexBlockNumber
-            } as any,
-            {
-                _timeouts: {
-                    theGraph: {
-                        timeout: 10 * INDEXING_INTERVAL,
-                        retryInterval: POLL_INTERVAL
-                    }    
+        fetchBlockNumbers = []
+        const fetch = async (_url: string, init: Record<string, unknown>) => {
+            return {
+                text: async () => {
+                    const state = theGraphIndex.getState()
+                    fetchBlockNumbers.push(state.blockNumber)
+                    const query = JSON.parse(init.body! as string).query
+                    const data = (query === 'mock-query') 
+                        ? state.queryResult
+                        : {
+                            _meta: {
+                                block: {
+                                    number: state.blockNumber
+                                }
+                            }
+                        }
+                    return JSON.stringify({
+                        data
+                    })
                 }
-            } as any
-        )
+            }
+        }
+        client = new TheGraphClient({
+            serverUrl: '',
+            fetch: fetch as any,
+            indexTimeout: 10 * INDEXING_INTERVAL,
+            indexPollInterval: POLL_INTERVAL
+        })
     })
 
     afterEach(() => {
@@ -102,42 +104,38 @@ describe('SynchronizedGraphQLClient', () => {
     })
 
     it('no synchronization', async () => {
-        const response = await client.sendQuery(MOCK_QUERY)
+        const response = await client.queryEntity(MOCK_QUERY)
         expect(response).toEqual({
             foo: 'result-0'
         })
-        expect(getIndexBlockNumber).not.toBeCalled()
-        expect(sendQuery).toBeCalledTimes(1)
-        expect(sendQuery).toBeCalledWith(MOCK_QUERY)
+        expect(fetchBlockNumbers).toEqual([0])
     })
 
     it('happy path', async () => {
         client.updateRequiredBlockNumber(4)
-        const responsePromise = client.sendQuery(MOCK_QUERY)
+        const responsePromise = client.queryEntity(MOCK_QUERY)
         theGraphIndex.start()
         expect(await responsePromise).toEqual({
             foo: 'result-4'
         })
-        expect(sendQuery).toBeCalledTimes(1)
-        expect(sendQuery).toBeCalledWith(MOCK_QUERY)
+        expect(fetchBlockNumbers).toSatisfyAll((n) => n <= 4)
     })
 
     it('required block number is not a poll result', async () => {
         client.updateRequiredBlockNumber(3)
-        const responsePromise = client.sendQuery(MOCK_QUERY)
+        const responsePromise = client.queryEntity(MOCK_QUERY)
         theGraphIndex.start()
         expect(await responsePromise).toEqual({
             foo: 'result-4'
         })
-        expect(sendQuery).toBeCalledTimes(1)
-        expect(sendQuery).toBeCalledWith(MOCK_QUERY)
+        expect(fetchBlockNumbers).toSatisfyAll((n) => n <= 4)
     })
 
     it('multiple queries for same block', async () => {
         client.updateRequiredBlockNumber(7)
         const responsePromise = Promise.all([
-            client.sendQuery(MOCK_QUERY),
-            client.sendQuery(MOCK_QUERY)
+            client.queryEntity(MOCK_QUERY),
+            client.queryEntity(MOCK_QUERY)
         ])
         theGraphIndex.start()
         const responses = await responsePromise
@@ -148,15 +146,14 @@ describe('SynchronizedGraphQLClient', () => {
         expect(responses[1]).toEqual({
             foo: 'result-7'
         })
-        expect(sendQuery).toBeCalledTimes(2)
-        expect(sendQuery).toBeCalledWith(MOCK_QUERY)
+        expect(fetchBlockNumbers).toSatisfyAll((n) => n <= 7)
     })
 
     it('multiple queries for different blocks', async () => {
         client.updateRequiredBlockNumber(7)
-        const responsePromise1 = client.sendQuery(MOCK_QUERY)
+        const responsePromise1 = client.queryEntity(MOCK_QUERY)
         client.updateRequiredBlockNumber(8)
-        const responsePromise2 = client.sendQuery(MOCK_QUERY)
+        const responsePromise2 = client.queryEntity(MOCK_QUERY)
         theGraphIndex.start()
         const responses = await Promise.all([responsePromise1, responsePromise2])
         expect(responses).toHaveLength(2)
@@ -166,21 +163,20 @@ describe('SynchronizedGraphQLClient', () => {
         expect(responses[1]).toEqual({
             foo: 'result-8'
         })
-        expect(sendQuery).toBeCalledTimes(2)
-        expect(sendQuery).toBeCalledWith(MOCK_QUERY)
+        expect(fetchBlockNumbers).toSatisfyAll((n) => n <= 8)
     })
 
     it('timeout', async () => {
         client.updateRequiredBlockNumber(999999)
         theGraphIndex.start()
-        return expect(() => client.sendQuery(MOCK_QUERY)).rejects.toThrow('The Graph did not synchronize to block 999999 (timed out after 1000 ms)')
+        return expect(() => client.queryEntity(MOCK_QUERY)).rejects.toThrow('The Graph did not synchronize to block 999999 (timed out after 1000 ms)')
     })
 
     it('one query timeouts, another succeeds', async () => {
         client.updateRequiredBlockNumber(7)
-        const responsePromise1 = client.sendQuery(MOCK_QUERY)
+        const responsePromise1 = client.queryEntity(MOCK_QUERY)
         await wait(800)
-        const responsePromise2 = client.sendQuery(MOCK_QUERY)
+        const responsePromise2 = client.queryEntity(MOCK_QUERY)
         theGraphIndex.start()
         await expect(() => responsePromise1).rejects.toThrow('The Graph did not synchronize to block 7 (timed out after 1000 ms)')
         expect(await responsePromise2).toEqual({

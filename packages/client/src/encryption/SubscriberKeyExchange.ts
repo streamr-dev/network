@@ -9,21 +9,22 @@ import {
     StreamPartID,
     StreamPartIDUtils
 } from '@streamr/protocol'
-import { inject, Lifecycle, scoped } from 'tsyringe'
+import { EthereumAddress, Logger } from '@streamr/utils'
+import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { v4 as uuidv4 } from 'uuid'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
-import { createRandomMsgChainId } from '../publish/messageChain'
+import { validateStreamMessage } from '../utils/validateStreamMessage'
 import { createSignedMessage } from '../publish/MessageFactory'
-import { withThrottling, pOnce } from '../utils/promises'
+import { createRandomMsgChainId } from '../publish/messageChain'
+import { StreamRegistryCached } from '../registry/StreamRegistryCached'
+import { LoggerFactory } from '../utils/LoggerFactory'
+import { pOnce, withThrottling } from '../utils/promises'
 import { MaxSizedSet } from '../utils/utils'
-import { Validator } from '../Validator'
 import { GroupKey } from './GroupKey'
 import { LocalGroupKeyStore } from './LocalGroupKeyStore'
 import { RSAKeyPair } from './RSAKeyPair'
-import { EthereumAddress, Logger } from '@streamr/utils'
-import { LoggerFactory } from '../utils/LoggerFactory'
 
 const MAX_PENDING_REQUEST_COUNT = 50000 // just some limit, we can tweak the number if needed
 
@@ -38,7 +39,7 @@ export class SubscriberKeyExchange {
     private readonly networkNodeFacade: NetworkNodeFacade
     private readonly store: LocalGroupKeyStore
     private readonly authentication: Authentication
-    private readonly validator: Validator
+    private readonly streamRegistryCached: StreamRegistryCached
     private readonly pendingRequests: MaxSizedSet<string> = new MaxSizedSet(MAX_PENDING_REQUEST_COUNT)
     private readonly ensureStarted: () => Promise<void>
     requestGroupKey: (groupKeyId: string, publisherId: EthereumAddress, streamPartId: StreamPartID) => Promise<void>
@@ -47,7 +48,7 @@ export class SubscriberKeyExchange {
         networkNodeFacade: NetworkNodeFacade,
         store: LocalGroupKeyStore,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
-        validator: Validator,
+        @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'encryption'>
     ) {
@@ -55,7 +56,7 @@ export class SubscriberKeyExchange {
         this.networkNodeFacade = networkNodeFacade
         this.store = store
         this.authentication = authentication
-        this.validator = validator
+        this.streamRegistryCached = streamRegistryCached
         this.ensureStarted = pOnce(async () => {
             this.rsaKeyPair = await RSAKeyPair.create()
             const node = await networkNodeFacade.getNode()
@@ -123,7 +124,7 @@ export class SubscriberKeyExchange {
                 if ((recipient === authenticatedUser) && (this.pendingRequests.has(requestId))) {
                     this.logger.debug('Handle group key response', { requestId })
                     this.pendingRequests.delete(requestId)
-                    await this.validator.validate(msg)
+                    await validateStreamMessage(msg, this.streamRegistryCached)
                     await Promise.all(encryptedGroupKeys.map(async (encryptedKey) => {
                         const key = GroupKey.decryptRSAEncrypted(encryptedKey, this.rsaKeyPair!.getPrivateKey())
                         await this.store.set(key.id, msg.getPublisherId(), key.data)

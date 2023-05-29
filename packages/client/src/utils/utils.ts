@@ -1,10 +1,13 @@
-import LRU from '../../vendor/quick-lru'
-import { SEPARATOR } from './uuid'
-
+import { ContractReceipt } from '@ethersproject/contracts'
 import { StreamID, toStreamID } from '@streamr/protocol'
-import { randomString, toEthereumAddress } from '@streamr/utils'
-import { JsonPeerDescriptor } from '../Config' 
+import { TheGraphClient, randomString, toEthereumAddress } from '@streamr/utils'
+import LRU from '../../vendor/quick-lru'
+import { StrictStreamrClientConfig, JsonPeerDescriptor } from '../Config'
+import { StreamrClientEventEmitter } from '../events'
+import { HttpFetcher } from './HttpFetcher'
+import { SEPARATOR } from './uuid'
 import { PeerDescriptor, PeerID } from '@streamr/dht'
+
 
 /**
  * Generates counter-based ids.
@@ -125,4 +128,24 @@ export function generateClientId(): string {
 // e.g. as a map key or a cache key.
 export const formLookupKey = <K extends (string | number)[]>(...args: K): string => {
     return args.join('|')
+}
+
+/** @internal */
+export const createTheGraphClient = (
+    httpFetcher: HttpFetcher,
+    eventEmitter: StreamrClientEventEmitter,
+    config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
+): TheGraphClient => {
+    const instance = new TheGraphClient({
+        serverUrl: config.contracts.theGraphUrl,
+        fetch: (url: string, init?: Record<string, unknown>) => httpFetcher.fetch(url, init),
+        // eslint-disable-next-line no-underscore-dangle
+        indexTimeout: config._timeouts.theGraph.timeout,
+        // eslint-disable-next-line no-underscore-dangle
+        indexPollInterval: config._timeouts.theGraph.retryInterval
+    })
+    eventEmitter.on('confirmContractTransaction', (payload: { receipt: ContractReceipt }) => {
+        instance.updateRequiredBlockNumber(payload.receipt.blockNumber)
+    })
+    return instance
 }

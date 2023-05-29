@@ -1,5 +1,5 @@
 import { wait } from '@streamr/utils'
-import { pOrderedResolve, pOnce, pLimitFn, pOne, until, tryInSequence } from '../../src/utils/promises'
+import { pOnce, pLimitFn, pOne, until, tryInSequence } from '../../src/utils/promises'
 import { CacheAsyncFn } from '../../src/utils/caches'
 
 const WAIT_TIME = 25
@@ -53,63 +53,6 @@ describe('until', () => {
         expect(condition.mock.calls.length).toBeLessThan(7)
         // ideally it should be 5.
         expect(condition.mock.calls.length).toBeGreaterThan(4)
-    })
-})
-
-describe('pOrderedResolve', () => {
-    it('Execute functions concurrently, resolving in order they were executed', async () => {
-        let count = 0
-        let active = 0
-        const orderedFn = pOrderedResolve(async (index) => {
-            try {
-                active += 1
-                if (index === 1) {
-                    await wait(WAIT_TIME) // delay first call
-                } else {
-                    expect(active).toBeGreaterThan(1) // ensure concurrent
-                    await wait(1)
-                }
-                return index
-            } finally {
-                active -= 1
-            }
-        })
-
-        const results: any[] = []
-        const fn = async () => {
-            count += 1
-            const v = await orderedFn(count)
-            results.push(v)
-            return v
-        }
-
-        await Promise.all([fn(), fn(), fn()])
-
-        expect(results).toEqual([1, 2, 3])
-
-        expect(active).toBe(0)
-    })
-
-    it('adopts type of wrapped function', async () => {
-        // actually checking via ts-expect-error
-        // assertions don't matter,
-        async function fn(_s: string): Promise<number> {
-            return 3
-        }
-
-        const orderedFn = pOrderedResolve(fn)
-        const a: number = await orderedFn('abc') // ok
-        expect(a).toEqual(3)
-        // @ts-expect-error not enough args
-        await orderedFn()
-        // @ts-expect-error too many args
-        await orderedFn('abc', 3)
-        // @ts-expect-error wrong argument type
-        await orderedFn(3)
-
-        const c: string = await orderedFn('abc')
-        expect(c).toEqual(3)
-        orderedFn.clear()
     })
 })
 

@@ -37,6 +37,9 @@ import { PeerDescriptor } from '@streamr/dht'
 import omit from 'lodash/omit'
 import merge from 'lodash/merge'
 import { StreamrClientError } from './StreamrClientError'
+import { TheGraphClient } from '@streamr/utils'
+import { createTheGraphClient } from './utils/utils'
+import { HttpFetcher } from './utils/HttpFetcher'
 
 // TODO: this type only exists to enable tsdoc to generate proper documentation
 export type SubscribeOptions = StreamDefinition & ExtraSubscribeOptions
@@ -93,6 +96,8 @@ export class StreamrClient {
         const container = parentContainer.createChildContainer()
         container.register(AuthenticationInjectionToken, { useValue: authentication })
         container.register(ConfigInjectionToken, { useValue: strictConfig })
+        // eslint-disable-next-line max-len
+        container.register(TheGraphClient, { useValue: createTheGraphClient(container.resolve<HttpFetcher>(HttpFetcher), container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter), strictConfig) })
         this.id = strictConfig.id
         this.config = strictConfig
         this.node = container.resolve<NetworkNodeFacade>(NetworkNodeFacade)

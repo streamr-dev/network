@@ -8,7 +8,7 @@ import {
 } from '@streamr/protocol'
 import { OrderMessages } from './OrderMessages'
 import { MessageStream } from './MessageStream'
-import { Validator } from '../Validator'
+import { validateStreamMessage } from '../utils/validateStreamMessage'
 import { decrypt } from '../encryption/decrypt'
 import { StrictStreamrClientConfig } from '../Config'
 import { Resends } from './Resends'
@@ -32,17 +32,6 @@ export const createSubscribePipeline = (opts: SubscriptionPipelineOptions): Mess
 
     const logger = opts.loggerFactory.createLogger(module)
 
-    const validate = new Validator(
-        opts.streamRegistryCached
-    )
-
-    const gapFillMessages = new OrderMessages(
-        opts.config,
-        opts.resends,
-        opts.streamPartId,
-        opts.loggerFactory
-    )
-
     /* eslint-enable object-curly-newline */
 
     const onError = (error: Error | StreamMessageError, streamMessage?: StreamMessage) => {
@@ -59,7 +48,7 @@ export const createSubscribePipeline = (opts: SubscriptionPipelineOptions): Mess
 
     const messageStream = new MessageStream()
     const msgChainUtil = new MsgChainUtil(async (msg) => {
-        await validate.validate(msg)
+        await validateStreamMessage(msg, opts.streamRegistryCached)
         if (StreamMessage.isAESEncrypted(msg)) {
             try {
                 return decrypt(msg, opts.groupKeyManager, opts.destroySignal)
@@ -80,9 +69,20 @@ export const createSubscribePipeline = (opts: SubscriptionPipelineOptions): Mess
     // end up acting as gaps that we repeatedly try to fill.
     const ignoreMessages = new WeakSet()
     messageStream.onError.listen(onError)
-    messageStream
+    if (opts.config.orderMessages) {
         // order messages (fill gaps)
-        .pipe(gapFillMessages.transform())
+        const orderMessages = new OrderMessages(
+            opts.config,
+            opts.resends,
+            opts.streamPartId,
+            opts.loggerFactory
+        )
+        messageStream.pipe(orderMessages.transform())
+        messageStream.onBeforeFinally.listen(() => {
+            orderMessages.stop()
+        })
+    }
+    messageStream
         // validate & decrypt
         .pipe(async function* (src: AsyncGenerator<StreamMessage>) {
             setImmediate(async () => {
@@ -101,10 +101,6 @@ export const createSubscribePipeline = (opts: SubscriptionPipelineOptions): Mess
         // ignore any failed messages
         .filter((streamMessage: StreamMessage) => {
             return !ignoreMessages.has(streamMessage)
-        })
-        .onBeforeFinally.listen(() => {
-            gapFillMessages.stop()
-            validate.stop()
         })
     return messageStream
 }
