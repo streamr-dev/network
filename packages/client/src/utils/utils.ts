@@ -114,6 +114,7 @@ export const formLookupKey = <K extends (string | number)[]>(...args: K): string
     return args.join('|')
 }
 
+/** @internal */
 export const createTheGraphClient = (
     httpFetcher: HttpFetcher,
     eventEmitter: StreamrClientEventEmitter,

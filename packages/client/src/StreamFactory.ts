@@ -22,8 +22,9 @@ export class StreamFactory {
     private readonly streamStorageRegistry: StreamStorageRegistry
     private readonly loggerFactory: LoggerFactory
     private readonly eventEmitter: StreamrClientEventEmitter
+    /** @internal */
     private readonly config: Pick<StrictStreamrClientConfig, '_timeouts'>
-
+    /** @internal */
     constructor(
         resends: Resends,
         @inject(delay(() => Publisher)) publisher: Publisher,
