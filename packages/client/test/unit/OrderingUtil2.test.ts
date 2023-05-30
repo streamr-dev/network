@@ -106,7 +106,7 @@ function calculateNumberOfUnfillableGaps(messageInfosInOrder: MessageInfo[]): nu
 }
 
 describe(OrderingUtil, () => {
-    it('randomized "worst-case" scenario with unavailable messages and gap fill needs (lightGapFill disabled)', async () => {
+    it('randomized "worst-case" scenario with unavailable messages and gap fill needs (using full gap filling strategy)', async () => {
         const groundTruthMessages: Record<string, MessageInfo[]> = {}
         const actual: Record<string, number[]> = {}
         const expected: Record<string, number[]> = {}
