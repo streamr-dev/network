@@ -1,11 +1,7 @@
-import { EventEmitter } from 'events'
-
-import Heap from 'heap'
-import StrictEventEmitter from 'strict-event-emitter-types'
-
-import { StreamMessage, MessageRef } from '@streamr/protocol'
-import GapFillFailedError from './GapFillFailedError'
+import { MessageRef, StreamMessage, StreamPartID } from '@streamr/protocol'
 import { EthereumAddress, Logger } from '@streamr/utils'
+import Heap from 'heap'
+import GapFillFailedError from './GapFillFailedError'
 
 function toMsgRefId(streamMessage: StreamMessage): MsgRefId {
     return streamMessage.getMessageRef().serialize()
@@ -15,11 +11,18 @@ type MsgRefId = string
 
 type ChainedMessage = StreamMessage & { prevMsgRef: NonNullable<StreamMessage['prevMsgRef']> }
 
+export interface MsgChainContext {
+    streamPartId: StreamPartID
+    publisherId: EthereumAddress
+    msgChainId: string
+}
+
 /**
  * Set of StreamMessages, unique by serialized msgRef i.e. timestamp + sequence number.
  */
 class StreamMessageSet {
-    msgMap = new Map<MsgRefId, StreamMessage>()
+
+    private readonly msgMap = new Map<MsgRefId, StreamMessage>()
 
     has(streamMessage: StreamMessage) {
         return this.msgMap.has(toMsgRefId(streamMessage))
@@ -123,68 +126,46 @@ class MsgChainQueue {
 }
 
 export type MessageHandler = (msg: StreamMessage) => void
-export type GapHandler = (from: MessageRef, to: MessageRef, publisherId: EthereumAddress, msgChainId: string) => void | Promise<void>
-
-/**
- * Strict types for EventEmitter interface.
- */
-interface Events {
-    /**
-     * Message was marked and is being skipped.
-     * Does not fire if maxGapRequests = 0
-     */
-    skip: MessageHandler
-    /**
-     * Queue was drained after something was in it.
-     */
-    drain: (numMessages: number) => void
-    /**
-     * Probably a GapFillFailedError.
-     */
-    error: (error: Error) => void
-}
-
-// eslint-disable-next-line @typescript-eslint/prefer-function-type
-export const MsgChainEmitter = EventEmitter as { new(): StrictEventEmitter<EventEmitter, Events> }
-
-let ID = 0
+export type GapHandler = (from: MessageRef, to: MessageRef, context: MsgChainContext) => void | Promise<void>
+export type OnDrain = (numMessages: number) => void
+export type OnError = (error: Error) => void
 
 const logger = new Logger(module)
 
-class OrderedMsgChain extends MsgChainEmitter {
-    id: number
-    queue = new MsgChainQueue()
-    lastOrderedMsgRef: MessageRef | null = null
-    hasPendingGap = false
-    gapRequestCount = 0
-    maxGapRequests: number
-    dropSubsequentGapsOnFailedGapFill: boolean
-    publisherId: EthereumAddress
-    msgChainId: string
-    inOrderHandler: MessageHandler
-    gapHandler: GapHandler
-    gapFillTimeout: number
-    retryResendAfter: number
-    nextGaps: ReturnType<typeof setTimeout> | null = null
-    markedExplicitly = new StreamMessageSet()
+export class OrderedMsgChain {
+
+    private lastOrderedMsgRef: MessageRef | null = null
+    private hasPendingGap = false
+    private gapRequestCount = 0
+    private maxGapRequests: number
+    private nextGaps: ReturnType<typeof setTimeout> | null = null
+    private readonly queue = new MsgChainQueue()
+    private readonly markedExplicitly = new StreamMessageSet()
+    private readonly context: MsgChainContext
+    private readonly inOrderHandler: MessageHandler
+    private readonly gapHandler: GapHandler
+    private readonly onDrain: OnDrain
+    private readonly onError: OnError
+    private readonly gapFillTimeout: number
+    private readonly retryResendAfter: number
+    private readonly dropSubsequentGapsOnFailedGapFill: boolean
 
     constructor(
-        publisherId: EthereumAddress,
-        msgChainId: string,
+        context: MsgChainContext,
         inOrderHandler: MessageHandler,
         gapHandler: GapHandler,
+        onDrain: OnDrain,
+        onError: OnError,
         gapFillTimeout: number,
         retryResendAfter: number,
         maxGapRequests: number,
         dropSubsequentGapsOnFailedGapFill: boolean
     ) {
-        super()
-        ID += 1
-        this.id = ID
-        this.publisherId = publisherId
-        this.msgChainId = msgChainId
+        this.context = context
         this.inOrderHandler = inOrderHandler
         this.gapHandler = gapHandler
+        this.onDrain = onDrain
+        this.onError = onError
         this.lastOrderedMsgRef = null
         this.gapFillTimeout = gapFillTimeout
         this.retryResendAfter = retryResendAfter
@@ -195,7 +176,7 @@ class OrderedMsgChain extends MsgChainEmitter {
     /**
      * Messages are stale if they are already enqueued or last ordered message is newer.
      */
-    isStaleMessage(streamMessage: StreamMessage): boolean {
+    private isStaleMessage(streamMessage: StreamMessage): boolean {
         const msgRef = streamMessage.getMessageRef()
         return !!(
             // already enqueued
@@ -228,16 +209,6 @@ class OrderedMsgChain extends MsgChainEmitter {
 
         this.queue.push(unorderedStreamMessage)
         this.checkQueue()
-    }
-
-    /**
-     * Mark a message to have it be treated as the next message & not trigger gap fill
-     */
-    markMessageExplicitly(streamMessage: StreamMessage): void {
-        // only add if not stale
-        if (this.markMessage(streamMessage)) {
-            this.add(streamMessage)
-        }
     }
 
     /**
@@ -276,7 +247,7 @@ class OrderedMsgChain extends MsgChainEmitter {
         this.checkQueue()
     }
 
-    isGapHandlingEnabled(): boolean {
+    private isGapHandlingEnabled(): boolean {
         return this.maxGapRequests > 0
     }
 
@@ -285,13 +256,6 @@ class OrderedMsgChain extends MsgChainEmitter {
      */
     isEmpty(): boolean {
         return this.queue.isEmpty()
-    }
-
-    /**
-     * Number of enqueued messages.
-     */
-    size(): number {
-        return this.queue.size()
     }
 
     /**
@@ -338,7 +302,7 @@ class OrderedMsgChain extends MsgChainEmitter {
         if (processedMessages > 1) {
             logger.trace('Drained queue', { processedMessages, lastMsgRef: this.lastOrderedMsgRef })
             this.clearGap()
-            this.emit('drain', processedMessages)
+            this.onDrain(processedMessages)
         }
     }
 
@@ -355,7 +319,6 @@ class OrderedMsgChain extends MsgChainEmitter {
 
                 if (this.isGapHandlingEnabled()) {
                     logger.trace('Skipped message', { msgRef: msg.getMessageRef() })
-                    this.emit('skip', msg)
                     return msg
                 }
             }
@@ -367,7 +330,7 @@ class OrderedMsgChain extends MsgChainEmitter {
             }
             this.inOrderHandler(msg)
         } catch (err: any) {
-            this.emit('error', err)
+            this.onError(err)
         }
         return msg
     }
@@ -427,9 +390,9 @@ class OrderedMsgChain extends MsgChainEmitter {
             })
             this.gapRequestCount += 1
             try {
-                await this.gapHandler(from, to, this.publisherId, this.msgChainId)
+                await this.gapHandler(from, to, this.context)
             } catch (err: any) {
-                this.emit('error', err)
+                this.onError(err)
             }
         } else {
             this.onGapFillsExhausted()
@@ -451,32 +414,16 @@ class OrderedMsgChain extends MsgChainEmitter {
                 from,
                 to
             })
-            this.debugStatus()
         }
 
         // skip gap, allow queue processing to continue
         this.lastOrderedMsgRef = msg.getPreviousMessageRef()
         if (this.isGapHandlingEnabled()) {
-            this.emit('error', new GapFillFailedError(from, to, this.publisherId, this.msgChainId, maxGapRequests))
+            this.onError(new GapFillFailedError(from, to, this.context, maxGapRequests))
         }
 
         this.clearGap()
         // keep processing
         this.checkQueue()
-
-    }
-
-    debugStatus(): void {
-        logger.trace('Update debug status', {
-            lastMsgRef: this.lastOrderedMsgRef,
-            gapRequestCount: this.gapRequestCount,
-            maxGapRequests: this.maxGapRequests,
-            size: this.queue.size(),
-            isEmpty: this.isEmpty(),
-            hasPendingGap: this.hasPendingGap,
-            markedExplicitly: this.markedExplicitly.size()
-        })
     }
 }
-
-export default OrderedMsgChain

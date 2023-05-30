@@ -1,14 +1,15 @@
+import { MessageID, MessageRef, StreamMessage, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
+import { toEthereumAddress } from '@streamr/utils'
 import assert from 'assert'
-
-import { MessageID, MessageRef, StreamMessage, toStreamID } from '@streamr/protocol'
-import OrderingUtil from '../../src/subscribe/ordering/OrderingUtil'
-import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 import { shuffle } from 'lodash'
+import { MsgChainContext } from '../../src/subscribe/ordering/OrderedMsgChain'
+import OrderingUtil from '../../src/subscribe/ordering/OrderingUtil'
 
 const DEFAULT_GAP_FILL_TIMEOUT = 5000
 const DEFAULT_RETRY_RESEND_AFTER = 5000
 const DEFAULT_MAX_GAP_REQUESTS = 10
 
+const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
 const defaultPublisherId = toEthereumAddress('0x0000000000000000000000000000000000000001')
 const publisherId1 = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 const publisherId2 = toEthereumAddress('0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb')
@@ -44,19 +45,20 @@ describe('OrderingUtil', () => {
             assert.deepStrictEqual(streamMessage.serialize(), msg.serialize())
             done()
         }
-        util = new OrderingUtil(handler, () => {}, DEFAULT_GAP_FILL_TIMEOUT, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS, false)
+        // eslint-disable-next-line max-len
+        util = new OrderingUtil(STREAM_PART_ID, handler, () => {}, () => {}, () => {}, DEFAULT_GAP_FILL_TIMEOUT, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS, false)
         util.add(msg)
     })
     it('calls the gap handler if a gap is detected', (done) => {
-        const gapHandler = (from: MessageRef, to: MessageRef, publisherId: EthereumAddress) => {
+        const gapHandler = (from: MessageRef, to: MessageRef, context: MsgChainContext) => {
             assert.equal(from.timestamp, 1)
             assert.equal(from.sequenceNumber, 1)
             assert.equal(to.timestamp, 3)
             assert.equal(to.sequenceNumber, 0)
-            assert.equal(publisherId, defaultPublisherId)
+            assert.equal(context.publisherId, defaultPublisherId)
             done()
         }
-        util = new OrderingUtil( () => {}, gapHandler, 50, 50, DEFAULT_MAX_GAP_REQUESTS, false)
+        util = new OrderingUtil(STREAM_PART_ID, () => {}, gapHandler, () => {}, () => {}, 50, 50, DEFAULT_MAX_GAP_REQUESTS, false)
         const msg1 = msg
         const msg4 = createMsg(4, undefined, 3)
         util.add(msg1)
@@ -66,7 +68,7 @@ describe('OrderingUtil', () => {
         const gapHandler = () => {
             throw new Error('The gap handler should not be called.')
         }
-        util = new OrderingUtil(() => {}, gapHandler, 5000, 5000, DEFAULT_MAX_GAP_REQUESTS, false)
+        util = new OrderingUtil(STREAM_PART_ID, () => {}, gapHandler, () => {}, () => {}, 5000, 5000, DEFAULT_MAX_GAP_REQUESTS, false)
         const msg1 = msg
         const msg2 = createMsg(2, undefined, 1)
         const msg3 = createMsg(3, undefined, 2)
@@ -99,7 +101,7 @@ describe('OrderingUtil', () => {
         const received1: StreamMessage[] = []
         const received2: StreamMessage[] = []
         const received3: StreamMessage[] = []
-        util = new OrderingUtil((m) => {
+        util = new OrderingUtil(STREAM_PART_ID, (m) => {
             if (m.getPublisherId() === publisherId1) {
                 received1.push(m)
             } else if (m.getPublisherId() === publisherId2) {
@@ -107,7 +109,7 @@ describe('OrderingUtil', () => {
             } else if (m.getPublisherId() === publisherId3) {
                 received3.push(m)
             }
-        }, () => {}, 50, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS, false)
+        }, () => {}, () => {}, () => {}, 50, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS, false)
         util.add(msg1Pub1)
         util.add(msg1Pub2)
         util.add(msg1Pub3)

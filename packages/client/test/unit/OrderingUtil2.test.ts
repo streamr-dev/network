@@ -2,11 +2,13 @@ import {
     MessageID,
     MessageRef,
     StreamMessage,
+    StreamPartIDUtils,
     toStreamID
 } from '@streamr/protocol'
 import { EthereumAddress, toEthereumAddress, wait, waitForCondition } from '@streamr/utils'
-import OrderingUtil from '../../src/subscribe/ordering/OrderingUtil'
 import { shuffle } from 'lodash'
+import { MsgChainContext } from '../../src/subscribe/ordering/OrderedMsgChain'
+import OrderingUtil from '../../src/subscribe/ordering/OrderingUtil'
 
 const MESSAGES_PER_PUBLISHER = 1000
 const NUM_OF_DUPLICATE_MESSAGES = 500
@@ -125,8 +127,8 @@ describe(OrderingUtil, () => {
             actual[msg.getPublisherId()].push(msg.getTimestamp())
         }
 
-        const gapHandler = async (from: MessageRef, to: MessageRef, publisherId: EthereumAddress) => {
-            const requestedMessages = groundTruthMessages[publisherId].filter(({ delivery, timestamp }) => {
+        const gapHandler = async (from: MessageRef, to: MessageRef, context: MsgChainContext) => {
+            const requestedMessages = groundTruthMessages[context.publisherId].filter(({ delivery, timestamp }) => {
                 return delivery === Delivery.GAP_FILL && (timestamp > from.timestamp && timestamp <= to.timestamp)
             })
             for (const msgInfo of requestedMessages) {
@@ -136,8 +138,8 @@ describe(OrderingUtil, () => {
         }
 
         const errorHandler = jest.fn()
-        const util = new OrderingUtil(inOrderHandler, gapHandler, PROPAGATION_TIMEOUT, RESEND_TIMEOUT, MAX_GAP_REQUESTS, false)
-        util.on('error', errorHandler)
+        // eslint-disable-next-line max-len
+        const util = new OrderingUtil(StreamPartIDUtils.parse('stream#0'), inOrderHandler, gapHandler, () => {}, errorHandler, PROPAGATION_TIMEOUT, RESEND_TIMEOUT, MAX_GAP_REQUESTS, false)
 
         // supply 1st message of chain always to set gap detection to work from 1st message onwards
         for (const publisherId of PUBLISHER_IDS) {

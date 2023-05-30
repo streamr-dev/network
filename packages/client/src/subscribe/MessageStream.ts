@@ -88,32 +88,9 @@ export class MessageStream implements AsyncIterable<Message> {
         return this.pipeline.pipe(fn)
     }
 
-    // used only in tests
-    /** @internal */
-    pipeBefore(fn: PipelineTransform<StreamMessage, StreamMessage>): Pipeline<StreamMessage, StreamMessage> {
-        return this.pipeline.pipeBefore(fn)
-    }
-
-    /** @internal */
-    map<NewOutType>(fn: G.GeneratorMap<StreamMessage, NewOutType>): Pipeline<StreamMessage, NewOutType> {
-        return this.pipeline.map(fn)
-    }
-
     /** @internal */
     forEach(fn: G.GeneratorForEach<StreamMessage>): Pipeline<StreamMessage, StreamMessage> {
         return this.pipeline.forEach(fn)
-    }
-
-    // used only in tests
-    /** @internal */
-    async consume(fn?: (streamMessage: StreamMessage) => void): Promise<void> {
-        await this.pipeline.consume(fn)
-    }
-
-    // used only in tests
-    /** @internal */
-    onConsumed(fn: () => void | Promise<void>): void {
-        this.pipeline.onConsumed(fn)
     }
 
     /** @internal */

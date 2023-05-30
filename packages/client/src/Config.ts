@@ -378,6 +378,7 @@ export type StrictStreamrClientConfig = MarkOptional<Required<StreamrClientConfi
     contracts: Exclude<Required<StreamrClientConfig['contracts']>, undefined>
     encryption: Exclude<Required<StreamrClientConfig['encryption']>, undefined>
     cache: Exclude<Required<StreamrClientConfig['cache']>, undefined>
+    /** @internal */
     _timeouts: Exclude<DeepRequired<StreamrClientConfig['_timeouts']>, undefined>
 }
 

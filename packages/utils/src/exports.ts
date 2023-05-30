@@ -32,6 +32,8 @@ import { ObservableEventEmitter } from './ObservableEventEmitter'
 import { initEventGateway } from './initEventGateway'
 import { merge } from './merge'
 import { collect } from './collect'
+import { Gate } from './Gate'
+import { TheGraphClient, GraphQLQuery, FetchResponse } from './TheGraphClient'
 
 export {
     BrandedString,
@@ -65,7 +67,11 @@ export {
     ObservableEventEmitter,
     initEventGateway,
     merge,
-    collect
+    collect,
+    Gate,
+    TheGraphClient,
+    GraphQLQuery,
+    FetchResponse
 }
 
 export {
