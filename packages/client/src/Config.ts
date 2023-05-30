@@ -4,7 +4,7 @@ import cloneDeep from 'lodash/cloneDeep'
 import Ajv, { ErrorObject } from 'ajv'
 import addFormats from 'ajv-formats'
 import type { ExternalProvider } from '@ethersproject/providers'
-import { MarkOptional, DeepRequired } from 'ts-essentials'
+import type { MarkOptional, DeepRequired } from 'ts-essentials'
 
 import CONFIG_SCHEMA from './config.schema.json'
 import { TrackerRegistryRecord } from '@streamr/protocol'
