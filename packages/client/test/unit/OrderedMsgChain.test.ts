@@ -96,7 +96,7 @@ describe('OrderedMsgChain', () => {
             received.push(msg)
         }, () => {
             throw new Error('Unexpected gap')
-        }, onDrain, () => {}, DEFAULT_GAP_FILL_TIMEOUT, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS, false)
+        }, onDrain, () => {}, DEFAULT_GAP_FILL_TIMEOUT, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS, true)
         util.add(msg1)
         util.add(msg2)
         util.add(msg3)
@@ -109,7 +109,7 @@ describe('OrderedMsgChain', () => {
         const onDrain = jest.fn()
         util = new OrderedMsgChain(CONTEXT, (msg: StreamMessage) => {
             received.push(msg)
-        }, () => {}, onDrain, () => {}, DEFAULT_GAP_FILL_TIMEOUT, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS, false)
+        }, () => {}, onDrain, () => {}, DEFAULT_GAP_FILL_TIMEOUT, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS, true)
         util.add(msg1)
         util.add(msg2)
         util.add(msg5)
@@ -138,7 +138,7 @@ describe('OrderedMsgChain', () => {
         const received: StreamMessage[] = []
         util = new OrderedMsgChain(CONTEXT, (msg: StreamMessage) => {
             received.push(msg)
-        }, () => {}, onDrain, () => {}, DEFAULT_GAP_FILL_TIMEOUT, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS, false)
+        }, () => {}, onDrain, () => {}, DEFAULT_GAP_FILL_TIMEOUT, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS, true)
         util.add(msg1)
         util.add(m2)
         util.add(m4)
@@ -159,7 +159,7 @@ describe('OrderedMsgChain', () => {
             received.push(msg)
         }, () => {
             util.add(unchainedMsg2)
-        }, onDrain, () => {}, 10, 10, DEFAULT_MAX_GAP_REQUESTS, false)
+        }, onDrain, () => {}, 10, 10, DEFAULT_MAX_GAP_REQUESTS, true)
 
         util.add(msg1)
         util.add(msg3)
@@ -199,7 +199,7 @@ describe('OrderedMsgChain', () => {
                     // noop
                 }
             }
-        }, onDrain, () => {}, 10, 10, DEFAULT_MAX_GAP_REQUESTS, false)
+        }, onDrain, () => {}, 10, 10, DEFAULT_MAX_GAP_REQUESTS, true)
 
         // 1. add chain with multiple gaps
         util.add(msg1)
@@ -214,7 +214,7 @@ describe('OrderedMsgChain', () => {
             received.push(msg)
         }, () => {
             throw new Error('Unexpected gap')
-        }, () => {}, () => {}, DEFAULT_GAP_FILL_TIMEOUT, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS, false)
+        }, () => {}, () => {}, DEFAULT_GAP_FILL_TIMEOUT, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS, true)
         util.add(msg1)
         util.add(msg1)
         util.add(msg2)
@@ -235,7 +235,7 @@ describe('OrderedMsgChain', () => {
                 expect(onDrain).toHaveBeenCalledTimes(1) // nothing should have queued
                 done()
             }, 0)
-        }, onDrain, () => {}, 50, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS, false)
+        }, onDrain, () => {}, 50, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS, true)
         util.add(msg1)
         util.add(msg2)
         // duplicate messages after gap
@@ -255,7 +255,7 @@ describe('OrderedMsgChain', () => {
             assert.strictEqual(context, CONTEXT)
             util.clearGap()
             done()
-        }, () => {}, () => {}, 50, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS, false)
+        }, () => {}, () => {}, 50, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS, true)
         util.add(msg1)
         util.add(msg2)
         util.add(msg5)
@@ -267,7 +267,7 @@ describe('OrderedMsgChain', () => {
             received.push(msg)
         }, () => {
             throw new Error('Unexpected gap')
-        }, () => {}, () => {}, 10000, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS, false)
+        }, () => {}, () => {}, 10000, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS, true)
         util.add(msg1)
         util.add(msg5)
         util.add(msg4)
@@ -297,7 +297,7 @@ describe('OrderedMsgChain', () => {
             count += 1
             await wait(WAIT * 3)
             util.add(msg2)
-        }, onDrain, () => {}, WAIT, WAIT, DEFAULT_MAX_GAP_REQUESTS, false)
+        }, onDrain, () => {}, WAIT, WAIT, DEFAULT_MAX_GAP_REQUESTS, true)
 
         util.add(msg1)
         // msg2 missing
@@ -316,7 +316,7 @@ describe('OrderedMsgChain', () => {
             } else {
                 throw new Error('Unexpected call to the gap handler')
             }
-        }, () => {}, () => {}, 100, 100, DEFAULT_MAX_GAP_REQUESTS, false)
+        }, () => {}, () => {}, 100, 100, DEFAULT_MAX_GAP_REQUESTS, true)
         util.add(msg1)
         util.add(msg3)
     })
@@ -342,7 +342,7 @@ describe('OrderedMsgChain', () => {
             } else {
                 throw new Error('Unexpected call to the gap handler')
             }
-        }, () => {}, () => {}, 100, 100, DEFAULT_MAX_GAP_REQUESTS, false)
+        }, () => {}, () => {}, 100, 100, DEFAULT_MAX_GAP_REQUESTS, true)
         util.add(msg1)
         util.add(msg3)
         util.add(msg5)
@@ -363,7 +363,7 @@ describe('OrderedMsgChain', () => {
             }
         }, () => {
             throw new Error('Unexpected call to the gap handler')
-        }, () => {}, () => {}, 100, 100, DEFAULT_MAX_GAP_REQUESTS, false)
+        }, () => {}, () => {}, 100, 100, DEFAULT_MAX_GAP_REQUESTS, true)
         util.disable()
         util.add(msg1)
         util.add(msg3)
@@ -388,7 +388,7 @@ describe('OrderedMsgChain', () => {
             if (to.timestamp === 4) {
                 util.add(msg4)
             }
-        }, () => {}, done, 100, 100, DEFAULT_MAX_GAP_REQUESTS, false)
+        }, () => {}, done, 100, 100, DEFAULT_MAX_GAP_REQUESTS, true)
 
         util.add(msg1)
         // missing msg2
@@ -421,7 +421,7 @@ describe('OrderedMsgChain', () => {
                     assert.strictEqual(context, CONTEXT)
                     counter += 1
                 }, 
-                () => {}, onError, 100, 100, DEFAULT_MAX_GAP_REQUESTS, false)
+                () => {}, onError, 100, 100, DEFAULT_MAX_GAP_REQUESTS, true)
             util.add(msg1)
             util.add(msg3)
         })
@@ -453,7 +453,7 @@ describe('OrderedMsgChain', () => {
             }
             util = new OrderedMsgChain(CONTEXT, (msg: StreamMessage) => {
                 received.push(msg)
-            }, () => {}, () => {}, onError, 5, 5, DEFAULT_MAX_GAP_REQUESTS, false)
+            }, () => {}, () => {}, onError, 5, 5, DEFAULT_MAX_GAP_REQUESTS, true)
 
             util.add(msg1)
             util.add(msg3)
@@ -470,7 +470,7 @@ describe('OrderedMsgChain', () => {
         const received: StreamMessage[] = []
         util = new OrderedMsgChain(CONTEXT, (msg: StreamMessage) => {
             received.push(msg)
-        }, () => {}, () => {}, () => {}, 50, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS, false)
+        }, () => {}, () => {}, () => {}, 50, DEFAULT_RETRY_RESEND_AFTER, DEFAULT_MAX_GAP_REQUESTS, true)
         util.add(msg1)
         shuffled.forEach((msg) => {
             util.add(msg)
@@ -565,7 +565,7 @@ describe('OrderedMsgChain', () => {
             clearTimeout(debugTimer)
         }, () => {
             next()
-        }, next, () => {}, 10, 10, NUM_CHUNKS * 2, false)
+        }, next, () => {}, 10, 10, NUM_CHUNKS * 2, true)
 
         // important: add first message first
         util.add(msg1)
