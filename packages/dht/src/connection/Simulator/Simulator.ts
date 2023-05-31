@@ -10,6 +10,8 @@ import { Logger } from "@streamr/utils"
 import { getRegionDelayMatrix } from "./pings"
 import { keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import Heap from 'heap'
+import { debugVars } from "../../helpers/debugHelpers"
+import * as sinon from 'sinon'
 
 const logger = new Logger(module)
 
@@ -99,7 +101,8 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     private fixedLatency?: number
 
     private loopCounter = 0
-    private MAX_LOOPS = 100
+    private operationCounter = 0
+    private MAX_LOOPS = 1000
 
     private operationQueue: Heap<SimulatorOperation> = new Heap<SimulatorOperation>((a: SimulatorOperation, b: SimulatorOperation) => {
         if ((a.executionTime - b.executionTime) == 0) {
@@ -110,9 +113,26 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     })
 
     private simulatorTimeout?: NodeJS.Timeout
+    private static clock: sinon.SinonFakeTimers | undefined
+
+    static useFakeTimers(on = true): void {
+        if (on) {
+            if (!Simulator.clock) {
+                Simulator.clock = sinon.useFakeTimers()
+            }
+        } else {
+            if (Simulator.clock) {
+                //Simulator.clock.reset()
+                Simulator.clock.restore()
+                //sinon.restore()
+                Simulator.clock = undefined
+            }
+        }
+    }
 
     constructor(latencyType: LatencyType = LatencyType.NONE, fixedLatency?: number) {
         super()
+
         this.latencyType = latencyType
         this.fixedLatency = fixedLatency
 
@@ -244,6 +264,8 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
             && this.operationQueue.peek()!.executionTime <= currentTime) {
             const operation = this.operationQueue.pop()
 
+            this.operationCounter++
+
             if (operation instanceof ConnectOperation) {
                 this.executeConnectOperation(operation)
             } else if (operation instanceof CloseOperation) {
@@ -257,12 +279,16 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
             this.loopCounter++
             if (this.loopCounter >= this.MAX_LOOPS) {
                 this.loopCounter = 0
-                setImmediate(() => this.executeQueuedOperations())
+                setTimeout(() => this.executeQueuedOperations(), 0)
                 return
             }
         }
 
         this.scheduleNextTimeout()
+    }
+
+    public getOperationCounter(): number {
+        return this.operationCounter
     }
 
     private scheduleNextTimeout(): void {
@@ -282,10 +308,10 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
         const firstOperationTime = firstOperation!.executionTime
         const timeDifference = firstOperationTime - currentTime
 
-        if (timeDifference > 0) {
-            this.simulatorTimeout = setTimeout(this.executeQueuedOperations, timeDifference)
-        } else {
-            setImmediate(() => this.executeQueuedOperations())
+        this.simulatorTimeout = setTimeout(this.executeQueuedOperations, timeDifference)
+       
+        if (Simulator.clock) {
+            Simulator.clock.runAllAsync()
         }
     }
 
@@ -300,6 +326,7 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
             logger.error('connect() called on a stopped simulator ' + (new Error().stack))
             return
         }
+        debugVars['simulatorHeapSize'] = this.operationQueue.size()
 
         const association = new Association(sourceConnection, undefined, connectedCallback)
         this.associations.set(sourceConnection.connectionId, association)
@@ -328,7 +355,8 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
 
         const executionTime = this.generateExecutionTime(association,
             sourceConnection.ownPeerDescriptor.region,
-            association.destinationConnection?.ownPeerDescriptor.region)
+            sourceConnection.getPeerDescriptor()?.region)
+        //association.destinationConnection?.ownPeerDescriptor.region)
         association.setLastOperationAt(executionTime)
 
         const operation = new CloseOperation(executionTime, association)
