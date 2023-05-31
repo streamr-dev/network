@@ -1,25 +1,34 @@
-import { StreamMessage } from '@streamr/protocol'
-import OrderedMsgChain, { GapHandler, MessageHandler, MsgChainEmitter } from './OrderedMsgChain'
+import { StreamMessage, StreamPartID } from '@streamr/protocol'
 import { EthereumAddress } from '@streamr/utils'
+import { GapHandler, MessageHandler, OnDrain, OnError, OrderedMsgChain } from './OrderedMsgChain'
 
-export default class OrderingUtil extends MsgChainEmitter {
-    inOrderHandler: MessageHandler
-    gapHandler: GapHandler
-    gapFillTimeout: number
-    retryResendAfter: number
-    maxGapRequests: number
-    orderedChains: Record<string, OrderedMsgChain>
+export default class OrderingUtil {
+
+    private maxGapRequests: number
+    private readonly orderedChains: Record<string, OrderedMsgChain>
+    private readonly streamPartId: StreamPartID
+    private readonly inOrderHandler: MessageHandler
+    private readonly gapHandler: GapHandler
+    private readonly onDrain: OnDrain
+    private readonly onError: OnError
+    private readonly gapFillTimeout: number
+    private readonly retryResendAfter: number
 
     constructor(
+        streamPartId: StreamPartID,
         inOrderHandler: MessageHandler,
         gapHandler: GapHandler,
+        onDrain: OnDrain,
+        onError: OnError,
         gapFillTimeout: number,
         retryResendAfter: number,
         maxGapRequests: number
     ) {
-        super()
+        this.streamPartId = streamPartId
         this.inOrderHandler = inOrderHandler
         this.gapHandler = gapHandler
+        this.onDrain = onDrain
+        this.onError = onError
         this.gapFillTimeout = gapFillTimeout
         this.retryResendAfter = retryResendAfter
         this.maxGapRequests = maxGapRequests
@@ -35,21 +44,13 @@ export default class OrderingUtil extends MsgChainEmitter {
         const key = publisherId + msgChainId
         if (!this.orderedChains[key]) {
             const chain = new OrderedMsgChain(
-                publisherId, msgChainId, this.inOrderHandler, this.gapHandler,
+                { streamPartId: this.streamPartId, publisherId, msgChainId }, this.inOrderHandler, this.gapHandler, this.onDrain, this.onError,
                 this.gapFillTimeout, this.retryResendAfter, this.maxGapRequests
             )
-            chain.on('error', (...args) => this.emit('error', ...args))
-            chain.on('skip', (...args) => this.emit('skip', ...args))
-            chain.on('drain', (...args) => this.emit('drain', ...args))
             this.orderedChains[key] = chain
 
         }
         return this.orderedChains[key]
-    }
-
-    markMessageExplicitly(streamMessage: StreamMessage): void {
-        const chain = this.getChain(streamMessage.getPublisherId(), streamMessage.getMsgChainId())
-        chain.markMessageExplicitly(streamMessage)
     }
 
     isEmpty(): boolean {

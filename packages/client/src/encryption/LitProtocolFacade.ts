@@ -1,4 +1,5 @@
-import * as LitJsSdk from '@lit-protocol/lit-node-client'
+import { LitCore } from '@lit-protocol/core'
+import { uint8arrayToString } from '@lit-protocol/uint8arrays'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import * as siwe from 'lit-siwe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -86,7 +87,7 @@ export class LitProtocolFacade {
     private readonly authentication: Authentication
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | 'encryption'>
     private readonly logger: Logger
-    private litNodeClient?: LitJsSdk.LitNodeClient
+    private litNodeClient?: LitCore
     private connectLitNodeClient?: () => Promise<void>
 
     constructor(
@@ -99,9 +100,9 @@ export class LitProtocolFacade {
         this.logger = loggerFactory.createLogger(module)
     }
 
-    async getLitNodeClient(): Promise<LitJsSdk.LitNodeClient> {
+    async getLitNodeClient(): Promise<LitCore> {
         if (this.litNodeClient === undefined) {
-            this.litNodeClient = new LitJsSdk.LitNodeClient({
+            this.litNodeClient = new LitCore({
                 alertWhenUnauthorized: false,
                 debug: this.config.encryption.litProtocolLogging
             })
@@ -127,7 +128,7 @@ export class LitProtocolFacade {
             if (encryptedSymmetricKey === undefined) {
                 return undefined
             }
-            const groupKeyId = LitJsSdk.uint8arrayToString(encryptedSymmetricKey, 'base16')
+            const groupKeyId = uint8arrayToString(encryptedSymmetricKey, 'base16')
             this.logger.debug('Stored key', { traceId, streamId, groupKeyId })
             return new GroupKey(groupKeyId, Buffer.from(symmetricKey))
         } catch (err) {

@@ -92,11 +92,7 @@ export class FakeStorageNode extends FakeNetworkNode {
         if (messages !== undefined) {
             const firstIndex = Math.max(messages.length - count, 0)
             const lastIndex = Math.min(firstIndex + count, messages.length - 1)
-            return messages.slice(firstIndex, lastIndex + 1).map((msg: StreamMessage) => {
-                // return a clone as client mutates message when it decrypts messages
-                const serialized = msg.serialize()
-                return StreamMessage.deserialize(serialized)
-            })
+            return messages.slice(firstIndex, lastIndex + 1)
         } else {
             // TODO throw an error if this storage node doesn't isn't configured to store the stream?
             return []

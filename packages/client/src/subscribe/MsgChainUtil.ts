@@ -1,5 +1,5 @@
-import { Gate } from './../utils/Gate'
 import { StreamMessage } from '@streamr/protocol'
+import { Gate } from '@streamr/utils'
 import { PushBuffer } from './../utils/PushBuffer'
 import { Signal } from './../utils/Signal'
 
@@ -9,7 +9,7 @@ type OnError = Signal<[Error, StreamMessage?, number?]>
 
 class MsgChainProcessor {
 
-    readonly busy: Gate = new Gate()
+    readonly busy: Gate = new Gate(true)
     private readonly inputBuffer: StreamMessage[] = []
     private readonly outputBuffer: PushBuffer<StreamMessage>
     private readonly processMessageFn: ProcessMessageFn
@@ -62,7 +62,7 @@ export class MsgChainUtil implements AsyncIterable<StreamMessage> {
     }
 
     async flush(): Promise<void> {
-        await Promise.all(Array.from(this.processors.values()).map((p) => p.busy.check()))
+        await Promise.all(Array.from(this.processors.values()).map((p) => p.busy.waitUntilOpen()))
     }
 
     stop(): void {

@@ -17,30 +17,21 @@ type AsyncGeneratorWithId<T> = AsyncGenerator<T> & {
 
 export type IPipeline<InType, OutType = InType> = {
     pipe<NewOutType>(fn: PipelineTransform<OutType, NewOutType>): IPipeline<InType, NewOutType>
-    map<NewOutType>(fn: G.GeneratorMap<OutType, NewOutType>): IPipeline<InType, NewOutType>
-    mapBefore(fn: G.GeneratorMap<InType, InType>): IPipeline<InType, OutType>
     filter(fn: G.GeneratorFilter<OutType>): IPipeline<InType, OutType>
     forEach(fn: G.GeneratorForEach<OutType>): IPipeline<InType, OutType>
-    forEachBefore(fn: G.GeneratorForEach<InType>): IPipeline<InType, OutType>
-    filterBefore(fn: G.GeneratorForEach<InType>): IPipeline<InType, OutType>
-    consume(): Promise<void>
-    pipeBefore(fn: PipelineTransform<InType, InType>): IPipeline<InType, OutType>
 } & AsyncGenerator<OutType>
 
 class PipelineDefinition<InType, OutType = InType> {
-    
+
     public source: AsyncGeneratorWithId<InType>
     protected transforms: PipelineTransform[]
-    protected transformsBefore: PipelineTransform[]
 
     constructor(
         source: AsyncGenerator<InType>,
         transforms: PipelineTransform[] = [],
-        transformsBefore: PipelineTransform[] = []
     ) {
         this.source = this.setSource(source)
         this.transforms = transforms
-        this.transformsBefore = transformsBefore
     }
 
     /**
@@ -52,18 +43,8 @@ class PipelineDefinition<InType, OutType = InType> {
         return this as PipelineDefinition<InType, unknown> as PipelineDefinition<InType, NewOutType>
     }
 
-    /**
-     * Inject pipeline step before other transforms.
-     * Note must return same type as source, otherwise we can't be type-safe.
-     */
-    pipeBefore(fn: PipelineTransform<InType, InType>): PipelineDefinition<InType, OutType> {
-        this.transformsBefore.push(fn)
-        return this
-    }
-
     clearTransforms() {
         this.transforms = []
-        this.transformsBefore = []
     }
 
     setSource(source: AsyncGenerator<InType> | AsyncGeneratorWithId<InType>) {
@@ -76,7 +57,7 @@ class PipelineDefinition<InType, OutType = InType> {
     }
 
     getTransforms() {
-        return [...this.transformsBefore, ...this.transforms]
+        return this.transforms
     }
 }
 
@@ -111,32 +92,6 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
     }
 
     /**
-     * Inject pipeline step before other transforms.
-     * Note must return same type as source, otherwise we can't be type-safe.
-     */
-    pipeBefore(fn: PipelineTransform<InType, InType>): Pipeline<InType, OutType> {
-        if (this.isIterating) {
-            throw new StreamrClientError(`cannot pipe after already iterating: ${this.isIterating}`, 'PIPELINE_ERROR')
-        }
-
-        this.definition.pipeBefore(fn)
-        return this
-    }
-
-    /**
-     * Fires this callback the moment this part of the pipeline starts returning.
-     */
-    onConsumed(fn: () => void | Promise<void>): Pipeline<InType, Awaited<OutType>> {
-        return this.pipe(async function* onConsumed(src) {
-            try {
-                yield* src
-            } finally {
-                await fn()
-            }
-        })
-    }
-
-    /**
      * Triggers once when pipeline ends.
      * Usage: `pipeline.onFinally(callback)`
      */
@@ -147,23 +102,9 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
      */
     onBeforeFinally = Signal.once()
 
-    /**
-     * Triggers once when pipeline starts flowing.
-     * Usage: `pipeline.onStart(callback)`
-     */
-    onStart = Signal.once()
-
     onMessage = Signal.create<[OutType]>()
 
     onError = ErrorSignal.create<[Error, (InType | OutType)?, number?]>()
-
-    map<NewOutType>(fn: G.GeneratorMap<OutType, NewOutType>): Pipeline<InType, NewOutType> {
-        return this.pipe((src) => G.map(src, fn, this.onError.trigger))
-    }
-
-    mapBefore(fn: G.GeneratorMap<InType, InType>): Pipeline<InType, OutType> {
-        return this.pipeBefore((src) => G.map(src, fn, this.onError.trigger))
-    }
 
     forEach(fn: G.GeneratorForEach<OutType>): Pipeline<InType, OutType> {
         return this.pipe((src) => G.forEach(src, fn, this.onError.trigger))
@@ -173,27 +114,11 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
         return this.pipe((src) => G.filter(src, fn, this.onError.trigger))
     }
 
-    reduce<NewOutType>(fn: G.GeneratorReduce<OutType, NewOutType>, initialValue: NewOutType): Pipeline<InType, NewOutType> {
-        return this.pipe((src) => G.reduce(src, fn, initialValue, this.onError.trigger))
-    }
-
-    forEachBefore(fn: G.GeneratorForEach<InType>): Pipeline<InType, OutType> {
-        return this.pipeBefore((src) => G.forEach(src, fn, this.onError.trigger))
-    }
-
-    filterBefore(fn: G.GeneratorFilter<InType>): Pipeline<InType, OutType> {
-        return this.pipeBefore((src) => G.filter(src, fn, this.onError.trigger))
-    }
-
-    async consume(fn?: G.GeneratorForEach<OutType>): Promise<void> {
-        return G.consume(this, fn, this.handleError)
-    }
-
     flow(): this {
         setImmediate(() => {
             // consume if not already doing so
             if (!this.isIterating) {
-                this.consume()
+                G.consume(this)
             }
         })
 
@@ -223,7 +148,6 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
 
     private async* iterate(): AsyncGenerator<any, void, unknown> {
         this.isIterating = true
-        await this.onStart.trigger()
 
         // this.debug('iterate', this.definition.source)
         if (!this.definition.source) {

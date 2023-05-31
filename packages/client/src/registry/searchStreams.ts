@@ -1,12 +1,11 @@
 /* eslint-disable padding-line-between-statements */
 import { StreamID, toStreamID } from '@streamr/protocol'
-import { StreamQueryResult } from './StreamRegistry'
-import { StreamPermission, ChainPermissions, convertChainPermissionsToStreamPermissions, PUBLIC_PERMISSION_ADDRESS } from '../permission'
-import { GraphQLClient, GraphQLQuery } from '../utils/GraphQLClient'
-import { filter, map, unique } from '../utils/GeneratorUtils'
-import { SynchronizedGraphQLClient } from '../utils/SynchronizedGraphQLClient'
-import { Stream } from '../Stream'
 import { EthereumAddress, Logger, toEthereumAddress } from '@streamr/utils'
+import { Stream } from '../Stream'
+import { ChainPermissions, PUBLIC_PERMISSION_ADDRESS, StreamPermission, convertChainPermissionsToStreamPermissions } from '../permission'
+import { filter, map, unique } from '../utils/GeneratorUtils'
+import { GraphQLQuery, TheGraphClient } from '@streamr/utils'
+import { StreamQueryResult } from './StreamRegistry'
 
 export interface SearchStreamsPermissionFilter {
     user: string
@@ -33,7 +32,7 @@ export const searchStreams = (
     term: string | undefined,
     permissionFilter: SearchStreamsPermissionFilter | undefined,
     orderBy: SearchStreamsOrderBy,
-    graphQLClient: SynchronizedGraphQLClient,
+    theGraphClient: TheGraphClient,
     parseStream: (id: StreamID, metadata: string) => Stream,
     logger: Logger,
 ): AsyncGenerator<Stream> => {
@@ -42,7 +41,7 @@ export const searchStreams = (
     }
     logger.debug('Search for streams', { term, permissionFilter })
     return map(
-        fetchSearchStreamsResultFromTheGraph(term, permissionFilter, orderBy, graphQLClient),
+        fetchSearchStreamsResultFromTheGraph(term, permissionFilter, orderBy, theGraphClient),
         (item: SearchStreamsResultItem) => parseStream(toStreamID(item.stream.id), item.stream.metadata),
         (err: Error, item: SearchStreamsResultItem) => {
             logger.debug('Omit stream from search result (invalid data)', {
@@ -57,9 +56,9 @@ async function* fetchSearchStreamsResultFromTheGraph(
     term: string | undefined,
     permissionFilter: SearchStreamsPermissionFilter | undefined,
     orderBy: SearchStreamsOrderBy,
-    graphQLClient: SynchronizedGraphQLClient,
+    theGraphClient: TheGraphClient,
 ): AsyncGenerator<SearchStreamsResultItem> {
-    const backendResults = graphQLClient.fetchPaginatedResults<SearchStreamsResultItem>(
+    const backendResults = theGraphClient.queryEntities<SearchStreamsResultItem>(
         (lastId: string, pageSize: number) => buildQuery(term, permissionFilter, orderBy, lastId, pageSize)
     )
     /*
@@ -143,7 +142,7 @@ const buildQuery = (
                 first: ${pageSize},
                 orderBy: "stream__${orderBy.field}",
                 orderDirection: "${orderBy.direction}", 
-                ${GraphQLClient.createWhereClause(variables)}
+                ${TheGraphClient.createWhereClause(variables)}
             ) {
                 id
                 stream {
