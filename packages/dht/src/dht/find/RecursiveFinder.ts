@@ -248,5 +248,6 @@ export class RecursiveFinder implements IRecursiveFinder {
         this.ongoingSessions.forEach((session, _id) => {
             session.stop()
         })
+        this.ongoingSessions.clear()
     }
 }
