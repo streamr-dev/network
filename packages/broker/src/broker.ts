@@ -70,7 +70,6 @@ export const createBroker = async (configWithoutDefaults: Config): Promise<Broke
             logger.info(`View your node in the Network Explorer: https://streamr.network/network-explorer/nodes/${encodeURIComponent(nodeId)}`)
             logger.info(`Network node ${nodeId} running`)
             logger.info(`Ethereum address ${brokerAddress}`)
-            // logger.info(`Tracker Configuration: ${config.client.network?.trackers ? JSON.stringify(config.client.network?.trackers) : 'default'}`)
 
             logger.info(`Plugins: ${JSON.stringify(plugins.map((p) => p.name))}`)
 
