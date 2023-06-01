@@ -237,12 +237,6 @@ export const getConfig = (privateKey: string, pluginsAnswers: PluginAnswers): an
         }
     })
 
-    if (pluginsAnswers.enableMinerPlugin) {
-        config.plugins.brubeckMiner = {
-            beneficiaryAddress: pluginsAnswers.beneficiaryAddress
-        }
-    }
-
     return config
 }
 
