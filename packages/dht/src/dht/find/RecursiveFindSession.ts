@@ -2,7 +2,7 @@ import { ServerCallContext } from "@protobuf-ts/runtime-rpc"
 import { Logger } from "@streamr/utils"
 import EventEmitter from "eventemitter3"
 import { PeerID, PeerIDKey } from "../../helpers/PeerID"
-import { DataEntry, PeerDescriptor, RecursiveFindReport } from "../../proto/packages/dht/protos/DhtRpc"
+import { DataEntry, FindMode, PeerDescriptor, RecursiveFindReport } from "../../proto/packages/dht/protos/DhtRpc"
 import { IRecursiveFindSessionService } from "../../proto/packages/dht/protos/DhtRpc.server"
 import { Empty } from "../../proto/google/protobuf/empty"
 import { ITransport } from "../../transport/ITransport"
@@ -24,6 +24,7 @@ export interface RecursiveFindSessionConfig {
     kademliaIdToFind: Uint8Array
     ownPeerID: PeerID
     waitedRoutingPathCompletions: number
+    mode: FindMode
 }
 
 export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvents> implements IRecursiveFindSessionService {
@@ -33,6 +34,7 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
     private readonly ownPeerID: PeerID
     private readonly waitedRoutingPathCompletions: number
     private readonly rpcCommunicator: ListeningRpcCommunicator
+    private readonly mode: FindMode
     private results: SortedContactList<Contact>
     private foundData: Map<string, DataEntry> = new Map()
     private allKnownHops: Set<PeerIDKey> = new Set()
@@ -49,6 +51,7 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
         this.ownPeerID = config.ownPeerID
         this.waitedRoutingPathCompletions = config.waitedRoutingPathCompletions
         this.results = new SortedContactList(PeerID.fromValue(this.kademliaIdToFind), 10)
+        this.mode = config.mode
         this.rpcCommunicator = new ListeningRpcCommunicator(this.serviceId, this.rpcTransport, {
             rpcRequestTimeout: 15000
         })
@@ -61,7 +64,13 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
         this.reportedHops.forEach((id) => {
             unreportedHops.delete(id)
         })
-        if (this.noCloserNodesReceivedCounter >= this.waitedRoutingPathCompletions && unreportedHops.size == 0) {
+        if (this.noCloserNodesReceivedCounter >= 1 && unreportedHops.size == 0) {
+            if (this.mode === FindMode.DATA 
+                && (this.foundData.size > 0 || this.noCloserNodesReceivedCounter > this.waitedRoutingPathCompletions)) {
+                return true
+            } else if (this.mode === FindMode.DATA) {
+                return false
+            }
             return true
         }
         return false
@@ -135,7 +144,7 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
                     this.emit('findCompleted', this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()))
                     this.findCompletedEmitted = true
                 }
-            }, 5000)
+            }, 2500)
         }
     }
 
