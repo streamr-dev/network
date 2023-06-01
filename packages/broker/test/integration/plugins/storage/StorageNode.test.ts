@@ -12,15 +12,7 @@ describe('StorageNode', () => {
 
     beforeAll(async () => {
         storageNodeAccount = new Wallet(await fetchPrivateKeyWithGas())
-        const entryPoints = [{
-            kademliaId: toEthereumAddress(await storageNodeAccount.getAddress()),
-            type: 0,
-            websocket: {
-                ip: '127.0.0.1',
-                port: 44404
-            }
-        }]
-        storageNode = await startStorageNode(storageNodeAccount.privateKey, 1234, 44404, entryPoints)
+        storageNode = await startStorageNode(storageNodeAccount.privateKey, 1234, 44404)
     }, 30 * 1000)
 
     afterAll(async () => {

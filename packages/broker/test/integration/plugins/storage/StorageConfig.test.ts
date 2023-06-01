@@ -11,7 +11,7 @@ import {
 } from '../../../utils'
 import { Broker } from '../../../../src/broker'
 import { StreamMessage } from '@streamr/protocol'
-import { toEthereumAddress, waitForCondition } from '@streamr/utils'
+import { waitForCondition } from '@streamr/utils'
 
 jest.setTimeout(30000)
 
@@ -45,30 +45,14 @@ describe('StorageConfig', () => {
 
     beforeEach(async () => {
 
-        const entryPoints = [{
-            kademliaId: toEthereumAddress(await storageNodeAccount.getAddress()),
-            type: 0,
-            websocket: {
-                ip: '127.0.0.1',
-                port: 44405
-            }
-        }]
-
-        client = await createClient(publisherAccount.privateKey, {
-            network: {
-                layer0: {
-                    entryPoints
-                }
-            }
-        })
+        client = await createClient(publisherAccount.privateKey)
 
         stream = await createTestStream(client, module)
 
         storageNode = await startStorageNode(
             storageNodeAccount.privateKey,
             HTTP_PORT,
-            44405,
-            entryPoints
+            44405 
         )
     })
 

@@ -3,7 +3,7 @@ import mqtt from 'async-mqtt'
 import { fetchPrivateKeyWithGas, Queue } from '@streamr/test-utils'
 import { Broker } from '../../../../src/broker'
 import { createClient, startBroker, createTestStream } from '../../../utils'
-import { toEthereumAddress, wait } from '@streamr/utils'
+import { wait } from '@streamr/utils'
 import { Wallet } from '@ethersproject/wallet'
 
 const MQTT_PLUGIN_PORT = 12470
@@ -37,15 +37,7 @@ describe('MQTT Bridge', () => {
                     port: MQTT_PLUGIN_PORT
                 }
             },
-            wsServerPort: BROKER_CONNECTIONMANAGER_PORT,
-            entryPoints: [{
-                kademliaId: toEthereumAddress(await brokerUser.getAddress()),
-                type: 0,
-                websocket: {
-                    ip: '127.0.0.1',
-                    port: BROKER_CONNECTIONMANAGER_PORT
-                }
-            }]
+            wsServerPort: BROKER_CONNECTIONMANAGER_PORT
         })
     })
 
@@ -56,20 +48,7 @@ describe('MQTT Bridge', () => {
     })
 
     beforeEach(async () => {
-        streamrClient = await createClient(brokerUser.privateKey, {
-            network: {
-                layer0: {
-                    entryPoints: [{
-                        kademliaId: toEthereumAddress(await brokerUser.getAddress()),
-                        type: 0,
-                        websocket: {
-                            ip: '127.0.0.1',
-                            port: BROKER_CONNECTIONMANAGER_PORT
-                        }
-                    }]
-                }
-            }
-        })
+        streamrClient = await createClient(brokerUser.privateKey)
         stream = await createTestStream(streamrClient, module)
     })
 

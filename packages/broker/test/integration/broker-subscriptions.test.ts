@@ -2,7 +2,7 @@ import { Wallet } from '@ethersproject/wallet'
 import mqtt, { AsyncMqttClient } from 'async-mqtt'
 import StreamrClient, { Stream, StreamPermission } from 'streamr-client'
 import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { toEthereumAddress, wait, waitForCondition } from '@streamr/utils'
+import { wait, waitForCondition } from '@streamr/utils'
 import { Broker } from '../../src/broker'
 import { startBroker, createClient, createTestStream, getStreamParts } from '../utils'
 
@@ -37,14 +37,6 @@ describe('broker subscriptions', () => {
     beforeEach(async () => {
         const broker1User = fastWallet()
         const broker2User = fastWallet()
-        const entryPoints = [{
-            kademliaId: toEthereumAddress(await broker1User.getAddress()),
-            type: 0,
-            websocket: {
-                ip: '127.0.0.1',
-                port: 44400
-            }
-        }]
         broker1 = await startBroker({
             privateKey: broker1User.privateKey,
             extraPlugins: {
@@ -52,8 +44,7 @@ describe('broker subscriptions', () => {
                     port: mqttPort1
                 }
             },
-            wsServerPort: 44400,
-            entryPoints
+            wsServerPort: 44400
         })
         broker2 = await startBroker({
             privateKey: broker2User.privateKey,
@@ -62,32 +53,11 @@ describe('broker subscriptions', () => {
                     port: mqttPort2
                 }
             },
-            wsServerPort: 44401,
-            entryPoints
+            wsServerPort: 44401
         })
 
-        client1 = await createClient(await fetchPrivateKeyWithGas(), {
-            network: {
-                layer0: {
-                    peerDescriptor: {
-                        kademliaId: 'broker-subscriptions-client1',
-                        type: 0
-                    },
-                    entryPoints
-                }
-            }
-        })
-        client2 = await createClient(await fetchPrivateKeyWithGas(), {
-            network: {
-                layer0: {
-                    peerDescriptor: {
-                        kademliaId: 'broker-subscriptions-client2',
-                        type: 0
-                    },
-                    entryPoints
-                }
-            }
-        })
+        client1 = await createClient(await fetchPrivateKeyWithGas())
+        client2 = await createClient(await fetchPrivateKeyWithGas())
 
         mqttClient1 = await createMqttClient(mqttPort1)
         mqttClient2 = await createMqttClient(mqttPort2)
