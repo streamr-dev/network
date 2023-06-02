@@ -64,9 +64,9 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
         this.reportedHops.forEach((id) => {
             unreportedHops.delete(id)
         })
-        if (this.noCloserNodesReceivedCounter >= 1 && unreportedHops.size == 0) {
+        if (this.noCloserNodesReceivedCounter >= 1 && unreportedHops.size === 0) {
             if (this.mode === FindMode.DATA 
-                && (this.foundData.size > 0 || this.noCloserNodesReceivedCounter > this.waitedRoutingPathCompletions)) {
+                && (this.foundData.size > 0 || this.noCloserNodesReceivedCounter >= this.waitedRoutingPathCompletions)) {
                 return true
             } else if (this.mode === FindMode.DATA) {
                 return false
@@ -113,6 +113,7 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
             if (!this.findCompletedEmitted && this.isFindCompleted()) {
                 if (this.reportFindCompletedTimeout) {
                     clearTimeout(this.reportFindCompletedTimeout)
+                    this.reportFindCompletedTimeout = undefined
                 }
                 this.emit('findCompleted', this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()))
                 this.findCompletedEmitted = true
@@ -137,14 +138,17 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
             this.findCompletedEmitted = true
             if (this.reportFindCompletedTimeout) {
                 clearTimeout(this.reportFindCompletedTimeout)
+                this.reportFindCompletedTimeout = undefined
             }
         } else {
-            this.reportFindCompletedTimeout = setTimeout(() => {
-                if (!this.findCompletedEmitted) {
-                    this.emit('findCompleted', this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()))
-                    this.findCompletedEmitted = true
-                }
-            }, 2500)
+            if (!this.reportFindCompletedTimeout && !this.findCompletedEmitted) {
+                this.reportFindCompletedTimeout = setTimeout(() => {
+                    if (!this.findCompletedEmitted) {
+                        this.emit('findCompleted', this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()))
+                        this.findCompletedEmitted = true
+                    }
+                }, 5000)
+            }
         }
     }
 
@@ -160,6 +164,10 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
     })
 
     public stop(): void {
+        if (this.reportFindCompletedTimeout) {
+            clearTimeout(this.reportFindCompletedTimeout)
+            this.reportFindCompletedTimeout = undefined
+        }
         this.emit('findCompleted', [])
     }
 }

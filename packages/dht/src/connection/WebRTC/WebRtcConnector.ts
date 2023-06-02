@@ -12,7 +12,6 @@ import { NodeWebRtcConnection } from './NodeWebRtcConnection'
 import { RemoteWebrtcConnector } from './RemoteWebrtcConnector'
 import { WebRtcConnectorServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { PeerIDKey } from '../../helpers/PeerID'
-import { DescriptionType } from 'node-datachannel'
 import { ManagedWebRtcConnection } from '../ManagedWebRtcConnection'
 import { Logger } from '@streamr/utils'
 import * as Err from '../../helpers/errors'
@@ -214,7 +213,7 @@ export class WebRtcConnector implements IWebRtcConnectorService {
 
         // Always use offerers connectionId
         connection!.setConnectionId(connectionId)
-        connection!.setRemoteDescription(description, DescriptionType.Offer)
+        connection!.setRemoteDescription(description, 'offer')
         
         managedConnection!.on('handshakeRequest', () => {
             if (this.ongoingConnectAttempts.has(peerKey)) {
