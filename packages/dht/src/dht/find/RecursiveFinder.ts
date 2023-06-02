@@ -87,6 +87,9 @@ export class RecursiveFinder implements IRecursiveFinder {
         findMode: FindMode = FindMode.NODE,
         excludedPeer?: PeerDescriptor
     ): Promise<RecursiveFindResult> {
+        if (this.stopped) {
+            return { closestNodes: [] }
+        }
         const sessionId = v4()
         const recursiveFindSession = new RecursiveFindSession({
             serviceId: sessionId,
@@ -119,6 +122,7 @@ export class RecursiveFinder implements IRecursiveFinder {
         }
         this.findAndReportLocalData(idToFind, findMode, [], this.ownPeerDescriptor, sessionId)
         this.ongoingSessions.delete(sessionId)
+        recursiveFindSession.stop()
         return recursiveFindSession.getResults()
     }
 

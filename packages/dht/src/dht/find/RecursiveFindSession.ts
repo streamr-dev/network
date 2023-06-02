@@ -64,7 +64,7 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
         this.reportedHops.forEach((id) => {
             unreportedHops.delete(id)
         })
-        if (this.noCloserNodesReceivedCounter >= 1 && unreportedHops.size == 0) {
+        if (this.noCloserNodesReceivedCounter >= 1 && unreportedHops.size === 0) {
             if (this.mode === FindMode.DATA 
                 && (this.foundData.size > 0 || this.noCloserNodesReceivedCounter >= this.waitedRoutingPathCompletions)) {
                 return true
