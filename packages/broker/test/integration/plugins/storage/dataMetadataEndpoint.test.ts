@@ -34,22 +34,8 @@ describe('DataMetadataEndpoints', () => {
 
     beforeAll(async () => {
         storageNodeAccount = new Wallet(await fetchPrivateKeyWithGas())
-        const entryPoints = [{
-            kademliaId: toEthereumAddress(await storageNodeAccount.getAddress()),
-            type: 0,
-            websocket: {
-                ip: '127.0.0.1',
-                port: 40412
-            }
-        }]
 
-        client1 = await createClient(await fetchPrivateKeyWithGas(), {
-            network: {
-                layer0: {
-                    entryPoints
-                }
-            }
-        })
+        client1 = await createClient(await fetchPrivateKeyWithGas())
 
         stream = await createTestStream(client1, module)
 
@@ -57,7 +43,7 @@ describe('DataMetadataEndpoints', () => {
             storageNodeAccount.privateKey,
             httpPort1,
             40412,
-            entryPoints,
+            undefined,
             {
                 subscriber: {
                     streams: [{
