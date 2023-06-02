@@ -38,9 +38,9 @@ describe('RandomGraphNode-DhtNode', () => {
         
     })
 
-    it.only('happy path single peer', async () => {
+    it.only('happy path single peer ', async () => {
         
-        //Simulator.useFakeTimers()
+        Simulator.useFakeTimers()
         const simulator = new Simulator()
         const entrypointCm = new ConnectionManager({ ownPeerDescriptor: entrypointDescriptor, nodeName: entrypointDescriptor.nodeName, simulator: simulator}) //new SimulatorTransport(entrypointDescriptor, simulator)
 
@@ -101,7 +101,7 @@ describe('RandomGraphNode-DhtNode', () => {
         entryPointRandomGraphNode.stop()
         await Promise.all(dhtNodes.map((node) => node.stop()))
         await Promise.all(graphNodes.map((node) => node.stop()))
-        //Simulator.useFakeTimers(false)
+        Simulator.useFakeTimers(false)
     })
 
     it('happy path 4 peers', async () => {
