@@ -29,9 +29,6 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
         this.protocolVersion = protocolVersion
         this.connection = connection
         this.connection.on('data', this.onData)
-        connection.on('data', (bytes: Uint8Array) => {
-            this.onData(bytes)
-        })
     }
 
     private onData = (data: Uint8Array) => {

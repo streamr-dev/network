@@ -187,8 +187,9 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         const peerId = peerIdFromPeerDescriptor(peerDescriptor)
         
         if (this.ongoingConnectRequests.has(peerId.toKey())) {
-            this.ongoingConnectRequests.get(peerId.toKey())?.attachImplementation(serverWebSocket, peerDescriptor)
-            this.ongoingConnectRequests.get(peerId.toKey())?.acceptHandshake()
+            const ongoingConnectReguest = this.ongoingConnectRequests.get(peerId.toKey())!
+            ongoingConnectReguest.attachImplementation(serverWebSocket, peerDescriptor)
+            ongoingConnectReguest.acceptHandshake()
             this.ongoingConnectRequests.delete(peerId.toKey())
         } else {
             const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, this.protocolVersion,
