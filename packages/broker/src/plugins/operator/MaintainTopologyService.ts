@@ -1,5 +1,5 @@
 import { Logger, Multimap } from '@streamr/utils'
-import { OperatorClient } from './FakeOperatorClient'
+import { OperatorClient } from '@streamr/operator-client'
 import StreamrClient, { Stream, Subscription } from 'streamr-client'
 import { StreamID, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
 import { SetMembershipSynchronizer } from '../storage/SetMembershipSynchronizer'
@@ -47,6 +47,7 @@ export class MaintainTopologyService {
 
     // eslint-disable-next-line class-methods-use-this
     async stop(): Promise<void> {
+        this.operatorClient.close()
         logger.info('stopped')
     }
 

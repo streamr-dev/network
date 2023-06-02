@@ -23,10 +23,11 @@ describe('OperatorPlugin', () => {
             privateKey: brokerWallet.privateKey,
             trackerPort: 12345,
             extraPlugins: {
-                operator: {}
+                operator: {
+                    operatorContractAddress: '0x00c9f382d8283dff280f40e4CD97f485CDE0986c'
+                }
             }
         })
-        await expect(promise).toResolve()
-        broker = await promise
+        await promise
     })
 })

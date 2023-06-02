@@ -4,5 +4,14 @@
   "type": "object",
   "description": "Operator plugin configuration",
   "additionalProperties": false,
-  "properties": {}
+  "required": [
+    "operatorContractAddress"
+  ],
+  "properties": {
+    "operatorContractAddress": {
+      "type": "string",
+      "description": "Operator contract Ethereum address",
+      "format": "ethereum-address"
+    }
+  }
 }
