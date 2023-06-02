@@ -42,16 +42,7 @@ describe('DataMetadataEndpoints', () => {
         storageNode = await startStorageNode(
             storageNodeAccount.privateKey,
             httpPort1,
-            40412,
-            undefined,
-            {
-                subscriber: {
-                    streams: [{
-                        streamId: stream.id,
-                        streamPartition: 0
-                    }]
-                }
-            }
+            40412
         )
     })
 

@@ -126,12 +126,6 @@ describe('multiple publisher plugins', () => {
                     port: wsPort
                 },
                 http: {},
-                subscriber: {
-                    streams: [{
-                        streamId,
-                        streamPartition: 0
-                    }]
-                } 
             },
             wsServerPort: 44409
         })
