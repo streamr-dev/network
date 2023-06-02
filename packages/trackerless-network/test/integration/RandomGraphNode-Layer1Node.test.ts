@@ -1,4 +1,4 @@
-import { DhtNode, Simulator, SimulatorTransport, PeerDescriptor, PeerID, ConnectionManager, getRandomRegion } from '@streamr/dht'
+import { DhtNode, Simulator, PeerDescriptor, PeerID, ConnectionManager, getRandomRegion } from '@streamr/dht'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { range } from 'lodash'
 import { wait, waitForCondition } from '@streamr/utils'
@@ -31,23 +31,28 @@ describe('RandomGraphNode-DhtNode', () => {
         }
     })
     beforeEach(async () => {
-        
+
     })
 
     afterEach(async () => {
-        
+
     })
 
     it.only('happy path single peer ', async () => {
-        
+
         Simulator.useFakeTimers()
         const simulator = new Simulator()
-        const entrypointCm = new ConnectionManager({ ownPeerDescriptor: entrypointDescriptor, nodeName: entrypointDescriptor.nodeName, simulator: simulator}) //new SimulatorTransport(entrypointDescriptor, simulator)
+        const entrypointCm = new ConnectionManager({
+            ownPeerDescriptor: entrypointDescriptor,
+            nodeName: entrypointDescriptor.nodeName, simulator: simulator
+        }) //new SimulatorTransport(entrypointDescriptor, simulator)
 
         const cms: ConnectionManager[] = range(numOfNodes).map((i) =>
-            new ConnectionManager({ ownPeerDescriptor: peerDescriptors[i], 
+            new ConnectionManager({
+                ownPeerDescriptor: peerDescriptors[i],
                 nodeName: peerDescriptors[i].nodeName,
-                simulator: simulator})
+                simulator: simulator
+            })
         )
 
         dhtEntryPoint = new DhtNode({
@@ -84,7 +89,7 @@ describe('RandomGraphNode-DhtNode', () => {
         ////////////
         await entryPointRandomGraphNode.start()
         await dhtNodes[0].joinDht(entrypointDescriptor)
-        
+
         await graphNodes[0].start()
         await Promise.all([
             waitForCondition(() => graphNodes[0].getNearbyContactPoolIds().length === 1, 15000, 1000),
@@ -93,9 +98,7 @@ describe('RandomGraphNode-DhtNode', () => {
         expect(graphNodes[0].getNearbyContactPoolIds().length).toEqual(1)
         expect(graphNodes[0].getTargetNeighborStringIds().length).toEqual(1)
 
-
         /////////////////
-
 
         await dhtEntryPoint.stop()
         entryPointRandomGraphNode.stop()
