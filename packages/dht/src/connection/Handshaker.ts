@@ -44,7 +44,6 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
             if (handshake.responseError) {
                 this.emit('handshakeFailed', handshake.responseError)
             } else {
-                logger.info('handshake completed ' + this)
                 this.emit('handshakeCompleted', handshake.peerDescriptor!)
             }
         }
