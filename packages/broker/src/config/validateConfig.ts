@@ -8,6 +8,7 @@ export const validateConfig = (data: unknown, schema: Schema, contextName?: stri
         useDefaults
     })
     addFormats(ajv)
+    ajv.addFormat('ethereum-address', /^0x[a-zA-Z0-9]{40}$/)
     ajv.addSchema(DEFINITIONS_SCHEMA)
     if (!ajv.validate(schema, data)) {
         const prefix = (contextName !== undefined) ? (contextName + ': ') : ''

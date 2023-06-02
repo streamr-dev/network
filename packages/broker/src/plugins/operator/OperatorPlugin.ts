@@ -1,4 +1,4 @@
-import { Plugin } from '../../Plugin'
+import { Plugin, PluginOptions } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { Schema } from 'ajv'
 import { AnnounceNodeService } from './AnnounceNodeService'
@@ -6,17 +6,37 @@ import { InspectRandomNodeService } from './InspectRandomNodeService'
 import { MaintainOperatorContractService } from './MaintainOperatorContractService'
 import { MaintainTopologyService } from './MaintainTopologyService'
 import { VoteOnSuspectNodeService } from './VoteOnSuspectNodeService'
-import { FakeOperatorClient } from './FakeOperatorClient'
+import { OperatorClient } from '@streamr/operator-client'
+import fetch from 'node-fetch'
+import { Logger } from '@streamr/utils'
+import { JsonRpcProvider } from '@ethersproject/providers'
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface OperatorPluginConfig {}
+export interface OperatorPluginConfig {
+    operatorContractAddress: string
+}
+
+const logger = new Logger(module)
 
 export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     private readonly announceNodeService = new AnnounceNodeService()
     private readonly inspectRandomNodeService = new InspectRandomNodeService()
     private readonly maintainOperatorContractService = new MaintainOperatorContractService()
-    private readonly maintainTopologyService = new MaintainTopologyService(this.streamrClient, new FakeOperatorClient([], 0))
     private readonly voteOnSuspectNodeService = new VoteOnSuspectNodeService()
+    private readonly maintainTopologyService: MaintainTopologyService
+
+    constructor(options: PluginOptions) {
+        super(options)
+        this.maintainTopologyService = new MaintainTopologyService(
+            this.streamrClient,
+            new OperatorClient({
+                provider: new JsonRpcProvider(this.brokerConfig.client.contracts!.streamRegistryChainRPCs!.rpcs[0].url),
+                operatorContractAddress: this.pluginConfig.operatorContractAddress,
+                theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST}:8000/subgraphs/name/streamr-dev/network-subgraphs`,
+                fetch: fetch
+            }, logger as any) // TODO: casting?
+        )
+    }
 
     async start(): Promise<void> {
         await this.announceNodeService.start()
