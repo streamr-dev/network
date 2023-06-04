@@ -25,7 +25,7 @@ export interface SubscriptionPipelineOptions {
     groupKeyManager: GroupKeyManager
     streamRegistryCached: StreamRegistryCached
     destroySignal: DestroySignal
-    config: StrictStreamrClientConfig
+    config: Pick<StrictStreamrClientConfig, 'orderMessages' | 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill'>
 }
 
 export const createSubscribePipeline = (opts: SubscriptionPipelineOptions): MessageStream => {

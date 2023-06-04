@@ -28,7 +28,7 @@ export class OrderMessages {
     private readonly logger: Logger
 
     constructor(
-        config: StrictStreamrClientConfig,
+        config: Pick<StrictStreamrClientConfig, 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill'>,
         resends: Resends,
         streamPartId: StreamPartID,
         loggerFactory: LoggerFactory
