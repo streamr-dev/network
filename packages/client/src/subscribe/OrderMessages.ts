@@ -23,7 +23,6 @@ export class OrderMessages {
     private readonly resendStreams = new Set<MessageStream>() // holds outstanding resends for cleanup
     private readonly outBuffer = new PushBuffer<StreamMessage>()
     private readonly orderingUtil: OrderingUtil
-    private readonly config: StrictStreamrClientConfig
     private readonly resends: Resends
     private readonly streamPartId: StreamPartID
     private readonly logger: Logger
@@ -34,14 +33,13 @@ export class OrderMessages {
         streamPartId: StreamPartID,
         loggerFactory: LoggerFactory
     ) {
-        this.config = config
         this.resends = resends
         this.streamPartId = streamPartId
         this.logger = loggerFactory.createLogger(module)
         this.onOrdered = this.onOrdered.bind(this)
         this.onGap = this.onGap.bind(this)
         this.maybeClose = this.maybeClose.bind(this)
-        const { gapFillTimeout, retryResendAfter, maxGapRequests, gapFill } = this.config
+        const { gapFillTimeout, retryResendAfter, maxGapRequests, gapFill } = config
         this.enabled = gapFill && (maxGapRequests > 0)
         this.orderingUtil = new OrderingUtil(
             this.streamPartId,
