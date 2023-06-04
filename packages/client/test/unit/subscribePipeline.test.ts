@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { Wallet } from '@ethersproject/wallet'
-import { EncryptionType, MessageID, StreamMessage, StreamPartID, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
+import { EncryptionType, MessageID, StreamMessage, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
 import { collect, toEthereumAddress } from '@streamr/utils'
 import { mock } from 'jest-mock-extended'
@@ -55,7 +55,7 @@ describe('subscribePipeline', () => {
         streamPartId = StreamPartIDUtils.parse(`${randomEthereumAddress()}/path#0`)
         publisher = fastWallet()
         const stream = new Stream(
-            toStreamID(streamPartId),
+            StreamPartIDUtils.getStreamID(streamPartId),
             {
                 partitions: 1,
             },
