@@ -21,6 +21,8 @@ found [here](packages/broker/CHANGELOG.md).
 
 #### Fixed
 
+- Clear cache when message decryption fails
+
 #### Security
 
 ### cli-tools
