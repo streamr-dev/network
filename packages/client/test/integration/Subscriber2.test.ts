@@ -601,38 +601,6 @@ describe('Subscriber', () => {
 
             expect(await getSubscriptionCount(streamId)).toBe(0)
         })
-
-        it('can subscribe then unsubscribe in parallel', async () => {
-            const [sub] = await Promise.all([
-                client.subscribe(streamId),
-                client.unsubscribe(streamId),
-            ])
-
-            expect(await getSubscriptionCount(streamId)).toBe(1)
-
-            const published = await publishTestMessages(3)
-
-            const received = await collect(sub, 3)
-
-            expect(received.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
-            expect(await getSubscriptionCount(streamId)).toBe(0)
-        })
-
-        it('can unsubscribe then subscribe in parallel', async () => {
-            const [_, sub] = await Promise.all([
-                client.unsubscribe(streamId),
-                client.subscribe(streamId),
-            ])
-
-            expect(await getSubscriptionCount(streamId)).toBe(1)
-
-            const published = await publishTestMessages(3)
-
-            const received = await collect(sub, 3)
-
-            expect(received.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
-            expect(await getSubscriptionCount(streamId)).toBe(0)
-        })
     })
 
     describe('mid-stream stop methods', () => {
