@@ -114,6 +114,7 @@ export class Resends {
         options: ResendOptions & { raw?: boolean }, 
         getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>
     ): Promise<MessageStream> {
+        const raw = options.raw ?? false
         if (isResendLast(options)) {
             if (options.last <= 0) {
                 const emptyStream = new MessageStream()
@@ -122,7 +123,7 @@ export class Resends {
             }
             return this.fetchStream('last', streamPartId, {
                 count: options.last,
-            }, options.raw ?? false, getStorageNodes)
+            }, raw, getStorageNodes)
         } else if (isResendRange(options)) {
             return this.fetchStream('range',streamPartId, {
                 fromTimestamp: new Date(options.from.timestamp).getTime(),
@@ -131,13 +132,13 @@ export class Resends {
                 toSequenceNumber: options.to.sequenceNumber,
                 publisherId: options.publisherId !== undefined ? toEthereumAddress(options.publisherId) : undefined,
                 msgChainId: options.msgChainId,
-            }, options.raw ?? false, getStorageNodes)
+            }, raw, getStorageNodes)
         } else if (isResendFrom(options)) {
             return this.fetchStream('from', streamPartId, {
                 fromTimestamp: new Date(options.from.timestamp).getTime(),
                 fromSequenceNumber: options.from.sequenceNumber,
                 publisherId: options.publisherId !== undefined ? toEthereumAddress(options.publisherId) : undefined,
-            }, options.raw ?? false, getStorageNodes)
+            }, raw, getStorageNodes)
         } else {
             throw new StreamrClientError(
                 `can not resend without valid resend options: ${JSON.stringify({ streamPartId, options })}`,
