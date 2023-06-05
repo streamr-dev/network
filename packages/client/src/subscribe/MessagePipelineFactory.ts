@@ -11,12 +11,12 @@ import { MessagePipelineOptions, createMessagePipeline as _createMessagePipeline
 @scoped(Lifecycle.ContainerScoped)
 export class MessagePipelineFactory {
 
-    loggerFactory: LoggerFactory
-    resends: Resends
-    groupKeyManager: GroupKeyManager
-    streamRegistryCached: StreamRegistryCached
-    destroySignal: DestroySignal
-    config: Pick<StrictStreamrClientConfig, 'orderMessages' | 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill'>
+    private readonly loggerFactory: LoggerFactory
+    private readonly resends: Resends
+    private readonly groupKeyManager: GroupKeyManager
+    private readonly streamRegistryCached: StreamRegistryCached
+    private readonly destroySignal: DestroySignal
+    private readonly config: Pick<StrictStreamrClientConfig, 'orderMessages' | 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill'>
 
     constructor(
         resends: Resends,
