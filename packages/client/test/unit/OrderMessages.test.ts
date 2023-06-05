@@ -22,7 +22,7 @@ const CONFIG = {
     gapFillTimeout: 50
 }
 
-const createTransform = (resends: Pick<Resends, 'range'>, config = CONFIG) => {
+const createTransform = (resends: Pick<Resends, 'resend'>, config = CONFIG) => {
     return new OrderMessages(
         config as any,
         resends as any,
@@ -67,22 +67,26 @@ describe('OrderMessages', () => {
         const msgs = await createMockMessages()
         const missing = msgs.filter((m) => m.getTimestamp() === 3000)
         const resends = {
-            range: jest.fn().mockResolvedValue(createMessageStream(...missing))
+            resend: jest.fn().mockResolvedValue(createMessageStream(...missing))
         }
         const transform = createTransform(resends)
         const output = transform(fromArray(without(msgs, ...missing)))
         expect(await collect(output)).toEqual(msgs)
-        expect(resends.range).toBeCalledWith(
+        expect(resends.resend).toBeCalledWith(
             STREAM_PART_ID,
             {
-                fromTimestamp: 2000,
-                fromSequenceNumber: 1,
-                toTimestamp: 3000,
-                toSequenceNumber: 0,
+                from: {
+                    timestamp: 2000,
+                    sequenceNumber: 1
+                },
+                to: {
+                    timestamp: 3000,
+                    sequenceNumber: 0
+                },
                 publisherId: PUBLISHER_ID,
-                msgChainId: MSG_CHAIN_ID
-            },
-            true
+                msgChainId: MSG_CHAIN_ID,
+                raw: true
+            }
         )
     })
 
@@ -90,22 +94,26 @@ describe('OrderMessages', () => {
         const msgs = await createMockMessages()
         const missing = msgs.filter((m) => (m.getTimestamp() === 3000) || (m.getTimestamp() === 4000))
         const resends = {
-            range: jest.fn().mockResolvedValue(createMessageStream(...missing))
+            resend: jest.fn().mockResolvedValue(createMessageStream(...missing))
         }
         const transform = createTransform(resends)
         const output = transform(fromArray(without(msgs, ...missing)))
         expect(await collect(output)).toEqual(msgs)
-        expect(resends.range).toBeCalledWith(
+        expect(resends.resend).toBeCalledWith(
             STREAM_PART_ID,
             {
-                fromTimestamp: 2000,
-                fromSequenceNumber: 1,
-                toTimestamp: 4000,
-                toSequenceNumber: 0,
+                from: {
+                    timestamp: 2000,
+                    sequenceNumber: 1
+                },
+                to: {
+                    timestamp: 4000,
+                    sequenceNumber: 0
+                },
                 publisherId: PUBLISHER_ID,
-                msgChainId: MSG_CHAIN_ID
-            },
-            true
+                msgChainId: MSG_CHAIN_ID,
+                raw: true
+            }
         )
     })
 
@@ -114,36 +122,44 @@ describe('OrderMessages', () => {
         const missing1 = msgs.filter((m) => m.getTimestamp() === 2000)
         const missing2 = msgs.filter((m) => m.getTimestamp() === 4000)
         const resends = {
-            range: jest.fn()
+            resend: jest.fn()
                 .mockResolvedValueOnce(createMessageStream(...missing1))
                 .mockResolvedValueOnce(createMessageStream(...missing2))
         }
         const transform = createTransform(resends)
         const output = transform(fromArray(without(msgs, ...missing1.concat(missing2))))
         expect(await collect(output)).toEqual(msgs)
-        expect(resends.range).toHaveBeenNthCalledWith(1,
+        expect(resends.resend).toHaveBeenNthCalledWith(1,
             STREAM_PART_ID,
             {
-                fromTimestamp: 1000,
-                fromSequenceNumber: 1,
-                toTimestamp: 2000,
-                toSequenceNumber: 0,
+                from: {
+                    timestamp: 1000,
+                    sequenceNumber: 1
+                },
+                to: {
+                    timestamp: 2000,
+                    sequenceNumber: 0
+                },
                 publisherId: PUBLISHER_ID,
-                msgChainId: MSG_CHAIN_ID
-            },
-            true
+                msgChainId: MSG_CHAIN_ID,
+                raw: true
+            }
         )
-        expect(resends.range).toHaveBeenNthCalledWith(2,
+        expect(resends.resend).toHaveBeenNthCalledWith(2,
             STREAM_PART_ID,
             {
-                fromTimestamp: 3000,
-                fromSequenceNumber: 1,
-                toTimestamp: 4000,
-                toSequenceNumber: 0,
+                from: {
+                    timestamp: 3000,
+                    sequenceNumber: 1
+                },
+                to: {
+                    timestamp: 4000,
+                    sequenceNumber: 0
+                },
                 publisherId: PUBLISHER_ID,
-                msgChainId: MSG_CHAIN_ID
-            },
-            true
+                msgChainId: MSG_CHAIN_ID,
+                raw: true
+            }
         )
     })
 
@@ -151,25 +167,25 @@ describe('OrderMessages', () => {
         const msgs = await createMockMessages()
         const missing = msgs.filter((m) => m.getTimestamp() === 3000)
         const resends = {
-            range: jest.fn().mockImplementation(() => createMessageStream())
+            resend: jest.fn().mockImplementation(() => createMessageStream())
         }
         const transform = createTransform(resends)
         const output = transform(fromArray(without(msgs, ...missing)))
         expect(await collect(output)).toEqual(without(msgs, ...missing))
-        expect(resends.range).toBeCalledTimes(CONFIG.maxGapRequests)
+        expect(resends.resend).toBeCalledTimes(CONFIG.maxGapRequests)
     })
 
     it('ignore missing message if gap filling disable', async () => {
         const msgs = await createMockMessages()
         const missing = msgs.filter((m) => m.getTimestamp() === 3000)
         const resends = {
-            range: jest.fn()
+            resend: jest.fn()
         }
         const transform = createTransform(resends, {
             orderMessages: false
         } as any)
         const output = transform(fromArray(without(msgs, ...missing)))
         expect(await collect(output)).toEqual(without(msgs, ...missing))
-        expect(resends.range).toBeCalledTimes(0)
+        expect(resends.resend).toBeCalledTimes(0)
     })
 })

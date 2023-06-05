@@ -102,11 +102,11 @@ export class Resends {
         this.logger = loggerFactory.createLogger(module)
     }
 
-    resend(streamPartId: StreamPartID, options: ResendOptions): Promise<MessageStream> {
+    resend(streamPartId: StreamPartID, options: ResendOptions & { raw?: boolean }): Promise<MessageStream> {
         if (isResendLast(options)) {
             return this.last(streamPartId, {
                 count: options.last,
-            }, false)
+            }, options.raw ?? false)
         }
 
         if (isResendRange(options)) {
@@ -117,7 +117,7 @@ export class Resends {
                 toSequenceNumber: options.to.sequenceNumber,
                 publisherId: options.publisherId !== undefined ? toEthereumAddress(options.publisherId) : undefined,
                 msgChainId: options.msgChainId,
-            }, false)
+            }, options.raw ?? false)
         }
 
         if (isResendFrom(options)) {
@@ -125,7 +125,7 @@ export class Resends {
                 fromTimestamp: new Date(options.from.timestamp).getTime(),
                 fromSequenceNumber: options.from.sequenceNumber,
                 publisherId: options.publisherId !== undefined ? toEthereumAddress(options.publisherId) : undefined,
-            }, false)
+            }, options.raw ?? false)
         }
 
         throw new StreamrClientError(
@@ -173,7 +173,7 @@ export class Resends {
         return messageStream
     }
 
-    async last(streamPartId: StreamPartID, { count }: { count: number }, raw: boolean): Promise<MessageStream> {
+    private async last(streamPartId: StreamPartID, { count }: { count: number }, raw: boolean): Promise<MessageStream> {
         if (count <= 0) {
             const emptyStream = new MessageStream()
             emptyStream.endWrite()
@@ -201,7 +201,7 @@ export class Resends {
         }, raw)
     }
 
-    async range(streamPartId: StreamPartID, {
+    private async range(streamPartId: StreamPartID, {
         fromTimestamp,
         fromSequenceNumber = MIN_SEQUENCE_NUMBER_VALUE,
         toTimestamp,
