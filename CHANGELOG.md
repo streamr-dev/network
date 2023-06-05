@@ -15,6 +15,8 @@ found [here](packages/broker/CHANGELOG.md).
 
 #### Changed
 
+- Optimize message ordering and gap handling of resend requests (https://github.com/streamr-dev/network/pull/1460)
+
 #### Deprecated
 
 #### Removed
