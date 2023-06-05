@@ -120,26 +120,6 @@ export class Subscriber {
     }
 
     /**
-     * Count all subscriptions.
-     */
-    countAll(): number {
-        let count = 0
-        this.subSessions.forEach((s) => {
-            count += s.count()
-        })
-        return count
-    }
-
-    /**
-     * Count all matching subscriptions.
-     */
-    // TODO rename this to something more specific?
-    async count(streamDefinition?: StreamDefinition): Promise<number> {
-        if (streamDefinition === undefined) { return this.countAll() }
-        return (await this.getSubscriptions(streamDefinition)).length
-    }
-
-    /**
      * Get all subscriptions.
      */
     private getAllSubscriptions(): Subscription[] {
