@@ -8,14 +8,22 @@ import { MessageStream } from './MessageStream'
 import { Resends } from './Resends'
 import { MessagePipelineOptions, createMessagePipeline as _createMessagePipeline } from './messagePipeline'
 
+type MessagePipelineFactoryOptions = Omit<MessagePipelineOptions,
+    'resends' |
+    'groupKeyManager' |
+    'streamRegistryCached' |
+    'destroySignal' |
+    'loggerFactory' |
+    'config'>
+
 @scoped(Lifecycle.ContainerScoped)
 export class MessagePipelineFactory {
 
-    private readonly loggerFactory: LoggerFactory
     private readonly resends: Resends
     private readonly groupKeyManager: GroupKeyManager
     private readonly streamRegistryCached: StreamRegistryCached
     private readonly destroySignal: DestroySignal
+    private readonly loggerFactory: LoggerFactory
     private readonly config: Pick<StrictStreamrClientConfig, 'orderMessages' | 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill'>
 
     /* eslint-disable indent */
@@ -37,7 +45,7 @@ export class MessagePipelineFactory {
     }
 
     // eslint-disable-next-line max-len
-    createMessagePipeline(opts: Omit<MessagePipelineOptions, 'resends' | 'groupKeyManager' | 'streamRegistryCached' | 'destroySignal' | 'loggerFactory' | 'config'>): MessageStream {
+    createMessagePipeline(opts: MessagePipelineFactoryOptions): MessageStream {
         return _createMessagePipeline({
             ...opts,
             resends: this.resends,
