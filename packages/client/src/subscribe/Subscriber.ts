@@ -1,54 +1,37 @@
 import { StreamPartID } from '@streamr/protocol'
 import { Logger } from '@streamr/utils'
-import { Lifecycle, delay, inject, scoped } from 'tsyringe'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
-import { DestroySignal } from '../DestroySignal'
+import { Lifecycle, inject, scoped } from 'tsyringe'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { StreamIDBuilder } from '../StreamIDBuilder'
-import { GroupKeyManager } from '../encryption/GroupKeyManager'
-import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
 import { StreamDefinition } from '../types'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { allSettledValues } from '../utils/promises'
-import { Resends } from './Resends'
+import { MessagePipelineFactory } from './MessagePipelineFactory'
 import { Subscription } from './Subscription'
 import { SubscriptionSession } from './SubscriptionSession'
 
 @scoped(Lifecycle.ContainerScoped)
 export class Subscriber {
+
     private readonly subSessions: Map<StreamPartID, SubscriptionSession> = new Map()
     private readonly streamIdBuilder: StreamIDBuilder
-    private readonly resends: Resends
-    private readonly groupKeyManager: GroupKeyManager
-    private readonly streamRegistryCached: StreamRegistryCached
+    private readonly messagePipelineFactory: MessagePipelineFactory
     private readonly streamStorageRegistry: StreamStorageRegistry
     private readonly node: NetworkNodeFacade
-    private readonly destroySignal: DestroySignal
-    private readonly config: StrictStreamrClientConfig
-    private readonly loggerFactory: LoggerFactory
     private readonly logger: Logger
 
     constructor(
         streamIdBuilder: StreamIDBuilder,
-        resends: Resends,
-        groupKeyManager: GroupKeyManager,
-        @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
         streamStorageRegistry: StreamStorageRegistry,
+        messagePipelineFactory: MessagePipelineFactory,
         node: NetworkNodeFacade,
-        destroySignal: DestroySignal,
-        @inject(ConfigInjectionToken) config: StrictStreamrClientConfig,
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
     ) {
         this.streamIdBuilder = streamIdBuilder
-        this.resends = resends
-        this.groupKeyManager = groupKeyManager
-        this.streamRegistryCached = streamRegistryCached
+        this.messagePipelineFactory = messagePipelineFactory
         this.streamStorageRegistry = streamStorageRegistry
         this.node = node
-        this.destroySignal = destroySignal
-        this.config = config
-        this.loggerFactory = loggerFactory
         this.logger = loggerFactory.createLogger(module)
     }
 
@@ -58,14 +41,9 @@ export class Subscriber {
         }
         const subSession = new SubscriptionSession(
             streamPartId,
-            this.resends,
-            this.groupKeyManager,
-            this.streamRegistryCached,
+            this.messagePipelineFactory,
             this.streamStorageRegistry,
-            this.node,
-            this.destroySignal,
-            this.loggerFactory,
-            this.config
+            this.node
         )
 
         this.subSessions.set(streamPartId, subSession)

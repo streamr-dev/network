@@ -1,18 +1,11 @@
 import { StreamID, StreamMessage, StreamMessageType, StreamPartID } from '@streamr/protocol'
-import { inject } from 'tsyringe'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
-import { DestroySignal } from '../DestroySignal'
 import { NetworkNodeFacade, NetworkNodeStub } from '../NetworkNodeFacade'
-import { GroupKeyManager } from '../encryption/GroupKeyManager'
-import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
-import { LoggerFactory } from '../utils/LoggerFactory'
 import { Scaffold } from '../utils/Scaffold'
 import { Signal } from '../utils/Signal'
+import { MessagePipelineFactory } from './MessagePipelineFactory'
 import { MessageStream } from './MessageStream'
-import { Resends } from './Resends'
 import { Subscription } from './Subscription'
-import { createMessagePipeline } from './messagePipeline'
 
 /**
  * Manages adding & removing subscriptions to node as needed.
@@ -20,6 +13,7 @@ import { createMessagePipeline } from './messagePipeline'
  */
 
 export class SubscriptionSession {
+
     public readonly streamPartId: StreamPartID
     public readonly onRetired = Signal.once()
     private isRetired: boolean = false
@@ -31,28 +25,17 @@ export class SubscriptionSession {
 
     constructor(
         streamPartId: StreamPartID,
-        resends: Resends,
-        groupKeyManager: GroupKeyManager,
-        streamRegistryCached: StreamRegistryCached,
+        messagePipelineFactory: MessagePipelineFactory,
         streamStorageRegistry: StreamStorageRegistry,
         node: NetworkNodeFacade,
-        destroySignal: DestroySignal,
-        loggerFactory: LoggerFactory,
-        @inject(ConfigInjectionToken) config: StrictStreamrClientConfig
     ) {
         this.streamPartId = streamPartId
         this.distributeMessage = this.distributeMessage.bind(this)
         this.node = node
         this.onError = this.onError.bind(this)
-        this.pipeline = createMessagePipeline({
+        this.pipeline = messagePipelineFactory.createMessagePipeline({
             streamPartId,
-            getStorageNodes: (streamId: StreamID) => streamStorageRegistry.getStorageNodes(streamId),
-            resends,
-            groupKeyManager,
-            streamRegistryCached,
-            loggerFactory,
-            destroySignal,
-            config: config
+            getStorageNodes: (streamId: StreamID) => streamStorageRegistry.getStorageNodes(streamId)
         })
         this.pipeline.onError.listen(this.onError)
         this.pipeline
