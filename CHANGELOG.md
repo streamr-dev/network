@@ -21,6 +21,8 @@ found [here](packages/broker/CHANGELOG.md).
 
 #### Fixed
 
+- Fix default value handling for resend range queries (https://github.com/streamr-dev/network/pull/1462)
+
 #### Security
 
 ### cli-tools
