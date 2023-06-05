@@ -51,6 +51,11 @@ ERROR_TYPES.set(ErrorCode.VALIDATION_ERROR, ValidationError)
 ERROR_TYPES.set(ErrorCode.NOT_FOUND, NotFoundError)
 ERROR_TYPES.set(ErrorCode.UNKNOWN, HttpError)
 
+export const createQueryString = (query: Record<string, any>): string => {
+    const withoutEmpty = Object.fromEntries(Object.entries(query).filter(([_k, v]) => v != null))
+    return new URLSearchParams(withoutEmpty).toString()
+}
+
 const parseErrorCode = (body: string) => {
     let json
     try {
@@ -101,12 +106,6 @@ export class HttpUtil {
         } finally {
             stream?.destroy()
         }
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    createQueryString(query: Record<string, any>): string {
-        const withoutEmpty = Object.fromEntries(Object.entries(query).filter(([_k, v]) => v != null))
-        return new URLSearchParams(withoutEmpty).toString()
     }
 }
 

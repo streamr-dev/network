@@ -25,7 +25,7 @@ export interface SubscriptionPipelineOptions {
     groupKeyManager: GroupKeyManager
     streamRegistryCached: StreamRegistryCached
     destroySignal: DestroySignal
-    config: StrictStreamrClientConfig
+    config: Pick<StrictStreamrClientConfig, 'orderMessages' | 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill'>
 }
 
 export const createSubscribePipeline = (opts: SubscriptionPipelineOptions): MessageStream => {
@@ -51,7 +51,7 @@ export const createSubscribePipeline = (opts: SubscriptionPipelineOptions): Mess
         await validateStreamMessage(msg, opts.streamRegistryCached)
         if (StreamMessage.isAESEncrypted(msg)) {
             try {
-                return decrypt(msg, opts.groupKeyManager, opts.destroySignal)
+                return await decrypt(msg, opts.groupKeyManager, opts.destroySignal)
             } catch (err) {
                 // TODO log this in onError? if we want to log all errors?
                 logger.debug('Failed to decrypt', { messageId: msg.getMessageID(), err })

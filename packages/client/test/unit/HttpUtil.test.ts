@@ -6,7 +6,7 @@ import { collect } from '@streamr/utils'
 import { once } from 'events'
 import express from 'express'
 import range from 'lodash/range'
-import { HttpUtil } from '../../src/HttpUtil'
+import { HttpUtil, createQueryString } from '../../src/HttpUtil'
 import { createMockMessage, mockLoggerFactory } from '../test-utils/utils'
 
 const MOCK_SERVER_PORT = 12345
@@ -39,8 +39,7 @@ describe('HttpUtil', () => {
     })
 
     it('query parameters with null/undefined', () => {
-        const httpUtil = new HttpUtil(mockLoggerFactory())
-        const actual = httpUtil.createQueryString({
+        const actual = createQueryString({
             a: 'foo',
             b: undefined,
             c: null,
