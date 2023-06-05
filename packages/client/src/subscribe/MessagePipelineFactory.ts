@@ -18,6 +18,7 @@ export class MessagePipelineFactory {
     private readonly destroySignal: DestroySignal
     private readonly config: Pick<StrictStreamrClientConfig, 'orderMessages' | 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill'>
 
+    /* eslint-disable indent */
     constructor(
         @inject(delay(() => Resends)) resends: Resends,
         groupKeyManager: GroupKeyManager,
