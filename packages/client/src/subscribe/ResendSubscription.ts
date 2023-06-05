@@ -1,7 +1,6 @@
-import { StreamID, StreamMessage, StreamPartID } from '@streamr/protocol'
+import { StreamMessage, StreamPartID } from '@streamr/protocol'
 import { inject } from 'tsyringe'
 import { ConfigInjectionToken } from '../Config'
-import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { StrictStreamrClientConfig } from './../Config'
 import { MessageStream } from './MessageStream'
@@ -19,7 +18,6 @@ export class ResendSubscription extends Subscription {
         streamPartId: StreamPartID,
         resendOptions: ResendOptions,
         resends: Resends,
-        streamStorageRegistry: StreamStorageRegistry,
         loggerFactory: LoggerFactory,
         @inject(ConfigInjectionToken) config: StrictStreamrClientConfig
     ) {

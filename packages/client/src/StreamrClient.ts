@@ -191,7 +191,6 @@ export class StreamrClient {
                 streamPartId,
                 options.resend,
                 this.resends,
-                this.streamStorageRegistry,
                 this.loggerFactory,
                 this.config
             )
