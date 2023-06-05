@@ -16,8 +16,6 @@ import { LoggerFactory } from '../utils/LoggerFactory'
 import { MessageStream } from './MessageStream'
 import { createSubscribePipeline } from './subscribePipeline'
 
-const MIN_SEQUENCE_NUMBER_VALUE = 0
-
 type QueryDict = Record<string, string | number | boolean | null | undefined>
 
 export interface ResendRef {
@@ -195,7 +193,7 @@ export class Resends {
 
     private async from(streamPartId: StreamPartID, {
         fromTimestamp,
-        fromSequenceNumber = MIN_SEQUENCE_NUMBER_VALUE,
+        fromSequenceNumber,
         publisherId
     }: {
         fromTimestamp: number
@@ -211,9 +209,9 @@ export class Resends {
 
     async range(streamPartId: StreamPartID, {
         fromTimestamp,
-        fromSequenceNumber = MIN_SEQUENCE_NUMBER_VALUE,
+        fromSequenceNumber,
         toTimestamp,
-        toSequenceNumber = MIN_SEQUENCE_NUMBER_VALUE,
+        toSequenceNumber,
         publisherId,
         msgChainId
     }: {
