@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { Wallet } from '@ethersproject/wallet'
-import { EncryptionType, MessageID, StreamMessage, StreamPartID, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
+import { EncryptionType, MessageID, StreamMessage, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
 import { collect, toEthereumAddress } from '@streamr/utils'
 import { mock } from 'jest-mock-extended'
@@ -15,6 +15,7 @@ import { LitProtocolFacade } from '../../src/encryption/LitProtocolFacade'
 import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
 import { StreamrClientEventEmitter } from '../../src/events'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
+import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
 import { createSubscribePipeline } from "../../src/subscribe/subscribePipeline"
 import { mockLoggerFactory } from '../test-utils/utils'
 import { GroupKey } from './../../src/encryption/GroupKey'
@@ -27,6 +28,7 @@ const CONTENT = {
 describe('subscribePipeline', () => {
 
     let pipeline: MessageStream
+    let streamRegistryCached: Partial<StreamRegistryCached>
     let streamPartId: StreamPartID
     let publisher: Wallet
 
@@ -55,7 +57,7 @@ describe('subscribePipeline', () => {
         streamPartId = StreamPartIDUtils.parse(`${randomEthereumAddress()}/path#0`)
         publisher = fastWallet()
         const stream = new Stream(
-            toStreamID(streamPartId),
+            StreamPartIDUtils.getStreamID(streamPartId),
             {
                 partitions: 1,
             },
@@ -81,6 +83,11 @@ describe('subscribePipeline', () => {
                 maxKeyRequestsPerSecond: 0
             }
         }
+        streamRegistryCached = {
+            getStream: async () => stream,
+            isStreamPublisher: async () => true,
+            clearStream: jest.fn()
+        } 
         pipeline = createSubscribePipeline({
             streamPartId,
             loggerFactory: mockLoggerFactory(),
@@ -94,11 +101,7 @@ describe('subscribePipeline', () => {
                 createPrivateKeyAuthentication(publisher.privateKey, {} as any),
                 config
             ),
-            streamRegistryCached: {
-                getStream: async () => stream,
-                isStreamPublisher: async () => true,
-                clearStream: () => {}
-            } as any,
+            streamRegistryCached: streamRegistryCached as any,
             destroySignal,
             config: config as any
         })
@@ -159,5 +162,7 @@ describe('subscribePipeline', () => {
         expect(error).toBeInstanceOf(DecryptError)
         expect(error.message).toMatch(/timed out/)
         expect(output).toEqual([])
+        expect(streamRegistryCached.clearStream).toBeCalledTimes(1)
+        expect(streamRegistryCached.clearStream).toBeCalledWith(StreamPartIDUtils.getStreamID(streamPartId))
     })
 })

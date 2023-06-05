@@ -51,7 +51,7 @@ export const createSubscribePipeline = (opts: SubscriptionPipelineOptions): Mess
         await validateStreamMessage(msg, opts.streamRegistryCached)
         if (StreamMessage.isAESEncrypted(msg)) {
             try {
-                return decrypt(msg, opts.groupKeyManager, opts.destroySignal)
+                return await decrypt(msg, opts.groupKeyManager, opts.destroySignal)
             } catch (err) {
                 // TODO log this in onError? if we want to log all errors?
                 logger.debug('Failed to decrypt', { messageId: msg.getMessageID(), err })
