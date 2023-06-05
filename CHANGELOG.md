@@ -23,6 +23,8 @@ found [here](packages/broker/CHANGELOG.md).
 
 #### Fixed
 
+- Clear permissions cache when message decryption fails (https://github.com/streamr-dev/network/pull/1458)
+
 #### Security
 
 ### cli-tools
