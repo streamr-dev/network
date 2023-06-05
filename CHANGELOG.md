@@ -15,11 +15,16 @@ found [here](packages/broker/CHANGELOG.md).
 
 #### Changed
 
+- Optimize message ordering and gap handling of resends (https://github.com/streamr-dev/network/pull/1460)
+
 #### Deprecated
 
 #### Removed
 
 #### Fixed
+
+- Clear permissions cache when message decryption fails (https://github.com/streamr-dev/network/pull/1458)
+- Fix default value handling for resend range queries (https://github.com/streamr-dev/network/pull/1462)
 
 #### Security
 

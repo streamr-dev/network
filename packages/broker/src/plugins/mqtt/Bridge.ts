@@ -1,9 +1,10 @@
-import { StreamPartID, toStreamID, toStreamPartID } from '@streamr/protocol'
+import { StreamID, StreamPartID, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { Logger } from '@streamr/utils'
 import without from 'lodash/without'
 import { MessageMetadata, StreamrClient, Subscription } from 'streamr-client'
-import { PayloadFormat } from '../../helpers/PayloadFormat'
+import { Message, PayloadFormat } from '../../helpers/PayloadFormat'
 import { parsePositiveInteger, parseQueryAndBase, parseQueryParameter } from '../../helpers/parser'
+import { PublishPartitionDefinition, getPartitionKey, parsePublishPartitionDefinition } from '../../helpers/partitions'
 import { MqttServer, MqttServerListener } from './MqttServer'
 
 const DEFAULT_PARTITION = 0
@@ -39,17 +40,23 @@ export class Bridge implements MqttServerListener {
     }
 
     async onMessageReceived(topic: string, payload: string, clientId: string): Promise<void> {
-        let message
+        let message: Message
+        let streamPart: { streamId: StreamID } & PublishPartitionDefinition
         try {
             message = this.payloadFormat.createMessage(payload)
+            streamPart = this.getPublishStreamPart(topic)
         } catch (err) {
             logger.warn('Unable to form message', { err, topic, clientId })
             return
         }
         const { content, metadata } = message
         try {
-            const publishedMessage = await this.streamrClient.publish(this.getStreamPartition(topic), content, {
+            const publishedMessage = await this.streamrClient.publish({
+                id: streamPart.streamId,
+                partition: streamPart.partition
+            }, content, {
                 timestamp: metadata.timestamp,
+                partitionKey: getPartitionKey(content, streamPart),
                 msgChainId: clientId
             })
             this.publishMessageChains.add(createMessageChainKey(publishedMessage))
@@ -60,7 +67,7 @@ export class Bridge implements MqttServerListener {
 
     async onSubscribed(topic: string, clientId: string): Promise<void> {
         logger.info('Handle client subscribe', { clientId, topic })
-        const streamPart = this.getStreamPartition(topic)
+        const streamPart = this.getSubscribeStreamPart(topic)
         const existingSubscription = this.getSubscription(streamPart)
         if (existingSubscription === undefined) {
             const streamrClientSubscription = await this.streamrClient.subscribe(streamPart, (content: any, metadata: MessageMetadata) => {
@@ -105,7 +112,7 @@ export class Bridge implements MqttServerListener {
 
     onUnsubscribed(topic: string, clientId: string): void {
         logger.info('Handle client unsubscribe', { clientId, topic })
-        const streamPart = this.getStreamPartition(topic)
+        const streamPart = this.getSubscribeStreamPart(topic)
         const existingSubscription = this.getSubscription(streamPart)
         if (existingSubscription !== undefined) {
             existingSubscription.clientIds = without(existingSubscription.clientIds, clientId)
@@ -116,11 +123,22 @@ export class Bridge implements MqttServerListener {
         }
     }
 
-    private getStreamPartition(topic: string): StreamPartID {
+    private getSubscribeStreamPart(topic: string): StreamPartID {
         const { base, query } = parseQueryAndBase(topic)
-        const streamId = (this.streamIdDomain !== undefined) ? `${this.streamIdDomain}/${base}` : base
         const partition = parseQueryParameter('partition', query, parsePositiveInteger)
-        return toStreamPartID(toStreamID(streamId), partition ?? DEFAULT_PARTITION)
+        return toStreamPartID(this.getStreamId(base), partition ?? DEFAULT_PARTITION)
+    }
+
+    private getPublishStreamPart(topic: string): { streamId: StreamID } & PublishPartitionDefinition {
+        const { base, query } = parseQueryAndBase(topic)
+        return {
+            streamId: this.getStreamId(base),
+            ...parsePublishPartitionDefinition(query)
+        }
+    }
+
+    private getStreamId(topicBase: string): StreamID {
+        return toStreamID((this.streamIdDomain !== undefined) ? `${this.streamIdDomain}/${topicBase}` : topicBase)
     }
 
     private getSubscription(streamPartId: StreamPartID): StreamSubscription | undefined {

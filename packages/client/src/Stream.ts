@@ -187,12 +187,11 @@ export class Stream {
      */
     async detectFields(): Promise<void> {
         // Get last message of the stream to be used for field detecting
-        const sub = await this._resends.last(
+        const sub = await this._resends.resend(
             toStreamPartID(this.id, DEFAULT_PARTITION),
             {
-                count: 1,
-            },
-            false
+                last: 1
+            }
         )
 
         const receivedMsgs = await collect(sub)

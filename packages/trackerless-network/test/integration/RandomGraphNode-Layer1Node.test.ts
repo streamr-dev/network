@@ -146,7 +146,7 @@ describe('RandomGraphNode-DhtNode', () => {
 
         logger.info(`AVG Number of neighbors: ${avg}`)
         await Promise.all(graphNodes.map((node) =>
-            waitForCondition(() => node.getNumberOfOutgoingHandshakes() == 0)
+            waitForCondition(() => node.getNumberOfOutgoingHandshakes() === 0)
         ))
         await wait(20000)
         let mismatchCounter = 0

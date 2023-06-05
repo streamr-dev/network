@@ -1,12 +1,13 @@
 import { inject } from 'tsyringe'
 import { Subscription } from './Subscription'
-import { StreamMessage, StreamPartID } from '@streamr/protocol'
+import { StreamMessage, StreamPartID, StreamID } from '@streamr/protocol'
 import { ConfigInjectionToken } from '../Config'
 import { OrderMessages } from './OrderMessages'
 import { ResendOptions, Resends } from './Resends'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { StrictStreamrClientConfig } from './../Config'
 import { MessageStream } from './MessageStream'
+import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
 
 export class ResendSubscription extends Subscription {
 
@@ -18,6 +19,7 @@ export class ResendSubscription extends Subscription {
         streamPartId: StreamPartID,
         resendOptions: ResendOptions,
         resends: Resends,
+        streamStorageRegistry: StreamStorageRegistry,
         loggerFactory: LoggerFactory,
         @inject(ConfigInjectionToken) config: StrictStreamrClientConfig
     ) {
@@ -30,7 +32,8 @@ export class ResendSubscription extends Subscription {
                 config,
                 resends,
                 streamPartId,
-                loggerFactory
+                loggerFactory,
+                (streamId: StreamID) => streamStorageRegistry.getStorageNodes(streamId)
             )
             this.pipe(orderMessages.transform())
             this.onBeforeFinally.listen(() => orderMessages.stop())

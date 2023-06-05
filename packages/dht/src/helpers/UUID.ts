@@ -21,7 +21,7 @@ export class UUID {
     }
 
     equals(other: UUID): boolean {
-        return (Buffer.compare(this.buf, other.value) == 0)
+        return (Buffer.compare(this.buf, other.value) === 0)
     }
 
     get value(): Uint8Array {

@@ -389,7 +389,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (this.connectionManager) {
             this.bucket!.remove(peerDescriptor.kademliaId)
 
-            if (dicsonnectionType == 'OUTGOING_GRACEFUL_LEAVE' || dicsonnectionType == 'INCOMING_GRACEFUL_LEAVE') {
+            if (dicsonnectionType === 'OUTGOING_GRACEFUL_LEAVE' || dicsonnectionType === 'INCOMING_GRACEFUL_LEAVE') {
                 logger.trace( this.config.nodeName + ', ' + peerDescriptor.nodeName + ' ' + 'onTransportDisconnected with type ' + dicsonnectionType)
                 this.removeContact(peerDescriptor, true)
             } else {
@@ -485,9 +485,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             return
         }
         this.contactOnAddedCounter++
-        if (this.config.nodeName == '1') {
-            logger.trace('peer1 contactOnAddCounter: ' + this.contactOnAddedCounter)
-        }
         if (!this.stopped && !contact.getPeerId().equals(this.ownPeerId!)) {
             // Important to lock here, before the ping result is known
             this.connectionManager?.weakLockConnection(contact.getPeerDescriptor())

@@ -27,7 +27,8 @@ const createTransform = (resends: Pick<Resends, 'range'>, config = CONFIG) => {
         config as any,
         resends as any,
         STREAM_PART_ID,
-        mockLoggerFactory()
+        mockLoggerFactory(),
+        undefined as any
     ).transform()
 }
 
@@ -82,7 +83,8 @@ describe('OrderMessages', () => {
                 publisherId: PUBLISHER_ID,
                 msgChainId: MSG_CHAIN_ID
             },
-            true
+            true,
+            undefined
         )
     })
 
@@ -105,7 +107,8 @@ describe('OrderMessages', () => {
                 publisherId: PUBLISHER_ID,
                 msgChainId: MSG_CHAIN_ID
             },
-            true
+            true,
+            undefined
         )
     })
 
@@ -131,7 +134,8 @@ describe('OrderMessages', () => {
                 publisherId: PUBLISHER_ID,
                 msgChainId: MSG_CHAIN_ID
             },
-            true
+            true,
+            undefined
         )
         expect(resends.range).toHaveBeenNthCalledWith(2,
             STREAM_PART_ID,
@@ -143,7 +147,8 @@ describe('OrderMessages', () => {
                 publisherId: PUBLISHER_ID,
                 msgChainId: MSG_CHAIN_ID
             },
-            true
+            true,
+            undefined
         )
     })
 

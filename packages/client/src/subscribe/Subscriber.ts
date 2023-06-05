@@ -1,18 +1,19 @@
-import { inject, scoped, Lifecycle, delay } from 'tsyringe'
-import { allSettledValues } from '../utils/promises'
-import { SubscriptionSession } from './SubscriptionSession'
-import { Subscription } from './Subscription'
 import { StreamPartID } from '@streamr/protocol'
-import { StreamIDBuilder } from '../StreamIDBuilder'
-import { StreamDefinition } from '../types'
-import { Resends } from './Resends'
-import { NetworkNodeFacade } from '../NetworkNodeFacade'
-import { DestroySignal } from '../DestroySignal'
-import { ConfigInjectionToken, StrictStreamrClientConfig, JsonPeerDescriptor } from '../Config'
-import { StreamRegistryCached } from '../registry/StreamRegistryCached'
-import { LoggerFactory } from '../utils/LoggerFactory'
 import { Logger } from '@streamr/utils'
+import { Lifecycle, delay, inject, scoped } from 'tsyringe'
+import { ConfigInjectionToken, StrictStreamrClientConfig, JsonPeerDescriptor } from '../Config'
+import { DestroySignal } from '../DestroySignal'
+import { NetworkNodeFacade } from '../NetworkNodeFacade'
+import { StreamIDBuilder } from '../StreamIDBuilder'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'
+import { StreamRegistryCached } from '../registry/StreamRegistryCached'
+import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
+import { StreamDefinition } from '../types'
+import { LoggerFactory } from '../utils/LoggerFactory'
+import { allSettledValues } from '../utils/promises'
+import { Resends } from './Resends'
+import { Subscription } from './Subscription'
+import { SubscriptionSession } from './SubscriptionSession'
 
 @scoped(Lifecycle.ContainerScoped)
 export class Subscriber {
@@ -21,6 +22,7 @@ export class Subscriber {
     private readonly resends: Resends
     private readonly groupKeyManager: GroupKeyManager
     private readonly streamRegistryCached: StreamRegistryCached
+    private readonly streamStorageRegistry: StreamStorageRegistry
     private readonly node: NetworkNodeFacade
     private readonly destroySignal: DestroySignal
     private readonly config: StrictStreamrClientConfig
@@ -32,6 +34,7 @@ export class Subscriber {
         resends: Resends,
         groupKeyManager: GroupKeyManager,
         @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
+        streamStorageRegistry: StreamStorageRegistry,
         node: NetworkNodeFacade,
         destroySignal: DestroySignal,
         @inject(ConfigInjectionToken) config: StrictStreamrClientConfig,
@@ -41,6 +44,7 @@ export class Subscriber {
         this.resends = resends
         this.groupKeyManager = groupKeyManager
         this.streamRegistryCached = streamRegistryCached
+        this.streamStorageRegistry = streamStorageRegistry
         this.node = node
         this.destroySignal = destroySignal
         this.config = config
@@ -57,6 +61,7 @@ export class Subscriber {
             this.resends,
             this.groupKeyManager,
             this.streamRegistryCached,
+            this.streamStorageRegistry,
             this.node,
             this.destroySignal,
             this.loggerFactory,
