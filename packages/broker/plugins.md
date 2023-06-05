@@ -236,6 +236,9 @@ By default the plugin publishes and subscribes to partition `0`. If you want to 
 await client.publish('/foobar?partition=5', ...)
 ```
 
+For publishing, it is also possible select the partition using `partitionKey`/`partitionKeyField` query parameter in the topic. See [above](#partitions) how the partition is calculated in that case.
+
+
 ## HTTP
 
 At the moment, only publishing is supported over HTTP. To subscribe, use one of the other protocol plugins as they allow a continuous streaming connection.
