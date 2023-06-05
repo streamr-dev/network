@@ -121,8 +121,7 @@ export class Resends {
             return this.fetchStream('last', streamPartId, {
                 count: options.last,
             }, options.raw ?? false, getStorageNodes)
-        }
-        if (isResendRange(options)) {
+        } else if (isResendRange(options)) {
             return this.fetchStream('range',streamPartId, {
                 fromTimestamp: new Date(options.from.timestamp).getTime(),
                 fromSequenceNumber: options.from.sequenceNumber,
@@ -131,18 +130,18 @@ export class Resends {
                 publisherId: options.publisherId !== undefined ? toEthereumAddress(options.publisherId) : undefined,
                 msgChainId: options.msgChainId,
             }, options.raw ?? false, getStorageNodes)
-        }
-        if (isResendFrom(options)) {
+        } else if (isResendFrom(options)) {
             return this.fetchStream('from', streamPartId, {
                 fromTimestamp: new Date(options.from.timestamp).getTime(),
                 fromSequenceNumber: options.from.sequenceNumber,
                 publisherId: options.publisherId !== undefined ? toEthereumAddress(options.publisherId) : undefined,
             }, options.raw ?? false, getStorageNodes)
+        } else {
+            throw new StreamrClientError(
+                `can not resend without valid resend options: ${JSON.stringify({ streamPartId, options })}`,
+                'INVALID_ARGUMENT'
+            )
         }
-        throw new StreamrClientError(
-            `can not resend without valid resend options: ${JSON.stringify({ streamPartId, options })}`,
-            'INVALID_ARGUMENT'
-        )
     }
 
     private async fetchStream(
