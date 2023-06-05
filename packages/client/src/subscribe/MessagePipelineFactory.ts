@@ -33,7 +33,6 @@ export class MessagePipelineFactory {
         @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
         destroySignal: DestroySignal,
         loggerFactory: LoggerFactory,
-        // eslint-disable-next-line max-len
         @inject(ConfigInjectionToken) config: MessagePipelineOptions['config']
     ) {
         this.resends = resends
