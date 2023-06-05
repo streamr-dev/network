@@ -13,7 +13,6 @@ export class ResendSubscription extends Subscription {
 
     private resendOptions: ResendOptions
     private resends: Resends
-    private readonly streamStorageRegistry: StreamStorageRegistry
 
     /** @internal */
     constructor(
@@ -27,7 +26,6 @@ export class ResendSubscription extends Subscription {
         super(streamPartId, false, loggerFactory)
         this.resendOptions = resendOptions
         this.resends = resends
-        this.streamStorageRegistry = streamStorageRegistry
         this.pipe(this.resendThenRealtime.bind(this))
         if (config.orderMessages) {
             const orderMessages = new OrderMessages(
