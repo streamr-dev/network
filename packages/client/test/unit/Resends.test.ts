@@ -64,7 +64,6 @@ describe('Resends', () => {
                     yield* messages
                 }
             } as any,
-            undefined as any,
             mockLoggerFactory()
         )
         return resends

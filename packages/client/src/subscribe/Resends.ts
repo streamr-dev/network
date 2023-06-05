@@ -1,11 +1,9 @@
-import { StreamID, StreamPartID, StreamPartIDUtils, toStreamPartID } from '@streamr/protocol'
-import { EthereumAddress, Logger, collect, randomString, toEthereumAddress, wait } from '@streamr/utils'
+import { StreamID, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
+import { EthereumAddress, Logger, randomString, toEthereumAddress } from '@streamr/utils'
 import random from 'lodash/random'
 import without from 'lodash/without'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { HttpUtil, createQueryString } from '../HttpUtil'
-import { Message } from '../Message'
 import { StreamrClientError } from '../StreamrClientError'
 import { StorageNodeRegistry } from '../registry/StorageNodeRegistry'
 import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
@@ -82,7 +80,6 @@ export class Resends {
     private readonly streamStorageRegistry: StreamStorageRegistry
     private readonly storageNodeRegistry: StorageNodeRegistry
     private readonly httpUtil: HttpUtil
-    private readonly config: StrictStreamrClientConfig
     private readonly logger: Logger
 
     constructor(
@@ -90,14 +87,12 @@ export class Resends {
         streamStorageRegistry: StreamStorageRegistry,
         @inject(delay(() => StorageNodeRegistry)) storageNodeRegistry: StorageNodeRegistry,
         httpUtil: HttpUtil,
-        @inject(ConfigInjectionToken) config: StrictStreamrClientConfig,
         loggerFactory: LoggerFactory
     ) {
         this.messagePipelineFactory = messagePipelineFactory
         this.streamStorageRegistry = streamStorageRegistry
         this.storageNodeRegistry = storageNodeRegistry
         this.httpUtil = httpUtil
-        this.config = config
         this.logger = loggerFactory.createLogger(module)
     }
 
@@ -182,61 +177,5 @@ export class Resends {
             this.logger.debug('Finished resend', { loggerIdx: traceId, messageCount: count })
         }))
         return messageStream
-    }
-
-    async waitForStorage(
-        message: Message,
-        {
-            // eslint-disable-next-line no-underscore-dangle
-            interval = this.config._timeouts.storageNode.retryInterval,
-            // eslint-disable-next-line no-underscore-dangle
-            timeout = this.config._timeouts.storageNode.timeout,
-            count = 100,
-            messageMatchFn = (msgTarget: Message, msgGot: Message) => {
-                return msgTarget.signature === msgGot.signature
-            }
-        }: {
-            interval?: number
-            timeout?: number
-            count?: number
-            messageMatchFn?: (msgTarget: Message, msgGot: Message) => boolean
-        } = {}
-    ): Promise<void> {
-        if (!message) {
-            throw new StreamrClientError('waitForStorage requires a Message', 'INVALID_ARGUMENT')
-        }
-
-        const start = Date.now()
-        let last: Message[] | undefined
-        let found = false
-        while (!found) {
-            const duration = Date.now() - start
-            if (duration > timeout) {
-                this.logger.debug('Timed out waiting for storage to contain message', {
-                    expected: message.streamMessage.getMessageID(),
-                    lastReceived: last?.map((l) => l.streamMessage.getMessageID()),
-                })
-                throw new Error(`timed out after ${duration}ms waiting for message`)
-            }
-
-            const resendStream = await this.resend(toStreamPartID(message.streamId, message.streamPartition), { last: count })
-            last = await collect(resendStream)
-            for (const lastMsg of last) {
-                if (messageMatchFn(message, lastMsg)) {
-                    found = true
-                    this.logger.debug('Found matching message')
-                    return
-                }
-            }
-
-            this.logger.debug('Retry after delay (matching message not found)', {
-                expected: message.streamMessage.getMessageID(),
-                'last-3': last.slice(-3).map((l) => l.streamMessage.getMessageID()),
-                delayInMs: interval
-            })
-
-            await wait(interval)
-        }
-        /* eslint-enable no-await-in-loop */
     }
 }
