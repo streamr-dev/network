@@ -122,22 +122,22 @@ export class Resends {
                 return emptyStream
             }
             return this.fetchStream('last', streamPartId, {
-                count: options.last,
+                count: options.last
             }, raw, getStorageNodes)
         } else if (isResendRange(options)) {
-            return this.fetchStream('range',streamPartId, {
+            return this.fetchStream('range', streamPartId, {
                 fromTimestamp: new Date(options.from.timestamp).getTime(),
                 fromSequenceNumber: options.from.sequenceNumber,
                 toTimestamp: new Date(options.to.timestamp).getTime(),
                 toSequenceNumber: options.to.sequenceNumber,
                 publisherId: options.publisherId !== undefined ? toEthereumAddress(options.publisherId) : undefined,
-                msgChainId: options.msgChainId,
+                msgChainId: options.msgChainId
             }, raw, getStorageNodes)
         } else if (isResendFrom(options)) {
             return this.fetchStream('from', streamPartId, {
                 fromTimestamp: new Date(options.from.timestamp).getTime(),
                 fromSequenceNumber: options.from.sequenceNumber,
-                publisherId: options.publisherId !== undefined ? toEthereumAddress(options.publisherId) : undefined,
+                publisherId: options.publisherId !== undefined ? toEthereumAddress(options.publisherId) : undefined
             }, raw, getStorageNodes)
         } else {
             throw new StreamrClientError(
