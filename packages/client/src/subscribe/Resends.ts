@@ -1,14 +1,10 @@
 import { StreamPartID, StreamPartIDUtils, toStreamPartID } from '@streamr/protocol'
-import { Lifecycle, delay, inject, scoped } from 'tsyringe'
-
-import { MessageStream } from './MessageStream'
-import { createSubscribePipeline } from './subscribePipeline'
-
 import { EthereumAddress, Logger, collect, randomString, toEthereumAddress, wait } from '@streamr/utils'
 import random from 'lodash/random'
+import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { DestroySignal } from '../DestroySignal'
-import { HttpUtil } from '../HttpUtil'
+import { HttpUtil, createQueryString } from '../HttpUtil'
 import { Message } from '../Message'
 import { StreamrClientError } from '../StreamrClientError'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'
@@ -17,6 +13,8 @@ import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
 import { counting } from '../utils/GeneratorUtils'
 import { LoggerFactory } from '../utils/LoggerFactory'
+import { MessageStream } from './MessageStream'
+import { createSubscribePipeline } from './subscribePipeline'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 
@@ -67,6 +65,16 @@ function isResendFrom<T extends ResendFromOptions>(options: any): options is T {
 
 function isResendRange<T extends ResendRangeOptions>(options: any): options is T {
     return options && typeof options === 'object' && 'from' in options && 'to' in options && options.to && options.from != null
+}
+
+const createUrl = (baseUrl: string, endpointSuffix: string, streamPartId: StreamPartID, query: QueryDict = {}): string => {
+    const queryMap = {
+        ...query,
+        format: 'raw'
+    }
+    const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
+    const queryString = createQueryString(queryMap)
+    return `${baseUrl}/streams/${encodeURIComponent(streamId)}/data/partitions/${streamPartition}/${endpointSuffix}?${queryString}`
 }
 
 @scoped(Lifecycle.ContainerScoped)
@@ -155,7 +163,7 @@ export class Resends {
 
         const nodeAddress = nodeAddresses[random(0, nodeAddresses.length - 1)]
         const nodeUrl = (await this.storageNodeRegistry.getStorageNodeMetadata(nodeAddress)).http
-        const url = this.createUrl(nodeUrl, endpointSuffix, streamPartId, query)
+        const url = createUrl(nodeUrl, endpointSuffix, streamPartId, query)
         const messageStream = (raw === false) ? createSubscribePipeline({
             streamPartId,
             resends: this,
@@ -277,15 +285,5 @@ export class Resends {
             await wait(interval)
         }
         /* eslint-enable no-await-in-loop */
-    }
-
-    private createUrl(baseUrl: string, endpointSuffix: string, streamPartId: StreamPartID, query: QueryDict = {}): string {
-        const queryMap = {
-            ...query,
-            format: 'raw'
-        }
-        const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
-        const queryString = this.httpUtil.createQueryString(queryMap)
-        return `${baseUrl}/streams/${encodeURIComponent(streamId)}/data/partitions/${streamPartition}/${endpointSuffix}?${queryString}`
     }
 }
