@@ -16,7 +16,7 @@ import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchang
 import { StreamrClientEventEmitter } from '../../src/events'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
-import { createSubscribePipeline } from "../../src/subscribe/subscribePipeline"
+import { createMessagePipeline } from "../../src/subscribe/messagePipeline"
 import { mockLoggerFactory } from '../test-utils/utils'
 import { GroupKey } from './../../src/encryption/GroupKey'
 import { MessageStream } from './../../src/subscribe/MessageStream'
@@ -25,7 +25,7 @@ const CONTENT = {
     foo: 'bar'
 }
 
-describe('subscribePipeline', () => {
+describe('messagePipeline', () => {
 
     let pipeline: MessageStream
     let streamRegistryCached: Partial<StreamRegistryCached>
@@ -88,7 +88,7 @@ describe('subscribePipeline', () => {
             isStreamPublisher: async () => true,
             clearStream: jest.fn()
         } 
-        pipeline = createSubscribePipeline({
+        pipeline = createMessagePipeline({
             streamPartId,
             getStorageNodes: undefined as any,
             loggerFactory: mockLoggerFactory(),

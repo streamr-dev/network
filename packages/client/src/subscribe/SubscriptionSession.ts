@@ -12,7 +12,7 @@ import { Signal } from '../utils/Signal'
 import { MessageStream } from './MessageStream'
 import { Resends } from './Resends'
 import { Subscription } from './Subscription'
-import { createSubscribePipeline } from './subscribePipeline'
+import { createMessagePipeline } from './messagePipeline'
 
 /**
  * Manages adding & removing subscriptions to node as needed.
@@ -44,7 +44,7 @@ export class SubscriptionSession {
         this.distributeMessage = this.distributeMessage.bind(this)
         this.node = node
         this.onError = this.onError.bind(this)
-        this.pipeline = createSubscribePipeline({
+        this.pipeline = createMessagePipeline({
             streamPartId,
             getStorageNodes: (streamId: StreamID) => streamStorageRegistry.getStorageNodes(streamId),
             resends,

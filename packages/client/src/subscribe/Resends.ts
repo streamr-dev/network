@@ -15,7 +15,7 @@ import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
 import { counting } from '../utils/GeneratorUtils'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { MessageStream } from './MessageStream'
-import { createSubscribePipeline } from './subscribePipeline'
+import { createMessagePipeline } from './messagePipeline'
 
 type QueryDict = Record<string, string | number | boolean | null | undefined>
 
@@ -176,7 +176,7 @@ export class Resends {
         const nodeUrl = (await this.storageNodeRegistry.getStorageNodeMetadata(nodeAddress)).http
         const url = createUrl(nodeUrl, resendType, streamPartId, query)
         const config = (nodeAddresses.length > 1) ? this.config : { ...this.config, orderMessages: false }
-        const messageStream = (raw === false) ? createSubscribePipeline({
+        const messageStream = (raw === false) ? createMessagePipeline({
             streamPartId,
             getStorageNodes: async () => without(nodeAddresses, nodeAddress),
             resends: this,
