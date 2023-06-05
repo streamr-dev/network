@@ -107,20 +107,23 @@ export class Resends {
         this.logger = loggerFactory.createLogger(module)
     }
 
-    resend(
+    async resend(
         streamPartId: StreamPartID, 
         options: ResendOptions & { raw?: boolean }, 
         getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>
     ): Promise<MessageStream> {
-
         if (isResendLast(options)) {
-            return this.last(streamPartId, {
+            if (options.last <= 0) {
+                const emptyStream = new MessageStream()
+                emptyStream.endWrite()
+                return emptyStream
+            }
+            return this.fetchStream('last', streamPartId, {
                 count: options.last,
             }, options.raw ?? false, getStorageNodes)
         }
-
         if (isResendRange(options)) {
-            return this.range(streamPartId, {
+            return this.fetchStream('range',streamPartId, {
                 fromTimestamp: new Date(options.from.timestamp).getTime(),
                 fromSequenceNumber: options.from.sequenceNumber,
                 toTimestamp: new Date(options.to.timestamp).getTime(),
@@ -129,15 +132,13 @@ export class Resends {
                 msgChainId: options.msgChainId,
             }, options.raw ?? false, getStorageNodes)
         }
-
         if (isResendFrom(options)) {
-            return this.from(streamPartId, {
+            return this.fetchStream('from', streamPartId, {
                 fromTimestamp: new Date(options.from.timestamp).getTime(),
                 fromSequenceNumber: options.from.sequenceNumber,
                 publisherId: options.publisherId !== undefined ? toEthereumAddress(options.publisherId) : undefined,
             }, options.raw ?? false, getStorageNodes)
         }
-
         throw new StreamrClientError(
             `can not resend without valid resend options: ${JSON.stringify({ streamPartId, options })}`,
             'INVALID_ARGUMENT'
@@ -184,64 +185,6 @@ export class Resends {
             this.logger.debug('Finished resend', { loggerIdx: traceId, messageCount: count })
         }))
         return messageStream
-    }
-
-    private async last(
-        streamPartId: StreamPartID,
-        { count }: { count: number },
-        raw: boolean,
-        getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>
-    ): Promise<MessageStream> {
-        if (count <= 0) {
-            const emptyStream = new MessageStream()
-            emptyStream.endWrite()
-            return emptyStream
-        }
-
-        return this.fetchStream('last', streamPartId, {
-            count,
-        }, raw, getStorageNodes)
-    }
-
-    private async from(streamPartId: StreamPartID, {
-        fromTimestamp,
-        fromSequenceNumber,
-        publisherId
-    }: {
-        fromTimestamp: number
-        fromSequenceNumber?: number
-        publisherId?: EthereumAddress
-    }, raw: boolean, getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>): Promise<MessageStream> {
-        return this.fetchStream('from', streamPartId, {
-            fromTimestamp,
-            fromSequenceNumber,
-            publisherId,
-        }, raw, getStorageNodes)
-    }
-
-    private async range(streamPartId: StreamPartID, {
-        fromTimestamp,
-        fromSequenceNumber,
-        toTimestamp,
-        toSequenceNumber,
-        publisherId,
-        msgChainId
-    }: {
-        fromTimestamp: number
-        fromSequenceNumber?: number
-        toTimestamp: number
-        toSequenceNumber?: number
-        publisherId?: EthereumAddress
-        msgChainId?: string
-    }, raw: boolean, getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>): Promise<MessageStream> {
-        return this.fetchStream('range', streamPartId, {
-            fromTimestamp,
-            fromSequenceNumber,
-            toTimestamp,
-            toSequenceNumber,
-            publisherId,
-            msgChainId
-        }, raw, getStorageNodes)
     }
 
     async waitForStorage(
