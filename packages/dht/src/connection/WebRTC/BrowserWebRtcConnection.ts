@@ -83,7 +83,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
     }
 
     public async setRemoteDescription(description: string, type: string): Promise<void> {
-        const offerCollision = (type.toLowerCase() == RtcDescription.OFFER) && (this.makingOffer || !this.peerConnection ||
+        const offerCollision = (type.toLowerCase() === RtcDescription.OFFER) && (this.makingOffer || !this.peerConnection ||
             this.peerConnection.signalingState != "stable")
 
         const ignoreOffer = this.isOffering && offerCollision
@@ -96,7 +96,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
             logger.warn('error', { err })
         }
 
-        if (type.toLowerCase() == RtcDescription.OFFER && this.peerConnection) {
+        if (type.toLowerCase() === RtcDescription.OFFER && this.peerConnection) {
             try {
                 await this.peerConnection.setLocalDescription()
             } catch (err) {
@@ -166,7 +166,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
     }
 
     public send(data: Uint8Array): void {
-        if (this.lastState == 'connected') {
+        if (this.lastState === 'connected') {
             this.dataChannel?.send(data as Buffer)
         } else {
             logger.warn('Tried to send on a connection with last state ' + this.lastState)
