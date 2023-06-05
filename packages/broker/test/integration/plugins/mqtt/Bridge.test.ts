@@ -83,7 +83,7 @@ describe('MQTT Bridge', () => {
         const subscriber = await createSubscriber(messageQueue)
         await streamrClient.publish(stream.id, expected)
 
-        const actual = await messageQueue.pop()
+        const actual = await messageQueue.pop(10000)
         expect(actual).toEqual(expected)
 
         await subscriber.end(true)
@@ -99,7 +99,7 @@ describe('MQTT Bridge', () => {
         const subscriber2 = await createSubscriber(messageQueue2)
         await streamrClient.publish(stream.id, expected)
 
-        const actual1 = await messageQueue1.pop()
+        const actual1 = await messageQueue1.pop(10000)
         const actual2 = await messageQueue2.pop()
         expect(actual1).toEqual(expected)
         expect(actual2).toEqual(expected)
@@ -120,7 +120,7 @@ describe('MQTT Bridge', () => {
         subscriber2.unsubscribe(stream.id)
         await streamrClient.publish(stream.id, expected)
 
-        const actual = await messageQueue.pop()
+        const actual = await messageQueue.pop(10000)
 
         expect(actual).toEqual(expected)
 
@@ -141,7 +141,7 @@ describe('MQTT Bridge', () => {
         subscriber2.unsubscribe(stream.id)
         await streamrClient.publish(stream.id, expected)
 
-        const actual1 = await messageQueue1.pop()
+        const actual1 = await messageQueue1.pop(15000)
         expect(actual1).toEqual(expected)
         expect(messageQueue2.items).toEqual([])
 

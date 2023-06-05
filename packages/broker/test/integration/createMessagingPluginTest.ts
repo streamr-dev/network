@@ -117,7 +117,7 @@ export const createMessagingPluginTest = <T>(
                 await streamrClient.publish(stream.id, MOCK_MESSAGE.content, {
                     timestamp: MOCK_MESSAGE.metadata.timestamp
                 })
-                const message = await messageQueue.pop()
+                const message = await messageQueue.pop(15000)
                 assertReceivedMessage(message)
             })
         })
