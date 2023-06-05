@@ -1,8 +1,8 @@
 /**
  * Makes OrderingUtil more compatible with use in pipeline.
  */
-import { MessageRef, StreamMessage, StreamPartID } from '@streamr/protocol'
-import { Logger } from '@streamr/utils'
+import { MessageRef, StreamID, StreamMessage, StreamPartID } from '@streamr/protocol'
+import { EthereumAddress, Logger } from '@streamr/utils'
 import { StrictStreamrClientConfig } from '../Config'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { PushBuffer } from '../utils/PushBuffer'
@@ -26,16 +26,19 @@ export class OrderMessages {
     private readonly resends: Resends
     private readonly streamPartId: StreamPartID
     private readonly logger: Logger
+    private readonly getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>
 
     constructor(
         config: Pick<StrictStreamrClientConfig, 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill'>,
         resends: Resends,
         streamPartId: StreamPartID,
-        loggerFactory: LoggerFactory
+        loggerFactory: LoggerFactory,
+        getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>
     ) {
         this.resends = resends
         this.streamPartId = streamPartId
         this.logger = loggerFactory.createLogger(module)
+        this.getStorageNodes = getStorageNodes
         this.onOrdered = this.onOrdered.bind(this)
         this.onGap = this.onGap.bind(this)
         this.maybeClose = this.maybeClose.bind(this)
@@ -72,7 +75,7 @@ export class OrderMessages {
                 toSequenceNumber: to.sequenceNumber,
                 publisherId: context.publisherId,
                 msgChainId: context.msgChainId,
-            }, true)
+            }, true, this.getStorageNodes)
             resendMessageStream.onFinally.listen(() => {
                 this.resendStreams.delete(resendMessageStream)
             })

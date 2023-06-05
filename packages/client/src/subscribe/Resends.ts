@@ -1,6 +1,7 @@
-import { StreamPartID, StreamPartIDUtils, toStreamPartID } from '@streamr/protocol'
+import { StreamID, StreamPartID, StreamPartIDUtils, toStreamPartID } from '@streamr/protocol'
 import { EthereumAddress, Logger, collect, randomString, toEthereumAddress, wait } from '@streamr/utils'
 import random from 'lodash/random'
+import without from 'lodash/without'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { DestroySignal } from '../DestroySignal'
@@ -111,10 +112,12 @@ export class Resends {
     }
 
     resend(streamPartId: StreamPartID, options: ResendOptions): Promise<MessageStream> {
+        const getStorageNodes = (streamId: StreamID) => this.streamStorageRegistry.getStorageNodes(streamId)
+
         if (isResendLast(options)) {
             return this.last(streamPartId, {
                 count: options.last,
-            }, false)
+            }, false, getStorageNodes)
         }
 
         if (isResendRange(options)) {
@@ -125,7 +128,7 @@ export class Resends {
                 toSequenceNumber: options.to.sequenceNumber,
                 publisherId: options.publisherId !== undefined ? toEthereumAddress(options.publisherId) : undefined,
                 msgChainId: options.msgChainId,
-            }, false)
+            }, false, getStorageNodes)
         }
 
         if (isResendFrom(options)) {
@@ -133,7 +136,7 @@ export class Resends {
                 fromTimestamp: new Date(options.from.timestamp).getTime(),
                 fromSequenceNumber: options.from.sequenceNumber,
                 publisherId: options.publisherId !== undefined ? toEthereumAddress(options.publisherId) : undefined,
-            }, false)
+            }, false, getStorageNodes)
         }
 
         throw new StreamrClientError(
@@ -146,7 +149,8 @@ export class Resends {
         endpointSuffix: 'last' | 'range' | 'from',
         streamPartId: StreamPartID,
         query: QueryDict,
-        raw: boolean
+        raw: boolean,
+        getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>
     ): Promise<MessageStream> {
         const traceId = randomString(5)
         this.logger.debug('Fetch resend data', {
@@ -156,7 +160,7 @@ export class Resends {
             query
         })
         const streamId = StreamPartIDUtils.getStreamID(streamPartId)
-        const nodeAddresses = await this.streamStorageRegistry.getStorageNodes(streamId)
+        const nodeAddresses = await getStorageNodes(streamId)
         if (!nodeAddresses.length) {
             throw new StreamrClientError(`no storage assigned: ${streamId}`, 'NO_STORAGE_NODES')
         }
@@ -167,6 +171,7 @@ export class Resends {
         const config = (nodeAddresses.length > 1) ? this.config : { ...this.config, orderMessages: false }
         const messageStream = (raw === false) ? createSubscribePipeline({
             streamPartId,
+            getStorageNodes: async () => without(nodeAddresses, nodeAddress),
             resends: this,
             groupKeyManager: this.groupKeyManager,
             streamRegistryCached: this.streamRegistryCached,
@@ -182,7 +187,12 @@ export class Resends {
         return messageStream
     }
 
-    async last(streamPartId: StreamPartID, { count }: { count: number }, raw: boolean): Promise<MessageStream> {
+    async last(
+        streamPartId: StreamPartID,
+        { count }: { count: number },
+        raw: boolean,
+        getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>
+    ): Promise<MessageStream> {
         if (count <= 0) {
             const emptyStream = new MessageStream()
             emptyStream.endWrite()
@@ -191,7 +201,7 @@ export class Resends {
 
         return this.fetchStream('last', streamPartId, {
             count,
-        }, raw)
+        }, raw, getStorageNodes)
     }
 
     private async from(streamPartId: StreamPartID, {
@@ -202,12 +212,12 @@ export class Resends {
         fromTimestamp: number
         fromSequenceNumber?: number
         publisherId?: EthereumAddress
-    }, raw: boolean): Promise<MessageStream> {
+    }, raw: boolean, getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>): Promise<MessageStream> {
         return this.fetchStream('from', streamPartId, {
             fromTimestamp,
             fromSequenceNumber,
             publisherId,
-        }, raw)
+        }, raw, getStorageNodes)
     }
 
     async range(streamPartId: StreamPartID, {
@@ -224,7 +234,7 @@ export class Resends {
         toSequenceNumber?: number
         publisherId?: EthereumAddress
         msgChainId?: string
-    }, raw: boolean): Promise<MessageStream> {
+    }, raw: boolean, getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>): Promise<MessageStream> {
         return this.fetchStream('range', streamPartId, {
             fromTimestamp,
             fromSequenceNumber,
@@ -232,7 +242,7 @@ export class Resends {
             toSequenceNumber,
             publisherId,
             msgChainId
-        }, raw)
+        }, raw, getStorageNodes)
     }
 
     async waitForStorage(message: Message, {

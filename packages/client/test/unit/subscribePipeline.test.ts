@@ -83,6 +83,7 @@ describe('subscribePipeline', () => {
         }
         pipeline = createSubscribePipeline({
             streamPartId,
+            getStorageNodes: undefined as any,
             loggerFactory: mockLoggerFactory(),
             resends: undefined as any,
             groupKeyManager: new GroupKeyManager(

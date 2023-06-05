@@ -2,24 +2,27 @@
  * Subscription message processing pipeline
  */
 import {
+    StreamID,
     StreamMessage,
     StreamMessageError,
     StreamPartID
 } from '@streamr/protocol'
-import { OrderMessages } from './OrderMessages'
-import { MessageStream } from './MessageStream'
-import { validateStreamMessage } from '../utils/validateStreamMessage'
-import { decrypt } from '../encryption/decrypt'
+import { EthereumAddress } from '@streamr/utils'
 import { StrictStreamrClientConfig } from '../Config'
-import { Resends } from './Resends'
 import { DestroySignal } from '../DestroySignal'
-import { StreamRegistryCached } from '../registry/StreamRegistryCached'
-import { MsgChainUtil } from './MsgChainUtil'
-import { LoggerFactory } from '../utils/LoggerFactory'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'
+import { decrypt } from '../encryption/decrypt'
+import { StreamRegistryCached } from '../registry/StreamRegistryCached'
+import { LoggerFactory } from '../utils/LoggerFactory'
+import { validateStreamMessage } from '../utils/validateStreamMessage'
+import { MessageStream } from './MessageStream'
+import { MsgChainUtil } from './MsgChainUtil'
+import { OrderMessages } from './OrderMessages'
+import { Resends } from './Resends'
 
 export interface SubscriptionPipelineOptions {
     streamPartId: StreamPartID
+    getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>
     loggerFactory: LoggerFactory
     resends: Resends
     groupKeyManager: GroupKeyManager
@@ -75,7 +78,8 @@ export const createSubscribePipeline = (opts: SubscriptionPipelineOptions): Mess
             opts.config,
             opts.resends,
             opts.streamPartId,
-            opts.loggerFactory
+            opts.loggerFactory,
+            opts.getStorageNodes
         )
         messageStream.pipe(orderMessages.transform())
         messageStream.onBeforeFinally.listen(() => {
