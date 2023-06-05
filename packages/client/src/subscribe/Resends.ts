@@ -51,7 +51,7 @@ export interface ResendRangeOptions {
  */
 export type ResendOptions = ResendLastOptions | ResendFromOptions | ResendRangeOptions
 
-type ResendType = 'last' | 'from' | 'range' 
+type ResendType = 'last' | 'from' | 'range'
 
 function isResendLast<T extends ResendLastOptions>(options: any): options is T {
     return options && typeof options === 'object' && 'last' in options && options.last != null
@@ -102,8 +102,8 @@ export class Resends {
     }
 
     async resend(
-        streamPartId: StreamPartID, 
-        options: ResendOptions & { raw?: boolean }, 
+        streamPartId: StreamPartID,
+        options: ResendOptions & { raw?: boolean },
         getStorageNodes?: (streamId: StreamID) => Promise<EthereumAddress[]>
     ): Promise<MessageStream> {
         const raw = options.raw ?? false
@@ -166,12 +166,12 @@ export class Resends {
         const url = createUrl(nodeUrl, resendType, streamPartId, query)
         const messageStream = (raw === false) ? this.messagePipelineFactory.createMessagePipeline({
             streamPartId,
-            /* 
-             * We could disable ordering for every resend request because messages arrive in ascending 
-             * order from the storage node. But disable ordering would also disable gap filling.
-             * If there are no other storage nodes, we don't need gap filling, and can therefore we can
-             * disable both gap filling and message ordering (setting "disableMessageOrdering" to true 
-             * disables both of those).
+            /*
+             * Disable ordering if the source of this resend is the only storage node. In that case there is no
+             * another storage node from which we could fetch the gaps. When we set "disableMessageOrdering"
+             * to true, we disable both gap filling and message ordering. As resend messages always arrive 
+             * in ascending order, we don't need the ordering functionality. But as that flag controls also 
+             * gap filling, we can use it only if gap filling is not needed.
              */
             disableMessageOrdering: (nodeAddresses.length === 1),
             getStorageNodes: async () => without(nodeAddresses, nodeAddress),
@@ -185,7 +185,7 @@ export class Resends {
     }
 
     async waitForStorage(
-        message: Message, 
+        message: Message,
         {
             // eslint-disable-next-line no-underscore-dangle
             interval = this.config._timeouts.storageNode.retryInterval,
