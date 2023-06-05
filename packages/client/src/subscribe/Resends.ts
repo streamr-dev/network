@@ -211,8 +211,7 @@ export class Resends {
             timeout?: number
             count?: number
             messageMatchFn?: (msgTarget: Message, msgGot: Message) => boolean
-        } = {},
-        getStorageNodes?: (streamId: StreamID) => Promise<EthereumAddress[]>
+        } = {}
     ): Promise<void> {
         if (!message) {
             throw new StreamrClientError('waitForStorage requires a Message', 'INVALID_ARGUMENT')
@@ -231,7 +230,7 @@ export class Resends {
                 throw new Error(`timed out after ${duration}ms waiting for message`)
             }
 
-            const resendStream = await this.resend(toStreamPartID(message.streamId, message.streamPartition), { last: count }, getStorageNodes)
+            const resendStream = await this.resend(toStreamPartID(message.streamId, message.streamPartition), { last: count })
             last = await collect(resendStream)
             for (const lastMsg of last) {
                 if (messageMatchFn(message, lastMsg)) {
