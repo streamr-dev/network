@@ -1,4 +1,4 @@
-import { Lifecycle, inject, scoped } from 'tsyringe'
+import { Lifecycle, inject, scoped, delay } from 'tsyringe'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { DestroySignal } from '../DestroySignal'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'
@@ -19,9 +19,9 @@ export class MessagePipelineFactory {
     private readonly config: Pick<StrictStreamrClientConfig, 'orderMessages' | 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill'>
 
     constructor(
-        resends: Resends,
+        @inject(delay(() => Resends)) resends: Resends,
         groupKeyManager: GroupKeyManager,
-        streamRegistryCached: StreamRegistryCached,
+        @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
         destroySignal: DestroySignal,
         loggerFactory: LoggerFactory,
         // eslint-disable-next-line max-len
