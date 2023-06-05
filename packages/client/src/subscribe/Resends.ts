@@ -11,6 +11,7 @@ import { StreamrClientError } from '../StreamrClientError'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'
 import { StorageNodeRegistry } from '../registry/StorageNodeRegistry'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
+import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
 import { counting } from '../utils/GeneratorUtils'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { MessageStream } from './MessageStream'
@@ -80,6 +81,7 @@ const createUrl = (baseUrl: string, endpointSuffix: string, streamPartId: Stream
 @scoped(Lifecycle.ContainerScoped)
 export class Resends {
 
+    private readonly streamStorageRegistry: StreamStorageRegistry
     private readonly storageNodeRegistry: StorageNodeRegistry
     private readonly streamRegistryCached: StreamRegistryCached
     private readonly httpUtil: HttpUtil
@@ -89,8 +91,8 @@ export class Resends {
     private readonly loggerFactory: LoggerFactory
     private readonly logger: Logger
 
-    /* eslint-disable indent */
     constructor(
+        streamStorageRegistry: StreamStorageRegistry,
         @inject(delay(() => StorageNodeRegistry)) storageNodeRegistry: StorageNodeRegistry,
         @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
         httpUtil: HttpUtil,
@@ -99,6 +101,7 @@ export class Resends {
         @inject(ConfigInjectionToken) config: StrictStreamrClientConfig,
         loggerFactory: LoggerFactory
     ) {
+        this.streamStorageRegistry = streamStorageRegistry
         this.storageNodeRegistry = storageNodeRegistry
         this.streamRegistryCached = streamRegistryCached
         this.httpUtil = httpUtil
@@ -112,7 +115,7 @@ export class Resends {
     async resend(
         streamPartId: StreamPartID, 
         options: ResendOptions & { raw?: boolean }, 
-        getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>
+        getStorageNodes?: (streamId: StreamID) => Promise<EthereumAddress[]>
     ): Promise<MessageStream> {
         const raw = options.raw ?? false
         if (isResendLast(options)) {
@@ -152,7 +155,7 @@ export class Resends {
         streamPartId: StreamPartID,
         query: QueryDict,
         raw: boolean,
-        getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>
+        getStorageNodes?: (streamId: StreamID) => Promise<EthereumAddress[]>
     ): Promise<MessageStream> {
         const traceId = randomString(5)
         this.logger.debug('Fetch resend data', {
@@ -162,7 +165,10 @@ export class Resends {
             query
         })
         const streamId = StreamPartIDUtils.getStreamID(streamPartId)
-        const nodeAddresses = await getStorageNodes(streamId)
+        // eslint-disable-next-line no-underscore-dangle
+        const getStorageNodes_ = getStorageNodes ?? ((streamId: StreamID) => this.streamStorageRegistry.getStorageNodes(streamId))
+        // eslint-disable-next-line no-underscore-dangle
+        const nodeAddresses = await getStorageNodes_(streamId)
         if (!nodeAddresses.length) {
             throw new StreamrClientError(`no storage assigned: ${streamId}`, 'NO_STORAGE_NODES')
         }
@@ -191,7 +197,6 @@ export class Resends {
 
     async waitForStorage(
         message: Message, 
-        getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>,
         {
             // eslint-disable-next-line no-underscore-dangle
             interval = this.config._timeouts.storageNode.retryInterval,
@@ -206,7 +211,8 @@ export class Resends {
             timeout?: number
             count?: number
             messageMatchFn?: (msgTarget: Message, msgGot: Message) => boolean
-        } = {}
+        } = {},
+        getStorageNodes?: (streamId: StreamID) => Promise<EthereumAddress[]>
     ): Promise<void> {
         if (!message) {
             throw new StreamrClientError('waitForStorage requires a Message', 'INVALID_ARGUMENT')

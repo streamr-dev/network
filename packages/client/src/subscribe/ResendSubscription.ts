@@ -43,11 +43,7 @@ export class ResendSubscription extends Subscription {
     }
 
     private async getResent(): Promise<MessageStream> {
-        const resentMsgs = await this.resends.resend(
-            this.streamPartId,
-            this.resendOptions,
-            (streamId: StreamID) => this.streamStorageRegistry.getStorageNodes(streamId)
-        )
+        const resentMsgs = await this.resends.resend(this.streamPartId, this.resendOptions)
         this.onBeforeFinally.listen(async () => {
             resentMsgs.end()
             await resentMsgs.return()

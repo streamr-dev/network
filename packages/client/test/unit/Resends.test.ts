@@ -33,6 +33,7 @@ describe('Resends', () => {
 
     const createResends = (messagesPerStorageNode: Record<EthereumAddress, StreamMessage[]>): Resends => {
         return new Resends(
+            undefined as any,
             {
                 getStorageNodeMetadata: async (nodeAddress: EthereumAddress) => ({ http: `${URL_PREFIX}${nodeAddress}` })
             } as any,
