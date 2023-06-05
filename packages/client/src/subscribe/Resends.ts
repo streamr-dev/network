@@ -166,9 +166,8 @@ export class Resends {
         })
         const streamId = StreamPartIDUtils.getStreamID(streamPartId)
         // eslint-disable-next-line no-underscore-dangle
-        const getStorageNodes_ = getStorageNodes ?? ((streamId: StreamID) => this.streamStorageRegistry.getStorageNodes(streamId))
-        // eslint-disable-next-line no-underscore-dangle
-        const nodeAddresses = await getStorageNodes_(streamId)
+        const _getStorageNodes = getStorageNodes ?? ((streamId: StreamID) => this.streamStorageRegistry.getStorageNodes(streamId))
+        const nodeAddresses = await _getStorageNodes(streamId)
         if (!nodeAddresses.length) {
             throw new StreamrClientError(`no storage assigned: ${streamId}`, 'NO_STORAGE_NODES')
         }
