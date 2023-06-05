@@ -53,6 +53,8 @@ export interface ResendRangeOptions {
  */
 export type ResendOptions = ResendLastOptions | ResendFromOptions | ResendRangeOptions
 
+type ResendType = 'last' | 'from' | 'range' 
+
 function isResendLast<T extends ResendLastOptions>(options: any): options is T {
     return options && typeof options === 'object' && 'last' in options && options.last != null
 }
@@ -145,7 +147,7 @@ export class Resends {
     }
 
     private async fetchStream(
-        endpointSuffix: 'last' | 'range' | 'from',
+        resendType: ResendType,
         streamPartId: StreamPartID,
         query: QueryDict,
         raw: boolean,
@@ -154,7 +156,7 @@ export class Resends {
         const traceId = randomString(5)
         this.logger.debug('Fetch resend data', {
             loggerIdx: traceId,
-            resendType: endpointSuffix,
+            resendType,
             streamPartId,
             query
         })
@@ -166,7 +168,7 @@ export class Resends {
 
         const nodeAddress = nodeAddresses[random(0, nodeAddresses.length - 1)]
         const nodeUrl = (await this.storageNodeRegistry.getStorageNodeMetadata(nodeAddress)).http
-        const url = createUrl(nodeUrl, endpointSuffix, streamPartId, query)
+        const url = createUrl(nodeUrl, resendType, streamPartId, query)
         const config = (nodeAddresses.length > 1) ? this.config : { ...this.config, orderMessages: false }
         const messageStream = (raw === false) ? createSubscribePipeline({
             streamPartId,
