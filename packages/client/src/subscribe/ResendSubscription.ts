@@ -32,8 +32,7 @@ export class ResendSubscription extends Subscription {
                 config,
                 resends,
                 streamPartId,
-                loggerFactory,
-                (streamId: StreamID) => streamStorageRegistry.getStorageNodes(streamId)
+                loggerFactory
             )
             this.pipe(orderMessages.transform())
             this.onBeforeFinally.listen(() => orderMessages.stop())

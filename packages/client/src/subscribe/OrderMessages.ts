@@ -26,14 +26,14 @@ export class OrderMessages {
     private readonly resends: Resends
     private readonly streamPartId: StreamPartID
     private readonly logger: Logger
-    private readonly getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>
+    private readonly getStorageNodes?: (streamId: StreamID) => Promise<EthereumAddress[]>
 
     constructor(
         config: Pick<StrictStreamrClientConfig, 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill'>,
         resends: Resends,
         streamPartId: StreamPartID,
         loggerFactory: LoggerFactory,
-        getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>
+        getStorageNodes?: (streamId: StreamID) => Promise<EthereumAddress[]>
     ) {
         this.resends = resends
         this.streamPartId = streamPartId

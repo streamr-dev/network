@@ -27,8 +27,7 @@ const createTransform = (resends: Pick<Resends, 'resend'>, config = CONFIG) => {
         config as any,
         resends as any,
         STREAM_PART_ID,
-        mockLoggerFactory(),
-        undefined as any
+        mockLoggerFactory()
     ).transform()
 }
 
