@@ -191,7 +191,8 @@ export class Stream {
             toStreamPartID(this.id, DEFAULT_PARTITION),
             {
                 last: 1
-            }
+            },
+            (streamId: StreamID) => this._streamStorageRegistry.getStorageNodes(streamId)
         )
 
         const receivedMsgs = await collect(sub)
