@@ -1,20 +1,18 @@
+import { StreamID, StreamMessage, StreamMessageType, StreamPartID } from '@streamr/protocol'
 import { inject } from 'tsyringe'
-
-import { StreamMessage, StreamMessageType, StreamPartID } from '@streamr/protocol'
-
+import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import { DestroySignal } from '../DestroySignal'
+import { NetworkNodeFacade, NetworkNodeStub } from '../NetworkNodeFacade'
+import { GroupKeyManager } from '../encryption/GroupKeyManager'
+import { StreamRegistryCached } from '../registry/StreamRegistryCached'
+import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
+import { LoggerFactory } from '../utils/LoggerFactory'
 import { Scaffold } from '../utils/Scaffold'
 import { Signal } from '../utils/Signal'
 import { MessageStream } from './MessageStream'
-
+import { Resends } from './Resends'
 import { Subscription } from './Subscription'
 import { createSubscribePipeline } from './subscribePipeline'
-import { NetworkNodeFacade, NetworkNodeStub } from '../NetworkNodeFacade'
-import { Resends } from './Resends'
-import { StreamRegistryCached } from '../registry/StreamRegistryCached'
-import { DestroySignal } from '../DestroySignal'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
-import { LoggerFactory } from '../utils/LoggerFactory'
-import { GroupKeyManager } from '../encryption/GroupKeyManager'
 
 /**
  * Manages adding & removing subscriptions to node as needed.
@@ -36,6 +34,7 @@ export class SubscriptionSession {
         resends: Resends,
         groupKeyManager: GroupKeyManager,
         streamRegistryCached: StreamRegistryCached,
+        streamStorageRegistry: StreamStorageRegistry,
         node: NetworkNodeFacade,
         destroySignal: DestroySignal,
         loggerFactory: LoggerFactory,
@@ -47,6 +46,7 @@ export class SubscriptionSession {
         this.onError = this.onError.bind(this)
         this.pipeline = createSubscribePipeline({
             streamPartId,
+            getStorageNodes: (streamId: StreamID) => streamStorageRegistry.getStorageNodes(streamId),
             resends,
             groupKeyManager,
             streamRegistryCached,

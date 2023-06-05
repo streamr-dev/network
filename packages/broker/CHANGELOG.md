@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fix `storage` plugin default value handling for resend range queries (https://github.com/streamr-dev/network/pull/1461)
+
 ### Security
 
 ## [33.3.0] - 2023-05-10

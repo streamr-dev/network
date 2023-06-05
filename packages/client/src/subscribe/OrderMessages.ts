@@ -1,8 +1,8 @@
 /**
  * Makes OrderingUtil more compatible with use in pipeline.
  */
-import { MessageRef, StreamMessage, StreamPartID } from '@streamr/protocol'
-import { Logger } from '@streamr/utils'
+import { MessageRef, StreamID, StreamMessage, StreamPartID } from '@streamr/protocol'
+import { EthereumAddress, Logger } from '@streamr/utils'
 import { StrictStreamrClientConfig } from '../Config'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { PushBuffer } from '../utils/PushBuffer'
@@ -23,25 +23,26 @@ export class OrderMessages {
     private readonly resendStreams = new Set<MessageStream>() // holds outstanding resends for cleanup
     private readonly outBuffer = new PushBuffer<StreamMessage>()
     private readonly orderingUtil: OrderingUtil
-    private readonly config: StrictStreamrClientConfig
     private readonly resends: Resends
     private readonly streamPartId: StreamPartID
     private readonly logger: Logger
+    private readonly getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>
 
     constructor(
-        config: StrictStreamrClientConfig,
+        config: Pick<StrictStreamrClientConfig, 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill'>,
         resends: Resends,
         streamPartId: StreamPartID,
-        loggerFactory: LoggerFactory
+        loggerFactory: LoggerFactory,
+        getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>
     ) {
-        this.config = config
         this.resends = resends
         this.streamPartId = streamPartId
         this.logger = loggerFactory.createLogger(module)
+        this.getStorageNodes = getStorageNodes
         this.onOrdered = this.onOrdered.bind(this)
         this.onGap = this.onGap.bind(this)
         this.maybeClose = this.maybeClose.bind(this)
-        const { gapFillTimeout, retryResendAfter, maxGapRequests, gapFill } = this.config
+        const { gapFillTimeout, retryResendAfter, maxGapRequests, gapFill } = config
         this.enabled = gapFill && (maxGapRequests > 0)
         this.orderingUtil = new OrderingUtil(
             this.streamPartId,
@@ -73,7 +74,7 @@ export class OrderMessages {
                 publisherId: context.publisherId,
                 msgChainId: context.msgChainId,
                 raw: true
-            })
+            }, this.getStorageNodes)
             resendMessageStream.onFinally.listen(() => {
                 this.resendStreams.delete(resendMessageStream)
             })
