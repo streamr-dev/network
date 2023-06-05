@@ -4,21 +4,18 @@ import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { DestroySignal } from '../DestroySignal'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
-import { StreamIDBuilder } from '../StreamIDBuilder'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
-import { StreamDefinition } from '../types'
 import { LoggerFactory } from '../utils/LoggerFactory'
-import { allSettledValues } from '../utils/promises'
 import { Resends } from './Resends'
 import { Subscription } from './Subscription'
 import { SubscriptionSession } from './SubscriptionSession'
 
 @scoped(Lifecycle.ContainerScoped)
 export class Subscriber {
+
     private readonly subSessions: Map<StreamPartID, SubscriptionSession> = new Map()
-    private readonly streamIdBuilder: StreamIDBuilder
     private readonly resends: Resends
     private readonly groupKeyManager: GroupKeyManager
     private readonly streamRegistryCached: StreamRegistryCached
@@ -30,7 +27,6 @@ export class Subscriber {
     private readonly logger: Logger
 
     constructor(
-        streamIdBuilder: StreamIDBuilder,
         resends: Resends,
         groupKeyManager: GroupKeyManager,
         @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
@@ -40,7 +36,6 @@ export class Subscriber {
         @inject(ConfigInjectionToken) config: StrictStreamrClientConfig,
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
     ) {
-        this.streamIdBuilder = streamIdBuilder
         this.resends = resends
         this.groupKeyManager = groupKeyManager
         this.streamRegistryCached = streamRegistryCached
@@ -90,39 +85,15 @@ export class Subscriber {
         }
     }
 
-    private async remove(sub: Subscription): Promise<void> {
-        if (!sub) { return }
+    async remove(sub: Subscription): Promise<void> {
         const subSession = this.subSessions.get(sub.streamPartId)
         if (!subSession) {
             return
         }
-
         await subSession.remove(sub)
     }
 
-    async unsubscribe(streamDefinitionOrSubscription?: StreamDefinition | Subscription): Promise<unknown> {
-        if (streamDefinitionOrSubscription instanceof Subscription) {
-            return this.remove(streamDefinitionOrSubscription)
-        }
-        return this.removeAll(streamDefinitionOrSubscription)
-    }
-
-    /**
-     * Remove all subscriptions, optionally only those matching options.
-     */
-    private async removeAll(streamDefinition?: StreamDefinition): Promise<unknown> {
-        const subs = !streamDefinition
-            ? this.getAllSubscriptions()
-            : await this.getSubscriptions(streamDefinition)
-        return allSettledValues(subs.map((sub) => (
-            this.remove(sub)
-        )))
-    }
-
-    /**
-     * Get all subscriptions.
-     */
-    private getAllSubscriptions(): Subscription[] {
+    getSubscriptions(): Subscription[] {
         return [...this.subSessions.values()].reduce((o: Subscription[], s: SubscriptionSession) => {
             // @ts-expect-error private
             o.push(...s.subscriptions)
@@ -139,24 +110,5 @@ export class Subscriber {
 
     countSubscriptionSessions(): number {
         return this.subSessions.size
-    }
-
-    async getSubscriptions(streamDefinition?: StreamDefinition): Promise<Subscription[]> {
-        if (!streamDefinition) {
-            return this.getAllSubscriptions()
-        }
-
-        const results: SubscriptionSession[] = []
-        await Promise.all([...this.subSessions.values()].map(async (subSession) => {
-            const isMatch = await this.streamIdBuilder.match(streamDefinition, subSession.streamPartId)
-            if (isMatch) {
-                results.push(subSession)
-            }
-        }))
-
-        return results.flatMap((subSession) => ([
-            // @ts-expect-error private
-            ...subSession.subscriptions
-        ]))
     }
 }
