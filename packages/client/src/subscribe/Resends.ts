@@ -4,18 +4,15 @@ import random from 'lodash/random'
 import without from 'lodash/without'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
-import { DestroySignal } from '../DestroySignal'
 import { HttpUtil, createQueryString } from '../HttpUtil'
 import { Message } from '../Message'
 import { StreamrClientError } from '../StreamrClientError'
-import { GroupKeyManager } from '../encryption/GroupKeyManager'
 import { StorageNodeRegistry } from '../registry/StorageNodeRegistry'
-import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
 import { counting } from '../utils/GeneratorUtils'
 import { LoggerFactory } from '../utils/LoggerFactory'
+import { MessagePipelineFactory } from './MessagePipelineFactory'
 import { MessageStream } from './MessageStream'
-import { createMessagePipeline } from './messagePipeline'
 
 type QueryDict = Record<string, string | number | boolean | null | undefined>
 
@@ -81,34 +78,26 @@ const createUrl = (baseUrl: string, endpointSuffix: string, streamPartId: Stream
 @scoped(Lifecycle.ContainerScoped)
 export class Resends {
 
+    private readonly messagePipelineFactory: MessagePipelineFactory
     private readonly streamStorageRegistry: StreamStorageRegistry
     private readonly storageNodeRegistry: StorageNodeRegistry
-    private readonly streamRegistryCached: StreamRegistryCached
     private readonly httpUtil: HttpUtil
-    private readonly groupKeyManager: GroupKeyManager
-    private readonly destroySignal: DestroySignal
     private readonly config: StrictStreamrClientConfig
-    private readonly loggerFactory: LoggerFactory
     private readonly logger: Logger
 
     constructor(
+        messagePipelineFactory: MessagePipelineFactory,
         streamStorageRegistry: StreamStorageRegistry,
         @inject(delay(() => StorageNodeRegistry)) storageNodeRegistry: StorageNodeRegistry,
-        @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
         httpUtil: HttpUtil,
-        groupKeyManager: GroupKeyManager,
-        destroySignal: DestroySignal,
         @inject(ConfigInjectionToken) config: StrictStreamrClientConfig,
         loggerFactory: LoggerFactory
     ) {
+        this.messagePipelineFactory = messagePipelineFactory
         this.streamStorageRegistry = streamStorageRegistry
         this.storageNodeRegistry = storageNodeRegistry
-        this.streamRegistryCached = streamRegistryCached
         this.httpUtil = httpUtil
-        this.groupKeyManager = groupKeyManager
-        this.destroySignal = destroySignal
         this.config = config
-        this.loggerFactory = loggerFactory
         this.logger = loggerFactory.createLogger(module)
     }
 
@@ -175,16 +164,17 @@ export class Resends {
         const nodeAddress = nodeAddresses[random(0, nodeAddresses.length - 1)]
         const nodeUrl = (await this.storageNodeRegistry.getStorageNodeMetadata(nodeAddress)).http
         const url = createUrl(nodeUrl, resendType, streamPartId, query)
-        const config = (nodeAddresses.length > 1) ? this.config : { ...this.config, orderMessages: false }
-        const messageStream = (raw === false) ? createMessagePipeline({
+        const messageStream = (raw === false) ? this.messagePipelineFactory.createMessagePipeline({
             streamPartId,
+            /* 
+             * We could disable ordering for every resend request because messages arrive in ascending 
+             * order from the storage node. But disable ordering would also disable gap filling.
+             * If there are no other storage nodes, we don't need gap filling, and can therefore we can
+             * disable both gap filling and message ordering (setting "disableMessageOrdering" to true 
+             * disables both of those).
+             */
+            disableMessageOrdering: (nodeAddresses.length === 1),
             getStorageNodes: async () => without(nodeAddresses, nodeAddress),
-            resends: this,
-            groupKeyManager: this.groupKeyManager,
-            streamRegistryCached: this.streamRegistryCached,
-            destroySignal: this.destroySignal,
-            config,
-            loggerFactory: this.loggerFactory
         }) : new MessageStream()
 
         const dataStream = this.httpUtil.fetchHttpStream(url)

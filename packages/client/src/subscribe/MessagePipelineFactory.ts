@@ -19,31 +19,31 @@ export class MessagePipelineFactory {
     config: Pick<StrictStreamrClientConfig, 'orderMessages' | 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill'>
 
     constructor(
-        loggerFactory: LoggerFactory,
         resends: Resends,
         groupKeyManager: GroupKeyManager,
         streamRegistryCached: StreamRegistryCached,
         destroySignal: DestroySignal,
+        loggerFactory: LoggerFactory,
         // eslint-disable-next-line max-len
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'orderMessages' | 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill'>
     ) {
-        this.loggerFactory = loggerFactory
         this.resends = resends
         this.groupKeyManager = groupKeyManager
         this.streamRegistryCached = streamRegistryCached
         this.destroySignal = destroySignal
+        this.loggerFactory = loggerFactory
         this.config = config
     }
 
     // eslint-disable-next-line max-len
-    createMessagePipeline(opts: Omit<MessagePipelineOptions, 'loggerFactory' | 'resends' | 'groupKeyManager' | 'streamRegistryCached' | 'destroySignal' | 'config'>): MessageStream {
+    createMessagePipeline(opts: Omit<MessagePipelineOptions, 'resends' | 'groupKeyManager' | 'streamRegistryCached' | 'destroySignal' | 'loggerFactory' | 'config'>): MessageStream {
         return _createMessagePipeline({
             ...opts,
-            loggerFactory: this.loggerFactory,
             resends: this.resends,
             groupKeyManager: this.groupKeyManager,
             streamRegistryCached: this.streamRegistryCached,
             destroySignal: this.destroySignal,
+            loggerFactory: this.loggerFactory,
             config: this.config
         })
     }

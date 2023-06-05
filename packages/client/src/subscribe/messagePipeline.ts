@@ -22,12 +22,13 @@ import { Resends } from './Resends'
 
 export interface MessagePipelineOptions {
     streamPartId: StreamPartID
+    disableMessageOrdering?: boolean
     getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>
-    loggerFactory: LoggerFactory
     resends: Resends
     groupKeyManager: GroupKeyManager
     streamRegistryCached: StreamRegistryCached
     destroySignal: DestroySignal
+    loggerFactory: LoggerFactory
     config: Pick<StrictStreamrClientConfig, 'orderMessages' | 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill'>
 }
 
@@ -72,7 +73,7 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): MessageStre
     // end up acting as gaps that we repeatedly try to fill.
     const ignoreMessages = new WeakSet()
     messageStream.onError.listen(onError)
-    if (opts.config.orderMessages) {
+    if (opts.config.orderMessages && (opts.disableMessageOrdering !== true)) {
         // order messages (fill gaps)
         const orderMessages = new OrderMessages(
             opts.config,
