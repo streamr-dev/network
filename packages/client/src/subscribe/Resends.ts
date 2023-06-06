@@ -172,8 +172,8 @@ export class Resends {
              * to true, we disable both gap filling and message ordering. As resend messages always arrive 
              * in ascending order, we don't need the ordering functionality.
              */
-            disableMessageOrdering: (nodeAddresses.length === 1),
             getStorageNodes: async () => without(nodeAddresses, nodeAddress),
+            config: (nodeAddresses.length > 1) ? this.config : { ...this.config, orderMessages: false }
         }) : new MessageStream()
 
         const dataStream = this.httpUtil.fetchHttpStream(url)

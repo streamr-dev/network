@@ -22,7 +22,6 @@ import { Resends } from './Resends'
 
 export interface MessagePipelineOptions {
     streamPartId: StreamPartID
-    disableMessageOrdering?: boolean
     getStorageNodes?: (streamId: StreamID) => Promise<EthereumAddress[]>
     resends: Resends
     groupKeyManager: GroupKeyManager
@@ -73,7 +72,7 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): MessageStre
     // end up acting as gaps that we repeatedly try to fill.
     const ignoreMessages = new WeakSet()
     messageStream.onError.listen(onError)
-    if (opts.config.orderMessages && (opts.disableMessageOrdering !== true)) {
+    if (opts.config.orderMessages) {
         // order messages (fill gaps)
         const orderMessages = new OrderMessages(
             opts.config,
