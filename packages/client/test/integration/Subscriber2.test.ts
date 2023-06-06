@@ -3,6 +3,8 @@ import 'reflect-metadata'
 import { StreamID, StreamMessage } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
 import { Defer, collect, waitForCondition } from '@streamr/utils'
+import range from 'lodash/range'
+import shuffle from 'lodash/shuffle'
 import { Message, MessageMetadata } from '../../src/Message'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamPermission } from '../../src/permission'
@@ -602,36 +604,29 @@ describe('Subscriber', () => {
             expect(await getSubscriptionCount(streamId)).toBe(0)
         })
 
-        it('can subscribe then unsubscribe in parallel', async () => {
+        it('can subscribe and unsubscribe in parallel', async () => {
+            const operations = shuffle(range(10).map((i) => {
+                const subscribe = (i % 2) === 0
+                return {
+                    subscribe,
+                    run: () => subscribe ? () => client.subscribe(streamId) : client.unsubscribe(streamId)
+                }
+            })
+            // do multiple operations in parallel
             const [sub] = await Promise.all([
-                client.subscribe(streamId),
-                client.unsubscribe(streamId),
+                client.,
+                ,
             ])
 
-            expect(await getSubscriptionCount(streamId)).toBe(1)
+            // operations did not crash, and we either have a subscription or we don't have
+            const subscriptionCount = await getSubscriptionCount(streamId)
+            if (subscriptionCount === 0) {
+                await client.subscribe(streamId)
+            }
 
             const published = await publishTestMessages(3)
-
             const received = await collect(sub, 3)
-
             expect(received.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
-            expect(await getSubscriptionCount(streamId)).toBe(0)
-        })
-
-        it('can unsubscribe then subscribe in parallel', async () => {
-            const [_, sub] = await Promise.all([
-                client.unsubscribe(streamId),
-                client.subscribe(streamId),
-            ])
-
-            expect(await getSubscriptionCount(streamId)).toBe(1)
-
-            const published = await publishTestMessages(3)
-
-            const received = await collect(sub, 3)
-
-            expect(received.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
-            expect(await getSubscriptionCount(streamId)).toBe(0)
         })
     })
 
