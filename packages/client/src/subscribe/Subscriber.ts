@@ -2,8 +2,6 @@ import { StreamPartID } from '@streamr/protocol'
 import { Logger } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
-import { StreamIDBuilder } from '../StreamIDBuilder'
-import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { MessagePipelineFactory } from './MessagePipelineFactory'
 import { Subscription } from './Subscription'
@@ -14,19 +12,15 @@ export class Subscriber {
 
     private readonly subSessions: Map<StreamPartID, SubscriptionSession> = new Map()
     private readonly messagePipelineFactory: MessagePipelineFactory
-    private readonly streamStorageRegistry: StreamStorageRegistry
     private readonly node: NetworkNodeFacade
     private readonly logger: Logger
 
     constructor(
-        streamIdBuilder: StreamIDBuilder,
-        streamStorageRegistry: StreamStorageRegistry,
         messagePipelineFactory: MessagePipelineFactory,
         node: NetworkNodeFacade,
         @inject(LoggerFactory) loggerFactory: LoggerFactory,
     ) {
         this.messagePipelineFactory = messagePipelineFactory
-        this.streamStorageRegistry = streamStorageRegistry
         this.node = node
         this.logger = loggerFactory.createLogger(module)
     }
@@ -38,7 +32,6 @@ export class Subscriber {
         const subSession = new SubscriptionSession(
             streamPartId,
             this.messagePipelineFactory,
-            this.streamStorageRegistry,
             this.node
         )
 
