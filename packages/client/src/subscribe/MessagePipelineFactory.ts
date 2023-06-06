@@ -30,7 +30,7 @@ export class MessagePipelineFactory {
     /* eslint-disable indent */
     constructor(
         @inject(delay(() => Resends)) resends: Resends,
-        groupKeyManager: GroupKeyManager,
+        @inject(delay(() => GroupKeyManager)) groupKeyManager: GroupKeyManager,
         @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
         destroySignal: DestroySignal,
         loggerFactory: LoggerFactory,
