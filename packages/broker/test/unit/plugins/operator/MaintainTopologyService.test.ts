@@ -69,7 +69,7 @@ describe('MaintainTopologyService', () => {
 
     async function setUpAndStart(initialState: StreamID[]): Promise<void> {
         operatorClient = new FakeOperatorClient(initialState, INITIAL_BLOCK)
-        service = new MaintainTopologyService(streamrClient, operatorClient)
+        service = new MaintainTopologyService(streamrClient, operatorClient as any) // TODO: remove casting
         await service.start()
     }
 
