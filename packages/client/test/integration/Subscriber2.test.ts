@@ -3,8 +3,8 @@ import 'reflect-metadata'
 import { StreamID, StreamMessage } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
 import { Defer, collect, waitForCondition } from '@streamr/utils'
-import range from 'lodash/range'
 import shuffle from 'lodash/shuffle'
+import sample from 'lodash/sample'
 import { Message, MessageMetadata } from '../../src/Message'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamPermission } from '../../src/permission'
@@ -605,28 +605,37 @@ describe('Subscriber', () => {
         })
 
         it('can subscribe and unsubscribe in parallel', async () => {
-            const operations = shuffle(range(10).map((i) => {
-                const subscribe = (i % 2) === 0
-                return {
-                    subscribe,
-                    run: () => subscribe ? () => client.subscribe(streamId) : client.unsubscribe(streamId)
-                }
-            })
-            // do multiple operations in parallel
-            const [sub] = await Promise.all([
-                client.,
-                ,
+            // do subscribe and unsubscribe request in random order
+            const operations = shuffle([
+                () => client.subscribe(streamId),
+                () => client.subscribe(streamId),
+                () => client.subscribe(streamId),
+                () => client.subscribe(streamId),
+                () => client.subscribe(streamId),
+                () => client.unsubscribe(streamId),
+                () => client.unsubscribe(streamId),
+                () => client.unsubscribe(streamId),
+                () => client.unsubscribe(streamId),
+                () => client.unsubscribe(streamId)
             ])
+            await Promise.all(operations.map(o => o()))
 
-            // operations did not crash, and we either have a subscription or we don't have
-            const subscriptionCount = await getSubscriptionCount(streamId)
-            if (subscriptionCount === 0) {
-                await client.subscribe(streamId)
+            // operations did not crash, and we either have some subscriptions or we don't have
+            const subscriptions = await client.getSubscriptions(streamId)
+            expect(subscriptions.length >= 0 && subscriptions.length <= 5).toBeTrue()
+            let sub: Subscription
+            if (subscriptions.length === 0) {
+                sub = await client.subscribe(streamId)
+            } else {
+                sub = sample(subscriptions)!
             }
 
             const published = await publishTestMessages(3)
             const received = await collect(sub, 3)
             expect(received.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
+
+            // clean up tests so that next test cases don't have existing subcriptions
+            await client.unsubscribe()
         })
     })
 
