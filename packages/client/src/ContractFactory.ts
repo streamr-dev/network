@@ -2,11 +2,11 @@ import { Signer } from '@ethersproject/abstract-signer'
 import { Contract, ContractInterface, ContractReceipt, ContractTransaction } from '@ethersproject/contracts'
 import { Provider } from '@ethersproject/providers'
 import { EthereumAddress } from '@streamr/utils'
-import { inject, Lifecycle, scoped } from 'tsyringe'
+import { Lifecycle, inject, scoped } from 'tsyringe'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
 import { StreamrClientEventEmitter } from './events'
-import { createDecoratedContract, ObservableContract } from './utils/contract'
 import { LoggerFactory } from './utils/LoggerFactory'
+import { ObservableContract, createDecoratedContract } from './utils/contract'
 
 @scoped(Lifecycle.ContainerScoped)
 export class ContractFactory {

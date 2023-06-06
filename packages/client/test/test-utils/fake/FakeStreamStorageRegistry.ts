@@ -1,13 +1,13 @@
-import { Lifecycle, scoped } from 'tsyringe'
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
-import { StreamIDBuilder } from '../../../src/StreamIDBuilder'
-import { FakeStorageNode } from './FakeStorageNode'
-import { FakeNetwork } from './FakeNetwork'
+import { EthereumAddress } from '@streamr/utils'
+import { Lifecycle, scoped } from 'tsyringe'
 import { Stream } from '../../../src/Stream'
+import { StreamIDBuilder } from '../../../src/StreamIDBuilder'
 import { StreamStorageRegistry } from '../../../src/registry/StreamStorageRegistry'
 import { Methods } from '../types'
 import { FakeChain } from './FakeChain'
-import { EthereumAddress } from '@streamr/utils'
+import { FakeNetwork } from './FakeNetwork'
+import { FakeStorageNode } from './FakeStorageNode'
 
 @scoped(Lifecycle.ContainerScoped)
 export class FakeStreamStorageRegistry implements Methods<StreamStorageRegistry> {

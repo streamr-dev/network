@@ -1,6 +1,6 @@
 import { Provider } from '@ethersproject/providers'
 import { StreamID, toStreamID } from '@streamr/protocol'
-import { EthereumAddress, Logger, collect, toEthereumAddress } from '@streamr/utils'
+import { EthereumAddress, Logger, TheGraphClient, collect, toEthereumAddress } from '@streamr/utils'
 import min from 'lodash/min'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -14,7 +14,6 @@ import type { StreamStorageRegistryV2 as StreamStorageRegistryContract } from '.
 import StreamStorageRegistryArtifact from '../ethereumArtifacts/StreamStorageRegistryV2Abi.json'
 import { StreamrClientEventEmitter } from '../events'
 import { LoggerFactory } from '../utils/LoggerFactory'
-import { TheGraphClient } from '@streamr/utils'
 import { initContractEventGateway, queryAllReadonlyContracts, waitForTx } from '../utils/contract'
 
 export interface StorageNodeAssignmentEvent {

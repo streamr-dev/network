@@ -1,9 +1,8 @@
+import { Logger, merge } from '@streamr/utils'
+import fetch, { Response } from 'node-fetch'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
-import fetch, { Response } from 'node-fetch'
-import { Logger } from '@streamr/utils'
 import { LoggerFactory } from './LoggerFactory'
-import { merge } from '@streamr/utils'
 
 @scoped(Lifecycle.ContainerScoped)
 export class HttpFetcher {

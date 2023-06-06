@@ -1,8 +1,8 @@
 import { StreamID } from '@streamr/protocol'
 import { EthereumAddress, Logger } from '@streamr/utils'
 import { Lifecycle, scoped } from 'tsyringe'
+import { NAMESPACES, PersistenceManager } from '../PersistenceManager'
 import { StreamrClientEventEmitter } from '../events'
-import { PersistenceManager, NAMESPACES } from '../PersistenceManager'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { GroupKey } from './GroupKey'
 

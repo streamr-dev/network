@@ -1,10 +1,9 @@
 /**
  * Client-wide destroy signal.
  */
-import { scoped, Lifecycle } from 'tsyringe'
-
-import { Signal } from './utils/Signal'
+import { Lifecycle, scoped } from 'tsyringe'
 import { StreamrClientError } from './StreamrClientError'
+import { Signal } from './utils/Signal'
 
 /**
  * Listen to onDestroy to fire cleanup code on destroy.

@@ -1,5 +1,5 @@
-import { delay, inject, Lifecycle, scoped } from 'tsyringe'
 import { StreamID } from '@streamr/protocol'
+import { delay, inject, Lifecycle, scoped } from 'tsyringe'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
 import { StreamrClientEventEmitter } from './events'
 import { Publisher } from './publish/Publisher'

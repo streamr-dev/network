@@ -1,12 +1,12 @@
 import { StreamID } from '@streamr/protocol'
-import { Lifecycle, scoped, inject, delay } from 'tsyringe'
-import { CacheAsyncFn, CacheAsyncFnType } from '../utils/caches'
-import { StrictStreamrClientConfig, ConfigInjectionToken } from '../Config'
-import { StreamRegistry } from './StreamRegistry'
-import { StreamPermission } from '../permission'
-import { Stream } from '../Stream'
 import { EthereumAddress, Logger } from '@streamr/utils'
+import { Lifecycle, delay, inject, scoped } from 'tsyringe'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import { Stream } from '../Stream'
+import { StreamPermission } from '../permission'
 import { LoggerFactory } from '../utils/LoggerFactory'
+import { CacheAsyncFn, CacheAsyncFnType } from '../utils/caches'
+import { StreamRegistry } from './StreamRegistry'
 
 const SEPARATOR = '|' // always use SEPARATOR for cache key
 

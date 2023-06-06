@@ -1,22 +1,22 @@
-import { EthereumAddress, Multimap, toEthereumAddress } from '@streamr/utils'
 import { StreamID } from '@streamr/protocol'
-import { inject, Lifecycle, scoped } from 'tsyringe'
+import { EthereumAddress, Multimap, toEthereumAddress } from '@streamr/utils'
+import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../../../src/Authentication'
 import { NotFoundError } from '../../../src/HttpUtil'
-import {
-    isPublicPermissionAssignment,
-    isPublicPermissionQuery,
-    PermissionAssignment,
-    PermissionQuery, StreamPermission
-} from '../../../src/permission'
-import { SearchStreamsPermissionFilter } from '../../../src/registry/searchStreams'
-import { StreamRegistry } from '../../../src/registry/StreamRegistry'
-import { StreamRegistryCached } from '../../../src/registry/StreamRegistryCached'
 import { Stream, StreamMetadata } from '../../../src/Stream'
 import { StreamFactory } from '../../../src/StreamFactory'
 import { StreamIDBuilder } from '../../../src/StreamIDBuilder'
+import {
+    PermissionAssignment,
+    PermissionQuery, StreamPermission,
+    isPublicPermissionAssignment,
+    isPublicPermissionQuery
+} from '../../../src/permission'
+import { StreamRegistry } from '../../../src/registry/StreamRegistry'
+import { StreamRegistryCached } from '../../../src/registry/StreamRegistryCached'
+import { SearchStreamsPermissionFilter } from '../../../src/registry/searchStreams'
 import { Methods } from '../types'
-import { FakeChain, PublicPermissionTarget, PUBLIC_PERMISSION_TARGET, StreamRegistryItem } from './FakeChain'
+import { FakeChain, PUBLIC_PERMISSION_TARGET, PublicPermissionTarget, StreamRegistryItem } from './FakeChain'
 
 @scoped(Lifecycle.ContainerScoped)
 export class FakeStreamRegistry implements Methods<StreamRegistry> {
