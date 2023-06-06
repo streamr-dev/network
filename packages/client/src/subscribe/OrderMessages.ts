@@ -68,14 +68,13 @@ export class OrderMessages {
         let resendMessageStream!: MessageStream
 
         try {
-            resendMessageStream = await this.resends.range(this.streamPartId, {
-                fromTimestamp: from.timestamp,
-                toTimestamp: to.timestamp,
-                fromSequenceNumber: from.sequenceNumber,
-                toSequenceNumber: to.sequenceNumber,
+            resendMessageStream = await this.resends.resend(this.streamPartId, {
+                from,
+                to,
                 publisherId: context.publisherId,
                 msgChainId: context.msgChainId,
-            }, true, this.getStorageNodes)
+                raw: true
+            }, this.getStorageNodes)
             resendMessageStream.onFinally.listen(() => {
                 this.resendStreams.delete(resendMessageStream)
             })
