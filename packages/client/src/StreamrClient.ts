@@ -29,7 +29,7 @@ import { StreamRegistry } from './registry/StreamRegistry'
 import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
 import { SearchStreamsOrderBy, SearchStreamsPermissionFilter } from './registry/searchStreams'
 import { MessageListener, MessageStream } from './subscribe/MessageStream'
-import { ResendSubscription } from './subscribe/ResendSubscription'
+import { initResendSubscription } from './subscribe/resendSubscription'
 import { ResendOptions, Resends } from './subscribe/Resends'
 import { Subscriber } from './subscribe/Subscriber'
 import { Subscription } from './subscribe/Subscription'
@@ -187,15 +187,16 @@ export class StreamrClient {
             throw new Error('Raw subscriptions are not supported for resend')
         }
         const streamPartId = await this.streamIdBuilder.toStreamPartID(options)
-        const sub = (options.resend !== undefined)
-            ? new ResendSubscription(
-                streamPartId,
+        const sub = new Subscription(streamPartId, options.raw ?? false, this.loggerFactory)
+        if (options.resend !== undefined) {
+            initResendSubscription(
+                sub,
                 options.resend,
                 this.resends,
+                this.config,
                 this.loggerFactory,
-                this.config
             )
-            : new Subscription(streamPartId, options.raw ?? false, this.loggerFactory)
+        }
         await this.subscriber.add(sub)
         if (onMessage !== undefined) {
             sub.useLegacyOnMessageHandler(onMessage)
