@@ -20,18 +20,18 @@ import { MsgChainUtil } from './MsgChainUtil'
 import { OrderMessages } from './OrderMessages'
 import { Resends } from './Resends'
 
-export interface SubscriptionPipelineOptions {
+export interface MessagePipelineOptions {
     streamPartId: StreamPartID
-    getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>
-    loggerFactory: LoggerFactory
+    getStorageNodes?: (streamId: StreamID) => Promise<EthereumAddress[]>
     resends: Resends
     groupKeyManager: GroupKeyManager
     streamRegistryCached: StreamRegistryCached
     destroySignal: DestroySignal
+    loggerFactory: LoggerFactory
     config: Pick<StrictStreamrClientConfig, 'orderMessages' | 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill'>
 }
 
-export const createSubscribePipeline = (opts: SubscriptionPipelineOptions): MessageStream => {
+export const createMessagePipeline = (opts: MessagePipelineOptions): MessageStream => {
 
     const logger = opts.loggerFactory.createLogger(module)
 

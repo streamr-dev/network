@@ -4,18 +4,15 @@ import random from 'lodash/random'
 import without from 'lodash/without'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
-import { DestroySignal } from '../DestroySignal'
 import { HttpUtil, createQueryString } from '../HttpUtil'
 import { Message } from '../Message'
 import { StreamrClientError } from '../StreamrClientError'
-import { GroupKeyManager } from '../encryption/GroupKeyManager'
 import { StorageNodeRegistry } from '../registry/StorageNodeRegistry'
-import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
 import { counting } from '../utils/GeneratorUtils'
 import { LoggerFactory } from '../utils/LoggerFactory'
+import { MessagePipelineFactory } from './MessagePipelineFactory'
 import { MessageStream } from './MessageStream'
-import { createSubscribePipeline } from './subscribePipeline'
 
 type QueryDict = Record<string, string | number | boolean | null | undefined>
 
@@ -54,7 +51,7 @@ export interface ResendRangeOptions {
  */
 export type ResendOptions = ResendLastOptions | ResendFromOptions | ResendRangeOptions
 
-type ResendType = 'last' | 'from' | 'range' 
+type ResendType = 'last' | 'from' | 'range'
 
 function isResendLast<T extends ResendLastOptions>(options: any): options is T {
     return options && typeof options === 'object' && 'last' in options && options.last != null
@@ -81,40 +78,32 @@ const createUrl = (baseUrl: string, endpointSuffix: string, streamPartId: Stream
 @scoped(Lifecycle.ContainerScoped)
 export class Resends {
 
+    private readonly messagePipelineFactory: MessagePipelineFactory
     private readonly streamStorageRegistry: StreamStorageRegistry
     private readonly storageNodeRegistry: StorageNodeRegistry
-    private readonly streamRegistryCached: StreamRegistryCached
     private readonly httpUtil: HttpUtil
-    private readonly groupKeyManager: GroupKeyManager
-    private readonly destroySignal: DestroySignal
     private readonly config: StrictStreamrClientConfig
-    private readonly loggerFactory: LoggerFactory
     private readonly logger: Logger
 
     constructor(
+        messagePipelineFactory: MessagePipelineFactory,
         streamStorageRegistry: StreamStorageRegistry,
         @inject(delay(() => StorageNodeRegistry)) storageNodeRegistry: StorageNodeRegistry,
-        @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
         httpUtil: HttpUtil,
-        groupKeyManager: GroupKeyManager,
-        destroySignal: DestroySignal,
         @inject(ConfigInjectionToken) config: StrictStreamrClientConfig,
         loggerFactory: LoggerFactory
     ) {
+        this.messagePipelineFactory = messagePipelineFactory
         this.streamStorageRegistry = streamStorageRegistry
         this.storageNodeRegistry = storageNodeRegistry
-        this.streamRegistryCached = streamRegistryCached
         this.httpUtil = httpUtil
-        this.groupKeyManager = groupKeyManager
-        this.destroySignal = destroySignal
         this.config = config
-        this.loggerFactory = loggerFactory
         this.logger = loggerFactory.createLogger(module)
     }
 
     async resend(
-        streamPartId: StreamPartID, 
-        options: ResendOptions & { raw?: boolean }, 
+        streamPartId: StreamPartID,
+        options: ResendOptions & { raw?: boolean },
         getStorageNodes?: (streamId: StreamID) => Promise<EthereumAddress[]>
     ): Promise<MessageStream> {
         const raw = options.raw ?? false
@@ -175,17 +164,17 @@ export class Resends {
         const nodeAddress = nodeAddresses[random(0, nodeAddresses.length - 1)]
         const nodeUrl = (await this.storageNodeRegistry.getStorageNodeMetadata(nodeAddress)).http
         const url = createUrl(nodeUrl, resendType, streamPartId, query)
-        const config = (nodeAddresses.length > 1) ? this.config : { ...this.config, orderMessages: false }
-        const messageStream = (raw === false) ? createSubscribePipeline({
+        const messageStream = raw ? new MessageStream() : this.messagePipelineFactory.createMessagePipeline({
             streamPartId,
+            /*
+             * Disable ordering if the source of this resend is the only storage node. In that case there is no
+             * other storage node from which we could fetch the gaps. When we set "disableMessageOrdering"
+             * to true, we disable both gap filling and message ordering. As resend messages always arrive 
+             * in ascending order, we don't need the ordering functionality.
+             */
             getStorageNodes: async () => without(nodeAddresses, nodeAddress),
-            resends: this,
-            groupKeyManager: this.groupKeyManager,
-            streamRegistryCached: this.streamRegistryCached,
-            destroySignal: this.destroySignal,
-            config,
-            loggerFactory: this.loggerFactory
-        }) : new MessageStream()
+            config: (nodeAddresses.length === 1) ? { ...this.config, orderMessages: false } : this.config
+        })
 
         const dataStream = this.httpUtil.fetchHttpStream(url)
         messageStream.pull(counting(dataStream, (count: number) => {
@@ -195,7 +184,7 @@ export class Resends {
     }
 
     async waitForStorage(
-        message: Message, 
+        message: Message,
         {
             // eslint-disable-next-line no-underscore-dangle
             interval = this.config._timeouts.storageNode.retryInterval,
