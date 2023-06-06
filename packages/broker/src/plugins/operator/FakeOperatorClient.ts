@@ -1,5 +1,6 @@
 import { StreamID } from '@streamr/protocol'
 import EventEmitter3 from 'eventemitter3'
+import { OperatorClient } from '@streamr/operator-client'
 
 interface OperatorClientEvents {
     addStakedStream: (streamId: string, blockNumber: number) => void
