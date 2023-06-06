@@ -2,6 +2,10 @@ import 'reflect-metadata'
 import './utils/PatchTsyringe'
 
 import { ProxyDirection } from '@streamr/protocol'
+import { EthereumAddress, TheGraphClient, toEthereumAddress } from '@streamr/utils'
+import merge from 'lodash/merge'
+import omit from 'lodash/omit'
+import { ProxyDirection } from '@streamr/protocol'
 import { EthereumAddress, TheGraphClient, merge, toEthereumAddress } from '@streamr/utils'
 import omit from 'lodash/omit'
 import { container as rootContainer } from 'tsyringe'
@@ -212,8 +216,14 @@ export class StreamrClient {
      *
      * @param streamDefinitionOrSubscription - leave as `undefined` to unsubscribe from all existing subscriptions.
      */
-    unsubscribe(streamDefinitionOrSubscription?: StreamDefinition | Subscription): Promise<unknown> {
-        return this.subscriber.unsubscribe(streamDefinitionOrSubscription)
+    async unsubscribe(streamDefinitionOrSubscription?: StreamDefinition | Subscription): Promise<unknown> {
+        if (streamDefinitionOrSubscription instanceof Subscription) {
+            const sub = streamDefinitionOrSubscription
+            return this.subscriber.remove(sub)
+        } else {
+            const subs = await this.getSubscriptions(streamDefinitionOrSubscription)
+            return Promise.allSettled(subs.map((sub) => this.subscriber.remove(sub)))
+        }
     }
 
     /**
@@ -223,8 +233,11 @@ export class StreamrClient {
      *
      * @param streamDefinition - leave as `undefined` to get all subscriptions
      */
-    getSubscriptions(streamDefinition?: StreamDefinition): Promise<Subscription[]> {
-        return this.subscriber.getSubscriptions(streamDefinition)
+    async getSubscriptions(streamDefinition?: StreamDefinition): Promise<Subscription[]> {
+        const matcher = (streamDefinition !== undefined)
+            ? await this.streamIdBuilder.getMatcher(streamDefinition)
+            : () => true
+        return this.subscriber.getSubscriptions().filter((s) => matcher(s.streamPartId))
     }
 
     // --------------------------------------------------------------------------------------------
@@ -587,7 +600,7 @@ export class StreamrClient {
         this._connect.reset() // reset connect (will error on next call)
         const tasks = [
             this.destroySignal.destroy().then(() => undefined),
-            this.subscriber.unsubscribe()
+            this.unsubscribe()
         ]
 
         await Promise.allSettled(tasks)

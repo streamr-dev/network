@@ -22,7 +22,6 @@ import { Resends } from './Resends'
 
 export interface MessagePipelineOptions {
     streamPartId: StreamPartID
-    disableMessageOrdering?: boolean
     getStorageNodes?: (streamId: StreamID) => Promise<EthereumAddress[]>
     resends: Resends
     groupKeyManager: GroupKeyManager

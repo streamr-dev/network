@@ -3,6 +3,7 @@ import { EthereumAddress, Logger, randomString, toEthereumAddress } from '@strea
 import random from 'lodash/random'
 import without from 'lodash/without'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { HttpUtil, createQueryString } from '../HttpUtil'
 import { StreamrClientError } from '../StreamrClientError'
 import { StorageNodeRegistry } from '../registry/StorageNodeRegistry'
@@ -80,6 +81,7 @@ export class Resends {
     private readonly streamStorageRegistry: StreamStorageRegistry
     private readonly storageNodeRegistry: StorageNodeRegistry
     private readonly httpUtil: HttpUtil
+    private readonly config: StrictStreamrClientConfig
     private readonly logger: Logger
 
     constructor(
@@ -87,12 +89,14 @@ export class Resends {
         streamStorageRegistry: StreamStorageRegistry,
         @inject(delay(() => StorageNodeRegistry)) storageNodeRegistry: StorageNodeRegistry,
         httpUtil: HttpUtil,
+        @inject(ConfigInjectionToken) config: StrictStreamrClientConfig,
         loggerFactory: LoggerFactory
     ) {
         this.messagePipelineFactory = messagePipelineFactory
         this.streamStorageRegistry = streamStorageRegistry
         this.storageNodeRegistry = storageNodeRegistry
         this.httpUtil = httpUtil
+        this.config = config
         this.logger = loggerFactory.createLogger(module)
     }
 
@@ -159,18 +163,17 @@ export class Resends {
         const nodeAddress = nodeAddresses[random(0, nodeAddresses.length - 1)]
         const nodeUrl = (await this.storageNodeRegistry.getStorageNodeMetadata(nodeAddress)).http
         const url = createUrl(nodeUrl, resendType, streamPartId, query)
-        const messageStream = (raw === false) ? this.messagePipelineFactory.createMessagePipeline({
+        const messageStream = raw ? new MessageStream() : this.messagePipelineFactory.createMessagePipeline({
             streamPartId,
             /*
              * Disable ordering if the source of this resend is the only storage node. In that case there is no
-             * another storage node from which we could fetch the gaps. When we set "disableMessageOrdering"
+             * other storage node from which we could fetch the gaps. When we set "disableMessageOrdering"
              * to true, we disable both gap filling and message ordering. As resend messages always arrive 
-             * in ascending order, we don't need the ordering functionality. But as that flag controls also 
-             * gap filling, we can use it only if gap filling is not needed.
+             * in ascending order, we don't need the ordering functionality.
              */
-            disableMessageOrdering: (nodeAddresses.length === 1),
             getStorageNodes: async () => without(nodeAddresses, nodeAddress),
-        }) : new MessageStream()
+            config: (nodeAddresses.length === 1) ? { ...this.config, orderMessages: false } : this.config
+        })
 
         const dataStream = this.httpUtil.fetchHttpStream(url)
         messageStream.pull(counting(dataStream, (count: number) => {

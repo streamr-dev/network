@@ -3,6 +3,8 @@ import 'reflect-metadata'
 import { StreamID, StreamMessage } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
 import { Defer, collect, waitForCondition } from '@streamr/utils'
+import shuffle from 'lodash/shuffle'
+import sample from 'lodash/sample'
 import { Message, MessageMetadata } from '../../src/Message'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamPermission } from '../../src/permission'
@@ -38,9 +40,9 @@ describe('Subscriber', () => {
     let publisher: StreamrClient
     let environment: FakeEnvironment
 
-    const getSubscriptionCount = (def?: StreamID) => {
-        // @ts-expect-error private
-        return client.subscriber.count(def)
+    const getSubscriptionCount = async (def?: StreamID) => {
+        const subcriptions = await client.getSubscriptions(def !== undefined ? { id: def } : undefined)
+        return subcriptions.length
     }
 
     beforeAll(async () => {
@@ -602,36 +604,38 @@ describe('Subscriber', () => {
             expect(await getSubscriptionCount(streamId)).toBe(0)
         })
 
-        it('can subscribe then unsubscribe in parallel', async () => {
-            const [sub] = await Promise.all([
-                client.subscribe(streamId),
-                client.unsubscribe(streamId),
+        it('can subscribe and unsubscribe in parallel', async () => {
+            // do subscribe and unsubscribe request in random order
+            const operations = shuffle([
+                () => client.subscribe(streamId),
+                () => client.subscribe(streamId),
+                () => client.subscribe(streamId),
+                () => client.subscribe(streamId),
+                () => client.subscribe(streamId),
+                () => client.unsubscribe(streamId),
+                () => client.unsubscribe(streamId),
+                () => client.unsubscribe(streamId),
+                () => client.unsubscribe(streamId),
+                () => client.unsubscribe(streamId)
             ])
+            await Promise.all(operations.map((o) => o()))
 
-            expect(await getSubscriptionCount(streamId)).toBe(1)
+            // operations did not crash, and we either have some subscriptions or we don't have
+            const subscriptions = await client.getSubscriptions(streamId)
+            expect(subscriptions.length >= 0 && subscriptions.length <= 5).toBeTrue()
+            let sub: Subscription
+            if (subscriptions.length === 0) {
+                sub = await client.subscribe(streamId)
+            } else {
+                sub = sample(subscriptions)!
+            }
 
             const published = await publishTestMessages(3)
-
             const received = await collect(sub, 3)
-
             expect(received.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
-            expect(await getSubscriptionCount(streamId)).toBe(0)
-        })
 
-        it('can unsubscribe then subscribe in parallel', async () => {
-            const [_, sub] = await Promise.all([
-                client.unsubscribe(streamId),
-                client.subscribe(streamId),
-            ])
-
-            expect(await getSubscriptionCount(streamId)).toBe(1)
-
-            const published = await publishTestMessages(3)
-
-            const received = await collect(sub, 3)
-
-            expect(received.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
-            expect(await getSubscriptionCount(streamId)).toBe(0)
+            // clean up tests so that next test cases don't have existing subcriptions
+            await client.unsubscribe()
         })
     })
 

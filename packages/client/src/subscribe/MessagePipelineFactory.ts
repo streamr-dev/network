@@ -1,4 +1,5 @@
-import { Lifecycle, inject, scoped, delay } from 'tsyringe'
+import { MarkOptional } from 'ts-essentials'
+import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { ConfigInjectionToken } from '../Config'
 import { DestroySignal } from '../DestroySignal'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'
@@ -8,13 +9,13 @@ import { MessageStream } from './MessageStream'
 import { Resends } from './Resends'
 import { MessagePipelineOptions, createMessagePipeline as _createMessagePipeline } from './messagePipeline'
 
-type MessagePipelineFactoryOptions = Omit<MessagePipelineOptions,
+type MessagePipelineFactoryOptions = MarkOptional<Omit<MessagePipelineOptions,
     'resends' |
     'groupKeyManager' |
     'streamRegistryCached' |
     'destroySignal' |
-    'loggerFactory' |
-    'config'>
+    'loggerFactory'>,
+    'config'> 
 
 @scoped(Lifecycle.ContainerScoped)
 export class MessagePipelineFactory {
@@ -52,7 +53,7 @@ export class MessagePipelineFactory {
             streamRegistryCached: this.streamRegistryCached,
             destroySignal: this.destroySignal,
             loggerFactory: this.loggerFactory,
-            config: this.config
+            config: opts.config ?? this.config
         })
     }
 }

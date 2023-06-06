@@ -9,7 +9,7 @@ import { DestroySignal } from '../../src/DestroySignal'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { MessageFactory } from '../../src/publish/MessageFactory'
 import { Resends } from '../../src/subscribe/Resends'
-import { MessagePipelineOptions, createMessagePipeline } from '../../src/subscribe/messagePipeline'
+import { MessagePipelineFactory } from '../../src/subscribe/MessagePipelineFactory'
 import { createGroupKeyQueue, createStreamRegistryCached, mockLoggerFactory } from '../test-utils/utils'
 
 const PUBLISHER_WALLET = fastWallet()
@@ -33,26 +33,24 @@ describe('Resends', () => {
     })
 
     const createResends = (messagesPerStorageNode: Record<EthereumAddress, StreamMessage[]>): Resends => {
-        const resends: Resends = new Resends(
+        const messagePipelineFactory = new MessagePipelineFactory(
+            undefined as any, // set later in this method as we have a circular dependency
             {
-                createMessagePipeline: (opts: Partial<MessagePipelineOptions>) => createMessagePipeline({
-                    ...opts,
-                    resends,
-                    groupKeyManager: {
-                        fetchKey: async () => GROUP_KEY
-                    } as any,
-                    streamRegistryCached: createStreamRegistryCached(),
-                    destroySignal: new DestroySignal(),
-                    loggerFactory: mockLoggerFactory(),
-                    config: { 
-                        orderMessages: true,
-                        gapFill: true,
-                        maxGapRequests: 1,
-                        gapFillTimeout: 100,
-                        retryResendAfter: 100
-                    }
-                } as any)
+                fetchKey: async () => GROUP_KEY
             } as any,
+            createStreamRegistryCached(),
+            new DestroySignal(),
+            mockLoggerFactory(),
+            { 
+                orderMessages: true,
+                gapFill: true,
+                maxGapRequests: 1,
+                gapFillTimeout: 100,
+                retryResendAfter: 100
+            }
+        )
+        const resends: Resends = new Resends(
+            messagePipelineFactory,
             undefined as any,
             {
                 getStorageNodeMetadata: async (nodeAddress: EthereumAddress) => ({ http: `${URL_PREFIX}${nodeAddress}` })
@@ -64,8 +62,11 @@ describe('Resends', () => {
                     yield* messages
                 }
             } as any,
+            undefined as any,
             mockLoggerFactory()
         )
+        // @ts-expect-error set value for circular dependency
+        messagePipelineFactory.resends = resends
         return resends
     }
 

@@ -1,6 +1,5 @@
-import { StreamID, StreamMessage, StreamMessageType, StreamPartID } from '@streamr/protocol'
+import { StreamMessage, StreamMessageType, StreamPartID } from '@streamr/protocol'
 import { NetworkNodeFacade, NetworkNodeStub } from '../NetworkNodeFacade'
-import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
 import { Scaffold } from '../utils/Scaffold'
 import { Signal } from '../utils/Signal'
 import { MessagePipelineFactory } from './MessagePipelineFactory'
@@ -26,7 +25,6 @@ export class SubscriptionSession {
     constructor(
         streamPartId: StreamPartID,
         messagePipelineFactory: MessagePipelineFactory,
-        streamStorageRegistry: StreamStorageRegistry,
         node: NetworkNodeFacade,
     ) {
         this.streamPartId = streamPartId
@@ -34,8 +32,7 @@ export class SubscriptionSession {
         this.node = node
         this.onError = this.onError.bind(this)
         this.pipeline = messagePipelineFactory.createMessagePipeline({
-            streamPartId,
-            getStorageNodes: (streamId: StreamID) => streamStorageRegistry.getStorageNodes(streamId)
+            streamPartId
         })
         this.pipeline.onError.listen(this.onError)
         this.pipeline
