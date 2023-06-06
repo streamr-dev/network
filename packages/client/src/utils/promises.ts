@@ -2,7 +2,6 @@ import pLimit from 'p-limit'
 import pThrottle from 'p-throttle'
 import { Defer, wait } from '@streamr/utils'
 import { MaybeAsync } from '../types'
-import { AggregatedError } from './AggregatedError'
 
 /**
  * Returns a function that executes with limited concurrency.
@@ -176,23 +175,6 @@ export async function pTimeout<T>(promise: Promise<T>, ...args: pTimeoutArgs): P
         clearTimeout(t)
         p.resolve(undefined)
     })
-}
-
-/**
- * Convert allSettled results into a thrown Aggregate error if necessary.
- */
-
-export async function allSettledValues(items: Parameters<(typeof Promise)['allSettled']>[0], errorMessage = ''): Promise<unknown[]> {
-    const result = await Promise.allSettled(items)
-    const errs = result
-        .filter(({ status }) => status === 'rejected')
-        .map((v) => (v as PromiseRejectedResult).reason)
-    if (errs.length) {
-        throw new AggregatedError(errs, errorMessage)
-    }
-
-    return result
-        .map((v) => (v as PromiseFulfilledResult<unknown>).value)
 }
 
 // TODO use streamr-test-utils#waitForCondition instead (when streamr-test-utils is no longer a test-only dependency)

@@ -40,9 +40,9 @@ describe('Subscriber', () => {
     let publisher: StreamrClient
     let environment: FakeEnvironment
 
-    const getSubscriptionCount = (def?: StreamID) => {
-        // @ts-expect-error private
-        return client.subscriber.count(def)
+    const getSubscriptionCount = async (def?: StreamID) => {
+        const subcriptions = await client.getSubscriptions(def !== undefined ? { id: def } : undefined)
+        return subcriptions.length
     }
 
     beforeAll(async () => {
