@@ -84,6 +84,7 @@ const signAuthMessage = async (authentication: Authentication) => {
  */
 @scoped(Lifecycle.ContainerScoped)
 export class LitProtocolFacade {
+
     private readonly authentication: Authentication
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | 'encryption'>
     private readonly logger: Logger

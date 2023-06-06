@@ -30,6 +30,7 @@ import { LocalGroupKeyStore } from './LocalGroupKeyStore'
 
 @scoped(Lifecycle.ContainerScoped)
 export class PublisherKeyExchange {
+
     private readonly logger: Logger
     private readonly store: LocalGroupKeyStore
     private readonly networkNodeFacade: NetworkNodeFacade

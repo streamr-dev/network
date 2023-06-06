@@ -7,7 +7,7 @@ import { EthereumAddress } from '@streamr/utils'
 @scoped(Lifecycle.ContainerScoped)
 export class FakeStorageNodeRegistry implements Methods<StorageNodeRegistry> {
 
-    private chain: FakeChain
+    private readonly chain: FakeChain
 
     constructor(chain: FakeChain) {
         this.chain = chain

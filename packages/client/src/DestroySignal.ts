@@ -13,6 +13,7 @@ import { StreamrClientError } from './StreamrClientError'
  */
 @scoped(Lifecycle.ContainerScoped)
 export class DestroySignal {
+
     public readonly onDestroy = Signal.once()
     public readonly trigger = this.destroy
     public readonly abortSignal: AbortSignal

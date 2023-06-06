@@ -50,11 +50,11 @@ const getNormalizedConfig = (config: Pick<StreamrClientConfig, 'metrics' | 'auth
 @scoped(Lifecycle.ContainerScoped)
 export class MetricsPublisher {
 
-    private publisher: Publisher
-    private node: NetworkNodeFacade
-    private eventEmitter: StreamrClientEventEmitter
-    private destroySignal: DestroySignal
-    private config: NormalizedConfig
+    private readonly publisher: Publisher
+    private readonly node: NetworkNodeFacade
+    private readonly eventEmitter: StreamrClientEventEmitter
+    private readonly destroySignal: DestroySignal
+    private readonly config: NormalizedConfig
 
     constructor(
         publisher: Publisher,

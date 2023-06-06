@@ -35,13 +35,13 @@ interface NodeQueryResult {
 @scoped(Lifecycle.ContainerScoped)
 export class StreamStorageRegistry {
 
-    private contractFactory: ContractFactory
-    private streamFactory: StreamFactory
-    private streamIdBuilder: StreamIDBuilder
-    private theGraphClient: TheGraphClient
-    private authentication: Authentication
+    private readonly contractFactory: ContractFactory
+    private readonly streamFactory: StreamFactory
+    private readonly streamIdBuilder: StreamIDBuilder
+    private readonly theGraphClient: TheGraphClient
+    private readonly authentication: Authentication
     private streamStorageRegistryContract?: StreamStorageRegistryContract
-    private config: Pick<StrictStreamrClientConfig, 'contracts'>
+    private readonly config: Pick<StrictStreamrClientConfig, 'contracts'>
     private readonly streamStorageRegistryContractsReadonly: StreamStorageRegistryContract[]
     private readonly logger: Logger
 

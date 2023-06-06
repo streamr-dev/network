@@ -14,6 +14,7 @@ import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 
 @scoped(Lifecycle.ContainerScoped)
 export class GroupKeyManager {
+
     private readonly localGroupKeyStore: LocalGroupKeyStore
     private readonly litProtocolFacade: LitProtocolFacade
     private readonly subscriberKeyExchange: SubscriberKeyExchange

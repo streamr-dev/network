@@ -8,8 +8,9 @@ import { merge } from '@streamr/utils'
 @scoped(Lifecycle.ContainerScoped)
 export class HttpFetcher {
 
-    private config: Pick<StrictStreamrClientConfig, '_timeouts'>
+    private readonly config: Pick<StrictStreamrClientConfig, '_timeouts'>
     private readonly logger: Logger
+
     /** @internal */
     constructor(
         loggerFactory: LoggerFactory,

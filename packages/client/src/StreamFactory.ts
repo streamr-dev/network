@@ -24,6 +24,7 @@ export class StreamFactory {
     private readonly eventEmitter: StreamrClientEventEmitter
     /** @internal */
     private readonly config: Pick<StrictStreamrClientConfig, '_timeouts'>
+
     /** @internal */
     constructor(
         resends: Resends,

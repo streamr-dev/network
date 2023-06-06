@@ -69,12 +69,12 @@ const streamContractErrorProcessor = (err: any, streamId: StreamID, registry: st
 @scoped(Lifecycle.ContainerScoped)
 export class StreamRegistry {
 
-    private contractFactory: ContractFactory
-    private streamIdBuilder: StreamIDBuilder
-    private streamFactory: StreamFactory
-    private theGraphClient: TheGraphClient
-    private streamRegistryCached: StreamRegistryCached
-    private authentication: Authentication
+    private readonly contractFactory: ContractFactory
+    private readonly streamIdBuilder: StreamIDBuilder
+    private readonly streamFactory: StreamFactory
+    private readonly theGraphClient: TheGraphClient
+    private readonly streamRegistryCached: StreamRegistryCached
+    private readonly authentication: Authentication
     /** @internal */
     private config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
     private readonly logger: Logger

@@ -34,6 +34,7 @@ const MAX_PENDING_REQUEST_COUNT = 50000 // just some limit, we can tweak the num
 
 @scoped(Lifecycle.ContainerScoped)
 export class SubscriberKeyExchange {
+
     private readonly logger: Logger
     private rsaKeyPair: RSAKeyPair | undefined
     private readonly networkNodeFacade: NetworkNodeFacade
