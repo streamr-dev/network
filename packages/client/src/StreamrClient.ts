@@ -300,10 +300,7 @@ export class StreamrClient {
             interval: this.config._timeouts.storageNode.retryInterval,
             // eslint-disable-next-line no-underscore-dangle
             timeout: this.config._timeouts.storageNode.timeout,
-            count: 100,
-            messageMatchFn: (msgTarget: Message, msgGot: Message) => {
-                return msgTarget.signature === msgGot.signature
-            }
+            count: 100
         }
         return waitForStorage(message, merge(defaultOptions, options), this.resends)
     }

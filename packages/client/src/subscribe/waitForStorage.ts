@@ -12,13 +12,14 @@ export const waitForStorage = async (
         interval: number
         timeout: number
         count: number
-        messageMatchFn: (msgTarget: Message, msgGot: Message) => boolean
+        messageMatchFn?: (msgTarget: Message, msgGot: Message) => boolean
     },
     resends: Resends
 ): Promise<void> => {
     if (!message) {
         throw new StreamrClientError('waitForStorage requires a Message', 'INVALID_ARGUMENT')
     }
+    const macher = opts.messageMatchFn ?? ((msgTarget: Message, msgGot: Message) => (msgTarget.signature === msgGot.signature))
     const start = Date.now()
     let last: Message[] | undefined
     let found = false
@@ -34,7 +35,7 @@ export const waitForStorage = async (
         const resendStream = await resends.resend(toStreamPartID(message.streamId, message.streamPartition), { last: opts.count })
         last = await collect(resendStream)
         for (const lastMsg of last) {
-            if (opts.messageMatchFn(message, lastMsg)) {
+            if (macher(message, lastMsg)) {
                 found = true
                 logger.debug('Found matching message')
                 return
