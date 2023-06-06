@@ -33,6 +33,7 @@ import { ResendSubscription } from './subscribe/ResendSubscription'
 import { ResendOptions, Resends } from './subscribe/Resends'
 import { Subscriber } from './subscribe/Subscriber'
 import { Subscription } from './subscribe/Subscription'
+import { waitForStorage } from './subscribe/waitForStorage'
 import { StreamDefinition } from './types'
 import { HttpFetcher } from './utils/HttpFetcher'
 import { LoggerFactory } from './utils/LoggerFactory'
@@ -294,7 +295,14 @@ export class StreamrClient {
          */
         messageMatchFn?: (msgTarget: Message, msgGot: Message) => boolean
     }): Promise<void> {
-        return this.resends.waitForStorage(message, options)
+        const defaultOptions = {
+            // eslint-disable-next-line no-underscore-dangle
+            interval: this.config._timeouts.storageNode.retryInterval,
+            // eslint-disable-next-line no-underscore-dangle
+            timeout: this.config._timeouts.storageNode.timeout,
+            count: 100
+        }
+        return waitForStorage(message, merge(defaultOptions, options), this.resends)
     }
 
     // --------------------------------------------------------------------------------------------
