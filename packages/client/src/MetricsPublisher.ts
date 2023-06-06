@@ -57,10 +57,10 @@ export class MetricsPublisher {
     private config: NormalizedConfig
 
     constructor(
-        @inject(Publisher) publisher: Publisher,
-        @inject(NetworkNodeFacade) node: NetworkNodeFacade,
-        @inject(StreamrClientEventEmitter) eventEmitter: StreamrClientEventEmitter,
-        @inject(DestroySignal) destroySignal: DestroySignal,
+        publisher: Publisher,
+        node: NetworkNodeFacade,
+        eventEmitter: StreamrClientEventEmitter,
+        destroySignal: DestroySignal,
         @inject(ConfigInjectionToken) config: Pick<StreamrClientConfig, 'metrics' | 'auth'>
     ) {
         this.publisher = publisher

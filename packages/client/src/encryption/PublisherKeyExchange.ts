@@ -39,7 +39,7 @@ export class PublisherKeyExchange {
     constructor(
         store: LocalGroupKeyStore,
         networkNodeFacade: NetworkNodeFacade,
-        @inject(LoggerFactory) loggerFactory: LoggerFactory,
+        loggerFactory: LoggerFactory,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
     ) {

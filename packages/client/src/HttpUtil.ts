@@ -4,7 +4,7 @@ import { Readable } from 'stream'
 import { WebStreamToNodeStream } from './utils/WebStreamToNodeStream'
 import split2 from 'split2'
 import { StreamMessage } from '@streamr/protocol'
-import { inject, Lifecycle, scoped } from 'tsyringe'
+import { Lifecycle, scoped } from 'tsyringe'
 import { Logger } from '@streamr/utils'
 import { LoggerFactory } from './utils/LoggerFactory'
 
@@ -72,7 +72,7 @@ const parseErrorCode = (body: string) => {
 export class HttpUtil {
     private readonly logger: Logger
 
-    constructor(@inject(LoggerFactory) loggerFactory: LoggerFactory) {
+    constructor(loggerFactory: LoggerFactory) {
         this.logger = loggerFactory.createLogger(module)
     }
 

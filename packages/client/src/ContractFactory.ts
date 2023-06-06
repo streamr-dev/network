@@ -17,7 +17,7 @@ export class ContractFactory {
 
     constructor(
         eventEmitter: StreamrClientEventEmitter,
-        @inject(LoggerFactory) loggerFactory: LoggerFactory,
+        loggerFactory: LoggerFactory,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts'>
     ) {
         this.eventEmitter = eventEmitter

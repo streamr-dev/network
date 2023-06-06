@@ -22,7 +22,7 @@ export class StreamRegistryCached {
     private readonly _isPublic: CacheAsyncFnType<[StreamID], boolean, string>
 
     constructor(
-        @inject(LoggerFactory) loggerFactory: LoggerFactory,
+        loggerFactory: LoggerFactory,
         @inject(delay(() => StreamRegistry)) streamRegistry: StreamRegistry,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'cache'>
     ) {

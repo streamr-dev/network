@@ -48,11 +48,11 @@ export class StreamStorageRegistry {
     constructor(
         contractFactory: ContractFactory,
         @inject(delay(() => StreamFactory)) streamFactory: StreamFactory,
-        @inject(StreamIDBuilder) streamIdBuilder: StreamIDBuilder,
+        streamIdBuilder: StreamIDBuilder,
         theGraphClient: TheGraphClient,
-        @inject(StreamrClientEventEmitter) eventEmitter: StreamrClientEventEmitter,
+        eventEmitter: StreamrClientEventEmitter,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
-        @inject(LoggerFactory) loggerFactory: LoggerFactory,
+        loggerFactory: LoggerFactory,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts'>
     ) {
         this.contractFactory = contractFactory

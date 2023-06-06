@@ -1,6 +1,6 @@
 import { StreamID } from '@streamr/protocol'
 import { EthereumAddress, Logger } from '@streamr/utils'
-import { inject, Lifecycle, scoped } from 'tsyringe'
+import { Lifecycle, scoped } from 'tsyringe'
 import { StreamrClientEventEmitter } from '../events'
 import { PersistenceManager, NAMESPACES } from '../PersistenceManager'
 import { LoggerFactory } from '../utils/LoggerFactory'
@@ -55,9 +55,9 @@ export class LocalGroupKeyStore {
     private readonly logger: Logger
 
     constructor(
-        @inject(PersistenceManager) persistenceManager: PersistenceManager,
-        @inject(LoggerFactory) loggerFactory: LoggerFactory,
-        @inject(StreamrClientEventEmitter) eventEmitter: StreamrClientEventEmitter
+        persistenceManager: PersistenceManager,
+        loggerFactory: LoggerFactory,
+        eventEmitter: StreamrClientEventEmitter
     ) {
         this.persistenceManager = persistenceManager
         this.eventEmitter = eventEmitter

@@ -1,6 +1,6 @@
 import { StreamPartID } from '@streamr/protocol'
 import { Logger } from '@streamr/utils'
-import { Lifecycle, inject, scoped } from 'tsyringe'
+import { Lifecycle, scoped } from 'tsyringe'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { MessagePipelineFactory } from './MessagePipelineFactory'
@@ -18,7 +18,7 @@ export class Subscriber {
     constructor(
         messagePipelineFactory: MessagePipelineFactory,
         node: NetworkNodeFacade,
-        @inject(LoggerFactory) loggerFactory: LoggerFactory,
+        loggerFactory: LoggerFactory,
     ) {
         this.messagePipelineFactory = messagePipelineFactory
         this.node = node

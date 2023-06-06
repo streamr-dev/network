@@ -84,12 +84,12 @@ export class StreamRegistry {
     /** @internal */
     constructor(
         contractFactory: ContractFactory,
-        @inject(LoggerFactory) loggerFactory: LoggerFactory,
-        @inject(StreamIDBuilder) streamIdBuilder: StreamIDBuilder,
+        loggerFactory: LoggerFactory,
+        streamIdBuilder: StreamIDBuilder,
         streamFactory: StreamFactory,
         theGraphClient: TheGraphClient,
         @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
-        @inject(StreamrClientEventEmitter) eventEmitter: StreamrClientEventEmitter,
+        eventEmitter: StreamrClientEventEmitter,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
     ) {
