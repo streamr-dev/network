@@ -59,7 +59,7 @@ describe('MaintainTopologyService', () => {
         service = new MaintainTopologyService(client, new OperatorClient({
             provider,
             operatorContractAddress: operatorContract.address,
-            theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST}:8000/subgraphs/name/streamr-dev/network-subgraphs`,
+            theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`,
             fetch: fetch
         }, new Logger(module) as any)) // TODO: logger casting issue
         await service.start()
