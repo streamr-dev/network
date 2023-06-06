@@ -164,7 +164,7 @@ export class Resends {
         const nodeAddress = nodeAddresses[random(0, nodeAddresses.length - 1)]
         const nodeUrl = (await this.storageNodeRegistry.getStorageNodeMetadata(nodeAddress)).http
         const url = createUrl(nodeUrl, resendType, streamPartId, query)
-        const messageStream = (raw === false) ? this.messagePipelineFactory.createMessagePipeline({
+        const messageStream = raw ? new MessageStream() : this.messagePipelineFactory.createMessagePipeline({
             streamPartId,
             /*
              * Disable ordering if the source of this resend is the only storage node. In that case there is no
@@ -173,8 +173,8 @@ export class Resends {
              * in ascending order, we don't need the ordering functionality.
              */
             getStorageNodes: async () => without(nodeAddresses, nodeAddress),
-            config: (nodeAddresses.length > 1) ? this.config : { ...this.config, orderMessages: false }
-        }) : new MessageStream()
+            config: (nodeAddresses.length === 1) ? { ...this.config, orderMessages: false } : this.config
+        })
 
         const dataStream = this.httpUtil.fetchHttpStream(url)
         messageStream.pull(counting(dataStream, (count: number) => {
