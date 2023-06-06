@@ -3,6 +3,8 @@ import 'reflect-metadata'
 import { StreamID, StreamMessage } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
 import { Defer, collect, waitForCondition } from '@streamr/utils'
+import shuffle from 'lodash/shuffle'
+import sample from 'lodash/sample'
 import { Message, MessageMetadata } from '../../src/Message'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamPermission } from '../../src/permission'
@@ -600,6 +602,40 @@ describe('Subscriber', () => {
             expect(received).toHaveLength(0)
 
             expect(await getSubscriptionCount(streamId)).toBe(0)
+        })
+
+        it('can subscribe and unsubscribe in parallel', async () => {
+            // do subscribe and unsubscribe request in random order
+            const operations = shuffle([
+                () => client.subscribe(streamId),
+                () => client.subscribe(streamId),
+                () => client.subscribe(streamId),
+                () => client.subscribe(streamId),
+                () => client.subscribe(streamId),
+                () => client.unsubscribe(streamId),
+                () => client.unsubscribe(streamId),
+                () => client.unsubscribe(streamId),
+                () => client.unsubscribe(streamId),
+                () => client.unsubscribe(streamId)
+            ])
+            await Promise.all(operations.map((o) => o()))
+
+            // operations did not crash, and we either have some subscriptions or we don't have
+            const subscriptions = await client.getSubscriptions(streamId)
+            expect(subscriptions.length >= 0 && subscriptions.length <= 5).toBeTrue()
+            let sub: Subscription
+            if (subscriptions.length === 0) {
+                sub = await client.subscribe(streamId)
+            } else {
+                sub = sample(subscriptions)!
+            }
+
+            const published = await publishTestMessages(3)
+            const received = await collect(sub, 3)
+            expect(received.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
+
+            // clean up tests so that next test cases don't have existing subcriptions
+            await client.unsubscribe()
         })
     })
 

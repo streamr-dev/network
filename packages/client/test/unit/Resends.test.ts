@@ -70,7 +70,7 @@ describe('Resends', () => {
         const resends = createResends({
             [storageNodeAddress]: [allMessages[0], allMessages[2]]
         })
-        const messageStream = await resends.last(STREAM_PART_ID, { count: 2 }, false, async () => [storageNodeAddress])
+        const messageStream = await resends.resend(STREAM_PART_ID, { last: 2 }, async () => [storageNodeAddress])
         const receivedMessages = await collect(messageStream)
         expect(receivedMessages.map((msg) => msg.content)).toEqual([
             { foo: 1 },
@@ -90,7 +90,7 @@ describe('Resends', () => {
             [storageNodeAddress1]: without(allMessages, msg2),
             [storageNodeAddress2]: without(allMessages, msg3)
         })
-        const messageStream = await resends.last(STREAM_PART_ID, { count: 4 }, false, async () => [storageNodeAddress1, storageNodeAddress2])
+        const messageStream = await resends.resend(STREAM_PART_ID, { last: 4 }, async () => [storageNodeAddress1, storageNodeAddress2])
         const receivedMessages = await collect(messageStream)
         expect(receivedMessages.map((msg) => msg.content)).toEqual([
             { foo: 1 },
