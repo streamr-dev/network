@@ -618,7 +618,7 @@ describe('Subscriber', () => {
                 () => client.unsubscribe(streamId),
                 () => client.unsubscribe(streamId)
             ])
-            await Promise.all(operations.map(o => o()))
+            await Promise.all(operations.map((o) => o()))
 
             // operations did not crash, and we either have some subscriptions or we don't have
             const subscriptions = await client.getSubscriptions(streamId)
