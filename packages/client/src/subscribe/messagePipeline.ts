@@ -66,7 +66,7 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): MessageStre
         } else {
             decrypted = msg
         }
-        decrypted.getParsedContent()  // throws if content is not parsaable (e.g. not valid JSON)
+        decrypted.getParsedContent()  // throws if content is not parsable (e.g. not valid JSON)
         return decrypted
     }, messageStream.onError)
 
