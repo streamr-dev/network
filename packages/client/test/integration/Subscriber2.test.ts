@@ -328,7 +328,7 @@ describe('Subscriber', () => {
             it('will skip bad message if error handler attached', async () => {
                 const sub = await client.subscribe(streamId)
                 const onSubscriptionError = jest.fn()
-                sub.onError.listen(onSubscriptionError)
+                sub.on('error', onSubscriptionError)
 
                 const published = []
                 const nodeId = (await publisher.getNode()).getNodeId()
@@ -360,36 +360,6 @@ describe('Subscriber', () => {
                     ...published.slice(0, MAX_ITEMS),
                     ...published.slice(MAX_ITEMS + 1)
                 ].map((m) => m.signature))
-                expect(onSubscriptionError).toHaveBeenCalledTimes(1)
-            })
-
-            it('will not skip bad message if error handler attached & throws', async () => {
-                const sub = await client.subscribe(streamId)
-                const received: Message[] = []
-                const onSubscriptionError = jest.fn((error: Error) => {
-                    throw error
-                })
-                sub.onError.listen(onSubscriptionError)
-
-                const published = []
-                const nodeId = (await publisher.getNode()).getNodeId()
-                const node = environment.getNetwork().getNode(nodeId)!
-                for (let i = 0; i < NUM_MESSAGES; i++) {
-                    const serializedContent = (i === MAX_ITEMS) ? 'invalid-json' : JSON.stringify({ foo: i })
-                    const msg = await createMockMessage(serializedContent, i)
-                    node.publish(msg)
-                    published.push(msg)
-                }
-
-                await expect(async () => {
-                    for await (const m of sub) {
-                        received.push(m)
-                        if (received.length === published.length) {
-                            break
-                        }
-                    }
-                }).rejects.toThrow()
-                expect(received.map((m) => m.signature)).toEqual(published.slice(0, MAX_ITEMS).map((m) => m.signature))
                 expect(onSubscriptionError).toHaveBeenCalledTimes(1)
             })
         })
