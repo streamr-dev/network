@@ -52,9 +52,10 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): MessageStre
     const messageStream = new MessageStream()
     const msgChainUtil = new MsgChainUtil(async (msg) => {
         await validateStreamMessage(msg, opts.streamRegistryCached)
+        let decrypted
         if (StreamMessage.isAESEncrypted(msg)) {
             try {
-                return await decrypt(msg, opts.groupKeyManager, opts.destroySignal)
+                decrypted = await decrypt(msg, opts.groupKeyManager, opts.destroySignal)
             } catch (err) {
                 // TODO log this in onError? if we want to log all errors?
                 logger.debug('Failed to decrypt', { messageId: msg.getMessageID(), err })
@@ -63,8 +64,10 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): MessageStre
                 throw err
             }    
         } else {
-            return msg
+            decrypted = msg
         }
+        decrypted.getParsedContent()  // throws if content is not parsaable (e.g. not valid JSON)
+        return decrypted
     }, messageStream.onError)
 
     // collect messages that fail validation/parsixng, do not push out of pipeline
@@ -97,10 +100,6 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): MessageStre
                 msgChainUtil.stop()
             })
             yield* msgChainUtil
-        })
-        // parse content
-        .forEach((streamMessage: StreamMessage) => {
-            streamMessage.getParsedContent()
         })
         // ignore any failed messages
         .filter((streamMessage: StreamMessage) => {
