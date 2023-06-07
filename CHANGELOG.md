@@ -15,16 +15,11 @@ found [here](packages/broker/CHANGELOG.md).
 
 #### Changed
 
-- Optimize message ordering and gap handling of resends (https://github.com/streamr-dev/network/pull/1460)
-
 #### Deprecated
 
 #### Removed
 
 #### Fixed
-
-- Clear permissions cache when message decryption fails (https://github.com/streamr-dev/network/pull/1458)
-- Fix default value handling for resend range queries (https://github.com/streamr-dev/network/pull/1462)
 
 #### Security
 
@@ -41,6 +36,20 @@ found [here](packages/broker/CHANGELOG.md).
 #### Fixed
 
 #### Security
+
+
+## [8.5.3] - 2023-06-07
+
+### client
+
+#### Changed
+
+- Optimize message ordering and gap handling of resends (https://github.com/streamr-dev/network/pull/1460)
+
+#### Fixed
+
+- Clear permissions cache when message decryption fails (https://github.com/streamr-dev/network/pull/1458)
+- Fix default value handling for resend range queries (https://github.com/streamr-dev/network/pull/1462)
 
 
 ## [8.5.2] - 2023-05-31
@@ -500,7 +509,8 @@ found [here](packages/broker/CHANGELOG.md).
 - Fixed an import so that the client successfully loads in a web browser environment (NET-721)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/client/v8.5.2...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/client/v8.5.3...HEAD
+[8.5.3]: https://github.com/streamr-dev/network/compare/client/v8.5.2...client/v8.5.3
 [8.5.2]: https://github.com/streamr-dev/network/compare/client/v8.5.1...client/v8.5.2
 [8.5.1]: https://github.com/streamr-dev/network/compare/client/v8.5.0...client/v8.5.1
 [8.5.0]: https://github.com/streamr-dev/network/compare/client/v8.4.0...client/v8.5.0
