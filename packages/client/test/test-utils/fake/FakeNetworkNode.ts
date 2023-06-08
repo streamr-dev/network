@@ -129,7 +129,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
 @scoped(Lifecycle.ContainerScoped)
 export class FakeNetworkNodeFactory implements NetworkNodeFactory {
 
-    private network: FakeNetwork
+    private readonly network: FakeNetwork
 
     constructor(network: FakeNetwork) {
         this.network = network

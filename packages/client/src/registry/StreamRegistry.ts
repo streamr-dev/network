@@ -75,7 +75,7 @@ export class StreamRegistry {
     private readonly streamRegistryCached: StreamRegistryCached
     private readonly authentication: Authentication
     /** @internal */
-    private config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
+    private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
     private readonly logger: Logger
     private streamRegistryContract?: ObservableContract<StreamRegistryContract>
     private streamRegistryContractsReadonly: ObservableContract<StreamRegistryContract>[]

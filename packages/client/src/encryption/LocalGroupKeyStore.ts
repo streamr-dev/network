@@ -50,8 +50,8 @@ function formLookupKey2(publisherId: EthereumAddress, streamId: StreamID): strin
 @scoped(Lifecycle.ContainerScoped)
 export class LocalGroupKeyStore {
 
-    private persistenceManager: PersistenceManager
-    private eventEmitter: StreamrClientEventEmitter
+    private readonly persistenceManager: PersistenceManager
+    private readonly eventEmitter: StreamrClientEventEmitter
     private readonly logger: Logger
 
     constructor(
