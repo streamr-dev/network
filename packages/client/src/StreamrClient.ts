@@ -1,44 +1,44 @@
 import 'reflect-metadata'
 import './utils/PatchTsyringe'
 
-import { container as rootContainer } from 'tsyringe'
-import { generateEthereumAccount as _generateEthereumAccount } from './Ethereum'
-import { pOnce } from './utils/promises'
-import { StreamrClientConfig, createStrictConfig, redactConfig, StrictStreamrClientConfig, ConfigInjectionToken } from './Config'
-import { Publisher } from './publish/Publisher'
-import { Subscriber } from './subscribe/Subscriber'
-import { ResendOptions, Resends } from './subscribe/Resends'
-import { ResendSubscription } from './subscribe/ResendSubscription'
-import { NetworkNodeFacade, NetworkNodeStub } from './NetworkNodeFacade'
-import { DestroySignal } from './DestroySignal'
-import { LocalGroupKeyStore, UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
-import { StorageNodeMetadata, StorageNodeRegistry } from './registry/StorageNodeRegistry'
-import { StreamRegistry } from './registry/StreamRegistry'
-import { StreamDefinition } from './types'
-import { Subscription } from './subscribe/Subscription'
-import { StreamIDBuilder } from './StreamIDBuilder'
-import { StreamrClientEventEmitter, StreamrClientEvents } from './events'
 import { ProxyDirection } from '@streamr/protocol'
-import { MessageStream, MessageListener } from './subscribe/MessageStream'
-import { Stream, StreamMetadata } from './Stream'
-import { SearchStreamsPermissionFilter, SearchStreamsOrderBy } from './registry/searchStreams'
-import { PermissionAssignment, PermissionQuery } from './permission'
-import { MetricsPublisher } from './MetricsPublisher'
+import { EthereumAddress, TheGraphClient, toEthereumAddress } from '@streamr/utils'
+import merge from 'lodash/merge'
+import omit from 'lodash/omit'
+import { container as rootContainer } from 'tsyringe'
 import { PublishMetadata } from '../src/publish/Publisher'
 import { Authentication, AuthenticationInjectionToken, createAuthentication } from './Authentication'
-import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
-import { GroupKey } from './encryption/GroupKey'
-import { PublisherKeyExchange } from './encryption/PublisherKeyExchange'
-import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
-import { LoggerFactory } from './utils/LoggerFactory'
-import { convertStreamMessageToMessage, Message } from './Message'
+import { ConfigInjectionToken, StreamrClientConfig, StrictStreamrClientConfig, createStrictConfig, redactConfig } from './Config'
+import { DestroySignal } from './DestroySignal'
+import { generateEthereumAccount as _generateEthereumAccount } from './Ethereum'
 import { ErrorCode } from './HttpUtil'
-import omit from 'lodash/omit'
-import merge from 'lodash/merge'
+import { Message, convertStreamMessageToMessage } from './Message'
+import { MetricsPublisher } from './MetricsPublisher'
+import { NetworkNodeFacade, NetworkNodeStub } from './NetworkNodeFacade'
+import { Stream, StreamMetadata } from './Stream'
+import { StreamIDBuilder } from './StreamIDBuilder'
 import { StreamrClientError } from './StreamrClientError'
-import { TheGraphClient } from '@streamr/utils'
-import { createTheGraphClient } from './utils/utils'
+import { GroupKey } from './encryption/GroupKey'
+import { LocalGroupKeyStore, UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
+import { PublisherKeyExchange } from './encryption/PublisherKeyExchange'
+import { StreamrClientEventEmitter, StreamrClientEvents } from './events'
+import { PermissionAssignment, PermissionQuery } from './permission'
+import { Publisher } from './publish/Publisher'
+import { StorageNodeMetadata, StorageNodeRegistry } from './registry/StorageNodeRegistry'
+import { StreamRegistry } from './registry/StreamRegistry'
+import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
+import { SearchStreamsOrderBy, SearchStreamsPermissionFilter } from './registry/searchStreams'
+import { MessageListener, MessageStream } from './subscribe/MessageStream'
+import { ResendSubscription } from './subscribe/ResendSubscription'
+import { ResendOptions, Resends } from './subscribe/Resends'
+import { Subscriber } from './subscribe/Subscriber'
+import { Subscription } from './subscribe/Subscription'
+import { waitForStorage } from './subscribe/waitForStorage'
+import { StreamDefinition } from './types'
 import { HttpFetcher } from './utils/HttpFetcher'
+import { LoggerFactory } from './utils/LoggerFactory'
+import { pOnce } from './utils/promises'
+import { createTheGraphClient } from './utils/utils'
 
 // TODO: this type only exists to enable tsdoc to generate proper documentation
 export type SubscribeOptions = StreamDefinition & ExtraSubscribeOptions
@@ -64,8 +64,8 @@ export class StreamrClient {
 
     public readonly id: string
     private readonly config: StrictStreamrClientConfig
-    private readonly node: NetworkNodeFacade
     private readonly authentication: Authentication
+    private readonly node: NetworkNodeFacade
     private readonly resends: Resends
     private readonly publisher: Publisher
     private readonly subscriber: Subscriber
@@ -93,8 +93,8 @@ export class StreamrClient {
         container.register(TheGraphClient, { useValue: createTheGraphClient(container.resolve<HttpFetcher>(HttpFetcher), container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter), strictConfig) })
         this.id = strictConfig.id
         this.config = strictConfig
+        this.authentication = authentication
         this.node = container.resolve<NetworkNodeFacade>(NetworkNodeFacade)
-        this.authentication = container.resolve<Authentication>(AuthenticationInjectionToken)
         this.resends = container.resolve<Resends>(Resends)
         this.publisher = container.resolve<Publisher>(Publisher)
         this.subscriber = container.resolve<Subscriber>(Subscriber)
@@ -192,7 +192,6 @@ export class StreamrClient {
                 streamPartId,
                 options.resend,
                 this.resends,
-                this.streamStorageRegistry,
                 this.loggerFactory,
                 this.config
             )
@@ -214,8 +213,14 @@ export class StreamrClient {
      *
      * @param streamDefinitionOrSubscription - leave as `undefined` to unsubscribe from all existing subscriptions.
      */
-    unsubscribe(streamDefinitionOrSubscription?: StreamDefinition | Subscription): Promise<unknown> {
-        return this.subscriber.unsubscribe(streamDefinitionOrSubscription)
+    async unsubscribe(streamDefinitionOrSubscription?: StreamDefinition | Subscription): Promise<unknown> {
+        if (streamDefinitionOrSubscription instanceof Subscription) {
+            const sub = streamDefinitionOrSubscription
+            return this.subscriber.remove(sub)
+        } else {
+            const subs = await this.getSubscriptions(streamDefinitionOrSubscription)
+            return Promise.allSettled(subs.map((sub) => this.subscriber.remove(sub)))
+        }
     }
 
     /**
@@ -225,8 +230,11 @@ export class StreamrClient {
      *
      * @param streamDefinition - leave as `undefined` to get all subscriptions
      */
-    getSubscriptions(streamDefinition?: StreamDefinition): Promise<Subscription[]> {
-        return this.subscriber.getSubscriptions(streamDefinition)
+    async getSubscriptions(streamDefinition?: StreamDefinition): Promise<Subscription[]> {
+        const matcher = (streamDefinition !== undefined)
+            ? await this.streamIdBuilder.getMatcher(streamDefinition)
+            : () => true
+        return this.subscriber.getSubscriptions().filter((s) => matcher(s.streamPartId))
     }
 
     // --------------------------------------------------------------------------------------------
@@ -287,7 +295,14 @@ export class StreamrClient {
          */
         messageMatchFn?: (msgTarget: Message, msgGot: Message) => boolean
     }): Promise<void> {
-        return this.resends.waitForStorage(message, options)
+        const defaultOptions = {
+            // eslint-disable-next-line no-underscore-dangle
+            interval: this.config._timeouts.storageNode.retryInterval,
+            // eslint-disable-next-line no-underscore-dangle
+            timeout: this.config._timeouts.storageNode.timeout,
+            count: 100
+        }
+        return waitForStorage(message, merge(defaultOptions, options), this.resends)
     }
 
     // --------------------------------------------------------------------------------------------
@@ -579,7 +594,7 @@ export class StreamrClient {
         this._connect.reset() // reset connect (will error on next call)
         const tasks = [
             this.destroySignal.destroy().then(() => undefined),
-            this.subscriber.unsubscribe()
+            this.unsubscribe()
         ]
 
         await Promise.allSettled(tasks)
