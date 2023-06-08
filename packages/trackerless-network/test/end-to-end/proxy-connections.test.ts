@@ -10,13 +10,13 @@ describe('Proxy connections', () => {
         kademliaId: PeerID.fromString(`proxyNode1`).value,
         type: NodeType.NODEJS,
         nodeName: 'proxyNode',
-        websocket: { ip: 'localhost', port: 15567 }
+        websocket: { ip: 'localhost', port: 23132 }
     }
     const proxyNodeDescriptor2: PeerDescriptor = {
         kademliaId: PeerID.fromString(`proxyNode2`).value,
         type: NodeType.NODEJS,
         nodeName: 'proxyNode',
-        websocket: { ip: 'localhost', port: 15568 }
+        websocket: { ip: 'localhost', port: 23133 }
     }
     const proxiedNodeDescriptor: PeerDescriptor = {
         kademliaId: PeerID.fromString(`proxiedNode`).value,
