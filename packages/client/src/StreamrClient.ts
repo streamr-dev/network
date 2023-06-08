@@ -63,20 +63,20 @@ export class StreamrClient {
     static readonly generateEthereumAccount = _generateEthereumAccount
 
     public readonly id: string
-    private readonly config: StrictStreamrClientConfig
-    private readonly authentication: Authentication
-    private readonly node: NetworkNodeFacade
-    private readonly resends: Resends
     private readonly publisher: Publisher
     private readonly subscriber: Subscriber
-    private readonly localGroupKeyStore: LocalGroupKeyStore
-    private readonly destroySignal: DestroySignal
+    private readonly resends: Resends
+    private readonly node: NetworkNodeFacade
     private readonly streamRegistry: StreamRegistry
     private readonly streamStorageRegistry: StreamStorageRegistry
     private readonly storageNodeRegistry: StorageNodeRegistry
-    private readonly loggerFactory: LoggerFactory
+    private readonly localGroupKeyStore: LocalGroupKeyStore
     private readonly streamIdBuilder: StreamIDBuilder
+    private readonly config: StrictStreamrClientConfig
+    private readonly authentication: Authentication
     private readonly eventEmitter: StreamrClientEventEmitter
+    private readonly destroySignal: DestroySignal
+    private readonly loggerFactory: LoggerFactory
 
     constructor(
         config: StreamrClientConfig = {},
@@ -94,18 +94,18 @@ export class StreamrClient {
         this.id = strictConfig.id
         this.config = strictConfig
         this.authentication = authentication
-        this.node = container.resolve<NetworkNodeFacade>(NetworkNodeFacade)
-        this.resends = container.resolve<Resends>(Resends)
         this.publisher = container.resolve<Publisher>(Publisher)
         this.subscriber = container.resolve<Subscriber>(Subscriber)
-        this.localGroupKeyStore = container.resolve<LocalGroupKeyStore>(LocalGroupKeyStore)
-        this.destroySignal = container.resolve<DestroySignal>(DestroySignal)
+        this.resends = container.resolve<Resends>(Resends)
+        this.node = container.resolve<NetworkNodeFacade>(NetworkNodeFacade)
         this.streamRegistry = container.resolve<StreamRegistry>(StreamRegistry)
         this.streamStorageRegistry = container.resolve<StreamStorageRegistry>(StreamStorageRegistry)
         this.storageNodeRegistry = container.resolve<StorageNodeRegistry>(StorageNodeRegistry)
-        this.loggerFactory = container.resolve<LoggerFactory>(LoggerFactory)
+        this.localGroupKeyStore = container.resolve<LocalGroupKeyStore>(LocalGroupKeyStore)
         this.streamIdBuilder = container.resolve<StreamIDBuilder>(StreamIDBuilder)
         this.eventEmitter = container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter)
+        this.destroySignal = container.resolve<DestroySignal>(DestroySignal)
+        this.loggerFactory = container.resolve<LoggerFactory>(LoggerFactory)
         container.resolve<PublisherKeyExchange>(PublisherKeyExchange) // side effect: activates publisher key exchange
         container.resolve<MetricsPublisher>(MetricsPublisher) // side effect: activates metrics publisher
     }
