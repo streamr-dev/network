@@ -125,7 +125,7 @@ export class ManagedConnection extends EventEmitter<Events> {
         // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
         context?: any
     ): this {
-        if (event == 'managedData' && this.listenerCount('managedData') == 0) {
+        if (event === 'managedData' && this.listenerCount('managedData') === 0) {
             while (this.inputBuffer.length > 0) {
                 logger.trace('emptying inputBuffer objectId: ' + this.objectId)
                 const data = (this.inputBuffer.shift()!)
@@ -143,7 +143,7 @@ export class ManagedConnection extends EventEmitter<Events> {
         context?: any
     ): this {
         logger.trace('overridden once objectId: ' + this.objectId)
-        if (event == 'managedData' && this.listenerCount('managedData') == 0) {
+        if (event === 'managedData' && this.listenerCount('managedData') === 0) {
             if (this.inputBuffer.length > 0) {
                 while (this.inputBuffer.length > 0) {
                     logger.trace('emptying inputBuffer objectId: ' + this.objectId)
@@ -256,10 +256,10 @@ export class ManagedConnection extends EventEmitter<Events> {
                 throw e
             }
 
-            if (result.winnerName == 'internal_disconnected') {
+            if (result.winnerName === 'internal_disconnected') {
                 this.doNotEmitDisconnected = false
                 this.doDisconnect('OTHER')
-            } else if (result.winnerName == 'handshakeFailed') {
+            } else if (result.winnerName === 'handshakeFailed') {
                 logger.trace(' ' + this.ownPeerDescriptor.nodeName + ', ' + this.peerDescriptor?.nodeName + ' handshakeFailed received')
 
                 if (this.bufferSentbyOtherConnection) {
@@ -278,13 +278,13 @@ export class ManagedConnection extends EventEmitter<Events> {
                         logger.trace(this.connectionId + ' Exception from raceEvents3 while waiting bufferSentByOtherConnection')
                         throw ex
                     }
-                    if (result2.winnerName == 'bufferSentByOtherConnection') {
+                    if (result2.winnerName === 'bufferSentByOtherConnection') {
                         logger.trace('bufferSentByOtherConnection received')
                         this.doNotEmitDisconnected = false
                         this.doDisconnect('OTHER')
-                    } else if (result2.winnerName == 'closing') {
+                    } else if (result2.winnerName === 'closing') {
                         logger.trace('bufferSentByOtherConnection not received, instead received a closing event')
-                    } else if (result2.winnerName == 'disconnected') {
+                    } else if (result2.winnerName === 'disconnected') {
                         logger.trace('disconnected while in raceEvents3')
                     }
                 }
