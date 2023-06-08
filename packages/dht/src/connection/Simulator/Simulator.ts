@@ -105,7 +105,7 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     private MAX_LOOPS = 1000
 
     private operationQueue: Heap<SimulatorOperation> = new Heap<SimulatorOperation>((a: SimulatorOperation, b: SimulatorOperation) => {
-        if ((a.executionTime - b.executionTime) == 0) {
+        if ((a.executionTime - b.executionTime) === 0) {
             return (a.objectId - b.objectId)
         } else {
             return (a.executionTime - b.executionTime)
@@ -136,11 +136,11 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
         this.latencyType = latencyType
         this.fixedLatency = fixedLatency
 
-        if (this.latencyType == LatencyType.REAL) {
+        if (this.latencyType === LatencyType.REAL) {
             this.latencyTable = getRegionDelayMatrix()
         }
 
-        if (this.latencyType == LatencyType.FIXED && !this.fixedLatency) {
+        if (this.latencyType === LatencyType.FIXED && !this.fixedLatency) {
             throw new Error('LatencyType.FIXED requires the desired latency to be given as second parameter')
         }
 
@@ -169,20 +169,20 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     private getLatency(sourceRegion: number | undefined, targetRegion: number | undefined): number {
         let latency: number = 0
 
-        if (this.latencyType == LatencyType.FIXED) {
+        if (this.latencyType === LatencyType.FIXED) {
             latency = this.fixedLatency!
         }
 
-        if (this.latencyType == LatencyType.REAL) {
+        if (this.latencyType === LatencyType.REAL) {
 
-            if (sourceRegion == undefined || targetRegion == undefined || sourceRegion > 15 || targetRegion > 15) {
+            if (sourceRegion === undefined || targetRegion === undefined || sourceRegion > 15 || targetRegion > 15) {
                 logger.error('invalid region index given to Simulator')
                 throw ('invalid region index given to Simulator')
             }
 
             latency = this.latencyTable![sourceRegion!][targetRegion!]
         }
-        if (this.latencyType == LatencyType.RANDOM) {
+        if (this.latencyType === LatencyType.RANDOM) {
             latency = Math.random() * (250 - 5) + 5
         }
 

@@ -62,7 +62,7 @@ export class PeerID {
     }
 
     equals(other: PeerID): boolean {
-        return (Buffer.compare(this.data, other.value) == 0)
+        return (Buffer.compare(this.data, other.value) === 0)
     }
 
     toString(): string {

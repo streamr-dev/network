@@ -17,13 +17,12 @@ interface ResendRequest {
 }
 
 export class FakeHttpUtil extends HttpUtil {
+
     private readonly network: FakeNetwork
-    private readonly realHttpUtil: HttpUtil
 
     constructor(network: FakeNetwork) {
         super(mockLoggerFactory())
         this.network = network
-        this.realHttpUtil = new HttpUtil(mockLoggerFactory())
     }
 
     override async* fetchHttpStream(url: string): AsyncIterable<StreamMessage> {
@@ -64,10 +63,6 @@ export class FakeHttpUtil extends HttpUtil {
         } else {
             throw new Error(`not implemented: ${url}`)
         }
-    }
-
-    override createQueryString(query: Record<string, any>): string {
-        return this.realHttpUtil.createQueryString(query)
     }
 
     private static getResendRequest(url: string): ResendRequest | undefined {

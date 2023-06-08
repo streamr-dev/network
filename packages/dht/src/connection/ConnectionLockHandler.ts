@@ -76,7 +76,7 @@ export class ConnectionLockHandler {
     public removeLocalLocked(id: PeerIDKey, serviceName: ServiceName): void {
         if (this.localLocks.has(id)) {
             this.localLocks.get(id)?.delete(serviceName)
-            if (this.localLocks.get(id)?.size == 0) {
+            if (this.localLocks.get(id)?.size === 0) {
                 this.localLocks.delete(id)
             }
         }
@@ -85,7 +85,7 @@ export class ConnectionLockHandler {
     public removeRemoteLocked(id: PeerIDKey, serviceName: ServiceName): void {
         if (this.remoteLocks.has(id)) {
             this.remoteLocks.get(id)?.delete(serviceName)
-            if (this.remoteLocks.get(id)?.size == 0) {
+            if (this.remoteLocks.get(id)?.size === 0) {
                 this.remoteLocks.delete(id)
             }
         }

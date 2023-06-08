@@ -1,14 +1,11 @@
-import { StreamPartID, StreamPartIDUtils, toStreamPartID } from '@streamr/protocol'
-import { Lifecycle, delay, inject, scoped } from 'tsyringe'
-
-import { MessageStream } from './MessageStream'
-import { createSubscribePipeline } from './subscribePipeline'
-
+import { StreamID, StreamPartID, StreamPartIDUtils, toStreamPartID } from '@streamr/protocol'
 import { EthereumAddress, Logger, collect, randomString, toEthereumAddress, wait } from '@streamr/utils'
 import random from 'lodash/random'
+import without from 'lodash/without'
+import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { DestroySignal } from '../DestroySignal'
-import { HttpUtil } from '../HttpUtil'
+import { HttpUtil, createQueryString } from '../HttpUtil'
 import { Message } from '../Message'
 import { StreamrClientError } from '../StreamrClientError'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'
@@ -17,8 +14,8 @@ import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
 import { counting } from '../utils/GeneratorUtils'
 import { LoggerFactory } from '../utils/LoggerFactory'
-
-const MIN_SEQUENCE_NUMBER_VALUE = 0
+import { MessageStream } from './MessageStream'
+import { createSubscribePipeline } from './subscribePipeline'
 
 type QueryDict = Record<string, string | number | boolean | null | undefined>
 
@@ -69,6 +66,16 @@ function isResendRange<T extends ResendRangeOptions>(options: any): options is T
     return options && typeof options === 'object' && 'from' in options && 'to' in options && options.to && options.from != null
 }
 
+const createUrl = (baseUrl: string, endpointSuffix: string, streamPartId: StreamPartID, query: QueryDict = {}): string => {
+    const queryMap = {
+        ...query,
+        format: 'raw'
+    }
+    const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
+    const queryString = createQueryString(queryMap)
+    return `${baseUrl}/streams/${encodeURIComponent(streamId)}/data/partitions/${streamPartition}/${endpointSuffix}?${queryString}`
+}
+
 @scoped(Lifecycle.ContainerScoped)
 export class Resends {
     private readonly streamStorageRegistry: StreamStorageRegistry
@@ -103,10 +110,12 @@ export class Resends {
     }
 
     resend(streamPartId: StreamPartID, options: ResendOptions): Promise<MessageStream> {
+        const getStorageNodes = (streamId: StreamID) => this.streamStorageRegistry.getStorageNodes(streamId)
+
         if (isResendLast(options)) {
             return this.last(streamPartId, {
                 count: options.last,
-            }, false)
+            }, false, getStorageNodes)
         }
 
         if (isResendRange(options)) {
@@ -117,7 +126,7 @@ export class Resends {
                 toSequenceNumber: options.to.sequenceNumber,
                 publisherId: options.publisherId !== undefined ? toEthereumAddress(options.publisherId) : undefined,
                 msgChainId: options.msgChainId,
-            }, false)
+            }, false, getStorageNodes)
         }
 
         if (isResendFrom(options)) {
@@ -125,7 +134,7 @@ export class Resends {
                 fromTimestamp: new Date(options.from.timestamp).getTime(),
                 fromSequenceNumber: options.from.sequenceNumber,
                 publisherId: options.publisherId !== undefined ? toEthereumAddress(options.publisherId) : undefined,
-            }, false)
+            }, false, getStorageNodes)
         }
 
         throw new StreamrClientError(
@@ -138,7 +147,8 @@ export class Resends {
         endpointSuffix: 'last' | 'range' | 'from',
         streamPartId: StreamPartID,
         query: QueryDict,
-        raw: boolean
+        raw: boolean,
+        getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>
     ): Promise<MessageStream> {
         const traceId = randomString(5)
         this.logger.debug('Fetch resend data', {
@@ -148,21 +158,23 @@ export class Resends {
             query
         })
         const streamId = StreamPartIDUtils.getStreamID(streamPartId)
-        const nodeAddresses = await this.streamStorageRegistry.getStorageNodes(streamId)
+        const nodeAddresses = await getStorageNodes(streamId)
         if (!nodeAddresses.length) {
             throw new StreamrClientError(`no storage assigned: ${streamId}`, 'NO_STORAGE_NODES')
         }
 
         const nodeAddress = nodeAddresses[random(0, nodeAddresses.length - 1)]
         const nodeUrl = (await this.storageNodeRegistry.getStorageNodeMetadata(nodeAddress)).http
-        const url = this.createUrl(nodeUrl, endpointSuffix, streamPartId, query)
+        const url = createUrl(nodeUrl, endpointSuffix, streamPartId, query)
+        const config = (nodeAddresses.length > 1) ? this.config : { ...this.config, orderMessages: false }
         const messageStream = (raw === false) ? createSubscribePipeline({
             streamPartId,
+            getStorageNodes: async () => without(nodeAddresses, nodeAddress),
             resends: this,
             groupKeyManager: this.groupKeyManager,
             streamRegistryCached: this.streamRegistryCached,
             destroySignal: this.destroySignal,
-            config: this.config,
+            config,
             loggerFactory: this.loggerFactory
         }) : new MessageStream()
 
@@ -173,7 +185,12 @@ export class Resends {
         return messageStream
     }
 
-    async last(streamPartId: StreamPartID, { count }: { count: number }, raw: boolean): Promise<MessageStream> {
+    async last(
+        streamPartId: StreamPartID,
+        { count }: { count: number },
+        raw: boolean,
+        getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>
+    ): Promise<MessageStream> {
         if (count <= 0) {
             const emptyStream = new MessageStream()
             emptyStream.endWrite()
@@ -182,30 +199,30 @@ export class Resends {
 
         return this.fetchStream('last', streamPartId, {
             count,
-        }, raw)
+        }, raw, getStorageNodes)
     }
 
     private async from(streamPartId: StreamPartID, {
         fromTimestamp,
-        fromSequenceNumber = MIN_SEQUENCE_NUMBER_VALUE,
+        fromSequenceNumber,
         publisherId
     }: {
         fromTimestamp: number
         fromSequenceNumber?: number
         publisherId?: EthereumAddress
-    }, raw: boolean): Promise<MessageStream> {
+    }, raw: boolean, getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>): Promise<MessageStream> {
         return this.fetchStream('from', streamPartId, {
             fromTimestamp,
             fromSequenceNumber,
             publisherId,
-        }, raw)
+        }, raw, getStorageNodes)
     }
 
     async range(streamPartId: StreamPartID, {
         fromTimestamp,
-        fromSequenceNumber = MIN_SEQUENCE_NUMBER_VALUE,
+        fromSequenceNumber,
         toTimestamp,
-        toSequenceNumber = MIN_SEQUENCE_NUMBER_VALUE,
+        toSequenceNumber,
         publisherId,
         msgChainId
     }: {
@@ -215,7 +232,7 @@ export class Resends {
         toSequenceNumber?: number
         publisherId?: EthereumAddress
         msgChainId?: string
-    }, raw: boolean): Promise<MessageStream> {
+    }, raw: boolean, getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>): Promise<MessageStream> {
         return this.fetchStream('range', streamPartId, {
             fromTimestamp,
             fromSequenceNumber,
@@ -223,7 +240,7 @@ export class Resends {
             toSequenceNumber,
             publisherId,
             msgChainId
-        }, raw)
+        }, raw, getStorageNodes)
     }
 
     async waitForStorage(message: Message, {
@@ -277,15 +294,5 @@ export class Resends {
             await wait(interval)
         }
         /* eslint-enable no-await-in-loop */
-    }
-
-    private createUrl(baseUrl: string, endpointSuffix: string, streamPartId: StreamPartID, query: QueryDict = {}): string {
-        const queryMap = {
-            ...query,
-            format: 'raw'
-        }
-        const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
-        const queryString = this.httpUtil.createQueryString(queryMap)
-        return `${baseUrl}/streams/${encodeURIComponent(streamId)}/data/partitions/${streamPartition}/${endpointSuffix}?${queryString}`
     }
 }

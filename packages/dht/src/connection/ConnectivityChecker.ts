@@ -157,7 +157,7 @@ export class ConnectivityChecker {
         } catch (e) {
             throw (new Err.ConnectionFailed('WebSocket connection timed out'))
         }
-        if (result.winnerName == 'error') {
+        if (result.winnerName === 'error') {
             throw (new Err.ConnectionFailed('Could not open WebSocket connection'))
         }
         return socket
