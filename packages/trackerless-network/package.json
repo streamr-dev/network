@@ -24,7 +24,8 @@
     "test-unit": "jest test/unit",
     "test-integration": "jest test/integration",
     "test-e2e": "jest test/end-to-end",
-    "network": "ts-node bin/network"
+    "network": "ts-node bin/network",
+    "run-joining-benchmark": "node --max-old-space-size=24288 dist/test/benchmark/first-message.js"
   },
   "dependencies": {
     "@protobuf-ts/runtime": "^2.8.2",

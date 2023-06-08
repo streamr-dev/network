@@ -29,6 +29,8 @@ import { RandomGraphNodeServer } from './RandomGraphNodeServer'
 
 export interface Events {
     message: (message: StreamMessage) => void
+    targetNeighborConnected: (stringId: string) => void
+    nearbyContactPoolIdAdded: () => void
 }
 
 export interface StrictRandomGraphNodeConfig {
@@ -92,6 +94,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
         this.config.P2PTransport.on('disconnected', (peerDescriptor: PeerDescriptor) => this.onPeerDisconnected(peerDescriptor))
         this.config.targetNeighbors.on('peerAdded', (id, _remote) => {
             this.config.propagation.onNeighborJoined(id)
+            this.emit('targetNeighborConnected', id)
         })
         const candidates = this.getNewNeighborCandidates()
         if (candidates.length > 0) {
@@ -115,6 +118,8 @@ export class RandomGraphNode extends EventEmitter<Events> {
         if (this.stopped) {
             return
         }
+      
+        const oldLength = this.config.nearbyContactPool.getStringIds().length
         this.config.nearbyContactPool.replaceAll(closestTen.map((descriptor) =>
             new RemoteRandomGraphNode(
                 descriptor,
@@ -122,6 +127,11 @@ export class RandomGraphNode extends EventEmitter<Events> {
                 toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
             )
         ))
+
+        if (oldLength < this.config.nearbyContactPool.getStringIds().length) {
+            this.emit('nearbyContactPoolIdAdded')
+        }
+        
         if (this.config.targetNeighbors.size() < this.config.numOfTargetNeighbors) {
             this.config.neighborFinder.start()
         }

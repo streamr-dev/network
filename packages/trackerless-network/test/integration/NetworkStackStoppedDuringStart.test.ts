@@ -1,4 +1,4 @@
-import { PeerID } from "@streamr/dht"
+import { PeerID, Simulator } from "@streamr/dht"
 import { NetworkStack } from "../../src/NetworkStack"
 import { NodeType } from "../../src/proto/packages/dht/protos/DhtRpc"
 
@@ -13,6 +13,7 @@ describe('NetworkStack can be stopped during start', () => {
     let peer: NetworkStack
 
     beforeEach(async () => {
+        Simulator.useFakeTimers()
         entryPoint = new NetworkStack({
             layer0: {
                 peerDescriptor: epDescriptor,
@@ -35,6 +36,7 @@ describe('NetworkStack can be stopped during start', () => {
     
     afterEach(async () => {
         await entryPoint.stop()
+        Simulator.useFakeTimers(false)
     })
 
     it('Can be stopped during start', async () => {

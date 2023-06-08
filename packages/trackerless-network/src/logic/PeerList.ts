@@ -28,8 +28,12 @@ export class PeerList extends EventEmitter<Events> {
     add(remote: RemoteRandomGraphNode): void {
         if (!this.ownPeerID.equals(peerIdFromPeerDescriptor(remote.getPeerDescriptor())) && this.peers.size < this.limit) {
             const stringId = keyFromPeerDescriptor(remote.getPeerDescriptor())
+            const isExistingPeer = this.peers.has(stringId)
             this.peers.set(stringId, remote)
-            this.emit('peerAdded', stringId, remote)
+            
+            if (!isExistingPeer) {
+                this.emit('peerAdded', stringId, remote)
+            }
         }
     }
 
