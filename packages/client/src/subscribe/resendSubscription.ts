@@ -25,8 +25,7 @@ export const initResendSubscription = (
             yield* resentMsgs.getStreamMessages()
         } catch (err) {
             if (err.code === 'NO_STORAGE_NODES') {
-                // @ts-expect-error private TODO should we expose logger somehow or use a separate logger?
-                subscription.logger.warn('Skip resend (no storage assigned to stream)', {
+                loggerFactory.createLogger(module).warn('Skip resend (no storage assigned to stream)', {
                     streamPartId: subscription.streamPartId,
                     resendOptions
                 })
