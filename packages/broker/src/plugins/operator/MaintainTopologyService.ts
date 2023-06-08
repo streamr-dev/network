@@ -1,5 +1,5 @@
 import { Logger, Multimap } from '@streamr/utils'
-import { OperatorClient } from '@streamr/operator-client'
+import { OperatorClient } from './OperatorClient'
 import StreamrClient, { Stream, Subscription } from 'streamr-client'
 import { StreamID, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
 import { SetMembershipSynchronizer } from '../storage/SetMembershipSynchronizer'
@@ -35,8 +35,8 @@ export class MaintainTopologyService {
     async start(): Promise<void> {
         this.operatorClient.on('addStakedStream', this.onAddStakedStream)
         this.operatorClient.on('removeStakedStream', this.onRemoveStakedStream)
-
-        const { streamIds: rawStreamIds, blockNumber } = await this.operatorClient.getStakedStreams()
+        const rawStreamIds = await this.operatorClient.getStakedStreams()
+        const blockNumber = 0 // TODO: fix properly
         const streamIds = new Set(compact([...rawStreamIds].map(toStreamIDSafe)))
         const { added } = this.synchronizer.ingestSnapshot(streamIds, blockNumber)
         for (const streamId of added) {
@@ -47,7 +47,7 @@ export class MaintainTopologyService {
 
     // eslint-disable-next-line class-methods-use-this
     async stop(): Promise<void> {
-        this.operatorClient.close()
+        this.operatorClient.stop()
         logger.info('stopped')
     }
 
