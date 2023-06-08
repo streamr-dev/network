@@ -1,8 +1,9 @@
-import { ProxyDirection, StreamMessage, StreamPartID } from '@streamr/protocol'
+import { StreamMessage, StreamPartID } from '@streamr/protocol'
 import { PeerDescriptor } from '@streamr/dht'
 import { StreamMessageTranslator } from './logic/protocol-integration/stream-message/StreamMessageTranslator'
 import { NetworkOptions, NetworkStack } from './NetworkStack'
 import { MetricsContext } from '@streamr/utils'
+import { ProxyDirection } from './proto/packages/trackerless-network/protos/NetworkRpc'
 
 /*
 Convenience wrapper for building client-facing functionality. Used by client.
@@ -11,8 +12,10 @@ Convenience wrapper for building client-facing functionality. Used by client.
 export class NetworkNode {
 
     readonly stack: NetworkStack
+    private readonly options: NetworkOptions
     private stopped = false
     constructor(opts: NetworkOptions) {
+        this.options = opts
         this.stack = new NetworkStack(opts)
     }
 
@@ -41,16 +44,17 @@ export class NetworkNode {
         this.stack.getStreamrNode().subscribeToStream(streamPartId, knownEntrypointDescriptors)
     }
 
-    // eslint-disable-next-line class-methods-use-this
-    async openProxyConnection(_streamPartId: StreamPartID, _contactNodeId: string, _direction: ProxyDirection, _userId: string): Promise<void> {
-        // await this.addProxyConnection(streamPartId, contactNodeId, direction, userId)
-        throw new Error('Not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    async closeProxyConnection(_streamPartId: StreamPartID, _contactNodeId: string, _direction: ProxyDirection): Promise<void> {
-        // await this.removeProxyConnection(streamPartId, contactNodeId, direction)
-        throw new Error('Not implemented')
+    async setProxies(
+        streamPartId: StreamPartID,
+        contactPeerDescriptors: PeerDescriptor[],
+        direction: ProxyDirection,
+        getUserId: () => Promise<string>,
+        connectionCount?: number
+    ): Promise<void> {
+        if (this.options.networkNode.acceptProxyConnections) {
+            throw new Error('cannot set proxies when acceptProxyConnections=true')
+        }
+        await this.stack.getStreamrNode().setProxies(streamPartId, contactPeerDescriptors, direction, getUserId, connectionCount)
     }
 
     addMessageListener<T>(cb: (msg: StreamMessage<T>) => void): void {
