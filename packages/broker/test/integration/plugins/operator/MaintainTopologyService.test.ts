@@ -1,5 +1,5 @@
 import { MaintainTopologyService } from '../../../../src/plugins/operator/MaintainTopologyService'
-import { OperatorClient } from '@streamr/operator-client'
+// import { OperatorClient } from '@streamr/operator-client'
 import fetch from 'node-fetch'
 import { Logger, waitForCondition } from '@streamr/utils'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
@@ -13,6 +13,7 @@ import {
     getTokenContract
 } from './smartContractUtils'
 import { StreamPartID } from '@streamr/protocol'
+import { OperatorClient } from '../../../../src/plugins/operator/OperatorClient'
 
 async function setUpStreams(): Promise<[Stream, Stream]> {
     const privateKey = await fetchPrivateKeyWithGas()
