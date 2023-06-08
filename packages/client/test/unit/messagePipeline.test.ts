@@ -87,7 +87,7 @@ describe('messagePipeline', () => {
             getStream: async () => stream,
             isStreamPublisher: async () => true,
             clearStream: jest.fn()
-        } 
+        }
         pipeline = createMessagePipeline({
             streamPartId,
             getStorageNodes: undefined as any,
@@ -165,5 +165,18 @@ describe('messagePipeline', () => {
         expect(output).toEqual([])
         expect(streamRegistryCached.clearStream).toBeCalledTimes(1)
         expect(streamRegistryCached.clearStream).toBeCalledWith(StreamPartIDUtils.getStreamID(streamPartId))
+    })
+
+    it('error: exception', async () => {
+        const err = new Error('mock-error')
+        const msg = await createMessage()
+        await pipeline.push(msg)
+        pipeline.endWrite(err)
+        const onError = jest.fn()
+        pipeline.onError.listen(onError)
+        const output = await collect(pipeline)
+        expect(output).toHaveLength(1)
+        expect(onError).toBeCalledTimes(1)
+        expect(onError).toBeCalledWith(err)
     })
 })
