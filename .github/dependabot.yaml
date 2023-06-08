@@ -22,6 +22,7 @@ updates:
   - package-ecosystem: npm
     directory: /
     open-pull-requests-limit: 10
+    versioning-strategy: increase
     schedule:
       interval: daily
     reviewers:
