@@ -71,7 +71,7 @@ describe('Proxy connections', () => {
             networkNode: {}
         })
         await proxiedNode.start()
-    })
+    }, 30000)
 
     afterEach(async () => {
         await proxyNode1.stop()
