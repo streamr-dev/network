@@ -7,6 +7,9 @@ import { HandshakeRpc } from "./NetworkRpc";
 import type { InterleaveNotice } from "./NetworkRpc";
 import type { StreamHandshakeResponse } from "./NetworkRpc";
 import type { StreamHandshakeRequest } from "./NetworkRpc";
+import { ProxyConnectionRpc } from "./NetworkRpc";
+import type { ProxyConnectionResponse } from "./NetworkRpc";
+import type { ProxyConnectionRequest } from "./NetworkRpc";
 import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
 import { NetworkRpc } from "./NetworkRpc";
@@ -51,6 +54,32 @@ export class NetworkRpcClient implements INetworkRpcClient, ServiceInfo {
     leaveStreamNotice(input: LeaveStreamNotice, options?: RpcOptions): UnaryCall<LeaveStreamNotice, Empty> {
         const method = this.methods[1], opt = this._transport.mergeOptions(options);
         return stackIntercept<LeaveStreamNotice, Empty>("unary", this._transport, method, opt, input);
+    }
+}
+/**
+ * @generated from protobuf service ProxyConnectionRpc
+ */
+export interface IProxyConnectionRpcClient {
+    /**
+     * @generated from protobuf rpc: requestConnection(ProxyConnectionRequest) returns (ProxyConnectionResponse);
+     */
+    requestConnection(input: ProxyConnectionRequest, options?: RpcOptions): UnaryCall<ProxyConnectionRequest, ProxyConnectionResponse>;
+}
+/**
+ * @generated from protobuf service ProxyConnectionRpc
+ */
+export class ProxyConnectionRpcClient implements IProxyConnectionRpcClient, ServiceInfo {
+    typeName = ProxyConnectionRpc.typeName;
+    methods = ProxyConnectionRpc.methods;
+    options = ProxyConnectionRpc.options;
+    constructor(private readonly _transport: RpcTransport) {
+    }
+    /**
+     * @generated from protobuf rpc: requestConnection(ProxyConnectionRequest) returns (ProxyConnectionResponse);
+     */
+    requestConnection(input: ProxyConnectionRequest, options?: RpcOptions): UnaryCall<ProxyConnectionRequest, ProxyConnectionResponse> {
+        const method = this.methods[0], opt = this._transport.mergeOptions(options);
+        return stackIntercept<ProxyConnectionRequest, ProxyConnectionResponse>("unary", this._transport, method, opt, input);
     }
 }
 /**

@@ -25,7 +25,9 @@ import { Propagation } from './propagation/Propagation'
 import { INeighborFinder } from './neighbor-discovery/NeighborFinder'
 import { INeighborUpdateManager } from './neighbor-discovery/NeighborUpdateManager'
 import { PeerIDKey } from '@streamr/dht/dist/src/helpers/PeerID'
-import { RandomGraphNodeServer } from './RandomGraphNodeServer'
+import { StreamNodeServer } from './StreamNodeServer'
+import { IStreamNode } from './IStreamNode'
+import { ProxyStreamConnectionServer } from './proxy/ProxyStreamConnectionServer'
 
 export interface Events {
     message: (message: StreamMessage) => void
@@ -50,11 +52,13 @@ export interface StrictRandomGraphNodeConfig {
     maxNumberOfContacts: number
     minPropagationTargets: number
     nodeName: string
+    acceptProxyConnections: boolean
+    proxyConnectionServer?: ProxyStreamConnectionServer
 }
 
 const logger = new Logger(module)
 
-export class RandomGraphNode extends EventEmitter<Events> {
+export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode {
     private stopped = false
     private started = false
     private readonly duplicateDetectors: Map<string, DuplicateMessageDetector>
@@ -67,7 +71,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
         this.config = config
         this.duplicateDetectors = new Map()
         this.abortController = new AbortController()
-        this.server = new RandomGraphNodeServer({
+        this.server = new StreamNodeServer({
             ownPeerDescriptor: this.config.ownPeerDescriptor,
             randomGraphId: this.config.randomGraphId,
             markAndCheckDuplicate: (msg: MessageRef, prev?: MessageRef) => this.markAndCheckDuplicate(msg, prev),
@@ -78,7 +82,8 @@ export class RandomGraphNode extends EventEmitter<Events> {
             randomContactPool: this.config.randomContactPool,
             connectionLocker:  this.config.connectionLocker,
             neighborFinder: this.config.neighborFinder,
-            rpcCommunicator: this.config.rpcCommunicator
+            rpcCommunicator: this.config.rpcCommunicator,
+            proxyServer: this.config.proxyConnectionServer
         })
     }
 
@@ -91,6 +96,9 @@ export class RandomGraphNode extends EventEmitter<Events> {
         this.config.layer1.on('randomContactRemoved', (peerDescriptor, randomPeers) => this.removedRandomContact(peerDescriptor, randomPeers))
         this.config.P2PTransport.on('disconnected', (peerDescriptor: PeerDescriptor) => this.onPeerDisconnected(peerDescriptor))
         this.config.targetNeighbors.on('peerAdded', (id, _remote) => {
+            this.config.propagation.onNeighborJoined(id)
+        })
+        this.config.proxyConnectionServer?.on('newConnection', (id: PeerIDKey) => {
             this.config.propagation.onNeighborJoined(id)
         })
         const candidates = this.getNewNeighborCandidates()
@@ -185,6 +193,13 @@ export class RandomGraphNode extends EventEmitter<Events> {
         })
     }
 
+    public hasProxyConnection(peerKey: PeerIDKey): boolean {
+        if (this.config.proxyConnectionServer) {
+            return this.config.proxyConnectionServer.hasConnection(peerKey)
+        }
+        return false
+    }
+
     stop(): void {
         if (!this.started) {
             return
@@ -204,6 +219,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
         this.config.randomContactPool.stop()
         this.config.neighborFinder.stop()
         this.config.neighborUpdateManager.stop()
+        this.config.proxyConnectionServer?.stop()
     }
 
     broadcast(msg: StreamMessage, previousPeer?: string): void {
@@ -211,7 +227,9 @@ export class RandomGraphNode extends EventEmitter<Events> {
             this.markAndCheckDuplicate(msg.messageRef!, msg.previousMessageRef)
         }
         this.emit('message', msg)
-        this.config.propagation.feedUnseenMessage(msg, this.config.targetNeighbors.getStringIds(), previousPeer || null)
+        const neighbors = this.config.targetNeighbors.getStringIds()
+        const proxyConnections = this.config.proxyConnectionServer?.getConnectedPeerIds() || []
+        this.config.propagation.feedUnseenMessage(msg, [...neighbors, ...proxyConnections], previousPeer || null)
     }
 
     private markAndCheckDuplicate(currentMessageRef: MessageRef, previousMessageRef?: MessageRef): boolean {

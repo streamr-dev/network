@@ -1,15 +1,15 @@
 import { ListeningRpcCommunicator, PeerDescriptor, PeerID, peerIdFromPeerDescriptor } from "@streamr/dht"
 import { PeerList } from "../../src/logic/PeerList"
-import { RandomGraphNodeServer } from "../../src/logic/RandomGraphNodeServer"
+import { StreamNodeServer } from "../../src/logic/StreamNodeServer"
 import { ContentMessage, LeaveStreamNotice } from "../../src/proto/packages/trackerless-network/protos/NetworkRpc"
 import { mockLayer1 } from "../utils/mock/MockLayer1"
 import { MockNeighborFinder } from "../utils/mock/MockNeighborFinder"
 import { MockTransport } from "../utils/mock/Transport"
 import { createStreamMessage, mockConnectionLocker } from "../utils/utils"
 
-describe('RandomGraphNodeServer', () => {
+describe('StreamNodeServer', () => {
 
-    let randomGraphNodeServer: RandomGraphNodeServer
+    let streamNodeServer: StreamNodeServer
     const peerDescriptor: PeerDescriptor = {
         kademliaId: PeerID.fromString('random-graph-node').value,
         type: 0
@@ -36,7 +36,7 @@ describe('RandomGraphNodeServer', () => {
 
         mockDuplicateCheck = jest.fn((_c, _p) => true)
         mockBroadcast = jest.fn((_m, _p) => {})
-        randomGraphNodeServer = new RandomGraphNodeServer({
+        streamNodeServer = new StreamNodeServer({
             markAndCheckDuplicate: mockDuplicateCheck,
             broadcast: mockBroadcast,
             targetNeighbors,
@@ -52,7 +52,7 @@ describe('RandomGraphNodeServer', () => {
     })
     
     it('Server sendData()', async () => {
-        await randomGraphNodeServer.sendData(message, {} as any)
+        await streamNodeServer.sendData(message, {} as any)
         expect(mockDuplicateCheck).toHaveBeenCalledTimes(1)
         expect(mockBroadcast).toHaveBeenCalledTimes(1)
     })
@@ -62,7 +62,7 @@ describe('RandomGraphNodeServer', () => {
             senderId: 'sender',
             randomGraphId: 'random-graph'
         }
-        await randomGraphNodeServer.leaveStreamNotice(leaveNotice, {} as any)
+        await streamNodeServer.leaveStreamNotice(leaveNotice, {} as any)
     })
 
 })
