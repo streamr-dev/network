@@ -62,7 +62,7 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): MessageStre
                 // clear cached permissions if cannot decrypt, likely permissions need updating
                 opts.streamRegistryCached.clearStream(msg.getStreamId())
                 throw err
-            }    
+            }
         } else {
             decrypted = msg
         }
@@ -92,11 +92,16 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): MessageStre
     messageStream
         .pipe(async function* (src: AsyncGenerator<StreamMessage>) {
             setImmediate(async () => {
-                for await (const msg of src) {
-                    msgChainUtil.addMessage(msg)
+                let err: Error | undefined = undefined
+                try {
+                    for await (const msg of src) {
+                        msgChainUtil.addMessage(msg)
+                    }
+                } catch (e) {
+                    err = e
                 }
                 await msgChainUtil.flush()
-                msgChainUtil.stop()
+                msgChainUtil.stop(err)
             })
             yield* msgChainUtil
         })
