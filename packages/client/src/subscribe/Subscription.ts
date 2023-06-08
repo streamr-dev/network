@@ -25,11 +25,12 @@ export interface SubscriptionEvents {
  * @category Important
  */
 export class Subscription extends MessageStream {
-    private readonly logger: Logger
+
     readonly streamPartId: StreamPartID
-    private readonly eventEmitter: EventEmitter<SubscriptionEvents>
     /** @internal */
     readonly isRaw: boolean
+    private readonly eventEmitter: EventEmitter<SubscriptionEvents>
+    private readonly logger: Logger
 
     /** @internal */
     constructor(streamPartId: StreamPartID, isRaw: boolean, eventEmitter: EventEmitter<SubscriptionEvents>, loggerFactory: LoggerFactory) {
