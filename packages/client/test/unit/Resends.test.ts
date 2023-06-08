@@ -9,6 +9,7 @@ import { DestroySignal } from '../../src/DestroySignal'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { MessageFactory } from '../../src/publish/MessageFactory'
 import { Resends } from '../../src/subscribe/Resends'
+import { MessagePipelineFactory } from '../../src/subscribe/MessagePipelineFactory'
 import { createGroupKeyQueue, createStreamRegistryCached, mockLoggerFactory } from '../test-utils/utils'
 
 const PUBLISHER_WALLET = fastWallet()
@@ -32,12 +33,28 @@ describe('Resends', () => {
     })
 
     const createResends = (messagesPerStorageNode: Record<EthereumAddress, StreamMessage[]>): Resends => {
-        return new Resends(
+        const messagePipelineFactory = new MessagePipelineFactory(
+            undefined as any, // set later in this method as we have a circular dependency
+            {
+                fetchKey: async () => GROUP_KEY
+            } as any,
+            createStreamRegistryCached(),
+            new DestroySignal(),
+            mockLoggerFactory(),
+            { 
+                orderMessages: true,
+                gapFill: true,
+                maxGapRequests: 1,
+                gapFillTimeout: 100,
+                retryResendAfter: 100
+            }
+        )
+        const resends: Resends = new Resends(
+            messagePipelineFactory,
             undefined as any,
             {
                 getStorageNodeMetadata: async (nodeAddress: EthereumAddress) => ({ http: `${URL_PREFIX}${nodeAddress}` })
             } as any,
-            createStreamRegistryCached(),
             {
                 fetchHttpStream: async function*(url: string) {
                     const nodeAddress = url.substring(URL_PREFIX.length, URL_PREFIX.length + ETHEREUM_ADDRESS_LENGTH) as EthereumAddress
@@ -45,19 +62,12 @@ describe('Resends', () => {
                     yield* messages
                 }
             } as any,
-            {
-                fetchKey: async () => GROUP_KEY
-            } as any,
-            new DestroySignal(),
-            { 
-                orderMessages: true,
-                gapFill: true,
-                maxGapRequests: 1,
-                gapFillTimeout: 100,
-                retryResendAfter: 100
-            } as any,
+            undefined as any,
             mockLoggerFactory()
         )
+        // @ts-expect-error set value for circular dependency
+        messagePipelineFactory.resends = resends
+        return resends
     }
 
     it('one storage node', async () => {
@@ -70,7 +80,7 @@ describe('Resends', () => {
         const resends = createResends({
             [storageNodeAddress]: [allMessages[0], allMessages[2]]
         })
-        const messageStream = await resends.last(STREAM_PART_ID, { count: 2 }, false, async () => [storageNodeAddress])
+        const messageStream = await resends.resend(STREAM_PART_ID, { last: 2 }, async () => [storageNodeAddress])
         const receivedMessages = await collect(messageStream)
         expect(receivedMessages.map((msg) => msg.content)).toEqual([
             { foo: 1 },
@@ -90,7 +100,7 @@ describe('Resends', () => {
             [storageNodeAddress1]: without(allMessages, msg2),
             [storageNodeAddress2]: without(allMessages, msg3)
         })
-        const messageStream = await resends.last(STREAM_PART_ID, { count: 4 }, false, async () => [storageNodeAddress1, storageNodeAddress2])
+        const messageStream = await resends.resend(STREAM_PART_ID, { last: 4 }, async () => [storageNodeAddress1, storageNodeAddress2])
         const receivedMessages = await collect(messageStream)
         expect(receivedMessages.map((msg) => msg.content)).toEqual([
             { foo: 1 },
