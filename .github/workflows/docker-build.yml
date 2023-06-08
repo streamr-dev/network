@@ -44,7 +44,7 @@ jobs:
             ${{ runner.os }}-buildx-v1-
       - name: Setup qemu
         if: contains(inputs.build_platforms, 'arm64')
-        uses: docker/setup-qemu-action@v2.1.0
+        uses: docker/setup-qemu-action@v2.2.0
         with:
           platforms: arm64
       - name: Set up Docker Buildx
