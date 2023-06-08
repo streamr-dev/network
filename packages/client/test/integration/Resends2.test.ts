@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { Wallet } from '@ethersproject/wallet'
-import { StreamID, toStreamPartID } from '@streamr/protocol'
+import { StreamID, StreamMessage, toStreamPartID } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
 import { collect } from '@streamr/utils'
 import fs from 'fs'
@@ -29,6 +29,18 @@ describe('Resends2', () => {
     const publishTestMessages = (count: number, streamId?: StreamID): Promise<Message[]> => {
         const task = getPublishTestStreamMessages(publisher, streamId ?? stream.id)
         return task(count)
+    }
+
+    const startFailingStorageNode = (error: Error) => {
+        const wallet = fastWallet()
+        const node = new class extends FakeStorageNode {
+            // eslint-disable-next-line class-methods-use-this, require-yield
+            override async* getLast(): AsyncIterable<StreamMessage> {
+                throw error
+            }
+        }(wallet, environment.getNetwork(), environment.getChain())
+        node.start()
+        return node
     }
 
     beforeAll(() => {
@@ -128,6 +140,9 @@ describe('Resends2', () => {
             })
 
             it('can ignore errors in resend', async () => {
+                await stream.removeFromStorageNode(storageNode.id)  // remove the default storage node added in beforeEach
+                const storageNode2 = startFailingStorageNode(new Error('expected'))
+                await stream.addToStorageNode(storageNode2.id)
                 const sub = await client.subscribe({
                     streamId: stream.id,
                     resend: {
@@ -136,15 +151,9 @@ describe('Resends2', () => {
                 })
 
                 const receivedMsgs: any[] = []
-
                 const onResent = jest.fn(() => {
                     expect(receivedMsgs).toEqual([])
                 })
-
-                // @ts-expect-error internal method
-                const mockFn = jest.spyOn(sub, 'getResent') as any
-                const err = new Error('expected')
-                mockFn.mockRejectedValueOnce(err)
                 sub.once('resendComplete', onResent)
 
                 await publishTestMessages(3)
@@ -155,6 +164,9 @@ describe('Resends2', () => {
             })
 
             it('can handle errors in resend', async () => {
+                await stream.removeFromStorageNode(storageNode.id)  // remove the default storage node added in beforeEach
+                const storageNode2 = startFailingStorageNode(new Error('expected'))
+                await stream.addToStorageNode(storageNode2.id)
                 const sub = await client.subscribe({
                     streamId: stream.id,
                     resend: {
@@ -163,11 +175,6 @@ describe('Resends2', () => {
                 })
 
                 const onResent = jest.fn(() => {})
-
-                // @ts-expect-error internal method
-                const mockFn = jest.spyOn(sub, 'getResent') as any
-                const err = new Error('expected')
-                mockFn.mockRejectedValueOnce(err)
                 sub.once('resendComplete', onResent)
                 const onSubError = jest.fn()
                 sub.on('error', onSubError) // suppress

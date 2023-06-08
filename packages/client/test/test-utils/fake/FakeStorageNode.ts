@@ -87,29 +87,28 @@ export class FakeStorageNode extends FakeNetworkNode {
         this.streamPartMessages.add(streamPartId, msg)
     }
 
-    async getLast(streamPartId: StreamPartID, count: number): Promise<StreamMessage[]> {
+    async* getLast(streamPartId: StreamPartID, count: number): AsyncIterable<StreamMessage> {
         const messages = this.streamPartMessages.get(streamPartId)
         if (messages !== undefined) {
             const firstIndex = Math.max(messages.length - count, 0)
             const lastIndex = Math.min(firstIndex + count, messages.length - 1)
-            return messages.slice(firstIndex, lastIndex + 1)
+            yield* messages.slice(firstIndex, lastIndex + 1)
         } else {
             // TODO throw an error if this storage node doesn't isn't configured to store the stream?
-            return []
         }
     }
 
-    async getRange(streamPartId: StreamPartID, opts: {
+    async* getRange(streamPartId: StreamPartID, opts: {
         fromTimestamp: number
         fromSequenceNumber: number
         toTimestamp: number
         toSequenceNumber: number
         publisherId?: string
         msgChainId?: string
-    }): Promise<StreamMessage[]> {
+    }): AsyncIterable<StreamMessage> {
         const messages = this.streamPartMessages.get(streamPartId)
         if (messages !== undefined) {
-            return messages.filter((msg) => {
+            yield* messages.filter((msg) => {
                 return ((opts.publisherId === undefined) || (msg.getPublisherId() === opts.publisherId))
                     && ((opts.msgChainId === undefined) || (msg.getMsgChainId() === opts.msgChainId))
                     && (
@@ -120,7 +119,6 @@ export class FakeStorageNode extends FakeNetworkNode {
             })
         } else {
             // TODO throw an error if this storage node doesn't isn't configured to store the stream?
-            return []
         }
     }
 }
