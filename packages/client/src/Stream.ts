@@ -241,7 +241,7 @@ export class Stream {
             const streamPartId = toStreamPartID(formStorageNodeAssignmentStreamId(normalizedNodeAddress), DEFAULT_PARTITION)
             assignmentSubscription = new Subscription(streamPartId, false, new EventEmitter<SubscriptionEvents>(), this._loggerFactory)
             await this._subscriber.add(assignmentSubscription)
-            const propagationPromise = waitForAssignmentsToPropagate(assignmentSubscription.getStreamMessages(), {
+            const propagationPromise = waitForAssignmentsToPropagate(assignmentSubscription, {
                 id: this.id,
                 partitions: this.getMetadata().partitions
             }, this._loggerFactory)
