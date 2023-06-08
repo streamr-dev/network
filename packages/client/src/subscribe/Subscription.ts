@@ -32,11 +32,11 @@ export class Subscription extends MessageStream {
     readonly isRaw: boolean
 
     /** @internal */
-    constructor(streamPartId: StreamPartID, isRaw: boolean, loggerFactory: LoggerFactory) {
+    constructor(streamPartId: StreamPartID, isRaw: boolean, eventEmitter: EventEmitter<SubscriptionEvents>, loggerFactory: LoggerFactory) {
         super()
         this.streamPartId = streamPartId
         this.isRaw = isRaw
-        this.eventEmitter = new EventEmitter<SubscriptionEvents>()
+        this.eventEmitter = eventEmitter
         this.logger = loggerFactory.createLogger(module)
         this.onError.listen((err) => {
             this.eventEmitter.emit('error', err)

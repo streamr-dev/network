@@ -5,6 +5,7 @@ import {
     toStreamPartID
 } from '@streamr/protocol'
 import { collect, merge, toEthereumAddress, withTimeout } from '@streamr/utils'
+import EventEmitter from 'eventemitter3'
 import range from 'lodash/range'
 import { PublishMetadata } from '../src/publish/Publisher'
 import { StrictStreamrClientConfig } from './Config'
@@ -19,7 +20,7 @@ import { StreamRegistryCached } from './registry/StreamRegistryCached'
 import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
 import { Resends } from './subscribe/Resends'
 import { Subscriber } from './subscribe/Subscriber'
-import { Subscription } from './subscribe/Subscription'
+import { Subscription, SubscriptionEvents } from './subscribe/Subscription'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { formStorageNodeAssignmentStreamId } from './utils/utils'
 import { waitForAssignmentsToPropagate } from './utils/waitForAssignmentsToPropagate'
@@ -238,7 +239,7 @@ export class Stream {
         let assignmentSubscription
         try {
             const streamPartId = toStreamPartID(formStorageNodeAssignmentStreamId(normalizedNodeAddress), DEFAULT_PARTITION)
-            assignmentSubscription = new Subscription(streamPartId, false, this._loggerFactory)
+            assignmentSubscription = new Subscription(streamPartId, false, new EventEmitter<SubscriptionEvents>(), this._loggerFactory)
             await this._subscriber.add(assignmentSubscription)
             const propagationPromise = waitForAssignmentsToPropagate(assignmentSubscription.getStreamMessages(), {
                 id: this.id,

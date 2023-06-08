@@ -1,9 +1,10 @@
 import { StreamMessage } from '@streamr/protocol'
-import { LoggerFactory } from '../utils/LoggerFactory'
+import EventEmitter from 'eventemitter3'
 import { StrictStreamrClientConfig } from '../Config'
+import { LoggerFactory } from '../utils/LoggerFactory'
 import { OrderMessages } from './OrderMessages'
 import { ResendOptions, Resends } from './Resends'
-import { Subscription } from './Subscription'
+import { Subscription, SubscriptionEvents } from './Subscription'
 
 /*
  * Initialize subscription pipeline transformations for a resend subscription
@@ -13,6 +14,7 @@ export const initResendSubscription = (
     resendOptions: ResendOptions,
     resends: Resends,
     config: StrictStreamrClientConfig,
+    eventEmitter: EventEmitter<SubscriptionEvents>,
     loggerFactory: LoggerFactory
 ): void => {
     const resendThenRealtime = async function* (src: AsyncGenerator<StreamMessage>): AsyncGenerator<StreamMessage, void, any> {
@@ -33,8 +35,7 @@ export const initResendSubscription = (
                 await subscription.handleError(err)
             }
         }
-        // @ts-expect-error private TODO should we expose eventEmitter somehow?
-        subscription.eventEmitter.emit('resendComplete')
+        eventEmitter.emit('resendComplete')
         yield* src
     }
     subscription.pipe(resendThenRealtime)
