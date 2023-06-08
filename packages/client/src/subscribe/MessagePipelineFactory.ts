@@ -49,11 +49,11 @@ export class MessagePipelineFactory {
         return _createMessagePipeline({
             ...opts,
             resends: this.resends,
-            groupKeyManager: this.groupKeyManager,
             streamRegistryCached: this.streamRegistryCached,
+            groupKeyManager: this.groupKeyManager,
+            config: opts.config ?? this.config,
             destroySignal: this.destroySignal,
-            loggerFactory: this.loggerFactory,
-            config: opts.config ?? this.config
+            loggerFactory: this.loggerFactory
         })
     }
 }

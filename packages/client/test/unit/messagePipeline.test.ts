@@ -91,8 +91,8 @@ describe('messagePipeline', () => {
         pipeline = createMessagePipeline({
             streamPartId,
             getStorageNodes: undefined as any,
-            loggerFactory: mockLoggerFactory(),
             resends: undefined as any,
+            streamRegistryCached: streamRegistryCached as any,
             groupKeyManager: new GroupKeyManager(
                 mock<SubscriberKeyExchange>(),
                 mock<LitProtocolFacade>(),
@@ -102,9 +102,9 @@ describe('messagePipeline', () => {
                 new StreamrClientEventEmitter(),
                 destroySignal
             ),
-            streamRegistryCached: streamRegistryCached as any,
+            config: config as any,
             destroySignal,
-            config: config as any
+            loggerFactory: mockLoggerFactory(),
         })
     })
 
