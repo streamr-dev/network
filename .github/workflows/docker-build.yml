@@ -52,7 +52,7 @@ jobs:
         with:
           driver-opts: |
             network=host
-      - uses: docker/login-action@v2.1.0
+      - uses: docker/login-action@v2.2.0
         if: ${{inputs.push_image}}
         with:
           username: ${{ secrets.dockerhub_username }}
