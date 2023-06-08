@@ -52,9 +52,10 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): MessageStre
     const messageStream = new MessageStream()
     const msgChainUtil = new MsgChainUtil(async (msg) => {
         await validateStreamMessage(msg, opts.streamRegistryCached)
+        let decrypted
         if (StreamMessage.isAESEncrypted(msg)) {
             try {
-                return await decrypt(msg, opts.groupKeyManager, opts.destroySignal)
+                decrypted = await decrypt(msg, opts.groupKeyManager, opts.destroySignal)
             } catch (err) {
                 // TODO log this in onError? if we want to log all errors?
                 logger.debug('Failed to decrypt', { messageId: msg.getMessageID(), err })
@@ -63,17 +64,19 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): MessageStre
                 throw err
             }    
         } else {
-            return msg
+            decrypted = msg
         }
+        decrypted.getParsedContent()  // throws if content is not parsable (e.g. not valid JSON)
+        return decrypted
     }, messageStream.onError)
 
-    // collect messages that fail validation/parsixng, do not push out of pipeline
+    // collect messages that fail validation/parsing, do not push out of pipeline
     // NOTE: we let failed messages be processed and only removed at end so they don't
     // end up acting as gaps that we repeatedly try to fill.
     const ignoreMessages = new WeakSet()
     messageStream.onError.listen(onError)
     if (opts.config.orderMessages) {
-        // order messages (fill gaps)
+        // order messages and fill gaps
         const orderMessages = new OrderMessages(
             opts.config,
             opts.resends,
@@ -87,7 +90,6 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): MessageStre
         })
     }
     messageStream
-        // validate & decrypt
         .pipe(async function* (src: AsyncGenerator<StreamMessage>) {
             setImmediate(async () => {
                 for await (const msg of src) {
@@ -97,10 +99,6 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): MessageStre
                 msgChainUtil.stop()
             })
             yield* msgChainUtil
-        })
-        // parse content
-        .forEach((streamMessage: StreamMessage) => {
-            streamMessage.getParsedContent()
         })
         // ignore any failed messages
         .filter((streamMessage: StreamMessage) => {
