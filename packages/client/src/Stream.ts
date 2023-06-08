@@ -199,7 +199,7 @@ export class Stream {
 
         if (!receivedMsgs.length) { return }
 
-        const lastMessage = receivedMsgs[0].content
+        const lastMessage = receivedMsgs[0].getParsedContent()
 
         const fields = Object.entries(lastMessage as any).map(([name, value]) => {
             const type = getFieldType(value)
