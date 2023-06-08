@@ -1,12 +1,12 @@
-import { inject } from 'tsyringe'
-import { Subscription } from './Subscription'
 import { StreamMessage, StreamPartID } from '@streamr/protocol'
+import { inject } from 'tsyringe'
 import { ConfigInjectionToken } from '../Config'
-import { OrderMessages } from './OrderMessages'
-import { ResendOptions, Resends } from './Resends'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { StrictStreamrClientConfig } from './../Config'
 import { MessageStream } from './MessageStream'
+import { OrderMessages } from './OrderMessages'
+import { ResendOptions, Resends } from './Resends'
+import { Subscription } from './Subscription'
 
 export class ResendSubscription extends Subscription {
 
@@ -39,12 +39,10 @@ export class ResendSubscription extends Subscription {
 
     private async getResent(): Promise<MessageStream> {
         const resentMsgs = await this.resends.resend(this.streamPartId, this.resendOptions)
-
         this.onBeforeFinally.listen(async () => {
             resentMsgs.end()
             await resentMsgs.return()
         })
-
         return resentMsgs
     }
 

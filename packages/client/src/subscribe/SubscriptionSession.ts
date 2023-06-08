@@ -1,20 +1,10 @@
-import { inject } from 'tsyringe'
-
 import { StreamMessage, StreamMessageType, StreamPartID } from '@streamr/protocol'
-
+import { NetworkNodeFacade, NetworkNodeStub } from '../NetworkNodeFacade'
 import { Scaffold } from '../utils/Scaffold'
 import { Signal } from '../utils/Signal'
+import { MessagePipelineFactory } from './MessagePipelineFactory'
 import { MessageStream } from './MessageStream'
-
 import { Subscription } from './Subscription'
-import { createSubscribePipeline } from './subscribePipeline'
-import { NetworkNodeFacade, NetworkNodeStub } from '../NetworkNodeFacade'
-import { Resends } from './Resends'
-import { StreamRegistryCached } from '../registry/StreamRegistryCached'
-import { DestroySignal } from '../DestroySignal'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
-import { LoggerFactory } from '../utils/LoggerFactory'
-import { GroupKeyManager } from '../encryption/GroupKeyManager'
 
 /**
  * Manages adding & removing subscriptions to node as needed.
@@ -22,6 +12,7 @@ import { GroupKeyManager } from '../encryption/GroupKeyManager'
  */
 
 export class SubscriptionSession {
+
     public readonly streamPartId: StreamPartID
     public readonly onRetired = Signal.once()
     private isRetired: boolean = false
@@ -33,26 +24,15 @@ export class SubscriptionSession {
 
     constructor(
         streamPartId: StreamPartID,
-        resends: Resends,
-        groupKeyManager: GroupKeyManager,
-        streamRegistryCached: StreamRegistryCached,
+        messagePipelineFactory: MessagePipelineFactory,
         node: NetworkNodeFacade,
-        destroySignal: DestroySignal,
-        loggerFactory: LoggerFactory,
-        @inject(ConfigInjectionToken) config: StrictStreamrClientConfig
     ) {
         this.streamPartId = streamPartId
         this.distributeMessage = this.distributeMessage.bind(this)
         this.node = node
         this.onError = this.onError.bind(this)
-        this.pipeline = createSubscribePipeline({
-            streamPartId,
-            resends,
-            groupKeyManager,
-            streamRegistryCached,
-            loggerFactory,
-            destroySignal,
-            config: config
+        this.pipeline = messagePipelineFactory.createMessagePipeline({
+            streamPartId
         })
         this.pipeline.onError.listen(this.onError)
         this.pipeline

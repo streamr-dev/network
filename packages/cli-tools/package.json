@@ -1,6 +1,6 @@
 {
   "name": "@streamr/cli-tools",
-  "version": "8.5.2",
+  "version": "8.5.3",
   "description": "Command line tools for Streamr",
   "repository": {
     "type": "git",
@@ -27,16 +27,16 @@
   "license": "AGPL-3.0",
   "dependencies": {
     "@ethersproject/wallet": "^5.5.0",
-    "@snapshot-labs/snapshot.js": "^0.4.43",
-    "@streamr/utils": "8.5.2",
+    "@snapshot-labs/snapshot.js": "^0.4.94",
+    "@streamr/utils": "8.5.3",
     "commander": "^10.0.1",
     "easy-table": "^1.1.1",
     "event-stream": "^4.0.1",
     "lodash": "^4.17.21",
-    "streamr-client": "8.5.2"
+    "streamr-client": "8.5.3"
   },
   "devDependencies": {
-    "@streamr/test-utils": "8.5.2",
+    "@streamr/test-utils": "8.5.3",
     "@types/event-stream": "^4.0.0",
     "@types/lodash": "^4.14.175",
     "@types/merge2": "^1.4.0",

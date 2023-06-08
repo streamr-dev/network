@@ -197,6 +197,8 @@ always refer to the latest _stable_ version.
 
 To update `latest` do the following.
 
+1. Remove potentially existing latest tag _locally_ with `docker manifest rm streamr/broker-node:latest`
+
 1. Find out the sha256 digests of both the amd64 and arm64 builds for a `vX.Y.Z` tag. This can be
 done via command-line `docker buildx imagetools inspect streamr/broker-node:vX.Y.Z` or you can check
 this from docker hub website under https://hub.docker.com/r/streamr/broker-node/tags.
