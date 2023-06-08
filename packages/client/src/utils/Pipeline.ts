@@ -18,7 +18,6 @@ type AsyncGeneratorWithId<T> = AsyncGenerator<T> & {
 export type IPipeline<InType, OutType = InType> = {
     pipe<NewOutType>(fn: PipelineTransform<OutType, NewOutType>): IPipeline<InType, NewOutType>
     filter(fn: G.GeneratorFilter<OutType>): IPipeline<InType, OutType>
-    forEach(fn: G.GeneratorForEach<OutType>): IPipeline<InType, OutType>
 } & AsyncGenerator<OutType>
 
 class PipelineDefinition<InType, OutType = InType> {
@@ -105,10 +104,6 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
     onMessage = Signal.create<[OutType]>()
 
     onError = ErrorSignal.create<[Error, (InType | OutType)?, number?]>()
-
-    forEach(fn: G.GeneratorForEach<OutType>): Pipeline<InType, OutType> {
-        return this.pipe((src) => G.forEach(src, fn, this.onError.trigger))
-    }
 
     filter(fn: G.GeneratorFilter<OutType>): Pipeline<InType, OutType> {
         return this.pipe((src) => G.filter(src, fn, this.onError.trigger))

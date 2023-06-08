@@ -64,8 +64,8 @@ export class StreamrClient {
 
     public readonly id: string
     private readonly config: StrictStreamrClientConfig
-    private readonly node: NetworkNodeFacade
     private readonly authentication: Authentication
+    private readonly node: NetworkNodeFacade
     private readonly resends: Resends
     private readonly publisher: Publisher
     private readonly subscriber: Subscriber
@@ -93,8 +93,8 @@ export class StreamrClient {
         container.register(TheGraphClient, { useValue: createTheGraphClient(container.resolve<HttpFetcher>(HttpFetcher), container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter), strictConfig) })
         this.id = strictConfig.id
         this.config = strictConfig
+        this.authentication = authentication
         this.node = container.resolve<NetworkNodeFacade>(NetworkNodeFacade)
-        this.authentication = container.resolve<Authentication>(AuthenticationInjectionToken)
         this.resends = container.resolve<Resends>(Resends)
         this.publisher = container.resolve<Publisher>(Publisher)
         this.subscriber = container.resolve<Subscriber>(Subscriber)

@@ -1,13 +1,15 @@
 import 'reflect-metadata'
 
-import { StreamID, StreamMessage } from '@streamr/protocol'
+import { MessageID, StreamID, StreamMessage } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
 import { Defer, collect, waitForCondition } from '@streamr/utils'
-import shuffle from 'lodash/shuffle'
 import sample from 'lodash/sample'
+import shuffle from 'lodash/shuffle'
+import { Authentication, createPrivateKeyAuthentication } from '../../src/Authentication'
 import { Message, MessageMetadata } from '../../src/Message'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamPermission } from '../../src/permission'
+import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { Subscription } from '../../src/subscribe/Subscription'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
@@ -38,11 +40,20 @@ describe('Subscriber', () => {
     let streamId: StreamID
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
     let publisher: StreamrClient
+    let publisherAuthentication: Authentication
     let environment: FakeEnvironment
 
     const getSubscriptionCount = async (def?: StreamID) => {
         const subcriptions = await client.getSubscriptions(def !== undefined ? { id: def } : undefined)
         return subcriptions.length
+    }
+
+    const createMockMessage = async (serializedContent: string, timestamp: number) => {
+        return await createSignedMessage({
+            messageId: new MessageID(streamId, 0, timestamp, 0, await publisher.getAddress(), 'msgChainId'),
+            serializedContent,
+            authentication: publisherAuthentication
+        })
     }
 
     beforeAll(async () => {
@@ -53,6 +64,7 @@ describe('Subscriber', () => {
                 privateKey: publisherWallet.privateKey
             }
         })
+        publisherAuthentication = createPrivateKeyAuthentication(publisherWallet.privateKey, undefined as any)
     })
 
     beforeEach(async () => {
@@ -314,21 +326,19 @@ describe('Subscriber', () => {
             })
 
             it('will skip bad message if error handler attached', async () => {
-                const err = new Error('expected')
-
                 const sub = await client.subscribe(streamId)
-                sub.forEach((_item, index) => {
-                    if (index === MAX_ITEMS) {
-                        throw err
-                    }
-                })
-
                 const onSubscriptionError = jest.fn()
-                sub.onError.listen(onSubscriptionError)
+                sub.on('error', onSubscriptionError)
 
-                const published = await publishTestMessages(NUM_MESSAGES, {
-                    timestamp: 111111,
-                })
+                const published = []
+                const nodeId = (await publisher.getNode()).getNodeId()
+                const node = environment.getNetwork().getNode(nodeId)!
+                for (let i = 0; i < NUM_MESSAGES; i++) {
+                    const serializedContent = (i === MAX_ITEMS) ? 'invalid-json' : JSON.stringify({ foo: i })
+                    const msg = await createMockMessage(serializedContent, i)
+                    node.publish(msg)
+                    published.push(msg)
+                }
 
                 const received: Message[] = []
                 let t!: ReturnType<typeof setTimeout>
@@ -350,40 +360,6 @@ describe('Subscriber', () => {
                     ...published.slice(0, MAX_ITEMS),
                     ...published.slice(MAX_ITEMS + 1)
                 ].map((m) => m.signature))
-                expect(onSubscriptionError).toHaveBeenCalledTimes(1)
-            })
-
-            it('will not skip bad message if error handler attached & throws', async () => {
-                const err = new Error('expected')
-
-                const sub = await client.subscribe(streamId)
-
-                sub.forEach((_item, index) => {
-                    if (index === MAX_ITEMS) {
-                        throw err
-                    }
-                })
-
-                const received: Message[] = []
-                const onSubscriptionError = jest.fn((error: Error) => {
-                    throw error
-                })
-
-                sub.onError.listen(onSubscriptionError)
-
-                const published = await publishTestMessages(NUM_MESSAGES, {
-                    timestamp: 111111,
-                })
-
-                await expect(async () => {
-                    for await (const m of sub) {
-                        received.push(m)
-                        if (received.length === published.length) {
-                            break
-                        }
-                    }
-                }).rejects.toThrow()
-                expect(received.map((m) => m.signature)).toEqual(published.slice(0, MAX_ITEMS).map((m) => m.signature))
                 expect(onSubscriptionError).toHaveBeenCalledTimes(1)
             })
         })
