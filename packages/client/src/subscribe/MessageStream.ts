@@ -49,11 +49,6 @@ export class MessageStream implements AsyncIterable<Message> {
         return this
     }
 
-    /** @internal */
-    getStreamMessages(): AsyncIterableIterator<StreamMessage> {
-        return this.pipeline
-    }
-
     async* [Symbol.asyncIterator](): AsyncIterator<Message> {
         for await (const msg of this.pipeline) {
             yield convertStreamMessageToMessage(msg)
@@ -81,11 +76,6 @@ export class MessageStream implements AsyncIterable<Message> {
     }
 
     /** @internal */
-    async pull(source: AsyncGenerator<StreamMessage>): Promise<void> {
-        return this.pipeline.pull(source)
-    }
-
-    /** @internal */
     async handleError(err: Error): Promise<void> {
         await this.pipeline.handleError(err)
     }
@@ -96,11 +86,6 @@ export class MessageStream implements AsyncIterable<Message> {
     }
 
     /** @internal */
-    endWrite(err?: Error): void {
-        this.pipeline.endWrite(err)
-    }
-
-    /** @internal */
     isDone(): boolean {
         return this.pipeline.isDone()
     }
@@ -108,11 +93,5 @@ export class MessageStream implements AsyncIterable<Message> {
     /** @internal */
     return(): Promise<unknown> {
         return this.pipeline.return()
-    }
-
-    // used only in tests
-    /** @internal */
-    throw(err: Error): Promise<unknown> {
-        return this.pipeline.throw(err)
     }
 }
