@@ -10,6 +10,7 @@ export class HttpFetcher {
     private readonly config: Pick<StrictStreamrClientConfig, '_timeouts'>
     private readonly logger: Logger
 
+    /* eslint-disable indent */
     /** @internal */
     constructor(
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, '_timeouts'>,

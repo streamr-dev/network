@@ -44,6 +44,7 @@ export class StreamStorageRegistry {
     private readonly authentication: Authentication
     private readonly logger: Logger
 
+    /* eslint-disable indent */
     constructor(
         @inject(delay(() => StreamFactory)) streamFactory: StreamFactory,
         streamIdBuilder: StreamIDBuilder,

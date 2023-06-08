@@ -91,6 +91,7 @@ export class LitProtocolFacade {
     private readonly logger: Logger
     private connectLitNodeClient?: () => Promise<void>
 
+    /* eslint-disable indent */
     constructor(
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | 'encryption'>,
         @inject(AuthenticationInjectionToken) authentication: Authentication,

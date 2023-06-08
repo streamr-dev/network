@@ -80,6 +80,7 @@ export class StreamRegistry {
     private readonly authentication: Authentication
     private readonly logger: Logger
     
+    /* eslint-disable indent */
     /** @internal */
     constructor(
         @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,

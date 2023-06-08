@@ -25,6 +25,7 @@ export class StreamFactory {
     private readonly eventEmitter: StreamrClientEventEmitter
     private readonly loggerFactory: LoggerFactory
 
+    /* eslint-disable indent */
     /** @internal */
     constructor(
         @inject(delay(() => Publisher)) publisher: Publisher,

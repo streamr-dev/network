@@ -21,6 +21,7 @@ export class StreamRegistryCached {
     private readonly streamRegistry: StreamRegistry
     private readonly logger: Logger
     
+    /* eslint-disable indent */
     constructor(
         @inject(delay(() => StreamRegistry)) streamRegistry: StreamRegistry,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'cache'>,

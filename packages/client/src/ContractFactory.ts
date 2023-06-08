@@ -15,6 +15,7 @@ export class ContractFactory {
     private readonly eventEmitter: StreamrClientEventEmitter
     private readonly loggerFactory: LoggerFactory
 
+    /* eslint-disable indent */
     constructor(
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts'>,
         eventEmitter: StreamrClientEventEmitter,
