@@ -1,5 +1,5 @@
 import { NetworkStack } from '../../src/NetworkStack'
-import { NodeType, PeerDescriptor, PeerID, Simulator } from '@streamr/dht'
+import { NodeType, PeerDescriptor, PeerID } from '@streamr/dht'
 import {
     StreamPartIDUtils,
     toStreamID,
@@ -21,7 +21,6 @@ describe('NetworkStack', () => {
     }
 
     beforeEach(async () => {
-        Simulator.useFakeTimers()
         stack1 = new NetworkStack({
             layer0: {
                 peerDescriptor: epDescriptor,
@@ -48,7 +47,6 @@ describe('NetworkStack', () => {
             stack1.stop(),
             stack2.stop()
         ])
-        Simulator.useFakeTimers(false)
     })
 
     it('Can use NetworkNode pub/sub via NetworkStack', async () => {

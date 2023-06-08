@@ -263,5 +263,4 @@ export class RandomGraphNode extends EventEmitter<Events> {
         }
         return this.config.randomContactPool.getStringIds()
     }
-
 }
