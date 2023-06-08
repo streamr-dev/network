@@ -91,9 +91,9 @@ function getFieldType(value: any): (Field['type'] | undefined) {
 export class Stream {
     readonly id: StreamID
     private metadata: StreamMetadata
-    private readonly _resends: Resends
     private readonly _publisher: Publisher
     private readonly _subscriber: Subscriber
+    private readonly _resends: Resends
     private readonly _streamRegistry: StreamRegistry
     private readonly _streamRegistryCached: StreamRegistryCached
     private readonly _streamStorageRegistry: StreamStorageRegistry
@@ -105,9 +105,9 @@ export class Stream {
     constructor(
         id: StreamID,
         metadata: Partial<StreamMetadata>,
-        resends: Resends,
         publisher: Publisher,
         subscriber: Subscriber,
+        resends: Resends,
         streamRegistryCached: StreamRegistryCached,
         streamRegistry: StreamRegistry,
         streamStorageRegistry: StreamStorageRegistry,
@@ -126,9 +126,9 @@ export class Stream {
             },
             metadata
         )
-        this._resends = resends
         this._publisher = publisher
         this._subscriber = subscriber
+        this._resends = resends
         this._streamRegistryCached = streamRegistryCached
         this._streamRegistry = streamRegistry
         this._streamStorageRegistry = streamStorageRegistry

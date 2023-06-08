@@ -11,17 +11,17 @@ import { SubscriptionSession } from './SubscriptionSession'
 export class Subscriber {
 
     private readonly subSessions: Map<StreamPartID, SubscriptionSession> = new Map()
-    private readonly messagePipelineFactory: MessagePipelineFactory
     private readonly node: NetworkNodeFacade
+    private readonly messagePipelineFactory: MessagePipelineFactory
     private readonly logger: Logger
 
     constructor(
-        messagePipelineFactory: MessagePipelineFactory,
         node: NetworkNodeFacade,
+        messagePipelineFactory: MessagePipelineFactory,
         loggerFactory: LoggerFactory,
     ) {
-        this.messagePipelineFactory = messagePipelineFactory
         this.node = node
+        this.messagePipelineFactory = messagePipelineFactory
         this.logger = loggerFactory.createLogger(module)
     }
 

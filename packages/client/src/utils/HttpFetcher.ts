@@ -12,8 +12,8 @@ export class HttpFetcher {
 
     /** @internal */
     constructor(
-        loggerFactory: LoggerFactory,
-        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, '_timeouts'>
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, '_timeouts'>,
+        loggerFactory: LoggerFactory
     ) {
         this.config = config
         this.logger = loggerFactory.createLogger(module)

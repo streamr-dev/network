@@ -11,18 +11,18 @@ import { ObservableContract, createDecoratedContract } from './utils/contract'
 @scoped(Lifecycle.ContainerScoped)
 export class ContractFactory {
 
+    private readonly config: Pick<StrictStreamrClientConfig, 'contracts'>
     private readonly eventEmitter: StreamrClientEventEmitter
     private readonly loggerFactory: LoggerFactory
-    private readonly config: Pick<StrictStreamrClientConfig, 'contracts'>
 
     constructor(
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts'>,
         eventEmitter: StreamrClientEventEmitter,
-        loggerFactory: LoggerFactory,
-        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts'>
+        loggerFactory: LoggerFactory
     ) {
+        this.config = config
         this.eventEmitter = eventEmitter
         this.loggerFactory = loggerFactory
-        this.config = config
     }
 
     createReadContract<T extends Contract>(

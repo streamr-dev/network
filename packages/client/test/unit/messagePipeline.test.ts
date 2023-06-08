@@ -94,13 +94,13 @@ describe('messagePipeline', () => {
             loggerFactory: mockLoggerFactory(),
             resends: undefined as any,
             groupKeyManager: new GroupKeyManager(
-                groupKeyStore,
-                mock<LitProtocolFacade>(),
                 mock<SubscriberKeyExchange>(),
-                new StreamrClientEventEmitter(),
-                destroySignal,
+                mock<LitProtocolFacade>(),
+                groupKeyStore,
+                config,
                 createPrivateKeyAuthentication(publisher.privateKey, {} as any),
-                config
+                new StreamrClientEventEmitter(),
+                destroySignal
             ),
             streamRegistryCached: streamRegistryCached as any,
             destroySignal,

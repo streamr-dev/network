@@ -35,26 +35,26 @@ describe('Resends', () => {
     const createResends = (messagesPerStorageNode: Record<EthereumAddress, StreamMessage[]>): Resends => {
         const messagePipelineFactory = new MessagePipelineFactory(
             undefined as any, // set later in this method as we have a circular dependency
+            createStreamRegistryCached(),
             {
                 fetchKey: async () => GROUP_KEY
             } as any,
-            createStreamRegistryCached(),
-            new DestroySignal(),
-            mockLoggerFactory(),
             { 
                 orderMessages: true,
                 gapFill: true,
                 maxGapRequests: 1,
                 gapFillTimeout: 100,
                 retryResendAfter: 100
-            }
+            },
+            new DestroySignal(),
+            mockLoggerFactory()
         )
         const resends: Resends = new Resends(
-            messagePipelineFactory,
             undefined as any,
             {
                 getStorageNodeMetadata: async (nodeAddress: EthereumAddress) => ({ http: `${URL_PREFIX}${nodeAddress}` })
             } as any,
+            messagePipelineFactory,
             {
                 fetchHttpStream: async function*(url: string) {
                     const nodeAddress = url.substring(URL_PREFIX.length, URL_PREFIX.length + ETHEREUM_ADDRESS_LENGTH) as EthereumAddress

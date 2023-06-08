@@ -36,30 +36,30 @@ export class StreamStorageRegistry {
 
     private streamStorageRegistryContract?: StreamStorageRegistryContract
     private readonly streamStorageRegistryContractsReadonly: StreamStorageRegistryContract[]
-    private readonly contractFactory: ContractFactory
     private readonly streamFactory: StreamFactory
     private readonly streamIdBuilder: StreamIDBuilder
+    private readonly contractFactory: ContractFactory
     private readonly theGraphClient: TheGraphClient
-    private readonly authentication: Authentication
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts'>
+    private readonly authentication: Authentication
     private readonly logger: Logger
 
     constructor(
-        contractFactory: ContractFactory,
         @inject(delay(() => StreamFactory)) streamFactory: StreamFactory,
         streamIdBuilder: StreamIDBuilder,
+        contractFactory: ContractFactory,
         theGraphClient: TheGraphClient,
-        eventEmitter: StreamrClientEventEmitter,
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts'>,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
-        loggerFactory: LoggerFactory,
-        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts'>
+        eventEmitter: StreamrClientEventEmitter,
+        loggerFactory: LoggerFactory
     ) {
-        this.contractFactory = contractFactory
         this.streamFactory = streamFactory
         this.streamIdBuilder = streamIdBuilder
+        this.contractFactory = contractFactory
         this.theGraphClient = theGraphClient
-        this.authentication = authentication
         this.config = config
+        this.authentication = authentication
         this.logger = loggerFactory.createLogger(module)
         this.streamStorageRegistryContractsReadonly = getStreamRegistryChainProviders(config).map((provider: Provider) => {
             return this.contractFactory.createReadContract(

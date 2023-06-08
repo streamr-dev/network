@@ -86,18 +86,18 @@ const signAuthMessage = async (authentication: Authentication) => {
 export class LitProtocolFacade {
 
     private litNodeClient?: LitCore
-    private readonly authentication: Authentication
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | 'encryption'>
+    private readonly authentication: Authentication
     private readonly logger: Logger
     private connectLitNodeClient?: () => Promise<void>
 
     constructor(
-        loggerFactory: LoggerFactory,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | 'encryption'>,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
+        loggerFactory: LoggerFactory
     ) {
-        this.authentication = authentication
         this.config = config
+        this.authentication = authentication
         this.logger = loggerFactory.createLogger(module)
     }
 

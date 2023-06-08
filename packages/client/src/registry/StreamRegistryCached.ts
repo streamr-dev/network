@@ -18,13 +18,13 @@ export class StreamRegistryCached {
     private readonly _isStreamPublisher: CacheAsyncFnType<[StreamID, EthereumAddress], boolean, string>
     private readonly _isStreamSubscriber: CacheAsyncFnType<[StreamID, EthereumAddress], boolean, string>
     private readonly _isPublic: CacheAsyncFnType<[StreamID], boolean, string>
-    private readonly logger: Logger
     private readonly streamRegistry: StreamRegistry
+    private readonly logger: Logger
     
     constructor(
-        loggerFactory: LoggerFactory,
         @inject(delay(() => StreamRegistry)) streamRegistry: StreamRegistry,
-        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'cache'>
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'cache'>,
+        loggerFactory: LoggerFactory
     ) {
         this.streamRegistry = streamRegistry
         this.logger = loggerFactory.createLogger(module)
