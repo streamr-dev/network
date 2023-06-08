@@ -35,13 +35,13 @@ const MAX_PENDING_REQUEST_COUNT = 50000 // just some limit, we can tweak the num
 @scoped(Lifecycle.ContainerScoped)
 export class SubscriberKeyExchange {
 
+    private rsaKeyPair?: RSAKeyPair
+    private readonly pendingRequests: MaxSizedSet<string> = new MaxSizedSet(MAX_PENDING_REQUEST_COUNT)
     private readonly logger: Logger
-    private rsaKeyPair: RSAKeyPair | undefined
     private readonly networkNodeFacade: NetworkNodeFacade
     private readonly store: LocalGroupKeyStore
     private readonly authentication: Authentication
     private readonly streamRegistryCached: StreamRegistryCached
-    private readonly pendingRequests: MaxSizedSet<string> = new MaxSizedSet(MAX_PENDING_REQUEST_COUNT)
     private readonly ensureStarted: () => Promise<void>
     requestGroupKey: (groupKeyId: string, publisherId: EthereumAddress, streamPartId: StreamPartID) => Promise<void>
 

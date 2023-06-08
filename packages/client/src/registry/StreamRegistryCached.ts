@@ -14,13 +14,13 @@ const SEPARATOR = '|' // always use SEPARATOR for cache key
 @scoped(Lifecycle.ContainerScoped)
 export class StreamRegistryCached {
 
-    private readonly streamRegistry: StreamRegistry
-    private readonly logger: Logger
     private readonly _getStream: CacheAsyncFnType<[StreamID], Stream, string>
     private readonly _isStreamPublisher: CacheAsyncFnType<[StreamID, EthereumAddress], boolean, string>
     private readonly _isStreamSubscriber: CacheAsyncFnType<[StreamID, EthereumAddress], boolean, string>
     private readonly _isPublic: CacheAsyncFnType<[StreamID], boolean, string>
-
+    private readonly logger: Logger
+    private readonly streamRegistry: StreamRegistry
+    
     constructor(
         loggerFactory: LoggerFactory,
         @inject(delay(() => StreamRegistry)) streamRegistry: StreamRegistry,

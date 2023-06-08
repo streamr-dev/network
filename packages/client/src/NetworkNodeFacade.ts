@@ -75,12 +75,12 @@ export class NetworkNodeFactory {
 @scoped(Lifecycle.ContainerScoped)
 export class NetworkNodeFacade {
 
-    private readonly destroySignal: DestroySignal
-    private readonly networkNodeFactory: NetworkNodeFactory
-    private readonly authentication: Authentication
     private cachedNode?: NetworkNodeStub
     private startNodeCalled = false
     private startNodeComplete = false
+    private readonly destroySignal: DestroySignal
+    private readonly networkNodeFactory: NetworkNodeFactory
+    private readonly authentication: Authentication
     private readonly config: Pick<StrictStreamrClientConfig, 'network' | 'contracts'>
     private readonly eventEmitter: EventEmitter<Events>
 

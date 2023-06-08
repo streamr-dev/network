@@ -85,10 +85,10 @@ const signAuthMessage = async (authentication: Authentication) => {
 @scoped(Lifecycle.ContainerScoped)
 export class LitProtocolFacade {
 
+    private litNodeClient?: LitCore
     private readonly authentication: Authentication
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | 'encryption'>
     private readonly logger: Logger
-    private litNodeClient?: LitCore
     private connectLitNodeClient?: () => Promise<void>
 
     constructor(

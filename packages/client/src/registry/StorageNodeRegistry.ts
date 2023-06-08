@@ -20,11 +20,11 @@ export interface StorageNodeMetadata {
 @scoped(Lifecycle.ContainerScoped)
 export class StorageNodeRegistry {
 
+    private nodeRegistryContract?: NodeRegistryContract
+    private readonly nodeRegistryContractsReadonly: NodeRegistryContract[]
     private readonly contractFactory: ContractFactory
     private readonly authentication: Authentication
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts'>
-    private nodeRegistryContract?: NodeRegistryContract
-    private readonly nodeRegistryContractsReadonly: NodeRegistryContract[]
 
     constructor(
         contractFactory: ContractFactory,
