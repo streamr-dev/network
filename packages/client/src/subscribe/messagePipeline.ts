@@ -24,11 +24,11 @@ export interface MessagePipelineOptions {
     streamPartId: StreamPartID
     getStorageNodes?: (streamId: StreamID) => Promise<EthereumAddress[]>
     resends: Resends
-    groupKeyManager: GroupKeyManager
     streamRegistryCached: StreamRegistryCached
+    groupKeyManager: GroupKeyManager
+    config: Pick<StrictStreamrClientConfig, 'orderMessages' | 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill'>
     destroySignal: DestroySignal
     loggerFactory: LoggerFactory
-    config: Pick<StrictStreamrClientConfig, 'orderMessages' | 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill'>
 }
 
 export const createMessagePipeline = (opts: MessagePipelineOptions): PushPipeline<StreamMessage, StreamMessage> => {

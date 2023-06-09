@@ -37,27 +37,27 @@ export class SubscriberKeyExchange {
 
     private rsaKeyPair?: RSAKeyPair
     private readonly pendingRequests: MaxSizedSet<string> = new MaxSizedSet(MAX_PENDING_REQUEST_COUNT)
-    private readonly logger: Logger
     private readonly networkNodeFacade: NetworkNodeFacade
+    private readonly streamRegistryCached: StreamRegistryCached
     private readonly store: LocalGroupKeyStore
     private readonly authentication: Authentication
-    private readonly streamRegistryCached: StreamRegistryCached
+    private readonly logger: Logger
     private readonly ensureStarted: () => Promise<void>
     requestGroupKey: (groupKeyId: string, publisherId: EthereumAddress, streamPartId: StreamPartID) => Promise<void>
 
     constructor(
         networkNodeFacade: NetworkNodeFacade,
-        store: LocalGroupKeyStore,
-        @inject(AuthenticationInjectionToken) authentication: Authentication,
         @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
-        loggerFactory: LoggerFactory,
-        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'encryption'>
+        store: LocalGroupKeyStore,
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'encryption'>,
+        @inject(AuthenticationInjectionToken) authentication: Authentication,
+        loggerFactory: LoggerFactory
     ) {
-        this.logger = loggerFactory.createLogger(module)
         this.networkNodeFacade = networkNodeFacade
+        this.streamRegistryCached = streamRegistryCached
         this.store = store
         this.authentication = authentication
-        this.streamRegistryCached = streamRegistryCached
+        this.logger = loggerFactory.createLogger(module)
         this.ensureStarted = pOnce(async () => {
             this.rsaKeyPair = await RSAKeyPair.create()
             const node = await networkNodeFacade.getNode()

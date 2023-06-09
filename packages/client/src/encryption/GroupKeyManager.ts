@@ -15,30 +15,30 @@ import { SubscriberKeyExchange } from './SubscriberKeyExchange'
 @scoped(Lifecycle.ContainerScoped)
 export class GroupKeyManager {
 
-    private readonly localGroupKeyStore: LocalGroupKeyStore
-    private readonly litProtocolFacade: LitProtocolFacade
     private readonly subscriberKeyExchange: SubscriberKeyExchange
+    private readonly litProtocolFacade: LitProtocolFacade
+    private readonly localGroupKeyStore: LocalGroupKeyStore
+    private readonly config: Pick<StrictStreamrClientConfig, 'encryption'>
+    private readonly authentication: Authentication
     private readonly eventEmitter: StreamrClientEventEmitter
     private readonly destroySignal: DestroySignal
-    private readonly authentication: Authentication
-    private readonly config: Pick<StrictStreamrClientConfig, 'encryption'>
 
     constructor(
-        localGroupKeyStore: LocalGroupKeyStore,
-        litProtocolFacade: LitProtocolFacade,
         subscriberKeyExchange: SubscriberKeyExchange,
-        eventEmitter: StreamrClientEventEmitter,
-        destroySignal: DestroySignal,
+        litProtocolFacade: LitProtocolFacade,
+        localGroupKeyStore: LocalGroupKeyStore,
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'encryption'>,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
-        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'encryption'>
+        eventEmitter: StreamrClientEventEmitter,
+        destroySignal: DestroySignal
     ) {
-        this.localGroupKeyStore = localGroupKeyStore
-        this.litProtocolFacade = litProtocolFacade
         this.subscriberKeyExchange = subscriberKeyExchange
+        this.litProtocolFacade = litProtocolFacade
+        this.localGroupKeyStore = localGroupKeyStore
+        this.config = config
+        this.authentication = authentication
         this.eventEmitter = eventEmitter
         this.destroySignal = destroySignal
-        this.authentication = authentication
-        this.config = config
     }
 
     async fetchKey(streamPartId: StreamPartID, groupKeyId: string, publisherId: EthereumAddress): Promise<GroupKey> {

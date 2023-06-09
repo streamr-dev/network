@@ -37,22 +37,22 @@ export class Publisher {
     private readonly messageFactories: Mapping<[streamId: StreamID], MessageFactory>
     private readonly groupKeyQueues: Mapping<[streamId: StreamID], GroupKeyQueue>
     private readonly concurrencyLimit = pLimit(1)
+    private readonly node: NetworkNodeFacade
+    private readonly streamRegistryCached: StreamRegistryCached
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly authentication: Authentication
-    private readonly streamRegistryCached: StreamRegistryCached
-    private readonly node: NetworkNodeFacade
 
     constructor(
-        streamIdBuilder: StreamIDBuilder,
-        @inject(AuthenticationInjectionToken) authentication: Authentication,
+        node: NetworkNodeFacade,
         streamRegistryCached: StreamRegistryCached,
         groupKeyManager: GroupKeyManager,
-        node: NetworkNodeFacade
+        streamIdBuilder: StreamIDBuilder,
+        @inject(AuthenticationInjectionToken) authentication: Authentication
     ) {
+        this.node = node
+        this.streamRegistryCached = streamRegistryCached
         this.streamIdBuilder = streamIdBuilder
         this.authentication = authentication
-        this.streamRegistryCached = streamRegistryCached
-        this.node = node
         this.messageFactories = new Mapping(async (streamId: StreamID) => {
             return this.createMessageFactory(streamId)
         })

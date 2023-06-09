@@ -56,8 +56,8 @@ export class LocalGroupKeyStore {
 
     constructor(
         persistenceManager: PersistenceManager,
+        eventEmitter: StreamrClientEventEmitter,
         loggerFactory: LoggerFactory,
-        eventEmitter: StreamrClientEventEmitter
     ) {
         this.persistenceManager = persistenceManager
         this.eventEmitter = eventEmitter
