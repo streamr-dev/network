@@ -22,7 +22,6 @@ import { DestroySignal } from '../../src/DestroySignal'
 import { MessageMetadata } from '../../src/Message'
 import { AuthenticationInjectionToken, createAuthentication } from '../../src/Authentication'
 import { merge, TheGraphClient } from '@streamr/utils'
-import { HttpFetcher } from '../../src/utils/HttpFetcher'
 import { StreamrClientEventEmitter } from '../../src/events'
 
 const Dependencies = {
@@ -90,8 +89,7 @@ describe('MemoryLeaks', () => {
                 childContainer.register(AuthenticationInjectionToken, { useValue: createAuthentication(config) })
                 childContainer.register(ConfigInjectionToken, { useValue: config })
                 childContainer.register(TheGraphClient, { useValue:
-                    // eslint-disable-next-line max-len
-                    createTheGraphClient(childContainer.resolve<HttpFetcher>(HttpFetcher), childContainer.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter), config)
+                    createTheGraphClient(childContainer.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter), config)
                 })
                 return { config, childContainer }
             }

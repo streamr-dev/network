@@ -36,7 +36,6 @@ import { Subscription, SubscriptionEvents } from './subscribe/Subscription'
 import { initResendSubscription } from './subscribe/resendSubscription'
 import { waitForStorage } from './subscribe/waitForStorage'
 import { StreamDefinition } from './types'
-import { HttpFetcher } from './utils/HttpFetcher'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { pOnce } from './utils/promises'
 import { createTheGraphClient } from './utils/utils'
@@ -91,7 +90,7 @@ export class StreamrClient {
         container.register(AuthenticationInjectionToken, { useValue: authentication })
         container.register(ConfigInjectionToken, { useValue: strictConfig })
         // eslint-disable-next-line max-len
-        container.register(TheGraphClient, { useValue: createTheGraphClient(container.resolve<HttpFetcher>(HttpFetcher), container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter), strictConfig) })
+        container.register(TheGraphClient, { useValue: createTheGraphClient(container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter), strictConfig) })
         this.id = strictConfig.id
         this.config = strictConfig
         this.authentication = authentication
