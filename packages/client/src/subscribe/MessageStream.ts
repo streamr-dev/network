@@ -3,11 +3,12 @@
  * Subscriptions are MessageStreams.
  * Not all MessageStreams are Subscriptions.
  */
+import { StreamMessage } from '@streamr/protocol'
+import omit from 'lodash/omit'
 import { Pipeline, PipelineTransform } from '../utils/Pipeline'
 import { PushPipeline } from '../utils/PushPipeline'
-import { StreamMessage } from '@streamr/protocol'
-import { convertStreamMessageToMessage, Message, MessageMetadata } from './../Message'
-import omit from 'lodash/omit'
+import { Signal } from '../utils/Signal'
+import { Message, MessageMetadata, convertStreamMessageToMessage } from './../Message'
 
 export type MessageListener = (content: unknown, metadata: MessageMetadata) => unknown | Promise<unknown>
 
@@ -17,11 +18,20 @@ export type MessageListener = (content: unknown, metadata: MessageMetadata) => u
  */
 export class MessageStream implements AsyncIterable<Message> {
 
-    private readonly pipeline: PushPipeline<StreamMessage, StreamMessage> = new PushPipeline()
+    private readonly pipeline: PushPipeline<StreamMessage, StreamMessage>
+    /** @internal */
+    onFinally: Signal<[Error | undefined]>
+    /** @internal */
+    onBeforeFinally: Signal<[]>
+    /** @internal */
+    onError: Signal<[Error, (StreamMessage<unknown> | undefined)?, (number | undefined)?]>
 
     /** @internal */
-    // eslint-disable-next-line @typescript-eslint/no-useless-constructor
-    constructor() {
+    constructor(pipeline?: PushPipeline<StreamMessage, StreamMessage>) {
+        this.pipeline = pipeline ?? new PushPipeline()
+        this.onFinally = this.pipeline.onFinally
+        this.onBeforeFinally = this.pipeline.onBeforeFinally
+        this.onError = this.pipeline.onError
     }
 
     /**
@@ -37,11 +47,6 @@ export class MessageStream implements AsyncIterable<Message> {
         this.pipeline.flow()
 
         return this
-    }
-
-    /** @internal */
-    getStreamMessages(): AsyncIterableIterator<StreamMessage> {
-        return this.pipeline
     }
 
     async* [Symbol.asyncIterator](): AsyncIterator<Message> {
@@ -61,23 +66,6 @@ export class MessageStream implements AsyncIterable<Message> {
      */
 
     /** @internal */
-    onFinally = this.pipeline.onFinally
-
-    /** @internal */
-    onBeforeFinally = this.pipeline.onBeforeFinally
-
-    /** @internal */
-    onError = this.pipeline.onError
-
-    /** @internal */
-    onMessage = this.pipeline.onMessage
-
-    /** @internal */
-    flow(): void {
-        this.pipeline.flow()
-    }
-
-    /** @internal */
     async push(item: StreamMessage): Promise<void> {
         await this.pipeline.push(item)
     }
@@ -85,11 +73,6 @@ export class MessageStream implements AsyncIterable<Message> {
     /** @internal */
     pipe<NewOutType>(fn: PipelineTransform<StreamMessage, NewOutType>): Pipeline<StreamMessage, NewOutType> {
         return this.pipeline.pipe(fn)
-    }
-
-    /** @internal */
-    async pull(source: AsyncGenerator<StreamMessage>): Promise<void> {
-        return this.pipeline.pull(source)
     }
 
     /** @internal */
@@ -103,11 +86,6 @@ export class MessageStream implements AsyncIterable<Message> {
     }
 
     /** @internal */
-    endWrite(err?: Error): void {
-        this.pipeline.endWrite(err)
-    }
-
-    /** @internal */
     isDone(): boolean {
         return this.pipeline.isDone()
     }
@@ -115,11 +93,5 @@ export class MessageStream implements AsyncIterable<Message> {
     /** @internal */
     return(): Promise<unknown> {
         return this.pipeline.return()
-    }
-
-    // used only in tests
-    /** @internal */
-    throw(err: Error): Promise<unknown> {
-        return this.pipeline.throw(err)
     }
 }
