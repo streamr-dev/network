@@ -79,17 +79,17 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
             broadcast: (message: StreamMessage, previousPeer?: string) => this.broadcast(message, previousPeer),
             onLeaveNotice: (notice: LeaveStreamNotice) => {
                 const senderId = notice.senderId
-                const contact = this.config.nearbyContactPool?.getNeighborWithId(senderId)
-                || this.config.randomContactPool?.getNeighborWithId(senderId)
+                const contact = this.config.nearbyContactPool.getNeighborWithId(senderId)
+                || this.config.randomContactPool.getNeighborWithId(senderId)
                 || this.config.targetNeighbors.getNeighborWithId(senderId)
                 || this.config.proxyConnectionServer?.getConnection(senderId as PeerIDKey)?.remote
                 // TODO: check integrity of notifier?
                 if (contact) {
-                    this.config.layer1?.removeContact(contact.getPeerDescriptor(), true)
+                    this.config.layer1.removeContact(contact.getPeerDescriptor(), true)
                     this.config.targetNeighbors.remove(contact.getPeerDescriptor())
-                    this.config.nearbyContactPool?.remove(contact.getPeerDescriptor())
-                    this.config.connectionLocker?.unlockConnection(contact.getPeerDescriptor(), this.config.randomGraphId)
-                    this.config.neighborFinder?.start([senderId])
+                    this.config.nearbyContactPool.remove(contact.getPeerDescriptor())
+                    this.config.connectionLocker.unlockConnection(contact.getPeerDescriptor(), this.config.randomGraphId)
+                    this.config.neighborFinder.start([senderId])
                     this.config.proxyConnectionServer?.removeConnection(senderId as PeerIDKey)
                 }
             }
