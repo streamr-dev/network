@@ -30,7 +30,7 @@ export interface OperatorClientConfig {
     // chain?:
     operatorContractAddress: string
     theGraphUrl: string
-    fetch: (url: string, init?: Record<string, unknown>) => Promise<FetchResponse>;
+    fetch: (url: string, init?: Record<string, unknown>) => Promise<FetchResponse>
 }
 
 export class OperatorClient extends EventEmitter<OperatorClientEvents> {
