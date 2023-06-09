@@ -1,12 +1,12 @@
+import { StreamMessage } from '@streamr/protocol'
+import { Logger } from '@streamr/utils'
 import fetch, { Response } from 'node-fetch'
 import { AbortSignal } from 'node-fetch/externals'
-import { Readable } from 'stream'
-import { WebStreamToNodeStream } from './utils/WebStreamToNodeStream'
 import split2 from 'split2'
-import { StreamMessage } from '@streamr/protocol'
-import { inject, Lifecycle, scoped } from 'tsyringe'
-import { Logger } from '@streamr/utils'
+import { Readable } from 'stream'
+import { Lifecycle, scoped } from 'tsyringe'
 import { LoggerFactory } from './utils/LoggerFactory'
+import { WebStreamToNodeStream } from './utils/WebStreamToNodeStream'
 
 export enum ErrorCode {
     NOT_FOUND = 'NOT_FOUND',
@@ -70,9 +70,10 @@ const parseErrorCode = (body: string) => {
 
 @scoped(Lifecycle.ContainerScoped)
 export class HttpUtil {
+
     private readonly logger: Logger
 
-    constructor(@inject(LoggerFactory) loggerFactory: LoggerFactory) {
+    constructor(loggerFactory: LoggerFactory) {
         this.logger = loggerFactory.createLogger(module)
     }
 

@@ -2,7 +2,7 @@ import { BigNumber } from '@ethersproject/bignumber'
 import { ContractTransaction } from '@ethersproject/contracts'
 import { Provider } from '@ethersproject/providers'
 import { StreamID, StreamIDUtils, toStreamID } from '@streamr/protocol'
-import { EthereumAddress, Logger, collect, isENSName, toEthereumAddress } from '@streamr/utils'
+import { EthereumAddress, GraphQLQuery, Logger, TheGraphClient, collect, isENSName, toEthereumAddress } from '@streamr/utils'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
@@ -29,7 +29,6 @@ import {
 } from '../permission'
 import { filter, map } from '../utils/GeneratorUtils'
 import { LoggerFactory } from '../utils/LoggerFactory'
-import { GraphQLQuery, TheGraphClient } from '@streamr/utils'
 import { ObservableContract, initContractEventGateway, queryAllReadonlyContracts, waitForTx } from '../utils/contract'
 import { until } from '../utils/promises'
 import { StreamFactory } from './../StreamFactory'
@@ -69,27 +68,27 @@ const streamContractErrorProcessor = (err: any, streamId: StreamID, registry: st
 @scoped(Lifecycle.ContainerScoped)
 export class StreamRegistry {
 
-    private contractFactory: ContractFactory
-    private streamIdBuilder: StreamIDBuilder
-    private streamFactory: StreamFactory
-    private theGraphClient: TheGraphClient
-    private streamRegistryCached: StreamRegistryCached
-    private authentication: Authentication
-    /** @internal */
-    private config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
-    private readonly logger: Logger
     private streamRegistryContract?: ObservableContract<StreamRegistryContract>
     private streamRegistryContractsReadonly: ObservableContract<StreamRegistryContract>[]
+    private readonly contractFactory: ContractFactory
+    private readonly streamIdBuilder: StreamIDBuilder
+    private readonly streamFactory: StreamFactory
+    private readonly theGraphClient: TheGraphClient
+    private readonly streamRegistryCached: StreamRegistryCached
+    private readonly authentication: Authentication
+    /** @internal */
+    private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
+    private readonly logger: Logger
     
     /** @internal */
     constructor(
         contractFactory: ContractFactory,
-        @inject(LoggerFactory) loggerFactory: LoggerFactory,
-        @inject(StreamIDBuilder) streamIdBuilder: StreamIDBuilder,
+        loggerFactory: LoggerFactory,
+        streamIdBuilder: StreamIDBuilder,
         streamFactory: StreamFactory,
         theGraphClient: TheGraphClient,
         @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
-        @inject(StreamrClientEventEmitter) eventEmitter: StreamrClientEventEmitter,
+        eventEmitter: StreamrClientEventEmitter,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
     ) {

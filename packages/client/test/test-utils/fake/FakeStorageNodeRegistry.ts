@@ -1,13 +1,13 @@
+import { EthereumAddress } from '@streamr/utils'
 import { Lifecycle, scoped } from 'tsyringe'
 import { StorageNodeMetadata, StorageNodeRegistry } from '../../../src/registry/StorageNodeRegistry'
 import { Methods } from '../types'
 import { FakeChain } from './FakeChain'
-import { EthereumAddress } from '@streamr/utils'
 
 @scoped(Lifecycle.ContainerScoped)
 export class FakeStorageNodeRegistry implements Methods<StorageNodeRegistry> {
 
-    private chain: FakeChain
+    private readonly chain: FakeChain
 
     constructor(chain: FakeChain) {
         this.chain = chain

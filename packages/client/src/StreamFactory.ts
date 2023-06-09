@@ -1,5 +1,5 @@
-import { delay, inject, Lifecycle, scoped } from 'tsyringe'
 import { StreamID } from '@streamr/protocol'
+import { delay, inject, Lifecycle, scoped } from 'tsyringe'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
 import { StreamrClientEventEmitter } from './events'
 import { Publisher } from './publish/Publisher'
@@ -24,6 +24,7 @@ export class StreamFactory {
     private readonly eventEmitter: StreamrClientEventEmitter
     /** @internal */
     private readonly config: Pick<StrictStreamrClientConfig, '_timeouts'>
+
     /** @internal */
     constructor(
         resends: Resends,

@@ -1,12 +1,12 @@
 import { StreamID } from '@streamr/protocol'
-import { Lifecycle, scoped, inject, delay } from 'tsyringe'
-import { CacheAsyncFn, CacheAsyncFnType } from '../utils/caches'
-import { StrictStreamrClientConfig, ConfigInjectionToken } from '../Config'
-import { StreamRegistry } from './StreamRegistry'
-import { StreamPermission } from '../permission'
-import { Stream } from '../Stream'
 import { EthereumAddress, Logger } from '@streamr/utils'
+import { Lifecycle, delay, inject, scoped } from 'tsyringe'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import { Stream } from '../Stream'
+import { StreamPermission } from '../permission'
 import { LoggerFactory } from '../utils/LoggerFactory'
+import { CacheAsyncFn, CacheAsyncFnType } from '../utils/caches'
+import { StreamRegistry } from './StreamRegistry'
 
 const SEPARATOR = '|' // always use SEPARATOR for cache key
 
@@ -14,15 +14,15 @@ const SEPARATOR = '|' // always use SEPARATOR for cache key
 @scoped(Lifecycle.ContainerScoped)
 export class StreamRegistryCached {
 
-    private streamRegistry: StreamRegistry
-    private readonly logger: Logger
     private readonly _getStream: CacheAsyncFnType<[StreamID], Stream, string>
     private readonly _isStreamPublisher: CacheAsyncFnType<[StreamID, EthereumAddress], boolean, string>
     private readonly _isStreamSubscriber: CacheAsyncFnType<[StreamID, EthereumAddress], boolean, string>
     private readonly _isPublic: CacheAsyncFnType<[StreamID], boolean, string>
-
+    private readonly logger: Logger
+    private readonly streamRegistry: StreamRegistry
+    
     constructor(
-        @inject(LoggerFactory) loggerFactory: LoggerFactory,
+        loggerFactory: LoggerFactory,
         @inject(delay(() => StreamRegistry)) streamRegistry: StreamRegistry,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'cache'>
     ) {
