@@ -307,15 +307,13 @@ export class StreamrNode extends EventEmitter<Events> {
         })
     }
 
-    isProxiedStreamPart(streamId: string): boolean {
-        return this.streams.get(streamId)?.type === NodeType.PROXY || false
+    isProxiedStreamPart(streamId: string, direction: ProxyDirection): boolean {
+        return this.streams.get(streamId)?.type === NodeType.PROXY 
+            && (this.streams.get(streamId)!.layer2 as ProxyStreamConnectionClient).getDirection() === direction
     }
 
-    hasProxyConnection(streamId: string, peerKey: PeerIDKey): boolean {
-        if (this.streams.has(streamId)) {
-            return this.streams.get(streamId)!.layer2.hasProxyConnection(peerKey)
-        }
-        return false
+    hasProxyConnection(streamId: string, peerKey: PeerIDKey, direction: ProxyDirection): boolean {
+        return this.streams.has(streamId) && this.streams.get(streamId)!.layer2.hasProxyConnection(peerKey, direction)
     }
 
     getStream(streamPartId: string): StreamObject | undefined {
