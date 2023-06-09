@@ -64,8 +64,7 @@ export const CONFIG_TEST: StreamrClientConfig = {
         ensStreamCreation: {
             timeout: 20 * 1000,
             retryInterval: 500
-        },
-        httpFetchTimeout: 30 * 1000
+        }
     },
     metrics: false
 }
