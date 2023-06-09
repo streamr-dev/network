@@ -74,16 +74,25 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         this.server = new StreamNodeServer({
             ownPeerDescriptor: this.config.ownPeerDescriptor,
             randomGraphId: this.config.randomGraphId,
+            rpcCommunicator: this.config.rpcCommunicator,
             markAndCheckDuplicate: (msg: MessageRef, prev?: MessageRef) => this.markAndCheckDuplicate(msg, prev),
             broadcast: (message: StreamMessage, previousPeer?: string) => this.broadcast(message, previousPeer),
-            layer1: this.config.layer1,
-            targetNeighbors: this.config.targetNeighbors,
-            nearbyContactPool: this.config.nearbyContactPool,
-            randomContactPool: this.config.randomContactPool,
-            connectionLocker:  this.config.connectionLocker,
-            neighborFinder: this.config.neighborFinder,
-            rpcCommunicator: this.config.rpcCommunicator,
-            proxyServer: this.config.proxyConnectionServer
+            onLeaveNotice: (notice: LeaveStreamNotice) => {
+                const senderId = notice.senderId
+                const contact = this.config.nearbyContactPool.getNeighborWithId(senderId)
+                || this.config.randomContactPool.getNeighborWithId(senderId)
+                || this.config.targetNeighbors.getNeighborWithId(senderId)
+                || this.config.proxyConnectionServer?.getConnection(senderId as PeerIDKey)?.remote
+                // TODO: check integrity of notifier?
+                if (contact) {
+                    this.config.layer1.removeContact(contact.getPeerDescriptor(), true)
+                    this.config.targetNeighbors.remove(contact.getPeerDescriptor())
+                    this.config.nearbyContactPool.remove(contact.getPeerDescriptor())
+                    this.config.connectionLocker.unlockConnection(contact.getPeerDescriptor(), this.config.randomGraphId)
+                    this.config.neighborFinder.start([senderId])
+                    this.config.proxyConnectionServer?.removeConnection(senderId as PeerIDKey)
+                }
+            }
         })
     }
 
@@ -207,6 +216,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         this.stopped = true
         this.abortController.abort()
         this.config.targetNeighbors.values().map((remote) => remote.leaveStreamNotice(this.config.ownPeerDescriptor))
+        this.config.proxyConnectionServer?.getConnections().map((connection) => connection.remote.leaveStreamNotice(this.config.ownPeerDescriptor))
         this.config.rpcCommunicator.stop()
         this.removeAllListeners()
         this.config.layer1.off('newContact', (peerDescriptor, closestTen) => this.newContact(peerDescriptor, closestTen))
