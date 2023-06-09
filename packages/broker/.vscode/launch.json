@@ -9,7 +9,7 @@
         "request": "launch",
         "runtimeArgs": [
           "jest",
-          "test/integration/plugins/operator/OperatorClient.test.ts"
+          "${file}"
         ],
         "runtimeExecutable": "npx",
         "skipFiles": [

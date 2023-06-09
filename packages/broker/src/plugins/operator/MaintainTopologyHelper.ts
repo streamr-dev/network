@@ -25,7 +25,7 @@ export interface OperatorClientEvents {
     removeStakedStream: (streamId: string) => void
 }
 
-export interface OperatorClientConfig {
+export interface TopologyHelperConfig {
     provider: Provider
     // chain?:
     operatorContractAddress: string
@@ -42,7 +42,7 @@ export class MaintainTopologyHelper extends EventEmitter<OperatorClientEvents> {
     theGraphClient: TheGraphClient
     private readonly logger: Logger
 
-    constructor(config: OperatorClientConfig, logger: Logger) {
+    constructor(config: TopologyHelperConfig, logger: Logger) {
         super()
 
         this.logger = logger
@@ -99,7 +99,9 @@ export class MaintainTopologyHelper extends EventEmitter<OperatorClientEvents> {
         })
         
         const initalStreams = await this.pullStakedStreams(latestBlock)
-        this.emit("addStakedStream", initalStreams)
+        if (initalStreams.length > 0) {
+            this.emit("addStakedStream", initalStreams)
+        }
     }
 
     async getStreamId(sponsorshipAddress: string): Promise<string> {
@@ -107,9 +109,9 @@ export class MaintainTopologyHelper extends EventEmitter<OperatorClientEvents> {
         return bounty.streamId()
     }
 
-    async getStakedStreams(): Promise<string[]> {
-        return Array.from(this.sponsorshipCountOfStream.keys())
-    }
+    // async getStakedStreams(): Promise<string[]> {
+    //     return Array.from(this.sponsorshipCountOfStream.keys())
+    // }
 
     private async pullStakedStreams(requiredBlocknumber: number): Promise<string[]> {
         this.logger.info(`getStakedStreams for ${this.address.toLowerCase()}`)
