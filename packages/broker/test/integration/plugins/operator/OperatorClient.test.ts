@@ -74,7 +74,7 @@ describe("OperatorClient", () => {
         logger.debug(`creating stream with streamId1 ${streamId1}`)
         await (await streamRegistry.createStream(streamPath1, "metadata")).wait()
         logger.debug(`creating stream with streamId2 ${streamId2}`)
-        await (await streamRegistry.createStream(streamPath2, "metadata")).wait();
+        await (await streamRegistry.createStream(streamPath2, "metadata")).wait()
 
         // const operatorWalletBalance = await token.balanceOf(adminWallet.address)
         // logger.debug(`operatorWalletBalance ${operatorWalletBalance}`)
@@ -85,7 +85,7 @@ describe("OperatorClient", () => {
         // })
 
         // beforeEach(async () => {
-        ({ operatorWallet, operatorContract } = await deployNewOperator())
+        ;({ operatorWallet, operatorContract } = await deployNewOperator())
     })
 
     afterEach(async () => {
