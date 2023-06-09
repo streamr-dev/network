@@ -144,7 +144,7 @@ run().then(() => {
     console.log(foundData)
     console.log(currentNode.stack.getLayer0DhtNode().getKBucketPeers().length)
     console.log(currentNode.stack.getLayer0DhtNode().getNumberOfConnections())
-    console.log(currentNode.stack.getStreamrNode().getStream(streamParts[0])!.layer1.getKBucketPeers())
+    console.log(currentNode.stack.getStreamrNode().getStream(streamParts[0])!.layer1!.getKBucketPeers())
     console.log(currentNode.stack.getStreamrNode().getStream(streamParts[0])!.layer2.getTargetNeighborStringIds())
     console.log(nodes[nodes.length - 1])
     if (publishInterval) {

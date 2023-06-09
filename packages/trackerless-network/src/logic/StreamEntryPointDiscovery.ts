@@ -199,8 +199,8 @@ export class StreamEntryPointDiscovery {
                         .filter((entryPoint) => !isSamePeerDescriptor(entryPoint, this.config.ownPeerDescriptor))
                         .map((entryPoint) => new Contact(entryPoint)))
                 await Promise.allSettled(sortedEntrypoints.getAllContacts()
-                    .map((entryPoint) => stream!.layer1.joinDht(entryPoint.getPeerDescriptor(), false)))
-                if (stream!.layer1.getBucketSize() === 0) {
+                    .map((entryPoint) => stream!.layer1!.joinDht(entryPoint.getPeerDescriptor(), false)))
+                if (stream!.layer1!.getBucketSize() === 0) {
                     throw new Error(`Node is alone in stream or a network split is still possible`)
                 }
             }
