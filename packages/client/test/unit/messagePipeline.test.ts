@@ -91,20 +91,20 @@ describe('messagePipeline', () => {
         pipeline = createMessagePipeline({
             streamPartId,
             getStorageNodes: undefined as any,
-            loggerFactory: mockLoggerFactory(),
             resends: undefined as any,
-            groupKeyManager: new GroupKeyManager(
-                groupKeyStore,
-                mock<LitProtocolFacade>(),
-                mock<SubscriberKeyExchange>(),
-                new StreamrClientEventEmitter(),
-                destroySignal,
-                createPrivateKeyAuthentication(publisher.privateKey, {} as any),
-                config
-            ),
             streamRegistryCached: streamRegistryCached as any,
+            groupKeyManager: new GroupKeyManager(
+                mock<SubscriberKeyExchange>(),
+                mock<LitProtocolFacade>(),
+                groupKeyStore,
+                config,
+                createPrivateKeyAuthentication(publisher.privateKey, {} as any),
+                new StreamrClientEventEmitter(),
+                destroySignal
+            ),
+            config: config as any,
             destroySignal,
-            config: config as any
+            loggerFactory: mockLoggerFactory(),
         })
     })
 

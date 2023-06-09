@@ -23,17 +23,17 @@ export class StorageNodeRegistry {
     private nodeRegistryContract?: NodeRegistryContract
     private readonly nodeRegistryContractsReadonly: NodeRegistryContract[]
     private readonly contractFactory: ContractFactory
-    private readonly authentication: Authentication
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts'>
+    private readonly authentication: Authentication
 
     constructor(
         contractFactory: ContractFactory,
-        @inject(AuthenticationInjectionToken) authentication: Authentication,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts'>,
+        @inject(AuthenticationInjectionToken) authentication: Authentication,
     ) {
         this.contractFactory = contractFactory
-        this.authentication = authentication
         this.config = config
+        this.authentication = authentication
         this.nodeRegistryContractsReadonly = getStreamRegistryChainProviders(config).map((provider: Provider) => {
             return this.contractFactory.createReadContract(
                 toEthereumAddress(this.config.contracts.storageNodeRegistryChainAddress),

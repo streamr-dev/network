@@ -22,27 +22,27 @@ type MessagePipelineFactoryOptions = MarkOptional<Omit<MessagePipelineOptions,
 export class MessagePipelineFactory {
 
     private readonly resends: Resends
-    private readonly groupKeyManager: GroupKeyManager
     private readonly streamRegistryCached: StreamRegistryCached
+    private readonly groupKeyManager: GroupKeyManager
+    private readonly config: MessagePipelineOptions['config']
     private readonly destroySignal: DestroySignal
     private readonly loggerFactory: LoggerFactory
-    private readonly config: MessagePipelineOptions['config']
-
+    
     /* eslint-disable indent */
     constructor(
         @inject(delay(() => Resends)) resends: Resends,
-        @inject(delay(() => GroupKeyManager)) groupKeyManager: GroupKeyManager,
         @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
+        @inject(delay(() => GroupKeyManager)) groupKeyManager: GroupKeyManager,
+        @inject(ConfigInjectionToken) config: MessagePipelineOptions['config'],
         destroySignal: DestroySignal,
-        loggerFactory: LoggerFactory,
-        @inject(ConfigInjectionToken) config: MessagePipelineOptions['config']
+        loggerFactory: LoggerFactory
     ) {
         this.resends = resends
-        this.groupKeyManager = groupKeyManager
         this.streamRegistryCached = streamRegistryCached
+        this.groupKeyManager = groupKeyManager
+        this.config = config
         this.destroySignal = destroySignal
         this.loggerFactory = loggerFactory
-        this.config = config
     }
 
     // eslint-disable-next-line max-len
@@ -50,11 +50,11 @@ export class MessagePipelineFactory {
         return _createMessagePipeline({
             ...opts,
             resends: this.resends,
-            groupKeyManager: this.groupKeyManager,
             streamRegistryCached: this.streamRegistryCached,
+            groupKeyManager: this.groupKeyManager,
+            config: opts.config ?? this.config,
             destroySignal: this.destroySignal,
-            loggerFactory: this.loggerFactory,
-            config: opts.config ?? this.config
+            loggerFactory: this.loggerFactory
         })
     }
 }

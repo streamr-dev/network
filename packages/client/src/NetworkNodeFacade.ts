@@ -78,23 +78,23 @@ export class NetworkNodeFacade {
     private cachedNode?: NetworkNodeStub
     private startNodeCalled = false
     private startNodeComplete = false
-    private readonly destroySignal: DestroySignal
     private readonly networkNodeFactory: NetworkNodeFactory
-    private readonly authentication: Authentication
     private readonly config: Pick<StrictStreamrClientConfig, 'network' | 'contracts'>
+    private readonly authentication: Authentication
     private readonly eventEmitter: EventEmitter<Events>
+    private readonly destroySignal: DestroySignal
 
     constructor(
-        destroySignal: DestroySignal,
         networkNodeFactory: NetworkNodeFactory,
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'network' | 'contracts'>,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
-        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'network' | 'contracts'>
+        destroySignal: DestroySignal
     ) {
-        this.destroySignal = destroySignal
         this.networkNodeFactory = networkNodeFactory
-        this.authentication = authentication
         this.config = config
+        this.authentication = authentication
         this.eventEmitter = new EventEmitter<Events>()
+        this.destroySignal = destroySignal
         destroySignal.onDestroy.listen(this.destroy)
     }
 

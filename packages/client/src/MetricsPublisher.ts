@@ -52,22 +52,22 @@ export class MetricsPublisher {
 
     private readonly publisher: Publisher
     private readonly node: NetworkNodeFacade
+    private readonly config: NormalizedConfig
     private readonly eventEmitter: StreamrClientEventEmitter
     private readonly destroySignal: DestroySignal
-    private readonly config: NormalizedConfig
 
     constructor(
         publisher: Publisher,
         node: NetworkNodeFacade,
+        @inject(ConfigInjectionToken) config: Pick<StreamrClientConfig, 'metrics' | 'auth'>,
         eventEmitter: StreamrClientEventEmitter,
-        destroySignal: DestroySignal,
-        @inject(ConfigInjectionToken) config: Pick<StreamrClientConfig, 'metrics' | 'auth'>
+        destroySignal: DestroySignal
     ) {
         this.publisher = publisher
         this.node = node
+        this.config = getNormalizedConfig(config)
         this.eventEmitter = eventEmitter
         this.destroySignal = destroySignal
-        this.config = getNormalizedConfig(config)
         const ensureStarted = pOnce(async () => {
             const node = await this.node.getNode()
             const metricsContext = node.getMetricsContext()

@@ -77,24 +77,24 @@ const createUrl = (baseUrl: string, endpointSuffix: string, streamPartId: Stream
 @scoped(Lifecycle.ContainerScoped)
 export class Resends {
 
-    private readonly messagePipelineFactory: MessagePipelineFactory
     private readonly streamStorageRegistry: StreamStorageRegistry
     private readonly storageNodeRegistry: StorageNodeRegistry
+    private readonly messagePipelineFactory: MessagePipelineFactory
     private readonly httpUtil: HttpUtil
     private readonly config: StrictStreamrClientConfig
     private readonly logger: Logger
 
     constructor(
-        messagePipelineFactory: MessagePipelineFactory,
         streamStorageRegistry: StreamStorageRegistry,
         @inject(delay(() => StorageNodeRegistry)) storageNodeRegistry: StorageNodeRegistry,
+        messagePipelineFactory: MessagePipelineFactory,
         httpUtil: HttpUtil,
         @inject(ConfigInjectionToken) config: StrictStreamrClientConfig,
         loggerFactory: LoggerFactory
     ) {
-        this.messagePipelineFactory = messagePipelineFactory
         this.streamStorageRegistry = streamStorageRegistry
         this.storageNodeRegistry = storageNodeRegistry
+        this.messagePipelineFactory = messagePipelineFactory
         this.httpUtil = httpUtil
         this.config = config
         this.logger = loggerFactory.createLogger(module)

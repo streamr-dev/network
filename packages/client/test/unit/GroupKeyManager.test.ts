@@ -29,12 +29,9 @@ describe('GroupKeyManager', () => {
 
     function createGroupKeyManager(litProtocolEnabled: boolean): GroupKeyManager {
         return new GroupKeyManager(
-            groupKeyStore,
-            litProtocolFacade,
             subscriberKeyExchange,
-            eventEmitter,
-            new DestroySignal(),
-            createPrivateKeyAuthentication(wallet.privateKey, {} as any),
+            litProtocolFacade,
+            groupKeyStore,
             {
                 encryption: {
                     litProtocolEnabled,
@@ -42,7 +39,10 @@ describe('GroupKeyManager', () => {
                     maxKeyRequestsPerSecond: 10,
                     keyRequestTimeout: 100
                 }
-            }
+            },
+            createPrivateKeyAuthentication(wallet.privateKey, {} as any),
+            eventEmitter,
+            new DestroySignal()
         )
     }
 

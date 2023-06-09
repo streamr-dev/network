@@ -31,24 +31,24 @@ import { LocalGroupKeyStore } from './LocalGroupKeyStore'
 @scoped(Lifecycle.ContainerScoped)
 export class PublisherKeyExchange {
 
-    private readonly logger: Logger
-    private readonly store: LocalGroupKeyStore
     private readonly networkNodeFacade: NetworkNodeFacade
-    private readonly authentication: Authentication
     private readonly streamRegistryCached: StreamRegistryCached
+    private readonly store: LocalGroupKeyStore
+    private readonly authentication: Authentication
+    private readonly logger: Logger
 
     constructor(
-        store: LocalGroupKeyStore,
         networkNodeFacade: NetworkNodeFacade,
-        loggerFactory: LoggerFactory,
-        @inject(AuthenticationInjectionToken) authentication: Authentication,
         @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
+        store: LocalGroupKeyStore,
+        @inject(AuthenticationInjectionToken) authentication: Authentication,
+        loggerFactory: LoggerFactory
     ) {
-        this.logger = loggerFactory.createLogger(module)
-        this.store = store
         this.networkNodeFacade = networkNodeFacade
-        this.authentication = authentication
         this.streamRegistryCached = streamRegistryCached
+        this.store = store
+        this.authentication = authentication
+        this.logger = loggerFactory.createLogger(module)
         networkNodeFacade.once('start', async () => {
             const node = await networkNodeFacade.getNode()
             node.addMessageListener((msg: StreamMessage) => this.onMessage(msg))

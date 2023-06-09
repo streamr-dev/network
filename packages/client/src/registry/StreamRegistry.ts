@@ -70,35 +70,36 @@ export class StreamRegistry {
 
     private streamRegistryContract?: ObservableContract<StreamRegistryContract>
     private streamRegistryContractsReadonly: ObservableContract<StreamRegistryContract>[]
-    private readonly contractFactory: ContractFactory
-    private readonly streamIdBuilder: StreamIDBuilder
-    private readonly streamFactory: StreamFactory
-    private readonly theGraphClient: TheGraphClient
     private readonly streamRegistryCached: StreamRegistryCached
-    private readonly authentication: Authentication
+    private readonly streamFactory: StreamFactory
+    private readonly contractFactory: ContractFactory
+    private readonly theGraphClient: TheGraphClient
+    private readonly streamIdBuilder: StreamIDBuilder
     /** @internal */
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
+    private readonly authentication: Authentication
     private readonly logger: Logger
     
+    /* eslint-disable indent */
     /** @internal */
     constructor(
-        contractFactory: ContractFactory,
-        loggerFactory: LoggerFactory,
-        streamIdBuilder: StreamIDBuilder,
-        streamFactory: StreamFactory,
-        theGraphClient: TheGraphClient,
         @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
-        eventEmitter: StreamrClientEventEmitter,
+        streamFactory: StreamFactory,
+        contractFactory: ContractFactory,
+        theGraphClient: TheGraphClient,
+        streamIdBuilder: StreamIDBuilder,
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
-        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
+        eventEmitter: StreamrClientEventEmitter,
+        loggerFactory: LoggerFactory
     ) {
-        this.contractFactory = contractFactory
-        this.streamIdBuilder = streamIdBuilder
-        this.streamFactory = streamFactory
-        this.theGraphClient = theGraphClient
         this.streamRegistryCached = streamRegistryCached
-        this.authentication = authentication
+        this.streamFactory = streamFactory
+        this.contractFactory = contractFactory
+        this.theGraphClient = theGraphClient
+        this.streamIdBuilder = streamIdBuilder
         this.config = config
+        this.authentication = authentication
         this.logger = loggerFactory.createLogger(module)
         const chainProviders = getStreamRegistryChainProviders(config)
         this.streamRegistryContractsReadonly = chainProviders.map((provider: Provider) => {

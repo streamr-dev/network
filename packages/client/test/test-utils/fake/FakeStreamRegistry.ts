@@ -22,23 +22,23 @@ import { FakeChain, PUBLIC_PERMISSION_TARGET, PublicPermissionTarget, StreamRegi
 export class FakeStreamRegistry implements Methods<StreamRegistry> {
 
     private readonly chain: FakeChain
+    private readonly streamRegistryCached: StreamRegistryCached
+    private readonly streamFactory: StreamFactory
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly authentication: Authentication
-    private readonly streamFactory: StreamFactory
-    private readonly streamRegistryCached: StreamRegistryCached
-
+    
     constructor(
         chain: FakeChain,
-        streamIdBuilder: StreamIDBuilder,
-        streamFactory: StreamFactory,
         streamRegistryCached: StreamRegistryCached,
+        streamFactory: StreamFactory,
+        streamIdBuilder: StreamIDBuilder,
         @inject(AuthenticationInjectionToken) authentication: Authentication
     ) {
         this.chain = chain
+        this.streamRegistryCached = streamRegistryCached
+        this.streamFactory = streamFactory
         this.streamIdBuilder = streamIdBuilder
         this.authentication = authentication
-        this.streamFactory = streamFactory
-        this.streamRegistryCached = streamRegistryCached
     }
 
     async createStream(streamId: StreamID, metadata: StreamMetadata): Promise<Stream> {
