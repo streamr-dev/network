@@ -241,9 +241,6 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
         this.config.P2PTransport.on('disconnected', (peerDescriptor: PeerDescriptor) => 
             this.onPeerDisconnected(peerDescriptor)
         )
-        this.server.on('leaveStreamNotice', (peerDescriptor: PeerDescriptor) => 
-            this.onPeerDisconnected(peerDescriptor)
-        )
     }
 
     stop(): void {

@@ -3,7 +3,6 @@ import { keyFromPeerDescriptor, ListeningRpcCommunicator, PeerDescriptor } from 
 import { Empty } from "../proto/google/protobuf/empty"
 import { LeaveStreamNotice, MessageRef, StreamMessage } from "../proto/packages/trackerless-network/protos/NetworkRpc"
 import { INetworkRpc } from "../proto/packages/trackerless-network/protos/NetworkRpc.server"
-import { EventEmitter } from "eventemitter3"
 
 export interface StreamNodeServerConfig {
     ownPeerDescriptor: PeerDescriptor
@@ -14,16 +13,11 @@ export interface StreamNodeServerConfig {
     rpcCommunicator: ListeningRpcCommunicator
 }
 
-export interface Events {
-    leaveStreamNotice: (peerDescriptor: PeerDescriptor) => void
-}
-
-export class StreamNodeServer extends EventEmitter<Events> implements INetworkRpc {
+export class StreamNodeServer implements INetworkRpc {
     
     private readonly config: StreamNodeServerConfig
 
     constructor(config: StreamNodeServerConfig) {
-        super()
         this.config = config
     }
 
