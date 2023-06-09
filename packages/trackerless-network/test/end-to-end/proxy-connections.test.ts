@@ -1,4 +1,4 @@
-import { NodeType, PeerDescriptor, PeerID, peerIdFromPeerDescriptor } from "@streamr/dht"
+import { NodeType, PeerDescriptor, PeerID, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from "@streamr/dht"
 import { NetworkStack } from "../../src/NetworkStack"
 import { ContentMessage, ProxyDirection } from "../../src/proto/packages/trackerless-network/protos/NetworkRpc"
 import { createStreamMessage } from "../utils/utils"
@@ -167,5 +167,25 @@ describe('Proxy connections', () => {
         await waitForCondition(() => proxyNode1.getStreamrNode().hasProxyConnection(streamPartId, proxiedPeerId.toKey()) === false)
         await waitForCondition(() => proxyNode2.getStreamrNode().hasProxyConnection(streamPartId, proxiedPeerId.toKey()) === false)
     })
+
+    it('will reconnect if proxy node goes offline and comes back online', async () => {
+        await proxiedNode.getStreamrNode()!.setProxies(
+            streamPartId,
+            [proxyNodeDescriptor1],
+            ProxyDirection.SUBSCRIBE,
+            async () => 'proxiedNode'
+        )
+        expect(proxiedNode.getStreamrNode().hasStream(streamPartId)).toBe(true)
+        proxyNode1.getStreamrNode()!.leaveStream(streamPartId)
+        await waitForCondition(() => proxiedNode.getStreamrNode().hasProxyConnection(streamPartId, keyFromPeerDescriptor(proxyNodeDescriptor1)))
+        expect(proxyNode1.getStreamrNode().hasProxyConnection(streamPartId, proxiedPeerId.toKey())).toBe(false)
+    
+        await proxyNode1.getStreamrNode()!.joinStream(streamPartId, [proxyNodeDescriptor1])
+        await waitForCondition(() => 
+            proxiedNode.getStreamrNode().hasProxyConnection(streamPartId, keyFromPeerDescriptor(proxyNodeDescriptor1))
+        , 25000)
+        expect(proxyNode1.getStreamrNode()!.hasProxyConnection(streamPartId, proxiedPeerId.toKey())).toBe(false)
+
+    }, 30000)
 
 })

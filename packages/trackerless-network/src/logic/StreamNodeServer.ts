@@ -1,32 +1,29 @@
 import { ServerCallContext } from "@protobuf-ts/runtime-rpc"
-import { ConnectionLocker, DhtNode, keyFromPeerDescriptor, ListeningRpcCommunicator, PeerDescriptor, PeerIDKey } from "@streamr/dht"
+import { keyFromPeerDescriptor, ListeningRpcCommunicator, PeerDescriptor } from "@streamr/dht"
 import { Empty } from "../proto/google/protobuf/empty"
 import { LeaveStreamNotice, MessageRef, StreamMessage } from "../proto/packages/trackerless-network/protos/NetworkRpc"
 import { INetworkRpc } from "../proto/packages/trackerless-network/protos/NetworkRpc.server"
-import { INeighborFinder } from "./neighbor-discovery/NeighborFinder"
-import { PeerList } from "./PeerList"
-import { ProxyStreamConnectionServer } from "./proxy/ProxyStreamConnectionServer"
+import { EventEmitter } from "eventemitter3"
 
 export interface StreamNodeServerConfig {
     ownPeerDescriptor: PeerDescriptor
     randomGraphId: string
     markAndCheckDuplicate: (messageRef: MessageRef, previousMessageRef?: MessageRef) => boolean
     broadcast: (message: StreamMessage, previousPeer?: string) => void
-    layer1?: DhtNode
-    targetNeighbors: PeerList
-    nearbyContactPool?: PeerList
-    randomContactPool?: PeerList
-    connectionLocker: ConnectionLocker
-    neighborFinder?: INeighborFinder
+    onLeaveNotice(notice: LeaveStreamNotice): void
     rpcCommunicator: ListeningRpcCommunicator
-    proxyServer?: ProxyStreamConnectionServer
 }
 
-export class StreamNodeServer implements INetworkRpc {
+export interface Events {
+    leaveStreamNotice: (peerDescriptor: PeerDescriptor) => void
+}
+
+export class StreamNodeServer extends EventEmitter<Events> implements INetworkRpc {
     
     private readonly config: StreamNodeServerConfig
 
     constructor(config: StreamNodeServerConfig) {
+        super()
         this.config = config
     }
 
@@ -41,19 +38,7 @@ export class StreamNodeServer implements INetworkRpc {
 
     async leaveStreamNotice(message: LeaveStreamNotice, _context: ServerCallContext): Promise<Empty> {
         if (message.randomGraphId === this.config.randomGraphId) {
-            const contact = this.config.nearbyContactPool?.getNeighborWithId(message.senderId)
-                || this.config.randomContactPool?.getNeighborWithId(message.senderId)
-                || this.config.targetNeighbors.getNeighborWithId(message.senderId)
-                || this.config.proxyServer?.getConnection(message.senderId as PeerIDKey)?.remote
-            // TODO: check integrity of notifier?
-            if (contact) {
-                this.config.layer1?.removeContact(contact.getPeerDescriptor(), true)
-                this.config.targetNeighbors.remove(contact.getPeerDescriptor())
-                this.config.nearbyContactPool?.remove(contact.getPeerDescriptor())
-                this.config.connectionLocker?.unlockConnection(contact.getPeerDescriptor(), this.config.randomGraphId)
-                this.config.neighborFinder?.start([message.senderId])
-                this.config.proxyServer?.removeConnection(message.senderId as PeerIDKey)
-            }
+            this.config.onLeaveNotice(message)
         }
         return Empty
     }

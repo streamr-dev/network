@@ -11,7 +11,7 @@ import { IStreamNode } from "../IStreamNode"
 import { EventEmitter } from 'eventemitter3'
 import { ConnectionLocker } from "@streamr/dht/src/exports"
 import { StreamNodeServer } from "../StreamNodeServer"
-import { DuplicateMessageDetector, Logger, NumberPair } from "@streamr/utils"
+import { DuplicateMessageDetector, Logger, NumberPair, wait } from "@streamr/utils"
 import { PeerList } from "../PeerList"
 import { Propagation } from "../propagation/Propagation"
 import { sampleSize } from 'lodash'
@@ -19,6 +19,21 @@ import { RemoteProxyServer } from "./RemoteProxyServer"
 import { NetworkRpcClient, ProxyConnectionRpcClient } from "../../proto/packages/trackerless-network/protos/NetworkRpc.client"
 import { toProtoRpcClient } from "@streamr/proto-rpc"
 import { RemoteRandomGraphNode } from "../RemoteRandomGraphNode"
+
+export const retry = async <T>(task: () => Promise<T>, description: string, abortSignal: AbortSignal, delay = 10000): Promise<T> => {
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+        try {
+            const result = await task()
+            return result
+        } catch (e: any) {
+            logger.warn(`Failed ${description} (retrying after delay)`, {
+                delayInMs: delay
+            })
+        }
+        await wait(delay, abortSignal)
+    }
+}
 
 interface ProxyStreamConnectionClientConfig {
     P2PTransport: ITransport
@@ -48,6 +63,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
     private readonly connections: Map<PeerIDKey, ProxyDirection> = new Map()
     private readonly propagation: Propagation
     private readonly targetNeighbors: PeerList
+    private readonly abortController: AbortController
 
     constructor(config: ProxyStreamConnectionClientConfig) {
         super()
@@ -59,9 +75,13 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
             randomGraphId: this.config.streamPartId,
             markAndCheckDuplicate: (msg: MessageRef, prev?: MessageRef) => this.markAndCheckDuplicate(msg, prev),
             broadcast: (message: StreamMessage, previousPeer?: string) => this.broadcast(message, previousPeer),
-            targetNeighbors: this.targetNeighbors,
-            connectionLocker:  this.config.connectionLocker,
-            // neighborFinder: this.config.neighborFinder,
+            onLeaveNotice: (notice: LeaveStreamNotice) => {
+                const senderId = notice.senderId
+                const contact = this.targetNeighbors.getNeighborWithId(senderId)
+                if (contact) {
+                    setImmediate(() => this.onPeerDisconnected(contact.getPeerDescriptor()))
+                }
+            },
             rpcCommunicator: this.rpcCommunicator
         })
         this.propagation = new Propagation({
@@ -76,6 +96,7 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
                 }
             }
         })
+        this.abortController = new AbortController()
     }
 
     private registerDefaultServerMethods(): void {
@@ -206,8 +227,23 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
         return this.connections.has(peerKey)
     }
 
+    async onPeerDisconnected(peerDescriptor: PeerDescriptor): Promise<void> {
+        const peerKey = keyFromPeerDescriptor(peerDescriptor)
+        if (this.connections.has(peerKey)) {
+            this.config.connectionLocker.unlockConnection(peerDescriptor, 'proxy-stream-connection-client')
+            this.removeConnection(peerKey)
+            await retry(() => this.updateConnections(), 'updating proxy connections', this.abortController.signal)
+        }
+    }
+
     async start(): Promise<void> {
         this.registerDefaultServerMethods()
+        this.config.P2PTransport.on('disconnected', (peerDescriptor: PeerDescriptor) => 
+            this.onPeerDisconnected(peerDescriptor)
+        )
+        this.server.on('leaveStreamNotice', (peerDescriptor: PeerDescriptor) => 
+            this.onPeerDisconnected(peerDescriptor)
+        )
     }
 
     stop(): void {
@@ -218,6 +254,10 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
         this.targetNeighbors.clear()
         this.rpcCommunicator.stop()
         this.connections.clear()
+        this.abortController.abort()
+        this.config.P2PTransport.off('disconnected', (peerDescriptor: PeerDescriptor) => 
+            this.onPeerDisconnected(peerDescriptor)
+        )
     }
 
 }
