@@ -8,7 +8,7 @@ import { MaintainTopologyService } from './MaintainTopologyService'
 import { VoteOnSuspectNodeService } from './VoteOnSuspectNodeService'
 import { OperatorClient } from './OperatorClient'
 import fetch from 'node-fetch'
-import { Logger } from '@streamr/utils'
+import { Logger, toEthereumAddress } from '@streamr/utils'
 import { JsonRpcProvider } from '@ethersproject/providers'
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
@@ -19,7 +19,7 @@ export interface OperatorPluginConfig {
 const logger = new Logger(module)
 
 export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
-    private readonly announceNodeService = new AnnounceNodeService()
+    private readonly announceNodeService: AnnounceNodeService
     private readonly inspectRandomNodeService = new InspectRandomNodeService()
     private readonly maintainOperatorContractService = new MaintainOperatorContractService()
     private readonly voteOnSuspectNodeService = new VoteOnSuspectNodeService()
@@ -27,6 +27,10 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
 
     constructor(options: PluginOptions) {
         super(options)
+        this.announceNodeService = new AnnounceNodeService(
+            this.streamrClient,
+            toEthereumAddress(this.pluginConfig.operatorContractAddress)
+        )
         this.maintainTopologyService = new MaintainTopologyService(
             this.streamrClient,
             new OperatorClient({
