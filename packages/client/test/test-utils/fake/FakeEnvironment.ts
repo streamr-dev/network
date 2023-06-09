@@ -87,6 +87,10 @@ export class FakeEnvironment {
         return this.network
     }
 
+    getChain(): FakeChain {
+        return this.chain
+    }
+
     getLogger(): FakeLogger {
         return this.logger
     }

@@ -3,6 +3,7 @@ import './utils/PatchTsyringe'
 
 import { ProxyDirection } from '@streamr/protocol'
 import { EthereumAddress, TheGraphClient, toEthereumAddress } from '@streamr/utils'
+import EventEmitter from 'eventemitter3'
 import merge from 'lodash/merge'
 import omit from 'lodash/omit'
 import { container as rootContainer } from 'tsyringe'
@@ -29,10 +30,10 @@ import { StreamRegistry } from './registry/StreamRegistry'
 import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
 import { SearchStreamsOrderBy, SearchStreamsPermissionFilter } from './registry/searchStreams'
 import { MessageListener, MessageStream } from './subscribe/MessageStream'
-import { ResendSubscription } from './subscribe/ResendSubscription'
 import { ResendOptions, Resends } from './subscribe/Resends'
 import { Subscriber } from './subscribe/Subscriber'
-import { Subscription } from './subscribe/Subscription'
+import { Subscription, SubscriptionEvents } from './subscribe/Subscription'
+import { initResendSubscription } from './subscribe/resendSubscription'
 import { waitForStorage } from './subscribe/waitForStorage'
 import { StreamDefinition } from './types'
 import { HttpFetcher } from './utils/HttpFetcher'
@@ -187,15 +188,18 @@ export class StreamrClient {
             throw new Error('Raw subscriptions are not supported for resend')
         }
         const streamPartId = await this.streamIdBuilder.toStreamPartID(options)
-        const sub = (options.resend !== undefined)
-            ? new ResendSubscription(
-                streamPartId,
+        const eventEmitter = new EventEmitter<SubscriptionEvents>()
+        const sub = new Subscription(streamPartId, options.raw ?? false, eventEmitter, this.loggerFactory)
+        if (options.resend !== undefined) {
+            initResendSubscription(
+                sub,
                 options.resend,
                 this.resends,
-                this.loggerFactory,
-                this.config
+                this.config,
+                eventEmitter,
+                this.loggerFactory
             )
-            : new Subscription(streamPartId, options.raw ?? false, this.loggerFactory)
+        }
         await this.subscriber.add(sub)
         if (onMessage !== undefined) {
             sub.useLegacyOnMessageHandler(onMessage)
@@ -258,7 +262,8 @@ export class StreamrClient {
         onMessage?: MessageListener
     ): Promise<MessageStream> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        const messageStream = await this.resends.resend(streamPartId, options)
+        const pipeline = await this.resends.resend(streamPartId, options)
+        const messageStream = new MessageStream(pipeline)
         if (onMessage !== undefined) {
             messageStream.useLegacyOnMessageHandler(onMessage)
         }

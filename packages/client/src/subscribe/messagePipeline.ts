@@ -14,8 +14,8 @@ import { GroupKeyManager } from '../encryption/GroupKeyManager'
 import { decrypt } from '../encryption/decrypt'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { LoggerFactory } from '../utils/LoggerFactory'
+import { PushPipeline } from '../utils/PushPipeline'
 import { validateStreamMessage } from '../utils/validateStreamMessage'
-import { MessageStream } from './MessageStream'
 import { MsgChainUtil } from './MsgChainUtil'
 import { OrderMessages } from './OrderMessages'
 import { Resends } from './Resends'
@@ -31,7 +31,7 @@ export interface MessagePipelineOptions {
     loggerFactory: LoggerFactory
 }
 
-export const createMessagePipeline = (opts: MessagePipelineOptions): MessageStream => {
+export const createMessagePipeline = (opts: MessagePipelineOptions): PushPipeline<StreamMessage, StreamMessage> => {
 
     const logger = opts.loggerFactory.createLogger(module)
 
@@ -49,7 +49,7 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): MessageStre
         throw error
     }
 
-    const messageStream = new MessageStream()
+    const messageStream = new PushPipeline<StreamMessage, StreamMessage>
     const msgChainUtil = new MsgChainUtil(async (msg) => {
         await validateStreamMessage(msg, opts.streamRegistryCached)
         let decrypted

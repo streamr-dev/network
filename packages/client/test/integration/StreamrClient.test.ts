@@ -74,26 +74,6 @@ describe('StreamrClient', () => {
             await wait(WAIT_TIME)
         }, TIMEOUT)
 
-        it('client.subscribe (realtime) with onMessage signal', async () => {
-            const done = new Defer<void>()
-            const msg = Msg()
-
-            const sub = await client.subscribe(streamDefinition)
-
-            sub.onMessage.listen(done.wrap(async (streamMessage) => {
-                sub.unsubscribe()
-                const parsedContent = streamMessage.getParsedContent()
-                expect(parsedContent).toEqual(msg)
-                expect(streamMessage.getPublisherId()).toBeTruthy()
-                expect(streamMessage.signature).toBeTruthy()
-            }))
-
-            // Publish after subscribed
-            await client.publish(streamDefinition, msg)
-            await collect(sub)
-            await done
-        })
-
         it('client.subscribe (realtime) with onMessage callback', async () => {
             const done = new Defer<void>()
             const mockMessage = Msg()

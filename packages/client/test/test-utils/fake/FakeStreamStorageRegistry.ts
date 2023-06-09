@@ -63,9 +63,16 @@ export class FakeStreamStorageRegistry implements Methods<StreamStorageRegistry>
         }
     }
 
-    // eslint-disable-next-line class-methods-use-this
-    removeStreamFromStorageNode(_streamIdOrPath: string, _nodeAddress: string): Promise<void> {
-        throw new Error('not implemented')
+    async removeStreamFromStorageNode(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<void> {
+        if (await this.isStoredStream(streamIdOrPath, nodeAddress)) {
+            const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+            const node = this.network.getNode(nodeAddress)
+            if (node !== undefined) {
+                this.chain.storageAssignments.remove(streamId, nodeAddress)
+            } else {
+                throw new Error(`No storage node ${nodeAddress} for ${streamId}`)
+            }
+        }
     }
 
     async isStoredStream(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<boolean> {

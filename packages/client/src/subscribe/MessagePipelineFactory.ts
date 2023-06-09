@@ -1,3 +1,4 @@
+import { StreamMessage } from '@streamr/protocol'
 import { MarkOptional } from 'ts-essentials'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { ConfigInjectionToken } from '../Config'
@@ -5,7 +6,7 @@ import { DestroySignal } from '../DestroySignal'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { LoggerFactory } from '../utils/LoggerFactory'
-import { MessageStream } from './MessageStream'
+import { PushPipeline } from '../utils/PushPipeline'
 import { Resends } from './Resends'
 import { MessagePipelineOptions, createMessagePipeline as _createMessagePipeline } from './messagePipeline'
 
@@ -45,7 +46,7 @@ export class MessagePipelineFactory {
     }
 
     // eslint-disable-next-line max-len
-    createMessagePipeline(opts: MessagePipelineFactoryOptions): MessageStream {
+    createMessagePipeline(opts: MessagePipelineFactoryOptions): PushPipeline<StreamMessage, StreamMessage> {
         return _createMessagePipeline({
             ...opts,
             resends: this.resends,
