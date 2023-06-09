@@ -8,9 +8,9 @@ import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { ContractFactory } from '../ContractFactory'
 import { getStreamRegistryChainProviders, getStreamRegistryOverrides } from '../Ethereum'
-import { NotFoundError } from '../HttpUtil'
 import { Stream, StreamMetadata } from '../Stream'
 import { StreamIDBuilder } from '../StreamIDBuilder'
+import { StreamrClientError } from '../StreamrClientError'
 import type { StreamRegistryV4 as StreamRegistryContract } from '../ethereumArtifacts/StreamRegistryV4'
 import StreamRegistryArtifact from '../ethereumArtifacts/StreamRegistryV4Abi.json'
 import { StreamrClientEventEmitter } from '../events'
@@ -59,7 +59,7 @@ export interface StreamCreationEvent {
 
 const streamContractErrorProcessor = (err: any, streamId: StreamID, registry: string): never => {
     if (err.reason?.code === 'CALL_EXCEPTION') {
-        throw new NotFoundError('Stream not found: id=' + streamId)
+        throw new StreamrClientError('Stream not found: id=' + streamId, 'STREAM_NOT_FOUND')
     } else {
         throw new Error(`Could not reach the ${registry} Smart Contract: ${err.message}`)
     }
@@ -340,7 +340,7 @@ export class StreamRegistry {
                 if (response.stream !== null) {
                     return response.stream.permissions
                 } else {
-                    throw new NotFoundError('stream not found: id: ' + streamId)
+                    throw new StreamrClientError('Stream not found: id=' + streamId, 'STREAM_NOT_FOUND')
                 }
             }
         ))

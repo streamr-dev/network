@@ -2,10 +2,10 @@ import { StreamID } from '@streamr/protocol'
 import { EthereumAddress, Multimap, toEthereumAddress } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../../../src/Authentication'
-import { NotFoundError } from '../../../src/HttpUtil'
 import { Stream, StreamMetadata } from '../../../src/Stream'
 import { StreamFactory } from '../../../src/StreamFactory'
 import { StreamIDBuilder } from '../../../src/StreamIDBuilder'
+import { StreamrClientError } from '../../../src/StreamrClientError'
 import {
     PermissionAssignment,
     PermissionQuery, StreamPermission,
@@ -61,7 +61,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         if (registryItem !== undefined) {
             return this.streamFactory.createStream(id, registryItem.metadata)
         } else {
-            throw new NotFoundError('Stream not found: id=' + id)
+            throw new StreamrClientError('Stream not found: id=' + id, 'STREAM_NOT_FOUND')
         }
     }
 
