@@ -223,8 +223,12 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
         return this.targetNeighbors.getStringIds()
     }
 
-    hasProxyConnection(peerKey: PeerIDKey): boolean {
-        return this.connections.has(peerKey)
+    hasProxyConnection(peerKey: PeerIDKey, direction: ProxyDirection): boolean {
+        return this.connections.has(peerKey) && this.connections.get(peerKey) === direction
+    }
+
+    getDirection(): ProxyDirection {
+        return this.definition!.direction
     }
 
     async onPeerDisconnected(peerDescriptor: PeerDescriptor): Promise<void> {
