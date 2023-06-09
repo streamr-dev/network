@@ -337,8 +337,8 @@ export interface StreamrClientConfig {
     /** @internal */
     _timeouts?: {
         theGraph?: {
-            timeout?: number
-            retryInterval?: number
+            indexTimeout?: number
+            indexPollInterval?: number
             httpFetchTimeout?: number
         }
         storageNode?: {

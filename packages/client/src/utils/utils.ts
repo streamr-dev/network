@@ -127,9 +127,9 @@ export const createTheGraphClient = (
             return fetch(url, merge({ timeout }, init))
         },
         // eslint-disable-next-line no-underscore-dangle
-        indexTimeout: config._timeouts.theGraph.timeout,
+        indexTimeout: config._timeouts.theGraph.indexTimeout,
         // eslint-disable-next-line no-underscore-dangle
-        indexPollInterval: config._timeouts.theGraph.retryInterval
+        indexPollInterval: config._timeouts.theGraph.indexPollInterval
     })
     eventEmitter.on('confirmContractTransaction', (payload: { receipt: ContractReceipt }) => {
         instance.updateRequiredBlockNumber(payload.receipt.blockNumber)

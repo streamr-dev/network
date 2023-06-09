@@ -418,11 +418,11 @@
                     "type": "object",
                     "additionalProperties": false,
                     "properties": {
-                        "timeout": {
+                        "indexTimeout": {
                             "type": "number",
                             "default": 60000
                         },
-                        "retryInterval": {
+                        "indexPollInterval": {
                             "type": "number",
                             "default": 1000
                         },
