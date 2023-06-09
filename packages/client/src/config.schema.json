@@ -425,6 +425,10 @@
                         "retryInterval": {
                             "type": "number",
                             "default": 1000
+                        },
+                        "httpFetchTimeout": {
+                            "type": "number",
+                            "default": 30000
                         }
                     },
                     "default": {}
@@ -458,10 +462,6 @@
                         }
                     },
                     "default": {}
-                },
-                "httpFetchTimeout": {
-                    "type": "number",
-                    "default": 30000
                 }
             },
             "default": {}
