@@ -353,7 +353,7 @@ export class StreamrClient {
         try {
             return await this.getStream(props.id)
         } catch (err: any) {
-            if (err.errorCode === 'STREAM_NOT_FOUND') {
+            if (err.code === 'STREAM_NOT_FOUND') {
                 return this.createStream(props)
             }
             throw err

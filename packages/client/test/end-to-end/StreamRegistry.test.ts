@@ -278,7 +278,7 @@ describe('StreamRegistry', () => {
                     await client.getStream(stream.id)
                     return false
                 } catch (err: any) {
-                    return err.errorCode === 'STREAM_NOT_FOUND'
+                    return err.code === 'STREAM_NOT_FOUND'
                 }
             }, 100000, 1000)
             return expect(client.getStream(stream.id)).rejects.toThrow()
