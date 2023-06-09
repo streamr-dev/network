@@ -426,7 +426,7 @@
                             "type": "number",
                             "default": 1000
                         },
-                        "httpFetchTimeout": {
+                        "fetchTimeout": {
                             "type": "number",
                             "default": 30000
                         }

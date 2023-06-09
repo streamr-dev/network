@@ -123,7 +123,7 @@ export const createTheGraphClient = (
         serverUrl: config.contracts.theGraphUrl,
         fetch: (url: string, init?: Record<string, unknown>) => {
             // eslint-disable-next-line no-underscore-dangle
-            const timeout = config._timeouts.theGraph.httpFetchTimeout
+            const timeout = config._timeouts.theGraph.fetchTimeout
             return fetch(url, merge({ timeout }, init))
         },
         // eslint-disable-next-line no-underscore-dangle
