@@ -6,7 +6,7 @@ import { InspectRandomNodeService } from './InspectRandomNodeService'
 import { MaintainOperatorContractService } from './MaintainOperatorContractService'
 import { MaintainTopologyService } from './MaintainTopologyService'
 import { VoteOnSuspectNodeService } from './VoteOnSuspectNodeService'
-import { OperatorClient } from './OperatorClient'
+import { MaintainTopologyHelper } from './MaintainTopologyHelper'
 import fetch from 'node-fetch'
 import { Logger } from '@streamr/utils'
 import { JsonRpcProvider } from '@ethersproject/providers'
@@ -29,7 +29,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         super(options)
         this.maintainTopologyService = new MaintainTopologyService(
             this.streamrClient,
-            new OperatorClient({
+            new MaintainTopologyHelper({
                 provider: new JsonRpcProvider(this.brokerConfig.client.contracts!.streamRegistryChainRPCs!.rpcs[0].url),
                 operatorContractAddress: this.pluginConfig.operatorContractAddress,
                 theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST}:8000/subgraphs/name/streamr-dev/network-subgraphs`,

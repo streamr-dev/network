@@ -1,5 +1,5 @@
 import { JsonRpcProvider, Provider } from "@ethersproject/providers"
-import { OperatorClient, OperatorClientConfig } from '../../../../src/plugins/operator/OperatorClient'
+import { MaintainTopologyHelper, OperatorClientConfig } from '../../../../src/plugins/operator/MaintainTopologyHelper'
 import { Chains } from "@streamr/config"
 import { Wallet } from "@ethersproject/wallet"
 import { parseEther } from "@ethersproject/units"
@@ -18,7 +18,7 @@ import { deploySponsorship } from "./deploySponsorshipContract"
 
 const config = Chains.load()["dev1"]
 const adminPrivKey = "0x4059de411f15511a85ce332e7a428f36492ab4e87c7830099dadbf130f1896ae"
-const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST}:8000/subgraphs/name/streamr-dev/network-subgraphs`
+const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`
 
 const logger = new Logger(module)
 
@@ -94,14 +94,14 @@ describe("OperatorClient", () => {
     })
 
     it("client emits events when sponsorships are unstaked completely", async () => {
-        const operatorClient = new OperatorClient(opertatorConfig, logger)
+        const operatorClient = new MaintainTopologyHelper(opertatorConfig, logger)
         await operatorClient.start()
         let eventcount = 0
-        operatorClient.on("addStakedStream", (streamid: string, blockNumber: number) => {
-            logger.debug(`got addStakedStream event for stream ${streamid} at block ${blockNumber}`)
+        operatorClient.on("addStakedStream", (streamid: string[]) => {
+            logger.debug(`got addStakedStream event for stream ${streamid}`)
         })
-        operatorClient.on("removeStakedStream", (streamid: string, blockNumber: number) => {
-            logger.debug(`got removeStakedStream event for stream ${streamid} at block ${blockNumber}`)
+        operatorClient.on("removeStakedStream", (streamid: string) => {
+            logger.debug(`got removeStakedStream event for stream ${streamid}`)
             eventcount += 1
         })
 
@@ -135,15 +135,15 @@ describe("OperatorClient", () => {
 
     it("client catches onchain events and emits join and leave events", async () => {
 
-        const operatorClient = new OperatorClient(opertatorConfig, logger)
+        const operatorClient = new MaintainTopologyHelper(opertatorConfig, logger)
         await operatorClient.start()
         let eventcount = 0
-        operatorClient.on("addStakedStream", (streamid: string, blockNumber: number) => {
-            logger.debug(`got addStakedStream event for stream ${streamid} at block ${blockNumber}`)
+        operatorClient.on("addStakedStream", (streamid: string[]) => {
+            logger.debug(`got addStakedStream event for stream ${streamid}`)
             eventcount += 1
         })
-        operatorClient.on("removeStakedStream", (streamid: string, blockNumber: number) => {
-            logger.debug(`got removeStakedStream event for stream ${streamid} at block ${blockNumber}`)
+        operatorClient.on("removeStakedStream", (streamid: string) => {
+            logger.debug(`got removeStakedStream event for stream ${streamid}`)
         })
 
         logger.debug("Added OperatorClient listeners, deploying Sponsorship contract...")
@@ -189,7 +189,7 @@ describe("OperatorClient", () => {
         logger.debug(`staked on sponsorship ${sponsorship2.address}`)
         // sleep 5 seconds to make sure theGraph has processed the events
         await new Promise((resolve) => setTimeout(resolve, 5000))
-        const operatorClient = new OperatorClient(opertatorConfig, logger)
+        const operatorClient = new MaintainTopologyHelper(opertatorConfig, logger)
 
         await operatorClient.start()
         const streams = await operatorClient.getStakedStreams()
@@ -203,16 +203,16 @@ describe("OperatorClient", () => {
 
     it("edge cases, 2 sponsorships for the same stream", async () => {
 
-        let operatorClient = new OperatorClient(opertatorConfig, logger)
+        let operatorClient = new MaintainTopologyHelper(opertatorConfig, logger)
         await operatorClient.start()
         let receivedAddStreams = 0
         let receivedRemoveStreams = 0
-        operatorClient.on("addStakedStream", (streamid: string, blockNumber: number) => {
-            logger.debug(`got addStakedStream event for stream ${streamid} at block ${blockNumber}`)
+        operatorClient.on("addStakedStream", (streamid: string[]) => {
+            logger.debug(`got addStakedStream event for stream ${streamid}`)
             receivedAddStreams += 1
         })
-        operatorClient.on("removeStakedStream", (streamid: string, blockNumber: number) => {
-            logger.debug(`got removeStakedStream event for stream ${streamid} at block ${blockNumber}`)
+        operatorClient.on("removeStakedStream", (streamid: string) => {
+            logger.debug(`got removeStakedStream event for stream ${streamid}`)
             receivedRemoveStreams += 1
         })
 
@@ -241,13 +241,13 @@ describe("OperatorClient", () => {
         operatorClient.stop()
         await new Promise((resolve) => setTimeout(resolve, 10000)) // wait for events to be processed
 
-        operatorClient = new OperatorClient(opertatorConfig, logger)
-        operatorClient.on("addStakedStream", (streamid: string, blockNumber: number) => {
-            logger.debug(`got addStakedStream event for stream ${streamid} at block ${blockNumber}`)
+        operatorClient = new MaintainTopologyHelper(opertatorConfig, logger)
+        operatorClient.on("addStakedStream", (streamid: string[]) => {
+            logger.debug(`got addStakedStream event for stream ${streamid}`)
             receivedAddStreams += 1
         })
-        operatorClient.on("removeStakedStream", (streamid: string, blockNumber: number) => {
-            logger.debug(`got removeStakedStream event for stream ${streamid} at block ${blockNumber}`)
+        operatorClient.on("removeStakedStream", (streamid: string) => {
+            logger.debug(`got removeStakedStream event for stream ${streamid}`)
             receivedRemoveStreams += 1
         })
 
@@ -272,15 +272,15 @@ describe("OperatorClient", () => {
     it("only returns the stream from getAllStreams when staked on 2 sponsorships for the stream", async () => {
         const { operatorWallet, operatorContract } = await deployNewOperator()
 
-        const operatorClient = new OperatorClient(opertatorConfig, logger)
+        const operatorClient = new MaintainTopologyHelper(opertatorConfig, logger)
         await operatorClient.start()
         let receivedAddStreams = 0
-        operatorClient.on("addStakedStream", (streamid: string, blockNumber: number) => {
-            logger.debug(`got addStakedStream event for stream ${streamid} at block ${blockNumber}`)
+        operatorClient.on("addStakedStream", (streamid: string[]) => {
+            logger.debug(`got addStakedStream event for stream ${streamid}`)
             receivedAddStreams += 1
         })
-        operatorClient.on("removeStakedStream", (streamid: string, blockNumber: number) => {
-            logger.debug(`got removeStakedStream event for stream ${streamid} at block ${blockNumber}`)
+        operatorClient.on("removeStakedStream", (streamid: string) => {
+            logger.debug(`got removeStakedStream event for stream ${streamid}`)
         })
 
         logger.debug("Added OperatorClient listeners, deploying Sponsorship contract...")
@@ -312,11 +312,11 @@ describe("OperatorClient", () => {
 
     // it("instantiate operatorclient with preexisting operator", () => {
     //     const oclient = new OperatorClient(operator.address, provider)
-    //     oclient.on("addStakedStream", (streamid: string, blockNumber: number) => {
-    //         logger.debug(`got addStakedStream event for stream ${streamid} at block ${blockNumber}`)
+    //     oclient.on("addStakedStream", (streamid: string[]) => {
+    //         logger.debug(`got addStakedStream event for stream ${streamid}`)
     //     })
-    //     oclient.on("removeStakedStream", (streamid: string, blockNumber: number) => {
-    //         logger.debug(`got removeStakedStream event for stream ${streamid} at block ${blockNumber}`)
+    //     oclient.on("removeStakedStream", (streamid: string[]) => {
+    //         logger.debug(`got removeStakedStream event for stream ${streamid}`)
     //     })
     // })
 

@@ -13,7 +13,7 @@ import {
     getTokenContract
 } from './smartContractUtils'
 import { StreamPartID } from '@streamr/protocol'
-import { OperatorClient } from '../../../../src/plugins/operator/OperatorClient'
+import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
 
 async function setUpStreams(): Promise<[Stream, Stream]> {
     const privateKey = await fetchPrivateKeyWithGas()
@@ -57,7 +57,7 @@ describe('MaintainTopologyService', () => {
         const client = new StreamrClient({
             ...CONFIG_TEST
         })
-        service = new MaintainTopologyService(client, new OperatorClient({
+        service = new MaintainTopologyService(client, new MaintainTopologyHelper({
             provider,
             operatorContractAddress: operatorContract.address,
             theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`,
