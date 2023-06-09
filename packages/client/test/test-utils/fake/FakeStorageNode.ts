@@ -45,8 +45,12 @@ export class FakeStorageNode extends FakeNetworkNode {
         } as any, network)
         this.wallet = wallet
         this.chain = chain
-        const address = toEthereumAddress(wallet.address)
-        chain.storageNodeMetadatas.set(address, {
+    }
+
+    override async start(): Promise<void> {
+        super.start()
+        const address = toEthereumAddress(this.wallet.address)
+        this.chain.storageNodeMetadatas.set(address, {
             http: createStorageNodeUrl(address)
         })
         const storageNodeAssignmentStreamPermissions = new Multimap<EthereumAddress, StreamPermission>()

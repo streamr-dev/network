@@ -32,7 +32,7 @@ describe('Resends2', () => {
         return task(count)
     }
 
-    const startFailingStorageNode = (error: Error) => {
+    const startFailingStorageNode = async (error: Error): Promise<FakeStorageNode> => {
         const wallet = fastWallet()
         const node = new class extends FakeStorageNode {
             // eslint-disable-next-line class-methods-use-this, require-yield
@@ -40,7 +40,7 @@ describe('Resends2', () => {
                 throw error
             }
         }(wallet, environment.getNetwork(), environment.getChain())
-        node.start()
+        await node.start()
         return node
     }
 
@@ -64,7 +64,7 @@ describe('Resends2', () => {
             public: true,
             permissions: [StreamPermission.SUBSCRIBE]
         })
-        storageNode = environment.startStorageNode()
+        storageNode = await environment.startStorageNode()
         await stream.addToStorageNode(storageNode.id)
         client = environment.createClient()
     })
@@ -146,7 +146,7 @@ describe('Resends2', () => {
 
             it('can ignore errors in resend', async () => {
                 await stream.removeFromStorageNode(storageNode.id)  // remove the default storage node added in beforeEach
-                const storageNode2 = startFailingStorageNode(new Error('expected'))
+                const storageNode2 = await startFailingStorageNode(new Error('expected'))
                 await stream.addToStorageNode(storageNode2.id)
                 const sub = await client.subscribe({
                     streamId: stream.id,
@@ -170,7 +170,7 @@ describe('Resends2', () => {
 
             it('can handle errors in resend', async () => {
                 await stream.removeFromStorageNode(storageNode.id)  // remove the default storage node added in beforeEach
-                const storageNode2 = startFailingStorageNode(new Error('expected'))
+                const storageNode2 = await startFailingStorageNode(new Error('expected'))
                 await stream.addToStorageNode(storageNode2.id)
                 const sub = await client.subscribe({
                     streamId: stream.id,

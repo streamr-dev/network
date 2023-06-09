@@ -27,7 +27,7 @@ describe('Group Key Persistence', () => {
 
     beforeEach(async () => {
         environment = new FakeEnvironment()
-        storageNode = environment.startStorageNode()
+        storageNode = await environment.startStorageNode()
     })
 
     afterEach(async () => {

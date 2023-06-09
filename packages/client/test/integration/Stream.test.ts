@@ -17,7 +17,7 @@ describe('Stream', () => {
     beforeEach(async () => {
         environment = new FakeEnvironment()
         client = environment.createClient()
-        storageNode = environment.startStorageNode()
+        storageNode = await environment.startStorageNode()
     })
 
     afterEach(async () => {

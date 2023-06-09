@@ -76,10 +76,10 @@ export class FakeEnvironment {
         return node
     }
 
-    startStorageNode(): FakeStorageNode {
+    async startStorageNode(): Promise<FakeStorageNode> {
         const wallet = fastWallet()
         const node = new FakeStorageNode(wallet, this.network, this.chain)
-        node.start()
+        await node.start()
         return node
     }
 
