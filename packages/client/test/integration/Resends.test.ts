@@ -23,16 +23,21 @@ describe('Resends', () => {
         let stream: Stream
         let storageNode: FakeStorageNode
         let authentication: Authentication
+        let environment: FakeEnvironment
 
         beforeEach(async () => {
             authentication = createRandomAuthentication()
-            const environment = new FakeEnvironment()
+            environment = new FakeEnvironment()
             client = environment.createClient()
             stream = await client.createStream({
                 id: createRelativeTestStreamId(module),
             })
             await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
             storageNode = environment.startStorageNode()
+        })
+
+        afterEach(async () => {
+            await environment.destroy()
         })
 
         it('happy path', async () => {

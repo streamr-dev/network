@@ -46,6 +46,10 @@ describe('gap fill', () => {
         })
     })
 
+    afterAll(async () => {
+        await environment.destroy()
+    })
+
     it('real-time subscription uses gap fill', async () => {
         const subscriber = environment.createClient({
             gapFillTimeout: 50

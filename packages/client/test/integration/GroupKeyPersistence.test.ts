@@ -16,6 +16,7 @@ import { createTestStream, startPublisherKeyExchangeSubscription } from '../test
 import { DEFAULT_PARTITION } from './../../src/StreamIDBuilder'
 
 describe('Group Key Persistence', () => {
+
     let publisherPrivateKey: string
     let subscriberPrivateKey: string
     let publisher: StreamrClient
@@ -24,9 +25,13 @@ describe('Group Key Persistence', () => {
     let storageNode: FakeStorageNode
     let environment: FakeEnvironment
 
-    beforeEach(() => {
+    beforeEach(async () => {
         environment = new FakeEnvironment()
         storageNode = environment.startStorageNode()
+    })
+
+    afterEach(async () => {
+        await environment.destroy()
     })
 
     describe('with encrypted streams', () => {

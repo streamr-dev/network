@@ -31,6 +31,7 @@ const waitMessagesReceived = async (
 }
 
 describe('PubSub with multiple clients', () => {
+
     let stream: Stream
     let mainClient: StreamrClient
     let otherClient: StreamrClient

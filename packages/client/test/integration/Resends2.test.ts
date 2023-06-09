@@ -19,6 +19,7 @@ import { FakeStorageNode } from './../test-utils/fake/FakeStorageNode'
 const MAX_MESSAGES = 5
 
 describe('Resends2', () => {
+
     let environment: FakeEnvironment
     let client: StreamrClient
     let publisher: StreamrClient
@@ -51,6 +52,10 @@ describe('Resends2', () => {
                 privateKey: publisherWallet.privateKey
             }
         })
+    })
+
+    afterAll(async () => {
+        await environment.destroy()
     })
 
     beforeEach(async () => {

@@ -9,8 +9,17 @@ import { createTestStream } from '../test-utils/utils'
 
 describe('pre-agreed encryption key', () => {
 
+    let environment: FakeEnvironment
+
+    beforeAll(async () => {
+        environment = new FakeEnvironment()
+    })
+
+    afterAll(async () => {
+        await environment.destroy()
+    })
+
     it('happy path', async () => {
-        const environment = new FakeEnvironment()
         const publisher = environment.createClient()
         const subscriber = environment.createClient()
         const stream = await createTestStream(publisher, module)

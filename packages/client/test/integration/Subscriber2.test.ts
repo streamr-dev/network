@@ -36,6 +36,7 @@ const collect2 = async (
 }
 
 describe('Subscriber', () => {
+
     let client: StreamrClient
     let streamId: StreamID
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
@@ -67,6 +68,10 @@ describe('Subscriber', () => {
         publisherAuthentication = createPrivateKeyAuthentication(publisherWallet.privateKey, undefined as any)
     })
 
+    afterAll(async () => {
+        await environment.destroy()
+    })
+
     beforeEach(async () => {
         const stream = await createTestStream(publisher, module)
         streamId = stream.id
@@ -84,10 +89,6 @@ describe('Subscriber', () => {
         // @ts-expect-error private
         expect(client.subscriber.countSubscriptionSessions()).toBe(0)
         await client.destroy()
-    })
-
-    afterAll(async () => {
-        await publisher?.destroy()
     })
 
     describe('basics', () => {
