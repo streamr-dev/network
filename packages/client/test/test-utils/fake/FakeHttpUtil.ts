@@ -32,11 +32,10 @@ export class FakeHttpUtil extends HttpUtil {
             const format = request.query!.get('format')
             if (format === 'raw') {
                 const count = Number(request.query!.get('count'))
-                let msgs: StreamMessage[]
                 if (request.resendType === 'last') {
-                    msgs = await storageNode.getLast(request.streamPartId, count)
+                    yield* storageNode.getLast(request.streamPartId, count)
                 } else if (request.resendType === 'range') {
-                    msgs = await storageNode.getRange(request.streamPartId, {
+                    yield* storageNode.getRange(request.streamPartId, {
                         fromTimestamp: Number(request.query!.get('fromTimestamp')),
                         fromSequenceNumber: Number(request.query!.get('fromSequenceNumber')),
                         toTimestamp: Number(request.query!.get('toTimestamp')),
@@ -45,7 +44,7 @@ export class FakeHttpUtil extends HttpUtil {
                         msgChainId: request.query!.get('msgChainId') ?? undefined
                     })
                 } else if (request.resendType === 'from') {
-                    msgs = await storageNode.getRange(request.streamPartId, {
+                    yield* storageNode.getRange(request.streamPartId, {
                         fromTimestamp: Number(request.query!.get('fromTimestamp')),
                         fromSequenceNumber: Number(request.query!.get('fromSequenceNumber')),
                         toTimestamp: MAX_TIMESTAMP_VALUE,
@@ -56,7 +55,6 @@ export class FakeHttpUtil extends HttpUtil {
                 } else {
                     throw new Error(`assertion failed: resendType=${request.resendType}`)
                 }
-                yield* msgs
             } else {
                 throw new Error(`not implemented: format=${format} ${url}`)
             }
