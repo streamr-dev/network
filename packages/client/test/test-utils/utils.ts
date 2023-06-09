@@ -222,7 +222,7 @@ export const waitForCalls = async (mockFunction: jest.Mock<any>, n: number): Pro
     })
 }
 
-export const createTestClient = (privateKey: string, stringKademliaId: string, wsPort?: number): StreamrClient => {
+export const createTestClient = (privateKey: string, stringKademliaId: string, wsPort?: number, acceptProxyConnections = false): StreamrClient => {
     return new StreamrClient({
         ...CONFIG_TEST,
         auth: {
@@ -239,6 +239,9 @@ export const createTestClient = (privateKey: string, stringKademliaId: string, w
                         port: wsPort
                     } : undefined
                 }
+            },
+            networkNode: {
+                acceptProxyConnections
             }
         }
     })
