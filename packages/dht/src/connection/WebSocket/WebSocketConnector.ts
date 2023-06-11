@@ -24,6 +24,7 @@ import { ServerWebSocket } from './ServerWebSocket'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Handshaker } from '../Handshaker'
 import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { ParsedUrlQuery } from 'querystring'
 
 const logger = new Logger(module)
 
@@ -75,10 +76,35 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         )
     }
 
+    private attachHandshaker(connection: IConnection) {
+        const handshaker = new Handshaker(this.ownPeerDescriptor!, this.protocolVersion, connection)
+
+        handshaker.once('handshakeRequest', (peerDescriptor: PeerDescriptor) => {
+            this.onServerSocketHandshakeRequest(peerDescriptor, connection)
+        })
+    }
+
     public async start(): Promise<void> {
         if (this.webSocketServer) {
             this.webSocketServer.on('connected', (connection: IConnection) => {
-                this.connectivityChecker.listenToIncomingConnectivityRequests(connection as unknown as ServerWebSocket)
+
+                const serverSocket = connection as unknown as ServerWebSocket
+
+                logger.debug('resource url: ' + JSON.stringify(serverSocket.resourceURL))
+                if (serverSocket.resourceURL &&
+                    serverSocket.resourceURL.query) {
+                    const query = serverSocket.resourceURL.query as unknown as ParsedUrlQuery
+                    if (query.connectivityRequest) {
+                        logger.debug("Received connectivity request connection")
+                        this.connectivityChecker.listenToIncomingConnectivityRequests(serverSocket)
+                    } else if (query.connectivityProbe) {
+                        logger.debug("Received connectivity probe connection")
+                    } else {
+                        this.attachHandshaker(connection)
+                    }
+                } else {
+                    this.attachHandshaker(connection)
+                }
             })
             await this.webSocketServer.start(this.webSocketPort!, this.webSocketHost)
         }
@@ -185,7 +211,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
     private onServerSocketHandshakeRequest = (peerDescriptor: PeerDescriptor, serverWebSocket: IConnection) => {
 
         const peerId = peerIdFromPeerDescriptor(peerDescriptor)
-        
+
         if (this.ongoingConnectRequests.has(peerId.toKey())) {
             const ongoingConnectReguest = this.ongoingConnectRequests.get(peerId.toKey())!
             ongoingConnectReguest.attachImplementation(serverWebSocket, peerDescriptor)
@@ -194,9 +220,9 @@ export class WebSocketConnector implements IWebSocketConnectorService {
         } else {
             const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, this.protocolVersion,
                 ConnectionType.WEBSOCKET_SERVER, undefined, serverWebSocket)
-            
+
             managedConnection.setPeerDescriptor(peerDescriptor)
-            
+
             if (this.incomingConnectionCallback(managedConnection)) {
                 managedConnection.acceptHandshake()
             } else {
@@ -208,16 +234,6 @@ export class WebSocketConnector implements IWebSocketConnectorService {
 
     public setOwnPeerDescriptor(ownPeerDescriptor: PeerDescriptor): void {
         this.ownPeerDescriptor = ownPeerDescriptor
-
-        if (this.webSocketServer) {
-            this.webSocketServer.on('connected', (connection: IConnection) => {
-                const handshaker = new Handshaker(this.ownPeerDescriptor!, this.protocolVersion, connection)
-
-                handshaker.once('handshakeRequest', (peerDescriptor: PeerDescriptor) => {
-                    this.onServerSocketHandshakeRequest(peerDescriptor, connection)
-                })
-            })
-        }
     }
 
     public async stop(): Promise<void> {
@@ -226,7 +242,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
 
         const requests = Array.from(this.ongoingConnectRequests.values())
         await Promise.allSettled(requests.map((conn) => conn.close('OTHER')))
-        
+
         const attempts = Array.from(this.connectingConnections.values())
         await Promise.allSettled(attempts.map((conn) => conn.close('OTHER')))
 

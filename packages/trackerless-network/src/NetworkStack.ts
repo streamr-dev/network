@@ -9,25 +9,35 @@ interface ReadynessEvents {
     done: () => void
 }
 
-class ReadynessListener extends EventEmitter<ReadynessEvents> {
+class ReadynessListener {
+    private emitter = new EventEmitter<ReadynessEvents>()
+
     constructor(private networkStack: NetworkStack,
         private dhtNode: DhtNode) {
 
-        super()
         networkStack.on('stopped', this.onStopped)
-        networkStack.getLayer0DhtNode().on('connected', this.onConnected)
+        dhtNode.on('connected', this.onConnected)
     }
 
     private onConnected = (_peerDescriptor: PeerDescriptor) => {
         this.networkStack.off('stopped', this.onStopped)
         this.dhtNode.off('connected', this.onConnected)
-        this.emit('done')
+        this.emitter.emit('done')
     }
 
     private onStopped = () => {
         this.networkStack.off('stopped', this.onStopped)
         this.dhtNode.off('connected', this.onConnected)
-        this.emit('done')
+        this.emitter.emit('done')
+    }
+
+    public async waitUntilReady(timeout: number): Promise<void> {
+        if (this.dhtNode.getNumberOfConnections() > 0) {
+            return
+        } else {
+            await waitForEvent3<ReadynessEvents>(this.emitter, 'done', timeout)
+
+        }
     }
 }
 
@@ -61,6 +71,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
         })
         this.streamrNode = new StreamrNode({
             ...options.networkNode,
+            nodeName: options.networkNode.nodeName || options.layer0.nodeName,
             metricsContext: this.metricsContext
         })
         this.firstConnectionTimeout = options.networkNode.firstConnectionTimeout || 5000
@@ -74,14 +85,13 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
             await this.layer0DhtNode?.joinDht(entryPoint)
             await this.streamrNode?.start(this.layer0DhtNode!, this.connectionManager!, this.connectionManager!)
         } else {
-            const readynessListener = new ReadynessListener(this, this.layer0DhtNode!)
-            const promise = waitForEvent3<ReadynessEvents>(readynessListener, 'done', this.firstConnectionTimeout)
-
+            
             setImmediate(() => {
                 this.layer0DhtNode?.joinDht(this.options.layer0.entryPoints![0])
             })
-
-            await promise
+            const readynessListener = new ReadynessListener(this, this.layer0DhtNode!)
+            await readynessListener.waitUntilReady(this.firstConnectionTimeout)
+            
             await this.streamrNode?.start(this.layer0DhtNode!, this.connectionManager!, this.connectionManager!)
         }
 

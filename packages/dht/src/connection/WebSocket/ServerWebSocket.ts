@@ -3,6 +3,7 @@ import { IConnection, ConnectionID, ConnectionEvents, ConnectionType } from '../
 import { connection as WsConnection } from 'websocket'
 import { Logger } from '@streamr/utils'
 import { DisconnectionType } from '../../transport/ITransport'
+import { Url } from 'url'
 
 const logger = new Logger(module)
 
@@ -25,7 +26,7 @@ export class ServerWebSocket extends EventEmitter<ConnectionEvents> implements I
     private socket?: WsConnection
     private stopped = false
 
-    constructor(socket: WsConnection) {
+    constructor(socket: WsConnection, public resourceURL: Url) {
         super()
 
         this.connectionId = new ConnectionID()

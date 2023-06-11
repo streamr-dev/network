@@ -230,7 +230,7 @@ export class StreamrNode extends EventEmitter<Events> {
             numberOfNodesPerKBucket: 4,
             rpcRequestTimeout: 15000,
             dhtJoinTimeout: 60000,
-            nodeName: this.config.nodeName
+            nodeName: this.config.nodeName + ':layer1'
         })
     }
 

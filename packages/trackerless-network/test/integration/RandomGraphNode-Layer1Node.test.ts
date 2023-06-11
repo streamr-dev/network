@@ -187,7 +187,7 @@ describe('RandomGraphNode-DhtNode', () => {
         })
     }, 10000)
 
-    it.only('happy path 64 peers', async () => {
+    it('happy path 64 peers', async () => {
 
         const promise = Promise.all(graphNodes.map((node) => {
 
