@@ -26,14 +26,14 @@ export class OrderMessages {
     private readonly resends: Resends
     private readonly streamPartId: StreamPartID
     private readonly logger: Logger
-    private readonly getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>
+    private readonly getStorageNodes?: (streamId: StreamID) => Promise<EthereumAddress[]>
 
     constructor(
         config: Pick<StrictStreamrClientConfig, 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill'>,
         resends: Resends,
         streamPartId: StreamPartID,
         loggerFactory: LoggerFactory,
-        getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>
+        getStorageNodes?: (streamId: StreamID) => Promise<EthereumAddress[]>
     ) {
         this.resends = resends
         this.streamPartId = streamPartId
@@ -68,14 +68,13 @@ export class OrderMessages {
         let resendMessageStream!: MessageStream
 
         try {
-            resendMessageStream = await this.resends.range(this.streamPartId, {
-                fromTimestamp: from.timestamp,
-                toTimestamp: to.timestamp,
-                fromSequenceNumber: from.sequenceNumber,
-                toSequenceNumber: to.sequenceNumber,
+            resendMessageStream = await this.resends.resend(this.streamPartId, {
+                from,
+                to,
                 publisherId: context.publisherId,
                 msgChainId: context.msgChainId,
-            }, true, this.getStorageNodes)
+                raw: true
+            }, this.getStorageNodes)
             resendMessageStream.onFinally.listen(() => {
                 this.resendStreams.delete(resendMessageStream)
             })

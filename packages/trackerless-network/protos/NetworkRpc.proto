@@ -11,6 +11,10 @@ service NetworkRpc {
   rpc leaveStreamNotice (LeaveStreamNotice) returns (google.protobuf.Empty);
 }
 
+service ProxyConnectionRpc {
+  rpc requestConnection (ProxyConnectionRequest) returns (ProxyConnectionResponse);
+}
+
 service HandshakeRpc {
   rpc handshake (StreamHandshakeRequest) returns (StreamHandshakeResponse);
   rpc interleaveNotice (InterleaveNotice) returns (google.protobuf.Empty);
@@ -71,9 +75,9 @@ message GroupKeyRequest {
 }
 
 message GroupKeyResponse {
-    string requestId = 1;
-    string recipient = 2;
-    repeated EncryptedGroupKey encryptedGroupKeys = 3;
+  string requestId = 1;
+  string recipient = 2;
+  repeated EncryptedGroupKey encryptedGroupKeys = 3;
 }
 
 message Layer2Message {
@@ -123,4 +127,26 @@ message NeighborUpdate {
 message StreamEntryPoint {
   dht.PeerDescriptor peerDescriptor = 1;
   bool firstToJoin = 2;
+}
+
+message ProxyConnectionRequest {
+  string senderId = 1;
+  string streamId = 2;
+  uint32 streamPartition = 3; 
+  ProxyDirection direction = 4;
+  string userId = 5;
+  dht.PeerDescriptor senderDescriptor = 6;
+}
+
+message ProxyConnectionResponse {
+  string senderId = 1;
+  string streamId = 2;
+  uint32 streamPartition = 3;
+  ProxyDirection direction = 4;  
+  bool accepted = 5;
+}
+
+enum ProxyDirection {
+  PUBLISH = 0;
+  SUBSCRIBE = 1;
 }

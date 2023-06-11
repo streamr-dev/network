@@ -6,7 +6,7 @@ export { getRandomRegion, getRegionDelayMatrix } from './connection/Simulator/pi
 export { PeerDescriptor, Message, NodeType, DataEntry } from './proto/packages/dht/protos/DhtRpc'
 export { ITransport } from './transport/ITransport'
 export { ConnectionManager, ConnectionLocker } from './connection/ConnectionManager'
-export { PeerID } from './helpers/PeerID'
+export { PeerID, PeerIDKey } from './helpers/PeerID'
 export { DhtPeer } from './dht/DhtPeer'
 export { UUID } from './helpers/UUID'
 export { DhtRpcOptions } from './rpc-protocol/DhtRpcOptions'

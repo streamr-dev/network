@@ -13,7 +13,7 @@ export const validateStreamMessage = async (msg: StreamMessage, streamRegistry: 
     await doValidate(msg, streamRegistry).catch((err: any) => {
         // all StreamMessageError already have this streamMessage, maybe this is 
         // here if e.g. contract call fails? TODO is this really needed as
-        // the onError callback in subscribePipeline knows which message
+        // the onError callback in messagePipeline knows which message
         // it is handling?
         if (!err.streamMessage) {
             err.streamMessage = msg
