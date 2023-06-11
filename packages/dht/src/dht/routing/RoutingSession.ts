@@ -88,10 +88,9 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         const contacts = this.findMoreContacts()
         if (contacts.length < 1 && this.ongoingRequests.size < 1) {
             logger.debug('routing failed, emitting routingFailed sessionId: ' + this.sessionId)
-            logger.debug(''+ protoToString(this.messageToRoute, RouteMessageWrapper))
+            logger.debug('' + protoToString(this.messageToRoute, RouteMessageWrapper))
             logger.debug('' + JSON.stringify(this.connections))
-            //debugger
-            //console.error('routing failed at: ' + new Error().stack)
+            
             this.stopped = true
             this.emitFailure()
         } else {
@@ -148,7 +147,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         }
     }
 
-    private findMoreContacts = () : RemoteRouter[] => {
+    private findMoreContacts = (): RemoteRouter[] => {
         logger.trace('findMoreContacts() sessionId: ' + this.sessionId)
         // the contents of the connections might have changed between the rounds
         // addContacts() will only add new contacts that were not there yet

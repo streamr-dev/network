@@ -78,7 +78,7 @@ export class ConnectivityChecker {
             return await retPromise
         } catch (e) {
             logger.info('error getting connectivityresponse')
-            
+
             throw e
         }
     }
@@ -145,7 +145,7 @@ export class ConnectivityChecker {
     // eslint-disable-next-line class-methods-use-this
     private async connectAsync({ host, port, url, timeoutMs, mode }:
         { host?: string, port?: number, url?: string, timeoutMs: number, mode: ConnectionMode } =
-        { timeoutMs: 1000, mode: ConnectionMode.REQUEST }
+    { timeoutMs: 1000, mode: ConnectionMode.REQUEST }
     ): Promise<IConnection> {
         const socket = new ClientWebSocket()
         let address = ''
@@ -161,8 +161,8 @@ export class ConnectivityChecker {
         try {
             result = await runAndRaceEvents3<ConnectionEvents>([
                 () => { socket.connect(address) }],
-                socket, ['connected', 'error'],
-                timeoutMs)
+            socket, ['connected', 'error'],
+            timeoutMs)
         } catch (e) {
             throw (new Err.ConnectionFailed('WebSocket connection timed out'))
         }
