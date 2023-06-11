@@ -1,8 +1,9 @@
-import { ProxyDirection, StreamMessage, StreamPartID } from '@streamr/protocol'
-import { PeerDescriptor } from '@streamr/dht'
+import { StreamMessage, StreamPartID, StreamMessageType } from '@streamr/protocol'
+import { PeerDescriptor, PeerIDKey } from '@streamr/dht'
 import { StreamMessageTranslator } from './logic/protocol-integration/stream-message/StreamMessageTranslator'
 import { NetworkOptions, NetworkStack } from './NetworkStack'
 import { MetricsContext } from '@streamr/utils'
+import { ProxyDirection } from './proto/packages/trackerless-network/protos/NetworkRpc'
 
 /*
 Convenience wrapper for building client-facing functionality. Used by client.
@@ -11,8 +12,10 @@ Convenience wrapper for building client-facing functionality. Used by client.
 export class NetworkNode {
 
     readonly stack: NetworkStack
+    private readonly options: NetworkOptions
     private stopped = false
     constructor(opts: NetworkOptions) {
+        this.options = opts
         this.stack = new NetworkStack(opts)
     }
 
@@ -26,31 +29,33 @@ export class NetworkNode {
 
     publish(streamMessage: StreamMessage, knownEntrypointDescriptors: PeerDescriptor[]): void | never {
         const streamPartId = streamMessage.getStreamPartID()
-        // if (this.isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE) && streamMessage.messageType === StreamMessageType.MESSAGE) {
-        //     throw new Error(`Cannot publish content data to ${streamPartId} as proxy subscribe connections have been set`)
-        // }
+        if (this.stack.getStreamrNode().isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE) 
+            && streamMessage.messageType === StreamMessageType.MESSAGE) {
+            throw new Error(`Cannot publish content data to ${streamPartId} as proxy subscribe connections have been set`)
+        }
 
         const msg = StreamMessageTranslator.toProtobuf(streamMessage)
         this.stack.getStreamrNode().publishToStream(streamPartId, knownEntrypointDescriptors, msg)
     }
 
     subscribe(streamPartId: StreamPartID, knownEntrypointDescriptors: PeerDescriptor[]): void {
-        // if (this.isProxiedStreamPart(streamPartId, ProxyDirection.PUBLISH)) {
-        //     throw new Error(`Cannot subscribe to ${streamPartId} as proxy publish connections have been set`)
-        // }
+        if (this.stack.getStreamrNode().isProxiedStreamPart(streamPartId, ProxyDirection.PUBLISH)) {
+            throw new Error(`Cannot subscribe to ${streamPartId} as proxy publish connections have been set`)
+        }
         this.stack.getStreamrNode().subscribeToStream(streamPartId, knownEntrypointDescriptors)
     }
 
-    // eslint-disable-next-line class-methods-use-this
-    async openProxyConnection(_streamPartId: StreamPartID, _contactNodeId: string, _direction: ProxyDirection, _userId: string): Promise<void> {
-        // await this.addProxyConnection(streamPartId, contactNodeId, direction, userId)
-        throw new Error('Not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    async closeProxyConnection(_streamPartId: StreamPartID, _contactNodeId: string, _direction: ProxyDirection): Promise<void> {
-        // await this.removeProxyConnection(streamPartId, contactNodeId, direction)
-        throw new Error('Not implemented')
+    async setProxies(
+        streamPartId: StreamPartID,
+        contactPeerDescriptors: PeerDescriptor[],
+        direction: ProxyDirection,
+        getUserId: () => Promise<string>,
+        connectionCount?: number
+    ): Promise<void> {
+        if (this.options.networkNode.acceptProxyConnections) {
+            throw new Error('cannot set proxies when acceptProxyConnections=true')
+        }
+        await this.stack.getStreamrNode().setProxies(streamPartId, contactPeerDescriptors, direction, getUserId, connectionCount)
     }
 
     addMessageListener<T>(cb: (msg: StreamMessage<T>) => void): void {
@@ -76,9 +81,9 @@ export class NetworkNode {
         timeout?: number,
         expectedNeighbors?: number
     ): Promise<number> {
-        // if (this.isProxiedStreamPart(streamPartId, ProxyDirection.PUBLISH)) {
-        //     throw new Error(`Cannot subscribe to ${streamPartId} as proxy publish connections have been set`)
-        // }
+        if (this.stack.getStreamrNode()!.isProxiedStreamPart(streamPartId, ProxyDirection.PUBLISH)) {
+            throw new Error(`Cannot subscribe to ${streamPartId} as proxy publish connections have been set`)
+        }
         return this.stack.getStreamrNode().waitForJoinAndSubscribe(streamPartId, knownEntrypointDescriptors, timeout, expectedNeighbors)
     }
 
@@ -86,9 +91,9 @@ export class NetworkNode {
         const streamPartId = streamMessage.getStreamPartID()
         const msg = StreamMessageTranslator.toProtobuf(streamMessage)
 
-        // if (this.isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE)) {
-        //     throw new Error(`Cannot publish to ${streamPartId} as proxy subscribe connections have been set`)
-        // }
+        if (this.stack.getStreamrNode()!.isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE)) {
+            throw new Error(`Cannot publish to ${streamPartId} as proxy subscribe connections have been set`)
+        }
 
         return this.stack.getStreamrNode().waitForJoinAndPublish(streamPartId, knownEntrypointDescriptors, msg, timeout)
     }
@@ -110,16 +115,8 @@ export class NetworkNode {
         return this.stack.getStreamrNode().hasStream(streamPartId)
     }
 
-    // eslint-disable-next-line class-methods-use-this
-    hasProxyConnection(_streamPartId: StreamPartID, _contactNodeId: string, _direction: ProxyDirection): boolean {
-        // if (direction === ProxyDirection.PUBLISH) {
-        //     return this.streamPartManager.hasOutOnlyConnection(streamPartId, contactNodeId)
-        // } else if (direction === ProxyDirection.SUBSCRIBE) {
-        //     return this.streamPartManager.hasInOnlyConnection(streamPartId, contactNodeId)
-        // } else {
-        //     throw new Error(`Assertion failed expected ProxyDirection but received ${direction}`)
-        // }
-        throw new Error('Not implemented')
+    hasProxyConnection(streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection): boolean {
+        return this.stack.getStreamrNode()!.hasProxyConnection(streamPartId, contactNodeId as PeerIDKey, direction)
     }
 
     // eslint-disable-next-line class-methods-use-this

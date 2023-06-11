@@ -16,7 +16,7 @@ import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchang
 import { StreamrClientEventEmitter } from '../../src/events'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
-import { createSubscribePipeline } from "../../src/subscribe/subscribePipeline"
+import { createMessagePipeline } from "../../src/subscribe/messagePipeline"
 import { mockLoggerFactory } from '../test-utils/utils'
 import { GroupKey } from './../../src/encryption/GroupKey'
 import { MessageStream } from './../../src/subscribe/MessageStream'
@@ -25,7 +25,7 @@ const CONTENT = {
     foo: 'bar'
 }
 
-describe('subscribePipeline', () => {
+describe('messagePipeline', () => {
 
     let pipeline: MessageStream
     let streamRegistryCached: Partial<StreamRegistryCached>
@@ -87,8 +87,8 @@ describe('subscribePipeline', () => {
             getStream: async () => stream,
             isStreamPublisher: async () => true,
             clearStream: jest.fn()
-        } 
-        pipeline = createSubscribePipeline({
+        }
+        pipeline = createMessagePipeline({
             streamPartId,
             getStorageNodes: undefined as any,
             loggerFactory: mockLoggerFactory(),
@@ -165,5 +165,18 @@ describe('subscribePipeline', () => {
         expect(output).toEqual([])
         expect(streamRegistryCached.clearStream).toBeCalledTimes(1)
         expect(streamRegistryCached.clearStream).toBeCalledWith(StreamPartIDUtils.getStreamID(streamPartId))
+    })
+
+    it('error: exception', async () => {
+        const err = new Error('mock-error')
+        const msg = await createMessage()
+        await pipeline.push(msg)
+        pipeline.endWrite(err)
+        const onError = jest.fn()
+        pipeline.onError.listen(onError)
+        const output = await collect(pipeline)
+        expect(output).toHaveLength(1)
+        expect(onError).toBeCalledTimes(1)
+        expect(onError).toBeCalledWith(err)
     })
 })

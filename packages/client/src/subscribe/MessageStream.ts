@@ -6,7 +6,6 @@
 import { Pipeline, PipelineTransform } from '../utils/Pipeline'
 import { PushPipeline } from '../utils/PushPipeline'
 import { StreamMessage } from '@streamr/protocol'
-import * as G from '../utils/GeneratorUtils'
 import { convertStreamMessageToMessage, Message, MessageMetadata } from './../Message'
 import omit from 'lodash/omit'
 
@@ -86,11 +85,6 @@ export class MessageStream implements AsyncIterable<Message> {
     /** @internal */
     pipe<NewOutType>(fn: PipelineTransform<StreamMessage, NewOutType>): Pipeline<StreamMessage, NewOutType> {
         return this.pipeline.pipe(fn)
-    }
-
-    /** @internal */
-    forEach(fn: G.GeneratorForEach<StreamMessage>): Pipeline<StreamMessage, StreamMessage> {
-        return this.pipeline.forEach(fn)
     }
 
     /** @internal */

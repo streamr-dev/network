@@ -4,7 +4,8 @@ import {
     ConnectionLocker,
     DhtNode,
     ITransport,
-    keyFromPeerDescriptor
+    keyFromPeerDescriptor,
+    PeerIDKey
 } from '@streamr/dht'
 import { StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { EventEmitter } from 'eventemitter3'
@@ -22,10 +23,19 @@ import { sampleSize } from 'lodash'
 import { StreamEntryPointDiscovery } from './StreamEntryPointDiscovery'
 import { ILayer0 } from './ILayer0'
 import { createRandomGraphNode } from './createRandomGraphNode'
+import { ProxyDirection } from '../proto/packages/trackerless-network/protos/NetworkRpc'
+import { IStreamNode } from './IStreamNode'
+import { ProxyStreamConnectionClient } from './proxy/ProxyStreamConnectionClient'
+
+enum NodeType {
+    RANDOM_GRAPH = 'random-graph',
+    PROXY = 'proxy'
+}
 
 export interface StreamObject {
-    layer1: DhtNode
-    layer2: RandomGraphNode
+    layer1?: DhtNode
+    layer2: IStreamNode
+    type: NodeType
 }
 
 export interface Events {
@@ -49,6 +59,7 @@ export interface StreamrNodeOpts {
     layer2MinPropagationTargets?: number
     nodeName?: string
     firstConnectionTimeout?: number
+    acceptProxyConnections?: boolean
 }
 
 export class StreamrNode extends EventEmitter<Events> {
@@ -103,7 +114,7 @@ export class StreamrNode extends EventEmitter<Events> {
         this.destroyed = true
         this.streams.forEach((stream) => {
             stream.layer2.stop()
-            stream.layer1.stop()
+            stream.layer1?.stop()
         })
         this.streams.clear()
         this.removeAllListeners()
@@ -145,7 +156,7 @@ export class StreamrNode extends EventEmitter<Events> {
         const stream = this.streams.get(streamPartID)
         if (stream) {
             stream.layer2.stop()
-            stream.layer1.stop()
+            stream.layer1?.stop()
             this.streams.delete(streamPartID)
         }
         this.streamEntryPointDiscovery!.stopRecaching(streamPartID)
@@ -179,6 +190,7 @@ export class StreamrNode extends EventEmitter<Events> {
         const layer1 = this.createLayer1Node(streamPartID, entryPoints)
         const layer2 = this.createRandomGraphNode(streamPartID, layer1)
         this.streams.set(streamPartID, {
+            type: NodeType.RANDOM_GRAPH,
             layer1,
             layer2
         })
@@ -212,7 +224,8 @@ export class StreamrNode extends EventEmitter<Events> {
             minPropagationTargets: this.config.layer2MinPropagationTargets,
             numOfTargetNeighbors: this.config.layer2NumOfTargetNeighbors,
             maxNumberOfContacts: this.config.layer2MaxNumberOfContact,
-            nodeName: this.config.nodeName
+            nodeName: this.config.nodeName,
+            acceptProxyConnections: this.config.acceptProxyConnections
         })
     }
 
@@ -222,8 +235,11 @@ export class StreamrNode extends EventEmitter<Events> {
         msg: StreamMessage,
         timeout?: number
     ): Promise<number> {
+        if (this.getStream(streamPartId)?.type === NodeType.PROXY) {
+            return 0
+        }
         await this.joinStream(streamPartId, knownEntryPointDescriptors)
-        if (this.getStream(streamPartId)!.layer1.getBucketSize() > 0) {
+        if (this.getStream(streamPartId)!.layer1!.getBucketSize() > 0) {
             await waitForCondition(() => this.getStream(streamPartId)!.layer2.getTargetNeighborStringIds().length > 0, timeout)
         }
         this.publishToStream(streamPartId, knownEntryPointDescriptors, msg)
@@ -236,12 +252,68 @@ export class StreamrNode extends EventEmitter<Events> {
         timeout?: number,
         expectedNeighbors = 1
     ): Promise<number> {
+        if (this.getStream(streamPartId)?.type === NodeType.PROXY) {
+            return 0
+        }
         await this.joinStream(streamPartId, knownEntryPointDescriptors)
-        if (this.getStream(streamPartId)!.layer1.getBucketSize() > 0) {
+        if (this.getStream(streamPartId)!.layer1!.getBucketSize() > 0) {
             await waitForCondition(() => this.getStream(streamPartId)!.layer2.getTargetNeighborStringIds().length >= expectedNeighbors, timeout)
         }
         this.subscribeToStream(streamPartId, knownEntryPointDescriptors)
         return this.getStream(streamPartId)?.layer2.getTargetNeighborStringIds().length || 0
+    }
+
+    async setProxies(
+        streamPartId: string,
+        contactPeerDescriptors: PeerDescriptor[],
+        direction: ProxyDirection,
+        getUserId: () => Promise<string>,
+        connectionCount?: number
+    ): Promise<void> {
+        const userId = await getUserId()
+        if (this.streams.get(streamPartId)?.type === NodeType.PROXY && contactPeerDescriptors.length > 0) {
+            const proxyClient = this.streams.get(streamPartId)!.layer2 as ProxyStreamConnectionClient
+            await proxyClient.setProxies(streamPartId, contactPeerDescriptors, direction, userId, connectionCount)
+        } else if (this.streams.get(streamPartId)?.type === NodeType.PROXY && contactPeerDescriptors.length === 0) {
+            this.streams.get(streamPartId)!.layer2.stop()
+            this.streams.delete(streamPartId)
+        } else {
+            const proxyClient = this.createProxyStream(streamPartId, userId)
+            await proxyClient.start()
+            await proxyClient.setProxies(streamPartId, contactPeerDescriptors, direction, userId, connectionCount)
+        }
+    }
+
+    private createProxyStream(streamPartId: string, userId: string): ProxyStreamConnectionClient {
+        const layer2 = this.createProxyStreamConnectionClient(streamPartId, userId)
+        this.streams.set(streamPartId, {
+            type: NodeType.PROXY,
+            layer2
+        })
+        layer2.on('message', (message: StreamMessage) => {
+            this.emit('newMessage', message)
+        })
+        return layer2
+    }
+
+    private createProxyStreamConnectionClient(streamPartId: string, userId: string): ProxyStreamConnectionClient {
+        return new ProxyStreamConnectionClient({
+            P2PTransport: this.P2PTransport!,
+            ownPeerDescriptor: this.layer0!.getPeerDescriptor(),
+            streamPartId: streamPartId,
+            connectionLocker: this.connectionLocker!,
+            nodeName: this.config.nodeName,
+            userId: userId
+        })
+    }
+
+    isProxiedStreamPart(streamId: string, direction: ProxyDirection): boolean {
+        return this.streams.get(streamId)?.type === NodeType.PROXY 
+            && (this.streams.get(streamId)!.layer2 as ProxyStreamConnectionClient).getDirection() === direction
+    }
+
+    hasProxyConnection(streamId: string, peerKey: PeerIDKey, direction: ProxyDirection): boolean {
+        return this.streams.has(streamId) && this.streams.get(streamId)!.layer2.hasProxyConnection(peerKey, direction)
     }
 
     getStream(streamPartId: string): StreamObject | undefined {

@@ -104,7 +104,7 @@ export class NetworkNodeFacade {
 
     private async getNetworkOptions(): Promise<NetworkNodeOptions> {
         let id = this.config.network.id
-        if (id === null || id === '') {
+        if (id == null || id === '') {
             id = await this.generateId()
         } else {
             const ethereumAddress = await this.authentication.getAddress()

@@ -20,18 +20,18 @@ import { MsgChainUtil } from './MsgChainUtil'
 import { OrderMessages } from './OrderMessages'
 import { Resends } from './Resends'
 
-export interface SubscriptionPipelineOptions {
+export interface MessagePipelineOptions {
     streamPartId: StreamPartID
-    getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>
-    loggerFactory: LoggerFactory
+    getStorageNodes?: (streamId: StreamID) => Promise<EthereumAddress[]>
     resends: Resends
     groupKeyManager: GroupKeyManager
     streamRegistryCached: StreamRegistryCached
     destroySignal: DestroySignal
+    loggerFactory: LoggerFactory
     config: Pick<StrictStreamrClientConfig, 'orderMessages' | 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill'>
 }
 
-export const createSubscribePipeline = (opts: SubscriptionPipelineOptions): MessageStream => {
+export const createMessagePipeline = (opts: MessagePipelineOptions): MessageStream => {
 
     const logger = opts.loggerFactory.createLogger(module)
 
@@ -52,28 +52,31 @@ export const createSubscribePipeline = (opts: SubscriptionPipelineOptions): Mess
     const messageStream = new MessageStream()
     const msgChainUtil = new MsgChainUtil(async (msg) => {
         await validateStreamMessage(msg, opts.streamRegistryCached)
+        let decrypted
         if (StreamMessage.isAESEncrypted(msg)) {
             try {
-                return await decrypt(msg, opts.groupKeyManager, opts.destroySignal)
+                decrypted = await decrypt(msg, opts.groupKeyManager, opts.destroySignal)
             } catch (err) {
                 // TODO log this in onError? if we want to log all errors?
                 logger.debug('Failed to decrypt', { messageId: msg.getMessageID(), err })
                 // clear cached permissions if cannot decrypt, likely permissions need updating
                 opts.streamRegistryCached.clearStream(msg.getStreamId())
                 throw err
-            }    
+            }
         } else {
-            return msg
+            decrypted = msg
         }
+        decrypted.getParsedContent()  // throws if content is not parsable (e.g. not valid JSON)
+        return decrypted
     }, messageStream.onError)
 
-    // collect messages that fail validation/parsixng, do not push out of pipeline
+    // collect messages that fail validation/parsing, do not push out of pipeline
     // NOTE: we let failed messages be processed and only removed at end so they don't
     // end up acting as gaps that we repeatedly try to fill.
     const ignoreMessages = new WeakSet()
     messageStream.onError.listen(onError)
     if (opts.config.orderMessages) {
-        // order messages (fill gaps)
+        // order messages and fill gaps
         const orderMessages = new OrderMessages(
             opts.config,
             opts.resends,
@@ -87,20 +90,20 @@ export const createSubscribePipeline = (opts: SubscriptionPipelineOptions): Mess
         })
     }
     messageStream
-        // validate & decrypt
         .pipe(async function* (src: AsyncGenerator<StreamMessage>) {
             setImmediate(async () => {
-                for await (const msg of src) {
-                    msgChainUtil.addMessage(msg)
+                let err: Error | undefined = undefined
+                try {
+                    for await (const msg of src) {
+                        msgChainUtil.addMessage(msg)
+                    }
+                } catch (e) {
+                    err = e
                 }
                 await msgChainUtil.flush()
-                msgChainUtil.stop()
+                msgChainUtil.stop(err)
             })
             yield* msgChainUtil
-        })
-        // parse content
-        .forEach((streamMessage: StreamMessage) => {
-            streamMessage.getParsedContent()
         })
         // ignore any failed messages
         .filter((streamMessage: StreamMessage) => {

@@ -271,6 +271,60 @@ export interface StreamEntryPoint {
     firstToJoin: boolean;
 }
 /**
+ * @generated from protobuf message ProxyConnectionRequest
+ */
+export interface ProxyConnectionRequest {
+    /**
+     * @generated from protobuf field: string senderId = 1;
+     */
+    senderId: string;
+    /**
+     * @generated from protobuf field: string streamId = 2;
+     */
+    streamId: string;
+    /**
+     * @generated from protobuf field: uint32 streamPartition = 3;
+     */
+    streamPartition: number;
+    /**
+     * @generated from protobuf field: ProxyDirection direction = 4;
+     */
+    direction: ProxyDirection;
+    /**
+     * @generated from protobuf field: string userId = 5;
+     */
+    userId: string;
+    /**
+     * @generated from protobuf field: dht.PeerDescriptor senderDescriptor = 6;
+     */
+    senderDescriptor?: PeerDescriptor;
+}
+/**
+ * @generated from protobuf message ProxyConnectionResponse
+ */
+export interface ProxyConnectionResponse {
+    /**
+     * @generated from protobuf field: string senderId = 1;
+     */
+    senderId: string;
+    /**
+     * @generated from protobuf field: string streamId = 2;
+     */
+    streamId: string;
+    /**
+     * @generated from protobuf field: uint32 streamPartition = 3;
+     */
+    streamPartition: number;
+    /**
+     * @generated from protobuf field: ProxyDirection direction = 4;
+     */
+    direction: ProxyDirection;
+    /**
+     * @generated from protobuf field: bool accepted = 5;
+     */
+    accepted: boolean;
+}
+/**
  * @generated from protobuf enum StreamMessageType
  */
 export enum StreamMessageType {
@@ -312,6 +366,19 @@ export enum Layer2Type {
      * @generated from protobuf enum value: Data = 0;
      */
     Data = 0
+}
+/**
+ * @generated from protobuf enum ProxyDirection
+ */
+export enum ProxyDirection {
+    /**
+     * @generated from protobuf enum value: PUBLISH = 0;
+     */
+    PUBLISH = 0,
+    /**
+     * @generated from protobuf enum value: SUBSCRIBE = 1;
+     */
+    SUBSCRIBE = 1
 }
 // @generated message type with reflection information, may provide speed optimized methods
 class MessageRef$Type extends MessageType<MessageRef> {
@@ -506,12 +573,51 @@ class StreamEntryPoint$Type extends MessageType<StreamEntryPoint> {
  * @generated MessageType for protobuf message StreamEntryPoint
  */
 export const StreamEntryPoint = new StreamEntryPoint$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ProxyConnectionRequest$Type extends MessageType<ProxyConnectionRequest> {
+    constructor() {
+        super("ProxyConnectionRequest", [
+            { no: 1, name: "senderId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "streamId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "streamPartition", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
+            { no: 4, name: "direction", kind: "enum", T: () => ["ProxyDirection", ProxyDirection] },
+            { no: 5, name: "userId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 6, name: "senderDescriptor", kind: "message", T: () => PeerDescriptor }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message ProxyConnectionRequest
+ */
+export const ProxyConnectionRequest = new ProxyConnectionRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ProxyConnectionResponse$Type extends MessageType<ProxyConnectionResponse> {
+    constructor() {
+        super("ProxyConnectionResponse", [
+            { no: 1, name: "senderId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "streamId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "streamPartition", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
+            { no: 4, name: "direction", kind: "enum", T: () => ["ProxyDirection", ProxyDirection] },
+            { no: 5, name: "accepted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message ProxyConnectionResponse
+ */
+export const ProxyConnectionResponse = new ProxyConnectionResponse$Type();
 /**
  * @generated ServiceType for protobuf service NetworkRpc
  */
 export const NetworkRpc = new ServiceType("NetworkRpc", [
     { name: "sendData", options: {}, I: StreamMessage, O: Empty },
     { name: "leaveStreamNotice", options: {}, I: LeaveStreamNotice, O: Empty }
+]);
+/**
+ * @generated ServiceType for protobuf service ProxyConnectionRpc
+ */
+export const ProxyConnectionRpc = new ServiceType("ProxyConnectionRpc", [
+    { name: "requestConnection", options: {}, I: ProxyConnectionRequest, O: ProxyConnectionResponse }
 ]);
 /**
  * @generated ServiceType for protobuf service HandshakeRpc

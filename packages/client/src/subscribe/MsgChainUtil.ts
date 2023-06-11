@@ -65,8 +65,8 @@ export class MsgChainUtil implements AsyncIterable<StreamMessage> {
         await Promise.all(Array.from(this.processors.values()).map((p) => p.busy.waitUntilOpen()))
     }
 
-    stop(): void {
-        this.outputBuffer.endWrite()
+    stop(err?: Error): void {
+        this.outputBuffer.endWrite(err)
     }
 
     [Symbol.asyncIterator](): AsyncIterator<StreamMessage> {
