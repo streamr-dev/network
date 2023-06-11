@@ -2,7 +2,7 @@
  * setTimeout with AbortSignal support. Aborting will simply clear
  * the timeout silently.
  */
-export const setAbortableTimeout = (cb: () => void, ms: number, abortSignal: AbortSignal) => {
+export const setAbortableTimeout = (cb: () => void, ms: number, abortSignal: AbortSignal): void => {
     if (abortSignal.aborted) {
         return
     }
@@ -20,7 +20,7 @@ export const setAbortableTimeout = (cb: () => void, ms: number, abortSignal: Abo
  * setInterval with AbortSignal support. Aborting will simply clear
  * the interval silently.
  */
-export const setAbortableInterval = (cb: () => void, ms: number, abortSignal: AbortSignal) => {
+export const setAbortableInterval = (cb: () => void, ms: number, abortSignal: AbortSignal): void => {
     if (abortSignal.aborted) {
         return
     }
