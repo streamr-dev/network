@@ -145,6 +145,9 @@ export interface StreamrClientConfig {
          * from overflowing.
          */
         maxKeyRequestsPerSecond?: number
+
+        /** @internal */
+        _rsaKeyLength?: number
     }
 
     /**
