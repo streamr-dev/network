@@ -4,6 +4,7 @@ import { operatorABI, sponsorshipABI } from "@streamr/network-contracts"
 import type { Operator, Sponsorship } from "@streamr/network-contracts"
 import { EventEmitter } from "eventemitter3"
 import { FetchResponse, Logger, TheGraphClient } from "@streamr/utils"
+import { Signer } from "ethers"
 
 /**
  * Events emitted by {@link OperatorClient}.
@@ -30,7 +31,8 @@ export interface OperatorClientConfig {
     // chain?:
     operatorContractAddress: string
     theGraphUrl: string
-    fetch: (url: string, init?: Record<string, unknown>) => Promise<FetchResponse>;
+    fetch: (url: string, init?: Record<string, unknown>) => Promise<FetchResponse>
+    signer: Signer
 }
 
 export class OperatorClient extends EventEmitter<OperatorClientEvents> {
