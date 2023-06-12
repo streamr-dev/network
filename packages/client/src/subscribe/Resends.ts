@@ -65,68 +65,6 @@ function isResendRange<T extends ResendRangeOptions>(options: any): options is T
     return options && typeof options === 'object' && 'from' in options && 'to' in options && options.to && options.from != null
 }
 
-export enum ErrorCode {
-    NOT_FOUND = 'NOT_FOUND',
-    VALIDATION_ERROR = 'VALIDATION_ERROR',
-    UNKNOWN = 'UNKNOWN'
-}
-
-export class HttpError extends Error {
-    public response?: Response
-    public body?: any
-    public code: ErrorCode
-    public errorCode: ErrorCode
-
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-    constructor(message: string, response?: Response, body?: any, errorCode?: ErrorCode) {
-        const typePrefix = errorCode ? errorCode + ': ' : ''
-        // add leading space if there is a body set
-        super(typePrefix + message)
-        this.response = response
-        this.body = body
-        this.code = errorCode || ErrorCode.UNKNOWN
-        this.errorCode = this.code
-    }
-}
-
-export class ValidationError extends HttpError {
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-    constructor(message: string, response?: Response, body?: any) {
-        super(message, response, body, ErrorCode.VALIDATION_ERROR)
-    }
-}
-
-export class NotFoundError extends HttpError {
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-    constructor(message: string, response?: Response, body?: any) {
-        super(message, response, body, ErrorCode.NOT_FOUND)
-    }
-}
-
-const ERROR_TYPES = new Map<ErrorCode, typeof HttpError>()
-ERROR_TYPES.set(ErrorCode.VALIDATION_ERROR, ValidationError)
-ERROR_TYPES.set(ErrorCode.NOT_FOUND, NotFoundError)
-ERROR_TYPES.set(ErrorCode.UNKNOWN, HttpError)
-
-const parseErrorCode = (body: string) => {
-    let json
-    try {
-        json = JSON.parse(body)
-    } catch (err) {
-        return ErrorCode.UNKNOWN
-    }
-
-    const { code } = json
-    return code in ErrorCode ? code : ErrorCode.UNKNOWN
-}
-
-const parseHttpError = async (response: Response): Promise<Error> => {
-    const body = await response.text()
-    const errorCode = parseErrorCode(body)
-    const ErrorClass = ERROR_TYPES.get(errorCode)!
-    throw new ErrorClass(`Request to ${response.url} returned with error code ${response.status}.`, response, body, errorCode)
-}
-
 const createUrl = (baseUrl: string, endpointSuffix: string, streamPartId: StreamPartID, query: QueryDict = {}): string => {
     const queryMap = {
         ...query,
@@ -135,6 +73,21 @@ const createUrl = (baseUrl: string, endpointSuffix: string, streamPartId: Stream
     const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
     const queryString = createQueryString(queryMap)
     return `${baseUrl}/streams/${encodeURIComponent(streamId)}/data/partitions/${streamPartition}/${endpointSuffix}?${queryString}`
+}
+
+const parseHttpError = async (response: Response): Promise<Error> => {
+    const body = await response.text()
+    let descriptionSnippet
+    try {
+        const json = JSON.parse(body)
+        descriptionSnippet = `: ${json.error}`
+    } catch (err) {
+        descriptionSnippet = ''
+    }
+    throw new StreamrClientError(
+        `Storage node fetch failed${descriptionSnippet}, httpStatus=${response.status}, url=${response.url}`,
+        'STORAGE_NODE_ERROR'
+    )
 }
 
 @scoped(Lifecycle.ContainerScoped)

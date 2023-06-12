@@ -8,6 +8,7 @@ export type StreamrClientErrorCode =
     'PIPELINE_ERROR' |
     'UNSUPPORTED_OPERATION' |
     'INVALID_STREAM_METADATA' |
+    'STORAGE_NODE_ERROR' |
     'UNKNOWN_ERROR'
 
 export class StreamrClientError extends Error {
