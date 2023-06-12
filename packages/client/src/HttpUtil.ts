@@ -71,10 +71,7 @@ const parseErrorCode = (body: string) => {
 @scoped(Lifecycle.ContainerScoped)
 export class HttpUtil {
 
-    private readonly logger: Logger
-
-    constructor(loggerFactory: LoggerFactory) {
-        this.logger = loggerFactory.createLogger(module)
+    constructor() {
     }
 
     async* fetchHttpStream(
@@ -82,7 +79,7 @@ export class HttpUtil {
         abortController = new AbortController()
     ): AsyncIterable<StreamMessage> {
         // cast is needed until this is fixed: https://github.com/node-fetch/node-fetch/issues/1652
-        const response = await fetchResponse(url, this.logger, abortController.signal as AbortSignal)
+        const response = await fetchResponse(url, abortController.signal as AbortSignal)
         if (!response.body) {
             throw new Error('No Response Body')
         }
@@ -112,22 +109,10 @@ export class HttpUtil {
 
 async function fetchResponse(
     url: string,
-    logger: Logger,
     abortSignal: AbortSignal
 ): Promise<Response> {
-    const timeStart = Date.now()
-
-    logger.debug('Send HTTP request', { url })
-
     const response: Response = await fetch(url, {
         signal: abortSignal
-    })
-    const timeEnd = Date.now()
-    logger.debug('Received HTTP response', {
-        url,
-        status: response.status,
-        statusText: response.statusText,
-        timeTakenInMs: timeEnd - timeStart
     })
 
     if (response.ok) {

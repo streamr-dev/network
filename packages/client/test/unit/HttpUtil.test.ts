@@ -7,7 +7,7 @@ import { once } from 'events'
 import express from 'express'
 import range from 'lodash/range'
 import { HttpUtil, createQueryString } from '../../src/HttpUtil'
-import { createMockMessage, mockLoggerFactory } from '../test-utils/utils'
+import { createMockMessage } from '../test-utils/utils'
 
 const MOCK_SERVER_PORT = 12345
 
@@ -32,7 +32,7 @@ describe('HttpUtil', () => {
         })
         const server = app.listen(MOCK_SERVER_PORT)
         await once(server, 'listening')
-        const httpUtil = new HttpUtil(mockLoggerFactory())
+        const httpUtil = new HttpUtil()
         const msgs = await collect(httpUtil.fetchHttpStream(`http://localhost:${MOCK_SERVER_PORT}/endpoint`))
         expect(msgs.map((m) => (m.getParsedContent() as any).mockId)).toEqual([0, 1, 2, 3, 4])
         server.close()
