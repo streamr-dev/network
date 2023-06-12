@@ -56,7 +56,8 @@
     "express": "^4.17.1",
     "patch-package": "^7.0.0",
     "setimmediate": "^1.0.5",
-    "ts-node": "^10.9.1"
+    "ts-node": "^10.9.1",
+    "timers-browserify": "^2.0.12"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.5",

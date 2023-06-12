@@ -191,7 +191,7 @@ describe('RandomGraphNode-DhtNode', () => {
 
         const promise = Promise.all(graphNodes.map((node) => {
 
-            const successListener = new SuccessListener(node, 3, 8)
+            const successListener = new SuccessListener(node, 4, 8)
             return waitForEvent3<SuccessEvents>(successListener, 'success', 15000)
         }))
 
