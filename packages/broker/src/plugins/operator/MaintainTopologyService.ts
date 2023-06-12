@@ -46,7 +46,7 @@ export class MaintainTopologyService {
     }
 
     private onAddStakedStreams = async (streamIDs: string[]) => {
-        streamIDs.map(this.parseStreamIdWrapper(this.addStream))
+        streamIDs.map(this.parseStreamIdWrapper(this.addStream.bind(this)))
     }
 
     private onRemoveStakedStream = this.parseStreamIdWrapper(async (streamId: StreamID) => {

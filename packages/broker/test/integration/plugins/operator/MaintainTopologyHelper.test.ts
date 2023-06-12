@@ -258,6 +258,8 @@ describe("OperatorClient", () => {
             })
             await operatorClient.start()
 
+            await new Promise((resolve) => setTimeout(resolve, 3000))
+
             logger.debug("Unstaking from sponsorship1...")
             await (await operatorContract.unstake(sponsorship.address)).wait()
             logger.debug(`unstaked from sponsorship1 ${sponsorship.address}`)
