@@ -1,10 +1,6 @@
 import { StreamID } from '@streamr/protocol'
 import EventEmitter3 from 'eventemitter3'
-
-interface OperatorClientEvents {
-    addStakedStream: (streamId: string, blockNumber: number) => void
-    removeStakedStream: (streamId: string, blockNumber: number) => void
-}
+import { OperatorClientEvents } from './MaintainTopologyHelper'
 
 export class FakeOperatorClient extends EventEmitter3<OperatorClientEvents> {
     private readonly initialState: Set<StreamID>
@@ -15,26 +11,23 @@ export class FakeOperatorClient extends EventEmitter3<OperatorClientEvents> {
         this.initialState = new Set(initialState)
         this.initialBlockNumber = initialBlockNumber
     }
-    getStakedStreams(): Promise<{ streamIds: string[], blockNumber: number }> {
-        return Promise.resolve({
-            streamIds: [...this.initialState],
-            blockNumber: this.initialBlockNumber
-        })
+    async start(): Promise<void> {
+        this.emit('addStakedStream', Array.from(this.initialState))
     }
 
-    // Used to fake smart contract events
-    addStreamToState(streamId: StreamID, blockNumber: number): void {
-        this.emit('addStakedStream', streamId, blockNumber)
-    }
-
-    // Used to fake smart contract events
-    removeStreamFromState(streamId: StreamID, blockNumber: number): void {
-        this.emit('removeStakedStream', streamId, blockNumber)
-    }
-
-    close(): void {
+    async stop(): Promise<void> {
         this.removeAllListeners('addStakedStream')
         this.removeAllListeners('removeStakedStream')
+    }
+
+    // Used to fake smart contract events
+    addStreamToState(streamId: StreamID): void {
+        this.emit('addStakedStream', [streamId])
+    }
+
+    // Used to fake smart contract events
+    removeStreamFromState(streamId: StreamID): void {
+        this.emit('removeStakedStream', streamId)
     }
 
 }

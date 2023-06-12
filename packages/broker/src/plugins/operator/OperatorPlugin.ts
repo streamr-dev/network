@@ -32,7 +32,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             new MaintainTopologyHelper({
                 provider: new JsonRpcProvider(this.brokerConfig.client.contracts!.streamRegistryChainRPCs!.rpcs[0].url),
                 operatorContractAddress: this.pluginConfig.operatorContractAddress,
-                theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST}:8000/subgraphs/name/streamr-dev/network-subgraphs`,
+                theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`,
                 fetch: fetch
             }, logger as any) // TODO: casting?
         )

@@ -24,7 +24,7 @@ const logger = new Logger(module)
 
 jest.setTimeout(60 * 1000)
 
-describe("OperatorClient", () => {
+describe("MaintainTopologyHelper", () => {
     const chainURL = config.rpcEndpoints[0].url
 
     let provider: Provider

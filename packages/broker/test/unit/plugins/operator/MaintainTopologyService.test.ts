@@ -82,7 +82,7 @@ describe('MaintainTopologyService', () => {
     it('subscribes to initial state on start', async () => {
         await setUpAndStart([STREAM_A, STREAM_B, STREAM_C])
 
-        expect(streamrClient.subscribe).toHaveBeenCalledTimes(1 + 3 + 2)
+        await waitForCondition(() => streamrClient.subscribe.mock.calls.length == 6)
         expect(streamrClient.subscribe).toBeCalledWith(formRawSubscriptionParam(STREAM_A, 0))
         expect(streamrClient.subscribe).toBeCalledWith(formRawSubscriptionParam(STREAM_B, 0))
         expect(streamrClient.subscribe).toBeCalledWith(formRawSubscriptionParam(STREAM_B, 1))
@@ -94,7 +94,8 @@ describe('MaintainTopologyService', () => {
     it('ignores non-existing streams on start', async () => {
         await setUpAndStart([STREAM_A, STREAM_NOT_EXIST, STREAM_C])
 
-        expect(streamrClient.subscribe).toHaveBeenCalledTimes(1 + 2)
+        // expect(streamrClient.subscribe).toHaveBeenCalledTimes(1 + 2)
+        await waitForCondition(() => streamrClient.subscribe.mock.calls.length == 3)
         expect(streamrClient.subscribe).toBeCalledWith(formRawSubscriptionParam(STREAM_A, 0))
         expect(streamrClient.subscribe).toBeCalledWith(formRawSubscriptionParam(STREAM_C, 0))
         expect(streamrClient.subscribe).toBeCalledWith(formRawSubscriptionParam(STREAM_C, 1))
@@ -102,9 +103,10 @@ describe('MaintainTopologyService', () => {
 
     it('handles addStakedStream event (happy path)', async () => {
         await setUpAndStart([STREAM_A, STREAM_B, STREAM_C])
+        await waitForCondition(() => streamrClient.subscribe.mock.calls.length == 6)
         streamrClient.subscribe.mockClear()
 
-        operatorClient.addStreamToState(STREAM_D, INITIAL_BLOCK + 1)
+        operatorClient.addStreamToState(STREAM_D)
 
         await waitForCondition(() => streamrClient.subscribe.mock.calls.length >= 2)
         expect(streamrClient.subscribe).toHaveBeenCalledTimes(2)
@@ -112,31 +114,12 @@ describe('MaintainTopologyService', () => {
         expect(streamrClient.subscribe).toBeCalledWith(formRawSubscriptionParam(STREAM_D, 1))
     })
 
-    it('handles addStakedStream event given old block', async () => {
-        await setUpAndStart([STREAM_A, STREAM_B, STREAM_C])
-        streamrClient.subscribe.mockClear()
-
-        operatorClient.addStreamToState(STREAM_D, INITIAL_BLOCK - 1)
-
-        await wait(NOTHING_HAPPENED_DELAY)
-        expect(streamrClient.subscribe).toHaveBeenCalledTimes(0)
-    })
-
     it('handles addStakedStream event given non-existing stream', async () => {
         await setUpAndStart([STREAM_A, STREAM_B, STREAM_C])
+        await waitForCondition(() => streamrClient.subscribe.mock.calls.length == 6)
         streamrClient.subscribe.mockClear()
 
-        operatorClient.addStreamToState(STREAM_NOT_EXIST, INITIAL_BLOCK + 1)
-
-        await wait(NOTHING_HAPPENED_DELAY)
-        expect(streamrClient.subscribe).toHaveBeenCalledTimes(0)
-    })
-
-    it('handles addStakedStream event given already subscribed stream', async () => {
-        await setUpAndStart([STREAM_A, STREAM_B, STREAM_C])
-        streamrClient.subscribe.mockClear()
-
-        operatorClient.addStreamToState(STREAM_B, INITIAL_BLOCK + 1)
+        operatorClient.addStreamToState(STREAM_NOT_EXIST)
 
         await wait(NOTHING_HAPPENED_DELAY)
         expect(streamrClient.subscribe).toHaveBeenCalledTimes(0)
@@ -151,7 +134,7 @@ describe('MaintainTopologyService', () => {
     it('handles removeStakedStream event (happy path)', async () => {
         await setUpAndStart([STREAM_A, STREAM_B, STREAM_C])
 
-        operatorClient.removeStreamFromState(STREAM_C, INITIAL_BLOCK + 1)
+        operatorClient.removeStreamFromState(STREAM_C)
 
         await waitForCondition(() => totalUnsubscribes(STREAM_C) >= 2)
         expect(fixtures[STREAM_C][0].unsubscribe).toHaveBeenCalledTimes(1)
@@ -161,28 +144,19 @@ describe('MaintainTopologyService', () => {
     it('handles removeStakedStream event for stream previously added by event (happy path)', async () => {
         await setUpAndStart([STREAM_A, STREAM_B])
 
-        operatorClient.addStreamToState(STREAM_C, INITIAL_BLOCK + 1)
-        operatorClient.removeStreamFromState(STREAM_C, INITIAL_BLOCK + 2)
+        operatorClient.addStreamToState(STREAM_C)
+        operatorClient.removeStreamFromState(STREAM_C)
 
         await waitForCondition(() => totalUnsubscribes(STREAM_C) >= 2)
         expect(fixtures[STREAM_C][0].unsubscribe).toHaveBeenCalledTimes(1)
         expect(fixtures[STREAM_C][1].unsubscribe).toHaveBeenCalledTimes(1)
     })
 
-    it('handles removeStakedStream event given old block', async () => {
-        await setUpAndStart([STREAM_A, STREAM_B, STREAM_C])
-
-        operatorClient.removeStreamFromState(STREAM_C, INITIAL_BLOCK - 1)
-
-        await wait(NOTHING_HAPPENED_DELAY)
-        expect(totalUnsubscribes(STREAM_C)).toEqual(0)
-    })
-
     it('handles removeStakedStream event once even if triggered twice', async () => {
         await setUpAndStart([STREAM_A, STREAM_B, STREAM_C])
 
-        operatorClient.removeStreamFromState(STREAM_C, INITIAL_BLOCK + 1)
-        operatorClient.removeStreamFromState(STREAM_C, INITIAL_BLOCK + 2)
+        operatorClient.removeStreamFromState(STREAM_C)
+        operatorClient.removeStreamFromState(STREAM_C)
 
         await waitForCondition(() => totalUnsubscribes(STREAM_C) >= 2)
         await wait(NOTHING_HAPPENED_DELAY)
@@ -194,7 +168,7 @@ describe('MaintainTopologyService', () => {
     it('handles removeStakedStream event given non-existing stream', async () => {
         await setUpAndStart([STREAM_A, STREAM_B, STREAM_C])
 
-        operatorClient.removeStreamFromState(STREAM_NOT_EXIST, INITIAL_BLOCK + 1)
+        operatorClient.removeStreamFromState(STREAM_NOT_EXIST)
 
         await wait(NOTHING_HAPPENED_DELAY)
         expect(totalUnsubscribes(STREAM_NOT_EXIST)).toEqual(0)
@@ -203,7 +177,7 @@ describe('MaintainTopologyService', () => {
     it('handles removeStakedStream event given not subscribed stream', async () => {
         await setUpAndStart([STREAM_A, STREAM_B, STREAM_C])
 
-        operatorClient.removeStreamFromState(STREAM_D, INITIAL_BLOCK + 1)
+        operatorClient.removeStreamFromState(STREAM_D)
 
         await wait(NOTHING_HAPPENED_DELAY)
         expect(totalUnsubscribes(STREAM_D)).toEqual(0)
@@ -220,8 +194,8 @@ describe('MaintainTopologyService', () => {
         streamrClient.subscribe.mockClear()
 
         for (let i = 1; i < 21; i += 2) {
-            operatorClient.removeStreamFromState(STREAM_C, INITIAL_BLOCK + i)
-            operatorClient.addStreamToState(STREAM_C, INITIAL_BLOCK + i + 1)
+            operatorClient.removeStreamFromState(STREAM_C)
+            operatorClient.addStreamToState(STREAM_C)
         }
 
         await waitForCondition(
@@ -232,45 +206,5 @@ describe('MaintainTopologyService', () => {
             () => `was ${totalUnsubscribes(STREAM_C)}`
         )
         expect(streamrClient.subscribe).toHaveBeenCalledTimes(10 * 2)
-    })
-
-    it('complex block numbering case', async () => {
-        await setUpAndStart([STREAM_A, STREAM_B, STREAM_C])
-
-        operatorClient.addStreamToState(STREAM_D, INITIAL_BLOCK + 5)
-        operatorClient.removeStreamFromState(STREAM_A, INITIAL_BLOCK + 15)
-        operatorClient.addStreamToState(STREAM_C, INITIAL_BLOCK + 10)
-        operatorClient.addStreamToState(STREAM_F, INITIAL_BLOCK + 25)
-        operatorClient.removeStreamFromState(STREAM_E, INITIAL_BLOCK + 20)
-        operatorClient.removeStreamFromState(STREAM_C, INITIAL_BLOCK + 15)
-        operatorClient.addStreamToState(STREAM_C, INITIAL_BLOCK + 30)
-        await wait(0)
-        // State: -a=15, +b=10, +c=40, +d=15, +f=35, -e=30
-
-        mockClear(streamrClient)
-        clearUnsubscribeMockCalls()
-
-        operatorClient.addStreamToState(STREAM_A, INITIAL_BLOCK + 14)
-        await wait(NOTHING_HAPPENED_DELAY)
-        expect(streamrClient.subscribe).toHaveBeenCalledTimes(0)
-
-        operatorClient.removeStreamFromState(STREAM_B, INITIAL_BLOCK - 5)
-        await wait(NOTHING_HAPPENED_DELAY)
-        expect(totalUnsubscribes(STREAM_C)).toEqual(0)
-
-        operatorClient.removeStreamFromState(STREAM_C, INITIAL_BLOCK + 25)
-        await wait(NOTHING_HAPPENED_DELAY)
-        expect(totalUnsubscribes(STREAM_C)).toEqual(0)
-
-        operatorClient.addStreamToState(STREAM_E, INITIAL_BLOCK + 19)
-        await wait(NOTHING_HAPPENED_DELAY)
-        expect(streamrClient.subscribe).toHaveBeenCalledTimes(0)
-
-        operatorClient.removeStreamFromState(STREAM_F, INITIAL_BLOCK + 55)
-        await waitForCondition(() => totalUnsubscribes(STREAM_F) >= 4)
-
-        operatorClient.addStreamToState(STREAM_E, INITIAL_BLOCK + 21)
-        await waitForCondition(() => streamrClient.subscribe.mock.calls.length >= 1)
-        expect(streamrClient.subscribe).toBeCalledWith(formRawSubscriptionParam(STREAM_E, 0))
     })
 })
