@@ -1,10 +1,14 @@
 import { ContractReceipt } from '@ethersproject/contracts'
-import { StreamID, toStreamID } from '@streamr/protocol'
+import { StreamID, StreamMessage, toStreamID } from '@streamr/protocol'
 import { TheGraphClient, merge, randomString, toEthereumAddress } from '@streamr/utils'
-import fetch from 'node-fetch'
+import fetch, { Response } from 'node-fetch'
+import { AbortSignal } from 'node-fetch/externals'
+import split2 from 'split2'
+import { Readable } from 'stream'
 import LRU from '../../vendor/quick-lru'
 import { StrictStreamrClientConfig } from '../Config'
 import { StreamrClientEventEmitter } from '../events'
+import { WebStreamToNodeStream } from './WebStreamToNodeStream'
 import { SEPARATOR } from './uuid'
 
 /**
@@ -135,4 +139,42 @@ export const createTheGraphClient = (
         instance.updateRequiredBlockNumber(payload.receipt.blockNumber)
     })
     return instance
+}
+
+export const createQueryString = (query: Record<string, any>): string => {
+    const withoutEmpty = Object.fromEntries(Object.entries(query).filter(([_k, v]) => v != null))
+    return new URLSearchParams(withoutEmpty).toString()
+}
+
+export const fetchHttpStream = async function*(
+    url: string,
+    fetchResponse: (url: string, abortSignal: AbortSignal) => Promise<Response>,
+    abortController = new AbortController()
+): AsyncIterable<StreamMessage> {
+    // cast is needed until this is fixed: https://github.com/node-fetch/node-fetch/issues/1652
+    const response = await fetchResponse(url, abortController.signal as AbortSignal)
+    if (!response.body) {
+        throw new Error('No Response Body')
+    }
+
+    let stream: Readable | undefined
+    try {
+        // in the browser, response.body will be a web stream. Convert this into a node stream.
+        const source: Readable = WebStreamToNodeStream(response.body as unknown as (ReadableStream | Readable))
+
+        stream = source.pipe(split2((message: string) => {
+            return StreamMessage.deserialize(message)
+        }))
+
+        stream.once('close', () => {
+            abortController.abort()
+        })
+
+        yield* stream
+    } catch (err) {
+        abortController.abort()
+        throw err
+    } finally {
+        stream?.destroy()
+    }
 }
