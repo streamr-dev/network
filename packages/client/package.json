@@ -77,7 +77,7 @@
     "weak-napi": "^2.0.2",
     "webpack": "^5.64.1",
     "webpack-bundle-analyzer": "^4.5.0",
-    "webpack-cli": "^5.0.1",
+    "webpack-cli": "^5.1.4",
     "webpack-merge": "^5.8.0"
   },
   "#IMPORTANT": "babel-runtime must be in dependencies, not devDependencies",
