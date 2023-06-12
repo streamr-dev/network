@@ -8,7 +8,7 @@ describe('events', () => {
 
         let environment: FakeEnvironment
 
-        beforeEach(async () => {
+        beforeEach(() => {
             environment = new FakeEnvironment()
         })
     
