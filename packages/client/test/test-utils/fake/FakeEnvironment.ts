@@ -95,7 +95,8 @@ export class FakeEnvironment {
         return this.logger
     }
 
-    destroy(): Promise<unknown> {
-        return Promise.all(this.clients.map((client) => client.destroy()))
+    async destroy(): Promise<void> {
+        await Promise.all(this.clients.map((client) => client.destroy()))
+        await Promise.all(this.network.getNodes().map((node) => node.stop()))
     }
 }

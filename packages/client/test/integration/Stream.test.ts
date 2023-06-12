@@ -9,17 +9,19 @@ import { createTestStream } from '../test-utils/utils'
 const DUMMY_ADDRESS = '0x1230000000000000000000000000000000000000'
 
 describe('Stream', () => {
+
     let client: StreamrClient
     let storageNode: FakeStorageNode
+    let environment: FakeEnvironment
 
     beforeEach(() => {
-        const environment = new FakeEnvironment()
+        environment = new FakeEnvironment()
         client = environment.createClient()
         storageNode = environment.startStorageNode()
     })
 
     afterEach(async () => {
-        await Promise.allSettled([client?.destroy()])
+        await environment.destroy()
     })
 
     describe('addToStorageNode', () => {

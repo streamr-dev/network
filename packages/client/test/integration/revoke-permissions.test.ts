@@ -29,6 +29,7 @@ import { merge } from '@streamr/utils'
 // and subscriber errored with something about group key or
 // permissions
 describe('revoke permissions', () => {
+
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
     let publisher: StreamrClient
     let publisherPrivateKey: string

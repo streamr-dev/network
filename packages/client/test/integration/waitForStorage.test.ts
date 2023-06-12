@@ -31,7 +31,7 @@ describe('waitForStorage', () => {
             id: createRelativeTestStreamId(module),
         })
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
-        storageNode = await environment.startStorageNode()
+        storageNode = environment.startStorageNode()
     })
 
     afterEach(async () => {

@@ -13,6 +13,7 @@ const MAX_MESSAGES = 5
 const ITERATIONS = 4
 
 describe('sequential resend subscribe', () => {
+
     let publisher: StreamrClient
     let subscriber: StreamrClient
     let stream: Stream
