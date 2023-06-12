@@ -2,8 +2,7 @@ import { StreamID, StreamMessage, StreamPartID, StreamPartIDUtils } from '@strea
 import { EthereumAddress, Logger, randomString, toEthereumAddress } from '@streamr/utils'
 import random from 'lodash/random'
 import without from 'lodash/without'
-import fetch, { Response } from 'node-fetch'
-import { AbortSignal } from 'node-fetch/externals'
+import { Response } from 'node-fetch'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { StreamrClientError } from '../StreamrClientError'
@@ -121,22 +120,11 @@ const parseErrorCode = (body: string) => {
     return code in ErrorCode ? code : ErrorCode.UNKNOWN
 }
 
-async function fetchResponse(
-    url: string,
-    abortSignal: AbortSignal
-): Promise<Response> {
-    const response: Response = await fetch(url, {
-        signal: abortSignal
-    })
-
-    if (response.ok) {
-        return response
-    }
-
+const parseHttpError = async (response: Response): Promise<Error> => {
     const body = await response.text()
     const errorCode = parseErrorCode(body)
     const ErrorClass = ERROR_TYPES.get(errorCode)!
-    throw new ErrorClass(`Request to ${url} returned with error code ${response.status}.`, response, body, errorCode)
+    throw new ErrorClass(`Request to ${response.url} returned with error code ${response.status}.`, response, body, errorCode)
 }
 
 const createUrl = (baseUrl: string, endpointSuffix: string, streamPartId: StreamPartID, query: QueryDict = {}): string => {
@@ -247,7 +235,7 @@ export class Resends {
             config: (nodeAddresses.length === 1) ? { ...this.config, orderMessages: false } : this.config
         })
 
-        const dataStream = fetchHttpStream(url, fetchResponse)
+        const dataStream = fetchHttpStream(url, parseHttpError)
         messageStream.pull(counting(dataStream, (count: number) => {
             this.logger.debug('Finished resend', { loggerIdx: traceId, messageCount: count })
         }))

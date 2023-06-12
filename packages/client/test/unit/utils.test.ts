@@ -48,7 +48,7 @@ describe('utils', () => {
         })
         const server = app.listen(MOCK_SERVER_PORT)
         await once(server, 'listening')
-        const msgs = await collect(fetchHttpStream(`http://localhost:${MOCK_SERVER_PORT}/endpoint`))
+        const msgs = await collect(fetchHttpStream(`http://localhost:${MOCK_SERVER_PORT}/endpoint`, () => undefined as any))
         expect(msgs.map((m) => (m.getParsedContent() as any).mockId)).toEqual([0, 1, 2, 3, 4])
         server.close()
     })

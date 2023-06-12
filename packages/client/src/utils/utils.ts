@@ -148,11 +148,16 @@ export const createQueryString = (query: Record<string, any>): string => {
 
 export const fetchHttpStream = async function*(
     url: string,
-    fetchResponse: (url: string, abortSignal: AbortSignal) => Promise<Response>,
+    parseError: (response: Response) => Promise<Error>,
     abortController = new AbortController()
 ): AsyncIterable<StreamMessage> {
-    // cast is needed until this is fixed: https://github.com/node-fetch/node-fetch/issues/1652
-    const response = await fetchResponse(url, abortController.signal as AbortSignal)
+    const response: Response = await fetch(url, {
+        // cast is needed until this is fixed: https://github.com/node-fetch/node-fetch/issues/1652
+        signal: abortController.signal as AbortSignal
+    })
+    if (!response.ok) {
+        throw await parseError(response)
+    }
     if (!response.body) {
         throw new Error('No Response Body')
     }
