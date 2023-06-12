@@ -29,7 +29,7 @@ describe('gap fill', () => {
     beforeAll(async () => {
         publisherWallet = fastWallet()
         environment = new FakeEnvironment()
-        storageNode = environment.startStorageNode()
+        storageNode = await environment.startStorageNode()
         const publisher = environment.createClient({
             auth: {
                 privateKey: publisherWallet.privateKey

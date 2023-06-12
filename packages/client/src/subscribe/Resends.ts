@@ -50,7 +50,7 @@ export interface ResendRangeOptions {
  */
 export type ResendOptions = ResendLastOptions | ResendFromOptions | ResendRangeOptions
 
-type ResendType = 'last' | 'from' | 'range'
+export type ResendType = 'last' | 'from' | 'range'
 
 function isResendLast<T extends ResendLastOptions>(options: any): options is T {
     return options && typeof options === 'object' && 'last' in options && options.last != null

@@ -48,7 +48,7 @@ describe('revoke permissions', () => {
 
     async function setupStream() {
         stream = await createTestStream(publisher, module)
-        const storageNode = environment.startStorageNode()
+        const storageNode = await environment.startStorageNode()
         await stream.addToStorageNode(storageNode.id)
         publishTestMessages = getPublishTestStreamMessages(publisher, stream)
     }
