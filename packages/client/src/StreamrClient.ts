@@ -12,7 +12,6 @@ import { Authentication, AuthenticationInjectionToken, createAuthentication } fr
 import { ConfigInjectionToken, StreamrClientConfig, StrictStreamrClientConfig, createStrictConfig, redactConfig } from './Config'
 import { DestroySignal } from './DestroySignal'
 import { generateEthereumAccount as _generateEthereumAccount } from './Ethereum'
-import { ErrorCode } from './HttpUtil'
 import { Message, convertStreamMessageToMessage } from './Message'
 import { MetricsPublisher } from './MetricsPublisher'
 import { NetworkNodeFacade, NetworkNodeStub } from './NetworkNodeFacade'
@@ -353,7 +352,7 @@ export class StreamrClient {
         try {
             return await this.getStream(props.id)
         } catch (err: any) {
-            if (err.errorCode === ErrorCode.NOT_FOUND) {
+            if (err.code === 'STREAM_NOT_FOUND') {
                 return this.createStream(props)
             }
             throw err

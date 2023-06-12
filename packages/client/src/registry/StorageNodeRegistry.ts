@@ -5,7 +5,7 @@ import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { ContractFactory } from '../ContractFactory'
 import { getStreamRegistryChainProviders, getStreamRegistryOverrides } from '../Ethereum'
-import { NotFoundError } from '../HttpUtil'
+import { StreamrClientError } from '../StreamrClientError'
 import type { NodeRegistry as NodeRegistryContract } from '../ethereumArtifacts/NodeRegistry'
 import NodeRegistryArtifact from '../ethereumArtifacts/NodeRegistryAbi.json'
 import { queryAllReadonlyContracts, waitForTx } from '../utils/contract'
@@ -74,7 +74,7 @@ export class StorageNodeRegistry {
         if (resultNodeAddress !== NODE_NOT_FOUND) {
             return JSON.parse(metadata)
         } else {
-            throw new NotFoundError('Node not found, id: ' + nodeAddress)
+            throw new StreamrClientError('Node not found, id: ' + nodeAddress, 'NODE_NOT_FOUND')
         }
     }
 }

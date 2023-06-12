@@ -34,6 +34,10 @@ describe('Group Key Persistence', () => {
         await environment.destroy()
     })
 
+    afterEach(async () => {
+        await environment.destroy()
+    })
+
     describe('with encrypted streams', () => {
         let stream: Stream
 
