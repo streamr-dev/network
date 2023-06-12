@@ -1,10 +1,10 @@
 import { ContractReceipt } from '@ethersproject/contracts'
 import { StreamID, toStreamID } from '@streamr/protocol'
-import { TheGraphClient, randomString, toEthereumAddress } from '@streamr/utils'
+import { TheGraphClient, merge, randomString, toEthereumAddress } from '@streamr/utils'
+import fetch from 'node-fetch'
 import LRU from '../../vendor/quick-lru'
 import { StrictStreamrClientConfig } from '../Config'
 import { StreamrClientEventEmitter } from '../events'
-import { HttpFetcher } from './HttpFetcher'
 import { SEPARATOR } from './uuid'
 
 /**
@@ -116,17 +116,20 @@ export const formLookupKey = <K extends (string | number)[]>(...args: K): string
 
 /** @internal */
 export const createTheGraphClient = (
-    httpFetcher: HttpFetcher,
     eventEmitter: StreamrClientEventEmitter,
     config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
 ): TheGraphClient => {
     const instance = new TheGraphClient({
         serverUrl: config.contracts.theGraphUrl,
-        fetch: (url: string, init?: Record<string, unknown>) => httpFetcher.fetch(url, init),
+        fetch: (url: string, init?: Record<string, unknown>) => {
+            // eslint-disable-next-line no-underscore-dangle
+            const timeout = config._timeouts.theGraph.fetchTimeout
+            return fetch(url, merge({ timeout }, init))
+        },
         // eslint-disable-next-line no-underscore-dangle
-        indexTimeout: config._timeouts.theGraph.timeout,
+        indexTimeout: config._timeouts.theGraph.indexTimeout,
         // eslint-disable-next-line no-underscore-dangle
-        indexPollInterval: config._timeouts.theGraph.retryInterval
+        indexPollInterval: config._timeouts.theGraph.indexPollInterval
     })
     eventEmitter.on('confirmContractTransaction', (payload: { receipt: ContractReceipt }) => {
         instance.updateRequiredBlockNumber(payload.receipt.blockNumber)
