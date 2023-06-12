@@ -7,8 +7,6 @@ import { StreamrClient } from '../../../src/StreamrClient'
 import { StreamRegistry } from '../../../src/registry/StreamRegistry'
 import { FakeStorageNodeRegistry } from './FakeStorageNodeRegistry'
 import { FakeStreamRegistry } from './FakeStreamRegistry'
-import { FakeHttpUtil } from './FakeHttpUtil'
-import { HttpUtil } from '../../../src/HttpUtil'
 import { StreamStorageRegistry } from '../../../src/registry/StreamStorageRegistry'
 import { FakeStreamStorageRegistry } from './FakeStreamStorageRegistry'
 import { FakeNetworkNodeFactory, FakeNetworkNode } from './FakeNetworkNode'
@@ -39,14 +37,12 @@ export class FakeEnvironment {
         this.chain = new FakeChain()
         this.logger = new FakeLogger()
         this.dependencyContainer = container.createChildContainer()
-        const httpUtil = new FakeHttpUtil(this.network)
         const loggerFactory = {
             createLogger: () => this.logger
         }
         this.dependencyContainer.register(FakeNetwork, { useValue: this.network })
         this.dependencyContainer.register(FakeChain, { useValue: this.chain })
         this.dependencyContainer.register(LoggerFactory, { useValue: loggerFactory } as any)
-        this.dependencyContainer.register(HttpUtil, { useValue: httpUtil as any })
         this.dependencyContainer.register(NetworkNodeFactory, FakeNetworkNodeFactory)
         this.dependencyContainer.register(StreamRegistry, FakeStreamRegistry as any)
         this.dependencyContainer.register(StreamStorageRegistry, FakeStreamStorageRegistry as any)

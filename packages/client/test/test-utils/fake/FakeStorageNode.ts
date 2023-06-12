@@ -1,41 +1,68 @@
-import range from 'lodash/range'
+import { Wallet } from '@ethersproject/wallet'
 import {
     StreamID,
     StreamMessage,
     StreamMessageType,
     StreamPartID,
+    toStreamID,
     toStreamPartID
 } from '@streamr/protocol'
-import { FakeNetworkNode } from './FakeNetworkNode'
-import { FakeNetwork } from './FakeNetwork'
-import { formStorageNodeAssignmentStreamId } from '../../../src/utils/utils'
 import { EthereumAddress, Multimap, toEthereumAddress } from '@streamr/utils'
-import { FakeChain } from './FakeChain'
-import { StreamPermission } from '../../../src/permission'
-import { Wallet } from '@ethersproject/wallet'
-import { createMockMessage } from '../utils'
+import { once } from 'events'
+import express, { Request, Response } from 'express'
+import { Server } from 'http'
+import range from 'lodash/range'
+import { AddressInfo } from 'net'
 import { DEFAULT_PARTITION } from '../../../src/StreamIDBuilder'
+import { StreamPermission } from '../../../src/permission'
+import { ResendType } from '../../../src/subscribe/Resends'
+import { formStorageNodeAssignmentStreamId } from '../../../src/utils/utils'
+import { createMockMessage } from '../utils'
+import { FakeChain } from './FakeChain'
+import { FakeNetwork } from './FakeNetwork'
+import { FakeNetworkNode } from './FakeNetworkNode'
 
-const URL_SCHEME = 'FakeStorageNode'
+const MAX_TIMESTAMP = 8640000000000000 // https://262.ecma-international.org/5.1/#sec-15.9.1.1
+const MIN_SEQUENCE_NUMBER = 0
+const MAX_SEQUENCE_NUMBER = 2147483647
 
-const createStorageNodeUrl = (address: EthereumAddress): string => `${URL_SCHEME}://${address}`
-
-export const parseNodeIdFromStorageNodeUrl = (url: string): EthereumAddress => {
-    const groups = url.match(new RegExp('(.*)://([^/]*)(/.*)?'))
-    if ((groups !== null) && (groups[1] === URL_SCHEME)) {
-        return toEthereumAddress(groups[2])
-    } else {
-        throw new Error(`unknown storage node url: ${url}`)
-    }
+const startServer = async (
+    getMessages: (streamPartId: StreamPartID, resendType: ResendType, queryParams: Record<string, any>) => AsyncIterable<StreamMessage>
+): Promise<Server> => {
+    const app = express()
+    app.get('/streams/:streamId/data/partitions/:partition/:resendType', async (req: Request, res: Response) => {
+        const format = req.query.format
+        if (format !== 'raw') {
+            throw new Error('not implemented')
+        }
+        const streamPartId = toStreamPartID(toStreamID(req.params.streamId), parseInt(req.params.partition))
+        const messages = getMessages(streamPartId, req.params.resendType as ResendType, req.query)
+        try {
+            for await (const msg of messages) {
+                res.write(`${msg.serialize()}\n`)
+            }
+            res.end()
+        } catch (err) {
+            res.destroy(err)
+        }
+    })
+    const server = app.listen()
+    await once(server, 'listening')
+    return server
 }
 
 const isStorableMessage = (msg: StreamMessage): boolean => {
     return msg.messageType === StreamMessageType.MESSAGE
 }
 
+const parseNumberQueryParameter = (str: string | undefined): number | undefined => {
+    return (str !== undefined) ? Number(str) : undefined
+}
+
 export class FakeStorageNode extends FakeNetworkNode {
 
     private readonly streamPartMessages: Multimap<StreamPartID, StreamMessage> = new Multimap()
+    private server?: Server
     private readonly wallet: Wallet
     private readonly chain: FakeChain
 
@@ -49,9 +76,37 @@ export class FakeStorageNode extends FakeNetworkNode {
 
     override async start(): Promise<void> {
         super.start()
+        this.server = await startServer((streamPartId: StreamPartID, resendType: ResendType, queryParams: Record<string, any>) => {
+            switch (resendType) {
+                case 'last':
+                    return this.getLast(streamPartId, {
+                        count: queryParams.count
+                    })
+                case 'from':
+                    return this.getRange(streamPartId, {
+                        fromTimestamp: parseNumberQueryParameter(queryParams.fromTimestamp)!,
+                        fromSequenceNumber: parseNumberQueryParameter(queryParams.fromSequenceNumber),
+                        toTimestamp: MAX_TIMESTAMP,
+                        toSequenceNumber: MAX_SEQUENCE_NUMBER,
+                        publisherId: queryParams.publisherId
+                    })
+                case 'range':
+                    return this.getRange(streamPartId, {
+                        fromTimestamp: parseNumberQueryParameter(queryParams.fromTimestamp)!,
+                        fromSequenceNumber: parseNumberQueryParameter(queryParams.fromSequenceNumber),
+                        toTimestamp: parseNumberQueryParameter(queryParams.toTimestamp)!,
+                        toSequenceNumber: parseNumberQueryParameter(queryParams.toSequenceNumber),
+                        publisherId: queryParams.publisherId,
+                        msgChainId: queryParams.msgChainId
+                    })
+                default:
+                    throw new Error('assertion failed')
+            }
+        })
+        const port = (this.server.address() as AddressInfo).port
         const address = toEthereumAddress(this.wallet.address)
         this.chain.storageNodeMetadatas.set(address, {
-            http: createStorageNodeUrl(address)
+            http: `http://localhost:${port}`
         })
         const storageNodeAssignmentStreamPermissions = new Multimap<EthereumAddress, StreamPermission>()
         storageNodeAssignmentStreamPermissions.add(address, StreamPermission.PUBLISH)
@@ -61,6 +116,12 @@ export class FakeStorageNode extends FakeNetworkNode {
             },
             permissions: storageNodeAssignmentStreamPermissions
         })
+    }
+
+    override async stop(): Promise<void> {
+        super.stop()
+        this.server!.close()
+        await once(this.server!, 'close')
     }
 
     async addAssignment(streamId: StreamID): Promise<void> {
@@ -91,11 +152,13 @@ export class FakeStorageNode extends FakeNetworkNode {
         this.streamPartMessages.add(streamPartId, msg)
     }
 
-    async* getLast(streamPartId: StreamPartID, count: number): AsyncIterable<StreamMessage> {
+    async* getLast(streamPartId: StreamPartID, opts: {
+        count: number
+    }): AsyncIterable<StreamMessage> {
         const messages = this.streamPartMessages.get(streamPartId)
         if (messages !== undefined) {
-            const firstIndex = Math.max(messages.length - count, 0)
-            const lastIndex = Math.min(firstIndex + count, messages.length - 1)
+            const firstIndex = Math.max(messages.length - opts.count, 0)
+            const lastIndex = Math.min(firstIndex + opts.count, messages.length - 1)
             yield* messages.slice(firstIndex, lastIndex + 1)
         } else {
             // TODO throw an error if this storage node doesn't isn't configured to store the stream?
@@ -104,21 +167,23 @@ export class FakeStorageNode extends FakeNetworkNode {
 
     async* getRange(streamPartId: StreamPartID, opts: {
         fromTimestamp: number
-        fromSequenceNumber: number
+        fromSequenceNumber?: number
         toTimestamp: number
-        toSequenceNumber: number
+        toSequenceNumber?: number
         publisherId?: string
         msgChainId?: string
     }): AsyncIterable<StreamMessage> {
         const messages = this.streamPartMessages.get(streamPartId)
         if (messages !== undefined) {
+            const minSequenceNumber = opts.fromSequenceNumber ?? MIN_SEQUENCE_NUMBER
+            const maxSequenceNumber = opts.toSequenceNumber ?? MAX_SEQUENCE_NUMBER
             yield* messages.filter((msg) => {
                 return ((opts.publisherId === undefined) || (msg.getPublisherId() === opts.publisherId))
                     && ((opts.msgChainId === undefined) || (msg.getMsgChainId() === opts.msgChainId))
                     && (
                         ((msg.getTimestamp() > opts.fromTimestamp) && (msg.getTimestamp() < opts.toTimestamp))
-                        || ((msg.getTimestamp() === opts.fromTimestamp) && (msg.getSequenceNumber() >= opts.fromSequenceNumber))
-                        || ((msg.getTimestamp() === opts.toTimestamp) && (msg.getSequenceNumber() <= opts.toSequenceNumber))
+                        || ((msg.getTimestamp() === opts.fromTimestamp) && (msg.getSequenceNumber() >= minSequenceNumber))
+                        || ((msg.getTimestamp() === opts.toTimestamp) && (msg.getSequenceNumber() <= maxSequenceNumber))
                     )
             })
         } else {
