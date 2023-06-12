@@ -25,7 +25,7 @@ describe('Group Key Persistence', () => {
     let storageNode: FakeStorageNode
     let environment: FakeEnvironment
 
-    beforeEach(async () => {
+    beforeEach(() => {
         environment = new FakeEnvironment()
         storageNode = await environment.startStorageNode()
     })

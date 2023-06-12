@@ -11,7 +11,7 @@ describe('pre-agreed encryption key', () => {
 
     let environment: FakeEnvironment
 
-    beforeAll(async () => {
+    beforeAll(() => {
         environment = new FakeEnvironment()
     })
 

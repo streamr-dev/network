@@ -14,7 +14,7 @@ describe('Stream', () => {
     let storageNode: FakeStorageNode
     let environment: FakeEnvironment
 
-    beforeEach(async () => {
+    beforeEach(() => {
         environment = new FakeEnvironment()
         client = environment.createClient()
         storageNode = await environment.startStorageNode()
