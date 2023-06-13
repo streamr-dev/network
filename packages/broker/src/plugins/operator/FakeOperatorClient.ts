@@ -15,11 +15,8 @@ export class FakeOperatorClient extends EventEmitter3<OperatorClientEvents> {
         this.initialState = new Set(initialState)
         this.initialBlockNumber = initialBlockNumber
     }
-    getStakedStreams(): Promise<{ streamIds: string[], blockNumber: number }> {
-        return Promise.resolve({
-            streamIds: [...this.initialState],
-            blockNumber: this.initialBlockNumber
-        })
+    getStakedStreams(): Promise<string[]> {
+        return Promise.resolve([...this.initialState])
     }
 
     // Used to fake smart contract events
