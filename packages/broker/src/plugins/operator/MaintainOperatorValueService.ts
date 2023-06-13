@@ -1,8 +1,6 @@
-import { Contract } from "@ethersproject/contracts"
-import { StreamrConfig, operatorABI, streamrConfigABI } from "@streamr/network-contracts"
-import { Operator } from '@streamr/network-contracts'
 import { Logger } from '@streamr/utils'
 import { OperatorClientConfig } from "./OperatorClient"
+import { MaintainOperatorValueHelper } from "./MaintainOperatorValueHelper"
 
 const logger = new Logger(module)
 
@@ -11,15 +9,18 @@ const CHECK_VALUE_INTERVAL = 1000 * 60 * 60 * 24 // 1 day
 export class MaintainOperatorValueService {
     config: OperatorClientConfig
     private checkValueInterval: NodeJS.Timeout | null = null
+    private helper: MaintainOperatorValueHelper
 
     constructor(config: OperatorClientConfig) {
         logger.trace('MaintainOperatorValueService created')
         this.config = config
+        this.helper = new MaintainOperatorValueHelper(config)
     }
 
     // eslint-disable-next-line class-methods-use-this
     async start(): Promise<void> {
-        logger.info('started MaintainOperatorValueService')
+        logger.info('MaintainOperatorValueService started')
+        // TODO: estimate seconds until penalty limit is reached and set interval accordingly
         this.checkValueInterval = setInterval(async () => {
             await this.checkValue(this.config.operatorContractAddress)
         }, CHECK_VALUE_INTERVAL)
@@ -28,23 +29,11 @@ export class MaintainOperatorValueService {
     async checkValue(operatorContractAddress: string, threshold?: bigint): Promise<void> {
         logger.info(`checkValue for operator contract ${operatorContractAddress} and threshold ${threshold}`)
 
-        const operator = new Contract(operatorContractAddress, operatorABI, this.config.signer) as unknown as Operator
-
-        logger.info(`created operator contract: ${operator.address}`)
-        
-        // treshold is a wei fraction, set in config.poolValueDriftLimitFraction
         if (!threshold) {
-            const streamrConfigAddress = await operator.streamrConfig()
-            const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, this.config.provider) as unknown as StreamrConfig
-            threshold = (await streamrConfig.poolValueDriftLimitFraction()).toBigInt()
-            logger.info(`set threshold from streamr config: ${threshold}`)
+            threshold = await this.helper.getThreshold()
         }
 
-        const { sponsorshipAddresses, approxValues, realValues } = await operator.getApproximatePoolValuesPerSponsorship()
-        logger.info(`sponsorshipAddresses (${sponsorshipAddresses.length}): ${sponsorshipAddresses}`)
-        logger.info(`approxValues (${approxValues.length}): ${approxValues}`)
-        logger.info(`realValues (${realValues.length}): ${realValues}`)
-
+        const { sponsorshipAddresses, approxValues, realValues } = await this.helper.getApproximatePoolValuesPerSponsorship()
         let totalDiff = BigInt(0)
         const sponsorships = []
         for (let i = 0; i < sponsorshipAddresses.length; i++) {
@@ -57,7 +46,6 @@ export class MaintainOperatorValueService {
             sponsorships.push(sponsorship)
             totalDiff = totalDiff + sponsorship.diff.toBigInt()
         }
-
         logger.info(`totalDiff: ${totalDiff}, threshold: ${threshold}`)
 
         if (totalDiff >= threshold) {
@@ -78,17 +66,17 @@ export class MaintainOperatorValueService {
             }
             logger.info(`Needed ${neededSponsorshipsCount} sponsorships to get total diff under threshold with a total of ${total}`)
             
-            // pick the first OPERATOR_VALUE_UPDATE_ITEMS entries
+            // pick the first entries needed to get the total diff under the threshold
             const neededSponsorshipAddresses = sortedSponsorships.slice(0, neededSponsorshipsCount).map((sponsorship: any) => sponsorship.address)
             logger.info(`Updating ${neededSponsorshipAddresses.length} sponsorships: ${neededSponsorshipAddresses}`)
-            await (await operator.updateApproximatePoolvalueOfSponsorships(neededSponsorshipAddresses)).wait()
+            this.helper.updateApproximatePoolvalueOfSponsorships(neededSponsorshipAddresses)
             logger.info(`Updated sponsorships!`)
         }
     }
 
     // eslint-disable-next-line class-methods-use-this
     async stop(): Promise<void> {
-        logger.info('stopped MaintainOperatorValueService')
+        logger.info('MaintainOperatorValueService stopped')
         clearInterval(this.checkValueInterval!)
     }
 }
