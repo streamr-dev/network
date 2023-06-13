@@ -1,11 +1,64 @@
-import { DhtNode, Simulator, SimulatorTransport, PeerDescriptor, PeerID } from '@streamr/dht'
+/* eslint-disable @typescript-eslint/parameter-properties */
+
+import { DhtNode, Simulator, PeerDescriptor, PeerID, ConnectionManager, getRandomRegion } from '@streamr/dht'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { range } from 'lodash'
-import { wait, waitForCondition } from '@streamr/utils'
+import { wait, waitForCondition, waitForEvent3 } from '@streamr/utils'
 import { Logger } from '@streamr/utils'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
+import { EventEmitter } from 'eventemitter3'
 
 const logger = new Logger(module)
+
+interface SuccessEvents {
+    success: () => void
+}
+
+class SuccessListener extends EventEmitter<SuccessEvents> {
+
+    private numNeighbors = 0
+    private numNearby = 0
+
+    constructor(private node: RandomGraphNode,
+        private wantedNumNeighbors: number,
+        private wantedNumNearby: number) {
+
+        super()
+        node.on('targetNeighborConnected', this.onTargetNeighborConnected)
+        node.on('nearbyContactPoolIdAdded', this.onNearbyContactPoolIdAdded)
+    }
+
+    private onTargetNeighborConnected = (_stringId: string) => {
+        this.numNeighbors++
+
+        if (this.numNeighbors >= this.wantedNumNeighbors
+            && this.numNearby >= this.wantedNumNearby) {
+            this.node.off('targetNeighborConnected', this.onTargetNeighborConnected)
+            this.node.off('nearbyContactPoolIdAdded', this.onNearbyContactPoolIdAdded)
+            this.emit('success')
+        }
+    }
+
+    private onNearbyContactPoolIdAdded = () => {
+        this.numNearby++
+
+        if (this.numNeighbors >= this.wantedNumNeighbors
+            && this.numNearby >= this.wantedNumNearby) {
+            this.node.off('targetNeighborConnected', this.onTargetNeighborConnected)
+            this.node.off('nearbyContactPoolIdAdded', this.onNearbyContactPoolIdAdded)
+            this.emit('success')
+        }
+    }
+
+    public async waitForSuccess(timeout: number): Promise<void> {
+        if (this.numNeighbors >= this.wantedNumNeighbors
+            && this.numNearby >= this.wantedNumNearby) {
+            return
+        } else {
+            await waitForEvent3<SuccessEvents>(this, 'success', timeout)
+        }
+    }
+}
 
 describe('RandomGraphNode-DhtNode', () => {
     const numOfNodes = 64
@@ -17,21 +70,34 @@ describe('RandomGraphNode-DhtNode', () => {
     const streamId = 'Stream1'
     const entrypointDescriptor: PeerDescriptor = {
         kademliaId: PeerID.fromString('entrypoint').value,
-        type: 0
+        nodeName: 'entrypoint',
+        type: 0,
+        region: getRandomRegion()
     }
 
     const peerDescriptors: PeerDescriptor[] = range(numOfNodes).map((i) => {
         return {
             kademliaId: PeerID.fromString(`${i}`).value,
-            type: 0
+            nodeName: `node${i}`,
+            type: 0,
+            region: getRandomRegion()
         }
     })
     beforeEach(async () => {
-        const simulator = new Simulator()
-        const entrypointCm = new SimulatorTransport(entrypointDescriptor, simulator)
 
-        const cms: SimulatorTransport[] = range(numOfNodes).map((i) =>
-            new SimulatorTransport(peerDescriptors[i], simulator)
+        Simulator.useFakeTimers()
+        const simulator = new Simulator()
+        const entrypointCm = new ConnectionManager({
+            ownPeerDescriptor: entrypointDescriptor,
+            nodeName: entrypointDescriptor.nodeName, simulator: simulator
+        })
+
+        const cms: ConnectionManager[] = range(numOfNodes).map((i) =>
+            new ConnectionManager({
+                ownPeerDescriptor: peerDescriptors[i],
+                nodeName: peerDescriptors[i].nodeName,
+                simulator: simulator
+            })
         )
 
         dhtEntryPoint = new DhtNode({
@@ -68,35 +134,41 @@ describe('RandomGraphNode-DhtNode', () => {
     })
 
     afterEach(async () => {
-        dhtEntryPoint.stop()
+        await dhtEntryPoint.stop()
         entryPointRandomGraphNode.stop()
         await Promise.all(dhtNodes.map((node) => node.stop()))
         await Promise.all(graphNodes.map((node) => node.stop()))
+        Simulator.useFakeTimers(false)
     })
 
-    it('happy path single peer', async () => {
+    it('happy path single peer ', async () => {
+
+        const successListener = new SuccessListener(graphNodes[0], 1, 1)
+        await entryPointRandomGraphNode.start()
         await dhtNodes[0].joinDht(entrypointDescriptor)
-        entryPointRandomGraphNode.start()
+
         await graphNodes[0].start()
-        await Promise.all([
-            waitForCondition(() => graphNodes[0].getNearbyContactPoolIds().length === 1),
-            waitForCondition(() => graphNodes[0].getTargetNeighborStringIds().length === 1)
-        ])
+
+        await successListener.waitForSuccess(15006)
         expect(graphNodes[0].getNearbyContactPoolIds().length).toEqual(1)
         expect(graphNodes[0].getTargetNeighborStringIds().length).toEqual(1)
+
     })
 
     it('happy path 4 peers', async () => {
+        const promise = Promise.all(range(4).map((i) => {
+            const successListener = new SuccessListener(graphNodes[i], 4, 4)
+            return waitForEvent3<SuccessEvents>(successListener, 'success', 15009)
+        }))
+
         entryPointRandomGraphNode.start()
         range(4).map((i) => graphNodes[i].start())
         await Promise.all(range(4).map(async (i) => {
             await dhtNodes[i].joinDht(entrypointDescriptor)
         }))
-        await Promise.all(range(4).map((i) => {
-            return waitForCondition(() => {
-                return graphNodes[i].getTargetNeighborStringIds().length >= 4
-            }, 10000, 2000)
-        }))
+
+        await promise
+
         range(4).map((i) => {
             expect(graphNodes[i].getNearbyContactPoolIds().length).toBeGreaterThanOrEqual(4)
             expect(graphNodes[i].getTargetNeighborStringIds().length).toBeGreaterThanOrEqual(4)
@@ -116,18 +188,29 @@ describe('RandomGraphNode-DhtNode', () => {
     }, 10000)
 
     it('happy path 64 peers', async () => {
-        range(numOfNodes).map((i) => graphNodes[i].start())
+        /*
+        const promise = Promise.all(graphNodes.map((node) => {
+
+            const successListener = new SuccessListener(node, 4, 8)
+            return waitForEvent3<SuccessEvents>(successListener, 'success', 15000)
+        }))
+
+        await Promise.all(range(numOfNodes).map((i) => graphNodes[i].start()))
         await Promise.all(range(numOfNodes).map(async (i) => {
             await dhtNodes[i].joinDht(entrypointDescriptor)
         }))
 
-        await Promise.all(graphNodes.map((node) =>
-            Promise.all([
-                waitForCondition(() => node.getNearbyContactPoolIds().length >= 8),
-                waitForCondition(() => node.getTargetNeighborStringIds().length >= 3, 10000)
-            ])
-        ))
+        await promise
+        */
 
+        await Promise.all(range(numOfNodes).map((i) => graphNodes[i].start()))
+        await Promise.all(range(numOfNodes).map((i) => {
+            dhtNodes[i].joinDht(entrypointDescriptor)
+        }))
+        await Promise.all(graphNodes.map((node) =>
+            waitForCondition(() => node.getTargetNeighborStringIds().length >= 4, 10000)
+        ))
+        
         await waitForCondition(() => {
             const avg = graphNodes.reduce((acc, curr) => {
                 return acc + curr.getTargetNeighborStringIds().length

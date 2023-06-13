@@ -31,6 +31,8 @@ import { ProxyStreamConnectionServer } from './proxy/ProxyStreamConnectionServer
 
 export interface Events {
     message: (message: StreamMessage) => void
+    targetNeighborConnected: (stringId: string) => void
+    nearbyContactPoolIdAdded: () => void
 }
 
 export interface StrictRandomGraphNodeConfig {
@@ -106,6 +108,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         this.config.P2PTransport.on('disconnected', (peerDescriptor: PeerDescriptor) => this.onPeerDisconnected(peerDescriptor))
         this.config.targetNeighbors.on('peerAdded', (id, _remote) => {
             this.config.propagation.onNeighborJoined(id)
+            this.emit('targetNeighborConnected', id)
         })
         this.config.proxyConnectionServer?.on('newConnection', (id: PeerIDKey) => {
             this.config.propagation.onNeighborJoined(id)
@@ -132,6 +135,8 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         if (this.stopped) {
             return
         }
+      
+        const oldLength = this.config.nearbyContactPool.getStringIds().length
         this.config.nearbyContactPool.replaceAll(closestTen.map((descriptor) =>
             new RemoteRandomGraphNode(
                 descriptor,
@@ -139,6 +144,11 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
                 toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
             )
         ))
+
+        if (oldLength < this.config.nearbyContactPool.getStringIds().length) {
+            this.emit('nearbyContactPoolIdAdded')
+        }
+        
         if (this.config.targetNeighbors.size() < this.config.numOfTargetNeighbors) {
             this.config.neighborFinder.start()
         }
@@ -281,5 +291,4 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         }
         return this.config.randomContactPool.getStringIds()
     }
-
 }

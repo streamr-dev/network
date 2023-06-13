@@ -6,7 +6,9 @@
     },
     "include": [
         "src/**/*",
-        "package.json"
+        "package.json",
+        "test/benchmark/first-message.ts",
+        "test/utils/utils.ts"
     ],
     "references": [
         { "path": "../proto-rpc/tsconfig.node.json" },

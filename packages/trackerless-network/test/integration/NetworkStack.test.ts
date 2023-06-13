@@ -17,14 +17,15 @@ describe('NetworkStack', () => {
         kademliaId: PeerID.fromString('entrypoint').value,
         type: NodeType.NODEJS,
         websocket: { ip: 'localhost', port: 32222 },
-        nodeName: 'node2'
+        nodeName: 'entrypoint'
     }
 
     beforeEach(async () => {
         stack1 = new NetworkStack({
             layer0: {
                 peerDescriptor: epDescriptor,
-                entryPoints: [epDescriptor]
+                entryPoints: [epDescriptor],
+                nodeName: 'entrypoint'
             },
             networkNode: {}
         })

@@ -39,7 +39,7 @@
     "k-bucket": "^5.1.0",
     "lodash": "^4.17.21",
     "node-datachannel": "^0.4.2",
-    "sinon": "^15.0.4",
+    "sinon": "latest",
     "uuid": "^9.0.0",
     "websocket": "^1.0.34"
   },
@@ -56,6 +56,7 @@
     "express": "^4.17.1",
     "patch-package": "^7.0.0",
     "setimmediate": "^1.0.5",
+    "timers-browserify": "^2.0.12",
     "ts-node": "^10.9.1"
   },
   "optionalDependencies": {

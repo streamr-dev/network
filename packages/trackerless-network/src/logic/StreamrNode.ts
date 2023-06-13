@@ -1,21 +1,22 @@
+/* eslint-disable @typescript-eslint/parameter-properties */
+
 import { RandomGraphNode } from './RandomGraphNode'
 import {
     PeerDescriptor,
     ConnectionLocker,
     DhtNode,
     ITransport,
-    keyFromPeerDescriptor,
-    PeerIDKey
+    keyFromPeerDescriptor
 } from '@streamr/dht'
 import { StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { EventEmitter } from 'eventemitter3'
 import {
     Logger,
-    waitForCondition,
     MetricsContext,
     RateMetric,
     Metric,
-    MetricsDefinition
+    MetricsDefinition,
+    waitForEvent3
 } from '@streamr/utils'
 import { uniq } from 'lodash'
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
@@ -26,10 +27,41 @@ import { createRandomGraphNode } from './createRandomGraphNode'
 import { ProxyDirection } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { IStreamNode } from './IStreamNode'
 import { ProxyStreamConnectionClient } from './proxy/ProxyStreamConnectionClient'
+import { PeerIDKey } from '@streamr/dht/src/exports'
 
 enum NodeType {
     RANDOM_GRAPH = 'random-graph',
     PROXY = 'proxy'
+}
+
+export interface NeighborCounterEvents {
+    targetReached: () => void
+}
+
+class NeighborCounter {
+    private counter = 0
+    private emitter = new EventEmitter<NeighborCounterEvents>()
+
+    constructor(private randomGraphNode: RandomGraphNode, private targetNumberOfNeighbors: number) {
+        this.counter = randomGraphNode.getTargetNeighborStringIds().length
+        randomGraphNode.on('targetNeighborConnected', this.onTargetNeighborConnected)
+    }
+
+    private onTargetNeighborConnected = (_id: string) => {
+        this.counter++
+        if (this.counter == this.targetNumberOfNeighbors) {
+            this.randomGraphNode.off('targetNeighborConnected', this.onTargetNeighborConnected)
+            this.emitter.emit('targetReached')
+        }
+    }
+
+    public async waitForTargetReached(timeout: number): Promise<void> {
+        if (this.counter >= this.targetNumberOfNeighbors) {
+            return
+        } else {
+            await waitForEvent3<NeighborCounterEvents>(this.emitter, 'targetReached', timeout)
+        }
+    }
 }
 
 export interface StreamObject {
@@ -44,7 +76,7 @@ export interface Events {
 
 const logger = new Logger(module)
 
-let cleanUp: () => Promise<void> = async () => {}
+let cleanUp: () => Promise<void> = async () => { }
 
 interface Metrics extends MetricsDefinition {
     publishMessagesPerSecond: Metric
@@ -167,7 +199,7 @@ export class StreamrNode extends EventEmitter<Events> {
             return
         }
         logger.info(`Joining stream ${streamPartID}`)
-        const [ layer1, layer2 ] = this.createStream(streamPartID, knownEntryPointDescriptors)
+        const [layer1, layer2] = this.createStream(streamPartID, knownEntryPointDescriptors)
         await layer1.start()
         await layer2.start()
         const forwardingPeer = this.layer0!.isJoinOngoing() ? this.layer0!.getKnownEntryPoints()[0] : undefined
@@ -210,7 +242,7 @@ export class StreamrNode extends EventEmitter<Events> {
             numberOfNodesPerKBucket: 4,
             rpcRequestTimeout: 15000,
             dhtJoinTimeout: 60000,
-            nodeName: this.config.nodeName
+            nodeName: this.config.nodeName + ':layer1'
         })
     }
 
@@ -240,7 +272,8 @@ export class StreamrNode extends EventEmitter<Events> {
         }
         await this.joinStream(streamPartId, knownEntryPointDescriptors)
         if (this.getStream(streamPartId)!.layer1!.getBucketSize() > 0) {
-            await waitForCondition(() => this.getStream(streamPartId)!.layer2.getTargetNeighborStringIds().length > 0, timeout)
+            const neighborCounter = new NeighborCounter(this.getStream(streamPartId)!.layer2 as RandomGraphNode, 1)
+            await neighborCounter.waitForTargetReached(timeout || 5001)
         }
         this.publishToStream(streamPartId, knownEntryPointDescriptors, msg)
         return this.getStream(streamPartId)?.layer2.getTargetNeighborStringIds().length || 0
@@ -257,7 +290,8 @@ export class StreamrNode extends EventEmitter<Events> {
         }
         await this.joinStream(streamPartId, knownEntryPointDescriptors)
         if (this.getStream(streamPartId)!.layer1!.getBucketSize() > 0) {
-            await waitForCondition(() => this.getStream(streamPartId)!.layer2.getTargetNeighborStringIds().length >= expectedNeighbors, timeout)
+            const neighborCounter = new NeighborCounter(this.getStream(streamPartId)!.layer2 as RandomGraphNode, expectedNeighbors)
+            await neighborCounter.waitForTargetReached(timeout || 5002)
         }
         this.subscribeToStream(streamPartId, knownEntryPointDescriptors)
         return this.getStream(streamPartId)?.layer2.getTargetNeighborStringIds().length || 0
