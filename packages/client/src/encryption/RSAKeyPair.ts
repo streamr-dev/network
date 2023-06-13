@@ -5,9 +5,11 @@ const { webcrypto } = crypto
 
 /**
  * The length of encrypted data determines the minimum length. In StreamrClient we use RSA
- * for encrypting 32 byte GroupKeys and therefore minimum key length is 585 bits.
+ * for encrypting 32 byte GroupKeys. In Node environment 585 bits is enough, but in
+ * browser environment we need 640.
+ * https://en.wikipedia.org/wiki/Optimal_asymmetric_encryption_padding
  */
-export const MIN_KEY_LENGTH = 585
+export const MIN_KEY_LENGTH = 640
 
 function getSubtle(): SubtleCrypto {
     const subtle = typeof window !== 'undefined' ? window?.crypto?.subtle : webcrypto.subtle
