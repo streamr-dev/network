@@ -13,7 +13,7 @@ found [here](packages/broker/CHANGELOG.md).
 
 #### Added
 
-- Add optinal config option `encryption.rsaKeyLength` to control the strength of RSA encryption in key-exchange (https://github.com/streamr-dev/network/pull/1505)
+- Add optional config option `encryption.rsaKeyLength` to control the strength of RSA encryption in key-exchange (https://github.com/streamr-dev/network/pull/1505)
 
 #### Changed
 
