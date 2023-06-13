@@ -22,7 +22,8 @@ describe('StreamEntryPointDiscovery', () => {
         data: Any.pack(peerDescriptor, PeerDescriptor),
         ttl: 1000,
         storer: peerDescriptor,
-        kademliaId: Uint8Array.from([1, 2, 3])
+        kademliaId: Uint8Array.from([1, 2, 3]),
+        stale: false
     }
 
     const stream = 'stream#0'

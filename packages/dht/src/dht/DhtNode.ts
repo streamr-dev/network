@@ -273,7 +273,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         })
         this.dataStore = new DataStore({
             rpcCommunicator: this.rpcCommunicator!,
-            router: this.router!,
             recursiveFinder: this.recursiveFinder,
             ownPeerDescriptor: this.ownPeerDescriptor!,
             serviceId: this.config.serviceId,
