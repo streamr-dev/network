@@ -1,6 +1,6 @@
 import { ContractReceipt } from '@ethersproject/contracts'
 import { StreamID, StreamMessage, toStreamID } from '@streamr/protocol'
-import { TheGraphClient, merge, randomString, toEthereumAddress } from '@streamr/utils'
+import { Logger, TheGraphClient, merge, randomString, toEthereumAddress } from '@streamr/utils'
 import fetch, { Response } from 'node-fetch'
 import { AbortSignal } from 'node-fetch/externals'
 import split2 from 'split2'
@@ -10,6 +10,8 @@ import { StrictStreamrClientConfig } from '../Config'
 import { StreamrClientEventEmitter } from '../events'
 import { WebStreamToNodeStream } from './WebStreamToNodeStream'
 import { SEPARATOR } from './uuid'
+
+const logger = new Logger(module)
 
 /**
  * Generates counter-based ids.
@@ -151,9 +153,14 @@ export const fetchHttpStream = async function*(
     parseError: (response: Response) => Promise<Error>,
     abortController = new AbortController()
 ): AsyncIterable<StreamMessage> {
+    logger.debug('Send HTTP request', { url })
     const response: Response = await fetch(url, {
         // cast is needed until this is fixed: https://github.com/node-fetch/node-fetch/issues/1652
         signal: abortController.signal as AbortSignal
+    })
+    logger.debug('Received HTTP response', {
+        url,
+        status: response.status,
     })
     if (!response.ok) {
         throw await parseError(response)
