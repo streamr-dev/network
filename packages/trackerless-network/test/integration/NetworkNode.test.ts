@@ -31,6 +31,7 @@ describe('NetworkNode', () => {
     const STREAM_ID = StreamPartIDUtils.parse('test#0')
 
     beforeEach(async () => {
+        Simulator.useFakeTimers()
         const simulator = new Simulator()
         transport1 = new SimulatorTransport(pd1, simulator)
         transport2 = new SimulatorTransport(pd2, simulator)
@@ -61,6 +62,7 @@ describe('NetworkNode', () => {
             node1.stop(),
             node2.stop()
         ])
+        Simulator.useFakeTimers(false)
     })
 
     it('wait for join + publish and subscribe', async () => {

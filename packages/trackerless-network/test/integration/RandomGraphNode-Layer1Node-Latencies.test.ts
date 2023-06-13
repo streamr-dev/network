@@ -27,6 +27,7 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         }
     })
     beforeEach(async () => {
+        Simulator.useFakeTimers()
         const simulator = new Simulator(LatencyType.FIXED, 50)
         const entrypointCm = new SimulatorTransport(entrypointDescriptor, simulator)
         const cms: SimulatorTransport[] = range(numOfNodes).map((i) =>
@@ -68,6 +69,7 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         entryPointRandomGraphNode.stop()
         await Promise.all(dhtNodes.map((node) => node.stop()))
         await Promise.all(graphNodes.map((node) => node.stop()))
+        Simulator.useFakeTimers(false)
     })
 
     it('happy path single peer', async () => {
@@ -112,7 +114,7 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
     }, 60000)
 
     it('happy path 64 peers', async () => {
-        range(numOfNodes).map((i) => graphNodes[i].start())
+        await Promise.all(range(numOfNodes).map((i) => graphNodes[i].start()))
         await Promise.all(range(numOfNodes).map((i) => {
             dhtNodes[i].joinDht(entrypointDescriptor)
         }))

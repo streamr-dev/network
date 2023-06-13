@@ -70,6 +70,7 @@ describe('Handshakes', () => {
     let simulatorTransport3: SimulatorTransport
 
     beforeEach(() => {
+        Simulator.useFakeTimers()
         simulator = new Simulator()
         simulatorTransport1 = new SimulatorTransport(peerDescriptor1, simulator)
         simulatorTransport2 = new SimulatorTransport(peerDescriptor2, simulator)
@@ -103,6 +104,7 @@ describe('Handshakes', () => {
         await simulatorTransport2.stop()
         await simulatorTransport3.stop()
         simulator.stop()
+        Simulator.useFakeTimers(false)
     })
 
     it('Two peers can handshake', async () => {

@@ -34,6 +34,7 @@ describe('RemoteHandshaker', () => {
     let mockConnectionManager2: SimulatorTransport
 
     beforeEach(() => {
+        Simulator.useFakeTimers()
         simulator = new Simulator()
         mockConnectionManager1 = new SimulatorTransport(serverPeer, simulator)
         mockConnectionManager2 = new SimulatorTransport(clientPeer, simulator)
@@ -67,6 +68,7 @@ describe('RemoteHandshaker', () => {
         await mockConnectionManager1.stop()
         await mockConnectionManager2.stop()
         simulator.stop()
+        Simulator.useFakeTimers(false)
     })
 
     it('handshake', async () => {
