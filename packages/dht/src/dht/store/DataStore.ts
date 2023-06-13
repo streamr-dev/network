@@ -9,7 +9,6 @@ import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { StoreServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
-import { IRouter } from '../routing/Router'
 import { IRecursiveFinder } from '../find/RecursiveFinder'
 import { isSamePeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger } from '@streamr/utils'
@@ -25,7 +24,6 @@ import { DhtPeer } from '../DhtPeer'
 
 interface DataStoreConfig {
     rpcCommunicator: RoutingRpcCommunicator
-    router: IRouter
     recursiveFinder: IRecursiveFinder
     ownPeerDescriptor: PeerDescriptor
     localDataStore: LocalDataStore
@@ -42,7 +40,6 @@ const logger = new Logger(module)
 export class DataStore implements IStoreService {
 
     private readonly rpcCommunicator: RoutingRpcCommunicator
-    private readonly router: IRouter
     private readonly recursiveFinder: IRecursiveFinder
     private readonly ownPeerDescriptor: PeerDescriptor
     private readonly localDataStore: LocalDataStore
@@ -57,7 +54,6 @@ export class DataStore implements IStoreService {
         this.storeData = this.storeData.bind(this)
         this.migrateData = this.migrateData.bind(this)
         this.rpcCommunicator = config.rpcCommunicator
-        this.router = config.router
         this.recursiveFinder = config.recursiveFinder
         this.ownPeerDescriptor = config.ownPeerDescriptor
         this.localDataStore = config.localDataStore
@@ -73,12 +69,8 @@ export class DataStore implements IStoreService {
         this.dhtNodeEmitter.on('newContact', (peerDescriptor: PeerDescriptor, _closestPeers: PeerDescriptor[]) => {
             this.localDataStore.getStore().forEach((dataMap, _dataKey) => {
                 dataMap.forEach((dataEntry) => {
-                    //if (this.isFurtherFromDataThan(dataEntry, contact) &&
-                    //    this.isFurtherstStorerOf(dataEntry)) 
                     if (this.shouldMigrateDataToNewNode(dataEntry.dataEntry, peerDescriptor)) {
-
                         this.migrateDataToContact(dataEntry.dataEntry, peerDescriptor)
-
                     }
                 })
             })
@@ -102,7 +94,6 @@ export class DataStore implements IStoreService {
             }
         })
 
-        //const closestToDat = sortedList.getAllContacts()
         if (!sortedList.getAllContacts()[0].getPeerId().equals(ownPeerId!)) {
             // If we are not the closes node to the data, do not migrate
             return false
@@ -125,8 +116,10 @@ export class DataStore implements IStoreService {
         // do migrate data to it
 
         if (index < 5) {
+            this.localDataStore.setStale(dataId, dataEntry.storer!, false)
             return true
         } else {
+            this.localDataStore.setStale(dataId, dataEntry.storer!, true)
             return false
         }
     }
@@ -157,8 +150,12 @@ export class DataStore implements IStoreService {
         for (let i = 0; i < closestNodes.length && successfulNodes.length < 5; i++) {
             if (isSamePeerDescriptor(this.ownPeerDescriptor, closestNodes[i])) {
                 this.localDataStore.storeEntry({
-                    kademliaId: key, storer: this.ownPeerDescriptor,
-                    ttl, storedAt: Timestamp.now(), data
+                    kademliaId: key, 
+                    storer: this.ownPeerDescriptor,
+                    ttl, 
+                    storedAt: Timestamp.now(), 
+                    data,
+                    stale: false
                 })
                 successfulNodes.push(closestNodes[i])
                 continue
@@ -184,13 +181,33 @@ export class DataStore implements IStoreService {
         return successfulNodes
     }
 
+    private selfIsOneOfClosestPeers(dataId: Uint8Array): boolean {
+        const ownPeerId = PeerID.fromValue(this.ownPeerDescriptor.kademliaId)
+        const closestPeers = this.getNodesClosestToIdFromBucket(dataId, 5)
+        const sortedList = new SortedContactList<Contact>(ownPeerId, 5, undefined, true)
+        sortedList.addContact(new Contact(this.ownPeerDescriptor))
+        closestPeers.forEach((con) => sortedList.addContact(new Contact(con.getPeerDescriptor())))
+        return sortedList.getClosestContacts().some((node) => node.getPeerId().equals(ownPeerId))
+    }
+
     // RPC service implementation
     async storeData(request: StoreDataRequest, context: ServerCallContext): Promise<StoreDataResponse> {
         const ttl = Math.min(request.ttl, this.storeMaxTtl)
         const { incomingSourceDescriptor } = context as DhtCallContext
         const { kademliaId, data } = request
 
-        this.localDataStore.storeEntry({ kademliaId: kademliaId, storer: incomingSourceDescriptor!, ttl, storedAt: Timestamp.now(), data })
+        this.localDataStore.storeEntry({ 
+            kademliaId: kademliaId, 
+            storer: incomingSourceDescriptor!, 
+            ttl,
+            storedAt: Timestamp.now(),
+            data,
+            stale: !this.selfIsOneOfClosestPeers(kademliaId)
+        })
+        
+        if (!this.selfIsOneOfClosestPeers(kademliaId)) {
+            this.localDataStore.setAllEntriesAsStale(PeerID.fromValue(kademliaId))
+        }
 
         logger.trace(this.ownPeerDescriptor.nodeName + ' storeData()')
         return StoreDataResponse.create()
@@ -200,9 +217,14 @@ export class DataStore implements IStoreService {
     public async migrateData(request: MigrateDataRequest, context: ServerCallContext): Promise<MigrateDataResponse> {
         logger.trace(this.ownPeerDescriptor.nodeName + ' server-side migrateData()')
         const dataEntry = request.dataEntry!
+
         const wasStored = this.localDataStore.storeEntry(dataEntry)
+        
         if (wasStored) {
             this.migrateDataToNeighborsIfNeeded((context as DhtCallContext).incomingSourceDescriptor!, request.dataEntry!)
+        }
+        if (!this.selfIsOneOfClosestPeers(dataEntry.kademliaId)) {
+            this.localDataStore.setAllEntriesAsStale(PeerID.fromValue(dataEntry.kademliaId))
         }
         logger.trace(this.ownPeerDescriptor.nodeName + ' server-side migrateData() at end')
         return MigrateDataResponse.create()

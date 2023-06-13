@@ -77,6 +77,10 @@ export interface DataEntry {
      * @generated from protobuf field: uint32 ttl = 5;
      */
     ttl: number; // milliseconds
+    /**
+     * @generated from protobuf field: bool stale = 6;
+     */
+    stale: boolean;
 }
 /**
  * @generated from protobuf message dht.ClosestPeersRequest
@@ -824,7 +828,8 @@ class DataEntry$Type extends MessageType$<DataEntry> {
             { no: 2, name: "kademliaId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 3, name: "data", kind: "message", T: () => Any },
             { no: 4, name: "storedAt", kind: "message", T: () => Timestamp },
-            { no: 5, name: "ttl", kind: "scalar", T: 13 /*ScalarType.UINT32*/ }
+            { no: 5, name: "ttl", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
+            { no: 6, name: "stale", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }
 }
