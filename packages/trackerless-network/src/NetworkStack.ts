@@ -1,6 +1,45 @@
-import { ConnectionManager, DhtNode, DhtNodeOptions, isSamePeerDescriptor } from '@streamr/dht'
+/* eslint-disable @typescript-eslint/parameter-properties */
+
+import { ConnectionManager, DhtNode, DhtNodeOptions, isSamePeerDescriptor, PeerDescriptor } from '@streamr/dht'
 import { StreamrNode, StreamrNodeOpts } from './logic/StreamrNode'
-import { MetricsContext, waitForCondition } from '@streamr/utils'
+import { MetricsContext, waitForEvent3 } from '@streamr/utils'
+import { EventEmitter } from 'eventemitter3'
+
+interface ReadynessEvents {
+    done: () => void
+}
+
+class ReadynessListener {
+    private emitter = new EventEmitter<ReadynessEvents>()
+
+    constructor(private networkStack: NetworkStack,
+        private dhtNode: DhtNode) {
+
+        networkStack.on('stopped', this.onStopped)
+        dhtNode.on('connected', this.onConnected)
+    }
+
+    private onConnected = (_peerDescriptor: PeerDescriptor) => {
+        this.networkStack.off('stopped', this.onStopped)
+        this.dhtNode.off('connected', this.onConnected)
+        this.emitter.emit('done')
+    }
+
+    private onStopped = () => {
+        this.networkStack.off('stopped', this.onStopped)
+        this.dhtNode.off('connected', this.onConnected)
+        this.emitter.emit('done')
+    }
+
+    public async waitUntilReady(timeout: number): Promise<void> {
+        if (this.dhtNode.getNumberOfConnections() > 0) {
+            return
+        } else {
+            await waitForEvent3<ReadynessEvents>(this.emitter, 'done', timeout)
+
+        }
+    }
+}
 
 export interface NetworkOptions {
     layer0: DhtNodeOptions
@@ -8,7 +47,11 @@ export interface NetworkOptions {
     metricsContext?: MetricsContext
 }
 
-export class NetworkStack {
+export interface NetworkStackEvents {
+    stopped: () => void
+}
+
+export class NetworkStack extends EventEmitter<NetworkStackEvents> {
 
     private connectionManager?: ConnectionManager
     private layer0DhtNode?: DhtNode
@@ -19,6 +62,7 @@ export class NetworkStack {
     private readonly firstConnectionTimeout: number
 
     constructor(options: NetworkOptions) {
+        super()
         this.options = options
         this.metricsContext = options.metricsContext || new MetricsContext()
         this.layer0DhtNode = new DhtNode({
@@ -27,6 +71,7 @@ export class NetworkStack {
         })
         this.streamrNode = new StreamrNode({
             ...options.networkNode,
+            nodeName: options.networkNode.nodeName || options.layer0.nodeName,
             metricsContext: this.metricsContext
         })
         this.firstConnectionTimeout = options.networkNode.firstConnectionTimeout || 5000
@@ -40,11 +85,16 @@ export class NetworkStack {
             await this.layer0DhtNode?.joinDht(entryPoint)
             await this.streamrNode?.start(this.layer0DhtNode!, this.connectionManager!, this.connectionManager!)
         } else {
-            setImmediate(() => this.layer0DhtNode?.joinDht(this.options.layer0.entryPoints![0])) 
-            await waitForCondition(() => this.stopped || this.layer0DhtNode!.getNumberOfConnections() > 0, this.firstConnectionTimeout)
+            
+            setImmediate(() => {
+                this.layer0DhtNode?.joinDht(this.options.layer0.entryPoints![0])
+            })
+            const readynessListener = new ReadynessListener(this, this.layer0DhtNode!)
+            await readynessListener.waitUntilReady(this.firstConnectionTimeout)
+            
             await this.streamrNode?.start(this.layer0DhtNode!, this.connectionManager!, this.connectionManager!)
         }
-        
+
     }
 
     getStreamrNode(): StreamrNode {
@@ -69,6 +119,7 @@ export class NetworkStack {
         this.streamrNode = undefined
         this.layer0DhtNode = undefined
         this.connectionManager = undefined
+        this.emit('stopped')
     }
 
 }

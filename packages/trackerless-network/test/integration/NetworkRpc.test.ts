@@ -14,6 +14,7 @@ import { Empty } from '../../src/proto/google/protobuf/empty'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { createStreamMessage } from '../utils/utils'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
+import { Simulator } from '@streamr/dht'
 
 describe('Network RPC', () => {
     let rpcCommunicator1: RpcCommunicator
@@ -22,6 +23,7 @@ describe('Network RPC', () => {
     let recvCounter = 0
 
     beforeEach(() => {
+        Simulator.useFakeTimers()
         rpcCommunicator1 = new RpcCommunicator()
         rpcCommunicator2 = new RpcCommunicator()
         rpcCommunicator1.on('outgoingMessage', (message: RpcMessage, _requestId: string, _ucallContext?: ProtoCallContext) => {
@@ -41,6 +43,7 @@ describe('Network RPC', () => {
     afterEach(() => {
         rpcCommunicator1.stop()
         rpcCommunicator2.stop()
+        Simulator.useFakeTimers(false)
     })
 
     it('sends Data', async () => {

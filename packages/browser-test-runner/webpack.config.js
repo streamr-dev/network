@@ -49,7 +49,8 @@ module.exports = function({ entry, libraryName, alias = {} }) {
                 fallback: {
                     'fs': false,
                     'module': false,
-                    'net': false
+                    'net': false,
+                    'timers': require.resolve('timers-browserify')
                 }
             },
             output: {

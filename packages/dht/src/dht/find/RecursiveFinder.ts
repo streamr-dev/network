@@ -172,6 +172,13 @@ export class RecursiveFinder implements IRecursiveFinder {
         return false
     }
 
+    private findLocalData(idToFind: Uint8Array, findMode: FindMode): Map<PeerIDKey, DataEntry> | undefined {
+        if (findMode === FindMode.DATA) {
+            return this.localDataStore.getEntry(PeerID.fromValue(idToFind))
+        }
+        return undefined
+    }
+
     private reportRecursiveFindResult(
         routingPath: PeerDescriptor[],
         targetPeerDescriptor: PeerDescriptor,
@@ -205,20 +212,17 @@ export class RecursiveFinder implements IRecursiveFinder {
         const msg = routedMessage.message
         const recursiveFindRequest = msg?.body.oneofKind === 'recursiveFindRequest' ? msg.body.recursiveFindRequest : undefined
         const closestPeersToDestination = this.getClosestPeerDescriptors(routedMessage.destinationPeer!.kademliaId, 5)
-        const foundLocalData = this.findAndReportLocalData(idToFind.value, recursiveFindRequest!.findMode,
-            routedMessage.routingPath, routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId)
-        if (foundLocalData) {
-            return createRouteMessageAck(routedMessage)
-        } else if (this.ownPeerId!.equals(idToFind)) {
+        const data = this.findLocalData(idToFind.value, recursiveFindRequest!.findMode)
+        if (this.ownPeerId!.equals(idToFind)) {
             this.reportRecursiveFindResult(routedMessage.routingPath, routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
-                closestPeersToDestination, undefined, true)
+                closestPeersToDestination, data, true)
             return createRouteMessageAck(routedMessage)
         }
         const ack = this.router.doRouteMessage(routedMessage, RoutingMode.RECURSIVE_FIND, excludedPeer)
         if (ack.error === RoutingErrors.NO_CANDIDATES_FOUND) {
             logger.trace(`findRecursively Node ${this.ownPeerDescriptor.nodeName} found no candidates`)
             this.reportRecursiveFindResult(routedMessage.routingPath, routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
-                closestPeersToDestination, undefined, true)
+                closestPeersToDestination, data, true)
         } else if (ack.error) {
             return ack
         } else {
@@ -228,7 +232,7 @@ export class RecursiveFinder implements IRecursiveFinder {
                 && !this.isPeerCloserToIdThanSelf(closestPeersToDestination[0], idToFind)
             )
             this.reportRecursiveFindResult(routedMessage.routingPath, routedMessage.sourcePeer!, recursiveFindRequest!.recursiveFindSessionId,
-                closestPeersToDestination, undefined, noCloserContactsFound)
+                closestPeersToDestination, data, noCloserContactsFound)
         }
         return ack
     }

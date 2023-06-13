@@ -66,7 +66,7 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
         })
         if (this.noCloserNodesReceivedCounter >= 1 && unreportedHops.size === 0) {
             if (this.mode === FindMode.DATA 
-                && (this.foundData.size > 0 || this.noCloserNodesReceivedCounter >= this.waitedRoutingPathCompletions)) {
+                && (this.hasNonStaleData() || this.noCloserNodesReceivedCounter >= this.waitedRoutingPathCompletions)) {
                 return true
             } else if (this.mode === FindMode.DATA) {
                 return false
@@ -74,6 +74,10 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
             return true
         }
         return false
+    }
+
+    private hasNonStaleData(): boolean {
+        return Array.from(this.foundData.values()).some((entry) => entry.stale === false)
     }
 
     public doReportRecursiveFindResult(

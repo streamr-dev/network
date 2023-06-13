@@ -9,7 +9,7 @@ import { StreamMessage, toStreamID, MessageID, StreamPartIDUtils, StreamMessageT
 import { waitForEvent3 } from '@streamr/utils'
 import { streamPartIdToDataKey } from '../../src/logic/StreamEntryPointDiscovery'
 
-const numNodes = 300
+const numNodes = 10000
 
 let nodes: NetworkNode[]
 let simulator: Simulator
@@ -118,6 +118,7 @@ const measureJoiningTime = async (count: number) => {
 }
 
 const run = async () => {
+    Simulator.useFakeTimers()
     await prepareLayer0()
     for (let i = 0; i < 20; i++) {
         await prepareStream(`stream-${i}`)
@@ -132,6 +133,7 @@ const run = async () => {
     }
     fs.closeSync(logFile)
     await shutdownNetwork()
+    Simulator.useFakeTimers(false)
 } 
 
 // eslint-disable-next-line promise/catch-or-return

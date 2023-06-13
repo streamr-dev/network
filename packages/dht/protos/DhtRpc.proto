@@ -76,6 +76,7 @@ message DataEntry {
   google.protobuf.Any data = 3;
   google.protobuf.Timestamp storedAt = 4; 
   uint32 ttl = 5;   // milliseconds
+  bool stale = 6;
 }
 
 message ClosestPeersRequest {

@@ -24,6 +24,7 @@ export class SimulatorConnection extends Connection implements IConnection {
         super(connectionType)
 
         this.ownPeerDescriptor = ownPeerDescriptor
+        this.setPeerDescriptor(targetPeerDescriptor)
         this.targetPeerDescriptor = targetPeerDescriptor
         this.connectionType = connectionType
         this.simulator = simulator

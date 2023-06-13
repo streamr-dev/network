@@ -67,6 +67,20 @@ export class LocalDataStore {
         return dataEntries
     }
 
+    public setStale(key: PeerID, storer: PeerDescriptor, stale: boolean): void {
+        const storerKey = keyFromPeerDescriptor(storer)
+        const storedEntry = this.store.get(key.toKey())?.get(storerKey)
+        if (storedEntry) {
+            storedEntry.dataEntry.stale = stale
+        }
+    }
+
+    public setAllEntriesAsStale(key: PeerID): void {
+        this.store.get(key.toKey())?.forEach((value) => {
+            value.dataEntry.stale = true
+        })
+    }
+
     public deleteEntry(key: PeerID, storer: PeerDescriptor): void {
         const storerKey = keyFromPeerDescriptor(storer)
         const storedEntry = this.store.get(key.toKey())?.get(storerKey)

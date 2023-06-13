@@ -151,6 +151,7 @@ export class Router implements IRouter {
         if (excludedPeer) {
             excludedPeers.push(peerIdFromPeerDescriptor(excludedPeer))
         }
+        logger.debug(' routing session created with connections: ' + this.connections.size )
         return new RoutingSession(
             this.rpcCommunicator,
             this.ownPeerDescriptor!,
@@ -216,7 +217,11 @@ export class Router implements IRouter {
     }
 
     private setForwardingEntries(routedMessage: RouteMessageWrapper): void {
-        if (routedMessage.reachableThrough.length > 0) {
+        const reachableThroughWithoutSelf = routedMessage.reachableThrough.filter((peer) => {
+            return !peerIdFromPeerDescriptor(peer).equals(this.ownPeerId!)
+        })
+        
+        if (reachableThroughWithoutSelf.length > 0) {
             const sourceKey = keyFromPeerDescriptor(routedMessage.sourcePeer!)
             if (this.forwardingTable.has(sourceKey)) {
                 const oldEntry = this.forwardingTable.get(sourceKey)
@@ -224,7 +229,7 @@ export class Router implements IRouter {
                 this.forwardingTable.delete(sourceKey)
             }
             const forwardingEntry: ForwardingTableEntry = {
-                peerDescriptors: routedMessage.reachableThrough,
+                peerDescriptors: reachableThroughWithoutSelf,
                 timeout: setTimeout(() => {
                     this.forwardingTable.delete(sourceKey)
                 }, 10000)
