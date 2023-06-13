@@ -102,7 +102,7 @@
     "@streamr/utils": "8.5.3",
     "ajv": "^8.8.2",
     "ajv-formats": "^2.1.1",
-    "core-js": "^3.19.1",
+    "core-js": "^3.31.0",
     "env-paths": "^2.2.1",
     "eventemitter3": "^5.0.0",
     "heap": "^0.2.6",
