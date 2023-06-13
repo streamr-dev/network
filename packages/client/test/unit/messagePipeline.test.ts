@@ -81,7 +81,7 @@ describe('messagePipeline', () => {
                 litProtocolLogging: false,
                 keyRequestTimeout: 50,
                 maxKeyRequestsPerSecond: 0
-            }
+            } as any
         }
         streamRegistryCached = {
             getStream: async () => stream,

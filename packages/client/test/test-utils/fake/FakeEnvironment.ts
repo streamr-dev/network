@@ -1,26 +1,30 @@
-import { container, DependencyContainer } from 'tsyringe'
-import merge from 'lodash/merge'
+import { NodeId } from '@streamr/network-node'
 import { fastPrivateKey, fastWallet } from '@streamr/test-utils'
+import merge from 'lodash/merge'
+import { DependencyContainer, container } from 'tsyringe'
 import { StreamrClientConfig } from '../../../src/Config'
-import { StorageNodeRegistry } from '../../../src/registry/StorageNodeRegistry'
-import { StreamrClient } from '../../../src/StreamrClient'
-import { StreamRegistry } from '../../../src/registry/StreamRegistry'
-import { FakeStorageNodeRegistry } from './FakeStorageNodeRegistry'
-import { FakeStreamRegistry } from './FakeStreamRegistry'
-import { StreamStorageRegistry } from '../../../src/registry/StreamStorageRegistry'
-import { FakeStreamStorageRegistry } from './FakeStreamStorageRegistry'
-import { FakeNetworkNodeFactory, FakeNetworkNode } from './FakeNetworkNode'
 import { NetworkNodeFactory } from '../../../src/NetworkNodeFacade'
+import { StreamrClient } from '../../../src/StreamrClient'
+import { MIN_KEY_LENGTH } from '../../../src/encryption/RSAKeyPair'
+import { StorageNodeRegistry } from '../../../src/registry/StorageNodeRegistry'
+import { StreamRegistry } from '../../../src/registry/StreamRegistry'
+import { StreamStorageRegistry } from '../../../src/registry/StreamStorageRegistry'
 import { LoggerFactory } from './../../../src/utils/LoggerFactory'
-import { FakeNetwork } from './FakeNetwork'
 import { FakeChain } from './FakeChain'
 import { FakeLogger } from './FakeLogger'
+import { FakeNetwork } from './FakeNetwork'
+import { FakeNetworkNode, FakeNetworkNodeFactory } from './FakeNetworkNode'
 import { FakeStorageNode } from './FakeStorageNode'
-import { NodeId } from '@streamr/network-node'
+import { FakeStorageNodeRegistry } from './FakeStorageNodeRegistry'
+import { FakeStreamRegistry } from './FakeStreamRegistry'
+import { FakeStreamStorageRegistry } from './FakeStreamStorageRegistry'
 
 const DEFAULT_CLIENT_OPTIONS: StreamrClientConfig = {
     network: {
         trackers: [] // without this setting NetworkNodeFacade would query the tracker addresses from the contract
+    },
+    encryption: {
+        rsaKeyLength: MIN_KEY_LENGTH
     },
     metrics: false
 }

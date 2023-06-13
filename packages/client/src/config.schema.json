@@ -357,6 +357,10 @@
                 "maxKeyRequestsPerSecond": {
                     "type": "number",
                     "default": 20
+                },
+                "rsaKeyLength": {
+                    "type": "number",
+                    "default": 4096
                 }
             },
             "default": {}

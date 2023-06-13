@@ -1,5 +1,6 @@
-import { StreamrClientConfig } from './Config'
 import { toEthereumAddress } from '@streamr/utils'
+import { StreamrClientConfig } from './Config'
+import { MIN_KEY_LENGTH } from './encryption/RSAKeyPair'
 
 function toNumber(value: any): number | undefined {
     return (value !== undefined) ? Number(value) : undefined
@@ -51,6 +52,9 @@ export const CONFIG_TEST: StreamrClientConfig = {
         },
         streamRegistryChainRPCs: sideChainConfig,
         theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:8000/subgraphs/name/streamr-dev/network-contracts`,
+    },
+    encryption: {
+        rsaKeyLength: MIN_KEY_LENGTH
     },
     _timeouts: {
         theGraph: {

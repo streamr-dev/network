@@ -38,7 +38,7 @@ describe('GroupKeyManager', () => {
                     litProtocolLogging: false,
                     maxKeyRequestsPerSecond: 10,
                     keyRequestTimeout: 100
-                }
+                } as any
             },
             createPrivateKeyAuthentication(wallet.privateKey, {} as any),
             eventEmitter,
