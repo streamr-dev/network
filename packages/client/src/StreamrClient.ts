@@ -1,7 +1,6 @@
 import 'reflect-metadata'
 import './utils/PatchTsyringe'
 
-import { ProxyDirection } from '@streamr/protocol'
 import { EthereumAddress, TheGraphClient, toEthereumAddress } from '@streamr/utils'
 import merge from 'lodash/merge'
 import omit from 'lodash/omit'
@@ -13,6 +12,7 @@ import { DestroySignal } from './DestroySignal'
 import { generateEthereumAccount as _generateEthereumAccount } from './Ethereum'
 import { ErrorCode } from './HttpUtil'
 import { PeerDescriptor } from '@streamr/dht'
+import { ProxyDirection } from '@streamr/trackerless-network'
 import { Message, convertStreamMessageToMessage } from './Message'
 import { MetricsPublisher } from './MetricsPublisher'
 import { NetworkNodeFacade, NetworkNodeStub } from './NetworkNodeFacade'
@@ -561,13 +561,13 @@ export class StreamrClient {
 
     // eslint-disable-next-line class-methods-use-this
     async setProxies(
-        _streamDefinition: StreamDefinition,
-        _nodeIds: string[],
-        _direction: ProxyDirection,
-        _connectionCount?: number
+        streamDefinition: StreamDefinition,
+        nodeDescriptors: JsonPeerDescriptor[],
+        direction: ProxyDirection,
+        connectionCount?: number
     ): Promise<void> {
-        // const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        // await this.node.setProxies(streamPartId, nodeIds, direction, connectionCount)
+        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
+        await this.node.setProxies(streamPartId, nodeDescriptors, direction, connectionCount)
     }
 
     // --------------------------------------------------------------------------------------------

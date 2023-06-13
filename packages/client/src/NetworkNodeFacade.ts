@@ -5,7 +5,8 @@ import { inject, Lifecycle, scoped } from 'tsyringe'
 import EventEmitter from 'eventemitter3'
 import {
     NetworkNode,
-    NetworkOptions
+    NetworkOptions,
+    ProxyDirection
 } from '@streamr/trackerless-network'
 import {
     PeerDescriptor,
@@ -15,8 +16,8 @@ import { MetricsContext } from '@streamr/utils'
 import { uuid } from './utils/uuid'
 import { pOnce } from './utils/promises'
 import { entryPointTranslator } from './utils/utils'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
-import { StreamMessage, StreamPartID, ProxyDirection } from '@streamr/protocol'
+import { ConfigInjectionToken, StrictStreamrClientConfig, JsonPeerDescriptor } from './Config'
+import { StreamMessage, StreamPartID } from '@streamr/protocol'
 import { DestroySignal } from './DestroySignal'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
 
@@ -45,14 +46,14 @@ export interface NetworkNodeStub {
     start: () => Promise<void>
     /** @internal */
     stop: () => Promise<void>
-    // /** @internal */
-    // setProxies: (
-    //     streamPartId: StreamPartID,
-    //     nodeIds: string[],
-    //     direction: ProxyDirection,
-    //     getUserId: () => Promise<string>,
-    //     connectionCount?: number
-    // ) => Promise<void>
+    /** @internal */
+    setProxies: (
+        streamPartId: StreamPartID,
+        peerDescriptors: PeerDescriptor[],
+        direction: ProxyDirection,
+        getUserId: () => Promise<string>,
+        connectionCount?: number
+    ) => Promise<void>
 }
 
 export interface Events {
@@ -109,15 +110,8 @@ export class NetworkNodeFacade {
 
         const entryPoints = this.getEntryPoints()
 
-        const ownPeerDescriptor: PeerDescriptor | undefined = this.config.network.layer0!.peerDescriptor ? {
-            kademliaId: PeerID.fromString(this.config.network.layer0!.peerDescriptor!.kademliaId).value,
-            type: this.config.network.layer0!.peerDescriptor!.type,
-            openInternet: this.config.network.layer0!.peerDescriptor!.openInternet,
-            udp: this.config.network.layer0!.peerDescriptor!.udp,
-            tcp: this.config.network.layer0!.peerDescriptor!.tcp,
-            websocket: this.config.network.layer0!.peerDescriptor!.websocket,
-            nodeName: this.config.network.layer0!.peerDescriptor!.kademliaId,
-        } : undefined
+        const ownPeerDescriptor: PeerDescriptor | undefined = this.config.network.layer0!.peerDescriptor ? 
+            this.jsonToPeerDescriptor(this.config.network.layer0!.peerDescriptor) : undefined
 
         if (id == null || id === '') {
             id = await this.generateId()
@@ -139,6 +133,15 @@ export class NetworkNodeFacade {
                 id
             },
             metricsContext: new MetricsContext()
+        }
+    }
+
+    private jsonToPeerDescriptor(jsonPeerDescriptor: JsonPeerDescriptor): PeerDescriptor {
+        return {
+            ...jsonPeerDescriptor,
+            websocket: jsonPeerDescriptor.websocket,
+            kademliaId: PeerID.fromString(jsonPeerDescriptor!.kademliaId).value,
+            nodeName: jsonPeerDescriptor!.kademliaId,
         }
     }
 
@@ -173,7 +176,6 @@ export class NetworkNodeFacade {
                 this.startNodeTask.reset() // allow subsequent calls to fail
                 await startNodeTask
             }
-
             await network.stop()
         }
         this.startNodeTask.reset() // allow subsequent calls to fail
@@ -231,24 +233,25 @@ export class NetworkNodeFacade {
         }
         return this.cachedNode!.publish(streamMessage, knownEntryPoints)
     }
-    //
-    // async setProxies(
-    //     streamPartId: StreamPartID,
-    //     nodeIds: string[],
-    //     direction: ProxyDirection,
-    //     connectionCount?: number
-    // ): Promise<void> {
-    //     if (this.isStarting()) {
-    //         await this.startNodeTask()
-    //     }
-    //     await this.cachedNode!.setProxies(
-    //         streamPartId,
-    //         nodeIds,
-    //         direction,
-    //         () => this.authentication.getAddress(),
-    //         connectionCount
-    //     )
-    // }
+    
+    async setProxies(
+        streamPartId: StreamPartID,
+        nodeDescriptors: JsonPeerDescriptor[],
+        direction: ProxyDirection,
+        connectionCount?: number
+    ): Promise<void> {
+        if (this.isStarting()) {
+            await this.startNodeTask()
+        }
+        const peerDescriptors = nodeDescriptors.map(this.jsonToPeerDescriptor)
+        await this.cachedNode!.setProxies(
+            streamPartId,
+            peerDescriptors,
+            direction,
+            () => this.authentication.getAddress(),
+            connectionCount
+        )
+    }
 
     private isStarting(): boolean {
         return !this.cachedNode || !this.startNodeComplete
