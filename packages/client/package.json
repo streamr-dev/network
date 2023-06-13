@@ -83,7 +83,7 @@
   "#IMPORTANT": "babel-runtime must be in dependencies, not devDependencies",
   "dependencies": {
     "@babel/runtime": "^7.22.5",
-    "@babel/runtime-corejs3": "^7.16.3",
+    "@babel/runtime-corejs3": "^7.22.5",
     "@ethersproject/abi": "^5.5.0",
     "@ethersproject/abstract-signer": "^5.5.0",
     "@ethersproject/address": "^5.5.0",
