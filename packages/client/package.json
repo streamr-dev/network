@@ -95,7 +95,7 @@
     "@ethersproject/transactions": "^5.5.0",
     "@ethersproject/wallet": "^5.5.0",
     "@ethersproject/web": "^5.5.0",
-    "@lit-protocol/core": "^2.2.5",
+    "@lit-protocol/core": "^2.2.24",
     "@lit-protocol/uint8arrays": "^2.2.24",
     "@streamr/network-node": "8.5.3",
     "@streamr/protocol": "8.5.3",
