@@ -27,7 +27,7 @@
         "packages/cli-tools"
     ],
     "dependencies": {
-        "@manypkg/cli": "^0.20.0",
+        "@manypkg/cli": "^0.21.0",
         "@tsconfig/node16": "^1.0.2",
         "@types/jest": "^29.5.1",
         "@types/node": "^18.16.17",
