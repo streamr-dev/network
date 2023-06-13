@@ -188,20 +188,29 @@ describe('RandomGraphNode-DhtNode', () => {
     }, 10000)
 
     it('happy path 64 peers', async () => {
-
+        /*
         const promise = Promise.all(graphNodes.map((node) => {
 
             const successListener = new SuccessListener(node, 4, 8)
             return waitForEvent3<SuccessEvents>(successListener, 'success', 15000)
         }))
 
-        range(numOfNodes).map((i) => graphNodes[i].start())
+        await Promise.all(range(numOfNodes).map((i) => graphNodes[i].start()))
         await Promise.all(range(numOfNodes).map(async (i) => {
             await dhtNodes[i].joinDht(entrypointDescriptor)
         }))
 
         await promise
+        */
 
+        await Promise.all(range(numOfNodes).map((i) => graphNodes[i].start()))
+        await Promise.all(range(numOfNodes).map((i) => {
+            dhtNodes[i].joinDht(entrypointDescriptor)
+        }))
+        await Promise.all(graphNodes.map((node) =>
+            waitForCondition(() => node.getTargetNeighborStringIds().length >= 4, 10000)
+        ))
+        
         await waitForCondition(() => {
             const avg = graphNodes.reduce((acc, curr) => {
                 return acc + curr.getTargetNeighborStringIds().length

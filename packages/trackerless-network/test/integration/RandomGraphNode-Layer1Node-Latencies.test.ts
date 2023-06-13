@@ -114,7 +114,7 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
     }, 60000)
 
     it('happy path 64 peers', async () => {
-        range(numOfNodes).map((i) => graphNodes[i].start())
+        await Promise.all(range(numOfNodes).map((i) => graphNodes[i].start()))
         await Promise.all(range(numOfNodes).map((i) => {
             dhtNodes[i].joinDht(entrypointDescriptor)
         }))
