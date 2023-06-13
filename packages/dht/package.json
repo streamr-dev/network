@@ -47,7 +47,7 @@
     "@types/express": "^4.17.13",
     "@types/k-bucket": "^5.0.1",
     "@types/lodash": "^4.14.175",
-    "@types/uuid": "^9.0.1",
+    "@types/uuid": "^9.0.2",
     "@types/websocket": "^1.0.3",
     "express": "^4.17.1",
     "patch-package": "^7.0.0",
