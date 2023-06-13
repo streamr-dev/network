@@ -3,7 +3,7 @@ import { randomEthereumAddress } from '@streamr/test-utils'
 import { collect } from '@streamr/utils'
 import range from 'lodash/range'
 import without from 'lodash/without'
-import { MessageStream } from './../../src/subscribe/MessageStream'
+import { PushPipeline } from './../../src/utils/PushPipeline'
 import { OrderMessages } from './../../src/subscribe/OrderMessages'
 import { Resends } from './../../src/subscribe/Resends'
 import { fromArray } from './../../src/utils/GeneratorUtils'
@@ -45,8 +45,8 @@ const createMockMessages = async (): Promise<StreamMessage[]> => {
     return messages
 }
 
-const createMessageStream = (...msgs: StreamMessage[]) => {
-    const result = new MessageStream()
+const createMessageStream = (...msgs: StreamMessage[]): PushPipeline<StreamMessage, StreamMessage> => {
+    const result = new PushPipeline<StreamMessage, StreamMessage>()
     for (const msg of msgs) {
         result.push(msg)
     }

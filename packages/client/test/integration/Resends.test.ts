@@ -1,95 +1,104 @@
 import 'reflect-metadata'
 
-import { toEthereumAddress } from '@streamr/utils'
-import { MessageID } from '@streamr/protocol'
-import { Authentication } from '../../src/Authentication'
-import { StreamPermission } from '../../src/permission'
-import { createSignedMessage } from '../../src/publish/MessageFactory'
+import { fastWallet } from '@streamr/test-utils'
+import { collect } from '@streamr/utils'
+import { createPrivateKeyAuthentication } from '../../src/Authentication'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
-import { StreamrClientError } from '../../src/StreamrClientError'
+import { GroupKey } from '../../src/encryption/GroupKey'
+import { StreamPermission } from '../../src/permission'
+import { MessageFactory } from '../../src/publish/MessageFactory'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
-import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
-import { createRandomAuthentication, createRelativeTestStreamId } from '../test-utils/utils'
-import { convertStreamMessageToMessage } from './../../src/Message'
-
-const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+import { createGroupKeyQueue, createStreamRegistryCached } from '../test-utils/utils'
 
 describe('Resends', () => {
 
-    describe('waitForStorage', () => {
+    let stream: Stream
+    let subscriber: StreamrClient
+    let messageFactory: MessageFactory
+    let environment: FakeEnvironment
 
-        let client: StreamrClient
-        let stream: Stream
-        let storageNode: FakeStorageNode
-        let authentication: Authentication
-
-        beforeEach(async () => {
-            authentication = createRandomAuthentication()
-            const environment = new FakeEnvironment()
-            client = environment.createClient()
-            stream = await client.createStream({
-                id: createRelativeTestStreamId(module),
-            })
-            await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
-            storageNode = environment.startStorageNode()
-        })
-
-        it('happy path', async () => {
-            await stream.addToStorageNode(storageNode.id)
-            const content = {
-                foo: Date.now()
+    beforeEach(async () => {
+        const publisherPrivateKey = fastWallet().privateKey
+        environment = new FakeEnvironment()
+        const publisher = environment.createClient({
+            auth: {
+                privateKey: publisherPrivateKey
             }
-            const publishedMsg = await client.publish(stream.id, content)
-            await client.waitForStorage(publishedMsg)
         })
+        stream = await publisher.createStream('/path')
+        subscriber = environment.createClient({
+            maxGapRequests: 1,
+            gapFillTimeout: 100
+        })
+        await stream.grantPermissions({
+            user: await subscriber.getAddress(),
+            permissions: [StreamPermission.SUBSCRIBE]
+        })
+        const groupKey = GroupKey.generate()
+        const authentication = createPrivateKeyAuthentication(publisherPrivateKey, undefined as any)
+        messageFactory = new MessageFactory({
+            authentication,
+            streamId: stream.id,
+            streamRegistry: createStreamRegistryCached(),
+            groupKeyQueue: await createGroupKeyQueue(authentication, groupKey)
+        })
+        // store the encryption key publisher's local group key store
+        await publisher.updateEncryptionKey({
+            streamId: stream.id,
+            distributionMethod: 'rekey',
+            key: groupKey
+        })
+        // trigger publisher to start serving response for group key requests
+        await publisher.publish(stream.id, {})
+    })
 
-        it('no match', async () => {
-            await stream.addToStorageNode(storageNode.id)
-            const content = {
-                foo: Date.now()
-            }
-            const publishedMsg = await client.publish(stream.id, content)
-            const messageMatchFn = jest.fn().mockReturnValue(false)
-            await expect(() => client.waitForStorage(publishedMsg, {
-                interval: 50,
-                timeout: 100,
-                count: 1,
-                messageMatchFn
-            })).rejects.toThrow('timed out')
-            expect(messageMatchFn).toHaveBeenCalledWith(expect.anything(), expect.anything())
-            expect(messageMatchFn.mock.calls[0][0].content).toEqual(content)
-            expect(messageMatchFn.mock.calls[0][1].content).toEqual(content)
-        })
+    afterEach(async () => {
+        await environment.destroy()
+    })
 
-        it('no message', async () => {
-            await stream.addToStorageNode(storageNode.id)
-            const msg = convertStreamMessageToMessage(await createSignedMessage({
-                messageId: new MessageID(stream.id, 0, Date.now(), 0, PUBLISHER_ID, 'msgChainId'),
-                serializedContent: JSON.stringify({}),
-                authentication
-            }))
-            await expect(() => client.waitForStorage(msg, {
-                interval: 50,
-                timeout: 100,
-                count: 1,
-                messageMatchFn: () => {
-                    return true
-                }
-            })).rejects.toThrow('timed out')
-        })
+    it('one storage node', async () => {
+        const allMessages = [
+            await messageFactory.createMessage({ foo: 1 }, { timestamp: 1000 }),
+            await messageFactory.createMessage({ foo: 2 }, { timestamp: 2000 }),
+            await messageFactory.createMessage({ foo: 3 }, { timestamp: 3000 })
+        ]
+        const storageNode = await environment.startStorageNode()
+        await stream.addToStorageNode(storageNode.id)
+        storageNode.storeMessage(allMessages[0])
+        storageNode.storeMessage(allMessages[2])
+        const messageStream = await subscriber.resend(stream.id, { last: 2 })
+        const receivedMessages = await collect(messageStream)
+        expect(receivedMessages.map((msg) => msg.content)).toEqual([
+            { foo: 1 },
+            { foo: 3 }
+        ])
+    })
 
-        it('no storage assigned', async () => {
-            const msg = convertStreamMessageToMessage(await createSignedMessage({
-                messageId: new MessageID(stream.id, 0, Date.now(), 0, PUBLISHER_ID, 'msgChainId'),
-                serializedContent: JSON.stringify({}),
-                authentication
-            }))
-            await expect(() => client.waitForStorage(msg, {
-                messageMatchFn: () => {
-                    return true
-                }
-            })).rejects.toThrowStreamrError(new StreamrClientError(`no storage assigned: ${stream.id}`, 'NO_STORAGE_NODES'))
-        })
+    it('multiple storage nodes', async () => {
+        const allMessages = [
+            await messageFactory.createMessage({ foo: 1 }, { timestamp: 1000 }),
+            await messageFactory.createMessage({ foo: 2 }, { timestamp: 2000 }),
+            await messageFactory.createMessage({ foo: 3 }, { timestamp: 3000 }),
+            await messageFactory.createMessage({ foo: 4 }, { timestamp: 4000 })
+        ]
+        const storageNode1 = await environment.startStorageNode()
+        await stream.addToStorageNode(storageNode1.id)
+        storageNode1.storeMessage(allMessages[0])
+        storageNode1.storeMessage(allMessages[2])
+        storageNode1.storeMessage(allMessages[3])
+        const storageNode2 = await environment.startStorageNode()
+        await stream.addToStorageNode(storageNode2.id)
+        storageNode2.storeMessage(allMessages[0])
+        storageNode2.storeMessage(allMessages[1])
+        storageNode2.storeMessage(allMessages[3])
+        const messageStream = await subscriber.resend(stream.id, { last: 4 })
+        const receivedMessages = await collect(messageStream)
+        expect(receivedMessages.map((msg) => msg.content)).toEqual([
+            { foo: 1 },
+            { foo: 2 },
+            { foo: 3 },
+            { foo: 4 }
+        ])
     })
 })

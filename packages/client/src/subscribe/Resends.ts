@@ -1,17 +1,18 @@
-import { StreamID, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
+import { StreamID, StreamMessage, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { EthereumAddress, Logger, randomString, toEthereumAddress } from '@streamr/utils'
 import random from 'lodash/random'
 import without from 'lodash/without'
+import { Response } from 'node-fetch'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
-import { HttpUtil, createQueryString } from '../HttpUtil'
 import { StreamrClientError } from '../StreamrClientError'
 import { StorageNodeRegistry } from '../registry/StorageNodeRegistry'
 import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
 import { counting } from '../utils/GeneratorUtils'
 import { LoggerFactory } from '../utils/LoggerFactory'
+import { PushPipeline } from '../utils/PushPipeline'
+import { createQueryString, fetchHttpStream } from '../utils/utils'
 import { MessagePipelineFactory } from './MessagePipelineFactory'
-import { MessageStream } from './MessageStream'
 
 type QueryDict = Record<string, string | number | boolean | null | undefined>
 
@@ -50,7 +51,7 @@ export interface ResendRangeOptions {
  */
 export type ResendOptions = ResendLastOptions | ResendFromOptions | ResendRangeOptions
 
-type ResendType = 'last' | 'from' | 'range'
+export type ResendType = 'last' | 'from' | 'range'
 
 function isResendLast<T extends ResendLastOptions>(options: any): options is T {
     return options && typeof options === 'object' && 'last' in options && options.last != null
@@ -74,28 +75,40 @@ const createUrl = (baseUrl: string, endpointSuffix: string, streamPartId: Stream
     return `${baseUrl}/streams/${encodeURIComponent(streamId)}/data/partitions/${streamPartition}/${endpointSuffix}?${queryString}`
 }
 
+const parseHttpError = async (response: Response): Promise<Error> => {
+    const body = await response.text()
+    let descriptionSnippet
+    try {
+        const json = JSON.parse(body)
+        descriptionSnippet = `: ${json.error}`
+    } catch (err) {
+        descriptionSnippet = ''
+    }
+    throw new StreamrClientError(
+        `Storage node fetch failed${descriptionSnippet}, httpStatus=${response.status}, url=${response.url}`,
+        'STORAGE_NODE_ERROR'
+    )
+}
+
 @scoped(Lifecycle.ContainerScoped)
 export class Resends {
 
-    private readonly messagePipelineFactory: MessagePipelineFactory
     private readonly streamStorageRegistry: StreamStorageRegistry
     private readonly storageNodeRegistry: StorageNodeRegistry
-    private readonly httpUtil: HttpUtil
+    private readonly messagePipelineFactory: MessagePipelineFactory
     private readonly config: StrictStreamrClientConfig
     private readonly logger: Logger
 
     constructor(
-        messagePipelineFactory: MessagePipelineFactory,
         streamStorageRegistry: StreamStorageRegistry,
         @inject(delay(() => StorageNodeRegistry)) storageNodeRegistry: StorageNodeRegistry,
-        httpUtil: HttpUtil,
+        messagePipelineFactory: MessagePipelineFactory,
         @inject(ConfigInjectionToken) config: StrictStreamrClientConfig,
         loggerFactory: LoggerFactory
     ) {
-        this.messagePipelineFactory = messagePipelineFactory
         this.streamStorageRegistry = streamStorageRegistry
         this.storageNodeRegistry = storageNodeRegistry
-        this.httpUtil = httpUtil
+        this.messagePipelineFactory = messagePipelineFactory
         this.config = config
         this.logger = loggerFactory.createLogger(module)
     }
@@ -104,11 +117,11 @@ export class Resends {
         streamPartId: StreamPartID,
         options: ResendOptions & { raw?: boolean },
         getStorageNodes?: (streamId: StreamID) => Promise<EthereumAddress[]>
-    ): Promise<MessageStream> {
+    ): Promise<PushPipeline<StreamMessage, StreamMessage>> {
         const raw = options.raw ?? false
         if (isResendLast(options)) {
             if (options.last <= 0) {
-                const emptyStream = new MessageStream()
+                const emptyStream = new PushPipeline<StreamMessage, StreamMessage>()
                 emptyStream.endWrite()
                 return emptyStream
             }
@@ -144,7 +157,7 @@ export class Resends {
         query: QueryDict,
         raw: boolean,
         getStorageNodes?: (streamId: StreamID) => Promise<EthereumAddress[]>
-    ): Promise<MessageStream> {
+    ): Promise<PushPipeline<StreamMessage, StreamMessage>> {
         const traceId = randomString(5)
         this.logger.debug('Fetch resend data', {
             loggerIdx: traceId,
@@ -163,7 +176,7 @@ export class Resends {
         const nodeAddress = nodeAddresses[random(0, nodeAddresses.length - 1)]
         const nodeUrl = (await this.storageNodeRegistry.getStorageNodeMetadata(nodeAddress)).http
         const url = createUrl(nodeUrl, resendType, streamPartId, query)
-        const messageStream = raw ? new MessageStream() : this.messagePipelineFactory.createMessagePipeline({
+        const messageStream = raw ? new PushPipeline<StreamMessage, StreamMessage>() : this.messagePipelineFactory.createMessagePipeline({
             streamPartId,
             /*
              * Disable ordering if the source of this resend is the only storage node. In that case there is no
@@ -175,7 +188,7 @@ export class Resends {
             config: (nodeAddresses.length === 1) ? { ...this.config, orderMessages: false } : this.config
         })
 
-        const dataStream = this.httpUtil.fetchHttpStream(url)
+        const dataStream = fetchHttpStream(url, parseHttpError)
         messageStream.pull(counting(dataStream, (count: number) => {
             this.logger.debug('Finished resend', { loggerIdx: traceId, messageCount: count })
         }))

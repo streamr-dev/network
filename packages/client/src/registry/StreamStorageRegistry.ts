@@ -1,6 +1,6 @@
 import { Provider } from '@ethersproject/providers'
 import { StreamID, toStreamID } from '@streamr/protocol'
-import { EthereumAddress, Logger, collect, toEthereumAddress } from '@streamr/utils'
+import { EthereumAddress, Logger, TheGraphClient, collect, toEthereumAddress } from '@streamr/utils'
 import min from 'lodash/min'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -14,7 +14,6 @@ import type { StreamStorageRegistryV2 as StreamStorageRegistryContract } from '.
 import StreamStorageRegistryArtifact from '../ethereumArtifacts/StreamStorageRegistryV2Abi.json'
 import { StreamrClientEventEmitter } from '../events'
 import { LoggerFactory } from '../utils/LoggerFactory'
-import { TheGraphClient } from '@streamr/utils'
 import { initContractEventGateway, queryAllReadonlyContracts, waitForTx } from '../utils/contract'
 
 export interface StorageNodeAssignmentEvent {
@@ -35,32 +34,33 @@ interface NodeQueryResult {
 @scoped(Lifecycle.ContainerScoped)
 export class StreamStorageRegistry {
 
-    private contractFactory: ContractFactory
-    private streamFactory: StreamFactory
-    private streamIdBuilder: StreamIDBuilder
-    private theGraphClient: TheGraphClient
-    private authentication: Authentication
     private streamStorageRegistryContract?: StreamStorageRegistryContract
-    private config: Pick<StrictStreamrClientConfig, 'contracts'>
     private readonly streamStorageRegistryContractsReadonly: StreamStorageRegistryContract[]
+    private readonly streamFactory: StreamFactory
+    private readonly streamIdBuilder: StreamIDBuilder
+    private readonly contractFactory: ContractFactory
+    private readonly theGraphClient: TheGraphClient
+    private readonly config: Pick<StrictStreamrClientConfig, 'contracts'>
+    private readonly authentication: Authentication
     private readonly logger: Logger
 
+    /* eslint-disable indent */
     constructor(
-        contractFactory: ContractFactory,
         @inject(delay(() => StreamFactory)) streamFactory: StreamFactory,
-        @inject(StreamIDBuilder) streamIdBuilder: StreamIDBuilder,
+        streamIdBuilder: StreamIDBuilder,
+        contractFactory: ContractFactory,
         theGraphClient: TheGraphClient,
-        @inject(StreamrClientEventEmitter) eventEmitter: StreamrClientEventEmitter,
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts'>,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
-        @inject(LoggerFactory) loggerFactory: LoggerFactory,
-        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts'>
+        eventEmitter: StreamrClientEventEmitter,
+        loggerFactory: LoggerFactory
     ) {
-        this.contractFactory = contractFactory
         this.streamFactory = streamFactory
         this.streamIdBuilder = streamIdBuilder
+        this.contractFactory = contractFactory
         this.theGraphClient = theGraphClient
-        this.authentication = authentication
         this.config = config
+        this.authentication = authentication
         this.logger = loggerFactory.createLogger(module)
         this.streamStorageRegistryContractsReadonly = getStreamRegistryChainProviders(config).map((provider: Provider) => {
             return this.contractFactory.createReadContract(

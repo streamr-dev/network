@@ -32,6 +32,6 @@
     "node-module-polyfill": "^1.0.1",
     "node-polyfill-webpack-plugin": "^2.0.1",
     "webpack": "^5.64.1",
-    "webpack-cli": "^5.0.1"
+    "webpack-cli": "^5.1.4"
   }
 }
