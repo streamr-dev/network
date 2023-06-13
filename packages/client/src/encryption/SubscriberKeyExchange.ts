@@ -60,7 +60,7 @@ export class SubscriberKeyExchange {
         this.logger = loggerFactory.createLogger(module)
         this.ensureStarted = pOnce(async () => {
             // eslint-disable-next-line no-underscore-dangle
-            this.rsaKeyPair = await RSAKeyPair.create(config.encryption._rsaKeyLength)
+            this.rsaKeyPair = await RSAKeyPair.create(config.encryption.rsaKeyLength)
             const node = await networkNodeFacade.getNode()
             node.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
             this.logger.debug('Started')

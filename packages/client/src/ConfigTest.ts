@@ -54,7 +54,7 @@ export const CONFIG_TEST: StreamrClientConfig = {
         theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:8000/subgraphs/name/streamr-dev/network-contracts`,
     },
     encryption: {
-        _rsaKeyLength: MIN_KEY_LENGTH
+        rsaKeyLength: MIN_KEY_LENGTH
     },
     _timeouts: {
         theGraph: {

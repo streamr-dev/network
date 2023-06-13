@@ -24,7 +24,7 @@ const DEFAULT_CLIENT_OPTIONS: StreamrClientConfig = {
         trackers: [] // without this setting NetworkNodeFacade would query the tracker addresses from the contract
     },
     encryption: {
-        _rsaKeyLength: MIN_KEY_LENGTH
+        rsaKeyLength: MIN_KEY_LENGTH
     },
     metrics: false
 }

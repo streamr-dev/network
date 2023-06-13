@@ -80,8 +80,7 @@ describe('messagePipeline', () => {
                 litProtocolEnabled: false,
                 litProtocolLogging: false,
                 keyRequestTimeout: 50,
-                maxKeyRequestsPerSecond: 0,
-                _rsaKeyLength: undefined
+                maxKeyRequestsPerSecond: 0
             } as any
         }
         streamRegistryCached = {

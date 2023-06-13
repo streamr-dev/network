@@ -358,7 +358,7 @@
                     "type": "number",
                     "default": 20
                 },
-                "_rsaKeyLength": {
+                "rsaKeyLength": {
                     "type": "number",
                     "default": 4096
                 }
