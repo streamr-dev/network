@@ -58,8 +58,8 @@ export const CONFIG_TEST: StreamrClientConfig = {
     },
     _timeouts: {
         theGraph: {
-            timeout: 10 * 1000,
-            retryInterval: 500
+            indexTimeout: 10 * 1000,
+            indexPollInterval: 500
         },
         storageNode: {
             timeout: 30 * 1000,
@@ -68,8 +68,7 @@ export const CONFIG_TEST: StreamrClientConfig = {
         ensStreamCreation: {
             timeout: 20 * 1000,
             retryInterval: 500
-        },
-        httpFetchTimeout: 30 * 1000
+        }
     },
     metrics: false
 }

@@ -3,7 +3,7 @@ import 'reflect-metadata'
 import { Wallet } from '@ethersproject/wallet'
 import { StreamID, StreamMessage, toStreamPartID } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
-import { collect } from '@streamr/utils'
+import { collect, waitForCondition } from '@streamr/utils'
 import fs from 'fs'
 import path from 'path'
 import { Message, MessageMetadata } from '../../src/Message'
@@ -19,6 +19,7 @@ import { FakeStorageNode } from './../test-utils/fake/FakeStorageNode'
 const MAX_MESSAGES = 5
 
 describe('Resends2', () => {
+
     let environment: FakeEnvironment
     let client: StreamrClient
     let publisher: StreamrClient
@@ -31,7 +32,7 @@ describe('Resends2', () => {
         return task(count)
     }
 
-    const startFailingStorageNode = (error: Error) => {
+    const startFailingStorageNode = async (error: Error): Promise<FakeStorageNode> => {
         const wallet = fastWallet()
         const node = new class extends FakeStorageNode {
             // eslint-disable-next-line class-methods-use-this, require-yield
@@ -39,7 +40,7 @@ describe('Resends2', () => {
                 throw error
             }
         }(wallet, environment.getNetwork(), environment.getChain())
-        node.start()
+        await node.start()
         return node
     }
 
@@ -53,13 +54,17 @@ describe('Resends2', () => {
         })
     })
 
+    afterAll(async () => {
+        await environment.destroy()
+    })
+
     beforeEach(async () => {
         stream = await createTestStream(publisher, module)
         await publisher.grantPermissions(stream.id, {
             public: true,
             permissions: [StreamPermission.SUBSCRIBE]
         })
-        storageNode = environment.startStorageNode()
+        storageNode = await environment.startStorageNode()
         await stream.addToStorageNode(storageNode.id)
         client = environment.createClient()
     })
@@ -73,15 +78,15 @@ describe('Resends2', () => {
     })
 
     it('throws if no storage assigned', async () => {
-        const notStoredStream = await createTestStream(client, module)
+        await stream.removeFromStorageNode(storageNode.id)  // remove the default storage node added in beforeEach
         await expect(async () => {
             await client.resend({
-                streamId: notStoredStream.id,
+                streamId: stream.id,
                 partition: 0
             }, {
                 last: 5
             })
-        }).rejects.toThrowStreamrError(new StreamrClientError(`no storage assigned: ${notStoredStream.id}`, 'NO_STORAGE_NODES'))
+        }).rejects.toThrowStreamrError(new StreamrClientError(`no storage assigned: ${stream.id}`, 'NO_STORAGE_NODES'))
     })
 
     it('throws error if bad partition', async () => {
@@ -141,7 +146,7 @@ describe('Resends2', () => {
 
             it('can ignore errors in resend', async () => {
                 await stream.removeFromStorageNode(storageNode.id)  // remove the default storage node added in beforeEach
-                const storageNode2 = startFailingStorageNode(new Error('expected'))
+                const storageNode2 = await startFailingStorageNode(new Error('expected'))
                 await stream.addToStorageNode(storageNode2.id)
                 const sub = await client.subscribe({
                     streamId: stream.id,
@@ -165,7 +170,7 @@ describe('Resends2', () => {
 
             it('can handle errors in resend', async () => {
                 await stream.removeFromStorageNode(storageNode.id)  // remove the default storage node added in beforeEach
-                const storageNode2 = startFailingStorageNode(new Error('expected'))
+                const storageNode2 = await startFailingStorageNode(new Error('expected'))
                 await stream.addToStorageNode(storageNode2.id)
                 const sub = await client.subscribe({
                     streamId: stream.id,
@@ -189,14 +194,9 @@ describe('Resends2', () => {
             })
 
             it('no storage assigned', async () => {
-                const nonStoredStream = await createTestStream(client, module)
-                await nonStoredStream.grantPermissions({
-                    user: publisherWallet.address,
-                    permissions: [StreamPermission.PUBLISH]
-                })
-
+                await stream.removeFromStorageNode(storageNode.id)  // remove the default storage node added in beforeEach
                 const sub = await client.subscribe({
-                    streamId: nonStoredStream.id,
+                    streamId: stream.id,
                     resend: {
                         last: 100
                     }
@@ -205,7 +205,7 @@ describe('Resends2', () => {
                 const onError = jest.fn()
                 sub.onError.listen(onError)
 
-                const publishedMessages = await publishTestMessages(3, nonStoredStream.id)
+                const publishedMessages = await publishTestMessages(3, stream.id)
 
                 const receivedMsgs: any[] = []
 
@@ -226,12 +226,12 @@ describe('Resends2', () => {
                 expect(onError).toHaveBeenCalledTimes(0)
                 expect(onResent).toHaveBeenCalledTimes(1)
                 expect(environment.getLogger().warn).toHaveBeenLastCalledWith('Skip resend (no storage assigned to stream)', {
-                    streamPartId: toStreamPartID(nonStoredStream.id, 0),
+                    streamPartId: toStreamPartID(stream.id, 0),
                     resendOptions: {
                         last: 100
                     }
                 })
-                expect(await client.getSubscriptions(nonStoredStream.id)).toHaveLength(0)
+                expect(await client.getSubscriptions(stream.id)).toHaveLength(0)
             })
         })
     })
@@ -374,6 +374,7 @@ describe('Resends2', () => {
 
         describe('resendSubscribe', () => {
             it('happy path', async () => {
+                const REALTIME_MESSAGES = 2
                 const sub = await client.subscribe({
                     streamId: stream.id,
                     resend: {
@@ -381,16 +382,15 @@ describe('Resends2', () => {
                     }
                 })
                 expect(await client.getSubscriptions(stream.id)).toHaveLength(1)
+
                 const onResent = jest.fn()
                 sub.once('resendComplete', onResent)
-                const REALTIME_MESSAGES = 2
-                setImmediate(async () => {
-                    // wrapped with setImmediate so that the request to storage node is fetched
-                    // before these messages are stored
-                    published.push(...await publishTestMessages(REALTIME_MESSAGES))
-                })
+                const receivedMsgsPromise = collect(sub, MAX_MESSAGES + REALTIME_MESSAGES)
+                await waitForCondition(() => onResent.mock.calls.length > 0)
 
-                const receivedMsgs = await collect(sub, MAX_MESSAGES + REALTIME_MESSAGES)
+                published.push(...await publishTestMessages(REALTIME_MESSAGES))
+
+                const receivedMsgs = await receivedMsgsPromise
                 expect(receivedMsgs).toHaveLength(published.length)
                 expect(onResent).toHaveBeenCalledTimes(1)
                 expect(receivedMsgs.map((m) => m.signature)).toEqual(published.map((m) => m.signature))

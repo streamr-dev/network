@@ -340,8 +340,9 @@ export interface StreamrClientConfig {
     /** @internal */
     _timeouts?: {
         theGraph?: {
-            timeout?: number
-            retryInterval?: number
+            indexTimeout?: number
+            indexPollInterval?: number
+            fetchTimeout?: number
         }
         storageNode?: {
             timeout?: number
@@ -351,7 +352,6 @@ export interface StreamrClientConfig {
             timeout?: number
             retryInterval?: number
         }
-        httpFetchTimeout?: number
     }
 }
 

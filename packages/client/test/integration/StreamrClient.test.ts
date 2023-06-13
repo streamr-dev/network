@@ -22,6 +22,7 @@ const TIMEOUT = 30 * 1000
 const WAIT_TIME = 600
 
 describe('StreamrClient', () => {
+
     let client: StreamrClient
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
     let streamDefinition: StreamPartID
@@ -48,6 +49,10 @@ describe('StreamrClient', () => {
                 privateKey: publisherWallet.privateKey
             }
         }), streamDefinition)
+    })
+
+    afterEach(async () => {
+        await environment.destroy()
     })
 
     describe('Pub/Sub', () => {

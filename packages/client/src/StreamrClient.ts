@@ -12,7 +12,6 @@ import { Authentication, AuthenticationInjectionToken, createAuthentication } fr
 import { ConfigInjectionToken, StreamrClientConfig, StrictStreamrClientConfig, createStrictConfig, redactConfig } from './Config'
 import { DestroySignal } from './DestroySignal'
 import { generateEthereumAccount as _generateEthereumAccount } from './Ethereum'
-import { ErrorCode } from './HttpUtil'
 import { Message, convertStreamMessageToMessage } from './Message'
 import { MetricsPublisher } from './MetricsPublisher'
 import { NetworkNodeFacade, NetworkNodeStub } from './NetworkNodeFacade'
@@ -36,7 +35,6 @@ import { Subscription, SubscriptionEvents } from './subscribe/Subscription'
 import { initResendSubscription } from './subscribe/resendSubscription'
 import { waitForStorage } from './subscribe/waitForStorage'
 import { StreamDefinition } from './types'
-import { HttpFetcher } from './utils/HttpFetcher'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { pOnce } from './utils/promises'
 import { createTheGraphClient } from './utils/utils'
@@ -91,7 +89,7 @@ export class StreamrClient {
         container.register(AuthenticationInjectionToken, { useValue: authentication })
         container.register(ConfigInjectionToken, { useValue: strictConfig })
         // eslint-disable-next-line max-len
-        container.register(TheGraphClient, { useValue: createTheGraphClient(container.resolve<HttpFetcher>(HttpFetcher), container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter), strictConfig) })
+        container.register(TheGraphClient, { useValue: createTheGraphClient(container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter), strictConfig) })
         this.id = strictConfig.id
         this.config = strictConfig
         this.authentication = authentication
@@ -354,7 +352,7 @@ export class StreamrClient {
         try {
             return await this.getStream(props.id)
         } catch (err: any) {
-            if (err.errorCode === ErrorCode.NOT_FOUND) {
+            if (err.code === 'STREAM_NOT_FOUND') {
                 return this.createStream(props)
             }
             throw err

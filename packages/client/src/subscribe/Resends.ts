@@ -2,15 +2,16 @@ import { StreamID, StreamMessage, StreamPartID, StreamPartIDUtils } from '@strea
 import { EthereumAddress, Logger, randomString, toEthereumAddress } from '@streamr/utils'
 import random from 'lodash/random'
 import without from 'lodash/without'
+import { Response } from 'node-fetch'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
-import { HttpUtil, createQueryString } from '../HttpUtil'
 import { StreamrClientError } from '../StreamrClientError'
 import { StorageNodeRegistry } from '../registry/StorageNodeRegistry'
 import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
 import { counting } from '../utils/GeneratorUtils'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { PushPipeline } from '../utils/PushPipeline'
+import { createQueryString, fetchHttpStream } from '../utils/utils'
 import { MessagePipelineFactory } from './MessagePipelineFactory'
 
 type QueryDict = Record<string, string | number | boolean | null | undefined>
@@ -50,7 +51,7 @@ export interface ResendRangeOptions {
  */
 export type ResendOptions = ResendLastOptions | ResendFromOptions | ResendRangeOptions
 
-type ResendType = 'last' | 'from' | 'range'
+export type ResendType = 'last' | 'from' | 'range'
 
 function isResendLast<T extends ResendLastOptions>(options: any): options is T {
     return options && typeof options === 'object' && 'last' in options && options.last != null
@@ -62,6 +63,68 @@ function isResendFrom<T extends ResendFromOptions>(options: any): options is T {
 
 function isResendRange<T extends ResendRangeOptions>(options: any): options is T {
     return options && typeof options === 'object' && 'from' in options && 'to' in options && options.to && options.from != null
+}
+
+export enum ErrorCode {
+    NOT_FOUND = 'NOT_FOUND',
+    VALIDATION_ERROR = 'VALIDATION_ERROR',
+    UNKNOWN = 'UNKNOWN'
+}
+
+export class HttpError extends Error {
+    public response?: Response
+    public body?: any
+    public code: ErrorCode
+    public errorCode: ErrorCode
+
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+    constructor(message: string, response?: Response, body?: any, errorCode?: ErrorCode) {
+        const typePrefix = errorCode ? errorCode + ': ' : ''
+        // add leading space if there is a body set
+        super(typePrefix + message)
+        this.response = response
+        this.body = body
+        this.code = errorCode || ErrorCode.UNKNOWN
+        this.errorCode = this.code
+    }
+}
+
+export class ValidationError extends HttpError {
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+    constructor(message: string, response?: Response, body?: any) {
+        super(message, response, body, ErrorCode.VALIDATION_ERROR)
+    }
+}
+
+export class NotFoundError extends HttpError {
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+    constructor(message: string, response?: Response, body?: any) {
+        super(message, response, body, ErrorCode.NOT_FOUND)
+    }
+}
+
+const ERROR_TYPES = new Map<ErrorCode, typeof HttpError>()
+ERROR_TYPES.set(ErrorCode.VALIDATION_ERROR, ValidationError)
+ERROR_TYPES.set(ErrorCode.NOT_FOUND, NotFoundError)
+ERROR_TYPES.set(ErrorCode.UNKNOWN, HttpError)
+
+const parseErrorCode = (body: string) => {
+    let json
+    try {
+        json = JSON.parse(body)
+    } catch (err) {
+        return ErrorCode.UNKNOWN
+    }
+
+    const { code } = json
+    return code in ErrorCode ? code : ErrorCode.UNKNOWN
+}
+
+const parseHttpError = async (response: Response): Promise<Error> => {
+    const body = await response.text()
+    const errorCode = parseErrorCode(body)
+    const ErrorClass = ERROR_TYPES.get(errorCode)!
+    throw new ErrorClass(`Request to ${response.url} returned with error code ${response.status}.`, response, body, errorCode)
 }
 
 const createUrl = (baseUrl: string, endpointSuffix: string, streamPartId: StreamPartID, query: QueryDict = {}): string => {
@@ -80,7 +143,6 @@ export class Resends {
     private readonly streamStorageRegistry: StreamStorageRegistry
     private readonly storageNodeRegistry: StorageNodeRegistry
     private readonly messagePipelineFactory: MessagePipelineFactory
-    private readonly httpUtil: HttpUtil
     private readonly config: StrictStreamrClientConfig
     private readonly logger: Logger
 
@@ -88,14 +150,12 @@ export class Resends {
         streamStorageRegistry: StreamStorageRegistry,
         @inject(delay(() => StorageNodeRegistry)) storageNodeRegistry: StorageNodeRegistry,
         messagePipelineFactory: MessagePipelineFactory,
-        httpUtil: HttpUtil,
         @inject(ConfigInjectionToken) config: StrictStreamrClientConfig,
         loggerFactory: LoggerFactory
     ) {
         this.streamStorageRegistry = streamStorageRegistry
         this.storageNodeRegistry = storageNodeRegistry
         this.messagePipelineFactory = messagePipelineFactory
-        this.httpUtil = httpUtil
         this.config = config
         this.logger = loggerFactory.createLogger(module)
     }
@@ -175,7 +235,7 @@ export class Resends {
             config: (nodeAddresses.length === 1) ? { ...this.config, orderMessages: false } : this.config
         })
 
-        const dataStream = this.httpUtil.fetchHttpStream(url)
+        const dataStream = fetchHttpStream(url, parseHttpError)
         messageStream.pull(counting(dataStream, (count: number) => {
             this.logger.debug('Finished resend', { loggerIdx: traceId, messageCount: count })
         }))
