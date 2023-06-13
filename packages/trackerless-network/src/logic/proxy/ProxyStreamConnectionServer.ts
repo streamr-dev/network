@@ -63,6 +63,14 @@ export class ProxyStreamConnectionServer extends EventEmitter<Events> implements
         return Array.from(this.connections.values())
     }
 
+    getSubscribers(): PeerIDKey[] {
+        return Array.from(this.connections.keys()).filter((key) => this.connections.get(key)!.direction === ProxyDirection.SUBSCRIBE)
+    }
+
+    public getPeerKeysForUserId(userId: string): PeerIDKey[] {
+        return Array.from(this.connections.keys()).filter((nodeId) => this.connections.get(nodeId)!.userId === userId)
+    }
+
     // IProxyConnectionRpc server method
     async requestConnection(request: ProxyConnectionRequest, _context: ServerCallContext): Promise<ProxyConnectionResponse> {
         this.connections.set(request.senderId as PeerIDKey, {
