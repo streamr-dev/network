@@ -39,7 +39,7 @@
   "author": "Streamr Network AG <contact@streamr.network>",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@babel/core": "^7.16.0",
+    "@babel/core": "^7.22.5",
     "@babel/plugin-proposal-decorators": "^7.22.5",
     "@babel/plugin-transform-modules-commonjs": "^7.22.5",
     "@babel/plugin-transform-runtime": "^7.22.5",
