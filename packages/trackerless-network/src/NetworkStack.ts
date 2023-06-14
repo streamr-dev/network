@@ -4,6 +4,7 @@ import { ConnectionManager, DhtNode, DhtNodeOptions, isSamePeerDescriptor, PeerD
 import { StreamrNode, StreamrNodeOpts } from './logic/StreamrNode'
 import { MetricsContext, waitForEvent3 } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
+import { StreamPartID } from '@streamr/protocol'
 
 interface ReadynessEvents {
     done: () => void
@@ -77,7 +78,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
         this.firstConnectionTimeout = options.networkNode.firstConnectionTimeout || 5000
     }
 
-    async start(): Promise<void> {
+    async start(doJoin = true): Promise<void> {
         await this.layer0DhtNode!.start()
         this.connectionManager = this.layer0DhtNode!.getTransport() as ConnectionManager
         const entryPoint = this.options.layer0.entryPoints![0]
@@ -85,16 +86,29 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
             await this.layer0DhtNode?.joinDht(entryPoint)
             await this.streamrNode?.start(this.layer0DhtNode!, this.connectionManager!, this.connectionManager!)
         } else {
-            
-            setImmediate(() => {
-                this.layer0DhtNode?.joinDht(this.options.layer0.entryPoints![0])
-            })
-            const readynessListener = new ReadynessListener(this, this.layer0DhtNode!)
-            await readynessListener.waitUntilReady(this.firstConnectionTimeout)
-            
+            if (doJoin) {
+                await this.joinDht()
+            }
             await this.streamrNode?.start(this.layer0DhtNode!, this.connectionManager!, this.connectionManager!)
         }
+    }
 
+    private async joinDht(): Promise<void> {
+        setImmediate(() => {
+            this.layer0DhtNode?.joinDht(this.options.layer0.entryPoints![0])
+        })
+        const readynessListener = new ReadynessListener(this, this.layer0DhtNode!)
+        await readynessListener.waitUntilReady(this.firstConnectionTimeout)
+    }
+
+    async joinLayer0IfRequired(streamPartId: StreamPartID): Promise<void> {
+        if (this.isJoinRequired(streamPartId)) {
+            await this.joinDht()
+        }
+    }
+
+    private isJoinRequired(streamPartId: StreamPartID): boolean {
+        return !this.layer0DhtNode!.hasJoined() && this.streamrNode!.isJoinRequired(streamPartId)
     }
 
     getStreamrNode(): StreamrNode {
