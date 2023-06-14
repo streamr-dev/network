@@ -10,7 +10,7 @@ describe('proxy and full node', () => {
         kademliaId: PeerID.fromString(`proxyNode`).value,
         type: NodeType.NODEJS,
         nodeName: 'proxyNode',
-        websocket: { ip: 'localhost', port: 23132 }
+        websocket: { ip: 'localhost', port: 23135 }
     }
     const proxiedNodeDescriptor: PeerDescriptor = {
         kademliaId: PeerID.fromString(`proxiedNode`).value,
