@@ -50,7 +50,7 @@ export const CONFIG_TEST: StreamrClientConfig = {
             }]
         },
         streamRegistryChainRPCs: sideChainConfig,
-        theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:8000/subgraphs/name/streamr-dev/network-contracts`,
+        theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`,
     },
     _timeouts: {
         theGraph: {

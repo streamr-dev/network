@@ -15,6 +15,7 @@ import { Contract } from "@ethersproject/contracts"
 
 import { deployOperatorContract } from "./deployOperatorContract"
 import { deploySponsorship } from "./deploySponsorshipContract"
+import { generateWalletWithGasAndTokens } from "./smartContractUtils"
 
 const config = Chains.load()["dev1"]
 const adminPrivKey = "0x4059de411f15511a85ce332e7a428f36492ab4e87c7830099dadbf130f1896ae"
@@ -36,13 +37,7 @@ describe("MaintainTopologyHelper", () => {
     // eslint-disable-next-line no-console
 
     const deployNewOperator = async () => {
-        const operatorWallet = Wallet.createRandom().connect(provider)
-        logger.debug("Funding", { address: operatorWallet.address })
-        await (await token.transfer(operatorWallet.address, parseEther("1000"))).wait()
-        await (await adminWallet.sendTransaction({
-            to: operatorWallet.address,
-            value: parseEther("1")
-        })).wait()
+        const operatorWallet = await generateWalletWithGasAndTokens(provider)
 
         logger.debug("Deploying operator contract")
         const operatorContract = await deployOperatorContract(config, operatorWallet)
