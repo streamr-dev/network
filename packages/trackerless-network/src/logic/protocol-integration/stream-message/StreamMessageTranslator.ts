@@ -4,17 +4,23 @@ import {
     StreamMessageType as OldStreamMessageType,
     MessageRef as OldMessageRef,
     EncryptedGroupKey as OldEncryptedGroupKey,
+    GroupKeyRequest as OldGroupKeyRequest,
+    GroupKeyResponse as OldGroupKeyResponse,
     StreamID,
 } from '@streamr/protocol'
 import {
     ContentMessage,
     EncryptedGroupKey,
+    GroupKeyRequest,
+    GroupKeyResponse,
     MessageRef,
     StreamMessage,
     StreamMessageType
 } from '../../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { ContentMessageTranslator } from './ContentMessageTranslator'
 import { EthereumAddress } from '@streamr/utils'
+import { GroupKeyRequestTranslator } from './GroupKeyRequestTranslator'
+import { GroupKeyResponseTranslator } from './GroupKeyResponseTranslator'
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class StreamMessageTranslator {
@@ -26,10 +32,22 @@ export class StreamMessageTranslator {
             content = ContentMessage.toBinary(ContentMessageTranslator.toProtobuf(msg.serializedContent))
             contentType = StreamMessageType.MESSAGE
         } else if (msg.messageType === OldStreamMessageType.GROUP_KEY_REQUEST) {
-            content = ContentMessage.toBinary(ContentMessageTranslator.toProtobuf(msg.serializedContent))
+            content = GroupKeyRequest.toBinary(
+                GroupKeyRequestTranslator.toProtobuf(
+                    OldGroupKeyRequest.deserialize(
+                        msg.serializedContent,
+                        OldStreamMessageType.GROUP_KEY_REQUEST) as OldGroupKeyRequest
+                )
+            )
             contentType = StreamMessageType.GROUP_KEY_REQUEST
         } else if (msg.messageType === OldStreamMessageType.GROUP_KEY_RESPONSE) {
-            content = ContentMessage.toBinary(ContentMessageTranslator.toProtobuf(msg.serializedContent))
+            content = GroupKeyResponse.toBinary(
+                GroupKeyResponseTranslator.toProtobuf(
+                    OldGroupKeyResponse.deserialize(
+                        msg.serializedContent,
+                        OldStreamMessageType.GROUP_KEY_RESPONSE) as OldGroupKeyResponse
+                )
+            )
             contentType = StreamMessageType.GROUP_KEY_RESPONSE
         } else {
             throw new Error('invalid message type')
@@ -82,10 +100,10 @@ export class StreamMessageTranslator {
             content = ContentMessageTranslator.toClientProtocol(ContentMessage.fromBinary(msg.content))
         } else if (msg.messageType === StreamMessageType.GROUP_KEY_REQUEST) {
             contentType = OldStreamMessageType.GROUP_KEY_REQUEST
-            content = ContentMessageTranslator.toClientProtocol(ContentMessage.fromBinary(msg.content))
+            content = GroupKeyRequestTranslator.toClientProtocol(GroupKeyRequest.fromBinary(msg.content)).serialize()
         } else if (msg.messageType === StreamMessageType.GROUP_KEY_RESPONSE) {
             contentType = OldStreamMessageType.GROUP_KEY_RESPONSE
-            content = ContentMessageTranslator.toClientProtocol(ContentMessage.fromBinary(msg.content))
+            content = GroupKeyResponseTranslator.toClientProtocol(GroupKeyResponse.fromBinary(msg.content)).serialize()
         } else {
             throw new Error('invalid message type')
         }
