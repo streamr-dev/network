@@ -15,6 +15,12 @@ export class FakeOperatorClient extends EventEmitter3<OperatorClientEvents> {
         this.initialState = new Set(initialState)
         this.initialBlockNumber = initialBlockNumber
     }
+
+    // eslint-disable-next-line class-methods-use-this
+    start(): Promise<void> {
+        return Promise.resolve()
+    }
+
     getStakedStreams(): Promise<string[]> {
         return Promise.resolve([...this.initialState])
     }
