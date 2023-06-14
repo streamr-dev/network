@@ -164,6 +164,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     public connectionManager?: ConnectionManager
     private started = false
     private stopped = false
+    private joined = false
     private entryPointDisconnectTimeout?: NodeJS.Timeout
 
     public contactAddCounter = 0
@@ -617,6 +618,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (!this.started) {
             throw new Error('Cannot join DHT before calling start() on DhtNode')
         }
+        this.joined = true
         await this.peerDiscovery!.joinDht(entryPointDescriptor, doRandomJoin)
     }
 
@@ -698,6 +700,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return this.peerDiscovery!.isJoinOngoing()
     }
 
+    public hasJoined(): boolean {
+        return this.joined
+    }
+
     public getKnownEntryPoints(): PeerDescriptor[] {
         return this.config.entryPoints || []
     }
@@ -710,6 +716,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (!this.started) {
             throw new Err.CouldNotStop('Cannot not stop() before start()')
         }
+        this.joined = false
         this.stopped = true
 
         if (this.entryPointDisconnectTimeout) {

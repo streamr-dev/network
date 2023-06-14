@@ -19,29 +19,31 @@ export class NetworkNode {
         this.stack = new NetworkStack(opts)
     }
 
-    async start(): Promise<void> {
-        await this.stack.start()
+    async start(doJoin?: boolean): Promise<void> {
+        await this.stack.start(doJoin)
     }
 
     setExtraMetadata(metadata: Record<string, unknown>): void {
         this.stack.getStreamrNode().setExtraMetadata(metadata)
     }
 
-    publish(streamMessage: StreamMessage, knownEntrypointDescriptors: PeerDescriptor[]): void | never {
+    async publish(streamMessage: StreamMessage, knownEntrypointDescriptors: PeerDescriptor[]): Promise<void> {
         const streamPartId = streamMessage.getStreamPartID()
         if (this.stack.getStreamrNode().isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE) 
             && streamMessage.messageType === StreamMessageType.MESSAGE) {
             throw new Error(`Cannot publish content data to ${streamPartId} as proxy subscribe connections have been set`)
         }
 
+        await this.stack.joinLayer0IfRequired(streamPartId)
         const msg = StreamMessageTranslator.toProtobuf(streamMessage)
         this.stack.getStreamrNode().publishToStream(streamPartId, knownEntrypointDescriptors, msg)
     }
 
-    subscribe(streamPartId: StreamPartID, knownEntrypointDescriptors: PeerDescriptor[]): void {
+    async subscribe(streamPartId: StreamPartID, knownEntrypointDescriptors: PeerDescriptor[]): Promise<void> {
         if (this.stack.getStreamrNode().isProxiedStreamPart(streamPartId, ProxyDirection.PUBLISH)) {
             throw new Error(`Cannot subscribe to ${streamPartId} as proxy publish connections have been set`)
         }
+        await this.stack.joinLayer0IfRequired(streamPartId)
         this.stack.getStreamrNode().subscribeToStream(streamPartId, knownEntrypointDescriptors)
     }
 

@@ -58,7 +58,7 @@ describe('proxy group key exchange', () => {
             },
             networkNode: {}
         })
-        await publisher.start()
+        await publisher.start(false)
 
         subscriber = new NetworkNode({
             layer0: {
@@ -67,7 +67,7 @@ describe('proxy group key exchange', () => {
             },
             networkNode: {}
         })
-        await subscriber.start()
+        await subscriber.start(false)
     })
 
     afterEach(async () => {

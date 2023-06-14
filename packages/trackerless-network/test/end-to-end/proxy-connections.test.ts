@@ -79,7 +79,7 @@ describe('Proxy connections', () => {
             },
             networkNode: {}
         })
-        await proxiedNode.start()
+        await proxiedNode.start(false)
     }, 30000)
 
     afterEach(async () => {
@@ -210,7 +210,7 @@ describe('Proxy connections', () => {
             ProxyDirection.PUBLISH,
             async () => 'proxiedNode'
         )
-        expect(() => proxiedNode.subscribe(streamPartId, [])).toThrow('Cannot subscribe')
+        await expect(proxiedNode.subscribe(streamPartId, [])).rejects.toThrow('Cannot subscribe')
     })
 
     it('connect publish on proxy subscribe streams', async () => {
@@ -220,7 +220,7 @@ describe('Proxy connections', () => {
             ProxyDirection.SUBSCRIBE,
             async () => 'proxiedNode'
         )
-        expect(() => proxiedNode.publish(message, [])).toThrow('Cannot publish')
+        await expect(proxiedNode.publish(message, [])).rejects.toThrow('Cannot publish')
     })
 
 })

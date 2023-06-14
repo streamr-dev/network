@@ -386,6 +386,10 @@ export class StreamrNode extends EventEmitter<Events> {
         this.extraMetadata = metadata
     }
 
+    isJoinRequired(streamPartId: StreamPartID): boolean {
+        return !this.streams.has(streamPartId) && Array.from(this.streams.values()).every((stream) => stream.type === NodeType.PROXY)
+    }
+
 }
 
 [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `unhandledRejection`, `SIGTERM`].forEach((term) => {
