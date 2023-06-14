@@ -27,11 +27,11 @@ export interface NetworkNodeStub {
     getNodeId: () => string
     addMessageListener: (listener: (msg: StreamMessage) => void) => void
     removeMessageListener: (listener: (msg: StreamMessage) => void) => void
-    subscribe: (streamPartId: StreamPartID, entryPointDescriptors: PeerDescriptor[]) => void
+    subscribe: (streamPartId: StreamPartID, entryPointDescriptors: PeerDescriptor[]) => Promise<void>
     subscribeAndWaitForJoin: (streamPart: StreamPartID, entryPointDescriptors: PeerDescriptor[], timeout?: number) => Promise<number>
     waitForJoinAndPublish: (msg: StreamMessage, entryPointDescriptors: PeerDescriptor[], timeout?: number) => Promise<number>
     unsubscribe: (streamPartId: StreamPartID) => void
-    publish: (streamMessage: StreamMessage, entryPointDescriptors: PeerDescriptor[]) => void
+    publish: (streamMessage: StreamMessage, entryPointDescriptors: PeerDescriptor[]) => Promise<void>
     getStreamParts: () => StreamPartID[]
     getNeighbors: () => string[]
     getNeighborsForStreamPart: (streamPartId: StreamPartID) => ReadonlyArray<string>
@@ -43,7 +43,7 @@ export interface NetworkNodeStub {
     /** @internal */
     hasProxyConnection: (streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection) => boolean
     /** @internal */
-    start: () => Promise<void>
+    start: (doJoin?: boolean) => Promise<void>
     /** @internal */
     stop: () => Promise<void>
     /** @internal */
@@ -184,12 +184,12 @@ export class NetworkNodeFacade {
     /**
      * Start network node, or wait for it to start if already started.
      */
-    private startNodeTask = pOnce(async () => {
+    private startNodeTask = pOnce(async (doJoin: boolean = true) => {
         this.startNodeCalled = true
         try {
             const node = await this.initNode()
             if (!this.destroySignal.isDestroyed()) {
-                await node.start()
+                await node.start(doJoin)
             }
 
             if (this.destroySignal.isDestroyed()) {
@@ -219,7 +219,7 @@ export class NetworkNodeFacade {
      * but will be sync in case that node is already started.
      * Zalgo intentional. See below.
      */
-    publishToNode(streamMessage: StreamMessage, knownEntryPoints: PeerDescriptor[]): void | Promise<void> {
+    async publishToNode(streamMessage: StreamMessage, knownEntryPoints: PeerDescriptor[]): Promise<void> {
         // NOTE: function is intentionally not async for performance reasons.
         // Will call cachedNode.publish immediately if cachedNode is set.
         // Otherwise will wait for node to start.
@@ -227,9 +227,9 @@ export class NetworkNodeFacade {
         if (this.isStarting()) {
             // use .then instead of async/await so
             // this.cachedNode.publish call can be sync
-            return this.startNodeTask().then((node) => {
-                return node.publish(streamMessage, knownEntryPoints)
-            })
+            return this.startNodeTask().then((node) =>
+                node.publish(streamMessage, knownEntryPoints)
+            )
         }
         return this.cachedNode!.publish(streamMessage, knownEntryPoints)
     }
@@ -241,7 +241,7 @@ export class NetworkNodeFacade {
         connectionCount?: number
     ): Promise<void> {
         if (this.isStarting()) {
-            await this.startNodeTask()
+            await this.startNodeTask(false)
         }
         const peerDescriptors = nodeDescriptors.map(this.jsonToPeerDescriptor)
         await this.cachedNode!.setProxies(

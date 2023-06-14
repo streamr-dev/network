@@ -32,7 +32,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
         pull(this.messageListeners, listener)
     }
 
-    subscribe(streamPartId: StreamPartID): void {
+    async subscribe(streamPartId: StreamPartID): Promise<void> {
         this.subscriptions.add(streamPartId)
     }
 
@@ -52,7 +52,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
         return this.getNeighborsForStreamPart(streamPartID).length
     }
 
-    publish(msg: StreamMessage): void {
+    async publish(msg: StreamMessage): Promise<void> {
         // by adding a subscription we emulate the functionality of real network node, which subscribes to 
         // the stream topology when it publishes a message to a stream
         this.subscriptions.add(msg.getStreamPartID())
