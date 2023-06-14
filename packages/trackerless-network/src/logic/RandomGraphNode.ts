@@ -11,7 +11,9 @@ import {
 import {
     StreamMessage,
     LeaveStreamNotice,
-    MessageRef
+    MessageRef,
+    StreamMessageType,
+    GroupKeyRequest
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { PeerList } from './PeerList'
 import { NetworkRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
@@ -247,9 +249,23 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
             this.markAndCheckDuplicate(msg.messageRef!, msg.previousMessageRef)
         }
         this.emit('message', msg)
-        const neighbors = this.config.targetNeighbors.getStringIds()
-        const proxyConnections = this.config.proxyConnectionServer?.getConnectedPeerIds() || []
-        this.config.propagation.feedUnseenMessage(msg, [...neighbors, ...proxyConnections], previousPeer || null)
+        
+        this.config.propagation.feedUnseenMessage(msg, this.getPropagationTargets(msg), previousPeer || null)
+    }
+
+    private getPropagationTargets(msg: StreamMessage): string[] {
+        let propagationTargets = this.config.targetNeighbors.getStringIds()
+        if (this.config.proxyConnectionServer) {
+            if (msg.messageType === StreamMessageType.GROUP_KEY_REQUEST) {
+                const { recipient } = GroupKeyRequest.fromBinary(msg.content)
+                propagationTargets = propagationTargets.concat(this.config.proxyConnectionServer!.getPeerKeysForUserId(recipient))
+            } else if (msg.messageType === StreamMessageType.GROUP_KEY_RESPONSE) {
+                propagationTargets = propagationTargets.concat(this.config.proxyConnectionServer!.getConnectedPeerIds())
+            } else {
+                propagationTargets = propagationTargets.concat(this.config.proxyConnectionServer!.getSubscribers())
+            }
+        }
+        return propagationTargets
     }
 
     private markAndCheckDuplicate(currentMessageRef: MessageRef, previousMessageRef?: MessageRef): boolean {
