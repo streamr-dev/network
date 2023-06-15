@@ -14,7 +14,6 @@ import { pOnce } from './utils/promises'
 import { uuid } from './utils/uuid'
 import { entryPointTranslator } from './utils/utils'
 
-
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
 /** @deprecated This in an internal interface */
 export interface NetworkNodeStub {
