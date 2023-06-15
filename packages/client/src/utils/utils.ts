@@ -1,12 +1,18 @@
 import { ContractReceipt } from '@ethersproject/contracts'
-import { StreamID, toStreamID } from '@streamr/protocol'
-import { TheGraphClient, randomString, toEthereumAddress } from '@streamr/utils'
+import { StreamID, StreamMessage, toStreamID } from '@streamr/protocol'
+import { Logger, TheGraphClient, merge, randomString, toEthereumAddress } from '@streamr/utils'
+import fetch, { Response } from 'node-fetch'
+import { AbortSignal } from 'node-fetch/externals'
+import split2 from 'split2'
+import { Readable } from 'stream'
 import LRU from '../../vendor/quick-lru'
 import { StrictStreamrClientConfig, JsonPeerDescriptor } from '../Config'
 import { StreamrClientEventEmitter } from '../events'
-import { HttpFetcher } from './HttpFetcher'
+import { WebStreamToNodeStream } from './WebStreamToNodeStream'
 import { SEPARATOR } from './uuid'
 import { PeerDescriptor, PeerID } from '@streamr/dht'
+
+const logger = new Logger(module)
 
 /**
  * Generates counter-based ids.
@@ -131,20 +137,71 @@ export const formLookupKey = <K extends (string | number)[]>(...args: K): string
 
 /** @internal */
 export const createTheGraphClient = (
-    httpFetcher: HttpFetcher,
     eventEmitter: StreamrClientEventEmitter,
     config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
 ): TheGraphClient => {
     const instance = new TheGraphClient({
         serverUrl: config.contracts.theGraphUrl,
-        fetch: (url: string, init?: Record<string, unknown>) => httpFetcher.fetch(url, init),
+        fetch: (url: string, init?: Record<string, unknown>) => {
+            // eslint-disable-next-line no-underscore-dangle
+            const timeout = config._timeouts.theGraph.fetchTimeout
+            return fetch(url, merge({ timeout }, init))
+        },
         // eslint-disable-next-line no-underscore-dangle
-        indexTimeout: config._timeouts.theGraph.timeout,
+        indexTimeout: config._timeouts.theGraph.indexTimeout,
         // eslint-disable-next-line no-underscore-dangle
-        indexPollInterval: config._timeouts.theGraph.retryInterval
+        indexPollInterval: config._timeouts.theGraph.indexPollInterval
     })
     eventEmitter.on('confirmContractTransaction', (payload: { receipt: ContractReceipt }) => {
         instance.updateRequiredBlockNumber(payload.receipt.blockNumber)
     })
     return instance
+}
+
+export const createQueryString = (query: Record<string, any>): string => {
+    const withoutEmpty = Object.fromEntries(Object.entries(query).filter(([_k, v]) => v != null))
+    return new URLSearchParams(withoutEmpty).toString()
+}
+
+export const fetchHttpStream = async function*(
+    url: string,
+    parseError: (response: Response) => Promise<Error>,
+    abortController = new AbortController()
+): AsyncIterable<StreamMessage> {
+    logger.debug('Send HTTP request', { url })
+    const response: Response = await fetch(url, {
+        // cast is needed until this is fixed: https://github.com/node-fetch/node-fetch/issues/1652
+        signal: abortController.signal as AbortSignal
+    })
+    logger.debug('Received HTTP response', {
+        url,
+        status: response.status,
+    })
+    if (!response.ok) {
+        throw await parseError(response)
+    }
+    if (!response.body) {
+        throw new Error('No Response Body')
+    }
+
+    let stream: Readable | undefined
+    try {
+        // in the browser, response.body will be a web stream. Convert this into a node stream.
+        const source: Readable = WebStreamToNodeStream(response.body as unknown as (ReadableStream | Readable))
+
+        stream = source.pipe(split2((message: string) => {
+            return StreamMessage.deserialize(message)
+        }))
+
+        stream.once('close', () => {
+            abortController.abort()
+        })
+
+        yield* stream
+    } catch (err) {
+        abortController.abort()
+        throw err
+    } finally {
+        stream?.destroy()
+    }
 }

@@ -15,13 +15,13 @@ import { v4 as uuidv4 } from 'uuid'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
-import { validateStreamMessage } from '../utils/validateStreamMessage'
 import { createSignedMessage } from '../publish/MessageFactory'
 import { createRandomMsgChainId } from '../publish/messageChain'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { pOnce, withThrottling } from '../utils/promises'
 import { MaxSizedSet } from '../utils/utils'
+import { validateStreamMessage } from '../utils/validateStreamMessage'
 import { GroupKey } from './GroupKey'
 import { LocalGroupKeyStore } from './LocalGroupKeyStore'
 import { RSAKeyPair } from './RSAKeyPair'
@@ -34,31 +34,33 @@ const MAX_PENDING_REQUEST_COUNT = 50000 // just some limit, we can tweak the num
 
 @scoped(Lifecycle.ContainerScoped)
 export class SubscriberKeyExchange {
-    private readonly logger: Logger
-    private rsaKeyPair: RSAKeyPair | undefined
+
+    private rsaKeyPair?: RSAKeyPair
+    private readonly pendingRequests: MaxSizedSet<string> = new MaxSizedSet(MAX_PENDING_REQUEST_COUNT)
     private readonly networkNodeFacade: NetworkNodeFacade
+    private readonly streamRegistryCached: StreamRegistryCached
     private readonly store: LocalGroupKeyStore
     private readonly authentication: Authentication
-    private readonly streamRegistryCached: StreamRegistryCached
-    private readonly pendingRequests: MaxSizedSet<string> = new MaxSizedSet(MAX_PENDING_REQUEST_COUNT)
+    private readonly logger: Logger
     private readonly ensureStarted: () => Promise<void>
     requestGroupKey: (groupKeyId: string, publisherId: EthereumAddress, streamPartId: StreamPartID) => Promise<void>
 
     constructor(
         networkNodeFacade: NetworkNodeFacade,
-        store: LocalGroupKeyStore,
-        @inject(AuthenticationInjectionToken) authentication: Authentication,
         @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
-        @inject(LoggerFactory) loggerFactory: LoggerFactory,
-        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'encryption'>
+        store: LocalGroupKeyStore,
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'encryption'>,
+        @inject(AuthenticationInjectionToken) authentication: Authentication,
+        loggerFactory: LoggerFactory
     ) {
-        this.logger = loggerFactory.createLogger(module)
         this.networkNodeFacade = networkNodeFacade
+        this.streamRegistryCached = streamRegistryCached
         this.store = store
         this.authentication = authentication
-        this.streamRegistryCached = streamRegistryCached
+        this.logger = loggerFactory.createLogger(module)
         this.ensureStarted = pOnce(async () => {
-            this.rsaKeyPair = await RSAKeyPair.create()
+            // eslint-disable-next-line no-underscore-dangle
+            this.rsaKeyPair = await RSAKeyPair.create(config.encryption.rsaKeyLength)
             const node = await networkNodeFacade.getNode()
             node.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
             this.logger.debug('Started')

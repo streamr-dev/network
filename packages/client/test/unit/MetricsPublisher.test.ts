@@ -37,9 +37,9 @@ describe('MetricsPublisher', () => {
             publisher as any,
             node as any,
             authentication as any,
+            config,
             eventEmitter,
-            destroySignal,
-            config
+            destroySignal
         )
 
         // trigger metric publisher to start

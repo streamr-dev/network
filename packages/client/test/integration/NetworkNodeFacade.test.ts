@@ -13,6 +13,10 @@ describe('NetworkNodeFacade', () => {
         environment = new FakeEnvironment()
     })
 
+    afterEach(async () => {
+        await environment.destroy()
+    })
+
     describe('id assignment/generation', () => {
         it('generates node id from address, if id not supplied', async () => {
             const client = environment.createClient({

@@ -170,6 +170,12 @@ export interface StreamrClientConfig {
          * from overflowing.
          */
         maxKeyRequestsPerSecond?: number
+
+        /**
+         * Defines how strong RSA key, in bits, is used when an encryption key is
+         * requested via the standard Streamr key-exchange.
+         */
+        rsaKeyLength?: number
     }
 
     contracts?: {
@@ -211,8 +217,9 @@ export interface StreamrClientConfig {
     /** @internal */
     _timeouts?: {
         theGraph?: {
-            timeout?: number
-            retryInterval?: number
+            indexTimeout?: number
+            indexPollInterval?: number
+            fetchTimeout?: number
         }
         storageNode?: {
             timeout?: number
@@ -222,7 +229,6 @@ export interface StreamrClientConfig {
             timeout?: number
             retryInterval?: number
         }
-        httpFetchTimeout?: number
     }
 }
 

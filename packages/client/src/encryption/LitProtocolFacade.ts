@@ -1,15 +1,15 @@
 import { LitCore } from '@lit-protocol/core'
 import { uint8arrayToString } from '@lit-protocol/uint8arrays'
-import { inject, Lifecycle, scoped } from 'tsyringe'
-import * as siwe from 'lit-siwe'
-import { Authentication, AuthenticationInjectionToken } from '../Authentication'
-import { ethers } from 'ethers'
 import { StreamID } from '@streamr/protocol'
-import { StreamPermission, streamPermissionToSolidityType } from '../permission'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
-import { GroupKey } from './GroupKey'
 import { Logger, randomString, withRateLimit } from '@streamr/utils'
+import { ethers } from 'ethers'
+import * as siwe from 'lit-siwe'
+import { inject, Lifecycle, scoped } from 'tsyringe'
+import { Authentication, AuthenticationInjectionToken } from '../Authentication'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import { StreamPermission, streamPermissionToSolidityType } from '../permission'
 import { LoggerFactory } from '../utils/LoggerFactory'
+import { GroupKey } from './GroupKey'
 
 const logger = new Logger(module)
 
@@ -84,19 +84,21 @@ const signAuthMessage = async (authentication: Authentication) => {
  */
 @scoped(Lifecycle.ContainerScoped)
 export class LitProtocolFacade {
-    private readonly authentication: Authentication
-    private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | 'encryption'>
-    private readonly logger: Logger
+
     private litNodeClient?: LitCore
+    private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | 'encryption'>
+    private readonly authentication: Authentication
+    private readonly logger: Logger
     private connectLitNodeClient?: () => Promise<void>
 
+    /* eslint-disable indent */
     constructor(
-        loggerFactory: LoggerFactory,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | 'encryption'>,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
+        loggerFactory: LoggerFactory
     ) {
-        this.authentication = authentication
         this.config = config
+        this.authentication = authentication
         this.logger = loggerFactory.createLogger(module)
     }
 

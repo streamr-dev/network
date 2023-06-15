@@ -1,13 +1,13 @@
 import { StreamID, StreamMessage } from '@streamr/protocol'
-import { scoped, Lifecycle, inject } from 'tsyringe'
+import isString from 'lodash/isString'
 import pLimit from 'p-limit'
-import { StreamDefinition } from '../types'
-import { StreamIDBuilder } from '../StreamIDBuilder'
+import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
+import { StreamIDBuilder } from '../StreamIDBuilder'
 import { MessageFactory } from './MessageFactory'
-import isString from 'lodash/isString'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
+import { StreamDefinition } from '../types'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { Mapping } from '../utils/Mapping'
 import { entryPointTranslator } from '../utils/utils'
@@ -39,23 +39,23 @@ export class Publisher {
 
     private readonly messageFactories: Mapping<[streamId: StreamID], MessageFactory>
     private readonly groupKeyQueues: Mapping<[streamId: StreamID], GroupKeyQueue>
+    private readonly concurrencyLimit = pLimit(1)
+    private readonly node: NetworkNodeFacade
+    private readonly streamRegistryCached: StreamRegistryCached
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly authentication: Authentication
-    private readonly streamRegistryCached: StreamRegistryCached
-    private readonly node: NetworkNodeFacade
-    private readonly concurrencyLimit = pLimit(1)
 
     constructor(
-        streamIdBuilder: StreamIDBuilder,
-        @inject(AuthenticationInjectionToken) authentication: Authentication,
+        node: NetworkNodeFacade,
         streamRegistryCached: StreamRegistryCached,
         groupKeyManager: GroupKeyManager,
-        node: NetworkNodeFacade
+        streamIdBuilder: StreamIDBuilder,
+        @inject(AuthenticationInjectionToken) authentication: Authentication
     ) {
+        this.node = node
+        this.streamRegistryCached = streamRegistryCached
         this.streamIdBuilder = streamIdBuilder
         this.authentication = authentication
-        this.streamRegistryCached = streamRegistryCached
-        this.node = node
         this.messageFactories = new Mapping(async (streamId: StreamID) => {
             return this.createMessageFactory(streamId)
         })

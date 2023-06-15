@@ -29,7 +29,7 @@ describe('gap fill', () => {
     beforeAll(async () => {
         publisherWallet = fastWallet()
         environment = new FakeEnvironment()
-        storageNode = environment.startStorageNode()
+        storageNode = await environment.startStorageNode()
         const publisher = environment.createClient({
             auth: {
                 privateKey: publisherWallet.privateKey
@@ -44,6 +44,10 @@ describe('gap fill', () => {
             streamRegistry: createStreamRegistryCached(),
             groupKeyQueue: await createGroupKeyQueue(authentication, GROUP_KEY)
         })
+    })
+
+    afterAll(async () => {
+        await environment.destroy()
     })
 
     it('real-time subscription uses gap fill', async () => {

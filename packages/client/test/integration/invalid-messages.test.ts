@@ -11,6 +11,7 @@ import { createMockMessage, createTestStream } from '../test-utils/utils'
 const PROPAGATION_WAIT_TIME = 2000
 
 describe('client behaviour on invalid message', () => {
+
     let streamId: StreamID
     let subscriberClient: StreamrClient
     let environment: FakeEnvironment
@@ -28,6 +29,10 @@ describe('client behaviour on invalid message', () => {
         } finally {
             await creatorClient.destroy()
         }
+    })
+
+    afterAll(async () => {
+        await environment.destroy()
     })
 
     beforeEach(async () => {

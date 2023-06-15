@@ -46,7 +46,7 @@
     "@types/geoip-lite": "^1.4.1",
     "@types/lodash": "^4.14.175",
     "@types/morgan": "^1.9.3",
-    "@types/uuid": "^9.0.1"
+    "@types/uuid": "^9.0.2"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.5",

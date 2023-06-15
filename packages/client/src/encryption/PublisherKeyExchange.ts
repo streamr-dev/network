@@ -15,11 +15,11 @@ import without from 'lodash/without'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
-import { validateStreamMessage } from '../utils/validateStreamMessage'
 import { createSignedMessage } from '../publish/MessageFactory'
 import { createRandomMsgChainId } from '../publish/messageChain'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { LoggerFactory } from '../utils/LoggerFactory'
+import { validateStreamMessage } from '../utils/validateStreamMessage'
 import { EncryptionUtil } from './EncryptionUtil'
 import { GroupKey } from './GroupKey'
 import { LocalGroupKeyStore } from './LocalGroupKeyStore'
@@ -30,24 +30,25 @@ import { LocalGroupKeyStore } from './LocalGroupKeyStore'
 
 @scoped(Lifecycle.ContainerScoped)
 export class PublisherKeyExchange {
-    private readonly logger: Logger
-    private readonly store: LocalGroupKeyStore
+
     private readonly networkNodeFacade: NetworkNodeFacade
-    private readonly authentication: Authentication
     private readonly streamRegistryCached: StreamRegistryCached
+    private readonly store: LocalGroupKeyStore
+    private readonly authentication: Authentication
+    private readonly logger: Logger
 
     constructor(
-        store: LocalGroupKeyStore,
         networkNodeFacade: NetworkNodeFacade,
-        @inject(LoggerFactory) loggerFactory: LoggerFactory,
-        @inject(AuthenticationInjectionToken) authentication: Authentication,
         @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
+        store: LocalGroupKeyStore,
+        @inject(AuthenticationInjectionToken) authentication: Authentication,
+        loggerFactory: LoggerFactory
     ) {
-        this.logger = loggerFactory.createLogger(module)
-        this.store = store
         this.networkNodeFacade = networkNodeFacade
-        this.authentication = authentication
         this.streamRegistryCached = streamRegistryCached
+        this.store = store
+        this.authentication = authentication
+        this.logger = loggerFactory.createLogger(module)
         networkNodeFacade.once('start', async () => {
             const node = await networkNodeFacade.getNode()
             node.addMessageListener((msg: StreamMessage) => this.onMessage(msg))

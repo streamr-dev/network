@@ -51,25 +51,26 @@ const getNormalizedConfig = (config: Pick<StreamrClientConfig, 'metrics' | 'auth
 @scoped(Lifecycle.ContainerScoped)
 export class MetricsPublisher {
 
-    private publisher: Publisher
-    private node: NetworkNodeFacade
-    private eventEmitter: StreamrClientEventEmitter
-    private destroySignal: DestroySignal
-    private config: NormalizedConfig
+    private readonly publisher: Publisher
+    private readonly node: NetworkNodeFacade
+    private readonly config: NormalizedConfig
+    private readonly eventEmitter: StreamrClientEventEmitter
+    private readonly destroySignal: DestroySignal
 
     constructor(
-        @inject(Publisher) publisher: Publisher,
-        @inject(NetworkNodeFacade) node: NetworkNodeFacade,
+
+        publisher: Publisher,
+        node: NetworkNodeFacade,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
-        @inject(StreamrClientEventEmitter) eventEmitter: StreamrClientEventEmitter,
-        @inject(DestroySignal) destroySignal: DestroySignal,
-        @inject(ConfigInjectionToken) config: Pick<StreamrClientConfig, 'metrics' | 'auth'>
+        @inject(ConfigInjectionToken) config: Pick<StreamrClientConfig, 'metrics' | 'auth'>,
+        eventEmitter: StreamrClientEventEmitter,
+        destroySignal: DestroySignal
     ) {
         this.publisher = publisher
         this.node = node
+        this.config = getNormalizedConfig(config)
         this.eventEmitter = eventEmitter
         this.destroySignal = destroySignal
-        this.config = getNormalizedConfig(config)
         const ensureStarted = pOnce(async () => {
             const node = await this.node.getNode()
             const metricsContext = node.getMetricsContext()

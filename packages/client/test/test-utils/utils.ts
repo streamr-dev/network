@@ -139,8 +139,8 @@ export const getLocalGroupKeyStore = (userAddress: EthereumAddress): LocalGroupK
             new DestroySignal(),
             loggerFactory
         ),
-        loggerFactory,
-        new StreamrClientEventEmitter()
+        new StreamrClientEventEmitter(),
+        loggerFactory
     )
 }
 
@@ -184,20 +184,22 @@ export const createGroupKeyManager = (
     authentication = createRandomAuthentication()
 ): GroupKeyManager => {
     return new GroupKeyManager(
-        groupKeyStore,
-        mock<LitProtocolFacade>(),
         mock<SubscriberKeyExchange>(),
-        new StreamrClientEventEmitter(),
-        new DestroySignal(),
-        authentication,
+        mock<LitProtocolFacade>(),
+        groupKeyStore,
         {
             encryption: {
                 litProtocolEnabled: false,
                 litProtocolLogging: false,
                 maxKeyRequestsPerSecond: 10,
-                keyRequestTimeout: 50
+                keyRequestTimeout: 50,
+                // eslint-disable-next-line no-underscore-dangle
+                rsaKeyLength: CONFIG_TEST.encryption!.rsaKeyLength!
             }
-        }
+        },
+        authentication,
+        new StreamrClientEventEmitter(),
+        new DestroySignal()
     )
 }
 

@@ -1,6 +1,6 @@
 import { StreamPartID } from '@streamr/protocol'
 import { Logger } from '@streamr/utils'
-import { Lifecycle, inject, scoped } from 'tsyringe'
+import { Lifecycle, scoped } from 'tsyringe'
 import { JsonPeerDescriptor } from '../Config'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { LoggerFactory } from '../utils/LoggerFactory'
@@ -12,17 +12,17 @@ import { SubscriptionSession } from './SubscriptionSession'
 export class Subscriber {
 
     private readonly subSessions: Map<StreamPartID, SubscriptionSession> = new Map()
-    private readonly messagePipelineFactory: MessagePipelineFactory
     private readonly node: NetworkNodeFacade
+    private readonly messagePipelineFactory: MessagePipelineFactory
     private readonly logger: Logger
 
     constructor(
-        messagePipelineFactory: MessagePipelineFactory,
         node: NetworkNodeFacade,
-        @inject(LoggerFactory) loggerFactory: LoggerFactory,
+        messagePipelineFactory: MessagePipelineFactory,
+        loggerFactory: LoggerFactory,
     ) {
-        this.messagePipelineFactory = messagePipelineFactory
         this.node = node
+        this.messagePipelineFactory = messagePipelineFactory
         this.logger = loggerFactory.createLogger(module)
     }
 

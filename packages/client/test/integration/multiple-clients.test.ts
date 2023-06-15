@@ -31,6 +31,7 @@ const waitMessagesReceived = async (
 }
 
 describe('PubSub with multiple clients', () => {
+
     let stream: Stream
     let mainClient: StreamrClient
     let otherClient: StreamrClient
@@ -48,7 +49,7 @@ describe('PubSub with multiple clients', () => {
             }
         })
         stream = await createTestStream(mainClient, module)
-        const storageNode = environment.startStorageNode()
+        const storageNode = await environment.startStorageNode()
         await stream.addToStorageNode(storageNode.id)
     })
 

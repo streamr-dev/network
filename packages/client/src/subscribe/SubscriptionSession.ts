@@ -1,11 +1,11 @@
 import { StreamMessage, StreamMessageType, StreamPartID } from '@streamr/protocol'
 import { JsonPeerDescriptor } from '../Config'
 import { NetworkNodeFacade, NetworkNodeStub } from '../NetworkNodeFacade'
+import { PushPipeline } from '../utils/PushPipeline'
 import { Scaffold } from '../utils/Scaffold'
 import { Signal } from '../utils/Signal'
 import { entryPointTranslator } from '../utils/utils'
 import { MessagePipelineFactory } from './MessagePipelineFactory'
-import { MessageStream } from './MessageStream'
 import { Subscription } from './Subscription'
 import { PeerDescriptor } from '@streamr/dht'
 
@@ -22,7 +22,7 @@ export class SubscriptionSession {
     private isStopped = false
     private readonly subscriptions: Set<Subscription> = new Set()
     private readonly pendingRemoval: WeakSet<Subscription> = new WeakSet()
-    private readonly pipeline: MessageStream
+    private readonly pipeline: PushPipeline<StreamMessage, StreamMessage>
     private readonly node: NetworkNodeFacade
     private readonly knownEntryPoints: PeerDescriptor[]
     constructor(

@@ -6,7 +6,7 @@ import { EthereumAddress, Logger } from '@streamr/utils'
 import { StrictStreamrClientConfig } from '../Config'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { PushBuffer } from '../utils/PushBuffer'
-import { MessageStream } from './MessageStream'
+import { PushPipeline } from '../utils/PushPipeline'
 import { Resends } from './Resends'
 import { MsgChainContext } from './ordering/OrderedMsgChain'
 import OrderingUtil from './ordering/OrderingUtil'
@@ -20,7 +20,7 @@ export class OrderMessages {
     private done = false
     private inputClosed = false
     private enabled = true
-    private readonly resendStreams = new Set<MessageStream>() // holds outstanding resends for cleanup
+    private readonly resendStreams = new Set<PushPipeline<StreamMessage, StreamMessage>>() // holds outstanding resends for cleanup
     private readonly outBuffer = new PushBuffer<StreamMessage>()
     private readonly orderingUtil: OrderingUtil
     private readonly resends: Resends
@@ -65,7 +65,7 @@ export class OrderMessages {
             to,
         })
 
-        let resendMessageStream!: MessageStream
+        let resendMessageStream!: PushPipeline<StreamMessage, StreamMessage>
 
         try {
             resendMessageStream = await this.resends.resend(this.streamPartId, {
@@ -81,7 +81,7 @@ export class OrderMessages {
             this.resendStreams.add(resendMessageStream)
             if (this.done) { return }
 
-            for await (const streamMessage of resendMessageStream.getStreamMessages()) {
+            for await (const streamMessage of resendMessageStream) {
                 if (this.done) { return }
                 this.orderingUtil.add(streamMessage)
             }
