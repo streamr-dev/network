@@ -3,7 +3,7 @@ import { MaintainTopologyHelper, TopologyHelperConfig } from '../../../../src/pl
 import { Chains } from "@streamr/config"
 import { Wallet } from "@ethersproject/wallet"
 import { parseEther } from "@ethersproject/units"
-import { Logger, wait, waitForCondition } from '@streamr/utils'
+import { Logger, waitForCondition } from '@streamr/utils'
 import fetch from "node-fetch"
 
 import type { IERC677, Operator } from "@streamr/network-contracts"
@@ -18,7 +18,6 @@ import { deploySponsorship } from "./deploySponsorshipContract"
 import { generateWalletWithGasAndTokens } from "./smartContractUtils"
 
 const config = Chains.load()["dev1"]
-const adminPrivKey = "0x4059de411f15511a85ce332e7a428f36492ab4e87c7830099dadbf130f1896ae"
 const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`
 
 const logger = new Logger(module)
@@ -55,9 +54,10 @@ describe("MaintainTopologyHelper", () => {
         provider = new JsonRpcProvider(chainURL)
         logger.debug("Connected to: ", await provider.getNetwork())
 
-        adminWallet = new Wallet(adminPrivKey, provider)
+        const streamCreatorKey = "0xfe1d528b7e204a5bdfb7668a1ed3adfee45b4b96960a175c9ef0ad16dd58d728"
+        adminWallet = new Wallet(streamCreatorKey, provider)
 
-        token = new Contract(config.contracts.LINK, tokenABI, adminWallet) as unknown as IERC677
+        token = new Contract(config.contracts.LINK, tokenABI) as unknown as IERC677
         const timeString = (new Date()).getTime().toString()
         const streamPath1 = "/operatorclienttest-1-" + timeString
         const streamPath2 = "/operatorclienttest-2-" + timeString
