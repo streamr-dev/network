@@ -2,15 +2,15 @@ import { BigNumber } from '@ethersproject/bignumber'
 import { ContractTransaction } from '@ethersproject/contracts'
 import { Provider } from '@ethersproject/providers'
 import { StreamID, StreamIDUtils, toStreamID } from '@streamr/protocol'
-import { EthereumAddress, Logger, collect, isENSName, toEthereumAddress } from '@streamr/utils'
+import { EthereumAddress, GraphQLQuery, Logger, TheGraphClient, collect, isENSName, toEthereumAddress } from '@streamr/utils'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { ContractFactory } from '../ContractFactory'
 import { getStreamRegistryChainProviders, getStreamRegistryOverrides } from '../Ethereum'
-import { NotFoundError } from '../HttpUtil'
 import { Stream, StreamMetadata } from '../Stream'
 import { StreamIDBuilder } from '../StreamIDBuilder'
+import { StreamrClientError } from '../StreamrClientError'
 import type { StreamRegistryV4 as StreamRegistryContract } from '../ethereumArtifacts/StreamRegistryV4'
 import StreamRegistryArtifact from '../ethereumArtifacts/StreamRegistryV4Abi.json'
 import { StreamrClientEventEmitter } from '../events'
@@ -29,7 +29,6 @@ import {
 } from '../permission'
 import { filter, map } from '../utils/GeneratorUtils'
 import { LoggerFactory } from '../utils/LoggerFactory'
-import { GraphQLQuery, TheGraphClient } from '@streamr/utils'
 import { ObservableContract, initContractEventGateway, queryAllReadonlyContracts, waitForTx } from '../utils/contract'
 import { until } from '../utils/promises'
 import { StreamFactory } from './../StreamFactory'
@@ -60,7 +59,7 @@ export interface StreamCreationEvent {
 
 const streamContractErrorProcessor = (err: any, streamId: StreamID, registry: string): never => {
     if (err.reason?.code === 'CALL_EXCEPTION') {
-        throw new NotFoundError('Stream not found: id=' + streamId)
+        throw new StreamrClientError('Stream not found: id=' + streamId, 'STREAM_NOT_FOUND')
     } else {
         throw new Error(`Could not reach the ${registry} Smart Contract: ${err.message}`)
     }
@@ -69,37 +68,38 @@ const streamContractErrorProcessor = (err: any, streamId: StreamID, registry: st
 @scoped(Lifecycle.ContainerScoped)
 export class StreamRegistry {
 
-    private contractFactory: ContractFactory
-    private streamIdBuilder: StreamIDBuilder
-    private streamFactory: StreamFactory
-    private theGraphClient: TheGraphClient
-    private streamRegistryCached: StreamRegistryCached
-    private authentication: Authentication
-    /** @internal */
-    private config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
-    private readonly logger: Logger
     private streamRegistryContract?: ObservableContract<StreamRegistryContract>
     private streamRegistryContractsReadonly: ObservableContract<StreamRegistryContract>[]
+    private readonly streamRegistryCached: StreamRegistryCached
+    private readonly streamFactory: StreamFactory
+    private readonly contractFactory: ContractFactory
+    private readonly theGraphClient: TheGraphClient
+    private readonly streamIdBuilder: StreamIDBuilder
+    /** @internal */
+    private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
+    private readonly authentication: Authentication
+    private readonly logger: Logger
     
+    /* eslint-disable indent */
     /** @internal */
     constructor(
-        contractFactory: ContractFactory,
-        @inject(LoggerFactory) loggerFactory: LoggerFactory,
-        @inject(StreamIDBuilder) streamIdBuilder: StreamIDBuilder,
-        streamFactory: StreamFactory,
-        theGraphClient: TheGraphClient,
         @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
-        @inject(StreamrClientEventEmitter) eventEmitter: StreamrClientEventEmitter,
+        streamFactory: StreamFactory,
+        contractFactory: ContractFactory,
+        theGraphClient: TheGraphClient,
+        streamIdBuilder: StreamIDBuilder,
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
-        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
+        eventEmitter: StreamrClientEventEmitter,
+        loggerFactory: LoggerFactory
     ) {
-        this.contractFactory = contractFactory
-        this.streamIdBuilder = streamIdBuilder
-        this.streamFactory = streamFactory
-        this.theGraphClient = theGraphClient
         this.streamRegistryCached = streamRegistryCached
-        this.authentication = authentication
+        this.streamFactory = streamFactory
+        this.contractFactory = contractFactory
+        this.theGraphClient = theGraphClient
+        this.streamIdBuilder = streamIdBuilder
         this.config = config
+        this.authentication = authentication
         this.logger = loggerFactory.createLogger(module)
         const chainProviders = getStreamRegistryChainProviders(config)
         this.streamRegistryContractsReadonly = chainProviders.map((provider: Provider) => {
@@ -341,7 +341,7 @@ export class StreamRegistry {
                 if (response.stream !== null) {
                     return response.stream.permissions
                 } else {
-                    throw new NotFoundError('stream not found: id: ' + streamId)
+                    throw new StreamrClientError('Stream not found: id=' + streamId, 'STREAM_NOT_FOUND')
                 }
             }
         ))

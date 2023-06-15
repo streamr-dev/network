@@ -36,7 +36,7 @@ describe('resend and subscribe', () => {
             user: publisherWallet.address,
             permissions: [StreamPermission.PUBLISH]
         })
-        storageNode = environment.startStorageNode()
+        storageNode = await environment.startStorageNode()
         subscriber.addStreamToStorageNode(stream.id, storageNode.id)
     })
 

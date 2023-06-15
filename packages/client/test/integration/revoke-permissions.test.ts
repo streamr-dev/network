@@ -29,6 +29,7 @@ import { merge } from '@streamr/utils'
 // and subscriber errored with something about group key or
 // permissions
 describe('revoke permissions', () => {
+
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
     let publisher: StreamrClient
     let publisherPrivateKey: string
@@ -47,7 +48,7 @@ describe('revoke permissions', () => {
 
     async function setupStream() {
         stream = await createTestStream(publisher, module)
-        const storageNode = environment.startStorageNode()
+        const storageNode = await environment.startStorageNode()
         await stream.addToStorageNode(storageNode.id)
         publishTestMessages = getPublishTestStreamMessages(publisher, stream)
     }

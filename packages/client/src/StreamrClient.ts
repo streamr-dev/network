@@ -3,6 +3,7 @@ import './utils/PatchTsyringe'
 
 import { ProxyDirection } from '@streamr/protocol'
 import { EthereumAddress, TheGraphClient, toEthereumAddress } from '@streamr/utils'
+import EventEmitter from 'eventemitter3'
 import merge from 'lodash/merge'
 import omit from 'lodash/omit'
 import { container as rootContainer } from 'tsyringe'
@@ -11,7 +12,6 @@ import { Authentication, AuthenticationInjectionToken, createAuthentication } fr
 import { ConfigInjectionToken, StreamrClientConfig, StrictStreamrClientConfig, createStrictConfig, redactConfig } from './Config'
 import { DestroySignal } from './DestroySignal'
 import { generateEthereumAccount as _generateEthereumAccount } from './Ethereum'
-import { ErrorCode } from './HttpUtil'
 import { Message, convertStreamMessageToMessage } from './Message'
 import { MetricsPublisher } from './MetricsPublisher'
 import { NetworkNodeFacade, NetworkNodeStub } from './NetworkNodeFacade'
@@ -29,13 +29,12 @@ import { StreamRegistry } from './registry/StreamRegistry'
 import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
 import { SearchStreamsOrderBy, SearchStreamsPermissionFilter } from './registry/searchStreams'
 import { MessageListener, MessageStream } from './subscribe/MessageStream'
-import { ResendSubscription } from './subscribe/ResendSubscription'
 import { ResendOptions, Resends } from './subscribe/Resends'
 import { Subscriber } from './subscribe/Subscriber'
-import { Subscription } from './subscribe/Subscription'
+import { Subscription, SubscriptionEvents } from './subscribe/Subscription'
+import { initResendSubscription } from './subscribe/resendSubscription'
 import { waitForStorage } from './subscribe/waitForStorage'
 import { StreamDefinition } from './types'
-import { HttpFetcher } from './utils/HttpFetcher'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { pOnce } from './utils/promises'
 import { createTheGraphClient } from './utils/utils'
@@ -63,20 +62,20 @@ export class StreamrClient {
     static readonly generateEthereumAccount = _generateEthereumAccount
 
     public readonly id: string
-    private readonly config: StrictStreamrClientConfig
-    private readonly authentication: Authentication
-    private readonly node: NetworkNodeFacade
-    private readonly resends: Resends
     private readonly publisher: Publisher
     private readonly subscriber: Subscriber
-    private readonly localGroupKeyStore: LocalGroupKeyStore
-    private readonly destroySignal: DestroySignal
+    private readonly resends: Resends
+    private readonly node: NetworkNodeFacade
     private readonly streamRegistry: StreamRegistry
     private readonly streamStorageRegistry: StreamStorageRegistry
     private readonly storageNodeRegistry: StorageNodeRegistry
-    private readonly loggerFactory: LoggerFactory
+    private readonly localGroupKeyStore: LocalGroupKeyStore
     private readonly streamIdBuilder: StreamIDBuilder
+    private readonly config: StrictStreamrClientConfig
+    private readonly authentication: Authentication
     private readonly eventEmitter: StreamrClientEventEmitter
+    private readonly destroySignal: DestroySignal
+    private readonly loggerFactory: LoggerFactory
 
     constructor(
         config: StreamrClientConfig = {},
@@ -90,22 +89,22 @@ export class StreamrClient {
         container.register(AuthenticationInjectionToken, { useValue: authentication })
         container.register(ConfigInjectionToken, { useValue: strictConfig })
         // eslint-disable-next-line max-len
-        container.register(TheGraphClient, { useValue: createTheGraphClient(container.resolve<HttpFetcher>(HttpFetcher), container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter), strictConfig) })
+        container.register(TheGraphClient, { useValue: createTheGraphClient(container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter), strictConfig) })
         this.id = strictConfig.id
         this.config = strictConfig
         this.authentication = authentication
-        this.node = container.resolve<NetworkNodeFacade>(NetworkNodeFacade)
-        this.resends = container.resolve<Resends>(Resends)
         this.publisher = container.resolve<Publisher>(Publisher)
         this.subscriber = container.resolve<Subscriber>(Subscriber)
-        this.localGroupKeyStore = container.resolve<LocalGroupKeyStore>(LocalGroupKeyStore)
-        this.destroySignal = container.resolve<DestroySignal>(DestroySignal)
+        this.resends = container.resolve<Resends>(Resends)
+        this.node = container.resolve<NetworkNodeFacade>(NetworkNodeFacade)
         this.streamRegistry = container.resolve<StreamRegistry>(StreamRegistry)
         this.streamStorageRegistry = container.resolve<StreamStorageRegistry>(StreamStorageRegistry)
         this.storageNodeRegistry = container.resolve<StorageNodeRegistry>(StorageNodeRegistry)
-        this.loggerFactory = container.resolve<LoggerFactory>(LoggerFactory)
+        this.localGroupKeyStore = container.resolve<LocalGroupKeyStore>(LocalGroupKeyStore)
         this.streamIdBuilder = container.resolve<StreamIDBuilder>(StreamIDBuilder)
         this.eventEmitter = container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter)
+        this.destroySignal = container.resolve<DestroySignal>(DestroySignal)
+        this.loggerFactory = container.resolve<LoggerFactory>(LoggerFactory)
         container.resolve<PublisherKeyExchange>(PublisherKeyExchange) // side effect: activates publisher key exchange
         container.resolve<MetricsPublisher>(MetricsPublisher) // side effect: activates metrics publisher
     }
@@ -187,15 +186,18 @@ export class StreamrClient {
             throw new Error('Raw subscriptions are not supported for resend')
         }
         const streamPartId = await this.streamIdBuilder.toStreamPartID(options)
-        const sub = (options.resend !== undefined)
-            ? new ResendSubscription(
-                streamPartId,
+        const eventEmitter = new EventEmitter<SubscriptionEvents>()
+        const sub = new Subscription(streamPartId, options.raw ?? false, eventEmitter, this.loggerFactory)
+        if (options.resend !== undefined) {
+            initResendSubscription(
+                sub,
                 options.resend,
                 this.resends,
-                this.loggerFactory,
-                this.config
+                this.config,
+                eventEmitter,
+                this.loggerFactory
             )
-            : new Subscription(streamPartId, options.raw ?? false, this.loggerFactory)
+        }
         await this.subscriber.add(sub)
         if (onMessage !== undefined) {
             sub.useLegacyOnMessageHandler(onMessage)
@@ -258,7 +260,8 @@ export class StreamrClient {
         onMessage?: MessageListener
     ): Promise<MessageStream> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        const messageStream = await this.resends.resend(streamPartId, options)
+        const pipeline = await this.resends.resend(streamPartId, options)
+        const messageStream = new MessageStream(pipeline)
         if (onMessage !== undefined) {
             messageStream.useLegacyOnMessageHandler(onMessage)
         }
@@ -349,7 +352,7 @@ export class StreamrClient {
         try {
             return await this.getStream(props.id)
         } catch (err: any) {
-            if (err.errorCode === ErrorCode.NOT_FOUND) {
+            if (err.code === 'STREAM_NOT_FOUND') {
                 return this.createStream(props)
             }
             throw err

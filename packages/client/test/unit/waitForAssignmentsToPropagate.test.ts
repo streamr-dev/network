@@ -50,7 +50,7 @@ describe(waitForAssignmentsToPropagate, () => {
     beforeEach(() => {
         messageStream = new MessageStream()
         propagatePromiseState = 'pending'
-        propagatePromise = waitForAssignmentsToPropagate(messageStream.getStreamMessages(), TARGET_STREAM, mockLoggerFactory())
+        propagatePromise = waitForAssignmentsToPropagate(messageStream, TARGET_STREAM, mockLoggerFactory())
             .then((retValue) => {
                 propagatePromiseState = 'resolved'
                 return retValue
