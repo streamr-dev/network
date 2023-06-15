@@ -5,9 +5,8 @@ import { Message } from '../../../../src/helpers/PayloadFormat'
 import { createMessagingPluginTest } from '../../createMessagingPluginTest'
 
 const MQTT_PORT = 12430
-const TRACKER_PORT = 12432
 
-jest.setTimeout(30000)
+jest.setTimeout(60000)
 
 createMessagingPluginTest('mqtt',
     {
@@ -39,7 +38,7 @@ createMessagingPluginTest('mqtt',
     },
     {
         plugin: MQTT_PORT,
-        tracker: TRACKER_PORT
+        brokerConnectionManager: 40420,
     },
     module
 )

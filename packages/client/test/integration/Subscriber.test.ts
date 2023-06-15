@@ -80,7 +80,7 @@ describe('Subscriber', () => {
                 publisher: publisherWallet,
                 content: MOCK_CONTENT,
                 encryptionKey: groupKey
-            }))
+            }), publisher.getEntryPoints())
     
             const receivedMessage = await nextValue(sub[Symbol.asyncIterator]())
             expect(receivedMessage!.content).toEqual(MOCK_CONTENT)
@@ -132,7 +132,7 @@ describe('Subscriber', () => {
                 publisher: publisherWallet,
                 content: MOCK_CONTENT,
                 encryptionKey: groupKey
-            }))
+            }), publisher.getEntryPoints())
     
             const receivedMessage = await nextValue(sub[Symbol.asyncIterator]())
             expect(receivedMessage!.content).toBeString()

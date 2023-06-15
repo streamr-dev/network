@@ -2,7 +2,7 @@ import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
-import { getCreateClient } from '../test-utils/utils'
+import { getCreateClient, createTestClient } from '../test-utils/utils'
 
 describe('getDiagnosticInfo', () => {
     let client: StreamrClient
@@ -12,11 +12,7 @@ describe('getDiagnosticInfo', () => {
 
     beforeAll(async () => {
         const streamPath = `/get-diagnostic-info.test.ts/${Date.now()}`
-        client = await createClient({
-            auth: {
-                privateKey: await fetchPrivateKeyWithGas()
-            }
-        })
+        client = await createTestClient(await fetchPrivateKeyWithGas(), 'get-diagnostic-info.test.ts')
         stream = await client.createStream(streamPath)
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
         otherClient = await createClient()

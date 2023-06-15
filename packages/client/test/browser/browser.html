@@ -232,18 +232,49 @@
         publisherAuth,
         subscriberAuth
     })
-
     const publisher = new StreamrClient({
         ...StreamrClient.CONFIG_TEST,
         id: 'publisher',
         logLevel: 'trace',
         auth: publisherAuth,
+        network: {
+            layer0: {
+                peerDescriptor: {
+                    kademliaId: 'browser-publisher',
+                    type: 0
+                },
+                entryPoints: [{
+                    kademliaId: 'entryPointBroker',
+                    type: 0,
+                    websocket: {
+                        ip: 'localhost',
+                        port: 40401
+                    }
+                }]
+            }
+        }
     })
     const subscriber = new StreamrClient({
         ...StreamrClient.CONFIG_TEST,
         id: 'subscriber',
         logLevel: 'trace',
         auth: subscriberAuth,
+        network: {
+            layer0: {
+                peerDescriptor: {
+                    kademliaId: 'browser-subscriber',
+                    type: 0
+                },
+                entryPoints: [{
+                    kademliaId: 'entryPointBroker',
+                    type: 0,
+                    websocket: {
+                        ip: 'localhost',
+                        port: 40401
+                    }
+                }]
+            }
+        }
     })
     let stream
     let messages = []

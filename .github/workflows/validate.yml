@@ -125,6 +125,7 @@ jobs:
     with:
       package: broker
       docker-services: cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph
+      run-brokers-and-trackers: true
       command: npm run test-integration
   client-browser:
     needs: build
@@ -139,7 +140,8 @@ jobs:
     uses: ./.github/workflows/test-setup.yml
     with:
       package: cli-tools
-      docker-services: parity-node0 graph-deploy-streamregistry-subgraph broker-node-storage-1
+      docker-services: cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph
+      run-brokers-and-trackers: true
       command: npm run test
   tracker-docker-image:
     uses: ./.github/workflows/docker-build.yml
@@ -154,6 +156,6 @@ jobs:
     with:
       docker_file: Dockerfile.broker
       image_name: streamr/broker-node
-      test_services_to_start: parity-node0 broker-node-no-storage-1
+      test_services_to_start: cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph chainlink parity-node0 broker-node-storage-1
       build_platforms: linux/amd64
-      test_script: bash ./.github/healthcheck.sh http://localhost:8791/info streamr-dev-broker-node-no-storage-1
+      test_script: bash ./.github/healthcheck.sh http://localhost:8891/info streamr-dev-broker-node-storage-1

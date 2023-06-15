@@ -7,7 +7,7 @@ import { createMessagingPluginTest } from '../../createMessagingPluginTest'
 jest.setTimeout(30000)
 
 const WEBSOCKET_PORT = 12400
-const TRACKER_PORT = 12402
+const BROKER_NETWORKNODE_PORT = 44410
 
 createMessagingPluginTest('websocket', 
     {
@@ -44,7 +44,7 @@ createMessagingPluginTest('websocket',
     },
     {
         plugin: WEBSOCKET_PORT,
-        tracker: TRACKER_PORT
+        brokerConnectionManager: BROKER_NETWORKNODE_PORT
     },
     module
 )

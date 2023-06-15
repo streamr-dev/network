@@ -79,11 +79,6 @@ describe('Config migration', () => {
                 },
                 apiAuthentication: null,
                 plugins: {
-                    brubeckMiner: {
-                        rewardStreamIds: ['mock-id'],
-                        stunServerHost: null,
-                        beneficiaryAddress: null
-                    },
                     mqtt: {
                         port: 2222,
                         streamIdDomain: null
@@ -116,10 +111,6 @@ describe('Config migration', () => {
                     port: 1111
                 },
                 plugins: {
-                    brubeckMiner: {
-                        rewardStreamIds: ['mock-id'],
-                        stunServerHost: null
-                    },
                     mqtt: {
                         port: 2222
                     },

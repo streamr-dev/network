@@ -7,12 +7,23 @@ import type { ExternalProvider } from '@ethersproject/providers'
 import { MarkOptional, DeepRequired } from 'ts-essentials'
 
 import CONFIG_SCHEMA from './config.schema.json'
-import { TrackerRegistryRecord } from '@streamr/protocol'
 import { LogLevel } from '@streamr/utils'
 
-import { IceServer, Location, WebRtcPortRange, ExternalIP } from '@streamr/network-node'
 import type { ConnectionInfo } from '@ethersproject/web'
 import { generateClientId } from './utils/utils'
+import { StreamrNodeOpts } from '@streamr/trackerless-network'
+import { DhtNodeOptions } from '@streamr/dht'
+
+export interface layer0Config extends Omit<DhtNodeOptions, 'entryPoints' | 'peerDescriptor' | 'stringId'> {
+    entryPoints?: JsonPeerDescriptor[]
+    peerDescriptor?: JsonPeerDescriptor
+    stringKademliaId?: string
+}
+
+export interface NetworkConfig {
+    layer0?: layer0Config
+    networkNode?: StreamrNodeOpts
+}
 
 export interface ProviderAuthConfig {
     ethereum: ExternalProvider
@@ -26,9 +37,19 @@ export interface PrivateKeyAuthConfig {
     address?: string
 }
 
-export interface TrackerRegistryContract {
-    jsonRpcProvider?: ConnectionInfo
-    contractAddress: string
+export interface JsonPeerDescriptor {
+    kademliaId: string
+    type: number
+    udp?: ConnectivityMethod
+    tcp?: ConnectivityMethod
+    websocket?: ConnectivityMethod
+    openInternet?: boolean
+    region?: number
+}
+
+export interface ConnectivityMethod {
+    ip: string
+    port: number
 }
 
 export interface ChainConnectionInfo {
@@ -100,6 +121,10 @@ export interface StreamrClientConfig {
     gapFillTimeout?: number
 
     /**
+     * Config for the decentralized network layer.
+     */
+    network?: NetworkConfig
+    /**
      * When gap filling is enabled and a gap is encountered, a resend request
      * may eventually be sent to a storage node in an attempt to _actively_
      * fill in the gap. This option controls how long to wait for, in
@@ -153,157 +178,6 @@ export interface StreamrClientConfig {
         rsaKeyLength?: number
     }
 
-    /**
-     * These settings determine how the client performs and interacts with the
-     * Streamr Network.
-     */
-    network?: {
-        /**
-         * The network-wide identifier of this node. Should be unique
-         * within the Streamr Network.
-         */
-        id?: string
-
-        /**
-         * Whether to accept proxy connections. Enabling this option allows
-         * this network node to act as proxy on behalf of other nodes / clients.
-         */
-        acceptProxyConnections?: boolean
-
-        /**
-         * Defines the trackers that should be used for peer discovery and
-         * connection forming.
-         *
-         * Generally not intended to be configured by the end-user unless a
-         * custom network is being formed.
-         */
-        trackers?: TrackerRegistryRecord[] | TrackerRegistryContract
-
-        /**
-         * Defines how often, in milliseconds, to ping connected tracker(s) to
-         * determine connection aliveness.
-         */
-        trackerPingInterval?: number
-
-        /**
-         * Determines how often, in milliseconds, should tracker connections be
-         * maintained. This involves connecting to any relevant trackers to
-         * which a connection does not yet exist and disconnecting from
-         * irrelevant ones.
-         */
-        trackerConnectionMaintenanceInterval?: number
-
-        /**
-         * When set to true private addresses will not be probed when forming
-         * WebRTC connections.
-         *
-         * Probing private addresses can trigger false-positive incidents in
-         * some port scanning detection systems employed by web hosting
-         * providers. Disallowing private addresses may prevent direct
-         * connections from being formed between nodes using IPv4 addresses
-         * on a local network.
-         *
-         * Details: https://github.com/streamr-dev/network/wiki/WebRTC-private-addresses
-         */
-        webrtcDisallowPrivateAddresses?: boolean
-
-        /**
-         * Defines WebRTC connection establishment timeout in milliseconds.
-         *
-         * When attempting to form a new connection, if not established within
-         * this timeout, the attempt is considered as failed and further
-         * waiting for it will cease.
-         */
-        newWebrtcConnectionTimeout?: number
-
-        /**
-         * Sets the low-water mark used by send buffers of WebRTC connections.
-         */
-        webrtcDatachannelBufferThresholdLow?: number
-
-        /**
-         * Sets the high-water mark used by send buffers of WebRTC connections.
-         */
-        webrtcDatachannelBufferThresholdHigh?: number
-
-        /**
-         * The maximum outgoing message size (in bytes) accepted by WebRTC
-         * connections. Messages exceeding the maximum size are simply
-         * discarded.
-         */
-        webrtcMaxMessageSize?: number
-
-        /**
-         * Defines a custom UDP port range to be used for WebRTC connections.
-         * This port range should not be restricted by enclosing firewalls
-         * or virtual private cloud configurations.
-         */
-        webrtcPortRange?: WebRtcPortRange
-
-        /**
-         * The maximum amount of messages retained in the send queue of a WebRTC
-         * connection.
-         *
-         * When the send queue becomes full, oldest messages are discarded
-         * first to make room for new.
-         */
-        webrtcSendBufferMaxMessageCount?: number
-
-        /**
-         * Determines how long, in milliseconds, to keep non-relevant neighbor
-         * connections around for before disconnecting them.
-         *
-         * A connection with another node is relevant when the two share
-         * one or more streams and thus have messages to propagate to one
-         * another. When this no longer holds, the connection may be cut.
-         *
-         * During the topology re-organization process, sometimes a neighbor
-         * node may cease to be our neighbor only to become one once again in
-         * a short period of time. For this reason, it can be beneficial not to
-         * disconnect non-relevant neighbors right away.
-         */
-        disconnectionWaitTime?: number
-
-        /**
-         * Defines how often, in milliseconds, to ping connected nodes to
-         * determine connection aliveness.
-         */
-        peerPingInterval?: number
-
-        /**
-         * Determines how often, in milliseconds, at most, to include
-         * round-trip time (RTT) statistics in status updates to trackers.
-         */
-        rttUpdateTimeout?: number
-
-        /**
-         * The list of STUN and TURN servers to use in ICE protocol when
-         * forming WebRTC connections.
-         */
-        iceServers?: ReadonlyArray<IceServer>
-
-        /**
-         * Defines an explicit geographic location for this node (overriding Geo
-         * IP lookup).
-         */
-        location?: Location
-
-        /**
-         * Used to assign a custom external IP address for the node.
-         * Useful in cases where the node has a public IP address but
-         * the hosts network interface does not know of it.
-         *
-         * Works only if the Full Cone NAT that the node is behind preserves local
-         * port mappings on the public side.
-        */
-        externalIp?: ExternalIP
-    }
-
-    /**
-     * The smart contract addresses and RPC urls to be used in the client.
-     * Generally not intended to be configured by the end-user unless a
-     * custom network is being formed.
-     */
     contracts?: {
         streamRegistryChainAddress?: string
         streamStorageRegistryChainAddress?: string
@@ -359,7 +233,7 @@ export interface StreamrClientConfig {
 }
 
 export type StrictStreamrClientConfig = MarkOptional<Required<StreamrClientConfig>, 'auth' | 'metrics'> & {
-    network: MarkOptional<Exclude<Required<StreamrClientConfig['network']>, undefined>, 'location'>
+    network: Exclude<Required<StreamrClientConfig['network']>, undefined>
     contracts: Exclude<Required<StreamrClientConfig['contracts']>, undefined>
     encryption: Exclude<Required<StreamrClientConfig['encryption']>, undefined>
     cache: Exclude<Required<StreamrClientConfig['cache']>, undefined>

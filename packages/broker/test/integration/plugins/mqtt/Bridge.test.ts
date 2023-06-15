@@ -1,16 +1,15 @@
 import { Stream, StreamrClient } from 'streamr-client'
-import { Tracker } from '@streamr/network-tracker'
 import mqtt from 'async-mqtt'
 import { fetchPrivateKeyWithGas, Queue } from '@streamr/test-utils'
 import { Broker } from '../../../../src/broker'
-import { createClient, startBroker, createTestStream, startTestTracker } from '../../../utils'
+import { createClient, startBroker, createTestStream } from '../../../utils'
 import { wait } from '@streamr/utils'
 import { Wallet } from '@ethersproject/wallet'
 
 const MQTT_PLUGIN_PORT = 12470
-const TRACKER_PORT = 12471
+const BROKER_CONNECTIONMANAGER_PORT = 40415
 
-jest.setTimeout(30000)
+jest.setTimeout(60000)
 
 const createMqttClient = () => {
     return mqtt.connectAsync(`mqtt://localhost:${MQTT_PLUGIN_PORT}`)
@@ -19,7 +18,6 @@ const createMqttClient = () => {
 describe('MQTT Bridge', () => {
     let stream: Stream
     let streamrClient: StreamrClient
-    let tracker: Tracker
     let broker: Broker
     let brokerUser: Wallet
 
@@ -32,27 +30,25 @@ describe('MQTT Bridge', () => {
 
     beforeAll(async () => {
         brokerUser = new Wallet(await fetchPrivateKeyWithGas())
-        tracker = await startTestTracker(TRACKER_PORT)
         broker = await startBroker({
             privateKey: brokerUser.privateKey,
-            trackerPort: TRACKER_PORT,
             extraPlugins: {
                 mqtt: {
                     port: MQTT_PLUGIN_PORT
                 }
-            }
+            },
+            wsServerPort: BROKER_CONNECTIONMANAGER_PORT
         })
     })
 
     afterAll(async () => {
         await Promise.allSettled([
-            broker.stop(),
-            tracker.stop()
+            broker.stop()
         ])
     })
 
     beforeEach(async () => {
-        streamrClient = await createClient(tracker, brokerUser.privateKey)
+        streamrClient = await createClient(brokerUser.privateKey)
         stream = await createTestStream(streamrClient, module)
     })
 
@@ -85,9 +81,9 @@ describe('MQTT Bridge', () => {
         }
         const messageQueue = new Queue<any>()
         const subscriber = await createSubscriber(messageQueue)
-        streamrClient.publish(stream.id, expected)
+        await streamrClient.publish(stream.id, expected)
 
-        const actual = await messageQueue.pop()
+        const actual = await messageQueue.pop(10000)
         expect(actual).toEqual(expected)
 
         await subscriber.end(true)
@@ -101,11 +97,12 @@ describe('MQTT Bridge', () => {
         const messageQueue2 = new Queue<any>()
         const subscriber1 = await createSubscriber(messageQueue1)
         const subscriber2 = await createSubscriber(messageQueue2)
-        streamrClient.publish(stream.id, expected)
+        await streamrClient.publish(stream.id, expected)
 
-        await wait(2000)
-        expect(messageQueue1.items).toEqual([expected])
-        expect(messageQueue2.items).toEqual([expected])
+        const actual1 = await messageQueue1.pop(10000)
+        const actual2 = await messageQueue2.pop()
+        expect(actual1).toEqual(expected)
+        expect(actual2).toEqual(expected)
 
         await Promise.allSettled([
             subscriber1.end(true),
@@ -121,10 +118,11 @@ describe('MQTT Bridge', () => {
         const subscriber1 = await createSubscriber(messageQueue)
         const subscriber2 = await createMqttClient()
         subscriber2.unsubscribe(stream.id)
-        streamrClient.publish(stream.id, expected)
+        await streamrClient.publish(stream.id, expected)
 
-        await wait(2000)
-        expect(messageQueue.items).toEqual([expected])
+        const actual = await messageQueue.pop(10000)
+
+        expect(actual).toEqual(expected)
 
         await Promise.allSettled([
             subscriber1.end(true),
@@ -141,10 +139,10 @@ describe('MQTT Bridge', () => {
         const subscriber1 = await createSubscriber(messageQueue1)
         const subscriber2 = await createSubscriber(messageQueue2)
         subscriber2.unsubscribe(stream.id)
-        streamrClient.publish(stream.id, expected)
+        await streamrClient.publish(stream.id, expected)
 
-        await wait(2000)
-        expect(messageQueue1.items).toEqual([expected])
+        const actual1 = await messageQueue1.pop(15000)
+        expect(actual1).toEqual(expected)
         expect(messageQueue2.items).toEqual([])
 
         await Promise.allSettled([

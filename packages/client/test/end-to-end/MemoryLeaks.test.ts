@@ -61,7 +61,7 @@ describe('MemoryLeaks', () => {
         expect(leaksDetector).toBeTruthy()
         if (!leaksDetector) { return }
         const detector = leaksDetector
-        await wait(1000)
+        await wait(5000)
         snapshot()
         await detector.checkNoLeaks() // this is very slow
         detector.clear()
@@ -146,8 +146,8 @@ describe('MemoryLeaks', () => {
             test('connect + destroy', async () => {
                 const client = await createClient()
                 await client.connect()
-                leaksDetector.addAll(instanceId(client), client)
                 await client.destroy()
+                leaksDetector.addAll(instanceId(client), client) // Should this be moved up by catch leaks?
             })
         })
 

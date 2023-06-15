@@ -24,12 +24,15 @@ export { StorageNodeMetadata } from './registry/StorageNodeRegistry'
 export { SearchStreamsPermissionFilter, SearchStreamsOrderBy } from './registry/searchStreams'
 export {
     StreamrClientConfig,
-    TrackerRegistryContract,
     ChainConnectionInfo,
     EthereumNetworkConfig,
     ProviderAuthConfig,
     PrivateKeyAuthConfig,
     STREAMR_STORAGE_NODE_GERMANY,
+    NetworkConfig,
+    layer0Config,
+    JsonPeerDescriptor,
+    ConnectivityMethod
 } from './Config'
 export { GroupKey as EncryptionKey } from './encryption/GroupKey'
 export { UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
@@ -42,7 +45,6 @@ export { formStorageNodeAssignmentStreamId } from './utils/utils'
 export type { StreamID, StreamPartID, TrackerRegistryRecord } from '@streamr/protocol'
 export { ProxyDirection } from '@streamr/protocol'
 export type { BrandedString, EthereumAddress, LogLevel, Metric, MetricsContext, MetricsDefinition, MetricsReport } from '@streamr/utils'
-export type { IceServer, Location, WebRtcPortRange } from '@streamr/network-node'
 
 // These are currently exported because NetworkNodeStub uses methods which operate on StreamMessage.
 // If we remove that semi-public class we can maybe remove these exports.
@@ -60,5 +62,7 @@ export {
     StreamMessageType
 } from '@streamr/protocol'
 
+export type { StreamrNodeOpts } from '@streamr/trackerless-network'
+export type { IceServer, PeerDescriptor } from '@streamr/dht' 
 export type { ConnectionInfo } from '@ethersproject/web'
 export type { ExternalProvider } from '@ethersproject/providers'

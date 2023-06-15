@@ -6,10 +6,11 @@ import { AbortSignal } from 'node-fetch/externals'
 import split2 from 'split2'
 import { Readable } from 'stream'
 import LRU from '../../vendor/quick-lru'
-import { StrictStreamrClientConfig } from '../Config'
+import { StrictStreamrClientConfig, JsonPeerDescriptor } from '../Config'
 import { StreamrClientEventEmitter } from '../events'
 import { WebStreamToNodeStream } from './WebStreamToNodeStream'
 import { SEPARATOR } from './uuid'
+import { PeerDescriptor, PeerID } from '@streamr/dht'
 
 const logger = new Logger(module)
 
@@ -108,6 +109,20 @@ export class MaxSizedSet<T> {
     delete(value: T): void {
         this.delegate.delete(value)
     }
+}
+
+export function entryPointTranslator(json: JsonPeerDescriptor[]): PeerDescriptor[] {
+    return json.map((ep: JsonPeerDescriptor) => {
+        const peerDescriptor: PeerDescriptor = {
+            kademliaId: PeerID.fromString(ep.kademliaId).value,
+            type: ep.type,
+            openInternet: ep.openInternet,
+            udp: ep.udp,
+            tcp: ep.tcp,
+            websocket: ep.websocket
+        }
+        return peerDescriptor
+    })
 }
 
 export function generateClientId(): string {
