@@ -6,10 +6,10 @@ import {
     toStreamID,
     toStreamPartID
 } from '@streamr/protocol'
-import { inject, Lifecycle, scoped } from 'tsyringe'
-import { StreamDefinition } from './types'
-import { Authentication, AuthenticationInjectionToken } from './Authentication'
 import { EthereumAddress } from '@streamr/utils'
+import { Lifecycle, inject, scoped } from 'tsyringe'
+import { Authentication, AuthenticationInjectionToken } from './Authentication'
+import { StreamDefinition } from './types'
 
 export const DEFAULT_PARTITION = 0
 

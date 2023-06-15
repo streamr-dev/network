@@ -52,6 +52,10 @@ describe('parallel key exchange', () => {
         }))
     }, 20000)
 
+    afterAll(async () => {
+        await environment.destroy()
+    })
+
     it('happy path', async () => {
         const sub = await subscriber.subscribe(stream.id)
 

@@ -10,6 +10,7 @@ import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { nextValue } from './../../src/utils/iterators'
 
 describe('publisher key reuse', () => {
+
     let publisherWallet: Wallet
     let environment: FakeEnvironment
     let publisher: StreamrClient
@@ -37,7 +38,7 @@ describe('publisher key reuse', () => {
     })
 
     afterEach(async () => {
-        await environment?.destroy()
+        await environment.destroy()
     })
 
     it('happy path: same publisher address', async () => {

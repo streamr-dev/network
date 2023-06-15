@@ -10,16 +10,16 @@ import { StrictStreamrClientConfig } from '../../src/Config'
 import { DestroySignal } from '../../src/DestroySignal'
 import { Stream } from '../../src/Stream'
 import { DecryptError, EncryptionUtil } from '../../src/encryption/EncryptionUtil'
+import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
 import { LitProtocolFacade } from '../../src/encryption/LitProtocolFacade'
 import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
 import { StreamrClientEventEmitter } from '../../src/events'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
-import { createMessagePipeline } from "../../src/subscribe/messagePipeline"
+import { createMessagePipeline } from '../../src/subscribe/messagePipeline'
+import { PushPipeline } from '../../src/utils/PushPipeline'
 import { mockLoggerFactory } from '../test-utils/utils'
-import { GroupKey } from './../../src/encryption/GroupKey'
-import { MessageStream } from './../../src/subscribe/MessageStream'
 
 const CONTENT = {
     foo: 'bar'
@@ -27,7 +27,7 @@ const CONTENT = {
 
 describe('messagePipeline', () => {
 
-    let pipeline: MessageStream
+    let pipeline: PushPipeline<StreamMessage, StreamMessage>
     let streamRegistryCached: Partial<StreamRegistryCached>
     let streamPartId: StreamPartID
     let publisher: Wallet
@@ -81,7 +81,7 @@ describe('messagePipeline', () => {
                 litProtocolLogging: false,
                 keyRequestTimeout: 50,
                 maxKeyRequestsPerSecond: 0
-            }
+            } as any
         }
         streamRegistryCached = {
             getStream: async () => stream,
@@ -91,20 +91,20 @@ describe('messagePipeline', () => {
         pipeline = createMessagePipeline({
             streamPartId,
             getStorageNodes: undefined as any,
-            loggerFactory: mockLoggerFactory(),
             resends: undefined as any,
-            groupKeyManager: new GroupKeyManager(
-                groupKeyStore,
-                mock<LitProtocolFacade>(),
-                mock<SubscriberKeyExchange>(),
-                new StreamrClientEventEmitter(),
-                destroySignal,
-                createPrivateKeyAuthentication(publisher.privateKey, {} as any),
-                config
-            ),
             streamRegistryCached: streamRegistryCached as any,
+            groupKeyManager: new GroupKeyManager(
+                mock<SubscriberKeyExchange>(),
+                mock<LitProtocolFacade>(),
+                groupKeyStore,
+                config,
+                createPrivateKeyAuthentication(publisher.privateKey, {} as any),
+                new StreamrClientEventEmitter(),
+                destroySignal
+            ),
+            config: config as any,
             destroySignal,
-            config: config as any
+            loggerFactory: mockLoggerFactory(),
         })
     })
 
@@ -114,7 +114,7 @@ describe('messagePipeline', () => {
         pipeline.endWrite()
         const output = await collect(pipeline)
         expect(output).toHaveLength(1)
-        expect(output[0].content).toEqual(CONTENT)
+        expect(output[0].getParsedContent()).toEqual(CONTENT)
     })
 
     it('error: invalid signature', async () => {
