@@ -24,7 +24,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig) => {
     const maxNumberOfContacts = config.maxNumberOfContacts ?? 20
     const minPropagationTargets = config.minPropagationTargets ?? 2
     const acceptProxyConnections = config.acceptProxyConnections ?? false
-    const nearbyContactPool = config.nearbyContactPool ?? new PeerList(peerId, maxNumberOfContacts)
+    const nearbyContactPool = config.nearbyContactPool ?? new PeerList(peerId, numOfTargetNeighbors + 1)
     const randomContactPool = config.randomContactPool ?? new PeerList(peerId, maxNumberOfContacts)
     const targetNeighbors = config.targetNeighbors ?? new PeerList(peerId, maxNumberOfContacts)
     const proxyConnectionServer = acceptProxyConnections ? new ProxyStreamConnectionServer({
