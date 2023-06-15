@@ -1,7 +1,7 @@
 import { MaintainTopologyService } from '../../../../src/plugins/operator/MaintainTopologyService'
 import { FakeOperatorClient } from '../../../../src/plugins/operator/FakeOperatorClient'
 import { StreamID, toStreamID, toStreamPartID } from '@streamr/protocol'
-import { mock, mockClear, MockProxy } from 'jest-mock-extended'
+import { mock, MockProxy } from 'jest-mock-extended'
 import StreamrClient, { Subscription } from 'streamr-client'
 import range from 'lodash/range'
 import { wait, waitForCondition } from '@streamr/utils'
@@ -182,12 +182,6 @@ describe('MaintainTopologyService', () => {
         await wait(NOTHING_HAPPENED_DELAY)
         expect(totalUnsubscribes(STREAM_D)).toEqual(0)
     })
-
-    function clearUnsubscribeMockCalls() {
-        for (const sub of Object.values(fixtures).flat()) {
-            sub.unsubscribe.mockClear()
-        }
-    }
 
     it('handles concurrency properly', async () => {
         await setUpAndStart([STREAM_C])
