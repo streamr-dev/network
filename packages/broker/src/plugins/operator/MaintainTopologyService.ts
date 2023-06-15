@@ -4,9 +4,7 @@ import StreamrClient, { Stream, Subscription } from 'streamr-client'
 import { StreamID, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
 import { SetMembershipSynchronizer } from '../storage/SetMembershipSynchronizer'
 import pLimit from 'p-limit'
-// import { compact } from 'lodash'
-
-const logger = new Logger(module)
+import { OperatorServiceConfig } from './OperatorPlugin'
 
 function toStreamIDSafe(input: string): StreamID | undefined {
     try {
@@ -16,33 +14,31 @@ function toStreamIDSafe(input: string): StreamID | undefined {
     }
 }
 
-// function singletonSet<T>(element: T): Set<T> {
-//     return new Set<T>([element])
-// }
-
 export class MaintainTopologyService {
     private readonly streamrClient: StreamrClient
     private readonly maintainTopologyHelper: MaintainTopologyHelper
     private readonly subscriptions = new Multimap<StreamID, Subscription>()
     private readonly synchronizer = new SetMembershipSynchronizer<StreamID>()
     private readonly concurrencyLimit = pLimit(1)
+    private readonly logger: Logger
 
-    constructor(streamrClient: StreamrClient, operatorClient: MaintainTopologyHelper) {
+    constructor(streamrClient: StreamrClient, serviceConfig: OperatorServiceConfig, logger: Logger) {
         this.streamrClient = streamrClient
-        this.maintainTopologyHelper = operatorClient
+        this.maintainTopologyHelper = new MaintainTopologyHelper(serviceConfig, logger as any) // TODO: casting?
+        this.logger = logger
     }
 
     async start(): Promise<void> {
-        logger.info('Starting MaintainTopologyService')
+        this.logger.info('Starting MaintainTopologyService')
         this.maintainTopologyHelper.on('addStakedStream', this.onAddStakedStreams)
         this.maintainTopologyHelper.on('removeStakedStream', this.onRemoveStakedStream)
         await this.maintainTopologyHelper.start()
-        logger.info('Started MaintainTopologyService')
+        this.logger.info('Started MaintainTopologyService')
     }
 
     async stop(): Promise<void> {
         this.maintainTopologyHelper.stop()
-        logger.info('stopped')
+        this.logger.info('stopped')
     }
 
     private onAddStakedStreams = async (streamIDs: string[]) => {
@@ -60,7 +56,7 @@ export class MaintainTopologyService {
         try {
             stream = await this.streamrClient.getStream(streamId)
         } catch (err) {
-            logger.warn('Ignore non-existing stream', { streamId, reason: err?.message })
+            this.logger.warn('Ignore non-existing stream', { streamId, reason: err?.message })
             return
         }
         for (const streamPart of stream.getStreamParts()) {
@@ -83,7 +79,7 @@ export class MaintainTopologyService {
             if (streamId !== undefined) {
                 this.concurrencyLimit(() => fn(streamId))
             } else {
-                logger.error('Encountered invalid stream id', { streamIdAsStr })
+                this.logger.error('Encountered invalid stream id', { streamIdAsStr })
             }
         }
     }

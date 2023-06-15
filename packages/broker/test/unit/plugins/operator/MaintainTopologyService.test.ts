@@ -4,7 +4,7 @@ import { StreamID, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { mock, MockProxy } from 'jest-mock-extended'
 import StreamrClient, { Subscription } from 'streamr-client'
 import range from 'lodash/range'
-import { wait, waitForCondition } from '@streamr/utils'
+import { Logger, wait, waitForCondition } from '@streamr/utils'
 
 interface MockSubscription {
     unsubscribe: jest.MockedFn<Subscription['unsubscribe']>
@@ -69,7 +69,7 @@ describe('MaintainTopologyService', () => {
 
     async function setUpAndStart(initialState: StreamID[]): Promise<void> {
         operatorClient = new FakeOperatorClient(initialState, INITIAL_BLOCK)
-        service = new MaintainTopologyService(streamrClient, operatorClient as any) // TODO: remove casting
+        service = new MaintainTopologyService(streamrClient, operatorClient as any, new Logger(module) as any) // TODO: remove casting
         await service.start()
     }
 

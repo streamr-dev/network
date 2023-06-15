@@ -12,7 +12,6 @@ import {
     getTokenContract
 } from './smartContractUtils'
 import { StreamPartID } from '@streamr/protocol'
-import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
 
 async function setUpStreams(): Promise<[Stream, Stream]> {
     const privateKey = await fetchPrivateKeyWithGas()
@@ -53,15 +52,18 @@ describe('MaintainTopologyService', () => {
         await (await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther("200"), operatorWallet.address)).wait()
         await (await operatorContract.stake(sponsorship1.address, parseEther("100"))).wait()
 
-        const client = new StreamrClient({
-            ...CONFIG_TEST
-        })
-        service = new MaintainTopologyService(client, new MaintainTopologyHelper({
+        const serviceConfig = {
             provider,
+            signer: operatorWallet,
             operatorContractAddress: operatorContract.address,
             theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`,
             fetch: fetch
-        }, new Logger(module) as any)) // TODO: logger casting issue
+        }
+
+        const client = new StreamrClient({
+            ...CONFIG_TEST
+        })
+        service = new MaintainTopologyService(client, serviceConfig, new Logger(module) as any)// TODO: logger casting issue
         await service.start()
 
         await waitForCondition(async () => (await client.getSubscriptions()).length === 1, 10000, 1000)
@@ -77,6 +79,5 @@ describe('MaintainTopologyService', () => {
         await (await operatorContract.unstake(sponsorship1.address)).wait()
         await waitForCondition(async () => (await client.getSubscriptions()).length === 3)
         expect(await getSubscribedStreamPartIds(client)).toEqual(stream2.getStreamParts())
-        service.stop()
     }, 120 * 1000)
 })

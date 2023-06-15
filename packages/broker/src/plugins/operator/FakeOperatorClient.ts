@@ -1,8 +1,8 @@
 import { StreamID } from '@streamr/protocol'
 import EventEmitter3 from 'eventemitter3'
-import { OperatorClientEvents } from './MaintainTopologyHelper'
+import { MaintainTopologyHelperEvents } from './MaintainTopologyHelper'
 
-export class FakeOperatorClient extends EventEmitter3<OperatorClientEvents> {
+export class FakeOperatorClient extends EventEmitter3<MaintainTopologyHelperEvents> {
     private readonly initialState: Set<StreamID>
     private readonly initialBlockNumber: number
 

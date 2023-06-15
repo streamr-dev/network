@@ -3,12 +3,13 @@ import { Provider } from "@ethersproject/providers"
 import { operatorABI, sponsorshipABI } from "@streamr/network-contracts"
 import type { Operator, Sponsorship } from "@streamr/network-contracts"
 import { EventEmitter } from "eventemitter3"
-import { FetchResponse, Logger, TheGraphClient } from "@streamr/utils"
+import { Logger, TheGraphClient } from "@streamr/utils"
+import { OperatorServiceConfig } from "./OperatorPlugin"
 
 /**
  * Events emitted by {@link MaintainTopologyHelper}.
  */
-export interface OperatorClientEvents {
+export interface MaintainTopologyHelperEvents {
     /**
      * Emitted if an error occurred in the subscription.
      */
@@ -25,15 +26,7 @@ export interface OperatorClientEvents {
     removeStakedStream: (streamId: string) => void
 }
 
-export interface TopologyHelperConfig {
-    provider: Provider
-    // chain?:
-    operatorContractAddress: string
-    theGraphUrl: string
-    fetch: (url: string, init?: Record<string, unknown>) => Promise<FetchResponse>
-}
-
-export class MaintainTopologyHelper extends EventEmitter<OperatorClientEvents> {
+export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperEvents> {
     provider: Provider
     address: string
     contract: Operator
@@ -42,7 +35,7 @@ export class MaintainTopologyHelper extends EventEmitter<OperatorClientEvents> {
     theGraphClient: TheGraphClient
     private readonly logger: Logger
 
-    constructor(config: TopologyHelperConfig, logger: Logger) {
+    constructor(config: OperatorServiceConfig, logger: Logger) {
         super()
 
         this.logger = logger
@@ -61,7 +54,7 @@ export class MaintainTopologyHelper extends EventEmitter<OperatorClientEvents> {
     async start(): Promise<void> {
         this.logger.info("Starting OperatorClient")
         this.logger.info("Subscribing to Staked and Unstaked events")
-        let latestBlock = 0
+        let latestBlock = await this.contract.provider.getBlockNumber()
         this.contract.on("Staked", async (sponsorship: string) => {
             this.logger.info(`got Staked event ${sponsorship}`)
             const sponsorshipAddress = sponsorship.toLowerCase()
@@ -79,7 +72,6 @@ export class MaintainTopologyHelper extends EventEmitter<OperatorClientEvents> {
             }
             latestBlock = await this.contract.provider.getBlockNumber()
         })
-        // this.provider.on({ address: config.operatorContractAddress }, (event) => { console.log("Got event %s", event.topics[0]) })
         this.contract.on("Unstaked", async (sponsorship: string) => {
             this.logger.info(`got Unstaked event ${sponsorship}`)
             const sponsorshipAddress = sponsorship.toLowerCase()
@@ -109,11 +101,7 @@ export class MaintainTopologyHelper extends EventEmitter<OperatorClientEvents> {
         return bounty.streamId()
     }
 
-    // async getStakedStreams(): Promise<string[]> {
-    //     return Array.from(this.sponsorshipCountOfStream.keys())
-    // }
-
-    private async pullStakedStreams(requiredBlocknumber: number): Promise<string[]> {
+    private async pullStakedStreams(requiredBlockNumber: number): Promise<string[]> {
         this.logger.info(`getStakedStreams for ${this.address.toLowerCase()}`)
         const createQuery = (lastId: string, pageSize: number) => {
             return {
@@ -138,17 +126,15 @@ export class MaintainTopologyHelper extends EventEmitter<OperatorClientEvents> {
                     `
             }
         }
-        // let latestBlockNumber = 0
         const parseItems = (response: any) => {
             // eslint-disable-next-line no-underscore-dangle
-            // latestBlockNumber = response._meta.block.number
             if (!response.operator) {
                 this.logger.error(`Operator ${this.address.toLowerCase()} not found in TheGraph`)
                 return []
             }
             return response.operator.stakes
         }
-        this.theGraphClient.updateRequiredBlockNumber(requiredBlocknumber)
+        this.theGraphClient.updateRequiredBlockNumber(requiredBlockNumber)
         const queryResult = this.theGraphClient.queryEntities<any>(createQuery, parseItems)
 
         for await (const stake of queryResult) {

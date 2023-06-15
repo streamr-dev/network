@@ -1,5 +1,5 @@
 import { JsonRpcProvider, Provider } from "@ethersproject/providers"
-import { MaintainTopologyHelper, TopologyHelperConfig } from '../../../../src/plugins/operator/MaintainTopologyHelper'
+import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
 import { Chains } from "@streamr/config"
 import { Wallet } from "@ethersproject/wallet"
 import { parseEther } from "@ethersproject/units"
@@ -16,6 +16,7 @@ import { Contract } from "@ethersproject/contracts"
 import { deployOperatorContract } from "./deployOperatorContract"
 import { deploySponsorship } from "./deploySponsorshipContract"
 import { generateWalletWithGasAndTokens } from "./smartContractUtils"
+import { OperatorServiceConfig } from "../../../../src/plugins/operator/OperatorPlugin"
 
 const config = Chains.load()["dev1"]
 const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`
@@ -33,8 +34,6 @@ describe("MaintainTopologyHelper", () => {
     let streamId1: string
     let streamId2: string
 
-    // eslint-disable-next-line no-console
-
     const deployNewOperator = async () => {
         const operatorWallet = await generateWalletWithGasAndTokens(provider)
 
@@ -43,6 +42,7 @@ describe("MaintainTopologyHelper", () => {
         logger.debug(`Operator deployed at ${operatorContract.address}`)
         const operatorConfig = {
             operatorContractAddress: operatorContract.address,
+            signer: operatorWallet,
             provider,
             theGraphUrl,
             fetch
@@ -73,7 +73,7 @@ describe("MaintainTopologyHelper", () => {
     describe("maintain topology service normal wolkflow", () => {
         let operatorWallet: Wallet
         let operatorContract: Operator
-        let operatorConfig: TopologyHelperConfig
+        let operatorConfig: OperatorServiceConfig
         let sponsorship: Contract
         let sponsorship2: Contract
         let operatorClient: MaintainTopologyHelper
@@ -129,7 +129,6 @@ describe("MaintainTopologyHelper", () => {
 
             await operatorClient.start()
             await new Promise((resolve) => setTimeout(resolve, 3000))
-            // const streams = await operatorClient.getStakedStreams()
             logger.debug(`streams: ${JSON.stringify(streams)}`)
             expect(streams.length).toEqual(2)
             expect(streams).toContain(streamId1)
@@ -157,7 +156,6 @@ describe("MaintainTopologyHelper", () => {
             logger.debug(`staked on sponsorship ${sponsorship.address}`)
             await (await operatorContract.unstake(sponsorship2.address)).wait()
             logger.debug(`staked on sponsorship ${sponsorship2.address}`)
-            // await setTimeout(() => {}, 20000) // wait for events to be processed
             await waitForCondition(() => eventcount === 2, 10000, 1000)
             operatorClient.stop()
         })
@@ -167,7 +165,7 @@ describe("MaintainTopologyHelper", () => {
 
         let operatorWallet: Wallet
         let operatorContract: Operator
-        let operatorConfig: TopologyHelperConfig
+        let operatorConfig: OperatorServiceConfig
         let sponsorship: Contract
         let sponsorship2: Contract
         let operatorClient: MaintainTopologyHelper
@@ -211,12 +209,8 @@ describe("MaintainTopologyHelper", () => {
             logger.debug("Staking to sponsorship 2...")
             await (await operatorContract.stake(sponsorship2.address, parseEther("100"))).wait()
             logger.debug(`staked on sponsorship ${sponsorship2.address}`)
-            // logger.debug(`staked on sponsorship ${sponsorship2.address}`)
-            // await new Promise((resolve) => setTimeout(resolve, 10000)) // wait for events to be processed
-            // expect(receivedAddStreams).to.equal(2)
             await waitForCondition(() => receivedAddStreams === 1, 10000, 1000)
 
-            // operatorClient.stop()
             await new Promise((resolve) => setTimeout(resolve, 10000)) // wait for events to be processed
 
             operatorClient.stop()
@@ -258,31 +252,11 @@ describe("MaintainTopologyHelper", () => {
             logger.debug("Unstaking from sponsorship1...")
             await (await operatorContract.unstake(sponsorship.address)).wait()
             logger.debug(`unstaked from sponsorship1 ${sponsorship.address}`)
-            // await new Promise((resolve) => setTimeout(resolve, 10000))
             await waitForCondition(() => receivedRemoveStreams === 0, 10000, 1000)
             await (await operatorContract.unstake(sponsorship2.address)).wait()
-            // await new Promise((resolve) => setTimeout(resolve, 10000))
             await waitForCondition(() => receivedRemoveStreams === 1, 10000, 1000)
 
             operatorClient.stop()
         })
     })
-
-    // it("instantiate operatorclient with preexisting operator", () => {
-    //     const oclient = new OperatorClient(operator.address, provider)
-    //     oclient.on("addStakedStream", (streamid: string[]) => {
-    //         logger.debug(`got addStakedStream event for stream ${streamid}`)
-    //     })
-    //     oclient.on("removeStakedStream", (streamid: string[]) => {
-    //         logger.debug(`got removeStakedStream event for stream ${streamid}`)
-    //     })
-    // })
-
-    // it("emits addStakedStream/removeStakedStream only when the first/last Sponsorship for a stream is un/staked to/from", () => {
-    // create 2 Sponsorship contracts for the same stream
-    // stake, expect addStakedStream
-    // stake, expect nothing
-    // unstake, expect nothing
-    // unstake, expect removeStakedStream
-    // })
 })
