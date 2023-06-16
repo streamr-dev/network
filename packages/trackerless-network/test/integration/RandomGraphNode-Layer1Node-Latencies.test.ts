@@ -2,10 +2,7 @@ import { DhtNode, Simulator, SimulatorTransport, PeerDescriptor, PeerID, Latency
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { range } from 'lodash'
 import { wait, waitForCondition } from '@streamr/utils'
-import { Logger } from '@streamr/utils'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
-
-const logger = new Logger(module)
 
 describe('RandomGraphNode-DhtNode-Latencies', () => {
     const numOfNodes = 64
@@ -121,18 +118,7 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         await Promise.all(graphNodes.map((node) =>
             waitForCondition(() => node.getTargetNeighborStringIds().length >= 4, 10000)
         ))
-        await waitForCondition(() => {
-            const avg = graphNodes.reduce((acc, curr) => {
-                return acc + curr.getTargetNeighborStringIds().length
-            }, 0) / numOfNodes
-            logger.info(`AVG Number of neighbors: ${avg}`)
-            return avg >= 3.90
-        }, 60000)
-        const avg = graphNodes.reduce((acc, curr) => {
-            return acc + curr.getTargetNeighborStringIds().length
-        }, 0) / numOfNodes
 
-        logger.info(`AVG Number of neighbors: ${avg}`)
         await Promise.all(graphNodes.map((node) =>
             waitForCondition(() => node.getNumberOfOutgoingHandshakes() === 0)
         ))

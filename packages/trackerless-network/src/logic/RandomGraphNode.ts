@@ -57,6 +57,7 @@ export interface StrictRandomGraphNodeConfig {
     minPropagationTargets: number
     nodeName: string
     acceptProxyConnections: boolean
+    neighborUpdateInterval: number
     proxyConnectionServer?: ProxyStreamConnectionServer
 }
 

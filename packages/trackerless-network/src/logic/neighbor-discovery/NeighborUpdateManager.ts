@@ -17,6 +17,7 @@ interface NeighborUpdateManagerConfig {
     neighborFinder: INeighborFinder
     randomGraphId: string
     rpcCommunicator: ListeningRpcCommunicator
+    neighborUpdateInterval: number
 }
 
 const logger = new Logger(module)
@@ -41,7 +42,7 @@ export class NeighborUpdateManager implements INeighborUpdateManager {
     }
 
     public async start(): Promise<void> {
-        await scheduleAtInterval(() => this.updateNeighborInfo(), 10000, false, this.abortController.signal)
+        await scheduleAtInterval(() => this.updateNeighborInfo(), this.config.neighborUpdateInterval, false, this.abortController.signal)
     }
 
     public stop(): void {
