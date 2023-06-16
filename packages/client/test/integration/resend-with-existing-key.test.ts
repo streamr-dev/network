@@ -90,7 +90,7 @@ describe('resend with existing key', () => {
             user: publisherWallet.address,
             permissions: [StreamPermission.PUBLISH]
         })
-        const storageNode = environment.startStorageNode()
+        const storageNode = await environment.startStorageNode()
         await subscriber.addStreamToStorageNode(stream.id, storageNode.id)
         initialKey = GroupKey.generate()
         rotatedKey = GroupKey.generate()

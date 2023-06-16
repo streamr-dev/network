@@ -18,7 +18,7 @@ import { deploySponsorship } from "./deploySponsorshipContract"
 
 const config = Chains.load()["dev1"]
 const adminPrivKey = "0x4059de411f15511a85ce332e7a428f36492ab4e87c7830099dadbf130f1896ae"
-const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST}:8000/subgraphs/name/streamr-dev/network-subgraphs`
+const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`
 
 const logger = new Logger(module)
 
@@ -74,7 +74,7 @@ describe("OperatorClient", () => {
         logger.debug(`creating stream with streamId1 ${streamId1}`)
         await (await streamRegistry.createStream(streamPath1, "metadata")).wait()
         logger.debug(`creating stream with streamId2 ${streamId2}`)
-        await (await streamRegistry.createStream(streamPath2, "metadata")).wait();
+        await (await streamRegistry.createStream(streamPath2, "metadata")).wait()
 
         // const operatorWalletBalance = await token.balanceOf(adminWallet.address)
         // logger.debug(`operatorWalletBalance ${operatorWalletBalance}`)
@@ -85,7 +85,7 @@ describe("OperatorClient", () => {
         // })
 
         // beforeEach(async () => {
-        ({ operatorWallet, operatorContract } = await deployNewOperator())
+        ;({ operatorWallet, operatorContract } = await deployNewOperator())
     })
 
     afterEach(async () => {

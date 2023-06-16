@@ -1,14 +1,14 @@
+import { Provider } from '@ethersproject/providers'
+import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
+import { Lifecycle, inject, scoped } from 'tsyringe'
+import { Authentication, AuthenticationInjectionToken } from '../Authentication'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import { ContractFactory } from '../ContractFactory'
+import { getStreamRegistryChainProviders, getStreamRegistryOverrides } from '../Ethereum'
+import { StreamrClientError } from '../StreamrClientError'
 import type { NodeRegistry as NodeRegistryContract } from '../ethereumArtifacts/NodeRegistry'
 import NodeRegistryArtifact from '../ethereumArtifacts/NodeRegistryAbi.json'
-import { scoped, Lifecycle, inject } from 'tsyringe'
-import { Provider } from '@ethersproject/providers'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
-import { getStreamRegistryChainProviders, getStreamRegistryOverrides } from '../Ethereum'
-import { NotFoundError } from '../HttpUtil'
-import { waitForTx, queryAllReadonlyContracts } from '../utils/contract'
-import { Authentication, AuthenticationInjectionToken } from '../Authentication'
-import { ContractFactory } from '../ContractFactory'
-import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
+import { queryAllReadonlyContracts, waitForTx } from '../utils/contract'
 
 export interface StorageNodeMetadata {
     http: string
@@ -20,20 +20,20 @@ export interface StorageNodeMetadata {
 @scoped(Lifecycle.ContainerScoped)
 export class StorageNodeRegistry {
 
-    private contractFactory: ContractFactory
-    private authentication: Authentication
-    private config: Pick<StrictStreamrClientConfig, 'contracts'>
     private nodeRegistryContract?: NodeRegistryContract
     private readonly nodeRegistryContractsReadonly: NodeRegistryContract[]
+    private readonly contractFactory: ContractFactory
+    private readonly config: Pick<StrictStreamrClientConfig, 'contracts'>
+    private readonly authentication: Authentication
 
     constructor(
         contractFactory: ContractFactory,
-        @inject(AuthenticationInjectionToken) authentication: Authentication,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts'>,
+        @inject(AuthenticationInjectionToken) authentication: Authentication,
     ) {
         this.contractFactory = contractFactory
-        this.authentication = authentication
         this.config = config
+        this.authentication = authentication
         this.nodeRegistryContractsReadonly = getStreamRegistryChainProviders(config).map((provider: Provider) => {
             return this.contractFactory.createReadContract(
                 toEthereumAddress(this.config.contracts.storageNodeRegistryChainAddress),
@@ -74,7 +74,7 @@ export class StorageNodeRegistry {
         if (resultNodeAddress !== NODE_NOT_FOUND) {
             return JSON.parse(metadata)
         } else {
-            throw new NotFoundError('Node not found, id: ' + nodeAddress)
+            throw new StreamrClientError('Node not found, id: ' + nodeAddress, 'NODE_NOT_FOUND')
         }
     }
 }
