@@ -175,6 +175,9 @@
                         },
                         "firstConnectionTimeout": {
                             "type": "number"
+                        }, 
+                        "acceptProxyConnections": {
+                            "type": "boolean"
                         }
                     },
                     "default": {}
