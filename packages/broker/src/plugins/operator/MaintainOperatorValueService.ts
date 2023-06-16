@@ -18,58 +18,61 @@ export class MaintainOperatorValueService {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async start(): Promise<void> {
+    start(penaltyLimitFraction?: bigint): void {
         logger.info('MaintainOperatorValueService started')
-        // TODO: estimate seconds until penalty limit is reached and set interval accordingly
-        this.checkValueInterval = setInterval(async () => {
-            await this.checkValue(this.config.operatorContractAddress)
+        this.checkValue(this.config.operatorContractAddress, penaltyLimitFraction)
+        this.checkValueInterval = setInterval(() => {
+            this.checkValue(this.config.operatorContractAddress, penaltyLimitFraction)
         }, CHECK_VALUE_INTERVAL)
     }
 
-    async checkValue(operatorContractAddress: string, threshold?: bigint): Promise<void> {
-        logger.info(`checkValue for operator contract ${operatorContractAddress} and threshold ${threshold}`)
-
-        if (!threshold) {
-            threshold = await this.helper.getThreshold()
-        }
+    async checkValue(operatorContractAddress: string, penaltyLimitFraction?: bigint): Promise<void> {
+        logger.info(`Check value for operator ${operatorContractAddress}`)
 
         const { sponsorshipAddresses, approxValues, realValues } = await this.helper.getApproximatePoolValuesPerSponsorship()
         let totalDiff = BigInt(0)
+        let totalApprox = BigInt(0)
         const sponsorships = []
         for (let i = 0; i < sponsorshipAddresses.length; i++) {
             const sponsorship = {
-                address: sponsorshipAddresses,
-                approxValue: approxValues,
-                realValue: realValues,
+                address: sponsorshipAddresses[i],
+                approxValue: approxValues[i],
+                realValue: realValues[i],
                 diff: realValues[i].sub(approxValues[i])
             }
             sponsorships.push(sponsorship)
             totalDiff = totalDiff + sponsorship.diff.toBigInt()
+            totalApprox = totalApprox + sponsorship.approxValue.toBigInt()
         }
-        logger.info(`totalDiff: ${totalDiff}, threshold: ${threshold}`)
 
-        if (totalDiff >= threshold) {
+        if (!penaltyLimitFraction) {
+            penaltyLimitFraction = await this.helper.getPenaltyLimitFraction()
+        }
+        logger.info(`penaltyLimitFraction: ${penaltyLimitFraction}`)
+
+        const threshold = totalApprox * penaltyLimitFraction / BigInt(1e18)
+
+        if (totalDiff > threshold) {
             // sort sponsorships by diff in descending order
-            logger.info(`totalDiff ${totalDiff} is over threshold ${threshold} => sorting sponsorships`)
             const sortedSponsorships = sponsorships.sort((a: any, b: any) => b.diff - a.diff)
-            logger.info(`sorted ${sortedSponsorships.length} sponsorships`)
+            logger.info(`Sponsorships sorted (${sortedSponsorships.length}): ${sortedSponsorships}`)
 
             // find the number of sponsorships needed to get the total diff under the threshold
             let neededSponsorshipsCount = 0
-            let total = BigInt(0)
+            let diff = BigInt(0)
             for (const sponsorship of sortedSponsorships) {
-                total = total + sponsorship.diff.toBigInt()
+                diff = diff + sponsorship.diff.toBigInt()
                 neededSponsorshipsCount += 1
-                if (total > threshold) {
+                if (diff > threshold) {
                     break
                 }
             }
-            logger.info(`Needed ${neededSponsorshipsCount} sponsorships to get total diff under threshold with a total of ${total}`)
+            logger.info(`Needs to update ${neededSponsorshipsCount} sponsorships. Threshold (${threshold}), diff ${diff}/${totalDiff}`)
             
             // pick the first entries needed to get the total diff under the threshold
             const neededSponsorshipAddresses = sortedSponsorships.slice(0, neededSponsorshipsCount).map((sponsorship: any) => sponsorship.address)
             logger.info(`Updating ${neededSponsorshipAddresses.length} sponsorships: ${neededSponsorshipAddresses}`)
-            this.helper.updateApproximatePoolvalueOfSponsorships(neededSponsorshipAddresses)
+            await this.helper.updateApproximatePoolvalueOfSponsorships(neededSponsorshipAddresses)
             logger.info(`Updated sponsorships!`)
         }
     }

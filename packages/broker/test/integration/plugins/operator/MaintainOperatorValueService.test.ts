@@ -3,7 +3,7 @@ import { OperatorClientConfig } from '../../../../src/plugins/operator/OperatorC
 import { Chains } from "@streamr/config"
 import { Wallet } from "@ethersproject/wallet"
 import { parseEther } from "@ethersproject/units"
-import { Logger } from '@streamr/utils'
+import { Logger, waitForCondition } from '@streamr/utils'
 import fetch from "node-fetch"
 
 import type { IERC677, Operator } from "@streamr/network-contracts"
@@ -81,30 +81,45 @@ describe("MaintainOperatorValueService", () => {
         ({ operatorWallet, operatorContract } = await deployNewOperator())
     })
 
-    it("checks the true value of operator contract", async () => {
-        logger.info("delegating to operator contract...")
+    it("updates the values to stay over the threshold", async () => {
         await (await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther("200"), operatorWallet.address)).wait()
         
-        logger.info("deploying Sponsorship contracts...")
         const sponsorship1 = await deploySponsorship(config, operatorWallet, { streamId: streamId1 })
-        logger.info(`Sponsorship1 deployed at ${sponsorship1.address}, delegating...`)
-        await (await token.connect(operatorWallet).transferAndCall(sponsorship1.address, parseEther("200"), "0x")).wait()
-        logger.info(`Sponsored sponsorship1 ${sponsorship1.address}`)
+        await (await token.connect(operatorWallet).transferAndCall(sponsorship1.address, parseEther("200"), "0x")).wait() // sponsor 200
+        logger.info(`OperatorWallet sponsored 200 tokens on sponsorship1 ${sponsorship1.address}`)
+        expect(await token.balanceOf(sponsorship1.address)).toEqual(parseEther("200"))
         await (await operatorContract.stake(sponsorship1.address, parseEther("100"))).wait()
-        logger.info(`staked on sponsorship1 ${sponsorship1.address}`)
+        logger.info(`Operator staked 100 tokens on sponsorship1 ${sponsorship1.address}`)
+        expect(await token.balanceOf(sponsorship1.address)).toEqual(parseEther("300")) // 200 + 100
         
         const sponsorship2 = await deploySponsorship(config, operatorWallet, { streamId: streamId2 })
-        logger.info(`Sponsorship2 deployed at ${sponsorship2.address}, delegating...`)
         await (await token.connect(operatorWallet).transferAndCall(sponsorship2.address, parseEther("200"), "0x")).wait()
-        logger.info(`Sponsored sponsorship2 ${sponsorship2.address}`)
-
+        logger.info(`OperatorWallet sponsored 200 tokens on sponsorship2 ${sponsorship2.address}`)
+        expect(await token.balanceOf(sponsorship2.address)).toEqual(parseEther("200"))
         await (await operatorContract.stake(sponsorship2.address, parseEther("100"))).wait()
-        logger.info(`staked on sponsorship2 ${sponsorship2.address}`)
+        logger.info(`Operator staked 100 tokens on sponsorship2 ${sponsorship2.address}`)
+        expect(await token.balanceOf(sponsorship2.address)).toEqual(parseEther("300")) // 200 sponsored + 100 staked
         
-        await new Promise((resolve) => setTimeout(resolve, 10000))
-
         const maintainOperatorValueService = new MaintainOperatorValueService(opertatorConfig)
-        await maintainOperatorValueService.start()
+
+        const totalValueInSponsorshipsBefore = await operatorContract.totalValueInSponsorshipsWei()
+        const penaltyFraction = 0.0001 // * 1e18
+        const threshold = 200 * penaltyFraction // 0.2
+        await new Promise((resolve) => setTimeout(resolve, 5000)) // sleep 5 sec
+        await maintainOperatorValueService.start(parseEther(`${penaltyFraction}`).toBigInt()) // 200 * 0.0001 = 0.2
+        await new Promise((resolve) => setTimeout(resolve, 5000)) // sleep 5 sec
+        const totalValueInSponsorshipsAfter = await operatorContract.totalValueInSponsorshipsWei()
+        await waitForCondition(async () => totalValueInSponsorshipsAfter > totalValueInSponsorshipsBefore, 10000, 1000) // TODO: use w/o sleep
+        
+        const { sponsorshipAddresses, approxValues, realValues } = await operatorContract.getApproximatePoolValuesPerSponsorship()
+        let diff = BigInt(0)
+        for (let i = 0; i < sponsorshipAddresses.length; i++) {
+            diff = realValues[i].toBigInt() - approxValues[i].toBigInt()
+        }
+        
+        expect(totalValueInSponsorshipsAfter > totalValueInSponsorshipsBefore)
+        expect(diff < threshold)
+
         await maintainOperatorValueService.stop()
     })
 })
