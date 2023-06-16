@@ -13,9 +13,8 @@ import { tokenABI } from "@streamr/network-contracts"
 import { streamRegistryABI } from "@streamr/network-contracts"
 import { Contract } from "@ethersproject/contracts"
 
-import { deployOperatorContract } from "./deployOperatorContract"
+import { createWalletAndDeployOperator } from "./deployOperatorContract"
 import { deploySponsorship } from "./deploySponsorshipContract"
-import { generateWalletWithGasAndTokens } from "./smartContractUtils"
 import { OperatorServiceConfig } from "../../../../src/plugins/operator/OperatorPlugin"
 
 const config = Chains.load()["dev1"]
@@ -33,22 +32,6 @@ describe("MaintainTopologyHelper", () => {
     let adminWallet: Wallet
     let streamId1: string
     let streamId2: string
-
-    const deployNewOperator = async () => {
-        const operatorWallet = await generateWalletWithGasAndTokens(provider)
-
-        logger.debug("Deploying operator contract")
-        const operatorContract = await deployOperatorContract(config, operatorWallet)
-        logger.debug(`Operator deployed at ${operatorContract.address}`)
-        const operatorConfig = {
-            operatorContractAddress: operatorContract.address,
-            signer: operatorWallet,
-            provider,
-            theGraphUrl,
-            fetch
-        }
-        return { operatorWallet, operatorContract, operatorConfig }
-    }
 
     beforeAll(async () => {
         provider = new JsonRpcProvider(chainURL)
@@ -78,7 +61,7 @@ describe("MaintainTopologyHelper", () => {
         let sponsorship2: Contract
         let operatorClient: MaintainTopologyHelper
         beforeAll(async () => {
-            ({ operatorWallet, operatorContract, operatorConfig } = await deployNewOperator())
+            ({ operatorWallet, operatorContract, operatorConfig } = await createWalletAndDeployOperator(provider, config, theGraphUrl, fetch))
         })
         afterEach(async () => {
             operatorClient.stop()
@@ -171,7 +154,7 @@ describe("MaintainTopologyHelper", () => {
         let operatorClient: MaintainTopologyHelper
 
         beforeAll(async () => {
-            ({ operatorWallet, operatorContract, operatorConfig } = await deployNewOperator())
+            ({ operatorWallet, operatorContract, operatorConfig } = await createWalletAndDeployOperator(provider, config, theGraphUrl, fetch))
         })
         afterEach(async () => {
             operatorClient.stop()

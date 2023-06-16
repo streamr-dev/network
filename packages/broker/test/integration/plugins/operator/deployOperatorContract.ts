@@ -2,9 +2,13 @@
 import { Chain } from "@streamr/config"
 import { Wallet, ContractReceipt, Contract, utils } from "ethers"
 import { AddressZero } from "@ethersproject/constants"
+import { Provider } from "@ethersproject/providers"
 
 import { operatorABI, operatorFactoryABI } from "@streamr/network-contracts"
 import type { Operator, OperatorFactory } from "@streamr/network-contracts"
+import { OperatorServiceConfig } from "../../../../src/plugins/operator/OperatorPlugin"
+import { generateWalletWithGasAndTokens } from "./smartContractUtils"
+import { RequestInfo, RequestInit, Response } from "node-fetch"
 
 const { parseEther } = utils
 
@@ -51,4 +55,20 @@ export async function deployOperatorContract(
     const newOperatorAddress = operatorReceipt.events?.find((e) => e.event === "NewOperator")?.args?.operatorContractAddress
     const newOperator = new Contract(newOperatorAddress, operatorABI, deployer) as unknown as Operator
     return newOperator
+}
+
+export async function createWalletAndDeployOperator(provider: Provider, config: Chain, theGraphUrl: string, 
+    fetch: (url: RequestInfo, init?: RequestInit) => Promise<Response>): 
+    Promise<{ operatorWallet: Wallet, operatorContract: Operator, operatorConfig: OperatorServiceConfig }> {
+    const operatorWallet = await generateWalletWithGasAndTokens(provider)
+
+    const operatorContract = await deployOperatorContract(config, operatorWallet)
+    const operatorConfig = {
+        operatorContractAddress: operatorContract.address,
+        signer: operatorWallet,
+        provider,
+        theGraphUrl,
+        fetch
+    }
+    return { operatorWallet, operatorContract, operatorConfig }
 }
