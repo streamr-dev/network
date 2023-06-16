@@ -23,33 +23,26 @@ describe('overrideConfigToEnvVarsIfGiven', () => {
             }
         }
         process.env.STREAMR__BROKER__CLIENT__AUTH__PRIVATE_KEY = '0x111'
-        process.env.STREAMR__BROKER__CLIENT__NETWORK__TRACKERS_1__ID = 'tracker1-id'
-        process.env.STREAMR__BROKER__CLIENT__NETWORK__TRACKERS_1__HTTP = 'tracker1-http'
-        process.env.STREAMR__BROKER__CLIENT__NETWORK__TRACKERS_2__ID = 'tracker2-id'
-        process.env.STREAMR__BROKER__CLIENT__NETWORK__TRACKERS_2__HTTP = 'tracker2-http'
-        process.env.STREAMR__BROKER__CLIENT__NETWORK__TRACKER_PING_INTERVAL = '-0.5'
         process.env.STREAMR__BROKER__CLIENT__ORDER_MESSAGES = 'true'
         process.env.STREAMR__BROKER__CLIENT__GAP_FILL = 'false'
+        // process.env.STREAMR__BROKER__CLIENT_NETWORK__LAYER0__PEER_DESCRIPTOR__KADEMLIA_ID = 'kademliaID'
+        // process.env.STREAMR__BROKER__CLIENT_NETWORK__LAYER0__PEER_DESCRIPTOR__TYPE = '0'
         process.env.STREAMR__BROKER__AUTHENTICATION__KEYS_1 = 'key-1'
         process.env.STREAMR__BROKER__AUTHENTICATION__KEYS_2 = 'key-2'
-        process.env.STREAMR__BROKER__PLUGINS__BRUBECK_MINER__BENEFICIARY_ADDRESS = '0x222'
-        process.env.STREAMR__BROKER__PLUGINS__BRUBECK_MINER__STUN_SERVER_HOST = 'null'
         overrideConfigToEnvVarsIfGiven(config)
         expect(config).toEqual({
             client: {
                 auth: {
                     privateKey: '0x111'
                 },
-                network: {
-                    trackers: [{
-                        id: 'tracker1-id',
-                        http: 'tracker1-http'
-                    }, {
-                        id: 'tracker2-id',
-                        http: 'tracker2-http'
-                    }],
-                    trackerPingInterval: -0.5
-                },
+                // network: {
+                //     layer0: {
+                //         peerDescriptor: {
+                //             kademliaId: 'kademliaID',
+                //             type: 0
+                //         }
+                //     }
+                // },
                 orderMessages: true,
                 gapFill: false
             },
@@ -57,10 +50,6 @@ describe('overrideConfigToEnvVarsIfGiven', () => {
                 keys: ['key-1', 'key-2']
             },
             plugins: {
-                brubeckMiner: {
-                    beneficiaryAddress: '0x222',
-                    stunServerHost: null
-                },
                 info: {}
             }
         })
@@ -68,16 +57,9 @@ describe('overrideConfigToEnvVarsIfGiven', () => {
 
     it('empty variable', () => {
         process.env.STREAMR__BROKER__CLIENT__AUTH__PRIVATE_KEY = ''
-        process.env.STREAMR__BROKER__PLUGINS__BRUBECK_MINER__BENEFICIARY_ADDRESS = '0x222'
         const config = {} as any
         overrideConfigToEnvVarsIfGiven(config)
-        expect(config).toEqual({
-            plugins: {
-                brubeckMiner: {
-                    beneficiaryAddress: '0x222'
-                }
-            }
-        })
+        expect(config).toEqual({})
     })
 
     it('malformed variable', () => {

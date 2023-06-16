@@ -1,13 +1,14 @@
 import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
-import { WebSocketConnectorServiceClient } from '../../src/proto/DhtRpc.client'
-import { generateId } from '../utils'
+import { WebSocketConnectorServiceClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
+import { generateId } from '../utils/utils'
 import {
     PeerDescriptor,
     WebSocketConnectionRequest,
     WebSocketConnectionResponse
-} from '../../src/proto/DhtRpc'
-import { MockWebSocketConnectorRpc } from '../utils'
+} from '../../src/proto/packages/dht/protos/DhtRpc'
+import { MockWebSocketConnectorRpc } from '../utils/utils'
 import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
+import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 
 describe('WebSocketConnectorRpc', () => {
     let rpcCommunicator1: RpcCommunicator
@@ -16,12 +17,12 @@ describe('WebSocketConnectorRpc', () => {
     let client2: ProtoRpcClient<WebSocketConnectorServiceClient>
 
     const peerDescriptor1: PeerDescriptor = {
-        peerId: generateId('peer1'),
+        kademliaId: generateId('peer1'),
         type: 0
     }
 
     const peerDescriptor2: PeerDescriptor = {
-        peerId: generateId('peer2'),
+        kademliaId: generateId('peer2'),
         type: 0
     }
 
@@ -42,11 +43,11 @@ describe('WebSocketConnectorRpc', () => {
             MockWebSocketConnectorRpc.requestConnection
         )
 
-        rpcCommunicator1.on('outgoingMessage', (message: Uint8Array, _ucallContext?: DhtCallContext) => {
+        rpcCommunicator1.on('outgoingMessage', (message: RpcMessage, _requestId: string, _ucallContext?: DhtCallContext) => {
             rpcCommunicator2.handleIncomingMessage(message)
         })
 
-        rpcCommunicator2.on('outgoingMessage', (message: Uint8Array, _ucallContext?: DhtCallContext) => {
+        rpcCommunicator2.on('outgoingMessage', (message: RpcMessage, _requestId: string, _ucallContext?: DhtCallContext) => {
             rpcCommunicator1.handleIncomingMessage(message)
         })
 

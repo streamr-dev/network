@@ -1,7 +1,7 @@
 import { initEventGateway } from '@streamr/utils'
 import { Contract, ContractReceipt, ContractTransaction } from '@ethersproject/contracts'
 import EventEmitter from 'eventemitter3'
-import { NameDirectory } from '@streamr/network-node'
+import { NameDirectory } from '@streamr/trackerless-network'
 import pLimit from 'p-limit'
 import { LoggerFactory } from './LoggerFactory'
 import { tryInSequence } from './promises'

@@ -148,7 +148,7 @@ export const startPublisherKeyExchangeSubscription = async (
     publisherClient: StreamrClient,
     streamPartId: StreamPartID): Promise<void> => {
     const node = await publisherClient.getNode()
-    node.subscribe(streamPartId)
+    node.subscribe(streamPartId, [])
 }
 
 export const createRandomAuthentication = (): Authentication => {
@@ -221,5 +221,30 @@ export const createGroupKeyQueue = async (authentication: Authentication, curren
 export const waitForCalls = async (mockFunction: jest.Mock<any>, n: number): Promise<void> => {
     await waitForCondition(() => mockFunction.mock.calls.length >= n, 1000, 10, undefined, () => {
         return `Timeout while waiting for calls: got ${mockFunction.mock.calls.length} out of ${n}`
+    })
+}
+
+export const createTestClient = (privateKey: string, stringKademliaId: string, wsPort?: number, acceptProxyConnections = false): StreamrClient => {
+    return new StreamrClient({
+        ...CONFIG_TEST,
+        auth: {
+            privateKey
+        },
+        network: {
+            layer0: {
+                ...CONFIG_TEST.network!.layer0,
+                peerDescriptor: {
+                    kademliaId: stringKademliaId,
+                    type: 0,
+                    websocket: wsPort ? {
+                        ip: 'localhost',
+                        port: wsPort
+                    } : undefined
+                }
+            },
+            networkNode: {
+                acceptProxyConnections
+            }
+        }
     })
 }

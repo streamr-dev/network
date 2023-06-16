@@ -1,6 +1,6 @@
 import { MessageID, MessageRef, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { StreamPartStatus } from '../identifiers'
-import { DuplicateMessageDetector, NumberPair } from './DuplicateMessageDetector'
+import { DuplicateMessageDetector, NumberPair } from '@streamr/utils'
 import { NodeId } from '../identifiers'
 import { COUNTER_UNSUBSCRIBE } from '../constants'
 import uniq from 'lodash/uniq'

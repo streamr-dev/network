@@ -1,7 +1,6 @@
 import 'reflect-metadata'
 import './utils/PatchTsyringe'
 
-import { ProxyDirection } from '@streamr/protocol'
 import { EthereumAddress, TheGraphClient, toEthereumAddress } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import merge from 'lodash/merge'
@@ -9,9 +8,11 @@ import omit from 'lodash/omit'
 import { container as rootContainer } from 'tsyringe'
 import { PublishMetadata } from '../src/publish/Publisher'
 import { Authentication, AuthenticationInjectionToken, createAuthentication } from './Authentication'
-import { ConfigInjectionToken, StreamrClientConfig, StrictStreamrClientConfig, createStrictConfig, redactConfig } from './Config'
+import { ConfigInjectionToken, StreamrClientConfig, StrictStreamrClientConfig, createStrictConfig, redactConfig, JsonPeerDescriptor } from './Config'
 import { DestroySignal } from './DestroySignal'
 import { generateEthereumAccount as _generateEthereumAccount } from './Ethereum'
+import { PeerDescriptor } from '@streamr/dht'
+import { ProxyDirection } from '@streamr/trackerless-network'
 import { Message, convertStreamMessageToMessage } from './Message'
 import { MetricsPublisher } from './MetricsPublisher'
 import { NetworkNodeFacade, NetworkNodeStub } from './NetworkNodeFacade'
@@ -51,6 +52,12 @@ export interface ExtraSubscribeOptions {
      * and decryption _disabled_.
      */
     raw?: boolean
+
+    /**
+     * Configure known entry points to the stream 
+     * (e.g. for private streams, or if you want to avoid DHT lookups).
+     */
+    entryPoints?: JsonPeerDescriptor[]
 }
 
 /**
@@ -197,6 +204,7 @@ export class StreamrClient {
                 eventEmitter,
                 this.loggerFactory
             )
+
         }
         await this.subscriber.add(sub)
         if (onMessage !== undefined) {
@@ -551,14 +559,19 @@ export class StreamrClient {
         return this.node.getNode()
     }
 
+    getEntryPoints(): PeerDescriptor[] {
+        return this.node.getEntryPoints()
+    }
+
+    // eslint-disable-next-line class-methods-use-this
     async setProxies(
         streamDefinition: StreamDefinition,
-        nodeIds: string[],
+        nodeDescriptors: JsonPeerDescriptor[],
         direction: ProxyDirection,
         connectionCount?: number
     ): Promise<void> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        await this.node.setProxies(streamPartId, nodeIds, direction, connectionCount)
+        await this.node.setProxies(streamPartId, nodeDescriptors, direction, connectionCount)
     }
 
     // --------------------------------------------------------------------------------------------

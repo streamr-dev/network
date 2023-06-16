@@ -20,6 +20,7 @@
         "packages/protocol",
         "packages/proto-rpc",
         "packages/dht",
+        "packages/trackerless-network",
         "packages/network",
         "packages/network-tracker",
         "packages/client",
@@ -28,6 +29,7 @@
     ],
     "dependencies": {
         "@manypkg/cli": "^0.21.0",
+        "@protobuf-ts/plugin": "^2.8.0",
         "@tsconfig/node16": "^1.0.2",
         "@types/jest": "^29.5.1",
         "@types/node": "^18.16.17",

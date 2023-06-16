@@ -179,7 +179,6 @@ describe('ConfigWizard', () => {
             expect(config.plugins.mqtt).toMatchObject({})
             expect(config.plugins.http).toMatchObject({})
             expect(config.httpServer).toBe(undefined)
-            expect(config.plugins.brubeckMiner).toEqual({})
         })
 
         it('should exercise the happy path with user-provided data', () => {
@@ -195,17 +194,8 @@ describe('ConfigWizard', () => {
             expect(config.plugins.mqtt.port).toBe(parseInt(pluginsAnswers.mqttPort!))
             expect(config.httpServer.port).toBe(parseInt(pluginsAnswers.httpPort!))
             expect(config.plugins.http).toMatchObject({})
-            expect(config.plugins.brubeckMiner).toEqual({})
         })
 
-        it('disable miner plugin', () => {
-            const pluginsAnswers: PluginAnswers = {
-                enabledApiPlugins: [],
-                enableMinerPlugin: false,
-            }
-            const config = getConfig(MOCK_PRIVATE_KEY, pluginsAnswers)
-            expect(config.plugins.brubeckMiner).toBeUndefined()
-        })
     })
 
     describe('identity', () => {
@@ -276,30 +266,11 @@ describe('ConfigWizard', () => {
             await assertValidFlow(
                 pluginAnswers,
                 (config: any) => {
-                    expect(Object.keys(config.plugins)).toIncludeSameMembers(['brubeckMiner', 'websocket', 'mqtt', 'http'])
+                    expect(Object.keys(config.plugins)).toIncludeSameMembers(['websocket', 'mqtt', 'http'])
                     expect(config.plugins.websocket.port).toBe(parseInt(pluginAnswers.websocketPort!))
                     expect(config.plugins.mqtt.port).toBe(parseInt(pluginAnswers.mqttPort!))
-                    expect(config.plugins.brubeckMiner).toEqual({})
                     expect(config.plugins.http).toMatchObject({})
                     expect(config.httpServer.port).toBe(parseInt(pluginAnswers.httpPort!))
-                }
-            )
-        })
-
-        it('miner with beneficiaryAddress enabled', async () => {
-            const pluginAnswers: PluginAnswers = {
-                enabledApiPlugins: [],
-                enableMinerPlugin: true,
-                wantToSetBeneficiaryAddress: true,
-                beneficiaryAddress: '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
-            }
-            await assertValidFlow(
-                pluginAnswers,
-                (config: any) => {
-                    expect(Object.keys(config.plugins)).toIncludeSameMembers(['brubeckMiner'])
-                    expect(config.plugins.brubeckMiner).toEqual({
-                        beneficiaryAddress: '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
-                    })
                 }
             )
         })

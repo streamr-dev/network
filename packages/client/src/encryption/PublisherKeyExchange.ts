@@ -75,7 +75,7 @@ export class PublisherKeyExchange {
                             request.getPublisherId(),
                             requestId)
                         const node = await this.networkNodeFacade.getNode()
-                        node.publish(response)
+                        node.publish(response, [])
                         this.logger.debug('Handled group key request (found keys)', {
                             groupKeyIds: keys.map((k) => k.id).join(),
                             recipient: request.getPublisherId()

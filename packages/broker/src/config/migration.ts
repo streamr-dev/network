@@ -81,9 +81,6 @@ const convertV1ToV2 = (source: any): ConfigFile => {
     if (target.httpServer !== undefined) {
         deleteNullProperties(target.httpServer)
     }
-    if (target.plugins.brubeckMiner !== undefined) {
-        deleteNullProperties(target.plugins.brubeckMiner, ['stunServerHost'])
-    }
     if (target.plugins.mqtt !== undefined) {
         deleteNullProperties(target.plugins.mqtt)
     }

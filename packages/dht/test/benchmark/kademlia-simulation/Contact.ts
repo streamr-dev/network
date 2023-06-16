@@ -1,23 +1,32 @@
 import { PeerID } from '../../../src/helpers/PeerID'
 import type { SimulationNode } from './SimulationNode'
-export class Contact {	
+import { NodeType, PeerDescriptor } from '../../../src/proto/packages/dht/protos/DhtRpc'
+
+export class Contact {
     private static counter = 0
 
-    public ownId: PeerID
+    public peerId: PeerID
+    public id: Uint8Array
     public vectorClock = 0
     public dhtNode: SimulationNode | undefined
 
     constructor(ownId: PeerID, dhtNode?: SimulationNode) {
-        this.ownId = ownId
+        this.peerId = ownId
         this.vectorClock = Contact.counter++
         this.dhtNode = dhtNode
+        this.id = ownId.value
     }
 
-    get id(): Uint8Array {
-        return this.ownId.value
+    getPeerDescriptor(): PeerDescriptor {
+        const peerDescriptor: PeerDescriptor = {
+            kademliaId: this.peerId.value,
+            type: NodeType.NODEJS
+        }
+        return peerDescriptor
     }
 
-    get peerId(): PeerID {
-        return this.ownId
+    getPeerId(): PeerID {
+        return this.peerId
     }
+
 }

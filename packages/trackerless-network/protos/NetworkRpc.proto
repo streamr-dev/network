@@ -1,0 +1,152 @@
+syntax = "proto3";
+
+option optimize_for = CODE_SIZE;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/any.proto";
+import "packages/dht/protos/DhtRpc.proto";
+
+service NetworkRpc {
+  rpc sendData (StreamMessage) returns (google.protobuf.Empty);
+  rpc leaveStreamNotice (LeaveStreamNotice) returns (google.protobuf.Empty);
+}
+
+service ProxyConnectionRpc {
+  rpc requestConnection (ProxyConnectionRequest) returns (ProxyConnectionResponse);
+}
+
+service HandshakeRpc {
+  rpc handshake (StreamHandshakeRequest) returns (StreamHandshakeResponse);
+  rpc interleaveNotice (InterleaveNotice) returns (google.protobuf.Empty);
+}
+
+service NeighborUpdateRpc {
+  rpc neighborUpdate (NeighborUpdate) returns (NeighborUpdate);
+}
+
+message MessageRef {
+  int64 timestamp = 1;
+  int32 sequenceNumber = 2;
+  string messageChainId = 3;
+  string streamId = 4;
+  int32 streamPartition = 5;
+  string publisherId = 6;
+}
+
+message ContentMessage {
+  string body = 1;
+}
+
+enum StreamMessageType {
+  MESSAGE = 0;
+  GROUP_KEY_REQUEST = 1;
+  GROUP_KEY_RESPONSE = 2;
+}
+
+enum EncryptionType {
+  NONE = 0;
+  RSA = 1;
+  AES = 2;
+}
+
+message EncryptedGroupKey {
+  string groupKeyId = 1;
+  string encryptedGroupKeyHex = 2;
+  optional string serialized = 3;
+}
+
+message StreamMessage {
+  StreamMessageType messageType = 1;
+  optional EncryptionType encryptionType = 2;
+  bytes content = 3;
+  string signature = 4;
+  MessageRef messageRef = 5;
+  optional MessageRef previousMessageRef = 6;
+  optional string previousPeer = 7;
+  optional string groupKeyId = 8;
+  optional EncryptedGroupKey newGroupKey = 9;
+}
+
+message GroupKeyRequest {
+  string requestId = 1;
+  string recipient = 2;
+  string rsaPublicKey = 3;
+  repeated string groupKeyIds = 4;
+}
+
+message GroupKeyResponse {
+  string requestId = 1;
+  string recipient = 2;
+  repeated EncryptedGroupKey encryptedGroupKeys = 3;
+}
+
+message Layer2Message {
+  Layer2Type type = 1;
+}
+
+enum Layer2Type {
+  Data = 0;
+}
+
+message StreamHandshakeRequest {
+  string randomGraphId = 1;
+  string senderId = 2;
+  string requestId = 3;
+  optional string concurrentHandshakeTargetId = 4;
+  repeated string neighbors = 5;
+  repeated string peerView = 6;
+  dht.PeerDescriptor senderDescriptor = 7;
+  bool interleaving = 8;
+  optional string interleavingFrom = 9;
+}
+
+message StreamHandshakeResponse {
+  bool accepted = 1;
+  string requestId = 2;
+  optional dht.PeerDescriptor interleaveTarget = 3;
+}
+
+message InterleaveNotice {
+  string senderId = 1;
+  string randomGraphId = 2;
+  dht.PeerDescriptor interleaveTarget = 3;
+}
+
+message LeaveStreamNotice {
+  string randomGraphId = 1;
+  string senderId = 2;
+}
+
+message NeighborUpdate {
+  string senderId = 1;
+  string randomGraphId = 2;
+  bool removeMe = 3;
+  repeated dht.PeerDescriptor neighborDescriptors = 4;
+}
+
+message StreamEntryPoint {
+  dht.PeerDescriptor peerDescriptor = 1;
+  bool firstToJoin = 2;
+}
+
+message ProxyConnectionRequest {
+  string senderId = 1;
+  string streamId = 2;
+  uint32 streamPartition = 3; 
+  ProxyDirection direction = 4;
+  string userId = 5;
+  dht.PeerDescriptor senderDescriptor = 6;
+}
+
+message ProxyConnectionResponse {
+  string senderId = 1;
+  string streamId = 2;
+  uint32 streamPartition = 3;
+  ProxyDirection direction = 4;  
+  bool accepted = 5;
+}
+
+enum ProxyDirection {
+  PUBLISH = 0;
+  SUBSCRIBE = 1;
+}
