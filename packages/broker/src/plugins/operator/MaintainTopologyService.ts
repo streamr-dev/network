@@ -4,7 +4,6 @@ import StreamrClient, { Stream, Subscription } from 'streamr-client'
 import { StreamID, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
 import { SetMembershipSynchronizer } from '../storage/SetMembershipSynchronizer'
 import pLimit from 'p-limit'
-import { OperatorServiceConfig } from './OperatorPlugin'
 
 function toStreamIDSafe(input: string): StreamID | undefined {
     try {
@@ -22,9 +21,9 @@ export class MaintainTopologyService {
     private readonly concurrencyLimit = pLimit(1)
     private readonly logger: Logger
 
-    constructor(streamrClient: StreamrClient, serviceConfig: OperatorServiceConfig, logger: Logger) {
+    constructor(streamrClient: StreamrClient, maintainTopologyHelper: MaintainTopologyHelper, logger: Logger) {
         this.streamrClient = streamrClient
-        this.maintainTopologyHelper = new MaintainTopologyHelper(serviceConfig, logger as any) // TODO: casting?
+        this.maintainTopologyHelper = maintainTopologyHelper
         this.logger = logger
     }
 

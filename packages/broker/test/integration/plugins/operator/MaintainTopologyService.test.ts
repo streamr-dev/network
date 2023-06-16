@@ -12,6 +12,7 @@ import {
     getTokenContract
 } from './smartContractUtils'
 import { StreamPartID } from '@streamr/protocol'
+import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
 
 async function setUpStreams(): Promise<[Stream, Stream]> {
     const privateKey = await fetchPrivateKeyWithGas()
@@ -63,7 +64,9 @@ describe('MaintainTopologyService', () => {
         const client = new StreamrClient({
             ...CONFIG_TEST
         })
-        service = new MaintainTopologyService(client, serviceConfig, new Logger(module) as any)// TODO: logger casting issue
+        service = new MaintainTopologyService(client, new MaintainTopologyHelper(
+            serviceConfig, new Logger(module) as any
+        ), new Logger(module) as any)// TODO: logger casting issue
         await service.start()
 
         await waitForCondition(async () => (await client.getSubscriptions()).length === 1, 10000, 1000)

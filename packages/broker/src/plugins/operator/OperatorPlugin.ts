@@ -11,6 +11,7 @@ import { Provider, JsonRpcProvider } from '@ethersproject/providers'
 import { Signer } from '@ethersproject/abstract-signer'
 import { Wallet } from 'ethers'
 import { VoteOnSuspectNodeService } from './VoteOnSuspectNodeService'
+import { MaintainTopologyHelper } from './MaintainTopologyHelper'
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface OperatorPluginConfig {
@@ -50,9 +51,13 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         )
         this.maintainTopologyService = new MaintainTopologyService(
             this.streamrClient,
-            serviceHelperConfig,
+            new MaintainTopologyHelper(
+                serviceHelperConfig,
+                logger
+            ),
             logger
         )
+    
     }
 
     async start(): Promise<void> {
