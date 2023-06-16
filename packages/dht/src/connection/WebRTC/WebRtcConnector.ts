@@ -1,4 +1,3 @@
-import 'setimmediate'
 import {
     IceCandidate,
     PeerDescriptor,

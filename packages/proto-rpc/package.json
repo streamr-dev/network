@@ -40,7 +40,6 @@
     "@types/uuid": "^9.0.2",
     "express": "^4.17.1",
     "patch-package": "^7.0.0",
-    "setimmediate": "^1.0.5",
     "ts-node": "^10.9.1"
   },
   "optionalDependencies": {
