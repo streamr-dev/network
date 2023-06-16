@@ -27,7 +27,7 @@ export class MaintainOperatorValueService {
     }
 
     async checkValue(operatorContractAddress: string, penaltyLimitFraction?: bigint): Promise<void> {
-        logger.info(`Check value for operator ${operatorContractAddress}`)
+        logger.info(`Check approximate value for operator ${operatorContractAddress}`)
 
         const { sponsorshipAddresses, approxValues, realValues } = await this.helper.getApproximatePoolValuesPerSponsorship()
         let totalDiff = BigInt(0)
@@ -48,14 +48,11 @@ export class MaintainOperatorValueService {
         if (!penaltyLimitFraction) {
             penaltyLimitFraction = await this.helper.getPenaltyLimitFraction()
         }
-        logger.info(`penaltyLimitFraction: ${penaltyLimitFraction}`)
 
         const threshold = totalApprox * penaltyLimitFraction / BigInt(1e18)
-
         if (totalDiff > threshold) {
             // sort sponsorships by diff in descending order
             const sortedSponsorships = sponsorships.sort((a: any, b: any) => b.diff - a.diff)
-            logger.info(`Sponsorships sorted (${sortedSponsorships.length}): ${sortedSponsorships}`)
 
             // find the number of sponsorships needed to get the total diff under the threshold
             let neededSponsorshipsCount = 0
@@ -67,11 +64,10 @@ export class MaintainOperatorValueService {
                     break
                 }
             }
-            logger.info(`Needs to update ${neededSponsorshipsCount} sponsorships. Threshold (${threshold}), diff ${diff}/${totalDiff}`)
             
             // pick the first entries needed to get the total diff under the threshold
             const neededSponsorshipAddresses = sortedSponsorships.slice(0, neededSponsorshipsCount).map((sponsorship: any) => sponsorship.address)
-            logger.info(`Updating ${neededSponsorshipAddresses.length} sponsorships: ${neededSponsorshipAddresses}`)
+            logger.info(`Updating ${neededSponsorshipsCount} sponsorships. Threshold (${threshold}), diff ${diff}/${totalDiff}`)
             await this.helper.updateApproximatePoolvalueOfSponsorships(neededSponsorshipAddresses)
             logger.info(`Updated sponsorships!`)
         }
