@@ -1,13 +1,12 @@
+import { MetricsReport, merge, wait } from '@streamr/utils'
 import { scoped, Lifecycle, inject } from 'tsyringe'
-import { StreamrClientEventEmitter } from './events'
+import { Authentication, AuthenticationInjectionToken } from './Authentication'
+import { ConfigInjectionToken, StreamrClientConfig, ProviderAuthConfig } from './Config'
 import { DestroySignal } from './DestroySignal'
+import { StreamrClientEventEmitter } from './events'
 import { NetworkNodeFacade } from './NetworkNodeFacade'
 import { Publisher } from './publish/Publisher'
-import { ConfigInjectionToken, StreamrClientConfig, ProviderAuthConfig } from './Config'
 import { pOnce } from './utils/promises'
-import { MetricsReport, wait } from '@streamr/utils'
-import { Authentication, AuthenticationInjectionToken } from './Authentication'
-import { merge } from '@streamr/utils'
 
 type NormalizedConfig = NonNullable<Required<Exclude<StreamrClientConfig['metrics'], boolean>>>
 
