@@ -117,7 +117,8 @@ describe('RandomGraphNode-DhtNode', () => {
             layer1: dhtNodes[i],
             P2PTransport: cms[i],
             connectionLocker: cms[i],
-            ownPeerDescriptor: peerDescriptors[i]
+            ownPeerDescriptor: peerDescriptors[i],
+            neighborUpdateInterval: 2000
         }))
 
         entryPointRandomGraphNode = createRandomGraphNode({
@@ -125,7 +126,8 @@ describe('RandomGraphNode-DhtNode', () => {
             layer1: dhtEntryPoint,
             P2PTransport: entrypointCm,
             connectionLocker: entrypointCm,
-            ownPeerDescriptor: entrypointDescriptor
+            ownPeerDescriptor: entrypointDescriptor,
+            neighborUpdateInterval: 2000
         })
 
         await dhtEntryPoint.start()
@@ -188,21 +190,6 @@ describe('RandomGraphNode-DhtNode', () => {
     }, 10000)
 
     it('happy path 64 peers', async () => {
-        /*
-        const promise = Promise.all(graphNodes.map((node) => {
-
-            const successListener = new SuccessListener(node, 4, 8)
-            return waitForEvent3<SuccessEvents>(successListener, 'success', 15000)
-        }))
-
-        await Promise.all(range(numOfNodes).map((i) => graphNodes[i].start()))
-        await Promise.all(range(numOfNodes).map(async (i) => {
-            await dhtNodes[i].joinDht(entrypointDescriptor)
-        }))
-
-        await promise
-        */
-
         await Promise.all(range(numOfNodes).map((i) => graphNodes[i].start()))
         await Promise.all(range(numOfNodes).map((i) => {
             dhtNodes[i].joinDht(entrypointDescriptor)
@@ -210,18 +197,6 @@ describe('RandomGraphNode-DhtNode', () => {
         await Promise.all(graphNodes.map((node) =>
             waitForCondition(() => node.getTargetNeighborStringIds().length >= 4, 10000)
         ))
-        
-        await waitForCondition(() => {
-            const avg = graphNodes.reduce((acc, curr) => {
-                return acc + curr.getTargetNeighborStringIds().length
-            }, 0) / numOfNodes
-            const avgNearest = graphNodes.reduce((acc, curr) => {
-                return acc + curr.getNearbyContactPoolIds().length
-            }, 0) / numOfNodes
-            console.info('avgTargets: ' + avg)
-            console.info('avgNearest: ' + avgNearest)
-            return avg >= 3.90
-        }, 60000)
 
         const avg = graphNodes.reduce((acc, curr) => {
             return acc + curr.getTargetNeighborStringIds().length
@@ -231,7 +206,7 @@ describe('RandomGraphNode-DhtNode', () => {
         await Promise.all(graphNodes.map((node) =>
             waitForCondition(() => node.getNumberOfOutgoingHandshakes() === 0)
         ))
-        await wait(20000)
+        await wait(10000)
         let mismatchCounter = 0
         graphNodes.forEach((node) => {
             const nodeId = node.getOwnStringId()
@@ -239,12 +214,13 @@ describe('RandomGraphNode-DhtNode', () => {
                 if (neighborId !== entryPointRandomGraphNode.getOwnStringId()) {
                     const neighbor = graphNodes.find((n) => n.getOwnStringId() === neighborId)
                     if (!neighbor!.getTargetNeighborStringIds().includes(nodeId)) {
-                        logger.info('mismatching ids length: ' + neighbor!.getTargetNeighborStringIds().length)
+                        logger.info('mismatching ids length: ' + nodeId + " " + neighbor!.getTargetNeighborStringIds().length)
                         mismatchCounter += 1
                     }
                 }
+        
             })
         })
         expect(mismatchCounter).toBeLessThanOrEqual(2)
-    }, 90000)
+    }, 95000)
 })

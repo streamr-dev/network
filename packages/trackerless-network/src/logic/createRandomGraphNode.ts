@@ -14,9 +14,10 @@ import { StreamMessageType } from '../proto/packages/trackerless-network/protos/
 type RandomGraphNodeConfig = MarkOptional<StrictRandomGraphNodeConfig,
     "nearbyContactPool" | "randomContactPool" | "targetNeighbors" | "propagation"
     | "handshaker" | "neighborFinder" | "neighborUpdateManager" | "nodeName" | "numOfTargetNeighbors"
-    | "maxNumberOfContacts" | "minPropagationTargets" | "rpcCommunicator" | "peerViewSize" | "acceptProxyConnections">
+    | "maxNumberOfContacts" | "minPropagationTargets" | "rpcCommunicator" | "peerViewSize" | "acceptProxyConnections"
+    | "neighborUpdateInterval">
 
-const createConfigWithDefaults = (config: RandomGraphNodeConfig) => {
+const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGraphNodeConfig => {
     const peerId = peerIdFromPeerDescriptor(config.ownPeerDescriptor)
     const rpcCommunicator = config.rpcCommunicator ?? new ListeningRpcCommunicator(`layer2-${config.randomGraphId}`, config.P2PTransport)
     const nodeName = config.nodeName ?? peerId.toKey()
@@ -24,6 +25,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig) => {
     const maxNumberOfContacts = config.maxNumberOfContacts ?? 20
     const minPropagationTargets = config.minPropagationTargets ?? 2
     const acceptProxyConnections = config.acceptProxyConnections ?? false
+    const neighborUpdateInterval = config.neighborUpdateInterval ?? 10000
     const nearbyContactPool = config.nearbyContactPool ?? new PeerList(peerId, numOfTargetNeighbors + 1)
     const randomContactPool = config.randomContactPool ?? new PeerList(peerId, maxNumberOfContacts)
     const targetNeighbors = config.targetNeighbors ?? new PeerList(peerId, maxNumberOfContacts)
@@ -53,12 +55,12 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig) => {
     const handshaker = config.handshaker ?? new Handshaker({
         ownPeerDescriptor: config.ownPeerDescriptor,
         randomGraphId: config.randomGraphId,
-        nearbyContactPool: nearbyContactPool!,
-        randomContactPool: randomContactPool!,
-        targetNeighbors: targetNeighbors!,
         connectionLocker: config.connectionLocker,
-        rpcCommunicator: rpcCommunicator!,
         nodeName: config.nodeName,
+        rpcCommunicator,
+        nearbyContactPool,
+        randomContactPool,
+        targetNeighbors,
         N: numOfTargetNeighbors
     })
     const neighborFinder = config.neighborFinder ?? new NeighborFinder({
@@ -68,13 +70,14 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig) => {
         N: numOfTargetNeighbors
     })
     const neighborUpdateManager = config.neighborUpdateManager ?? new NeighborUpdateManager({
-        targetNeighbors: targetNeighbors,
-        nearbyContactPool: nearbyContactPool,
+        targetNeighbors,
+        nearbyContactPool,
         ownStringId: peerId.toKey(),
         ownPeerDescriptor: config.ownPeerDescriptor,
-        neighborFinder: neighborFinder,
+        neighborFinder,
         randomGraphId: config.randomGraphId,
-        rpcCommunicator: rpcCommunicator
+        rpcCommunicator,
+        neighborUpdateInterval
     })
     return {
         ...config,
@@ -92,7 +95,8 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig) => {
         nodeName,
         peerViewSize: maxNumberOfContacts,
         acceptProxyConnections,
-        proxyConnectionServer
+        proxyConnectionServer,
+        neighborUpdateInterval
     }
 }
 
