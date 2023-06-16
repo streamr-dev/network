@@ -1,5 +1,3 @@
-import 'setimmediate'
-
 import { ClientWebSocket } from './ClientWebSocket'
 import { IConnection, ConnectionType } from '../IConnection'
 import { ITransport } from '../../transport/ITransport'

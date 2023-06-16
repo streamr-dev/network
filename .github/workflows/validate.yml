@@ -79,23 +79,6 @@ jobs:
       command: |
         sudo apt-get install xvfb
         xvfb-run --auto-servernum npm run test-browser
-  network:
-    needs: build
-    uses: ./.github/workflows/test-setup.yml
-    with:
-      package: network
-  network-browser:
-    needs: build
-    uses: ./.github/workflows/test-setup.yml
-    with:
-      package: network
-      command: |
-        xvfb-run --auto-servernum npm run test-browser
-  tracker:
-    needs: build
-    uses: ./.github/workflows/test-setup.yml
-    with:
-      package: network-tracker
   client:
     needs: build
     uses: ./.github/workflows/test-setup.yml
@@ -143,14 +126,6 @@ jobs:
       docker-services: cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph
       run-brokers-and-trackers: true
       command: npm run test
-  tracker-docker-image:
-    uses: ./.github/workflows/docker-build.yml
-    with:
-      docker_file: Dockerfile.tracker
-      image_name: streamr/tracker
-      test_services_to_start: tracker-1
-      build_platforms: linux/amd64
-      test_script: bash ./.github/healthcheck.sh http://localhost:30301/topology streamr-dev-tracker-1
   broker-docker-image:
     uses: ./.github/workflows/docker-build.yml
     with:

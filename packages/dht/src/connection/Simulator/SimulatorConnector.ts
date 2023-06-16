@@ -1,5 +1,3 @@
-import 'setimmediate'
-
 import { ConnectionType } from '../IConnection'
 
 import {
