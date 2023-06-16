@@ -81,35 +81,28 @@ describe("MaintainOperatorValueService", () => {
         ({ operatorWallet, operatorContract } = await deployNewOperator())
     })
 
-    it("updates the values to stay over the threshold", async () => {
+    it("updates both sponsorships to stay over the threshold", async () => {
         await (await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther("200"), operatorWallet.address)).wait()
-        
+        // deploy 2 sponsorships, sponsor 200 & stake 100 into both of them
         const sponsorship1 = await deploySponsorship(config, operatorWallet, { streamId: streamId1 })
-        await (await token.connect(operatorWallet).transferAndCall(sponsorship1.address, parseEther("200"), "0x")).wait() // sponsor 200
-        logger.info(`OperatorWallet sponsored 200 tokens on sponsorship1 ${sponsorship1.address}`)
-        expect(await token.balanceOf(sponsorship1.address)).toEqual(parseEther("200"))
-        await (await operatorContract.stake(sponsorship1.address, parseEther("100"))).wait()
-        logger.info(`Operator staked 100 tokens on sponsorship1 ${sponsorship1.address}`)
-        expect(await token.balanceOf(sponsorship1.address)).toEqual(parseEther("300")) // 200 + 100
-        
         const sponsorship2 = await deploySponsorship(config, operatorWallet, { streamId: streamId2 })
+        await (await token.connect(operatorWallet).transferAndCall(sponsorship1.address, parseEther("200"), "0x")).wait()
         await (await token.connect(operatorWallet).transferAndCall(sponsorship2.address, parseEther("200"), "0x")).wait()
-        logger.info(`OperatorWallet sponsored 200 tokens on sponsorship2 ${sponsorship2.address}`)
-        expect(await token.balanceOf(sponsorship2.address)).toEqual(parseEther("200"))
+        await (await operatorContract.stake(sponsorship1.address, parseEther("100"))).wait()
         await (await operatorContract.stake(sponsorship2.address, parseEther("100"))).wait()
-        logger.info(`Operator staked 100 tokens on sponsorship2 ${sponsorship2.address}`)
-        expect(await token.balanceOf(sponsorship2.address)).toEqual(parseEther("300")) // 200 sponsored + 100 staked
+
+        expect(await token.balanceOf(sponsorship1.address)).toEqual(parseEther("300")) // 200 sponsored + 100 staked
+        expect(await token.balanceOf(sponsorship2.address)).toEqual(parseEther("300"))
         
         const maintainOperatorValueService = new MaintainOperatorValueService(opertatorConfig)
 
         const totalValueInSponsorshipsBefore = await operatorContract.totalValueInSponsorshipsWei()
-        const penaltyFraction = 0.001 // * 1e18
-        const threshold = 200 * penaltyFraction // 0.2
-        await new Promise((resolve) => setTimeout(resolve, 5000)) // sleep 5 sec
-        await maintainOperatorValueService.start(parseEther(`${penaltyFraction}`).toBigInt()) // 200 * 0.001 = 0.2
-        await new Promise((resolve) => setTimeout(resolve, 5000)) // sleep 5 sec
-        const totalValueInSponsorshipsAfter = await operatorContract.totalValueInSponsorshipsWei()
-        await waitForCondition(async () => totalValueInSponsorshipsAfter > totalValueInSponsorshipsBefore, 10000, 1000) // TODO: use w/o sleep
+        const penaltyFraction = 0.0005 // * 1e18
+        const threshold = 200 * penaltyFraction // 0.1
+        await new Promise((resolve) => setTimeout(resolve, 2000)) // sleep 2 sec
+        await maintainOperatorValueService.start(parseEther(`${penaltyFraction}`).toBigInt()) // 200 * 0.001 = 0.1
+
+        await waitForCondition(async () => await operatorContract.totalValueInSponsorshipsWei() > totalValueInSponsorshipsBefore, 10000, 1000)
         
         const { sponsorshipAddresses, approxValues, realValues } = await operatorContract.getApproximatePoolValuesPerSponsorship()
         let diff = BigInt(0)
@@ -117,13 +110,11 @@ describe("MaintainOperatorValueService", () => {
             diff = realValues[i].toBigInt() - approxValues[i].toBigInt()
         }
         
-        expect(totalValueInSponsorshipsAfter > totalValueInSponsorshipsBefore)
+        expect(await operatorContract.totalValueInSponsorshipsWei() > totalValueInSponsorshipsBefore)
         expect(diff < threshold)
 
         await maintainOperatorValueService.stop()
     })
-
-
 
     it("needs only one sponsorship to stay over the threshold", async () => {
         await (await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther("200"), operatorWallet.address)).wait()
@@ -149,11 +140,8 @@ describe("MaintainOperatorValueService", () => {
         const totalValueInSponsorshipsBefore = await operatorContract.totalValueInSponsorshipsWei()
         const penaltyFraction = 0.0005 // * 1e18
         const threshold = 200 * penaltyFraction // 0.1
-        await new Promise((resolve) => setTimeout(resolve, 5000)) // sleep 5 sec
         await maintainOperatorValueService.start(parseEther(`${penaltyFraction}`).toBigInt()) // 200 * 0.0005 = 0.1
-        await new Promise((resolve) => setTimeout(resolve, 5000)) // sleep 5 sec
-        const totalValueInSponsorshipsAfter = await operatorContract.totalValueInSponsorshipsWei()
-        await waitForCondition(async () => totalValueInSponsorshipsAfter > totalValueInSponsorshipsBefore, 10000, 1000) // TODO: use w/o sleep
+        await waitForCondition(async () => await operatorContract.totalValueInSponsorshipsWei() > totalValueInSponsorshipsBefore, 10000, 1000)
         
         const { sponsorshipAddresses, approxValues, realValues } = await operatorContract.getApproximatePoolValuesPerSponsorship()
         let diff = BigInt(0)
@@ -161,7 +149,7 @@ describe("MaintainOperatorValueService", () => {
             diff = realValues[i].toBigInt() - approxValues[i].toBigInt()
         }
         
-        expect(totalValueInSponsorshipsAfter > totalValueInSponsorshipsBefore)
+        expect(await operatorContract.totalValueInSponsorshipsWei() > totalValueInSponsorshipsBefore)
         expect(diff < threshold)
 
         await maintainOperatorValueService.stop()
