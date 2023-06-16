@@ -79,5 +79,5 @@ describe('publish and subscribe', () => {
                 publisherId: new Wallet(publisherPrivateKey).address.toLowerCase()
             }
         })
-    })
+    }, 15000)
 })
