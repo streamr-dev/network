@@ -91,9 +91,7 @@ const getHttpErrorTransform = (): (error: any) => Promise<StreamrClientError> =>
         } else {
             message = err?.message ?? 'Unknown error'
         }
-        return new StreamrClientError(
-            message, 'STORAGE_NODE_ERROR'
-        )
+        return new StreamrClientError(message, 'STORAGE_NODE_ERROR')
     }
 }
 
