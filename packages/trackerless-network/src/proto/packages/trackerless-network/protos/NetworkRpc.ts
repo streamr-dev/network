@@ -89,15 +89,11 @@ export interface StreamMessage {
      */
     previousMessageRef?: MessageRef;
     /**
-     * @generated from protobuf field: optional string previousPeer = 7;
-     */
-    previousPeer?: string;
-    /**
-     * @generated from protobuf field: optional string groupKeyId = 8;
+     * @generated from protobuf field: optional string groupKeyId = 7;
      */
     groupKeyId?: string;
     /**
-     * @generated from protobuf field: optional EncryptedGroupKey newGroupKey = 9;
+     * @generated from protobuf field: optional EncryptedGroupKey newGroupKey = 8;
      */
     newGroupKey?: EncryptedGroupKey;
 }
@@ -433,9 +429,8 @@ class StreamMessage$Type extends MessageType<StreamMessage> {
             { no: 4, name: "signature", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 5, name: "messageRef", kind: "message", T: () => MessageRef },
             { no: 6, name: "previousMessageRef", kind: "message", T: () => MessageRef },
-            { no: 7, name: "previousPeer", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
-            { no: 8, name: "groupKeyId", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
-            { no: 9, name: "newGroupKey", kind: "message", T: () => EncryptedGroupKey }
+            { no: 7, name: "groupKeyId", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
+            { no: 8, name: "newGroupKey", kind: "message", T: () => EncryptedGroupKey }
         ]);
     }
 }
