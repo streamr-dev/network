@@ -62,9 +62,9 @@ describe('utils', () => {
 
         it('error code from response', async () => {
             const server = await startTestServer('/foo', async () => {})
-            const parseError = async (response: FetchResponse) => new Error(`foo=${response.status}`)
+            const parseError = async (response: FetchResponse) => new Error(`status=${response.status}`)
             const iterator = fetchHttpStream(`${server.url}/bar`, parseError)[Symbol.asyncIterator]()
-            await expect(() => nextValue(iterator)).rejects.toThrow('foo=404')
+            await expect(() => nextValue(iterator)).rejects.toThrow('status=404')
             await server.stop()
         })
 
