@@ -36,7 +36,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         this.operatorClientConfig = {
             provider,
             operatorContractAddress: this.pluginConfig.operatorContractAddress,
-            theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST}:8000/subgraphs/name/streamr-dev/network-subgraphs`,
+            theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`,
             fetch: fetch,
             signer: Wallet.createRandom().connect(provider)
         }
