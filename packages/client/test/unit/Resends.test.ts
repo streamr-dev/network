@@ -5,7 +5,7 @@ import { randomEthereumAddress, startTestServer } from '@streamr/test-utils'
 import { collect } from '@streamr/utils'
 import range from 'lodash/range'
 import { Resends } from '../../src/subscribe/Resends'
-import { mockLoggerFactory  } from '../test-utils/utils'
+import { mockLoggerFactory } from '../test-utils/utils'
 
 const createResends = (serverUrl: string) => {
     return new Resends(
