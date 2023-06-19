@@ -208,18 +208,6 @@ export class PushBuffer<T> implements IPushBuffer<T> {
         return this.iterator.next()
     }
 
-    async pull(src: AsyncGenerator<T>): Promise<void> {
-        try {
-            for await (const v of src) {
-                const ok = await this.push(v)
-                if (!ok || !this.isWritable()) { break }
-            }
-        } catch (err) {
-            // this.endWrite(err)
-        }
-        this.endWrite()
-    }
-
     [Symbol.asyncIterator](): this {
         if (this.isIterating) {
             // @ts-expect-error ts can't do this.constructor properly
