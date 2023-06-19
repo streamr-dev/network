@@ -93,7 +93,7 @@ const createWrappedContractMethod = (
             const tx = returnValue
             const originalWaitMethod = tx.wait
             tx.wait = async (confirmations?: number): Promise<ContractReceipt> => {
-                const receipt = await withErrorHandling(() => originalWaitMethod(confirmations), `${methodName}.wait`, 'waiting transaction for')
+                const receipt = await withErrorHandling(() => originalWaitMethod(confirmations), methodName, 'waiting transaction for')
                 eventEmitter.emit('onTransactionConfirm', methodName, tx, receipt)
                 return receipt
             }
