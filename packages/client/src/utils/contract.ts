@@ -59,13 +59,14 @@ const createLogger = (eventEmitter: EventEmitter<ContractEvent>, loggerFactory: 
 
 const withErrorHandling = async <T>(
     execute: () => Promise<T>,
-    methodName: string
+    methodName: string,
+    action: string
 ): Promise<T> => {
     try {
         return await execute()
     } catch (e: any) {
         const suffixes = without(['reason', 'code'].map(field => (e[field] !== undefined ? `${field}=${e[field]}` : undefined)), undefined)
-        const wrappedError = new Error(`Error in contract call "${methodName}"${(suffixes.length > 0) ? ', ' + suffixes.join(', ') : ''}`)
+        const wrappedError = new Error(`Error while ${action} contract call "${methodName}"${(suffixes.length > 0) ? ', ' + suffixes.join(', ') : ''}`)
         // @ts-expect-error unknown property
         wrappedError.reason = e
         throw wrappedError
@@ -82,12 +83,12 @@ const createWrappedContractMethod = (
         const returnValue = await withErrorHandling(() => concurrencyLimit(() => {
             eventEmitter.emit('onMethodExecute', methodName)
             return originalMethod(...args)
-        }), methodName)
+        }), methodName, 'executing')
         if (isTransaction(returnValue)) {
             const tx = returnValue
             const originalWaitMethod = tx.wait
             tx.wait = async (confirmations?: number): Promise<ContractReceipt> => {
-                const receipt = await withErrorHandling(() => originalWaitMethod(confirmations), `${methodName}.wait`)
+                const receipt = await withErrorHandling(() => originalWaitMethod(confirmations), `${methodName}.wait`, 'waiting transaction for')
                 eventEmitter.emit('onTransactionConfirm', methodName, tx, receipt)
                 return receipt
             }
