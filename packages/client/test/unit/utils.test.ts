@@ -1,8 +1,8 @@
+import { startTestServer } from '@streamr/test-utils'
 import { collect } from '@streamr/utils'
 import { Request, Response } from 'express'
 import range from 'lodash/range'
 import { createQueryString, fetchHttpStream, getEndpointUrl } from '../../src/utils/utils'
-import { startTestServer } from '../test-utils/utils'
 
 describe('utils', () => {
 
