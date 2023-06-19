@@ -1,8 +1,8 @@
+import { startTestServer } from '@streamr/test-utils'
 import { collect, waitForCondition } from '@streamr/utils'
 import { Request, Response } from 'express'
 import range from 'lodash/range'
 import { FetchHttpStreamResponseError, createQueryString, fetchHttpStream, getEndpointUrl } from '../../src/utils/utils'
-import { startTestServer } from '../test-utils/utils'
 import { nextValue } from './../../src/utils/iterators'
 
 describe('utils', () => {
