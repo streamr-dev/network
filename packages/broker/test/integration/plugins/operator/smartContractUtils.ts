@@ -1,6 +1,6 @@
 import { IERC677, Operator, Sponsorship, tokenABI } from '@streamr/network-contracts'
 import { Contract } from '@ethersproject/contracts'
-import { JsonRpcProvider } from '@ethersproject/providers'
+import { Provider, JsonRpcProvider } from '@ethersproject/providers'
 import { Wallet } from 'ethers'
 import { fastPrivateKey } from '@streamr/test-utils'
 import { parseEther } from '@ethersproject/units'
@@ -11,7 +11,7 @@ import { Chains } from '@streamr/config'
 const ADMIN_WALLET_PK = '0x4059de411f15511a85ce332e7a428f36492ab4e87c7830099dadbf130f1896ae'
 const CONFIG = Chains.load()["dev1"]
 
-export function getProvider(): JsonRpcProvider {
+export function getProvider(): Provider {
     return new JsonRpcProvider(CONFIG.rpcEndpoints[0].url)
 }
 
@@ -19,11 +19,24 @@ export function getTokenContract(): IERC677 {
     return new Contract(CONFIG.contracts.LINK, tokenABI) as unknown as IERC677
 }
 
-export async function generateWalletWithGasAndTokens(provider: JsonRpcProvider): Promise<Wallet> {
+export async function generateWalletWithGasAndTokens(provider: Provider): Promise<Wallet> {
     const newWallet = new Wallet(fastPrivateKey())
     const adminWallet = new Wallet(ADMIN_WALLET_PK).connect(provider)
     const token = getTokenContract().connect(adminWallet)
-    await (await token.transfer(newWallet.address, parseEther("1000"))).wait()
+    for (let i = 0; i < 5; i++) {
+        try {
+            // eslint-disable-next-line no-console
+            // console.log("trying with nonce " + await adminWallet.getTransactionCount() + " time " + new Date().getTime() / 1000)
+            await (await token.transfer(newWallet.address, parseEther("1000"), {
+                nonce: await adminWallet.getTransactionCount()
+            })).wait()
+            break
+        } catch (e) {
+            await new Promise((resolve) => setTimeout(resolve, 3000))
+            // eslint-disable-next-line no-console
+            // console.log("sending link failed, retrying")
+        }
+    }
     await (await adminWallet.sendTransaction({
         to: newWallet.address,
         value: parseEther("1")
