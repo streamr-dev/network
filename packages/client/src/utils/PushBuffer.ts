@@ -1,5 +1,4 @@
 import { Gate } from './Gate'
-import * as G from './GeneratorUtils'
 import { StreamrClientError } from '../StreamrClientError'
 
 export const DEFAULT_BUFFER_SIZE = 256
