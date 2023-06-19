@@ -6,16 +6,19 @@ const logger = new Logger(module)
 
 const once = <T extends EventEmitter.ValidEventTypes>(
     emitter: EventEmitter<T>,
-    eventName: keyof T
+    eventName: keyof T,
+    predicate: (...eventArgs: any[]) => boolean = () => true,
 ): { task: Promise<any[]>, cancel: () => void } => {
-    let listener: any
+    let listener: (eventArgs: any[]) => void
     const task = new Promise<any[]>((resolve) => {
-        listener = (...args: any) => {
-            resolve(args)
+        listener = (...eventArgs: any[]) => {
+            if (predicate(...eventArgs)) {
+                resolve(eventArgs)
+            }
         }
-        emitter.once(eventName as any, listener)
+        emitter.on(eventName as any, listener as any)
     })
-    const cancel = () => emitter.off(eventName as any, listener)
+    const cancel = () => emitter.off(eventName as any, listener as any)
     return {
         task,
         cancel
@@ -35,9 +38,10 @@ const once = <T extends EventEmitter.ValidEventTypes>(
 export function waitForEvent3<T extends EventEmitter.ValidEventTypes>(
     emitter: EventEmitter<T>,
     eventName: keyof T,
-    timeout = 5000
+    timeout = 5000,
+    predicate: (...eventArgs: any[]) => boolean = () => true
 ): Promise<unknown> {
-    const { task, cancel } = once(emitter, eventName)
+    const { task, cancel } = once(emitter, eventName, predicate)
     return withTimeout(
         task,
         timeout,
