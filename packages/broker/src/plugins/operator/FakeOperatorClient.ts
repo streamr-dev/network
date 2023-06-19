@@ -1,12 +1,8 @@
 import { StreamID } from '@streamr/protocol'
 import EventEmitter3 from 'eventemitter3'
+import { MaintainTopologyHelperEvents } from './MaintainTopologyHelper'
 
-interface OperatorClientEvents {
-    addStakedStream: (streamId: string, blockNumber: number) => void
-    removeStakedStream: (streamId: string, blockNumber: number) => void
-}
-
-export class FakeOperatorClient extends EventEmitter3<OperatorClientEvents> {
+export class FakeOperatorClient extends EventEmitter3<MaintainTopologyHelperEvents> {
     private readonly initialState: Set<StreamID>
     private readonly initialBlockNumber: number
 
@@ -15,29 +11,23 @@ export class FakeOperatorClient extends EventEmitter3<OperatorClientEvents> {
         this.initialState = new Set(initialState)
         this.initialBlockNumber = initialBlockNumber
     }
-
-    // eslint-disable-next-line class-methods-use-this
-    start(): Promise<void> {
-        return Promise.resolve()
+    async start(): Promise<void> {
+        this.emit('addStakedStream', Array.from(this.initialState))
     }
 
-    getStakedStreams(): Promise<string[]> {
-        return Promise.resolve([...this.initialState])
-    }
-
-    // Used to fake smart contract events
-    addStreamToState(streamId: StreamID, blockNumber: number): void {
-        this.emit('addStakedStream', streamId, blockNumber)
-    }
-
-    // Used to fake smart contract events
-    removeStreamFromState(streamId: StreamID, blockNumber: number): void {
-        this.emit('removeStakedStream', streamId, blockNumber)
-    }
-
-    close(): void {
+    async stop(): Promise<void> {
         this.removeAllListeners('addStakedStream')
         this.removeAllListeners('removeStakedStream')
+    }
+
+    // Used to fake smart contract events
+    addStreamToState(streamId: StreamID): void {
+        this.emit('addStakedStream', [streamId])
+    }
+
+    // Used to fake smart contract events
+    removeStreamFromState(streamId: StreamID): void {
+        this.emit('removeStakedStream', streamId)
     }
 
 }

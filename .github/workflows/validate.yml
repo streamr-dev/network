@@ -107,7 +107,7 @@ jobs:
     uses: ./.github/workflows/test-setup.yml
     with:
       package: broker
-      docker-services: cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph
+      docker-services: cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph deploy-network-subgraphs
       run-brokers: true
       command: npm run test-integration
   client-browser:
@@ -115,7 +115,7 @@ jobs:
     uses: ./.github/workflows/test-setup.yml
     with:
       package: client
-      docker-services: init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph
+      docker-services: init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph deploy-network-subgraphs
       run-brokers: true
       command: npm run test-browser
   cli-tools:
