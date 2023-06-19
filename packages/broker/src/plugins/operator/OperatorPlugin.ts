@@ -6,14 +6,13 @@ import { InspectRandomNodeService } from './InspectRandomNodeService'
 import { MaintainOperatorContractService } from './MaintainOperatorContractService'
 import { MaintainTopologyService } from './MaintainTopologyService'
 import fetch from 'node-fetch'
-import { FetchResponse, Logger, toEthereumAddress } from '@streamr/utils'
+import { FetchResponse, toEthereumAddress } from '@streamr/utils'
 import { Provider, JsonRpcProvider } from '@ethersproject/providers'
 import { Signer } from '@ethersproject/abstract-signer'
 import { Wallet } from 'ethers'
 import { VoteOnSuspectNodeService } from './VoteOnSuspectNodeService'
 import { MaintainTopologyHelper } from './MaintainTopologyHelper'
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface OperatorPluginConfig {
     operatorContractAddress: string
 }
@@ -25,8 +24,6 @@ export interface OperatorServiceConfig {
     theGraphUrl: string
     fetch: (url: string, init?: Record<string, unknown>) => Promise<FetchResponse>
 }
-
-const logger = new Logger(module)
 
 export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     private readonly announceNodeService: AnnounceNodeService
@@ -52,10 +49,8 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         this.maintainTopologyService = new MaintainTopologyService(
             this.streamrClient,
             new MaintainTopologyHelper(
-                serviceHelperConfig,
-                logger
-            ),
-            logger
+                serviceHelperConfig
+            )
         )
     
     }

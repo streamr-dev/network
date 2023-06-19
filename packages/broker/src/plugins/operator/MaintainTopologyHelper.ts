@@ -33,28 +33,27 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
     streamIdOfSponsorship: Map<string, string> = new Map()
     sponsorshipCountOfStream: Map<string, number> = new Map()
     theGraphClient: TheGraphClient
-    private readonly logger: Logger
+    private readonly logger = new Logger(module)
 
-    constructor(config: OperatorServiceConfig, logger: Logger) {
+    constructor(config: OperatorServiceConfig) {
         super()
 
-        this.logger = logger
         this.logger.trace('OperatorClient created')
         this.theGraphClient = new TheGraphClient({
             serverUrl: config.theGraphUrl,
             fetch: config.fetch,
-            logger
+            logger: this.logger
         })
         this.address = config.operatorContractAddress
         this.provider = config.provider
         this.contract = new Contract(config.operatorContractAddress, operatorABI, this.provider) as unknown as Operator
-        logger.info(`OperatorClient created for ${config.operatorContractAddress}`)
+        this.logger.info(`OperatorClient created for ${config.operatorContractAddress}`)
     }
 
     async start(): Promise<void> {
         this.logger.info("Starting OperatorClient")
         this.logger.info("Subscribing to Staked and Unstaked events")
-        let latestBlock = await this.contract.provider.getBlockNumber()
+        const latestBlock = await this.contract.provider.getBlockNumber()
         this.contract.on("Staked", async (sponsorship: string) => {
             this.logger.info(`got Staked event ${sponsorship}`)
             const sponsorshipAddress = sponsorship.toLowerCase()
@@ -70,7 +69,6 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
             if (sponsorshipCount === 1) {
                 this.emit("addStakedStream", [streamId])
             }
-            latestBlock = await this.contract.provider.getBlockNumber()
         })
         this.contract.on("Unstaked", async (sponsorship: string) => {
             this.logger.info(`got Unstaked event ${sponsorship}`)
@@ -87,7 +85,6 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
                 this.sponsorshipCountOfStream.delete(streamId)
                 this.emit("removeStakedStream", streamId)
             }
-            latestBlock = await this.contract.provider.getBlockNumber()
         })
         
         const initalStreams = await this.pullStakedStreams(latestBlock)
@@ -127,7 +124,6 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
             }
         }
         const parseItems = (response: any) => {
-            // eslint-disable-next-line no-underscore-dangle
             if (!response.operator) {
                 this.logger.error(`Operator ${this.address.toLowerCase()} not found in TheGraph`)
                 return []

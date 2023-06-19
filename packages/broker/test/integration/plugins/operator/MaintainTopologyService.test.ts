@@ -1,6 +1,6 @@
 import { MaintainTopologyService } from '../../../../src/plugins/operator/MaintainTopologyService'
 import fetch from 'node-fetch'
-import { Logger, waitForCondition } from '@streamr/utils'
+import { waitForCondition } from '@streamr/utils'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { parseEther } from '@ethersproject/units'
 import StreamrClient, { CONFIG_TEST, Stream } from 'streamr-client'
@@ -65,8 +65,8 @@ describe('MaintainTopologyService', () => {
             ...CONFIG_TEST
         })
         service = new MaintainTopologyService(client, new MaintainTopologyHelper(
-            serviceConfig, new Logger(module) as any
-        ), new Logger(module) as any)// TODO: logger casting issue
+            serviceConfig
+        ))
         await service.start()
 
         await waitForCondition(async () => (await client.getSubscriptions()).length === 1, 10000, 1000)

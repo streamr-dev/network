@@ -86,7 +86,7 @@ describe("MaintainTopologyHelper", () => {
         })
 
         it("client emits events when sponsorships are staked", async () => {
-            operatorClient = new MaintainTopologyHelper(operatorConfig, logger)
+            operatorClient = new MaintainTopologyHelper(operatorConfig)
             let eventcount = 0
             operatorClient.on("addStakedStream", (streamid: string[]) => {
                 logger.debug(`got addStakedStream event for stream ${streamid}`)
@@ -120,7 +120,7 @@ describe("MaintainTopologyHelper", () => {
 
         it("client returns all streams from theGraph on initial startup as event", async () => {
             await new Promise((resolve) => setTimeout(resolve, 5000))
-            operatorClient = new MaintainTopologyHelper(operatorConfig, logger)
+            operatorClient = new MaintainTopologyHelper(operatorConfig)
             let streams: string[] = []
             operatorClient.on("addStakedStream", (streamid: string[]) => {
                 logger.debug(`got addStakedStream event for stream ${streamid}`)
@@ -139,7 +139,7 @@ describe("MaintainTopologyHelper", () => {
 
         it("client catches onchain events and emits join and leave events", async () => {
 
-            operatorClient = new MaintainTopologyHelper(operatorConfig, logger)
+            operatorClient = new MaintainTopologyHelper(operatorConfig)
             let eventcount = 0
             operatorClient.on("addStakedStream", (streamid: string[]) => {
                 logger.debug(`got addStakedStream event for stream ${streamid}`)
@@ -180,7 +180,7 @@ describe("MaintainTopologyHelper", () => {
 
         it("edge cases, 2 sponsorships for the same stream, join only fired once", async () => {
 
-            operatorClient = new MaintainTopologyHelper(operatorConfig, logger)
+            operatorClient = new MaintainTopologyHelper(operatorConfig)
             let receivedAddStreams = 0
             operatorClient.on("addStakedStream", (streamid: string[]) => {
                 logger.debug(`got addStakedStream event for stream ${streamid}`)
@@ -219,7 +219,7 @@ describe("MaintainTopologyHelper", () => {
 
         it("only returns the stream from getAllStreams when staked on 2 sponsorships for the stream", async () => {
 
-            const operatorClient = new MaintainTopologyHelper(operatorConfig, logger)
+            const operatorClient = new MaintainTopologyHelper(operatorConfig)
             let streams: string[] = []
             operatorClient.on("addStakedStream", (streamIDs: string[]) => {
                 logger.debug(`got addStakedStream event for stream ${streamIDs}`)
@@ -236,7 +236,7 @@ describe("MaintainTopologyHelper", () => {
 
         it("edge cases, 2 sponsorships for the same stream, remove only fired once", async () => {
 
-            operatorClient = new MaintainTopologyHelper(operatorConfig, logger)
+            operatorClient = new MaintainTopologyHelper(operatorConfig)
             let receivedRemoveStreams = 0
             operatorClient.on("addStakedStream", (streamid: string[]) => {
                 logger.debug(`got addStakedStream event for stream ${streamid}`)

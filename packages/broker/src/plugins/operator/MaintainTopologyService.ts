@@ -19,25 +19,24 @@ export class MaintainTopologyService {
     private readonly subscriptions = new Multimap<StreamID, Subscription>()
     private readonly synchronizer = new SetMembershipSynchronizer<StreamID>()
     private readonly concurrencyLimit = pLimit(1)
-    private readonly logger: Logger
+    private readonly logger = new Logger(module)
 
-    constructor(streamrClient: StreamrClient, maintainTopologyHelper: MaintainTopologyHelper, logger: Logger) {
+    constructor(streamrClient: StreamrClient, maintainTopologyHelper: MaintainTopologyHelper) {
         this.streamrClient = streamrClient
         this.maintainTopologyHelper = maintainTopologyHelper
-        this.logger = logger
     }
 
     async start(): Promise<void> {
-        this.logger.info('Starting MaintainTopologyService')
+        this.logger.info('Starting')
         this.maintainTopologyHelper.on('addStakedStream', this.onAddStakedStreams)
         this.maintainTopologyHelper.on('removeStakedStream', this.onRemoveStakedStream)
         await this.maintainTopologyHelper.start()
-        this.logger.info('Started MaintainTopologyService')
+        this.logger.info('Started')
     }
 
     async stop(): Promise<void> {
         this.maintainTopologyHelper.stop()
-        this.logger.info('stopped')
+        this.logger.info('Stopped')
     }
 
     private onAddStakedStreams = async (streamIDs: string[]) => {
