@@ -8,7 +8,7 @@ import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { StreamrClientError } from '../StreamrClientError'
 import { StorageNodeRegistry } from '../registry/StorageNodeRegistry'
 import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
-import { counting } from '../utils/GeneratorUtils'
+import { forEach, map } from '../utils/GeneratorUtils'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { PushPipeline } from '../utils/PushPipeline'
 import { createQueryString, fetchHttpStream } from '../utils/utils'
@@ -172,7 +172,6 @@ export class Resends {
         if (!nodeAddresses.length) {
             throw new StreamrClientError(`no storage assigned: ${streamId}`, 'NO_STORAGE_NODES')
         }
-
         const nodeAddress = nodeAddresses[random(0, nodeAddresses.length - 1)]
         const nodeUrl = (await this.storageNodeRegistry.getStorageNodeMetadata(nodeAddress)).http
         const url = createUrl(nodeUrl, resendType, streamPartId, query)
@@ -187,11 +186,15 @@ export class Resends {
             getStorageNodes: async () => without(nodeAddresses, nodeAddress),
             config: (nodeAddresses.length === 1) ? { ...this.config, orderMessages: false } : this.config
         })
-
-        const dataStream = fetchHttpStream(url, parseHttpError)
-        messageStream.pull(counting(dataStream, (count: number) => {
+        const lines = fetchHttpStream(url, parseHttpError)
+        setImmediate(async () => {
+            let count = 0
+            const messages = map(lines, (line: string) => StreamMessage.deserialize(line))
+            await messageStream.pull(
+                forEach(messages, () => count++)
+            )
             this.logger.debug('Finished resend', { loggerIdx: traceId, messageCount: count })
-        }))
+        })
         return messageStream
     }
 }
