@@ -1,6 +1,7 @@
 import { collect, waitForCondition } from '@streamr/utils'
 import { Request, Response } from 'express'
 import range from 'lodash/range'
+import { Response as FetchResponse } from 'node-fetch'
 import { createQueryString, fetchHttpStream, getEndpointUrl } from '../../src/utils/utils'
 import { startTestServer } from '../test-utils/utils'
 import { nextValue } from './../../src/utils/iterators'
@@ -57,6 +58,19 @@ describe('utils', () => {
             await waitForCondition(() => serverResponseClosed === true)
             await expect(() => nextValue(iterator)).rejects.toThrow(/aborted/)
             await server.stop()
+        })
+
+        it('error code from response', async () => {
+            const server = await startTestServer('/foo', async () => {})
+            const parseError = async (response: FetchResponse) => new Error(`foo=${response.status}`)
+            const iterator = fetchHttpStream(`${server.url}/bar`, parseError)[Symbol.asyncIterator]()
+            await expect(() => nextValue(iterator)).rejects.toThrow('foo=404')
+            await server.stop()
+        })
+
+        it('invalid host', async () => {
+            const iterator = fetchHttpStream('http://mock.test', () => undefined as any)[Symbol.asyncIterator]()
+            await expect(() => nextValue(iterator)).rejects.toThrow(/getaddrinfo ENOTFOUND/)
         })
     })
 })
