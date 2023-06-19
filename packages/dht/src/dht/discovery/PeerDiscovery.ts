@@ -144,6 +144,10 @@ export class PeerDiscovery {
         return !this.joinCalled ? true : this.ongoingDiscoverySessions.size > 0
     }
 
+    public isJoinCalled(): boolean {
+        return this.joinCalled
+    }
+
     public stop(): void {
         this.stopped = true
         this.abortController.abort()

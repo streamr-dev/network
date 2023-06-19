@@ -61,6 +61,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
     private readonly options: NetworkOptions
     private stopped = false
     private readonly firstConnectionTimeout: number
+    private dhtJoinRequired = true
 
     constructor(options: NetworkOptions) {
         super()
@@ -87,6 +88,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
             await this.streamrNode?.start(this.layer0DhtNode!, this.connectionManager!, this.connectionManager!)
         } else {
             if (doJoin) {
+                this.dhtJoinRequired = false
                 await this.joinDht()
             }
             await this.streamrNode?.start(this.layer0DhtNode!, this.connectionManager!, this.connectionManager!)
@@ -97,18 +99,25 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
         setImmediate(() => {
             this.layer0DhtNode?.joinDht(this.options.layer0.entryPoints![0])
         })
+        await this.waitForFirstConnection()
+    }
+
+    private async waitForFirstConnection(): Promise<void> {
         const readynessListener = new ReadynessListener(this, this.layer0DhtNode!)
         await readynessListener.waitUntilReady(this.firstConnectionTimeout)
     }
 
     async joinLayer0IfRequired(streamPartId: StreamPartID): Promise<void> {
         if (this.isJoinRequired(streamPartId)) {
+            this.dhtJoinRequired = false
             await this.joinDht()
+        } else if (this.layer0DhtNode!.getNumberOfConnections() < 1) {
+            await this.waitForFirstConnection()
         }
     }
 
     private isJoinRequired(streamPartId: StreamPartID): boolean {
-        return !this.layer0DhtNode!.hasJoined() && this.streamrNode!.isJoinRequired(streamPartId)
+        return this.dhtJoinRequired && !this.layer0DhtNode!.hasJoined() && this.streamrNode!.isJoinRequired(streamPartId)
     }
 
     getStreamrNode(): StreamrNode {
