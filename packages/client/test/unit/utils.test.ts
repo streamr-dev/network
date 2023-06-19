@@ -1,10 +1,8 @@
-import { StreamPartIDUtils } from '@streamr/protocol'
-import { fastWallet, startTestServer } from '@streamr/test-utils'
+import { startTestServer } from '@streamr/test-utils'
 import { collect } from '@streamr/utils'
 import { Request, Response } from 'express'
 import range from 'lodash/range'
 import { createQueryString, fetchHttpStream, getEndpointUrl } from '../../src/utils/utils'
-import { createMockMessage } from '../test-utils/utils'
 
 describe('utils', () => {
 
@@ -28,23 +26,15 @@ describe('utils', () => {
     })
 
     it('fetchHttpStream', async () => {
-        const MESSAGE_COUNT = 5
+        const LINE_COUNT = 5
         const server = await startTestServer('/', async (_req: Request, res: Response) => {
-            const publisher = fastWallet()
-            for (const i of range(MESSAGE_COUNT)) {
-                const msg = await createMockMessage({
-                    streamPartId: StreamPartIDUtils.parse('stream#0'),
-                    publisher,
-                    content: { 
-                        mockId: i
-                    }
-                })
-                res.write(`${msg.serialize()}\n`)
+            for (const i of range(LINE_COUNT)) {
+                res.write(`${i}\n`)
             }
             res.end()
         })
-        const msgs = await collect(fetchHttpStream(server.url, () => undefined as any))
-        expect(msgs.map((m) => (m.getParsedContent() as any).mockId)).toEqual(range(MESSAGE_COUNT))
+        const lines = await collect(fetchHttpStream(server.url, () => undefined as any))
+        expect(lines.map((line) => parseInt(line))).toEqual(range(LINE_COUNT))
         await server.stop()
     })
 })

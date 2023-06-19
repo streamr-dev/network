@@ -1,5 +1,5 @@
 import { ContractReceipt } from '@ethersproject/contracts'
-import { StreamID, StreamMessage, toStreamID } from '@streamr/protocol'
+import { StreamID, toStreamID } from '@streamr/protocol'
 import { Logger, TheGraphClient, merge, randomString, toEthereumAddress } from '@streamr/utils'
 import fetch, { Response } from 'node-fetch'
 import { AbortSignal } from 'node-fetch/externals'
@@ -152,7 +152,7 @@ export const fetchHttpStream = async function*(
     url: string,
     parseError: (response: Response) => Promise<Error>,
     abortController = new AbortController()
-): AsyncIterable<StreamMessage> {
+): AsyncGenerator<string, void, undefined> {
     logger.debug('Send HTTP request', { url })
     const response: Response = await fetch(url, {
         // cast is needed until this is fixed: https://github.com/node-fetch/node-fetch/issues/1652
@@ -174,9 +174,7 @@ export const fetchHttpStream = async function*(
         // in the browser, response.body will be a web stream. Convert this into a node stream.
         const source: Readable = WebStreamToNodeStream(response.body as unknown as (ReadableStream | Readable))
 
-        stream = source.pipe(split2((message: string) => {
-            return StreamMessage.deserialize(message)
-        }))
+        stream = source.pipe(split2())
 
         stream.once('close', () => {
             abortController.abort()
