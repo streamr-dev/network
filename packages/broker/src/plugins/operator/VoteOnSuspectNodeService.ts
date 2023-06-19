@@ -32,15 +32,14 @@ export class VoteOnSuspectNodeService {
 
     // eslint-disable-next-line class-methods-use-this
     async handleNodeInspectionRequest(sponsorship: string, targetOperator: string): Promise<void> {
-        
-        this.logger.info('handleNodeInspectionRequest', { sponsorship, targetOperator })
+        this.logger.info(`got node inspection request for target ${targetOperator} on sponsorship ${sponsorship}`)
         //const operatorIsMalicious = this.streamrClient.inspectNodes(sponsorship, targetOperato)
         const operatorIsMalicious = true
         if (operatorIsMalicious) {
-            this.logger.info('operatorIsMalicious', { targetOperator })
+            this.logger.info(`operatorIsMalicious, voting KICK on ${targetOperator} on sponsorship ${sponsorship}`)
             await this.nodeInspectionHelper.voteOnFlag(sponsorship, targetOperator, true)
         } else {
-            this.logger.info('operatorIsNotMalicious', { targetOperator })
+            this.logger.info(`operatorIsNotMalicious, voting NO KICK on, ${targetOperator} on sponsorship ${sponsorship}`)
             await this.nodeInspectionHelper.voteOnFlag(sponsorship, targetOperator, false)
         }
     }

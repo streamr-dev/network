@@ -61,7 +61,7 @@ describe('MaintainTopologyService', () => {
             fetch: fetch
         }
 
-        const client = new StreamrClient({
+        client = new StreamrClient({
             ...CONFIG_TEST
         })
         service = new MaintainTopologyService(client, new MaintainTopologyHelper(

@@ -9,7 +9,8 @@ import { Provider } from "@ethersproject/abstract-provider"
 import { JsonRpcProvider } from "@ethersproject/providers"
 import { Chains } from "@streamr/config"
 import { Contract, ContractFactory, Wallet } from "ethers"
-import { IERC677, Operator, OperatorFactory, StreamRegistry, StreamrConfig, streamRegistryABI, streamrConfigABI, streamrConfigBytecode, tokenABI } from "@streamr/network-contracts"
+import { IERC677, Operator, OperatorFactory, SponsorshipFactory, StreamRegistry, StreamrConfig, sponsorshipFactoryABI, sponsorshipFactoryBytecode, streamRegistryABI, 
+    streamrConfigABI, streamrConfigBytecode, tokenABI } from "@streamr/network-contracts"
 import fetch from "node-fetch"
 import { VoteOnSuspectNodeService } from "../../../../src/plugins/operator/VoteOnSuspectNodeService"
 import { operatorFactoryABI, operatorFactoryBytecode } from "@streamr/network-contracts"
@@ -21,8 +22,6 @@ jest.setTimeout(600000)
 
 const logger = new Logger(module)
 describe('MaintainTopologyService', () => {
-    let service: MaintainTopologyService
-    let client: StreamrClient
     let provider: Provider
     let adminWallet: Wallet
     let token: IERC677
@@ -35,30 +34,52 @@ describe('MaintainTopologyService', () => {
 
     async function deployOperatorFactory(signer: Wallet): Promise<OperatorFactory> {
         const operatorTemplateAddress = "0x699B4bE95614f017Bb622e427d3232837Cc814E6"
+        const sponsorshipTemplateAddress = "0x8f83273a293292b0142d810623568Ea5A248CA58"
         // const {
         //     token, streamrConfig,
         //     defaultDelegationPolicy, defaultPoolYieldPolicy, defaultUndelegationPolicy,
         // } = contracts
 
-        // const operatorTemplate = await (await getContractFactory("Operator", { signer })).deploy()
-        const operatorFactoryFactory = new ContractFactory(operatorFactoryABI, operatorFactoryBytecode, signer)
-        const operatorFactory = await operatorFactoryFactory.deploy() as unknown as OperatorFactory
-        await operatorFactory.deployed()
-
-        await (await operatorFactory.initialize(
-            operatorTemplateAddress,
-            config.contracts.LINK,
-            config.contracts.StreamrConfig
-        )).wait()
-
+        // deploy new streamrconfig
         const streamrConfigFactory = new ContractFactory(streamrConfigABI, streamrConfigBytecode, signer)
         const streamrConfig = await streamrConfigFactory.deploy() as unknown as StreamrConfig
         await streamrConfig.deployed()
-
         await (await streamrConfig.initialize()).wait()
 
-        await (await streamrConfig.setSponsorshipFactory(config.contracts.SponsorshipFactory)).wait()
+        // deploy contractfactory
+        const operatorFactoryFactory = new ContractFactory(operatorFactoryABI, operatorFactoryBytecode, signer)
+        const operatorFactory = await operatorFactoryFactory.deploy() as unknown as OperatorFactory
+        await operatorFactory.deployed()
+        await (await operatorFactory.initialize(
+            operatorTemplateAddress,
+            config.contracts.LINK,
+            streamrConfig.address
+        )).wait()
+        await (await operatorFactory.addTrustedPolicies([
+            config.contracts.DefaultDelegationPolicy,
+            config.contracts.DefaultPoolYieldPolicy,
+            config.contracts.DefaultUndelegationPolicy,
+            config.contracts.MaxOperatorsJoinPolicy,
+            config.contracts.OperatorContractOnlyJoinPolicy   
+        ], { gasLimit: 500000 })).wait()
 
+        // deplyo sponsorshipfactory
+        const sponsorshipFactoryFactory = new ContractFactory(sponsorshipFactoryABI, sponsorshipFactoryBytecode, signer)
+        const sponsorshipFactory = await sponsorshipFactoryFactory.deploy() as unknown as SponsorshipFactory
+        await sponsorshipFactory.deployed()
+        await (await sponsorshipFactory.initialize(
+            sponsorshipTemplateAddress,
+            config.contracts.LINK,
+            streamrConfig.address
+        )).wait()
+        await (await sponsorshipFactory.addTrustedPolicies([
+            config.contracts.StakeWeightedAllocationPolicy,
+            config.contracts.DefaultLeavePolicy,
+            config.contracts.VoteKickPolicy
+        ])).wait()
+
+        // link factories in streamrconfig
+        await (await streamrConfig.setSponsorshipFactory(config.contracts.SponsorshipFactory)).wait()
         await (await streamrConfig.setOperatorFactory(operatorFactory.address)).wait()
 
         // const streamrConfig = new Contract(config.contracts.StreamrConfig, streamrConfigABI) as unknown as StreamrConfig
@@ -69,11 +90,6 @@ describe('MaintainTopologyService', () => {
         //     streamrConfig!.address,
         //     { gasLimit: 500000 } // solcover makes the gas estimation require 1000+ ETH for transaction, this fixes it
         // )).wait()
-        await (await operatorFactory.addTrustedPolicies([
-            config.contracts.DefaultDelegationPolicy,
-            config.contracts.DefaultPoolYieldPolicy,
-            config.contracts.DefaultUndelegationPolicy
-        ], { gasLimit: 500000 })).wait()
 
         return operatorFactory
     }
@@ -96,83 +112,75 @@ describe('MaintainTopologyService', () => {
         await (await streamRegistry.createStream(streamPath1, "metadata")).wait()
         logger.debug(`creating stream with streamId2 ${streamId2}`)
         await (await streamRegistry.createStream(streamPath2, "metadata")).wait()
+
     })
     
-    afterEach(async () => {
-        await service.stop()
-        await client?.destroy()
-    })
-
     it("allows to flag an operator as malicious", async () => {
         const operatorFactory = await deployOperatorFactory(adminWallet)
         const newOperatorFactoryChainConfig = Chains.load()["dev1"]
         newOperatorFactoryChainConfig.contracts.OperatorFactory = operatorFactory.address
         const flagger = await createWalletAndDeployOperator(provider, config, theGraphUrl, fetch)
-        logger.debug("deployed flagger contract" + flagger.operatorConfig.operatorContractAddress)
+        logger.debug("deployed flagger contract " + flagger.operatorConfig.operatorContractAddress)
         const target = await createWalletAndDeployOperator(provider, config, theGraphUrl, fetch)
-        logger.debug("deployed target contract" + target.operatorConfig.operatorContractAddress)
+        logger.debug("deployed target contract " + target.operatorConfig.operatorContractAddress)
         const voter = await createWalletAndDeployOperator(provider, config, theGraphUrl, fetch)
-        logger.debug("deployed voter contract" + voter.operatorConfig.operatorContractAddress)
+        logger.debug("deployed voter contract " + voter.operatorConfig.operatorContractAddress)
 
         await new Promise((resolve) => setTimeout(resolve, 5000)) // wait for events to be processed
-        const flaggerOperatorClient = new VoteOnSuspectNodeService(client, flagger.operatorConfig, logger)
+        const flaggerClient = new StreamrClient(CONFIG_TEST)
+        const flaggerOperatorClient = new VoteOnSuspectNodeService(flaggerClient, flagger.operatorConfig, logger)
         await flaggerOperatorClient.start()
 
-        const targetOperatorClient = new VoteOnSuspectNodeService(client, target.operatorConfig, logger)
+        const targetClient = new StreamrClient(CONFIG_TEST)
+        const targetOperatorClient = new VoteOnSuspectNodeService(targetClient, target.operatorConfig, logger)
         await targetOperatorClient.start()
+        const subscriptions = await targetClient.getSubscriptions()
+        expect(subscriptions.length).toBe(0)
 
-        // get all operators from theGraph
+        const voterClient = new StreamrClient(CONFIG_TEST)
+        const voterOperatorClient = new VoteOnSuspectNodeService(voterClient, voter.operatorConfig, logger)
+        await voterOperatorClient.start()
 
-        // const voterOperatorClient = new VoteOnSuspectNodeService(client, voter.operatorConfig, logger)
-        // await voterOperatorClient.start()
+        logger.debug("deploying sponsorship contract")
+        const sponsorship = await deploySponsorship(config, adminWallet, {
+            streamId: streamId1 })
+        logger.debug("sponsoring sponsorship contract")
+        await (await token.connect(flagger.operatorWallet).approve(sponsorship.address, parseEther("500"))).wait()
+        await (await sponsorship.connect(flagger.operatorWallet).sponsor(parseEther("500"))).wait()
 
-        // get all operator contracts
-    
-        // let receivedReviewRequested = false
-        // voterOperatorClient.on("onReviewRequest", (targetOperator: string, sponsorship: string) => {
-        //     logger.debug(`got onRviewRequested event for targetOperator ${targetOperator} with sponsorship ${sponsorship}`)
-        //     receivedReviewRequested = true
-        // })
+        // operatorf - config - sponsonripfactory
+        // of2 - config
 
-        // logger.debug("deploying sponsorship contract")
-        // const sponsorship = await deploySponsorship(config, adminWallet , {
-        //     streamId: streamId1 })
-        // logger.debug("sponsoring sponsorship contract")
-        // await (await token.connect(adminWallet).approve(sponsorship.address, parseEther("500"))).wait()
-        // await (await sponsorship.sponsor(parseEther("500"))).wait()
-
-        // logger.debug("each operator delegates to its operactor contract")
-        // logger.debug("delegating from flagger: ", flagger.operatorWallet.address)
-        // await (await token.connect(flagger.operatorWallet).transferAndCall(flagger.operatorContract.address,
-        //     parseEther("200"), flagger.operatorWallet.address)).wait()
-        // logger.debug("delegating from target: ", target.operatorWallet.address)
-        // await (await token.connect(target.operatorWallet).transferAndCall(target.operatorContract.address,
-        //     parseEther("200"), target.operatorWallet.address)).wait()
-        // logger.debug("delegating from voter: ", voter.operatorWallet.address)
-        // await (await token.connect(voter.operatorWallet).transferAndCall(voter.operatorContract.address,
-        //     parseEther("200"), voter.operatorWallet.address)).wait()
+        logger.debug("each operator delegates to its operactor contract")
+        logger.debug("delegating from flagger: " + flagger.operatorWallet.address)
+        await (await token.connect(flagger.operatorWallet).transferAndCall(flagger.operatorContract.address,
+            parseEther("200"), flagger.operatorWallet.address)).wait()
+        logger.debug("delegating from target: " + target.operatorWallet.address)
+        await (await token.connect(target.operatorWallet).transferAndCall(target.operatorContract.address,
+            parseEther("200"), target.operatorWallet.address)).wait()
+        logger.debug("delegating from voter: " + voter.operatorWallet.address)
+        await (await token.connect(voter.operatorWallet).transferAndCall(voter.operatorContract.address,
+            parseEther("200"), voter.operatorWallet.address)).wait()
         
-        // await new Promise((resolve) => setTimeout(resolve, 5000))
+        logger.debug("staking to sponsorship contract from flagger and target and voter")
+        logger.debug("staking from flagger: " + flagger.operatorContract.address)
+        await (await flagger.operatorContract.stake(sponsorship.address, parseEther("150"))).wait()
+        logger.debug("staking from target: " + target.operatorContract.address)
+        await new Promise((resolve) => setTimeout(resolve, 3000))
+        await (await target.operatorContract.stake(sponsorship.address, parseEther("150"))).wait()
+        logger.debug("staking from voter: " + voter.operatorContract.address)
+        await new Promise((resolve) => setTimeout(resolve, 3000))
+        await (await voter.operatorContract.stake(sponsorship.address, parseEther("150"))).wait()
+        await new Promise((resolve) => setTimeout(resolve, 3000))
 
-        // logger.debug("staking to sponsorship contract from flagger and target and voter")
-        // logger.debug("staking from flagger: ", flagger.operatorContract.address)
-        // await (await flagger.operatorContract.stake(sponsorship.address, parseEther("150"))).wait()
-        // logger.debug("staking from target: ", target.operatorContract.address)
-        // await new Promise((resolve) => setTimeout(resolve, 3000))
-        // await (await target.operatorContract.stake(sponsorship.address, parseEther("150"))).wait()
-        // logger.debug("staking from voter: ", voter.operatorContract.address)
-        // await new Promise((resolve) => setTimeout(resolve, 3000))
-        // await (await voter.operatorContract.stake(sponsorship.address, parseEther("150"))).wait()
-        // await new Promise((resolve) => setTimeout(resolve, 3000))
+        waitForCondition(async () => (await targetClient.getSubscriptions()).length === 1, 10000, 1000)
         
-        // logger.debug("registering node addresses")
-        // // await (await flagger.operatorContract.setNodeAddresses([await flagger.operatorContract.owner()])).wait()
-        // const nodesettr = await (await flagger.operatorContract.setNodeAddresses([flagger.operatorWallet.address])).wait()
+        logger.debug("registering node addresses")
+        await (await flagger.operatorContract.setNodeAddresses([await flagger.operatorContract.owner()])).wait()
 
-        // logger.debug("flagging target operator")
-        // // flaggerOC -> sponsorshipC -> voterOC.emits
-        // const tr = await (await flagger.operatorContract.flag(sponsorship.address, target.operatorContract.address)).wait()
-        // await waitForCondition(() => receivedReviewRequested, 100000, 1000)
+        logger.debug("flagging target operator")
+        const tr = await (await flagger.operatorContract.flag(sponsorship.address, target.operatorContract.address)).wait()
+        waitForCondition(async () => (await targetClient.getSubscriptions()).length === 0, 10000, 1000)
         
         flaggerOperatorClient.stop()
     })

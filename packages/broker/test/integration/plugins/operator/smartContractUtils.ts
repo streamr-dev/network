@@ -27,7 +27,7 @@ export async function generateWalletWithGasAndTokens(provider: Provider): Promis
         try {
             // eslint-disable-next-line no-console
             // console.log("trying with nonce " + await adminWallet.getTransactionCount() + " time " + new Date().getTime() / 1000)
-            await (await token.transfer(newWallet.address, parseEther("1000"), {
+            await (await token.transfer(newWallet.address, parseEther("10000"), {
                 nonce: await adminWallet.getTransactionCount()
             })).wait()
             break
