@@ -174,7 +174,7 @@ export const fetchHttpStream = async function*(
         // in the browser, response.body will be a web stream. Convert this into a node stream.
         const source: Readable = WebStreamToNodeStream(response.body as unknown as (ReadableStream | Readable))
         stream = source.pipe(split2())
-        source.on('error', (err: Error) => stream?.destroy(err))
+        source.on('error', (err: Error) => stream!.destroy(err))
         stream.once('close', () => {
             abortController.abort()
         })
