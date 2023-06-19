@@ -65,8 +65,13 @@ const withErrorHandling = async <T>(
     try {
         return await execute()
     } catch (e: any) {
-        const suffixes = without(['reason', 'code'].map(field => (e[field] !== undefined ? `${field}=${e[field]}` : undefined)), undefined)
-        const wrappedError = new Error(`Error while ${action} contract call "${methodName}"${(suffixes.length > 0) ? ', ' + suffixes.join(', ') : ''}`)
+        const suffixes = without(
+            ['reason', 'code'].map((field) => (e[field] !== undefined ? `${field}=${e[field]}` : undefined)),
+            undefined
+        )
+        const wrappedError = new Error(
+            `Error while ${action} contract call "${methodName}"${(suffixes.length > 0) ? ', ' + suffixes.join(', ') : ''}`
+        )
         // @ts-expect-error unknown property
         wrappedError.reason = e
         throw wrappedError

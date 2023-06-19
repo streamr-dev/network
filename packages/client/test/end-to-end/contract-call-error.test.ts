@@ -12,6 +12,7 @@ describe('contract call error', () => {
             }
         })
         await expect(() => client.createStream('/path')).rejects.toThrow(
+            // eslint-disable-next-line max-len
             'Error while executing contract call "streamRegistry.createStream", reason=insufficient funds for intrinsic transaction cost, code=INSUFFICIENT_FUNDS'
         )
     })
@@ -30,7 +31,7 @@ describe('contract call error', () => {
             }
         })
         await expect(() => client.createStream('/path')).rejects.toThrow(
-            'Error while executing contract call \"streamRegistry.createStream\", reason=could not detect network, code=NETWORK_ERROR'
+            'Error while executing contract call "streamRegistry.createStream", reason=could not detect network, code=NETWORK_ERROR'
         )
     })
 })
