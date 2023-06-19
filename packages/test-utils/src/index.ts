@@ -1,12 +1,13 @@
-import { Readable } from "stream"
-import { EventEmitter } from "events"
-import http from 'http'
-import express from 'express'
-import cors from 'cors'
-import crypto from 'crypto'
 import { Wallet } from '@ethersproject/wallet'
 import { EthereumAddress, toEthereumAddress, waitForCondition, waitForEvent } from '@streamr/utils'
+import cors from 'cors'
+import crypto from 'crypto'
+import { EventEmitter, once } from "events"
+import express, { Request, Response } from 'express'
+import http from 'http'
+import { AddressInfo } from 'net'
 import fetch from 'node-fetch'
+import { Readable } from "stream"
 
 export type Event = string
 
@@ -304,5 +305,25 @@ export class Queue<T> {
 
     size(): number {
         return this.items.length
+    }
+}
+
+export const startTestServer = async (
+    endpoint: string,
+    onRequest: (req: Request, res: Response) => Promise<void>
+): Promise<{ url: string, stop: () => Promise<void> }> => {
+    const app = express()
+    app.get(endpoint, async (req, res) => {
+        await onRequest(req, res)
+    })
+    const server = app.listen()
+    await once(server, 'listening')
+    const port = (server.address() as AddressInfo).port
+    return {
+        url: `http://localhost:${port}`,
+        stop: async () => {
+            server.close()
+            await once(server, 'close')
+        }
     }
 }

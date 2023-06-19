@@ -1,8 +1,7 @@
 import { StreamPartIDUtils } from '@streamr/protocol'
-import { fastWallet } from '@streamr/test-utils'
+import { fastWallet, startTestServer } from '@streamr/test-utils'
 import { collect } from '@streamr/utils'
-import { once } from 'events'
-import express from 'express'
+import { Request, Response } from 'express'
 import range from 'lodash/range'
 import { createQueryString, fetchHttpStream, getEndpointUrl } from '../../src/utils/utils'
 import { createMockMessage } from '../test-utils/utils'
@@ -30,15 +29,13 @@ describe('utils', () => {
 
     it('fetchHttpStream', async () => {
         const MESSAGE_COUNT = 5
-        const MOCK_SERVER_PORT = 12345
-        const app = express()
-        app.get('/endpoint', async (_req, res) => {
+        const server = await startTestServer('/', async (_req: Request, res: Response) => {
             const publisher = fastWallet()
             for (const i of range(MESSAGE_COUNT)) {
                 const msg = await createMockMessage({
                     streamPartId: StreamPartIDUtils.parse('stream#0'),
                     publisher,
-                    content: {
+                    content: { 
                         mockId: i
                     }
                 })
@@ -46,10 +43,8 @@ describe('utils', () => {
             }
             res.end()
         })
-        const server = app.listen(MOCK_SERVER_PORT)
-        await once(server, 'listening')
-        const msgs = await collect(fetchHttpStream(`http://localhost:${MOCK_SERVER_PORT}/endpoint`, () => undefined as any))
-        expect(msgs.map((m) => (m.getParsedContent() as any).mockId)).toEqual([0, 1, 2, 3, 4])
-        server.close()
+        const msgs = await collect(fetchHttpStream(server.url, () => undefined as any))
+        expect(msgs.map((m) => (m.getParsedContent() as any).mockId)).toEqual(range(MESSAGE_COUNT))
+        await server.stop()
     })
 })
