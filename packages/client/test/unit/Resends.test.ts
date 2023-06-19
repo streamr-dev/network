@@ -1,10 +1,10 @@
 import 'reflect-metadata'
 
 import { StreamPartIDUtils } from '@streamr/protocol'
-import { randomEthereumAddress } from '@streamr/test-utils'
+import { randomEthereumAddress, startTestServer } from '@streamr/test-utils'
 import { collect } from '@streamr/utils'
 import { Resends } from '../../src/subscribe/Resends'
-import { mockLoggerFactory, startTestServer } from '../test-utils/utils'
+import { mockLoggerFactory } from '../test-utils/utils'
 
 describe('Resends', () => {
 

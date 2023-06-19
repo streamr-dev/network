@@ -1,10 +1,10 @@
 import { StreamPartIDUtils } from '@streamr/protocol'
-import { fastWallet } from '@streamr/test-utils'
+import { fastWallet, startTestServer } from '@streamr/test-utils'
 import { collect } from '@streamr/utils'
 import { Request, Response } from 'express'
 import range from 'lodash/range'
 import { createQueryString, fetchHttpStream, getEndpointUrl } from '../../src/utils/utils'
-import { createMockMessage, startTestServer } from '../test-utils/utils'
+import { createMockMessage } from '../test-utils/utils'
 
 describe('utils', () => {
 
