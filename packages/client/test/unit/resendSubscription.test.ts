@@ -100,7 +100,6 @@ describe('resend subscription', () => {
         sub.on('resendComplete', onResendComplete)
         setImmediate(() => outputMessages.collect(sub))
 
-        // TODO duplikaattina historical message ja/tai gapFilled
         const bufferedRealtimeMessages = await createMessages(5, 'bufferedRealtime')
         for await (const msg of bufferedRealtimeMessages) {
             await sub.push(msg)
