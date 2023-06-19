@@ -79,12 +79,6 @@ export class PushBuffer<T> implements IPushBuffer<T> {
         return this.writeGate.check()
     }
 
-    filter(fn: G.GeneratorFilter<T>): PushBuffer<unknown> {
-        const p = new PushBuffer(this.bufferSize)
-        pull(G.filter(this, fn), p)
-        return p
-    }
-
     private updateWriteGate(): void {
         this.writeGate.setOpenState(!this.isFull())
     }
