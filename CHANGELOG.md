@@ -17,6 +17,8 @@ found [here](packages/broker/CHANGELOG.md).
 
 #### Changed
 
+- Improve error messages for contract call errors (https://github.com/streamr-dev/network/pull/1558)
+
 #### Deprecated
 
 #### Removed
