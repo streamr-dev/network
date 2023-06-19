@@ -16,7 +16,7 @@
     "build-browser": "webpack --mode=development --progress",
     "generate-protoc-code": "./proto.sh",
     "check": "tsc -p ./tsconfig.jest.json --noEmit",
-    "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache src/proto || true",
+    "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "coverage": "jest --coverage",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "test": "jest",
