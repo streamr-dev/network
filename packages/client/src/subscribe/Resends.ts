@@ -9,6 +9,7 @@ import { StorageNodeRegistry } from '../registry/StorageNodeRegistry'
 import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
 import { forEach, map, transformError } from '../utils/GeneratorUtils'
 import { LoggerFactory } from '../utils/LoggerFactory'
+import { pull } from '../utils/PushBuffer'
 import { PushPipeline } from '../utils/PushPipeline'
 import { FetchHttpStreamResponseError, createQueryString, fetchHttpStream } from '../utils/utils'
 import { MessagePipelineFactory } from './MessagePipelineFactory'
@@ -196,8 +197,9 @@ export class Resends {
         setImmediate(async () => {
             let count = 0
             const messages = map(lines, (line: string) => StreamMessage.deserialize(line))
-            await messageStream.pull(
-                forEach(messages, () => count++)
+            await pull(
+                forEach(messages, () => count++),
+                messageStream
             )
             this.logger.debug('Finished resend', { loggerIdx: traceId, messageCount: count })
         })
