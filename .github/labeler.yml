@@ -13,6 +13,9 @@ broker:
 browser-test-runner:
   - 'package/browser-test-runner/*'
   - 'package/browser-test-runner/**/*'
+trackerless-network:
+  - 'packages/trackerless-network/*'
+  - 'packages/trackerless-network/**/*'
 dht:
   - 'packages/dht/*'
   - 'packages/dht/**/*'
