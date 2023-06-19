@@ -1,5 +1,4 @@
 import { JsonRpcProvider, Provider } from "@ethersproject/providers"
-import { OperatorClientConfig } from '../../../../src/plugins/operator/OperatorClient'
 import { Chains } from "@streamr/config"
 import { Wallet } from "@ethersproject/wallet"
 import { parseEther } from "@ethersproject/units"
@@ -16,6 +15,7 @@ import { Contract } from "@ethersproject/contracts"
 import { deployOperatorContract } from "./deployOperatorContract"
 import { deploySponsorship } from "./deploySponsorshipContract"
 import { MaintainOperatorValueService } from "../../../../src/plugins/operator/MaintainOperatorValueService"
+import { OperatorServiceConfig } from "../../../../src/plugins/operator/OperatorPlugin"
 
 const config = Chains.load()["dev1"]
 const adminPrivKey = "0x4059de411f15511a85ce332e7a428f36492ab4e87c7830099dadbf130f1896ae"
@@ -36,7 +36,7 @@ describe("MaintainOperatorValueService", () => {
     let streamId1: string
     let streamId2: string
 
-    let opertatorConfig: OperatorClientConfig
+    let opertatorConfig: OperatorServiceConfig
 
     const deployNewOperator = async () => {
         const operatorWallet = Wallet.createRandom().connect(provider)

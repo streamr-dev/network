@@ -5,20 +5,26 @@ import { AnnounceNodeService } from './AnnounceNodeService'
 import { InspectRandomNodeService } from './InspectRandomNodeService'
 import { MaintainOperatorContractService } from './MaintainOperatorContractService'
 import { MaintainTopologyService } from './MaintainTopologyService'
-import { VoteOnSuspectNodeService } from './VoteOnSuspectNodeService'
-import { OperatorClient, OperatorClientConfig } from './OperatorClient'
 import fetch from 'node-fetch'
-import { Logger, toEthereumAddress } from '@streamr/utils'
-import { JsonRpcProvider } from '@ethersproject/providers'
-import { MaintainOperatorValueService } from './MaintainOperatorValueService'
+import { FetchResponse, toEthereumAddress } from '@streamr/utils'
+import { Provider, JsonRpcProvider } from '@ethersproject/providers'
+import { Signer } from '@ethersproject/abstract-signer'
 import { Wallet } from 'ethers'
+import { VoteOnSuspectNodeService } from './VoteOnSuspectNodeService'
+import { MaintainTopologyHelper } from './MaintainTopologyHelper'
+import { MaintainOperatorValueService } from './MaintainOperatorValueService'
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface OperatorPluginConfig {
     operatorContractAddress: string
 }
 
-const logger = new Logger(module)
+export interface OperatorServiceConfig {
+    provider: Provider
+    signer: Signer
+    operatorContractAddress: string
+    theGraphUrl: string
+    fetch: (url: string, init?: Record<string, unknown>) => Promise<FetchResponse>
+}
 
 export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     private readonly announceNodeService: AnnounceNodeService
@@ -26,14 +32,12 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     private readonly maintainOperatorContractService = new MaintainOperatorContractService()
     private readonly voteOnSuspectNodeService = new VoteOnSuspectNodeService()
     private readonly maintainTopologyService: MaintainTopologyService
-    
-    private operatorClientConfig: OperatorClientConfig
     private maintainOperatorValueService: MaintainOperatorValueService
 
     constructor(options: PluginOptions) {
         super(options)
         const provider = new JsonRpcProvider(this.brokerConfig.client.contracts!.streamRegistryChainRPCs!.rpcs[0].url)
-        this.operatorClientConfig = {
+        const serviceHelperConfig = {
             provider,
             operatorContractAddress: this.pluginConfig.operatorContractAddress,
             theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`,
@@ -46,9 +50,12 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         )
         this.maintainTopologyService = new MaintainTopologyService(
             this.streamrClient,
-            new OperatorClient(this.operatorClientConfig, logger as any) // TODO: casting?
+            new MaintainTopologyHelper(
+                serviceHelperConfig
+            )
         )
-        this.maintainOperatorValueService = new MaintainOperatorValueService(this.operatorClientConfig)
+        this.maintainOperatorValueService = new MaintainOperatorValueService(serviceHelperConfig)
+    
     }
 
     async start(): Promise<void> {

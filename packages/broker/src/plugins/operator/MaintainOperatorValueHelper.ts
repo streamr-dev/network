@@ -1,15 +1,15 @@
 import { Logger } from '@streamr/utils'
-import { OperatorClientConfig } from "./OperatorClient"
 import { Contract } from 'ethers'
 import { Operator, StreamrConfig, operatorABI, streamrConfigABI } from '@streamr/network-contracts'
+import { OperatorServiceConfig } from './OperatorPlugin'
 
 const logger = new Logger(module)
 
 export class MaintainOperatorValueHelper {
-    config: OperatorClientConfig
+    config: OperatorServiceConfig
     operator: Operator
 
-    constructor(config: OperatorClientConfig) {
+    constructor(config: OperatorServiceConfig) {
         logger.trace('MaintainOperatorValueHelper created')
         this.config = config
         this.operator = new Contract(config.operatorContractAddress, operatorABI, this.config.signer) as unknown as Operator

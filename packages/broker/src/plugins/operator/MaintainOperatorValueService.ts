@@ -1,17 +1,17 @@
 import { Logger } from '@streamr/utils'
-import { OperatorClientConfig } from "./OperatorClient"
 import { MaintainOperatorValueHelper } from "./MaintainOperatorValueHelper"
+import { OperatorServiceConfig } from './OperatorPlugin'
 
 const logger = new Logger(module)
 
 const CHECK_VALUE_INTERVAL = 1000 * 60 * 60 * 24 // 1 day
 
 export class MaintainOperatorValueService {
-    config: OperatorClientConfig
+    config: OperatorServiceConfig
     private checkValueInterval: NodeJS.Timeout | null = null
     private helper: MaintainOperatorValueHelper
 
-    constructor(config: OperatorClientConfig) {
+    constructor(config: OperatorServiceConfig) {
         logger.trace('MaintainOperatorValueService created')
         this.config = config
         this.helper = new MaintainOperatorValueHelper(config)

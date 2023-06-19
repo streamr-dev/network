@@ -3,13 +3,13 @@ import { Provider } from "@ethersproject/providers"
 import { operatorABI, sponsorshipABI } from "@streamr/network-contracts"
 import type { Operator, Sponsorship } from "@streamr/network-contracts"
 import { EventEmitter } from "eventemitter3"
-import { FetchResponse, Logger, TheGraphClient } from "@streamr/utils"
-import { Signer } from "ethers"
+import { Logger, TheGraphClient } from "@streamr/utils"
+import { OperatorServiceConfig } from "./OperatorPlugin"
 
 /**
- * Events emitted by {@link OperatorClient}.
+ * Events emitted by {@link MaintainTopologyHelper}.
  */
-export interface OperatorClientEvents {
+export interface MaintainTopologyHelperEvents {
     /**
      * Emitted if an error occurred in the subscription.
      */
@@ -18,53 +18,42 @@ export interface OperatorClientEvents {
     /**
      * Emitted when staking into a Sponsorship on a stream that we haven't staked on before (in another Sponsorship)
      */
-    addStakedStream: (streamId: string, blockNumber: number) => void
+    addStakedStream: (streamIds: string[]) => void
 
     /**
      * Emitted when a unstaked from ALL Sponsorships for the given stream
      */
-    removeStakedStream: (streamId: string, blockNumber: number) => void
+    removeStakedStream: (streamId: string) => void
 }
 
-export interface OperatorClientConfig {
-    provider: Provider
-    // chain?:
-    operatorContractAddress: string
-    theGraphUrl: string
-    fetch: (url: string, init?: Record<string, unknown>) => Promise<FetchResponse>
-    signer?: Signer
-}
-
-export class OperatorClient extends EventEmitter<OperatorClientEvents> {
+export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperEvents> {
     provider: Provider
     address: string
     contract: Operator
     streamIdOfSponsorship: Map<string, string> = new Map()
     sponsorshipCountOfStream: Map<string, number> = new Map()
     theGraphClient: TheGraphClient
-    private readonly logger: Logger
+    private readonly logger = new Logger(module)
 
-    constructor(config: OperatorClientConfig, logger: Logger) {
+    constructor(config: OperatorServiceConfig) {
         super()
 
-        this.logger = logger
         this.logger.trace('OperatorClient created')
         this.theGraphClient = new TheGraphClient({
             serverUrl: config.theGraphUrl,
             fetch: config.fetch,
-            logger
+            logger: this.logger
         })
         this.address = config.operatorContractAddress
         this.provider = config.provider
         this.contract = new Contract(config.operatorContractAddress, operatorABI, this.provider) as unknown as Operator
-        logger.info(`OperatorClient created for ${config.operatorContractAddress}`)
-        // log("getting all streams from TheGraph")
-        // this.getStakedStreams()
+        this.logger.info(`OperatorClient created for ${config.operatorContractAddress}`)
     }
 
     async start(): Promise<void> {
         this.logger.info("Starting OperatorClient")
         this.logger.info("Subscribing to Staked and Unstaked events")
+        const latestBlock = await this.contract.provider.getBlockNumber()
         this.contract.on("Staked", async (sponsorship: string) => {
             this.logger.info(`got Staked event ${sponsorship}`)
             const sponsorshipAddress = sponsorship.toLowerCase()
@@ -78,10 +67,9 @@ export class OperatorClient extends EventEmitter<OperatorClientEvents> {
             const sponsorshipCount = (this.sponsorshipCountOfStream.get(streamId) || 0) + 1
             this.sponsorshipCountOfStream.set(streamId, sponsorshipCount)
             if (sponsorshipCount === 1) {
-                this.emit("addStakedStream", streamId, await this.contract.provider.getBlockNumber())
+                this.emit("addStakedStream", [streamId])
             }
         })
-        // this.provider.on({ address: config.operatorContractAddress }, (event) => { console.log("Got event %s", event.topics[0]) })
         this.contract.on("Unstaked", async (sponsorship: string) => {
             this.logger.info(`got Unstaked event ${sponsorship}`)
             const sponsorshipAddress = sponsorship.toLowerCase()
@@ -95,10 +83,14 @@ export class OperatorClient extends EventEmitter<OperatorClientEvents> {
             this.sponsorshipCountOfStream.set(streamId, sponsorshipCount)
             if (sponsorshipCount === 0) {
                 this.sponsorshipCountOfStream.delete(streamId)
-                this.emit("removeStakedStream", streamId, await this.contract.provider.getBlockNumber())
+                this.emit("removeStakedStream", streamId)
             }
         })
-        await this.pullStakedStreams()
+        
+        const initalStreams = await this.pullStakedStreams(latestBlock)
+        if (initalStreams.length > 0) {
+            this.emit("addStakedStream", initalStreams)
+        }
     }
 
     async getStreamId(sponsorshipAddress: string): Promise<string> {
@@ -106,11 +98,7 @@ export class OperatorClient extends EventEmitter<OperatorClientEvents> {
         return bounty.streamId()
     }
 
-    async getStakedStreams(): Promise<string[]> {
-        return Array.from(this.sponsorshipCountOfStream.keys())
-    }
-
-    private async pullStakedStreams(): Promise<{ streamIds: string[], blockNumber: number }> {
+    private async pullStakedStreams(requiredBlockNumber: number): Promise<string[]> {
         this.logger.info(`getStakedStreams for ${this.address.toLowerCase()}`)
         const createQuery = (lastId: string, pageSize: number) => {
             return {
@@ -135,16 +123,14 @@ export class OperatorClient extends EventEmitter<OperatorClientEvents> {
                     `
             }
         }
-        let latestBlockNumber = 0
         const parseItems = (response: any) => {
-            // eslint-disable-next-line no-underscore-dangle
-            latestBlockNumber = response._meta.block.number
             if (!response.operator) {
                 this.logger.error(`Operator ${this.address.toLowerCase()} not found in TheGraph`)
                 return []
             }
             return response.operator.stakes
         }
+        this.theGraphClient.updateRequiredBlockNumber(requiredBlockNumber)
         const queryResult = this.theGraphClient.queryEntities<any>(createQuery, parseItems)
 
         for await (const stake of queryResult) {
@@ -157,10 +143,7 @@ export class OperatorClient extends EventEmitter<OperatorClientEvents> {
                 this.logger.info(`added ${stake.sponsorship.id} to stream ${streamId} with sponsorshipCount ${sponsorshipCount}`)
             }
         }
-        return {
-            streamIds: Array.from(this.sponsorshipCountOfStream.keys()),
-            blockNumber: latestBlockNumber
-        }
+        return Array.from(this.sponsorshipCountOfStream.keys())
     }
 
     stop(): void {

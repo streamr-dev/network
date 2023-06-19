@@ -1,6 +1,6 @@
 import { MaintainTopologyService } from '../../../../src/plugins/operator/MaintainTopologyService'
 import fetch from 'node-fetch'
-import { Logger, waitForCondition } from '@streamr/utils'
+import { waitForCondition } from '@streamr/utils'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { parseEther } from '@ethersproject/units'
 import StreamrClient, { CONFIG_TEST, Stream } from 'streamr-client'
@@ -12,7 +12,7 @@ import {
     getTokenContract
 } from './smartContractUtils'
 import { StreamPartID } from '@streamr/protocol'
-import { OperatorClient } from '../../../../src/plugins/operator/OperatorClient'
+import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
 
 async function setUpStreams(): Promise<[Stream, Stream]> {
     const privateKey = await fetchPrivateKeyWithGas()
@@ -53,18 +53,23 @@ describe('MaintainTopologyService', () => {
         await (await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther("200"), operatorWallet.address)).wait()
         await (await operatorContract.stake(sponsorship1.address, parseEther("100"))).wait()
 
-        const client = new StreamrClient({
-            ...CONFIG_TEST
-        })
-        service = new MaintainTopologyService(client, new OperatorClient({
+        const serviceConfig = {
             provider,
+            signer: operatorWallet,
             operatorContractAddress: operatorContract.address,
             theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`,
             fetch: fetch
-        }, new Logger(module) as any)) // TODO: logger casting issue
+        }
+
+        const client = new StreamrClient({
+            ...CONFIG_TEST
+        })
+        service = new MaintainTopologyService(client, new MaintainTopologyHelper(
+            serviceConfig
+        ))
         await service.start()
 
-        await waitForCondition(async () => (await client.getSubscriptions()).length === 1)
+        await waitForCondition(async () => (await client.getSubscriptions()).length === 1, 10000, 1000)
         expect(await getSubscribedStreamPartIds(client)).toEqual(stream1.getStreamParts())
 
         await (await operatorContract.stake(sponsorship2.address, parseEther("100"))).wait()
