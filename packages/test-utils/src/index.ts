@@ -291,7 +291,8 @@ export async function fetchPrivateKeyWithGas(): Promise<string> {
 }
 
 export class Queue<T> {
-    items: T[] = []
+
+    private readonly items: T[] = []
 
     push(item: T): void {
         this.items.push(item)
@@ -304,5 +305,19 @@ export class Queue<T> {
 
     size(): number {
         return this.items.length
+    }
+
+    async collect(src: AsyncIterable<T>): Promise<void> {
+        for await (const item of src) {
+            this.push(item)
+        }
+    }
+
+    values(): T[] {
+        return this.items
+    }
+
+    [Symbol.iterator]() {
+        return this.items[Symbol.iterator]()
     }
 }
