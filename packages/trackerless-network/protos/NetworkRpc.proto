@@ -62,9 +62,8 @@ message StreamMessage {
   string signature = 4;
   MessageRef messageRef = 5;
   optional MessageRef previousMessageRef = 6;
-  optional string previousPeer = 7;
-  optional string groupKeyId = 8;
-  optional EncryptedGroupKey newGroupKey = 9;
+  optional string groupKeyId = 7;
+  optional EncryptedGroupKey newGroupKey = 8;
 }
 
 message GroupKeyRequest {

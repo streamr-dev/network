@@ -12,6 +12,11 @@ describe('StreamNodeServer', () => {
         type: 0
     }
 
+    const mockSender: PeerDescriptor = {
+        kademliaId: PeerID.fromString('mock-sender').value,
+        type: 0
+    }
+
     const content: ContentMessage = {
         body: JSON.stringify({ hello: "WORLD" })
     }
@@ -36,7 +41,7 @@ describe('StreamNodeServer', () => {
     })
     
     it('Server sendData()', async () => {
-        await streamNodeServer.sendData(message, {} as any)
+        await streamNodeServer.sendData(message, { incomingSourceDescriptor: mockSender } as any)
         expect(mockDuplicateCheck).toHaveBeenCalledTimes(1)
         expect(mockBroadcast).toHaveBeenCalledTimes(1)
     })
@@ -46,7 +51,7 @@ describe('StreamNodeServer', () => {
             senderId: 'sender',
             randomGraphId: 'random-graph'
         }
-        await streamNodeServer.leaveStreamNotice(leaveNotice, {} as any)
+        await streamNodeServer.leaveStreamNotice(leaveNotice, { incomingSourceDescriptor: mockSender } as any)
         expect(mockOnLeaveNotice).toHaveBeenCalledTimes(1)
     })
 
