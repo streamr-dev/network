@@ -1,11 +1,11 @@
 import 'reflect-metadata'
 
 import { MessageID, StreamMessage, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
-import { randomEthereumAddress } from '@streamr/test-utils'
+import { randomEthereumAddress, startTestServer } from '@streamr/test-utils'
 import { collect } from '@streamr/utils'
 import range from 'lodash/range'
 import { Resends } from '../../src/subscribe/Resends'
-import { mockLoggerFactory, startTestServer } from '../test-utils/utils'
+import { mockLoggerFactory  } from '../test-utils/utils'
 
 const createResends = (serverUrl: string) => {
     return new Resends(

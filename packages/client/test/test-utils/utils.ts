@@ -5,10 +5,7 @@ import { MAX_PARTITION_COUNT, StreamMessage, StreamPartID, StreamPartIDUtils } f
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { EthereumAddress, Logger, merge, wait, waitForCondition } from '@streamr/utils'
 import crypto from 'crypto'
-import { once } from 'events'
-import express, { Request, Response } from 'express'
 import { mock } from 'jest-mock-extended'
-import { AddressInfo } from 'net'
 import { DependencyContainer } from 'tsyringe'
 import { Authentication, createPrivateKeyAuthentication } from '../../src/Authentication'
 import { StreamrClientConfig } from '../../src/Config'
@@ -225,24 +222,4 @@ export const waitForCalls = async (mockFunction: jest.Mock<any>, n: number): Pro
     await waitForCondition(() => mockFunction.mock.calls.length >= n, 1000, 10, undefined, () => {
         return `Timeout while waiting for calls: got ${mockFunction.mock.calls.length} out of ${n}`
     })
-}
-
-export const startTestServer = async (
-    endpoint: string,
-    onRequest: (req: Request, res: Response) => Promise<void>
-): Promise<{ url: string, stop: () => Promise<void> }> => {
-    const app = express()
-    app.get(endpoint, async (req, res) => {
-        await onRequest(req, res)
-    })
-    const server = app.listen()
-    await once(server, 'listening')
-    const port = (server.address() as AddressInfo).port
-    return {
-        url: `http://localhost:${port}`,
-        stop: async () => {
-            server.close()
-            await once(server, 'close')
-        }
-    }
 }
