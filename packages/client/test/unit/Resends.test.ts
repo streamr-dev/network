@@ -23,7 +23,7 @@ const createResends = (serverUrl: string) => {
 
 describe('Resends', () => {
 
-    it('error handling', async () => {
+    it('error response', async () => {
         const server = await startTestServer('/streams/:streamId/data/partitions/:partition/:resendType', async (_req, res) => {
             res.status(400).json({
                 error: 'Mock error'
@@ -39,6 +39,18 @@ describe('Resends', () => {
             code: 'STORAGE_NODE_ERROR'
         })
         await server.stop()
+    })
+
+    it('invalid server url', async () => {
+        const resends = createResends('http://mock.test')
+        await expect(async () => {
+            const messages = await resends.resend(StreamPartIDUtils.parse('stream#0'), { last: 1, raw: true })
+            await collect(messages)
+        }).rejects.toThrowStreamrError({
+            // eslint-disable-next-line max-len
+            message: `request to http://mock.test/streams/stream/data/partitions/0/last?count=1&format=raw failed, reason: getaddrinfo ENOTFOUND mock.test`,
+            code: 'STORAGE_NODE_ERROR'
+        })
     })
 
     it('large response', async () => {

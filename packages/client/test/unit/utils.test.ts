@@ -1,8 +1,7 @@
 import { collect, waitForCondition } from '@streamr/utils'
 import { Request, Response } from 'express'
 import range from 'lodash/range'
-import { Response as FetchResponse } from 'node-fetch'
-import { createQueryString, fetchHttpStream, getEndpointUrl } from '../../src/utils/utils'
+import { FetchHttpStreamResponseError, createQueryString, fetchHttpStream, getEndpointUrl } from '../../src/utils/utils'
 import { startTestServer } from '../test-utils/utils'
 import { nextValue } from './../../src/utils/iterators'
 
@@ -37,7 +36,7 @@ describe('utils', () => {
                 }
                 res.end()
             })
-            const lines = await collect(fetchHttpStream(server.url, () => undefined as any))
+            const lines = await collect(fetchHttpStream(server.url))
             expect(lines.map((line) => parseInt(line))).toEqual(range(LINE_COUNT))
             await server.stop()
         })
@@ -51,7 +50,7 @@ describe('utils', () => {
                 res.write(`foobar\n`)
             })
             const abortController = new AbortController()
-            const iterator = fetchHttpStream(server.url, () => undefined as any, abortController)[Symbol.asyncIterator]()
+            const iterator = fetchHttpStream(server.url, abortController)[Symbol.asyncIterator]()
             const line = await nextValue(iterator)
             expect(line).toBe('foobar')
             abortController.abort()
@@ -60,16 +59,21 @@ describe('utils', () => {
             await server.stop()
         })
 
-        it('error code from response', async () => {
+        it('error response', async () => {
             const server = await startTestServer('/foo', async () => {})
-            const parseError = async (response: FetchResponse) => new Error(`status=${response.status}`)
-            const iterator = fetchHttpStream(`${server.url}/bar`, parseError)[Symbol.asyncIterator]()
-            await expect(() => nextValue(iterator)).rejects.toThrow('status=404')
+            const iterator = fetchHttpStream(`${server.url}/bar`)[Symbol.asyncIterator]()
+            try {
+                await nextValue(iterator)
+                fail('Should throw')
+            } catch (err) {
+                expect(err).toBeInstanceOf(FetchHttpStreamResponseError)
+                expect(err.response.status).toBe(404)
+            }
             await server.stop()
         })
 
         it('invalid host', async () => {
-            const iterator = fetchHttpStream('http://mock.test', () => undefined as any)[Symbol.asyncIterator]()
+            const iterator = fetchHttpStream('http://mock.test')[Symbol.asyncIterator]()
             await expect(() => nextValue(iterator)).rejects.toThrow(/getaddrinfo ENOTFOUND/)
         })
     })

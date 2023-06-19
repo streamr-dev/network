@@ -148,9 +148,18 @@ export const createQueryString = (query: Record<string, any>): string => {
     return new URLSearchParams(withoutEmpty).toString()
 }
 
+export class FetchHttpStreamResponseError extends Error {
+
+    response: Response
+
+    constructor(response: Response) {
+        super(`Fetch error, url=${response.url}`)
+        this.response = response
+    }
+}
+
 export const fetchHttpStream = async function*(
     url: string,
-    parseError: (response: Response) => Promise<Error>,
     abortController = new AbortController()
 ): AsyncGenerator<string, void, undefined> {
     logger.debug('Send HTTP request', { url })
@@ -163,7 +172,7 @@ export const fetchHttpStream = async function*(
         status: response.status,
     })
     if (!response.ok) {
-        throw await parseError(response)
+        throw new FetchHttpStreamResponseError(response)
     }
     if (!response.body) {
         throw new Error('No Response Body')
