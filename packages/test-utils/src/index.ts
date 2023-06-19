@@ -317,7 +317,7 @@ export class Queue<T> {
         return this.items
     }
 
-    [Symbol.iterator]() {
+    [Symbol.iterator](): Iterator<T> {
         return this.items[Symbol.iterator]()
     }
 }
