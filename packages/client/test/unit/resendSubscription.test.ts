@@ -1,17 +1,17 @@
 import { StreamMessage, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
-import { Queue, fastWallet } from '@streamr/test-utils'
+import { Queue } from '@streamr/test-utils'
 import { waitForCondition } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import last from 'lodash/last'
-import { createPrivateKeyAuthentication } from '../../src/Authentication'
 import { Message } from '../../src/Message'
 import { MessageFactory } from '../../src/publish/MessageFactory'
 import { ResendRangeOptions } from '../../src/subscribe/Resends'
 import { Subscription, SubscriptionEvents } from '../../src/subscribe/Subscription'
 import { initResendSubscription } from '../../src/subscribe/resendSubscription'
 import { PushPipeline } from '../../src/utils/PushPipeline'
-import { createGroupKeyQueue, createStreamRegistryCached, mockLoggerFactory } from '../test-utils/utils'
+import { createGroupKeyQueue, createRandomAuthentication, createStreamRegistryCached, mockLoggerFactory } from '../test-utils/utils'
 
+const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
 const MAX_GAP_REQUESTS = 2
 
 const createPushPipeline = (messages: StreamMessage[]) => {
@@ -35,15 +35,13 @@ const expectEqualMessageCollections = (actual: Iterable<Message>, expected: Stre
 
 describe('resend subscription', () => {
 
-    let streamPartId: StreamPartID
     let messageFactory: MessageFactory
 
     beforeEach(async () => {
-        streamPartId = StreamPartIDUtils.parse('stream#0')
-        const authentication = createPrivateKeyAuthentication(fastWallet().privateKey, undefined as any)
+        const authentication = createRandomAuthentication()
         messageFactory = new MessageFactory({
             authentication,
-            streamId: StreamPartIDUtils.getStreamID(streamPartId),
+            streamId: StreamPartIDUtils.getStreamID(STREAM_PART_ID),
             streamRegistry: createStreamRegistryCached({
                 isPublicStream: true
             }),
@@ -65,7 +63,7 @@ describe('resend subscription', () => {
         gapFill = true
     ) => {
         const eventEmitter = new EventEmitter<SubscriptionEvents>()
-        const sub = new Subscription(streamPartId, false, eventEmitter, mockLoggerFactory())
+        const sub = new Subscription(STREAM_PART_ID, false, eventEmitter, mockLoggerFactory())
         initResendSubscription(
             sub,
             undefined as any,
