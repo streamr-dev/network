@@ -86,8 +86,8 @@ describe("MaintainOperatorValueService", () => {
         // deploy 2 sponsorships, sponsor 200 & stake 100 into both of them
         const sponsorship1 = await deploySponsorship(config, operatorWallet, { streamId: streamId1 })
         const sponsorship2 = await deploySponsorship(config, operatorWallet, { streamId: streamId2 })
-        await (await token.connect(operatorWallet).transferAndCall(sponsorship1.address, parseEther("200"), operatorWallet.address)).wait()
-        await (await token.connect(operatorWallet).transferAndCall(sponsorship2.address, parseEther("200"), operatorWallet.address)).wait()
+        await (await token.connect(operatorWallet).transferAndCall(sponsorship1.address, parseEther("200"), "0x")).wait()
+        await (await token.connect(operatorWallet).transferAndCall(sponsorship2.address, parseEther("200"), "0x")).wait()
         await (await operatorContract.stake(sponsorship1.address, parseEther("100"))).wait()
         await (await operatorContract.stake(sponsorship2.address, parseEther("100"))).wait()
 
@@ -124,8 +124,8 @@ describe("MaintainOperatorValueService", () => {
         // deploy 2 sponsorships, sponsor 200 & stake 100 into both of them
         const sponsorship1 = await deploySponsorship(config, operatorWallet, { streamId: streamId1 })
         const sponsorship2 = await deploySponsorship(config, operatorWallet, { streamId: streamId2 })
-        await (await token.connect(operatorWallet).transferAndCall(sponsorship1.address, parseEther("200"), operatorWallet.address)).wait()
-        await (await token.connect(operatorWallet).transferAndCall(sponsorship2.address, parseEther("200"), operatorWallet.address)).wait()
+        await (await token.connect(operatorWallet).transferAndCall(sponsorship1.address, parseEther("200"), "0x")).wait()
+        await (await token.connect(operatorWallet).transferAndCall(sponsorship2.address, parseEther("200"), "0x")).wait()
         await (await operatorContract.stake(sponsorship1.address, parseEther("100"))).wait()
         await (await operatorContract.stake(sponsorship2.address, parseEther("100"))).wait()
 
