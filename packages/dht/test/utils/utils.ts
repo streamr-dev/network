@@ -16,7 +16,9 @@ import {
     WebSocketConnectionRequest,
     WebSocketConnectionResponse,
     RecursiveFindRequest, 
-    FindMode
+    FindMode,
+    DeleteDataRequest,
+    DeleteDataResponse
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { PeerID } from '../../src/helpers/PeerID'
@@ -225,6 +227,9 @@ export const MockStoreService: IStoreServiceWithError = {
     },
     async migrateData(_request: MigrateDataRequest, _context: ServerCallContext): Promise<MigrateDataResponse> {
         return MigrateDataResponse.create()
+    },
+    async deleteData(_request: DeleteDataRequest, _context: ServerCallContext): Promise<DeleteDataResponse> {
+        return DeleteDataResponse.create()
     }
 }
 

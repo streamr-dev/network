@@ -23,6 +23,7 @@ service RoutingService {
 service StoreService {
   rpc storeData (StoreDataRequest) returns (StoreDataResponse);
   rpc migrateData (MigrateDataRequest) returns (MigrateDataResponse);
+  rpc deleteData (DeleteDataRequest) returns (DeleteDataResponse);
 }
 
 service RecursiveFindSessionService {
@@ -56,6 +57,7 @@ message StoreDataRequest {
   bytes kademliaId = 1;
   google.protobuf.Any data = 2;
   uint32 ttl = 3;
+  google.protobuf.Timestamp storerTime = 4;
 }
 
 message StoreDataResponse {
@@ -70,6 +72,14 @@ message MigrateDataResponse {
   string error = 1;
 }
 
+message DeleteDataRequest {
+  bytes kademliaId = 1;
+}
+
+message DeleteDataResponse {
+  bool deleted = 1;
+}
+
 message DataEntry {
   PeerDescriptor storer = 1;
   bytes kademliaId = 2;
@@ -77,6 +87,8 @@ message DataEntry {
   google.protobuf.Timestamp storedAt = 4; 
   uint32 ttl = 5;   // milliseconds
   bool stale = 6;
+  bool deleted = 7;
+  google.protobuf.Timestamp storerTime = 8;
 }
 
 message ClosestPeersRequest {

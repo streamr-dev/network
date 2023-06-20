@@ -129,7 +129,8 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
         dataEntries.forEach((entry) => {
             const storerKey = keyFromPeerDescriptor(entry.storer!)
             const existingEntry = this.foundData.get(storerKey)
-            if (!existingEntry || existingEntry.storedAt! < entry.storedAt!) {
+            if (!existingEntry || existingEntry.storerTime! < entry.storerTime! 
+                || (existingEntry.storerTime! <= entry.storerTime! && entry.deleted)) {
                 this.foundData.set(storerKey, entry)
             }
         })

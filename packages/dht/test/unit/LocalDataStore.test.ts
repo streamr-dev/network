@@ -2,10 +2,12 @@ import { Any } from '../../src/proto/google/protobuf/any'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import {
     isSamePeerDescriptor,
+    keyFromPeerDescriptor,
     peerIdFromPeerDescriptor
 } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { LocalDataStore } from '../../src/dht/store/LocalDataStore'
 import { wait } from '@streamr/utils'
+import { Timestamp } from '../../src/proto/google/protobuf/timestamp'
 
 describe('LocalDataStore', () => {
     let localDataStore: LocalDataStore
@@ -32,7 +34,8 @@ describe('LocalDataStore', () => {
 
     it('can store', () => {
         const dataKey = peerIdFromPeerDescriptor(storer1)
-        localDataStore.storeEntry({ storer: storer1, kademliaId: dataKey.value, data: data1, ttl: 10000, stale: false })
+        localDataStore.storeEntry({ storer: storer1, kademliaId: dataKey.value, data: data1, 
+            ttl: 10000, stale: false, deleted: false, storerTime: Timestamp.now() })
         const fetchedData = localDataStore.getEntry(dataKey)
         fetchedData!.forEach((entry) => {
             const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
@@ -42,8 +45,10 @@ describe('LocalDataStore', () => {
 
     it('multiple storers behind one key', () => {
         const dataKey = peerIdFromPeerDescriptor(storer1)
-        localDataStore.storeEntry({ storer: storer1, kademliaId: dataKey.value, data: data1, ttl: 10000, stale: false })
-        localDataStore.storeEntry({ storer: storer2, kademliaId: dataKey.value, data: data1, ttl: 10000, stale: false })
+        localDataStore.storeEntry({ storer: storer1, kademliaId: dataKey.value, data: data1,
+            ttl: 10000, stale: false, deleted: false, storerTime: Timestamp.now() })
+        localDataStore.storeEntry({ storer: storer2, kademliaId: dataKey.value, 
+            data: data1, ttl: 10000, stale: false, deleted: false, storerTime: Timestamp.now() })
         const fetchedData = localDataStore.getEntry(dataKey)
         fetchedData!.forEach((entry) => {
             const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
@@ -53,8 +58,10 @@ describe('LocalDataStore', () => {
 
     it('can remove data entries', () => {
         const dataKey = peerIdFromPeerDescriptor(storer1)
-        localDataStore.storeEntry({ storer: storer1, kademliaId: dataKey.value, data: data1, ttl: 10000, stale: false })
-        localDataStore.storeEntry({ storer: storer2, kademliaId: dataKey.value, data: data2, ttl: 10000, stale: false })
+        localDataStore.storeEntry({ storer: storer1, kademliaId: dataKey.value, data: data1,
+            ttl: 10000, stale: false, deleted: false, storerTime: Timestamp.now() })
+        localDataStore.storeEntry({ storer: storer2, kademliaId: dataKey.value, data: data2,
+            ttl: 10000, stale: false, deleted: false, storerTime: Timestamp.now() })
         localDataStore.deleteEntry(dataKey, storer1)
         const fetchedData = localDataStore.getEntry(dataKey)
         fetchedData!.forEach((entry) => {
@@ -65,8 +72,10 @@ describe('LocalDataStore', () => {
 
     it('can remove all data entries', () => {
         const dataKey = peerIdFromPeerDescriptor(storer1)
-        localDataStore.storeEntry({ storer: storer1, kademliaId: dataKey.value, data: data1, ttl: 10000, stale: false })
-        localDataStore.storeEntry({ storer: storer2, kademliaId: dataKey.value, data: data2, ttl: 10000, stale: false })
+        localDataStore.storeEntry({ storer: storer1, kademliaId: dataKey.value, data: data1,
+            ttl: 10000, stale: false, deleted: false, storerTime: Timestamp.now() })
+        localDataStore.storeEntry({ storer: storer2, kademliaId: dataKey.value, data: data2,
+            ttl: 10000, stale: false, deleted: false, storerTime: Timestamp.now() })
         localDataStore.deleteEntry(dataKey, storer1)
         localDataStore.deleteEntry(dataKey, storer2)
         const fetchedData = localDataStore.getEntry(dataKey)
@@ -75,12 +84,24 @@ describe('LocalDataStore', () => {
 
     it('data is deleted after TTL', async () => {
         const dataKey = peerIdFromPeerDescriptor(storer1)
-        localDataStore.storeEntry({ storer: storer1, kademliaId: dataKey.value, data: data1, ttl: 1000, stale: false })
+        localDataStore.storeEntry({ storer: storer1, kademliaId: dataKey.value, data: data1,
+            ttl: 1000, stale: false, deleted: false, storerTime: Timestamp.now() })
         const intitialStore = localDataStore.getEntry(dataKey)
         expect(intitialStore.size).toBe(1)
         await wait(1100)
         const fetchedData = localDataStore.getEntry(dataKey)
         expect(fetchedData.size).toBe(0)
+    })
+
+    it('can mark data as deleted', () => {
+        const dataKey = peerIdFromPeerDescriptor(storer1)
+        localDataStore.storeEntry({ storer: storer1, kademliaId: dataKey.value, data: data1,
+            ttl: 10000, stale: false, deleted: false, storerTime: Timestamp.now() })
+        const notDeletedData = localDataStore.getEntry(dataKey)
+        expect(notDeletedData.get(keyFromPeerDescriptor(storer1))!.deleted).toBeFalse()
+        localDataStore.markAsDeleted(dataKey.value, peerIdFromPeerDescriptor(storer1))
+        const deletedData = localDataStore.getEntry(dataKey)
+        expect(deletedData.get(keyFromPeerDescriptor(storer1))!.deleted).toBeTrue()
     })
 
 })

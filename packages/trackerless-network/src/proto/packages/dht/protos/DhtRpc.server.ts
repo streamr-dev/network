@@ -15,6 +15,8 @@ import { WebRtcConnectionRequest } from "./DhtRpc";
 import { WebSocketConnectionResponse } from "./DhtRpc";
 import { WebSocketConnectionRequest } from "./DhtRpc";
 import { RecursiveFindReport } from "./DhtRpc";
+import { DeleteDataResponse } from "./DhtRpc";
+import { DeleteDataRequest } from "./DhtRpc";
 import { MigrateDataResponse } from "./DhtRpc";
 import { MigrateDataRequest } from "./DhtRpc";
 import { StoreDataResponse } from "./DhtRpc";
@@ -74,6 +76,10 @@ export interface IStoreService<T = ServerCallContext> {
      * @generated from protobuf rpc: migrateData(dht.MigrateDataRequest) returns (dht.MigrateDataResponse);
      */
     migrateData(request: MigrateDataRequest, context: T): Promise<MigrateDataResponse>;
+    /**
+     * @generated from protobuf rpc: deleteData(dht.DeleteDataRequest) returns (dht.DeleteDataResponse);
+     */
+    deleteData(request: DeleteDataRequest, context: T): Promise<DeleteDataResponse>;
 }
 /**
  * @generated from protobuf service dht.RecursiveFindSessionService

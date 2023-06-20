@@ -23,7 +23,8 @@ describe('StreamEntryPointDiscovery', () => {
         ttl: 1000,
         storer: peerDescriptor,
         kademliaId: Uint8Array.from([1, 2, 3]),
-        stale: false
+        stale: false,
+        deleted: false
     }
 
     const stream = 'stream#0'
