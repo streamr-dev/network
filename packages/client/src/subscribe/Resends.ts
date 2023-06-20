@@ -117,7 +117,8 @@ export class Resends {
     async resend(
         streamPartId: StreamPartID,
         options: ResendOptions & { raw?: boolean },
-        getStorageNodes?: (streamId: StreamID) => Promise<EthereumAddress[]>
+        getStorageNodes?: (streamId: StreamID) => Promise<EthereumAddress[]>,
+        abortSignal?: AbortSignal
     ): Promise<PushPipeline<StreamMessage, StreamMessage>> {
         const raw = options.raw ?? false
         if (isResendLast(options)) {
@@ -128,7 +129,7 @@ export class Resends {
             }
             return this.fetchStream('last', streamPartId, {
                 count: options.last
-            }, raw, getStorageNodes)
+            }, raw, getStorageNodes, abortSignal)
         } else if (isResendRange(options)) {
             return this.fetchStream('range', streamPartId, {
                 fromTimestamp: new Date(options.from.timestamp).getTime(),
@@ -137,13 +138,13 @@ export class Resends {
                 toSequenceNumber: options.to.sequenceNumber,
                 publisherId: options.publisherId !== undefined ? toEthereumAddress(options.publisherId) : undefined,
                 msgChainId: options.msgChainId
-            }, raw, getStorageNodes)
+            }, raw, getStorageNodes, abortSignal)
         } else if (isResendFrom(options)) {
             return this.fetchStream('from', streamPartId, {
                 fromTimestamp: new Date(options.from.timestamp).getTime(),
                 fromSequenceNumber: options.from.sequenceNumber,
                 publisherId: options.publisherId !== undefined ? toEthereumAddress(options.publisherId) : undefined
-            }, raw, getStorageNodes)
+            }, raw, getStorageNodes, abortSignal)
         } else {
             throw new StreamrClientError(
                 `can not resend without valid resend options: ${JSON.stringify({ streamPartId, options })}`,
@@ -157,7 +158,8 @@ export class Resends {
         streamPartId: StreamPartID,
         query: QueryDict,
         raw: boolean,
-        getStorageNodes?: (streamId: StreamID) => Promise<EthereumAddress[]>
+        getStorageNodes?: (streamId: StreamID) => Promise<EthereumAddress[]>,
+        abortSignal?: AbortSignal
     ): Promise<PushPipeline<StreamMessage, StreamMessage>> {
         const traceId = randomString(5)
         this.logger.debug('Fetch resend data', {
@@ -187,7 +189,7 @@ export class Resends {
             getStorageNodes: async () => without(nodeAddresses, nodeAddress),
             config: (nodeAddresses.length === 1) ? { ...this.config, orderMessages: false } : this.config
         })
-        const lines = fetchHttpStream(url, parseHttpError)
+        const lines = fetchHttpStream(url, parseHttpError, abortSignal)
         setImmediate(async () => {
             let count = 0
             const messages = map(lines, (line: string) => StreamMessage.deserialize(line))

@@ -17,10 +17,9 @@ import OrderingUtil from './ordering/OrderingUtil'
  */
 export class OrderMessages {
 
-    private done = false
+    private abortController: AbortController = new AbortController()
     private inputClosed = false
     private enabled = true
-    private readonly resendStreams = new Set<PushPipeline<StreamMessage, StreamMessage>>() // holds outstanding resends for cleanup
     private readonly outBuffer = new PushBuffer<StreamMessage>()
     private readonly orderingUtil: OrderingUtil
     private readonly resends: Resends
@@ -57,7 +56,7 @@ export class OrderMessages {
     }
 
     async onGap(from: MessageRef, to: MessageRef, context: MsgChainContext): Promise<void> {
-        if (this.done || !this.enabled) { return }
+        if (this.isDone() || !this.enabled) { return }
         this.logger.debug('Encountered gap', {
             streamPartId: this.streamPartId,
             context,
@@ -74,19 +73,15 @@ export class OrderMessages {
                 publisherId: context.publisherId,
                 msgChainId: context.msgChainId,
                 raw: true
-            }, this.getStorageNodes)
-            resendMessageStream.onFinally.listen(() => {
-                this.resendStreams.delete(resendMessageStream)
-            })
-            this.resendStreams.add(resendMessageStream)
-            if (this.done) { return }
+            }, this.getStorageNodes, this.abortController.signal)
+            if (this.isDone()) { return }
 
             for await (const streamMessage of resendMessageStream) {
-                if (this.done) { return }
+                if (this.isDone()) { return }
                 this.orderingUtil.add(streamMessage)
             }
         } catch (err) {
-            if (this.done) { return }
+            if (this.isDone()) { return }
 
             if (err.code === 'NO_STORAGE_NODES') {
                 // ignore NO_STORAGE_NODES errors
@@ -96,15 +91,11 @@ export class OrderMessages {
             } else {
                 this.outBuffer.endWrite(err)
             }
-        } finally {
-            if (resendMessageStream != null) {
-                this.resendStreams.delete(resendMessageStream)
-            }
         }
     }
 
     onOrdered(orderedMessage: StreamMessage): void {
-        if (this.outBuffer.isDone() || this.done) {
+        if (this.outBuffer.isDone() || this.isDone()) {
             return
         }
 
@@ -112,7 +103,12 @@ export class OrderMessages {
     }
 
     stop(): void {
-        this.done = true
+        this.outBuffer.endWrite()
+        this.abortController.abort()
+    }
+
+    private isDone() {
+        return this.abortController.signal.aborted
     }
 
     private maybeClose(): void {
@@ -131,7 +127,9 @@ export class OrderMessages {
     private async addToOrderingUtil(src: AsyncGenerator<StreamMessage>): Promise<void> {
         try {
             for await (const msg of src) {
-                this.orderingUtil.add(msg)
+                if (!this.isDone()) {
+                    this.orderingUtil.add(msg)
+                }
             }
             this.inputClosed = true
             this.maybeClose()
@@ -146,10 +144,9 @@ export class OrderMessages {
                 this.addToOrderingUtil(src)
                 yield* this.outBuffer
             } finally {
-                this.done = true
+                this.stop()
                 this.orderingUtil.clearGaps()
-                this.resendStreams.forEach((s) => s.end())
-                this.resendStreams.clear()
+                // TODO why there are two clearGaps() calls?
                 this.orderingUtil.clearGaps()
             }
         }.bind(this)
