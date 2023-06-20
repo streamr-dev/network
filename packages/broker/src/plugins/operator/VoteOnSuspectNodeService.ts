@@ -7,26 +7,25 @@ import { VoteOnSuspectNodeHelper } from './VoteOnSuspectNodeHelper'
 
 export class VoteOnSuspectNodeService {
     private readonly streamrClient: StreamrClient
-    private readonly nodeInspectionHelper: VoteOnSuspectNodeHelper
-    private readonly logger: Logger
+    private readonly voteOnSuspectNodeHelper: VoteOnSuspectNodeHelper
+    private readonly logger: Logger = new Logger(module)
     private readonly concurrencyLimit = pLimit(1)
     // TODO how does the concurrency limit factor in here?
 
-    constructor(streamrClient: StreamrClient, serviceConfig: OperatorServiceConfig, logger: Logger) {
+    constructor(streamrClient: StreamrClient, serviceConfig: OperatorServiceConfig) {
         this.streamrClient = streamrClient
-        this.logger = logger
-        this.nodeInspectionHelper = new VoteOnSuspectNodeHelper(serviceConfig, logger as any,
+        this.voteOnSuspectNodeHelper = new VoteOnSuspectNodeHelper(serviceConfig,
             this.handleNodeInspectionRequest)
     }
 
     async start(): Promise<void> {
         this.logger.info('Starting NodeInspectionService')
-        await this.nodeInspectionHelper.start()
+        await this.voteOnSuspectNodeHelper.start()
         this.logger.info('Started MaintainTopologyService')
     }
 
     async stop(): Promise<void> {
-        this.nodeInspectionHelper.stop()
+        this.voteOnSuspectNodeHelper.stop()
         this.logger.info('stopped')
     }
 
@@ -37,10 +36,10 @@ export class VoteOnSuspectNodeService {
         const operatorIsMalicious = true
         if (operatorIsMalicious) {
             this.logger.info(`operatorIsMalicious, voting KICK on ${targetOperator} on sponsorship ${sponsorship}`)
-            await this.nodeInspectionHelper.voteOnFlag(sponsorship, targetOperator, true)
+            await this.voteOnSuspectNodeHelper.voteOnFlag(sponsorship, targetOperator, true)
         } else {
             this.logger.info(`operatorIsNotMalicious, voting NO KICK on, ${targetOperator} on sponsorship ${sponsorship}`)
-            await this.nodeInspectionHelper.voteOnFlag(sponsorship, targetOperator, false)
+            await this.voteOnSuspectNodeHelper.voteOnFlag(sponsorship, targetOperator, false)
         }
     }
 }

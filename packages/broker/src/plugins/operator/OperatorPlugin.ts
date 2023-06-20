@@ -54,8 +54,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         )
         this.voteOnSuspectNodeService = new VoteOnSuspectNodeService(
             this.streamrClient,
-            serviceHelperConfig,
-            logger
+            serviceHelperConfig
         )
     
     }

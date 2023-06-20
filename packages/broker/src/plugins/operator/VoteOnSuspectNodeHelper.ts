@@ -20,14 +20,13 @@ export class VoteOnSuspectNodeHelper {
     signer: Signer
     streamIdOfSponsorship: Map<string, string> = new Map()
     sponsorshipCountOfStream: Map<string, number> = new Map()
-    private readonly logger: Logger
+    logger: Logger = new Logger(module)
     callback: (sponsorship: string, operatorContractAddress: string) => void
 
-    constructor(config: OperatorServiceConfig, logger: Logger, 
+    constructor(config: OperatorServiceConfig,
         callback: (sponsorship: string, soperatorContractAddress: string) => void) {
         // super()
 
-        this.logger = logger
         this.logger.trace('OperatorClient created')
         this.callback = callback
         this.address = config.operatorContractAddress
@@ -40,7 +39,6 @@ export class VoteOnSuspectNodeHelper {
     async start(): Promise<void> {
         this.logger.info("Starting NodeInspectionHelper")
         this.contract.on("ReviewRequest", async (sponsorship: string, targetOperator: string) => {
-        // this.contract.filters.ReviewRequest().  (async (sponsorship: string, targetOperator: string) => {
             this.logger.info(`${this.contract.address} got ReviewRequest event ${sponsorship} ${targetOperator}`)
             this.callback(sponsorship, targetOperator)
         })

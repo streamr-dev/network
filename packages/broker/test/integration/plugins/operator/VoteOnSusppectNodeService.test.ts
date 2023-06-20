@@ -1,19 +1,20 @@
-import { fetchPrivateKeyWithGas } from "@streamr/test-utils"
-import { Logger, TheGraphClient, waitForCondition } from "@streamr/utils"
+import { Logger, waitForCondition } from "@streamr/utils"
 import { parseEther } from "ethers/lib/utils"
-import StreamrClient, { Stream, CONFIG_TEST, StreamPartID } from "streamr-client"
-import { MaintainTopologyService } from "../../../../src/plugins/operator/MaintainTopologyService"
+import StreamrClient from "streamr-client"
 import { createWalletAndDeployOperator } from "./deployOperatorContract"
 import { deploySponsorship } from "./deploySponsorshipContract"
 import { Provider } from "@ethersproject/abstract-provider"
 import { JsonRpcProvider } from "@ethersproject/providers"
 import { Chains } from "@streamr/config"
 import { Contract, ContractFactory, Wallet } from "ethers"
-import { IERC677, Operator, OperatorFactory, SponsorshipFactory, StreamRegistry, StreamrConfig, sponsorshipFactoryABI, sponsorshipFactoryBytecode, streamRegistryABI, 
+import { IERC677, OperatorFactory, SponsorshipFactory, StreamRegistry, StreamrConfig,
+    sponsorshipFactoryABI, sponsorshipFactoryBytecode, streamRegistryABI, 
     streamrConfigABI, streamrConfigBytecode, tokenABI } from "@streamr/network-contracts"
 import fetch from "node-fetch"
 import { VoteOnSuspectNodeService } from "../../../../src/plugins/operator/VoteOnSuspectNodeService"
 import { operatorFactoryABI, operatorFactoryBytecode } from "@streamr/network-contracts"
+import { MockProxy, mock } from "jest-mock-extended"
+import { VoteOnSuspectNodeHelper } from "../../../../src/plugins/operator/VoteOnSuspectNodeHelper"
 
 const config = Chains.load()["dev1"]
 const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`
@@ -82,6 +83,14 @@ describe('MaintainTopologyService', () => {
         await (await streamrConfig.setSponsorshipFactory(config.contracts.SponsorshipFactory)).wait()
         await (await streamrConfig.setOperatorFactory(operatorFactory.address)).wait()
 
+        // update local config with new addresses
+        // eslint-disable-next-line require-atomic-updates
+        config.contracts.StreamrConfig = streamrConfig.address
+        // eslint-disable-next-line require-atomic-updates
+        config.contracts.OperatorFactory = operatorFactory.address
+        // eslint-disable-next-line require-atomic-updates
+        config.contracts.SponsorshipFactory = sponsorshipFactory.address
+
         // const streamrConfig = new Contract(config.contracts.StreamrConfig, streamrConfigABI) as unknown as StreamrConfig
 
         // await (await operatorFactory.initialize(
@@ -109,9 +118,9 @@ describe('MaintainTopologyService', () => {
         streamId2 = adminWallet.address.toLowerCase() + streamPath2
         const streamRegistry = new Contract(config.contracts.StreamRegistry, streamRegistryABI, adminWallet) as unknown as StreamRegistry
         logger.debug(`creating stream with streamId1 ${streamId1}`)
-        await (await streamRegistry.createStream(streamPath1, "metadata")).wait()
+        await (await streamRegistry.createStream(streamPath1, '{"partitions":"1"}')).wait()
         logger.debug(`creating stream with streamId2 ${streamId2}`)
-        await (await streamRegistry.createStream(streamPath2, "metadata")).wait()
+        await (await streamRegistry.createStream(streamPath2, '{"partitions":"1"}')).wait()
 
     })
     
@@ -127,19 +136,18 @@ describe('MaintainTopologyService', () => {
         logger.debug("deployed voter contract " + voter.operatorConfig.operatorContractAddress)
 
         await new Promise((resolve) => setTimeout(resolve, 5000)) // wait for events to be processed
-        const flaggerClient = new StreamrClient(CONFIG_TEST)
-        const flaggerOperatorClient = new VoteOnSuspectNodeService(flaggerClient, flagger.operatorConfig, logger)
-        await flaggerOperatorClient.start()
+        const flaggerClient: MockProxy<StreamrClient> = mock<StreamrClient>()
+        const flaggerVoteService = new VoteOnSuspectNodeService(flaggerClient, flagger.operatorConfig)
+        await flaggerVoteService.start()
 
-        const targetClient = new StreamrClient(CONFIG_TEST)
-        const targetOperatorClient = new VoteOnSuspectNodeService(targetClient, target.operatorConfig, logger)
-        await targetOperatorClient.start()
-        const subscriptions = await targetClient.getSubscriptions()
-        expect(subscriptions.length).toBe(0)
+        const targetClient: MockProxy<StreamrClient> = mock<StreamrClient>()
+        const targetVoteService = new VoteOnSuspectNodeService(targetClient, target.operatorConfig)
+        await targetVoteService.start()
+        expect(targetClient.subscribe.mock.calls.length).toBe(0)
 
-        const voterClient = new StreamrClient(CONFIG_TEST)
-        const voterOperatorClient = new VoteOnSuspectNodeService(voterClient, voter.operatorConfig, logger)
-        await voterOperatorClient.start()
+        const voterClient: MockProxy<StreamrClient> = mock<StreamrClient>()
+        const voterVoteService = new VoteOnSuspectNodeService(voterClient, voter.operatorConfig)
+        await voterVoteService.start()
 
         logger.debug("deploying sponsorship contract")
         const sponsorship = await deploySponsorship(config, adminWallet, {
@@ -173,15 +181,22 @@ describe('MaintainTopologyService', () => {
         await (await voter.operatorContract.stake(sponsorship.address, parseEther("150"))).wait()
         await new Promise((resolve) => setTimeout(resolve, 3000))
 
-        waitForCondition(async () => (await targetClient.getSubscriptions()).length === 1, 10000, 1000)
-        
         logger.debug("registering node addresses")
         await (await flagger.operatorContract.setNodeAddresses([await flagger.operatorContract.owner()])).wait()
 
         logger.debug("flagging target operator")
+        const mockVoteOnSuspectNodeHelper = mock<VoteOnSuspectNodeHelper>()
+        // @ts-expect-error mock
+        voterVoteService.voteOnSuspectNodeHelper = mockVoteOnSuspectNodeHelper
         const tr = await (await flagger.operatorContract.flag(sponsorship.address, target.operatorContract.address)).wait()
-        waitForCondition(async () => (await targetClient.getSubscriptions()).length === 0, 10000, 1000)
-        
-        flaggerOperatorClient.stop()
+        await new Promise((resolve) => setTimeout(resolve, 10000))
+        // check that voter votes
+        await waitForCondition(async () => {
+            return mockVoteOnSuspectNodeHelper.voteOnFlag.mock.calls.length > 0 &&
+            mockVoteOnSuspectNodeHelper.voteOnFlag.mock.calls[0][0] === target.operatorContract.address &&
+            mockVoteOnSuspectNodeHelper.voteOnFlag.mock.calls[0][1] === sponsorship.address &&
+            mockVoteOnSuspectNodeHelper.voteOnFlag.mock.calls[0][2] === true
+        }, 10000, 1000)
+        flaggerVoteService.stop()
     })
 })
