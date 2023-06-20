@@ -16,7 +16,27 @@ const main = async () => {
                     },
                     type: 0
                 }],
-                stringKademliaId: name
+                stringKademliaId: name,
+                iceServers: [
+                    {
+                        url: 'stun:stun.streamr.network',
+                        port: 5349
+                    },
+                    {
+                        url: 'turn:turn.streamr.network',
+                        port: 5349,
+                        username: 'BrubeckTurn1',
+                        password: 'MIlbgtMw4nhpmbgqRrht1Q=='
+                    },
+                    {
+                        url: 'turn:turn.streamr.network',
+                        port: 5349,
+                        username: 'BrubeckTurn1',
+                        password: 'MIlbgtMw4nhpmbgqRrht1Q==',
+                        tcp: true
+                    }
+                ],
+                webrtcDisallowPrivateAddresses: false
             }
         }
     })
