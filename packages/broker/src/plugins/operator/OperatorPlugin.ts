@@ -32,7 +32,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     private readonly maintainOperatorContractService = new MaintainOperatorContractService()
     private readonly voteOnSuspectNodeService = new VoteOnSuspectNodeService()
     private readonly maintainTopologyService: MaintainTopologyService
-    private maintainOperatorValueService: MaintainOperatorValueService
+    private readonly maintainOperatorValueService: MaintainOperatorValueService
 
     constructor(options: PluginOptions) {
         super(options)
