@@ -6,8 +6,8 @@ import { OperatorServiceConfig } from './OperatorPlugin'
 const logger = new Logger(module)
 
 export class MaintainOperatorValueHelper {
-    config: OperatorServiceConfig
-    operator: Operator
+    private readonly config: OperatorServiceConfig
+    private readonly operator: Operator
 
     constructor(config: OperatorServiceConfig) {
         logger.trace('MaintainOperatorValueHelper created')
