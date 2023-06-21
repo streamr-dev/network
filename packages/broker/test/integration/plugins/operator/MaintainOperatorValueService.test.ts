@@ -34,7 +34,7 @@ describe("MaintainOperatorValueService", () => {
     let streamId1: string
     let streamId2: string
 
-    let opertatorConfig: OperatorServiceConfig
+    let operatorConfig: OperatorServiceConfig
 
     const deployNewOperator = async () => {
         const operatorWallet = Wallet.createRandom().connect(provider)
@@ -48,7 +48,7 @@ describe("MaintainOperatorValueService", () => {
         logger.debug("Deploying operator contract")
         const operatorContract = await deployOperatorContract(config, operatorWallet)
         logger.debug(`Operator deployed at ${operatorContract.address}`)
-        opertatorConfig = {
+        operatorConfig = {
             operatorContractAddress: operatorContract.address,
             provider,
             theGraphUrl,
@@ -92,7 +92,7 @@ describe("MaintainOperatorValueService", () => {
         expect(await token.balanceOf(sponsorship1.address)).toEqual(parseEther("300")) // 200 sponsored + 100 staked
         expect(await token.balanceOf(sponsorship2.address)).toEqual(parseEther("300"))
         
-        const maintainOperatorValueService = new MaintainOperatorValueService(opertatorConfig)
+        const maintainOperatorValueService = new MaintainOperatorValueService(operatorConfig)
 
         const totalValueInSponsorshipsBefore = await operatorContract.totalValueInSponsorshipsWei()
         const penaltyFraction = 0.0005 // * 1e18
@@ -130,7 +130,7 @@ describe("MaintainOperatorValueService", () => {
         expect(await token.balanceOf(sponsorship1.address)).toEqual(parseEther("300")) // 200 sponsored + 100 staked
         expect(await token.balanceOf(sponsorship2.address)).toEqual(parseEther("300"))
         
-        const maintainOperatorValueService = new MaintainOperatorValueService(opertatorConfig)
+        const maintainOperatorValueService = new MaintainOperatorValueService(operatorConfig)
 
         const totalValueInSponsorshipsBefore = await operatorContract.totalValueInSponsorshipsWei()
         const penaltyFraction = 0.0005 // * 1e18
