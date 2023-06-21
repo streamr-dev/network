@@ -201,12 +201,17 @@ describe('OrderMessages', () => {
         const resends = {
             resend: jest.fn()
                 .mockResolvedValueOnce(createMessageStream(...missing1))
+                // 5 error responses (CONFIG.maxGapRequests)
+                .mockRejectedValueOnce(new Error('mock-error'))
+                .mockRejectedValueOnce(new Error('mock-error'))
+                .mockRejectedValueOnce(new Error('mock-error'))
+                .mockRejectedValueOnce(new Error('mock-error'))
                 .mockRejectedValueOnce(new Error('mock-error'))
                 .mockResolvedValueOnce(createMessageStream(...missing3))
         }
         const transform = createTransform(resends)
         const output = transform(fromArray(without(msgs, ...missing1.concat(missing2).concat(missing3))))
         expect(await collect(output)).toEqual(without(msgs, ...missing2))
-        expect(resends.resend).toBeCalledTimes(3)
+        expect(resends.resend).toBeCalledTimes(2 + CONFIG.maxGapRequests)
     })
 })

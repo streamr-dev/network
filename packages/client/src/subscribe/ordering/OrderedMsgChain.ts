@@ -385,9 +385,6 @@ export class OrderedMsgChain {
                 await this.gapHandler(from, to, this.context)
             } catch (err: any) {
                 this.onError(err)
-                // do not retry this gap
-                this.gapRequestCount = maxGapRequests
-                this.onGapFillsExhausted()
             }
         } else {
             this.onGapFillsExhausted()
