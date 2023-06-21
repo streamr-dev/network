@@ -11,7 +11,7 @@ export class MaintainOperatorValueHelper {
         this.operator = new Contract(config.operatorContractAddress, operatorABI, this.config.signer) as unknown as Operator
     }
 
-    /// returns a wei value (1 ETH means 100%)
+    // returns a wei value (1 ETH means 100%)
     async getPenaltyLimitFraction(): Promise<bigint> {
         const streamrConfigAddress = await this.operator.streamrConfig()
         const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, this.config.provider) as unknown as StreamrConfig
