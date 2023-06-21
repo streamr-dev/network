@@ -37,7 +37,6 @@ export class AnnounceNodeService {
         }, this.intervalInMs, this.abortController.signal)
     }
 
-    // eslint-disable-next-line class-methods-use-this
     async stop(): Promise<void> {
         this.abortController.abort()
         logger.info('stopped')
