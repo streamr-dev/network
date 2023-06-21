@@ -6,6 +6,7 @@ import { BigNumber } from 'ethers'
 const logger = new Logger(module)
 
 const CHECK_VALUE_INTERVAL = 1000 * 60 * 60 * 24 // 1 day
+const ONE_ETHER = BigInt(1e18)
 
 export class MaintainOperatorValueService {
     private readonly config: OperatorServiceConfig
@@ -52,7 +53,7 @@ export class MaintainOperatorValueService {
             penaltyLimitFraction = await this.helper.getPenaltyLimitFraction()
         }
 
-        const threshold = totalApprox * penaltyLimitFraction / BigInt(1e18)
+        const threshold = totalApprox * penaltyLimitFraction / BigInt(ONE_ETHER)
         if (totalDiff > threshold) {
             // sort sponsorships by diff in descending order
             const sortedSponsorships = sponsorships.sort((a: any, b: any) => b.diff - a.diff)

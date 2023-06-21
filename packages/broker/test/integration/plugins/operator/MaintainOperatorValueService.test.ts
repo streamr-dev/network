@@ -16,9 +16,9 @@ import { deployOperatorContract } from "./deployOperatorContract"
 import { deploySponsorship } from "./deploySponsorshipContract"
 import { MaintainOperatorValueService } from "../../../../src/plugins/operator/MaintainOperatorValueService"
 import { OperatorServiceConfig } from "../../../../src/plugins/operator/OperatorPlugin"
+import { ADMIN_WALLET_PK } from "./smartContractUtils"
 
 const config = Chains.load()["dev1"]
-const adminPrivKey = "0x4059de411f15511a85ce332e7a428f36492ab4e87c7830099dadbf130f1896ae"
 const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '127.0.0.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`
 
 const logger = new Logger(module)
@@ -62,7 +62,7 @@ describe("MaintainOperatorValueService", () => {
         provider = new JsonRpcProvider(chainURL)
         logger.debug("Connected to: ", await provider.getNetwork())
 
-        adminWallet = new Wallet(adminPrivKey, provider)
+        adminWallet = new Wallet(ADMIN_WALLET_PK, provider)
 
         token = new Contract(config.contracts.LINK, tokenABI, adminWallet) as unknown as IERC677
         const timeString = (new Date()).getTime().toString()
