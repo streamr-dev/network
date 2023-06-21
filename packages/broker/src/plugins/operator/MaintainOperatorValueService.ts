@@ -1,6 +1,7 @@
 import { Logger } from '@streamr/utils'
 import { MaintainOperatorValueHelper } from "./MaintainOperatorValueHelper"
 import { OperatorServiceConfig } from './OperatorPlugin'
+import { BigNumber } from 'ethers'
 
 const logger = new Logger(module)
 
@@ -30,7 +31,7 @@ export class MaintainOperatorValueService {
         const { sponsorshipAddresses, approxValues, realValues } = await this.helper.getApproximatePoolValuesPerSponsorship()
         let totalDiff = BigInt(0)
         let totalApprox = BigInt(0)
-        const sponsorships = []
+        const sponsorships: { address: string, approxValue: BigNumber, realValue: BigNumber, diff: BigNumber }[] = []
         for (let i = 0; i < sponsorshipAddresses.length; i++) {
             const sponsorship = {
                 address: sponsorshipAddresses[i],
