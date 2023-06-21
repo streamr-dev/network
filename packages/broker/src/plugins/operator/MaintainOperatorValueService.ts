@@ -19,9 +19,13 @@ export class MaintainOperatorValueService {
 
     start(penaltyLimitFraction?: bigint): void {
         logger.info('Started')
-        this.checkValue(penaltyLimitFraction)
+        this.checkValue(penaltyLimitFraction).catch((err) => {
+            logger.warn('Encountered error while checking value', { err })
+        })
         this.checkValueInterval = setInterval(() => {
-            this.checkValue(penaltyLimitFraction)
+            this.checkValue(penaltyLimitFraction).catch((err) => {
+                logger.warn('Encountered error while checking value', { err })
+            })
         }, CHECK_VALUE_INTERVAL)
     }
 
