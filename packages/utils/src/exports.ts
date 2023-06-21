@@ -25,7 +25,7 @@ import { Events, BrandedString } from './types'
 import { wait } from './wait'
 import { waitForEvent } from './waitForEvent'
 import { TimeoutError, withTimeout } from './withTimeout'
-import { composeAbortSignals } from './composeAbortSignals'
+import { composeAbortSignals, ComposedAbortSignal } from './composeAbortSignals'
 import { waitForCondition } from './waitForCondition'
 import { withRateLimit } from './withRateLimit'
 import { ObservableEventEmitter } from './ObservableEventEmitter'
@@ -48,6 +48,7 @@ export {
     pTransaction,
     asAbortable,
     composeAbortSignals,
+    ComposedAbortSignal,
     isENSName,
     keyToArrayIndex,
     randomString,

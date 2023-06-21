@@ -1,8 +1,9 @@
 import { ContractReceipt } from '@ethersproject/contracts'
 import { StreamID, toStreamID } from '@streamr/protocol'
-import { Logger, TheGraphClient, merge, randomString, toEthereumAddress } from '@streamr/utils'
+import { Logger, TheGraphClient, composeAbortSignals, merge, randomString, toEthereumAddress } from '@streamr/utils'
+import compact from 'lodash/compact'
 import fetch, { Response } from 'node-fetch'
-import { AbortSignal } from 'node-fetch/externals'
+import { AbortSignal as FetchAbortSignal } from 'node-fetch/externals'
 import split2 from 'split2'
 import { Readable } from 'stream'
 import LRU from '../../vendor/quick-lru'
@@ -160,12 +161,14 @@ export class FetchHttpStreamResponseError extends Error {
 
 export const fetchHttpStream = async function*(
     url: string,
-    abortController = new AbortController()
+    abortSignal?: AbortSignal
 ): AsyncGenerator<string, void, undefined> {
-    logger.debug('Send HTTP request', { url })
+    logger.debug('Send HTTP request', { url }) 
+    const abortController = new AbortController()
+    const fetchAbortSignal = composeAbortSignals(...compact([abortController.signal, abortSignal]))
     const response: Response = await fetch(url, {
         // cast is needed until this is fixed: https://github.com/node-fetch/node-fetch/issues/1652
-        signal: abortController.signal as AbortSignal
+        signal: fetchAbortSignal as FetchAbortSignal
     })
     logger.debug('Received HTTP response', {
         url,
@@ -193,5 +196,6 @@ export const fetchHttpStream = async function*(
         throw err
     } finally {
         stream?.destroy()
+        fetchAbortSignal.destroy()
     }
 }
