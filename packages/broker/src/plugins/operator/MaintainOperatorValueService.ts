@@ -12,22 +12,20 @@ export class MaintainOperatorValueService {
     private readonly helper: MaintainOperatorValueHelper
 
     constructor(config: OperatorServiceConfig) {
-        logger.trace('MaintainOperatorValueService created')
         this.config = config
         this.helper = new MaintainOperatorValueHelper(config)
     }
 
-    // eslint-disable-next-line class-methods-use-this
     start(penaltyLimitFraction?: bigint): void {
-        logger.info('MaintainOperatorValueService started')
-        this.checkValue(this.config.operatorContractAddress, penaltyLimitFraction)
+        logger.info('Started')
+        this.checkValue(penaltyLimitFraction)
         this.checkValueInterval = setInterval(() => {
-            this.checkValue(this.config.operatorContractAddress, penaltyLimitFraction)
+            this.checkValue(penaltyLimitFraction)
         }, CHECK_VALUE_INTERVAL)
     }
 
-    async checkValue(operatorContractAddress: string, penaltyLimitFraction?: bigint): Promise<void> {
-        logger.info(`Check approximate value for operator ${operatorContractAddress}`)
+    private async checkValue(penaltyLimitFraction?: bigint): Promise<void> {
+        logger.info('Check approximate value for operator', { operatorContractAddress: this.config.operatorContractAddress })
 
         const { sponsorshipAddresses, approxValues, realValues } = await this.helper.getApproximatePoolValuesPerSponsorship()
         let totalDiff = BigInt(0)
