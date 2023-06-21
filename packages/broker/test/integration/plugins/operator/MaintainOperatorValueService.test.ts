@@ -2,7 +2,7 @@ import { JsonRpcProvider, Provider } from "@ethersproject/providers"
 import { Chains } from "@streamr/config"
 import { Wallet } from "@ethersproject/wallet"
 import { parseEther } from "@ethersproject/units"
-import { Logger, waitForCondition } from '@streamr/utils'
+import { Logger, wait, waitForCondition } from '@streamr/utils'
 import fetch from "node-fetch"
 
 import type { IERC677, Operator } from "@streamr/network-contracts"
@@ -101,7 +101,7 @@ describe("MaintainOperatorValueService", () => {
         const threshold = 200 * penaltyFraction // 0.1
 
         // wait for sponsorships to accumulate earnings so approximate values differ enough form the real values
-        await new Promise((resolve) => setTimeout(resolve, 3000)) // sleep 3 sec
+        await wait(3000)
 
         maintainOperatorValueService.start(parseEther(`${penaltyFraction}`).toBigInt()) // 200 * 0.001 = 0.1
 
@@ -139,7 +139,7 @@ describe("MaintainOperatorValueService", () => {
         const threshold = 200 * penaltyFraction // 0.02
 
         // wait for sponsorships to accumulate earnings so approximate values differ enough form the real values
-        await new Promise((resolve) => setTimeout(resolve, 3000)) // sleep 3 sec
+        await wait(3000)
 
         maintainOperatorValueService.start(parseEther(`${penaltyFraction}`).toBigInt()) // 200 * 0.001 = 0.02
 
