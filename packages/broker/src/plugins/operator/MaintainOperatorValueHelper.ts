@@ -3,8 +3,8 @@ import { Operator, StreamrConfig, operatorABI, streamrConfigABI } from '@streamr
 import { OperatorServiceConfig } from './OperatorPlugin'
 
 export class MaintainOperatorValueHelper {
-    private readonly config: OperatorServiceConfig
     private readonly operator: Operator
+    private readonly config: OperatorServiceConfig
 
     constructor(config: OperatorServiceConfig) {
         this.config = config

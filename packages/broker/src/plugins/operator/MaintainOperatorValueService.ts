@@ -9,10 +9,10 @@ const CHECK_VALUE_INTERVAL = 1000 * 60 * 60 * 24 // 1 day
 const ONE_ETHER = BigInt(1e18)
 
 export class MaintainOperatorValueService {
-    private readonly config: OperatorServiceConfig
     private checkValueInterval: NodeJS.Timeout | null = null
-    private readonly helper: MaintainOperatorValueHelper
     private penaltyLimitFraction: bigint
+    private readonly helper: MaintainOperatorValueHelper
+    private readonly config: OperatorServiceConfig
 
     constructor(config: OperatorServiceConfig, penaltyLimitFraction = BigInt(0)) {
         this.config = config
