@@ -101,8 +101,8 @@ describe("MaintainOperatorValueService", () => {
             diff = realValues[i].toBigInt() - approxValues[i].toBigInt()
         }
         
-        expect(await operatorContract.totalValueInSponsorshipsWei() > totalValueInSponsorshipsBefore)
-        expect(diff < threshold)
+        expect((await operatorContract.totalValueInSponsorshipsWei()).toBigInt()).toBeGreaterThan(totalValueInSponsorshipsBefore.toBigInt())
+        expect(diff).toBeLessThan(threshold)
 
         await maintainOperatorValueService.stop()
     }, 60 * 1000)
@@ -139,8 +139,8 @@ describe("MaintainOperatorValueService", () => {
             diff = realValues[i].toBigInt() - approxValues[i].toBigInt()
         }
         
-        expect(await operatorContract.totalValueInSponsorshipsWei() > totalValueInSponsorshipsBefore)
-        expect(diff < threshold)
+        expect((await operatorContract.totalValueInSponsorshipsWei()).toBigInt()).toBeGreaterThan(totalValueInSponsorshipsBefore.toBigInt())
+        expect(diff).toBeLessThan(threshold)
 
         await maintainOperatorValueService.stop()
     }, 60 * 1000)
