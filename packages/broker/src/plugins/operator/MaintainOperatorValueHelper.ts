@@ -10,7 +10,6 @@ export class MaintainOperatorValueHelper {
     private readonly operator: Operator
 
     constructor(config: OperatorServiceConfig) {
-        logger.trace('MaintainOperatorValueHelper created')
         this.config = config
         this.operator = new Contract(config.operatorContractAddress, operatorABI, this.config.signer) as unknown as Operator
     }
