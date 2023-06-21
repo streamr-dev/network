@@ -9,16 +9,24 @@ import { StreamID, toStreamID } from '@streamr/protocol'
 
 const logger = new Logger(module)
 
+function toStreamIDSafe(input: string): StreamID | undefined {
+    try {
+        return toStreamID(input)
+    } catch {
+        return undefined
+    }
+}
+
 export interface MaintainTopologyHelperEvents {
     /**
      * Emitted when staking into a Sponsorship on a stream that we haven't staked on before (in another Sponsorship)
      */
-    addStakedStream: (streamIds: string[]) => void
+    addStakedStream: (streamIds: StreamID[]) => void
 
     /**
      * Emitted when un-staked from all Sponsorships for the given stream
      */
-    removeStakedStream: (streamId: string) => void
+    removeStakedStream: (streamId: StreamID) => void
 }
 
 export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperEvents> {
@@ -89,7 +97,7 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
         return toStreamID(await bounty.streamId())
     }
 
-    private async pullStakedStreams(requiredBlockNumber: number): Promise<string[]> {
+    private async pullStakedStreams(requiredBlockNumber: number): Promise<StreamID[]> {
         const createQuery = (lastId: string, pageSize: number) => {
             return {
                 query: `
@@ -125,7 +133,7 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
 
         for await (const stake of queryResult) {
             const sponsorshipId = stake.sponsorship?.id
-            const streamId = stake.sponsorship?.stream?.id
+            const streamId = toStreamIDSafe(stake.sponsorship?.stream?.id)
             if (streamId !== undefined && sponsorshipId !== undefined && this.streamIdOfSponsorship.get(sponsorshipId) !== streamId) {
                 this.streamIdOfSponsorship.set(sponsorshipId, streamId)
                 const sponsorshipCount = (this.sponsorshipCountOfStream.get(streamId) || 0) + 1
