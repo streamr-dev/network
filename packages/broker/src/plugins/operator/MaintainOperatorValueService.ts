@@ -65,7 +65,7 @@ export class MaintainOperatorValueService {
             }
             
             // pick the first entries needed to get the total diff under the threshold
-            const neededSponsorshipAddresses = sortedSponsorships.slice(0, neededSponsorshipsCount).map((sponsorship: any) => sponsorship.address)
+            const neededSponsorshipAddresses = sortedSponsorships.slice(0, neededSponsorshipsCount).map((sponsorship) => sponsorship.address)
             logger.info(`Updating ${neededSponsorshipsCount} sponsorships. Threshold (${threshold}), diff ${diff}/${totalDiff}`)
             await this.helper.updateApproximatePoolvalueOfSponsorships(neededSponsorshipAddresses)
             logger.info(`Updated sponsorships!`)
