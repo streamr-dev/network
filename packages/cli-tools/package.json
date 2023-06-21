@@ -27,9 +27,9 @@
   "license": "AGPL-3.0",
   "dependencies": {
     "@ethersproject/wallet": "^5.5.0",
-    "@snapshot-labs/snapshot.js": "^0.4.97",
+    "@snapshot-labs/snapshot.js": "^0.4.99",
     "@streamr/utils": "8.5.3",
-    "commander": "^10.0.1",
+    "commander": "^11.0.0",
     "easy-table": "^1.1.1",
     "event-stream": "^4.0.1",
     "lodash": "^4.17.21",

@@ -2,17 +2,16 @@ import { StreamID, StreamMessage, StreamPartID, StreamPartIDUtils } from '@strea
 import { EthereumAddress, Logger, randomString, toEthereumAddress } from '@streamr/utils'
 import random from 'lodash/random'
 import without from 'lodash/without'
-import { Response } from 'node-fetch'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { StreamrClientError } from '../StreamrClientError'
 import { StorageNodeRegistry } from '../registry/StorageNodeRegistry'
 import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
-import { forEach, map } from '../utils/GeneratorUtils'
+import { forEach, map, transformError } from '../utils/GeneratorUtils'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { pull } from '../utils/PushBuffer'
 import { PushPipeline } from '../utils/PushPipeline'
-import { createQueryString, fetchHttpStream } from '../utils/utils'
+import { FetchHttpStreamResponseError, createQueryString, fetchHttpStream } from '../utils/utils'
 import { MessagePipelineFactory } from './MessagePipelineFactory'
 
 type QueryDict = Record<string, string | number | boolean | null | undefined>
@@ -76,19 +75,24 @@ const createUrl = (baseUrl: string, endpointSuffix: string, streamPartId: Stream
     return `${baseUrl}/streams/${encodeURIComponent(streamId)}/data/partitions/${streamPartition}/${endpointSuffix}?${queryString}`
 }
 
-const parseHttpError = async (response: Response): Promise<Error> => {
-    const body = await response.text()
-    let descriptionSnippet
-    try {
-        const json = JSON.parse(body)
-        descriptionSnippet = `: ${json.error}`
-    } catch (err) {
-        descriptionSnippet = ''
+const getHttpErrorTransform = (): (error: any) => Promise<StreamrClientError> => {
+    return async (err: any) => {
+        let message
+        if (err instanceof FetchHttpStreamResponseError) {
+            const body = await err.response.text()
+            let descriptionSnippet
+            try {
+                const json = JSON.parse(body)
+                descriptionSnippet = `: ${json.error}`
+            } catch (err) {
+                descriptionSnippet = ''
+            }
+            message = `Storage node fetch failed${descriptionSnippet}, httpStatus=${err.response.status}, url=${err.response.url}`
+        } else {
+            message = err?.message ?? 'Unknown error'
+        }
+        return new StreamrClientError(message, 'STORAGE_NODE_ERROR')
     }
-    throw new StreamrClientError(
-        `Storage node fetch failed${descriptionSnippet}, httpStatus=${response.status}, url=${response.url}`,
-        'STORAGE_NODE_ERROR'
-    )
 }
 
 @scoped(Lifecycle.ContainerScoped)
@@ -189,7 +193,7 @@ export class Resends {
             getStorageNodes: async () => without(nodeAddresses, nodeAddress),
             config: (nodeAddresses.length === 1) ? { ...this.config, orderMessages: false } : this.config
         })
-        const lines = fetchHttpStream(url, parseHttpError, abortSignal)
+        const lines = transformError(fetchHttpStream(url, abortSignal), getHttpErrorTransform())
         setImmediate(async () => {
             let count = 0
             const messages = map(lines, (line: string) => StreamMessage.deserialize(line))
