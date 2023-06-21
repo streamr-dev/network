@@ -3,8 +3,7 @@ import { MaintainTopologyHelper } from '../../../../src/plugins/operator/Maintai
 import { Chains } from "@streamr/config"
 import { Wallet } from "@ethersproject/wallet"
 import { parseEther } from "@ethersproject/units"
-import { Logger, waitForCondition } from '@streamr/utils'
-import fetch from "node-fetch"
+import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
 
 import type { IERC677, Operator } from "@streamr/network-contracts"
 import type { StreamRegistry } from "@streamr/network-contracts"
@@ -41,11 +40,10 @@ describe("MaintainTopologyHelper", () => {
         const operatorContract = await deployOperatorContract(config, operatorWallet)
         logger.debug(`Operator deployed at ${operatorContract.address}`)
         const operatorConfig = {
-            operatorContractAddress: operatorContract.address,
+            operatorContractAddress: toEthereumAddress(operatorContract.address),
             signer: operatorWallet,
             provider,
-            theGraphUrl,
-            fetch
+            theGraphUrl
         }
         return { operatorWallet, operatorContract, operatorConfig }
     }

@@ -6,6 +6,7 @@ import { EventEmitter } from "eventemitter3"
 import { EthereumAddress, Logger, TheGraphClient, toEthereumAddress } from "@streamr/utils"
 import { OperatorServiceConfig } from "./OperatorPlugin"
 import { StreamID, toStreamID } from '@streamr/protocol'
+import fetch from 'node-fetch'
 
 const logger = new Logger(module)
 
@@ -37,14 +38,14 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
     private readonly operatorContract: Operator
     private readonly theGraphClient: TheGraphClient
 
-    constructor(config: OperatorServiceConfig) {
+    constructor({ operatorContractAddress, provider, theGraphUrl }: OperatorServiceConfig) {
         super()
-        this.operatorContractAddress = toEthereumAddress(config.operatorContractAddress)
-        this.provider = config.provider
-        this.operatorContract = new Contract(config.operatorContractAddress, operatorABI, this.provider) as unknown as Operator
+        this.operatorContractAddress = operatorContractAddress
+        this.provider = provider
+        this.operatorContract = new Contract(operatorContractAddress, operatorABI, this.provider) as unknown as Operator
         this.theGraphClient = new TheGraphClient({
-            serverUrl: config.theGraphUrl,
-            fetch: config.fetch, // TODO: remove config.fetch
+            serverUrl: theGraphUrl,
+            fetch,
             logger
         })
     }
