@@ -25,6 +25,10 @@ export interface StoreDataRequest {
      * @generated from protobuf field: uint32 ttl = 3;
      */
     ttl: number;
+    /**
+     * @generated from protobuf field: google.protobuf.Timestamp storerTime = 4;
+     */
+    storerTime?: Timestamp;
 }
 /**
  * @generated from protobuf message dht.StoreDataResponse
@@ -54,6 +58,24 @@ export interface MigrateDataResponse {
     error: string;
 }
 /**
+ * @generated from protobuf message dht.DeleteDataRequest
+ */
+export interface DeleteDataRequest {
+    /**
+     * @generated from protobuf field: bytes kademliaId = 1;
+     */
+    kademliaId: Uint8Array;
+}
+/**
+ * @generated from protobuf message dht.DeleteDataResponse
+ */
+export interface DeleteDataResponse {
+    /**
+     * @generated from protobuf field: bool deleted = 1;
+     */
+    deleted: boolean;
+}
+/**
  * @generated from protobuf message dht.DataEntry
  */
 export interface DataEntry {
@@ -81,6 +103,14 @@ export interface DataEntry {
      * @generated from protobuf field: bool stale = 6;
      */
     stale: boolean;
+    /**
+     * @generated from protobuf field: bool deleted = 7;
+     */
+    deleted: boolean;
+    /**
+     * @generated from protobuf field: google.protobuf.Timestamp storerTime = 8;
+     */
+    storerTime?: Timestamp;
 }
 /**
  * @generated from protobuf message dht.ClosestPeersRequest
@@ -776,7 +806,8 @@ class StoreDataRequest$Type extends MessageType$<StoreDataRequest> {
         super("dht.StoreDataRequest", [
             { no: 1, name: "kademliaId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 2, name: "data", kind: "message", T: () => Any },
-            { no: 3, name: "ttl", kind: "scalar", T: 13 /*ScalarType.UINT32*/ }
+            { no: 3, name: "ttl", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
+            { no: 4, name: "storerTime", kind: "message", T: () => Timestamp }
         ]);
     }
 }
@@ -821,6 +852,30 @@ class MigrateDataResponse$Type extends MessageType$<MigrateDataResponse> {
  */
 export const MigrateDataResponse = new MigrateDataResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class DeleteDataRequest$Type extends MessageType$<DeleteDataRequest> {
+    constructor() {
+        super("dht.DeleteDataRequest", [
+            { no: 1, name: "kademliaId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message dht.DeleteDataRequest
+ */
+export const DeleteDataRequest = new DeleteDataRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class DeleteDataResponse$Type extends MessageType$<DeleteDataResponse> {
+    constructor() {
+        super("dht.DeleteDataResponse", [
+            { no: 1, name: "deleted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message dht.DeleteDataResponse
+ */
+export const DeleteDataResponse = new DeleteDataResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class DataEntry$Type extends MessageType$<DataEntry> {
     constructor() {
         super("dht.DataEntry", [
@@ -829,7 +884,9 @@ class DataEntry$Type extends MessageType$<DataEntry> {
             { no: 3, name: "data", kind: "message", T: () => Any },
             { no: 4, name: "storedAt", kind: "message", T: () => Timestamp },
             { no: 5, name: "ttl", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
-            { no: 6, name: "stale", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+            { no: 6, name: "stale", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 7, name: "deleted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 8, name: "storerTime", kind: "message", T: () => Timestamp }
         ]);
     }
 }
@@ -1302,7 +1359,8 @@ export const RoutingService = new ServiceType("dht.RoutingService", [
  */
 export const StoreService = new ServiceType("dht.StoreService", [
     { name: "storeData", options: {}, I: StoreDataRequest, O: StoreDataResponse },
-    { name: "migrateData", options: {}, I: MigrateDataRequest, O: MigrateDataResponse }
+    { name: "migrateData", options: {}, I: MigrateDataRequest, O: MigrateDataResponse },
+    { name: "deleteData", options: {}, I: DeleteDataRequest, O: DeleteDataResponse }
 ]);
 /**
  * @generated ServiceType for protobuf service dht.RecursiveFindSessionService
