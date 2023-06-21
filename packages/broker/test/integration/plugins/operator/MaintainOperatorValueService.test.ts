@@ -85,7 +85,7 @@ describe("MaintainOperatorValueService", () => {
         const maintainOperatorValueService = new MaintainOperatorValueService(operatorConfig)
 
         const totalValueInSponsorshipsBefore = await operatorContract.totalValueInSponsorshipsWei()
-        const penaltyFraction = 0.0005 // * 1e18
+        const penaltyFraction = 0.0005
         const threshold = 200 * penaltyFraction // 0.1
 
         // wait for sponsorships to accumulate earnings so approximate values differ enough form the real values
