@@ -73,7 +73,7 @@ export class MaintainOperatorValueService {
     }
 
     async stop(): Promise<void> {
-        logger.info('MaintainOperatorValueService stopped')
+        logger.info('Stop')
         clearInterval(this.checkValueInterval!)
     }
 }
