@@ -2,7 +2,6 @@ import { Logger, Multimap } from '@streamr/utils'
 import { MaintainTopologyHelper } from './MaintainTopologyHelper'
 import StreamrClient, { Stream, Subscription } from 'streamr-client'
 import { StreamID, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
-import { SetMembershipSynchronizer } from '../storage/SetMembershipSynchronizer'
 import pLimit from 'p-limit'
 
 function toStreamIDSafe(input: string): StreamID | undefined {
@@ -17,7 +16,6 @@ export class MaintainTopologyService {
     private readonly streamrClient: StreamrClient
     private readonly maintainTopologyHelper: MaintainTopologyHelper
     private readonly subscriptions = new Multimap<StreamID, Subscription>()
-    private readonly synchronizer = new SetMembershipSynchronizer<StreamID>()
     private readonly concurrencyLimit = pLimit(1)
     private readonly logger = new Logger(module)
 
