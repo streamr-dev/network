@@ -29,7 +29,7 @@ export class AnnounceNodeService {
                 msgType: 'heartbeat',
                 nodeId
             }).catch((err) => {
-                logger.debug('Unable to publish to coordination stream', {
+                logger.warn('Unable to publish to coordination stream', {
                     streamId: this.coordinationStream,
                     reason: err?.message
                 })
