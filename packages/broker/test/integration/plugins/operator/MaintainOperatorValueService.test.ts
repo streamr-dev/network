@@ -23,8 +23,6 @@ const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '127.0.0.1'
 
 const logger = new Logger(module)
 
-jest.setTimeout(60 * 1000)
-
 describe("MaintainOperatorValueService", () => {
     const chainURL = config.rpcEndpoints[0].url
 
@@ -79,7 +77,7 @@ describe("MaintainOperatorValueService", () => {
         await (await streamRegistry.createStream(streamPath2, "metadata")).wait();
         
         ({ operatorWallet, operatorContract } = await deployNewOperator())
-    })
+    }, 60 * 1000)
 
     it("updates both sponsorships to stay over the threshold", async () => {
         await (await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther("200"), operatorWallet.address)).wait()
@@ -117,7 +115,7 @@ describe("MaintainOperatorValueService", () => {
         expect(diff < threshold)
 
         await maintainOperatorValueService.stop()
-    })
+    }, 60 * 1000)
 
     it("needs only one sponsorship to stay over the threshold", async () => {
         await (await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther("200"), operatorWallet.address)).wait()
@@ -155,5 +153,5 @@ describe("MaintainOperatorValueService", () => {
         expect(diff < threshold)
 
         await maintainOperatorValueService.stop()
-    })
+    }, 60 * 1000)
 })
