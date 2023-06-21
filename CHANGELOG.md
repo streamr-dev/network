@@ -27,6 +27,7 @@ found [here](packages/broker/CHANGELOG.md).
 
 - Fix error handling in message pipeline (https://github.com/streamr-dev/network/pull/1479)
 - Fix resend freeze issue (https://github.com/streamr-dev/network/pull/1554)
+- Fix error handling in gap fill (https://github.com/streamr-dev/network/pull/1570)
 
 #### Security
 

@@ -4,12 +4,12 @@ import { EthereumAddress, collect } from '@streamr/utils'
 import range from 'lodash/range'
 import without from 'lodash/without'
 import { OrderMessages } from './../../src/subscribe/OrderMessages'
-import { Resends, ResendOptions } from './../../src/subscribe/Resends'
+import { ResendOptions, Resends } from './../../src/subscribe/Resends'
 import { fromArray } from './../../src/utils/GeneratorUtils'
 import { PushPipeline } from './../../src/utils/PushPipeline'
 import { mockLoggerFactory } from './../test-utils/utils'
 
-const MESSAGE_COUNT = 5
+const MESSAGE_COUNT = 7
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
 const PUBLISHER_ID = randomEthereumAddress()
 const MSG_CHAIN_ID = 'mock-msg-chain-id'
@@ -195,6 +195,28 @@ describe('OrderMessages', () => {
         const output = transform(fromArray(without(msgs, ...missing)))
         expect(await collect(output)).toEqual(without(msgs, ...missing))
         expect(resends.resend).toBeCalledTimes(0)
+    })
+
+    it('gap fill error', async () => {
+        const msgs = await createMockMessages()
+        const missing1 = msgs.filter((m) => m.getTimestamp() === 2000)
+        const missing2 = msgs.filter((m) => m.getTimestamp() === 4000)
+        const missing3 = msgs.filter((m) => m.getTimestamp() === 6000)
+        const resends = {
+            resend: jest.fn()
+                .mockResolvedValueOnce(createMessageStream(...missing1))
+                // 5 error responses (CONFIG.maxGapRequests)
+                .mockRejectedValueOnce(new Error('mock-error'))
+                .mockRejectedValueOnce(new Error('mock-error'))
+                .mockRejectedValueOnce(new Error('mock-error'))
+                .mockRejectedValueOnce(new Error('mock-error'))
+                .mockRejectedValueOnce(new Error('mock-error'))
+                .mockResolvedValueOnce(createMessageStream(...missing3))
+        }
+        const transform = createOrderMessages(resends).transform()
+        const output = transform(fromArray(without(msgs, ...missing1.concat(missing2).concat(missing3))))
+        expect(await collect(output)).toEqual(without(msgs, ...missing2))
+        expect(resends.resend).toBeCalledTimes(2 + CONFIG.maxGapRequests)
     })
 
     it('aborts resends when stopped', async () => {
