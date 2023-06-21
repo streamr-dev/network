@@ -82,7 +82,7 @@ describe('resend subscription', () => {
         return messages
     }
 
-    const startConsuming = (sub: Subscription, outputMessages: Queue<Message>) => {
+    const startConsuming = () => {
         setImmediate(async () => {
             for await (const item of sub) {
                 outputMessages.push(item)
@@ -125,7 +125,7 @@ describe('resend subscription', () => {
             () => latestMessageWhenResendComplete = last(outputMessages.values())!
         )
         sub.on('resendComplete', onResendComplete)
-        startConsuming(sub, outputMessages)
+        startConsuming()
 
         const bufferedRealtimeMessages = await publishAndWaitUntilConsumed('bufferedRealtime')
         const immediateRealtimeMessages = await publishAndWaitUntilConsumed('immediateRealtime')
@@ -148,7 +148,7 @@ describe('resend subscription', () => {
         await createMessages('gap')
         const resend = createResend(historicalMessages, () => [])
         sub = createSubscription(resend)
-        startConsuming(sub, outputMessages)
+        startConsuming()
         
         const realtimeMessages = await publishAndWaitUntilConsumed('realtime')
         await sub.unsubscribe()
@@ -164,7 +164,7 @@ describe('resend subscription', () => {
     it('no historical data', async () => {
         const resend = createResend([], () => [])
         sub = createSubscription(resend)
-        startConsuming(sub, outputMessages)
+        startConsuming()
 
         const realtimeMessages = await publishAndWaitUntilConsumed('realtime')
         await sub.unsubscribe()
@@ -178,7 +178,7 @@ describe('resend subscription', () => {
         const gapMessages = await createMessages('gap')
         const resend = createResend(historicalMessages, () => gapMessages)
         sub = createSubscription(resend, false)
-        startConsuming(sub, outputMessages)
+        startConsuming()
 
         const realtimeMessages = await publishAndWaitUntilConsumed('realtime')
         await sub.unsubscribe()
@@ -210,7 +210,7 @@ describe('resend subscription', () => {
             }
         )
         sub = createSubscription(resend)
-        startConsuming(sub, outputMessages)
+        startConsuming()
 
         const realtimeMessages1 = await publishAndWaitUntilConsumed('realtime1', msgChainIds[0])
         const realtimeMessages2 = await publishAndWaitUntilConsumed('realtime1', msgChainIds[1])
@@ -236,7 +236,7 @@ describe('resend subscription', () => {
         const gapMessages = await createMessages('gap')
         const resend = createResend(historicalMessages, () => gapMessages)
         sub = createSubscription(resend)
-        startConsuming(sub, outputMessages)
+        startConsuming()
 
         await sub.push(historicalMessages[0])
         await sub.push(gapMessages[0])
@@ -256,7 +256,7 @@ describe('resend subscription', () => {
         const historicalMessages = await createMessages('historical')
         const resend = createResend(historicalMessages, () => [])
         sub = createSubscription(resend)
-        startConsuming(sub, outputMessages)
+        startConsuming()
 
         const gapMessages = await publish('gap')
         const realtimeMessages = await publishAndWaitUntilConsumed('realtime')
