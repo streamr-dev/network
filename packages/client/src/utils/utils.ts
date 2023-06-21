@@ -165,9 +165,10 @@ export const fetchHttpStream = async function*(
 ): AsyncGenerator<string, void, undefined> {
     logger.debug('Send HTTP request', { url }) 
     const abortController = new AbortController()
+    const fetchAbortSignal = composeAbortSignals(...compact([abortController.signal, abortSignal]))
     const response: Response = await fetch(url, {
         // cast is needed until this is fixed: https://github.com/node-fetch/node-fetch/issues/1652
-        signal: composeAbortSignals(...compact([abortController.signal, abortSignal])) as FetchAbortSignal
+        signal: fetchAbortSignal as FetchAbortSignal
     })
     logger.debug('Received HTTP response', {
         url,
@@ -195,5 +196,6 @@ export const fetchHttpStream = async function*(
         throw err
     } finally {
         stream?.destroy()
+        fetchAbortSignal.destroy()
     }
 }
