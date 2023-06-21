@@ -11,11 +11,6 @@ import { OperatorServiceConfig } from "./OperatorPlugin"
  */
 export interface MaintainTopologyHelperEvents {
     /**
-     * Emitted if an error occurred in the subscription.
-     */
-    error: (err: Error) => void
-
-    /**
      * Emitted when staking into a Sponsorship on a stream that we haven't staked on before (in another Sponsorship)
      */
     addStakedStream: (streamIds: string[]) => void
