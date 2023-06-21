@@ -12,11 +12,10 @@ import { tokenABI } from "@streamr/network-contracts"
 import { streamRegistryABI } from "@streamr/network-contracts"
 import { Contract } from "@ethersproject/contracts"
 
-import { deployOperatorContract } from "./deployOperatorContract"
 import { deploySponsorship } from "./deploySponsorshipContract"
 import { MaintainOperatorValueService } from "../../../../src/plugins/operator/MaintainOperatorValueService"
 import { OperatorServiceConfig } from "../../../../src/plugins/operator/OperatorPlugin"
-import { ADMIN_WALLET_PK, generateWalletWithGasAndTokens } from "./smartContractUtils"
+import { ADMIN_WALLET_PK, deployOperatorContract, generateWalletWithGasAndTokens } from "./smartContractUtils"
 
 const config = Chains.load()["dev1"]
 const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '127.0.0.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`
@@ -39,7 +38,7 @@ describe("MaintainOperatorValueService", () => {
     const deployNewOperator = async () => {
         const operatorWallet = await generateWalletWithGasAndTokens(provider)
         logger.debug("Deploying operator contract")
-        const operatorContract = await deployOperatorContract(config, operatorWallet)
+        const operatorContract = await deployOperatorContract(operatorWallet)
         logger.debug(`Operator deployed at ${operatorContract.address}`)
         operatorConfig = {
             operatorContractAddress: operatorContract.address,
