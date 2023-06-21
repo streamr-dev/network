@@ -265,7 +265,7 @@ describe('resend subscription', () => {
             ...gapMessages,
             ...realtimeMessages,
         ]
-        expect(outputMessages.values().map((m) => m.content)).toEqual(expectedMessages.map((m) => m.getParsedContent()))
+        expectEqualMessageCollections(outputMessages, expectedMessages)
     })
 
     it('real-time resolves gap', async () => {
@@ -292,7 +292,7 @@ describe('resend subscription', () => {
             ...gapMessages,
             ...realtimeMessages,
         ]
-        expect(outputMessages.values().map((m) => m.content)).toEqual(expectedMessages.map((m) => m.getParsedContent()))
+        expectEqualMessageCollections(outputMessages, expectedMessages)
         expect(resend).toBeCalledTimes(1)  // the historical messages fetch
     })
 
