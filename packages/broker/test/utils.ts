@@ -18,7 +18,7 @@ export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '1
 
 interface TestConfig {
     privateKey: string
-    wsServerPort?: number
+    networkLayerWsServerPort?: number
     httpPort?: number
     extraPlugins?: Record<string, unknown>
     apiAuthentication?: Config['apiAuthentication']
@@ -43,7 +43,7 @@ export const formConfig = ({
     apiAuthentication,
     enableCassandra = false,
     storageConfigRefreshInterval = 0,
-    wsServerPort,
+    networkLayerWsServerPort,
     entryPoints = DEFAULT_ENTRYPOINTS
 }: TestConfig): Config => {
     const plugins: Record<string, any> = { ...extraPlugins }
@@ -63,12 +63,12 @@ export const formConfig = ({
             }
         }
     }
-    const peerDescriptor = wsServerPort ? {
+    const peerDescriptor = networkLayerWsServerPort ? {
         kademliaId: uuid(),
         type: 0,
         websocket: {
             ip: '127.0.0.1',
-            port: wsServerPort
+            port: networkLayerWsServerPort
         }
     } : {
         kademliaId: uuid(),
@@ -166,7 +166,7 @@ export const getStreamParts = async (broker: Broker): Promise<StreamPartID[]> =>
 export async function startStorageNode(
     storageNodePrivateKey: string,
     httpPort: number,
-    wsServerPort: number,
+    networkLayerWsServerPort: number,
     entryPoints?: JsonPeerDescriptor[],
     extraPlugins = {}
 ): Promise<Broker> {
@@ -188,7 +188,7 @@ export async function startStorageNode(
         privateKey: storageNodePrivateKey,
         httpPort,
         enableCassandra: true,
-        wsServerPort,
+        networkLayerWsServerPort,
         entryPoints,
         extraPlugins
     })

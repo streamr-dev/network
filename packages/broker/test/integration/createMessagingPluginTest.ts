@@ -19,7 +19,7 @@ interface MessagingPluginApi<T> {
 
 interface Ports {
     plugin: number
-    brokerConnectionManager: number
+    networkLayer: number
 }
 
 const MOCK_MESSAGE = {
@@ -77,7 +77,7 @@ export const createMessagingPluginTest = <T>(
                         pluginConfig
                     )            
                 },
-                wsServerPort: ports.brokerConnectionManager
+                networkLayerWsServerPort: ports.networkLayer
             })
         })
 
