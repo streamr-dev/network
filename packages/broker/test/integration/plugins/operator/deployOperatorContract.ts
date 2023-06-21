@@ -45,11 +45,13 @@ export async function deployOperatorContract(
             chainConfig.contracts.DefaultUndelegationPolicy,
         ], [
             0,
-            parseEther("1").mul(minOperatorStakePercent).div(100),
+            // parseEther("1").mul(minOperatorStakePercent).div(100),
             0,
             0,
             0,
-            parseEther("1").mul(operatorSharePercent).div(100)
+            0,
+            // parseEther("1").mul(operatorSharePercent).div(100)
+            parseEther("0.1")
         ]
     )).wait() as ContractReceipt // TODO: figure out why typechain types produce any from .connect, shouldn't need explicit typing here
     const newOperatorAddress = operatorReceipt.events?.find((e) => e.event === "NewOperator")?.args?.operatorContractAddress
