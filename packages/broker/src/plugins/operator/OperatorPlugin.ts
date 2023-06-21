@@ -20,9 +20,9 @@ export interface OperatorPluginConfig {
 export interface OperatorServiceConfig {
     provider: Provider
     signer: Signer
-    operatorContractAddress: string
+    operatorContractAddress: string // TODO: make into EthereumAddress
     theGraphUrl: string
-    fetch: (url: string, init?: Record<string, unknown>) => Promise<FetchResponse>
+    fetch: (url: string, init?: Record<string, unknown>) => Promise<FetchResponse> // TODO: remove?
 }
 
 export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
