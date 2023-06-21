@@ -38,7 +38,7 @@ export class AnnounceNodeService {
     }
 
     async stop(): Promise<void> {
+        logger.info('Stop')
         this.abortController.abort()
-        logger.info('stopped')
     }
 }
