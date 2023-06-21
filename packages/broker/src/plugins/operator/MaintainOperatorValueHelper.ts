@@ -26,7 +26,7 @@ export class MaintainOperatorValueHelper {
         return await this.operator.getApproximatePoolValuesPerSponsorship()
     }
 
-    async updateApproximatePoolvalueOfSponsorships(sponsorshipAddresses: string[]): Promise<void> {
+    async updateApproximatePoolValueOfSponsorships(sponsorshipAddresses: string[]): Promise<void> {
         await (await this.operator.updateApproximatePoolvalueOfSponsorships(sponsorshipAddresses)).wait()
     }
 }
