@@ -1,11 +1,9 @@
-import { StreamPartIDUtils } from '@streamr/protocol'
-import { fastWallet } from '@streamr/test-utils'
-import { collect } from '@streamr/utils'
-import { once } from 'events'
-import express from 'express'
+import { startTestServer } from '@streamr/test-utils'
+import { collect, waitForCondition } from '@streamr/utils'
+import { Request, Response } from 'express'
 import range from 'lodash/range'
-import { createQueryString, fetchHttpStream, getEndpointUrl } from '../../src/utils/utils'
-import { createMockMessage } from '../test-utils/utils'
+import { FetchHttpStreamResponseError, createQueryString, fetchHttpStream, getEndpointUrl } from '../../src/utils/utils'
+import { nextValue } from './../../src/utils/iterators'
 
 describe('utils', () => {
 
@@ -28,28 +26,55 @@ describe('utils', () => {
         expect(actual).toBe('a=foo&d=123&e=x%2Cy')
     })
 
-    it('fetchHttpStream', async () => {
-        const MESSAGE_COUNT = 5
-        const MOCK_SERVER_PORT = 12345
-        const app = express()
-        app.get('/endpoint', async (_req, res) => {
-            const publisher = fastWallet()
-            for (const i of range(MESSAGE_COUNT)) {
-                const msg = await createMockMessage({
-                    streamPartId: StreamPartIDUtils.parse('stream#0'),
-                    publisher,
-                    content: {
-                        mockId: i
-                    }
-                })
-                res.write(`${msg.serialize()}\n`)
-            }
-            res.end()
+    describe('fetchHttpStream', () => {
+
+        it('happy path', async () => {
+            const LINE_COUNT = 5
+            const server = await startTestServer('/', async (_req: Request, res: Response) => {
+                for (const i of range(LINE_COUNT)) {
+                    res.write(`${i}\n`)
+                }
+                res.end()
+            })
+            const lines = await collect(fetchHttpStream(server.url))
+            expect(lines.map((line) => parseInt(line))).toEqual(range(LINE_COUNT))
+            await server.stop()
         })
-        const server = app.listen(MOCK_SERVER_PORT)
-        await once(server, 'listening')
-        const msgs = await collect(fetchHttpStream(`http://localhost:${MOCK_SERVER_PORT}/endpoint`, () => undefined as any))
-        expect(msgs.map((m) => (m.getParsedContent() as any).mockId)).toEqual([0, 1, 2, 3, 4])
-        server.close()
+
+        it('abort', async () => {
+            let serverResponseClosed = false
+            const server = await startTestServer('/', async (_req: Request, res: Response) => {
+                res.on('close', () => {
+                    serverResponseClosed = true
+                })
+                res.write(`foobar\n`)
+            })
+            const abortController = new AbortController()
+            const iterator = fetchHttpStream(server.url, abortController)[Symbol.asyncIterator]()
+            const line = await nextValue(iterator)
+            expect(line).toBe('foobar')
+            abortController.abort()
+            await waitForCondition(() => serverResponseClosed === true)
+            await expect(() => nextValue(iterator)).rejects.toThrow(/aborted/)
+            await server.stop()
+        })
+
+        it('error response', async () => {
+            const server = await startTestServer('/foo', async () => {})
+            const iterator = fetchHttpStream(`${server.url}/bar`)[Symbol.asyncIterator]()
+            try {
+                await nextValue(iterator)
+                fail('Should throw')
+            } catch (err) {
+                expect(err).toBeInstanceOf(FetchHttpStreamResponseError)
+                expect(err.response.status).toBe(404)
+            }
+            await server.stop()
+        })
+
+        it('invalid host', async () => {
+            const iterator = fetchHttpStream('http://mock.test')[Symbol.asyncIterator]()
+            await expect(() => nextValue(iterator)).rejects.toThrow(/getaddrinfo ENOTFOUND/)
+        })
     })
 })

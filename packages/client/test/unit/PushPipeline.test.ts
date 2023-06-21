@@ -2,6 +2,7 @@ import { MessageID, StreamMessage, toStreamID } from '@streamr/protocol'
 import { collect, toEthereumAddress, wait } from '@streamr/utils'
 import { Authentication } from '../../src/Authentication'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
+import { pull } from '../../src/utils/PushBuffer'
 import { PushPipeline } from '../../src/utils/PushPipeline'
 import { counterId, instanceId } from '../../src/utils/utils'
 import { LeaksDetector } from '../test-utils/LeaksDetector'
@@ -61,11 +62,10 @@ describe('PushPipeline', () => {
         const s = new PushPipeline<StreamMessage>()
         leaksDetector.add(instanceId(s), s)
         const received: StreamMessage[] = []
-        s.pull((async function* g() {
+        pull((async function* g() {
             yield streamMessage
-
             throw err
-        }()))
+        }()), s)
 
         await expect(async () => {
             for await (const msg of s) {
@@ -95,9 +95,9 @@ describe('PushPipeline', () => {
             throw error
         })
         // eslint-disable-next-line require-yield
-        s.pull((async function* g() {
+        pull((async function* g() {
             throw err
-        }()))
+        }()), s)
 
         await expect(async () => {
             for await (const msg of s) {

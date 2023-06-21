@@ -76,7 +76,7 @@
     "typedoc": "^0.24.8",
     "util": "^0.12.4",
     "weak-napi": "^2.0.2",
-    "webpack": "^5.86.0",
+    "webpack": "^5.87.0",
     "webpack-bundle-analyzer": "^4.9.0",
     "webpack-cli": "^5.1.4",
     "webpack-merge": "^5.8.0"
