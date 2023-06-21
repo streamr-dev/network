@@ -53,9 +53,10 @@ describe('resend subscription', () => {
         })
     })
 
-    const createMessages = async (count: number, type: string, msgChainId?: string): Promise<StreamMessage[]> => {
+    const createMessages = async (type: string, msgChainId?: string): Promise<StreamMessage[]> => {
+        const MESSAGE_COUNT = 3
         const result: StreamMessage[] = []
-        for (let i = 0; i < count; i++) {
+        for (let i = 0; i < MESSAGE_COUNT; i++) {
             const msgId = `${type}${(msgChainId !== undefined) ? ('-' + msgChainId) : ''}-${(i + 1)}`
             result.push(await messageFactory.createMessage({ msgId }, { timestamp: Date.now(), msgChainId }))
         }
@@ -88,8 +89,8 @@ describe('resend subscription', () => {
     }
 
     it('happy path', async () => {
-        const historicalMessages = await createMessages(3, 'historical')
-        const gapMessages = await createMessages(3, 'gap')
+        const historicalMessages = await createMessages('historical')
+        const gapMessages = await createMessages('gap')
         const outputMessages: Queue<Message> = new Queue()
         const resend = jest.fn()
             .mockImplementationOnce(() => createPushPipeline(historicalMessages))
@@ -102,12 +103,12 @@ describe('resend subscription', () => {
         sub.on('resendComplete', onResendComplete)
         startConsuming(sub, outputMessages)
 
-        const bufferedRealtimeMessages = await createMessages(5, 'bufferedRealtime')
+        const bufferedRealtimeMessages = await createMessages('bufferedRealtime')
         for await (const msg of bufferedRealtimeMessages) {
             await sub.push(msg)
         }
         await waitForMatchingItem(last(bufferedRealtimeMessages)!, outputMessages)
-        const immediateRealtimeMessages = await createMessages(5, 'immediateRealtime')
+        const immediateRealtimeMessages = await createMessages('immediateRealtime')
         for await (const msg of immediateRealtimeMessages) {
             await sub.push(msg)
         }
@@ -126,8 +127,8 @@ describe('resend subscription', () => {
     })
 
     it('gap not fillable', async () => {
-        const historicalMessages = await createMessages(3, 'historical')
-        await createMessages(1, 'gap')
+        const historicalMessages = await createMessages('historical')
+        await createMessages('gap')
         const outputMessages: Queue<Message> = new Queue()
         const resend = jest.fn()
             .mockImplementationOnce(() => createPushPipeline(historicalMessages))
@@ -136,7 +137,7 @@ describe('resend subscription', () => {
         const sub = createSubscription(resend)
         startConsuming(sub, outputMessages)
         
-        const realtimeMessages = await createMessages(5, 'realtime')
+        const realtimeMessages = await createMessages('realtime')
         for await (const msg of realtimeMessages) {
             await sub.push(msg)
         }
@@ -158,7 +159,7 @@ describe('resend subscription', () => {
         const sub = createSubscription(resend)
         startConsuming(sub, outputMessages)
 
-        const realtimeMessages = await createMessages(5, 'realtime')
+        const realtimeMessages = await createMessages('realtime')
         for await (const msg of realtimeMessages) {
             await sub.push(msg)
         }
@@ -170,15 +171,15 @@ describe('resend subscription', () => {
     })
 
     it('gap fill disabled', async () => {
-        const historicalMessages = await createMessages(3, 'historical')
-        await createMessages(1, 'gap')
+        const historicalMessages = await createMessages('historical')
+        await createMessages('gap')
         const outputMessages: Queue<Message> = new Queue()
         const resend = jest.fn()
             .mockImplementationOnce(() => createPushPipeline(historicalMessages))
         const sub = createSubscription(resend, false)
         startConsuming(sub, outputMessages)
 
-        const realtimeMessages = await createMessages(5, 'realtime')
+        const realtimeMessages = await createMessages('realtime')
         for await (const msg of realtimeMessages) {
             await sub.push(msg)
         }
@@ -195,10 +196,10 @@ describe('resend subscription', () => {
 
     it('multiple message chains', async () => {
         const msgChainIds = ['chain1', 'chain2']
-        const historicalMessages1 = await createMessages(3, 'historical1', msgChainIds[0])
-        const historicalMessages2 = await createMessages(3, 'historical1', msgChainIds[1])
-        const gapMessages1 = await createMessages(3, 'gap1', msgChainIds[0])
-        const gapMessages2 = await createMessages(3, 'gap2', msgChainIds[1])
+        const historicalMessages1 = await createMessages('historical1', msgChainIds[0])
+        const historicalMessages2 = await createMessages('historical1', msgChainIds[1])
+        const gapMessages1 = await createMessages('gap1', msgChainIds[0])
+        const gapMessages2 = await createMessages('gap2', msgChainIds[1])
         const outputMessages: Queue<Message> = new Queue()
         const resend = jest.fn()
             .mockImplementationOnce(() => createPushPipeline(historicalMessages1.concat(historicalMessages2)))
@@ -212,8 +213,8 @@ describe('resend subscription', () => {
         const sub = createSubscription(resend)
         startConsuming(sub, outputMessages)
 
-        const realtimeMessages1 = await createMessages(5, 'realtime1', msgChainIds[0])
-        const realtimeMessages2 = await createMessages(5, 'realtime1', msgChainIds[1])
+        const realtimeMessages1 = await createMessages('realtime1', msgChainIds[0])
+        const realtimeMessages2 = await createMessages('realtime1', msgChainIds[1])
         for await (const msg of realtimeMessages1.concat(realtimeMessages2)) {
             await sub.push(msg)
         }
@@ -237,8 +238,8 @@ describe('resend subscription', () => {
     })
 
     it('ignore duplicate', async () => {
-        const historicalMessages = await createMessages(3, 'historical')
-        const gapMessages = await createMessages(3, 'gap')
+        const historicalMessages = await createMessages('historical')
+        const gapMessages = await createMessages('gap')
         const outputMessages: Queue<Message> = new Queue()
         const resend = jest.fn()
             .mockImplementationOnce(() => createPushPipeline(historicalMessages))
@@ -248,7 +249,7 @@ describe('resend subscription', () => {
 
         await sub.push(historicalMessages[0])
         await sub.push(gapMessages[0])
-        const realtimeMessages = await createMessages(5, 'realtime')
+        const realtimeMessages = await createMessages('realtime')
         for await (const msg of realtimeMessages) {
             await sub.push(msg)
         }
@@ -264,8 +265,8 @@ describe('resend subscription', () => {
     })
 
     it('real-time resolves gap', async () => {
-        const historicalMessages = await createMessages(3, 'historical')
-        const gapMessages = await createMessages(3, 'gap')
+        const historicalMessages = await createMessages('historical')
+        const gapMessages = await createMessages('gap')
         const outputMessages: Queue<Message> = new Queue()
         const resend = jest.fn()
             .mockImplementationOnce(() => createPushPipeline(historicalMessages))
@@ -275,7 +276,7 @@ describe('resend subscription', () => {
         for await (const msg of gapMessages) {
             await sub.push(msg)
         }
-        const realtimeMessages = await createMessages(5, 'realtime')
+        const realtimeMessages = await createMessages('realtime')
         for await (const msg of realtimeMessages) {
             await sub.push(msg)
         }
