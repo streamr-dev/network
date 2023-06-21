@@ -1,9 +1,6 @@
-import { Logger } from '@streamr/utils'
-import { Contract } from 'ethers'
+import { BigNumber, Contract } from 'ethers'
 import { Operator, StreamrConfig, operatorABI, streamrConfigABI } from '@streamr/network-contracts'
 import { OperatorServiceConfig } from './OperatorPlugin'
-
-const logger = new Logger(module)
 
 export class MaintainOperatorValueHelper {
     private readonly config: OperatorServiceConfig
@@ -21,7 +18,11 @@ export class MaintainOperatorValueHelper {
         return (await streamrConfig.poolValueDriftLimitFraction()).toBigInt()
     }
 
-    async getApproximatePoolValuesPerSponsorship(): Promise<any> {
+    async getApproximatePoolValuesPerSponsorship(): Promise<{
+        sponsorshipAddresses: string[]
+        approxValues: BigNumber[]
+        realValues: BigNumber[]
+    }> {
         return await this.operator.getApproximatePoolValuesPerSponsorship()
     }
 
