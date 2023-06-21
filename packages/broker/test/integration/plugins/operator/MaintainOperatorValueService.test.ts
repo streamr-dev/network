@@ -16,7 +16,7 @@ import { deployOperatorContract } from "./deployOperatorContract"
 import { deploySponsorship } from "./deploySponsorshipContract"
 import { MaintainOperatorValueService } from "../../../../src/plugins/operator/MaintainOperatorValueService"
 import { OperatorServiceConfig } from "../../../../src/plugins/operator/OperatorPlugin"
-import { ADMIN_WALLET_PK } from "./smartContractUtils"
+import { ADMIN_WALLET_PK, generateWalletWithGasAndTokens } from "./smartContractUtils"
 
 const config = Chains.load()["dev1"]
 const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '127.0.0.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`
@@ -37,14 +37,7 @@ describe("MaintainOperatorValueService", () => {
     let operatorConfig: OperatorServiceConfig
 
     const deployNewOperator = async () => {
-        const operatorWallet = Wallet.createRandom().connect(provider)
-        logger.debug("Funding", { address: operatorWallet.address })
-        await (await token.transfer(operatorWallet.address, parseEther("1000"))).wait()
-        await (await adminWallet.sendTransaction({
-            to: operatorWallet.address,
-            value: parseEther("1")
-        })).wait()
-
+        const operatorWallet = await generateWalletWithGasAndTokens(provider)
         logger.debug("Deploying operator contract")
         const operatorContract = await deployOperatorContract(config, operatorWallet)
         logger.debug(`Operator deployed at ${operatorContract.address}`)
