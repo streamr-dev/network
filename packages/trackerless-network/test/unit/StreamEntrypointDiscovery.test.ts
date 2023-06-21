@@ -13,12 +13,18 @@ describe('StreamEntryPointDiscovery', () => {
     let streams = new Map<string, StreamObject>()
 
     const peerDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString('mock').value,
+        kademliaId: PeerID.fromString('fake').value,
         type: 0,
-        nodeName: 'mock'
+        nodeName: 'fake'
     }
 
-    const mockData: DataEntry = {
+    const deletedPeerDescriptor: PeerDescriptor = {
+        kademliaId: PeerID.fromString('deleted').value,
+        type: 0,
+        nodeName: 'deleted'
+    }
+
+    const fakeData: DataEntry = {
         data: Any.pack(peerDescriptor, PeerDescriptor),
         ttl: 1000,
         storer: peerDescriptor,
@@ -27,30 +33,41 @@ describe('StreamEntryPointDiscovery', () => {
         deleted: false
     }
 
+    const fakeDeletedData: DataEntry = {
+        data: Any.pack(deletedPeerDescriptor, PeerDescriptor),
+        ttl: 1000,
+        storer: deletedPeerDescriptor,
+        kademliaId: Uint8Array.from([1, 2, 3]),
+        stale: false,
+        deleted: true
+    }
+
     const stream = 'stream#0'
 
-    const mockGetEntryPointData = async (_key: Uint8Array): Promise<RecursiveFindResult> => {
+    const fakeGetEntryPointData = async (_key: Uint8Array): Promise<RecursiveFindResult> => {
         return {
             closestNodes: [peerDescriptor],
-            dataEntries: [mockData]
+            dataEntries: [fakeData, fakeDeletedData]
         }
     }
 
-    const mockGetEntryPointDataViaPeer = async (_key: Uint8Array, _peer: PeerDescriptor): Promise<DataEntry[]> => {
-        return [mockData]
+    const fakeGetEntryPointDataViaPeer = async (_key: Uint8Array, _peer: PeerDescriptor): Promise<DataEntry[]> => {
+        return [fakeData]
     }
 
-    const mockStoreEntryPointData = async (_key: Uint8Array, _data: Any): Promise<PeerDescriptor[]> => {
+    const fakeStoreEntryPointData = async (_key: Uint8Array, _data: Any): Promise<PeerDescriptor[]> => {
         storeCalled++
         return [peerDescriptor]
     }
 
-    const emptyGetEntryPointData = async (_key: Uint8Array): Promise<RecursiveFindResult> => {
+    const fakeEmptyGetEntryPointData = async (_key: Uint8Array): Promise<RecursiveFindResult> => {
         return {
             closestNodes: [],
             dataEntries: []
         }
     }
+
+    const fakeDeleteEntryPointData = async (_key: Uint8Array): Promise<void> => {}
 
     beforeEach(() => {
         storeCalled = 0
@@ -59,17 +76,19 @@ describe('StreamEntryPointDiscovery', () => {
         streamEntryPointDiscoveryWithData = new StreamEntryPointDiscovery({
             ownPeerDescriptor: peerDescriptor,
             streams,
-            getEntryPointData: mockGetEntryPointData,
-            getEntryPointDataViaPeer: mockGetEntryPointDataViaPeer,
-            storeEntryPointData: mockStoreEntryPointData,
+            getEntryPointData: fakeGetEntryPointData,
+            getEntryPointDataViaPeer: fakeGetEntryPointDataViaPeer,
+            storeEntryPointData: fakeStoreEntryPointData,
+            deleteEntryPointData: fakeDeleteEntryPointData,
             cacheInterval: 2000
         })
         streamEntryPointDiscoveryWithoutData = new StreamEntryPointDiscovery({
             ownPeerDescriptor: peerDescriptor,
             streams: new Map<string, StreamObject>(),
-            getEntryPointData: emptyGetEntryPointData,
-            getEntryPointDataViaPeer: mockGetEntryPointDataViaPeer,
-            storeEntryPointData: mockStoreEntryPointData,
+            getEntryPointData: fakeEmptyGetEntryPointData,
+            getEntryPointDataViaPeer: fakeGetEntryPointDataViaPeer,
+            storeEntryPointData: fakeStoreEntryPointData,
+            deleteEntryPointData: fakeDeleteEntryPointData,
             cacheInterval: 2000
         })
     })
@@ -118,7 +137,7 @@ describe('StreamEntryPointDiscovery', () => {
         await streamEntryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(stream, true, true, 0)
         expect(storeCalled).toEqual(1)
         await wait(4500)
-        streamEntryPointDiscoveryWithData.stopRecaching(stream)
+        streamEntryPointDiscoveryWithData.removeSelfAsEntryPoint(stream)
         expect(storeCalled).toEqual(3)
     })
 

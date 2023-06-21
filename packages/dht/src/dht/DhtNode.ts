@@ -633,7 +633,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public async deleteDataFromDht(idToDelete: Uint8Array): Promise<void> {
-        return this.dataStore!.deleteDataFromDht(idToDelete)
+        if (!this.stopped) {
+            return this.dataStore!.deleteDataFromDht(idToDelete)
+        }
     }
 
     public async findDataViaPeer(idToFind: Uint8Array, peer: PeerDescriptor): Promise<DataEntry[]> {
