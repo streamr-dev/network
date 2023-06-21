@@ -1,4 +1,4 @@
-import { JsonRpcProvider, Provider } from "@ethersproject/providers"
+import { Provider } from "@ethersproject/providers"
 import { Chains } from "@streamr/config"
 import { Wallet } from "@ethersproject/wallet"
 import { parseEther } from "@ethersproject/units"
@@ -15,7 +15,7 @@ import { Contract } from "@ethersproject/contracts"
 import { deploySponsorship } from "./deploySponsorshipContract"
 import { MaintainOperatorValueService } from "../../../../src/plugins/operator/MaintainOperatorValueService"
 import { OperatorServiceConfig } from "../../../../src/plugins/operator/OperatorPlugin"
-import { ADMIN_WALLET_PK, deployOperatorContract, generateWalletWithGasAndTokens } from "./smartContractUtils"
+import { ADMIN_WALLET_PK, deployOperatorContract, generateWalletWithGasAndTokens, getProvider } from "./smartContractUtils"
 
 const config = Chains.load()["dev1"]
 const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '127.0.0.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`
@@ -23,8 +23,6 @@ const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '127.0.0.1'
 const logger = new Logger(module)
 
 describe("MaintainOperatorValueService", () => {
-    const chainURL = config.rpcEndpoints[0].url
-
     let provider: Provider
     let operatorWallet: Wallet
     let operatorContract: Operator
@@ -51,7 +49,7 @@ describe("MaintainOperatorValueService", () => {
     }
 
     beforeEach(async () => {
-        provider = new JsonRpcProvider(chainURL)
+        provider = getProvider()
         logger.debug("Connected to: ", await provider.getNetwork())
 
         adminWallet = new Wallet(ADMIN_WALLET_PK, provider)
@@ -63,9 +61,9 @@ describe("MaintainOperatorValueService", () => {
         streamId1 = adminWallet.address.toLowerCase() + streamPath1
         streamId2 = adminWallet.address.toLowerCase() + streamPath2
         const streamRegistry = new Contract(config.contracts.StreamRegistry, streamRegistryABI, adminWallet) as unknown as StreamRegistry
-        logger.debug(`creating stream with streamId1 ${streamId1}`)
+        logger.debug(`Creating stream with streamId1 ${streamId1}`)
         await (await streamRegistry.createStream(streamPath1, "metadata")).wait()
-        logger.debug(`creating stream with streamId2 ${streamId2}`)
+        logger.debug(`Creating stream with streamId2 ${streamId2}`)
         await (await streamRegistry.createStream(streamPath2, "metadata")).wait();
         
         ({ operatorWallet, operatorContract } = await deployNewOperator())
