@@ -143,6 +143,7 @@ describe('resend subscription', () => {
         await createMessages('gap')
         const resend = jest.fn()
             .mockImplementationOnce(() => createPushPipeline(historicalMessages))
+            // two gap requests (MAX_GAP_REQUESTS)
             .mockImplementationOnce(() => createPushPipeline([]))
             .mockImplementationOnce(() => createPushPipeline([]))
         sub = createSubscription(resend)
