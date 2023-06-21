@@ -71,7 +71,15 @@
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/peerDescriptor"
-                            }
+                            },
+                            "default": [{
+                                "kademliaId": "productionEntryPoint1",
+                                "type": 0,
+                                "websocket": {
+                                    "ip": "127.0.0.1",
+                                    "port": 40401
+                                }
+                            }]
                         },
                         "stringKademliaId": {
                             "type": "string"
@@ -108,54 +116,45 @@
                                         "type": "boolean"
                                     }
                                 }
-                            }
+                            },
+                            "default": [
+                                {
+                                    "url": "stun:stun.streamr.network",
+                                    "port": 5349
+                                },
+                                {
+                                    "url": "turn:turn.streamr.network",
+                                    "port": 5349,
+                                    "username": "BrubeckTurn1",
+                                    "password": "MIlbgtMw4nhpmbgqRrht1Q=="
+                                },
+                                {
+                                    "url": "turn:turn.streamr.network",
+                                    "port": 5349,
+                                    "username": "BrubeckTurn1",
+                                    "password": "MIlbgtMw4nhpmbgqRrht1Q==",
+                                    "tcp": true
+                                }
+                            ]
                         },
                         "webrtcDisallowPrivateAddresses": {
-                            "type": "boolean"
+                            "type": "boolean",
+                            "default": true
                         },
                         "newWebrtcConnectionTimeout": {
-                            "type": "number"
+                            "type": "number",
+                            "default": 15000
                         },
                         "webrtcDatachannelBufferThresholdLow": {
-                            "type": "number"
+                            "type": "number",
+                            "default": 32768
                         },
                         "webrtcDatachannelBufferThresholdHigh": {
-                            "type": "number"
+                            "type": "number",
+                            "default": 131072
                         }
                     },
-                    "default": {
-                        "entryPoints":  [{
-                            "kademliaId": "productionEntryPoint1",
-                            "type": 0,
-                            "websocket": {
-                                "ip": "127.0.0.1",
-                                "port": 40401
-                            }
-                        }],
-                        "iceServers": [
-                            {
-                                "url": "stun:stun.streamr.network",
-                                "port": 5349
-                            },
-                            {
-                                "url": "turn:turn.streamr.network",
-                                "port": 5349,
-                                "username": "BrubeckTurn1",
-                                "password": "MIlbgtMw4nhpmbgqRrht1Q=="
-                            },
-                            {
-                                "url": "turn:turn.streamr.network",
-                                "port": 5349,
-                                "username": "BrubeckTurn1",
-                                "password": "MIlbgtMw4nhpmbgqRrht1Q==",
-                                "tcp": true
-                            }
-                        ],
-                        "webrtcDisallowPrivateAddresses": true,
-                        "newWebrtcConnectionTimeout": 15000,
-                        "webrtcDatachannelBufferThresholdLow": 32768,
-                        "webrtcDatachannelBufferThresholdHigh": 131072
-                    }
+                    "default": {}
                 },
                 "networkNode": {
                     "type": "object",
@@ -165,7 +164,8 @@
                             "type": "string"
                         },
                         "layer2NumOfTargetNeighbors": {
-                            "type": "number"
+                            "type": "number",
+                            "default": 4
                         },
                         "layer2MaxNumberOfContact": {
                             "type": "number"
@@ -174,10 +174,12 @@
                             "type": "number"
                         },
                         "firstConnectionTimeout": {
-                            "type": "number"
+                            "type": "number",
+                            "default": 10000
                         }, 
                         "acceptProxyConnections": {
-                            "type": "boolean"
+                            "type": "boolean",
+                            "default": false
                         }
                     },
                     "default": {}
