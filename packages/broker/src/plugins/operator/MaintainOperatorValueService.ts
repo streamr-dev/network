@@ -12,25 +12,27 @@ export class MaintainOperatorValueService {
     private readonly config: OperatorServiceConfig
     private checkValueInterval: NodeJS.Timeout | null = null
     private readonly helper: MaintainOperatorValueHelper
+    private penaltyLimitFraction: bigint
 
-    constructor(config: OperatorServiceConfig) {
+    constructor(config: OperatorServiceConfig, penaltyLimitFraction = BigInt(0)) {
         this.config = config
         this.helper = new MaintainOperatorValueHelper(config)
+        this.penaltyLimitFraction = penaltyLimitFraction
     }
 
-    start(penaltyLimitFraction?: bigint): void {
+    start(): void {
         logger.info('Started')
-        this.checkValue(penaltyLimitFraction).catch((err) => {
+        this.checkValue().catch((err) => {
             logger.warn('Encountered error while checking value', { err })
         })
         this.checkValueInterval = setInterval(() => {
-            this.checkValue(penaltyLimitFraction).catch((err) => {
+            this.checkValue().catch((err) => {
                 logger.warn('Encountered error while checking value', { err })
             })
         }, CHECK_VALUE_INTERVAL)
     }
 
-    private async checkValue(penaltyLimitFraction?: bigint): Promise<void> {
+    private async checkValue(): Promise<void> {
         logger.info('Check approximate value for operator', { operatorContractAddress: this.config.operatorContractAddress })
 
         const { sponsorshipAddresses, approxValues, realValues } = await this.helper.getApproximatePoolValuesPerSponsorship()
@@ -49,11 +51,11 @@ export class MaintainOperatorValueService {
             totalApprox = totalApprox + sponsorship.approxValue.toBigInt()
         }
 
-        if (penaltyLimitFraction === undefined) {
-            penaltyLimitFraction = await this.helper.getPenaltyLimitFraction()
+        if (this.penaltyLimitFraction === undefined || this.penaltyLimitFraction === BigInt(0)) {
+            this.penaltyLimitFraction = await this.helper.getPenaltyLimitFraction()
         }
 
-        const threshold = totalApprox * penaltyLimitFraction / BigInt(ONE_ETHER)
+        const threshold = totalApprox * this.penaltyLimitFraction / BigInt(ONE_ETHER)
         if (totalDiff > threshold) {
             // sort sponsorships by diff in descending order
             const sortedSponsorships = sponsorships.sort((a: any, b: any) => b.diff - a.diff)

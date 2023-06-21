@@ -82,16 +82,16 @@ describe("MaintainOperatorValueService", () => {
         expect(await token.balanceOf(sponsorship1.address)).toEqual(parseEther("300")) // 200 sponsored + 100 staked
         expect(await token.balanceOf(sponsorship2.address)).toEqual(parseEther("300"))
         
-        const maintainOperatorValueService = new MaintainOperatorValueService(operatorConfig)
+        const penaltyFraction = parseEther("0.0005")
+        const threshold = penaltyFraction.mul(200).toBigInt()
+        const maintainOperatorValueService = new MaintainOperatorValueService(operatorConfig, penaltyFraction.toBigInt())
 
         const totalValueInSponsorshipsBefore = await operatorContract.totalValueInSponsorshipsWei()
-        const penaltyFraction = 0.0005
-        const threshold = 200 * penaltyFraction // 0.1
 
         // wait for sponsorships to accumulate earnings so approximate values differ enough form the real values
         await wait(3000)
 
-        maintainOperatorValueService.start(parseEther(`${penaltyFraction}`).toBigInt()) // 200 * 0.001 = 0.1
+        maintainOperatorValueService.start()
 
         await waitForCondition(async () => await operatorContract.totalValueInSponsorshipsWei() > totalValueInSponsorshipsBefore, 10000, 1000)
         
@@ -120,16 +120,16 @@ describe("MaintainOperatorValueService", () => {
         expect(await token.balanceOf(sponsorship1.address)).toEqual(parseEther("300")) // 200 sponsored + 100 staked
         expect(await token.balanceOf(sponsorship2.address)).toEqual(parseEther("300"))
         
-        const maintainOperatorValueService = new MaintainOperatorValueService(operatorConfig)
+        const penaltyFraction = parseEther("0.0005")
+        const threshold = penaltyFraction.mul(200).toBigInt()
+        const maintainOperatorValueService = new MaintainOperatorValueService(operatorConfig, penaltyFraction.toBigInt())
 
         const totalValueInSponsorshipsBefore = await operatorContract.totalValueInSponsorshipsWei()
-        const penaltyFraction = 0.0005 // * 1e18
-        const threshold = 200 * penaltyFraction // 0.02
 
         // wait for sponsorships to accumulate earnings so approximate values differ enough form the real values
         await wait(3000)
 
-        maintainOperatorValueService.start(parseEther(`${penaltyFraction}`).toBigInt()) // 200 * 0.001 = 0.02
+        maintainOperatorValueService.start()
 
         await waitForCondition(async () => await operatorContract.totalValueInSponsorshipsWei() > totalValueInSponsorshipsBefore, 10000, 1000)
         
