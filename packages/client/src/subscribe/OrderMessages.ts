@@ -94,7 +94,7 @@ export class OrderMessages {
                 this.enabled = false
                 this.orderingUtil.disable()
             } else {
-                this.outBuffer.endWrite(err)
+                throw err
             }
         } finally {
             if (resendMessageStream != null) {
