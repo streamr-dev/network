@@ -7,9 +7,9 @@ const logger = new Logger(module)
 const CHECK_VALUE_INTERVAL = 1000 * 60 * 60 * 24 // 1 day
 
 export class MaintainOperatorValueService {
-    config: OperatorServiceConfig
+    private readonly config: OperatorServiceConfig
     private checkValueInterval: NodeJS.Timeout | null = null
-    private helper: MaintainOperatorValueHelper
+    private readonly helper: MaintainOperatorValueHelper
 
     constructor(config: OperatorServiceConfig) {
         logger.trace('MaintainOperatorValueService created')
