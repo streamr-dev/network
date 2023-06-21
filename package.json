@@ -41,7 +41,7 @@
         "jest-extended": "^4.0.0",
         "jest-mock-extended": "^3.0.1",
         "lerna": "^7.0.2",
-        "semver": "^7.3.5",
+        "semver": "^7.5.2",
         "ts-jest": "^29.0.5",
         "typescript": "^4.9.3",
         "yarn": "^1.22.17",
