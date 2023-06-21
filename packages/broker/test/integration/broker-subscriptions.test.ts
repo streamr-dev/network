@@ -44,7 +44,7 @@ describe('broker subscriptions', () => {
                     port: mqttPort1
                 }
             },
-            wsServerPort: 44400
+            networkLayerWsServerPort: 44400
         })
         broker2 = await startBroker({
             privateKey: broker2User.privateKey,
@@ -53,7 +53,7 @@ describe('broker subscriptions', () => {
                     port: mqttPort2
                 }
             },
-            wsServerPort: 44401
+            networkLayerWsServerPort: 44401
         })
 
         client1 = await createClient(await fetchPrivateKeyWithGas())

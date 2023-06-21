@@ -5,6 +5,7 @@ import { Message } from '../../../../src/helpers/PayloadFormat'
 import { createMessagingPluginTest } from '../../createMessagingPluginTest'
 
 const MQTT_PORT = 12430
+const NETWORK_LAYER_PORT = 40420
 
 jest.setTimeout(60000)
 
@@ -38,7 +39,7 @@ createMessagingPluginTest('mqtt',
     },
     {
         plugin: MQTT_PORT,
-        brokerConnectionManager: 40420,
+        networkLayer: NETWORK_LAYER_PORT,
     },
     module
 )
