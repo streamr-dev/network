@@ -307,12 +307,6 @@ export class Queue<T> {
         return this.items.length
     }
 
-    async collect(src: AsyncIterable<T>): Promise<void> {
-        for await (const item of src) {
-            this.push(item)
-        }
-    }
-
     values(): T[] {
         return this.items
     }

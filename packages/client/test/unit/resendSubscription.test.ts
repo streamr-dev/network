@@ -34,7 +34,11 @@ const expectEqualMessageCollections = (actual: Iterable<Message>, expected: Stre
 }
 
 const startConsuming = (sub: Subscription, outputMessages: Queue<Message>) => {
-    setImmediate(() => outputMessages.collect(sub))
+    setImmediate(async () => {
+        for await (const item of sub) {
+            outputMessages.push(item)
+        }
+    })
 }
 
 describe('resend subscription', () => {
