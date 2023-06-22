@@ -18,6 +18,7 @@ export class MaintainOperatorValueHelper {
         return (await streamrConfig.poolValueDriftLimitFraction()).toBigInt()
     }
 
+    // ethers5 handles BigIng as BigNumber, but once it's upgrated to ethers6, it will be changed to BigInt (see ETH-536)
     async getApproximatePoolValuesPerSponsorship(): Promise<{
         sponsorshipAddresses: string[]
         approxValues: BigNumber[]

@@ -33,8 +33,6 @@ export class MaintainOperatorValueService {
     }
 
     private async checkValue(): Promise<void> {
-        logger.info('Check approximate value for operator', { operatorContractAddress: this.config.operatorContractAddress })
-
         const { sponsorshipAddresses, approxValues, realValues } = await this.helper.getApproximatePoolValuesPerSponsorship()
         let totalDiff = BigInt(0)
         let totalApprox = BigInt(0)
@@ -56,6 +54,8 @@ export class MaintainOperatorValueService {
         }
 
         const threshold = totalApprox * this.penaltyLimitFraction / BigInt(ONE_ETHER)
+
+        logger.info('Check approximate pool values of sponsorships', { threshold, totalDiff })
         if (totalDiff > threshold) {
             // sort sponsorships by diff in descending order
             const sortedSponsorships = sponsorships.sort((a: any, b: any) => b.diff - a.diff)
@@ -73,9 +73,8 @@ export class MaintainOperatorValueService {
             
             // pick the first entries needed to get the total diff under the threshold
             const neededSponsorshipAddresses = sortedSponsorships.slice(0, neededSponsorshipsCount).map((sponsorship) => sponsorship.address)
-            logger.info('Updating sponsorships', { neededSponsorshipsCount, threshold, diffPercentage: diff / totalDiff })
+            logger.info('Update approximate pool values of sponsorships', { threshold, diffPercentage: diff / totalDiff })
             await this.helper.updateApproximatePoolValueOfSponsorships(neededSponsorshipAddresses)
-            logger.info('Updated sponsorships!')
         }
     }
 
