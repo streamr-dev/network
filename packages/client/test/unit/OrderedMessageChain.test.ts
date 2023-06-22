@@ -47,7 +47,7 @@ describe('OrderedMessageChain', () => {
         onOrderedMessageAdded = jest.fn()
         onGapFound = jest.fn()
         onGapResolved = jest.fn()
-        chain = new OrderedMessageChain(undefined as any)
+        chain = new OrderedMessageChain(undefined as any, new AbortController().signal)
         chain.on('orderedMessageAdded', onOrderedMessageAdded)
         chain.on('gapFound', onGapFound)
         chain.on('gapResolved', onGapResolved)

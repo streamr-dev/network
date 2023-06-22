@@ -1,5 +1,5 @@
 import { MessageRef, StreamMessage, StreamPartID } from '@streamr/protocol'
-import { Gate, Logger } from '@streamr/utils'
+import { Gate, Logger, EthereumAddress } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import Heap from 'heap'
 
@@ -9,6 +9,12 @@ import Heap from 'heap'
 export interface Gap {
     from: StreamMessage
     to: StreamMessage
+}
+
+export interface OrderedMessageChainContext {
+    streamPartId: StreamPartID
+    publisherId: EthereumAddress
+    msgChainId: string
 }
 
 export interface Events {
@@ -77,14 +83,17 @@ export class OrderedMessageChain {
     private currentGap?: Gap
     private readonly pendingMsgs: Heap<StreamMessage>
     private readonly eventEmitter: EventEmitter<Events>
-    protected readonly streamPartId: StreamPartID
+    private readonly context: OrderedMessageChainContext
 
-    constructor(streamPartId: StreamPartID) {
-        this.streamPartId = streamPartId
+    constructor(context: OrderedMessageChainContext, abortSignal: AbortSignal) {
+        this.context = context
         this.pendingMsgs = new Heap<StreamMessage>((msg1: StreamMessage, msg2: StreamMessage) => {
             return msg1.getMessageRef().compareTo(msg2.getMessageRef())
         })
         this.eventEmitter = new EventEmitter()
+        abortSignal.addEventListener('abort', () => {
+            this.eventEmitter.removeAllListeners()
+        })
     }
 
     addMessage(msg: StreamMessage): void {
@@ -136,7 +145,7 @@ export class OrderedMessageChain {
                 to: this.pendingMsgs.peek()!
             }
             logger.debug('Gap found', {
-                streamPartId: this.streamPartId,
+                context: this.context,
                 from: this.currentGap.from.getMessageRef(),
                 to: this.currentGap.to.getMessageRef()
             })
@@ -149,7 +158,7 @@ export class OrderedMessageChain {
             const gap = this.currentGap
             this.currentGap = undefined
             logger.debug('Gap resolved', {
-                streamPartId: this.streamPartId,
+                context: this.context,
                 from: gap.from.getMessageRef(),
                 to: gap.to.getMessageRef()
             })
@@ -170,8 +179,8 @@ export class OrderedMessageChain {
             || this.pendingMsgs.contains(msg)
     }
 
-    destroy(): void {
-        this.eventEmitter.removeAllListeners()
+    getContext(): OrderedMessageChainContext {
+        return this.context
     }
 
     on<E extends keyof Events>(eventName: E, listener: Events[E]): void {

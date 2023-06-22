@@ -1,23 +1,26 @@
 import { MessageID, MessageRef, StreamMessage, StreamPartIDUtils } from '@streamr/protocol'
 import { Defer, EthereumAddress, toEthereumAddress, wait, waitForCondition } from '@streamr/utils'
-import { GapFilledMessageChain } from '../../src/subscribe/ordering/GapFilledMessageChain'
+import { OrderedMessageChain } from '../../src/subscribe/ordering/OrderedMessageChain'
+import { GapFiller } from '../../src/subscribe/ordering/GapFiller'
 import { Gap } from '../../src/subscribe/ordering/OrderedMessageChain'
 import { fromArray } from '../../src/utils/GeneratorUtils'
 
-const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
-const PUBLISHER_ID = toEthereumAddress('0x0000000000000000000000000000000000000001')
-const MSG_CHAIN_ID = 'msgChainId'
+const CONTEXT = {
+    streamPartId: StreamPartIDUtils.parse('stream#0'),
+    publisherId: toEthereumAddress('0x0000000000000000000000000000000000000001'),
+    msgChainId: 'msgChainId'
+}
 const STORAGE_NODE_ADDRESS = toEthereumAddress('0x0000000000000000000000000000000000000002')
 
 const createMessage = (timestamp: number, hasPrevRef = true) => {
     return new StreamMessage({
         messageId: new MessageID(
-            StreamPartIDUtils.getStreamID(STREAM_PART_ID),
-            StreamPartIDUtils.getStreamPartition(STREAM_PART_ID),
+            StreamPartIDUtils.getStreamID(CONTEXT.streamPartId),
+            StreamPartIDUtils.getStreamPartition(CONTEXT.streamPartId),
             timestamp,
             0,
-            PUBLISHER_ID, 
-            MSG_CHAIN_ID
+            CONTEXT.publisherId, 
+            CONTEXT.msgChainId
         ),
         prevMsgRef: hasPrevRef ? new MessageRef(timestamp - 1, 0) : null,
         content: '{}',
@@ -28,36 +31,45 @@ const createMessage = (timestamp: number, hasPrevRef = true) => {
 const MAX_REQUESTS_PER_GAP = 3
 const INITIAL_WAIT_TIME = 50
 
-describe('gap fill', () => {
+describe('GapFiller', () => {
 
-    let chain: GapFilledMessageChain
+    let chain: OrderedMessageChain
     const onOrderedMessageAdded = jest.fn()
+    let abortController: AbortController
 
-    const createChainWithActiveGapFill = (
+    beforeEach(() => {
+        abortController = new AbortController()
+        chain = new OrderedMessageChain(CONTEXT, abortController.signal)
+        chain.on('orderedMessageAdded', onOrderedMessageAdded)
+    })
+
+    const startActiveGapFiller = (
         resend: (gap: Gap, storageNodeAddress: EthereumAddress, abortSignal: AbortSignal) => AsyncGenerator<StreamMessage>,
         getStorageNodeAddresses: () => Promise<EthereumAddress[]>
     ) => {
-        chain = new GapFilledMessageChain({
-            streamPartId: STREAM_PART_ID,
+        const filler = new GapFiller({
+            chain,
             resend,
             getStorageNodeAddresses,
             initialWaitTime: INITIAL_WAIT_TIME,
             retryWaitTime: 20,
             maxRequestsPerGap: MAX_REQUESTS_PER_GAP,
+            abortSignal: abortController.signal
         })
-        chain.on('orderedMessageAdded', onOrderedMessageAdded)
+        filler.start()
     }
     
-    const createChainWithPassiveGapFill = () => {
-        chain = new GapFilledMessageChain({
-            streamPartId: STREAM_PART_ID,
+    const startPassiveGapFiller = () => {
+        const filler = new GapFiller({
+            chain,
             resend: undefined as any,
             getStorageNodeAddresses: undefined as any,
             initialWaitTime: INITIAL_WAIT_TIME,
             retryWaitTime: undefined as any,
             maxRequestsPerGap: 0,
+            abortSignal: abortController.signal
         })
-        chain.on('orderedMessageAdded', onOrderedMessageAdded)
+        filler.start()
     }
 
     const addMessages = (timestamps: number[], usePrevRefs = true) => {
@@ -78,7 +90,7 @@ describe('gap fill', () => {
             const storedMessages = [createMessage(2), createMessage(3)]
             const getStorageNodeAddresses = jest.fn().mockResolvedValue([STORAGE_NODE_ADDRESS])
             const resend = jest.fn().mockReturnValue(fromArray(storedMessages))
-            createChainWithActiveGapFill(
+            startActiveGapFiller(
                 resend,
                 getStorageNodeAddresses
             )
@@ -107,7 +119,7 @@ describe('gap fill', () => {
                     throw new Error('assertion failed')
                 }
             })
-            createChainWithActiveGapFill(
+            startActiveGapFiller(
                 resend,
                 getStorageNodeAddresses
             )
@@ -121,7 +133,7 @@ describe('gap fill', () => {
             const storedMessages = [createMessage(3)]
             const resend = jest.fn().mockReturnValue(fromArray(storedMessages))
             const getStorageNodeAddresses = jest.fn().mockResolvedValue([STORAGE_NODE_ADDRESS])
-            createChainWithActiveGapFill(
+            startActiveGapFiller(
                 resend,
                 getStorageNodeAddresses
             )
@@ -133,7 +145,7 @@ describe('gap fill', () => {
         it('realtime data resolves gap', async () => {
             const resend = jest.fn()
             const getStorageNodeAddresses = jest.fn()
-            createChainWithActiveGapFill(
+            startActiveGapFiller(
                 resend,
                 getStorageNodeAddresses
             )
@@ -146,7 +158,7 @@ describe('gap fill', () => {
         it('no storage nodes', async () => {
             const resend = jest.fn()
             const getStorageNodeAddresses = jest.fn().mockResolvedValue([])
-            createChainWithActiveGapFill(
+            startActiveGapFiller(
                 resend,
                 getStorageNodeAddresses
             )
@@ -159,12 +171,12 @@ describe('gap fill', () => {
         it('destroy while waiting', async () => {
             const resend = jest.fn()
             const getStorageNodeAddresses = jest.fn()
-            createChainWithActiveGapFill(
+            startActiveGapFiller(
                 resend, 
                 getStorageNodeAddresses,
             )
             addMessages([1, 3])
-            chain.destroy()
+            abortController.abort()
             await expectOrderedMessages([1])
             expect(getStorageNodeAddresses).not.toBeCalled()
             expect(resend).not.toBeCalled()
@@ -186,13 +198,13 @@ describe('gap fill', () => {
                 await defer
             }
             const getStorageNodeAddresses = jest.fn().mockResolvedValue([STORAGE_NODE_ADDRESS])
-            createChainWithActiveGapFill(
+            startActiveGapFiller(
                 resend,
                 getStorageNodeAddresses,
             )
             addMessages([1, 3])
             await wait(INITIAL_WAIT_TIME * 1.1)
-            chain.destroy()
+            abortController.abort()
             await expectOrderedMessages([1])
             expect(resendAborted).toBeTrue()
         })
@@ -201,27 +213,27 @@ describe('gap fill', () => {
     describe('passive', () => {
 
         it('single gap', async () => {
-            createChainWithPassiveGapFill()
+            startPassiveGapFiller()
             addMessages([1, 3])
             await expectOrderedMessages([1, 3])
         })
 
         it('multiple gaps', async () => {
-            createChainWithPassiveGapFill()
+            startPassiveGapFiller()
             addMessages([1, 3, 5])
             await expectOrderedMessages([1, 3, 5])
         })
 
         it('realtime data resolves gap', async () => {
-            createChainWithPassiveGapFill()
+            startPassiveGapFiller()
             addMessages([1, 3, 2])
             await expectOrderedMessages([1, 2, 3])
         })
 
         it('abort while waiting', async () => {
-            createChainWithPassiveGapFill()
+            startPassiveGapFiller()
             addMessages([1, 3])
-            chain.destroy()
+            abortController.abort()
             await expectOrderedMessages([1])
         })
 

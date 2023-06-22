@@ -1,17 +1,18 @@
-import { StreamMessage, StreamPartID } from '@streamr/protocol'
+import { StreamMessage } from '@streamr/protocol'
 import { EthereumAddress, Logger, wait } from '@streamr/utils'
 import sample from 'lodash/sample'
 import { Gap, OrderedMessageChain } from './OrderedMessageChain'
 
 const logger = new Logger(module)
 
-interface GapFilledMessageChainOptions {
-    streamPartId: StreamPartID
+interface GapFillerOptions {
+    chain: OrderedMessageChain
     resend: (gap: Gap, storageNodeAddress: EthereumAddress, abortSignal: AbortSignal) => AsyncGenerator<StreamMessage>
     getStorageNodeAddresses: () => Promise<EthereumAddress[]>
     initialWaitTime: number
     retryWaitTime: number
     maxRequestsPerGap: number
+    abortSignal: AbortSignal
 }
 
 const runAbortableTask = async (
@@ -26,24 +27,33 @@ const runAbortableTask = async (
     }
 }
 
-export class GapFilledMessageChain extends OrderedMessageChain {
+export class GapFiller {
 
     private currentTask: { gap: Gap, abortController: AbortController } | undefined = undefined
+    private readonly chain: OrderedMessageChain
     private readonly resend: (gap: Gap, storageNodeAddress: EthereumAddress, abortSignal: AbortSignal) => AsyncGenerator<StreamMessage>
     private readonly getStorageNodeAddresses: () => Promise<EthereumAddress[]>
     private readonly initialWaitTime: number
     private readonly retryWaitTime: number
     private readonly maxRequestsPerGap: number
 
-    constructor(opts: GapFilledMessageChainOptions) {
-        super(opts.streamPartId)
+    constructor(opts: GapFillerOptions) {
+        this.chain = opts.chain
         this.resend = opts.resend
         this.getStorageNodeAddresses = opts.getStorageNodeAddresses
         this.initialWaitTime = opts.initialWaitTime
         this.retryWaitTime = opts.retryWaitTime
         this.maxRequestsPerGap = opts.maxRequestsPerGap
-        this.on('gapFound', (gap: Gap) => this.onGapFound(gap))
-        this.on('gapResolved', () => this.onGapResolved())
+        opts.abortSignal.addEventListener('abort', () => {
+            if (this.currentTask !== undefined) {
+                this.currentTask.abortController.abort()
+            }
+        })
+    }
+
+    start(): void {
+        this.chain.on('gapFound', (gap: Gap) => this.onGapFound(gap))
+        this.chain.on('gapResolved', () => this.onGapResolved())
     }
 
     private async onGapFound(gap: Gap) {
@@ -66,7 +76,7 @@ export class GapFilledMessageChain extends OrderedMessageChain {
                  * this task has not been aborted by either of these reasons, we resolve the gap manually as we
                  * don't try to fill it anymore.
                  */
-                this.resolveMessages(gap.to.getMessageRef())
+                this.chain.resolveMessages(gap.to.getMessageRef())
             })
         } catch (err: any) {
             this.onError(err, gap)
@@ -88,7 +98,7 @@ export class GapFilledMessageChain extends OrderedMessageChain {
                     await runAbortableTask(async () => {
                         const msgs = this.resend(gap, sample(addresses)!, abortSignal)
                         for await (const msg of msgs) {
-                            this.addMessage(msg)
+                            this.chain.addMessage(msg)
                         }
                     })
                 } catch (err) {
@@ -101,20 +111,13 @@ export class GapFilledMessageChain extends OrderedMessageChain {
         }
     }
 
-    override destroy(): void {
-        super.destroy()
-        if (this.currentTask !== undefined) {
-            this.currentTask.abortController.abort()
-        }
-    }
-
     private onError(error: any, gap: Gap): void {
         logger.debug('Unable to fill gap', {
             error: {
                 message: error?.message,
                 code: error?.code,
             },
-            streamPartId: this.streamPartId,
+            context: this.chain.getContext(),
             from: gap.from.getMessageRef(),
             to: gap.to.getMessageRef()
         })
