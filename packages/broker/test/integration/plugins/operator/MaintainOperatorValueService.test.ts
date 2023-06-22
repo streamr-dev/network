@@ -6,16 +6,15 @@ import { Logger, wait, waitForCondition } from '@streamr/utils'
 import fetch from "node-fetch"
 
 import type { IERC677, Operator } from "@streamr/network-contracts"
-import type { StreamRegistry } from "@streamr/network-contracts"
 
 import { tokenABI } from "@streamr/network-contracts"
-import { streamRegistryABI } from "@streamr/network-contracts"
 import { Contract } from "@ethersproject/contracts"
 
 import { deploySponsorship } from "./deploySponsorshipContract"
 import { MaintainOperatorValueService } from "../../../../src/plugins/operator/MaintainOperatorValueService"
 import { OperatorServiceConfig } from "../../../../src/plugins/operator/OperatorPlugin"
 import { ADMIN_WALLET_PK, deployOperatorContract, generateWalletWithGasAndTokens, getProvider } from "./smartContractUtils"
+import StreamrClient, { CONFIG_TEST } from "streamr-client"
 
 const config = Chains.load()["dev1"]
 const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '127.0.0.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`
@@ -55,17 +54,16 @@ describe("MaintainOperatorValueService", () => {
         adminWallet = new Wallet(ADMIN_WALLET_PK, provider)
 
         token = new Contract(config.contracts.LINK, tokenABI, adminWallet) as unknown as IERC677
-        const timeString = (new Date()).getTime().toString()
-        const streamPath1 = "/operatorvalueservicetest-1-" + timeString
-        const streamPath2 = "/operatorvalueservicetest-2-" + timeString
-        streamId1 = adminWallet.address.toLowerCase() + streamPath1
-        streamId2 = adminWallet.address.toLowerCase() + streamPath2
-        const streamRegistry = new Contract(config.contracts.StreamRegistry, streamRegistryABI, adminWallet) as unknown as StreamRegistry
-        logger.debug(`Creating stream with streamId1 ${streamId1}`)
-        await (await streamRegistry.createStream(streamPath1, "metadata")).wait()
-        logger.debug(`Creating stream with streamId2 ${streamId2}`)
-        await (await streamRegistry.createStream(streamPath2, "metadata")).wait();
-        
+        const client = new StreamrClient({
+            ...CONFIG_TEST,
+            auth: {
+                privateKey: ADMIN_WALLET_PK
+            }
+        })
+        streamId1 = (await client.createStream(`/operatorvalueservicetest-1-${Date.now()}`)).id
+        streamId2 = (await client.createStream(`/operatorvalueservicetest-2-${Date.now()}`)).id
+        await client.destroy();
+
         ({ operatorWallet, operatorContract } = await deployNewOperator())
     }, 60 * 1000)
 
