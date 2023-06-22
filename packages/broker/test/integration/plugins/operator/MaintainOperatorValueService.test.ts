@@ -47,6 +47,15 @@ describe("MaintainOperatorValueService", () => {
         return { operatorWallet, operatorContract }
     }
 
+    const getDiffBetweenApproxAndRealValues = async (): Promise<bigint> => {
+        const { sponsorshipAddresses, approxValues, realValues } = await operatorContract.getApproximatePoolValuesPerSponsorship()
+        let diff = BigInt(0)
+        for (let i = 0; i < sponsorshipAddresses.length; i++) {
+            diff = realValues[i].toBigInt() - approxValues[i].toBigInt()
+        }
+        return diff
+    }
+
     beforeEach(async () => {
         provider = getProvider()
         logger.debug("Connected to: ", await provider.getNetwork())
@@ -65,9 +74,7 @@ describe("MaintainOperatorValueService", () => {
         await client.destroy();
 
         ({ operatorWallet, operatorContract } = await deployNewOperator())
-    }, 60 * 1000)
 
-    it("updates both sponsorships to stay over the threshold", async () => {
         await (await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther("200"), operatorWallet.address)).wait()
         // deploy 2 sponsorships, sponsor 200 & stake 100 into both of them
         for (const streamId of [streamId1, streamId2]) {
@@ -76,7 +83,9 @@ describe("MaintainOperatorValueService", () => {
             await (await operatorContract.stake(sponsorship.address, parseEther("100"))).wait()
             expect(await token.balanceOf(sponsorship.address)).toEqual(parseEther("300")) // 200 sponsored + 100 staked
         }
-        
+    }, 60 * 1000)
+
+    it("updates both sponsorships to stay over the threshold", async () => {
         const penaltyFraction = parseEther("0.001")
         const threshold = penaltyFraction.mul(200).toBigInt()
         const maintainOperatorValueService = new MaintainOperatorValueService(operatorConfig, penaltyFraction.toBigInt())
@@ -90,12 +99,7 @@ describe("MaintainOperatorValueService", () => {
 
         await waitForCondition(async () => await operatorContract.totalValueInSponsorshipsWei() > totalValueInSponsorshipsBefore, 10000, 1000)
         
-        const { sponsorshipAddresses, approxValues, realValues } = await operatorContract.getApproximatePoolValuesPerSponsorship()
-        let diff = BigInt(0)
-        for (let i = 0; i < sponsorshipAddresses.length; i++) {
-            diff = realValues[i].toBigInt() - approxValues[i].toBigInt()
-        }
-        
+        const diff = await getDiffBetweenApproxAndRealValues()
         expect((await operatorContract.totalValueInSponsorshipsWei()).toBigInt()).toBeGreaterThan(totalValueInSponsorshipsBefore.toBigInt())
         expect(diff).toBeLessThan(threshold)
 
@@ -103,15 +107,6 @@ describe("MaintainOperatorValueService", () => {
     }, 60 * 1000)
 
     it("needs only one sponsorship to stay over the threshold", async () => {
-        await (await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther("200"), operatorWallet.address)).wait()
-        // deploy 2 sponsorships, sponsor 200 & stake 100 into both of them
-        for (const streamId of [streamId1, streamId2]) {
-            const sponsorship = await deploySponsorship(config, operatorWallet, { streamId })
-            await (await token.connect(operatorWallet).transferAndCall(sponsorship.address, parseEther("200"), "0x")).wait()
-            await (await operatorContract.stake(sponsorship.address, parseEther("100"))).wait()
-            expect(await token.balanceOf(sponsorship.address)).toEqual(parseEther("300")) // 200 sponsored + 100 staked
-        }
-        
         const penaltyFraction = parseEther("0.0005")
         const threshold = penaltyFraction.mul(200).toBigInt()
         const maintainOperatorValueService = new MaintainOperatorValueService(operatorConfig, penaltyFraction.toBigInt())
@@ -125,12 +120,7 @@ describe("MaintainOperatorValueService", () => {
 
         await waitForCondition(async () => await operatorContract.totalValueInSponsorshipsWei() > totalValueInSponsorshipsBefore, 10000, 1000)
         
-        const { sponsorshipAddresses, approxValues, realValues } = await operatorContract.getApproximatePoolValuesPerSponsorship()
-        let diff = BigInt(0)
-        for (let i = 0; i < sponsorshipAddresses.length; i++) {
-            diff = realValues[i].toBigInt() - approxValues[i].toBigInt()
-        }
-        
+        const diff = await getDiffBetweenApproxAndRealValues()
         expect((await operatorContract.totalValueInSponsorshipsWei()).toBigInt()).toBeGreaterThan(totalValueInSponsorshipsBefore.toBigInt())
         expect(diff).toBeLessThan(threshold)
 
