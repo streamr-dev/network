@@ -33,7 +33,6 @@ const createMockLogger = () => {
 describe('ConfigWizard', () => {
     const importPrivateKeyPrompt = PROMPTS.privateKey[1]
     const portPrompt = PROMPTS.plugins[1]
-    const beneficiaryAddressPrompt = PROMPTS.plugins[6]
 
     describe('importPrivateKey validate', () => {
         it('happy path, prefixed', () => {
@@ -82,18 +81,6 @@ describe('ConfigWizard', () => {
             const validate = portPrompt.validate!
             const port = 'Not A Number!'
             expect(validate(port)).toBe(`Non-numeric value provided`)
-        })
-    })
-
-    describe('beneficiary address validation', () => {
-        it('happy path, prefixed', () => {
-            const validate = beneficiaryAddressPrompt.validate!
-            expect(validate('0x535620aa186d3243A10b929c8A854510dE00bf77')).toBe(true)
-        })
-
-        it('invalid data', () => {
-            const validate = beneficiaryAddressPrompt.validate!
-            expect(validate('0xloremipsum')).toEqual('Invalid Ethereum address provided.')
         })
     })
 
@@ -151,8 +138,7 @@ describe('ConfigWizard', () => {
             const numericPort = (typeof port === 'string') ? parseInt(port) : port
             const pluginsAnswers: PluginAnswers = {
                 enabledApiPlugins: [pluginName],
-                websocketPort: String(port),
-                enableMinerPlugin: true
+                websocketPort: String(port)
             }
             const config = getConfig(MOCK_PRIVATE_KEY, pluginsAnswers)
             expect(config.plugins[pluginName].port).toBe(numericPort)
@@ -171,8 +157,7 @@ describe('ConfigWizard', () => {
                 enabledApiPlugins: [ 'websocket', 'mqtt', 'http' ],
                 websocketPort: String(DEFAULT_CONFIG_PORTS.WS),
                 mqttPort: String(DEFAULT_CONFIG_PORTS.MQTT),
-                httpPort: String(DEFAULT_CONFIG_PORTS.HTTP),
-                enableMinerPlugin: true,
+                httpPort: String(DEFAULT_CONFIG_PORTS.HTTP)
             }
             const config = getConfig(MOCK_PRIVATE_KEY, pluginsAnswers)
             expect(config.plugins.websocket).toMatchObject({})
@@ -186,8 +171,7 @@ describe('ConfigWizard', () => {
                 enabledApiPlugins: [ 'websocket', 'mqtt', 'http' ],
                 websocketPort: '3170',
                 mqttPort: '3171',
-                httpPort: '3172',
-                enableMinerPlugin: true
+                httpPort: '3172'
             }
             const config = getConfig(MOCK_PRIVATE_KEY, pluginsAnswers)
             expect(config.plugins.websocket.port).toBe(parseInt(pluginsAnswers.websocketPort!))
@@ -246,8 +230,7 @@ describe('ConfigWizard', () => {
 
         it('no plugins', async () => {
             await assertValidFlow({
-                enabledApiPlugins: [],
-                enableMinerPlugin: false
+                enabledApiPlugins: []
             },
             (config: any) => {
                 expect(config.plugins).toEqual({})
@@ -260,8 +243,7 @@ describe('ConfigWizard', () => {
                 enabledApiPlugins: [ 'websocket', 'mqtt', 'http' ],
                 websocketPort: '3170',
                 mqttPort: '3171',
-                httpPort: '3172',
-                enableMinerPlugin: true
+                httpPort: '3172'
             }
             await assertValidFlow(
                 pluginAnswers,
