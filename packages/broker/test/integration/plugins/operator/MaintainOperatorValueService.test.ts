@@ -21,6 +21,9 @@ const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '127.0.0.1'
 
 const logger = new Logger(module)
 
+const SPONSOR_AMOUNT = 200
+const STAKE_AMOUNT = 100
+
 describe("MaintainOperatorValueService", () => {
     let provider: Provider
     let operatorWallet: Wallet
@@ -75,13 +78,14 @@ describe("MaintainOperatorValueService", () => {
 
         ({ operatorWallet, operatorContract } = await deployNewOperator())
 
-        await (await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther("200"), operatorWallet.address)).wait()
-        // deploy 2 sponsorships, sponsor 200 & stake 100 into both of them
+        await (
+            await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther(`${STAKE_AMOUNT * 2}`), operatorWallet.address)
+        ).wait()
         for (const streamId of [streamId1, streamId2]) {
             const sponsorship = await deploySponsorship(config, operatorWallet, { streamId })
-            await (await token.connect(operatorWallet).transferAndCall(sponsorship.address, parseEther("200"), "0x")).wait()
-            await (await operatorContract.stake(sponsorship.address, parseEther("100"))).wait()
-            expect(await token.balanceOf(sponsorship.address)).toEqual(parseEther("300")) // 200 sponsored + 100 staked
+            await (await token.connect(operatorWallet).transferAndCall(sponsorship.address, parseEther(`${SPONSOR_AMOUNT}`), "0x")).wait()
+            await (await operatorContract.stake(sponsorship.address, parseEther(`${STAKE_AMOUNT}`))).wait()
+            expect(await token.balanceOf(sponsorship.address)).toEqual(parseEther(`${SPONSOR_AMOUNT + STAKE_AMOUNT}`))
         }
     }, 60 * 1000)
 
