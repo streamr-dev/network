@@ -84,6 +84,7 @@ export class OrderedMessageChain {
     private readonly pendingMsgs: Heap<StreamMessage>
     private readonly eventEmitter: EventEmitter<Events>
     private readonly context: OrderedMessageChainContext
+    private readonly abortSignal: AbortSignal
 
     constructor(context: OrderedMessageChainContext, abortSignal: AbortSignal) {
         this.context = context
@@ -91,6 +92,7 @@ export class OrderedMessageChain {
             return msg1.getMessageRef().compareTo(msg2.getMessageRef())
         })
         this.eventEmitter = new EventEmitter()
+        this.abortSignal = abortSignal
         abortSignal.addEventListener('abort', () => {
             this.eventEmitter.removeAllListeners()
         })
@@ -114,7 +116,7 @@ export class OrderedMessageChain {
     }
 
     async waitUntilIdle(): Promise<void> {
-        const isIdle = () => this.pendingMsgs.empty()
+        const isIdle = () => this.pendingMsgs.empty() || this.abortSignal.aborted
         if (!isIdle()) {
             const gate = new Gate(false)
             const listener = () => {
@@ -123,8 +125,10 @@ export class OrderedMessageChain {
                 }
             }
             this.on('orderedMessageAdded', listener)
+            this.abortSignal.addEventListener('abort', listener)
             await gate.waitUntilOpen()
             this.off('orderedMessageAdded', listener)
+            this.abortSignal.removeEventListener('abort', listener)
         }
     }
 
