@@ -1,4 +1,4 @@
-import { StreamMessage, StreamMessageType, toStreamPartID } from '@streamr/protocol'
+import { StreamMessage, StreamMessageType } from '@streamr/protocol'
 import { createDataQueryEndpoint } from './dataQueryEndpoint'
 import { createDataMetadataEndpoint } from './dataMetadataEndpoint'
 import { createStorageConfigEndpoint } from './storageConfigEndpoint'
