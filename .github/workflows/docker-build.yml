@@ -96,6 +96,7 @@ jobs:
         uses: streamr-dev/streamr-docker-dev-action@v1.0.1
         with:
           services-to-start: ${{inputs.test_services_to_start}}
+          branch: cleanup
 
       - name: Run test script
         if: ${{inputs.test_services_to_start && inputs.test_script }}
