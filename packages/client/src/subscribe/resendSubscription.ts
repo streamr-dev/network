@@ -1,4 +1,5 @@
-import { StreamMessage } from '@streamr/protocol'
+import { StreamID, StreamMessage } from '@streamr/protocol'
+import { EthereumAddress } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { StrictStreamrClientConfig } from '../Config'
 import { LoggerFactory } from '../utils/LoggerFactory'
@@ -13,14 +14,16 @@ export const initResendSubscription = (
     subscription: Subscription,
     resendOptions: ResendOptions,
     resends: Resends,
+    getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>,
     config: StrictStreamrClientConfig,
     eventEmitter: EventEmitter<SubscriptionEvents>,
     loggerFactory: LoggerFactory
 ): void => {
     const resendThenRealtime = async function* (src: AsyncGenerator<StreamMessage>): AsyncGenerator<StreamMessage, void, any> {
         try {
-            const resentMsgs = await resends.resend(subscription.streamPartId, resendOptions)
+            const resentMsgs = await resends.resend(subscription.streamPartId, resendOptions, getStorageNodes)
             subscription.onBeforeFinally.listen(async () => {
+                // TODO maybe we could add AbortControler parameter to resend() and signal it here?
                 resentMsgs.end()
                 await resentMsgs.return()
             })
@@ -41,12 +44,17 @@ export const initResendSubscription = (
     subscription.pipe(resendThenRealtime)
     if (config.orderMessages) {
         const orderMessages = new OrderMessages(
-            config,
-            resends,
             subscription.streamPartId,
-            loggerFactory
+            getStorageNodes,
+            resends,
+            config
         )
-        subscription.pipe(orderMessages.transform())
-        subscription.onBeforeFinally.listen(() => orderMessages.stop())
+        subscription.pipe(async function* (src: AsyncGenerator<StreamMessage>) {
+            setImmediate(() => {
+                orderMessages.addMessages(src)
+            })
+            yield* orderMessages
+        })
+        subscription.onBeforeFinally.listen(() => orderMessages.destroy())
     }
 }

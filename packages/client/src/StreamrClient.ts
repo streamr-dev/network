@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 import './utils/PatchTsyringe'
 
-import { ProxyDirection } from '@streamr/protocol'
+import { ProxyDirection, StreamID } from '@streamr/protocol'
 import { EthereumAddress, TheGraphClient, toEthereumAddress } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import merge from 'lodash/merge'
@@ -193,6 +193,7 @@ export class StreamrClient {
                 sub,
                 options.resend,
                 this.resends,
+                (streamId: StreamID) => this.streamStorageRegistry.getStorageNodes(streamId),
                 this.config,
                 eventEmitter,
                 this.loggerFactory
@@ -260,7 +261,8 @@ export class StreamrClient {
         onMessage?: MessageListener
     ): Promise<MessageStream> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        const pipeline = await this.resends.resend(streamPartId, options)
+        const getStorageNodes = (streamId: StreamID) => this.streamStorageRegistry.getStorageNodes(streamId)
+        const pipeline = await this.resends.resend(streamPartId, options, getStorageNodes)
         const messageStream = new MessageStream(pipeline)
         if (onMessage !== undefined) {
             messageStream.useLegacyOnMessageHandler(onMessage)
@@ -305,7 +307,7 @@ export class StreamrClient {
             timeout: this.config._timeouts.storageNode.timeout,
             count: 100
         }
-        return waitForStorage(message, merge(defaultOptions, options), this.resends)
+        return waitForStorage(message, merge(defaultOptions, options), this.resends, this.streamStorageRegistry)
     }
 
     // --------------------------------------------------------------------------------------------

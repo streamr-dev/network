@@ -22,7 +22,7 @@ import { Resends } from './Resends'
 
 export interface MessagePipelineOptions {
     streamPartId: StreamPartID
-    getStorageNodes?: (streamId: StreamID) => Promise<EthereumAddress[]>
+    getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>
     resends: Resends
     streamRegistryCached: StreamRegistryCached
     groupKeyManager: GroupKeyManager

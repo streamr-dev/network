@@ -1,5 +1,5 @@
 import { StreamMessage, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
-import { Queue } from '@streamr/test-utils'
+import { Queue, randomEthereumAddress } from '@streamr/test-utils'
 import { waitForCondition } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import last from 'lodash/last'
@@ -102,6 +102,7 @@ describe('resend subscription', () => {
             {
                 resend
             } as any,
+            async () => [randomEthereumAddress()],
             {
                 orderMessages: true,
                 gapFill,
