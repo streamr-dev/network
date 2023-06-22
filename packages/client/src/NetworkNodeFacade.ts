@@ -20,11 +20,11 @@ export interface NetworkNodeStub {
     getNodeId: () => string
     addMessageListener: (listener: (msg: StreamMessage) => void) => void
     removeMessageListener: (listener: (msg: StreamMessage) => void) => void
-    subscribe: (streamPartId: StreamPartID, entryPointDescriptors: PeerDescriptor[]) => Promise<void>
-    subscribeAndWaitForJoin: (streamPart: StreamPartID, entryPointDescriptors: PeerDescriptor[], timeout?: number) => Promise<number>
-    waitForJoinAndPublish: (msg: StreamMessage, entryPointDescriptors: PeerDescriptor[], timeout?: number) => Promise<number>
+    subscribe: (streamPartId: StreamPartID, entryPointDescriptors?: PeerDescriptor[]) => Promise<void>
+    subscribeAndWaitForJoin: (streamPart: StreamPartID, entryPointDescriptors?: PeerDescriptor[], timeout?: number) => Promise<number>
+    waitForJoinAndPublish: (msg: StreamMessage, entryPointDescriptors?: PeerDescriptor[], timeout?: number) => Promise<number>
     unsubscribe: (streamPartId: StreamPartID) => void
-    publish: (streamMessage: StreamMessage, entryPointDescriptors: PeerDescriptor[]) => Promise<void>
+    publish: (streamMessage: StreamMessage, entryPointDescriptors?: PeerDescriptor[]) => Promise<void>
     getStreamParts: () => StreamPartID[]
     getNeighbors: () => string[]
     getNeighborsForStreamPart: (streamPartId: StreamPartID) => ReadonlyArray<string>

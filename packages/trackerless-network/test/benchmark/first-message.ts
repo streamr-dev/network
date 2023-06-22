@@ -51,7 +51,7 @@ const prepareStream = async (streamId: string) => {
     const streamPartId = toStreamPartID(toStreamID(streamId), 0)
     const streamPublisher = createNetworkNodeWithSimulator(peerDescriptor, simulator, [layer0Ep])
     await streamPublisher.start()
-    streamPublisher.subscribe(streamPartId, [])
+    streamPublisher.subscribe(streamPartId)
     nodes.push(streamPublisher)
     streams.set(streamPartId, streamPublisher)
 }
@@ -106,7 +106,7 @@ const measureJoiningTime = async (count: number) => {
 
     await Promise.all([
         waitForEvent3(streamSubscriber.stack.getStreamrNode() as any, 'newMessage', 60000),
-        streamSubscriber.subscribe(stream, [])
+        streamSubscriber.subscribe(stream)
     ])
 
     const end = performance.now()
