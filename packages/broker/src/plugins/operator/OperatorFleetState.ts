@@ -10,8 +10,8 @@ export const PRUNE_AGE_IN_MS = 5 * 60 * 1000
 const DEFAULT_PRUNE_INTERVAL_IN_MS = 30 * 1000
 
 interface OperatorFleetStateEvents {
-    cameOnline: (nodeId: string) => void
-    wentOffline: (nodeId: string) => void
+    added: (nodeId: string) => void
+    removed: (nodeId: string) => void
 }
 
 export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
@@ -40,10 +40,8 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
         if (this.subscription !== undefined) {
             throw new Error('already started')
         }
-        this.subscription = await this.streamrClient.subscribe(this.coordinationStream)
-        this.pruneNodesIntervalRef = setInterval(() => this.pruneOfflineNodes(), this.pruneIntervalInMs)
-        for await (const msg of this.subscription) {
-            const { msgType, nodeId } = (msg.content as Record<string, unknown>)
+        this.subscription = await this.streamrClient.subscribe(this.coordinationStream, (content) => {
+            const { msgType, nodeId } = (content as Record<string, unknown>)
             if (typeof msgType !== 'string' || typeof nodeId !== 'string') {
                 logger.warn('Received invalid message in coordination stream', {
                     coordinationStream: this.coordinationStream,
@@ -53,9 +51,10 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
             const exists = this.nodes.has(nodeId)
             this.nodes.set(nodeId, this.timeProvider())
             if (!exists) {
-                this.emit('cameOnline', nodeId)
+                this.emit('added', nodeId)
             }
-        }
+        })
+        this.pruneNodesIntervalRef = setInterval(() => this.pruneOfflineNodes(), this.pruneIntervalInMs)
     }
 
     async destroy(): Promise<void> {
@@ -73,7 +72,7 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
         for (const [nodeId, time] of this.nodes) {
             if (now - time >= PRUNE_AGE_IN_MS) {
                 this.nodes.delete(nodeId)
-                this.emit('wentOffline', nodeId)
+                this.emit('removed', nodeId)
             }
         }
     }
