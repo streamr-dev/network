@@ -246,10 +246,6 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
         
     }
 
-    // private onGatheringStateChange(state: string): void {
-    //     logger.trace(`Gathering state changed to ${state}`)
-    // }
-
     isOpen(): boolean {
         return !this.closed && this.lastState === 'connected' && !!this.dataChannel
     }

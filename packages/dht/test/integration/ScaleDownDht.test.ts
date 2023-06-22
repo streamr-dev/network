@@ -29,8 +29,6 @@ describe('Scaling down a Dht network', () => {
             nodeName: entryPointId
         }
 
-        //nodes.push(entryPoint)
-
         for (let i = 1; i < NUM_NODES; i++) {
             const nodeId = `${i}`
             const node = await createMockConnectionDhtNode(nodeId, simulator, undefined, K, nodeId, MAX_CONNECTIONS)

@@ -142,7 +142,6 @@ export class ManagedConnection extends EventEmitter<Events> {
         // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
         context?: any
     ): this {
-        //logger.trace('overridden once objectId: ' + this.objectId)
         if (event === 'managedData' && this.listenerCount('managedData') === 0) {
             if (this.inputBuffer.length > 0) {
                 while (this.inputBuffer.length > 0) {

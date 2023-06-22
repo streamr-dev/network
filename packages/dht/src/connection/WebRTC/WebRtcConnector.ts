@@ -250,7 +250,6 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         managedConnection.setPeerDescriptor(targetPeerDescriptor)
 
         this.incomingConnectionCallback(managedConnection)
-        //this.emit('newConnection', managedConnection)
     }
     private onRemoteCandidate(
         remotePeerDescriptor: PeerDescriptor,
@@ -283,7 +282,6 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         await Promise.allSettled(attempts.map((conn) => conn.close('OTHER')))
        
         this.rpcCommunicator.stop()
-        //this.removeAllListeners()
     }
 
     public isOffering(targetPeerDescriptor: PeerDescriptor): boolean {
@@ -293,7 +291,6 @@ export class WebRtcConnector implements IWebRtcConnectorService {
     }
 
     // IWebRTCConnector implementation
-
     async requestConnection(request: WebRtcConnectionRequest, _context: ServerCallContext): Promise<Empty> {
         this.onConnectionRequest(request.requester!)
         return {}

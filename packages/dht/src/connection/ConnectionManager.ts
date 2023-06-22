@@ -245,7 +245,6 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             this.webSocketConnector = undefined
             await this.webrtcConnector!.stop()
             this.webrtcConnector = undefined
-            //WEB_RTC_CLEANUP.cleanUp()
         } else {
             await this.simulatorConnector!.stop()
             this.simulatorConnector = undefined
@@ -253,7 +252,6 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
         await Promise.all(Array.from(this.connections.values()).map((peer) => {
             return new Promise<void>((resolve, _reject) => {
-                // eslint-disable-next-line promise/catch-or-return 
 
                 if (peer.isHandshakeCompleted()) {
 

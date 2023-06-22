@@ -75,7 +75,6 @@ describe('Migrating data from node to node in DHT', () => {
     })
 
     it('Data migrates to the closest node no matter where it is stored', async () => {
-        //const storingNode = getRandomNode()
         const dataKey = PeerID.fromString('3232323e12r31r3')
         const data = Any.pack(entrypointDescriptor, PeerDescriptor)
 
