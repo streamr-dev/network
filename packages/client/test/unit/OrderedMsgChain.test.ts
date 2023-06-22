@@ -3,7 +3,6 @@ import { Defer, EthereumAddress, toEthereumAddress } from '@streamr/utils'
 import assert from 'assert'
 import { shuffle } from 'lodash'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
-import GapFillFailedError from '../../src/subscribe/ordering/GapFillFailedError'
 import { MsgChainContext, OrderedMsgChain } from '../../src/subscribe/ordering/OrderedMsgChain'
 import { createRandomAuthentication } from '../test-utils/utils'
 
@@ -398,17 +397,11 @@ describe('OrderedMsgChain', () => {
     })
 
     describe('maxGapRequests', () => {
-        it('call the gap handler maxGapRequests times and then fails with GapFillFailedError', (done) => {
+        it('call the gap handler maxGapRequests times and then fails with error', (done) => {
             let counter = 0
-            const onError = (err: Error) => {
-                expect(err).toBeInstanceOf(GapFillFailedError)
-                if (err instanceof GapFillFailedError) {
-                    expect(err.from.serialize()).toEqual('[1,1]')
-                    expect(err.to.serialize()).toEqual('[2,0]')
-                    expect(err.context).toEqual(CONTEXT)
-                    // @ts-expect-error private method
-                    expect(counter).toBe(util.maxGapRequests)
-                }
+            const onError = () => {
+                // @ts-expect-error private method
+                expect(counter).toBe(util.maxGapRequests)
                 done()
             }
             util = new OrderedMsgChain(
@@ -426,12 +419,11 @@ describe('OrderedMsgChain', () => {
             util.add(msg3)
         })
 
-        it('after maxGapRequests OrderingUtil gives up on filling gap with GapFillFailedError "error" event', (done) => {
+        it('after maxGapRequests OrderingUtil gives up on filling gap with "error" event', (done) => {
             const received: StreamMessage[] = []
             const onGap = jest.fn()
             let onErrorCallCount = 0
-            const onError = (err: Error) => {
-                if (!(err instanceof GapFillFailedError)) { throw err }
+            const onError = () => {
                 onGap()
                 if (onErrorCallCount === 0) {
                     setImmediate(() => {

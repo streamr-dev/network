@@ -2,7 +2,7 @@ import 'reflect-metadata'
 
 import { Wallet } from '@ethersproject/wallet'
 import { MAX_PARTITION_COUNT, StreamMessage, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
-import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { fastPrivateKey, fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { EthereumAddress, Logger, merge, wait, waitForCondition } from '@streamr/utils'
 import crypto from 'crypto'
 import { once } from 'events'
@@ -28,6 +28,8 @@ import { MessageFactory } from '../../src/publish/MessageFactory'
 import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
 import { LoggerFactory } from '../../src/utils/LoggerFactory'
 import { counterId } from '../../src/utils/utils'
+import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
+import { FakeStorageNode } from './../test-utils/fake/FakeStorageNode'
 import { addAfterFn } from './jest-utils'
 
 const logger = new Logger(module)
@@ -270,4 +272,20 @@ export const startTestServer = async (
             await once(server, 'close')
         }
     }
+}
+
+export const startFailingStorageNode = async (error: Error, environment: FakeEnvironment): Promise<FakeStorageNode> => {
+    const wallet = fastWallet()
+    const node = new class extends FakeStorageNode {
+        // eslint-disable-next-line class-methods-use-this, require-yield
+        override async* getLast(): AsyncIterable<StreamMessage> {
+            throw error
+        }
+        // eslint-disable-next-line class-methods-use-this, require-yield
+        override async* getRange(): AsyncIterable<StreamMessage> {
+            throw error
+        }
+    }(wallet, environment.getNetwork(), environment.getChain())
+    await node.start()
+    return node
 }

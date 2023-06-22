@@ -1,10 +1,10 @@
-import { composeAbortSignals } from '../src/composeAbortSignals'
+import { ComposedAbortSignal, composeAbortSignals } from '../src/composeAbortSignals'
 import range from 'lodash/range'
 import fetch from 'node-fetch'
 
 describe(composeAbortSignals, () => {
     let controllers: AbortController[]
-    let composedSignal: AbortSignal
+    let composedSignal: ComposedAbortSignal
 
     describe('given zero pre-aborted signals', () => {
         beforeEach(() => {
@@ -37,6 +37,14 @@ describe(composeAbortSignals, () => {
             controllers[3].abort()
             controllers[6].abort()
             expect(listener).toHaveBeenCalledTimes(1)
+        })
+
+        it('event "abort" is not emitted after destroy', () => {
+            const listener = jest.fn()
+            composedSignal.addEventListener('abort', listener)
+            composedSignal.destroy()
+            controllers[6].abort()
+            expect(listener).toHaveBeenCalledTimes(0)
         })
 
         it('onabort if set is invoked when a signal aborts', () => {

@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { Wallet } from '@ethersproject/wallet'
-import { StreamID, StreamMessage, toStreamPartID } from '@streamr/protocol'
+import { StreamID, toStreamPartID } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
 import { collect, waitForCondition } from '@streamr/utils'
 import fs from 'fs'
@@ -10,11 +10,12 @@ import { Message, MessageMetadata } from '../../src/Message'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamrClientError } from '../../src/StreamrClientError'
+import { StreamPermission } from '../../src/permission'
+import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
+import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 import { Msg, getPublishTestStreamMessages, getWaitForStorage } from '../test-utils/publish'
 import { createTestStream } from '../test-utils/utils'
-import { StreamPermission } from './../../src/permission'
-import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
-import { FakeStorageNode } from './../test-utils/fake/FakeStorageNode'
+import { startFailingStorageNode } from './../test-utils/utils'
 
 const MAX_MESSAGES = 5
 
@@ -30,18 +31,6 @@ describe('Resends2', () => {
     const publishTestMessages = (count: number, streamId?: StreamID): Promise<Message[]> => {
         const task = getPublishTestStreamMessages(publisher, streamId ?? stream.id)
         return task(count)
-    }
-
-    const startFailingStorageNode = async (error: Error): Promise<FakeStorageNode> => {
-        const wallet = fastWallet()
-        const node = new class extends FakeStorageNode {
-            // eslint-disable-next-line class-methods-use-this, require-yield
-            override async* getLast(): AsyncIterable<StreamMessage> {
-                throw error
-            }
-        }(wallet, environment.getNetwork(), environment.getChain())
-        await node.start()
-        return node
     }
 
     beforeAll(() => {
@@ -146,7 +135,7 @@ describe('Resends2', () => {
 
             it('can ignore errors in resend', async () => {
                 await stream.removeFromStorageNode(storageNode.id)  // remove the default storage node added in beforeEach
-                const storageNode2 = await startFailingStorageNode(new Error('expected'))
+                const storageNode2 = await startFailingStorageNode(new Error('expected'), environment)
                 await stream.addToStorageNode(storageNode2.id)
                 const sub = await client.subscribe({
                     streamId: stream.id,
@@ -170,7 +159,7 @@ describe('Resends2', () => {
 
             it('can handle errors in resend', async () => {
                 await stream.removeFromStorageNode(storageNode.id)  // remove the default storage node added in beforeEach
-                const storageNode2 = await startFailingStorageNode(new Error('expected'))
+                const storageNode2 = await startFailingStorageNode(new Error('expected'), environment)
                 await stream.addToStorageNode(storageNode2.id)
                 const sub = await client.subscribe({
                     streamId: stream.id,

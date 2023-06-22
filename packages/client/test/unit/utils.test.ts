@@ -50,7 +50,7 @@ describe('utils', () => {
                 res.write(`foobar\n`)
             })
             const abortController = new AbortController()
-            const iterator = fetchHttpStream(server.url, abortController)[Symbol.asyncIterator]()
+            const iterator = fetchHttpStream(server.url, abortController.signal)[Symbol.asyncIterator]()
             const line = await nextValue(iterator)
             expect(line).toBe('foobar')
             abortController.abort()
