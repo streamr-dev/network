@@ -118,7 +118,7 @@ jobs:
     with:
       package: cli-tools
       docker-services: parity-node0 graph-deploy-streamregistry-subgraph broker-node-storage-1
-      command: npm run test
+      command: streamr-docker-dev log graph-deploy-streamregistry-subgraph && npm run test
   tracker-docker-image:
     uses: ./.github/workflows/docker-build.yml
     with:
