@@ -110,7 +110,7 @@ export class OrderedMessageChain {
     resolveMessages(to: MessageRef): void {
         if ((this.lastOrderedMsg === undefined) || (this.lastOrderedMsg.getMessageRef().compareTo(to) < 0)) {
             this.consumePendingOrderedMessages(
-                (msg) => (msg.getMessageRef().compareTo(to) <= 0) ? true : this.isNextOrderedMessage(msg)
+                (msg) => (msg.getMessageRef().compareTo(to) <= 0) || this.isNextOrderedMessage(msg)
             )
         }
     }
@@ -172,9 +172,7 @@ export class OrderedMessageChain {
 
     private isNextOrderedMessage(msg: StreamMessage) {
         const previousRef = msg.getPreviousMessageRef()
-        return (previousRef !== null)
-            ? (this.lastOrderedMsg === undefined) || areEqualRefs(previousRef, this.lastOrderedMsg.getMessageRef())
-            : true
+        return (this.lastOrderedMsg === undefined) || (previousRef === null) || areEqualRefs(previousRef, this.lastOrderedMsg.getMessageRef())
     }
 
     private isStaleMessage(msg: StreamMessage): boolean {
