@@ -7,7 +7,7 @@ import { isSamePeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor
 
 describe('WebSocket IConnection Requests', () => {
     const epPeerDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString('3').value, // Uint8Array.from([1, 2, 3]),
+        kademliaId: PeerID.fromString('3').value,
         type: NodeType.NODEJS,
         websocket: { ip: '127.0.0.1', port: 10021 }
     }

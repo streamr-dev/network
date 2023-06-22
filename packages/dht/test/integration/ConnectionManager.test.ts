@@ -144,14 +144,12 @@ describe('ConnectionManager', () => {
 
         const connectedPromise1 = new Promise<void>((resolve, _reject) => {
             connectionManager1.on('connected', (_peerDescriptor: PeerDescriptor) => {
-                //expect(message.messageType).toBe(MessageType.RPC)
                 resolve()
             })
         })
 
         const connectedPromise2 = new Promise<void>((resolve, _reject) => {
             connectionManager2.on('connected', (_peerDescriptor: PeerDescriptor) => {
-                //expect(message.messageType).toBe(MessageType.RPC)
                 resolve()
             })
         })

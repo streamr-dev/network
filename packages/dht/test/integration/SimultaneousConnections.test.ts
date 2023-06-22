@@ -73,10 +73,6 @@ describe('SimultaneousConnections', () => {
             simulatorTransport1.send(msg1),
             simulatorTransport2.send(msg2)
         ])
-
-        // console.log(connectionManager2.getAllConnectionPeerDescriptors())
-        // console.log(connectionManager1.getAllConnectionPeerDescriptors())
-
         await waitForCondition(() => simulatorTransport2.hasConnection(peerDescriptor1))
         await waitForCondition(() => simulatorTransport1.hasConnection(peerDescriptor2))
     })

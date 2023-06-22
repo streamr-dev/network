@@ -122,9 +122,7 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
             }
         } else {
             if (Simulator.clock) {
-                //Simulator.clock.reset()
                 Simulator.clock.restore()
-                //sinon.restore()
                 Simulator.clock = undefined
             }
         }
@@ -356,7 +354,6 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
         const executionTime = this.generateExecutionTime(association,
             sourceConnection.ownPeerDescriptor.region,
             sourceConnection.getPeerDescriptor()?.region)
-        //association.destinationConnection?.ownPeerDescriptor.region)
         association.setLastOperationAt(executionTime)
 
         const operation = new CloseOperation(executionTime, association)
