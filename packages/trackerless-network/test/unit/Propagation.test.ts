@@ -98,12 +98,6 @@ describe(Propagation, () => {
             expect(sendToNeighbor).toHaveBeenNthCalledWith(1, 'n3', msg)
         })
 
-        // it('no-op if passed non-existing stream', async () => {
-        //     await setUpAndFeed(['n1', 'n2', 'n3'])
-        //     propagation.onNeighborJoined('n4')
-        //     expect(sendToNeighbor).toHaveBeenCalledTimes(0)
-        // })
-
         it('no-op if passed source node', async () => {
             await setUpAndFeed(['n1', 'n2', 'n3'])
             propagation.onNeighborJoined('n2')

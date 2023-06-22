@@ -138,13 +138,4 @@ describe('StreamrNode', () => {
         await waitForCondition(() => node1.getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length === 0)
     })
 
-    // TODO: make this work
-    // it('Publishing and subscribing to streams without join awaits', async () => {
-    //     node1.subscribeToStream(STREAM_ID, peer1)
-    //     await Promise.all([
-    //         waitForEvent3<Events>(node1, 'newMessage'),
-    //         node2.publishToStream(STREAM_ID, peer1, msg)
-    //     ])
-    // })
-
 })
