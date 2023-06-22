@@ -7,6 +7,6 @@ runs:
     - name: run brokers
       run: |
         mkdir -p logs
-        ./bin/run-brokers.sh >logs/broker-tracker-logs.txt 2>&1 &
+        ./bin/run-brokers.sh >logs/broker-logs.txt 2>&1 &
       shell: bash
       working-directory: './'
