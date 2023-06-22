@@ -123,7 +123,6 @@ export class NetworkNode {
 
     // eslint-disable-next-line class-methods-use-this
     getRtt(_nodeId: string): number | undefined {
-        // return this.nodeToNode.getRtts()[nodeId]
         throw new Error('Not implemented')
     }
 
