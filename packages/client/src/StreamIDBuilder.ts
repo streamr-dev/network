@@ -6,10 +6,10 @@ import {
     toStreamID,
     toStreamPartID
 } from '@streamr/protocol'
-import { inject, Lifecycle, scoped } from 'tsyringe'
-import { StreamDefinition } from './types'
-import { Authentication, AuthenticationInjectionToken } from './Authentication'
 import { EthereumAddress } from '@streamr/utils'
+import { Lifecycle, inject, scoped } from 'tsyringe'
+import { Authentication, AuthenticationInjectionToken } from './Authentication'
+import { StreamDefinition } from './types'
 
 export const DEFAULT_PARTITION = 0
 
@@ -63,11 +63,13 @@ export class StreamIDBuilder {
         return [await this.toStreamID(streamId), streamPartition]
     }
 
-    async match(definition: StreamDefinition, streamPartId: StreamPartID): Promise<boolean> {
+    async getMatcher(definition: StreamDefinition): Promise<(streamPartId: StreamPartID) => boolean> {
         const [targetStreamId, targetPartition] = await this.toStreamPartElements(definition)
-        return targetStreamId === StreamPartIDUtils.getStreamID(streamPartId)
+        return ((streamPartId: StreamPartID) => {
+            return targetStreamId === StreamPartIDUtils.getStreamID(streamPartId)
             && (
                 targetPartition === undefined || targetPartition === StreamPartIDUtils.getStreamPartition(streamPartId)
             )
+        })
     }
 }

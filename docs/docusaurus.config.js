@@ -3,6 +3,7 @@
 
 const lightCodeTheme = require("prism-react-renderer/themes/github")
 const darkCodeTheme = require("prism-react-renderer/themes/dracula")
+const path = require("path")
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -36,7 +37,7 @@ const config = {
             {
                 entryPoints: ["../packages/client/src/exports.ts"],
                 disableSources: true,
-                name: "⚙️ Streamr SDK",
+                name: "API reference",
                 excludePrivate: true,
                 excludeProtected: true,
                 excludeInternal: true,
@@ -45,11 +46,15 @@ const config = {
                 treatWarningsAsErrors: true,
                 watch: process.env.TYPEDOC_WATCH,
                 sidebar: {
-                    categoryLabel: "⚙️ API",
+                    categoryLabel: "API reference",
+                    indexLabel: " ",
+                    position: 5,
                 },
+                out: "usage/streamr-js-client/api",
                 tsconfig: "../packages/client/tsconfig.json",
             },
         ],
+        path.resolve("plugins", "refine-docs"),
     ],
 
     presets: [
@@ -62,6 +67,10 @@ const config = {
                     sidebarPath: require.resolve("./sidebars.js"),
                     editUrl:
                         "https://github.com/streamr-dev/network/tree/main/docs",
+                    exclude: [
+                        "**usage/streamr-js-client/api/modules.mdx",
+                        "**usage/streamr-js-client/api/modules.md",
+                    ],
                 },
                 blog: {
                     showReadingTime: true,

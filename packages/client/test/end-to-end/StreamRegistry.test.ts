@@ -1,14 +1,14 @@
+import 'reflect-metadata'
+
 import { Wallet } from '@ethersproject/wallet'
-import { createTestStream, createRelativeTestStreamId } from '../test-utils/utils'
-import { until } from '../../src/utils/promises'
-import { NotFoundError } from '../../src/HttpUtil'
-import { StreamrClient } from '../../src/StreamrClient'
-import { Stream } from '../../src/Stream'
-import { CONFIG_TEST } from '../../src/ConfigTest'
 import { toStreamID } from '@streamr/protocol'
-import { collect } from '../../src/utils/iterators'
 import { fetchPrivateKeyWithGas, randomEthereumAddress } from '@streamr/test-utils'
-import { EthereumAddress, toEthereumAddress, waitForCondition } from '@streamr/utils'
+import { EthereumAddress, collect, toEthereumAddress, waitForCondition } from '@streamr/utils'
+import { CONFIG_TEST } from '../../src/ConfigTest'
+import { Stream } from '../../src/Stream'
+import { StreamrClient } from '../../src/StreamrClient'
+import { until } from '../../src/utils/promises'
+import { createRelativeTestStreamId, createTestStream } from '../test-utils/utils'
 
 jest.setTimeout(20000)
 const PARTITION_COUNT = 3
@@ -112,10 +112,11 @@ describe('StreamRegistry', () => {
             expect(hasBeenCalledFor(invalidStream)).toBeFalse()
         })
 
+        // skipped until fix by smart contract
         describe('ENS', () => {
 
             it('domain owned by user', async () => {
-                const streamId = 'testdomain1.eth/foobar/' + Date.now()
+                const streamId = `testdomain1.eth/foobar/${Date.now()}`
                 const ensOwnerClient = new StreamrClient({
                     ...CONFIG_TEST,
                     auth: {
@@ -154,7 +155,9 @@ describe('StreamRegistry', () => {
 
         it('get a non-existing Stream', async () => {
             const streamId = `${publicAddress}/StreamRegistry-nonexisting-${Date.now()}`
-            return expect(() => client.getStream(streamId)).rejects.toThrow(NotFoundError)
+            return expect(() => client.getStream(streamId)).rejects.toThrowStreamrError({
+                code: 'STREAM_NOT_FOUND'
+            })
         })
     })
 
@@ -275,7 +278,7 @@ describe('StreamRegistry', () => {
                     await client.getStream(stream.id)
                     return false
                 } catch (err: any) {
-                    return err.errorCode === 'NOT_FOUND'
+                    return err.code === 'STREAM_NOT_FOUND'
                 }
             }, 100000, 1000)
             return expect(client.getStream(stream.id)).rejects.toThrow()

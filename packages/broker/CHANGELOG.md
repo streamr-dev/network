@@ -20,6 +20,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 
+## [33.4.0] - 2023-06-07
+
+### Added
+
+- Add partition support to `mqtt` plugin (https://github.com/streamr-dev/network/pull/1376, https://github.com/streamr-dev/network/pull/1447)
+
+### Fixed
+
+- Fix `storage` plugin default value handling for resend range queries (https://github.com/streamr-dev/network/pull/1461)
+
+
+## [33.3.0] - 2023-05-10
+
+### Added
+
+- Add config option `client.network.externalIp` (https://github.com/streamr-dev/network/pull/1357)
+
+
 ## [33.2.0] - 2023-04-26
 
 ### Added
@@ -102,7 +120,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Log output is always prettified (even when `NODE_ENV=production`)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/broker/v33.2.0...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/broker/v33.4.0...HEAD
+[33.4.0]: https://github.com/streamr-dev/network/compare/broker/v33.3.0...broker/v33.4.0
+[33.3.0]: https://github.com/streamr-dev/network/compare/broker/v33.2.0...broker/v33.3.0
 [33.2.0]: https://github.com/streamr-dev/network/compare/broker/v33.1.2...broker/v33.2.0
 [33.1.2]: https://github.com/streamr-dev/network/compare/broker/v33.1.1...broker/v33.1.2
 [33.1.1]: https://github.com/streamr-dev/network/compare/broker/v33.1.0...broker/v33.1.1

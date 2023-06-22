@@ -1,17 +1,15 @@
 /**
  * Makes OrderingUtil more compatible with use in pipeline.
  */
-import { StreamMessage, StreamPartID, MessageRef } from '@streamr/protocol'
-
-import { PushBuffer } from '../utils/PushBuffer'
-import { Signal } from '../utils/Signal'
-
-import { Resends } from './Resends'
-import { MessageStream } from './MessageStream'
-import { StrictStreamrClientConfig } from '../Config'
-import OrderingUtil from './ordering/OrderingUtil'
+import { MessageRef, StreamID, StreamMessage, StreamPartID } from '@streamr/protocol'
 import { EthereumAddress, Logger } from '@streamr/utils'
+import { StrictStreamrClientConfig } from '../Config'
 import { LoggerFactory } from '../utils/LoggerFactory'
+import { PushBuffer } from '../utils/PushBuffer'
+import { PushPipeline } from '../utils/PushPipeline'
+import { Resends } from './Resends'
+import { MsgChainContext } from './ordering/OrderedMsgChain'
+import OrderingUtil from './ordering/OrderingUtil'
 
 /**
  * Wraps OrderingUtil into a PushBuffer.
@@ -19,85 +17,71 @@ import { LoggerFactory } from '../utils/LoggerFactory'
  */
 export class OrderMessages {
 
-    private config: StrictStreamrClientConfig
-    private resends: Resends
+    private abortController: AbortController = new AbortController()
+    private inputClosed = false
+    private enabled = true
+    private readonly outBuffer = new PushBuffer<StreamMessage>()
+    private readonly orderingUtil: OrderingUtil
+    private readonly resends: Resends
     private readonly streamPartId: StreamPartID
     private readonly logger: Logger
-    private stopSignal = Signal.once()
-    private done = false
-    private resendStreams = new Set<MessageStream>() // holds outstanding resends for cleanup
-    private outBuffer = new PushBuffer<StreamMessage>()
-    private inputClosed = false
-    private orderMessages: boolean
-    private enabled = true
-    private orderingUtil
+    private readonly getStorageNodes?: (streamId: StreamID) => Promise<EthereumAddress[]>
 
     constructor(
-        config: StrictStreamrClientConfig,
+        config: Pick<StrictStreamrClientConfig, 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill'>,
         resends: Resends,
         streamPartId: StreamPartID,
-        loggerFactory: LoggerFactory
+        loggerFactory: LoggerFactory,
+        getStorageNodes?: (streamId: StreamID) => Promise<EthereumAddress[]>
     ) {
-        this.config = config
         this.resends = resends
         this.streamPartId = streamPartId
         this.logger = loggerFactory.createLogger(module)
-        this.stopSignal.listen(() => {
-            this.done = true
-        })
+        this.getStorageNodes = getStorageNodes
         this.onOrdered = this.onOrdered.bind(this)
         this.onGap = this.onGap.bind(this)
         this.maybeClose = this.maybeClose.bind(this)
-        const { gapFillTimeout, retryResendAfter, maxGapRequests, orderMessages, gapFill } = this.config
+        const { gapFillTimeout, retryResendAfter, maxGapRequests, gapFill } = config
         this.enabled = gapFill && (maxGapRequests > 0)
-        this.orderMessages = orderMessages
         this.orderingUtil = new OrderingUtil(
+            this.streamPartId,
             this.onOrdered,
             this.onGap,
+            () => this.maybeClose(),
+            () => this.maybeClose(), // probably noop, TODO: handle gapfill errors without closing stream or logging
             gapFillTimeout,
             retryResendAfter,
             this.enabled ? maxGapRequests : 0
         )
-
-        this.orderingUtil.on('drain', this.maybeClose)
-
-        // TODO: handle gapfill errors without closing stream or logging
-        this.orderingUtil.on('error', this.maybeClose) // probably noop
     }
 
-    async onGap(from: MessageRef, to: MessageRef, publisherId: EthereumAddress, msgChainId: string): Promise<void> {
-        if (this.done || !this.enabled) { return }
+    async onGap(from: MessageRef, to: MessageRef, context: MsgChainContext): Promise<void> {
+        if (this.isDone() || !this.enabled) { return }
         this.logger.debug('Encountered gap', {
             streamPartId: this.streamPartId,
-            publisherId,
-            msgChainId,
+            context,
             from,
             to,
         })
 
-        let resendMessageStream!: MessageStream
+        let resendMessageStream!: PushPipeline<StreamMessage, StreamMessage>
 
         try {
-            resendMessageStream = await this.resends.range(this.streamPartId, {
-                fromTimestamp: from.timestamp,
-                toTimestamp: to.timestamp,
-                fromSequenceNumber: from.sequenceNumber,
-                toSequenceNumber: to.sequenceNumber,
-                publisherId,
-                msgChainId,
-            })
-            resendMessageStream.onFinally.listen(() => {
-                this.resendStreams.delete(resendMessageStream)
-            })
-            this.resendStreams.add(resendMessageStream)
-            if (this.done) { return }
+            resendMessageStream = await this.resends.resend(this.streamPartId, {
+                from,
+                to,
+                publisherId: context.publisherId,
+                msgChainId: context.msgChainId,
+                raw: true
+            }, this.getStorageNodes, this.abortController.signal)
+            if (this.isDone()) { return }
 
-            for await (const streamMessage of resendMessageStream.getStreamMessages()) {
-                if (this.done) { return }
+            for await (const streamMessage of resendMessageStream) {
+                if (this.isDone()) { return }
                 this.orderingUtil.add(streamMessage)
             }
         } catch (err) {
-            if (this.done) { return }
+            if (this.isDone()) { return }
 
             if (err.code === 'NO_STORAGE_NODES') {
                 // ignore NO_STORAGE_NODES errors
@@ -105,28 +89,29 @@ export class OrderMessages {
                 this.enabled = false
                 this.orderingUtil.disable()
             } else {
-                this.outBuffer.endWrite(err)
-            }
-        } finally {
-            if (resendMessageStream != null) {
-                this.resendStreams.delete(resendMessageStream)
+                throw err
             }
         }
     }
 
     onOrdered(orderedMessage: StreamMessage): void {
-        if (this.outBuffer.isDone() || this.done) {
+        if (this.outBuffer.isDone() || this.isDone()) {
             return
         }
 
         this.outBuffer.push(orderedMessage)
     }
 
-    stop(): Promise<void> {
-        return this.stopSignal.trigger()
+    stop(): void {
+        this.outBuffer.endWrite()
+        this.abortController.abort()
     }
 
-    maybeClose(): void {
+    private isDone() {
+        return this.abortController.signal.aborted
+    }
+
+    private maybeClose(): void {
         // we can close when:
         // input has closed (i.e. all messages sent)
         // AND
@@ -139,10 +124,12 @@ export class OrderMessages {
         }
     }
 
-    async addToOrderingUtil(src: AsyncGenerator<StreamMessage>): Promise<void> {
+    private async addToOrderingUtil(src: AsyncGenerator<StreamMessage>): Promise<void> {
         try {
             for await (const msg of src) {
-                this.orderingUtil.add(msg)
+                if (!this.isDone()) {
+                    this.orderingUtil.add(msg)
+                }
             }
             this.inputClosed = true
             this.maybeClose()
@@ -153,19 +140,13 @@ export class OrderMessages {
 
     transform(): (src: AsyncGenerator<StreamMessage, any, unknown>) => AsyncGenerator<StreamMessage> {
         return async function* Transform(this: OrderMessages, src: AsyncGenerator<StreamMessage>) {
-            if (!this.orderMessages) {
-                yield* src
-                return
-            }
-
             try {
                 this.addToOrderingUtil(src)
                 yield* this.outBuffer
             } finally {
-                this.done = true
+                this.stop()
                 this.orderingUtil.clearGaps()
-                this.resendStreams.forEach((s) => s.end())
-                this.resendStreams.clear()
+                // TODO why there are two clearGaps() calls?
                 this.orderingUtil.clearGaps()
             }
         }.bind(this)

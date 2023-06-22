@@ -1,8 +1,8 @@
 import 'reflect-metadata'
 
+import { collect } from '@streamr/utils'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
-import { collect } from '../../src/utils/iterators'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { createTestStream } from '../test-utils/utils'
 
@@ -10,11 +10,16 @@ describe('client destroy', () => {
 
     let client: StreamrClient
     let stream: Stream
+    let environment: FakeEnvironment
 
     beforeEach(async () => {
-        const environment = new FakeEnvironment()
+        environment = new FakeEnvironment()
         client = environment.createClient()
         stream = await createTestStream(client, module)
+    })
+
+    afterEach(async () => {
+        await environment.destroy()
     })
 
     it('unsubscribes', async () => {

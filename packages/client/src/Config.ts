@@ -10,7 +10,7 @@ import CONFIG_SCHEMA from './config.schema.json'
 import { TrackerRegistryRecord } from '@streamr/protocol'
 import { LogLevel } from '@streamr/utils'
 
-import { IceServer, Location, WebRtcPortRange } from '@streamr/network-node'
+import { IceServer, Location, WebRtcPortRange, ExternalIP } from '@streamr/network-node'
 import type { ConnectionInfo } from '@ethersproject/web'
 import { generateClientId } from './utils/utils'
 
@@ -31,7 +31,7 @@ export interface TrackerRegistryContract {
     contractAddress: string
 }
 
-export interface ChainConnectionInfo { 
+export interface ChainConnectionInfo {
     rpcs: ConnectionInfo[]
     chainId?: number
     name?: string
@@ -145,6 +145,12 @@ export interface StreamrClientConfig {
          * from overflowing.
          */
         maxKeyRequestsPerSecond?: number
+
+        /**
+         * Defines how strong RSA key, in bits, is used when an encryption key is
+         * requested via the standard Streamr key-exchange.
+         */
+        rsaKeyLength?: number
     }
 
     /**
@@ -281,6 +287,16 @@ export interface StreamrClientConfig {
          * IP lookup).
          */
         location?: Location
+
+        /**
+         * Used to assign a custom external IP address for the node.
+         * Useful in cases where the node has a public IP address but
+         * the hosts network interface does not know of it.
+         *
+         * Works only if the Full Cone NAT that the node is behind preserves local
+         * port mappings on the public side.
+        */
+        externalIp?: ExternalIP
     }
 
     /**
@@ -327,8 +343,9 @@ export interface StreamrClientConfig {
     /** @internal */
     _timeouts?: {
         theGraph?: {
-            timeout?: number
-            retryInterval?: number
+            indexTimeout?: number
+            indexPollInterval?: number
+            fetchTimeout?: number
         }
         storageNode?: {
             timeout?: number
@@ -338,7 +355,6 @@ export interface StreamrClientConfig {
             timeout?: number
             retryInterval?: number
         }
-        httpFetchTimeout?: number
     }
 }
 
@@ -347,6 +363,7 @@ export type StrictStreamrClientConfig = MarkOptional<Required<StreamrClientConfi
     contracts: Exclude<Required<StreamrClientConfig['contracts']>, undefined>
     encryption: Exclude<Required<StreamrClientConfig['encryption']>, undefined>
     cache: Exclude<Required<StreamrClientConfig['cache']>, undefined>
+    /** @internal */
     _timeouts: Exclude<DeepRequired<StreamrClientConfig['_timeouts']>, undefined>
 }
 

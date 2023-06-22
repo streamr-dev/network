@@ -25,6 +25,7 @@ export interface ConstructorOptions {
     deferredConnectionAttempt: DeferredConnectionAttempt
     portRange: WebRtcPortRange
     maxMessageSize: number
+    externalIp?: ExternalIP
     bufferThresholdLow?: number
     bufferThresholdHigh?: number
     newConnectionTimeout?: number
@@ -36,6 +37,8 @@ export interface WebRtcPortRange {
     min: number
     max: number
 }
+
+export type ExternalIP = string
 
 let ID = 0
 
@@ -124,6 +127,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
     protected readonly bufferThresholdHigh: number
     protected readonly bufferThresholdLow: number
     protected readonly portRange: WebRtcPortRange
+    protected readonly externalIp?: ExternalIP
 
     // diagnostic info
     private messagesSent = 0
@@ -142,6 +146,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         pingInterval,
         portRange,
         maxMessageSize,
+        externalIp,
         bufferThresholdHigh = 2 ** 17,
         bufferThresholdLow = 2 ** 15,
         newConnectionTimeout = 15000,
@@ -164,6 +169,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         this.flushRetryTimeout = flushRetryTimeout
         this.messageQueue = messageQueue
         this.deferredConnectionAttempt = deferredConnectionAttempt
+        this.externalIp = externalIp
         this.portRange = portRange
         this.baseLogger = new Logger(module, { id: `${NameDirectory.getName(this.getPeerId())}/${ID}` })
         this.isFinished = false
@@ -414,35 +420,38 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
                 }
                 return // method eventually re-scheduled by `onBufferedAmountLow`
             } else {
-                let sent = false
-                let isOpen
-                try {
-                    // this.isOpen() is checked immediately after the call to node-datachannel.sendMessage() as if
-                    // this.isOpen() returns false after a "successful" send, the message is lost with a near 100% chance.
-                    // This does not work as expected if this.isOpen() is checked before sending a message
-                    sent = this.isOpen() && this.doSendMessage(queueItem.getMessage())
-                    isOpen = this.isOpen()
-                    sent = sent && isOpen
-                    this.messagesSent += 1
-                    this.bytesSent += queueItem.getMessage().length
-                } catch (e) {
-                    this.sendFailures += 1
-                    this.processFailedMessage(queueItem, e)
-                    return // method rescheduled by `this.flushTimeoutRef`
+                let sent: boolean
+                let caughtError: Error | undefined = undefined
+                if (this.isOpen()) {
+                    try {
+                        this.doSendMessage(queueItem.getMessage())
+                        // this.isOpen() is checked immediately after the call to node-datachannel.sendMessage() as if
+                        // this.isOpen() returns false after a "successful" send, the message is lost with a near 100% chance.
+                        // This does not work as expected if this.isOpen() is checked before sending a message
+                        sent = this.isOpen()
+                    } catch (e) {
+                        caughtError = e
+                        sent = false
+                    }
+                } else {
+                    sent = false
                 }
 
                 if (sent) {
                     this.messageQueue.pop()
                     queueItem.delivered()
                     numOfSuccessSends += 1
+                    this.messagesSent += 1
+                    this.bytesSent += queueItem.getMessage().length
                 } else {
                     this.baseLogger.debug('Failed to send queue item', {
-                        wasOpen: isOpen,
                         numOfSuccessSends,
                         queueItem,
                         messageQueueSize: this.messageQueue.size(),
                     })
-                    this.processFailedMessage(queueItem, new Error('sendMessage returned false'))
+                    this.sendFailures += 1
+                    this.processFailedMessage(queueItem, caughtError ?? new Error('failed to send message'))
+                    return // method rescheduled by `this.flushTimeoutRef`
                 }
             }
         }
@@ -484,9 +493,8 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
      * Invoked when a message is ready to be sent. Connectivity is ensured
      * with a check to `isOpen` before invocation.
      * @param message - mesasge to be sent
-     * @return return false if the message could not be delivered
      */
-    protected abstract doSendMessage(message: string): boolean
+    protected abstract doSendMessage(message: string): void
 
     /**
      * Subclass should call this method when the connection has opened.

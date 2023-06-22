@@ -2,14 +2,15 @@ import 'reflect-metadata'
 
 import { Wallet } from '@ethersproject/wallet'
 import { fastWallet } from '@streamr/test-utils'
-import { StreamPermission } from '../../src/permission'
+import { collect } from '@streamr/utils'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
-import { collect } from '../../src/utils/iterators'
+import { StreamPermission } from '../../src/permission'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { nextValue } from './../../src/utils/iterators'
 
 describe('publisher key reuse', () => {
+
     let publisherWallet: Wallet
     let environment: FakeEnvironment
     let publisher: StreamrClient
@@ -37,7 +38,7 @@ describe('publisher key reuse', () => {
     })
 
     afterEach(async () => {
-        await environment?.destroy()
+        await environment.destroy()
     })
 
     it('happy path: same publisher address', async () => {

@@ -4,73 +4,184 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+Package streamr-broker follows its own versioning and has its own changelog
+found [here](packages/broker/CHANGELOG.md).
 
 ## [Unreleased]
 
-### Added
+### client
 
-### Changed
+#### Added
 
-### Deprecated
+- Add optional config option `encryption.rsaKeyLength` to control the strength of RSA encryption in key-exchange (https://github.com/streamr-dev/network/pull/1505)
 
-### Removed
+#### Changed
 
-### Fixed
+- Improve error messages for contract call errors (https://github.com/streamr-dev/network/pull/1558)
 
-### Security
+#### Deprecated
+
+#### Removed
+
+#### Fixed
+
+- Fix error handling in message pipeline (https://github.com/streamr-dev/network/pull/1479)
+- Fix resend freeze issue (https://github.com/streamr-dev/network/pull/1554)
+- Fix error handling in gap fill (https://github.com/streamr-dev/network/pull/1570)
+
+#### Security
+
+### cli-tools
+
+#### Added
+
+#### Changed
+
+#### Deprecated
+
+#### Removed
+
+#### Fixed
+
+#### Security
+
+
+## [8.5.3] - 2023-06-07
+
+### client
+
+#### Changed
+
+- Optimize message ordering and gap handling of resends (https://github.com/streamr-dev/network/pull/1460)
+
+#### Fixed
+
+- Clear permissions cache when message decryption fails (https://github.com/streamr-dev/network/pull/1458)
+- Fix default value handling for resend range queries (https://github.com/streamr-dev/network/pull/1462)
+
+
+## [8.5.2] - 2023-05-31
+
+### client
+
+#### Fixed
+
+- Fix another TypeScript definitions issue that caused build to fail with `skipLibCheck: false` (https://github.com/streamr-dev/network/pull/1432)
+
+
+## [8.5.1] - 2023-05-29
+
+### client
+
+#### Fixed
+
+- Fix TypeScript definitions issue that caused build to fail with `skipLibCheck: false` (https://github.com/streamr-dev/network/pull/1403)
+- Fix active gap fill for encrypted streams (https://github.com/streamr-dev/network/pull/1421)
+
+
+## [8.5.0] - 2023-05-10
+
+### client
+
+#### Added
+
+- Add config option `network.externalIp` to set a custom external IP address for the node (https://github.com/streamr-dev/network/pull/1357)
+
+
+## [8.4.0] - 2023-05-09
+
+### client
+
+#### Changed
+
+- Reduce browser bundle size (https://github.com/streamr-dev/network/pull/1343)
+
+### cli-tools
+
+#### Added
+
+- Add flag `--raw` (or shorthand `-r`) to command `stream subscribe` for raw subscription (https://github.com/streamr-dev/network/pull/1317)
+- Add flag `--with-metadata` (or shorthand `-m`) to command `stream subscribe` to include metadata in output (https://github.com/streamr-dev/network/pull/1317)
+
+
+## [8.3.1] - 2023-05-03
+
+### client
+
+#### Fixed
+
+- Fix duplicate message sending issue in network library (https://github.com/streamr-dev/network/pull/1290)
+- Fix calculation of diagnostic info in network library (https://github.com/streamr-dev/network/pull/1300)
 
 
 ## [8.3.0] - 2023-04-26
 
-### Added
+### client
+
+#### Added
 
 - Add method `.getDiagnosticInfo` for getting diagnostic information for debugging purposes
 - Add support for observing stream creation events with `.on('createStream')`
 - Add optional config option `contracts.pollInterval`
 
-### Changed
+#### Changed
 
 - Validate `partitions` when parsing contract metadata
 - Use default partition count if there is no information in contract metadata
 
-### Fixed
+#### Fixed
 
 - Handling of `undefined` partition in `.createStream`
 
 
+### cli-tools
+
+#### Fixed
+
+- Fix `stream create` ouput (now valid JSON without extra characters)
+
+
 ## [8.2.1] - 2023-04-13
 
-### Fixed
+### client
+
+#### Fixed
 
 - Fix crashing issue in network library when `acceptProxyConnections` is enabled
 
 
 ## [8.2.0] - 2023-04-11
 
-### Added
+### client
+
+#### Added
 
 - Add new option `raw` to method `.subscribe`
 - Add optional parameter to `.searchStreams` for defining order of the result set
 
-### Changed
+#### Changed
 
 - Increase default timeout of stream creation when ENS domains are used
 
 
 ## [8.1.0] - 2023-03-23
 
-### Added
+### client
+
+#### Added
 
 - Encryption keys are re-used automatically
 
-### Changed
+#### Changed
 
 - .addEncryptionKey: 2nd parameter is now `publisherId` instead of `streamId`
 
 
 ## [8.0.4] - 2023-03-20
 
-### Added
+### client
+
+#### Added
 
 - Add optional config option `network.webrtcPortRange`
 - Add optional config option `network.webrtcMaxMessageSize`
@@ -78,33 +189,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [8.0.3] - 2023-03-08
 
-### Fixed 
+### client
+
+#### Fixed 
 
 - Fix startup error `ERR_PACKAGE_PATH_NOT_EXPORTED`
 
 
 ## [8.0.2] - 2023-02-27
 
-### Changed 
+### client
+
+#### Changed 
 
 - Optimize browser bundle
 
 
 ## [8.0.1] - 2023-02-20
 
-### Fixed 
+### client
+
+#### Fixed 
 
 - Browser bundle
 
 
 ## [8.0.0] - 2023-02-20
 
-### Added
+### client
+
+#### Added
 
 - Add support for experimental encryption key exchange via [Lit Protocol](https://litprotocol.com/). Enabled by
   setting configuration option `encryption.litProtocolEnabled` to be true.
 
-### Changed
+#### Changed
 
 - Proxy enhancements
   - Use `.setProxies` instead of `.openProxyConnections` and `.closeProxyConnections`.
@@ -114,7 +233,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Combine `encryption` and `decryption` config option blocks
   - All options are now in the `encryption` block
 
-### Removed
+#### Removed
 
 - Remove deprecated:
   - `gasPriceStrategy` config option from `contracts.ethereumNetworks`
@@ -128,7 +247,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [7.3.0] - 2023-01-23
 
-### Added
+### client
+
+#### Added
 
 - Add optional config option `network.webrtcSendBufferMaxMessageCount`
 - Add optional config option `network.iceServers.tcp`
@@ -136,49 +257,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [7.2.1] - 2023-01-12
 
-### Fixed
+### client
+
+#### Fixed
 
 - Fix `allOf` filter of `client.searchStreams`
 
 
 ## [7.2.0] - 2022-12-14
 
-### Deprecated
+### client
+
+#### Deprecated
 
 - Deprecate TypeScript interface `NetworkNodeConfig`
 
 
 ## [7.1.0] - 2022-11-25
 
-### Deprecated
+### client
+
+#### Deprecated
 
 - Deprecate TypeScript interface `StrictStreamrClientConfig`
 - Deprecate `gasPriceStrategy` config option in `contracts.ethereumNetworks`, use `highGasPriceStrategy` instead
 - Deprecate method parameter of `.waitForStorage()`
 
-### Fixed
+#### Fixed
 - Networking issue in which connections could not be formed via WebRTC if STUN or TURN were needed
 
 
 ## [7.0.3] - 2022-11-23
 
-### Changed
+### client
+
+#### Changed
 
 - Change default list of Ethereum RPC URLs
 
 
 ## [7.0.2] - 2022-11-22
 
-### Deprecated
+### client
+
+#### Deprecated
 
 - Deprecate `STREAM_CLIENT_DEFAULTS` constant
 - Deprecate `ConfigTest` constant, use `CONFIG_TEST` instead
 
-### Removed
+#### Removed
 
 - Remove (non-functional) client configuration option `contracts.ensCacheChainAddress`
 
-### Fixed
+#### Fixed
 
 - Fix CORS issue in browser when interacting with smart contracts
   - Remove https://rpc-mainnet.matic.network/ from default list of Polygon RPCs
@@ -186,11 +317,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [7.0.1] - 2022-11-18
 
-### Changed
+### client
+
+#### Changed
 
 - Simplify authentication config type to use union instead of `XOR`
 
-### Removed
+#### Removed
 
 - Remove TypeScript interfaces and types:
   - `AuthConfig`
@@ -208,13 +341,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [7.0.0] - 2022-11-15
 
-### Added
+### client
+
+#### Added
 
 - The client publishes telemetry metrics to the network at regular intervals (enabled by default, configurable with `metrics` config option)
 - You can manually update a stream encryption key with method `.updateEncryptionKey()`
 - Add optional client configuration option `logLevel` to set desired logging level.
 
-### Changed
+#### Changed
 
 - Methods related to publishing and subscribing operate on new interfaces `Message` and `MessageMetadata` instead of `StreamMessage`
   - in `.subscribe()` and `.resend()` the data type of 2nd parameter of `onMessage` callback is `MessageMetadata` instead of `StreamMessage`
@@ -253,11 +388,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Result set of `.getStoredStreams()` is no longer capped to 1000 streams
 - Result sets of `.getPermissions()` and `.getStorageNodes()` are no longer capped to 100 items
 
-### Deprecated
+#### Deprecated
 
 - Deprecate `.getNode()` method and interface `NetworkNodeStub`
 
-### Removed
+#### Removed
 
 - Remove Data Union functionality
   - functionality moved to package `@dataunions/client`
@@ -280,16 +415,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove (non-functional) client configuration options `autoConnect`, `autoDisconnect`, and `maxRetries`
 - Remove `AuthenticatedAuthConfig` and `UnauthenticatedAuthConfig` interfaces
 
-### Fixed
+#### Fixed
 
 - Promise `MessageStream` returned from `.resend()` does not reject in the case of an encryption key being unavailable
 - Fix timeout issue of method `stream.addToStorageNode()` when used with storage node cluster
 - Fix concurrency issue when encryption keys are added in parallel for multiple streams (`SQLITE_ERROR: no such table: GroupKeys`)
 
+### cli-tools
+
+#### Changed
+
+- Replace command `storage-node list-stream-parts` with `storage-node list-streams` and change the output format
+
 
 ## [6.0.10] - 2022-10-03
 
-### Fixed
+### client
+
+#### Fixed
 
 - Fix `searchStreams`, `getStreamSubscribers`, and `getStreamPublishers` timestamp filtering behaviour where valid
   entries were not appearing in the result set.
@@ -297,28 +440,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [6.0.9] - 2022-06-20
 
-### Fixed
+### client
+
+#### Fixed
 
 - Update `streamr-network` library to include fix to `std::bad_weak_ptr` crashing issue
 
 
 ## [6.0.8] - 2022-05-31
 
-### Fixed
+### client
+
+#### Fixed
 
 - Update `streamr-network` library to include propagation fix to proxy stream behaviour
 
 
 ## [6.0.7] - 2022-05-25
 
-### Fixed
+### client
+
+#### Fixed
 
 - Update `streamr-network` library to include race condition fix to proxy stream behaviour
 
 
 ## [6.0.6] - 2022-05-24
 
-### Fixed
+### client
+
+#### Fixed
 
 - Subscriptions now have a default error handler in case of errors in message processing (e.g. message validation failures).
   This means that unhandled promise rejections will not occur when not setting an explicit error handler. The default error
@@ -327,36 +478,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [6.0.5] - 2022-05-10
 
-### Fixed
+### client
+
+#### Fixed
 
 - Update `streamr-network` library to include stability fixes
 
 
 ## [6.0.4] - 2022-04-28
 
-### Fixed
+### client
+
+#### Fixed
 - Update `streamr-network` library that includes a fix to Firefox compatibility
 
 
 ## [6.0.3] - 2022-04-25
 
-### Fixed
+### client
+
+#### Fixed
 - Fix stream encryption: messages weren't automatically encrypted if the local database didn't contain pre-existing encryption keys for a stream
 
 
 ## [6.0.2] - 2022-03-04
 
-### Fixed
+### client
+
+#### Fixed
 - Fixed an issue in which method `searchStreams` would throw on invalid metadata (NET-730)
 
 
 ## [6.0.1] - 2022-02-24
 
-### Fixed
+### client
+
+#### Fixed
 - Fixed an import so that the client successfully loads in a web browser environment (NET-721)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/client/v8.3.0...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/client/v8.5.3...HEAD
+[8.5.3]: https://github.com/streamr-dev/network/compare/client/v8.5.2...client/v8.5.3
+[8.5.2]: https://github.com/streamr-dev/network/compare/client/v8.5.1...client/v8.5.2
+[8.5.1]: https://github.com/streamr-dev/network/compare/client/v8.5.0...client/v8.5.1
+[8.5.0]: https://github.com/streamr-dev/network/compare/client/v8.4.0...client/v8.5.0
+[8.4.0]: https://github.com/streamr-dev/network/compare/client/v8.3.1...client/v8.4.0
+[8.3.1]: https://github.com/streamr-dev/network/compare/client/v8.3.0...client/v8.3.1
 [8.3.0]: https://github.com/streamr-dev/network/compare/client/v8.2.1...client/v8.3.0
 [8.2.1]: https://github.com/streamr-dev/network/compare/client/v8.2.0...client/v8.2.1
 [8.2.0]: https://github.com/streamr-dev/network/compare/client/v8.1.0...client/v8.2.0

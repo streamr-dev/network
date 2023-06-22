@@ -1,31 +1,8 @@
-# Changelog
-All notable changes to this project will be documented in this file.
+# Old Changelog
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-
-## [Unreleased]
-
-### Added
-
-### Changed
-
-### Deprecated
-
-### Removed
-
-### Fixed
-
-### Security
-
-
-## [7.0.0] - 2022-11-15
-
-### Changed
-
-- Replace command `storage-node list-stream-parts` with `storage-node list-streams` and change the output format
-
+Versions before 7.0.0 and below are collected into this file. Changelogs for
+newer versions of the cli-tool are available at the root-level CHANGELOG.md
+file.
 
 ## [6.1.1] - 2022-11-03
 
@@ -149,7 +126,8 @@ ordering and gap filling.
 - Re-organize README.md and a few touches to Developing section paragraphs.
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/cli-tools%2fv7.0.0...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/cli-tools%2fv8.3.1...HEAD
+[8.3.1]: https://github.com/streamr-dev/network/compare/cli-tools%2fv7.0.0...cli-tools%2fv8.3.1
 [7.0.0]: https://github.com/streamr-dev/network/compare/cli-tools%2fv6.1.1...cli-tools%2fv7.0.0
 [6.1.1]: https://github.com/streamr-dev/network/compare/cli-tools%2fv6.1.0...cli-tools%2fv6.1.1
 [6.1.0]: https://github.com/streamr-dev/network/compare/cli-tools%2fv6.0.0...cli-tools%2fv6.1.0

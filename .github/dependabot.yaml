@@ -21,9 +21,10 @@ updates:
       - DaisyDomergue
   - package-ecosystem: npm
     directory: /
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 20
+    versioning-strategy: increase
     schedule:
-      interval: daily
+      interval: weekly
     reviewers:
       - harbu
   - package-ecosystem: docker

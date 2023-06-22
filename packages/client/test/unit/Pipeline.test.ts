@@ -1,13 +1,9 @@
 import { expected, MAX_ITEMS, IteratorTest } from './IteratorTest'
-import { Logger, wait } from '@streamr/utils'
-
+import { wait, collect } from '@streamr/utils'
 import { Pipeline } from '../../src/utils/Pipeline'
 import { PushPipeline } from '../../src/utils/PushPipeline'
-import { PushBuffer } from '../../src/utils/PushBuffer'
-import { PullBuffer } from '../../src/utils/PullBuffer'
+import { PushBuffer, pull } from '../../src/utils/PushBuffer'
 import { iteratorFinally } from '../../src/utils/iterators'
-
-const logger = new Logger(module)
 
 const WAIT = 20
 
@@ -76,13 +72,12 @@ describe('Pipeline', () => {
         }
 
         const p5 = new Pipeline(generate())
-            .pipe(async function* Step1(s) {
+            .pipe(async function* Step0(s) {
                 for await (const msg of s) {
                     yield String(msg) // change output type
                 }
             })
-            // @ts-expect-error expects same as input type
-            .pipeBefore(async function* Step0(s) {
+            .pipe(async function* Step1(s) {
                 for await (const msg of s) {
                     yield String(msg) // change output type
                 }
@@ -91,12 +86,7 @@ describe('Pipeline', () => {
         expect(p5).toBeTruthy() // avoid unused warning
 
         const p6 = new Pipeline(generate())
-            .pipe(async function* Step3(s) {
-                for await (const msg of s) {
-                    yield String(msg) // change output type
-                }
-            })
-            .pipeBefore(async function* Step0(s) {
+            .pipe(async function* Step0(s) {
                 for await (const msg of s) {
                     if (msg % 2) {
                         continue // remove every other item
@@ -105,14 +95,19 @@ describe('Pipeline', () => {
                     yield msg
                 }
             })
-            .pipeBefore(async function* Step2(s) {
+            .pipe(async function* Step1(s) {
                 for await (const msg of s) {
                     yield msg * 2
                 }
             })
-            .pipeBefore(async function* Step1(s) {
+            .pipe(async function* Step2(s) {
                 for await (const msg of s) {
                     yield msg - 1
+                }
+            })
+            .pipe(async function* Step3(s) {
+                for await (const msg of s) {
+                    yield String(msg) // change output type
                 }
             })
 
@@ -441,103 +436,6 @@ describe('Pipeline', () => {
                 expect(onError).toHaveBeenCalledTimes(1)
             })
 
-            it('waits for onError before continuing', async () => {
-                const err = new Error('expected')
-                let receivedBefore: number[] = []
-                let receivedAfter: number[] = []
-                const onError = jest.fn(async () => {
-                    receivedBefore = received.slice()
-                    await wait(500)
-                    receivedAfter = received.slice()
-                })
-
-                const p = new Pipeline(generate())
-                    .forEach(async (_v, index) => {
-                        if (index === 2) {
-                            throw err
-                        }
-                    })
-                p.onFinally.listen(onFinally)
-                p.onError.listen(onError)
-
-                const received: number[] = []
-                for await (const msg of p) {
-                    received.push(msg)
-                }
-
-                expect(received).toEqual(expected.filter((_v, index) => index !== 2))
-                expect(onError).toHaveBeenCalledTimes(1)
-                expect(receivedBefore).toEqual(expected.slice(0, 2))
-                expect(receivedAfter).toEqual(expected.slice(0, 2))
-            })
-
-            it('can suppress error in iterator function with onError handler', async () => {
-                let err = new Error('expected -1')
-                let count = 0
-                const onError = jest.fn((error) => {
-                    count += 1
-                    logger.debug(`onError ${count}`)
-                    if (count === 3) {
-                        logger.debug('throwing last')
-                        throw error
-                    }
-                })
-
-                const p = new Pipeline(generate())
-                    .pipe(async function* Step1(s) {
-                        yield* s
-                    })
-                    .forEach(async (_msg, index) => {
-                        if (index >= expected.length - 3) {
-                            err = new Error(`expected ${index}`)
-                            throw err
-                        }
-                    })
-                p.onFinally.listen(onFinally)
-                p.onError.listen(onError)
-
-                const received: number[] = []
-                const task = (async () => {
-                    for await (const msg of p) {
-                        received.push(msg)
-                    }
-                })()
-                await task.catch(() => {})
-
-                await expect(async () => {
-                    await task
-                }).rejects.toThrow(err)
-
-                expect(onError).toHaveBeenCalledTimes(3)
-                expect(received).toEqual(expected.slice(0, -3))
-            })
-
-            it('works with PullBuffer inputs', async () => {
-                const onFinallyInnerAfter = jest.fn()
-                const onFinallyInner = jest.fn(async () => {
-                    await wait(WAIT)
-                    onFinallyInnerAfter()
-                })
-                const inputStream = new PullBuffer(generate())
-                const p = new Pipeline(inputStream)
-                    .pipe(async function* Step1(s) {
-                        yield* s
-                    })
-                    .pipe(async function* finallyFn(s) {
-                        yield* iteratorFinally(s, onFinallyInner)
-                    })
-                p.onFinally.listen(onFinally)
-
-                const received = []
-                for await (const msg of p) {
-                    received.push(msg)
-                }
-
-                expect(onFinallyInner).toHaveBeenCalledTimes(1)
-                expect(onFinallyInnerAfter).toHaveBeenCalledTimes(1)
-                expect(received).toEqual(expected)
-            })
-
             it('works with PushBuffer inputs', async () => {
                 const onFinallyInnerAfter = jest.fn()
                 const onFinallyInner = jest.fn(async () => {
@@ -622,7 +520,8 @@ describe('Pipeline', () => {
                 const receivedStep1: number[] = []
                 const receivedStep2: number[] = []
 
-                const firstStream = new PullBuffer(generate())
+                const firstStream = new PushBuffer<number>()
+                await pull(generate(), firstStream)
                 const p = new Pipeline(firstStream)
                     .pipe(async function* Step2(src) {
                         const subPipeline = new Pipeline(src)
@@ -667,7 +566,8 @@ describe('Pipeline', () => {
                 const receivedStep2: number[] = []
                 const err = new Error('expected err')
 
-                const firstStream = new PullBuffer(generate())
+                const firstStream = new PushBuffer<number>()
+                await pull(generate(), firstStream)
                 const p = new Pipeline(firstStream)
                     .pipe(async function* Step2(src) {
                         const subPipeline = new Pipeline(src)
@@ -708,69 +608,6 @@ describe('Pipeline', () => {
             })
 
             describe('Array-like methods', () => {
-                describe('map', () => {
-                    it('works', async () => {
-                        let count = 0
-                        const p = new Pipeline(generate())
-                            .map((value, index) => {
-                                expect(index).toEqual(count)
-                                count += 1
-                                return value * 10
-                            })
-                        p.onFinally.listen(onFinally)
-                        const result = await p.collect()
-                        expect(result).toEqual(expected.map((v) => v * 10))
-                    })
-
-                    it('works async', async () => {
-                        let count = 0
-                        const p = new Pipeline(generate())
-                            .map(async (value, index) => {
-                                await wait(Math.random() * WAIT)
-                                expect(index).toEqual(count)
-                                count += 1
-                                return value * 10
-                            })
-                        p.onFinally.listen(onFinally)
-                        const result = await p.collect()
-                        expect(onFinally).toHaveBeenCalledTimes(1)
-                        expect(result).toEqual(expected.map((v) => v * 10))
-                    })
-                })
-
-                describe('forEach', () => {
-                    it('works', async () => {
-                        const items: number[] = []
-                        let count = 0
-                        const p = new Pipeline(generate())
-                            .forEach((value, index) => {
-                                expect(index).toEqual(count)
-                                items.push(value)
-                                count += 1
-                            })
-                        p.onFinally.listen(onFinally)
-                        const result = await p.collect()
-                        expect(result).toEqual(expected)
-                        expect(items).toEqual(expected)
-                    })
-
-                    it('works async', async () => {
-                        const items: number[] = []
-                        let count = 0
-                        const p = new Pipeline(generate())
-                            .forEach(async (value, index) => {
-                                await wait(Math.random() * WAIT)
-                                expect(index).toEqual(count)
-                                items.push(value)
-                                count += 1
-                            })
-                        p.onFinally.listen(onFinally)
-                        const result = await p.collect()
-                        expect(result).toEqual(expected)
-                        expect(items).toEqual(expected)
-                    })
-                })
-
                 describe('filter', () => {
                     it('works', async () => {
                         let count = 0
@@ -781,8 +618,7 @@ describe('Pipeline', () => {
                                 return value % 2
                             })
                         p.onFinally.listen(onFinally)
-                        const result = await p.collect()
-                        expect(result).toEqual(expected.filter((v) => v % 2))
+                        expect(await collect(p)).toEqual(expected.filter((v) => v % 2))
                     })
 
                     it('works async', async () => {
@@ -795,20 +631,7 @@ describe('Pipeline', () => {
                                 return value % 2
                             })
                         p.onFinally.listen(onFinally)
-                        const result = await p.collect()
-                        expect(result).toEqual(expected.filter((v) => v % 2))
-                    })
-                })
-
-                describe('reduce', () => {
-                    it('works', async () => {
-                        const p = new Pipeline(generate())
-                            .reduce((prev, value) => {
-                                return prev + value
-                            }, 0)
-                        p.onFinally.listen(onFinally)
-                        const results = await p.collect()
-                        expect(results[results.length - 1]).toEqual(expected.reduce((w, v) => w + v, 0))
+                        expect(await collect(p)).toEqual(expected.filter((v) => v % 2))
                     })
                 })
             })
@@ -820,8 +643,7 @@ describe('Pipeline', () => {
                     yield* s
                 })
                 pipeline.onFinally.listen(onFinally)
-
-                pipeline.pull(generate())
+                pull(generate(), pipeline)
                 return pipeline
             })
 
@@ -831,11 +653,10 @@ describe('Pipeline', () => {
                     yield* s
                 })
                 pipeline.onFinally.listen(onFinally)
-
-                pipeline.pull((async function* generateError() {
+                pull((async function* generateError() {
                     yield* generate()
                     throw err
-                }()))
+                }()), pipeline)
                 const received: number[] = []
                 await expect(async () => {
                     for await (const msg of pipeline) {
@@ -852,11 +673,10 @@ describe('Pipeline', () => {
                     yield* s
                 })
                 pipeline.onFinally.listen(onFinally)
-
                 // eslint-disable-next-line require-yield
-                pipeline.pull((async function* generateError() {
+                pull((async function* generateError() {
                     throw err
-                }()))
+                }()), pipeline)
                 const received: any[] = []
                 await expect(async () => {
                     for await (const msg of pipeline) {

@@ -61,6 +61,7 @@
         "network": {
             "type": "object",
             "additionalProperties": false,
+            "required": [],
             "properties": {
                 "id": {
                     "type": "string"
@@ -178,6 +179,10 @@
                 "rttUpdateTimeout": {
                     "type": "number",
                     "default": 15000
+                },
+                "externalIp": {
+                    "type": "string",
+                    "format": "ipv4"
                 },
                 "iceServers": {
                     "type": "array",
@@ -352,6 +357,10 @@
                 "maxKeyRequestsPerSecond": {
                     "type": "number",
                     "default": 20
+                },
+                "rsaKeyLength": {
+                    "type": "number",
+                    "default": 4096
                 }
             },
             "default": {}
@@ -413,13 +422,17 @@
                     "type": "object",
                     "additionalProperties": false,
                     "properties": {
-                        "timeout": {
+                        "indexTimeout": {
                             "type": "number",
                             "default": 60000
                         },
-                        "retryInterval": {
+                        "indexPollInterval": {
                             "type": "number",
                             "default": 1000
+                        },
+                        "fetchTimeout": {
+                            "type": "number",
+                            "default": 30000
                         }
                     },
                     "default": {}
@@ -453,10 +466,6 @@
                         }
                     },
                     "default": {}
-                },
-                "httpFetchTimeout": {
-                    "type": "number",
-                    "default": 30000
                 }
             },
             "default": {}

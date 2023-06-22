@@ -25,12 +25,15 @@ import { Events, BrandedString } from './types'
 import { wait } from './wait'
 import { waitForEvent } from './waitForEvent'
 import { TimeoutError, withTimeout } from './withTimeout'
-import { composeAbortSignals } from './composeAbortSignals'
+import { composeAbortSignals, ComposedAbortSignal } from './composeAbortSignals'
 import { waitForCondition } from './waitForCondition'
 import { withRateLimit } from './withRateLimit'
 import { ObservableEventEmitter } from './ObservableEventEmitter'
 import { initEventGateway } from './initEventGateway'
 import { merge } from './merge'
+import { collect } from './collect'
+import { Gate } from './Gate'
+import { TheGraphClient, GraphQLQuery, FetchResponse } from './TheGraphClient'
 
 export {
     BrandedString,
@@ -45,6 +48,7 @@ export {
     pTransaction,
     asAbortable,
     composeAbortSignals,
+    ComposedAbortSignal,
     isENSName,
     keyToArrayIndex,
     randomString,
@@ -63,7 +67,12 @@ export {
     Events,
     ObservableEventEmitter,
     initEventGateway,
-    merge
+    merge,
+    collect,
+    Gate,
+    TheGraphClient,
+    GraphQLQuery,
+    FetchResponse
 }
 
 export {

@@ -1,30 +1,29 @@
-import { collect, unique } from './GeneratorUtils'
-import { StreamID, StreamMessage, StreamPartIDUtils } from '@streamr/protocol'
-import identity from 'lodash/identity'
-import { MessageStream } from '../subscribe/MessageStream'
+import { StreamID, StreamPartIDUtils } from '@streamr/protocol'
+import { LoggerFactory } from './LoggerFactory'
+import { Message } from '../Message'
 
-export function waitForAssignmentsToPropagate(
-    messageStream: MessageStream,
+export async function waitForAssignmentsToPropagate(
+    messages: AsyncIterable<Message>,
     targetStream: {
         id: StreamID
         partitions: number
+    },
+    loggerFactory: LoggerFactory
+): Promise<void> {
+    const foundPartitions = new Set<number>
+    for await (const msg of messages) {
+        const streamPart = (msg.content as any).streamPart
+        try {
+            const streamPartId = StreamPartIDUtils.parse(streamPart)
+            const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
+            if ((streamId === targetStream.id) && (partition < targetStream.partitions)) {
+                foundPartitions.add(partition)
+                if (foundPartitions.size === targetStream.partitions) {
+                    return
+                }
+            }
+        } catch {
+            loggerFactory.createLogger(module).debug('Ignore malformed content')
+        }
     }
-): Promise<string[]> {
-    return collect(
-        unique<string>(
-            messageStream
-                .map((msg: StreamMessage) => (msg.getParsedContent() as any).streamPart)
-                .filter((input: any) => {
-                    try {
-                        const streamPartId = StreamPartIDUtils.parse(input)
-                        const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
-                        return streamId === targetStream.id && partition < targetStream.partitions
-                    } catch {
-                        return false
-                    }
-                }),
-            identity
-        ),
-        targetStream.partitions
-    )
 }

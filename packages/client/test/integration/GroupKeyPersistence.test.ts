@@ -2,20 +2,21 @@ import 'reflect-metadata'
 
 import { StreamMessageType, toStreamPartID } from '@streamr/protocol'
 import { fastPrivateKey } from '@streamr/test-utils'
-import { GroupKey } from '../../src/encryption/GroupKey'
-import { StreamPermission } from '../../src/permission'
+import { collect } from '@streamr/utils'
+import { Message } from '../../src/Message'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
+import { GroupKey } from '../../src/encryption/GroupKey'
+import { StreamPermission } from '../../src/permission'
 import { until } from '../../src/utils/promises'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { createTestStream, startPublisherKeyExchangeSubscription } from '../test-utils/utils'
 import { DEFAULT_PARTITION } from './../../src/StreamIDBuilder'
-import { collect } from '../../src/utils/iterators'
-import { Message } from '../../src/Message'
 
 describe('Group Key Persistence', () => {
+
     let publisherPrivateKey: string
     let subscriberPrivateKey: string
     let publisher: StreamrClient
@@ -24,9 +25,17 @@ describe('Group Key Persistence', () => {
     let storageNode: FakeStorageNode
     let environment: FakeEnvironment
 
-    beforeEach(() => {
+    beforeEach(async () => {
         environment = new FakeEnvironment()
-        storageNode = environment.startStorageNode()
+        storageNode = await environment.startStorageNode()
+    })
+
+    afterEach(async () => {
+        await environment.destroy()
+    })
+
+    afterEach(async () => {
+        await environment.destroy()
     })
 
     describe('with encrypted streams', () => {

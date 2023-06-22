@@ -1,43 +1,39 @@
+import { BigNumber } from '@ethersproject/bignumber'
 import { ContractTransaction } from '@ethersproject/contracts'
+import { Provider } from '@ethersproject/providers'
+import { StreamID, StreamIDUtils, toStreamID } from '@streamr/protocol'
+import { EthereumAddress, GraphQLQuery, Logger, TheGraphClient, collect, isENSName, toEthereumAddress } from '@streamr/utils'
+import { Lifecycle, delay, inject, scoped } from 'tsyringe'
+import { Authentication, AuthenticationInjectionToken } from '../Authentication'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import { ContractFactory } from '../ContractFactory'
+import { getStreamRegistryChainProviders, getStreamRegistryOverrides } from '../Ethereum'
+import { Stream, StreamMetadata } from '../Stream'
+import { StreamIDBuilder } from '../StreamIDBuilder'
+import { StreamrClientError } from '../StreamrClientError'
 import type { StreamRegistryV4 as StreamRegistryContract } from '../ethereumArtifacts/StreamRegistryV4'
 import StreamRegistryArtifact from '../ethereumArtifacts/StreamRegistryV4Abi.json'
-import { BigNumber } from '@ethersproject/bignumber'
-import { Provider } from '@ethersproject/providers'
-import { delay, inject, Lifecycle, scoped } from 'tsyringe'
-import { getStreamRegistryChainProviders, getStreamRegistryOverrides } from '../Ethereum'
-import { until } from '../utils/promises'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
-import { Stream, StreamMetadata } from '../Stream'
-import { NotFoundError } from '../HttpUtil'
-import { StreamID, StreamIDUtils } from '@streamr/protocol'
-import { StreamIDBuilder } from '../StreamIDBuilder'
-import { SynchronizedGraphQLClient } from '../utils/SynchronizedGraphQLClient'
-import { searchStreams as _searchStreams, SearchStreamsPermissionFilter, SearchStreamsOrderBy } from './searchStreams'
-import { filter, map } from '../utils/GeneratorUtils'
-import { ObservableContract, queryAllReadonlyContracts, waitForTx, initContractEventGateway } from '../utils/contract'
+import { StreamrClientEventEmitter } from '../events'
 import {
     ChainPermissions,
+    PUBLIC_PERMISSION_ADDRESS,
+    PermissionAssignment,
+    PermissionQuery,
+    PermissionQueryResult,
+    StreamPermission,
     convertChainPermissionsToStreamPermissions,
     convertStreamPermissionsToChainPermission,
     isPublicPermissionAssignment,
     isPublicPermissionQuery,
-    PermissionAssignment,
-    PermissionQuery,
-    PermissionQueryResult,
-    PUBLIC_PERMISSION_ADDRESS,
-    StreamPermission,
     streamPermissionToSolidityType
 } from '../permission'
-import { StreamRegistryCached } from './StreamRegistryCached'
-import { Authentication, AuthenticationInjectionToken } from '../Authentication'
-import { ContractFactory } from '../ContractFactory'
-import { EthereumAddress, isENSName, Logger, toEthereumAddress } from '@streamr/utils'
-import { toStreamID } from '@streamr/protocol'
+import { filter, map } from '../utils/GeneratorUtils'
 import { LoggerFactory } from '../utils/LoggerFactory'
+import { ObservableContract, initContractEventGateway, queryAllReadonlyContracts, waitForTx } from '../utils/contract'
+import { until } from '../utils/promises'
 import { StreamFactory } from './../StreamFactory'
-import { GraphQLQuery } from '../utils/GraphQLClient'
-import { collect } from '../utils/iterators'
-import { StreamrClientEventEmitter } from '../events'
+import { StreamRegistryCached } from './StreamRegistryCached'
+import { SearchStreamsOrderBy, SearchStreamsPermissionFilter, searchStreams as _searchStreams } from './searchStreams'
 
 /*
  * On-chain registry of stream metadata and permissions.
@@ -63,7 +59,7 @@ export interface StreamCreationEvent {
 
 const streamContractErrorProcessor = (err: any, streamId: StreamID, registry: string): never => {
     if (err.reason?.code === 'CALL_EXCEPTION') {
-        throw new NotFoundError('Stream not found: id=' + streamId)
+        throw new StreamrClientError('Stream not found: id=' + streamId, 'STREAM_NOT_FOUND')
     } else {
         throw new Error(`Could not reach the ${registry} Smart Contract: ${err.message}`)
     }
@@ -72,35 +68,38 @@ const streamContractErrorProcessor = (err: any, streamId: StreamID, registry: st
 @scoped(Lifecycle.ContainerScoped)
 export class StreamRegistry {
 
-    private contractFactory: ContractFactory
-    private streamIdBuilder: StreamIDBuilder
-    private streamFactory: StreamFactory
-    private graphQLClient: SynchronizedGraphQLClient
-    private streamRegistryCached: StreamRegistryCached
-    private authentication: Authentication
-    private config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
-    private readonly logger: Logger
     private streamRegistryContract?: ObservableContract<StreamRegistryContract>
     private streamRegistryContractsReadonly: ObservableContract<StreamRegistryContract>[]
-
+    private readonly streamRegistryCached: StreamRegistryCached
+    private readonly streamFactory: StreamFactory
+    private readonly contractFactory: ContractFactory
+    private readonly theGraphClient: TheGraphClient
+    private readonly streamIdBuilder: StreamIDBuilder
+    /** @internal */
+    private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
+    private readonly authentication: Authentication
+    private readonly logger: Logger
+    
+    /* eslint-disable indent */
+    /** @internal */
     constructor(
-        contractFactory: ContractFactory,
-        @inject(LoggerFactory) loggerFactory: LoggerFactory,
-        @inject(StreamIDBuilder) streamIdBuilder: StreamIDBuilder,
-        streamFactory: StreamFactory,
-        @inject(SynchronizedGraphQLClient) graphQLClient: SynchronizedGraphQLClient,
         @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
-        @inject(StreamrClientEventEmitter) eventEmitter: StreamrClientEventEmitter,
+        streamFactory: StreamFactory,
+        contractFactory: ContractFactory,
+        theGraphClient: TheGraphClient,
+        streamIdBuilder: StreamIDBuilder,
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
-        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
+        eventEmitter: StreamrClientEventEmitter,
+        loggerFactory: LoggerFactory
     ) {
-        this.contractFactory = contractFactory
-        this.streamIdBuilder = streamIdBuilder
-        this.streamFactory = streamFactory
-        this.graphQLClient = graphQLClient
         this.streamRegistryCached = streamRegistryCached
-        this.authentication = authentication
+        this.streamFactory = streamFactory
+        this.contractFactory = contractFactory
+        this.theGraphClient = theGraphClient
+        this.streamIdBuilder = streamIdBuilder
         this.config = config
+        this.authentication = authentication
         this.logger = loggerFactory.createLogger(module)
         const chainProviders = getStreamRegistryChainProviders(config)
         this.streamRegistryContractsReadonly = chainProviders.map((provider: Provider) => {
@@ -239,7 +238,7 @@ export class StreamRegistry {
             term,
             permissionFilter,
             orderBy,
-            this.graphQLClient,
+            this.theGraphClient,
             (id: StreamID, metadata: string) => this.parseStream(id, metadata),
             this.logger)
     }
@@ -254,7 +253,7 @@ export class StreamRegistry {
 
     private async* getStreamPublishersOrSubscribersList(streamIdOrPath: string, fieldName: string): AsyncIterable<EthereumAddress> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        const backendResults = this.graphQLClient.fetchPaginatedResults<StreamPublisherOrSubscriberItem>(
+        const backendResults = this.theGraphClient.queryEntities<StreamPublisherOrSubscriberItem>(
             (lastId: string, pageSize: number) => StreamRegistry.buildStreamPublishersOrSubscribersQuery(streamId, fieldName, lastId, pageSize)
         )
         /*
@@ -267,7 +266,7 @@ export class StreamRegistry {
         const validItems = filter<StreamPublisherOrSubscriberItem>(backendResults, (p) => (p as any).stream !== null)
         yield* map<StreamPublisherOrSubscriberItem, EthereumAddress>(
             validItems,
-            (item) => item.userAddress as EthereumAddress
+            (item) => item.userAddress
         )
     }
 
@@ -319,7 +318,7 @@ export class StreamRegistry {
 
     async getPermissions(streamIdOrPath: string): Promise<PermissionAssignment[]> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        const queryResults = await collect(this.graphQLClient.fetchPaginatedResults<PermissionQueryResult>(
+        const queryResults = await collect(this.theGraphClient.queryEntities<PermissionQueryResult>(
             (lastId: string, pageSize: number) => {
                 const query = `{
                     stream (id: "${streamId}") {
@@ -342,7 +341,7 @@ export class StreamRegistry {
                 if (response.stream !== null) {
                     return response.stream.permissions
                 } else {
-                    throw new NotFoundError('stream not found: id: ' + streamId)
+                    throw new StreamrClientError('Stream not found: id=' + streamId, 'STREAM_NOT_FOUND')
                 }
             }
         ))

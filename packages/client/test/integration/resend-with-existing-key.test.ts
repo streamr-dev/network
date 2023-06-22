@@ -1,14 +1,13 @@
 import 'reflect-metadata'
 
-import { toEthereumAddress } from '@streamr/utils'
 import { toStreamID } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
+import { collect, toEthereumAddress } from '@streamr/utils'
+import { Stream } from '../../src/Stream'
+import { StreamrClient } from '../../src/StreamrClient'
 import { DecryptError } from '../../src/encryption/EncryptionUtil'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'
-import { Stream } from '../../src/Stream'
-import { StreamrClient } from '../../src/StreamrClient'
-import { collect } from '../../src/utils/iterators'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 import { createMockMessage, createRelativeTestStreamId, getLocalGroupKeyStore } from '../test-utils/utils'
@@ -91,7 +90,7 @@ describe('resend with existing key', () => {
             user: publisherWallet.address,
             permissions: [StreamPermission.PUBLISH]
         })
-        const storageNode = environment.startStorageNode()
+        const storageNode = await environment.startStorageNode()
         await subscriber.addStreamToStorageNode(stream.id, storageNode.id)
         initialKey = GroupKey.generate()
         rotatedKey = GroupKey.generate()
