@@ -27,7 +27,7 @@ jobs:
         uses: ./.github/workflows/reusable/cached-build
       - name: start docker services
         if: ${{ inputs.docker-services != '' }}
-        uses: streamr-dev/streamr-docker-dev-action@v1.0.1
+        uses: streamr-dev/streamr-docker-dev-action@v1.0.2
         with:
           services-to-start: ${{ inputs.docker-services }}
           branch: cleanup
