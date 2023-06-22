@@ -103,6 +103,18 @@ const config = {
                 //   },
                 // ],
             },
+            algolia: {
+                // The application ID provided by Algolia
+                appId: "NOLYN2Z67B",
+
+                // Public API key: it is safe to commit it
+                apiKey: "f9fcf2cbeb33f2edee5ee580110d8045",
+
+                indexName: "streamr",
+
+                // Optional: see doc section below
+                contextualSearch: true,
+            },
             footer: {
                 links: [
                     {
