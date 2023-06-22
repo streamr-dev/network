@@ -1,4 +1,4 @@
-import { Logger } from '@streamr/utils'
+import { Logger, scheduleAtInterval } from '@streamr/utils'
 import { MaintainOperatorValueHelper } from "./MaintainOperatorValueHelper"
 import { OperatorServiceConfig } from './OperatorPlugin'
 import { BigNumber } from 'ethers'
@@ -9,27 +9,28 @@ const CHECK_VALUE_INTERVAL = 1000 * 60 * 60 * 24 // 1 day
 const ONE_ETHER = BigInt(1e18)
 
 export class MaintainOperatorValueService {
-    private checkValueInterval: NodeJS.Timeout | null = null
     private penaltyLimitFraction: bigint
     private readonly helper: MaintainOperatorValueHelper
+    private readonly abortController: AbortController
     private readonly config: OperatorServiceConfig
 
     constructor(config: OperatorServiceConfig, penaltyLimitFraction = BigInt(0)) {
-        this.config = config
-        this.helper = new MaintainOperatorValueHelper(config)
         this.penaltyLimitFraction = penaltyLimitFraction
+        this.helper = new MaintainOperatorValueHelper(config)
+        this.abortController = new AbortController()
+        this.config = config
     }
 
-    start(): void {
-        logger.info('Started')
-        this.checkValue().catch((err) => {
-            logger.warn('Encountered error while checking value', { err })
-        })
-        this.checkValueInterval = setInterval(() => {
-            this.checkValue().catch((err) => {
+    async start(): Promise<void> {
+        await scheduleAtInterval(
+            () => this.checkValue().catch((err) => {
                 logger.warn('Encountered error while checking value', { err })
-            })
-        }, CHECK_VALUE_INTERVAL)
+            }),
+            CHECK_VALUE_INTERVAL,
+            true,
+            this.abortController.signal
+        )
+
     }
 
     private async checkValue(): Promise<void> {
@@ -80,6 +81,6 @@ export class MaintainOperatorValueService {
 
     async stop(): Promise<void> {
         logger.info('Stop')
-        clearInterval(this.checkValueInterval!)
+        this.abortController.abort()
     }
 }
