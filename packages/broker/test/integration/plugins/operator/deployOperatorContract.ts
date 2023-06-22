@@ -40,9 +40,9 @@ export async function deployOperatorContract(
     const operatorReceipt = await (await operatorFactory.deployOperator(
         [ poolTokenName, operatorMetadata ],
         [
-            chainConfig.contracts.DefaultDelegationPolicy,
-            chainConfig.contracts.DefaultPoolYieldPolicy,
-            chainConfig.contracts.DefaultUndelegationPolicy,
+            chainConfig.contracts.OperatorDefaultDelegationPolicy,
+            chainConfig.contracts.OperatorDefaultPoolYieldPolicy,
+            chainConfig.contracts.OperatorDefaultUndelegationPolicy,
         ], [
             0,
             // parseEther("1").mul(minOperatorStakePercent).div(100),
@@ -62,7 +62,7 @@ export async function deployOperatorContract(
 export async function createWalletAndDeployOperator(provider: Provider, config: Chain, theGraphUrl: string, 
     fetch: (url: RequestInfo, init?: RequestInit) => Promise<Response>): 
     Promise<{ operatorWallet: Wallet, operatorContract: Operator, operatorConfig: OperatorServiceConfig }> {
-    const operatorWallet = await generateWalletWithGasAndTokens(provider)
+    const operatorWallet = await generateWalletWithGasAndTokens(config, provider)
 
     const operatorContract = await deployOperatorContract(config, operatorWallet)
     const operatorConfig = {
