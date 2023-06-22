@@ -1,154 +1,107 @@
-/**
- * Makes OrderingUtil more compatible with use in pipeline.
- */
-import { MessageRef, StreamID, StreamMessage, StreamPartID } from '@streamr/protocol'
-import { EthereumAddress, Logger } from '@streamr/utils'
+import { StreamID, StreamMessage, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
+import { EthereumAddress } from '@streamr/utils'
 import { StrictStreamrClientConfig } from '../Config'
-import { LoggerFactory } from '../utils/LoggerFactory'
+import { Mapping } from '../utils/Mapping'
 import { PushBuffer } from '../utils/PushBuffer'
-import { PushPipeline } from '../utils/PushPipeline'
+import { CacheAsyncFn } from '../utils/caches'
 import { Resends } from './Resends'
-import { MsgChainContext } from './ordering/OrderedMsgChain'
-import OrderingUtil from './ordering/OrderingUtil'
+import { Gap } from './ordering/OrderedMessageChain'
+import { GapFilledMessageChain } from './ordering/GapFilledMessageChain'
+
+const createMessageChain = (
+    streamPartId: StreamPartID,
+    publisherId: EthereumAddress,
+    msgChainId: string,
+    getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>,
+    resends: Resends,
+    config: Pick<StrictStreamrClientConfig, 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill'>,
+) => {
+    const resend = async function*(gap: Gap, storageNodeAddress: EthereumAddress, abortSignal: AbortSignal) {
+        const msgs = await resends.resend(streamPartId, {
+            from: {
+                timestamp: gap.from.getMessageRef().timestamp,
+                sequenceNumber: gap.from.getMessageRef().sequenceNumber + 1,
+            },
+            to: gap.to.getPreviousMessageRef()!,
+            publisherId,
+            msgChainId,
+            raw: true
+        }, async () => [storageNodeAddress], abortSignal)
+        yield* msgs
+    }
+    return new GapFilledMessageChain({
+        streamPartId,
+        resend,
+        // TODO maybe caching should be configurable? (now uses 30 min maxAge, which is the default of CacheAsyncFn)
+        // - maybe the caching should be done at application level, e.g. with a new CacheStreamStorageRegistry class?
+        // - also not that this is a cache which contains just one item (as streamPartId always the same)
+        getStorageNodeAddresses: CacheAsyncFn(() => getStorageNodes(StreamPartIDUtils.getStreamID(streamPartId))),
+        initialWaitTime: config.gapFillTimeout,
+        retryWaitTime: config.retryResendAfter,
+        maxRequestsPerGap: (config.gapFill) ? config.maxGapRequests : 0,
+    })
+}
 
 /**
- * Wraps OrderingUtil into a PushBuffer.
  * Implements gap filling
  */
 export class OrderMessages {
 
-    private abortController: AbortController = new AbortController()
-    private inputClosed = false
-    private enabled = true
+    private readonly chains: Mapping<[EthereumAddress, string], GapFilledMessageChain>
     private readonly outBuffer = new PushBuffer<StreamMessage>()
-    private readonly orderingUtil: OrderingUtil
-    private readonly resends: Resends
-    private readonly streamPartId: StreamPartID
-    private readonly logger: Logger
-    private readonly getStorageNodes?: (streamId: StreamID) => Promise<EthereumAddress[]>
+    private isDestroyed = false
 
     constructor(
-        config: Pick<StrictStreamrClientConfig, 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill'>,
-        resends: Resends,
         streamPartId: StreamPartID,
-        loggerFactory: LoggerFactory,
-        getStorageNodes?: (streamId: StreamID) => Promise<EthereumAddress[]>
+        getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>,
+        resends: Resends,
+        config: Pick<StrictStreamrClientConfig, 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill'>,
     ) {
-        this.resends = resends
-        this.streamPartId = streamPartId
-        this.logger = loggerFactory.createLogger(module)
-        this.getStorageNodes = getStorageNodes
-        this.onOrdered = this.onOrdered.bind(this)
-        this.onGap = this.onGap.bind(this)
-        this.maybeClose = this.maybeClose.bind(this)
-        const { gapFillTimeout, retryResendAfter, maxGapRequests, gapFill } = config
-        this.enabled = gapFill && (maxGapRequests > 0)
-        this.orderingUtil = new OrderingUtil(
-            this.streamPartId,
-            this.onOrdered,
-            this.onGap,
-            () => this.maybeClose(),
-            () => this.maybeClose(), // probably noop, TODO: handle gapfill errors without closing stream or logging
-            gapFillTimeout,
-            retryResendAfter,
-            this.enabled ? maxGapRequests : 0
-        )
-    }
-
-    async onGap(from: MessageRef, to: MessageRef, context: MsgChainContext): Promise<void> {
-        if (this.isDone() || !this.enabled) { return }
-        this.logger.debug('Encountered gap', {
-            streamPartId: this.streamPartId,
-            context,
-            from,
-            to,
+        this.chains = new Mapping(async (publisherId: EthereumAddress, msgChainId: string) => {
+            const chain = createMessageChain(
+                streamPartId, 
+                publisherId, 
+                msgChainId,
+                getStorageNodes,
+                resends,
+                config
+            )
+            chain.on('orderedMessageAdded', (msg: StreamMessage) => this.onOrdered(msg))
+            return chain
         })
+    }
 
-        let resendMessageStream!: PushPipeline<StreamMessage, StreamMessage>
-
-        try {
-            resendMessageStream = await this.resends.resend(this.streamPartId, {
-                from,
-                to,
-                publisherId: context.publisherId,
-                msgChainId: context.msgChainId,
-                raw: true
-            }, this.getStorageNodes, this.abortController.signal)
-            if (this.isDone()) { return }
-
-            for await (const streamMessage of resendMessageStream) {
-                if (this.isDone()) { return }
-                this.orderingUtil.add(streamMessage)
-            }
-        } catch (err) {
-            if (this.isDone()) { return }
-
-            if (err.code === 'NO_STORAGE_NODES') {
-                // ignore NO_STORAGE_NODES errors
-                // if stream has no storage we can't do resends
-                this.enabled = false
-                this.orderingUtil.disable()
-            } else {
-                throw err
-            }
+    private onOrdered(orderedMessage: StreamMessage): void {
+        if (!this.outBuffer.isDone()) {
+            this.outBuffer.push(orderedMessage)
         }
     }
 
-    onOrdered(orderedMessage: StreamMessage): void {
-        if (this.outBuffer.isDone() || this.isDone()) {
-            return
-        }
-
-        this.outBuffer.push(orderedMessage)
-    }
-
-    stop(): void {
+    destroy(): void {
+        this.isDestroyed = true
         this.outBuffer.endWrite()
-        this.abortController.abort()
-    }
-
-    private isDone() {
-        return this.abortController.signal.aborted
-    }
-
-    private maybeClose(): void {
-        // we can close when:
-        // input has closed (i.e. all messages sent)
-        // AND
-        // no gaps are pending
-        // AND
-        // gaps have been filled or failed
-        // NOTE ordering util cannot have gaps if queue is empty
-        if (this.inputClosed && this.orderingUtil.isEmpty()) {
-            this.outBuffer.endWrite()
+        for (const chain of this.chains.values()) {
+            chain.destroy()
         }
     }
 
-    private async addToOrderingUtil(src: AsyncGenerator<StreamMessage>): Promise<void> {
+    async addMessages(src: AsyncGenerator<StreamMessage>): Promise<void> {
         try {
             for await (const msg of src) {
-                if (!this.isDone()) {
-                    this.orderingUtil.add(msg)
+                if (this.isDestroyed) {
+                    return
                 }
+                const chain = await this.chains.get(msg.getPublisherId(), msg.getMsgChainId())
+                chain.addMessage(msg)
             }
-            this.inputClosed = true
-            this.maybeClose()
+            await Promise.all(this.chains.values().map((chain) => chain.waitUntilIdle()))
+            this.outBuffer.endWrite()
         } catch (err) {
             this.outBuffer.endWrite(err)
         }
     }
 
-    transform(): (src: AsyncGenerator<StreamMessage, any, unknown>) => AsyncGenerator<StreamMessage> {
-        return async function* Transform(this: OrderMessages, src: AsyncGenerator<StreamMessage>) {
-            try {
-                this.addToOrderingUtil(src)
-                yield* this.outBuffer
-            } finally {
-                this.stop()
-                this.orderingUtil.clearGaps()
-                // TODO why there are two clearGaps() calls?
-                this.orderingUtil.clearGaps()
-            }
-        }.bind(this)
+    [Symbol.asyncIterator](): AsyncIterator<StreamMessage> {
+        return this.outBuffer
     }
 }

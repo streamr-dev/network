@@ -78,15 +78,19 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): PushPipelin
     if (opts.config.orderMessages) {
         // order messages and fill gaps
         const orderMessages = new OrderMessages(
-            opts.config,
-            opts.resends,
             opts.streamPartId,
-            opts.loggerFactory,
-            opts.getStorageNodes
+            opts.getStorageNodes,
+            opts.resends,
+            opts.config
         )
-        messageStream.pipe(orderMessages.transform())
+        messageStream.pipe(async function* (src: AsyncGenerator<StreamMessage>) {
+            setImmediate(() => {
+                orderMessages.addMessages(src)
+            })
+            yield* orderMessages
+        })
         messageStream.onBeforeFinally.listen(() => {
-            orderMessages.stop()
+            orderMessages.destroy()
         })
     }
     messageStream

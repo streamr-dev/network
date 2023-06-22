@@ -1,13 +1,12 @@
-import { MessageID, StreamID, StreamMessage, StreamPartID, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
+import { MessageID, MessageRef, StreamID, StreamMessage, StreamPartID, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { EthereumAddress, collect } from '@streamr/utils'
 import range from 'lodash/range'
 import without from 'lodash/without'
-import { OrderMessages } from './../../src/subscribe/OrderMessages'
-import { ResendOptions, Resends } from './../../src/subscribe/Resends'
-import { fromArray } from './../../src/utils/GeneratorUtils'
-import { PushPipeline } from './../../src/utils/PushPipeline'
-import { mockLoggerFactory } from './../test-utils/utils'
+import { OrderMessages } from '../../src/subscribe/OrderMessages'
+import { ResendOptions, Resends } from '../../src/subscribe/Resends'
+import { fromArray } from '../../src/utils/GeneratorUtils'
+import { PushPipeline } from '../../src/utils/PushPipeline'
 
 const MESSAGE_COUNT = 7
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
@@ -22,25 +21,35 @@ const CONFIG = {
     gapFillTimeout: 50
 }
 
-const createOrderMessages = (resends: Pick<Resends, 'resend'>, config = CONFIG) => {
+const createOrderMessages = (
+    resends: Pick<Resends, 'resend'>, 
+    getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]> = async () => [randomEthereumAddress()],
+    configOverrides = {}
+) => {
     return new OrderMessages(
-        config as any,
-        resends as any,
         STREAM_PART_ID,
-        mockLoggerFactory()
+        getStorageNodes,
+        resends as any,
+        {
+            ...CONFIG,
+            ...configOverrides
+        } as any
     )
 }
 
-const createMockMessages = async (): Promise<StreamMessage[]> => {
+const createMessage = (timestamp: number) => {
+    return new StreamMessage({
+        messageId: new MessageID(toStreamID('streamId'), 0, timestamp, 0, PUBLISHER_ID, MSG_CHAIN_ID),
+        prevMsgRef: new MessageRef(timestamp - 1000, 0),
+        content: {},
+        signature: 'signature'
+    })
+}
+
+const createMessages = async (): Promise<StreamMessage[]> => {
     const messages: StreamMessage[] = []
     for (const i of range(MESSAGE_COUNT)) {
-        const msg = new StreamMessage({
-            messageId: new MessageID(toStreamID('streamId'), 0, (i + 1) * 1000, 0, PUBLISHER_ID, MSG_CHAIN_ID),
-            prevMsgRef: (i > 0) ? messages[i - 1].getMessageRef() : null,
-            content: {},
-            signature: 'signature'
-        })
-        messages.push(msg)
+        messages.push(createMessage((i + 1) * 1000))
     }
     return messages
 }
@@ -56,73 +65,67 @@ const createMessageStream = (...msgs: StreamMessage[]): PushPipeline<StreamMessa
 
 describe('OrderMessages', () => {
 
+    it('no messages', async () => {
+        const orderMessages = createOrderMessages(undefined as any)
+        await orderMessages.addMessages(fromArray([]))
+        expect(await collect(orderMessages)).toEqual([])
+    })
+
     it('no gaps', async () => {
-        const msgs = await createMockMessages()
-        const transform = createOrderMessages(undefined as any).transform()
-        const output = transform(fromArray(msgs))
-        expect(await collect(output)).toEqual(msgs)
+        const msgs = await createMessages()
+        const orderMessages = createOrderMessages(undefined as any)
+        await orderMessages.addMessages(fromArray(msgs))
+        expect(await collect(orderMessages)).toEqual(msgs)
     })
 
     it('gap of single message', async () => {
-        const msgs = await createMockMessages()
+        const msgs = await createMessages()
         const missing = msgs.filter((m) => m.getTimestamp() === 3000)
         const resends = {
             resend: jest.fn().mockResolvedValue(createMessageStream(...missing))
         }
-        const transform = createOrderMessages(resends).transform()
-        const output = transform(fromArray(without(msgs, ...missing)))
-        expect(await collect(output)).toEqual(msgs)
+        const orderMessages = createOrderMessages(resends)
+        await orderMessages.addMessages(fromArray(without(msgs, ...missing)))
+        expect(await collect(orderMessages)).toEqual(msgs)
         expect(resends.resend).toBeCalledWith(
             STREAM_PART_ID,
             {
-                from: {
-                    timestamp: 2000,
-                    sequenceNumber: 1
-                },
-                to: {
-                    timestamp: 3000,
-                    sequenceNumber: 0
-                },
+                from: new MessageRef(2000, 1),
+                to: new MessageRef(3000, 0),
                 publisherId: PUBLISHER_ID,
                 msgChainId: MSG_CHAIN_ID,
                 raw: true
             },
-            undefined,
+            expect.toBeFunction(),
             expect.anything()
         )
     })
 
     it('gap of multiple messages', async () => {
-        const msgs = await createMockMessages()
+        const msgs = await createMessages()
         const missing = msgs.filter((m) => (m.getTimestamp() === 3000) || (m.getTimestamp() === 4000))
         const resends = {
             resend: jest.fn().mockResolvedValue(createMessageStream(...missing))
         }
-        const transform = createOrderMessages(resends).transform()
-        const output = transform(fromArray(without(msgs, ...missing)))
-        expect(await collect(output)).toEqual(msgs)
+        const orderMessages = createOrderMessages(resends)
+        await orderMessages.addMessages(fromArray(without(msgs, ...missing)))
+        expect(await collect(orderMessages)).toEqual(msgs)
         expect(resends.resend).toBeCalledWith(
             STREAM_PART_ID,
             {
-                from: {
-                    timestamp: 2000,
-                    sequenceNumber: 1
-                },
-                to: {
-                    timestamp: 4000,
-                    sequenceNumber: 0
-                },
+                from: new MessageRef(2000, 1),
+                to: new MessageRef(4000, 0),
                 publisherId: PUBLISHER_ID,
                 msgChainId: MSG_CHAIN_ID,
                 raw: true
             },
-            undefined,
+            expect.toBeFunction(),
             expect.anything()
         )
     })
 
     it('multiple gaps', async () => {
-        const msgs = await createMockMessages()
+        const msgs = await createMessages()
         const missing1 = msgs.filter((m) => m.getTimestamp() === 2000)
         const missing2 = msgs.filter((m) => m.getTimestamp() === 4000)
         const resends = {
@@ -130,75 +133,63 @@ describe('OrderMessages', () => {
                 .mockResolvedValueOnce(createMessageStream(...missing1))
                 .mockResolvedValueOnce(createMessageStream(...missing2))
         }
-        const transform = createOrderMessages(resends).transform()
-        const output = transform(fromArray(without(msgs, ...missing1.concat(missing2))))
-        expect(await collect(output)).toEqual(msgs)
+        const orderMessages = createOrderMessages(resends)
+        await orderMessages.addMessages(fromArray(without(msgs, ...missing1.concat(missing2))))
+        expect(await collect(orderMessages)).toEqual(msgs)
         expect(resends.resend).toHaveBeenNthCalledWith(1,
             STREAM_PART_ID,
             {
-                from: {
-                    timestamp: 1000,
-                    sequenceNumber: 1
-                },
-                to: {
-                    timestamp: 2000,
-                    sequenceNumber: 0
-                },
+                from: new MessageRef(1000, 1),
+                to: new MessageRef(2000, 0),
                 publisherId: PUBLISHER_ID,
                 msgChainId: MSG_CHAIN_ID,
                 raw: true
             },
-            undefined,
+            expect.toBeFunction(),
             expect.anything()
         )
         expect(resends.resend).toHaveBeenNthCalledWith(2,
             STREAM_PART_ID,
             {
-                from: {
-                    timestamp: 3000,
-                    sequenceNumber: 1
-                },
-                to: {
-                    timestamp: 4000,
-                    sequenceNumber: 0
-                },
+                from: new MessageRef(3000, 1),
+                to: new MessageRef(4000, 0),
                 publisherId: PUBLISHER_ID,
                 msgChainId: MSG_CHAIN_ID,
                 raw: true
             },
-            undefined,
+            expect.toBeFunction(),
             expect.anything()
         )
     })
 
     it('ignore missing message if no data in storage node', async () => {
-        const msgs = await createMockMessages()
+        const msgs = await createMessages()
         const missing = msgs.filter((m) => m.getTimestamp() === 3000)
         const resends = {
             resend: jest.fn().mockImplementation(() => createMessageStream())
         }
-        const transform = createOrderMessages(resends).transform()
-        const output = transform(fromArray(without(msgs, ...missing)))
-        expect(await collect(output)).toEqual(without(msgs, ...missing))
+        const orderMessages = createOrderMessages(resends)
+        await orderMessages.addMessages(fromArray(without(msgs, ...missing)))
+        expect(await collect(orderMessages)).toEqual(without(msgs, ...missing))
         expect(resends.resend).toBeCalledTimes(CONFIG.maxGapRequests)
     })
 
     it('ignore missing message if gap filling disable', async () => {
-        const msgs = await createMockMessages()
+        const msgs = await createMessages()
         const missing = msgs.filter((m) => m.getTimestamp() === 3000)
         const resends = {
             resend: jest.fn()
         }
-        const transform = createOrderMessages(resends, {
-            orderMessages: false
-        } as any).transform()
-        const output = transform(fromArray(without(msgs, ...missing)))
-        expect(await collect(output)).toEqual(without(msgs, ...missing))
+        const orderMessages = createOrderMessages(resends, undefined, {
+            gapFill: false
+        } as any)
+        await orderMessages.addMessages(fromArray(without(msgs, ...missing)))
+        expect(await collect(orderMessages)).toEqual(without(msgs, ...missing))
         expect(resends.resend).toBeCalledTimes(0)
     })
 
     it('gap fill error', async () => {
-        const msgs = await createMockMessages()
+        const msgs = await createMessages()
         const missing1 = msgs.filter((m) => m.getTimestamp() === 2000)
         const missing2 = msgs.filter((m) => m.getTimestamp() === 4000)
         const missing3 = msgs.filter((m) => m.getTimestamp() === 6000)
@@ -213,16 +204,16 @@ describe('OrderMessages', () => {
                 .mockRejectedValueOnce(new Error('mock-error'))
                 .mockResolvedValueOnce(createMessageStream(...missing3))
         }
-        const transform = createOrderMessages(resends).transform()
-        const output = transform(fromArray(without(msgs, ...missing1.concat(missing2).concat(missing3))))
-        expect(await collect(output)).toEqual(without(msgs, ...missing2))
+        const orderMessages = createOrderMessages(resends)
+        await orderMessages.addMessages(fromArray(without(msgs, ...missing1.concat(missing2).concat(missing3))))
+        expect(await collect(orderMessages)).toEqual(without(msgs, ...missing2))
         expect(resends.resend).toBeCalledTimes(2 + CONFIG.maxGapRequests)
     })
 
-    it('aborts resends when stopped', async () => {
-        const msgs = await createMockMessages()
+    it('aborts resends when destroyed', async () => {
+        const msgs = await createMessages()
         const missing = msgs.filter((m) => m.getTimestamp() === 3000)
-        let orderedMessages: OrderMessages | undefined = undefined
+        let orderMessages: OrderMessages | undefined = undefined
         let resendAborted = false
         const resends = {
             resend: jest.fn().mockImplementation((
@@ -232,14 +223,38 @@ describe('OrderMessages', () => {
                 abortSignal?: AbortSignal
             ) => {
                 abortSignal!.addEventListener('abort', () => resendAborted = true)
-                orderedMessages!.stop()
+                orderMessages!.destroy()
                 return createMessageStream(...missing)
             })
         }
-        orderedMessages = createOrderMessages(resends)
-        const transform = orderedMessages.transform()
-        const output = transform(fromArray(without(msgs, ...missing)))
-        expect(await collect(output)).toEqual(msgs.filter((msg) => msg.getTimestamp() < missing[0].getTimestamp()))
+        orderMessages = createOrderMessages(resends)
+        await orderMessages.addMessages(fromArray(without(msgs, ...missing)))
+        expect(await collect(orderMessages)).toEqual(msgs.filter((msg) => msg.getTimestamp() < missing[0].getTimestamp()))
         expect(resendAborted).toBe(true)
+    })
+
+    describe('storage node caching', () => {
+
+        it('no gaps', async () => {
+            const getStorageNodes = jest.fn()
+            const orderMessages = createOrderMessages(undefined as any, getStorageNodes)
+            await orderMessages.addMessages(fromArray(await createMessages()))
+            await collect(orderMessages)
+            expect(getStorageNodes).not.toBeCalled()
+        })
+
+        it('multiple gaps', async () => {
+            const getStorageNodes = jest.fn().mockResolvedValue([randomEthereumAddress()])
+            const resends = {
+                resend: jest.fn().mockImplementation(() => createMessageStream())
+            }
+            const orderMessages = createOrderMessages(resends, getStorageNodes)
+            const messages = (await createMessages()).filter(
+                (m) => (m.getTimestamp() !== 2000) && (m.getTimestamp() !== 4000)
+            )
+            await orderMessages.addMessages(fromArray(messages))
+            await collect(orderMessages)
+            expect(getStorageNodes).toBeCalledTimes(1)
+        })
     })
 })
