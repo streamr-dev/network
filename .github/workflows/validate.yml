@@ -94,7 +94,7 @@ jobs:
     with:
       package: client
       docker-services: cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph ens-sync-script
-      run-brokers-and-trackers: true
+      run-brokers: true
       command: npm run test-end-to-end
   broker:
     needs: build
@@ -108,7 +108,7 @@ jobs:
     with:
       package: broker
       docker-services: cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph
-      run-brokers-and-trackers: true
+      run-brokers: true
       command: npm run test-integration
   client-browser:
     needs: build
@@ -116,7 +116,7 @@ jobs:
     with:
       package: client
       docker-services: init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph
-      run-brokers-and-trackers: true
+      run-brokers: true
       command: npm run test-browser
   cli-tools:
     needs: build
@@ -124,7 +124,7 @@ jobs:
     with:
       package: cli-tools
       docker-services: cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph
-      run-brokers-and-trackers: true
+      run-brokers: true
       command: npm run test
   broker-docker-image:
     uses: ./.github/workflows/docker-build.yml

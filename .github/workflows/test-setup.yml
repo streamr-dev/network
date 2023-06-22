@@ -13,7 +13,7 @@ on:
       docker-services:
         required: false
         type: string
-      run-brokers-and-trackers:
+      run-brokers:
         required: false
         type: boolean
         default: false
@@ -30,14 +30,14 @@ jobs:
         uses: streamr-dev/streamr-docker-dev-action@v1.0.1
         with:
           services-to-start: ${{ inputs.docker-services }}
-      - name: run brokers and trackers
-        if: ${{ inputs.run-brokers-and-trackers }}
-        uses: ./.github/workflows/reusable/run-brokers-and-trackers
+      - name: run brokers
+        if: ${{ inputs.run-brokers }}
+        uses: ./.github/workflows/reusable/run-brokers
       - name: test
         working-directory: 'packages/${{ inputs.package }}'
         run: ${{ inputs.command }}
       - name: upload logs
-        if: ${{ inputs.docker-services != '' || inputs.run-brokers-and-trackers }}
+        if: ${{ inputs.docker-services != '' || inputs.run-brokers }}
         uses: ./.github/workflows/reusable/collect-and-upload-logs
         with:
           artifact_prefix: ${{ inputs.package }}

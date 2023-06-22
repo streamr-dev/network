@@ -25,7 +25,6 @@ async function startNetworkNodeAndListenForAtLeastOneMessage(streamId: StreamID)
         }
     })    
     const networkNode = new NetworkNode({
-        // TODO better typing for ConfigTest.network.trackers?
         ...CONFIG_TEST.network as any,
         layer0: {
             entryPoints,
