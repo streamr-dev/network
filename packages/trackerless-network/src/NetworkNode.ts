@@ -27,7 +27,7 @@ export class NetworkNode {
         this.stack.getStreamrNode().setExtraMetadata(metadata)
     }
 
-    async publish(streamMessage: StreamMessage, knownEntrypointDescriptors: PeerDescriptor[]): Promise<void> {
+    async publish(streamMessage: StreamMessage, knownEntrypointDescriptors: PeerDescriptor[] = []): Promise<void> {
         const streamPartId = streamMessage.getStreamPartID()
         if (this.stack.getStreamrNode().isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE) 
             && streamMessage.messageType === StreamMessageType.MESSAGE) {
@@ -39,7 +39,7 @@ export class NetworkNode {
         this.stack.getStreamrNode().publishToStream(streamPartId, knownEntrypointDescriptors, msg)
     }
 
-    async subscribe(streamPartId: StreamPartID, knownEntrypointDescriptors: PeerDescriptor[]): Promise<void> {
+    async subscribe(streamPartId: StreamPartID, knownEntrypointDescriptors: PeerDescriptor[] = []): Promise<void> {
         if (this.stack.getStreamrNode().isProxiedStreamPart(streamPartId, ProxyDirection.PUBLISH)) {
             throw new Error(`Cannot subscribe to ${streamPartId} as proxy publish connections have been set`)
         }
@@ -79,7 +79,7 @@ export class NetworkNode {
 
     async subscribeAndWaitForJoin(
         streamPartId: StreamPartID,
-        knownEntrypointDescriptors: PeerDescriptor[],
+        knownEntrypointDescriptors: PeerDescriptor[] = [],
         timeout?: number,
         expectedNeighbors?: number
     ): Promise<number> {
@@ -89,7 +89,7 @@ export class NetworkNode {
         return this.stack.getStreamrNode().waitForJoinAndSubscribe(streamPartId, knownEntrypointDescriptors, timeout, expectedNeighbors)
     }
 
-    async waitForJoinAndPublish(streamMessage: StreamMessage, knownEntrypointDescriptors: PeerDescriptor[], timeout?: number): Promise<number> {
+    async waitForJoinAndPublish(streamMessage: StreamMessage, knownEntrypointDescriptors: PeerDescriptor[] = [], timeout?: number): Promise<number> {
         const streamPartId = streamMessage.getStreamPartID()
         const msg = StreamMessageTranslator.toProtobuf(streamMessage)
 

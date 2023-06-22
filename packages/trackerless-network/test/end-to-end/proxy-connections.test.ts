@@ -93,16 +93,16 @@ describe('Proxy connections', () => {
 
         await Promise.all([
             waitForEvent3(proxyNode1.stack.getStreamrNode()! as any, 'newMessage'),
-            proxiedNode.publish(message, [])
+            proxiedNode.publish(message)
         ])
     })
 
     it('happy path subscribing', async () => {
         await proxiedNode.setProxies(streamPartId, [proxyNodeDescriptor1], ProxyDirection.SUBSCRIBE, async () => 'proxiedNode', 1)
-        proxiedNode.subscribe(streamPartId, [])
+        proxiedNode.subscribe(streamPartId)
         await Promise.all([
             waitForEvent3(proxiedNode.stack.getStreamrNode()! as any, 'newMessage'),
-            proxyNode1.publish(message, [])
+            proxyNode1.publish(message)
         ])
     })
 
@@ -210,7 +210,7 @@ describe('Proxy connections', () => {
             ProxyDirection.PUBLISH,
             async () => 'proxiedNode'
         )
-        await expect(proxiedNode.subscribe(streamPartId, [])).rejects.toThrow('Cannot subscribe')
+        await expect(proxiedNode.subscribe(streamPartId)).rejects.toThrow('Cannot subscribe')
     })
 
     it('connect publish on proxy subscribe streams', async () => {
@@ -220,7 +220,7 @@ describe('Proxy connections', () => {
             ProxyDirection.SUBSCRIBE,
             async () => 'proxiedNode'
         )
-        await expect(proxiedNode.publish(message, [])).rejects.toThrow('Cannot publish')
+        await expect(proxiedNode.publish(message)).rejects.toThrow('Cannot publish')
     })
 
 })
