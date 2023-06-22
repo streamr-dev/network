@@ -33,8 +33,8 @@ const areEqualRefs = (ref1: MessageRef, ref2: MessageRef) => {
  * This class represents a chain of messages, in which message are in ascencing order. 
 
  * There is always one message reference (timestamp + sequence number) to the head of the chain, 
- * and a message can be immediately added to the chain if the "prevMsgRef" of the new message reference
- * to the head of the chain. If a message immediately can't be added to the chain, it is stored to 
+ * and a message can be immediately added to the chain if the "prevMsgRef" of the new message is equal
+ * to the head of the chain. If a message can't be immediately added to the chain, it is stored to 
  * an internal heap structure (a priority queue which is ordered my message references).
  *
  * Messages are added to the chain by calling "addMessage" method. If the new message can be immediately 
@@ -44,10 +44,10 @@ const areEqualRefs = (ref1: MessageRef, ref2: MessageRef) => {
  * which we need before the message can be processed. In that case we emit the "gapFound" event.
  * 
  * Typically the "gapFound" triggers some component to provide us more messages (e.g. fetching
- * messages from a storage node). Also the same component which produced the original message continues 
+ * messages from a storage node). Also the component which produced the original message continues 
  * to provide more messages. Both of these sources provide messages by calling the "addMessage" method.
  * 
- * The sources may provide us messages which can be added be immediately added to the chain. In that case
+ * The sources may provide us messages which can be immediately added to the chain. In that case
  * the messages is added and the "orderedMessageAdded" event is emitted. As the head of the chain changes, 
  * there may be also some messages in the heap which can also be added now. The "orderedMessageAdded"
  * is emmitted for those messages, too. 
@@ -61,15 +61,15 @@ const areEqualRefs = (ref1: MessageRef, ref2: MessageRef) => {
  * 
  * Alternatively if don't get all the missing messages from the sources, an external component may call
  * the "resolveMessages" method. It enforces us to ignore the remaining missing messages and allows the
- * chain to proceed with new messages. In that case we add some of temporarily stored messages to the 
- * chain, and typically the last of those messages resolves the gap (and therefore "gapResolved" is 
- * emitted).
+ * chain to proceed with new messages. In that case we iterate the internal heap and some of the messages
+ * to the  chain, and typically the last of the messages resolves the gap (and therefore "gapResolved" 
+ * is emitted).
  * 
  * The consequence from rules above is that we always process on gap at a time. For each "gapFound" event 
  * there is always a matching "gapResolved" event emitted before new "gapFound" event can be emitted.
  * 
  * Implementation:
- * - The "prevMessageRef" field to a message tells us whether there are missing messages between
+ * - The "prevMessageRef" field of a message tells us whether there are missing messages between
  *   that message and some other messages. Typically all messages contain that field.
  *   If a message doesn't contain "prevMessageRef" field, we can't know if there are some missing
  *   messages, and therefore we just add that message to the chain as a latest message (if 
