@@ -124,7 +124,7 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
         }
         const parseItems = (response: any) => {
             if (!response.operator) {
-                logger.debug('Unable to find operator in The Graph', { operatorContractAddress: this.operatorContractAddress })
+                logger.error('Unable to find operator in The Graph', { operatorContractAddress: this.operatorContractAddress })
                 return []
             }
             return response.operator.stakes
