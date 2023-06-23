@@ -15,7 +15,7 @@ export class VoteOnSuspectNodeService {
     constructor(streamrClient: StreamrClient, serviceConfig: OperatorServiceConfig) {
         this.streamrClient = streamrClient
         this.voteOnSuspectNodeHelper = new VoteOnSuspectNodeHelper(serviceConfig,
-            this.handleNodeInspectionRequest)
+            this.handleNodeInspectionRequest.bind(this))
     }
 
     async start(): Promise<void> {

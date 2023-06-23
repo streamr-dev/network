@@ -1,6 +1,6 @@
 import { Logger, waitForCondition } from "@streamr/utils"
 import { parseEther } from "ethers/lib/utils"
-import StreamrClient from "streamr-client"
+import StreamrClient, { CONFIG_TEST } from "streamr-client"
 import { createWalletAndDeployOperator } from "./deployOperatorContract"
 import { deploySponsorship } from "./deploySponsorshipContract"
 import { Provider } from "@ethersproject/abstract-provider"
@@ -31,10 +31,12 @@ describe('MaintainTopologyService', () => {
 
     // const chainURL = config.rpcEndpoints[0].url
     const chainURL = "http://127.0.0.1:8545"
+    // const chainURL = "http://10.200.10.1:8546"
     // const getOperators
 
     beforeAll(async () => {
         const privkey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+        // const privkey = "0x2cd9855d17e01ce041953829398af7e48b24ece04ff9d0e183414de54dc52285"
         streamrEnvDeployer = new StreamrEnvDeployer(privkey, chainURL)
         await streamrEnvDeployer.deployEverything()
         const { contracts } = streamrEnvDeployer
@@ -108,12 +110,12 @@ describe('MaintainTopologyService', () => {
         logger.debug("staking from flagger: " + flagger.operatorContract.address)
         await (await flagger.operatorContract.stake(sponsorship.address, parseEther("150"))).wait()
         logger.debug("staking from target: " + target.operatorContract.address)
-        await new Promise((resolve) => setTimeout(resolve, 3000))
+        // await new Promise((resolve) => setTimeout(resolve, 3000))
         await (await target.operatorContract.stake(sponsorship.address, parseEther("150"))).wait()
         logger.debug("staking from voter: " + voter.operatorContract.address)
-        await new Promise((resolve) => setTimeout(resolve, 3000))
+        // await new Promise((resolve) => setTimeout(resolve, 3000))
         await (await voter.operatorContract.stake(sponsorship.address, parseEther("150"))).wait()
-        await new Promise((resolve) => setTimeout(resolve, 3000))
+        // await new Promise((resolve) => setTimeout(resolve, 3000))
 
         logger.debug("registering node addresses")
         await (await flagger.operatorContract.setNodeAddresses([await flagger.operatorContract.owner()])).wait()
@@ -129,12 +131,11 @@ describe('MaintainTopologyService', () => {
         // @ts-expect-error mock
         voterVoteService.voteOnSuspectNodeHelper = mockVoteOnSuspectNodeHelper
         const tr = await (await flagger.operatorContract.flag(sponsorship.address, target.operatorContract.address)).wait()
-        // await new Promise((resolve) => setTimeout(resolve, 20000))
         // check that voter votes
         await waitForCondition(async () => {
             return mockVoteOnSuspectNodeHelper.voteOnFlag.mock.calls.length > 0 &&
-            mockVoteOnSuspectNodeHelper.voteOnFlag.mock.calls[0][0] === target.operatorContract.address &&
-            mockVoteOnSuspectNodeHelper.voteOnFlag.mock.calls[0][1] === sponsorship.address &&
+            mockVoteOnSuspectNodeHelper.voteOnFlag.mock.calls[0][0] === sponsorship.address &&
+            mockVoteOnSuspectNodeHelper.voteOnFlag.mock.calls[0][1] === target.operatorContract.address &&
             mockVoteOnSuspectNodeHelper.voteOnFlag.mock.calls[0][2] === true
         }, 10000, 1000)
         flaggerVoteService.stop()
