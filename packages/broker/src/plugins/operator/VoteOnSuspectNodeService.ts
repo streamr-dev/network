@@ -35,7 +35,6 @@ export class VoteOnSuspectNodeService {
         //const operatorIsMalicious = this.streamrClient.inspectNodes(sponsorship, targetOperato)
         const operatorIsMalicious = true
         if (operatorIsMalicious) {
-            // this.logger.info(`operatorIsMalicious, I am operaton ${this.voteOnSuspectNodeHelper.address}`)
             this.logger.info(`operatorIsMalicious, voting KICK on ${targetOperator} on sponsorship ${sponsorship}`)
             await this.voteOnSuspectNodeHelper.voteOnFlag(sponsorship, targetOperator, true)
         } else {
