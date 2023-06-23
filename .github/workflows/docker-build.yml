@@ -93,7 +93,7 @@ jobs:
 
       - name: Start Streamr Docker Stack
         if: ${{inputs.test_services_to_start && inputs.test_script }}
-        uses: streamr-dev/streamr-docker-dev-action@v1.0.1
+        uses: streamr-dev/streamr-docker-dev-action@v1.0.2
         with:
           services-to-start: ${{inputs.test_services_to_start}}
 
