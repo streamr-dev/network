@@ -34,6 +34,7 @@ import { merge } from './merge'
 import { collect } from './collect'
 import { Gate } from './Gate'
 import { TheGraphClient, GraphQLQuery, FetchResponse } from './TheGraphClient'
+import { Heap } from './Heap'
 
 export {
     BrandedString,
@@ -72,7 +73,8 @@ export {
     Gate,
     TheGraphClient,
     GraphQLQuery,
-    FetchResponse
+    FetchResponse,
+    Heap
 }
 
 export {
