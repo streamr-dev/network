@@ -123,7 +123,7 @@
     "sqlite3": "^5.0.3",
     "ts-essentials": "^9.3.0",
     "ts-toolbelt": "^9.6.0",
-    "tsyringe": "^4.6.0",
+    "tsyringe": "^4.8.0",
     "uuid": "^9.0.0"
   },
   "optionalDependencies": {
