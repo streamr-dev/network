@@ -6,7 +6,8 @@
         "lib": ["es2021", "dom"],
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
-        "resolveJsonModule": true
+        "resolveJsonModule": true,
+        "noImplicitOverride": false
     },
     "include": [
         "package.json",
@@ -25,6 +26,7 @@
     "references": [
         { "path": "../test-utils/tsconfig.node.json" },
         { "path": "../protocol/tsconfig.node.json" },
-        { "path": "../network/tsconfig.node.json" }
+        { "path": "../dht/tsconfig.node.json" },
+        { "path": "../trackerless-network/tsconfig.node.json" }
     ]
 }

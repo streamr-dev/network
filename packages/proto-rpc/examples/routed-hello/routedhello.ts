@@ -60,7 +60,7 @@ const run = async () => {
 
     // Simulate a network connection, in real life the message blobs would be transferred over a network
 
-    serverCommunicator1.on('outgoingMessage', (msgBody: Uint8Array, callContext?: ProtoCallContext) => {
+    serverCommunicator1.on('outgoingMessage', (msgBody: Uint8Array, _requestId: string, callContext?: ProtoCallContext) => {
 
         // Send the reply message to the calling client based on sourceId passed 
         // through the network stack in the context information
@@ -70,14 +70,14 @@ const run = async () => {
         }
     })
 
-    serverCommunicator2.on('outgoingMessage', (msgBody: Uint8Array, callContext?: ProtoCallContext) => {
+    serverCommunicator2.on('outgoingMessage', (msgBody: Uint8Array, _requestId: string, callContext?: ProtoCallContext) => {
         if (callContext!.sourceId) {
             const clientId = callContext!["sourceId"] as string
             clientCommunicators[clientId].handleIncomingMessage(msgBody)
         }
     })
 
-    communicator1.on('outgoingMessage', (msgBody: Uint8Array, clientContext?: ProtoCallContext) => {
+    communicator1.on('outgoingMessage', (msgBody: Uint8Array, _requestId: string, clientContext?: ProtoCallContext) => {
        
         // Choose the server to send the message to based on context information passed
         // through the RPC stack as client context information
@@ -105,7 +105,7 @@ const run = async () => {
         server.handleIncomingMessage(msgBody, serverContext)
     })
 
-    communicator2.on('outgoingMessage', (msgBody: Uint8Array, clientContext?: ProtoCallContext) => {
+    communicator2.on('outgoingMessage', (msgBody: Uint8Array, _requestId: string, clientContext?: ProtoCallContext) => {
         let server: RpcCommunicator
 
         if (clientContext && clientContext['targetServerId'] && clientContext['targetServerId'] == '2') {

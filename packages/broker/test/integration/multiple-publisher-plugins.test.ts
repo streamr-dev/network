@@ -2,17 +2,15 @@ import mqtt, { AsyncMqttClient } from 'async-mqtt'
 import WebSocket from 'ws'
 import fetch from 'node-fetch'
 import { StreamPermission } from 'streamr-client'
-import { Tracker } from '@streamr/network-tracker'
 import { fetchPrivateKeyWithGas, Queue } from '@streamr/test-utils'
 import { Broker } from '../../src/broker'
-import { startBroker, createClient, createTestStream, startTestTracker } from '../utils'
+import { startBroker, createClient, createTestStream } from '../utils'
 import { fastPrivateKey } from '@streamr/test-utils'
 import { wait, waitForEvent, waitForCondition } from '@streamr/utils'
 import sample from 'lodash/sample'
 import range from 'lodash/range'
 
 const MESSAGE_COUNT = 120
-const trackerPort = 13610
 const mqttPort = 13611
 const wsPort = 13612
 const httpPort = 13613
@@ -87,7 +85,7 @@ const publishMessages = async (streamId: string): Promise<any[]> => {
         })
     }
     let firstMessage = true
-    for await (const msg of messages) {
+    for (const msg of messages) {
         await publishers[msg.publisher].publish(msg, streamId)
         if (firstMessage) {
             firstMessage = false
@@ -100,15 +98,13 @@ const publishMessages = async (streamId: string): Promise<any[]> => {
 
 describe('multiple publisher plugins', () => {
 
-    let tracker: Tracker
     let broker: Broker
     let privateKey: string
     let streamId: string
 
     beforeAll(async () => {
         privateKey = await fetchPrivateKeyWithGas()
-        tracker = await startTestTracker(trackerPort)
-        const client = await createClient(tracker, privateKey)
+        const client = await createClient(privateKey)
         const stream = await createTestStream(client, module)
         streamId = stream.id
         await stream.grantPermissions({
@@ -118,14 +114,9 @@ describe('multiple publisher plugins', () => {
         await client.destroy()
     }, 30 * 1000)
 
-    afterAll(async () => {
-        await tracker?.stop()
-    })
-
     beforeEach(async () => {
         broker = await startBroker({
             privateKey,
-            trackerPort,
             httpPort,
             extraPlugins: {
                 mqtt: {
@@ -134,10 +125,11 @@ describe('multiple publisher plugins', () => {
                 websocket: {
                     port: wsPort
                 },
-                http: {}
-            }
+                http: {},
+            },
+            networkLayerWsServerPort: 44409
         })
-    })
+    }, 15000)
 
     afterEach(async () => {
         await broker?.stop()
@@ -146,7 +138,7 @@ describe('multiple publisher plugins', () => {
     it('subscribe by StreamrClient', async () => {
 
         const receivedMessages: Queue<unknown> = new Queue()
-        const subscriber = await createClient(tracker, fastPrivateKey())
+        const subscriber = await createClient(fastPrivateKey())
         await subscriber.subscribe(streamId, (message: unknown) => {
             receivedMessages.push(message)
         })

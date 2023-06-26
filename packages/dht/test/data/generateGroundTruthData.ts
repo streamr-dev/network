@@ -3,7 +3,7 @@ import crypto from 'crypto'
 import KBucket from 'k-bucket'
 
 const ID_LENGTH = 8
-const NUM_NODES = 1000
+const NUM_NODES = 2000
 const NUM_NEAREST = 10
 
 const generateId = function(): Uint8Array {

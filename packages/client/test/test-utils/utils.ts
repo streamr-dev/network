@@ -229,6 +229,31 @@ export const waitForCalls = async (mockFunction: jest.Mock<any>, n: number): Pro
     })
 }
 
+export const createTestClient = (privateKey: string, stringKademliaId: string, wsPort?: number, acceptProxyConnections = false): StreamrClient => {
+    return new StreamrClient({
+        ...CONFIG_TEST,
+        auth: {
+            privateKey
+        },
+        network: {
+            layer0: {
+                ...CONFIG_TEST.network!.layer0,
+                peerDescriptor: {
+                    kademliaId: stringKademliaId,
+                    type: 0,
+                    websocket: wsPort ? {
+                        ip: 'localhost',
+                        port: wsPort
+                    } : undefined
+                }
+            },
+            networkNode: {
+                acceptProxyConnections
+            }
+        }
+    })
+}
+
 export const startTestServer = async (
     endpoint: string,
     onRequest: (req: Request, res: Response) => Promise<void>

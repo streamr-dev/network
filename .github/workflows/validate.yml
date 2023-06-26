@@ -54,26 +54,31 @@ jobs:
     uses: ./.github/workflows/test-setup.yml
     with:
       package: dht
+  dht-browser:
+    needs: build
+    uses: ./.github/workflows/test-setup.yml
+    with:
+      package: dht
       command: |
-        npm run test
+        sudo apt-get install xvfb
         xvfb-run --auto-servernum npm run test-browser
-  network:
+  trackerless-network:
     needs: build
     uses: ./.github/workflows/test-setup.yml
     with:
-      package: network
-  network-browser:
-    needs: build
-    uses: ./.github/workflows/test-setup.yml
-    with:
-      package: network
+      package: trackerless-network
       command: |
-        xvfb-run --auto-servernum npm run test-browser
-  tracker:
+        npm run test-unit
+        npm run test-integration
+        npm run test-e2e
+  trackerless-network-browser:
     needs: build
     uses: ./.github/workflows/test-setup.yml
     with:
-      package: network-tracker
+      package: trackerless-network
+      command: |
+        sudo apt-get install xvfb
+        xvfb-run --auto-servernum npm run test-browser
   client:
     needs: build
     uses: ./.github/workflows/test-setup.yml
@@ -89,7 +94,7 @@ jobs:
     with:
       package: client
       docker-services: cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph ens-sync-script
-      run-brokers-and-trackers: true
+      run-brokers: true
       command: npm run test-end-to-end
   broker:
     needs: build
@@ -103,6 +108,7 @@ jobs:
     with:
       package: broker
       docker-services: cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph deploy-network-subgraphs
+      run-brokers: true
       command: npm run test-integration
   client-browser:
     needs: build
@@ -110,7 +116,7 @@ jobs:
     with:
       package: client
       docker-services: init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph deploy-network-subgraphs
-      run-brokers-and-trackers: true
+      run-brokers: true
       command: npm run test-browser
   cli-tools:
     needs: build

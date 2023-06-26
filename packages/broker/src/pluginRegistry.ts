@@ -4,7 +4,6 @@ import { ConsoleMetricsPlugin } from './plugins/consoleMetrics/ConsoleMetricsPlu
 import { WebsocketPlugin } from './plugins/websocket/WebsocketPlugin'
 import { MqttPlugin } from './plugins/mqtt/MqttPlugin'
 import { StoragePlugin } from './plugins/storage/StoragePlugin'
-import { BrubeckMinerPlugin } from './plugins/brubeckMiner/BrubeckMinerPlugin'
 import { SubscriberPlugin } from './plugins/subscriber/SubscriberPlugin'
 import { InfoPlugin } from './plugins/info/InfoPlugin'
 import { OperatorPlugin } from './plugins/operator/OperatorPlugin'
@@ -23,8 +22,6 @@ export const createPlugin = (name: string, pluginOptions: PluginOptions): Plugin
             return new StoragePlugin(pluginOptions)
         case 'operator':
             return new OperatorPlugin(pluginOptions)
-        case 'brubeckMiner':
-            return new BrubeckMinerPlugin(pluginOptions)
         case 'subscriber':
             return new SubscriberPlugin(pluginOptions)
         case 'info':

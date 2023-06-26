@@ -29,10 +29,14 @@ describe('MetricsPublisher', () => {
                 getNodeId: () => nodeAddress + '#mock-session-id'
             }) as any
         }
+        const authentication = {
+            getAddress: async () => nodeAddress
+        }
         const eventEmitter = new StreamrClientEventEmitter()
         new MetricsPublisher(
             publisher as any,
             node as any,
+            authentication as any,
             config,
             eventEmitter,
             destroySignal
