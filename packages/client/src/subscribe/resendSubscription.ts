@@ -3,9 +3,9 @@ import { EthereumAddress } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { StrictStreamrClientConfig } from '../Config'
 import { LoggerFactory } from '../utils/LoggerFactory'
-import { OrderMessages } from './OrderMessages'
 import { ResendOptions, Resends } from './Resends'
 import { Subscription, SubscriptionEvents } from './Subscription'
+import { OrderMessages } from './ordering/OrderMessages'
 
 /*
  * Initialize subscription pipeline transformations for a resend subscription

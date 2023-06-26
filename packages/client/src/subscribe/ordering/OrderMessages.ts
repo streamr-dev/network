@@ -1,12 +1,12 @@
 import { StreamID, StreamMessage, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { EthereumAddress } from '@streamr/utils'
-import { StrictStreamrClientConfig } from '../Config'
-import { Mapping } from '../utils/Mapping'
-import { PushBuffer } from '../utils/PushBuffer'
-import { CacheAsyncFn } from '../utils/caches'
-import { Resends } from './Resends'
-import { Gap, OrderedMessageChain, OrderedMessageChainContext } from './ordering/OrderedMessageChain'
-import { GapFiller } from './ordering/GapFiller'
+import { StrictStreamrClientConfig } from '../../Config'
+import { Mapping } from '../../utils/Mapping'
+import { PushBuffer } from '../../utils/PushBuffer'
+import { CacheAsyncFn } from '../../utils/caches'
+import { Resends } from '../Resends'
+import { GapFiller } from './GapFiller'
+import { Gap, OrderedMessageChain, OrderedMessageChainContext } from './OrderedMessageChain'
 
 const createMessageChain = (
     context: OrderedMessageChainContext,

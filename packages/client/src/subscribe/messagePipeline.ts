@@ -17,8 +17,8 @@ import { LoggerFactory } from '../utils/LoggerFactory'
 import { PushPipeline } from '../utils/PushPipeline'
 import { validateStreamMessage } from '../utils/validateStreamMessage'
 import { MsgChainUtil } from './MsgChainUtil'
-import { OrderMessages } from './OrderMessages'
 import { Resends } from './Resends'
+import { OrderMessages } from './ordering/OrderMessages'
 
 export interface MessagePipelineOptions {
     streamPartId: StreamPartID
