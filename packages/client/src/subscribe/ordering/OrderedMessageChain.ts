@@ -1,7 +1,6 @@
 import { MessageRef, StreamMessage, StreamPartID } from '@streamr/protocol'
-import { Gate, Logger, EthereumAddress } from '@streamr/utils'
+import { Heap, Gate, Logger, EthereumAddress } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
-import Heap from 'heap'
 
 /*
  * There are missing messages between these two messages. The "to" message is guaranteed to have prevMsgRef.
@@ -116,7 +115,7 @@ export class OrderedMessageChain {
     }
 
     async waitUntilIdle(): Promise<void> {
-        const isIdle = () => this.pendingMsgs.empty() || this.abortSignal.aborted
+        const isIdle = () => this.pendingMsgs.isEmpty() || this.abortSignal.aborted
         if (!isIdle()) {
             const gate = new Gate(false)
             const listener = () => {
@@ -133,7 +132,7 @@ export class OrderedMessageChain {
     }
 
     private consumePendingOrderedMessages(isConsumable: (msg: StreamMessage) => boolean) {
-        while (!this.pendingMsgs.empty() && isConsumable(this.pendingMsgs.peek()!)) {
+        while (!this.pendingMsgs.isEmpty() && isConsumable(this.pendingMsgs.peek()!)) {
             const next = this.pendingMsgs.pop()!
             this.lastOrderedMsg = next
             this.eventEmitter.emit('orderedMessageAdded', next)
@@ -143,7 +142,7 @@ export class OrderedMessageChain {
     }
 
     private checkGapFound() {
-        if (!this.pendingMsgs.empty() && (this.currentGap === undefined)) {
+        if (!this.pendingMsgs.isEmpty() && (this.currentGap === undefined)) {
             this.currentGap = {
                 from: this.lastOrderedMsg!,
                 to: this.pendingMsgs.peek()!
