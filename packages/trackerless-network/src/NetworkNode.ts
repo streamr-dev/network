@@ -107,6 +107,11 @@ export class NetworkNode {
         this.stack.getStreamrNode().unsubscribeFromStream(streamPartId)
     }
 
+    async findPeer(id: Uint8Array): Promise<PeerDescriptor[]> {
+        const result = await this.stack.getLayer0DhtNode()!.startRecursiveFind(id)
+        return result.closestNodes
+    }
+
     getNeighborsForStreamPart(streamPartId: StreamPartID): ReadonlyArray<string> {
         return this.hasStreamPart(streamPartId)
             ? this.stack.getStreamrNode().getStream(streamPartId)!.layer2.getTargetNeighborStringIds()

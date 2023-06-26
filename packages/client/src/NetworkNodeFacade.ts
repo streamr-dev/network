@@ -47,6 +47,8 @@ export interface NetworkNodeStub {
         getUserId: () => Promise<string>,
         connectionCount?: number
     ) => Promise<void>
+    /** @internal */
+    findPeer: (id: Uint8Array) => Promise<PeerDescriptor[]>
 }
 
 export interface Events {
