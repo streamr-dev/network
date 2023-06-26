@@ -91,7 +91,8 @@ describe("MaintainOperatorValueService", () => {
 
     it("updates both sponsorships to stay over the threshold", async () => {
         const penaltyFraction = parseEther("0.001")
-        const threshold = penaltyFraction.mul(200).toBigInt()
+        const poolValue = STAKE_AMOUNT * 2
+        const threshold = penaltyFraction.mul(poolValue).toBigInt()
         const maintainOperatorValueService = new MaintainOperatorValueService(operatorConfig, penaltyFraction.toBigInt())
 
         const totalValueInSponsorshipsBefore = await operatorContract.totalValueInSponsorshipsWei()
@@ -112,7 +113,8 @@ describe("MaintainOperatorValueService", () => {
 
     it("needs only one sponsorship to stay over the threshold", async () => {
         const penaltyFraction = parseEther("0.0005")
-        const threshold = penaltyFraction.mul(200).toBigInt()
+        const poolValue = STAKE_AMOUNT * 2
+        const threshold = penaltyFraction.mul(poolValue).toBigInt()
         const maintainOperatorValueService = new MaintainOperatorValueService(operatorConfig, penaltyFraction.toBigInt())
 
         const totalValueInSponsorshipsBefore = await operatorContract.totalValueInSponsorshipsWei()

@@ -28,7 +28,6 @@ export class MaintainOperatorValueService {
             true,
             this.abortController.signal
         )
-
     }
 
     private async checkValue(): Promise<void> {
