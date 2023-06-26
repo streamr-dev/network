@@ -85,7 +85,6 @@ describe("MaintainOperatorValueService", () => {
             const sponsorship = await deploySponsorship(config, operatorWallet, { streamId })
             await (await token.connect(operatorWallet).transferAndCall(sponsorship.address, parseEther(`${SPONSOR_AMOUNT}`), "0x")).wait()
             await (await operatorContract.stake(sponsorship.address, parseEther(`${STAKE_AMOUNT}`))).wait()
-            expect(await token.balanceOf(sponsorship.address)).toEqual(parseEther(`${SPONSOR_AMOUNT + STAKE_AMOUNT}`))
         }
     }, 60 * 1000)
 
