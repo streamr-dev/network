@@ -13,21 +13,13 @@ found [here](packages/broker/CHANGELOG.md).
 
 #### Added
 
-- Add optional config option `encryption.rsaKeyLength` to control the strength of RSA encryption in key-exchange (https://github.com/streamr-dev/network/pull/1505)
-
 #### Changed
-
-- Improve error messages for contract call errors (https://github.com/streamr-dev/network/pull/1558)
 
 #### Deprecated
 
 #### Removed
 
 #### Fixed
-
-- Fix error handling in message pipeline (https://github.com/streamr-dev/network/pull/1479)
-- Fix resend freeze issue (https://github.com/streamr-dev/network/pull/1554)
-- Fix error handling in gap fill (https://github.com/streamr-dev/network/pull/1570)
 
 #### Security
 
@@ -44,6 +36,25 @@ found [here](packages/broker/CHANGELOG.md).
 #### Fixed
 
 #### Security
+
+
+## [8.5.4] - 2023-06-26
+
+### client
+
+#### Added
+
+- Add optional config option `encryption.rsaKeyLength` to control the strength of RSA encryption in key-exchange (https://github.com/streamr-dev/network/pull/1505)
+
+#### Changed
+
+- Improve error messages for contract call errors (https://github.com/streamr-dev/network/pull/1558)
+
+#### Fixed
+
+- Fix error handling in message pipeline (https://github.com/streamr-dev/network/pull/1479)
+- Fix resend freeze issue (https://github.com/streamr-dev/network/pull/1554)
+- Fix error handling in gap fill (https://github.com/streamr-dev/network/pull/1570)
 
 
 ## [8.5.3] - 2023-06-07
@@ -517,7 +528,8 @@ found [here](packages/broker/CHANGELOG.md).
 - Fixed an import so that the client successfully loads in a web browser environment (NET-721)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/client/v8.5.3...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/client/v8.5.4...HEAD
+[8.5.4]: https://github.com/streamr-dev/network/compare/client/v8.5.3...client/v8.5.4
 [8.5.3]: https://github.com/streamr-dev/network/compare/client/v8.5.2...client/v8.5.3
 [8.5.2]: https://github.com/streamr-dev/network/compare/client/v8.5.1...client/v8.5.2
 [8.5.1]: https://github.com/streamr-dev/network/compare/client/v8.5.0...client/v8.5.1
