@@ -99,7 +99,7 @@ describe("MaintainOperatorValueService", () => {
         // wait for sponsorships to accumulate earnings so approximate values differ enough form the real values
         await wait(3000)
 
-        maintainOperatorValueService.start()
+        await maintainOperatorValueService.start()
 
         await waitForCondition(async () => await operatorContract.totalValueInSponsorshipsWei() > totalValueInSponsorshipsBefore, 10000, 1000)
         
@@ -120,7 +120,7 @@ describe("MaintainOperatorValueService", () => {
         // wait for sponsorships to accumulate earnings so approximate values differ enough form the real values
         await wait(3000)
 
-        maintainOperatorValueService.start()
+        await maintainOperatorValueService.start()
 
         await waitForCondition(async () => await operatorContract.totalValueInSponsorshipsWei() > totalValueInSponsorshipsBefore, 10000, 1000)
         
