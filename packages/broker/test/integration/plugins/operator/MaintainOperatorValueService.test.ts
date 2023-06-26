@@ -23,7 +23,6 @@ const logger = new Logger(module)
 
 const SPONSOR_AMOUNT = 200
 const STAKE_AMOUNT = 100
-const cases = [parseEther("0.001"), parseEther("0.0005")]
 
 describe("MaintainOperatorValueService", () => {
     let provider: Provider
@@ -89,7 +88,7 @@ describe("MaintainOperatorValueService", () => {
         }
     }, 60 * 1000)
 
-    test.each(cases)("updates the sponsorships to stay over the threshold", async (penaltyFraction) => {
+    test.each([parseEther("0.001"), parseEther("0.0005")])("updates the sponsorships to stay over the threshold", async (penaltyFraction) => {
         const poolValue = STAKE_AMOUNT * 2
         const threshold = penaltyFraction.mul(poolValue).toBigInt()
         const maintainOperatorValueService = new MaintainOperatorValueService(operatorConfig, penaltyFraction.toBigInt())
