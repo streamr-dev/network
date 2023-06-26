@@ -71,19 +71,6 @@ describe('OrderedMessageChain', () => {
         expect(onGapResolved).not.toBeCalled()
     })
 
-    it('debug', () => {
-        chain.addMessage(createMessage(1))
-        chain.addMessage(createMessage(3))
-        chain.addMessage(createMessage(5))
-        chain.addMessage(createMessage(2))
-        chain.addMessage(createMessage(4))
-        expect(getOrderedTimestamps()).toEqual([1, 2, 3, 4, 5])
-        expectGaps([
-            createGap(1, 3),
-            createGap(3, 5)
-        ])
-    })
-
     it('fill single gap', () => {
         chain.addMessage(createMessage(1))
         chain.addMessage(createMessage(2))
@@ -127,6 +114,23 @@ describe('OrderedMessageChain', () => {
         expect(getOrderedTimestamps()).toEqual([1, 2, 3, 4, 5, 6, 7, 8])
         expectGaps([
             createGap(1, 3)
+        ])
+    })
+
+    it('duplicates', () => {
+        chain.addMessage(createMessage(1))
+        chain.addMessage(createMessage(1))
+        chain.addMessage(createMessage(2))
+        chain.addMessage(createMessage(2))
+        chain.addMessage(createMessage(4))
+        chain.addMessage(createMessage(4))
+        chain.addMessage(createMessage(3))
+        chain.addMessage(createMessage(5))
+        chain.addMessage(createMessage(3))
+        chain.addMessage(createMessage(5))
+        expect(getOrderedTimestamps()).toEqual([1, 2, 3, 4, 5])
+        expectGaps([
+            createGap(2, 4)
         ])
     })
 
