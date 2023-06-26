@@ -172,7 +172,7 @@ export const createStreamRegistryCached = (opts?: {
                 partitions: opts?.partitionCount ?? 1
             })
         }),
-        isPublic: async () => {
+        hasPublicSubscribePermission: async () => {
             return opts?.isPublicStream ?? false
         },
         isStreamPublisher: async () => {

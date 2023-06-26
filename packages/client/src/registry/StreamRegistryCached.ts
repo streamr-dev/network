@@ -17,7 +17,7 @@ export class StreamRegistryCached {
     private readonly _getStream: CacheAsyncFnType<[StreamID], Stream, string>
     private readonly _isStreamPublisher: CacheAsyncFnType<[StreamID, EthereumAddress], boolean, string>
     private readonly _isStreamSubscriber: CacheAsyncFnType<[StreamID, EthereumAddress], boolean, string>
-    private readonly _isPublic: CacheAsyncFnType<[StreamID], boolean, string>
+    private readonly _hasPublicSubscribePermission: CacheAsyncFnType<[StreamID], boolean, string>
     private readonly streamRegistry: StreamRegistry
     private readonly logger: Logger
     
@@ -54,7 +54,7 @@ export class StreamRegistryCached {
                 return [streamId, ethAddress].join(SEPARATOR)
             }
         })
-        this._isPublic = CacheAsyncFn((streamId: StreamID) => {
+        this._hasPublicSubscribePermission = CacheAsyncFn((streamId: StreamID) => {
             return this.streamRegistry.hasPermission({
                 streamId,
                 public: true,
@@ -80,8 +80,8 @@ export class StreamRegistryCached {
         return this._isStreamSubscriber(streamId, ethAddress)
     }
 
-    isPublic(streamId: StreamID): Promise<boolean> {
-        return this._isPublic(streamId)
+    hasPublicSubscribePermission(streamId: StreamID): Promise<boolean> {
+        return this._hasPublicSubscribePermission(streamId)
     }
 
     /**
