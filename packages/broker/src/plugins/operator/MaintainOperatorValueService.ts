@@ -12,13 +12,11 @@ export class MaintainOperatorValueService {
     private penaltyLimitFraction: bigint
     private readonly helper: MaintainOperatorValueHelper
     private readonly abortController: AbortController
-    private readonly config: OperatorServiceConfig
 
     constructor(config: OperatorServiceConfig, penaltyLimitFraction = BigInt(0)) {
         this.penaltyLimitFraction = penaltyLimitFraction
         this.helper = new MaintainOperatorValueHelper(config)
         this.abortController = new AbortController()
-        this.config = config
     }
 
     async start(): Promise<void> {
