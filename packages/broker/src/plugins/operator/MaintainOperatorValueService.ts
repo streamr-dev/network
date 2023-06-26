@@ -48,7 +48,7 @@ export class MaintainOperatorValueService {
             totalApprox = totalApprox + sponsorship.approxValue.toBigInt()
         }
 
-        if (this.penaltyLimitFraction === undefined || this.penaltyLimitFraction === BigInt(0)) {
+        if (this.penaltyLimitFraction === BigInt(0)) {
             this.penaltyLimitFraction = await this.helper.getPenaltyLimitFraction()
         }
 
