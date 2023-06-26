@@ -16,6 +16,10 @@ export const streamPartIdToDataKey = (streamPartId: string): Uint8Array => {
     return new Uint8Array(createHash('md5').update(streamPartId).digest())
 }
 
+const parseEntryPointData = (dataEntries: DataEntry[]): PeerDescriptor[] => {
+    return dataEntries!.filter((entry) => !entry.deleted).map((entry) => Any.unpack(entry.data!, PeerDescriptor))
+}
+
 interface FindEntryPointsResult {
     joiningEmptyStream: boolean
     entryPointsFromDht: boolean
@@ -58,20 +62,22 @@ interface StreamEntryPointDiscoveryConfig {
     getEntryPointData: (key: Uint8Array) => Promise<RecursiveFindResult>
     getEntryPointDataViaPeer: (key: Uint8Array, peer: PeerDescriptor) => Promise<DataEntry[]>
     storeEntryPointData: (key: Uint8Array, data: Any) => Promise<PeerDescriptor[]>
+    deleteEntryPointData: (key: Uint8Array) => Promise<void>
     cacheInterval?: number
 }
 
 export class StreamEntryPointDiscovery {
     private readonly abortController: AbortController
     private readonly config: StreamEntryPointDiscoveryConfig
-    private readonly cacheIntervalRefs: Map<string, NodeJS.Timeout>
+    private readonly servicedStreams: Map<string, NodeJS.Timeout>
     private readonly cacheInterval: number
+    private destroyed = false
 
     constructor(config: StreamEntryPointDiscoveryConfig) {
         this.config = config
         this.abortController = new AbortController()
         this.cacheInterval = this.config.cacheInterval || 60000
-        this.cacheIntervalRefs = new Map()
+        this.servicedStreams = new Map()
     }
 
     async discoverEntryPointsFromDht(
@@ -110,7 +116,7 @@ export class StreamEntryPointDiscovery {
         try {
             const results = await this.config.getEntryPointData(key)
             if (results.dataEntries) {
-                return results.dataEntries!.map((entry) => Any.unpack(entry.data!, PeerDescriptor))
+                return parseEntryPointData(results.dataEntries)
             } else {
                 return []
             }
@@ -124,7 +130,7 @@ export class StreamEntryPointDiscovery {
         try {
             const results = await this.config.getEntryPointDataViaPeer(key, peer)
             if (results) {
-                return results.map((entry) => Any.unpack(entry.data!, PeerDescriptor))
+                return parseEntryPointData(results)
             } else {
                 return []
             }
@@ -163,12 +169,12 @@ export class StreamEntryPointDiscovery {
     }
 
     private keepSelfAsEntryPoint(streamPartId: string): void {
-        if (!this.config.streams.has(streamPartId) || this.cacheIntervalRefs.has(streamPartId)) {
+        if (!this.config.streams.has(streamPartId) || this.servicedStreams.has(streamPartId)) {
             return
         }
-        this.cacheIntervalRefs.set(streamPartId, setTimeout(async () => {
+        this.servicedStreams.set(streamPartId, setTimeout(async () => {
             if (!this.config.streams.has(streamPartId)) {
-                this.cacheIntervalRefs.delete(streamPartId)
+                this.servicedStreams.delete(streamPartId)
                 return
             }
             logger.trace(`Attempting to keep self as entrypoint for ${streamPartId}`)
@@ -177,10 +183,10 @@ export class StreamEntryPointDiscovery {
                 if (discovered.length < ENTRYPOINT_STORE_LIMIT 
                     || discovered.some((peer) => isSamePeerDescriptor(peer, this.config.ownPeerDescriptor))) {
                     await this.storeSelfAsEntryPoint(streamPartId)
-                    this.cacheIntervalRefs.delete(streamPartId)
+                    this.servicedStreams.delete(streamPartId)
                     this.keepSelfAsEntryPoint(streamPartId)
                 } else {
-                    this.cacheIntervalRefs.delete(streamPartId)
+                    this.servicedStreams.delete(streamPartId)
                 }
             } catch (err) {
                 logger.debug(`Failed to keep self as entrypoint for ${streamPartId}`)
@@ -208,18 +214,22 @@ export class StreamEntryPointDiscovery {
         logger.trace(`Network split avoided`)
     }
 
-    stopRecaching(streamPartId: string): void {
-        if (this.cacheIntervalRefs.has(streamPartId)) {
-            clearTimeout(this.cacheIntervalRefs.get(streamPartId)!)
-            this.cacheIntervalRefs.delete(streamPartId)
+    removeSelfAsEntryPoint(streamPartId: string): void {
+        if (this.servicedStreams.has(streamPartId)) {
+            setImmediate(async () => {
+                if (!this.destroyed) {
+                    await this.config.deleteEntryPointData(streamPartIdToDataKey(streamPartId))
+                }
+            })
+            clearTimeout(this.servicedStreams.get(streamPartId)!)
+            this.servicedStreams.delete(streamPartId)
         }
     }
 
-    destroy(): void {
-        this.cacheIntervalRefs.forEach((timeout) => {
-            clearTimeout(timeout)
-        })
-        this.cacheIntervalRefs.clear()
+    async destroy(): Promise<void> {
+        this.destroyed = true
+        await Promise.all(Array.from(this.servicedStreams.keys()).map((streamPartId) => this.removeSelfAsEntryPoint(streamPartId)))
+        this.servicedStreams.clear()
         this.abortController.abort()
     }
 

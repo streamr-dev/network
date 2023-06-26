@@ -133,7 +133,8 @@ export class StreamrNode extends EventEmitter<Events> {
             streams: this.streams,
             getEntryPointData: (key) => this.layer0!.getDataFromDht(key),
             getEntryPointDataViaPeer: (peerDescriptor, key) => this.layer0!.findDataViaPeer(peerDescriptor, key),
-            storeEntryPointData: (key, data) => this.layer0!.storeDataToDht(key, data)
+            storeEntryPointData: (key, data) => this.layer0!.storeDataToDht(key, data),
+            deleteEntryPointData: (key) => this.layer0!.deleteDataFromDht(key)
         })
         cleanUp = () => this.destroy()
     }
@@ -148,11 +149,11 @@ export class StreamrNode extends EventEmitter<Events> {
             stream.layer2.stop()
             stream.layer1?.stop()
         })
+        await this.streamEntryPointDiscovery!.destroy()
         this.streams.clear()
         this.removeAllListeners()
         await this.layer0!.stop()
         await this.P2PTransport!.stop()
-        await this.streamEntryPointDiscovery!.destroy()
         this.layer0 = undefined
         this.P2PTransport = undefined
         this.streamEntryPointDiscovery = undefined
@@ -191,7 +192,7 @@ export class StreamrNode extends EventEmitter<Events> {
             stream.layer1?.stop()
             this.streams.delete(streamPartID)
         }
-        this.streamEntryPointDiscovery!.stopRecaching(streamPartID)
+        this.streamEntryPointDiscovery!.removeSelfAsEntryPoint(streamPartID)
     }
 
     async joinStream(streamPartID: string, knownEntryPointDescriptors: PeerDescriptor[]): Promise<void> {

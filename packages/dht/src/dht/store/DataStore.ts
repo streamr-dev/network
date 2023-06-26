@@ -221,7 +221,7 @@ export class DataStore implements IStoreService {
                 }
                 successfulNodes.push(closestNodes[i])
             } catch (e) {
-                logger.warn('remoteStore.deleteData() threw an exception ' + e)
+                logger.debug('remoteStore.deleteData() threw an exception ' + e)
             }
         }
     }

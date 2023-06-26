@@ -34,6 +34,11 @@ export class MockLayer0 extends EventEmitter implements ILayer0 {
     }
 
     // eslint-disable-next-line class-methods-use-this
+    async deleteDataFromDht(_key: Uint8Array): Promise<void> {
+        
+    }
+
+    // eslint-disable-next-line class-methods-use-this
     async storeDataToDht(_key: Uint8Array, _data: Any): Promise<PeerDescriptor[]> {
         return []
     }

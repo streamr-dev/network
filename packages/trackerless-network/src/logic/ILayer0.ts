@@ -7,6 +7,7 @@ export interface ILayer0 extends ITransport {
     getDataFromDht(key: Uint8Array): Promise<RecursiveFindResult>
     findDataViaPeer(key: Uint8Array, peer: PeerDescriptor): Promise<DataEntry[]>
     storeDataToDht(key: Uint8Array, data: Any): Promise<PeerDescriptor[]>
+    deleteDataFromDht(key: Uint8Array): Promise<void>
     getKnownEntryPoints(): PeerDescriptor[]
     isJoinOngoing(): boolean
     stop(): Promise<void>
