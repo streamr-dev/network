@@ -1,12 +1,13 @@
-import { initEventGateway } from '@streamr/utils'
 import { Contract, ContractReceipt, ContractTransaction } from '@ethersproject/contracts'
-import EventEmitter from 'eventemitter3'
 import { NameDirectory } from '@streamr/network-node'
+import { initEventGateway } from '@streamr/utils'
+import EventEmitter from 'eventemitter3'
+import shuffle from 'lodash/shuffle'
+import without from 'lodash/without'
 import pLimit from 'p-limit'
+import { InternalEvents, StreamrClientEventEmitter, StreamrClientEvents } from '../events'
 import { LoggerFactory } from './LoggerFactory'
 import { tryInSequence } from './promises'
-import shuffle from 'lodash/shuffle'
-import { StreamrClientEventEmitter, InternalEvents, StreamrClientEvents } from '../events'
 
 export interface ContractEvent {
     onMethodExecute: (methodName: string) => void
@@ -58,12 +59,19 @@ const createLogger = (eventEmitter: EventEmitter<ContractEvent>, loggerFactory: 
 
 const withErrorHandling = async <T>(
     execute: () => Promise<T>,
-    methodName: string
+    methodName: string,
+    action: string
 ): Promise<T> => {
     try {
         return await execute()
     } catch (e: any) {
-        const wrappedError = new Error(`Error in contract call "${methodName}"`)
+        const suffixes = without(
+            ['reason', 'code'].map((field) => (e[field] !== undefined ? `${field}=${e[field]}` : undefined)),
+            undefined
+        )
+        const wrappedError = new Error(
+            `Error while ${action} contract call "${methodName}"${(suffixes.length > 0) ? ', ' + suffixes.join(', ') : ''}`
+        )
         // @ts-expect-error unknown property
         wrappedError.reason = e
         throw wrappedError
@@ -80,12 +88,12 @@ const createWrappedContractMethod = (
         const returnValue = await withErrorHandling(() => concurrencyLimit(() => {
             eventEmitter.emit('onMethodExecute', methodName)
             return originalMethod(...args)
-        }), methodName)
+        }), methodName, 'executing')
         if (isTransaction(returnValue)) {
             const tx = returnValue
             const originalWaitMethod = tx.wait
             tx.wait = async (confirmations?: number): Promise<ContractReceipt> => {
-                const receipt = await withErrorHandling(() => originalWaitMethod(confirmations), `${methodName}.wait`)
+                const receipt = await withErrorHandling(() => originalWaitMethod(confirmations), methodName, 'waiting transaction for')
                 eventEmitter.emit('onTransactionConfirm', methodName, tx, receipt)
                 return receipt
             }

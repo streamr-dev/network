@@ -1,7 +1,6 @@
 import { MessageRef, StreamMessage, StreamPartID } from '@streamr/protocol'
 import { EthereumAddress, Logger } from '@streamr/utils'
 import Heap from 'heap'
-import GapFillFailedError from './GapFillFailedError'
 
 function toMsgRefId(streamMessage: StreamMessage): MsgRefId {
     return streamMessage.getMessageRef().serialize()
@@ -128,7 +127,7 @@ class MsgChainQueue {
 export type MessageHandler = (msg: StreamMessage) => void
 export type GapHandler = (from: MessageRef, to: MessageRef, context: MsgChainContext) => void | Promise<void>
 export type OnDrain = (numMessages: number) => void
-export type OnError = (error: Error) => void
+export type OnError = () => void
 
 const logger = new Logger(module)
 
@@ -322,7 +321,7 @@ export class OrderedMsgChain {
 
             this.inOrderHandler(msg)
         } catch (err: any) {
-            this.onError(err)
+            this.onError()
         }
         return msg
     }
@@ -384,7 +383,7 @@ export class OrderedMsgChain {
             try {
                 await this.gapHandler(from, to, this.context)
             } catch (err: any) {
-                this.onError(err)
+                this.onError()
             }
         } else {
             this.onGapFillsExhausted()
@@ -411,7 +410,7 @@ export class OrderedMsgChain {
         // skip gap, allow queue processing to continue
         this.lastOrderedMsgRef = msg.getPreviousMessageRef()
         if (this.isGapHandlingEnabled()) {
-            this.onError(new GapFillFailedError(from, to, this.context, maxGapRequests))
+            this.onError()
         }
 
         this.clearGap()

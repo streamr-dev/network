@@ -127,14 +127,12 @@ export const fromArray = async function* <T>(items: T[]): AsyncGenerator<T> {
     }
 }
 
-export const counting = async function*<T>(items: AsyncIterable<T>, onFinally: (count: number) => void): AsyncGenerator<T> {
-    let count = 0
+export const transformError = async function* <T>(src: AsyncGenerator<T>, transformFn: (err: any) => any): AsyncGenerator<T> {
     try {
-        for await (const item of items) {
+        for await (const item of src) {
             yield item
-            count++
         }
-    } finally {
-        onFinally(count)
+    } catch (err: any) {
+        throw await transformFn(err)
     }
 }
