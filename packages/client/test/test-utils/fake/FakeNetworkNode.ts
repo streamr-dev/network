@@ -121,7 +121,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async findPeer(id: Uint8Array): Promise<PeerDescriptor[]> {
+    async findPeer(_id: Uint8Array): Promise<PeerDescriptor[]> {
         return []
     }
 
