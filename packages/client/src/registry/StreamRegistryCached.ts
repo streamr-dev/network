@@ -95,5 +95,6 @@ export class StreamRegistryCached {
         this._getStream.clearMatching(matchTarget)
         this._isStreamPublisher.clearMatching(matchTarget)
         this._isStreamSubscriber.clearMatching(matchTarget)
+        // TODO should also clear cache for hasPublicSubscribePermission?
     }
 }
