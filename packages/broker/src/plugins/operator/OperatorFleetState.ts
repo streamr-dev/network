@@ -5,7 +5,7 @@ import { EventEmitter } from 'eventemitter3'
 
 const logger = new Logger(module)
 
-export const PRUNE_AGE_IN_MS = 5 * 60 * 1000
+const DEFAULT_PRUNE_AGE_IN_MS = 5 * 60 * 1000
 
 const DEFAULT_PRUNE_INTERVAL_IN_MS = 30 * 1000
 
@@ -19,6 +19,7 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
     private readonly streamrClient: StreamrClient
     private readonly coordinationStream: StreamID
     private readonly timeProvider: () => number
+    private readonly pruneAgeInMs: number
     private readonly pruneIntervalInMs: number
     private subscription?: Subscription
     private pruneNodesIntervalRef?: NodeJS.Timeout
@@ -27,12 +28,14 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
         streamrClient: StreamrClient,
         coordinationStream: StreamID,
         timeProvider = Date.now,
+        pruneAgeInMs = DEFAULT_PRUNE_AGE_IN_MS,
         pruneIntervalInMs = DEFAULT_PRUNE_INTERVAL_IN_MS
     ) {
         super()
         this.streamrClient = streamrClient
         this.coordinationStream = coordinationStream
         this.timeProvider = timeProvider
+        this.pruneAgeInMs = pruneAgeInMs
         this.pruneIntervalInMs = pruneIntervalInMs
     }
 
@@ -70,7 +73,7 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
     private pruneOfflineNodes(): void {
         const now = this.timeProvider()
         for (const [nodeId, time] of this.nodes) {
-            if (now - time >= PRUNE_AGE_IN_MS) {
+            if (now - time >= this.pruneAgeInMs) {
                 this.nodes.delete(nodeId)
                 this.emit('removed', nodeId)
             }

@@ -1,7 +1,7 @@
 import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
 import { mock, MockProxy } from 'jest-mock-extended'
 import StreamrClient, { MessageListener, Subscription } from 'streamr-client'
-import { toEthereumAddress, wait } from '@streamr/utils'
+import { toEthereumAddress, wait, waitForCondition, waitForEvent } from '@streamr/utils'
 import { toStreamID } from '@streamr/protocol'
 import { eventsWithArgsToArray } from '@streamr/test-utils'
 
@@ -15,8 +15,8 @@ describe(OperatorFleetState, () => {
     let state: OperatorFleetState
     let capturedOnMessage: MessageListener
 
-    async function incrementTimeAndPublishMessage(msg: Record<string, unknown>) {
-        currentTime += 1
+    async function setTimeAndPublishMessage(msg: Record<string, unknown>, time: number): Promise<void> {
+        currentTime = time
         capturedOnMessage(msg, {} as any)
         await wait(0)
     }
@@ -29,7 +29,7 @@ describe(OperatorFleetState, () => {
             return subscription
         })
         currentTime = 0
-        state = new OperatorFleetState(streamrClient, coordinationStreamId, () => currentTime, 100)
+        state = new OperatorFleetState(streamrClient, coordinationStreamId, () => currentTime, 10, 100)
     })
 
     afterEach(() => {
@@ -49,20 +49,69 @@ describe(OperatorFleetState, () => {
 
     it('can handle invalid messages in coordination stream', async () => {
         await state.start()
-        await incrementTimeAndPublishMessage({ foo: 'bar', 'lorem': 666 })
-        await incrementTimeAndPublishMessage({})
+        await setTimeAndPublishMessage({ foo: 'bar', 'lorem': 666 }, 10)
+        await setTimeAndPublishMessage({}, 10)
         expect(state.getNodeIds()).toEqual([])
     })
 
-    it('handles new nodes emerging', async () => {
+    it('handles nodes coming online', async () => {
         const events = eventsWithArgsToArray(state as any, ['added', 'removed'])
         await state.start()
 
-        currentTime = 1
-        capturedOnMessage({ msgType: 'heartbeat', nodeId: 'a' })
-        currentTime = 2
-        capturedOnMessage({ msgType: 'heartbeat', nodeId: 'b' })
-        currentTime = 2
-        capturedOnMessage({ msgType: 'heartbeat', nodeId: 'c' })
+        await setTimeAndPublishMessage({ msgType: 'heartbeat', nodeId: 'a' }, 10)
+        await setTimeAndPublishMessage({ msgType: 'heartbeat', nodeId: 'b' }, 10)
+        await setTimeAndPublishMessage({ msgType: 'heartbeat', nodeId: 'c' }, 10)
+        await setTimeAndPublishMessage({ msgType: 'heartbeat', nodeId: 'a' }, 15)
+        await setTimeAndPublishMessage({ msgType: 'heartbeat', nodeId: 'a' }, 15)
+
+        expect(state.getNodeIds()).toEqual(['a', 'b', 'c'])
+        expect(events).toEqual([
+            ['added', 'a'],
+            ['added', 'b'],
+            ['added', 'c']
+        ])
+    })
+
+    it('handles node going offline', async () => {
+        const events = eventsWithArgsToArray(state as any, ['added', 'removed'])
+        await state.start()
+
+        await setTimeAndPublishMessage({ msgType: 'heartbeat', nodeId: 'a' }, 5)
+        await setTimeAndPublishMessage({ msgType: 'heartbeat', nodeId: 'b' }, 5)
+        await setTimeAndPublishMessage({ msgType: 'heartbeat', nodeId: 'c' }, 5)
+        await setTimeAndPublishMessage({ msgType: 'heartbeat', nodeId: 'd' }, 10)
+        await setTimeAndPublishMessage({ msgType: 'heartbeat', nodeId: 'c' }, 10)
+        await setTimeAndPublishMessage({ msgType: 'heartbeat', nodeId: 'e' }, 19)
+
+        await waitForCondition(() => state.getNodeIds().length <= 3)
+        expect(state.getNodeIds()).toEqual(['c', 'd', 'e'])
+        expect(events).toEqual([
+            ['added', 'a'],
+            ['added', 'b'],
+            ['added', 'c'],
+            ['added', 'd'],
+            ['added', 'e'],
+            ['removed', 'a'],
+            ['removed', 'b']
+        ])
+    })
+
+    it('nodes can go and come back up again', async () => {
+        await state.start()
+
+        await setTimeAndPublishMessage({ msgType: 'heartbeat', nodeId: 'a' }, 5)
+        await setTimeAndPublishMessage({ msgType: 'heartbeat', nodeId: 'b' }, 5)
+        expect(state.getNodeIds()).toEqual(['a', 'b'])
+
+        await setTimeAndPublishMessage({ msgType: 'heartbeat', nodeId: 'b' }, 15)
+        await waitForEvent(state as any, 'removed')
+        expect(state.getNodeIds()).toEqual(['b'])
+
+        await setTimeAndPublishMessage({ msgType: 'heartbeat', nodeId: 'a' }, 18)
+        expect(state.getNodeIds()).toEqual(['b', 'a'])
+
+        currentTime = 30
+        await waitForEvent(state as any, 'removed')
+        expect(state.getNodeIds()).toEqual([])
     })
 })
