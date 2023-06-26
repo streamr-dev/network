@@ -176,8 +176,7 @@ export class OrderedMessageChain {
     }
 
     private isStaleMessage(msg: StreamMessage): boolean {
-        return (this.lastOrderedMsg !== undefined 
-            && msg.getMessageRef().compareTo(this.lastOrderedMsg.getMessageRef()) <= 0)
+        return ((this.lastOrderedMsg !== undefined) && (msg.getMessageRef().compareTo(this.lastOrderedMsg.getMessageRef()) <= 0))
             || this.pendingMsgs.contains(msg)
     }
 
