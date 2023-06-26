@@ -20,14 +20,6 @@ import { FakeStreamRegistry } from './FakeStreamRegistry'
 import { FakeStreamStorageRegistry } from './FakeStreamStorageRegistry'
 
 const DEFAULT_CLIENT_OPTIONS: StreamrClientConfig = {
-    network: {
-        layer0: {
-            entryPoints: [{
-                kademliaId: 'Entrypoint',
-                type: 0
-            }]
-        }
-    },
     encryption: {
         rsaKeyLength: MIN_KEY_LENGTH
     },

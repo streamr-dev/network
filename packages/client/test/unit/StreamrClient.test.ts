@@ -11,13 +11,6 @@ const createClient = (opts: StreamrClientConfig = {}) => {
     return new StreamrClient(merge(
         {},
         CONFIG_TEST,
-        {
-            network: {
-                layer0: {
-                    entryPoints: []
-                }
-            }
-        },
         opts
     ), container)
 }

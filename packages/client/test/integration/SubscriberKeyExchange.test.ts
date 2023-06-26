@@ -45,7 +45,7 @@ describe('SubscriberKeyExchange', () => {
             streamPartId,
             publisher: publisherWallet,
             encryptionKey: key
-        }), publisher.getEntryPoints())
+        }))
     }
 
     const assertGroupKeyRequest = async (request: StreamMessage, expectedRequestedKeyIds: string[]): Promise<void> => {
