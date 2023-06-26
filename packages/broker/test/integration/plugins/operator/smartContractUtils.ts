@@ -6,35 +6,47 @@ import { fastPrivateKey } from '@streamr/test-utils'
 import { parseEther } from '@ethersproject/units'
 import { deploySponsorship as _deploySponsorship } from './deploySponsorshipContract'
 import { deployOperatorContract as _deployOperatorContract } from './deployOperatorContract'
-import { Chains } from '@streamr/config'
+import { Chain, Chains } from '@streamr/config'
 
-const ADMIN_WALLET_PK = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80'
+const ADMIN_WALLET_PK = '0x4059de411f15511a85ce332e7a428f36492ab4e87c7830099dadbf130f1896ae'
 const CONFIG = Chains.load()["dev1"]
 
 export function getProvider(): Provider {
     return new JsonRpcProvider(CONFIG.rpcEndpoints[0].url)
 }
 
-export async function generateWalletWithGasAndTokens(config: any, provider: Provider): Promise<Wallet> {
+export function getTokenContract(): TestToken {
+    return new Contract(CONFIG.contracts.LINK, tokenABI) as unknown as TestToken
+}
+
+export async function generateWalletWithGasAndTokens(provider: Provider, config?: Chain): Promise<Wallet> {
     const newWallet = new Wallet(fastPrivateKey())
     const adminWallet = new Wallet(ADMIN_WALLET_PK).connect(provider)
-    const token = new Contract(config.contracts.DATA, tokenABI, adminWallet) as unknown as TestToken
-    // for (let i = 0; i < 5; i++) {
-    //     try {
-    // eslint-disable-next-line no-console
-    console.log("trying with nonce " + await adminWallet.getTransactionCount() + " time " + new Date().getTime() / 1000)
-    await (await token.mint(newWallet.address, parseEther("1000000"), {
-        nonce: await adminWallet.getTransactionCount()
-    })).wait()
-    // eslint-disable-next-line no-console
-    console.log("sent link to " + newWallet.address)
-    //         break
-    //     } catch (e) {
-    //         await new Promise((resolve) => setTimeout(resolve, 3000))
-    //         // eslint-disable-next-line no-console
-    //         console.log("sending link failed, retrying")
-    //     }
-    // }
+
+    if (config && !config.contracts.LINK) {
+        const token = new Contract(config.contracts.DATA, tokenABI, adminWallet) as unknown as TestToken 
+        // console.log("trying with nonce " + await adminWallet.getTransactionCount() + " time " + new Date().getTime() / 1000)
+        await (await token.mint(newWallet.address, parseEther("1000000"), {
+            nonce: await adminWallet.getTransactionCount()
+        })).wait()
+        // console.log("sent link to " + newWallet.address)
+    } else {
+        const token = getTokenContract().connect(adminWallet)
+        for (let i = 0; i < 5; i++) {
+            try {
+                // eslint-disable-next-line no-console
+                // console.log("trying with nonce " + await adminWallet.getTransactionCount() + " time " + new Date().getTime() / 1000)
+                await (await token.transfer(newWallet.address, parseEther("1000"), {
+                    nonce: await adminWallet.getTransactionCount()
+                })).wait()
+                break
+            } catch (e) {
+                await new Promise((resolve) => setTimeout(resolve, 3000))
+                // eslint-disable-next-line no-console
+                // console.log("sending link failed, retrying")
+            }
+        }
+    }
     await (await adminWallet.sendTransaction({
         to: newWallet.address,
         value: parseEther("1")

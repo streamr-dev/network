@@ -29,14 +29,14 @@ describe('MaintainTopologyService', () => {
     let config: Chain
 
     // const chainURL = config.rpcEndpoints[0].url
-    const chainURL = "http://127.0.0.1:8545"
-    // const chainURL = "http://10.200.10.1:8546"
+    // const chainURL = "http://127.0.0.1:8545"
+    const chainURL = "http://10.200.10.1:8546"
 
     beforeAll(async () => {
-        const privkey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
-        // const privkey = "0x2cd9855d17e01ce041953829398af7e48b24ece04ff9d0e183414de54dc52285"
+        // const privkey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+        const privkey = "0x2cd9855d17e01ce041953829398af7e48b24ece04ff9d0e183414de54dc52285"
         streamrEnvDeployer = new StreamrEnvDeployer(privkey, chainURL)
-        await streamrEnvDeployer.deployEverything()
+        await streamrEnvDeployer.deployEvironment()
         const { contracts } = streamrEnvDeployer
         config = { contracts: streamrEnvDeployer.addresses } as unknown as Chain
 

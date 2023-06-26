@@ -62,7 +62,7 @@ export async function deployOperatorContract(
 export async function createWalletAndDeployOperator(provider: Provider, config: Chain, theGraphUrl: string, 
     fetch: (url: RequestInfo, init?: RequestInit) => Promise<Response>): 
     Promise<{ operatorWallet: Wallet, operatorContract: Operator, operatorConfig: OperatorServiceConfig }> {
-    const operatorWallet = await generateWalletWithGasAndTokens(config, provider)
+    const operatorWallet = await generateWalletWithGasAndTokens(provider, config)
 
     const operatorContract = await deployOperatorContract(config, operatorWallet)
     const operatorConfig = {
