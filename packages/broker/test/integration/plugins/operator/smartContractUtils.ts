@@ -8,7 +8,7 @@ import { deploySponsorship as _deploySponsorship } from './deploySponsorshipCont
 import { deployOperatorContract as _deployOperatorContract } from './deployOperatorContract'
 import { Chains } from '@streamr/config'
 
-const ADMIN_WALLET_PK = '0x4059de411f15511a85ce332e7a428f36492ab4e87c7830099dadbf130f1896ae'
+export const ADMIN_WALLET_PK = '0x4059de411f15511a85ce332e7a428f36492ab4e87c7830099dadbf130f1896ae'
 const CONFIG = Chains.load()["dev1"]
 
 export function getProvider(): Provider {
