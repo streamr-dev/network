@@ -12,6 +12,7 @@ describe('NetworkStack', () => {
 
     let stack1: NetworkStack
     let stack2: NetworkStack
+    const streamPartId = StreamPartIDUtils.parse('stream1#0')
 
     const epDescriptor: PeerDescriptor = {
         kademliaId: PeerID.fromString('entrypoint').value,
@@ -40,7 +41,9 @@ describe('NetworkStack', () => {
         })
 
         await stack1.start()
+        stack1.getStreamrNode()!.setStreamEntryPoints(streamPartId, [epDescriptor])
         await stack2.start()
+        stack2.getStreamrNode()!.setStreamEntryPoints(streamPartId, [epDescriptor])
     })
 
     afterEach(async () => {
@@ -52,8 +55,7 @@ describe('NetworkStack', () => {
 
     it('Can use NetworkNode pub/sub via NetworkStack', async () => {
         let receivedMessages = 0
-        const streamPartId = StreamPartIDUtils.parse('stream1#0')
-        await stack1.getStreamrNode().waitForJoinAndSubscribe(streamPartId, [epDescriptor])
+        await stack1.getStreamrNode().waitForJoinAndSubscribe(streamPartId)
         stack1.getStreamrNode().on('newMessage', () => {
             receivedMessages += 1
         })
@@ -65,7 +67,7 @@ describe('NetworkStack', () => {
             toStreamID(streamPartId),
             PeerID.fromString('network-stack').toKey()
         )
-        await stack2.getStreamrNode().waitForJoinAndPublish(streamPartId, [epDescriptor], msg)
+        await stack2.getStreamrNode().waitForJoinAndPublish(streamPartId, msg)
         await waitForCondition(() => receivedMessages === 1)
     })
 

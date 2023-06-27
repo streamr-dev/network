@@ -34,7 +34,7 @@ async function startNetworkNodeAndListenForAtLeastOneMessage(streamId: StreamID)
 
     try {
         await networkNode.start()
-        networkNode.subscribe(toStreamPartID(streamId, 0), [])
+        networkNode.subscribe(toStreamPartID(streamId, 0))
         const messages: unknown[] = []
         networkNode.addMessageListener((msg) => {
             messages.push(msg.getContent())

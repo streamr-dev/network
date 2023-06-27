@@ -52,12 +52,6 @@ export interface ExtraSubscribeOptions {
      * and decryption _disabled_.
      */
     raw?: boolean
-
-    /**
-     * Configure known entry points to the stream 
-     * (e.g. for private streams, or if you want to avoid DHT lookups).
-     */
-    entryPoints?: JsonPeerDescriptor[]
 }
 
 /**
@@ -566,7 +560,6 @@ export class StreamrClient {
         return this.node.getEntryPoints()
     }
 
-    // eslint-disable-next-line class-methods-use-this
     async setProxies(
         streamDefinition: StreamDefinition,
         nodeDescriptors: JsonPeerDescriptor[],
@@ -575,6 +568,15 @@ export class StreamrClient {
     ): Promise<void> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         await this.node.setProxies(streamPartId, nodeDescriptors, direction, connectionCount)
+    }
+
+    /**
+     * Used to set known entry points for a stream. If known are not set they 
+     * will be automatically discovered from the Streamr Network.
+    */
+    async setStreamEntryPoints(streamDefinition: StreamDefinition, nodeDescriptors: JsonPeerDescriptor[]): Promise<void> {
+        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
+        await this.node.setStreamEntryPoints(streamPartId, nodeDescriptors)
     }
 
     // --------------------------------------------------------------------------------------------
