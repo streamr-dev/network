@@ -1,4 +1,4 @@
-import { TestToken, Operator, Sponsorship, tokenABI } from '@streamr/network-contracts'
+import { IERC677, Operator, Sponsorship, tokenABI } from '@streamr/network-contracts'
 import { Contract } from '@ethersproject/contracts'
 import { Provider, JsonRpcProvider } from '@ethersproject/providers'
 import { Wallet } from 'ethers'
@@ -15,8 +15,8 @@ export function getProvider(): Provider {
     return new JsonRpcProvider(CONFIG.rpcEndpoints[0].url)
 }
 
-export function getTokenContract(): TestToken {
-    return new Contract(CONFIG.contracts.LINK, tokenABI) as unknown as TestToken
+export function getTokenContract(): IERC677 {
+    return new Contract(CONFIG.contracts.LINK, tokenABI) as unknown as IERC677
 }
 
 export async function generateWalletWithGasAndTokens(provider: Provider): Promise<Wallet> {
