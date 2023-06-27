@@ -2,8 +2,7 @@ import { Provider } from "@ethersproject/providers"
 import { Chains } from "@streamr/config"
 import { Wallet } from "@ethersproject/wallet"
 import { parseEther } from "@ethersproject/units"
-import { Logger, wait, waitForCondition } from '@streamr/utils'
-import fetch from "node-fetch"
+import { Logger, toEthereumAddress, wait, waitForCondition } from '@streamr/utils'
 
 import type { IERC677, Operator } from "@streamr/network-contracts"
 
@@ -41,10 +40,9 @@ describe("MaintainOperatorValueService", () => {
         const operatorContract = await deployOperatorContract(operatorWallet)
         logger.debug(`Operator deployed at ${operatorContract.address}`)
         operatorConfig = {
-            operatorContractAddress: operatorContract.address,
+            operatorContractAddress: toEthereumAddress(operatorContract.address),
             provider,
             theGraphUrl,
-            fetch,
             signer: operatorWallet
         }
         return { operatorWallet, operatorContract }
