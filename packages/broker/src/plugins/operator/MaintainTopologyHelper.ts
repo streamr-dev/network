@@ -106,12 +106,12 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
                         operator(id: "${this.operatorContractAddress}") {
                             stakes(where: {id_gt: "${lastId}"}, first: ${pageSize}) {
                                 sponsorship {
-                                  id
-                                  stream {
                                     id
-                                  }
+                                    stream {
+                                        id
+                                    }
                                 }
-                              }
+                            }
                         }
                         _meta {
                             block {
