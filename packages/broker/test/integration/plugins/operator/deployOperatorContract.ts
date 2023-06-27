@@ -9,6 +9,7 @@ import type { Operator, OperatorFactory } from "@streamr/network-contracts"
 import { OperatorServiceConfig } from "../../../../src/plugins/operator/OperatorPlugin"
 import { generateWalletWithGasAndTokens } from "./smartContractUtils"
 import { RequestInfo, RequestInit, Response } from "node-fetch"
+import { toEthereumAddress } from "@streamr/utils"
 
 const { parseEther } = utils
 
@@ -18,8 +19,6 @@ const { parseEther } = utils
  */
 export async function deployOperatorContract(
     chainConfig: Chain, deployer: Wallet, {
-        minOperatorStakePercent = 0,
-        operatorSharePercent = 0,
         operatorMetadata = "{}",
     } = {}, poolTokenName = `Pool-${Date.now()}`): Promise<Operator> {
 
@@ -66,7 +65,7 @@ export async function createWalletAndDeployOperator(provider: Provider, config: 
 
     const operatorContract = await deployOperatorContract(config, operatorWallet)
     const operatorConfig = {
-        operatorContractAddress: operatorContract.address,
+        operatorContractAddress: toEthereumAddress(operatorContract.address),
         signer: operatorWallet,
         provider,
         theGraphUrl,

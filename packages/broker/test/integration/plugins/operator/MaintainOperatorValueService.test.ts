@@ -4,7 +4,7 @@ import { Wallet } from "@ethersproject/wallet"
 import { parseEther } from "@ethersproject/units"
 import { Logger, toEthereumAddress, wait, waitForCondition } from '@streamr/utils'
 
-import type { IERC677, Operator } from "@streamr/network-contracts"
+import type { TestToken, Operator } from "@streamr/network-contracts"
 
 import { tokenABI } from "@streamr/network-contracts"
 import { Contract } from "@ethersproject/contracts"
@@ -27,7 +27,7 @@ describe("MaintainOperatorValueService", () => {
     let provider: Provider
     let operatorWallet: Wallet
     let operatorContract: Operator
-    let token: IERC677
+    let token: TestToken
     let adminWallet: Wallet
     let streamId1: string
     let streamId2: string
@@ -63,7 +63,7 @@ describe("MaintainOperatorValueService", () => {
 
         adminWallet = new Wallet(ADMIN_WALLET_PK, provider)
 
-        token = new Contract(config.contracts.LINK, tokenABI, adminWallet) as unknown as IERC677
+        token = new Contract(config.contracts.LINK, tokenABI, adminWallet) as unknown as TestToken
         const client = new StreamrClient({
             ...CONFIG_TEST,
             auth: {
