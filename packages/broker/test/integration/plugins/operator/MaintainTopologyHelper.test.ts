@@ -3,18 +3,18 @@ import { MaintainTopologyHelper } from '../../../../src/plugins/operator/Maintai
 import { Chains } from "@streamr/config"
 import { Wallet } from "@ethersproject/wallet"
 import { parseEther } from "@ethersproject/units"
-import { Logger, waitForCondition } from '@streamr/utils'
-import fetch from "node-fetch"
+import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
 
-import type { TestToken, Operator } from "@streamr/network-contracts"
+import type { IERC677, Operator } from "@streamr/network-contracts"
 import type { StreamRegistry } from "@streamr/network-contracts"
 
 import { tokenABI } from "@streamr/network-contracts"
 import { streamRegistryABI } from "@streamr/network-contracts"
 import { Contract } from "@ethersproject/contracts"
 
-import { createWalletAndDeployOperator } from "./deployOperatorContract"
+import { deployOperatorContract } from "./deployOperatorContract"
 import { deploySponsorship } from "./deploySponsorshipContract"
+import { generateWalletWithGasAndTokens } from "./smartContractUtils"
 import { OperatorServiceConfig } from "../../../../src/plugins/operator/OperatorPlugin"
 
 const config = Chains.load()["dev1"]

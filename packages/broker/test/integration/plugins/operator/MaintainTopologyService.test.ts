@@ -1,6 +1,5 @@
 import { MaintainTopologyService } from '../../../../src/plugins/operator/MaintainTopologyService'
-import fetch from 'node-fetch'
-import { waitForCondition } from '@streamr/utils'
+import { toEthereumAddress, waitForCondition } from '@streamr/utils'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { parseEther } from '@ethersproject/units'
 import StreamrClient, { CONFIG_TEST, Stream } from 'streamr-client'
@@ -56,12 +55,11 @@ describe('MaintainTopologyService', () => {
         const serviceConfig = {
             provider,
             signer: operatorWallet,
-            operatorContractAddress: operatorContract.address,
+            operatorContractAddress: toEthereumAddress(operatorContract.address),
             theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`,
-            fetch: fetch
         }
 
-        client = new StreamrClient({
+        const client = new StreamrClient({
             ...CONFIG_TEST
         })
         service = new MaintainTopologyService(client, new MaintainTopologyHelper(

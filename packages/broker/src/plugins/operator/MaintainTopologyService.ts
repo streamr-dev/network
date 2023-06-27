@@ -1,25 +1,16 @@
 import { Logger, Multimap } from '@streamr/utils'
 import { MaintainTopologyHelper } from './MaintainTopologyHelper'
 import StreamrClient, { Stream, Subscription } from 'streamr-client'
-import { StreamID, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
-import { SetMembershipSynchronizer } from '../storage/SetMembershipSynchronizer'
+import { StreamID, StreamPartIDUtils } from '@streamr/protocol'
 import pLimit from 'p-limit'
 
-function toStreamIDSafe(input: string): StreamID | undefined {
-    try {
-        return toStreamID(input)
-    } catch {
-        return undefined
-    }
-}
+const logger = new Logger(module)
 
 export class MaintainTopologyService {
     private readonly streamrClient: StreamrClient
     private readonly maintainTopologyHelper: MaintainTopologyHelper
     private readonly subscriptions = new Multimap<StreamID, Subscription>()
-    private readonly synchronizer = new SetMembershipSynchronizer<StreamID>()
     private readonly concurrencyLimit = pLimit(1)
-    private readonly logger = new Logger(module)
 
     constructor(streamrClient: StreamrClient, maintainTopologyHelper: MaintainTopologyHelper) {
         this.streamrClient = streamrClient
@@ -27,23 +18,21 @@ export class MaintainTopologyService {
     }
 
     async start(): Promise<void> {
-        this.logger.info('Starting')
         this.maintainTopologyHelper.on('addStakedStream', this.onAddStakedStreams)
         this.maintainTopologyHelper.on('removeStakedStream', this.onRemoveStakedStream)
         await this.maintainTopologyHelper.start()
-        this.logger.info('Started')
+        logger.info('Started')
     }
 
     async stop(): Promise<void> {
         this.maintainTopologyHelper.stop()
-        this.logger.info('Stopped')
     }
 
-    private onAddStakedStreams = async (streamIDs: string[]) => {
-        streamIDs.map(this.parseStreamIdWrapper(this.addStream.bind(this)))
+    private onAddStakedStreams = (streamIDs: StreamID[]) => {
+        streamIDs.map(this.concurrencyLimiter(this.addStream.bind(this)))
     }
 
-    private onRemoveStakedStream = this.parseStreamIdWrapper(async (streamId: StreamID) => {
+    private onRemoveStakedStream = this.concurrencyLimiter(async (streamId: StreamID) => {
         const subscriptions = this.subscriptions.get(streamId)
         this.subscriptions.removeAll(streamId, subscriptions)
         await Promise.all(subscriptions.map((sub) => sub.unsubscribe())) // TODO: rejects?
@@ -54,7 +43,7 @@ export class MaintainTopologyService {
         try {
             stream = await this.streamrClient.getStream(streamId)
         } catch (err) {
-            this.logger.warn('Ignore non-existing stream', { streamId, reason: err?.message })
+            logger.warn('Ignore non-existing stream', { streamId, reason: err?.message })
             return
         }
         for (const streamPart of stream.getStreamParts()) {
@@ -69,16 +58,13 @@ export class MaintainTopologyService {
         }
     }
 
-    private parseStreamIdWrapper(
+    private concurrencyLimiter(
         fn: (streamId: StreamID) => Promise<void>
-    ): (streamIdAsStr: string) => void {
-        return (streamIdAsStr: string) => {
-            const streamId = toStreamIDSafe(streamIdAsStr)
-            if (streamId !== undefined) {
-                this.concurrencyLimit(() => fn(streamId))
-            } else {
-                this.logger.error('Encountered invalid stream id', { streamIdAsStr })
-            }
+    ): (streamId: StreamID) => void {
+        return (streamId) => {
+            this.concurrencyLimit(() => fn(streamId)).catch((err) => {
+                logger.warn('Encountered error while processing event', { err })
+            })
         }
     }
 }

@@ -1,15 +1,15 @@
-import { MessageID, StreamMessage, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
+import { MessageID, StreamID, StreamMessage, StreamPartID, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { collect } from '@streamr/utils'
+import { EthereumAddress, collect } from '@streamr/utils'
 import range from 'lodash/range'
 import without from 'lodash/without'
-import { PushPipeline } from './../../src/utils/PushPipeline'
 import { OrderMessages } from './../../src/subscribe/OrderMessages'
-import { Resends } from './../../src/subscribe/Resends'
+import { ResendOptions, Resends } from './../../src/subscribe/Resends'
 import { fromArray } from './../../src/utils/GeneratorUtils'
+import { PushPipeline } from './../../src/utils/PushPipeline'
 import { mockLoggerFactory } from './../test-utils/utils'
 
-const MESSAGE_COUNT = 5
+const MESSAGE_COUNT = 7
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
 const PUBLISHER_ID = randomEthereumAddress()
 const MSG_CHAIN_ID = 'mock-msg-chain-id'
@@ -22,13 +22,13 @@ const CONFIG = {
     gapFillTimeout: 50
 }
 
-const createTransform = (resends: Pick<Resends, 'resend'>, config = CONFIG) => {
+const createOrderMessages = (resends: Pick<Resends, 'resend'>, config = CONFIG) => {
     return new OrderMessages(
         config as any,
         resends as any,
         STREAM_PART_ID,
         mockLoggerFactory()
-    ).transform()
+    )
 }
 
 const createMockMessages = async (): Promise<StreamMessage[]> => {
@@ -58,7 +58,7 @@ describe('OrderMessages', () => {
 
     it('no gaps', async () => {
         const msgs = await createMockMessages()
-        const transform = createTransform(undefined as any)
+        const transform = createOrderMessages(undefined as any).transform()
         const output = transform(fromArray(msgs))
         expect(await collect(output)).toEqual(msgs)
     })
@@ -69,7 +69,7 @@ describe('OrderMessages', () => {
         const resends = {
             resend: jest.fn().mockResolvedValue(createMessageStream(...missing))
         }
-        const transform = createTransform(resends)
+        const transform = createOrderMessages(resends).transform()
         const output = transform(fromArray(without(msgs, ...missing)))
         expect(await collect(output)).toEqual(msgs)
         expect(resends.resend).toBeCalledWith(
@@ -87,7 +87,8 @@ describe('OrderMessages', () => {
                 msgChainId: MSG_CHAIN_ID,
                 raw: true
             },
-            undefined
+            undefined,
+            expect.anything()
         )
     })
 
@@ -97,7 +98,7 @@ describe('OrderMessages', () => {
         const resends = {
             resend: jest.fn().mockResolvedValue(createMessageStream(...missing))
         }
-        const transform = createTransform(resends)
+        const transform = createOrderMessages(resends).transform()
         const output = transform(fromArray(without(msgs, ...missing)))
         expect(await collect(output)).toEqual(msgs)
         expect(resends.resend).toBeCalledWith(
@@ -115,7 +116,8 @@ describe('OrderMessages', () => {
                 msgChainId: MSG_CHAIN_ID,
                 raw: true
             },
-            undefined
+            undefined,
+            expect.anything()
         )
     })
 
@@ -128,7 +130,7 @@ describe('OrderMessages', () => {
                 .mockResolvedValueOnce(createMessageStream(...missing1))
                 .mockResolvedValueOnce(createMessageStream(...missing2))
         }
-        const transform = createTransform(resends)
+        const transform = createOrderMessages(resends).transform()
         const output = transform(fromArray(without(msgs, ...missing1.concat(missing2))))
         expect(await collect(output)).toEqual(msgs)
         expect(resends.resend).toHaveBeenNthCalledWith(1,
@@ -146,7 +148,8 @@ describe('OrderMessages', () => {
                 msgChainId: MSG_CHAIN_ID,
                 raw: true
             },
-            undefined
+            undefined,
+            expect.anything()
         )
         expect(resends.resend).toHaveBeenNthCalledWith(2,
             STREAM_PART_ID,
@@ -163,7 +166,8 @@ describe('OrderMessages', () => {
                 msgChainId: MSG_CHAIN_ID,
                 raw: true
             },
-            undefined
+            undefined,
+            expect.anything()
         )
     })
 
@@ -173,7 +177,7 @@ describe('OrderMessages', () => {
         const resends = {
             resend: jest.fn().mockImplementation(() => createMessageStream())
         }
-        const transform = createTransform(resends)
+        const transform = createOrderMessages(resends).transform()
         const output = transform(fromArray(without(msgs, ...missing)))
         expect(await collect(output)).toEqual(without(msgs, ...missing))
         expect(resends.resend).toBeCalledTimes(CONFIG.maxGapRequests)
@@ -185,11 +189,57 @@ describe('OrderMessages', () => {
         const resends = {
             resend: jest.fn()
         }
-        const transform = createTransform(resends, {
+        const transform = createOrderMessages(resends, {
             orderMessages: false
-        } as any)
+        } as any).transform()
         const output = transform(fromArray(without(msgs, ...missing)))
         expect(await collect(output)).toEqual(without(msgs, ...missing))
         expect(resends.resend).toBeCalledTimes(0)
+    })
+
+    it('gap fill error', async () => {
+        const msgs = await createMockMessages()
+        const missing1 = msgs.filter((m) => m.getTimestamp() === 2000)
+        const missing2 = msgs.filter((m) => m.getTimestamp() === 4000)
+        const missing3 = msgs.filter((m) => m.getTimestamp() === 6000)
+        const resends = {
+            resend: jest.fn()
+                .mockResolvedValueOnce(createMessageStream(...missing1))
+                // 5 error responses (CONFIG.maxGapRequests)
+                .mockRejectedValueOnce(new Error('mock-error'))
+                .mockRejectedValueOnce(new Error('mock-error'))
+                .mockRejectedValueOnce(new Error('mock-error'))
+                .mockRejectedValueOnce(new Error('mock-error'))
+                .mockRejectedValueOnce(new Error('mock-error'))
+                .mockResolvedValueOnce(createMessageStream(...missing3))
+        }
+        const transform = createOrderMessages(resends).transform()
+        const output = transform(fromArray(without(msgs, ...missing1.concat(missing2).concat(missing3))))
+        expect(await collect(output)).toEqual(without(msgs, ...missing2))
+        expect(resends.resend).toBeCalledTimes(2 + CONFIG.maxGapRequests)
+    })
+
+    it('aborts resends when stopped', async () => {
+        const msgs = await createMockMessages()
+        const missing = msgs.filter((m) => m.getTimestamp() === 3000)
+        let orderedMessages: OrderMessages | undefined = undefined
+        let resendAborted = false
+        const resends = {
+            resend: jest.fn().mockImplementation((
+                _streamPartId: StreamPartID,
+                _options: ResendOptions & { raw?: boolean },
+                _getStorageNodes?: (streamId: StreamID) => Promise<EthereumAddress[]>,
+                abortSignal?: AbortSignal
+            ) => {
+                abortSignal!.addEventListener('abort', () => resendAborted = true)
+                orderedMessages!.stop()
+                return createMessageStream(...missing)
+            })
+        }
+        orderedMessages = createOrderMessages(resends)
+        const transform = orderedMessages.transform()
+        const output = transform(fromArray(without(msgs, ...missing)))
+        expect(await collect(output)).toEqual(msgs.filter((msg) => msg.getTimestamp() < missing[0].getTimestamp()))
+        expect(resendAborted).toBe(true)
     })
 })
