@@ -8,23 +8,10 @@ import { MarkOptional, DeepRequired } from 'ts-essentials'
 
 import CONFIG_SCHEMA from './config.schema.json'
 import { LogLevel } from '@streamr/utils'
+import { IceServer } from '@streamr/dht'
 
 import type { ConnectionInfo } from '@ethersproject/web'
 import { generateClientId } from './utils/utils'
-import { StreamrNodeOpts } from '@streamr/trackerless-network'
-import { DhtNodeOptions } from '@streamr/dht'
-
-// TODO: stringId when PeerDescriptors are auto-generated
-export interface layer0Config extends Omit<DhtNodeOptions, 'entryPoints' | 'peerDescriptor' | 'stringId'> {
-    entryPoints?: JsonPeerDescriptor[]
-    peerDescriptor?: JsonPeerDescriptor
-    id?: string
-}
-
-export interface NetworkConfig {
-    layer0?: layer0Config
-    networkNode?: StreamrNodeOpts
-}
 
 export interface ProviderAuthConfig {
     ethereum: ExternalProvider
@@ -36,6 +23,102 @@ export interface PrivateKeyAuthConfig {
     // compatible with StreamrClient.generateEthereumAccount(), as we typically
     // use that method to generate the client "auth" option.
     address?: string
+}
+
+export interface Layer0Config {
+
+    /**
+     * The list of entry point PeerDescriptors used to join the Streamr Network.
+     */
+    entryPoints?: JsonPeerDescriptor[]
+
+    /**
+     * The list of STUN and TURN servers to use in ICE protocol when
+     * forming WebRTC connections.
+    */
+    iceServers?: IceServer[]
+
+    /**
+     * When set to true private addresses will not be probed when forming
+     * WebRTC connections.
+     *
+     * Probing private addresses can trigger false-positive incidents in
+     * some port scanning detection systems employed by web hosting
+     * providers. Disallowing private addresses may prevent direct
+     * connections from being formed between nodes using IPv4 addresses
+     * on a local network.
+     *
+     * Details: https://github.com/streamr-dev/network/wiki/WebRTC-private-addresses
+    */
+    webrtcDisallowPrivateAddresses?: boolean
+
+    /**
+     * Defines WebRTC connection establishment timeout in milliseconds.
+     *
+     * When attempting to form a new connection, if not established within
+     * this timeout, the attempt is considered as failed and further
+     * waiting for it will cease.
+    */
+    newWebrtcConnectionTimeout?: number
+
+    /**
+     * Sets the low-water mark used by send buffers of WebRTC connections.
+    */
+    webrtcDatachannelBufferThresholdLow?: number
+
+    /**
+     * Sets the high-water mark used by send buffers of WebRTC connections.
+    */
+    webrtcDatachannelBufferThresholdHigh?: number
+
+    /**
+     * Contains connectivity information to the client's Network Node, used in the network layer.
+     * Can be used in cases where the client's public IP address is known before
+     * starting the network node. If not specified, the PeerDescriptor will be auto-generated.
+    */
+    peerDescriptor?: JsonPeerDescriptor
+
+    /**
+     * The port to use for the client's Network Node WebSocket server.
+     * If not specified, the server will not be started
+     */
+    webSocketPort?: number
+}
+
+export interface NetworkNodeConfig {
+
+    /** The Ethereum address of the node. */
+    id?: string
+
+    /** 
+     * The number of connections the client's network node should have
+     * on each stream partition. 
+    */
+    streamPartitionNumOfNeighbors?: number
+
+    /**
+     * The minimum number of peers in a stream partition that the client's network node
+     * will attempt to propagate messages to
+     */
+    streamPartitionMinPropagationTargets?: number
+
+    /**
+     * The waited time for the first connection to be formed when first connecting 
+     * to the network. If the connection is not formed within this time, the client's
+     * network node will throw an error.
+     */
+    firstConnectionTimeout?: number
+
+    /**
+     * Whether to accept proxy connections. Enabling this option allows
+     * this network node to act as proxy on behalf of other nodes / clients.
+    */
+    acceptProxyConnections?: boolean
+}
+
+export interface NetworkConfig {
+    layer0?: Layer0Config
+    networkNode?: NetworkNodeConfig
 }
 
 export interface JsonPeerDescriptor {

@@ -83,12 +83,11 @@ interface Metrics extends MetricsDefinition {
     publishBytesPerSecond: Metric
 }
 
-export interface StreamrNodeOpts {
+export interface StreamrNodeConfig {
     metricsContext?: MetricsContext
     id?: string
-    layer2NumOfTargetNeighbors?: number
-    layer2MaxNumberOfContact?: number
-    layer2MinPropagationTargets?: number
+    streamPartitionNumOfNeighbors?: number
+    streamPartitionMinPropagationTargets?: number
     nodeName?: string
     firstConnectionTimeout?: number
     acceptProxyConnections?: boolean
@@ -101,13 +100,13 @@ export class StreamrNode extends EventEmitter<Events> {
     private streamEntryPointDiscovery?: StreamEntryPointDiscovery
     private readonly metricsContext: MetricsContext
     private readonly metrics: Metrics
-    public config: StreamrNodeOpts
+    public config: StreamrNodeConfig
     private readonly streams: Map<string, StreamObject>
     protected extraMetadata: Record<string, unknown> = {}
     private started = false
     private destroyed = false
 
-    constructor(config: StreamrNodeOpts) {
+    constructor(config: StreamrNodeConfig) {
         super()
         this.config = config
         this.streams = new Map()
@@ -254,9 +253,8 @@ export class StreamrNode extends EventEmitter<Events> {
             layer1: layer1,
             connectionLocker: this.connectionLocker!,
             ownPeerDescriptor: this.layer0!.getPeerDescriptor(),
-            minPropagationTargets: this.config.layer2MinPropagationTargets,
-            numOfTargetNeighbors: this.config.layer2NumOfTargetNeighbors,
-            maxNumberOfContacts: this.config.layer2MaxNumberOfContact,
+            minPropagationTargets: this.config.streamPartitionMinPropagationTargets,
+            numOfTargetNeighbors: this.config.streamPartitionNumOfNeighbors,
             nodeName: this.config.nodeName,
             acceptProxyConnections: this.config.acceptProxyConnections
         })

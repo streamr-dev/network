@@ -164,15 +164,13 @@
                         "id": {
                             "type": "string"
                         },
-                        "layer2NumOfTargetNeighbors": {
+                        "streamPartitionNumOfTargetNeighbors": {
                             "type": "number",
                             "default": 4
                         },
-                        "layer2MaxNumberOfContact": {
-                            "type": "number"
-                        },
-                        "layer2MinPropagationTargets": {
-                            "type": "number"
+                        "streamPartitionMinPropagationTargets": {
+                            "type": "number",
+                            "default": 2
                         },
                         "firstConnectionTimeout": {
                             "type": "number",

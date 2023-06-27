@@ -30,7 +30,8 @@ export {
     PrivateKeyAuthConfig,
     STREAMR_STORAGE_NODE_GERMANY,
     NetworkConfig,
-    layer0Config,
+    Layer0Config,
+    NetworkNodeConfig,
     JsonPeerDescriptor,
     ConnectivityMethod
 } from './Config'
@@ -62,7 +63,6 @@ export {
     StreamMessageType
 } from '@streamr/protocol'
 
-export type { StreamrNodeOpts } from '@streamr/trackerless-network'
 export type { IceServer, PeerDescriptor } from '@streamr/dht' 
 export type { ConnectionInfo } from '@ethersproject/web'
 export type { ExternalProvider } from '@ethersproject/providers'
