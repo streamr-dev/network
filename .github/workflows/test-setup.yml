@@ -17,7 +17,7 @@ on:
         required: false
         type: boolean
         default: false
-      run-entry-poitns:
+      run-entry-point:
         required: false
         type: boolean
         default: false
@@ -35,7 +35,7 @@ jobs:
         with:
           services-to-start: ${{ inputs.docker-services }}
       - name: run entry point
-        if: ${{ inputs.run-entry-points }}
+        if: ${{ inputs.run-entry-point }}
         uses: ./.github/workflows/reusable/run-entry-points
       - name: run brokers
         if: ${{ inputs.run-brokers }}
