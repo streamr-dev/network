@@ -133,8 +133,8 @@ export class NetworkNodeFacade {
         return {
             ...jsonPeerDescriptor,
             websocket: jsonPeerDescriptor.websocket,
-            kademliaId: PeerID.fromString(jsonPeerDescriptor!.kademliaId).value,
-            nodeName: jsonPeerDescriptor!.kademliaId,
+            kademliaId: PeerID.fromString(jsonPeerDescriptor!.id).value,
+            nodeName: jsonPeerDescriptor!.id,
         }
     }
 

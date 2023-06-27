@@ -19,7 +19,7 @@ const ENCRYPTED_MESSSAGE_FORMAT = /^[0-9A-Fa-f]+$/
 async function startNetworkNodeAndListenForAtLeastOneMessage(streamId: StreamID): Promise<unknown[]> {
     const entryPoints = CONFIG_TEST.network!.layer0!.entryPoints!.map((ep) => {
         return {
-            kademliaId: PeerID.fromString(ep.kademliaId).value,
+            kademliaId: PeerID.fromString(ep.id).value,
             type: ep.type,
             websocket: ep.websocket
         }

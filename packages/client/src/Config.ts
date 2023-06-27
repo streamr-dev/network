@@ -18,7 +18,7 @@ import { DhtNodeOptions } from '@streamr/dht'
 export interface layer0Config extends Omit<DhtNodeOptions, 'entryPoints' | 'peerDescriptor' | 'stringId'> {
     entryPoints?: JsonPeerDescriptor[]
     peerDescriptor?: JsonPeerDescriptor
-    stringKademliaId?: string
+    id?: string
 }
 
 export interface NetworkConfig {
@@ -39,7 +39,7 @@ export interface PrivateKeyAuthConfig {
 }
 
 export interface JsonPeerDescriptor {
-    kademliaId: string
+    id: string
     type: number
     websocket?: ConnectivityMethod
     openInternet?: boolean
