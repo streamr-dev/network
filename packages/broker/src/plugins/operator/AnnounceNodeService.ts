@@ -29,7 +29,7 @@ export class AnnounceNodeService {
                 msgType: 'heartbeat',
                 nodeId
             }).catch((err) => {
-                logger.debug('Unable to publish to coordination stream', {
+                logger.warn('Unable to publish to coordination stream', {
                     streamId: this.coordinationStream,
                     reason: err?.message
                 })
@@ -37,9 +37,8 @@ export class AnnounceNodeService {
         }, this.intervalInMs, this.abortController.signal)
     }
 
-    // eslint-disable-next-line class-methods-use-this
     async stop(): Promise<void> {
+        logger.info('Stop')
         this.abortController.abort()
-        logger.info('stopped')
     }
 }

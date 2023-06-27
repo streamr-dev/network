@@ -1,5 +1,5 @@
 import { MaintainTopologyService } from '../../../../src/plugins/operator/MaintainTopologyService'
-import { FakeOperatorClient as FakeMaintainTopologyHelper } from '../../../../src/plugins/operator/FakeOperatorClient'
+import { FakeMaintainTopologyHelper as FakeMaintainTopologyHelper } from './FakeMaintainTopologyHelper'
 import { StreamID, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { mock, MockProxy } from 'jest-mock-extended'
 import StreamrClient, { Subscription } from 'streamr-client'
