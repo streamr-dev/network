@@ -1,3 +1,4 @@
+import { NodeType } from '@streamr/dht'
 import { toEthereumAddress } from '@streamr/utils'
 import { StreamrClientConfig } from './Config'
 import { MIN_KEY_LENGTH } from './encryption/RSAKeyPair'
@@ -23,7 +24,7 @@ export const CONFIG_TEST: StreamrClientConfig = {
         layer0: {
             entryPoints: [{
                 id: 'entryPointBroker',
-                type: 0,
+                type: NodeType.NODEJS,
                 websocket: {
                     ip: '127.0.0.1',
                     port: 40401
