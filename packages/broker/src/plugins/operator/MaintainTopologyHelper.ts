@@ -94,8 +94,8 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
     }
 
     async getStreamId(sponsorshipAddress: string): Promise<StreamID> {
-        const bounty = new Contract(sponsorshipAddress, sponsorshipABI, this.operatorContract.provider as Provider) as unknown as Sponsorship
-        return toStreamID(await bounty.streamId())
+        const sponsorship = new Contract(sponsorshipAddress, sponsorshipABI, this.operatorContract.provider as Provider) as unknown as Sponsorship
+        return toStreamID(await sponsorship.streamId())
     }
 
     private async pullStakedStreams(requiredBlockNumber: number): Promise<StreamID[]> {
