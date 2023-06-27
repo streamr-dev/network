@@ -3,7 +3,7 @@
 
 const lightCodeTheme = require("prism-react-renderer/themes/github")
 const darkCodeTheme = require("prism-react-renderer/themes/dracula")
-const path = require('path')
+const path = require("path")
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -48,13 +48,13 @@ const config = {
                 sidebar: {
                     categoryLabel: "API reference",
                     indexLabel: " ",
-                    position: 5
+                    position: 5,
                 },
                 out: "usage/streamr-js-client/api",
                 tsconfig: "../packages/client/tsconfig.json",
             },
         ],
-        path.resolve('plugins', 'refine-docs'),
+        path.resolve("plugins", "refine-docs"),
     ],
 
     presets: [
@@ -66,8 +66,11 @@ const config = {
                     routeBasePath: "/",
                     sidebarPath: require.resolve("./sidebars.js"),
                     editUrl:
-                        "https://github.com/streamr-dev/documentation/blob/main",
-                    exclude: ['**usage/streamr-js-client/api/modules.mdx', '**usage/streamr-js-client/api/modules.md']
+                        "https://github.com/streamr-dev/network/tree/main/docs",
+                    exclude: [
+                        "**usage/streamr-js-client/api/modules.mdx",
+                        "**usage/streamr-js-client/api/modules.md",
+                    ],
                 },
                 blog: {
                     showReadingTime: true,
@@ -108,6 +111,18 @@ const config = {
                 //     position: 'right',
                 //   },
                 // ],
+            },
+            algolia: {
+                // The application ID provided by Algolia
+                appId: "NOLYN2Z67B",
+
+                // Public API key: it is safe to commit it
+                apiKey: "f9fcf2cbeb33f2edee5ee580110d8045",
+
+                indexName: "streamr",
+
+                // Optional: see doc section below
+                contextualSearch: true,
             },
             footer: {
                 links: [
