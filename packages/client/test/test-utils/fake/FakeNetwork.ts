@@ -41,18 +41,8 @@ export class FakeNetwork {
 
     send(msg: StreamMessage, sender: NodeId, isRecipient: (networkNode: FakeNetworkNode) => boolean): void {
         const recipients = this.getNodes().filter((n) => isRecipient(n))
-        /*
-        * This serialization+serialization is needed in test/integration/Encryption.ts
-        * as it expects that the EncryptedGroupKey format changes in the process.
-        * TODO: should we change the serialization or the test? Or keep this hack?
-        */
-        const serialized = msg.serialize()
         recipients.forEach((n) => {
-            n.messageListeners.forEach((listener) => {
-                // return a clone as client mutates message when it decrypts messages
-                const deserialized = StreamMessage.deserialize(serialized)
-                listener(deserialized)
-            })
+            n.messageListeners.forEach((listener) => listener(msg))
         })
         this.sends.push({
             message: msg,

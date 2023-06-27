@@ -6,9 +6,10 @@ import { createPrivateKeyAuthentication } from '../../src/Authentication'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { PublishMetadata } from '../../src/publish/Publisher'
 import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
-import { MessageFactory } from '../../src/publish/MessageFactory'
+import { MessageFactory, MessageFactoryOptions } from '../../src/publish/MessageFactory'
 import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
 import { createGroupKeyQueue, createStreamRegistryCached } from '../test-utils/utils'
+import { merge } from '@streamr/utils'
 
 const WALLET = fastWallet()
 const STREAM_ID = toStreamID('/path', toEthereumAddress(WALLET.address))
@@ -22,27 +23,33 @@ const createMessageFactory = async (opts?: {
     groupKeyQueue?: GroupKeyQueue
 }) => {
     const authentication = createPrivateKeyAuthentication(WALLET.privateKey, undefined as any)
-    return new MessageFactory({
-        streamId: STREAM_ID,
-        authentication,
-        streamRegistry: createStreamRegistryCached({
-            partitionCount: PARTITION_COUNT,
-            isPublicStream: false,
-            isStreamPublisher: true
-        }),
-        groupKeyQueue: await createGroupKeyQueue(authentication, GROUP_KEY),
-        ...opts
-    })
+    return new MessageFactory(
+        merge<MessageFactoryOptions>(
+            {
+                streamId: STREAM_ID,
+                authentication,
+                streamRegistry: createStreamRegistryCached({
+                    partitionCount: PARTITION_COUNT,
+                    isPublicStream: false,
+                    isStreamPublisher: true
+                }),
+                groupKeyQueue: await createGroupKeyQueue(authentication, GROUP_KEY)
+            },
+            opts
+        )
+    )
 }
 
 const createMessage = async (
     opts: Omit<PublishMetadata, 'timestamp'> & { timestamp?: number, explicitPartition?: number },
     messageFactory: MessageFactory
 ): Promise<StreamMessage> => {
-    return messageFactory.createMessage(CONTENT, {
-        timestamp: TIMESTAMP,
-        ...opts
-    }, opts.explicitPartition)
+    return messageFactory.createMessage(CONTENT, merge(
+        {
+            timestamp: TIMESTAMP
+        },
+        opts
+    ), opts.explicitPartition)
 }
 
 describe('MessageFactory', () => {
@@ -148,7 +155,7 @@ describe('MessageFactory', () => {
             const messageFactory = await createMessageFactory()
             const msg1 = await createMessage({}, messageFactory)
             const msg2 = await createMessage({}, messageFactory)
-            expect(msg1!.messageId.streamPartition).toBe(msg2!.messageId.streamPartition)
+            expect(msg1.messageId.streamPartition).toBe(msg2.messageId.streamPartition)
         })
 
         it('same partition key maps to same partition', async () => {
@@ -156,21 +163,21 @@ describe('MessageFactory', () => {
             const partitionKey = `mock-partition-key-${random(Number.MAX_SAFE_INTEGER)}`
             const msg1 = await createMessage({ partitionKey }, messageFactory)
             const msg2 = await createMessage({ partitionKey }, messageFactory)
-            expect(msg1!.messageId.streamPartition).toBe(msg2!.messageId.streamPartition)
+            expect(msg1.messageId.streamPartition).toBe(msg2.messageId.streamPartition)
         })
 
         it('numeric partition key maps to the partition if in range', async () => {
             const messageFactory = await createMessageFactory()
             const partitionKey = 10
             const msg = await createMessage({ partitionKey }, messageFactory)
-            expect(msg!.messageId.streamPartition).toBe(partitionKey)
+            expect(msg.messageId.streamPartition).toBe(partitionKey)
         })
 
         it('numeric partition key maps to partition range', async () => {
             const messageFactory = await createMessageFactory()
             const partitionOffset = 20
             const msg = await createMessage({ partitionKey: PARTITION_COUNT + partitionOffset }, messageFactory)
-            expect(msg!.messageId.streamPartition).toBe(partitionOffset)
+            expect(msg.messageId.streamPartition).toBe(partitionOffset)
         })
 
         it('selected random partition in range when partition count decreases', async () => {

@@ -3,12 +3,12 @@ import 'reflect-metadata'
 import { Wallet } from '@ethersproject/wallet'
 import { StreamMessage } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
+import { collect } from '@streamr/utils'
 import range from 'lodash/range'
 import { Message } from '../../src/Message'
-import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
-import { collect } from '../../src/utils/iterators'
+import { StreamPermission } from '../../src/permission'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { createMockMessage, createTestStream } from '../test-utils/utils'
 
@@ -105,7 +105,7 @@ describe('unsubscribe', () => {
     })
 
     it('before realtime messages iterated', async () => {
-        const storageNode = environment.startStorageNode()
+        const storageNode = await environment.startStorageNode()
         await client.addStreamToStorageNode(stream.id, storageNode.id)
         const historicalMessages: StreamMessage[] = []
         for (const _ of range(2)) {

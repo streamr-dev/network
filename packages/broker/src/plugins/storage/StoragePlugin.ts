@@ -43,7 +43,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
     async start(): Promise<void> {
         const clusterId = this.pluginConfig.cluster.clusterAddress ?? await this.streamrClient.getAddress()
         const assignmentStream = await this.streamrClient.getStream(formStorageNodeAssignmentStreamId(clusterId))
-        const metricsContext = (await (this.streamrClient!.getNode())).getMetricsContext()
+        const metricsContext = (await (this.streamrClient.getNode())).getMetricsContext()
         this.cassandra = await this.startCassandraStorage(metricsContext)
         this.storageConfig = await this.startStorageConfig(clusterId, assignmentStream)
         this.messageListener = (msg) => {
@@ -64,10 +64,8 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
         this.storageConfig!.getStreamParts().forEach((streamPart) => {
             node.unsubscribe(streamPart)
         })
-        await Promise.all([
-            this.cassandra!.close(),
-            this.storageConfig!.destroy()
-        ])
+        await this.cassandra!.close()
+        this.storageConfig!.destroy()
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -109,9 +107,14 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
                         await assignmentStream.publish({
                             streamPart
                         })
-                        logger.debug('published message to assignment stream %s', assignmentStream.id)
-                    } catch (e) {
-                        logger.warn('failed to publish to assignment stream %s, reason: %s', assignmentStream.id, e)
+                        logger.debug('Published message to assignment stream', {
+                            assignmentStreamId: assignmentStream.id
+                        })
+                    } catch (err) {
+                        logger.warn('Failed to publish to assignment stream', {
+                            assignmentStreamId: assignmentStream.id,
+                            err
+                        })
                     }
                 },
                 onStreamPartRemoved: (streamPart) => {

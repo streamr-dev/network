@@ -24,6 +24,9 @@ export interface PluginAnswers extends Answers {
     mqttPort?: string
     httpPort?: string
     enableMinerPlugin: boolean
+    wantToSetBeneficiaryAddress?: boolean
+    beneficiaryAddress?: string
+
 }
 
 export interface StorageAnswers extends Answers {
@@ -153,7 +156,41 @@ const createPluginPrompts = (): Array<inquirer.Question | inquirer.ListQuestion 
         default: true
     }
 
-    return [selectApiPluginsPrompt, ...portPrompts, minerPluginPrompt]
+    const wantToSetBeneficiaryAddressPrompt: inquirer.DistinctQuestion = {
+        type: 'confirm',
+        name: 'wantToSetBeneficiaryAddress',
+        // eslint-disable-next-line max-len
+        message: 'It is recommended to set a separate beneficiary address for security reasons. Would you like to set one?',
+        default: false,
+        when: (answers: inquirer.Answers) => {
+            return answers.enableMinerPlugin
+        }
+    }
+
+    const beneficiaryAddressPrompt: inquirer.DistinctQuestion = {
+        type: 'input',
+        name: 'beneficiaryAddress',
+        message: 'Please provide a beneficiary address (public key)',
+        when: (answers: inquirer.Answers) => {
+            return answers.wantToSetBeneficiaryAddress
+        },
+        validate: (input: string): string | boolean => {
+            try {
+                toEthereumAddress(input)
+                return true
+            } catch (e: any) {
+                return 'Invalid Ethereum address provided.'
+            }
+        }
+    }
+
+    return [
+        selectApiPluginsPrompt,
+        ...portPrompts,
+        minerPluginPrompt,
+        wantToSetBeneficiaryAddressPrompt,
+        beneficiaryAddressPrompt
+    ]
 }
 
 export const PROMPTS = {
@@ -201,7 +238,9 @@ export const getConfig = (privateKey: string, pluginsAnswers: PluginAnswers): an
     })
 
     if (pluginsAnswers.enableMinerPlugin) {
-        config.plugins.brubeckMiner = {}
+        config.plugins.brubeckMiner = {
+            beneficiaryAddress: pluginsAnswers.beneficiaryAddress
+        }
     }
 
     return config
@@ -216,7 +255,7 @@ const selectStoragePath = async (): Promise<StorageAnswers> => {
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export const createStorageFile = async (config: any, answers: StorageAnswers): Promise<string> => {
+export const createStorageFile = (config: any, answers: StorageAnswers): string => {
     const dirPath = path.dirname(answers.storagePath)
     const dirExists = existsSync(dirPath)
     if (!dirExists) {
@@ -261,7 +300,7 @@ export const start = async (
         const pluginsAnswers = await getPluginAnswers()
         const config = getConfig(privateKey, pluginsAnswers)
         const storageAnswers = await getStorageAnswers()
-        const storagePath = await createStorageFile(config, storageAnswers)
+        const storagePath = createStorageFile(config, storageAnswers)
         logger.info('Welcome to the Streamr Network')
         const { mnemonic, networkExplorerUrl } = getNodeIdentity(privateKey)
         logger.info(`Your node's generated name is ${mnemonic}.`)
@@ -270,6 +309,6 @@ export const start = async (
         logger.info('You can start the broker now with')
         logger.info(`streamr-broker ${storagePath}`)
     } catch (e: any) {
-        logger.error("Broker Config Wizard encountered an error:\n" + e.message)
+        logger.error(`Broker Config Wizard encountered an error:\n${e.message}`)
     }
 }

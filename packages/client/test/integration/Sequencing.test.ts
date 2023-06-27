@@ -1,18 +1,21 @@
 import 'reflect-metadata'
 
-import { wait, waitForCondition } from '@streamr/utils'
+import { collect, merge, wait, waitForCondition } from '@streamr/utils'
+import { Message } from '../../src/Message'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
-import { collect } from '../../src/utils/iterators'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { getWaitForStorage } from '../test-utils/publish'
 import { createTestStream, uid } from '../test-utils/utils'
-import { Message } from '../../src/Message'
 
-const Msg = (opts?: any) => ({
-    value: uid('msg'),
-    ...opts,
-})
+const Msg = (opts?: any) => {
+    return merge(
+        {
+            value: uid('msg')
+        },
+        opts
+    )
+}
 
 function toSeq(requests: Message[], ts = Date.now()) {
     return requests.map((msg) => {
@@ -25,12 +28,19 @@ function toSeq(requests: Message[], ts = Date.now()) {
 }
 
 describe('Sequencing', () => {
+
     let client: StreamrClient
     let stream: Stream
+    let environment: FakeEnvironment
 
     beforeEach(async () => {
-        client = new FakeEnvironment().createClient()
+        environment = new FakeEnvironment()
+        client = environment.createClient()
         stream = await createTestStream(client, module)
+    })
+
+    afterEach(async () => {
+        await environment.destroy()
     })
 
     it('should sequence in order', async () => {

@@ -17,7 +17,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.5.0
+      - uses: actions/checkout@v3.5.2
       - name: build
         uses: ./.github/workflows/reusable/cached-build
       - run: npm run versions
@@ -35,7 +35,6 @@ jobs:
       package: utils
       command: |
         npm run test
-        sudo apt-get install xvfb
         xvfb-run --auto-servernum npm run test-browser
   protocol:
     needs: build
@@ -49,7 +48,6 @@ jobs:
       package: proto-rpc
       command: |
         npm run test
-        sudo apt-get install xvfb
         xvfb-run --auto-servernum npm run test-browser
   dht:
     needs: build
@@ -58,7 +56,6 @@ jobs:
       package: dht
       command: |
         npm run test
-        sudo apt-get install xvfb
         xvfb-run --auto-servernum npm run test-browser
   network:
     needs: build
@@ -71,7 +68,6 @@ jobs:
     with:
       package: network
       command: |
-        sudo apt-get install xvfb
         xvfb-run --auto-servernum npm run test-browser
   tracker:
     needs: build
@@ -86,12 +82,13 @@ jobs:
       command: |
         npm run test-unit
         npm run test-integration
+        npm run docs
   client-e2e:
     needs: build
     uses: ./.github/workflows/test-setup.yml
     with:
       package: client
-      docker-services: cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph chainlink
+      docker-services: cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph ens-sync-script
       run-brokers-and-trackers: true
       command: npm run test-end-to-end
   broker:
@@ -115,6 +112,13 @@ jobs:
       docker-services: init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph
       run-brokers-and-trackers: true
       command: npm run test-browser
+  cli-tools:
+    needs: build
+    uses: ./.github/workflows/test-setup.yml
+    with:
+      package: cli-tools
+      docker-services: parity-node0 graph-deploy-streamregistry-subgraph broker-node-storage-1
+      command: npm run test
   tracker-docker-image:
     uses: ./.github/workflows/docker-build.yml
     with:

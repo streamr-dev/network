@@ -13,6 +13,7 @@ import { Config } from '../src/config/config'
 import { StreamPartID } from '@streamr/protocol'
 import { EthereumAddress, MetricsContext, toEthereumAddress } from '@streamr/utils'
 import { TEST_CONFIG } from '@streamr/network-node'
+import { merge } from '@streamr/utils'
 
 export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
 
@@ -112,19 +113,23 @@ export const createClient = async (
     privateKey: string,
     clientOptions?: StreamrClientConfig
 ): Promise<StreamrClient> => {
-    const networkOptions = {
-        ...CONFIG_TEST?.network,
-        trackers: [tracker.getConfigRecord()],
-        ...clientOptions?.network
-    }
-    return new StreamrClient({
-        ...CONFIG_TEST,
-        auth: {
-            privateKey
+    const opts = merge(
+        CONFIG_TEST,
+        {
+            auth: {
+                privateKey
+            },
+            network: merge(
+                CONFIG_TEST?.network,
+                { 
+                    trackers: [tracker.getConfigRecord()]
+                },
+                clientOptions?.network
+            )
         },
-        network: networkOptions,
-        ...clientOptions,
-    })
+        clientOptions
+    )
+    return new StreamrClient(opts)
 }
 
 export const getTestName = (module: NodeModule): string => {
@@ -138,7 +143,7 @@ export const createTestStream = async (
     module: NodeModule,
     props?: Partial<StreamMetadata>
 ): Promise<Stream> => {
-    const id = (await streamrClient.getAddress()) + '/test/' + getTestName(module) + '/' + Date.now()
+    const id = `${await streamrClient.getAddress()}/test/${getTestName(module)}/${Date.now()}`
     const stream = await streamrClient.createStream({
         id,
         ...props
@@ -149,12 +154,6 @@ export const createTestStream = async (
 export const getStreamParts = async (broker: Broker): Promise<StreamPartID[]> => {
     const node = await broker.getNode()
     return Array.from(node.getStreamParts())
-}
-
-export async function sleep(ms = 0): Promise<void> {
-    return new Promise((resolve) => {
-        setTimeout(resolve, ms)
-    })
 }
 
 export async function startStorageNode(

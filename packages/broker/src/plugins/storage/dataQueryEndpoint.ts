@@ -72,14 +72,16 @@ const sendSuccess = (data: Readable, format: Format, version: number | undefined
         res,
         (err) => {
             if ((err !== undefined) && (err !== null)) {
-                logger.error(`Pipeline error in DataQueryEndpoints: ${streamId}`, err)
+                logger.error('Encountered error in pipeline', {
+                    streamId,
+                    err
+                })
             }
         }
     )
 }
 
 const sendError = (message: string, res: Response) => {
-    logger.error(message)
     res.status(400).json({
         error: message
     })
@@ -144,7 +146,7 @@ const handleFrom = (
 ) => {
     metrics.resendFromQueriesPerSecond.record(1)
     const fromTimestamp = parseIntIfExists(req.query.fromTimestamp)
-    const fromSequenceNumber = parseIntIfExists(req.query.fromSequenceNumber) || MIN_SEQUENCE_NUMBER_VALUE
+    const fromSequenceNumber = parseIntIfExists(req.query.fromSequenceNumber) ?? MIN_SEQUENCE_NUMBER_VALUE
     const { publisherId } = req.query
     if (fromTimestamp === undefined) {
         sendError('Query parameter "fromTimestamp" required.', res)
@@ -177,8 +179,8 @@ const handleRange = (
     metrics.resendRangeQueriesPerSecond.record(1)
     const fromTimestamp = parseIntIfExists(req.query.fromTimestamp)
     const toTimestamp = parseIntIfExists(req.query.toTimestamp)
-    const fromSequenceNumber = parseIntIfExists(req.query.fromSequenceNumber) || MIN_SEQUENCE_NUMBER_VALUE
-    const toSequenceNumber = parseIntIfExists(req.query.toSequenceNumber) || MAX_SEQUENCE_NUMBER_VALUE
+    const fromSequenceNumber = parseIntIfExists(req.query.fromSequenceNumber) ?? MIN_SEQUENCE_NUMBER_VALUE
+    const toSequenceNumber = parseIntIfExists(req.query.toSequenceNumber) ?? MAX_SEQUENCE_NUMBER_VALUE
     const { publisherId, msgChainId } = req.query
     if (req.query.fromOffset !== undefined || req.query.toOffset !== undefined) {
         sendError('Query parameters "fromOffset" and "toOffset" are no longer supported. Please use "fromTimestamp" and "toTimestamp".', res)

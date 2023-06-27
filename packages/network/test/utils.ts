@@ -14,14 +14,19 @@ import { MetricsContext } from '@streamr/utils'
 import { NegotiatedProtocolVersions } from '../src/connection/NegotiatedProtocolVersions'
 import NodeClientWsEndpoint from '../src/connection/ws/NodeClientWsEndpoint'
 import { NetworkNode } from '../src/logic/NetworkNode'
+import { merge } from '@streamr/utils'
 
 export const createTestNetworkNode = (opts: Partial<NetworkNodeOptions> & Pick<NetworkNodeOptions, 'trackers'>): NetworkNode => {
-    return createNetworkNode({
-        ...TEST_CONFIG,
-        id: uuidv4(),
-        metricsContext: new MetricsContext(),
-        ...opts
-    })
+    return createNetworkNode(
+        merge<NetworkNodeOptions>(
+            TEST_CONFIG,
+            {
+                id: uuidv4(),
+                metricsContext: new MetricsContext()
+            },
+            opts
+        )
+    )
 }
 
 export const createTestWebRtcEndpoint = (
@@ -51,7 +56,7 @@ export const createTestWebRtcEndpoint = (
         TEST_CONFIG.webrtcSendBufferMaxMessageCount,
         webrtcDisallowPrivateAddresses ?? false,
         TEST_CONFIG.webrtcPortRange,
-        TEST_CONFIG.webrtcMaxMessageSize,
+        TEST_CONFIG.webrtcMaxMessageSize
     )
 }
 

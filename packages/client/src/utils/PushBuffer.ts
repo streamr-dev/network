@@ -1,5 +1,4 @@
 import { Gate } from './Gate'
-import * as G from './GeneratorUtils'
 import { StreamrClientError } from '../StreamrClientError'
 
 export const DEFAULT_BUFFER_SIZE = 256
@@ -25,7 +24,6 @@ export type IPushBuffer<InType, OutType = InType> = {
     length: number
     isDone(): boolean
     clear(): void
-    collect(n?: number): Promise<OutType[]>
 } & AsyncGenerator<OutType>
 
 /**
@@ -78,41 +76,6 @@ export class PushBuffer<T> implements IPushBuffer<T> {
         this.updateWriteGate()
         this.readGate.open()
         return this.writeGate.check()
-    }
-
-    map<NewOutType>(fn: G.GeneratorMap<T, NewOutType>): PushBuffer<NewOutType> {
-        const p = new PushBuffer<NewOutType>(this.bufferSize)
-        pull(G.map(this, fn), p)
-        return p
-    }
-
-    forEach(fn: G.GeneratorForEach<T>): PushBuffer<unknown> {
-        const p = new PushBuffer(this.bufferSize)
-        pull(G.forEach(this, fn), p)
-        return p
-    }
-
-    filter(fn: G.GeneratorFilter<T>): PushBuffer<unknown> {
-        const p = new PushBuffer(this.bufferSize)
-        pull(G.filter(this, fn), p)
-        return p
-    }
-
-    reduce<NewOutType>(fn: G.GeneratorReduce<T, NewOutType>, initialValue: NewOutType): PushBuffer<unknown> {
-        const p = new PushBuffer(this.bufferSize)
-        pull(G.reduce(this, fn, initialValue), p)
-        return p
-    }
-
-    /**
-     * Collect n/all messages into an array.
-     */
-    async collect(n?: number): Promise<T[]> {
-        if (this.isIterating) {
-            // @ts-expect-error ts can't do this.constructor properly
-            throw new this.constructor.Error(this, 'Cannot collect if already iterating.')
-        }
-        return G.collect(this, n)
     }
 
     private updateWriteGate(): void {
@@ -243,18 +206,6 @@ export class PushBuffer<T> implements IPushBuffer<T> {
 
     next(): Promise<IteratorResult<T, any>> {
         return this.iterator.next()
-    }
-
-    async pull(src: AsyncGenerator<T>): Promise<void> {
-        try {
-            for await (const v of src) {
-                const ok = await this.push(v)
-                if (!ok || !this.isWritable()) { break }
-            }
-        } catch (err) {
-            // this.endWrite(err)
-        }
-        this.endWrite()
     }
 
     [Symbol.asyncIterator](): this {

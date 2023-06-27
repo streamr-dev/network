@@ -30,21 +30,21 @@ export class StorageEventListener {
         if (event.nodeAddress !== this.clusterId) {
             return
         }
-        logger.info('received StorageNodeAssignmentEvent type=%s: %j', type, event)
+        logger.info('Received StorageNodeAssignmentEvent', { type, event })
         try {
             const stream = await this.streamrClient.getStream(event.streamId)
             this.onEvent(stream, type, event.blockNumber)
-        } catch (e) {
-            logger.warn('chainEventsListener: %s', e)
+        } catch (err) {
+            logger.warn('Encountered error handling StorageNodeAssignmentEvent', { err, event, type })
         }
     }
 
-    async start(): Promise<void> {
+    start(): void {
         this.streamrClient.on('addToStorageNode', this.onAddToStorageNode)
         this.streamrClient.on('removeFromStorageNode', this.onRemoveFromStorageNode)
     }
 
-    async destroy(): Promise<void> {
+    destroy(): void {
         this.streamrClient.off('addToStorageNode', this.onAddToStorageNode)
         this.streamrClient.off('removeFromStorageNode', this.onRemoveFromStorageNode)
     }

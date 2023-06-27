@@ -3,6 +3,12 @@ import { StreamrClientConfig } from 'streamr-client'
 import pkg from '../package.json'
 import { createClient } from './client'
 
+export interface Options {
+    privateKey?: string
+    config?: string
+    dev: boolean
+}
+
 export const createCommand = (): commander.Command => {
     return new Command()
         .version(pkg.version)
@@ -25,11 +31,11 @@ export const createClientCommand = (
     return createCommand()
         .option('--private-key <key>', 'use an Ethereum private key to authenticate')
         .option('--config <file>', 'read connection and authentication settings from a config file')
-        .option('--dev', 'use pre-defined development environment')
+        .option('--dev', 'use pre-defined development environment', false)
         .action(async (...args: any[]) => {
-            const commandLineOptions = args[args.length - 1].opts()
+            const commandOptions = args[args.length - 1].opts()
             try {
-                const client = createClient(commandLineOptions, opts.clientOptionsFactory!(commandLineOptions))
+                const client = createClient(commandOptions, opts.clientOptionsFactory!(commandOptions))
                 try {
                     await action(...[client].concat(args))
                 } finally {

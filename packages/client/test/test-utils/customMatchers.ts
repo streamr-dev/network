@@ -19,7 +19,7 @@ declare global {
     // eslint-disable-next-line @typescript-eslint/no-namespace
     namespace jest {
         interface Matchers<R> {
-            toThrowStreamError(expectedError: PartialStreamrClientError): R
+            toThrowStreamrError(expectedError: PartialStreamrClientError): R
         }
     }
 }
@@ -31,7 +31,7 @@ const formError = (description: string, expected: string, actual: string): Expec
     }
 }
 
-const toThrowStreamError = (
+const toThrowStreamrError = (
     actual: unknown, // should be (() => StreamrClientError) | StreamrClientError
     expectedError: PartialStreamrClientError
 ): ExpectationResult => {
@@ -51,7 +51,7 @@ const toThrowStreamError = (
     }
 
     if (!(actualError instanceof StreamrClientError)) {
-        return formError('Class name', 'StreamrClientError', (actualError as any).constructor.name)
+        return formError('Class name', 'StreamrClientError', actualError.constructor.name)
     }
     if (actualError.code !== expectedError.code) {
         return formError('StreamrClientError.code', expectedError.code, actualError.code)
@@ -66,5 +66,5 @@ const toThrowStreamError = (
 }
 
 expect.extend({
-    toThrowStreamError
+    toThrowStreamrError
 })

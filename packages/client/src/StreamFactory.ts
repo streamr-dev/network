@@ -1,5 +1,5 @@
-import { delay, inject, Lifecycle, scoped } from 'tsyringe'
 import { StreamID } from '@streamr/protocol'
+import { delay, inject, Lifecycle, scoped } from 'tsyringe'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
 import { StreamrClientEventEmitter } from './events'
 import { Publisher } from './publish/Publisher'
@@ -14,45 +14,48 @@ import { LoggerFactory } from './utils/LoggerFactory'
 @scoped(Lifecycle.ContainerScoped)
 export class StreamFactory {
 
-    private readonly resends: Resends
     private readonly publisher: Publisher
     private readonly subscriber: Subscriber
-    private readonly streamRegistryCached: StreamRegistryCached
+    private readonly resends: Resends
     private readonly streamRegistry: StreamRegistry
+    private readonly streamRegistryCached: StreamRegistryCached
     private readonly streamStorageRegistry: StreamStorageRegistry
-    private readonly loggerFactory: LoggerFactory
-    private readonly eventEmitter: StreamrClientEventEmitter
+    /** @internal */
     private readonly config: Pick<StrictStreamrClientConfig, '_timeouts'>
+    private readonly eventEmitter: StreamrClientEventEmitter
+    private readonly loggerFactory: LoggerFactory
 
+    /* eslint-disable indent */
+    /** @internal */
     constructor(
-        resends: Resends,
         @inject(delay(() => Publisher)) publisher: Publisher,
         subscriber: Subscriber,
-        @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
+        resends: Resends,
         @inject(delay(() => StreamRegistry)) streamRegistry: StreamRegistry,
+        @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
         streamStorageRegistry: StreamStorageRegistry,
-        loggerFactory: LoggerFactory,
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, '_timeouts'>,
         eventEmitter: StreamrClientEventEmitter,
-        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, '_timeouts'>
+        loggerFactory: LoggerFactory
     ) {
-        this.resends = resends
         this.publisher = publisher
         this.subscriber = subscriber
-        this.streamRegistryCached = streamRegistryCached
+        this.resends = resends
         this.streamRegistry = streamRegistry
+        this.streamRegistryCached = streamRegistryCached
         this.streamStorageRegistry = streamStorageRegistry
-        this.loggerFactory = loggerFactory
-        this.eventEmitter = eventEmitter
         this.config = config
+        this.eventEmitter = eventEmitter
+        this.loggerFactory = loggerFactory
     }
 
     createStream(id: StreamID, metadata: Partial<StreamMetadata>): Stream {
         return new Stream(
             id,
             metadata,
-            this.resends,
             this.publisher,
             this.subscriber,
+            this.resends,
             this.streamRegistryCached,
             this.streamRegistry,
             this.streamStorageRegistry,

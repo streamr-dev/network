@@ -8,8 +8,9 @@ type HandleFn = (
     reattempt: boolean
 ) => Promise<void>
 
+const logger = new Logger(module)
+
 export class InstructionRetryManager {
-    private readonly logger: Logger
     private readonly handleFn: HandleFn
     private readonly intervalInMs: number
     private readonly statusSendCounterLimit: number
@@ -20,7 +21,6 @@ export class InstructionRetryManager {
     private stopped: boolean
 
     constructor(handleFn: HandleFn, intervalInMs: number) {
-        this.logger = new Logger(module)
         this.handleFn = handleFn
         this.intervalInMs = intervalInMs
         this.instructionRetryIntervals = {}
@@ -53,7 +53,7 @@ export class InstructionRetryManager {
             // First and every nth instruction retries will always send status messages to tracker
             await this.handleFn(instructionMessage, trackerId, this.instructionRetryIntervals[streamPartId].counter !== 0)
         } catch (err) {
-            this.logger.warn('instruction retry threw %s', err)
+            logger.warn('Encountered error handling instruction', err)
         }
         // Check that stream has not been removed
         if (this.instructionRetryIntervals[streamPartId]) {
@@ -77,7 +77,7 @@ export class InstructionRetryManager {
         if (streamPartId in this.instructionRetryIntervals) {
             clearTimeout(this.instructionRetryIntervals[streamPartId].interval)
             delete this.instructionRetryIntervals[streamPartId]
-            this.logger.debug('stream part %s successfully removed', streamPartId)
+            logger.debug('Removed', { streamPartId })
         }
     }
 

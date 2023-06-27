@@ -19,7 +19,7 @@ export const decrypt = async (
     try {
         groupKey = await groupKeyManager.fetchKey(
             streamMessage.getStreamPartID(),
-            streamMessage.groupKeyId!,
+            streamMessage.groupKeyId,
             streamMessage.getPublisherId()
         )
     } catch (e: any) {
@@ -31,7 +31,7 @@ export const decrypt = async (
     if (destroySignal.isDestroyed()) {
         return streamMessage
     }
-    const clone = StreamMessage.deserialize(streamMessage.serialize())
+    const clone = streamMessage.clone()
     EncryptionUtil.decryptStreamMessage(clone, groupKey)
     if (streamMessage.newGroupKey) {
         // newGroupKey has been converted into GroupKey

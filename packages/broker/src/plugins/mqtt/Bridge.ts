@@ -1,9 +1,13 @@
+import { StreamID, StreamPartID, toStreamID, toStreamPartID } from '@streamr/protocol'
+import { Logger } from '@streamr/utils'
 import without from 'lodash/without'
 import { MessageMetadata, StreamrClient, Subscription } from 'streamr-client'
-import { StreamPartIDUtils } from '@streamr/protocol'
-import { Logger } from '@streamr/utils'
-import { PayloadFormat } from '../../helpers/PayloadFormat'
+import { Message, PayloadFormat } from '../../helpers/PayloadFormat'
+import { parsePositiveInteger, parseQueryAndBase, parseQueryParameter } from '../../helpers/parser'
+import { PublishPartitionDefinition, getPartitionKey, parsePublishPartitionDefinition } from '../../helpers/partitions'
 import { MqttServer, MqttServerListener } from './MqttServer'
+
+const DEFAULT_PARTITION = 0
 
 const logger = new Logger(module)
 
@@ -36,31 +40,37 @@ export class Bridge implements MqttServerListener {
     }
 
     async onMessageReceived(topic: string, payload: string, clientId: string): Promise<void> {
-        let message
+        let message: Message
+        let streamPart: { streamId: StreamID } & PublishPartitionDefinition
         try {
             message = this.payloadFormat.createMessage(payload)
+            streamPart = this.getPublishStreamPart(topic)
         } catch (err) {
-            logger.warn(`Unable to publish message: ${err.message}`)
+            logger.warn('Unable to form message', { err, topic, clientId })
             return
         }
         const { content, metadata } = message
         try {
-            const publishedMessage = await this.streamrClient.publish(this.getStreamId(topic), content, {
+            const publishedMessage = await this.streamrClient.publish({
+                id: streamPart.streamId,
+                partition: streamPart.partition
+            }, content, {
                 timestamp: metadata.timestamp,
+                partitionKey: getPartitionKey(content, streamPart),
                 msgChainId: clientId
             })
             this.publishMessageChains.add(createMessageChainKey(publishedMessage))
         } catch (err: any) {
-            logger.warn('Unable to publish, reason: %s', err)
+            logger.warn('Unable to publish message', { err, topic, clientId })
         }
     }
 
     async onSubscribed(topic: string, clientId: string): Promise<void> {
-        logger.info('Client subscribed: ' + topic)
-        const streamId = this.getStreamId(topic)
-        const existingSubscription = this.getSubscription(streamId)
+        logger.info('Handle client subscribe', { clientId, topic })
+        const streamPart = this.getSubscribeStreamPart(topic)
+        const existingSubscription = this.getSubscription(streamPart)
         if (existingSubscription === undefined) {
-            const streamrClientSubscription = await this.streamrClient.subscribe(streamId, (content: any, metadata: MessageMetadata) => {
+            const streamrClientSubscription = await this.streamrClient.subscribe(streamPart, (content: any, metadata: MessageMetadata) => {
                 if (!this.isSelfPublishedMessage(metadata)) {
                     const payload = this.payloadFormat.createPayload(content, metadata)
                     this.mqttServer.publish(topic, payload)
@@ -101,9 +111,9 @@ export class Bridge implements MqttServerListener {
     }
 
     onUnsubscribed(topic: string, clientId: string): void {
-        logger.info('Client unsubscribed: ' + topic)
-        const streamId = this.getStreamId(topic)
-        const existingSubscription = this.getSubscription(streamId)
+        logger.info('Handle client unsubscribe', { clientId, topic })
+        const streamPart = this.getSubscribeStreamPart(topic)
+        const existingSubscription = this.getSubscription(streamPart)
         if (existingSubscription !== undefined) {
             existingSubscription.clientIds = without(existingSubscription.clientIds, clientId)
             if (existingSubscription.clientIds.length === 0) {
@@ -113,18 +123,27 @@ export class Bridge implements MqttServerListener {
         }
     }
 
-    private getStreamId(topic: string): string {
-        if (this.streamIdDomain !== undefined) {
-            return this.streamIdDomain + '/' + topic
-        } else {
-            return topic
+    private getSubscribeStreamPart(topic: string): StreamPartID {
+        const { base, query } = parseQueryAndBase(topic)
+        const partition = parseQueryParameter('partition', query, parsePositiveInteger)
+        return toStreamPartID(this.getStreamId(base), partition ?? DEFAULT_PARTITION)
+    }
+
+    private getPublishStreamPart(topic: string): { streamId: StreamID } & PublishPartitionDefinition {
+        const { base, query } = parseQueryAndBase(topic)
+        return {
+            streamId: this.getStreamId(base),
+            ...parsePublishPartitionDefinition(query)
         }
     }
 
-    private getSubscription(streamId: string): StreamSubscription | undefined {
+    private getStreamId(topicBase: string): StreamID {
+        return toStreamID((this.streamIdDomain !== undefined) ? `${this.streamIdDomain}/${topicBase}` : topicBase)
+    }
+
+    private getSubscription(streamPartId: StreamPartID): StreamSubscription | undefined {
         return this.subscriptions.find((s: StreamSubscription) => {
-            // TODO take partition into consideration?
-            return StreamPartIDUtils.getStreamID(s.streamrClientSubscription.streamPartId) === streamId
+            return s.streamrClientSubscription.streamPartId === streamPartId
         })
     }
 }

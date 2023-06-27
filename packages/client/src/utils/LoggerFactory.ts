@@ -1,5 +1,5 @@
-import { inject, Lifecycle, scoped } from 'tsyringe'
 import { Logger } from '@streamr/utils'
+import { inject, Lifecycle, scoped } from 'tsyringe'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 
 @scoped(Lifecycle.ContainerScoped)
@@ -14,6 +14,6 @@ export class LoggerFactory {
     }
 
     createLogger(module: NodeJS.Module): Logger {
-        return new Logger(module, this.config.id, this.config.logLevel)
+        return new Logger(module, { id: this.config.id }, this.config.logLevel)
     }
 }

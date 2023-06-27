@@ -1,10 +1,10 @@
 import 'reflect-metadata'
-import { Message } from '../../src/Message'
 
+import { collect, waitForCondition } from '@streamr/utils'
+import { Message } from '../../src/Message'
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
-import { collect } from '../../src/utils/iterators'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { getPublishTestStreamMessages, getWaitForStorage, Msg } from '../test-utils/publish'
 import { createTestStream } from '../test-utils/utils'
@@ -13,6 +13,7 @@ const MAX_MESSAGES = 5
 const ITERATIONS = 4
 
 describe('sequential resend subscribe', () => {
+
     let publisher: StreamrClient
     let subscriber: StreamrClient
     let stream: Stream
@@ -29,7 +30,7 @@ describe('sequential resend subscribe', () => {
         subscriber = environment.createClient()
         stream = await createTestStream(publisher, module)
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
-        const storageNode = environment.startStorageNode()
+        const storageNode = await environment.startStorageNode()
         await stream.addToStorageNode(storageNode.id)
         publishTestMessages = getPublishTestStreamMessages(publisher, stream)
         await stream.grantPermissions({
@@ -75,17 +76,16 @@ describe('sequential resend subscribe', () => {
             sub.once('resendComplete', onResent)
 
             const expectedMessageCount = published.length + 1 // the realtime message which we publish next
-            setImmediate(async () => {
-                const message = Msg()
-                const streamMessage = await publisher.publish(stream.id, message, { // should be realtime
-                    timestamp: id
-                })
-                // keep track of published messages so we can check they are resent in next test(s)
-                published.push(streamMessage)
+            const receivedMsgsPromise = collect(sub, expectedMessageCount)
+            await waitForCondition(() => onResent.mock.calls.length > 0)
+            const streamMessage = await publisher.publish(stream.id, Msg(), { // should be realtime
+                timestamp: id
             })
-            const msgs = await collect(sub, expectedMessageCount)
-            expect(msgs).toHaveLength(expectedMessageCount)
-            expect(msgs.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
+            // keep track of published messages so we can check they are resent in next test(s)
+            published.push(streamMessage)
+            const receivedMsgs = await receivedMsgsPromise
+            expect(receivedMsgs).toHaveLength(expectedMessageCount)
+            expect(receivedMsgs.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
         })
     }
 })

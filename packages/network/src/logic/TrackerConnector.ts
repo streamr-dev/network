@@ -53,7 +53,7 @@ export class TrackerConnector {
         }
         this.signallingOnlySessions.get(streamPartId)!.add(nodeToSignal)
         await this.connectToTracker(tracker.ws, PeerInfo.newTracker(tracker.id))
-        logger.info('Connected to tracker %s for signalling only', NameDirectory.getName(tracker.id))
+        logger.info('Connected to tracker for signalling only', { trackerId: NameDirectory.getName(tracker.id) })
     }
 
     removeSignallingOnlySession(streamPartId: StreamPartID, nodeToSignal: NodeId): void {
@@ -95,7 +95,9 @@ export class TrackerConnector {
         this.connectToTracker(ws, PeerInfo.newTracker(id))
             .then(() => {
                 if (this.connectionStates.get(id) !== ConnectionState.SUCCESS) {
-                    logger.info('Connected to tracker %s', NameDirectory.getName(id))
+                    logger.info('Connected to tracker', {
+                        trackerId: NameDirectory.getName(id)
+                    })
                     this.connectionStates.set(id, ConnectionState.SUCCESS)
                 }
                 return
@@ -105,7 +107,10 @@ export class TrackerConnector {
                     // TODO we could also store the previous error and check that the current error is the same?
                     // -> now it doesn't log anything if the connection error reason changes
                     this.connectionStates.set(id, ConnectionState.ERROR)
-                    logger.warn('Could not connect to tracker %s, reason: %s', NameDirectory.getName(id), err.message)
+                    logger.warn('Could not connect to tracker', {
+                        trackerId: NameDirectory.getName(id),
+                        reason: err.message
+                    })
                 }
             })
     }

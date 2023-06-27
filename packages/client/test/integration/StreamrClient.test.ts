@@ -1,19 +1,19 @@
 import 'reflect-metadata'
 
-import { Defer, wait } from '@streamr/utils'
-import fs from 'fs'
-import path from 'path'
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { fastPrivateKey, fastWallet } from '@streamr/test-utils'
-import { StreamPermission } from '../../src/permission'
+import { Defer, collect, wait } from '@streamr/utils'
+import fs from 'fs'
+import path from 'path'
+import { MessageMetadata } from '../../src/Message'
 import { StreamrClient } from '../../src/StreamrClient'
+import { StreamPermission } from '../../src/permission'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import {
-    getPublishTestStreamMessages, Msg
+    Msg,
+    getPublishTestStreamMessages
 } from '../test-utils/publish'
 import { createTestStream } from '../test-utils/utils'
-import { collect } from '../../src/utils/iterators'
-import { MessageMetadata } from '../../src/Message'
 
 // TODO rename this test to something more specific (and maybe divide to multiple test files?)
 
@@ -22,6 +22,7 @@ const TIMEOUT = 30 * 1000
 const WAIT_TIME = 600
 
 describe('StreamrClient', () => {
+
     let client: StreamrClient
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
     let streamDefinition: StreamPartID
@@ -50,6 +51,10 @@ describe('StreamrClient', () => {
         }), streamDefinition)
     })
 
+    afterEach(async () => {
+        await environment.destroy()
+    })
+
     describe('Pub/Sub', () => {
         it('client.publish does not error', async () => {
             await client.publish(streamDefinition, {
@@ -73,26 +78,6 @@ describe('StreamrClient', () => {
             })
             await wait(WAIT_TIME)
         }, TIMEOUT)
-
-        it('client.subscribe (realtime) with onMessage signal', async () => {
-            const done = new Defer<void>()
-            const msg = Msg()
-
-            const sub = await client.subscribe(streamDefinition)
-
-            sub.onMessage.listen(done.wrap(async (streamMessage) => {
-                sub.unsubscribe()
-                const parsedContent = streamMessage.getParsedContent()
-                expect(parsedContent).toEqual(msg)
-                expect(streamMessage.getPublisherId()).toBeTruthy()
-                expect(streamMessage.signature).toBeTruthy()
-            }))
-
-            // Publish after subscribed
-            await client.publish(streamDefinition, msg)
-            await sub.consume()
-            await done
-        })
 
         it('client.subscribe (realtime) with onMessage callback', async () => {
             const done = new Defer<void>()

@@ -13,6 +13,7 @@ import {
     createTestStream
 } from '../test-utils/utils'
 import { Message } from '../../src/Message'
+import { merge } from '@streamr/utils'
 
 // this has publisher & subscriber clients
 // publisher begins publishing `maxMessages` messages
@@ -28,6 +29,7 @@ import { Message } from '../../src/Message'
 // and subscriber errored with something about group key or
 // permissions
 describe('revoke permissions', () => {
+
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
     let publisher: StreamrClient
     let publisherPrivateKey: string
@@ -46,7 +48,7 @@ describe('revoke permissions', () => {
 
     async function setupStream() {
         stream = await createTestStream(publisher, module)
-        const storageNode = environment.startStorageNode()
+        const storageNode = await environment.startStorageNode()
         await stream.addToStorageNode(storageNode.id)
         publishTestMessages = getPublishTestStreamMessages(publisher, stream)
     }
@@ -61,24 +63,32 @@ describe('revoke permissions', () => {
         publisherPrivateKey = fastPrivateKey()
         subscriberPrivateKey = fastPrivateKey()
         // eslint-disable-next-line require-atomic-updates
-        publisher = environment.createClient({
-            id: 'publisher',
-            auth: {
-                privateKey: publisherPrivateKey
-            },
-            ...opts
-        })
+        publisher = environment.createClient(
+            merge(
+                {
+                    id: 'publisher',
+                    auth: {
+                        privateKey: publisherPrivateKey
+                    },
+                },
+                opts
+            )
+        )
         // eslint-disable-next-line require-atomic-updates
-        subscriber = environment.createClient({
-            id: 'subscriber',
-            auth: {
-                privateKey: subscriberPrivateKey
-            },
-            encryption: {
-                keyRequestTimeout: 200
-            },
-            ...opts
-        })
+        subscriber = environment.createClient(
+            merge(
+                {
+                    id: 'subscriber',
+                    auth: {
+                        privateKey: subscriberPrivateKey
+                    },
+                    encryption: {
+                        keyRequestTimeout: 200
+                    }
+                },
+                opts
+            )
+        )
     }
 
     async function testRevokeDuringSubscribe({

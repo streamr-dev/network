@@ -1,7 +1,7 @@
 /**
  * This file captures named exports so we can manipulate them for cjs/browser builds.
  */
-export { StreamrClient, SubscribeOptions } from './StreamrClient'
+export { StreamrClient, SubscribeOptions, ExtraSubscribeOptions } from './StreamrClient'
 export { Stream, StreamMetadata, Field, VALID_FIELD_TYPES } from './Stream'
 export { Message, MessageMetadata } from './Message'
 export { StreamrClientEvents } from './events'
@@ -18,9 +18,10 @@ export {
     UserPermissionAssignment,
     PublicPermissionAssignment
 } from './permission'
+export { StreamCreationEvent } from './registry/StreamRegistry'
 export { StorageNodeAssignmentEvent } from './registry/StreamStorageRegistry'
 export { StorageNodeMetadata } from './registry/StorageNodeRegistry'
-export { SearchStreamsPermissionFilter } from './registry/searchStreams'
+export { SearchStreamsPermissionFilter, SearchStreamsOrderBy } from './registry/searchStreams'
 export {
     StreamrClientConfig,
     TrackerRegistryContract,
@@ -29,7 +30,6 @@ export {
     ProviderAuthConfig,
     PrivateKeyAuthConfig,
     STREAMR_STORAGE_NODE_GERMANY,
-    validateConfig
 } from './Config'
 export { GroupKey as EncryptionKey } from './encryption/GroupKey'
 export { UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
@@ -52,6 +52,7 @@ export type {
     MessageRef,
     StreamMessage,
     StreamMessageOptions,
+    StreamMessageAESEncrypted
 } from '@streamr/protocol'
 export {
     ContentType,

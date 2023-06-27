@@ -12,16 +12,16 @@ describe('Publisher', () => {
             isStreamPublisher: async () => false
         }
         const publisher = new Publisher(
-            streamIdBuilder,
-            authentication,
+            undefined as any,
             streamRegistry as any,
             createGroupKeyManager(undefined, authentication),
-            undefined as any,
+            streamIdBuilder,
+            authentication
         )
         const streamId = await streamIdBuilder.toStreamID('/test')
         await expect(async () => {
             await publisher.publish(streamId, {})
-        }).rejects.toThrowStreamError({
+        }).rejects.toThrowStreamrError({
             code: 'MISSING_PERMISSION',
             // eslint-disable-next-line max-len
             message: `Failed to publish to stream ${streamId}. Cause: You don't have permission to publish to this stream. Using address: ${await authentication.getAddress()}`

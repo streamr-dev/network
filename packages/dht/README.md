@@ -6,14 +6,14 @@ An implementation of the Kademlia-based Streamr DHT used for the trackerless net
 
 Auto-generated protobuf/gRPC code is compiled during the build process.
 ```bash
-	npm run build
+  npm run build
 ```
 
 Alternatively
 ```bash
-	npm run prebuild
-	# Or
-	./proto.sh
+  npm run prebuild
+  # Or
+  ./proto.sh
 ```
 
 ## Running DHT simulations

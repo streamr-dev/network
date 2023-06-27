@@ -1,12 +1,12 @@
 import { StreamID } from '@streamr/protocol'
-import { Lifecycle, scoped, inject, delay } from 'tsyringe'
-import { CacheAsyncFn, CacheAsyncFnType } from '../utils/caches'
-import { StrictStreamrClientConfig, ConfigInjectionToken } from '../Config'
-import { StreamRegistry } from './StreamRegistry'
-import { StreamPermission } from '../permission'
-import { Stream } from '../Stream'
 import { EthereumAddress, Logger } from '@streamr/utils'
+import { Lifecycle, delay, inject, scoped } from 'tsyringe'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import { Stream } from '../Stream'
+import { StreamPermission } from '../permission'
 import { LoggerFactory } from '../utils/LoggerFactory'
+import { CacheAsyncFn, CacheAsyncFnType } from '../utils/caches'
+import { StreamRegistry } from './StreamRegistry'
 
 const SEPARATOR = '|' // always use SEPARATOR for cache key
 
@@ -14,17 +14,18 @@ const SEPARATOR = '|' // always use SEPARATOR for cache key
 @scoped(Lifecycle.ContainerScoped)
 export class StreamRegistryCached {
 
-    private streamRegistry: StreamRegistry
-    private readonly logger: Logger
     private readonly _getStream: CacheAsyncFnType<[StreamID], Stream, string>
     private readonly _isStreamPublisher: CacheAsyncFnType<[StreamID, EthereumAddress], boolean, string>
     private readonly _isStreamSubscriber: CacheAsyncFnType<[StreamID, EthereumAddress], boolean, string>
     private readonly _isPublic: CacheAsyncFnType<[StreamID], boolean, string>
-
+    private readonly streamRegistry: StreamRegistry
+    private readonly logger: Logger
+    
+    /* eslint-disable indent */
     constructor(
-        @inject(LoggerFactory) loggerFactory: LoggerFactory,
         @inject(delay(() => StreamRegistry)) streamRegistry: StreamRegistry,
-        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'cache'>
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'cache'>,
+        loggerFactory: LoggerFactory
     ) {
         this.streamRegistry = streamRegistry
         this.logger = loggerFactory.createLogger(module)
@@ -87,7 +88,7 @@ export class StreamRegistryCached {
      * Clear cache for streamId
      */
     clearStream(streamId: StreamID): void {
-        this.logger.debug('clearing caches matching streamId="%s"', streamId)
+        this.logger.debug('Clear caches matching stream', { streamId })
         // include separator so startsWith(streamid) doesn't match streamid-something
         const target = `${streamId}${SEPARATOR}`
         const matchTarget = (s: string) => s.startsWith(target)

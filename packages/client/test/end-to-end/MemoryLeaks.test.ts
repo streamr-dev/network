@@ -7,7 +7,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { container as rootContainer, DependencyContainer } from 'tsyringe'
 import { writeHeapSnapshot } from 'v8'
 import { Subscription } from '../../src/subscribe/Subscription'
-import { counterId, instanceId } from '../../src/utils/utils'
+import { counterId, instanceId, createTheGraphClient } from '../../src/utils/utils'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { createStrictConfig, ConfigInjectionToken, StrictStreamrClientConfig } from '../../src/Config'
 import * as ethersAbi from '@ethersproject/abi'
@@ -21,6 +21,8 @@ import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
 import { DestroySignal } from '../../src/DestroySignal'
 import { MessageMetadata } from '../../src/Message'
 import { AuthenticationInjectionToken, createAuthentication } from '../../src/Authentication'
+import { merge, TheGraphClient } from '@streamr/utils'
+import { StreamrClientEventEmitter } from '../../src/events'
 
 const Dependencies = {
     NetworkNodeFacade,
@@ -72,16 +74,23 @@ describe('MemoryLeaks', () => {
                 config: StrictStreamrClientConfig
                 childContainer: DependencyContainer
             }> => {
-                const config = createStrictConfig({
-                    ...CONFIG_TEST,
-                    auth: {
-                        privateKey: await fetchPrivateKeyWithGas(),
-                    },
-                    ...opts,
-                })
+                const config = createStrictConfig(
+                    merge(
+                        CONFIG_TEST,
+                        {
+                            auth: {
+                                privateKey: await fetchPrivateKeyWithGas(),
+                            }
+                        },
+                        opts
+                    )
+                )
                 const childContainer = rootContainer.createChildContainer()
                 childContainer.register(AuthenticationInjectionToken, { useValue: createAuthentication(config) })
                 childContainer.register(ConfigInjectionToken, { useValue: config })
+                childContainer.register(TheGraphClient, { useValue:
+                    createTheGraphClient(childContainer.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter), config)
+                })
                 return { config, childContainer }
             }
         })
@@ -113,13 +122,17 @@ describe('MemoryLeaks', () => {
         let createClient: () => Promise<StreamrClient>
         beforeAll(() => {
             createClient = async (opts: any = {}) => {
-                const c = new StreamrClient({
-                    ...CONFIG_TEST,
-                    auth: {
-                        privateKey: await fetchPrivateKeyWithGas(),
-                    },
-                    ...opts,
-                })
+                const c = new StreamrClient(
+                    merge(
+                        CONFIG_TEST,
+                        {
+                            auth: {
+                                privateKey: await fetchPrivateKeyWithGas(),
+                            }
+                        },
+                        opts
+                    )
+                )
                 return c
             }
         })

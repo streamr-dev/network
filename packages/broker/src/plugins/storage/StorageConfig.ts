@@ -66,15 +66,13 @@ export class StorageConfig {
     }
 
     async start(): Promise<void> {
-        await Promise.all([
-            this.storagePoller.start(this.abortController.signal),
-            this.storageEventListener.start()
-        ])
+        this.storageEventListener.start()
+        await this.storagePoller.start(this.abortController.signal)
     }
 
-    async destroy(): Promise<void> {
+    destroy(): void {
         this.abortController.abort()
-        await this.storageEventListener.destroy()
+        this.storageEventListener.destroy()
     }
 
     hasStreamPart(streamPart: StreamPartID): boolean {
@@ -95,6 +93,9 @@ export class StorageConfig {
     private handleDiff({ added, removed }: Diff<StreamPartID>): void {
         added.forEach((streamPart) => this.listener.onStreamPartAdded(streamPart))
         removed.forEach((streamPart) => this.listener.onStreamPartRemoved(streamPart))
-        logger.info('added %j to and removed %j from state', added, removed)
+        logger.info('Updated state', {
+            added,
+            removed
+        })
     }
 }

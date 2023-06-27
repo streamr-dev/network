@@ -56,7 +56,9 @@ export class DisconnectionManager {
             const nodeIds = this.getAllNodes()
             const nonNeighborNodeIds = nodeIds.filter((nodeId) => !this.hasSharedStreams(nodeId))
             if (nonNeighborNodeIds.length > 0) {
-                logger.debug('connectionCleanUpInterval: disconnecting from %d nodes', nonNeighborNodeIds.length)
+                logger.debug('Disconnect from nodes', {
+                    nodeCount: nonNeighborNodeIds.length
+                })
                 nonNeighborNodeIds.forEach((nodeId) => {
                     this.loggedDisconnect(nodeId)
                 })
@@ -80,7 +82,10 @@ export class DisconnectionManager {
                     this.loggedDisconnect(nodeId)
                 }
             }, this.disconnectionDelayInMs))
-            logger.trace('scheduled disconnection from %s in %d ms', nodeId, this.disconnectionDelayInMs)
+            logger.trace('Schedule disconnection from node', {
+                nodeId,
+                delayInMs: this.disconnectionDelayInMs
+            })
         }
     }
 
@@ -89,12 +94,14 @@ export class DisconnectionManager {
         if (timeout !== undefined) {
             clearTimeout(timeout)
             this.disconnectionTimers.delete(nodeId)
-            logger.trace('canceled scheduled disconnection from %s', nodeId)
+            logger.trace('Cancel scheduled disconnection from node', { nodeId })
         }
     }
 
     private loggedDisconnect(nodeId: NodeId): void {
-        logger.trace('executing disconnect from %s', NameDirectory.getName(nodeId))
+        logger.trace('loggedDisconnect', {
+            nodeId: NameDirectory.getName(nodeId)
+        })
         this.disconnect(nodeId, DisconnectionManager.DISCONNECTION_REASON)
     }
 }

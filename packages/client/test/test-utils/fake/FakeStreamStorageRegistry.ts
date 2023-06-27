@@ -1,13 +1,13 @@
-import { inject, Lifecycle, scoped } from 'tsyringe'
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
-import { StreamIDBuilder } from '../../../src/StreamIDBuilder'
-import { FakeStorageNode } from './FakeStorageNode'
-import { FakeNetwork } from './FakeNetwork'
+import { EthereumAddress } from '@streamr/utils'
+import { Lifecycle, scoped } from 'tsyringe'
 import { Stream } from '../../../src/Stream'
+import { StreamIDBuilder } from '../../../src/StreamIDBuilder'
 import { StreamStorageRegistry } from '../../../src/registry/StreamStorageRegistry'
 import { Methods } from '../types'
 import { FakeChain } from './FakeChain'
-import { EthereumAddress } from '@streamr/utils'
+import { FakeNetwork } from './FakeNetwork'
+import { FakeStorageNode } from './FakeStorageNode'
 
 @scoped(Lifecycle.ContainerScoped)
 export class FakeStreamStorageRegistry implements Methods<StreamStorageRegistry> {
@@ -17,18 +17,13 @@ export class FakeStreamStorageRegistry implements Methods<StreamStorageRegistry>
     private readonly streamIdBuilder: StreamIDBuilder
 
     constructor(
-        @inject(FakeChain) chain: FakeChain,
-        @inject(FakeNetwork) network: FakeNetwork,
-        @inject(StreamIDBuilder) streamIdBuilder: StreamIDBuilder
+        chain: FakeChain,
+        network: FakeNetwork,
+        streamIdBuilder: StreamIDBuilder
     ) {
         this.chain = chain
         this.network = network
         this.streamIdBuilder = streamIdBuilder
-    }
-
-    private async hasAssignment(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<boolean> {
-        const assignments = await this.getStorageNodes(streamIdOrPath)
-        return assignments.includes(nodeAddress)
     }
 
     async getStorageNodes(streamIdOrPath?: string): Promise<EthereumAddress[]> {
@@ -56,7 +51,7 @@ export class FakeStreamStorageRegistry implements Methods<StreamStorageRegistry>
     }
 
     async addStreamToStorageNode(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<void> {
-        if (!(await this.hasAssignment(streamIdOrPath, nodeAddress))) {
+        if (!(await this.isStoredStream(streamIdOrPath, nodeAddress))) {
             const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
             const node = this.network.getNode(nodeAddress)
             if (node !== undefined) {
@@ -68,14 +63,21 @@ export class FakeStreamStorageRegistry implements Methods<StreamStorageRegistry>
         }
     }
 
-    // eslint-disable-next-line class-methods-use-this
-    removeStreamFromStorageNode(_streamIdOrPath: string, _nodeAddress: string): Promise<void> {
-        throw new Error('not implemented')
+    async removeStreamFromStorageNode(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<void> {
+        if (await this.isStoredStream(streamIdOrPath, nodeAddress)) {
+            const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+            const node = this.network.getNode(nodeAddress)
+            if (node !== undefined) {
+                this.chain.storageAssignments.remove(streamId, nodeAddress)
+            } else {
+                throw new Error(`No storage node ${nodeAddress} for ${streamId}`)
+            }
+        }
     }
 
-    // eslint-disable-next-line class-methods-use-this
-    isStoredStream(_streamIdOrPath: string, _nodeAddress: string): Promise<boolean> {
-        throw new Error('not implemented')
+    async isStoredStream(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<boolean> {
+        const assignments = await this.getStorageNodes(streamIdOrPath)
+        return assignments.includes(nodeAddress)
     }
 
     // eslint-disable-next-line class-methods-use-this

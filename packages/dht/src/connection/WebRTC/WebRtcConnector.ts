@@ -14,7 +14,6 @@ import { NodeWebRtcConnection } from './NodeWebRtcConnection'
 import { RemoteWebrtcConnector } from './RemoteWebrtcConnector'
 import { WebRtcConnectorServiceClient } from '../../proto/DhtRpc.client'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
-import { DescriptionType } from 'node-datachannel'
 import crypto from "crypto"
 import { ManagedWebRtcConnection } from '../ManagedWebRtcConnection'
 import { Logger } from '@streamr/utils'
@@ -108,7 +107,7 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
         }
         // Always use offerers connectionId
         connection.setConnectionId(connectionId)
-        connection.setRemoteDescription(description, DescriptionType.Offer)
+        connection.setRemoteDescription(description, 'offer')
     }
 
     private onRtcAnswer(
@@ -128,7 +127,7 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
             logger.trace(`Ignoring RTC answer due to connectionId mismatch`)
             return
         }
-        connection.setRemoteDescription(description, DescriptionType.Answer)
+        connection.setRemoteDescription(description, 'answer')
     }
 
     private onConnectionRequest(targetPeerDescriptor: PeerDescriptor): void {

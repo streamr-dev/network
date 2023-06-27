@@ -1,27 +1,29 @@
-import { inject, Lifecycle, scoped } from 'tsyringe'
+import { Signer } from '@ethersproject/abstract-signer'
 import { Contract, ContractInterface, ContractReceipt, ContractTransaction } from '@ethersproject/contracts'
 import { Provider } from '@ethersproject/providers'
-import { Signer } from '@ethersproject/abstract-signer'
-import { ObservableContract, createDecoratedContract } from './utils/contract'
-import { SynchronizedGraphQLClient } from './utils/SynchronizedGraphQLClient'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
 import { EthereumAddress } from '@streamr/utils'
+import { Lifecycle, inject, scoped } from 'tsyringe'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
+import { StreamrClientEventEmitter } from './events'
 import { LoggerFactory } from './utils/LoggerFactory'
+import { ObservableContract, createDecoratedContract } from './utils/contract'
 
 @scoped(Lifecycle.ContainerScoped)
 export class ContractFactory {
-    private readonly graphQLClient: SynchronizedGraphQLClient
-    private readonly loggerFactory: LoggerFactory
-    private readonly config: Pick<StrictStreamrClientConfig, 'contracts'>
 
+    private readonly config: Pick<StrictStreamrClientConfig, 'contracts'>
+    private readonly eventEmitter: StreamrClientEventEmitter
+    private readonly loggerFactory: LoggerFactory
+
+    /* eslint-disable indent */
     constructor(
-        graphQLClient: SynchronizedGraphQLClient,
-        @inject(LoggerFactory) loggerFactory: LoggerFactory,
-        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts'>
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts'>,
+        eventEmitter: StreamrClientEventEmitter,
+        loggerFactory: LoggerFactory
     ) {
-        this.graphQLClient = graphQLClient
-        this.loggerFactory = loggerFactory
         this.config = config
+        this.eventEmitter = eventEmitter
+        this.loggerFactory = loggerFactory
     }
 
     createReadContract<T extends Contract>(
@@ -54,8 +56,12 @@ export class ContractFactory {
             // because the concurrency limit covers only submits, not tx.wait() calls.
             999999
         )
-        contract.eventEmitter.on('onTransactionConfirm', (_methodName: string, _tx: ContractTransaction, receipt: ContractReceipt) => {
-            this.graphQLClient.updateRequiredBlockNumber(receipt.blockNumber)
+        contract.eventEmitter.on('onTransactionConfirm', (methodName: string, transaction: ContractTransaction, receipt: ContractReceipt) => {
+            this.eventEmitter.emit('confirmContractTransaction', {
+                methodName,
+                transaction,
+                receipt
+            })
         })
         return contract
     }

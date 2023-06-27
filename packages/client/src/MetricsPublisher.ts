@@ -6,6 +6,7 @@ import { Publisher } from './publish/Publisher'
 import { ConfigInjectionToken, StreamrClientConfig, ProviderAuthConfig } from './Config'
 import { pOnce } from './utils/promises'
 import { MetricsReport, wait } from '@streamr/utils'
+import { merge } from '@streamr/utils'
 
 type NormalizedConfig = NonNullable<Required<Exclude<StreamrClientConfig['metrics'], boolean>>>
 
@@ -36,10 +37,7 @@ const getNormalizedConfig = (config: Pick<StreamrClientConfig, 'metrics' | 'auth
             periods: []
         }
     } else if (config.metrics !== undefined) {
-        return {
-            ...DEFAULTS,
-            ...config.metrics
-        }
+        return merge(DEFAULTS, config.metrics)
     } else {
         const isEthereumAuth = ((config.auth as ProviderAuthConfig)?.ethereum !== undefined)
         return {
@@ -52,24 +50,24 @@ const getNormalizedConfig = (config: Pick<StreamrClientConfig, 'metrics' | 'auth
 @scoped(Lifecycle.ContainerScoped)
 export class MetricsPublisher {
 
-    private publisher: Publisher
-    private node: NetworkNodeFacade
-    private eventEmitter: StreamrClientEventEmitter
-    private destroySignal: DestroySignal
-    private config: NormalizedConfig
+    private readonly publisher: Publisher
+    private readonly node: NetworkNodeFacade
+    private readonly config: NormalizedConfig
+    private readonly eventEmitter: StreamrClientEventEmitter
+    private readonly destroySignal: DestroySignal
 
     constructor(
-        @inject(Publisher) publisher: Publisher,
-        @inject(NetworkNodeFacade) node: NetworkNodeFacade,
-        @inject(StreamrClientEventEmitter) eventEmitter: StreamrClientEventEmitter,
-        @inject(DestroySignal) destroySignal: DestroySignal,
-        @inject(ConfigInjectionToken) config: Pick<StreamrClientConfig, 'metrics' | 'auth'>
+        publisher: Publisher,
+        node: NetworkNodeFacade,
+        @inject(ConfigInjectionToken) config: Pick<StreamrClientConfig, 'metrics' | 'auth'>,
+        eventEmitter: StreamrClientEventEmitter,
+        destroySignal: DestroySignal
     ) {
         this.publisher = publisher
         this.node = node
+        this.config = getNormalizedConfig(config)
         this.eventEmitter = eventEmitter
         this.destroySignal = destroySignal
-        this.config = getNormalizedConfig(config)
         const ensureStarted = pOnce(async () => {
             const node = await this.node.getNode()
             const metricsContext = node.getMetricsContext()

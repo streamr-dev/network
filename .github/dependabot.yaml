@@ -19,6 +19,14 @@ updates:
       - ci
     assignees:
       - DaisyDomergue
+  - package-ecosystem: npm
+    directory: /
+    open-pull-requests-limit: 20
+    versioning-strategy: increase
+    schedule:
+      interval: weekly
+    reviewers:
+      - harbu
   - package-ecosystem: docker
     directory: /
     open-pull-requests-limit: 5

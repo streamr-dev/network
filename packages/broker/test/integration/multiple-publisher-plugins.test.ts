@@ -154,7 +154,7 @@ describe('multiple publisher plugins', () => {
         const messages = await publishMessages(streamId)
 
         await waitForCondition(() => receivedMessages.size() >= messages.length)
-        expect(receivedMessages.items).toIncludeSameMembers(messages)
+        expect(receivedMessages.values()).toIncludeSameMembers(messages)
         await subscriber.destroy()
 
     }, 10 * 1000)
@@ -171,7 +171,7 @@ describe('multiple publisher plugins', () => {
         const messages = await publishMessages(streamId)
 
         await waitForCondition(() => receivedMessages.size() >= messages.length)
-        expect(receivedMessages.items).toIncludeSameMembers(messages)
+        expect(receivedMessages.values()).toIncludeSameMembers(messages)
         await subscriber.close()
 
     })
@@ -190,7 +190,7 @@ describe('multiple publisher plugins', () => {
         const messages = await publishMessages(streamId)
 
         await waitForCondition(() => receivedMessages.size() >= messages.length)
-        expect(receivedMessages.items).toIncludeSameMembers(messages)
+        expect(receivedMessages.values()).toIncludeSameMembers(messages)
         await subscriber.end(true)
     })
 })

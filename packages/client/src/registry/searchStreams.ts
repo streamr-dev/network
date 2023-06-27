@@ -1,12 +1,11 @@
 /* eslint-disable padding-line-between-statements */
 import { StreamID, toStreamID } from '@streamr/protocol'
-import { StreamQueryResult } from './StreamRegistry'
-import { StreamPermission, ChainPermissions, convertChainPermissionsToStreamPermissions, PUBLIC_PERMISSION_ADDRESS } from '../permission'
-import { GraphQLClient, GraphQLQuery } from '../utils/GraphQLClient'
-import { filter, map, unique } from '../utils/GeneratorUtils'
-import { SynchronizedGraphQLClient } from '../utils/SynchronizedGraphQLClient'
-import { Stream } from '../Stream'
 import { EthereumAddress, Logger, toEthereumAddress } from '@streamr/utils'
+import { Stream } from '../Stream'
+import { ChainPermissions, PUBLIC_PERMISSION_ADDRESS, StreamPermission, convertChainPermissionsToStreamPermissions } from '../permission'
+import { filter, map, unique } from '../utils/GeneratorUtils'
+import { GraphQLQuery, TheGraphClient } from '@streamr/utils'
+import { StreamQueryResult } from './StreamRegistry'
 
 export interface SearchStreamsPermissionFilter {
     user: string
@@ -18,6 +17,11 @@ export interface SearchStreamsPermissionFilter {
     allowPublic: boolean
 }
 
+export interface SearchStreamsOrderBy {
+    field: 'id' | 'createdAt' | 'updatedAt'
+    direction: 'asc' | 'desc'
+}
+
 export type SearchStreamsResultItem = {
     id: string
     userAddress: EthereumAddress
@@ -27,19 +31,23 @@ export type SearchStreamsResultItem = {
 export const searchStreams = (
     term: string | undefined,
     permissionFilter: SearchStreamsPermissionFilter | undefined,
-    graphQLClient: SynchronizedGraphQLClient,
+    orderBy: SearchStreamsOrderBy,
+    theGraphClient: TheGraphClient,
     parseStream: (id: StreamID, metadata: string) => Stream,
-    logger: Logger
+    logger: Logger,
 ): AsyncGenerator<Stream> => {
     if ((term === undefined) && (permissionFilter === undefined)) {
         throw new Error('Requires a search term or a permission filter')
     }
-    logger.debug('search streams with term="%s" and permissions=%j', term, permissionFilter)
+    logger.debug('Search for streams', { term, permissionFilter })
     return map(
-        fetchSearchStreamsResultFromTheGraph(term, permissionFilter, graphQLClient),
+        fetchSearchStreamsResultFromTheGraph(term, permissionFilter, orderBy, theGraphClient),
         (item: SearchStreamsResultItem) => parseStream(toStreamID(item.stream.id), item.stream.metadata),
         (err: Error, item: SearchStreamsResultItem) => {
-            logger.debug('omitting stream %s from result, reason: %s', item.stream.id, err.message)
+            logger.debug('Omit stream from search result (invalid data)', {
+                streamId: item.stream.id,
+                reason: err?.message
+            })
         }
     )
 }
@@ -47,10 +55,11 @@ export const searchStreams = (
 async function* fetchSearchStreamsResultFromTheGraph(
     term: string | undefined,
     permissionFilter: SearchStreamsPermissionFilter | undefined,
-    graphQLClient: SynchronizedGraphQLClient
+    orderBy: SearchStreamsOrderBy,
+    theGraphClient: TheGraphClient,
 ): AsyncGenerator<SearchStreamsResultItem> {
-    const backendResults = graphQLClient.fetchPaginatedResults<SearchStreamsResultItem>(
-        (lastId: string, pageSize: number) => buildQuery(term, permissionFilter, lastId, pageSize)
+    const backendResults = theGraphClient.queryEntities<SearchStreamsResultItem>(
+        (lastId: string, pageSize: number) => buildQuery(term, permissionFilter, orderBy, lastId, pageSize)
     )
     /*
      * There can be orphaned permission entities if a stream is deleted (currently
@@ -96,6 +105,7 @@ async function* fetchSearchStreamsResultFromTheGraph(
 const buildQuery = (
     term: string | undefined,
     permissionFilter: SearchStreamsPermissionFilter | undefined,
+    orderBy: SearchStreamsOrderBy,
     lastId: string,
     pageSize: number
 ): GraphQLQuery => {
@@ -128,7 +138,12 @@ const buildQuery = (
             $canGrant: Boolean
             $id_gt: String
         ) {
-            permissions (first: ${pageSize} orderBy: "id" ${GraphQLClient.createWhereClause(variables)}) {
+            permissions (
+                first: ${pageSize},
+                orderBy: "stream__${orderBy.field}",
+                orderDirection: "${orderBy.direction}", 
+                ${TheGraphClient.createWhereClause(variables)}
+            ) {
                 id
                 stream {
                     id
