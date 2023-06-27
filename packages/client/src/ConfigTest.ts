@@ -22,7 +22,7 @@ export const CONFIG_TEST: StreamrClientConfig = {
     network: {
         layer0: {
             entryPoints: [{
-                kademliaId: 'entryPointBroker',
+                id: 'entryPointBroker',
                 type: 0,
                 websocket: {
                     ip: '127.0.0.1',

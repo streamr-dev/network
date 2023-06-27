@@ -73,7 +73,7 @@
                                 "$ref": "#/definitions/peerDescriptor"
                             },
                             "default": [{
-                                "kademliaId": "productionEntryPoint1",
+                                "id": "productionEntryPoint1",
                                 "type": 0,
                                 "websocket": {
                                     "ip": "127.0.0.1",
@@ -81,7 +81,7 @@
                                 }
                             }]
                         },
-                        "stringKademliaId": {
+                        "id": {
                             "type": "string",
                             "description": "TODO: remove later"
                         },
@@ -464,11 +464,11 @@
             "type": "object",
             "additionalProperties": false,
             "required": [
-                "kademliaId",
+                "id",
                 "type"
             ],
             "properties": {
-                "kademliaId": {
+                "id": {
                     "type": "string"
                 },
                 "type": {

@@ -28,7 +28,7 @@ interface TestConfig {
 }
 
 const DEFAULT_ENTRYPOINTS = [{
-    kademliaId: "entryPointBroker",
+    id: "entryPointBroker",
     type: 0,
     websocket: {
         ip: "127.0.0.1",
@@ -64,14 +64,14 @@ export const formConfig = ({
         }
     }
     const peerDescriptor = networkLayerWsServerPort ? {
-        kademliaId: uuid(),
+        id: uuid(),
         type: 0,
         websocket: {
             ip: '127.0.0.1',
             port: networkLayerWsServerPort
         }
     } : {
-        kademliaId: uuid(),
+        id: uuid(),
         type: 0,
     }
 
@@ -121,11 +121,7 @@ export const createClient = async (
             },
             network: {
                 layer0: {
-                    ...CONFIG_TEST.network!.layer0!,
-                    peerDescriptor: {
-                        kademliaId: uuid(),
-                        type: 0
-                    }
+                    ...CONFIG_TEST.network!.layer0!
                 },
                 networkNode:
                     merge(

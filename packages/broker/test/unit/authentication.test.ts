@@ -10,11 +10,11 @@ const formConfig = (auth: StreamrClientConfig['auth']): Config => {
             network: {
                 layer0: {
                     peerDescriptor: {
-                        kademliaId: 'broker',
+                        id: 'broker',
                         type: 0
                     },
                     entryPoints: [{
-                        kademliaId: 'broker',
+                        id: 'broker',
                         type: 0
                     }]
                 }

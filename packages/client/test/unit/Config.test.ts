@@ -22,7 +22,7 @@ describe('Config', () => {
                     network: {
                         layer0: {
                             entryPoints: [{
-                                kademliaId: 'test'
+                                id: 'test'
                             }]
                         }
                     }
@@ -115,12 +115,12 @@ describe('Config', () => {
                 network: {}
             })
             expect(clientOverrides.network).toEqual(clientDefaults.network)
-            expect(clientOverrides.network.layer0!.entryPoints![0].kademliaId).toEqual('productionEntryPoint1')
+            expect(clientOverrides.network.layer0!.entryPoints![0].id).toEqual('productionEntryPoint1')
         })
 
         it('can override entryPoints', () => {
             const entryPoints = [{
-                kademliaId: '0xFBB6066c44bc8132bA794C73f58F391273E3bdA1',
+                id: '0xFBB6066c44bc8132bA794C73f58F391273E3bdA1',
                 type: 0,
                 websocket: {
                     ip: 'brubeck3.streamr.network',

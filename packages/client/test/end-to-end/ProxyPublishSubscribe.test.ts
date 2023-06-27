@@ -29,7 +29,7 @@ describe('PubSub with proxy connections', () => {
     const proxyNodePort2 = 14232
 
     const proxyNodeDescriptor1: JsonPeerDescriptor = {
-        kademliaId: proxyNodeId1,
+        id: proxyNodeId1,
         type: 0,
         websocket: {
             ip: 'localhost',
@@ -37,7 +37,7 @@ describe('PubSub with proxy connections', () => {
         }
     }
     const proxyNodeDescriptor2: JsonPeerDescriptor = {
-        kademliaId: proxyNodeId2,
+        id: proxyNodeId2,
         type: 0,
         websocket: {
             ip: 'localhost',

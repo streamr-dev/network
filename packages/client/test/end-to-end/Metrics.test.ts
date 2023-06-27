@@ -32,8 +32,7 @@ describe('NodeMetrics', () => {
             },
             network: {
                 layer0: {
-                    ...CONFIG_TEST.network!.layer0,
-                    stringKademliaId: 'generator'
+                    ...CONFIG_TEST.network!.layer0
                 }
             }
         })
