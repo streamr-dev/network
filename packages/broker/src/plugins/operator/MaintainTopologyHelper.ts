@@ -135,7 +135,7 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
         for await (const stake of queryResult) {
             const sponsorshipId = stake.sponsorship?.id
             const streamId = toStreamIDSafe(stake.sponsorship?.stream?.id)
-            if (streamId !== undefined && sponsorshipId !== undefined && this.streamIdOfSponsorship.get(sponsorshipId) !== streamId) {
+            if (streamId !== undefined && sponsorshipId !== undefined && this.streamIdOfSponsorship.get(sponsorshipId) !== streamId) { // TODO: null-checks needed or being too defensive?
                 this.streamIdOfSponsorship.set(sponsorshipId, streamId)
                 const sponsorshipCount = (this.sponsorshipCountOfStream.get(streamId) || 0) + 1
                 this.sponsorshipCountOfStream.set(streamId, sponsorshipCount)
