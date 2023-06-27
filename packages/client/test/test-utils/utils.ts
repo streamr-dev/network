@@ -25,7 +25,7 @@ import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchang
 import { StreamrClientEventEmitter } from '../../src/events'
 import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
 import { MessageFactory } from '../../src/publish/MessageFactory'
-import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
+import { StreamRegistry } from '../../src/registry/StreamRegistry'
 import { LoggerFactory } from '../../src/utils/LoggerFactory'
 import { counterId } from '../../src/utils/utils'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
@@ -118,7 +118,7 @@ export const createMockMessage = async (
     const factory = new MessageFactory({
         authentication,
         streamId,
-        streamRegistry: createStreamRegistryCached({
+        streamRegistry: createStreamRegistry({
             partitionCount: MAX_PARTITION_COUNT,
             isPublicStream: (opts.encryptionKey === undefined),
             isStreamPublisher: true
@@ -160,19 +160,19 @@ export const createRandomAuthentication = (): Authentication => {
     return createPrivateKeyAuthentication(`0x${fastPrivateKey()}`, undefined as any)
 }
 
-export const createStreamRegistryCached = (opts?: {
+export const createStreamRegistry = (opts?: {
     partitionCount?: number
     isPublicStream?: boolean
     isStreamPublisher?: boolean
     isStreamSubscriber?: boolean
-}): StreamRegistryCached => {
+}): StreamRegistry => {
     return {
         getStream: async () => ({
             getMetadata: () => ({
                 partitions: opts?.partitionCount ?? 1
             })
         }),
-        isPublic: async () => {
+        hasPublicSubscribePermission: async () => {
             return opts?.isPublicStream ?? false
         },
         isStreamPublisher: async () => {

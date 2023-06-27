@@ -16,14 +16,14 @@ import { keyToArrayIndex } from '@streamr/utils'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { Mapping } from '../utils/Mapping'
 import { Authentication } from '../Authentication'
-import { StreamRegistryCached } from '../registry/StreamRegistryCached'
+import { StreamRegistry } from '../registry/StreamRegistry'
 import { formLookupKey } from '../utils/utils'
 import { StreamrClientError } from '../StreamrClientError'
 
 export interface MessageFactoryOptions {
     streamId: StreamID
     authentication: Authentication
-    streamRegistry: Pick<StreamRegistryCached, 'getStream' | 'isPublic' | 'isStreamPublisher'>
+    streamRegistry: Pick<StreamRegistry, 'getStream' | 'hasPublicSubscribePermission' | 'isStreamPublisher'>
     groupKeyQueue: GroupKeyQueue
 }
 
@@ -51,7 +51,7 @@ export class MessageFactory {
     private defaultPartition: number | undefined
     private readonly defaultMessageChainIds: Mapping<[partition: number], string>
     private readonly prevMsgRefs: Map<string, MessageRef> = new Map()
-    private readonly streamRegistry: Pick<StreamRegistryCached, 'getStream' | 'isPublic' | 'isStreamPublisher'>
+    private readonly streamRegistry: Pick<StreamRegistry, 'getStream' | 'hasPublicSubscribePermission' | 'isStreamPublisher'>
     private readonly groupKeyQueue: GroupKeyQueue
 
     constructor(opts: MessageFactoryOptions) {
@@ -99,7 +99,7 @@ export class MessageFactory {
         this.prevMsgRefs.set(msgChainKey, msgRef)
         const messageId = new MessageID(this.streamId, partition, msgRef.timestamp, msgRef.sequenceNumber, publisherId, msgChainId)
 
-        const encryptionType = (await this.streamRegistry.isPublic(this.streamId)) ? EncryptionType.NONE : EncryptionType.AES
+        const encryptionType = (await this.streamRegistry.hasPublicSubscribePermission(this.streamId)) ? EncryptionType.NONE : EncryptionType.AES
         let groupKeyId: string | undefined
         let newGroupKey: EncryptedGroupKey | undefined
         let serializedContent = JSON.stringify(content)

@@ -12,12 +12,12 @@ import {
 } from '@streamr/protocol'
 import { EthereumAddress, Logger } from '@streamr/utils'
 import without from 'lodash/without'
-import { Lifecycle, delay, inject, scoped } from 'tsyringe'
+import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { createSignedMessage } from '../publish/MessageFactory'
 import { createRandomMsgChainId } from '../publish/messageChain'
-import { StreamRegistryCached } from '../registry/StreamRegistryCached'
+import { StreamRegistry } from '../registry/StreamRegistry'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { validateStreamMessage } from '../utils/validateStreamMessage'
 import { EncryptionUtil } from './EncryptionUtil'
@@ -32,20 +32,20 @@ import { LocalGroupKeyStore } from './LocalGroupKeyStore'
 export class PublisherKeyExchange {
 
     private readonly networkNodeFacade: NetworkNodeFacade
-    private readonly streamRegistryCached: StreamRegistryCached
+    private readonly streamRegistry: StreamRegistry
     private readonly store: LocalGroupKeyStore
     private readonly authentication: Authentication
     private readonly logger: Logger
 
     constructor(
         networkNodeFacade: NetworkNodeFacade,
-        @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
+        streamRegistry: StreamRegistry,
         store: LocalGroupKeyStore,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         loggerFactory: LoggerFactory
     ) {
         this.networkNodeFacade = networkNodeFacade
-        this.streamRegistryCached = streamRegistryCached
+        this.streamRegistry = streamRegistry
         this.store = store
         this.authentication = authentication
         this.logger = loggerFactory.createLogger(module)
@@ -63,7 +63,7 @@ export class PublisherKeyExchange {
                 const { recipient, requestId, rsaPublicKey, groupKeyIds } = GroupKeyRequest.fromStreamMessage(request) as GroupKeyRequest
                 if (recipient === authenticatedUser) {
                     this.logger.debug('Handling group key request', { requestId })
-                    await validateStreamMessage(request, this.streamRegistryCached)
+                    await validateStreamMessage(request, this.streamRegistry)
                     const keys = without(
                         await Promise.all(groupKeyIds.map((id: string) => this.store.get(id, authenticatedUser))),
                         undefined) as GroupKey[]

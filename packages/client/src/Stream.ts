@@ -16,7 +16,6 @@ import { StreamrClientEventEmitter } from './events'
 import { PermissionAssignment, PublicPermissionQuery, UserPermissionQuery } from './permission'
 import { Publisher } from './publish/Publisher'
 import { StreamRegistry } from './registry/StreamRegistry'
-import { StreamRegistryCached } from './registry/StreamRegistryCached'
 import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
 import { Resends } from './subscribe/Resends'
 import { Subscriber } from './subscribe/Subscriber'
@@ -96,7 +95,6 @@ export class Stream {
     private readonly _subscriber: Subscriber
     private readonly _resends: Resends
     private readonly _streamRegistry: StreamRegistry
-    private readonly _streamRegistryCached: StreamRegistryCached
     private readonly _streamStorageRegistry: StreamStorageRegistry
     private readonly _loggerFactory: LoggerFactory
     private readonly _eventEmitter: StreamrClientEventEmitter
@@ -109,7 +107,6 @@ export class Stream {
         publisher: Publisher,
         subscriber: Subscriber,
         resends: Resends,
-        streamRegistryCached: StreamRegistryCached,
         streamRegistry: StreamRegistry,
         streamStorageRegistry: StreamStorageRegistry,
         loggerFactory: LoggerFactory,
@@ -130,7 +127,6 @@ export class Stream {
         this._publisher = publisher
         this._subscriber = subscriber
         this._resends = resends
-        this._streamRegistryCached = streamRegistryCached
         this._streamRegistry = streamRegistry
         this._streamStorageRegistry = streamStorageRegistry
         this._loggerFactory = loggerFactory
@@ -146,7 +142,7 @@ export class Stream {
         try {
             await this._streamRegistry.updateStream(this.id, merged)
         } finally {
-            this._streamRegistryCached.clearStream(this.id)
+            this._streamRegistry.clearStreamCache(this.id)
         }
         this.metadata = merged
     }
@@ -174,7 +170,7 @@ export class Stream {
         try {
             await this._streamRegistry.deleteStream(this.id)
         } finally {
-            this._streamRegistryCached.clearStream(this.id)
+            this._streamRegistry.clearStreamCache(this.id)
         }
     }
 
@@ -253,7 +249,7 @@ export class Stream {
                 'storage node did not respond'
             )
         } finally {
-            this._streamRegistryCached.clearStream(this.id)
+            this._streamRegistry.clearStreamCache(this.id)
             await assignmentSubscription?.unsubscribe() // should never reject...
         }
     }
@@ -265,7 +261,7 @@ export class Stream {
         try {
             return this._streamStorageRegistry.removeStreamFromStorageNode(this.id, toEthereumAddress(nodeAddress))
         } finally {
-            this._streamRegistryCached.clearStream(this.id)
+            this._streamRegistry.clearStreamCache(this.id)
         }
     }
 
