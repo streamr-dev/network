@@ -29,10 +29,10 @@ export class MaintainTopologyService {
     }
 
     private onAddStakedStreams = (streamIDs: StreamID[]) => {
-        streamIDs.map(this.oneByOne(this.addStream.bind(this)))
+        streamIDs.map(this.concurrencyLimiter(this.addStream.bind(this)))
     }
 
-    private onRemoveStakedStream = this.oneByOne(async (streamId: StreamID) => {
+    private onRemoveStakedStream = this.concurrencyLimiter(async (streamId: StreamID) => {
         const subscriptions = this.subscriptions.get(streamId)
         this.subscriptions.removeAll(streamId, subscriptions)
         await Promise.all(subscriptions.map((sub) => sub.unsubscribe())) // TODO: rejects?
@@ -58,7 +58,7 @@ export class MaintainTopologyService {
         }
     }
 
-    private oneByOne(
+    private concurrencyLimiter(
         fn: (streamId: StreamID) => Promise<void>
     ): (streamId: StreamID) => void {
         return (streamId) => {
