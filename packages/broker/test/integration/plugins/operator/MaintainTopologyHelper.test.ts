@@ -5,7 +5,7 @@ import { Wallet } from "@ethersproject/wallet"
 import { parseEther } from "@ethersproject/units"
 import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
 
-import type { IERC677, Operator } from "@streamr/network-contracts"
+import type { TestToken, Operator } from "@streamr/network-contracts"
 import type { StreamRegistry } from "@streamr/network-contracts"
 
 import { tokenABI } from "@streamr/network-contracts"
@@ -28,7 +28,7 @@ describe("MaintainTopologyHelper", () => {
     const chainURL = config.rpcEndpoints[0].url
 
     let provider: Provider
-    let token: IERC677
+    let token: TestToken
     let adminWallet: Wallet
     let streamId1: string
     let streamId2: string
@@ -55,7 +55,7 @@ describe("MaintainTopologyHelper", () => {
         const streamCreatorKey = "0xfe1d528b7e204a5bdfb7668a1ed3adfee45b4b96960a175c9ef0ad16dd58d728"
         adminWallet = new Wallet(streamCreatorKey, provider)
 
-        token = new Contract(config.contracts.LINK, tokenABI) as unknown as IERC677
+        token = new Contract(config.contracts.LINK, tokenABI) as unknown as TestToken
         const timeString = (new Date()).getTime().toString()
         const streamPath1 = "/operatorclienttest-1-" + timeString
         const streamPath2 = "/operatorclienttest-2-" + timeString
