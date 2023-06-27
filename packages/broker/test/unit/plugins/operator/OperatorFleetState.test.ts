@@ -41,6 +41,11 @@ describe(OperatorFleetState, () => {
         await expect(() => state.start()).rejects.toEqual(new Error('already started'))
     })
 
+    it('subscribes to coordination stream', async () => {
+        await state.start()
+        expect(streamrClient.subscribe).toHaveBeenCalledWith(coordinationStreamId, expect.anything())
+    })
+
     it('unsubscribes on destroy', async () => {
         await state.start()
         await state.destroy()
