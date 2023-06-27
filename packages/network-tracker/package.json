@@ -28,7 +28,7 @@
     "@streamr/protocol": "8.5.3",
     "@streamr/utils": "8.5.3",
     "ajv": "^8.8.2",
-    "commander": "^10.0.1",
+    "commander": "^11.0.0",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
     "ethers": "^5.4.7",

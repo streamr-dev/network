@@ -24,7 +24,7 @@ describe('OperatorPlugin', () => {
             trackerPort: 12345,
             extraPlugins: {
                 operator: {
-                    operatorContractAddress: '0x00c9f382d8283dff280f40e4CD97f485CDE0986c'
+                    operatorContractAddress: '0x4A5C0EC07F7ddBd4B6050181638e24b0153991b2'
                 }
             }
         })

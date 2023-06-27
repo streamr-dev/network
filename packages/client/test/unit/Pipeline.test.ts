@@ -643,8 +643,7 @@ describe('Pipeline', () => {
                     yield* s
                 })
                 pipeline.onFinally.listen(onFinally)
-
-                pipeline.pull(generate())
+                pull(generate(), pipeline)
                 return pipeline
             })
 
@@ -654,11 +653,10 @@ describe('Pipeline', () => {
                     yield* s
                 })
                 pipeline.onFinally.listen(onFinally)
-
-                pipeline.pull((async function* generateError() {
+                pull((async function* generateError() {
                     yield* generate()
                     throw err
-                }()))
+                }()), pipeline)
                 const received: number[] = []
                 await expect(async () => {
                     for await (const msg of pipeline) {
@@ -675,11 +673,10 @@ describe('Pipeline', () => {
                     yield* s
                 })
                 pipeline.onFinally.listen(onFinally)
-
                 // eslint-disable-next-line require-yield
-                pipeline.pull((async function* generateError() {
+                pull((async function* generateError() {
                     throw err
-                }()))
+                }()), pipeline)
                 const received: any[] = []
                 await expect(async () => {
                     for await (const msg of pipeline) {

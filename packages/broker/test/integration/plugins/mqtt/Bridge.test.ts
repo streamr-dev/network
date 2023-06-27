@@ -71,7 +71,7 @@ describe('MQTT Bridge', () => {
         publisher.publish(stream.id, JSON.stringify(message))
         await wait(1000)
 
-        expect(messageQueue.items).toEqual([message])
+        expect(messageQueue.values()).toEqual([message])
 
         await Promise.allSettled([
             subscriber.end(true),
@@ -104,8 +104,8 @@ describe('MQTT Bridge', () => {
         streamrClient.publish(stream.id, expected)
 
         await wait(2000)
-        expect(messageQueue1.items).toEqual([expected])
-        expect(messageQueue2.items).toEqual([expected])
+        expect(messageQueue1.values()).toEqual([expected])
+        expect(messageQueue2.values()).toEqual([expected])
 
         await Promise.allSettled([
             subscriber1.end(true),
@@ -124,7 +124,7 @@ describe('MQTT Bridge', () => {
         streamrClient.publish(stream.id, expected)
 
         await wait(2000)
-        expect(messageQueue.items).toEqual([expected])
+        expect(messageQueue.values()).toEqual([expected])
 
         await Promise.allSettled([
             subscriber1.end(true),
@@ -144,8 +144,8 @@ describe('MQTT Bridge', () => {
         streamrClient.publish(stream.id, expected)
 
         await wait(2000)
-        expect(messageQueue1.items).toEqual([expected])
-        expect(messageQueue2.items).toEqual([])
+        expect(messageQueue1.values()).toEqual([expected])
+        expect(messageQueue2.values()).toEqual([])
 
         await Promise.allSettled([
             subscriber1.end(true),

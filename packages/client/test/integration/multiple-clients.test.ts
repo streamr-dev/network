@@ -174,7 +174,7 @@ describe('PubSub with multiple clients', () => {
 
             checkMessages(published, receivedMessagesMain)
             checkMessages(published, receivedMessagesOther)
-        }, 10 * 1000)
+        })
 
         // late subscriber test is super unreliable. Doesn't seem to be a good way to make the
         // late subscriber reliably get all of both realtime and resent messages
