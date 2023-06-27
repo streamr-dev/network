@@ -20,6 +20,7 @@ const localDataCenter = 'datacenter1'
 const keyspace = 'streamr_dev_v2'
 
 const HTTP_PORT = 17770
+const NETWORK_LAYER_PORT = 44405
 
 describe('StorageConfig', () => {
     let cassandraClient: Client
@@ -52,7 +53,7 @@ describe('StorageConfig', () => {
         storageNode = await startStorageNode(
             storageNodeAccount.privateKey,
             HTTP_PORT,
-            44405 
+            NETWORK_LAYER_PORT 
         )
     })
 

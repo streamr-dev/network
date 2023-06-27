@@ -6,13 +6,15 @@ import { Broker } from "../../../../src/broker"
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { toEthereumAddress } from '@streamr/utils'
 
+const NETWORK_LAYER_PORT = 44404
+
 describe('StorageNode', () => {
     let storageNode: Broker
     let storageNodeAccount: Wallet
 
     beforeAll(async () => {
         storageNodeAccount = new Wallet(await fetchPrivateKeyWithGas())
-        storageNode = await startStorageNode(storageNodeAccount.privateKey, 1234, 44404)
+        storageNode = await startStorageNode(storageNodeAccount.privateKey, 1234, NETWORK_LAYER_PORT)
     }, 30 * 1000)
 
     afterAll(async () => {

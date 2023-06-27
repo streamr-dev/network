@@ -12,6 +12,7 @@ import { toEthereumAddress } from '@streamr/utils'
 
 jest.setTimeout(30000)
 const httpPort1 = 12371
+const networkLayerPort = 40412
 
 const httpGet = (url: string): Promise<[number, string]> => { // return tuple is of form [statusCode, body]
     return new Promise((resolve, reject) => {
@@ -42,7 +43,7 @@ describe('DataMetadataEndpoints', () => {
         storageNode = await startStorageNode(
             storageNodeAccount.privateKey,
             httpPort1,
-            40412
+            networkLayerPort
         )
     })
 
