@@ -21,7 +21,7 @@ const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '127.0.0.1'
 
 const logger = new Logger(module)
 
-const SPONSOR_AMOUNT = 200
+const SPONSOR_AMOUNT = 250
 const STAKE_AMOUNT = 100
 
 describe("MaintainOperatorValueService", () => {
