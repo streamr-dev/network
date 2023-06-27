@@ -1,3 +1,4 @@
+import { NodeType } from '@streamr/dht'
 import { createStrictConfig, JsonPeerDescriptor, redactConfig } from '../../src/Config'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { generateEthereumAccount } from '../../src/Ethereum'
@@ -121,7 +122,7 @@ describe('Config', () => {
         it('can override entryPoints', () => {
             const entryPoints = [{
                 id: '0xFBB6066c44bc8132bA794C73f58F391273E3bdA1',
-                type: 0,
+                type: NodeType.NODEJS,
                 websocket: {
                     ip: 'brubeck3.streamr.network',
                     port: 30401

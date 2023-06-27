@@ -1,5 +1,5 @@
 import { fastWallet } from '@streamr/test-utils'
-import { ExternalProvider, StreamrClientConfig } from 'streamr-client'
+import { ExternalProvider, StreamrClientConfig, NodeType } from 'streamr-client'
 import { createBroker } from '../../src/broker'
 import { Config } from '../../src/config/config'
 
@@ -11,11 +11,11 @@ const formConfig = (auth: StreamrClientConfig['auth']): Config => {
                 layer0: {
                     peerDescriptor: {
                         id: 'broker',
-                        type: 0
+                        type: NodeType.NODEJS,
                     },
                     entryPoints: [{
                         id: 'broker',
-                        type: 0
+                        type: NodeType.NODEJS,
                     }]
                 }
             }

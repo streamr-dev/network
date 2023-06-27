@@ -8,7 +8,7 @@ import { MarkOptional, DeepRequired } from 'ts-essentials'
 
 import CONFIG_SCHEMA from './config.schema.json'
 import { LogLevel } from '@streamr/utils'
-import { IceServer } from '@streamr/dht'
+import { IceServer, NodeType } from '@streamr/dht'
 
 import type { ConnectionInfo } from '@ethersproject/web'
 import { generateClientId } from './utils/utils'
@@ -123,7 +123,7 @@ export interface NetworkConfig {
 
 export interface JsonPeerDescriptor {
     id: string
-    type: number
+    type: NodeType
     websocket?: ConnectivityMethod
     openInternet?: boolean
     region?: number
