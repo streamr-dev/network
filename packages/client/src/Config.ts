@@ -41,8 +41,6 @@ export interface PrivateKeyAuthConfig {
 export interface JsonPeerDescriptor {
     kademliaId: string
     type: number
-    udp?: ConnectivityMethod
-    tcp?: ConnectivityMethod
     websocket?: ConnectivityMethod
     openInternet?: boolean
     region?: number

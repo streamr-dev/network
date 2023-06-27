@@ -474,12 +474,6 @@
                 "type": {
                     "type": "number"
                 },
-                "udp": {
-                    "$ref": "#/definitions/connectivityMethod"
-                },
-                "tcp": {
-                    "$ref": "#/definitions/connectivityMethod"
-                },
                 "websocket": {
                     "$ref": "#/definitions/connectivityMethod"
                 },

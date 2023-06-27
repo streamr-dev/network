@@ -118,8 +118,6 @@ export function entryPointTranslator(json: JsonPeerDescriptor[]): PeerDescriptor
             kademliaId: PeerID.fromString(ep.kademliaId).value,
             type: ep.type,
             openInternet: ep.openInternet,
-            udp: ep.udp,
-            tcp: ep.tcp,
             websocket: ep.websocket
         }
         return peerDescriptor
