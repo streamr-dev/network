@@ -28,8 +28,8 @@ async function startNetworkNodeAndListenForAtLeastOneMessage(streamId: StreamID)
         ...CONFIG_TEST.network as any,
         layer0: {
             entryPoints,
-            stringKademliaId: 'node'
-        }
+        },
+        networkNode: {} 
     })
 
     try {
