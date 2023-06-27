@@ -1,5 +1,4 @@
 import { toEthereumAddress } from '@streamr/utils'
-import { v4 as uuid } from 'uuid'
 import { StreamrClientConfig } from './Config'
 import { MIN_KEY_LENGTH } from './encryption/RSAKeyPair'
 
@@ -30,15 +29,8 @@ export const CONFIG_TEST: StreamrClientConfig = {
                     port: 40401
                 }
             }],
-            peerDescriptor: {
-                kademliaId: uuid(),
-                type: 0
-            },
             iceServers: [],
             webrtcDisallowPrivateAddresses: false
-        },
-        networkNode: {
-            firstConnectionTimeout: 15 * 1000
         }
     },
     contracts: {
