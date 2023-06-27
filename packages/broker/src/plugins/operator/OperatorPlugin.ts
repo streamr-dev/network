@@ -12,6 +12,7 @@ import { Signer } from '@ethersproject/abstract-signer'
 import { Wallet } from 'ethers'
 import { VoteOnSuspectNodeService } from './VoteOnSuspectNodeService'
 import { MaintainTopologyHelper } from './MaintainTopologyHelper'
+import { MaintainOperatorValueService } from './MaintainOperatorValueService'
 
 export interface OperatorPluginConfig {
     operatorContractAddress: string
@@ -31,6 +32,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     private readonly maintainOperatorContractService = new MaintainOperatorContractService()
     private readonly voteOnSuspectNodeService = new VoteOnSuspectNodeService()
     private readonly maintainTopologyService: MaintainTopologyService
+    private readonly maintainOperatorValueService: MaintainOperatorValueService
 
     constructor(options: PluginOptions) {
         super(options)
@@ -52,6 +54,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                 serviceHelperConfig
             )
         )
+        this.maintainOperatorValueService = new MaintainOperatorValueService(serviceHelperConfig)
     
     }
 
@@ -59,6 +62,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         await this.announceNodeService.start()
         await this.inspectRandomNodeService.start()
         await this.maintainOperatorContractService.start()
+        await this.maintainOperatorValueService.start()
         await this.maintainTopologyService.start()
         await this.voteOnSuspectNodeService.start()
     }
@@ -67,6 +71,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         await this.announceNodeService.stop()
         await this.inspectRandomNodeService.stop()
         await this.maintainOperatorContractService.stop()
+        await this.maintainOperatorValueService.stop()
         await this.maintainTopologyService.stop()
         await this.voteOnSuspectNodeService.stop()
     }
