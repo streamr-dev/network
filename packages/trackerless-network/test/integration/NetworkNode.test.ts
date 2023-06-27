@@ -54,7 +54,9 @@ describe('NetworkNode', () => {
         })
 
         await node1.start()
+        node1.setStreamEntryPoints(STREAM_ID, [pd1])
         await node2.start()
+        node2.setStreamEntryPoints(STREAM_ID, [pd1])
     })
 
     afterEach(async () => {
@@ -84,13 +86,13 @@ describe('NetworkNode', () => {
         })
 
         let msgCount = 0
-        await node1.subscribeAndWaitForJoin(STREAM_ID, [pd1])
+        await node1.subscribeAndWaitForJoin(STREAM_ID)
         node1.addMessageListener((msg) => {
             expect(msg.messageId.timestamp).toEqual(666)
             expect(msg.getSequenceNumber()).toEqual(0)
             msgCount += 1
         })
-        await node2.waitForJoinAndPublish(streamMessage, [pd1])
+        await node2.waitForJoinAndPublish(streamMessage)
         await waitForCondition(() => msgCount === 1)
     })
 

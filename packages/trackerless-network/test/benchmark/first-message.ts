@@ -95,7 +95,7 @@ const measureJoiningTime = async (count: number) => {
             messageType: StreamMessageType.MESSAGE,
             signature: 'signature',
         })
-        streams.get(stream)!.publish(streamMessage, [])
+        streams.get(stream)!.publish(streamMessage)
     }, 1000)
     // get random node from network to use as entrypoint
     const randomNode = nodes[Math.floor(Math.random() * nodes.length)]

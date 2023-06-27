@@ -3,7 +3,6 @@ import isString from 'lodash/isString'
 import pLimit from 'p-limit'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
-import { JsonPeerDescriptor } from '../Config'
 import { MessageFactory } from './MessageFactory'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { StreamIDBuilder } from '../StreamIDBuilder'
@@ -13,13 +12,11 @@ import { StreamRegistry } from '../registry/StreamRegistry'
 import { StreamDefinition } from '../types'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { Mapping } from '../utils/Mapping'
-import { entryPointTranslator } from '../utils/utils'
 
 export interface PublishMetadata {
     timestamp?: string | number | Date
     partitionKey?: string | number
     msgChainId?: string
-    knownEntryPoints?: JsonPeerDescriptor[]
 }
 
 const parseTimestamp = (metadata?: PublishMetadata): number => {
@@ -70,7 +67,6 @@ export class Publisher {
         metadata?: PublishMetadata
     ): Promise<StreamMessage<T>> {
         const timestamp = parseTimestamp(metadata)
-        const entryPoints = metadata?.knownEntryPoints ? entryPointTranslator(metadata.knownEntryPoints) : []  
         /*
          * There are some steps in the publish process which need to be done sequentially:
          * - message chaining
@@ -98,7 +94,7 @@ export class Publisher {
                     },
                     partition
                 )
-                await this.node.publishToNode(message, entryPoints)
+                await this.node.publishToNode(message)
                 return message
             } catch (e) {
                 const errorCode = (e instanceof StreamrClientError) ? e.code : 'UNKNOWN_ERROR'

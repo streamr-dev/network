@@ -107,7 +107,7 @@ describe('stream without default entrypoints', () => {
     it('multiple nodes can join without configured entrypoints simultaneously', async () => {
         const numOfSubscribers = 8
         await Promise.all(range(numOfSubscribers).map(async (i) => {
-            await nodes[i].subscribeAndWaitForJoin(STREAM_ID, [], undefined, 4)
+            await nodes[i].subscribeAndWaitForJoin(STREAM_ID, undefined, 4)
             nodes[i].addMessageListener((_msg) => {
                 numOfReceivedMessages += 1
             })

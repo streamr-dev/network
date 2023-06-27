@@ -1,13 +1,10 @@
 import { StreamMessage, StreamMessageType, StreamPartID } from '@streamr/protocol'
-import { JsonPeerDescriptor } from '../Config'
 import { NetworkNodeFacade, NetworkNodeStub } from '../NetworkNodeFacade'
 import { PushPipeline } from '../utils/PushPipeline'
 import { Scaffold } from '../utils/Scaffold'
 import { Signal } from '../utils/Signal'
-import { entryPointTranslator } from '../utils/utils'
 import { MessagePipelineFactory } from './MessagePipelineFactory'
 import { Subscription } from './Subscription'
-import { PeerDescriptor } from '@streamr/dht'
 
 /**
  * Manages adding & removing subscriptions to node as needed.
@@ -24,12 +21,10 @@ export class SubscriptionSession {
     private readonly pendingRemoval: WeakSet<Subscription> = new WeakSet()
     private readonly pipeline: PushPipeline<StreamMessage, StreamMessage>
     private readonly node: NetworkNodeFacade
-    private readonly knownEntryPoints: PeerDescriptor[]
     constructor(
         streamPartId: StreamPartID,
         messagePipelineFactory: MessagePipelineFactory,
-        node: NetworkNodeFacade,
-        knownEntryPoints?: JsonPeerDescriptor[]
+        node: NetworkNodeFacade
     ) {
         this.streamPartId = streamPartId
         this.distributeMessage = this.distributeMessage.bind(this)
@@ -47,7 +42,6 @@ export class SubscriptionSession {
                 }
             })
         this.pipeline.flow()
-        this.knownEntryPoints = knownEntryPoints ? entryPointTranslator(knownEntryPoints) : []
     }
 
     private async retire(): Promise<void> {
@@ -106,7 +100,7 @@ export class SubscriptionSession {
     private async subscribe(): Promise<NetworkNodeStub> {
         const node = await this.node.getNode()
         node.addMessageListener(this.onMessageInput)
-        await node.subscribe(this.streamPartId, this.knownEntryPoints)
+        await node.subscribe(this.streamPartId)
         return node
     }
 

@@ -40,12 +40,12 @@ export class FakeNetworkNode implements NetworkNodeStub {
         this.subscriptions.delete(streamPartId)
     }
 
-    async subscribeAndWaitForJoin(streamPartId: StreamPartID, _entryPointDescriptors?: PeerDescriptor[], _timeout?: number): Promise<number> {
+    async subscribeAndWaitForJoin(streamPartId: StreamPartID, _timeout?: number): Promise<number> {
         this.subscriptions.add(streamPartId)
         return this.getNeighborsForStreamPart(streamPartId).length
     }
 
-    async waitForJoinAndPublish(msg: StreamMessage, _entryPointDescriptors?: PeerDescriptor[], _timeout?: number): Promise<number> {
+    async waitForJoinAndPublish(msg: StreamMessage, _timeout?: number): Promise<number> {
         const streamPartID = msg.getStreamPartID()
         this.subscriptions.add(streamPartID)
         this.publish(msg)
@@ -75,6 +75,11 @@ export class FakeNetworkNode implements NetworkNodeStub {
             .filter((node) => (node.id !== this.id))
             .filter((node) => node.subscriptions.has(streamPartId))
             .map((node) => node.id)
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    setStreamEntryPoints(_streamPartId: StreamPartID, _peerDescriptors: PeerDescriptor[]): void {
+        return
     }
 
     // eslint-disable-next-line class-methods-use-this
