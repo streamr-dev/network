@@ -33,7 +33,7 @@
     "@protobuf-ts/runtime-rpc": "^2.8.2",
     "@streamr/proto-rpc": "8.5.4",
     "@streamr/utils": "8.5.4",
-    "eventemitter3": "^4.0.7",
+    "eventemitter3": "^5.0.0",
     "heap": "^0.2.6",
     "ipaddr.js": "^2.0.1",
     "k-bucket": "^5.1.0",

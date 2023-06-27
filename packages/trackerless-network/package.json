@@ -35,7 +35,7 @@
     "@streamr/protocol": "8.5.4",
     "@streamr/test-utils": "8.5.4",
     "@streamr/utils": "8.5.4",
-    "eventemitter3": "^4.0.7",
+    "eventemitter3": "^5.0.0",
     "lodash": "^4.17.21",
     "yallist": "^4.0.0"
   },
