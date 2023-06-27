@@ -68,14 +68,14 @@
     "git-revision-webpack-plugin": "^5.0.0",
     "jest-leak-detector": "^27.3.1",
     "lodash-webpack-plugin": "^0.11.6",
-    "nightwatch": "^2.6.20",
+    "nightwatch": "^3.0.1",
     "node-polyfill-webpack-plugin": "^2.0.1",
     "terser-webpack-plugin": "^5.2.5",
     "ts-loader": "^9.3.1",
     "typedoc": "^0.24.8",
     "util": "^0.12.4",
     "weak-napi": "^2.0.2",
-    "webpack": "^5.87.0",
+    "webpack": "^5.88.0",
     "webpack-bundle-analyzer": "^4.9.0",
     "webpack-cli": "^5.1.4",
     "webpack-merge": "^5.8.0"
@@ -122,7 +122,7 @@
     "sqlite3": "^5.0.3",
     "ts-essentials": "^9.3.0",
     "ts-toolbelt": "^9.6.0",
-    "tsyringe": "^4.6.0",
+    "tsyringe": "^4.8.0",
     "uuid": "^9.0.0"
   },
   "optionalDependencies": {

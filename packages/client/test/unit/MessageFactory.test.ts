@@ -7,8 +7,8 @@ import { GroupKey } from '../../src/encryption/GroupKey'
 import { PublishMetadata } from '../../src/publish/Publisher'
 import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
 import { MessageFactory, MessageFactoryOptions } from '../../src/publish/MessageFactory'
-import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
-import { createGroupKeyQueue, createStreamRegistryCached } from '../test-utils/utils'
+import { StreamRegistry } from '../../src/registry/StreamRegistry'
+import { createGroupKeyQueue, createStreamRegistry } from '../test-utils/utils'
 import { merge } from '@streamr/utils'
 
 const WALLET = fastWallet()
@@ -19,7 +19,7 @@ const PARTITION_COUNT = 50
 const GROUP_KEY = GroupKey.generate()
 
 const createMessageFactory = async (opts?: {
-    streamRegistry?: StreamRegistryCached
+    streamRegistry?: StreamRegistry
     groupKeyQueue?: GroupKeyQueue
 }) => {
     const authentication = createPrivateKeyAuthentication(WALLET.privateKey, undefined as any)
@@ -28,7 +28,7 @@ const createMessageFactory = async (opts?: {
             {
                 streamId: STREAM_ID,
                 authentication,
-                streamRegistry: createStreamRegistryCached({
+                streamRegistry: createStreamRegistry({
                     partitionCount: PARTITION_COUNT,
                     isPublicStream: false,
                     isStreamPublisher: true
@@ -79,7 +79,7 @@ describe('MessageFactory', () => {
 
     it('public stream', async () => {
         const messageFactory = await createMessageFactory({
-            streamRegistry: createStreamRegistryCached({
+            streamRegistry: createStreamRegistry({
                 isPublicStream: true
             })
         })
@@ -123,7 +123,7 @@ describe('MessageFactory', () => {
 
     it('not a publisher', async () => {
         const messageFactory = await createMessageFactory({
-            streamRegistry: createStreamRegistryCached({
+            streamRegistry: createStreamRegistry({
                 isStreamPublisher: false
             })
         })
@@ -183,7 +183,7 @@ describe('MessageFactory', () => {
         it('selected random partition in range when partition count decreases', async () => {
             let partitionCount: number = MAX_PARTITION_COUNT - 1
             const messageFactory = await createMessageFactory({
-                streamRegistry: createStreamRegistryCached({
+                streamRegistry: createStreamRegistry({
                     partitionCount: 1
                 })
             })

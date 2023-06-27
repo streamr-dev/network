@@ -13,7 +13,6 @@ import {
     isPublicPermissionQuery
 } from '../../../src/permission'
 import { StreamRegistry } from '../../../src/registry/StreamRegistry'
-import { StreamRegistryCached } from '../../../src/registry/StreamRegistryCached'
 import { SearchStreamsPermissionFilter } from '../../../src/registry/searchStreams'
 import { Methods } from '../types'
 import { FakeChain, PUBLIC_PERMISSION_TARGET, PublicPermissionTarget, StreamRegistryItem } from './FakeChain'
@@ -22,20 +21,17 @@ import { FakeChain, PUBLIC_PERMISSION_TARGET, PublicPermissionTarget, StreamRegi
 export class FakeStreamRegistry implements Methods<StreamRegistry> {
 
     private readonly chain: FakeChain
-    private readonly streamRegistryCached: StreamRegistryCached
     private readonly streamFactory: StreamFactory
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly authentication: Authentication
     
     constructor(
         chain: FakeChain,
-        streamRegistryCached: StreamRegistryCached,
         streamFactory: StreamFactory,
         streamIdBuilder: StreamIDBuilder,
         @inject(AuthenticationInjectionToken) authentication: Authentication
     ) {
         this.chain = chain
-        this.streamRegistryCached = streamRegistryCached
         this.streamFactory = streamFactory
         this.streamIdBuilder = streamIdBuilder
         this.authentication = authentication
@@ -146,7 +142,6 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         ) => void
     ): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        this.streamRegistryCached.clearStream(streamId)
         const registryItem = this.chain.streams.get(streamId)
         if (registryItem === undefined) {
             throw new Error('Stream not found')
@@ -168,6 +163,19 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
             await this.revokePermissions(stream.streamId, ...await this.getPermissions(stream.streamId))
             await this.grantPermissions(stream.streamId, ...stream.assignments)
         }))
+    }
+
+    hasPublicSubscribePermission(streamId: StreamID): Promise<boolean> {
+        return this.hasPermission({
+            streamId,
+            public: true,
+            permission: StreamPermission.SUBSCRIBE
+        })
+    }
+    
+    // eslint-disable-next-line class-methods-use-this
+    clearStreamCache(_streamId: StreamID): void {
+        // no-op
     }
 
     async isStreamPublisher(streamIdOrPath: string, user: EthereumAddress): Promise<boolean> {

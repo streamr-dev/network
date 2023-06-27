@@ -321,8 +321,9 @@ export class StreamrClient {
      *
      * @returns rejects if the stream is not found
      */
-    getStream(streamIdOrPath: string): Promise<Stream> {
-        return this.streamRegistry.getStream(streamIdOrPath)
+    async getStream(streamIdOrPath: string): Promise<Stream> {
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+        return this.streamRegistry.getStream(streamId, false)
     }
 
     /**
@@ -457,14 +458,16 @@ export class StreamrClient {
      * Checks whether a given ethereum address has {@link StreamPermission.PUBLISH} permission to a stream.
      */
     async isStreamPublisher(streamIdOrPath: string, userAddress: string): Promise<boolean> {
-        return this.streamRegistry.isStreamPublisher(streamIdOrPath, toEthereumAddress(userAddress))
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+        return this.streamRegistry.isStreamPublisher(streamId, toEthereumAddress(userAddress), false)
     }
 
     /**
      * Checks whether a given ethereum address has {@link StreamPermission.SUBSCRIBE} permission to a stream.
      */
     async isStreamSubscriber(streamIdOrPath: string, userAddress: string): Promise<boolean> {
-        return this.streamRegistry.isStreamSubscriber(streamIdOrPath, toEthereumAddress(userAddress))
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+        return this.streamRegistry.isStreamSubscriber(streamId, toEthereumAddress(userAddress), false)
     }
 
     // --------------------------------------------------------------------------------------------
