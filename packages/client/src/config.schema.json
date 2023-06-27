@@ -82,7 +82,8 @@
                             }]
                         },
                         "stringKademliaId": {
-                            "type": "string"
+                            "type": "string",
+                            "description": "TODO: remove later"
                         },
                         "webSocketPort": {
                             "type": "number"

@@ -5,13 +5,13 @@ import { Lifecycle, scoped } from 'tsyringe'
 import { NetworkNodeFactory, NetworkNodeStub } from '../../../src/NetworkNodeFacade'
 import { FakeNetwork } from './FakeNetwork'
 import { PeerDescriptor } from '@streamr/dht'
-import { NetworkOptions } from '@streamr/trackerless-network'
+import { NetworkOptions, NodeId } from '@streamr/trackerless-network'
 
 type MessageListener = (msg: StreamMessage) => void
 
 export class FakeNetworkNode implements NetworkNodeStub {
 
-    public readonly id: string
+    public readonly id: NodeId
     readonly subscriptions: Set<StreamPartID> = new Set()
     readonly messageListeners: MessageListener[] = []
     private readonly network: FakeNetwork
@@ -20,7 +20,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
         this.network = network
     }
 
-    getNodeId(): string {
+    getNodeId(): NodeId {
         return this.id
     }
 

@@ -14,6 +14,7 @@ import { generateClientId } from './utils/utils'
 import { StreamrNodeOpts } from '@streamr/trackerless-network'
 import { DhtNodeOptions } from '@streamr/dht'
 
+// TODO: stringId when PeerDescriptors are auto-generated
 export interface layer0Config extends Omit<DhtNodeOptions, 'entryPoints' | 'peerDescriptor' | 'stringId'> {
     entryPoints?: JsonPeerDescriptor[]
     peerDescriptor?: JsonPeerDescriptor

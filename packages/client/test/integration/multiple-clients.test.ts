@@ -94,7 +94,7 @@ describe('PubSub with multiple clients', () => {
     }
 
     describe('can get messages published from other client', () => {
-        test.only('it works', async () => {
+        test('it works', async () => {
             otherClient = await createSubscriber()
 
             const receivedMessagesOther: any[] = []
