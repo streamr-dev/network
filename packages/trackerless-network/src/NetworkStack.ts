@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/parameter-properties */
 
 import { ConnectionManager, DhtNode, DhtNodeOptions, isSamePeerDescriptor, PeerDescriptor } from '@streamr/dht'
-import { StreamrNode, StreamrNodeOpts } from './logic/StreamrNode'
+import { StreamrNode, StreamrNodeConfig } from './logic/StreamrNode'
 import { MetricsContext, waitForEvent3 } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { StreamPartID } from '@streamr/protocol'
@@ -44,7 +44,7 @@ class ReadynessListener {
 
 export interface NetworkOptions {
     layer0: DhtNodeOptions
-    networkNode: StreamrNodeOpts
+    networkNode: StreamrNodeConfig
     metricsContext?: MetricsContext
 }
 
