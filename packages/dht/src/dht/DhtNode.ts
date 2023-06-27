@@ -40,6 +40,7 @@ import { LocalDataStore } from './store/LocalDataStore'
 import { IceServer } from '../connection/WebRTC/WebRtcConnector'
 import { ExternalApi } from './ExternalApi'
 import { RemoteExternalApi } from './RemoteExternalApi'
+import { UUID } from '../exports'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -96,13 +97,13 @@ export class DhtNodeConfig {
     storeMaxTtl = 60000
     storeNumberOfCopies = 5
     metricsContext = new MetricsContext()
+    peerIdString = new UUID().toString()
 
     transportLayer?: ITransport
     peerDescriptor?: PeerDescriptor
     entryPoints?: PeerDescriptor[]
     webSocketHost?: string
     webSocketPort?: number
-    peerIdString?: string
     nodeName?: string
     rpcRequestTimeout?: number
     iceServers?: IceServer[]
