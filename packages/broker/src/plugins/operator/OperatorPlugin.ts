@@ -5,8 +5,7 @@ import { AnnounceNodeService } from './AnnounceNodeService'
 import { InspectRandomNodeService } from './InspectRandomNodeService'
 import { MaintainOperatorContractService } from './MaintainOperatorContractService'
 import { MaintainTopologyService } from './MaintainTopologyService'
-import fetch from 'node-fetch'
-import { FetchResponse, toEthereumAddress } from '@streamr/utils'
+import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 import { Provider, JsonRpcProvider } from '@ethersproject/providers'
 import { Signer } from '@ethersproject/abstract-signer'
 import { Wallet } from 'ethers'
@@ -21,9 +20,8 @@ export interface OperatorPluginConfig {
 export interface OperatorServiceConfig {
     provider: Provider
     signer: Signer
-    operatorContractAddress: string
+    operatorContractAddress: EthereumAddress
     theGraphUrl: string
-    fetch: (url: string, init?: Record<string, unknown>) => Promise<FetchResponse>
 }
 
 export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
@@ -39,9 +37,8 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         const provider = new JsonRpcProvider(this.brokerConfig.client.contracts!.streamRegistryChainRPCs!.rpcs[0].url)
         const serviceHelperConfig = {
             provider,
-            operatorContractAddress: this.pluginConfig.operatorContractAddress,
+            operatorContractAddress: toEthereumAddress(this.pluginConfig.operatorContractAddress),
             theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`,
-            fetch: fetch,
             signer: Wallet.createRandom().connect(provider)
         }
         this.announceNodeService = new AnnounceNodeService(
