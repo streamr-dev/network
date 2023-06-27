@@ -46,6 +46,7 @@ export const initResendSubscription = (
         const orderMessages = new OrderMessages(
             subscription.streamPartId,
             getStorageNodes,
+            () => {}, // TODO send some error to subscription (NET-987)
             resends,
             config
         )

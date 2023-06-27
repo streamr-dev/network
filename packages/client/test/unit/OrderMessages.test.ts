@@ -29,6 +29,7 @@ const createOrderMessages = (
     return new OrderMessages(
         STREAM_PART_ID,
         getStorageNodes,
+        () => {},
         resends as any,
         {
             ...CONFIG,

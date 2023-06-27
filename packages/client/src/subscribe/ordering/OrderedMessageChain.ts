@@ -20,6 +20,7 @@ export interface Events {
     orderedMessageAdded: (msg: StreamMessage) => void
     gapFound: (gap: Gap) => void
     gapResolved: () => void
+    unfillableGap: (gap: Gap) => void
 }
 
 const logger = new Logger(module)
@@ -109,7 +110,20 @@ export class OrderedMessageChain {
     resolveMessages(to: MessageRef): void {
         if ((this.lastOrderedMsg === undefined) || (this.lastOrderedMsg.getMessageRef().compareTo(to) < 0)) {
             this.consumePendingOrderedMessages(
-                (msg) => (msg.getMessageRef().compareTo(to) <= 0) || this.isNextOrderedMessage(msg)
+                (msg) => {
+                    if (this.isNextOrderedMessage(msg)) {
+                        return true
+                    } else if (msg.getMessageRef().compareTo(to) <= 0) {
+                        const gap = {
+                            from: this.lastOrderedMsg!,
+                            to: msg
+                        }
+                        this.eventEmitter.emit('unfillableGap', gap)
+                        return true
+                    } else {
+                        return false
+                    }
+                }
             )
         }
     }

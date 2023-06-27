@@ -80,6 +80,7 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): PushPipelin
         const orderMessages = new OrderMessages(
             opts.streamPartId,
             opts.getStorageNodes,
+            () => {}, // TODO send some error to messageStream (NET-987)
             opts.resends,
             opts.config
         )
