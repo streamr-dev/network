@@ -79,7 +79,7 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
                 return
             }
             this.streamIdOfSponsorship.delete(sponsorshipAddress)
-            const sponsorshipCount = (this.sponsorshipCountOfStream.get(streamId) ?? 1) - 1
+            const sponsorshipCount = this.sponsorshipCountOfStream.get(streamId)! - 1
             this.sponsorshipCountOfStream.set(streamId, sponsorshipCount)
             if (sponsorshipCount === 0) {
                 this.sponsorshipCountOfStream.delete(streamId)
