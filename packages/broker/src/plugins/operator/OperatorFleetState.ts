@@ -15,25 +15,25 @@ interface OperatorFleetStateEvents {
 }
 
 export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
-    private readonly nodes = new Map<string, number>()
     private readonly streamrClient: StreamrClient
-    private readonly coordinationStream: StreamID
+    private readonly coordinationStreamId: StreamID
     private readonly timeProvider: () => number
     private readonly pruneAgeInMs: number
     private readonly pruneIntervalInMs: number
+    private readonly nodes = new Map<string, number>()
     private subscription?: Subscription
     private pruneNodesIntervalRef?: NodeJS.Timeout
 
     constructor(
         streamrClient: StreamrClient,
-        coordinationStream: StreamID,
+        coordinationStreamId: StreamID,
         timeProvider = Date.now,
         pruneAgeInMs = DEFAULT_PRUNE_AGE_IN_MS,
         pruneIntervalInMs = DEFAULT_PRUNE_INTERVAL_IN_MS
     ) {
         super()
         this.streamrClient = streamrClient
-        this.coordinationStream = coordinationStream
+        this.coordinationStreamId = coordinationStreamId
         this.timeProvider = timeProvider
         this.pruneAgeInMs = pruneAgeInMs
         this.pruneIntervalInMs = pruneIntervalInMs
@@ -43,11 +43,11 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
         if (this.subscription !== undefined) {
             throw new Error('already started')
         }
-        this.subscription = await this.streamrClient.subscribe(this.coordinationStream, (content) => {
+        this.subscription = await this.streamrClient.subscribe(this.coordinationStreamId, (content) => {
             const { msgType, nodeId } = (content as Record<string, unknown>)
             if (typeof msgType !== 'string' || typeof nodeId !== 'string') {
                 logger.warn('Received invalid message in coordination stream', {
-                    coordinationStream: this.coordinationStream,
+                    coordinationStreamId: this.coordinationStreamId,
                 })
                 return
             }
