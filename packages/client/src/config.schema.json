@@ -65,7 +65,7 @@
             "properties": {
                 "layer0": {
                     "type": "object",
-                    "additionalProperties": true,
+                    "additionalProperties": false,
                     "properties": {
                         "entryPoints": {
                             "type": "array",
@@ -80,10 +80,6 @@
                                     "port": 40401
                                 }
                             }]
-                        },
-                        "id": {
-                            "type": "string",
-                            "description": "TODO: remove later"
                         },
                         "webSocketPort": {
                             "type": "number"
