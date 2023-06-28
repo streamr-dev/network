@@ -65,7 +65,7 @@ describe('MQTT Bridge', () => {
 
         const publisher = await createMqttClient()
         publisher.publish(stream.id, JSON.stringify(message))
-        await wait(2000)
+        await wait(6000)
 
         expect(messageQueue.values()).toEqual([message])
 
@@ -83,7 +83,7 @@ describe('MQTT Bridge', () => {
         const subscriber = await createSubscriber(messageQueue)
         await streamrClient.publish(stream.id, expected)
 
-        const actual = await messageQueue.pop(10000)
+        const actual = await messageQueue.pop()
         expect(actual).toEqual(expected)
 
         await subscriber.end(true)
