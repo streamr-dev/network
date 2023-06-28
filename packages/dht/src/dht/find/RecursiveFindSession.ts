@@ -152,7 +152,7 @@ export class RecursiveFindSession extends EventEmitter<RecursiveFindSessionEvent
                         this.emit('findCompleted', this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()))
                         this.findCompletedEmitted = true
                     }
-                }, 5000)
+                }, 4000)
             }
         }
     }

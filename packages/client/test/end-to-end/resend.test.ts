@@ -46,7 +46,7 @@ describe('resend', () => {
                 })
             }
             await wait(MESSAGE_STORE_TIMEOUT)
-        }, TIMEOUT * 2)
+        }, TIMEOUT)
 
         it('can request resend for all messages', async () => {
             const messages: unknown[] = []
