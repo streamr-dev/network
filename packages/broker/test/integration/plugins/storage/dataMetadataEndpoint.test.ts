@@ -35,11 +35,8 @@ describe('DataMetadataEndpoints', () => {
 
     beforeAll(async () => {
         storageNodeAccount = new Wallet(await fetchPrivateKeyWithGas())
-
         client1 = await createClient(await fetchPrivateKeyWithGas())
-
         stream = await createTestStream(client1, module)
-
         storageNode = await startStorageNode(
             storageNodeAccount.privateKey,
             httpPort1,
@@ -79,19 +76,15 @@ describe('DataMetadataEndpoints', () => {
 
     it('returns (non-zero) metadata for existing stream', async () => {
         await stream.addToStorageNode(toEthereumAddress(storageNodeAccount.address))
-
         await client1.publish(stream.id, {
             key: 1
         })
-
         await client1.publish(stream.id, {
             key: 2
         })
-
         await client1.publish(stream.id, {
             key: 3
         })
-
         const lastItem = await client1.publish(stream.id, {
             key: 4
         })
