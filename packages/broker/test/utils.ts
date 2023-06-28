@@ -28,12 +28,12 @@ interface TestConfig {
     entryPoints?: JsonPeerDescriptor[]
 }
 
-const DEFAULT_ENTRYPOINTS = [{
-    id: "entryPointBroker",
+export const DEFAULT_ENTRYPOINTS = [{
+    id: "entrypoint",
     type: NodeType.NODEJS,
     websocket: {
         ip: "127.0.0.1",
-        port: 40401
+        port: 40500
     }
 }]
 
@@ -122,7 +122,8 @@ export const createClient = async (
             },
             network: {
                 layer0: {
-                    ...CONFIG_TEST.network!.layer0!
+                    ...CONFIG_TEST.network!.layer0!,
+                    entryPoints: DEFAULT_ENTRYPOINTS
                 },
                 networkNode:
                     merge(
