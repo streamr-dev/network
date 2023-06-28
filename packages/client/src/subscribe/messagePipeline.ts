@@ -26,6 +26,7 @@ export interface MessagePipelineOptions {
     resends: Resends
     streamRegistry: StreamRegistry
     groupKeyManager: GroupKeyManager
+    // eslint-disable-next-line max-len
     config: Pick<StrictStreamrClientConfig, 'orderMessages' | 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'>
     destroySignal: DestroySignal
     loggerFactory: LoggerFactory
