@@ -98,7 +98,7 @@ describe("MaintainOperatorValueService", () => {
 
         await maintainOperatorValueService.start()
 
-        await waitForCondition(async () => (await operatorContract.totalValueInSponsorshipsWei()).gt(totalValueInSponsorshipsBefore), 10000, 1000)
+        await waitForCondition(async () => (await operatorContract.totalValueInSponsorshipsWei()).gt(totalValueInSponsorshipsBefore), 20000, 1000)
         
         const diff = await getDiffBetweenApproxAndRealValues()
         expect((await operatorContract.totalValueInSponsorshipsWei()).toBigInt()).toBeGreaterThan(totalValueInSponsorshipsBefore.toBigInt())

@@ -19,6 +19,8 @@ const { parseEther } = utils
  */
 export async function deployOperatorContract(
     chainConfig: Chain, deployer: Wallet, {
+        minOperatorStakePercent = 0,
+        operatorSharePercent = 0,
         operatorMetadata = "{}",
     } = {}, poolTokenName = `Pool-${Date.now()}`): Promise<Operator> {
 
@@ -44,13 +46,11 @@ export async function deployOperatorContract(
             chainConfig.contracts.OperatorDefaultUndelegationPolicy,
         ], [
             0,
-            // parseEther("1").mul(minOperatorStakePercent).div(100),
+            parseEther("1").mul(minOperatorStakePercent).div(100),
             0,
             0,
             0,
-            0,
-            // parseEther("1").mul(operatorSharePercent).div(100)
-            parseEther("0.1")
+            parseEther("1").mul(operatorSharePercent).div(100)
         ]
     )).wait() as ContractReceipt // TODO: figure out why typechain types produce any from .connect, shouldn't need explicit typing here
     const newOperatorAddress = operatorReceipt.events?.find((e) => e.event === "NewOperator")?.args?.operatorContractAddress

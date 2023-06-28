@@ -12,10 +12,10 @@ import { tokenABI } from "@streamr/network-contracts"
 import { streamRegistryABI } from "@streamr/network-contracts"
 import { Contract } from "@ethersproject/contracts"
 
-import { deploySponsorship } from "./deploySponsorshipContract"
-import { OperatorServiceConfig } from "../../../../src/plugins/operator/OperatorPlugin"
 import { deployOperatorContract } from "./deployOperatorContract"
+import { deploySponsorship } from "./deploySponsorshipContract"
 import { generateWalletWithGasAndTokens } from "./smartContractUtils"
+import { OperatorServiceConfig } from "../../../../src/plugins/operator/OperatorPlugin"
 
 const config = Chains.load()["dev1"]
 const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`

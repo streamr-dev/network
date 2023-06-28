@@ -25,17 +25,19 @@ export async function generateWalletWithGasAndTokens(provider: Provider, config?
 
     if (config && !config.contracts.LINK) {
         const token = new Contract(config.contracts.DATA, tokenABI, adminWallet) as unknown as TestToken 
-        // console.log("trying with nonce " + await adminWallet.getTransactionCount() + " time " + new Date().getTime() / 1000)
+        // eslint-disable-next-line no-console
+        console.log("trying data with nonce " + await adminWallet.getTransactionCount() + " time " + new Date().getTime() / 1000)
         await (await token.mint(newWallet.address, parseEther("1000000"), {
             nonce: await adminWallet.getTransactionCount()
         })).wait()
-        // console.log("sent link to " + newWallet.address)
+        // eslint-disable-next-line no-console
+        console.log("sent Data to " + newWallet.address)
     } else {
         const token = getTokenContract().connect(adminWallet)
         for (let i = 0; i < 5; i++) {
             try {
                 // eslint-disable-next-line no-console
-                // console.log("trying with nonce " + await adminWallet.getTransactionCount() + " time " + new Date().getTime() / 1000)
+                console.log("trying with nonce " + await adminWallet.getTransactionCount() + " time " + new Date().getTime() / 1000)
                 await (await token.transfer(newWallet.address, parseEther("1000"), {
                     nonce: await adminWallet.getTransactionCount()
                 })).wait()
@@ -43,7 +45,7 @@ export async function generateWalletWithGasAndTokens(provider: Provider, config?
             } catch (e) {
                 await new Promise((resolve) => setTimeout(resolve, 3000))
                 // eslint-disable-next-line no-console
-                // console.log("sending link failed, retrying")
+                console.log("sending link failed, retrying")
             }
         }
     }

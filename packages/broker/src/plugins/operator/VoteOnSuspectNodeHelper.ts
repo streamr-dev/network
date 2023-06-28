@@ -1,17 +1,15 @@
-import { Contract } from "@ethersproject/contracts"
-import { Provider } from "@ethersproject/providers"
-import { Signer } from "@ethersproject/abstract-signer"
-import { operatorABI } from "@streamr/network-contracts"
-import type { Operator } from "@streamr/network-contracts"
-import { Logger } from "@streamr/utils"
-import { OperatorServiceConfig } from "./OperatorPlugin"
+import { Contract } from '@ethersproject/contracts'
+import { Provider } from '@ethersproject/providers'
+import { Signer } from '@ethersproject/abstract-signer'
+import { operatorABI } from '@streamr/network-contracts'
+import type { Operator } from '@streamr/network-contracts'
+import { Logger } from '@streamr/utils'
+import { OperatorServiceConfig } from './OperatorPlugin'
 
-export const VOTE_KICK = "0x0000000000000000000000000000000000000000000000000000000000000001"
-export const VOTE_NO_KICK = "0x0000000000000000000000000000000000000000000000000000000000000000"
+export const VOTE_KICK = '0x0000000000000000000000000000000000000000000000000000000000000001'
+export const VOTE_NO_KICK = '0x0000000000000000000000000000000000000000000000000000000000000000'
 
-/**
- * Events emitted by {@link OperatorClient}.
-*/
+const logger = new Logger(module)
 
 export class VoteOnSuspectNodeHelper {
     provider: Provider
@@ -20,14 +18,11 @@ export class VoteOnSuspectNodeHelper {
     signer: Signer
     streamIdOfSponsorship: Map<string, string> = new Map()
     sponsorshipCountOfStream: Map<string, number> = new Map()
-    logger: Logger = new Logger(module)
     callback: (sponsorship: string, operatorContractAddress: string) => void
 
     constructor(config: OperatorServiceConfig,
         callback: (sponsorship: string, soperatorContractAddress: string) => void) {
-        // super()
-
-        this.logger.trace('OperatorClient created')
+        logger.trace('OperatorClient created')
         this.callback = callback
         this.address = config.operatorContractAddress
         this.provider = config.provider
@@ -37,9 +32,9 @@ export class VoteOnSuspectNodeHelper {
     }
 
     async start(): Promise<void> {
-        this.logger.info("Starting NodeInspectionHelper")
-        this.contract.on("ReviewRequest", async (sponsorship: string, targetOperator: string) => {
-            this.logger.info(`${this.contract.address} got ReviewRequest event ${sponsorship} ${targetOperator}`)
+        logger.info('Starting NodeInspectionHelper')
+        this.contract.on('ReviewRequest', async (sponsorship: string, targetOperator: string) => {
+            logger.info(`${this.contract.address} got ReviewRequest event ${sponsorship} ${targetOperator}`)
             this.callback(sponsorship, targetOperator)
         })
     }
