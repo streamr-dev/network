@@ -198,7 +198,6 @@ export class StreamrClient {
                 eventEmitter,
                 this.loggerFactory
             )
-
         }
         await this.subscriber.add(sub)
         if (onMessage !== undefined) {

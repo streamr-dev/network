@@ -4,7 +4,6 @@ import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { getCreateClient, createTestClient } from '../test-utils/utils'
-import { CONFIG_TEST } from '../../src/ConfigTest'
 
 const NUM_OF_PARTITIONS = 10
 
@@ -29,11 +28,6 @@ describe('NodeMetrics', () => {
                     }
                 ],
                 maxPublishDelay: 50
-            },
-            network: {
-                layer0: {
-                    ...CONFIG_TEST.network!.layer0
-                }
             }
         })
         stream = await generatorClient.createStream({

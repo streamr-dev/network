@@ -15,6 +15,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
     readonly subscriptions: Set<StreamPartID> = new Set()
     readonly messageListeners: MessageListener[] = []
     private readonly network: FakeNetwork
+
     constructor(opts: NetworkOptions, network: FakeNetwork) {
         this.id = opts.networkNode!.id!
         this.network = network

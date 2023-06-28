@@ -85,7 +85,7 @@ describe('publish-subscribe', () => {
     describe('private stream', () => {
         let stream: Stream
 
-        beforeEach(async () => {
+        beforeAll(async () => {
             stream = await createStreamWithPermissions(publisherPk, {
                 permissions: [StreamPermission.SUBSCRIBE],
                 user: subscriberWallet.address
@@ -101,10 +101,10 @@ describe('publish-subscribe', () => {
 
         it('subscriber is able to receive and decrypt messages', async () => {
             const messages: any[] = []
+            await publisherClient.publish(stream.id, PAYLOAD)
             await subscriberClient.subscribe(stream.id, (msg: any) => {
                 messages.push(msg)
             })
-            await publisherClient.publish(stream.id, PAYLOAD)
             await waitForCondition(() => messages.length > 0)
             expect(messages).toEqual([PAYLOAD])
         }, TIMEOUT)
