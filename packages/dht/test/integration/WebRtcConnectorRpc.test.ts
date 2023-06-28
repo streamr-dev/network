@@ -1,18 +1,19 @@
 import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
-import { WebRtcConnectorServiceClient } from '../../src/proto/DhtRpc.client'
+import { WebRtcConnectorServiceClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import {
     IceCandidate,
     PeerDescriptor,
     RtcAnswer,
     RtcOffer,
     WebRtcConnectionRequest
-} from '../../src/proto/DhtRpc'
+} from '../../src/proto/packages/dht/protos/DhtRpc'
 import { Empty } from '../../src/proto/google/protobuf/empty'
-import { generateId } from '../utils'
-import { IWebRtcConnectorService } from '../../src/proto/DhtRpc.server'
+import { generateId } from '../utils/utils'
+import { IWebRtcConnectorService } from '../../src/proto/packages/dht/protos/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 import { waitForCondition } from '@streamr/utils'
+import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 
 describe('WebRTC rpc messages', () => {
     let rpcCommunicator1: RpcCommunicator
@@ -25,12 +26,12 @@ describe('WebRTC rpc messages', () => {
     let iceCandidateCounter: number
 
     const peerDescriptor1: PeerDescriptor = {
-        peerId: generateId('peer1'),
+        kademliaId: generateId('peer1'),
         type: 0
     }
 
     const peerDescriptor2: PeerDescriptor = {
-        peerId: generateId('peer2'),
+        kademliaId: generateId('peer2'),
         type: 0
     }
 
@@ -74,11 +75,11 @@ describe('WebRTC rpc messages', () => {
         rpcCommunicator2.registerRpcNotification(IceCandidate, 'iceCandidate', serverFunctions.iceCandidate)
         rpcCommunicator2.registerRpcNotification(WebRtcConnectionRequest, 'requestConnection', serverFunctions.requestConnection)
 
-        rpcCommunicator1.on('outgoingMessage', (message: Uint8Array, _ucallContext?: DhtCallContext) => {
+        rpcCommunicator1.on('outgoingMessage', (message: RpcMessage, _requestId: string, _ucallContext?: DhtCallContext) => {
             rpcCommunicator2.handleIncomingMessage(message)
         })
 
-        rpcCommunicator2.on('outgoingMessage', (message: Uint8Array, _ucallContext?: DhtCallContext) => {
+        rpcCommunicator2.on('outgoingMessage', (message: RpcMessage, _requestId: string, _ucallContext?: DhtCallContext) => {
             rpcCommunicator1.handleIncomingMessage(message)
         })
 

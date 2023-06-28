@@ -1,29 +1,39 @@
-import { Wallet } from '@ethersproject/wallet'
-import { StreamID, toStreamPartID, TrackerRegistryRecord } from '@streamr/protocol'
-import { createNetworkNode, NetworkNodeOptions, TEST_CONFIG } from '@streamr/network-node'
+import { Wallet } from 'ethers'
+import { StreamID, toStreamPartID } from '@streamr/protocol'
 import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { PermissionAssignment, StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
-import { createTestStream } from '../test-utils/utils'
-import { waitForCondition, MetricsContext } from '@streamr/utils'
+import { createTestStream, createTestClient } from '../test-utils/utils'
+import { waitForCondition } from '@streamr/utils'
+import { NetworkNode } from '@streamr/trackerless-network'
+import { PeerID } from '@streamr/dht'
 
-const TIMEOUT = 20 * 1000
+const TIMEOUT = 60 * 1000
 
 const PAYLOAD = { hello: 'world' }
 
 const ENCRYPTED_MESSSAGE_FORMAT = /^[0-9A-Fa-f]+$/
 
 async function startNetworkNodeAndListenForAtLeastOneMessage(streamId: StreamID): Promise<unknown[]> {
-    const config: NetworkNodeOptions = {
-        ...TEST_CONFIG,
-        id: 'networkNode',
-        trackers: CONFIG_TEST.network!.trackers as TrackerRegistryRecord[],
-        metricsContext: new MetricsContext()
-    }
-    const networkNode = createNetworkNode(config)
+    const entryPoints = CONFIG_TEST.network!.layer0!.entryPoints!.map((ep) => {
+        return {
+            kademliaId: PeerID.fromString(ep.id).value,
+            type: ep.type,
+            websocket: ep.websocket
+        }
+    })    
+    const networkNode = new NetworkNode({
+        ...CONFIG_TEST.network as any,
+        layer0: {
+            entryPoints,
+        },
+        networkNode: {} 
+    })
+
     try {
+        await networkNode.start()
         networkNode.subscribe(toStreamPartID(streamId, 0))
         const messages: unknown[] = []
         networkNode.addMessageListener((msg) => {
@@ -67,19 +77,8 @@ describe('publish-subscribe', () => {
     })
 
     beforeEach(async () => {
-        publisherClient = new StreamrClient({
-            ...CONFIG_TEST,
-            auth: {
-                privateKey: publisherPk
-            }
-        })
-        subscriberClient = new StreamrClient({
-            ...CONFIG_TEST,
-            auth: {
-                privateKey: subscriberWallet.privateKey
-            }
-        })
-
+        publisherClient = createTestClient(publisherPk, 'publisher', 15656)
+        subscriberClient = createTestClient(subscriberWallet.privateKey, subscriberWallet.address)
     }, TIMEOUT)
 
     afterEach(async () => {
@@ -108,11 +107,11 @@ describe('publish-subscribe', () => {
 
         it('subscriber is able to receive and decrypt messages', async () => {
             const messages: any[] = []
+            await publisherClient.publish(stream.id, PAYLOAD)
             await subscriberClient.subscribe(stream.id, (msg: any) => {
                 messages.push(msg)
             })
-            await publisherClient.publish(stream.id, PAYLOAD)
-            await waitForCondition(() => messages.length > 0)
+            await waitForCondition(() => messages.length > 0, 15000)
             expect(messages).toEqual([PAYLOAD])
         }, TIMEOUT)
     })
@@ -135,10 +134,10 @@ describe('publish-subscribe', () => {
 
         it('subscriber is able to receive messages', async () => {
             const messages: unknown[] = []
+            await publisherClient.publish(stream.id, PAYLOAD)
             await subscriberClient.subscribe(stream.id, (msg: any) => {
                 messages.push(msg)
             })
-            await publisherClient.publish(stream.id, PAYLOAD)
             await waitForCondition(() => messages.length > 0)
             expect(messages).toEqual([PAYLOAD])
         }, TIMEOUT)

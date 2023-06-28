@@ -1,10 +1,11 @@
-import { NetworkNodeOptions, NodeId } from '@streamr/network-node'
 import { ProxyDirection, StreamMessage, StreamPartID } from '@streamr/protocol'
 import { MetricsContext } from '@streamr/utils'
 import pull from 'lodash/pull'
 import { Lifecycle, scoped } from 'tsyringe'
 import { NetworkNodeFactory, NetworkNodeStub } from '../../../src/NetworkNodeFacade'
 import { FakeNetwork } from './FakeNetwork'
+import { PeerDescriptor } from '@streamr/dht'
+import { NetworkOptions, NodeId } from '@streamr/trackerless-network'
 
 type MessageListener = (msg: StreamMessage) => void
 
@@ -14,13 +15,12 @@ export class FakeNetworkNode implements NetworkNodeStub {
     readonly subscriptions: Set<StreamPartID> = new Set()
     readonly messageListeners: MessageListener[] = []
     private readonly network: FakeNetwork
-
-    constructor(opts: NetworkNodeOptions, network: FakeNetwork) {
-        this.id = opts.id!
+    constructor(opts: NetworkOptions, network: FakeNetwork) {
+        this.id = opts.networkNode!.id!
         this.network = network
     }
 
-    getNodeId(): string {
+    getNodeId(): NodeId {
         return this.id
     }
 
@@ -32,7 +32,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
         pull(this.messageListeners, listener)
     }
 
-    subscribe(streamPartId: StreamPartID): void {
+    async subscribe(streamPartId: StreamPartID): Promise<void> {
         this.subscriptions.add(streamPartId)
     }
 
@@ -52,7 +52,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
         return this.getNeighborsForStreamPart(streamPartID).length
     }
 
-    publish(msg: StreamMessage): void {
+    async publish(msg: StreamMessage): Promise<void> {
         // by adding a subscription we emulate the functionality of real network node, which subscribes to 
         // the stream topology when it publishes a message to a stream
         this.subscriptions.add(msg.getStreamPartID())
@@ -60,12 +60,12 @@ export class FakeNetworkNode implements NetworkNodeStub {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getStreamParts(): Iterable<StreamPartID> {
+    getStreamParts(): StreamPartID[] {
         throw new Error('not implemented')
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getNeighbors(): ReadonlyArray<string> {
+    getNeighbors(): string[] {
         throw new Error('not implemented')
     }
 
@@ -75,6 +75,11 @@ export class FakeNetworkNode implements NetworkNodeStub {
             .filter((node) => (node.id !== this.id))
             .filter((node) => node.subscriptions.has(streamPartId))
             .map((node) => node.id)
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    setStreamEntryPoints(_streamPartId: StreamPartID, _peerDescriptors: PeerDescriptor[]): void {
+        return
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -101,7 +106,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
         throw new Error('not implemented')
     }
 
-    start(): void {
+    async start(): Promise<void> {
         this.network.addNode(this)
     }
 
@@ -112,7 +117,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
     // eslint-disable-next-line class-methods-use-this
     async setProxies(
         _streamPartId: StreamPartID,
-        _nodeIds: string[],
+        _peerDescriptors: PeerDescriptor[],
         _direction: ProxyDirection,
         _getUserId: () => Promise<string>,
         _targetCount?: number
@@ -135,7 +140,7 @@ export class FakeNetworkNodeFactory implements NetworkNodeFactory {
         this.network = network
     }
 
-    createNetworkNode(opts: NetworkNodeOptions): FakeNetworkNode {
+    createNetworkNode(opts: NetworkOptions): FakeNetworkNode {
         return new FakeNetworkNode(opts, this.network)
     }
 }

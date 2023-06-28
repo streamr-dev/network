@@ -1,10 +1,10 @@
-import { NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
+import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { PeerID } from '../../src/helpers/PeerID'
+import { peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 
 describe('Layer0-Layer1', () => {
     const epPeerDescriptor: PeerDescriptor = {
-        peerId: Uint8Array.from([1, 2, 3]),
+        kademliaId: Uint8Array.from([1, 2, 3]),
         type: NodeType.NODEJS,
         websocket: { ip: '127.0.0.1', port: 10016 }
     }
@@ -79,9 +79,9 @@ describe('Layer0-Layer1', () => {
         expect(stream2Node1.getNeighborList().getSize()).toEqual(1)
         expect(stream2Node2.getNeighborList().getSize()).toEqual(1)
 
-        expect(stream1Node1.getNeighborList().getContactIds()[0].equals(PeerID.fromValue(node1.getPeerDescriptor().peerId))).toEqual(true)
-        expect(stream1Node2.getNeighborList().getContactIds()[0].equals(PeerID.fromValue(epPeerDescriptor.peerId))).toEqual(true)
-        expect(stream2Node1.getNeighborList().getContactIds()[0].equals(PeerID.fromValue(node2.getPeerDescriptor().peerId))).toEqual(true)
-        expect(stream2Node2.getNeighborList().getContactIds()[0].equals(PeerID.fromValue(epPeerDescriptor.peerId))).toEqual(true)
+        expect(stream1Node1.getNeighborList().getContactIds()[0].equals(peerIdFromPeerDescriptor(node1.getPeerDescriptor()))).toEqual(true)
+        expect(stream1Node2.getNeighborList().getContactIds()[0].equals(peerIdFromPeerDescriptor(epPeerDescriptor))).toEqual(true)
+        expect(stream2Node1.getNeighborList().getContactIds()[0].equals(peerIdFromPeerDescriptor(node2.getPeerDescriptor()))).toEqual(true)
+        expect(stream2Node2.getNeighborList().getContactIds()[0].equals(peerIdFromPeerDescriptor(epPeerDescriptor))).toEqual(true)
     })
 })

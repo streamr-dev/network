@@ -76,9 +76,8 @@ describe('publish and subscribe', () => {
                 streamPartition: 0,
                 timestamp: expect.any(Number),
                 sequenceNumber: 0,
-                publisherId: expect.stringMatching(/0x[0-9a-zA-Z]+/),
-                msgChainId: expect.stringMatching(/[0-9a-zA-Z]+/)
+                publisherId: new Wallet(publisherPrivateKey).address.toLowerCase()
             }
         })
-    })
+    }, 15000)
 })

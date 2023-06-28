@@ -21,11 +21,10 @@ export class SubscriptionSession {
     private readonly pendingRemoval: WeakSet<Subscription> = new WeakSet()
     private readonly pipeline: PushPipeline<StreamMessage, StreamMessage>
     private readonly node: NetworkNodeFacade
-
     constructor(
         streamPartId: StreamPartID,
         messagePipelineFactory: MessagePipelineFactory,
-        node: NetworkNodeFacade,
+        node: NetworkNodeFacade
     ) {
         this.streamPartId = streamPartId
         this.distributeMessage = this.distributeMessage.bind(this)
@@ -101,7 +100,7 @@ export class SubscriptionSession {
     private async subscribe(): Promise<NetworkNodeStub> {
         const node = await this.node.getNode()
         node.addMessageListener(this.onMessageInput)
-        node.subscribe(this.streamPartId)
+        await node.subscribe(this.streamPartId)
         return node
     }
 

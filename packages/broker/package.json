@@ -30,7 +30,6 @@
     "@ethersproject/hdnode": "^5.4.0",
     "@streamr/config": "^2.6.3",
     "@streamr/network-contracts": "^2.6.5",
-    "@streamr/network-tracker": "8.5.4",
     "@streamr/protocol": "8.5.4",
     "@streamr/utils": "8.5.4",
     "aedes": "^0.49.0",

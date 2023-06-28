@@ -1,12 +1,10 @@
 import { Wallet } from '@ethersproject/wallet'
 import { MessageMetadata, Stream, StreamrClient } from 'streamr-client'
-import { Tracker } from '@streamr/network-tracker'
 import { fetchPrivateKeyWithGas, Queue } from '@streamr/test-utils'
 import { Broker } from '../../src/broker'
 import { Message } from '../../src/helpers/PayloadFormat'
-import { createClient, startBroker, createTestStream, startTestTracker } from '../utils'
-import { wait } from '@streamr/utils'
-import { merge } from '@streamr/utils'
+import { createClient, startBroker, createTestStream } from '../utils'
+import { wait, merge } from '@streamr/utils'
 
 interface MessagingPluginApi<T> {
     createClient: (action: 'publish' | 'subscribe', streamId: string, apiKey?: string) => Promise<T>
@@ -21,7 +19,7 @@ interface MessagingPluginApi<T> {
 
 interface Ports {
     plugin: number
-    tracker: number
+    networkLayer: number
 }
 
 const MOCK_MESSAGE = {
@@ -57,16 +55,16 @@ export const createMessagingPluginTest = <T>(
         let stream: Stream
         let streamrClient: StreamrClient
         let pluginClient: T
-        let tracker: Tracker
         let broker: Broker
         let messageQueue: Queue<Message>
 
         beforeAll(async () => {
             brokerUser = new Wallet(await fetchPrivateKeyWithGas())
-            tracker = await startTestTracker(ports.tracker)
             broker = await startBroker({
                 privateKey: brokerUser.privateKey,
-                trackerPort: ports.tracker,
+                apiAuthentication: {
+                    keys: [MOCK_API_KEY]
+                },
                 extraPlugins: {
                     [pluginName]: merge(
                         {
@@ -77,20 +75,20 @@ export const createMessagingPluginTest = <T>(
                             }
                         },
                         pluginConfig
-                    )
-                }
+                    )            
+                },
+                networkLayerWsServerPort: ports.networkLayer
             })
         })
 
         afterAll(async () => {
             await Promise.allSettled([
                 broker.stop(),
-                tracker.stop()
             ])
         })
 
         beforeEach(async () => {
-            streamrClient = await createClient(tracker, brokerUser.privateKey)
+            streamrClient = await createClient(brokerUser.privateKey)
             stream = await createTestStream(streamrClient, testModule)
             messageQueue = new Queue<Message>()
         })
@@ -103,23 +101,23 @@ export const createMessagingPluginTest = <T>(
         })
 
         describe('happy path', () => {
-            test('publish', async () => {
+            it('publish', async () => {
                 await streamrClient.subscribe(stream.id, (content: any, metadata: MessageMetadata) => {
                     messageQueue.push({ content, metadata })
                 })
                 pluginClient = await api.createClient('publish', stream.id, MOCK_API_KEY)
                 await api.publish(MOCK_MESSAGE, stream.id, pluginClient)
-                const message = await messageQueue.pop()
+                const message = await messageQueue.pop(30000)
                 assertReceivedMessage(message)
             })
 
-            test('subscribe', async () => {
+            it('subscribe', async () => {
                 pluginClient = await api.createClient('subscribe', stream.id, MOCK_API_KEY)
                 await api.subscribe(messageQueue, stream.id, pluginClient)
                 await streamrClient.publish(stream.id, MOCK_MESSAGE.content, {
                     timestamp: MOCK_MESSAGE.metadata.timestamp
                 })
-                const message = await messageQueue.pop()
+                const message = await messageQueue.pop(15000)
                 assertReceivedMessage(message)
             })
         })

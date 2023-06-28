@@ -1,0 +1,501 @@
+[90mTRACE[39m [2023-06-11T06:09:32.346] (DhtNode             ): [36mStarting new Streamr Network DHT Node with serviceId layer0[39m
+[90mTRACE[39m [2023-06-11T06:09:32.346] (ConnectionManager   ): [36mCreating WebSocketConnector[39m
+[90mTRACE[39m [2023-06-11T06:09:32.346] (ConnectionManager   ): [36mCreating WebRTCConnector[39m
+[90mTRACE[39m [2023-06-11T06:09:32.347] (ConnectionManager   ): [36mStarting ConnectionManager...[39m
+[32mINFO[39m [2023-06-11T06:09:32.351] (WebSocketServer     ): [36mSun Jun 11 2023 09:09:32 GMT+0300 (Eastern European Summer Time) Websocket server is listening on port 32222[39m
+[90mTRACE[39m [2023-06-11T06:09:32.355] (WebSocketServer     ): [36mSun Jun 11 2023 09:09:32 GMT+0300 (Eastern European Summer Time) IConnection accepted.[39m
+[34mDEBUG[39m [2023-06-11T06:09:32.355] (WebSocketConnector  ): [36mresource url: {"protocol":null,"slashes":null,"auth":null,"host":null,"port":null,"hostname":null,"hash":null,"search":"?connectivityRequest=true","query":{"connectivityRequest":"true"},"pathname":"/","path":"/?connectivityRequest=true","href":"/?connectivityRequest=true"}[39m
+[34mDEBUG[39m [2023-06-11T06:09:32.355] (WebSocketConnector  ): [36mReceived connectivity request connection[39m
+[90mTRACE[39m [2023-06-11T06:09:32.356] (ClientWebSocket     ): [36mWebSocket Client Connected[39m
+[90mTRACE[39m [2023-06-11T06:09:32.356] (ConnectivityChecker ): [36mtrying to send connectivity request[39m
+[90mTRACE[39m [2023-06-11T06:09:32.357] (ClientWebSocket     ): [36mSending data with size 72[39m
+[32mINFO[39m [2023-06-11T06:09:32.357] (ConnectivityChecker ): [36mconnectivity request sent: {"messageId":"d9df030f-3c11-4bb7-a719-936857981a80","serviceId":"system/connectivitychecker","connectivityRequest":{"port":32222}}[39m
+[90mTRACE[39m [2023-06-11T06:09:32.357] (ServerWebSocket     ): [36mServerWebSocket::onMessage[39m
+[90mTRACE[39m [2023-06-11T06:09:32.357] (ServerWebSocket     ): [36mReceived Binary Message of 72 bytes[39m
+[90mTRACE[39m [2023-06-11T06:09:32.357] (ConnectivityChecker ): [36mserver received data[39m
+[90mTRACE[39m [2023-06-11T06:09:32.358] (ConnectivityChecker ): [36mreceived connectivity request[39m
+[90mTRACE[39m [2023-06-11T06:09:32.359] (WebSocketServer     ): [36mSun Jun 11 2023 09:09:32 GMT+0300 (Eastern European Summer Time) IConnection accepted.[39m
+[34mDEBUG[39m [2023-06-11T06:09:32.359] (WebSocketConnector  ): [36mresource url: {"protocol":null,"slashes":null,"auth":null,"host":null,"port":null,"hostname":null,"hash":null,"search":"?connectivityProbe=true","query":{"connectivityProbe":"true"},"pathname":"/","path":"/?connectivityProbe=true","href":"/?connectivityProbe=true"}[39m
+[34mDEBUG[39m [2023-06-11T06:09:32.359] (WebSocketConnector  ): [36mReceived connectivity probe connection[39m
+[90mTRACE[39m [2023-06-11T06:09:32.359] (ClientWebSocket     ): [36mWebSocket Client Connected[39m
+[90mTRACE[39m [2023-06-11T06:09:32.359] (ClientWebSocket     ): [36mClosing socket for connection e4300fde-4f8c-44c8-8ab3-11637c8c5831[39m
+[90mTRACE[39m [2023-06-11T06:09:32.359] (ConnectivityChecker ): [36mConnectivity test produced positive result, communicating reply to the requester[39m
+[90mTRACE[39m [2023-06-11T06:09:32.360] (ConnectivityChecker ): [36mhandleIncomingConnectivityRequest ok[39m
+[90mTRACE[39m [2023-06-11T06:09:32.360] (ClientWebSocket     ): [36mClosing socket for connection 2ac4684e-93ef-4325-b406-10311f148d8d[39m
+[90mTRACE[39m [2023-06-11T06:09:32.360] (DhtNode             ): [36mBinding default DHT RPC methods[39m
+[32mINFO[39m [2023-06-11T06:09:32.361] (PeerDiscovery       ): [36mJoining The Streamr Network via entrypoint 656e747279706f696e74[39m
+[32mINFO[39m [2023-06-11T06:09:32.361] (StreamrNode         ): [36mStarting new StreamrNode with id 656e747279706f696e74[39m
+[90mTRACE[39m [2023-06-11T06:09:32.361] (DhtNode             ): [36mStarting new Streamr Network DHT Node with serviceId layer0[39m
+[90mTRACE[39m [2023-06-11T06:09:32.361] (ConnectionManager   ): [36mCreating WebSocketConnector[39m
+[90mTRACE[39m [2023-06-11T06:09:32.361] (ConnectionManager   ): [36mCreating WebRTCConnector[39m
+[90mTRACE[39m [2023-06-11T06:09:32.361] (ConnectionManager   ): [36mStarting ConnectionManager...[39m
+[32mINFO[39m [2023-06-11T06:09:32.361] (WebSocketServer     ): [36mSun Jun 11 2023 09:09:32 GMT+0300 (Eastern European Summer Time) Websocket server is listening on port 32223[39m
+[90mTRACE[39m [2023-06-11T06:09:32.362] (ServerWebSocket     ): [36m Peer 127.0.0.1 disconnected.[39m
+[90mTRACE[39m [2023-06-11T06:09:32.362] (ServerWebSocket     ): [36m Peer 127.0.0.1 disconnected.[39m
+[90mTRACE[39m [2023-06-11T06:09:32.362] (ClientWebSocket     ): [36mWebsocket Closed[39m
+[90mTRACE[39m [2023-06-11T06:09:32.362] (ClientWebSocket     ): [36mWebsocket Closed[39m
+[90mTRACE[39m [2023-06-11T06:09:32.362] (WebSocketServer     ): [36mSun Jun 11 2023 09:09:32 GMT+0300 (Eastern European Summer Time) IConnection accepted.[39m
+[34mDEBUG[39m [2023-06-11T06:09:32.362] (WebSocketConnector  ): [36mresource url: {"protocol":null,"slashes":null,"auth":null,"host":null,"port":null,"hostname":null,"hash":null,"search":"?connectivityRequest=true","query":{"connectivityRequest":"true"},"pathname":"/","path":"/?connectivityRequest=true","href":"/?connectivityRequest=true"}[39m
+[34mDEBUG[39m [2023-06-11T06:09:32.362] (WebSocketConnector  ): [36mReceived connectivity request connection[39m
+[90mTRACE[39m [2023-06-11T06:09:32.363] (ClientWebSocket     ): [36mWebSocket Client Connected[39m
+[90mTRACE[39m [2023-06-11T06:09:32.363] (ConnectivityChecker ): [36mtrying to send connectivity request[39m
+[90mTRACE[39m [2023-06-11T06:09:32.363] (ClientWebSocket     ): [36mSending data with size 72[39m
+[32mINFO[39m [2023-06-11T06:09:32.363] (ConnectivityChecker ): [36mconnectivity request sent: {"messageId":"924405e5-cc1c-43d1-b89d-91db2a6182f7","serviceId":"system/connectivitychecker","connectivityRequest":{"port":32223}}[39m
+[90mTRACE[39m [2023-06-11T06:09:32.363] (ServerWebSocket     ): [36mServerWebSocket::onMessage[39m
+[90mTRACE[39m [2023-06-11T06:09:32.363] (ServerWebSocket     ): [36mReceived Binary Message of 72 bytes[39m
+[90mTRACE[39m [2023-06-11T06:09:32.363] (ConnectivityChecker ): [36mserver received data[39m
+[90mTRACE[39m [2023-06-11T06:09:32.363] (ConnectivityChecker ): [36mreceived connectivity request[39m
+[90mTRACE[39m [2023-06-11T06:09:32.363] (WebSocketServer     ): [36mSun Jun 11 2023 09:09:32 GMT+0300 (Eastern European Summer Time) IConnection accepted.[39m
+[34mDEBUG[39m [2023-06-11T06:09:32.363] (WebSocketConnector  ): [36mresource url: {"protocol":null,"slashes":null,"auth":null,"host":null,"port":null,"hostname":null,"hash":null,"search":"?connectivityProbe=true","query":{"connectivityProbe":"true"},"pathname":"/","path":"/?connectivityProbe=true","href":"/?connectivityProbe=true"}[39m
+[34mDEBUG[39m [2023-06-11T06:09:32.363] (WebSocketConnector  ): [36mReceived connectivity probe connection[39m
+[90mTRACE[39m [2023-06-11T06:09:32.364] (ClientWebSocket     ): [36mWebSocket Client Connected[39m
+[90mTRACE[39m [2023-06-11T06:09:32.364] (ClientWebSocket     ): [36mClosing socket for connection 4d5bf806-4fe9-4421-a982-4f3672bd3a15[39m
+[90mTRACE[39m [2023-06-11T06:09:32.364] (ConnectivityChecker ): [36mConnectivity test produced positive result, communicating reply to the requester[39m
+[90mTRACE[39m [2023-06-11T06:09:32.364] (ConnectivityChecker ): [36mhandleIncomingConnectivityRequest ok[39m
+[90mTRACE[39m [2023-06-11T06:09:32.364] (ClientWebSocket     ): [36mClosing socket for connection d93555b8-8e65-4fe2-b876-95998df2d96b[39m
+[90mTRACE[39m [2023-06-11T06:09:32.364] (DhtNode             ): [36mBinding default DHT RPC methods[39m
+[90mTRACE[39m [2023-06-11T06:09:32.364] (RemoteConnectionLock): [36mRequesting locked connection to 101,110,116,114,121,112,111,105,110,116[39m
+[90mTRACE[39m [2023-06-11T06:09:32.365] (ClientTransport     ): [36mNew rpc request, 598d2e6e-2e3b-4dc0-b634-ca4ec67f82d8[39m
+[90mTRACE[39m [2023-06-11T06:09:32.365] (RpcCommunicator     ): [36monOutGoingMessage, messageId: 598d2e6e-2e3b-4dc0-b634-ca4ec67f82d8[39m
+[90mTRACE[39m [2023-06-11T06:09:32.365] (ConnectionManager   ): [36mSending message to: 101,110,116,114,121,112,111,105,110,116[39m
+[90mTRACE[39m [2023-06-11T06:09:32.365] (ManagedConnection   ): [36mcreating ManagedConnection of type: websocket-client objectId: 0[39m
+[90mTRACE[39m [2023-06-11T06:09:32.365] (ConnectionManager   ): [36mincomingConnectionCallback() objectId 0[39m
+[90mTRACE[39m [2023-06-11T06:09:32.365] (ConnectionManager   ): [36m node2, entrypoint acceptIncomingConnection()[39m
+[90mTRACE[39m [2023-06-11T06:09:32.365] (ConnectionManager   ): [36m node2, entrypoint added to connections at acceptIncomingConnection[39m
+[90mTRACE[39m [2023-06-11T06:09:32.366] (ManagedConnection   ): [36madding data to outputBuffer objectId: 0[39m
+[32mINFO[39m [2023-06-11T06:09:32.366] (PeerDiscovery       ): [36mJoining The Streamr Network via entrypoint 656e747279706f696e74[39m
+[90mTRACE[39m [2023-06-11T06:09:32.366] (RemoteConnectionLock): [36mRequesting locked connection to 101,110,116,114,121,112,111,105,110,116[39m
+[90mTRACE[39m [2023-06-11T06:09:32.366] (ClientTransport     ): [36mNew rpc request, 58805594-fcb2-444a-8c1d-f5d360f3126a[39m
+[90mTRACE[39m [2023-06-11T06:09:32.366] (RpcCommunicator     ): [36monOutGoingMessage, messageId: 58805594-fcb2-444a-8c1d-f5d360f3126a[39m
+[90mTRACE[39m [2023-06-11T06:09:32.366] (ConnectionManager   ): [36mSending message to: 101,110,116,114,121,112,111,105,110,116[39m
+[90mTRACE[39m [2023-06-11T06:09:32.366] (ManagedConnection   ): [36madding data to outputBuffer objectId: 0[39m
+[90mTRACE[39m [2023-06-11T06:09:32.366] (DhtNode             ): [36mAdding new contact 101,110,116,114,121,112,111,105,110,116[39m
+[90mTRACE[39m [2023-06-11T06:09:32.367] (DhtNode             ): [36mstarting ping node2, entrypoint [39m
+[90mTRACE[39m [2023-06-11T06:09:32.367] (DhtPeer             ): [36mRequesting ping on layer0 from 656e747279706f696e74[39m
+[90mTRACE[39m [2023-06-11T06:09:32.367] (ClientTransport     ): [36mNew rpc request, 2ace3269-4ac1-4cc4-80f7-1140c9a0e64a[39m
+[90mTRACE[39m [2023-06-11T06:09:32.367] (RpcCommunicator     ): [36monOutGoingMessage, messageId: 2ace3269-4ac1-4cc4-80f7-1140c9a0e64a[39m
+[90mTRACE[39m [2023-06-11T06:09:32.367] (ConnectionManager   ): [36mSending message to: 101,110,116,114,121,112,111,105,110,116[39m
+[90mTRACE[39m [2023-06-11T06:09:32.367] (ManagedConnection   ): [36madding data to outputBuffer objectId: 0[39m
+[90mTRACE[39m [2023-06-11T06:09:32.367] (DiscoverySession    ): [36mGetting closest peers from contact: 656e747279706f696e74[39m
+[90mTRACE[39m [2023-06-11T06:09:32.367] (DhtPeer             ): [36mRequesting getClosestPeers on layer0 from 656e747279706f696e74[39m
+[90mTRACE[39m [2023-06-11T06:09:32.367] (ClientTransport     ): [36mNew rpc request, 55d1d7c4-a2ee-40fd-b85a-f60daa9d89b9[39m
+[90mTRACE[39m [2023-06-11T06:09:32.367] (RpcCommunicator     ): [36monOutGoingMessage, messageId: 55d1d7c4-a2ee-40fd-b85a-f60daa9d89b9[39m
+[90mTRACE[39m [2023-06-11T06:09:32.367] (ConnectionManager   ): [36mSending message to: 101,110,116,114,121,112,111,105,110,116[39m
+[90mTRACE[39m [2023-06-11T06:09:32.367] (ManagedConnection   ): [36madding data to outputBuffer objectId: 0[39m
+[90mTRACE[39m [2023-06-11T06:09:32.369] (ServerWebSocket     ): [36m Peer ::ffff:127.0.0.1 disconnected.[39m
+[90mTRACE[39m [2023-06-11T06:09:32.369] (ClientWebSocket     ): [36mWebsocket Closed[39m
+[90mTRACE[39m [2023-06-11T06:09:32.369] (ServerWebSocket     ): [36m Peer 127.0.0.1 disconnected.[39m
+[90mTRACE[39m [2023-06-11T06:09:32.370] (WebSocketServer     ): [36mSun Jun 11 2023 09:09:32 GMT+0300 (Eastern European Summer Time) IConnection accepted.[39m
+[34mDEBUG[39m [2023-06-11T06:09:32.370] (WebSocketConnector  ): [36mresource url: {"protocol":null,"slashes":null,"auth":null,"host":null,"port":null,"hostname":null,"hash":null,"search":null,"query":{},"pathname":"/","path":"/","href":"/"}[39m
+[90mTRACE[39m [2023-06-11T06:09:32.370] (ClientWebSocket     ): [36mWebsocket Closed[39m
+[90mTRACE[39m [2023-06-11T06:09:32.370] (ClientWebSocket     ): [36mWebSocket Client Connected[39m
+[90mTRACE[39m [2023-06-11T06:09:32.370] (ClientWebSocket     ): [36mSending data with size 124[39m
+[90mTRACE[39m [2023-06-11T06:09:32.370] (Handshaker          ): [36mhandshake request sent[39m
+[90mTRACE[39m [2023-06-11T06:09:32.370] (ServerWebSocket     ): [36mServerWebSocket::onMessage[39m
+[90mTRACE[39m [2023-06-11T06:09:32.370] (ServerWebSocket     ): [36mReceived Binary Message of 124 bytes[39m
+[90mTRACE[39m [2023-06-11T06:09:32.370] (Handshaker          ): [36mhandshake request received[39m
+[90mTRACE[39m [2023-06-11T06:09:32.370] (ManagedConnection   ): [36mcreating ManagedConnection of type: websocket-server objectId: 1[39m
+[90mTRACE[39m [2023-06-11T06:09:32.370] (ConnectionManager   ): [36mincomingConnectionCallback() objectId 1[39m
+[90mTRACE[39m [2023-06-11T06:09:32.370] (ConnectionManager   ): [36m entrypoint, node2 acceptIncomingConnection()[39m
+[90mTRACE[39m [2023-06-11T06:09:32.370] (ConnectionManager   ): [36m entrypoint, node2 added to connections at acceptIncomingConnection[39m
+[90mTRACE[39m [2023-06-11T06:09:32.371] (Handshaker          ): [36mhandshake request sent[39m
+[90mTRACE[39m [2023-06-11T06:09:32.371] (ManagedConnection   ): [36mattachImplementation() objectId: 1[39m
+[90mTRACE[39m [2023-06-11T06:09:32.371] (ManagedConnection   ): [36memitting handshake_completed, objectId: 1[39m
+[34mDEBUG[39m [2023-06-11T06:09:32.371] (DhtNode             ): [36m entrypoint connectionschange add 1[39m
+[90mTRACE[39m [2023-06-11T06:09:32.371] (DhtNode             ): [36mconnected: entrypoint, node2 1[39m
+[90mTRACE[39m [2023-06-11T06:09:32.371] (ConnectionManager   ): [36m entrypoint, node2 onConnected() websocket-server[39m
+[90mTRACE[39m [2023-06-11T06:09:32.371] (Handshaker          ): [36mhandshake response received[39m
+[90mTRACE[39m [2023-06-11T06:09:32.371] (ManagedConnection   ): [36mhandshake completed for outgoing connection node2, entrypoint objectid: 0 outputBuffer.length: 4[39m
+[90mTRACE[39m [2023-06-11T06:09:32.371] (ManagedConnection   ): [36mattachImplementation() objectId: 0[39m
+[90mTRACE[39m [2023-06-11T06:09:32.371] (ManagedConnection   ): [36memptying outputBuffer objectId: 0[39m
+[90mTRACE[39m [2023-06-11T06:09:32.371] (ClientWebSocket     ): [36mSending data with size 365[39m
+[90mTRACE[39m [2023-06-11T06:09:32.371] (ManagedConnection   ): [36memptying outputBuffer objectId: 0[39m
+[90mTRACE[39m [2023-06-11T06:09:32.371] (ClientWebSocket     ): [36mSending data with size 353[39m
+[90mTRACE[39m [2023-06-11T06:09:32.371] (ManagedConnection   ): [36memptying outputBuffer objectId: 0[39m
+[90mTRACE[39m [2023-06-11T06:09:32.371] (ClientWebSocket     ): [36mSending data with size 308[39m
+[90mTRACE[39m [2023-06-11T06:09:32.371] (ManagedConnection   ): [36memptying outputBuffer objectId: 0[39m
+[90mTRACE[39m [2023-06-11T06:09:32.371] (ClientWebSocket     ): [36mSending data with size 342[39m
+[90mTRACE[39m [2023-06-11T06:09:32.371] (ManagedConnection   ): [36memitting handshake_completed, objectId: 0[39m
+[34mDEBUG[39m [2023-06-11T06:09:32.371] (DhtNode             ): [36m node2 connectionschange add 1[39m
+[90mTRACE[39m [2023-06-11T06:09:32.371] (ConnectionManager   ): [36m node2, entrypoint onConnected() websocket-client[39m
+[32mINFO[39m [2023-06-11T06:09:32.371] (StreamrNode         ): [36mStarting new StreamrNode with id 6e6574776f726b2d737461636b[39m
+[32mINFO[39m [2023-06-11T06:09:32.372] (StreamrNode         ): [36mJoining stream stream1#0[39m
+[90mTRACE[39m [2023-06-11T06:09:32.372] (DhtNode             ): [36mStarting new Streamr Network DHT Node with serviceId layer1::stream1#0[39m
+[90mTRACE[39m [2023-06-11T06:09:32.372] (DhtNode             ): [36mBinding default DHT RPC methods[39m
+[34mDEBUG[39m [2023-06-11T06:09:32.372] (DhtNode             ): [36m entrypoint:layer1 connectionschange add 1[39m
+[34mDEBUG[39m [2023-06-11T06:09:32.372] (RandomGraphNode     ): [36mlayer1 had no closest contacts in the beginning[39m
+[32mINFO[39m [2023-06-11T06:09:32.373] (PeerDiscovery       ): [36mJoining Control Layer for layer1::stream1#0 via entrypoint 656e747279706f696e74[39m
+[32mINFO[39m [2023-06-11T06:09:32.373] (StreamrNode         ): [36mJoining stream stream1#0[39m
+[90mTRACE[39m [2023-06-11T06:09:32.373] (DhtNode             ): [36mStarting new Streamr Network DHT Node with serviceId layer1::stream1#0[39m
+[90mTRACE[39m [2023-06-11T06:09:32.373] (DhtNode             ): [36mBinding default DHT RPC methods[39m
+[34mDEBUG[39m [2023-06-11T06:09:32.373] (DhtNode             ): [36m node2:layer1 connectionschange add 1[39m
+[34mDEBUG[39m [2023-06-11T06:09:32.373] (RandomGraphNode     ): [36mlayer1 had no closest contacts in the beginning[39m
+[32mINFO[39m [2023-06-11T06:09:32.373] (PeerDiscovery       ): [36mJoining Control Layer for layer1::stream1#0 via entrypoint 656e747279706f696e74[39m
+[90mTRACE[39m [2023-06-11T06:09:32.373] (DhtNode             ): [36mAdding new contact 101,110,116,114,121,112,111,105,110,116[39m
+[90mTRACE[39m [2023-06-11T06:09:32.373] (RandomGraphNode     ): [36mNew nearby contact found[39m
+[90mTRACE[39m [2023-06-11T06:09:32.373] (DhtNode             ): [36mAdded new contact 101,110,116,114,121,112,111,105,110,116[39m
+[90mTRACE[39m [2023-06-11T06:09:32.373] (DiscoverySession    ): [36mGetting closest peers from contact: 656e747279706f696e74[39m
+[90mTRACE[39m [2023-06-11T06:09:32.373] (DhtPeer             ): [36mRequesting getClosestPeers on layer1::stream1#0 from 656e747279706f696e74[39m
+[90mTRACE[39m [2023-06-11T06:09:32.373] (ClientTransport     ): [36mNew rpc request, 37b8c69f-0e56-478c-b50c-04a8317e908c[39m
+[90mTRACE[39m [2023-06-11T06:09:32.373] (RpcCommunicator     ): [36monOutGoingMessage, messageId: 37b8c69f-0e56-478c-b50c-04a8317e908c[39m
+[90mTRACE[39m [2023-06-11T06:09:32.374] (Router              ): [36mPeer 110,101,116,119,111,114,107,45,115,116,97,99,107 routing message 11e91467-e29b-4366-be3c-e3cb996f72eb 
+            from 110,101,116,119,111,114,107,45,115,116,97,99,107 to 101,110,116,114,121,112,111,105,110,116[39m
+[34mDEBUG[39m [2023-06-11T06:09:32.374] (Router              ): [36m routing session created with connections: {}[39m
+[90mTRACE[39m [2023-06-11T06:09:32.374] (Router              ): [36mstarting to raceEvents from routingSession: 685f2817-53ad-4c7c-aa94-54b102c4f61b[39m
+[90mTRACE[39m [2023-06-11T06:09:32.374] (RoutingSession      ): [36mstart() sessionId: 685f2817-53ad-4c7c-aa94-54b102c4f61b[39m
+[90mTRACE[39m [2023-06-11T06:09:32.374] (RoutingSession      ): [36mfindMoreContacts() sessionId: 685f2817-53ad-4c7c-aa94-54b102c4f61b[39m
+[90mTRACE[39m [2023-06-11T06:09:32.374] (RoutingSession      ): [36msendMoreRequests() sessionId: 685f2817-53ad-4c7c-aa94-54b102c4f61b[39m
+[90mTRACE[39m [2023-06-11T06:09:32.374] (RoutingSession      ): [36msendRouteMessageRequest[39m
+[90mTRACE[39m [2023-06-11T06:09:32.374] (RoutingSession      ): [36msendRouteMessageRequest() sessionId: 685f2817-53ad-4c7c-aa94-54b102c4f61b[39m
+[90mTRACE[39m [2023-06-11T06:09:32.374] (RoutingSession      ): [36mSending routeMessage request from 110,101,116,119,111,114,107,45,115,116,97,99,107 to contact: entrypoint[39m
+[90mTRACE[39m [2023-06-11T06:09:32.374] (RemoteRouter        ): [36mcalling dhtClient.routeMessage[39m
+[90mTRACE[39m [2023-06-11T06:09:32.374] (ClientTransport     ): [36mNew rpc request, b1618622-91fe-4699-a35f-d2f0b80e625e[39m
+[90mTRACE[39m [2023-06-11T06:09:32.374] (RpcCommunicator     ): [36monOutGoingMessage, messageId: b1618622-91fe-4699-a35f-d2f0b80e625e[39m
+[90mTRACE[39m [2023-06-11T06:09:32.374] (ConnectionManager   ): [36mSending message to: 101,110,116,114,121,112,111,105,110,116[39m
+[90mTRACE[39m [2023-06-11T06:09:32.374] (ClientWebSocket     ): [36mSending data with size 897[39m
+[90mTRACE[39m [2023-06-11T06:09:32.374] (ServerWebSocket     ): [36mServerWebSocket::onMessage[39m
+[90mTRACE[39m [2023-06-11T06:09:32.374] (ServerWebSocket     ): [36mReceived Binary Message of 365 bytes[39m
+[90mTRACE[39m [2023-06-11T06:09:32.375] (ConnectionManager   ): [36mentrypoint received protojson: {"messageId":"a8bb731a-f47a-439f-9fa0-7f8358d31509","messageType":"RPC","sourceDescriptor":{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"},"targetDescriptor":{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"},"serviceId":"ConnectionManager","rpcMessage":{"header":{"method":"lockRequest","request":"request","notification":""},"body":{"protocolVersion":"1.0","peerDescriptor":{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"},"serviceId":"temporary-layer0-connection","@type":"type.googleapis.com/dht.LockRequest"},"requestId":"598d2e6e-2e3b-4dc0-b634-ca4ec67f82d8"}}[39m
+[90mTRACE[39m [2023-06-11T06:09:32.375] (ConnectionManager   ): [36mReceived message of type 4[39m
+[90mTRACE[39m [2023-06-11T06:09:32.375] (RpcCommunicator     ): [36monIncomingMessage, requestId: 598d2e6e-2e3b-4dc0-b634-ca4ec67f82d8[39m
+[90mTRACE[39m [2023-06-11T06:09:32.375] (ServerRegistry      ): [36mServer processing RPC call 598d2e6e-2e3b-4dc0-b634-ca4ec67f82d8[39m
+[90mTRACE[39m [2023-06-11T06:09:32.376] (RpcCommunicator     ): [36monOutGoingMessage, messageId: 598d2e6e-2e3b-4dc0-b634-ca4ec67f82d8[39m
+[90mTRACE[39m [2023-06-11T06:09:32.376] (ConnectionManager   ): [36mSending message to: 110,101,116,119,111,114,107,45,115,116,97,99,107[39m
+[90mTRACE[39m [2023-06-11T06:09:32.376] (ServerWebSocket     ): [36mServerWebSocket::onMessage[39m
+[90mTRACE[39m [2023-06-11T06:09:32.376] (ServerWebSocket     ): [36mReceived Binary Message of 353 bytes[39m
+[90mTRACE[39m [2023-06-11T06:09:32.376] (ConnectionManager   ): [36mentrypoint received protojson: {"messageId":"f6bb616f-c640-4795-9eac-c03c0fb67706","messageType":"RPC","sourceDescriptor":{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"},"targetDescriptor":{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"},"serviceId":"ConnectionManager","rpcMessage":{"header":{"method":"lockRequest","request":"request","notification":""},"body":{"protocolVersion":"1.0","peerDescriptor":{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"},"serviceId":"layer0::joinDht","@type":"type.googleapis.com/dht.LockRequest"},"requestId":"58805594-fcb2-444a-8c1d-f5d360f3126a"}}[39m
+[90mTRACE[39m [2023-06-11T06:09:32.376] (ConnectionManager   ): [36mReceived message of type 4[39m
+[90mTRACE[39m [2023-06-11T06:09:32.376] (RpcCommunicator     ): [36monIncomingMessage, requestId: 58805594-fcb2-444a-8c1d-f5d360f3126a[39m
+[90mTRACE[39m [2023-06-11T06:09:32.376] (ServerRegistry      ): [36mServer processing RPC call 58805594-fcb2-444a-8c1d-f5d360f3126a[39m
+[90mTRACE[39m [2023-06-11T06:09:32.376] (RpcCommunicator     ): [36monOutGoingMessage, messageId: 58805594-fcb2-444a-8c1d-f5d360f3126a[39m
+[90mTRACE[39m [2023-06-11T06:09:32.376] (ConnectionManager   ): [36mSending message to: 110,101,116,119,111,114,107,45,115,116,97,99,107[39m
+[90mTRACE[39m [2023-06-11T06:09:32.376] (ConnectionManager   ): [36mnode2 received protojson: {"messageId":"1d22f8be-6b28-41fa-8889-37041b55f131","messageType":"RPC","sourceDescriptor":{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"},"targetDescriptor":{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"},"serviceId":"ConnectionManager","rpcMessage":{"header":{"response":"response","method":"lockRequest"},"body":{"accepted":true,"@type":"type.googleapis.com/dht.LockResponse"},"requestId":"598d2e6e-2e3b-4dc0-b634-ca4ec67f82d8"}}[39m
+[90mTRACE[39m [2023-06-11T06:09:32.376] (ConnectionManager   ): [36mReceived message of type 4[39m
+[90mTRACE[39m [2023-06-11T06:09:32.376] (RpcCommunicator     ): [36monIncomingMessage, requestId: 598d2e6e-2e3b-4dc0-b634-ca4ec67f82d8[39m
+[90mTRACE[39m [2023-06-11T06:09:32.377] (ConnectionManager   ): [36mLockRequest successful[39m
+[90mTRACE[39m [2023-06-11T06:09:32.377] (ServerWebSocket     ): [36mServerWebSocket::onMessage[39m
+[90mTRACE[39m [2023-06-11T06:09:32.377] (ServerWebSocket     ): [36mReceived Binary Message of 308 bytes[39m
+[90mTRACE[39m [2023-06-11T06:09:32.377] (ConnectionManager   ): [36mentrypoint received protojson: {"messageId":"1dbe7e2b-9c04-4d62-a784-2d8c1d0ab353","messageType":"RPC","sourceDescriptor":{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"},"targetDescriptor":{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"},"serviceId":"layer0","rpcMessage":{"header":{"method":"ping","request":"request","notification":""},"body":{"requestId":"e4588de9-deac-426e-bcfd-6b44fee32225","@type":"type.googleapis.com/dht.PingRequest"},"requestId":"2ace3269-4ac1-4cc4-80f7-1140c9a0e64a"}}[39m
+[90mTRACE[39m [2023-06-11T06:09:32.377] (ConnectionManager   ): [36mReceived message of type 4[39m
+[90mTRACE[39m [2023-06-11T06:09:32.377] (ConnectionManager   ): [36memit "message" entrypoint, node2 layer0 1dbe7e2b-9c04-4d62-a784-2d8c1d0ab353[39m
+[90mTRACE[39m [2023-06-11T06:09:32.377] (DhtNode             ): [36mcallig this.handleMessageFromPeer entrypoint, node2 layer0 1dbe7e2b-9c04-4d62-a784-2d8c1d0ab353[39m
+[90mTRACE[39m [2023-06-11T06:09:32.377] (RpcCommunicator     ): [36monIncomingMessage, requestId: 2ace3269-4ac1-4cc4-80f7-1140c9a0e64a[39m
+[90mTRACE[39m [2023-06-11T06:09:32.377] (ServerRegistry      ): [36mServer processing RPC call 2ace3269-4ac1-4cc4-80f7-1140c9a0e64a[39m
+[90mTRACE[39m [2023-06-11T06:09:32.377] (DhtNode             ): [36mreceived ping request: entrypoint, node2[39m
+[90mTRACE[39m [2023-06-11T06:09:32.377] (RpcCommunicator     ): [36monOutGoingMessage, messageId: 2ace3269-4ac1-4cc4-80f7-1140c9a0e64a[39m
+[90mTRACE[39m [2023-06-11T06:09:32.377] (ConnectionManager   ): [36mSending message to: 110,101,116,119,111,114,107,45,115,116,97,99,107[39m
+[90mTRACE[39m [2023-06-11T06:09:32.377] (ConnectionManager   ): [36mnode2 received protojson: {"messageId":"017643f4-cd37-45df-a511-ded12067a120","messageType":"RPC","sourceDescriptor":{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"},"targetDescriptor":{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"},"serviceId":"ConnectionManager","rpcMessage":{"header":{"response":"response","method":"lockRequest"},"body":{"accepted":true,"@type":"type.googleapis.com/dht.LockResponse"},"requestId":"58805594-fcb2-444a-8c1d-f5d360f3126a"}}[39m
+[90mTRACE[39m [2023-06-11T06:09:32.377] (ConnectionManager   ): [36mReceived message of type 4[39m
+[90mTRACE[39m [2023-06-11T06:09:32.377] (RpcCommunicator     ): [36monIncomingMessage, requestId: 58805594-fcb2-444a-8c1d-f5d360f3126a[39m
+[90mTRACE[39m [2023-06-11T06:09:32.377] (ConnectionManager   ): [36mLockRequest successful[39m
+[90mTRACE[39m [2023-06-11T06:09:32.378] (ConnectionManager   ): [36mnode2 received protojson: {"messageId":"533d534b-3090-4cc6-a874-f1aaead6c950","messageType":"RPC","sourceDescriptor":{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"},"targetDescriptor":{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"},"serviceId":"layer0","rpcMessage":{"header":{"response":"response","method":"ping"},"body":{"requestId":"e4588de9-deac-426e-bcfd-6b44fee32225","@type":"type.googleapis.com/dht.PingResponse"},"requestId":"2ace3269-4ac1-4cc4-80f7-1140c9a0e64a"}}[39m
+[90mTRACE[39m [2023-06-11T06:09:32.378] (ConnectionManager   ): [36mReceived message of type 4[39m
+[90mTRACE[39m [2023-06-11T06:09:32.378] (ConnectionManager   ): [36memit "message" node2, entrypoint layer0 533d534b-3090-4cc6-a874-f1aaead6c950[39m
+[90mTRACE[39m [2023-06-11T06:09:32.378] (DhtNode             ): [36mcallig this.handleMessageFromPeer node2, entrypoint layer0 533d534b-3090-4cc6-a874-f1aaead6c950[39m
+[90mTRACE[39m [2023-06-11T06:09:32.378] (RpcCommunicator     ): [36monIncomingMessage, requestId: 2ace3269-4ac1-4cc4-80f7-1140c9a0e64a[39m
+[90mTRACE[39m [2023-06-11T06:09:32.378] (DhtNode             ): [36mAdded new contact 101,110,116,114,121,112,111,105,110,116[39m
+[90mTRACE[39m [2023-06-11T06:09:32.378] (ServerWebSocket     ): [36mServerWebSocket::onMessage[39m
+[90mTRACE[39m [2023-06-11T06:09:32.378] (ServerWebSocket     ): [36mReceived Binary Message of 342 bytes[39m
+[90mTRACE[39m [2023-06-11T06:09:32.378] (ConnectionManager   ): [36mentrypoint received protojson: {"messageId":"9eba6390-b736-456b-bfe4-f2247c32463d","messageType":"RPC","sourceDescriptor":{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"},"targetDescriptor":{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"},"serviceId":"layer0","rpcMessage":{"header":{"method":"getClosestPeers","request":"request","notification":""},"body":{"kademliaId":"bmV0d29yay1zdGFjaw==","requestId":"499ea76f-7385-4e75-8d7d-9308ef56a9ef","@type":"type.googleapis.com/dht.ClosestPeersRequest"},"requestId":"55d1d7c4-a2ee-40fd-b85a-f60daa9d89b9"}}[39m
+[90mTRACE[39m [2023-06-11T06:09:32.378] (ConnectionManager   ): [36mReceived message of type 4[39m
+[90mTRACE[39m [2023-06-11T06:09:32.378] (ConnectionManager   ): [36memit "message" entrypoint, node2 layer0 9eba6390-b736-456b-bfe4-f2247c32463d[39m
+[90mTRACE[39m [2023-06-11T06:09:32.378] (DhtNode             ): [36mcallig this.handleMessageFromPeer entrypoint, node2 layer0 9eba6390-b736-456b-bfe4-f2247c32463d[39m
+[90mTRACE[39m [2023-06-11T06:09:32.378] (RpcCommunicator     ): [36monIncomingMessage, requestId: 55d1d7c4-a2ee-40fd-b85a-f60daa9d89b9[39m
+[90mTRACE[39m [2023-06-11T06:09:32.378] (ServerRegistry      ): [36mServer processing RPC call 55d1d7c4-a2ee-40fd-b85a-f60daa9d89b9[39m
+[90mTRACE[39m [2023-06-11T06:09:32.378] (DhtNode             ): [36mAdding new contact 110,101,116,119,111,114,107,45,115,116,97,99,107[39m
+[90mTRACE[39m [2023-06-11T06:09:32.378] (DhtNode             ): [36mAdded new contact 110,101,116,119,111,114,107,45,115,116,97,99,107[39m
+[90mTRACE[39m [2023-06-11T06:09:32.378] (RpcCommunicator     ): [36monOutGoingMessage, messageId: 55d1d7c4-a2ee-40fd-b85a-f60daa9d89b9[39m
+[90mTRACE[39m [2023-06-11T06:09:32.378] (ConnectionManager   ): [36mSending message to: 110,101,116,119,111,114,107,45,115,116,97,99,107[39m
+[90mTRACE[39m [2023-06-11T06:09:32.378] (DhtNode             ): [36mAdding new contact 110,101,116,119,111,114,107,45,115,116,97,99,107[39m
+[90mTRACE[39m [2023-06-11T06:09:32.378] (ConnectionManager   ): [36mnode2 received protojson: {"messageId":"f072bcd2-889e-447a-b3e5-d39cd0153dff","messageType":"RPC","sourceDescriptor":{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"},"targetDescriptor":{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"},"serviceId":"layer0","rpcMessage":{"header":{"response":"response","method":"getClosestPeers"},"body":{"peers":[{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"}],"requestId":"499ea76f-7385-4e75-8d7d-9308ef56a9ef","@type":"type.googleapis.com/dht.ClosestPeersResponse"},"requestId":"55d1d7c4-a2ee-40fd-b85a-f60daa9d89b9"}}[39m
+[90mTRACE[39m [2023-06-11T06:09:32.378] (ConnectionManager   ): [36mReceived message of type 4[39m
+[90mTRACE[39m [2023-06-11T06:09:32.378] (ConnectionManager   ): [36memit "message" node2, entrypoint layer0 f072bcd2-889e-447a-b3e5-d39cd0153dff[39m
+[90mTRACE[39m [2023-06-11T06:09:32.378] (DhtNode             ): [36mcallig this.handleMessageFromPeer node2, entrypoint layer0 f072bcd2-889e-447a-b3e5-d39cd0153dff[39m
+[90mTRACE[39m [2023-06-11T06:09:32.378] (RpcCommunicator     ): [36monIncomingMessage, requestId: 55d1d7c4-a2ee-40fd-b85a-f60daa9d89b9[39m
+[90mTRACE[39m [2023-06-11T06:09:32.378] (DiscoverySession    ): [36mgetUncontactedContacts length was 0 in beginning of discovery, this.neighborList.size: 1[39m
+[90mTRACE[39m [2023-06-11T06:09:32.379] (DhtPeer             ): [36mRequesting getClosestPeers on layer0 from 656e747279706f696e74[39m
+[90mTRACE[39m [2023-06-11T06:09:32.379] (ClientTransport     ): [36mNew rpc request, 12ce7878-7c97-4671-bdf3-40019fb7260f[39m
+[90mTRACE[39m [2023-06-11T06:09:32.379] (RpcCommunicator     ): [36monOutGoingMessage, messageId: 12ce7878-7c97-4671-bdf3-40019fb7260f[39m
+[90mTRACE[39m [2023-06-11T06:09:32.379] (ConnectionManager   ): [36mSending message to: 101,110,116,114,121,112,111,105,110,116[39m
+[90mTRACE[39m [2023-06-11T06:09:32.379] (ClientWebSocket     ): [36mSending data with size 342[39m
+[90mTRACE[39m [2023-06-11T06:09:32.379] (ServerWebSocket     ): [36mServerWebSocket::onMessage[39m
+[90mTRACE[39m [2023-06-11T06:09:32.379] (ServerWebSocket     ): [36mReceived Binary Message of 897 bytes[39m
+[90mTRACE[39m [2023-06-11T06:09:32.379] (ConnectionManager   ): [36mentrypoint received protojson: {"messageId":"4974dc6f-24cc-45aa-8d7b-bb5134121a83","messageType":"RPC","sourceDescriptor":{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"},"targetDescriptor":{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"},"serviceId":"layer0","rpcMessage":{"header":{"method":"routeMessage","request":"request","notification":""},"body":{"sourcePeer":{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"},"requestId":"11e91467-e29b-4366-be3c-e3cb996f72eb","destinationPeer":{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"},"previousPeer":{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"},"message":{"messageId":"a1f528bb-b4ad-47c4-852a-424626d3ac5e","messageType":"RPC","sourceDescriptor":{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"},"targetDescriptor":{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"},"serviceId":"layer1::stream1#0","rpcMessage":{"header":{"method":"getClosestPeers","request":"request","notification":""},"body":{"kademliaId":"bmV0d29yay1zdGFjaw==","requestId":"72e657dc-38e9-49d5-b1d9-788830ea7f04","@type":"type.googleapis.com/dht.ClosestPeersRequest"},"requestId":"37b8c69f-0e56-478c-b50c-04a8317e908c"}},"reachableThrough":[{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"}],"routingPath":[{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"}],"@type":"type.googleapis.com/dht.RouteMessageWrapper"},"requestId":"b1618622-91fe-4699-a35f-d2f0b80e625e"}}[39m
+[90mTRACE[39m [2023-06-11T06:09:32.379] (ConnectionManager   ): [36mReceived message of type 4[39m
+[90mTRACE[39m [2023-06-11T06:09:32.379] (ConnectionManager   ): [36memit "message" entrypoint, node2 layer0 4974dc6f-24cc-45aa-8d7b-bb5134121a83[39m
+[90mTRACE[39m [2023-06-11T06:09:32.379] (DhtNode             ): [36mcallig this.handleMessageFromPeer entrypoint, node2 layer0 4974dc6f-24cc-45aa-8d7b-bb5134121a83[39m
+[90mTRACE[39m [2023-06-11T06:09:32.379] (RpcCommunicator     ): [36monIncomingMessage, requestId: b1618622-91fe-4699-a35f-d2f0b80e625e[39m
+[90mTRACE[39m [2023-06-11T06:09:32.379] (ServerRegistry      ): [36mServer processing RPC call b1618622-91fe-4699-a35f-d2f0b80e625e[39m
+[90mTRACE[39m [2023-06-11T06:09:32.379] (Router              ): [36mProcessing received routeMessage 11e91467-e29b-4366-be3c-e3cb996f72eb[39m
+[90mTRACE[39m [2023-06-11T06:09:32.379] (DhtNode             ): [36mAdding new contact 110,101,116,119,111,114,107,45,115,116,97,99,107[39m
+[90mTRACE[39m [2023-06-11T06:09:32.379] (Router              ): [36mentrypoint routing message targeted to self 11e91467-e29b-4366-be3c-e3cb996f72eb[39m
+[90mTRACE[39m [2023-06-11T06:09:32.379] (ConnectionManager   ): [36mReceived message of type 4[39m
+[90mTRACE[39m [2023-06-11T06:09:32.379] (ConnectionManager   ): [36memit "message" entrypoint, node2 layer1::stream1#0 a1f528bb-b4ad-47c4-852a-424626d3ac5e[39m
+[90mTRACE[39m [2023-06-11T06:09:32.379] (DhtNode             ): [36memit "message" entrypoint, node2 layer1::stream1#0 a1f528bb-b4ad-47c4-852a-424626d3ac5e[39m
+[90mTRACE[39m [2023-06-11T06:09:32.379] (DhtNode             ): [36mcallig this.handleMessageFromPeer entrypoint:layer1, node2 layer1::stream1#0 a1f528bb-b4ad-47c4-852a-424626d3ac5e[39m
+[90mTRACE[39m [2023-06-11T06:09:32.379] (RpcCommunicator     ): [36monIncomingMessage, requestId: 37b8c69f-0e56-478c-b50c-04a8317e908c[39m
+[90mTRACE[39m [2023-06-11T06:09:32.379] (ServerRegistry      ): [36mServer processing RPC call 37b8c69f-0e56-478c-b50c-04a8317e908c[39m
+[90mTRACE[39m [2023-06-11T06:09:32.379] (DhtNode             ): [36mAdding new contact 110,101,116,119,111,114,107,45,115,116,97,99,107[39m
+[90mTRACE[39m [2023-06-11T06:09:32.379] (RandomGraphNode     ): [36mNew nearby contact found[39m
+[90mTRACE[39m [2023-06-11T06:09:32.379] (DhtNode             ): [36mAdded new contact 110,101,116,119,111,114,107,45,115,116,97,99,107[39m
+[90mTRACE[39m [2023-06-11T06:09:32.379] (RpcCommunicator     ): [36monOutGoingMessage, messageId: 37b8c69f-0e56-478c-b50c-04a8317e908c[39m
+[90mTRACE[39m [2023-06-11T06:09:32.379] (Router              ): [36mPeer 101,110,116,114,121,112,111,105,110,116 routing message 3dd8d30d-3b0c-46c5-8a5a-18a66bef19c1 
+            from 101,110,116,114,121,112,111,105,110,116 to 101,110,116,114,121,112,111,105,110,116[39m
+[34mDEBUG[39m [2023-06-11T06:09:32.379] (Router              ): [36m routing session created with connections: {}[39m
+[90mTRACE[39m [2023-06-11T06:09:32.379] (Router              ): [36mstarting to raceEvents from routingSession: d181ece9-60d6-4cb6-b6a5-f56b28d491d2[39m
+[90mTRACE[39m [2023-06-11T06:09:32.379] (RoutingSession      ): [36mstart() sessionId: d181ece9-60d6-4cb6-b6a5-f56b28d491d2[39m
+[90mTRACE[39m [2023-06-11T06:09:32.379] (RoutingSession      ): [36mfindMoreContacts() sessionId: d181ece9-60d6-4cb6-b6a5-f56b28d491d2[39m
+[90mTRACE[39m [2023-06-11T06:09:32.379] (RoutingSession      ): [36msendMoreRequests() sessionId: d181ece9-60d6-4cb6-b6a5-f56b28d491d2[39m
+[90mTRACE[39m [2023-06-11T06:09:32.379] (RoutingSession      ): [36msendRouteMessageRequest[39m
+[90mTRACE[39m [2023-06-11T06:09:32.379] (RoutingSession      ): [36msendRouteMessageRequest() sessionId: d181ece9-60d6-4cb6-b6a5-f56b28d491d2[39m
+[90mTRACE[39m [2023-06-11T06:09:32.379] (RoutingSession      ): [36mSending routeMessage request from 101,110,116,114,121,112,111,105,110,116 to contact: network-stack[39m
+[90mTRACE[39m [2023-06-11T06:09:32.380] (ClientTransport     ): [36mNew rpc request, e2155780-f9aa-4370-9387-b747d868ee0a[39m
+[90mTRACE[39m [2023-06-11T06:09:32.380] (RpcCommunicator     ): [36monOutGoingMessage, messageId: e2155780-f9aa-4370-9387-b747d868ee0a[39m
+[90mTRACE[39m [2023-06-11T06:09:32.380] (ConnectionManager   ): [36mSending message to: 110,101,116,119,111,114,107,45,115,116,97,99,107[39m
+[90mTRACE[39m [2023-06-11T06:09:32.380] (RpcCommunicator     ): [36monOutGoingMessage, messageId: b1618622-91fe-4699-a35f-d2f0b80e625e[39m
+[90mTRACE[39m [2023-06-11T06:09:32.380] (ConnectionManager   ): [36mSending message to: 110,101,116,119,111,114,107,45,115,116,97,99,107[39m
+[90mTRACE[39m [2023-06-11T06:09:32.380] (ConnectionManager   ): [36mnode2 received protojson: {"messageId":"6df569eb-466d-4ae9-ba21-3fd062a90f96","messageType":"RPC","sourceDescriptor":{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"},"targetDescriptor":{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"},"serviceId":"layer0","rpcMessage":{"header":{"method":"forwardMessage","request":"request","notification":""},"body":{"sourcePeer":{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"},"requestId":"3dd8d30d-3b0c-46c5-8a5a-18a66bef19c1","destinationPeer":{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"},"previousPeer":{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"},"message":{"messageId":"05184090-2cab-4f2e-b3f2-aa5b99e6d5f7","messageType":"RPC","sourceDescriptor":{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"},"targetDescriptor":{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"},"serviceId":"layer1::stream1#0","rpcMessage":{"header":{"response":"response","method":"getClosestPeers"},"body":{"peers":[{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"}],"requestId":"72e657dc-38e9-49d5-b1d9-788830ea7f04","@type":"type.googleapis.com/dht.ClosestPeersResponse"},"requestId":"37b8c69f-0e56-478c-b50c-04a8317e908c"}},"routingPath":[{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"}],"@type":"type.googleapis.com/dht.RouteMessageWrapper"},"requestId":"e2155780-f9aa-4370-9387-b747d868ee0a"}}[39m
+[90mTRACE[39m [2023-06-11T06:09:32.380] (ConnectionManager   ): [36mReceived message of type 4[39m
+[90mTRACE[39m [2023-06-11T06:09:32.380] (ConnectionManager   ): [36memit "message" node2, entrypoint layer0 6df569eb-466d-4ae9-ba21-3fd062a90f96[39m
+[90mTRACE[39m [2023-06-11T06:09:32.380] (DhtNode             ): [36mcallig this.handleMessageFromPeer node2, entrypoint layer0 6df569eb-466d-4ae9-ba21-3fd062a90f96[39m
+[90mTRACE[39m [2023-06-11T06:09:32.380] (RpcCommunicator     ): [36monIncomingMessage, requestId: e2155780-f9aa-4370-9387-b747d868ee0a[39m
+[90mTRACE[39m [2023-06-11T06:09:32.380] (ServerRegistry      ): [36mServer processing RPC call e2155780-f9aa-4370-9387-b747d868ee0a[39m
+[90mTRACE[39m [2023-06-11T06:09:32.380] (Router              ): [36mProcessing received forward routeMessage 3dd8d30d-3b0c-46c5-8a5a-18a66bef19c1[39m
+[90mTRACE[39m [2023-06-11T06:09:32.380] (DhtNode             ): [36mAdding new contact 101,110,116,114,121,112,111,105,110,116[39m
+[90mTRACE[39m [2023-06-11T06:09:32.380] (Router              ): [36mPeer 110,101,116,119,111,114,107,45,115,116,97,99,107 routing message 3dd8d30d-3b0c-46c5-8a5a-18a66bef19c1 
+            from 101,110,116,114,121,112,111,105,110,116 to 101,110,116,114,121,112,111,105,110,116[39m
+[34mDEBUG[39m [2023-06-11T06:09:32.380] (Router              ): [36m routing session created with connections: {}[39m
+[90mTRACE[39m [2023-06-11T06:09:32.380] (Router              ): [36mstarting to raceEvents from routingSession: 2f3499b0-bdee-480b-895e-2ae88f10512e[39m
+[90mTRACE[39m [2023-06-11T06:09:32.380] (RoutingSession      ): [36mstart() sessionId: 2f3499b0-bdee-480b-895e-2ae88f10512e[39m
+[90mTRACE[39m [2023-06-11T06:09:32.380] (RoutingSession      ): [36mfindMoreContacts() sessionId: 2f3499b0-bdee-480b-895e-2ae88f10512e[39m
+[90mTRACE[39m [2023-06-11T06:09:32.380] (RoutingSession      ): [36mstart() throwing noCandidatesFound sessionId: 2f3499b0-bdee-480b-895e-2ae88f10512e[39m
+[90mTRACE[39m [2023-06-11T06:09:32.380] (RpcCommunicator     ): [36monOutGoingMessage, messageId: e2155780-f9aa-4370-9387-b747d868ee0a[39m
+[90mTRACE[39m [2023-06-11T06:09:32.380] (ConnectionManager   ): [36mSending message to: 101,110,116,114,121,112,111,105,110,116[39m
+[90mTRACE[39m [2023-06-11T06:09:32.381] (ClientWebSocket     ): [36mSending data with size 423[39m
+[90mTRACE[39m [2023-06-11T06:09:32.381] (Router              ): [36mraceEvents ended from routingSession: 2f3499b0-bdee-480b-895e-2ae88f10512e[39m
+[90mTRACE[39m [2023-06-11T06:09:32.381] (ServerWebSocket     ): [36mServerWebSocket::onMessage[39m
+[90mTRACE[39m [2023-06-11T06:09:32.381] (ServerWebSocket     ): [36mReceived Binary Message of 342 bytes[39m
+[90mTRACE[39m [2023-06-11T06:09:32.381] (ConnectionManager   ): [36mentrypoint received protojson: {"messageId":"13be42fc-cab1-4e7b-a9bd-c404c8461a3d","messageType":"RPC","sourceDescriptor":{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"},"targetDescriptor":{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"},"serviceId":"layer0","rpcMessage":{"header":{"method":"getClosestPeers","request":"request","notification":""},"body":{"kademliaId":"bmV0d29yay1zdGFjaw==","requestId":"6585bdff-2450-47f9-a8bf-94e330850ddf","@type":"type.googleapis.com/dht.ClosestPeersRequest"},"requestId":"12ce7878-7c97-4671-bdf3-40019fb7260f"}}[39m
+[90mTRACE[39m [2023-06-11T06:09:32.381] (ConnectionManager   ): [36mReceived message of type 4[39m
+[90mTRACE[39m [2023-06-11T06:09:32.381] (ConnectionManager   ): [36memit "message" entrypoint, node2 layer0 13be42fc-cab1-4e7b-a9bd-c404c8461a3d[39m
+[90mTRACE[39m [2023-06-11T06:09:32.381] (DhtNode             ): [36mcallig this.handleMessageFromPeer entrypoint, node2 layer0 13be42fc-cab1-4e7b-a9bd-c404c8461a3d[39m
+[90mTRACE[39m [2023-06-11T06:09:32.381] (RpcCommunicator     ): [36monIncomingMessage, requestId: 12ce7878-7c97-4671-bdf3-40019fb7260f[39m
+[90mTRACE[39m [2023-06-11T06:09:32.381] (ServerRegistry      ): [36mServer processing RPC call 12ce7878-7c97-4671-bdf3-40019fb7260f[39m
+[90mTRACE[39m [2023-06-11T06:09:32.381] (DhtNode             ): [36mAdding new contact 110,101,116,119,111,114,107,45,115,116,97,99,107[39m
+[90mTRACE[39m [2023-06-11T06:09:32.381] (RpcCommunicator     ): [36monOutGoingMessage, messageId: 12ce7878-7c97-4671-bdf3-40019fb7260f[39m
+[90mTRACE[39m [2023-06-11T06:09:32.381] (ConnectionManager   ): [36mSending message to: 110,101,116,119,111,114,107,45,115,116,97,99,107[39m
+[90mTRACE[39m [2023-06-11T06:09:32.381] (ConnectionManager   ): [36mnode2 received protojson: {"messageId":"048d2803-6d57-4c7e-be8d-5ca5463fc1e4","messageType":"RPC","sourceDescriptor":{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"},"targetDescriptor":{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"},"serviceId":"layer0","rpcMessage":{"header":{"response":"response","method":"routeMessage"},"body":{"sourcePeer":{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"},"requestId":"11e91467-e29b-4366-be3c-e3cb996f72eb","destinationPeer":{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"},"@type":"type.googleapis.com/dht.RouteMessageAck"},"requestId":"b1618622-91fe-4699-a35f-d2f0b80e625e"}}[39m
+[90mTRACE[39m [2023-06-11T06:09:32.381] (ConnectionManager   ): [36mReceived message of type 4[39m
+[90mTRACE[39m [2023-06-11T06:09:32.381] (ConnectionManager   ): [36memit "message" node2, entrypoint layer0 048d2803-6d57-4c7e-be8d-5ca5463fc1e4[39m
+[90mTRACE[39m [2023-06-11T06:09:32.381] (DhtNode             ): [36mcallig this.handleMessageFromPeer node2, entrypoint layer0 048d2803-6d57-4c7e-be8d-5ca5463fc1e4[39m
+[90mTRACE[39m [2023-06-11T06:09:32.381] (RpcCommunicator     ): [36monIncomingMessage, requestId: b1618622-91fe-4699-a35f-d2f0b80e625e[39m
+[90mTRACE[39m [2023-06-11T06:09:32.381] (RemoteRouter        ): [36mdhtClient.routeMessage returned[39m
+[90mTRACE[39m [2023-06-11T06:09:32.381] (RoutingSession      ): [36monRequestSucceeded() sessionId: 685f2817-53ad-4c7c-aa94-54b102c4f61b[39m
+[90mTRACE[39m [2023-06-11T06:09:32.381] (RoutingSession      ): [36mfindMoreContacts() sessionId: 685f2817-53ad-4c7c-aa94-54b102c4f61b[39m
+[90mTRACE[39m [2023-06-11T06:09:32.381] (RoutingSession      ): [36msendRouteMessageRequest returned[39m
+[90mTRACE[39m [2023-06-11T06:09:32.381] (Router              ): [36mraceEvents ended from routingSession: 685f2817-53ad-4c7c-aa94-54b102c4f61b[39m
+[90mTRACE[39m [2023-06-11T06:09:32.381] (ServerWebSocket     ): [36mServerWebSocket::onMessage[39m
+[90mTRACE[39m [2023-06-11T06:09:32.381] (ServerWebSocket     ): [36mReceived Binary Message of 423 bytes[39m
+[90mTRACE[39m [2023-06-11T06:09:32.382] (ConnectionManager   ): [36mentrypoint received protojson: {"messageId":"a9fcf24d-d34f-4707-8ec9-26f56e9314d9","messageType":"RPC","sourceDescriptor":{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"},"targetDescriptor":{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"},"serviceId":"layer0","rpcMessage":{"header":{"response":"response","method":"forwardMessage"},"body":{"sourcePeer":{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"},"requestId":"3dd8d30d-3b0c-46c5-8a5a-18a66bef19c1","destinationPeer":{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"},"error":"No routing candidates found","@type":"type.googleapis.com/dht.RouteMessageAck"},"requestId":"e2155780-f9aa-4370-9387-b747d868ee0a"}}[39m
+[90mTRACE[39m [2023-06-11T06:09:32.382] (ConnectionManager   ): [36mReceived message of type 4[39m
+[90mTRACE[39m [2023-06-11T06:09:32.382] (ConnectionManager   ): [36memit "message" entrypoint, node2 layer0 a9fcf24d-d34f-4707-8ec9-26f56e9314d9[39m
+[90mTRACE[39m [2023-06-11T06:09:32.382] (DhtNode             ): [36mcallig this.handleMessageFromPeer entrypoint, node2 layer0 a9fcf24d-d34f-4707-8ec9-26f56e9314d9[39m
+[90mTRACE[39m [2023-06-11T06:09:32.382] (RpcCommunicator     ): [36monIncomingMessage, requestId: e2155780-f9aa-4370-9387-b747d868ee0a[39m
+[90mTRACE[39m [2023-06-11T06:09:32.382] (RoutingSession      ): [36monRequestFailed() sessionId: d181ece9-60d6-4cb6-b6a5-f56b28d491d2[39m
+[90mTRACE[39m [2023-06-11T06:09:32.382] (RoutingSession      ): [36mfindMoreContacts() sessionId: d181ece9-60d6-4cb6-b6a5-f56b28d491d2[39m
+[34mDEBUG[39m [2023-06-11T06:09:32.382] (RoutingSession      ): [36mrouting failed, emitting routingFailed sessionId: d181ece9-60d6-4cb6-b6a5-f56b28d491d2[39m
+[34mDEBUG[39m [2023-06-11T06:09:32.382] (RoutingSession      ): [36m{"sourcePeer":{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"},"requestId":"3dd8d30d-3b0c-46c5-8a5a-18a66bef19c1","destinationPeer":{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"},"message":{"messageId":"05184090-2cab-4f2e-b3f2-aa5b99e6d5f7","messageType":"RPC","sourceDescriptor":{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"},"targetDescriptor":{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"},"serviceId":"layer1::stream1#0","rpcMessage":{"header":{"response":"response","method":"getClosestPeers"},"body":{"peers":[{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"}],"requestId":"72e657dc-38e9-49d5-b1d9-788830ea7f04","@type":"type.googleapis.com/dht.ClosestPeersResponse"},"requestId":"37b8c69f-0e56-478c-b50c-04a8317e908c"}},"routingPath":[{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"}]}[39m
+[34mDEBUG[39m [2023-06-11T06:09:32.382] (RoutingSession      ): [36m{}[39m
+[90mTRACE[39m [2023-06-11T06:09:32.382] (RoutingSession      ): [36msendRouteMessageRequest returned[39m
+[90mTRACE[39m [2023-06-11T06:09:32.382] (Router              ): [36mraceEvents ended from routingSession: d181ece9-60d6-4cb6-b6a5-f56b28d491d2[39m
+[90mTRACE[39m [2023-06-11T06:09:32.382] (ConnectionManager   ): [36mnode2 received protojson: {"messageId":"7c46b3cd-5e1c-4384-ac6b-fc2508287e46","messageType":"RPC","sourceDescriptor":{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"},"targetDescriptor":{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"},"serviceId":"layer0","rpcMessage":{"header":{"response":"response","method":"getClosestPeers"},"body":{"peers":[{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"}],"requestId":"6585bdff-2450-47f9-a8bf-94e330850ddf","@type":"type.googleapis.com/dht.ClosestPeersResponse"},"requestId":"12ce7878-7c97-4671-bdf3-40019fb7260f"}}[39m
+[90mTRACE[39m [2023-06-11T06:09:32.382] (ConnectionManager   ): [36mReceived message of type 4[39m
+[90mTRACE[39m [2023-06-11T06:09:32.382] (ConnectionManager   ): [36memit "message" node2, entrypoint layer0 7c46b3cd-5e1c-4384-ac6b-fc2508287e46[39m
+[90mTRACE[39m [2023-06-11T06:09:32.382] (DhtNode             ): [36mcallig this.handleMessageFromPeer node2, entrypoint layer0 7c46b3cd-5e1c-4384-ac6b-fc2508287e46[39m
+[90mTRACE[39m [2023-06-11T06:09:32.382] (RpcCommunicator     ): [36monIncomingMessage, requestId: 12ce7878-7c97-4671-bdf3-40019fb7260f[39m
+[90mTRACE[39m [2023-06-11T06:09:32.382] (RemoteConnectionLock): [36mRequesting connection to be unlocked from 101,110,116,114,121,112,111,105,110,116[39m
+[90mTRACE[39m [2023-06-11T06:09:32.382] (ClientTransport     ): [36mNew rpc notification, 662d20c0-fbce-4228-9c29-b2248eff92c3[39m
+[90mTRACE[39m [2023-06-11T06:09:32.382] (RpcCommunicator     ): [36monOutGoingMessage, messageId: 662d20c0-fbce-4228-9c29-b2248eff92c3[39m
+[90mTRACE[39m [2023-06-11T06:09:32.382] (ConnectionManager   ): [36mSending message to: 101,110,116,114,121,112,111,105,110,116[39m
+[90mTRACE[39m [2023-06-11T06:09:32.382] (ClientWebSocket     ): [36mSending data with size 369[39m
+[90mTRACE[39m [2023-06-11T06:09:32.383] (ServerWebSocket     ): [36mServerWebSocket::onMessage[39m
+[90mTRACE[39m [2023-06-11T06:09:32.383] (ServerWebSocket     ): [36mReceived Binary Message of 369 bytes[39m
+[90mTRACE[39m [2023-06-11T06:09:32.383] (ConnectionManager   ): [36mentrypoint received protojson: {"messageId":"df9a0eb6-1d36-4d02-bc85-ea36955e28cf","messageType":"RPC","sourceDescriptor":{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"},"targetDescriptor":{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"},"serviceId":"ConnectionManager","rpcMessage":{"header":{"method":"unlockRequest","request":"request","notification":"notification"},"body":{"protocolVersion":"1.0","peerDescriptor":{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"},"serviceId":"layer0::joinDht","@type":"type.googleapis.com/dht.UnlockRequest"},"requestId":"662d20c0-fbce-4228-9c29-b2248eff92c3"}}[39m
+[90mTRACE[39m [2023-06-11T06:09:32.383] (ConnectionManager   ): [36mReceived message of type 4[39m
+[90mTRACE[39m [2023-06-11T06:09:32.383] (RpcCommunicator     ): [36monIncomingMessage, requestId: 662d20c0-fbce-4228-9c29-b2248eff92c3[39m
+[90mTRACE[39m [2023-06-11T06:09:32.383] (ServerRegistry      ): [36mServer processing RPC notification 662d20c0-fbce-4228-9c29-b2248eff92c3[39m
+[90mTRACE[39m [2023-06-11T06:09:32.474] (Handshaker          ): [36mAttempting parallel handshakes with 2 targets[39m
+[90mTRACE[39m [2023-06-11T06:09:32.474] (ClientTransport     ): [36mNew rpc request, 902ed468-c1b8-4b8a-804f-62b53b74a063[39m
+[90mTRACE[39m [2023-06-11T06:09:32.474] (RpcCommunicator     ): [36monOutGoingMessage, messageId: 902ed468-c1b8-4b8a-804f-62b53b74a063[39m
+[90mTRACE[39m [2023-06-11T06:09:32.474] (ConnectionManager   ): [36mSending message to: 110,101,116,119,111,114,107,45,115,116,97,99,107[39m
+[90mTRACE[39m [2023-06-11T06:09:32.475] (Handshaker          ): [36mAttempting parallel handshakes with 2 targets[39m
+[90mTRACE[39m [2023-06-11T06:09:32.475] (ClientTransport     ): [36mNew rpc request, 336f20de-d8e5-4e7c-83bb-32b1455534bf[39m
+[90mTRACE[39m [2023-06-11T06:09:32.475] (RpcCommunicator     ): [36monOutGoingMessage, messageId: 336f20de-d8e5-4e7c-83bb-32b1455534bf[39m
+[90mTRACE[39m [2023-06-11T06:09:32.475] (ConnectionManager   ): [36mSending message to: 101,110,116,114,121,112,111,105,110,116[39m
+[90mTRACE[39m [2023-06-11T06:09:32.475] (ClientWebSocket     ): [36mSending data with size 436[39m
+[90mTRACE[39m [2023-06-11T06:09:32.475] (ConnectionManager   ): [36mnode2 received protojson: [type not in type registry][39m
+[90mTRACE[39m [2023-06-11T06:09:32.475] (ConnectionManager   ): [36mReceived message of type 4[39m
+[90mTRACE[39m [2023-06-11T06:09:32.475] (ConnectionManager   ): [36memit "message" node2, entrypoint layer2-stream1#0 251382ac-cad5-40e8-aa10-d977759a1736[39m
+[90mTRACE[39m [2023-06-11T06:09:32.475] (DhtNode             ): [36memit "message" node2, entrypoint layer2-stream1#0 251382ac-cad5-40e8-aa10-d977759a1736[39m
+[90mTRACE[39m [2023-06-11T06:09:32.475] (DhtNode             ): [36memit "message" node2:layer1, entrypoint layer2-stream1#0 251382ac-cad5-40e8-aa10-d977759a1736[39m
+[90mTRACE[39m [2023-06-11T06:09:32.475] (RpcCommunicator     ): [36monIncomingMessage, requestId: 902ed468-c1b8-4b8a-804f-62b53b74a063[39m
+[90mTRACE[39m [2023-06-11T06:09:32.475] (ServerRegistry      ): [36mServer processing RPC call 902ed468-c1b8-4b8a-804f-62b53b74a063[39m
+[90mTRACE[39m [2023-06-11T06:09:32.476] (RemoteConnectionLock): [36mRequesting locked connection to 101,110,116,114,121,112,111,105,110,116[39m
+[90mTRACE[39m [2023-06-11T06:09:32.476] (ClientTransport     ): [36mNew rpc request, 1dbc0efc-1f9a-4529-9c47-e8276841b0a9[39m
+[90mTRACE[39m [2023-06-11T06:09:32.476] (RpcCommunicator     ): [36monOutGoingMessage, messageId: 1dbc0efc-1f9a-4529-9c47-e8276841b0a9[39m
+[90mTRACE[39m [2023-06-11T06:09:32.476] (ConnectionManager   ): [36mSending message to: 101,110,116,114,121,112,111,105,110,116[39m
+[90mTRACE[39m [2023-06-11T06:09:32.476] (ClientWebSocket     ): [36mSending data with size 347[39m
+[90mTRACE[39m [2023-06-11T06:09:32.476] (RpcCommunicator     ): [36monOutGoingMessage, messageId: 902ed468-c1b8-4b8a-804f-62b53b74a063[39m
+[90mTRACE[39m [2023-06-11T06:09:32.476] (ConnectionManager   ): [36mSending message to: 101,110,116,114,121,112,111,105,110,116[39m
+[90mTRACE[39m [2023-06-11T06:09:32.476] (ClientWebSocket     ): [36mSending data with size 317[39m
+[90mTRACE[39m [2023-06-11T06:09:32.476] (ServerWebSocket     ): [36mServerWebSocket::onMessage[39m
+[90mTRACE[39m [2023-06-11T06:09:32.476] (ServerWebSocket     ): [36mReceived Binary Message of 436 bytes[39m
+[90mTRACE[39m [2023-06-11T06:09:32.476] (ConnectionManager   ): [36mentrypoint received protojson: [type not in type registry][39m
+[90mTRACE[39m [2023-06-11T06:09:32.476] (ConnectionManager   ): [36mReceived message of type 4[39m
+[90mTRACE[39m [2023-06-11T06:09:32.476] (ConnectionManager   ): [36memit "message" entrypoint, node2 layer2-stream1#0 83251621-8230-4630-b156-568313f44ba4[39m
+[90mTRACE[39m [2023-06-11T06:09:32.476] (DhtNode             ): [36memit "message" entrypoint, node2 layer2-stream1#0 83251621-8230-4630-b156-568313f44ba4[39m
+[90mTRACE[39m [2023-06-11T06:09:32.476] (DhtNode             ): [36memit "message" entrypoint:layer1, node2 layer2-stream1#0 83251621-8230-4630-b156-568313f44ba4[39m
+[90mTRACE[39m [2023-06-11T06:09:32.476] (RpcCommunicator     ): [36monIncomingMessage, requestId: 336f20de-d8e5-4e7c-83bb-32b1455534bf[39m
+[90mTRACE[39m [2023-06-11T06:09:32.476] (ServerRegistry      ): [36mServer processing RPC call 336f20de-d8e5-4e7c-83bb-32b1455534bf[39m
+[90mTRACE[39m [2023-06-11T06:09:32.476] (RemoteConnectionLock): [36mRequesting locked connection to 110,101,116,119,111,114,107,45,115,116,97,99,107[39m
+[90mTRACE[39m [2023-06-11T06:09:32.477] (ClientTransport     ): [36mNew rpc request, 2c34357c-4878-441c-912b-d9b403c1bd0b[39m
+[90mTRACE[39m [2023-06-11T06:09:32.477] (RpcCommunicator     ): [36monOutGoingMessage, messageId: 2c34357c-4878-441c-912b-d9b403c1bd0b[39m
+[90mTRACE[39m [2023-06-11T06:09:32.477] (ConnectionManager   ): [36mSending message to: 110,101,116,119,111,114,107,45,115,116,97,99,107[39m
+[90mTRACE[39m [2023-06-11T06:09:32.477] (RpcCommunicator     ): [36monOutGoingMessage, messageId: 336f20de-d8e5-4e7c-83bb-32b1455534bf[39m
+[90mTRACE[39m [2023-06-11T06:09:32.477] (ConnectionManager   ): [36mSending message to: 110,101,116,119,111,114,107,45,115,116,97,99,107[39m
+[90mTRACE[39m [2023-06-11T06:09:32.477] (ServerWebSocket     ): [36mServerWebSocket::onMessage[39m
+[90mTRACE[39m [2023-06-11T06:09:32.477] (ServerWebSocket     ): [36mReceived Binary Message of 347 bytes[39m
+[90mTRACE[39m [2023-06-11T06:09:32.477] (ConnectionManager   ): [36mentrypoint received protojson: {"messageId":"f4c24de2-13ea-47a6-9489-0751b236f85d","messageType":"RPC","sourceDescriptor":{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"},"targetDescriptor":{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"},"serviceId":"ConnectionManager","rpcMessage":{"header":{"method":"lockRequest","request":"request","notification":""},"body":{"protocolVersion":"1.0","peerDescriptor":{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"},"serviceId":"stream1#0","@type":"type.googleapis.com/dht.LockRequest"},"requestId":"1dbc0efc-1f9a-4529-9c47-e8276841b0a9"}}[39m
+[90mTRACE[39m [2023-06-11T06:09:32.477] (ConnectionManager   ): [36mReceived message of type 4[39m
+[90mTRACE[39m [2023-06-11T06:09:32.477] (RpcCommunicator     ): [36monIncomingMessage, requestId: 1dbc0efc-1f9a-4529-9c47-e8276841b0a9[39m
+[90mTRACE[39m [2023-06-11T06:09:32.477] (ServerRegistry      ): [36mServer processing RPC call 1dbc0efc-1f9a-4529-9c47-e8276841b0a9[39m
+[90mTRACE[39m [2023-06-11T06:09:32.477] (RpcCommunicator     ): [36monOutGoingMessage, messageId: 1dbc0efc-1f9a-4529-9c47-e8276841b0a9[39m
+[90mTRACE[39m [2023-06-11T06:09:32.477] (ConnectionManager   ): [36mSending message to: 110,101,116,119,111,114,107,45,115,116,97,99,107[39m
+[90mTRACE[39m [2023-06-11T06:09:32.478] (ConnectionManager   ): [36mnode2 received protojson: {"messageId":"2eb188d7-c1f2-4137-863b-10c04f065cc6","messageType":"RPC","sourceDescriptor":{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"},"targetDescriptor":{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"},"serviceId":"ConnectionManager","rpcMessage":{"header":{"method":"lockRequest","request":"request","notification":""},"body":{"protocolVersion":"1.0","peerDescriptor":{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"},"serviceId":"stream1#0","@type":"type.googleapis.com/dht.LockRequest"},"requestId":"2c34357c-4878-441c-912b-d9b403c1bd0b"}}[39m
+[90mTRACE[39m [2023-06-11T06:09:32.478] (ConnectionManager   ): [36mReceived message of type 4[39m
+[90mTRACE[39m [2023-06-11T06:09:32.478] (RpcCommunicator     ): [36monIncomingMessage, requestId: 2c34357c-4878-441c-912b-d9b403c1bd0b[39m
+[90mTRACE[39m [2023-06-11T06:09:32.478] (ServerRegistry      ): [36mServer processing RPC call 2c34357c-4878-441c-912b-d9b403c1bd0b[39m
+[90mTRACE[39m [2023-06-11T06:09:32.478] (RpcCommunicator     ): [36monOutGoingMessage, messageId: 2c34357c-4878-441c-912b-d9b403c1bd0b[39m
+[90mTRACE[39m [2023-06-11T06:09:32.478] (ConnectionManager   ): [36mSending message to: 101,110,116,114,121,112,111,105,110,116[39m
+[90mTRACE[39m [2023-06-11T06:09:32.478] (ClientWebSocket     ): [36mSending data with size 274[39m
+[90mTRACE[39m [2023-06-11T06:09:32.478] (ServerWebSocket     ): [36mServerWebSocket::onMessage[39m
+[90mTRACE[39m [2023-06-11T06:09:32.478] (ServerWebSocket     ): [36mReceived Binary Message of 317 bytes[39m
+[90mTRACE[39m [2023-06-11T06:09:32.478] (ConnectionManager   ): [36mentrypoint received protojson: [type not in type registry][39m
+[90mTRACE[39m [2023-06-11T06:09:32.478] (ConnectionManager   ): [36mReceived message of type 4[39m
+[90mTRACE[39m [2023-06-11T06:09:32.478] (ConnectionManager   ): [36memit "message" entrypoint, node2 layer2-stream1#0 2b77124b-03fa-4d31-bdff-6b13aabd506f[39m
+[90mTRACE[39m [2023-06-11T06:09:32.478] (DhtNode             ): [36memit "message" entrypoint, node2 layer2-stream1#0 2b77124b-03fa-4d31-bdff-6b13aabd506f[39m
+[90mTRACE[39m [2023-06-11T06:09:32.478] (DhtNode             ): [36memit "message" entrypoint:layer1, node2 layer2-stream1#0 2b77124b-03fa-4d31-bdff-6b13aabd506f[39m
+[90mTRACE[39m [2023-06-11T06:09:32.478] (RpcCommunicator     ): [36monIncomingMessage, requestId: 902ed468-c1b8-4b8a-804f-62b53b74a063[39m
+[90mTRACE[39m [2023-06-11T06:09:32.478] (RemoteConnectionLock): [36mRequesting locked connection to 110,101,116,119,111,114,107,45,115,116,97,99,107[39m
+[90mTRACE[39m [2023-06-11T06:09:32.478] (ClientTransport     ): [36mNew rpc request, 924923d6-797b-4348-8f1f-5506669e0da0[39m
+[90mTRACE[39m [2023-06-11T06:09:32.478] (RpcCommunicator     ): [36monOutGoingMessage, messageId: 924923d6-797b-4348-8f1f-5506669e0da0[39m
+[90mTRACE[39m [2023-06-11T06:09:32.478] (ConnectionManager   ): [36mSending message to: 110,101,116,119,111,114,107,45,115,116,97,99,107[39m
+[90mTRACE[39m [2023-06-11T06:09:32.479] (ConnectionManager   ): [36mnode2 received protojson: [type not in type registry][39m
+[90mTRACE[39m [2023-06-11T06:09:32.479] (ConnectionManager   ): [36mReceived message of type 4[39m
+[90mTRACE[39m [2023-06-11T06:09:32.479] (ConnectionManager   ): [36memit "message" node2, entrypoint layer2-stream1#0 d94a3556-f4f3-4ea5-8579-9b19f89845e2[39m
+[90mTRACE[39m [2023-06-11T06:09:32.479] (DhtNode             ): [36memit "message" node2, entrypoint layer2-stream1#0 d94a3556-f4f3-4ea5-8579-9b19f89845e2[39m
+[90mTRACE[39m [2023-06-11T06:09:32.479] (DhtNode             ): [36memit "message" node2:layer1, entrypoint layer2-stream1#0 d94a3556-f4f3-4ea5-8579-9b19f89845e2[39m
+[90mTRACE[39m [2023-06-11T06:09:32.479] (RpcCommunicator     ): [36monIncomingMessage, requestId: 336f20de-d8e5-4e7c-83bb-32b1455534bf[39m
+[90mTRACE[39m [2023-06-11T06:09:32.479] (RemoteConnectionLock): [36mRequesting locked connection to 101,110,116,114,121,112,111,105,110,116[39m
+[90mTRACE[39m [2023-06-11T06:09:32.479] (ClientTransport     ): [36mNew rpc request, b0ae4356-a656-423d-a9cd-6b532e39a12e[39m
+[90mTRACE[39m [2023-06-11T06:09:32.479] (RpcCommunicator     ): [36monOutGoingMessage, messageId: b0ae4356-a656-423d-a9cd-6b532e39a12e[39m
+[90mTRACE[39m [2023-06-11T06:09:32.479] (ConnectionManager   ): [36mSending message to: 101,110,116,114,121,112,111,105,110,116[39m
+[90mTRACE[39m [2023-06-11T06:09:32.479] (ClientWebSocket     ): [36mSending data with size 347[39m
+[90mTRACE[39m [2023-06-11T06:09:32.479] (ConnectionManager   ): [36mnode2 received protojson: {"messageId":"6dd94e38-952d-4bc9-b145-33d5c81d83be","messageType":"RPC","sourceDescriptor":{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"},"targetDescriptor":{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"},"serviceId":"ConnectionManager","rpcMessage":{"header":{"response":"response","method":"lockRequest"},"body":{"accepted":true,"@type":"type.googleapis.com/dht.LockResponse"},"requestId":"1dbc0efc-1f9a-4529-9c47-e8276841b0a9"}}[39m
+[90mTRACE[39m [2023-06-11T06:09:32.479] (ConnectionManager   ): [36mReceived message of type 4[39m
+[90mTRACE[39m [2023-06-11T06:09:32.479] (RpcCommunicator     ): [36monIncomingMessage, requestId: 1dbc0efc-1f9a-4529-9c47-e8276841b0a9[39m
+[90mTRACE[39m [2023-06-11T06:09:32.479] (ConnectionManager   ): [36mLockRequest successful[39m
+[90mTRACE[39m [2023-06-11T06:09:32.479] (ServerWebSocket     ): [36mServerWebSocket::onMessage[39m
+[90mTRACE[39m [2023-06-11T06:09:32.479] (ServerWebSocket     ): [36mReceived Binary Message of 274 bytes[39m
+[90mTRACE[39m [2023-06-11T06:09:32.479] (ConnectionManager   ): [36mentrypoint received protojson: {"messageId":"cbae81cb-09f8-4d33-b855-a1920cab52e3","messageType":"RPC","sourceDescriptor":{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"},"targetDescriptor":{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"},"serviceId":"ConnectionManager","rpcMessage":{"header":{"response":"response","method":"lockRequest"},"body":{"accepted":true,"@type":"type.googleapis.com/dht.LockResponse"},"requestId":"2c34357c-4878-441c-912b-d9b403c1bd0b"}}[39m
+[90mTRACE[39m [2023-06-11T06:09:32.479] (ConnectionManager   ): [36mReceived message of type 4[39m
+[90mTRACE[39m [2023-06-11T06:09:32.479] (RpcCommunicator     ): [36monIncomingMessage, requestId: 2c34357c-4878-441c-912b-d9b403c1bd0b[39m
+[90mTRACE[39m [2023-06-11T06:09:32.479] (ConnectionManager   ): [36mLockRequest successful[39m
+[90mTRACE[39m [2023-06-11T06:09:32.479] (ConnectionManager   ): [36mnode2 received protojson: {"messageId":"271d2e62-68c6-442d-9804-84f0f77a8c70","messageType":"RPC","sourceDescriptor":{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"},"targetDescriptor":{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"},"serviceId":"ConnectionManager","rpcMessage":{"header":{"method":"lockRequest","request":"request","notification":""},"body":{"protocolVersion":"1.0","peerDescriptor":{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"},"serviceId":"stream1#0","@type":"type.googleapis.com/dht.LockRequest"},"requestId":"924923d6-797b-4348-8f1f-5506669e0da0"}}[39m
+[90mTRACE[39m [2023-06-11T06:09:32.479] (ConnectionManager   ): [36mReceived message of type 4[39m
+[90mTRACE[39m [2023-06-11T06:09:32.479] (RpcCommunicator     ): [36monIncomingMessage, requestId: 924923d6-797b-4348-8f1f-5506669e0da0[39m
+[90mTRACE[39m [2023-06-11T06:09:32.479] (ServerRegistry      ): [36mServer processing RPC call 924923d6-797b-4348-8f1f-5506669e0da0[39m
+[90mTRACE[39m [2023-06-11T06:09:32.480] (RpcCommunicator     ): [36monOutGoingMessage, messageId: 924923d6-797b-4348-8f1f-5506669e0da0[39m
+[90mTRACE[39m [2023-06-11T06:09:32.480] (ConnectionManager   ): [36mSending message to: 101,110,116,114,121,112,111,105,110,116[39m
+[90mTRACE[39m [2023-06-11T06:09:32.480] (ClientWebSocket     ): [36mSending data with size 274[39m
+[90mTRACE[39m [2023-06-11T06:09:32.480] (ServerWebSocket     ): [36mServerWebSocket::onMessage[39m
+[90mTRACE[39m [2023-06-11T06:09:32.480] (ServerWebSocket     ): [36mReceived Binary Message of 347 bytes[39m
+[90mTRACE[39m [2023-06-11T06:09:32.480] (ConnectionManager   ): [36mentrypoint received protojson: {"messageId":"2b27de96-b19d-4c27-bf87-63f1b5b8f837","messageType":"RPC","sourceDescriptor":{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"},"targetDescriptor":{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"},"serviceId":"ConnectionManager","rpcMessage":{"header":{"method":"lockRequest","request":"request","notification":""},"body":{"protocolVersion":"1.0","peerDescriptor":{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"},"serviceId":"stream1#0","@type":"type.googleapis.com/dht.LockRequest"},"requestId":"b0ae4356-a656-423d-a9cd-6b532e39a12e"}}[39m
+[90mTRACE[39m [2023-06-11T06:09:32.480] (ConnectionManager   ): [36mReceived message of type 4[39m
+[90mTRACE[39m [2023-06-11T06:09:32.480] (RpcCommunicator     ): [36monIncomingMessage, requestId: b0ae4356-a656-423d-a9cd-6b532e39a12e[39m
+[90mTRACE[39m [2023-06-11T06:09:32.480] (ServerRegistry      ): [36mServer processing RPC call b0ae4356-a656-423d-a9cd-6b532e39a12e[39m
+[90mTRACE[39m [2023-06-11T06:09:32.480] (RpcCommunicator     ): [36monOutGoingMessage, messageId: b0ae4356-a656-423d-a9cd-6b532e39a12e[39m
+[90mTRACE[39m [2023-06-11T06:09:32.480] (ConnectionManager   ): [36mSending message to: 110,101,116,119,111,114,107,45,115,116,97,99,107[39m
+[90mTRACE[39m [2023-06-11T06:09:32.480] (ServerWebSocket     ): [36mServerWebSocket::onMessage[39m
+[90mTRACE[39m [2023-06-11T06:09:32.480] (ServerWebSocket     ): [36mReceived Binary Message of 274 bytes[39m
+[90mTRACE[39m [2023-06-11T06:09:32.480] (ConnectionManager   ): [36mentrypoint received protojson: {"messageId":"6ed84bea-598e-4f8b-95b0-4dc3e267a867","messageType":"RPC","sourceDescriptor":{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"},"targetDescriptor":{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"},"serviceId":"ConnectionManager","rpcMessage":{"header":{"response":"response","method":"lockRequest"},"body":{"accepted":true,"@type":"type.googleapis.com/dht.LockResponse"},"requestId":"924923d6-797b-4348-8f1f-5506669e0da0"}}[39m
+[90mTRACE[39m [2023-06-11T06:09:32.480] (ConnectionManager   ): [36mReceived message of type 4[39m
+[90mTRACE[39m [2023-06-11T06:09:32.480] (RpcCommunicator     ): [36monIncomingMessage, requestId: 924923d6-797b-4348-8f1f-5506669e0da0[39m
+[90mTRACE[39m [2023-06-11T06:09:32.480] (ConnectionManager   ): [36mLockRequest successful[39m
+[90mTRACE[39m [2023-06-11T06:09:32.481] (ConnectionManager   ): [36mnode2 received protojson: {"messageId":"7c457031-d4a1-4523-b95c-9dca4beb9865","messageType":"RPC","sourceDescriptor":{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"},"targetDescriptor":{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"},"serviceId":"ConnectionManager","rpcMessage":{"header":{"response":"response","method":"lockRequest"},"body":{"accepted":true,"@type":"type.googleapis.com/dht.LockResponse"},"requestId":"b0ae4356-a656-423d-a9cd-6b532e39a12e"}}[39m
+[90mTRACE[39m [2023-06-11T06:09:32.481] (ConnectionManager   ): [36mReceived message of type 4[39m
+[90mTRACE[39m [2023-06-11T06:09:32.481] (RpcCommunicator     ): [36monIncomingMessage, requestId: b0ae4356-a656-423d-a9cd-6b532e39a12e[39m
+[90mTRACE[39m [2023-06-11T06:09:32.481] (ConnectionManager   ): [36mLockRequest successful[39m
+[90mTRACE[39m [2023-06-11T06:09:32.730] (Handshaker          ): [36mAttempting parallel handshakes with 2 targets[39m
+[90mTRACE[39m [2023-06-11T06:09:32.731] (Handshaker          ): [36mAttempting parallel handshakes with 2 targets[39m
+[90mTRACE[39m [2023-06-11T06:09:37.347] (ConnectionManager   ): [36mdisconnectorInterval[39m
+[90mTRACE[39m [2023-06-11T06:09:37.362] (ConnectionManager   ): [36mdisconnectorInterval[39m
+[90mTRACE[39m [2023-06-11T06:09:42.349] (ConnectionManager   ): [36mdisconnectorInterval[39m
+[90mTRACE[39m [2023-06-11T06:09:42.363] (ConnectionManager   ): [36mdisconnectorInterval[39m
+[90mTRACE[39m [2023-06-11T06:09:42.367] (RemoteConnectionLock): [36mRequesting connection to be unlocked from 101,110,116,114,121,112,111,105,110,116[39m
+[90mTRACE[39m [2023-06-11T06:09:42.367] (ClientTransport     ): [36mNew rpc notification, f9c0b973-1857-4344-89db-6c2b626631b7[39m
+[90mTRACE[39m [2023-06-11T06:09:42.367] (RpcCommunicator     ): [36monOutGoingMessage, messageId: f9c0b973-1857-4344-89db-6c2b626631b7[39m
+[90mTRACE[39m [2023-06-11T06:09:42.367] (ConnectionManager   ): [36mSending message to: 101,110,116,114,121,112,111,105,110,116[39m
+[90mTRACE[39m [2023-06-11T06:09:42.368] (ClientWebSocket     ): [36mSending data with size 381[39m
+[90mTRACE[39m [2023-06-11T06:09:42.369] (ServerWebSocket     ): [36mServerWebSocket::onMessage[39m
+[90mTRACE[39m [2023-06-11T06:09:42.369] (ServerWebSocket     ): [36mReceived Binary Message of 381 bytes[39m
+[90mTRACE[39m [2023-06-11T06:09:42.369] (ConnectionManager   ): [36mentrypoint received protojson: {"messageId":"69ffbb08-c446-4493-a651-a06f0e1c3e57","messageType":"RPC","sourceDescriptor":{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"},"targetDescriptor":{"kademliaId":"ZW50cnlwb2ludA==","websocket":{"port":32222,"ip":"localhost"},"nodeName":"entrypoint"},"serviceId":"ConnectionManager","rpcMessage":{"header":{"method":"unlockRequest","request":"request","notification":"notification"},"body":{"protocolVersion":"1.0","peerDescriptor":{"kademliaId":"bmV0d29yay1zdGFjaw==","websocket":{"port":32223,"ip":"127.0.0.1"},"openInternet":true,"nodeName":"node2"},"serviceId":"temporary-layer0-connection","@type":"type.googleapis.com/dht.UnlockRequest"},"requestId":"f9c0b973-1857-4344-89db-6c2b626631b7"}}[39m
+[90mTRACE[39m [2023-06-11T06:09:42.370] (ConnectionManager   ): [36mReceived message of type 4[39m
+[90mTRACE[39m [2023-06-11T06:09:42.370] (RpcCommunicator     ): [36monIncomingMessage, requestId: f9c0b973-1857-4344-89db-6c2b626631b7[39m
+[90mTRACE[39m [2023-06-11T06:09:42.370] (ServerRegistry      ): [36mServer processing RPC notification f9c0b973-1857-4344-89db-6c2b626631b7[39m
+[90mTRACE[39m [2023-06-11T06:09:42.373] (NeighborUpdateManage): [36mUpdating neighbor info to peers[39m
+[90mTRACE[39m [2023-06-11T06:09:42.374] (ClientTransport     ): [36mNew rpc request, 6eacc1bb-e595-432f-b478-61a2f4741292[39m
+[90mTRACE[39m [2023-06-11T06:09:42.374] (RpcCommunicator     ): [36monOutGoingMessage, messageId: 6eacc1bb-e595-432f-b478-61a2f4741292[39m
+[90mTRACE[39m [2023-06-11T06:09:42.374] (ConnectionManager   ): [36mSending message to: 110,101,116,119,111,114,107,45,115,116,97,99,107[39m
+[90mTRACE[39m [2023-06-11T06:09:42.375] (ConnectionManager   ): [36mnode2 received protojson: [type not in type registry][39m
+[90mTRACE[39m [2023-06-11T06:09:42.375] (ConnectionManager   ): [36mReceived message of type 4[39m
+[90mTRACE[39m [2023-06-11T06:09:42.375] (ConnectionManager   ): [36memit "message" node2, entrypoint layer2-stream1#0 1ffb15aa-2e71-4cd4-b997-4ba4deaab11b[39m
+[90mTRACE[39m [2023-06-11T06:09:42.375] (DhtNode             ): [36memit "message" node2, entrypoint layer2-stream1#0 1ffb15aa-2e71-4cd4-b997-4ba4deaab11b[39m
+[90mTRACE[39m [2023-06-11T06:09:42.375] (DhtNode             ): [36memit "message" node2:layer1, entrypoint layer2-stream1#0 1ffb15aa-2e71-4cd4-b997-4ba4deaab11b[39m
+[90mTRACE[39m [2023-06-11T06:09:42.375] (RpcCommunicator     ): [36monIncomingMessage, requestId: 6eacc1bb-e595-432f-b478-61a2f4741292[39m
+[90mTRACE[39m [2023-06-11T06:09:42.375] (ServerRegistry      ): [36mServer processing RPC call 6eacc1bb-e595-432f-b478-61a2f4741292[39m
+[90mTRACE[39m [2023-06-11T06:09:42.376] (RpcCommunicator     ): [36monOutGoingMessage, messageId: 6eacc1bb-e595-432f-b478-61a2f4741292[39m
+[90mTRACE[39m [2023-06-11T06:09:42.376] (ConnectionManager   ): [36mSending message to: 101,110,116,114,121,112,111,105,110,116[39m
+[90mTRACE[39m [2023-06-11T06:09:42.376] (ClientWebSocket     ): [36mSending data with size 355[39m
+[90mTRACE[39m [2023-06-11T06:09:42.376] (NeighborUpdateManage): [36mUpdating neighbor info to peers[39m
+[90mTRACE[39m [2023-06-11T06:09:42.377] (ClientTransport     ): [36mNew rpc request, 59ebceb2-a73e-4071-b7d8-37331da2d582[39m
+[90mTRACE[39m [2023-06-11T06:09:42.377] (RpcCommunicator     ): [36monOutGoingMessage, messageId: 59ebceb2-a73e-4071-b7d8-37331da2d582[39m
+[90mTRACE[39m [2023-06-11T06:09:42.377] (ConnectionManager   ): [36mSending message to: 101,110,116,114,121,112,111,105,110,116[39m
+[90mTRACE[39m [2023-06-11T06:09:42.377] (ClientWebSocket     ): [36mSending data with size 371[39m
+[90mTRACE[39m [2023-06-11T06:09:42.377] (ServerWebSocket     ): [36mServerWebSocket::onMessage[39m
+[90mTRACE[39m [2023-06-11T06:09:42.377] (ServerWebSocket     ): [36mReceived Binary Message of 355 bytes[39m
+[90mTRACE[39m [2023-06-11T06:09:42.378] (ConnectionManager   ): [36mentrypoint received protojson: [type not in type registry][39m
+[90mTRACE[39m [2023-06-11T06:09:42.378] (ConnectionManager   ): [36mReceived message of type 4[39m
+[90mTRACE[39m [2023-06-11T06:09:42.378] (ConnectionManager   ): [36memit "message" entrypoint, node2 layer2-stream1#0 6d935560-42eb-482b-a8c2-4b4bec198605[39m
+[90mTRACE[39m [2023-06-11T06:09:42.378] (DhtNode             ): [36memit "message" entrypoint, node2 layer2-stream1#0 6d935560-42eb-482b-a8c2-4b4bec198605[39m
+[90mTRACE[39m [2023-06-11T06:09:42.378] (DhtNode             ): [36memit "message" entrypoint:layer1, node2 layer2-stream1#0 6d935560-42eb-482b-a8c2-4b4bec198605[39m
+[90mTRACE[39m [2023-06-11T06:09:42.378] (RpcCommunicator     ): [36monIncomingMessage, requestId: 6eacc1bb-e595-432f-b478-61a2f4741292[39m
+[90mTRACE[39m [2023-06-11T06:09:42.378] (ServerWebSocket     ): [36mServerWebSocket::onMessage[39m
+[90mTRACE[39m [2023-06-11T06:09:42.378] (ServerWebSocket     ): [36mReceived Binary Message of 371 bytes[39m
+[90mTRACE[39m [2023-06-11T06:09:42.379] (ConnectionManager   ): [36mentrypoint received protojson: [type not in type registry][39m
+[90mTRACE[39m [2023-06-11T06:09:42.379] (ConnectionManager   ): [36mReceived message of type 4[39m
+[90mTRACE[39m [2023-06-11T06:09:42.379] (ConnectionManager   ): [36memit "message" entrypoint, node2 layer2-stream1#0 9bab2970-cd19-4d93-8eed-b05406d270ed[39m
+[90mTRACE[39m [2023-06-11T06:09:42.379] (DhtNode             ): [36memit "message" entrypoint, node2 layer2-stream1#0 9bab2970-cd19-4d93-8eed-b05406d270ed[39m
+[90mTRACE[39m [2023-06-11T06:09:42.379] (DhtNode             ): [36memit "message" entrypoint:layer1, node2 layer2-stream1#0 9bab2970-cd19-4d93-8eed-b05406d270ed[39m
+[90mTRACE[39m [2023-06-11T06:09:42.379] (RpcCommunicator     ): [36monIncomingMessage, requestId: 59ebceb2-a73e-4071-b7d8-37331da2d582[39m
+[90mTRACE[39m [2023-06-11T06:09:42.379] (ServerRegistry      ): [36mServer processing RPC call 59ebceb2-a73e-4071-b7d8-37331da2d582[39m
+[90mTRACE[39m [2023-06-11T06:09:42.379] (RpcCommunicator     ): [36monOutGoingMessage, messageId: 59ebceb2-a73e-4071-b7d8-37331da2d582[39m
+[90mTRACE[39m [2023-06-11T06:09:42.379] (ConnectionManager   ): [36mSending message to: 110,101,116,119,111,114,107,45,115,116,97,99,107[39m
+[90mTRACE[39m [2023-06-11T06:09:42.380] (ConnectionManager   ): [36mnode2 received protojson: [type not in type registry][39m
+[90mTRACE[39m [2023-06-11T06:09:42.380] (ConnectionManager   ): [36mReceived message of type 4[39m
+[90mTRACE[39m [2023-06-11T06:09:42.380] (ConnectionManager   ): [36memit "message" node2, entrypoint layer2-stream1#0 2bbe78a2-7a2e-437b-ab1a-4353aee3b578[39m
+[90mTRACE[39m [2023-06-11T06:09:42.380] (DhtNode             ): [36memit "message" node2, entrypoint layer2-stream1#0 2bbe78a2-7a2e-437b-ab1a-4353aee3b578[39m
+[90mTRACE[39m [2023-06-11T06:09:42.380] (DhtNode             ): [36memit "message" node2:layer1, entrypoint layer2-stream1#0 2bbe78a2-7a2e-437b-ab1a-4353aee3b578[39m
+[90mTRACE[39m [2023-06-11T06:09:42.380] (RpcCommunicator     ): [36monIncomingMessage, requestId: 59ebceb2-a73e-4071-b7d8-37331da2d582[39m
+[90mTRACE[39m [2023-06-11T06:09:42.477] (Handshaker          ): [36mAttempting parallel handshakes with 2 targets[39m
+[90mTRACE[39m [2023-06-11T06:09:42.478] (Handshaker          ): [36mAttempting parallel handshakes with 2 targets[39m

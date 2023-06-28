@@ -1,106 +1,96 @@
-import { IDhtRpcServiceClient } from '../proto/DhtRpc.client'
-import { ClosestPeersRequest, PeerDescriptor, PingRequest, RouteMessageWrapper } from '../proto/DhtRpc'
+import { IDhtRpcServiceClient } from '../proto/packages/dht/protos/DhtRpc.client'
+import {
+    ClosestPeersRequest,
+    LeaveNotice,
+    PeerDescriptor,
+    PingRequest
+} from '../proto/packages/dht/protos/DhtRpc'
 import { v4 } from 'uuid'
-import { PeerID } from '../helpers/PeerID'
 import { DhtRpcOptions } from '../rpc-protocol/DhtRpcOptions'
-import { RouteMessageParams } from './DhtNode'
 import { Logger } from '@streamr/utils'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
+import { Remote } from './contact/Remote'
 
 const logger = new Logger(module)
 
 // Fields required by objects stored in the k-bucket library
-interface KBucketContact {
+export interface KBucketContact {
     id: Uint8Array
     vectorClock: number
 }
 
-export class DhtPeer implements KBucketContact {
+export class DhtPeer extends Remote<IDhtRpcServiceClient> implements KBucketContact {
     private static counter = 0
-    
-    public readonly peerId: PeerID
-
-    public get id(): Uint8Array {
-        return this.peerId.value
-    }
-
-    private peerDescriptor: PeerDescriptor
     public vectorClock: number
-    private readonly dhtClient: ProtoRpcClient<IDhtRpcServiceClient>
-    
-    constructor(peerDescriptor: PeerDescriptor, client: ProtoRpcClient<IDhtRpcServiceClient>) {
-        this.peerId = PeerID.fromValue(peerDescriptor.peerId)
-        this.peerDescriptor = peerDescriptor
+    public readonly id: Uint8Array
+    constructor(
+        ownPeerDescriptor: PeerDescriptor,
+        peerDescriptor: PeerDescriptor,
+        client: ProtoRpcClient<IDhtRpcServiceClient>,
+        serviceId: string
+    ) {
+        super(ownPeerDescriptor, peerDescriptor, client, serviceId)
+        this.id = this.peerId.value
         this.vectorClock = DhtPeer.counter++
-        this.dhtClient = client
-        this.getClosestPeers = this.getClosestPeers.bind(this)
-        this.ping = this.ping.bind(this)
     }
 
-    async getClosestPeers(sourceDescriptor: PeerDescriptor): Promise<PeerDescriptor[]> {
+    async getClosestPeers(kademliaId: Uint8Array): Promise<PeerDescriptor[]> {
+        logger.trace(`Requesting getClosestPeers on ${this.serviceId} from ${this.peerId.toKey()}`)
         const request: ClosestPeersRequest = {
-            peerDescriptor: sourceDescriptor,
+            kademliaId: kademliaId,
             requestId: v4()
         }
         const options: DhtRpcOptions = {
-            sourceDescriptor: sourceDescriptor as PeerDescriptor,
-            targetDescriptor: this.peerDescriptor as PeerDescriptor
+            sourceDescriptor: this.ownPeerDescriptor,
+            targetDescriptor: this.peerDescriptor
         }
-
         try {
-            const peers = await this.dhtClient.getClosestPeers(request, options)
+            const peers = await this.client.getClosestPeers(request, options)
             return peers.peers
         } catch (err) {
-            logger.debug('error', { err })
-            return []
+            logger.trace(`getClosestPeers error ${this.serviceId}`, { err })
+            throw err
         }
-
     }
 
-    async ping(sourceDescriptor: PeerDescriptor): Promise<boolean> {
+    async ping(): Promise<boolean> {
+        logger.trace(`Requesting ping on ${this.serviceId} from ${this.peerId.toKey()}`)
         const request: PingRequest = {
             requestId: v4()
         }
         const options: DhtRpcOptions = {
-            sourceDescriptor: sourceDescriptor as PeerDescriptor,
-            targetDescriptor: this.peerDescriptor as PeerDescriptor
+            sourceDescriptor: this.ownPeerDescriptor,
+            targetDescriptor: this.peerDescriptor,
+            timeout: 10000
         }
         try {
-            const pong = await this.dhtClient.ping(request, options)
+            const pong = await this.client.ping(request, options)
             if (pong.requestId === request.requestId) {
                 return true
             }
         } catch (err) {
-            logger.debug('error', { err })
+            logger.debug(`ping failed on ${this.serviceId} to ${this.peerId.toKey()}: ${err}`)
         }
         return false
     }
 
-    async routeMessage(params: RouteMessageParams): Promise<boolean> {
-        const message: RouteMessageWrapper = {
-            destinationPeer: params.destinationPeer,
-            sourcePeer: params.sourcePeer,
-            previousPeer: params.previousPeer,
-            message: params.message,
-            requestId: params.messageId || v4()
+    leaveNotice(): void {
+        logger.trace(`Sending leaveNotice on ${this.serviceId} from ${this.peerId.toKey()}`)
+        const request: LeaveNotice = {
+            serviceId: this.serviceId
         }
         const options: DhtRpcOptions = {
-            sourceDescriptor: params.previousPeer as PeerDescriptor,
-            targetDescriptor: this.peerDescriptor as PeerDescriptor
+            sourceDescriptor: this.ownPeerDescriptor,
+            targetDescriptor: this.peerDescriptor,
+            notification: true
         }
-        try {
-            const ack = await this.dhtClient.routeMessage(message, options)
-            if (ack.error!.length > 0) {
-                return false
-            }
-        } catch (err) {
-            logger.debug('error', { err })
-            return false
-        }
-        return true
+        this.client.leaveNotice(request, options).catch((e) => {
+            logger.trace('Failed to send leaveNotice' + e)
+        })
     }
 
     getPeerDescriptor(): PeerDescriptor {
         return this.peerDescriptor
     }
+
 }

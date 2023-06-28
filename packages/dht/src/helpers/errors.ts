@@ -12,7 +12,11 @@ export enum ErrorCode {
     ILLEGAL_RTC_PEER_CONNECTION_STATE = 'ILLEGAL_RTC_PEER_CONNECTION_STATE',
     ILLEGAL_ARGUMENTS = 'ILLEGAL_ARGUMENTS',
     CONNECTIVITY_RESPONSE_NOT_RECEIVED_BEFORE_TIMEOUT = 'CONNECTIVITY_RESPONSE_NOT_RECEIVED_BEFORE_TIMEOUT',
-    DHT_JOIN_TIMEOUT = 'DHT_JOIN_TIMEOUT' 
+    CONNECTION_LOCKER = 'CONNECTION_LOCKER',
+    DHT_JOIN_TIMEOUT = 'DHT_JOIN_TIMEOUT',
+    SEND_FAILED = 'SEND_FAILED',
+    GETTING_DATA_FAILED = 'GETTING_DATA_FAILED',
+    CONNECTION_NOT_OPEN = 'CONNECTION_NOT_OPEN'
 }
 
 class Err extends Error {
@@ -38,4 +42,8 @@ export class NotImplemented extends Err { constructor(message?: string, original
 export class IllegalRTCPeerConnectionState extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.ILLEGAL_RTC_PEER_CONNECTION_STATE, message, originalError) } }
 export class IllegalArguments extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.ILLEGAL_ARGUMENTS, message, originalError) } }
 export class ConnectivityResponseTimeout extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.CONNECTIVITY_RESPONSE_NOT_RECEIVED_BEFORE_TIMEOUT, message, originalError) } }
+export class ConnectionLocker extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.CONNECTION_LOCKER, message, originalError) } }
 export class DhtJoinTimeout extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.DHT_JOIN_TIMEOUT, message, originalError) } }
+export class SendFailed extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.SEND_FAILED, message, originalError) } }
+export class GettingDataFailed extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.GETTING_DATA_FAILED, message, originalError) } }
+export class ConnectionNotOpen extends Err { constructor( message?: string, originalError?: Error | string) { super(ErrorCode.CONNECTION_NOT_OPEN, message, originalError) } }

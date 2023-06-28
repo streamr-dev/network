@@ -1,6 +1,6 @@
 import { fastWallet } from '@streamr/test-utils'
-import { ExternalProvider, StreamrClientConfig } from 'streamr-client'
-import { Broker, createBroker } from '../../src/broker'
+import { ExternalProvider, StreamrClientConfig, NodeType } from 'streamr-client'
+import { createBroker } from '../../src/broker'
 import { Config } from '../../src/config/config'
 
 const formConfig = (auth: StreamrClientConfig['auth']): Config => {
@@ -8,15 +8,20 @@ const formConfig = (auth: StreamrClientConfig['auth']): Config => {
         client: {
             auth,
             network: {
-                trackers: []
+                layer0: {
+                    peerDescriptor: {
+                        id: 'broker',
+                        type: NodeType.NODEJS,
+                    },
+                    entryPoints: [{
+                        id: 'broker',
+                        type: NodeType.NODEJS,
+                    }]
+                }
             }
         },
         plugins: {}
     }
-}
-
-const getAddress = async (broker: Broker) => {
-    return (await broker.getNode()).getNodeId().split('#')[0]
 }
 
 const createExternalProvider = (address: string): ExternalProvider => {
@@ -40,7 +45,7 @@ describe('authentication', () => {
             privateKey: wallet.privateKey
         }))
         await broker.start()
-        expect(await getAddress(broker)).toEqualCaseInsensitive(wallet.address)
+        expect(await broker.getAddress()).toEqualCaseInsensitive(wallet.address)
         await broker.stop()
     })
 
@@ -49,7 +54,7 @@ describe('authentication', () => {
             ethereum: createExternalProvider(wallet.address)
         }))
         await broker.start()
-        expect(await getAddress(broker)).toEqualCaseInsensitive(wallet.address)
+        expect(await broker.getAddress()).toEqualCaseInsensitive(wallet.address)
         await broker.stop()
     })
 })
