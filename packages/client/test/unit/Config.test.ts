@@ -28,7 +28,7 @@ describe('Config', () => {
                         }
                     }
                 } as any)
-            }).toThrow("/network/layer0/entryPoints/0 must have required property 'type'")
+            }).toThrow('/network/layer0/entryPoints/0 must have required property \'type\'')
         })
 
         it('empty array', () => {
