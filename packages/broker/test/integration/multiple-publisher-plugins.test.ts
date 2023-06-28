@@ -130,7 +130,7 @@ describe('multiple publisher plugins', () => {
             },
             networkLayerWsServerPort: networkLayerPort
         })
-    }   )
+    })
 
     afterEach(async () => {
         await broker?.stop()
