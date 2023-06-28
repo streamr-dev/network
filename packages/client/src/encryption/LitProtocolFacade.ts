@@ -26,54 +26,54 @@ const formEvmContractConditions = (streamRegistryChainAddress: string, streamId:
         functionAbi: {
             inputs: [
                 {
-                    name: "streamId",
-                    type: "string"
+                    name: 'streamId',
+                    type: 'string'
                 },
                 {
-                    name: "user",
-                    type: "address"
+                    name: 'user',
+                    type: 'address'
                 },
                 {
-                    name: "permissionType",
-                    type: "uint8"
+                    name: 'permissionType',
+                    type: 'uint8'
                 }
             ],
-            name: "hasPermission",
+            name: 'hasPermission',
             outputs: [
                 {
-                    name: "userHasPermission",
-                    type: "bool"
+                    name: 'userHasPermission',
+                    type: 'bool'
                 }
             ],
-            stateMutability: "view",
-            type: "function"
+            stateMutability: 'view',
+            type: 'function'
         },
         returnValueTest: {
-            key: "userHasPermission",
+            key: 'userHasPermission',
             comparator: '=',
-            value: "true",
+            value: 'true',
         },
     }
 ])
 
 const signAuthMessage = async (authentication: Authentication) => {
-    const domain = "dummy.com"
-    const uri = "https://dummy.com"
-    const statement = "dummy"
+    const domain = 'dummy.com'
+    const uri = 'https://dummy.com'
+    const statement = 'dummy'
     const addressInChecksumCase = ethers.utils.getAddress(await authentication.getAddress())
     const siweMessage = new siwe.SiweMessage({
         domain,
         uri,
         statement,
         address: addressInChecksumCase,
-        version: "1",
+        version: '1',
         chainId: 1
     })
     const messageToSign = siweMessage.prepareMessage()
     const signature = await authentication.createMessageSignature(messageToSign)
     return {
         sig: signature,
-        derivedVia: "web3.eth.personal.sign",
+        derivedVia: 'web3.eth.personal.sign',
         signedMessage: messageToSign,
         address: addressInChecksumCase
     }
