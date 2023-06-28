@@ -110,10 +110,10 @@ export const createEthereumAddress = (id: number): EthereumAddress => {
     return toEthereumAddress('0x' + padEnd(String(id), 40, '0'))
 }
 
-export const createClient = async (
+export const createClient = (
     privateKey: string,
     clientOptions?: StreamrClientConfig
-): Promise<StreamrClient> => {
+): StreamrClient => {
     const opts = merge(
         CONFIG_TEST,
         {
