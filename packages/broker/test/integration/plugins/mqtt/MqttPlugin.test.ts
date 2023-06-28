@@ -7,7 +7,7 @@ import { createMessagingPluginTest } from '../../createMessagingPluginTest'
 const MQTT_PORT = 12430
 const NETWORK_LAYER_PORT = 40420
 
-jest.setTimeout(60000)
+jest.setTimeout(30000)
 
 createMessagingPluginTest('mqtt',
     {
