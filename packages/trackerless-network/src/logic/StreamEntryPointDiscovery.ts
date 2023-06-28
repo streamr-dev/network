@@ -30,8 +30,8 @@ const exponentialRunOff = async (
     task: () => Promise<void>,
     description: string,
     abortSignal: AbortSignal,
-    baseDelay = 1000,
-    maxAttempts = 5
+    baseDelay = 500,
+    maxAttempts = 6
 ): Promise<void> => {
     for (let i = 1; i <= maxAttempts; i++) {
         if (abortSignal.aborted) {

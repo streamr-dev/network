@@ -10,7 +10,7 @@ import { waitForCondition } from '@streamr/utils'
 import { NetworkNode } from '@streamr/trackerless-network'
 import { PeerID } from '@streamr/dht'
 
-const TIMEOUT = 60 * 1000
+const TIMEOUT = 30 * 1000
 
 const PAYLOAD = { hello: 'world' }
 
@@ -134,10 +134,10 @@ describe('publish-subscribe', () => {
 
         it('subscriber is able to receive messages', async () => {
             const messages: unknown[] = []
-            await publisherClient.publish(stream.id, PAYLOAD)
             await subscriberClient.subscribe(stream.id, (msg: any) => {
                 messages.push(msg)
             })
+            await publisherClient.publish(stream.id, PAYLOAD)
             await waitForCondition(() => messages.length > 0)
             expect(messages).toEqual([PAYLOAD])
         }, TIMEOUT)

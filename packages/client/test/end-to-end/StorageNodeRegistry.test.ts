@@ -7,7 +7,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { until } from '../../src/utils/promises'
 import { createTestStream, createTestClient } from '../test-utils/utils'
 
-const TEST_TIMEOUT = 60 * 1000
+const TEST_TIMEOUT = 30 * 1000
 
 describe('StorageNodeRegistry', () => {
     let creatorWallet: Wallet

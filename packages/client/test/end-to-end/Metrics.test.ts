@@ -68,7 +68,7 @@ describe('NodeMetrics', () => {
         const dummyStream = await generatorClient.createStream(`/${Date.now()}`)
         await generatorClient.subscribe(dummyStream, () => {})
 
-        await waitForCondition(() => report !== undefined, 15000)
+        await waitForCondition(() => report !== undefined, 10000)
         expect(report!).toMatchObject({
             node: {
                 publishMessagesPerSecond: expect.any(Number),
