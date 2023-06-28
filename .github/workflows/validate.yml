@@ -108,7 +108,7 @@ jobs:
     with:
       package: broker
       docker-services: cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph deploy-network-subgraphs
-      run-brokers: true
+      run-entry-point: true
       command: npm run test-integration
   client-browser:
     needs: build

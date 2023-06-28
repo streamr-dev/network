@@ -17,6 +17,10 @@ on:
         required: false
         type: boolean
         default: false
+      run-entry-point:
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   test:
@@ -30,6 +34,9 @@ jobs:
         uses: streamr-dev/streamr-docker-dev-action@v1.0.1
         with:
           services-to-start: ${{ inputs.docker-services }}
+      - name: run entry point
+        if: ${{ inputs.run-entry-point }}
+        uses: ./.github/workflows/reusable/run-entry-points
       - name: run brokers
         if: ${{ inputs.run-brokers }}
         uses: ./.github/workflows/reusable/run-brokers
