@@ -1,24 +1,18 @@
-import { StreamPartID, StreamPartIDUtils, toStreamPartID } from '@streamr/protocol'
-import { Lifecycle, delay, inject, scoped } from 'tsyringe'
-
-import { MessageStream } from './MessageStream'
-import { createSubscribePipeline } from './subscribePipeline'
-
-import { EthereumAddress, Logger, collect, randomString, toEthereumAddress, wait } from '@streamr/utils'
+import { StreamID, StreamMessage, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
+import { EthereumAddress, Logger, randomString, toEthereumAddress } from '@streamr/utils'
 import random from 'lodash/random'
+import without from 'lodash/without'
+import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
-import { DestroySignal } from '../DestroySignal'
-import { HttpUtil } from '../HttpUtil'
-import { Message } from '../Message'
 import { StreamrClientError } from '../StreamrClientError'
-import { GroupKeyManager } from '../encryption/GroupKeyManager'
 import { StorageNodeRegistry } from '../registry/StorageNodeRegistry'
-import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
-import { counting } from '../utils/GeneratorUtils'
+import { forEach, map, transformError } from '../utils/GeneratorUtils'
 import { LoggerFactory } from '../utils/LoggerFactory'
-
-const MIN_SEQUENCE_NUMBER_VALUE = 0
+import { pull } from '../utils/PushBuffer'
+import { PushPipeline } from '../utils/PushPipeline'
+import { FetchHttpStreamResponseError, createQueryString, fetchHttpStream } from '../utils/utils'
+import { MessagePipelineFactory } from './MessagePipelineFactory'
 
 type QueryDict = Record<string, string | number | boolean | null | undefined>
 
@@ -57,6 +51,8 @@ export interface ResendRangeOptions {
  */
 export type ResendOptions = ResendLastOptions | ResendFromOptions | ResendRangeOptions
 
+export type ResendType = 'last' | 'from' | 'range'
+
 function isResendLast<T extends ResendLastOptions>(options: any): options is T {
     return options && typeof options === 'object' && 'last' in options && options.last != null
 }
@@ -69,223 +65,144 @@ function isResendRange<T extends ResendRangeOptions>(options: any): options is T
     return options && typeof options === 'object' && 'from' in options && 'to' in options && options.to && options.from != null
 }
 
+const createUrl = (baseUrl: string, endpointSuffix: string, streamPartId: StreamPartID, query: QueryDict = {}): string => {
+    const queryMap = {
+        ...query,
+        format: 'raw'
+    }
+    const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
+    const queryString = createQueryString(queryMap)
+    return `${baseUrl}/streams/${encodeURIComponent(streamId)}/data/partitions/${streamPartition}/${endpointSuffix}?${queryString}`
+}
+
+const getHttpErrorTransform = (): (error: any) => Promise<StreamrClientError> => {
+    return async (err: any) => {
+        let message
+        if (err instanceof FetchHttpStreamResponseError) {
+            const body = await err.response.text()
+            let descriptionSnippet
+            try {
+                const json = JSON.parse(body)
+                descriptionSnippet = `: ${json.error}`
+            } catch (err) {
+                descriptionSnippet = ''
+            }
+            message = `Storage node fetch failed${descriptionSnippet}, httpStatus=${err.response.status}, url=${err.response.url}`
+        } else {
+            message = err?.message ?? 'Unknown error'
+        }
+        return new StreamrClientError(message, 'STORAGE_NODE_ERROR')
+    }
+}
+
 @scoped(Lifecycle.ContainerScoped)
 export class Resends {
+
     private readonly streamStorageRegistry: StreamStorageRegistry
     private readonly storageNodeRegistry: StorageNodeRegistry
-    private readonly streamRegistryCached: StreamRegistryCached
-    private readonly httpUtil: HttpUtil
-    private readonly groupKeyManager: GroupKeyManager
-    private readonly destroySignal: DestroySignal
+    private readonly messagePipelineFactory: MessagePipelineFactory
     private readonly config: StrictStreamrClientConfig
-    private readonly loggerFactory: LoggerFactory
     private readonly logger: Logger
 
     constructor(
         streamStorageRegistry: StreamStorageRegistry,
         @inject(delay(() => StorageNodeRegistry)) storageNodeRegistry: StorageNodeRegistry,
-        @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
-        httpUtil: HttpUtil,
-        groupKeyManager: GroupKeyManager,
-        destroySignal: DestroySignal,
+        messagePipelineFactory: MessagePipelineFactory,
         @inject(ConfigInjectionToken) config: StrictStreamrClientConfig,
         loggerFactory: LoggerFactory
     ) {
         this.streamStorageRegistry = streamStorageRegistry
         this.storageNodeRegistry = storageNodeRegistry
-        this.streamRegistryCached = streamRegistryCached
-        this.httpUtil = httpUtil
-        this.groupKeyManager = groupKeyManager
-        this.destroySignal = destroySignal
+        this.messagePipelineFactory = messagePipelineFactory
         this.config = config
-        this.loggerFactory = loggerFactory
         this.logger = loggerFactory.createLogger(module)
     }
 
-    resend(streamPartId: StreamPartID, options: ResendOptions): Promise<MessageStream> {
+    async resend(
+        streamPartId: StreamPartID,
+        options: ResendOptions & { raw?: boolean },
+        getStorageNodes?: (streamId: StreamID) => Promise<EthereumAddress[]>,
+        abortSignal?: AbortSignal
+    ): Promise<PushPipeline<StreamMessage, StreamMessage>> {
+        const raw = options.raw ?? false
         if (isResendLast(options)) {
-            return this.last(streamPartId, {
-                count: options.last,
-            }, false)
-        }
-
-        if (isResendRange(options)) {
-            return this.range(streamPartId, {
+            if (options.last <= 0) {
+                const emptyStream = new PushPipeline<StreamMessage, StreamMessage>()
+                emptyStream.endWrite()
+                return emptyStream
+            }
+            return this.fetchStream('last', streamPartId, {
+                count: options.last
+            }, raw, getStorageNodes, abortSignal)
+        } else if (isResendRange(options)) {
+            return this.fetchStream('range', streamPartId, {
                 fromTimestamp: new Date(options.from.timestamp).getTime(),
                 fromSequenceNumber: options.from.sequenceNumber,
                 toTimestamp: new Date(options.to.timestamp).getTime(),
                 toSequenceNumber: options.to.sequenceNumber,
                 publisherId: options.publisherId !== undefined ? toEthereumAddress(options.publisherId) : undefined,
-                msgChainId: options.msgChainId,
-            }, false)
-        }
-
-        if (isResendFrom(options)) {
-            return this.from(streamPartId, {
+                msgChainId: options.msgChainId
+            }, raw, getStorageNodes, abortSignal)
+        } else if (isResendFrom(options)) {
+            return this.fetchStream('from', streamPartId, {
                 fromTimestamp: new Date(options.from.timestamp).getTime(),
                 fromSequenceNumber: options.from.sequenceNumber,
-                publisherId: options.publisherId !== undefined ? toEthereumAddress(options.publisherId) : undefined,
-            }, false)
+                publisherId: options.publisherId !== undefined ? toEthereumAddress(options.publisherId) : undefined
+            }, raw, getStorageNodes, abortSignal)
+        } else {
+            throw new StreamrClientError(
+                `can not resend without valid resend options: ${JSON.stringify({ streamPartId, options })}`,
+                'INVALID_ARGUMENT'
+            )
         }
-
-        throw new StreamrClientError(
-            `can not resend without valid resend options: ${JSON.stringify({ streamPartId, options })}`,
-            'INVALID_ARGUMENT'
-        )
     }
 
     private async fetchStream(
-        endpointSuffix: 'last' | 'range' | 'from',
+        resendType: ResendType,
         streamPartId: StreamPartID,
         query: QueryDict,
-        raw: boolean
-    ): Promise<MessageStream> {
+        raw: boolean,
+        getStorageNodes?: (streamId: StreamID) => Promise<EthereumAddress[]>,
+        abortSignal?: AbortSignal
+    ): Promise<PushPipeline<StreamMessage, StreamMessage>> {
         const traceId = randomString(5)
         this.logger.debug('Fetch resend data', {
             loggerIdx: traceId,
-            resendType: endpointSuffix,
+            resendType,
             streamPartId,
             query
         })
         const streamId = StreamPartIDUtils.getStreamID(streamPartId)
-        const nodeAddresses = await this.streamStorageRegistry.getStorageNodes(streamId)
+        // eslint-disable-next-line no-underscore-dangle
+        const _getStorageNodes = getStorageNodes ?? ((streamId: StreamID) => this.streamStorageRegistry.getStorageNodes(streamId))
+        const nodeAddresses = await _getStorageNodes(streamId)
         if (!nodeAddresses.length) {
             throw new StreamrClientError(`no storage assigned: ${streamId}`, 'NO_STORAGE_NODES')
         }
-
         const nodeAddress = nodeAddresses[random(0, nodeAddresses.length - 1)]
         const nodeUrl = (await this.storageNodeRegistry.getStorageNodeMetadata(nodeAddress)).http
-        const url = this.createUrl(nodeUrl, endpointSuffix, streamPartId, query)
-        const messageStream = (raw === false) ? createSubscribePipeline({
+        const url = createUrl(nodeUrl, resendType, streamPartId, query)
+        const messageStream = raw ? new PushPipeline<StreamMessage, StreamMessage>() : this.messagePipelineFactory.createMessagePipeline({
             streamPartId,
-            resends: this,
-            groupKeyManager: this.groupKeyManager,
-            streamRegistryCached: this.streamRegistryCached,
-            destroySignal: this.destroySignal,
-            config: this.config,
-            loggerFactory: this.loggerFactory
-        }) : new MessageStream()
-
-        const dataStream = this.httpUtil.fetchHttpStream(url)
-        messageStream.pull(counting(dataStream, (count: number) => {
+            /*
+             * Disable ordering if the source of this resend is the only storage node. In that case there is no
+             * other storage node from which we could fetch the gaps. When we set "disableMessageOrdering"
+             * to true, we disable both gap filling and message ordering. As resend messages always arrive 
+             * in ascending order, we don't need the ordering functionality.
+             */
+            getStorageNodes: async () => without(nodeAddresses, nodeAddress),
+            config: (nodeAddresses.length === 1) ? { ...this.config, orderMessages: false } : this.config
+        })
+        const lines = transformError(fetchHttpStream(url, abortSignal), getHttpErrorTransform())
+        setImmediate(async () => {
+            let count = 0
+            const messages = map(lines, (line: string) => StreamMessage.deserialize(line))
+            await pull(
+                forEach(messages, () => count++),
+                messageStream
+            )
             this.logger.debug('Finished resend', { loggerIdx: traceId, messageCount: count })
-        }))
+        })
         return messageStream
-    }
-
-    async last(streamPartId: StreamPartID, { count }: { count: number }, raw: boolean): Promise<MessageStream> {
-        if (count <= 0) {
-            const emptyStream = new MessageStream()
-            emptyStream.endWrite()
-            return emptyStream
-        }
-
-        return this.fetchStream('last', streamPartId, {
-            count,
-        }, raw)
-    }
-
-    private async from(streamPartId: StreamPartID, {
-        fromTimestamp,
-        fromSequenceNumber = MIN_SEQUENCE_NUMBER_VALUE,
-        publisherId
-    }: {
-        fromTimestamp: number
-        fromSequenceNumber?: number
-        publisherId?: EthereumAddress
-    }, raw: boolean): Promise<MessageStream> {
-        return this.fetchStream('from', streamPartId, {
-            fromTimestamp,
-            fromSequenceNumber,
-            publisherId,
-        }, raw)
-    }
-
-    async range(streamPartId: StreamPartID, {
-        fromTimestamp,
-        fromSequenceNumber = MIN_SEQUENCE_NUMBER_VALUE,
-        toTimestamp,
-        toSequenceNumber = MIN_SEQUENCE_NUMBER_VALUE,
-        publisherId,
-        msgChainId
-    }: {
-        fromTimestamp: number
-        fromSequenceNumber?: number
-        toTimestamp: number
-        toSequenceNumber?: number
-        publisherId?: EthereumAddress
-        msgChainId?: string
-    }, raw: boolean): Promise<MessageStream> {
-        return this.fetchStream('range', streamPartId, {
-            fromTimestamp,
-            fromSequenceNumber,
-            toTimestamp,
-            toSequenceNumber,
-            publisherId,
-            msgChainId
-        }, raw)
-    }
-
-    async waitForStorage(message: Message, {
-        // eslint-disable-next-line no-underscore-dangle
-        interval = this.config._timeouts.storageNode.retryInterval,
-        // eslint-disable-next-line no-underscore-dangle
-        timeout = this.config._timeouts.storageNode.timeout,
-        count = 100,
-        messageMatchFn = (msgTarget: Message, msgGot: Message) => {
-            return msgTarget.signature === msgGot.signature
-        }
-    }: {
-        interval?: number
-        timeout?: number
-        count?: number
-        messageMatchFn?: (msgTarget: Message, msgGot: Message) => boolean
-    } = {}): Promise<void> {
-        if (!message) {
-            throw new StreamrClientError('waitForStorage requires a Message', 'INVALID_ARGUMENT')
-        }
-
-        const start = Date.now()
-        let last: Message[] | undefined
-        let found = false
-        while (!found) {
-            const duration = Date.now() - start
-            if (duration > timeout) {
-                this.logger.debug('Timed out waiting for storage to contain message', {
-                    expected: message.streamMessage.getMessageID(),
-                    lastReceived: last?.map((l) => l.streamMessage.getMessageID()),
-                })
-                throw new Error(`timed out after ${duration}ms waiting for message`)
-            }
-
-            const resendStream = await this.resend(toStreamPartID(message.streamId, message.streamPartition), { last: count })
-            last = await collect(resendStream)
-            for (const lastMsg of last) {
-                if (messageMatchFn(message, lastMsg)) {
-                    found = true
-                    this.logger.debug('Found matching message')
-                    return
-                }
-            }
-
-            this.logger.debug('Retry after delay (matching message not found)', {
-                expected: message.streamMessage.getMessageID(),
-                'last-3': last.slice(-3).map((l) => l.streamMessage.getMessageID()),
-                delayInMs: interval
-            })
-
-            await wait(interval)
-        }
-        /* eslint-enable no-await-in-loop */
-    }
-
-    private createUrl(baseUrl: string, endpointSuffix: string, streamPartId: StreamPartID, query: QueryDict = {}): string {
-        const queryMap = {
-            ...query,
-            format: 'raw'
-        }
-        const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
-        const queryString = this.httpUtil.createQueryString(queryMap)
-        return `${baseUrl}/streams/${encodeURIComponent(streamId)}/data/partitions/${streamPartition}/${endpointSuffix}?${queryString}`
     }
 }

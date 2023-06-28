@@ -13,7 +13,7 @@ import { createStrictConfig, ConfigInjectionToken, StrictStreamrClientConfig } f
 import * as ethersAbi from '@ethersproject/abi'
 import { NetworkNodeFacade } from '../../src/NetworkNodeFacade'
 import { StorageNodeRegistry } from '../../src/registry/StorageNodeRegistry'
-import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
+import { StreamRegistry } from '../../src/registry/StreamRegistry'
 import { Resends } from '../../src/subscribe/Resends'
 import { Publisher } from '../../src/publish/Publisher'
 import { Subscriber } from '../../src/subscribe/Subscriber'
@@ -22,13 +22,12 @@ import { DestroySignal } from '../../src/DestroySignal'
 import { MessageMetadata } from '../../src/Message'
 import { AuthenticationInjectionToken, createAuthentication } from '../../src/Authentication'
 import { merge, TheGraphClient } from '@streamr/utils'
-import { HttpFetcher } from '../../src/utils/HttpFetcher'
 import { StreamrClientEventEmitter } from '../../src/events'
 
 const Dependencies = {
     NetworkNodeFacade,
     StorageNodeRegistry,
-    StreamRegistryCached,
+    StreamRegistry,
     Resends,
     Publisher,
     Subscriber,
@@ -90,8 +89,7 @@ describe('MemoryLeaks', () => {
                 childContainer.register(AuthenticationInjectionToken, { useValue: createAuthentication(config) })
                 childContainer.register(ConfigInjectionToken, { useValue: config })
                 childContainer.register(TheGraphClient, { useValue:
-                    // eslint-disable-next-line max-len
-                    createTheGraphClient(childContainer.resolve<HttpFetcher>(HttpFetcher), childContainer.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter), config)
+                    createTheGraphClient(childContainer.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter), config)
                 })
                 return { config, childContainer }
             }

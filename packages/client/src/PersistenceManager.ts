@@ -16,7 +16,7 @@ export const NAMESPACES = {
 @scoped(Lifecycle.ContainerScoped)
 export class PersistenceManager {
 
-    private persistence: ServerPersistence | undefined
+    private persistence?: ServerPersistence
     private readonly authentication: Authentication
     private readonly loggerFactory: LoggerFactory
 

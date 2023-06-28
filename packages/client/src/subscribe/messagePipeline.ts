@@ -2,33 +2,36 @@
  * Subscription message processing pipeline
  */
 import {
+    StreamID,
     StreamMessage,
     StreamMessageError,
     StreamPartID
 } from '@streamr/protocol'
-import { OrderMessages } from './OrderMessages'
-import { MessageStream } from './MessageStream'
-import { validateStreamMessage } from '../utils/validateStreamMessage'
-import { decrypt } from '../encryption/decrypt'
+import { EthereumAddress } from '@streamr/utils'
 import { StrictStreamrClientConfig } from '../Config'
-import { Resends } from './Resends'
 import { DestroySignal } from '../DestroySignal'
-import { StreamRegistryCached } from '../registry/StreamRegistryCached'
-import { MsgChainUtil } from './MsgChainUtil'
-import { LoggerFactory } from '../utils/LoggerFactory'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'
+import { decrypt } from '../encryption/decrypt'
+import { StreamRegistry } from '../registry/StreamRegistry'
+import { LoggerFactory } from '../utils/LoggerFactory'
+import { PushPipeline } from '../utils/PushPipeline'
+import { validateStreamMessage } from '../utils/validateStreamMessage'
+import { MsgChainUtil } from './MsgChainUtil'
+import { OrderMessages } from './OrderMessages'
+import { Resends } from './Resends'
 
-export interface SubscriptionPipelineOptions {
+export interface MessagePipelineOptions {
     streamPartId: StreamPartID
-    loggerFactory: LoggerFactory
+    getStorageNodes?: (streamId: StreamID) => Promise<EthereumAddress[]>
     resends: Resends
+    streamRegistry: StreamRegistry
     groupKeyManager: GroupKeyManager
-    streamRegistryCached: StreamRegistryCached
+    config: Pick<StrictStreamrClientConfig, 'orderMessages' | 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'>
     destroySignal: DestroySignal
-    config: StrictStreamrClientConfig
+    loggerFactory: LoggerFactory
 }
 
-export const createSubscribePipeline = (opts: SubscriptionPipelineOptions): MessageStream => {
+export const createMessagePipeline = (opts: MessagePipelineOptions): PushPipeline<StreamMessage, StreamMessage> => {
 
     const logger = opts.loggerFactory.createLogger(module)
 
@@ -46,36 +49,40 @@ export const createSubscribePipeline = (opts: SubscriptionPipelineOptions): Mess
         throw error
     }
 
-    const messageStream = new MessageStream()
+    const messageStream = new PushPipeline<StreamMessage, StreamMessage>
     const msgChainUtil = new MsgChainUtil(async (msg) => {
-        await validateStreamMessage(msg, opts.streamRegistryCached)
+        await validateStreamMessage(msg, opts.streamRegistry)
+        let decrypted
         if (StreamMessage.isAESEncrypted(msg)) {
             try {
-                return decrypt(msg, opts.groupKeyManager, opts.destroySignal)
+                decrypted = await decrypt(msg, opts.groupKeyManager, opts.destroySignal)
             } catch (err) {
                 // TODO log this in onError? if we want to log all errors?
                 logger.debug('Failed to decrypt', { messageId: msg.getMessageID(), err })
                 // clear cached permissions if cannot decrypt, likely permissions need updating
-                opts.streamRegistryCached.clearStream(msg.getStreamId())
+                opts.streamRegistry.clearStreamCache(msg.getStreamId())
                 throw err
-            }    
+            }
         } else {
-            return msg
+            decrypted = msg
         }
+        decrypted.getParsedContent()  // throws if content is not parsable (e.g. not valid JSON)
+        return decrypted
     }, messageStream.onError)
 
-    // collect messages that fail validation/parsixng, do not push out of pipeline
+    // collect messages that fail validation/parsing, do not push out of pipeline
     // NOTE: we let failed messages be processed and only removed at end so they don't
     // end up acting as gaps that we repeatedly try to fill.
     const ignoreMessages = new WeakSet()
     messageStream.onError.listen(onError)
     if (opts.config.orderMessages) {
-        // order messages (fill gaps)
+        // order messages and fill gaps
         const orderMessages = new OrderMessages(
             opts.config,
             opts.resends,
             opts.streamPartId,
-            opts.loggerFactory
+            opts.loggerFactory,
+            opts.getStorageNodes
         )
         messageStream.pipe(orderMessages.transform())
         messageStream.onBeforeFinally.listen(() => {
@@ -83,20 +90,20 @@ export const createSubscribePipeline = (opts: SubscriptionPipelineOptions): Mess
         })
     }
     messageStream
-        // validate & decrypt
         .pipe(async function* (src: AsyncGenerator<StreamMessage>) {
             setImmediate(async () => {
-                for await (const msg of src) {
-                    msgChainUtil.addMessage(msg)
+                let err: Error | undefined = undefined
+                try {
+                    for await (const msg of src) {
+                        msgChainUtil.addMessage(msg)
+                    }
+                } catch (e) {
+                    err = e
                 }
                 await msgChainUtil.flush()
-                msgChainUtil.stop()
+                msgChainUtil.stop(err)
             })
             yield* msgChainUtil
-        })
-        // parse content
-        .forEach((streamMessage: StreamMessage) => {
-            streamMessage.getParsedContent()
         })
         // ignore any failed messages
         .filter((streamMessage: StreamMessage) => {

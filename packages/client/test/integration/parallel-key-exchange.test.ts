@@ -11,7 +11,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'
 import { MessageFactory } from '../../src/publish/MessageFactory'
-import { createGroupKeyQueue, createStreamRegistryCached } from '../test-utils/utils'
+import { createGroupKeyQueue, createStreamRegistry } from '../test-utils/utils'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
 
 const PUBLISHER_COUNT = 50
@@ -52,6 +52,10 @@ describe('parallel key exchange', () => {
         }))
     }, 20000)
 
+    afterAll(async () => {
+        await environment.destroy()
+    })
+
     it('happy path', async () => {
         const sub = await subscriber.subscribe(stream.id)
 
@@ -60,7 +64,7 @@ describe('parallel key exchange', () => {
             const messageFactory = new MessageFactory({
                 streamId: stream.id,
                 authentication,
-                streamRegistry: createStreamRegistryCached({
+                streamRegistry: createStreamRegistry({
                     partitionCount: 1,
                     isPublicStream: false,
                     isStreamPublisher: true

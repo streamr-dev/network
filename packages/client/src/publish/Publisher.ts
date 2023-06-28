@@ -1,17 +1,17 @@
 import { StreamID, StreamMessage } from '@streamr/protocol'
-import { scoped, Lifecycle, inject } from 'tsyringe'
+import isString from 'lodash/isString'
 import pLimit from 'p-limit'
-import { StreamDefinition } from '../types'
-import { StreamIDBuilder } from '../StreamIDBuilder'
+import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
-import { MessageFactory } from './MessageFactory'
-import isString from 'lodash/isString'
-import { StreamRegistryCached } from '../registry/StreamRegistryCached'
-import { GroupKeyQueue } from './GroupKeyQueue'
-import { Mapping } from '../utils/Mapping'
+import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamrClientError } from '../StreamrClientError'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'
+import { StreamRegistry } from '../registry/StreamRegistry'
+import { StreamDefinition } from '../types'
+import { Mapping } from '../utils/Mapping'
+import { GroupKeyQueue } from './GroupKeyQueue'
+import { MessageFactory } from './MessageFactory'
 
 export interface PublishMetadata {
     timestamp?: string | number | Date
@@ -36,23 +36,23 @@ export class Publisher {
 
     private readonly messageFactories: Mapping<[streamId: StreamID], MessageFactory>
     private readonly groupKeyQueues: Mapping<[streamId: StreamID], GroupKeyQueue>
+    private readonly concurrencyLimit = pLimit(1)
+    private readonly node: NetworkNodeFacade
+    private readonly streamRegistry: StreamRegistry
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly authentication: Authentication
-    private readonly streamRegistryCached: StreamRegistryCached
-    private readonly node: NetworkNodeFacade
-    private readonly concurrencyLimit = pLimit(1)
 
     constructor(
-        streamIdBuilder: StreamIDBuilder,
-        @inject(AuthenticationInjectionToken) authentication: Authentication,
-        streamRegistryCached: StreamRegistryCached,
+        node: NetworkNodeFacade,
+        streamRegistry: StreamRegistry,
         groupKeyManager: GroupKeyManager,
-        node: NetworkNodeFacade
+        streamIdBuilder: StreamIDBuilder,
+        @inject(AuthenticationInjectionToken) authentication: Authentication
     ) {
+        this.node = node
+        this.streamRegistry = streamRegistry
         this.streamIdBuilder = streamIdBuilder
         this.authentication = authentication
-        this.streamRegistryCached = streamRegistryCached
-        this.node = node
         this.messageFactories = new Mapping(async (streamId: StreamID) => {
             return this.createMessageFactory(streamId)
         })
@@ -112,7 +112,7 @@ export class Publisher {
         return new MessageFactory({
             streamId,
             authentication: this.authentication,
-            streamRegistry: this.streamRegistryCached,
+            streamRegistry: this.streamRegistry,
             groupKeyQueue: await this.groupKeyQueues.get(streamId)
         })
     }

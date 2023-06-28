@@ -105,7 +105,7 @@ describe('unsubscribe', () => {
     })
 
     it('before realtime messages iterated', async () => {
-        const storageNode = environment.startStorageNode()
+        const storageNode = await environment.startStorageNode()
         await client.addStreamToStorageNode(stream.id, storageNode.id)
         const historicalMessages: StreamMessage[] = []
         for (const _ of range(2)) {

@@ -31,7 +31,7 @@ export interface TrackerRegistryContract {
     contractAddress: string
 }
 
-export interface ChainConnectionInfo { 
+export interface ChainConnectionInfo {
     rpcs: ConnectionInfo[]
     chainId?: number
     name?: string
@@ -166,6 +166,12 @@ export interface StreamrClientConfig {
          * from overflowing.
          */
         maxKeyRequestsPerSecond?: number
+
+        /**
+         * Defines how strong RSA key, in bits, is used when an encryption key is
+         * requested via the standard Streamr key-exchange.
+         */
+        rsaKeyLength?: number
     }
 
     /**
@@ -307,9 +313,9 @@ export interface StreamrClientConfig {
          * Used to assign a custom external IP address for the node.
          * Useful in cases where the node has a public IP address but
          * the hosts network interface does not know of it.
-         * 
-         * Works only if the Full Cone NAT that the node is behind preserves local   
-         * port mappings on the public side. 
+         *
+         * Works only if the Full Cone NAT that the node is behind preserves local
+         * port mappings on the public side.
         */
         externalIp?: ExternalIP
     }
@@ -358,8 +364,9 @@ export interface StreamrClientConfig {
     /** @internal */
     _timeouts?: {
         theGraph?: {
-            timeout?: number
-            retryInterval?: number
+            indexTimeout?: number
+            indexPollInterval?: number
+            fetchTimeout?: number
         }
         storageNode?: {
             timeout?: number
@@ -369,7 +376,6 @@ export interface StreamrClientConfig {
             timeout?: number
             retryInterval?: number
         }
-        httpFetchTimeout?: number
     }
 }
 

@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { Wallet } from '@ethersproject/wallet'
-import { EncryptionType, MessageID, StreamMessage, StreamPartID, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
+import { EncryptionType, MessageID, StreamMessage, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
 import { collect, toEthereumAddress } from '@streamr/utils'
 import { mock } from 'jest-mock-extended'
@@ -10,23 +10,25 @@ import { StrictStreamrClientConfig } from '../../src/Config'
 import { DestroySignal } from '../../src/DestroySignal'
 import { Stream } from '../../src/Stream'
 import { DecryptError, EncryptionUtil } from '../../src/encryption/EncryptionUtil'
+import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
 import { LitProtocolFacade } from '../../src/encryption/LitProtocolFacade'
 import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
 import { StreamrClientEventEmitter } from '../../src/events'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
-import { createSubscribePipeline } from "../../src/subscribe/subscribePipeline"
+import { StreamRegistry } from '../../src/registry/StreamRegistry'
+import { createMessagePipeline } from '../../src/subscribe/messagePipeline'
+import { PushPipeline } from '../../src/utils/PushPipeline'
 import { mockLoggerFactory } from '../test-utils/utils'
-import { GroupKey } from './../../src/encryption/GroupKey'
-import { MessageStream } from './../../src/subscribe/MessageStream'
 
 const CONTENT = {
     foo: 'bar'
 }
 
-describe('subscribePipeline', () => {
+describe('messagePipeline', () => {
 
-    let pipeline: MessageStream
+    let pipeline: PushPipeline<StreamMessage, StreamMessage>
+    let streamRegistry: Partial<StreamRegistry>
     let streamPartId: StreamPartID
     let publisher: Wallet
 
@@ -55,11 +57,10 @@ describe('subscribePipeline', () => {
         streamPartId = StreamPartIDUtils.parse(`${randomEthereumAddress()}/path#0`)
         publisher = fastWallet()
         const stream = new Stream(
-            toStreamID(streamPartId),
+            StreamPartIDUtils.getStreamID(streamPartId),
             {
                 partitions: 1,
             },
-            undefined as any,
             undefined as any,
             undefined as any,
             undefined as any,
@@ -79,28 +80,30 @@ describe('subscribePipeline', () => {
                 litProtocolLogging: false,
                 keyRequestTimeout: 50,
                 maxKeyRequestsPerSecond: 0
-            }
+            } as any
         }
-        pipeline = createSubscribePipeline({
+        streamRegistry = {
+            getStream: async () => stream,
+            isStreamPublisher: async () => true,
+            clearStreamCache: jest.fn()
+        }
+        pipeline = createMessagePipeline({
             streamPartId,
-            loggerFactory: mockLoggerFactory(),
+            getStorageNodes: undefined as any,
             resends: undefined as any,
+            streamRegistry: streamRegistry as any,
             groupKeyManager: new GroupKeyManager(
-                groupKeyStore,
-                mock<LitProtocolFacade>(),
                 mock<SubscriberKeyExchange>(),
-                new StreamrClientEventEmitter(),
-                destroySignal,
+                mock<LitProtocolFacade>(),
+                groupKeyStore,
+                config,
                 createPrivateKeyAuthentication(publisher.privateKey, {} as any),
-                config
+                new StreamrClientEventEmitter(),
+                destroySignal
             ),
-            streamRegistryCached: {
-                getStream: async () => stream,
-                isStreamPublisher: async () => true,
-                clearStream: () => {}
-            } as any,
+            config: config as any,
             destroySignal,
-            config: config as any
+            loggerFactory: mockLoggerFactory(),
         })
     })
 
@@ -110,7 +113,7 @@ describe('subscribePipeline', () => {
         pipeline.endWrite()
         const output = await collect(pipeline)
         expect(output).toHaveLength(1)
-        expect(output[0].content).toEqual(CONTENT)
+        expect(output[0].getParsedContent()).toEqual(CONTENT)
     })
 
     it('error: invalid signature', async () => {
@@ -159,5 +162,20 @@ describe('subscribePipeline', () => {
         expect(error).toBeInstanceOf(DecryptError)
         expect(error.message).toMatch(/timed out/)
         expect(output).toEqual([])
+        expect(streamRegistry.clearStreamCache).toBeCalledTimes(1)
+        expect(streamRegistry.clearStreamCache).toBeCalledWith(StreamPartIDUtils.getStreamID(streamPartId))
+    })
+
+    it('error: exception', async () => {
+        const err = new Error('mock-error')
+        const msg = await createMessage()
+        await pipeline.push(msg)
+        pipeline.endWrite(err)
+        const onError = jest.fn()
+        pipeline.onError.listen(onError)
+        const output = await collect(pipeline)
+        expect(output).toHaveLength(1)
+        expect(onError).toBeCalledTimes(1)
+        expect(onError).toBeCalledWith(err)
     })
 })

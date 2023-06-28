@@ -1,4 +1,4 @@
-import { IPushBuffer, PushBuffer, DEFAULT_BUFFER_SIZE, pull } from './PushBuffer'
+import { IPushBuffer, PushBuffer, DEFAULT_BUFFER_SIZE } from './PushBuffer'
 import * as G from './GeneratorUtils'
 import { Pipeline, PipelineTransform } from './Pipeline'
 
@@ -24,15 +24,6 @@ export class PushPipeline<InType, OutType = InType> extends Pipeline<InType, Out
     override filter(fn: G.GeneratorFilter<OutType>): PushPipeline<InType, OutType> {
         // this method override just fixes the output type to be PushPipeline rather than Pipeline
         return super.filter(fn) as PushPipeline<InType, OutType>
-    }
-
-    override forEach(fn: G.GeneratorForEach<OutType>): PushPipeline<InType, OutType> {
-        // this method override just fixes the output type to be PushPipeline rather than Pipeline
-        return super.forEach(fn) as PushPipeline<InType, OutType>
-    }
-
-    pull(source: AsyncGenerator<InType>): Promise<void> {
-        return pull(source, this)
     }
 
     // wrapped PushBuffer methods below here

@@ -1,31 +1,36 @@
-import crypto from 'crypto'
-import { DependencyContainer } from 'tsyringe'
-import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { EthereumAddress, Logger, wait } from '@streamr/utils'
+import 'reflect-metadata'
+
 import { Wallet } from '@ethersproject/wallet'
-import { StreamMessage, StreamPartID, StreamPartIDUtils, MAX_PARTITION_COUNT } from '@streamr/protocol'
-import { StreamrClient } from '../../src/StreamrClient'
-import { counterId } from '../../src/utils/utils'
-import { Stream, StreamMetadata } from '../../src/Stream'
-import { CONFIG_TEST } from '../../src/ConfigTest'
-import { StreamrClientConfig } from '../../src/Config'
-import { GroupKey } from '../../src/encryption/GroupKey'
-import { addAfterFn } from './jest-utils'
-import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
-import { StreamrClientEventEmitter } from '../../src/events'
-import { MessageFactory } from '../../src/publish/MessageFactory'
-import { Authentication, createPrivateKeyAuthentication } from '../../src/Authentication'
-import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
-import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
-import { LoggerFactory } from '../../src/utils/LoggerFactory'
-import { waitForCondition } from '@streamr/utils'
-import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
+import { MAX_PARTITION_COUNT, StreamMessage, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
+import { fastPrivateKey, fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { EthereumAddress, Logger, merge, wait, waitForCondition } from '@streamr/utils'
+import crypto from 'crypto'
+import { once } from 'events'
+import express, { Request, Response } from 'express'
 import { mock } from 'jest-mock-extended'
-import { LitProtocolFacade } from '../../src/encryption/LitProtocolFacade'
-import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
+import { AddressInfo } from 'net'
+import { DependencyContainer } from 'tsyringe'
+import { Authentication, createPrivateKeyAuthentication } from '../../src/Authentication'
+import { StreamrClientConfig } from '../../src/Config'
+import { CONFIG_TEST } from '../../src/ConfigTest'
 import { DestroySignal } from '../../src/DestroySignal'
 import { PersistenceManager } from '../../src/PersistenceManager'
-import { merge } from '@streamr/utils'
+import { Stream, StreamMetadata } from '../../src/Stream'
+import { StreamrClient } from '../../src/StreamrClient'
+import { GroupKey } from '../../src/encryption/GroupKey'
+import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
+import { LitProtocolFacade } from '../../src/encryption/LitProtocolFacade'
+import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
+import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
+import { StreamrClientEventEmitter } from '../../src/events'
+import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
+import { MessageFactory } from '../../src/publish/MessageFactory'
+import { StreamRegistry } from '../../src/registry/StreamRegistry'
+import { LoggerFactory } from '../../src/utils/LoggerFactory'
+import { counterId } from '../../src/utils/utils'
+import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
+import { FakeStorageNode } from './../test-utils/fake/FakeStorageNode'
+import { addAfterFn } from './jest-utils'
 
 const logger = new Logger(module)
 
@@ -113,7 +118,7 @@ export const createMockMessage = async (
     const factory = new MessageFactory({
         authentication,
         streamId,
-        streamRegistry: createStreamRegistryCached({
+        streamRegistry: createStreamRegistry({
             partitionCount: MAX_PARTITION_COUNT,
             isPublicStream: (opts.encryptionKey === undefined),
             isStreamPublisher: true
@@ -139,8 +144,8 @@ export const getLocalGroupKeyStore = (userAddress: EthereumAddress): LocalGroupK
             new DestroySignal(),
             loggerFactory
         ),
-        loggerFactory,
-        new StreamrClientEventEmitter()
+        new StreamrClientEventEmitter(),
+        loggerFactory
     )
 }
 
@@ -155,19 +160,19 @@ export const createRandomAuthentication = (): Authentication => {
     return createPrivateKeyAuthentication(`0x${fastPrivateKey()}`, undefined as any)
 }
 
-export const createStreamRegistryCached = (opts?: {
+export const createStreamRegistry = (opts?: {
     partitionCount?: number
     isPublicStream?: boolean
     isStreamPublisher?: boolean
     isStreamSubscriber?: boolean
-}): StreamRegistryCached => {
+}): StreamRegistry => {
     return {
         getStream: async () => ({
             getMetadata: () => ({
                 partitions: opts?.partitionCount ?? 1
             })
         }),
-        isPublic: async () => {
+        hasPublicSubscribePermission: async () => {
             return opts?.isPublicStream ?? false
         },
         isStreamPublisher: async () => {
@@ -184,20 +189,22 @@ export const createGroupKeyManager = (
     authentication = createRandomAuthentication()
 ): GroupKeyManager => {
     return new GroupKeyManager(
-        groupKeyStore,
-        mock<LitProtocolFacade>(),
         mock<SubscriberKeyExchange>(),
-        new StreamrClientEventEmitter(),
-        new DestroySignal(),
-        authentication,
+        mock<LitProtocolFacade>(),
+        groupKeyStore,
         {
             encryption: {
                 litProtocolEnabled: false,
                 litProtocolLogging: false,
                 maxKeyRequestsPerSecond: 10,
-                keyRequestTimeout: 50
+                keyRequestTimeout: 50,
+                // eslint-disable-next-line no-underscore-dangle
+                rsaKeyLength: CONFIG_TEST.encryption!.rsaKeyLength!
             }
-        }
+        },
+        authentication,
+        new StreamrClientEventEmitter(),
+        new DestroySignal()
     )
 }
 
@@ -220,4 +227,40 @@ export const waitForCalls = async (mockFunction: jest.Mock<any>, n: number): Pro
     await waitForCondition(() => mockFunction.mock.calls.length >= n, 1000, 10, undefined, () => {
         return `Timeout while waiting for calls: got ${mockFunction.mock.calls.length} out of ${n}`
     })
+}
+
+export const startTestServer = async (
+    endpoint: string,
+    onRequest: (req: Request, res: Response) => Promise<void>
+): Promise<{ url: string, stop: () => Promise<void> }> => {
+    const app = express()
+    app.get(endpoint, async (req, res) => {
+        await onRequest(req, res)
+    })
+    const server = app.listen()
+    await once(server, 'listening')
+    const port = (server.address() as AddressInfo).port
+    return {
+        url: `http://localhost:${port}`,
+        stop: async () => {
+            server.close()
+            await once(server, 'close')
+        }
+    }
+}
+
+export const startFailingStorageNode = async (error: Error, environment: FakeEnvironment): Promise<FakeStorageNode> => {
+    const wallet = fastWallet()
+    const node = new class extends FakeStorageNode {
+        // eslint-disable-next-line class-methods-use-this, require-yield
+        override async* getLast(): AsyncIterable<StreamMessage> {
+            throw error
+        }
+        // eslint-disable-next-line class-methods-use-this, require-yield
+        override async* getRange(): AsyncIterable<StreamMessage> {
+            throw error
+        }
+    }(wallet, environment.getNetwork(), environment.getChain())
+    await node.start()
+    return node
 }

@@ -6,11 +6,10 @@ import { fastWallet } from '@streamr/test-utils'
 import { collect, toEthereumAddress } from '@streamr/utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
-import { createGroupKeyQueue, createStreamRegistryCached, createTestStream } from '../test-utils/utils'
+import { createGroupKeyQueue, createStreamRegistry, createTestStream, startFailingStorageNode } from '../test-utils/utils'
 import { createPrivateKeyAuthentication } from './../../src/Authentication'
 import { Stream } from './../../src/Stream'
 import { MessageFactory } from './../../src/publish/MessageFactory'
-import { FakeStorageNode } from './../test-utils/fake/FakeStorageNode'
 
 const GROUP_KEY = GroupKey.generate()
 
@@ -18,7 +17,6 @@ describe('gap fill', () => {
 
     let publisherWallet: Wallet
     let stream: Stream
-    let storageNode: FakeStorageNode
     let messageFactory: MessageFactory
     let environment: FakeEnvironment
 
@@ -26,27 +24,31 @@ describe('gap fill', () => {
 
     const publish = (msg: StreamMessage) => environment.getNetwork().send(msg, publisherWallet.address, () => true)
 
-    beforeAll(async () => {
+    beforeEach(async () => {
         publisherWallet = fastWallet()
         environment = new FakeEnvironment()
-        storageNode = environment.startStorageNode()
         const publisher = environment.createClient({
             auth: {
                 privateKey: publisherWallet.privateKey
             }
         })
         stream = await createTestStream(publisher, module)
-        await stream.addToStorageNode(storageNode.id)
         const authentication = createPrivateKeyAuthentication(publisherWallet.privateKey, undefined as any)
         messageFactory = new MessageFactory({
             authentication,
             streamId: stream.id,
-            streamRegistry: createStreamRegistryCached(),
+            streamRegistry: createStreamRegistry(),
             groupKeyQueue: await createGroupKeyQueue(authentication, GROUP_KEY)
         })
     })
 
-    it('real-time subscription uses gap fill', async () => {
+    afterEach(async () => {
+        await environment.destroy()
+    })
+
+    it('happy path', async () => {
+        const storageNode = await environment.startStorageNode()
+        await stream.addToStorageNode(storageNode.id)
         const subscriber = environment.createClient({
             gapFillTimeout: 50
         })
@@ -57,6 +59,21 @@ describe('gap fill', () => {
         storageNode.storeMessage(await createMessage(2000))
         publish(await createMessage(3000))
         expect((await receivedMessages).map((m) => m.timestamp)).toEqual([1000, 2000, 3000])
+    })
+
+    it('failing storage node', async () => {
+        const storageNode = await startFailingStorageNode(new Error('expected'), environment)
+        await stream.addToStorageNode(storageNode.id)
+        const subscriber = environment.createClient({
+            gapFillTimeout: 50
+        })
+        subscriber.addEncryptionKey(GROUP_KEY, toEthereumAddress(publisherWallet.address))
+        const sub = await subscriber.subscribe(stream.id)
+        const receivedMessages = collect(sub, 2)
+        publish(await createMessage(1000))
+        await createMessage(2000)
+        publish(await createMessage(3000))
+        expect((await receivedMessages).map((m) => m.timestamp)).toEqual([1000, 3000])
     })
 
 })

@@ -1,17 +1,17 @@
 /**
  * Wrap a network node.
  */
-import { inject, Lifecycle, scoped } from 'tsyringe'
-import EventEmitter from 'eventemitter3'
-import { NetworkNodeOptions, createNetworkNode as _createNetworkNode } from '@streamr/network-node'
+import { createNetworkNode as _createNetworkNode, NetworkNodeOptions } from '@streamr/network-node'
+import { ProxyDirection, StreamMessage, StreamPartID } from '@streamr/protocol'
 import { MetricsContext } from '@streamr/utils'
-import { uuid } from './utils/uuid'
-import { pOnce } from './utils/promises'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
-import { StreamMessage, StreamPartID, ProxyDirection } from '@streamr/protocol'
-import { DestroySignal } from './DestroySignal'
+import EventEmitter from 'eventemitter3'
+import { inject, Lifecycle, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
+import { DestroySignal } from './DestroySignal'
 import { getTrackers } from './registry/trackerRegistry'
+import { pOnce } from './utils/promises'
+import { uuid } from './utils/uuid'
 
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
 /** @deprecated This in an internal interface */
@@ -75,26 +75,26 @@ export class NetworkNodeFactory {
 @scoped(Lifecycle.ContainerScoped)
 export class NetworkNodeFacade {
 
-    private destroySignal: DestroySignal
-    private networkNodeFactory: NetworkNodeFactory
-    private authentication: Authentication
     private cachedNode?: NetworkNodeStub
     private startNodeCalled = false
     private startNodeComplete = false
+    private readonly networkNodeFactory: NetworkNodeFactory
     private readonly config: Pick<StrictStreamrClientConfig, 'network' | 'contracts'>
+    private readonly authentication: Authentication
     private readonly eventEmitter: EventEmitter<Events>
+    private readonly destroySignal: DestroySignal
 
     constructor(
-        destroySignal: DestroySignal,
         networkNodeFactory: NetworkNodeFactory,
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'network' | 'contracts'>,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
-        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'network' | 'contracts'>
+        destroySignal: DestroySignal
     ) {
-        this.destroySignal = destroySignal
         this.networkNodeFactory = networkNodeFactory
-        this.authentication = authentication
         this.config = config
+        this.authentication = authentication
         this.eventEmitter = new EventEmitter<Events>()
+        this.destroySignal = destroySignal
         destroySignal.onDestroy.listen(this.destroy)
     }
 

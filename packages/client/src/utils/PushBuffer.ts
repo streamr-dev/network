@@ -1,5 +1,4 @@
 import { Gate } from './Gate'
-import * as G from './GeneratorUtils'
 import { StreamrClientError } from '../StreamrClientError'
 
 export const DEFAULT_BUFFER_SIZE = 256
@@ -77,18 +76,6 @@ export class PushBuffer<T> implements IPushBuffer<T> {
         this.updateWriteGate()
         this.readGate.open()
         return this.writeGate.check()
-    }
-
-    forEach(fn: G.GeneratorForEach<T>): PushBuffer<unknown> {
-        const p = new PushBuffer(this.bufferSize)
-        pull(G.forEach(this, fn), p)
-        return p
-    }
-
-    filter(fn: G.GeneratorFilter<T>): PushBuffer<unknown> {
-        const p = new PushBuffer(this.bufferSize)
-        pull(G.filter(this, fn), p)
-        return p
     }
 
     private updateWriteGate(): void {
@@ -219,18 +206,6 @@ export class PushBuffer<T> implements IPushBuffer<T> {
 
     next(): Promise<IteratorResult<T, any>> {
         return this.iterator.next()
-    }
-
-    async pull(src: AsyncGenerator<T>): Promise<void> {
-        try {
-            for await (const v of src) {
-                const ok = await this.push(v)
-                if (!ok || !this.isWritable()) { break }
-            }
-        } catch (err) {
-            // this.endWrite(err)
-        }
-        this.endWrite()
     }
 
     [Symbol.asyncIterator](): this {

@@ -12,14 +12,14 @@ import {
 } from '@streamr/protocol'
 import { EthereumAddress, Logger } from '@streamr/utils'
 import without from 'lodash/without'
-import { Lifecycle, delay, inject, scoped } from 'tsyringe'
+import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
-import { validateStreamMessage } from '../utils/validateStreamMessage'
 import { createSignedMessage } from '../publish/MessageFactory'
 import { createRandomMsgChainId } from '../publish/messageChain'
-import { StreamRegistryCached } from '../registry/StreamRegistryCached'
+import { StreamRegistry } from '../registry/StreamRegistry'
 import { LoggerFactory } from '../utils/LoggerFactory'
+import { validateStreamMessage } from '../utils/validateStreamMessage'
 import { EncryptionUtil } from './EncryptionUtil'
 import { GroupKey } from './GroupKey'
 import { LocalGroupKeyStore } from './LocalGroupKeyStore'
@@ -30,24 +30,25 @@ import { LocalGroupKeyStore } from './LocalGroupKeyStore'
 
 @scoped(Lifecycle.ContainerScoped)
 export class PublisherKeyExchange {
-    private readonly logger: Logger
-    private readonly store: LocalGroupKeyStore
+
     private readonly networkNodeFacade: NetworkNodeFacade
+    private readonly streamRegistry: StreamRegistry
+    private readonly store: LocalGroupKeyStore
     private readonly authentication: Authentication
-    private readonly streamRegistryCached: StreamRegistryCached
+    private readonly logger: Logger
 
     constructor(
-        store: LocalGroupKeyStore,
         networkNodeFacade: NetworkNodeFacade,
-        @inject(LoggerFactory) loggerFactory: LoggerFactory,
+        streamRegistry: StreamRegistry,
+        store: LocalGroupKeyStore,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
-        @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
+        loggerFactory: LoggerFactory
     ) {
-        this.logger = loggerFactory.createLogger(module)
-        this.store = store
         this.networkNodeFacade = networkNodeFacade
+        this.streamRegistry = streamRegistry
+        this.store = store
         this.authentication = authentication
-        this.streamRegistryCached = streamRegistryCached
+        this.logger = loggerFactory.createLogger(module)
         networkNodeFacade.once('start', async () => {
             const node = await networkNodeFacade.getNode()
             node.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
@@ -62,7 +63,7 @@ export class PublisherKeyExchange {
                 const { recipient, requestId, rsaPublicKey, groupKeyIds } = GroupKeyRequest.fromStreamMessage(request) as GroupKeyRequest
                 if (recipient === authenticatedUser) {
                     this.logger.debug('Handling group key request', { requestId })
-                    await validateStreamMessage(request, this.streamRegistryCached)
+                    await validateStreamMessage(request, this.streamRegistry)
                     const keys = without(
                         await Promise.all(groupKeyIds.map((id: string) => this.store.get(id, authenticatedUser))),
                         undefined) as GroupKey[]

@@ -5,6 +5,7 @@ import {
     toStreamPartID
 } from '@streamr/protocol'
 import { collect, merge, toEthereumAddress, withTimeout } from '@streamr/utils'
+import EventEmitter from 'eventemitter3'
 import range from 'lodash/range'
 import { PublishMetadata } from '../src/publish/Publisher'
 import { StrictStreamrClientConfig } from './Config'
@@ -15,11 +16,10 @@ import { StreamrClientEventEmitter } from './events'
 import { PermissionAssignment, PublicPermissionQuery, UserPermissionQuery } from './permission'
 import { Publisher } from './publish/Publisher'
 import { StreamRegistry } from './registry/StreamRegistry'
-import { StreamRegistryCached } from './registry/StreamRegistryCached'
 import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
 import { Resends } from './subscribe/Resends'
 import { Subscriber } from './subscribe/Subscriber'
-import { Subscription } from './subscribe/Subscription'
+import { Subscription, SubscriptionEvents } from './subscribe/Subscription'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { formStorageNodeAssignmentStreamId } from './utils/utils'
 import { waitForAssignmentsToPropagate } from './utils/waitForAssignmentsToPropagate'
@@ -91,11 +91,10 @@ function getFieldType(value: any): (Field['type'] | undefined) {
 export class Stream {
     readonly id: StreamID
     private metadata: StreamMetadata
-    private readonly _resends: Resends
     private readonly _publisher: Publisher
     private readonly _subscriber: Subscriber
+    private readonly _resends: Resends
     private readonly _streamRegistry: StreamRegistry
-    private readonly _streamRegistryCached: StreamRegistryCached
     private readonly _streamStorageRegistry: StreamStorageRegistry
     private readonly _loggerFactory: LoggerFactory
     private readonly _eventEmitter: StreamrClientEventEmitter
@@ -105,10 +104,9 @@ export class Stream {
     constructor(
         id: StreamID,
         metadata: Partial<StreamMetadata>,
-        resends: Resends,
         publisher: Publisher,
         subscriber: Subscriber,
-        streamRegistryCached: StreamRegistryCached,
+        resends: Resends,
         streamRegistry: StreamRegistry,
         streamStorageRegistry: StreamStorageRegistry,
         loggerFactory: LoggerFactory,
@@ -126,10 +124,9 @@ export class Stream {
             },
             metadata
         )
-        this._resends = resends
         this._publisher = publisher
         this._subscriber = subscriber
-        this._streamRegistryCached = streamRegistryCached
+        this._resends = resends
         this._streamRegistry = streamRegistry
         this._streamStorageRegistry = streamStorageRegistry
         this._loggerFactory = loggerFactory
@@ -145,7 +142,7 @@ export class Stream {
         try {
             await this._streamRegistry.updateStream(this.id, merged)
         } finally {
-            this._streamRegistryCached.clearStream(this.id)
+            this._streamRegistry.clearStreamCache(this.id)
         }
         this.metadata = merged
     }
@@ -173,7 +170,7 @@ export class Stream {
         try {
             await this._streamRegistry.deleteStream(this.id)
         } finally {
-            this._streamRegistryCached.clearStream(this.id)
+            this._streamRegistry.clearStreamCache(this.id)
         }
     }
 
@@ -187,19 +184,18 @@ export class Stream {
      */
     async detectFields(): Promise<void> {
         // Get last message of the stream to be used for field detecting
-        const sub = await this._resends.last(
+        const sub = await this._resends.resend(
             toStreamPartID(this.id, DEFAULT_PARTITION),
             {
-                count: 1,
-            },
-            false
+                last: 1
+            }
         )
 
         const receivedMsgs = await collect(sub)
 
         if (!receivedMsgs.length) { return }
 
-        const lastMessage = receivedMsgs[0].content
+        const lastMessage = receivedMsgs[0].getParsedContent()
 
         const fields = Object.entries(lastMessage as any).map(([name, value]) => {
             const type = getFieldType(value)
@@ -239,9 +235,9 @@ export class Stream {
         let assignmentSubscription
         try {
             const streamPartId = toStreamPartID(formStorageNodeAssignmentStreamId(normalizedNodeAddress), DEFAULT_PARTITION)
-            assignmentSubscription = new Subscription(streamPartId, false, this._loggerFactory)
+            assignmentSubscription = new Subscription(streamPartId, false, new EventEmitter<SubscriptionEvents>(), this._loggerFactory)
             await this._subscriber.add(assignmentSubscription)
-            const propagationPromise = waitForAssignmentsToPropagate(assignmentSubscription.getStreamMessages(), {
+            const propagationPromise = waitForAssignmentsToPropagate(assignmentSubscription, {
                 id: this.id,
                 partitions: this.getMetadata().partitions
             }, this._loggerFactory)
@@ -253,7 +249,7 @@ export class Stream {
                 'storage node did not respond'
             )
         } finally {
-            this._streamRegistryCached.clearStream(this.id)
+            this._streamRegistry.clearStreamCache(this.id)
             await assignmentSubscription?.unsubscribe() // should never reject...
         }
     }
@@ -265,7 +261,7 @@ export class Stream {
         try {
             return this._streamStorageRegistry.removeStreamFromStorageNode(this.id, toEthereumAddress(nodeAddress))
         } finally {
-            this._streamRegistryCached.clearStream(this.id)
+            this._streamRegistry.clearStreamCache(this.id)
         }
     }
 
