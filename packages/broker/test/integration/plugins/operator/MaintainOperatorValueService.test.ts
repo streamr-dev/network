@@ -87,20 +87,22 @@ describe("MaintainOperatorValueService", () => {
     }, 60 * 1000)
 
     test.each([parseEther("0.001"), parseEther("0.0005")])("updates the sponsorships to stay over the threshold", async (penaltyFraction) => {
-        const poolValue = STAKE_AMOUNT * 2
-        const threshold = penaltyFraction.mul(poolValue).toBigInt()
         const maintainOperatorValueService = new MaintainOperatorValueService(operatorConfig, penaltyFraction.toBigInt())
 
         const totalValueInSponsorshipsBefore = await operatorContract.totalValueInSponsorshipsWei()
 
         // wait for sponsorships to accumulate earnings so approximate values differ enough form the real values
-        await wait(3000)
+        await wait(6000)
 
         await maintainOperatorValueService.start()
 
         await waitForCondition(async () => (await operatorContract.totalValueInSponsorshipsWei()).gt(totalValueInSponsorshipsBefore), 10000, 1000)
         
         const diff = await getDiffBetweenApproxAndRealValues()
+
+        const poolValue = await operatorContract.totalValueInSponsorshipsWei()
+        const threshold = penaltyFraction.mul(poolValue).toBigInt()
+
         expect((await operatorContract.totalValueInSponsorshipsWei()).toBigInt()).toBeGreaterThan(totalValueInSponsorshipsBefore.toBigInt())
         expect(diff).toBeLessThan(threshold)
 
