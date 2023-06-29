@@ -138,7 +138,7 @@
                             "type": "boolean",
                             "default": true
                         },
-                        "newWebrtcConnectionTimeout": {
+                        "webNewrtcConnectionTimeout": {
                             "type": "number",
                             "default": 15000
                         },

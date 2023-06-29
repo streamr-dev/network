@@ -59,7 +59,7 @@ export interface ControlLayerConfig {
      * this timeout, the attempt is considered as failed and further
      * waiting for it will cease.
     */
-    newWebrtcConnectionTimeout?: number
+    webrtcNewConnectionTimeout?: number
 
     /**
      * Sets the low-water mark used by send buffers of WebRTC connections.
