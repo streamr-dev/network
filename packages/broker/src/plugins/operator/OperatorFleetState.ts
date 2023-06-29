@@ -51,10 +51,12 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
                 })
                 return
             }
-            const exists = this.nodeActivityTimestamps.has(nodeId)
-            this.nodeActivityTimestamps.set(nodeId, this.timeProvider())
-            if (!exists) {
-                this.emit('added', nodeId)
+            if (msgType === 'heartbeat') {
+                const exists = this.nodeActivityTimestamps.has(nodeId)
+                this.nodeActivityTimestamps.set(nodeId, this.timeProvider())
+                if (!exists) {
+                    this.emit('added', nodeId)
+                }
             }
         })
         this.pruneNodesIntervalRef = setInterval(() => this.pruneOfflineNodes(), this.pruneIntervalInMs)

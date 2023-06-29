@@ -59,6 +59,12 @@ describe(OperatorFleetState, () => {
         expect(state.getNodeIds()).toEqual([])
     })
 
+    it('ignores non-heartbeat messages', async () => {
+        await state.start()
+        await setTimeAndPublishMessage(10, { msgType: 'somethingElse', nodeId: 'a' })
+        expect(state.getNodeIds()).toEqual([])
+    })
+
     it('handles nodes coming online', async () => {
         const events = eventsWithArgsToArray(state as any, ['added', 'removed'])
         await state.start()
