@@ -7,7 +7,6 @@ import { Provider } from '@ethersproject/abstract-provider'
 import { JsonRpcProvider } from '@ethersproject/providers'
 import { StreamrEnvDeployer, TestToken } from '@streamr/network-contracts'
 import { Wallet } from 'ethers'
-import fetch from 'node-fetch'
 import { VoteOnSuspectNodeService } from '../../../../src/plugins/operator/VoteOnSuspectNodeService'
 import { MockProxy, mock } from 'jest-mock-extended'
 import { VoteOnSuspectNodeHelper } from '../../../../src/plugins/operator/VoteOnSuspectNodeHelper'
@@ -16,6 +15,9 @@ import { Chain } from '@streamr/config'
 const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`
 
 jest.setTimeout(600000)
+
+const ADMIN_PRIV_KEY = "0x2cd9855d17e01ce041953829398af7e48b24ece04ff9d0e183414de54dc52285" // sidechain
+// const ADMIN_PRIV_KEY = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80" // fastChain
 
 const logger = new Logger(module)
 describe('MaintainTopologyService', () => {
@@ -32,9 +34,7 @@ describe('MaintainTopologyService', () => {
     const chainURL = 'http://10.200.10.1:8546'
 
     beforeAll(async () => {
-        // const privkey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
-        const privkey = '0x2cd9855d17e01ce041953829398af7e48b24ece04ff9d0e183414de54dc52285'
-        streamrEnvDeployer = new StreamrEnvDeployer(privkey, chainURL)
+        streamrEnvDeployer = new StreamrEnvDeployer(ADMIN_PRIV_KEY, chainURL)
         await streamrEnvDeployer.deployEvironment()
         const { contracts } = streamrEnvDeployer
         config = { contracts: streamrEnvDeployer.addresses } as unknown as Chain
@@ -42,7 +42,7 @@ describe('MaintainTopologyService', () => {
         provider = new JsonRpcProvider(chainURL)
         logger.debug('Connected to: ', await provider.getNetwork())
 
-        adminWallet = new Wallet(privkey, provider)
+        adminWallet = new Wallet(ADMIN_PRIV_KEY, provider)
     
         token = contracts.DATA as unknown as TestToken
         const timeString = (new Date()).getTime().toString()
@@ -58,11 +58,11 @@ describe('MaintainTopologyService', () => {
     })
     
     it('allows to flag an operator as malicious', async () => {
-        const flagger = await createWalletAndDeployOperator(provider, config, theGraphUrl, fetch)
+        const flagger = await createWalletAndDeployOperator(provider, config, theGraphUrl, ADMIN_PRIV_KEY)
         logger.debug('deployed flagger contract ' + flagger.operatorConfig.operatorContractAddress)
-        const target = await createWalletAndDeployOperator(provider, config, theGraphUrl, fetch)
+        const target = await createWalletAndDeployOperator(provider, config, theGraphUrl, ADMIN_PRIV_KEY)
         logger.debug('deployed target contract ' + target.operatorConfig.operatorContractAddress)
-        const voter = await createWalletAndDeployOperator(provider, config, theGraphUrl, fetch)
+        const voter = await createWalletAndDeployOperator(provider, config, theGraphUrl, ADMIN_PRIV_KEY)
         logger.debug('deployed voter contract ' + voter.operatorConfig.operatorContractAddress)
 
         await new Promise((resolve) => setTimeout(resolve, 5000)) // wait for events to be processed

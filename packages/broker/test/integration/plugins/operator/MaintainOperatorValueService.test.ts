@@ -12,7 +12,7 @@ import { Contract } from "@ethersproject/contracts"
 import { deploySponsorship } from "./deploySponsorshipContract"
 import { MaintainOperatorValueService } from "../../../../src/plugins/operator/MaintainOperatorValueService"
 import { OperatorServiceConfig } from "../../../../src/plugins/operator/OperatorPlugin"
-import { ADMIN_WALLET_PK, deployOperatorContract, generateWalletWithGasAndTokens, getProvider } from "./smartContractUtils"
+import { deployOperatorContract, generateWalletWithGasAndTokens, getProvider } from "./smartContractUtils"
 import StreamrClient, { CONFIG_TEST } from "streamr-client"
 
 const config = Chains.load()["dev1"]
@@ -23,12 +23,13 @@ const logger = new Logger(module)
 const SPONSOR_AMOUNT = 250
 const STAKE_AMOUNT = 100
 
+const STREAM_CREATION_KEY = "0xb1abdb742d3924a45b0a54f780f0f21b9d9283b231a0a0b35ce5e455fa5375e7"
+
 describe("MaintainOperatorValueService", () => {
     let provider: Provider
     let operatorWallet: Wallet
     let operatorContract: Operator
     let token: TestToken
-    let adminWallet: Wallet
     let streamId1: string
     let streamId2: string
 
@@ -57,17 +58,19 @@ describe("MaintainOperatorValueService", () => {
         return diff
     }
 
+    beforeAll(async () => {
+
+    })
+
     beforeEach(async () => {
         provider = getProvider()
         logger.debug("Connected to: ", await provider.getNetwork())
 
-        adminWallet = new Wallet(ADMIN_WALLET_PK, provider)
-
-        token = new Contract(config.contracts.LINK, tokenABI, adminWallet) as unknown as TestToken
+        token = new Contract(config.contracts.LINK, tokenABI) as unknown as TestToken
         const client = new StreamrClient({
             ...CONFIG_TEST,
             auth: {
-                privateKey: ADMIN_WALLET_PK
+                privateKey: STREAM_CREATION_KEY
             }
         })
         streamId1 = (await client.createStream(`/operatorvalueservicetest-1-${Date.now()}`)).id

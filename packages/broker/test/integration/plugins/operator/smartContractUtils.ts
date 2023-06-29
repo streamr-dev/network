@@ -19,9 +19,9 @@ export function getTokenContract(): TestToken {
     return new Contract(CONFIG.contracts.LINK, tokenABI) as unknown as TestToken
 }
 
-export async function generateWalletWithGasAndTokens(provider: Provider, config?: Chain): Promise<Wallet> {
+export async function generateWalletWithGasAndTokens(provider: Provider, config?: Chain, adminKey?: string): Promise<Wallet> {
     const newWallet = new Wallet(fastPrivateKey())
-    const adminWallet = new Wallet(ADMIN_WALLET_PK).connect(provider)
+    const adminWallet = new Wallet(adminKey ?? ADMIN_WALLET_PK).connect(provider)
 
     if (config && !config.contracts.LINK) {
         const token = new Contract(config.contracts.DATA, tokenABI, adminWallet) as unknown as TestToken 
