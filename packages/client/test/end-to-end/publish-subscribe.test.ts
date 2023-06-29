@@ -17,13 +17,12 @@ const PAYLOAD = { hello: 'world' }
 const ENCRYPTED_MESSSAGE_FORMAT = /^[0-9A-Fa-f]+$/
 
 async function startNetworkNodeAndListenForAtLeastOneMessage(streamId: StreamID): Promise<unknown[]> {
-    const entryPoints = entryPointTranslator(CONFIG_TEST.network!.layer0!.entryPoints!)
+    const entryPoints = entryPointTranslator(CONFIG_TEST.network!.controlLayer!.entryPoints!)
     const networkNode = new NetworkNode({
-        ...CONFIG_TEST.network as any,
         layer0: {
             entryPoints,
         },
-        networkNode: {} 
+        networkNode: {}
     })
 
     try {

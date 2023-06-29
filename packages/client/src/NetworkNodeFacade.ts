@@ -99,12 +99,12 @@ export class NetworkNodeFacade {
     }
 
     private async getNetworkOptions(): Promise<NetworkOptions> {
-        let id = this.config.network!.networkNode!.id
+        let id = this.config.network!.node!.id
 
         const entryPoints = this.getEntryPoints()
 
-        const ownPeerDescriptor: PeerDescriptor | undefined = this.config.network.layer0!.peerDescriptor ? 
-            this.jsonToPeerDescriptor(this.config.network.layer0!.peerDescriptor) : undefined
+        const ownPeerDescriptor: PeerDescriptor | undefined = this.config.network.controlLayer!.peerDescriptor ? 
+            this.jsonToPeerDescriptor(this.config.network.controlLayer!.peerDescriptor) : undefined
 
         if (id == null || id === '') {
             id = await this.generateId()
@@ -117,12 +117,12 @@ export class NetworkNodeFacade {
 
         return {
             layer0: {
-                ...this.config.network.layer0,
+                ...this.config.network.controlLayer,
                 entryPoints,
                 peerDescriptor: ownPeerDescriptor
             },
             networkNode: {
-                ...this.config.network.networkNode,
+                ...this.config.network.node,
                 id
             },
             metricsContext: new MetricsContext()
@@ -263,6 +263,6 @@ export class NetworkNodeFacade {
     }
 
     getEntryPoints(): PeerDescriptor[] {
-        return entryPointTranslator(this.config.network.layer0!.entryPoints!)
+        return entryPointTranslator(this.config.network.controlLayer!.entryPoints!)
     }
 }

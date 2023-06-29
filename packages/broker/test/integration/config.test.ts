@@ -11,7 +11,7 @@ describe('Config', () => {
         const broker = await createBroker({
             client: {
                 network: {
-                    layer0: {
+                    controlLayer: {
                         entryPoints: DEFAULT_ENTRYPOINTS
                     }
                 }

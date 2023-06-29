@@ -25,7 +25,7 @@ export interface PrivateKeyAuthConfig {
     address?: string
 }
 
-export interface Layer0Config {
+export interface ControlLayerConfig {
 
     /**
      * The list of entry point PeerDescriptors used to join the Streamr Network.
@@ -117,8 +117,8 @@ export interface NetworkNodeConfig {
 }
 
 export interface NetworkConfig {
-    layer0?: Layer0Config
-    networkNode?: NetworkNodeConfig
+    controlLayer?: ControlLayerConfig
+    node?: NetworkNodeConfig
 }
 
 export interface JsonPeerDescriptor {
