@@ -66,7 +66,6 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
     }
 
     getNodeIds(): string[] {
-        this.pruneOfflineNodes()
         return [...this.nodeActivityTimestamps.keys()]
     }
 
