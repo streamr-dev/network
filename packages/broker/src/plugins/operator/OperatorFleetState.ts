@@ -20,7 +20,7 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
     private readonly timeProvider: () => number
     private readonly pruneAgeInMs: number
     private readonly pruneIntervalInMs: number
-    private readonly nodes = new Map<string, number>()
+    private readonly nodeActivityTimestamps = new Map<string, number>()
     private subscription?: Subscription
     private pruneNodesIntervalRef?: NodeJS.Timeout
 
@@ -51,8 +51,8 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
                 })
                 return
             }
-            const exists = this.nodes.has(nodeId)
-            this.nodes.set(nodeId, this.timeProvider())
+            const exists = this.nodeActivityTimestamps.has(nodeId)
+            this.nodeActivityTimestamps.set(nodeId, this.timeProvider())
             if (!exists) {
                 this.emit('added', nodeId)
             }
@@ -67,14 +67,14 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
 
     getNodeIds(): string[] {
         this.pruneOfflineNodes()
-        return [...this.nodes.keys()]
+        return [...this.nodeActivityTimestamps.keys()]
     }
 
     private pruneOfflineNodes(): void {
         const now = this.timeProvider()
-        for (const [nodeId, time] of this.nodes) {
+        for (const [nodeId, time] of this.nodeActivityTimestamps) {
             if (now - time >= this.pruneAgeInMs) {
-                this.nodes.delete(nodeId)
+                this.nodeActivityTimestamps.delete(nodeId)
                 this.emit('removed', nodeId)
             }
         }
