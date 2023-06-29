@@ -31,7 +31,7 @@ export const CONFIG_TEST: StreamrClientConfig = {
                 }
             }],
             iceServers: [],
-            webrtcDisallowPrivateAddresses: false
+            webrtcAllowPrivateAddresses: true
         }
     },
     contracts: {

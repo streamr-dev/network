@@ -134,9 +134,9 @@
                                 }
                             ]
                         },
-                        "webrtcDisallowPrivateAddresses": {
+                        "webrtcAllowPrivateAddresses": {
                             "type": "boolean",
-                            "default": true
+                            "default": false
                         },
                         "webNewrtcConnectionTimeout": {
                             "type": "number",

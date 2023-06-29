@@ -50,7 +50,7 @@ export interface ControlLayerConfig {
      *
      * Details: https://github.com/streamr-dev/network/wiki/WebRTC-private-addresses
     */
-    webrtcDisallowPrivateAddresses?: boolean
+    webrtcAllowPrivateAddresses?: boolean
 
     /**
      * Defines WebRTC connection establishment timeout in milliseconds.
