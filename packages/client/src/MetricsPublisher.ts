@@ -57,7 +57,6 @@ export class MetricsPublisher {
     private readonly destroySignal: DestroySignal
 
     constructor(
-
         publisher: Publisher,
         node: NetworkNodeFacade,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
@@ -73,9 +72,8 @@ export class MetricsPublisher {
         const ensureStarted = pOnce(async () => {
             const node = await this.node.getNode()
             const metricsContext = node.getMetricsContext()
-            const partitionKey = (await authentication.getAddress()).toLowerCase()
+            const partitionKey = await authentication.getAddress()
             this.config.periods.map((config) => {
-
                 return metricsContext.createReportProducer(async (report: MetricsReport) => {
                     await this.publish(report, config.streamId, partitionKey)
                 }, config.duration, this.destroySignal.abortSignal)
