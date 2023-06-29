@@ -106,4 +106,5 @@ describe("MaintainOperatorValueService", () => {
 
         await maintainOperatorValueService.stop()
     }, 60 * 1000)
+    
 })
