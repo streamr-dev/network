@@ -124,10 +124,6 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
         return this.streamrNode!
     }
 
-    getConnectionManager(): ConnectionManager | undefined {
-        return this.connectionManager
-    }
-
     getLayer0DhtNode(): DhtNode {
         return this.layer0DhtNode!
     }
