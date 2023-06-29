@@ -32,7 +32,7 @@ describe('Full node network with WebSocket connections only', () => {
             networkNode: {}
         })
         await entryPoint.start()
-        entryPoint.getStreamrNode()!.setStreamEntryPoints(randomGraphId, [epPeerDescriptor])
+        entryPoint.getStreamrNode()!.setStreamPartEntryPoints(randomGraphId, [epPeerDescriptor])
         await entryPoint.getStreamrNode()!.joinStream(randomGraphId)
 
         await Promise.all(range(NUM_OF_NODES).map(async (i) => {
@@ -49,7 +49,7 @@ describe('Full node network with WebSocket connections only', () => {
             })
             nodes.push(node)
             await node.start()
-            node.getStreamrNode!().setStreamEntryPoints(randomGraphId, [epPeerDescriptor])
+            node.getStreamrNode!().setStreamPartEntryPoints(randomGraphId, [epPeerDescriptor])
             await node.getStreamrNode().joinStream(randomGraphId)
             node.getStreamrNode!().subscribeToStream(randomGraphId)
         }))

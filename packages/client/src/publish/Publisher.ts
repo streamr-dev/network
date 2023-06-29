@@ -3,15 +3,15 @@ import isString from 'lodash/isString'
 import pLimit from 'p-limit'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
-import { MessageFactory } from './MessageFactory'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamrClientError } from '../StreamrClientError'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'
 import { StreamRegistry } from '../registry/StreamRegistry'
 import { StreamDefinition } from '../types'
-import { GroupKeyQueue } from './GroupKeyQueue'
 import { Mapping } from '../utils/Mapping'
+import { GroupKeyQueue } from './GroupKeyQueue'
+import { MessageFactory } from './MessageFactory'
 
 export interface PublishMetadata {
     timestamp?: string | number | Date

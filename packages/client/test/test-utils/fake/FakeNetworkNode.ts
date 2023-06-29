@@ -49,7 +49,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
     async waitForJoinAndPublish(msg: StreamMessage, _timeout?: number): Promise<number> {
         const streamPartID = msg.getStreamPartID()
         this.subscriptions.add(streamPartID)
-        this.publish(msg)
+        await this.publish(msg)
         return this.getNeighborsForStreamPart(streamPartID).length
     }
 
@@ -79,7 +79,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    setStreamEntryPoints(_streamPartId: StreamPartID, _peerDescriptors: PeerDescriptor[]): void {
+    setStreamPartEntryPoints(_streamPartId: StreamPartID, _peerDescriptors: PeerDescriptor[]): void {
         return
     }
 

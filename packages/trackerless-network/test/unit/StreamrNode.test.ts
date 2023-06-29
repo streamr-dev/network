@@ -23,7 +23,7 @@ describe('StreamrNode', () => {
         node = new StreamrNode({})
         const mockLayer0 = new MockLayer0(peerDescriptor)
         await node.start(mockLayer0, new MockTransport(), mockConnectionLocker)
-        node.setStreamEntryPoints(stream, [peerDescriptor])
+        node.setStreamPartEntryPoints(stream, [peerDescriptor])
     })
 
     afterEach(async () => {

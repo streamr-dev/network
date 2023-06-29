@@ -71,8 +71,8 @@ describe('publish-subscribe', () => {
     })
 
     beforeEach(async () => {
-        publisherClient = createTestClient(publisherPk, 'publisher', 15656)
-        subscriberClient = createTestClient(subscriberWallet.privateKey, 'subscriber', 15657)
+        publisherClient = createTestClient(publisherPk, 'e2e-pub-sub-publisher', 15656)
+        subscriberClient = createTestClient(subscriberWallet.privateKey, 'e2e-pub-sub-subscriber', 15657)
     }, TIMEOUT)
 
     afterEach(async () => {

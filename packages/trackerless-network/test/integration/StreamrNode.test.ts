@@ -72,9 +72,9 @@ describe('StreamrNode', () => {
         node1 = new StreamrNode({})
         node2 = new StreamrNode({})
         await node1.start(layer01, transport1, transport1)
-        node1.setStreamEntryPoints(STREAM_ID, [peer1])
+        node1.setStreamPartEntryPoints(STREAM_ID, [peer1])
         await node2.start(layer02, transport2, transport2)
-        node2.setStreamEntryPoints(STREAM_ID, [peer1])
+        node2.setStreamPartEntryPoints(STREAM_ID, [peer1])
     })
 
     it('starts', async () => {
@@ -104,8 +104,8 @@ describe('StreamrNode', () => {
 
     it('multi-stream pub/sub', async () => {
         const stream2 = 'test2'
-        node1.setStreamEntryPoints(stream2, [peer1])
-        node2.setStreamEntryPoints(stream2, [peer1])
+        node1.setStreamPartEntryPoints(stream2, [peer1])
+        node2.setStreamPartEntryPoints(stream2, [peer1])
         await node1.joinStream(STREAM_ID)
         await node1.joinStream(stream2)
         await node2.joinStream(STREAM_ID)

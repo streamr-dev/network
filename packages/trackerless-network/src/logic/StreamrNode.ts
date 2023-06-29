@@ -341,7 +341,7 @@ export class StreamrNode extends EventEmitter<Events> {
         })
     }
 
-    setStreamEntryPoints(streamPartId: string, entryPoints: PeerDescriptor[]): void {
+    setStreamPartEntryPoints(streamPartId: string, entryPoints: PeerDescriptor[]): void {
         this.knownStreamEntryPoints.set(streamPartId, entryPoints)
     }
 

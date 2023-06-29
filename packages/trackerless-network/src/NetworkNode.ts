@@ -67,8 +67,8 @@ export class NetworkNode {
         })
     }
 
-    setStreamEntryPoints(streamPartId: StreamPartID, contactPeerDescriptors: PeerDescriptor[]): void {
-        this.stack.getStreamrNode()!.setStreamEntryPoints(streamPartId, contactPeerDescriptors)
+    setStreamPartEntryPoints(streamPartId: StreamPartID, contactPeerDescriptors: PeerDescriptor[]): void {
+        this.stack.getStreamrNode()!.setStreamPartEntryPoints(streamPartId, contactPeerDescriptors)
     }
 
     removeMessageListener<T>(cb: (msg: StreamMessage<T>) => void): void {

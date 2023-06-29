@@ -41,9 +41,9 @@ describe('NetworkStack', () => {
         })
 
         await stack1.start()
-        stack1.getStreamrNode()!.setStreamEntryPoints(streamPartId, [epDescriptor])
+        stack1.getStreamrNode()!.setStreamPartEntryPoints(streamPartId, [epDescriptor])
         await stack2.start()
-        stack2.getStreamrNode()!.setStreamEntryPoints(streamPartId, [epDescriptor])
+        stack2.getStreamrNode()!.setStreamPartEntryPoints(streamPartId, [epDescriptor])
     })
 
     afterEach(async () => {
