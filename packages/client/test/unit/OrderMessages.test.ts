@@ -8,7 +8,6 @@ import { OrderMessages } from '../../src/subscribe/ordering/OrderMessages'
 import { fromArray } from '../../src/utils/GeneratorUtils'
 import { PushPipeline } from '../../src/utils/PushPipeline'
 
-const MESSAGE_COUNT = 7
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
 const PUBLISHER_ID = randomEthereumAddress()
 const MSG_CHAIN_ID = 'mock-msg-chain-id'
@@ -47,9 +46,9 @@ const createMessage = (timestamp: number) => {
     })
 }
 
-const createMessages = async (): Promise<StreamMessage[]> => {
+const createMessages = async (messageCount: number): Promise<StreamMessage[]> => {
     const messages: StreamMessage[] = []
-    for (const i of range(MESSAGE_COUNT)) {
+    for (const i of range(messageCount)) {
         messages.push(createMessage((i + 1) * 1000))
     }
     return messages
@@ -73,14 +72,14 @@ describe('OrderMessages', () => {
     })
 
     it('no gaps', async () => {
-        const msgs = await createMessages()
+        const msgs = await createMessages(5)
         const orderMessages = createOrderMessages(undefined as any)
         await orderMessages.addMessages(fromArray(msgs))
         expect(await collect(orderMessages)).toEqual(msgs)
     })
 
     it('gap of single message', async () => {
-        const msgs = await createMessages()
+        const msgs = await createMessages(5)
         const missing = msgs.filter((m) => m.getTimestamp() === 3000)
         const resends = {
             resend: jest.fn().mockResolvedValue(createMessageStream(...missing))
@@ -103,7 +102,7 @@ describe('OrderMessages', () => {
     })
 
     it('gap of multiple messages', async () => {
-        const msgs = await createMessages()
+        const msgs = await createMessages(5)
         const missing = msgs.filter((m) => (m.getTimestamp() === 3000) || (m.getTimestamp() === 4000))
         const resends = {
             resend: jest.fn().mockResolvedValue(createMessageStream(...missing))
@@ -126,7 +125,7 @@ describe('OrderMessages', () => {
     })
 
     it('multiple gaps', async () => {
-        const msgs = await createMessages()
+        const msgs = await createMessages(5)
         const missing1 = msgs.filter((m) => m.getTimestamp() === 2000)
         const missing2 = msgs.filter((m) => m.getTimestamp() === 4000)
         const resends = {
@@ -164,7 +163,7 @@ describe('OrderMessages', () => {
     })
 
     it('ignore missing message if no data in storage node', async () => {
-        const msgs = await createMessages()
+        const msgs = await createMessages(5)
         const missing = msgs.filter((m) => m.getTimestamp() === 3000)
         const resends = {
             resend: jest.fn().mockImplementation(() => createMessageStream())
@@ -176,7 +175,7 @@ describe('OrderMessages', () => {
     })
 
     it('ignore missing message if gap filling disable', async () => {
-        const msgs = await createMessages()
+        const msgs = await createMessages(5)
         const missing = msgs.filter((m) => m.getTimestamp() === 3000)
         const resends = {
             resend: jest.fn()
@@ -190,7 +189,7 @@ describe('OrderMessages', () => {
     })
 
     it('gap fill error', async () => {
-        const msgs = await createMessages()
+        const msgs = await createMessages(7)
         const missing1 = msgs.filter((m) => m.getTimestamp() === 2000)
         const missing2 = msgs.filter((m) => m.getTimestamp() === 4000)
         const missing3 = msgs.filter((m) => m.getTimestamp() === 6000)
@@ -212,7 +211,7 @@ describe('OrderMessages', () => {
     })
 
     it('aborts resends when destroyed', async () => {
-        const msgs = await createMessages()
+        const msgs = await createMessages(5)
         const missing = msgs.filter((m) => m.getTimestamp() === 3000)
         let orderMessages: OrderMessages | undefined = undefined
         let resendAborted = false
@@ -239,7 +238,7 @@ describe('OrderMessages', () => {
         it('no gaps', async () => {
             const getStorageNodes = jest.fn()
             const orderMessages = createOrderMessages(undefined as any, getStorageNodes)
-            await orderMessages.addMessages(fromArray(await createMessages()))
+            await orderMessages.addMessages(fromArray(await createMessages(5)))
             await collect(orderMessages)
             expect(getStorageNodes).not.toBeCalled()
         })
@@ -250,7 +249,7 @@ describe('OrderMessages', () => {
                 resend: jest.fn().mockImplementation(() => createMessageStream())
             }
             const orderMessages = createOrderMessages(resends, getStorageNodes)
-            const messages = (await createMessages()).filter(
+            const messages = (await createMessages(5)).filter(
                 (m) => (m.getTimestamp() !== 2000) && (m.getTimestamp() !== 4000)
             )
             await orderMessages.addMessages(fromArray(messages))
