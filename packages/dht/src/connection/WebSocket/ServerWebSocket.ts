@@ -20,15 +20,16 @@ enum MessageType {
 
 export class ServerWebSocket extends EventEmitter<ConnectionEvents> implements IConnection {
 
-    public connectionId: ConnectionID
-    public connectionType = ConnectionType.WEBSOCKET_SERVER
-
+    public readonly connectionId: ConnectionID
+    public readonly connectionType = ConnectionType.WEBSOCKET_SERVER
+    public readonly resourceURL: Url
     private socket?: WsConnection
     private stopped = false
 
-    constructor(socket: WsConnection, public resourceURL: Url) {
+    constructor(socket: WsConnection, resourceURL: Url) {
         super()
 
+        this.resourceURL = resourceURL
         this.connectionId = new ConnectionID()
 
         socket.on('message', (message) => {
