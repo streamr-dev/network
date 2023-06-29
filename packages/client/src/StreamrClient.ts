@@ -568,7 +568,7 @@ export class StreamrClient {
      * Used to set known entry points for a stream partition. If entry points are not set they 
      * will be automatically discovered from the Streamr Network.
     */
-    async setStreamPartEntryPoints(streamDefinition: StreamDefinition, entryPoints: JsonPeerDescriptor[]): Promise<void> {
+    async setStreamEntryPoints(streamDefinition: StreamDefinition, entryPoints: JsonPeerDescriptor[]): Promise<void> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         await this.node.setStreamPartEntryPoints(streamPartId, entryPoints)
     }

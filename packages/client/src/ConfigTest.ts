@@ -58,7 +58,7 @@ export const CONFIG_TEST: StreamrClientConfig = {
             indexPollInterval: 500
         },
         storageNode: {
-            timeout: 60 * 1000,
+            timeout: 30 * 1000,
             retryInterval: 500
         },
         ensStreamCreation: {

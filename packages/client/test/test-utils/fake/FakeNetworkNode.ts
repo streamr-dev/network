@@ -80,7 +80,6 @@ export class FakeNetworkNode implements NetworkNodeStub {
 
     // eslint-disable-next-line class-methods-use-this
     setStreamPartEntryPoints(_streamPartId: StreamPartID, _peerDescriptors: PeerDescriptor[]): void {
-        return
     }
 
     // eslint-disable-next-line class-methods-use-this
