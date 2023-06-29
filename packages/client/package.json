@@ -99,7 +99,7 @@
     "@lit-protocol/uint8arrays": "^2.2.24",
     "@streamr/dht": "8.5.4",
     "@streamr/protocol": "8.5.4",
-    "@streamr/trackerless-network": "0.0.1",
+    "@streamr/trackerless-network": "8.5.4",
     "@streamr/utils": "8.5.4",
     "ajv": "^8.8.2",
     "ajv-formats": "^2.1.1",
