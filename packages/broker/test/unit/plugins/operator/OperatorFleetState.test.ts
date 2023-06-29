@@ -1,11 +1,11 @@
 import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
 import { mock, MockProxy } from 'jest-mock-extended'
 import StreamrClient, { MessageListener, Subscription } from 'streamr-client'
-import { toEthereumAddress, wait, waitForCondition, waitForEvent } from '@streamr/utils'
+import { wait, waitForCondition, waitForEvent } from '@streamr/utils'
 import { toStreamID } from '@streamr/protocol'
-import { eventsWithArgsToArray } from '@streamr/test-utils'
+import { eventsWithArgsToArray, randomEthereumAddress } from '@streamr/test-utils'
 
-const ADDRESS = toEthereumAddress('0x61BBf708Fb7bB1D4dA10D1958C88A170988d3d1F')
+const ADDRESS = randomEthereumAddress()
 const coordinationStreamId = toStreamID('/operator/coordination', ADDRESS)
 
 describe(OperatorFleetState, () => {
