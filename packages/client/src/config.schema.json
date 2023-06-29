@@ -63,7 +63,7 @@
             "additionalProperties": false,
             "required": [],
             "properties": {
-                "layer0": {
+                "controlLayer": {
                     "type": "object",
                     "additionalProperties": false,
                     "properties": {
@@ -153,7 +153,7 @@
                     },
                     "default": {}
                 },
-                "networkNode": {
+                "node": {
                     "type": "object",
                     "additionalProperties": false,
                     "properties": {

@@ -66,7 +66,7 @@ describe('StorageNodeRegistry', () => {
             },
             network: {
                 ...CONFIG_TEST.network,
-                networkNode: {
+                node: {
                     id: storageNodeWallet.address
                 }
             }

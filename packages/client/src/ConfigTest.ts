@@ -21,7 +21,7 @@ const sideChainConfig = {
  */
 export const CONFIG_TEST: StreamrClientConfig = {
     network: {
-        layer0: {
+        controlLayer: {
             entryPoints: [{
                 id: 'entryPointBroker',
                 type: NodeType.NODEJS,

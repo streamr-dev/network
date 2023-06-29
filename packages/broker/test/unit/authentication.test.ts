@@ -8,7 +8,7 @@ const formConfig = (auth: StreamrClientConfig['auth']): Config => {
         client: {
             auth,
             network: {
-                layer0: {
+                controlLayer: {
                     peerDescriptor: {
                         id: 'broker',
                         type: NodeType.NODEJS,
