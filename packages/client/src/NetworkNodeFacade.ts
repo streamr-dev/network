@@ -47,7 +47,7 @@ export interface NetworkNodeStub {
         connectionCount?: number
     ) => Promise<void>
     /** @internal */
-    findPeer: (id: NodeId) => Promise<PeerDescriptor[]>
+    findPeer: (id: NodeId) => Promise<PeerDescriptor | undefined>
     setStreamPartEntryPoints: (streamPartId: StreamPartID, peerDescriptors: PeerDescriptor[]) => void
 }
 
