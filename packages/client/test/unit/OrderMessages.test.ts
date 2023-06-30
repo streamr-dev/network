@@ -239,7 +239,6 @@ describe('OrderMessages', () => {
         beforeEach(async () => {
             allMessages = await createMessages(14)
             outputMessages = []
-
         })
 
         const startConsuming = (orderMessages: OrderMessages) => {
