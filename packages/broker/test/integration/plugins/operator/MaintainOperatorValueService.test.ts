@@ -28,7 +28,6 @@ describe("MaintainOperatorValueService", () => {
     let operatorWallet: Wallet
     let operatorContract: Operator
     let token: IERC677
-    let adminWallet: Wallet
     let streamId1: string
     let streamId2: string
 
@@ -50,20 +49,15 @@ describe("MaintainOperatorValueService", () => {
 
     const getDiffBetweenApproxAndRealValues = async (): Promise<bigint> => {
         const { sponsorshipAddresses, approxValues, realValues } = await operatorContract.getApproximatePoolValuesPerSponsorship()
-        let diff = BigInt(0)
+        let totalDiff = BigInt(0)
         for (let i = 0; i < sponsorshipAddresses.length; i++) {
-            diff = realValues[i].toBigInt() - approxValues[i].toBigInt()
+            const diff = realValues[i].toBigInt() - approxValues[i].toBigInt()
+            totalDiff += diff
         }
-        return diff
+        return totalDiff
     }
 
-    beforeEach(async () => {
-        provider = getProvider()
-        logger.debug("Connected to: ", await provider.getNetwork())
-
-        adminWallet = new Wallet(ADMIN_WALLET_PK, provider)
-
-        token = new Contract(config.contracts.LINK, tokenABI, adminWallet) as unknown as IERC677
+    beforeAll(async () => {
         const client = new StreamrClient({
             ...CONFIG_TEST,
             auth: {
@@ -72,7 +66,14 @@ describe("MaintainOperatorValueService", () => {
         })
         streamId1 = (await client.createStream(`/operatorvalueservicetest-1-${Date.now()}`)).id
         streamId2 = (await client.createStream(`/operatorvalueservicetest-2-${Date.now()}`)).id
-        await client.destroy();
+        await client.destroy()
+    })
+
+    beforeEach(async () => {
+        provider = getProvider()
+        logger.debug("Connected to: ", await provider.getNetwork())
+
+        token = new Contract(config.contracts.LINK, tokenABI) as unknown as IERC677
 
         ({ operatorWallet, operatorContract } = await deployNewOperator())
 
@@ -86,13 +87,31 @@ describe("MaintainOperatorValueService", () => {
         }
     }, 60 * 1000)
 
-    test.each([parseEther("0.001"), parseEther("0.0005")])("updates the sponsorships to stay over the threshold", async (penaltyFraction) => {
+    // TODO: split into two test, where one verifies that not all sponsorships are used to update
+    // .each([parseEther("0.001"), parseEther("0.0005")]
+    test("updates all sponsorships to stay over the threshold", async () => {
+        const penaltyFraction = parseEther("0.001")
         const maintainOperatorValueService = new MaintainOperatorValueService(operatorConfig, penaltyFraction.toBigInt())
 
         const totalValueInSponsorshipsBefore = await operatorContract.totalValueInSponsorshipsWei()
 
         // wait for sponsorships to accumulate earnings so approximate values differ enough form the real values
         await wait(6000)
+        // await waitForCondition(async () => {
+        //     const diff = await getDiffBetweenApproxAndRealValues()
+        //     const poolValue = await operatorContract.totalValueInSponsorshipsWei()
+        //     const threshold = penaltyFraction.mul(poolValue).div(parseEther("1")).toBigInt()
+        //     logger.debug(`diff: ${diff}, threshold: ${threshold}`)
+        //     return diff > threshold
+        // }, 15000, 1000)
+        
+        const diff2 = await getDiffBetweenApproxAndRealValues()
+
+        const poolValue2 = await operatorContract.totalValueInSponsorshipsWei()
+        const threshold2 = penaltyFraction.mul(poolValue2).div(parseEther("1")).toBigInt()
+
+        logger.debug(`at end diff: ${diff2}, threshold: ${threshold2}`)
+        expect(diff2).toBeGreaterThan(threshold2)
 
         await maintainOperatorValueService.start()
 
@@ -101,9 +120,10 @@ describe("MaintainOperatorValueService", () => {
         const diff = await getDiffBetweenApproxAndRealValues()
 
         const poolValue = await operatorContract.totalValueInSponsorshipsWei()
-        const threshold = penaltyFraction.mul(poolValue).toBigInt()
+        const threshold = penaltyFraction.mul(poolValue).div(parseEther("1")).toBigInt()
 
         expect((await operatorContract.totalValueInSponsorshipsWei()).toBigInt()).toBeGreaterThan(totalValueInSponsorshipsBefore.toBigInt())
+        logger.debug(`at end diff: ${diff}, threshold: ${threshold}`)
         expect(diff).toBeLessThan(threshold)
 
         await maintainOperatorValueService.stop()
