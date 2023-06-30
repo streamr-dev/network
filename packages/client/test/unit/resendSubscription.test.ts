@@ -105,6 +105,7 @@ describe('resend subscription', () => {
             async () => [randomEthereumAddress()],
             {
                 orderMessages: true,
+                gapFillStrategy: 'light',
                 gapFill,
                 maxGapRequests: MAX_GAP_REQUESTS,
                 gapFillTimeout: 200,
