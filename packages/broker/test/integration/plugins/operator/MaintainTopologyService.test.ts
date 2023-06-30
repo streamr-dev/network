@@ -55,7 +55,7 @@ describe('MaintainTopologyService', () => {
             theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`,
         }
 
-        const client = createClient(fastPrivateKey())
+        client = createClient(fastPrivateKey())
         service = new MaintainTopologyService(client, new MaintainTopologyHelper(
             serviceConfig
         ))
