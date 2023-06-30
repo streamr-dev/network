@@ -63,7 +63,7 @@ describe('NetworkNodeFacade', () => {
                 },
                 network: {
                     ...CONFIG_TEST.network,
-                    networkNode: {
+                    node: {
                         id: nodeId
                     }
                 }
@@ -79,7 +79,7 @@ describe('NetworkNodeFacade', () => {
                     privateKey: fastPrivateKey()
                 },
                 network: {
-                    networkNode: {
+                    node: {
                         id: nodeId
                     }
                 }

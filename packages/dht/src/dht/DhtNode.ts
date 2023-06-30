@@ -76,10 +76,10 @@ export interface DhtNodeOptions {
     nodeName?: string
     rpcRequestTimeout?: number
     iceServers?: IceServer[]
-    webrtcDisallowPrivateAddresses?: boolean
+    webrtcAllowPrivateAddresses?: boolean
     webrtcDatachannelBufferThresholdLow?: number
     webrtcDatachannelBufferThresholdHigh?: number
-    newWebrtcConnectionTimeout?: number
+    webrtcNewConnectionTimeout?: number
     maxConnections?: number
 }
 
@@ -107,10 +107,10 @@ export class DhtNodeConfig {
     nodeName?: string
     rpcRequestTimeout?: number
     iceServers?: IceServer[]
-    webrtcDisallowPrivateAddresses?: boolean
+    webrtcAllowPrivateAddresses?: boolean
     webrtcDatachannelBufferThresholdLow?: number
     webrtcDatachannelBufferThresholdHigh?: number
-    newWebrtcConnectionTimeout?: number
+    webrtcNewConnectionTimeout?: number
 
     constructor(conf: Partial<DhtNodeOptions>) {
         // assign given non-undefined config vars over defaults
@@ -196,10 +196,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 entryPoints: this.config.entryPoints,
                 iceServers: this.config.iceServers,
                 metricsContext: this.config.metricsContext,
-                webrtcDisallowPrivateAddresses: this.config.webrtcDisallowPrivateAddresses,
+                webrtcAllowPrivateAddresses: this.config.webrtcAllowPrivateAddresses,
                 webrtcDatachannelBufferThresholdLow: this.config.webrtcDatachannelBufferThresholdLow,
                 webrtcDatachannelBufferThresholdHigh: this.config.webrtcDatachannelBufferThresholdHigh,
-                newWebrtcConnectionTimeout: this.config.newWebrtcConnectionTimeout,
+                webrtcNewConnectionTimeout: this.config.webrtcNewConnectionTimeout,
                 nodeName: this.getNodeName(),
                 maxConnections: this.config.maxConnections
             }

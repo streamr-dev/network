@@ -25,7 +25,7 @@ export interface PrivateKeyAuthConfig {
     address?: string
 }
 
-export interface Layer0Config {
+export interface ControlLayerConfig {
 
     /**
      * The list of entry point PeerDescriptors used to join the Streamr Network.
@@ -50,7 +50,7 @@ export interface Layer0Config {
      *
      * Details: https://github.com/streamr-dev/network/wiki/WebRTC-private-addresses
     */
-    webrtcDisallowPrivateAddresses?: boolean
+    webrtcAllowPrivateAddresses?: boolean
 
     /**
      * Defines WebRTC connection establishment timeout in milliseconds.
@@ -59,7 +59,7 @@ export interface Layer0Config {
      * this timeout, the attempt is considered as failed and further
      * waiting for it will cease.
     */
-    newWebrtcConnectionTimeout?: number
+    webrtcNewConnectionTimeout?: number
 
     /**
      * Sets the low-water mark used by send buffers of WebRTC connections.
@@ -117,8 +117,8 @@ export interface NetworkNodeConfig {
 }
 
 export interface NetworkConfig {
-    layer0?: Layer0Config
-    networkNode?: NetworkNodeConfig
+    controlLayer?: ControlLayerConfig
+    node?: NetworkNodeConfig
 }
 
 export interface JsonPeerDescriptor {

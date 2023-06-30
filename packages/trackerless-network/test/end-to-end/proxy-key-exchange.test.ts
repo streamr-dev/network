@@ -50,7 +50,7 @@ describe('proxy group key exchange', () => {
             }
         })
         await proxyNode.start()
-        proxyNode.setStreamEntryPoints(streamPartId, [proxyNodeDescriptor])
+        proxyNode.setStreamPartEntryPoints(streamPartId, [proxyNodeDescriptor])
         await proxyNode.stack.getStreamrNode()!.joinStream(streamPartId)
         publisher = new NetworkNode({
             layer0: {

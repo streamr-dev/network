@@ -249,7 +249,7 @@ export class WebSocketConnector implements IWebSocketConnectorService {
 
     // IWebSocketConnectorService implementation
     public async requestConnection(request: WebSocketConnectionRequest, _context: ServerCallContext): Promise<WebSocketConnectionResponse> {
-        if (this.canConnectFunction(request.requester!, request.ip, request.port)) {
+        if (!this.stopped && this.canConnectFunction(request.requester!, request.ip, request.port)) {
             setImmediate(() => {
                 const connection = this.connect(request.requester!)
                 this.incomingConnectionCallback(connection)
@@ -259,9 +259,8 @@ export class WebSocketConnector implements IWebSocketConnectorService {
             }
             return res
         }
-        const res: WebSocketConnectionResponse = {
+        return {
             accepted: false
         }
-        return res
     }
 }

@@ -21,6 +21,7 @@ export class SubscriptionSession {
     private readonly pendingRemoval: WeakSet<Subscription> = new WeakSet()
     private readonly pipeline: PushPipeline<StreamMessage, StreamMessage>
     private readonly node: NetworkNodeFacade
+
     constructor(
         streamPartId: StreamPartID,
         messagePipelineFactory: MessagePipelineFactory,

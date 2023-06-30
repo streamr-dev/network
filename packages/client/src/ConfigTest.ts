@@ -21,7 +21,7 @@ const sideChainConfig = {
  */
 export const CONFIG_TEST: StreamrClientConfig = {
     network: {
-        layer0: {
+        controlLayer: {
             entryPoints: [{
                 id: 'entryPointBroker',
                 type: NodeType.NODEJS,
@@ -31,7 +31,7 @@ export const CONFIG_TEST: StreamrClientConfig = {
                 }
             }],
             iceServers: [],
-            webrtcDisallowPrivateAddresses: false
+            webrtcAllowPrivateAddresses: true
         }
     },
     contracts: {
@@ -58,7 +58,7 @@ export const CONFIG_TEST: StreamrClientConfig = {
             indexPollInterval: 500
         },
         storageNode: {
-            timeout: 60 * 1000,
+            timeout: 30 * 1000,
             retryInterval: 500
         },
         ensStreamCreation: {

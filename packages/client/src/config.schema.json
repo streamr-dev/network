@@ -63,7 +63,7 @@
             "additionalProperties": false,
             "required": [],
             "properties": {
-                "layer0": {
+                "controlLayer": {
                     "type": "object",
                     "additionalProperties": false,
                     "properties": {
@@ -134,11 +134,11 @@
                                 }
                             ]
                         },
-                        "webrtcDisallowPrivateAddresses": {
+                        "webrtcAllowPrivateAddresses": {
                             "type": "boolean",
-                            "default": true
+                            "default": false
                         },
-                        "newWebrtcConnectionTimeout": {
+                        "webNewrtcConnectionTimeout": {
                             "type": "number",
                             "default": 15000
                         },
@@ -153,9 +153,9 @@
                     },
                     "default": {}
                 },
-                "networkNode": {
+                "node": {
                     "type": "object",
-                    "additionalProperties": true,
+                    "additionalProperties": false,
                     "properties": {
                         "id": {
                             "type": "string"

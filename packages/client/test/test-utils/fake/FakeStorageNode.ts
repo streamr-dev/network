@@ -144,7 +144,7 @@ export class FakeStorageNode extends FakeNetworkNode {
                         streamPart: streamPartId,
                     }
                 })
-                this.publish(assignmentMessage)
+                await this.publish(assignmentMessage)
             }
         })
     }

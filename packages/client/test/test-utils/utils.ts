@@ -154,7 +154,7 @@ export const startPublisherKeyExchangeSubscription = async (
     publisherClient: StreamrClient,
     streamPartId: StreamPartID): Promise<void> => {
     const node = await publisherClient.getNode()
-    node.subscribe(streamPartId)
+    await node.subscribe(streamPartId)
 }
 
 export const createRandomAuthentication = (): Authentication => {
@@ -237,8 +237,8 @@ export const createTestClient = (privateKey: string, id: string, wsPort?: number
             privateKey
         },
         network: {
-            layer0: {
-                ...CONFIG_TEST.network!.layer0,
+            controlLayer: {
+                ...CONFIG_TEST.network!.controlLayer,
                 peerDescriptor: {
                     id,
                     type: NodeType.NODEJS,
@@ -248,7 +248,7 @@ export const createTestClient = (privateKey: string, id: string, wsPort?: number
                     } : undefined
                 }
             },
-            networkNode: {
+            node: {
                 acceptProxyConnections
             }
         }

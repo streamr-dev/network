@@ -31,7 +31,7 @@ export interface WebRtcConnectorConfig {
     rpcTransport: ITransport
     protocolVersion: string
     iceServers?: IceServer[]
-    disallowPrivateAddresses?: boolean
+    allowPrivateAddresses?: boolean
     bufferThresholdLow?: number
     bufferThresholdHigh?: number
     connectionTimeout?: number
@@ -54,7 +54,7 @@ export class WebRtcConnector implements IWebRtcConnectorService {
     private static objectCounter = 0
     private objectId = 0
     private iceServers: IceServer[]
-    private disallowPrivateAddresses: boolean
+    private allowPrivateAddresses: boolean
     private config: WebRtcConnectorConfig
     private incomingConnectionCallback: (connection: ManagedConnection) => boolean
 
@@ -69,7 +69,7 @@ export class WebRtcConnector implements IWebRtcConnectorService {
         this.objectId = WebRtcConnector.objectCounter
 
         this.iceServers = config.iceServers || []
-        this.disallowPrivateAddresses = config.disallowPrivateAddresses || false
+        this.allowPrivateAddresses = config.allowPrivateAddresses || true
         this.incomingConnectionCallback = incomingConnectionCallback
 
         this.rpcCommunicator = new ListeningRpcCommunicator(WebRtcConnector.WEBRTC_CONNECTOR_SERVICE_ID, config.rpcTransport, {
@@ -162,7 +162,7 @@ export class WebRtcConnector implements IWebRtcConnectorService {
     }
 
     isIceCandidateAllowed(candidate: string): boolean {
-        if (this.disallowPrivateAddresses) {
+        if (!this.allowPrivateAddresses) {
             const address = getAddressFromIceCandidate(candidate)
             if (address && isPrivateIPv4(address)) {
                 return false

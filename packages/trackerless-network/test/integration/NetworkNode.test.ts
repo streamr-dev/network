@@ -54,9 +54,9 @@ describe('NetworkNode', () => {
         })
 
         await node1.start()
-        node1.setStreamEntryPoints(STREAM_ID, [pd1])
+        node1.setStreamPartEntryPoints(STREAM_ID, [pd1])
         await node2.start()
-        node2.setStreamEntryPoints(STREAM_ID, [pd1])
+        node2.setStreamPartEntryPoints(STREAM_ID, [pd1])
     })
 
     afterEach(async () => {

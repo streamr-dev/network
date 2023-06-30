@@ -117,7 +117,6 @@ describe('broker subscriptions', () => {
         await mqttClient1.unsubscribe(freshStream1.id)
 
         await waitForCondition(async () => (await getStreamParts(broker2)).length === 2)
-        await waitForCondition(async () => (await getStreamParts(broker1)).length === 1)
 
         expect((await getStreamParts(broker1))).toIncludeSameMembers([freshStream2.id + '#0'])
         expect((await getStreamParts(broker2))).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])

@@ -36,7 +36,7 @@ jobs:
           services-to-start: ${{ inputs.docker-services }}
       - name: run entry point
         if: ${{ inputs.run-entry-point }}
-        uses: ./.github/workflows/reusable/run-entry-points
+        uses: ./.github/workflows/reusable/run-entry-point
       - name: run brokers
         if: ${{ inputs.run-brokers }}
         uses: ./.github/workflows/reusable/run-brokers

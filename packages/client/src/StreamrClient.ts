@@ -11,7 +11,6 @@ import { Authentication, AuthenticationInjectionToken, createAuthentication } fr
 import { ConfigInjectionToken, StreamrClientConfig, StrictStreamrClientConfig, createStrictConfig, redactConfig, JsonPeerDescriptor } from './Config'
 import { DestroySignal } from './DestroySignal'
 import { generateEthereumAccount as _generateEthereumAccount } from './Ethereum'
-import { PeerDescriptor } from '@streamr/dht'
 import { ProxyDirection } from '@streamr/trackerless-network'
 import { Message, convertStreamMessageToMessage } from './Message'
 import { MetricsPublisher } from './MetricsPublisher'
@@ -198,7 +197,6 @@ export class StreamrClient {
                 eventEmitter,
                 this.loggerFactory
             )
-
         }
         await this.subscriber.add(sub)
         if (onMessage !== undefined) {
@@ -556,27 +554,23 @@ export class StreamrClient {
         return this.node.getNode()
     }
 
-    getEntryPoints(): PeerDescriptor[] {
-        return this.node.getEntryPoints()
-    }
-
     async setProxies(
         streamDefinition: StreamDefinition,
-        nodeDescriptors: JsonPeerDescriptor[],
+        proxyNodes: JsonPeerDescriptor[],
         direction: ProxyDirection,
         connectionCount?: number
     ): Promise<void> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        await this.node.setProxies(streamPartId, nodeDescriptors, direction, connectionCount)
+        await this.node.setProxies(streamPartId, proxyNodes, direction, connectionCount)
     }
 
     /**
-     * Used to set known entry points for a stream. If known are not set they 
+     * Used to set known entry points for a stream partition. If entry points are not set they 
      * will be automatically discovered from the Streamr Network.
     */
-    async setStreamEntryPoints(streamDefinition: StreamDefinition, nodeDescriptors: JsonPeerDescriptor[]): Promise<void> {
+    async setStreamEntryPoints(streamDefinition: StreamDefinition, entryPoints: JsonPeerDescriptor[]): Promise<void> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        await this.node.setStreamEntryPoints(streamPartId, nodeDescriptors)
+        await this.node.setStreamPartEntryPoints(streamPartId, entryPoints)
     }
 
     // --------------------------------------------------------------------------------------------

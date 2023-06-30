@@ -1,6 +1,6 @@
 {
   "name": "@streamr/trackerless-network",
-  "version": "0.0.1",
+  "version": "8.5.4",
   "description": "Minimal and extendable implementation of the Streamr Network node.",
   "repository": {
     "type": "git",

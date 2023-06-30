@@ -19,6 +19,6 @@ run_application() {
         { print "\033[38;2;" color "m" substr($0, 1, 1) substr($0, index($0, " "), length($0)); color = default_color }'
 }
 
-run_application broker ./dist/bin/run-entry-point.js &
+run_application broker ./dist/bin/entry-point.js &
 
 wait 

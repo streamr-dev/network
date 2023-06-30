@@ -59,7 +59,6 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
     private streamrNode?: StreamrNode
     private readonly metricsContext: MetricsContext
     private readonly options: NetworkOptions
-    private stopped = false
     private readonly firstConnectionTimeout: number
     private dhtJoinRequired = true
 
@@ -125,10 +124,6 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
         return this.streamrNode!
     }
 
-    getConnectionManager(): ConnectionManager | undefined {
-        return this.connectionManager
-    }
-
     getLayer0DhtNode(): DhtNode {
         return this.layer0DhtNode!
     }
@@ -138,7 +133,6 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
     }
 
     async stop(): Promise<void> {
-        this.stopped = true
         await this.streamrNode!.destroy()
         this.streamrNode = undefined
         this.layer0DhtNode = undefined

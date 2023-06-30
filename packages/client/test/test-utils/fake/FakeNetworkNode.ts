@@ -15,6 +15,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
     readonly subscriptions: Set<StreamPartID> = new Set()
     readonly messageListeners: MessageListener[] = []
     private readonly network: FakeNetwork
+
     constructor(opts: NetworkOptions, network: FakeNetwork) {
         this.id = opts.networkNode!.id!
         this.network = network
@@ -48,7 +49,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
     async waitForJoinAndPublish(msg: StreamMessage, _timeout?: number): Promise<number> {
         const streamPartID = msg.getStreamPartID()
         this.subscriptions.add(streamPartID)
-        this.publish(msg)
+        await this.publish(msg)
         return this.getNeighborsForStreamPart(streamPartID).length
     }
 
@@ -78,8 +79,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    setStreamEntryPoints(_streamPartId: StreamPartID, _peerDescriptors: PeerDescriptor[]): void {
-        return
+    setStreamPartEntryPoints(_streamPartId: StreamPartID, _peerDescriptors: PeerDescriptor[]): void {
     }
 
     // eslint-disable-next-line class-methods-use-this

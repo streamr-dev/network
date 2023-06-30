@@ -83,11 +83,11 @@ export const formConfig = ({
                 privateKey
             },
             network: {
-                layer0: {
+                controlLayer: {
                     entryPoints,
                     peerDescriptor,
                 },
-                networkNode: {
+                node: {
                     id: toEthereumAddress(new Wallet(privateKey).address),
                 }
             }
@@ -121,14 +121,14 @@ export const createClient = (
                 privateKey
             },
             network: {
-                layer0: {
-                    ...CONFIG_TEST.network!.layer0!,
+                controlLayer: {
+                    ...CONFIG_TEST.network!.controlLayer!,
                     entryPoints: DEFAULT_ENTRYPOINTS
                 },
-                networkNode:
+                node:
                     merge(
-                        CONFIG_TEST!.network!.networkNode,
-                        clientOptions?.network?.networkNode
+                        CONFIG_TEST!.network!.node,
+                        clientOptions?.network?.node
                     )
             }
         },
