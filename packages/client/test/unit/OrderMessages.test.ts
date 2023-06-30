@@ -66,13 +66,17 @@ const createMessageStream = (...msgs: StreamMessage[]): PushPipeline<StreamMessa
     return result
 }
 
-const createResend = (availableMessages: StreamMessage[]) => {
+const createResend = (availableMessages: StreamMessage[], isError: (from: number) => boolean = () => false) => {
     return jest.fn().mockImplementation(async (_streamPartId: StreamPartID, options: ResendRangeOptions): Promise<PushPipeline<StreamMessage>> => {
         const from = new MessageRef(options.from.timestamp as number, options.from.sequenceNumber!)
         const to = new MessageRef(options.to.timestamp as number, options.to.sequenceNumber!)
-        return createMessageStream(
-            ...availableMessages.filter((msg) => (msg.getMessageRef().compareTo(from) >= 0) && (msg.getMessageRef().compareTo(to) <= 0))
-        )
+        if (!isError(from.timestamp)) {
+            return createMessageStream(
+                ...availableMessages.filter((msg) => (msg.getMessageRef().compareTo(from) >= 0) && (msg.getMessageRef().compareTo(to) <= 0))
+            )
+        } else {
+            throw new Error('mock-error')
+        }
     })
 }
 
@@ -201,29 +205,6 @@ describe('OrderMessages', () => {
         expect(resends.resend).toBeCalledTimes(0)
     })
 
-    it('gap fill error', async () => {
-        const msgs = await createMessages(7)
-        const missing1 = msgs.filter((m) => m.getTimestamp() === 2000)
-        const missing2 = msgs.filter((m) => m.getTimestamp() === 4000)
-        const missing3 = msgs.filter((m) => m.getTimestamp() === 6000)
-        const resends = {
-            resend: jest.fn()
-                .mockResolvedValueOnce(createMessageStream(...missing1))
-                // 5 error responses (CONFIG.maxGapRequests)
-                .mockRejectedValueOnce(new Error('mock-error'))
-                .mockRejectedValueOnce(new Error('mock-error'))
-                .mockRejectedValueOnce(new Error('mock-error'))
-                .mockRejectedValueOnce(new Error('mock-error'))
-                .mockRejectedValueOnce(new Error('mock-error'))
-        }
-        const orderMessages = createOrderMessages(resends)
-        await orderMessages.addMessages(fromArray(without(msgs, ...missing1.concat(missing2).concat(missing3))))
-        // the gap of missing3 had accumulated to the internal heap before
-        // the error occurred and therefore that gap is ignored
-        expect(await collect(orderMessages)).toEqual(without(msgs, ...missing2.concat(missing3)))
-        expect(resends.resend).toBeCalledTimes(1 + CONFIG.maxGapRequests)
-    })
-
     it('aborts resends when destroyed', async () => {
         const msgs = await createMessages(5)
         const missing = msgs.filter((m) => m.getTimestamp() === 3000)
@@ -249,20 +230,16 @@ describe('OrderMessages', () => {
 
     describe('strategy', () => {
 
-        const UNAVAILABLE = [5000, 6000]
         const CHUNK1 = [1000, 3000, 8000, 10000]
         const CHUNK2 = [11000, 12000, 14000]
 
         let allMessages: StreamMessage[]
         let outputMessages: StreamMessage[]
-        let resends: { resend: jest.Mock<Promise<PushPipeline<StreamMessage>>> }
 
         beforeEach(async () => {
             allMessages = await createMessages(14)
             outputMessages = []
-            resends = {
-                resend: createResend(allMessages.filter((m) => !UNAVAILABLE.includes(m.getTimestamp())))
-            }
+
         })
 
         const startConsuming = (orderMessages: OrderMessages) => {
@@ -283,40 +260,100 @@ describe('OrderMessages', () => {
             }())
         }
 
-        it('full', async () => {
-            const onUnfillableGap = jest.fn()
-            const orderMessages = createOrderMessages(resends, {
-                gapFillStrategy: 'full'
-            }, undefined, onUnfillableGap)
-            startConsuming(orderMessages)
-            await addMessages(orderMessages)
-            const expectedMessages = allMessages.filter((m) => !UNAVAILABLE.includes(m.getTimestamp()))
-            expect(outputMessages).toEqual(expectedMessages)
-            expect(resends.resend).toBeCalledTimes(3 + CONFIG.maxGapRequests)
-            expect(onUnfillableGap).toBeCalledTimes(1)
-            expect(onUnfillableGap.mock.calls[0][0].from.messageId.timestamp).toBe(4000)
-            expect(onUnfillableGap.mock.calls[0][0].to.messageId.timestamp).toBe(7000)
+        describe('full', () => {
+
+            it('happy path', async () => {
+                const UNAVAILABLE = [5000, 6000]
+                const onUnfillableGap = jest.fn()
+                const availableMessages = allMessages.filter((m) => !UNAVAILABLE.includes(m.getTimestamp()))
+                const resends = {
+                    resend: createResend(availableMessages)
+                }
+                const orderMessages = createOrderMessages(resends, {
+                    gapFillStrategy: 'full'
+                }, undefined, onUnfillableGap)
+                startConsuming(orderMessages)
+                await addMessages(orderMessages)
+                expect(outputMessages).toEqual(availableMessages)
+                expect(resends.resend).toBeCalledTimes(3 + CONFIG.maxGapRequests)
+                expect(onUnfillableGap).toBeCalledTimes(1)
+                expect(onUnfillableGap.mock.calls[0][0].from.messageId.timestamp).toBe(4000)
+                expect(onUnfillableGap.mock.calls[0][0].to.messageId.timestamp).toBe(7000)
+            })
+
+            it('error', async () => {
+                const ERROR = [4000, 5000, 6000, 7000]
+                const onUnfillableGap = jest.fn()
+                const availableMessages = allMessages.filter((m) => !ERROR.includes(m.getTimestamp()))
+                const resends = {
+                    resend: createResend(availableMessages, (from) => ERROR.includes(from))
+                }
+                const orderMessages = createOrderMessages(resends, {
+                    gapFillStrategy: 'full'
+                }, undefined, onUnfillableGap)
+                startConsuming(orderMessages)
+                await addMessages(orderMessages)
+                expect(outputMessages).toEqual(availableMessages)
+                expect(resends.resend).toBeCalledTimes(3 + CONFIG.maxGapRequests)
+                expect(onUnfillableGap).toBeCalledTimes(1)
+                expect(onUnfillableGap.mock.calls[0][0].from.messageId.timestamp).toBe(3000)
+                expect(onUnfillableGap.mock.calls[0][0].to.messageId.timestamp).toBe(8000)
+            })
         })
 
-        it('light', async () => {
-            const onUnfillableGap = jest.fn()
-            const orderMessages = createOrderMessages(resends, {
-                gapFillStrategy: 'light'
-            }, undefined, onUnfillableGap)
-            startConsuming(orderMessages)
-            await addMessages(orderMessages)
-            const expectedMessages = allMessages.filter(
-                // ignore the gap 8000-10000 as it has accumulated while we process the unfillable
-                // gap of 3000-8000
-                (m) => (!UNAVAILABLE.includes(m.getTimestamp())) && (m.getTimestamp() !== 9000)
-            )
-            expect(outputMessages).toEqual(expectedMessages)
-            expect(resends.resend).toBeCalledTimes(2 + CONFIG.maxGapRequests)
-            expect(onUnfillableGap).toBeCalledTimes(2)
-            expect(onUnfillableGap.mock.calls[0][0].from.messageId.timestamp).toBe(4000)
-            expect(onUnfillableGap.mock.calls[0][0].to.messageId.timestamp).toBe(7000)
-            expect(onUnfillableGap.mock.calls[1][0].from.messageId.timestamp).toBe(8000)
-            expect(onUnfillableGap.mock.calls[1][0].to.messageId.timestamp).toBe(10000)
+        describe('light', () => {
+
+            it('happy path', async () => {
+                const UNAVAILABLE = [5000, 6000]
+                const onUnfillableGap = jest.fn()
+                const availableMessages = allMessages.filter((m) => !UNAVAILABLE.includes(m.getTimestamp()))
+                const resends = {
+                    resend: createResend(availableMessages)
+                }
+                const orderMessages = createOrderMessages(resends, {
+                    gapFillStrategy: 'light'
+                }, undefined, onUnfillableGap)
+                startConsuming(orderMessages)
+                await addMessages(orderMessages)
+                const expectedMessages = allMessages.filter(
+                    // ignore the gap 8000-10000 as it has accumulated while we process the unfillable
+                    // gap of 3000-8000
+                    (m) => !UNAVAILABLE.includes(m.getTimestamp()) && (m.getTimestamp() !== 9000)
+                )
+                expect(outputMessages).toEqual(expectedMessages)
+                expect(resends.resend).toBeCalledTimes(2 + CONFIG.maxGapRequests)
+                expect(onUnfillableGap).toBeCalledTimes(2)
+                expect(onUnfillableGap.mock.calls[0][0].from.messageId.timestamp).toBe(4000)
+                expect(onUnfillableGap.mock.calls[0][0].to.messageId.timestamp).toBe(7000)
+                expect(onUnfillableGap.mock.calls[1][0].from.messageId.timestamp).toBe(8000)
+                expect(onUnfillableGap.mock.calls[1][0].to.messageId.timestamp).toBe(10000)
+            })
+
+            it('error', async () => {
+                const ERROR = [4000, 5000, 6000, 7000]
+                const onUnfillableGap = jest.fn()
+                const availableMessages = allMessages.filter((m) => !ERROR.includes(m.getTimestamp()))
+                const resends = {
+                    resend: createResend(availableMessages)
+                }
+                const orderMessages = createOrderMessages(resends, {
+                    gapFillStrategy: 'light'
+                }, undefined, onUnfillableGap)
+                startConsuming(orderMessages)
+                await addMessages(orderMessages)
+                const expectedMessages = allMessages.filter(
+                    // ignore the gap 8000-10000 as it has accumulated while we process the unfillable
+                    // gap of 3000-8000
+                    (m) => !ERROR.includes(m.getTimestamp()) && (m.getTimestamp() !== 9000)
+                )
+                expect(outputMessages).toEqual(expectedMessages)
+                expect(resends.resend).toBeCalledTimes(2 + CONFIG.maxGapRequests)
+                expect(onUnfillableGap).toBeCalledTimes(2)
+                expect(onUnfillableGap.mock.calls[0][0].from.messageId.timestamp).toBe(3000)
+                expect(onUnfillableGap.mock.calls[0][0].to.messageId.timestamp).toBe(8000)
+                expect(onUnfillableGap.mock.calls[1][0].from.messageId.timestamp).toBe(8000)
+                expect(onUnfillableGap.mock.calls[1][0].to.messageId.timestamp).toBe(10000)
+            })
         })
     })
 
