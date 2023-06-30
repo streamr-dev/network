@@ -202,12 +202,13 @@ describe('OrderMessages', () => {
                 .mockRejectedValueOnce(new Error('mock-error'))
                 .mockRejectedValueOnce(new Error('mock-error'))
                 .mockRejectedValueOnce(new Error('mock-error'))
-                .mockResolvedValueOnce(createMessageStream(...missing3))
         }
         const orderMessages = createOrderMessages(resends)
         await orderMessages.addMessages(fromArray(without(msgs, ...missing1.concat(missing2).concat(missing3))))
-        expect(await collect(orderMessages)).toEqual(without(msgs, ...missing2))
-        expect(resends.resend).toBeCalledTimes(2 + CONFIG.maxGapRequests)
+        // the gap of missing3 had accumulated to the internal heap before
+        // the error occurred and therefore that gap is ignored
+        expect(await collect(orderMessages)).toEqual(without(msgs, ...missing2.concat(missing3)))
+        expect(resends.resend).toBeCalledTimes(1 + CONFIG.maxGapRequests)
     })
 
     it('aborts resends when destroyed', async () => {

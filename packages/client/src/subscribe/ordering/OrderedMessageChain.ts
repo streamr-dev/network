@@ -107,25 +107,20 @@ export class OrderedMessageChain {
         }
     }
 
-    resolveMessages(to: MessageRef): void {
-        if ((this.lastOrderedMsg === undefined) || (this.lastOrderedMsg.getMessageRef().compareTo(to) < 0)) {
-            this.consumePendingOrderedMessages(
-                (msg) => {
-                    if (this.isNextOrderedMessage(msg)) {
-                        return true
-                    } else if (msg.getMessageRef().compareTo(to) <= 0) {
-                        const gap = {
-                            from: this.lastOrderedMsg!,
-                            to: msg
-                        }
-                        this.eventEmitter.emit('unfillableGap', gap)
-                        return true
-                    } else {
-                        return false
+    resolveMessages(): void {
+        this.consumePendingOrderedMessages(
+            (msg) => {
+                if (!this.isNextOrderedMessage(msg)) {
+                    const gap = {
+                        from: this.lastOrderedMsg!,
+                        to: msg
                     }
+                    this.eventEmitter.emit('unfillableGap', gap)
                 }
-            )
-        }
+                return true
+            }, 
+            false
+        )
     }
 
     async waitUntilIdle(): Promise<void> {
@@ -145,14 +140,16 @@ export class OrderedMessageChain {
         }
     }
 
-    private consumePendingOrderedMessages(isConsumable: (msg: StreamMessage) => boolean) {
+    private consumePendingOrderedMessages(isConsumable: (msg: StreamMessage) => boolean, gapCheckEnabled = true) {
         while (!this.pendingMsgs.isEmpty() && isConsumable(this.pendingMsgs.peek()!)) {
             const next = this.pendingMsgs.pop()!
             this.lastOrderedMsg = next
             this.eventEmitter.emit('orderedMessageAdded', next)
             this.checkGapResolved()
         }
-        this.checkGapFound()
+        if (gapCheckEnabled) {
+            this.checkGapFound()
+        }
     }
 
     private checkGapFound() {

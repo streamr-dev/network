@@ -164,7 +164,7 @@ describe('GapFiller', () => {
             )
             addMessages([1, 3, 5])
             await expectOrderedMessages([1, 3, 5])
-            expect(getStorageNodeAddresses).toBeCalledTimes(2)
+            expect(getStorageNodeAddresses).toBeCalledTimes(1)
             expect(resend).not.toBeCalled()
         })
 

@@ -74,9 +74,9 @@ export class GapFiller {
                  * before we reach this line. Alternatively the callback may have been called by the chain because
                  * it received the missing messages from another source (i.e. the real-time pipeline). But if
                  * this task has not been aborted by either of these reasons, we resolve the gap manually as we
-                 * don't try to fill it anymore.
+                 * don't try to fill it anymore. We also drop all accumulated gaps.
                  */
-                this.chain.resolveMessages(gap.to.getMessageRef())
+                this.chain.resolveMessages()
             })
         } catch (err: any) {
             this.onError(err, gap)

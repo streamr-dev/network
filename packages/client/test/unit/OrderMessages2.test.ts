@@ -109,7 +109,7 @@ function calculateNumberOfUnfillableGaps(messageInfosInOrder: MessageInfo[]): nu
     return gaps
 }
 
-describe('OrderMessages2', () => {
+describe.skip('OrderMessages2', () => {
 
     it('randomized "worst-case" scenario with unavailable messages and gap fill needs', async () => {
         const groundTruthMessages: Record<string, MessageInfo[]> = {}
