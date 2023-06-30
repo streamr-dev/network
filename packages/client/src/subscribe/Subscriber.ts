@@ -1,7 +1,6 @@
 import { StreamPartID } from '@streamr/protocol'
 import { Logger } from '@streamr/utils'
 import { Lifecycle, scoped } from 'tsyringe'
-import { JsonPeerDescriptor } from '../Config'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { MessagePipelineFactory } from './MessagePipelineFactory'
@@ -26,15 +25,14 @@ export class Subscriber {
         this.logger = loggerFactory.createLogger(module)
     }
 
-    getOrCreateSubscriptionSession(streamPartId: StreamPartID, knownEntryPoints?: JsonPeerDescriptor[]): SubscriptionSession {
+    getOrCreateSubscriptionSession(streamPartId: StreamPartID): SubscriptionSession {
         if (this.subSessions.has(streamPartId)) {
             return this.getSubscriptionSession(streamPartId)!
         }
         const subSession = new SubscriptionSession(
             streamPartId,
             this.messagePipelineFactory,
-            this.node,
-            knownEntryPoints
+            this.node
         )
 
         this.subSessions.set(streamPartId, subSession)
@@ -45,8 +43,8 @@ export class Subscriber {
         return subSession
     }
 
-    async add(sub: Subscription, knownEntryPoints?: JsonPeerDescriptor[]): Promise<void> {
-        const subSession = this.getOrCreateSubscriptionSession(sub.streamPartId, knownEntryPoints)
+    async add(sub: Subscription): Promise<void> {
+        const subSession = this.getOrCreateSubscriptionSession(sub.streamPartId)
 
         // add subscription to subSession
         try {

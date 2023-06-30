@@ -10,6 +10,8 @@ jest.setTimeout(50000)
 
 const mqttPort1 = 13551
 const mqttPort2 = 13552
+const networkLayerPort1 = 44400
+const networkLayerPort2 = 44401
 
 const createMqttClient = (mqttPort: number) => {
     return mqtt.connectAsync(`mqtt://localhost:${mqttPort}`)
@@ -44,7 +46,7 @@ describe('broker subscriptions', () => {
                     port: mqttPort1
                 }
             },
-            networkLayerWsServerPort: 44400
+            networkLayerWsServerPort: networkLayerPort1
         })
         broker2 = await startBroker({
             privateKey: broker2User.privateKey,
@@ -53,7 +55,7 @@ describe('broker subscriptions', () => {
                     port: mqttPort2
                 }
             },
-            networkLayerWsServerPort: 44401
+            networkLayerWsServerPort: networkLayerPort2
         })
 
         client1 = await createClient(await fetchPrivateKeyWithGas())
@@ -115,7 +117,6 @@ describe('broker subscriptions', () => {
         await mqttClient1.unsubscribe(freshStream1.id)
 
         await waitForCondition(async () => (await getStreamParts(broker2)).length === 2)
-        await waitForCondition(async () => (await getStreamParts(broker1)).length === 1)
 
         expect((await getStreamParts(broker1))).toIncludeSameMembers([freshStream2.id + '#0'])
         expect((await getStreamParts(broker2))).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])

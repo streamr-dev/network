@@ -12,6 +12,7 @@ import { Broker, createBroker } from '../src/broker'
 import { Config } from '../src/config/config'
 import { StreamPartID } from '@streamr/protocol'
 import { EthereumAddress, toEthereumAddress, merge } from '@streamr/utils'
+import { NodeType } from 'streamr-client'
 import { v4 as uuid } from 'uuid'
 
 export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
@@ -27,12 +28,12 @@ interface TestConfig {
     entryPoints?: JsonPeerDescriptor[]
 }
 
-const DEFAULT_ENTRYPOINTS = [{
-    kademliaId: "entryPointBroker",
-    type: 0,
+export const DEFAULT_ENTRYPOINTS = [{
+    id: "entrypoint",
+    type: NodeType.NODEJS,
     websocket: {
         ip: "127.0.0.1",
-        port: 40401
+        port: 40500
     }
 }]
 
@@ -64,15 +65,15 @@ export const formConfig = ({
         }
     }
     const peerDescriptor = networkLayerWsServerPort ? {
-        kademliaId: uuid(),
-        type: 0,
+        id: uuid(),
+        type: NodeType.NODEJS,
         websocket: {
             ip: '127.0.0.1',
             port: networkLayerWsServerPort
         }
     } : {
-        kademliaId: uuid(),
-        type: 0,
+        id: uuid(),
+        type: NodeType.NODEJS,
     }
 
     return {
@@ -82,11 +83,11 @@ export const formConfig = ({
                 privateKey
             },
             network: {
-                layer0: {
+                controlLayer: {
                     entryPoints,
                     peerDescriptor,
                 },
-                networkNode: {
+                node: {
                     id: toEthereumAddress(new Wallet(privateKey).address),
                 }
             }
@@ -120,17 +121,14 @@ export const createClient = async (
                 privateKey
             },
             network: {
-                layer0: {
-                    ...CONFIG_TEST.network!.layer0!,
-                    peerDescriptor: {
-                        kademliaId: uuid(),
-                        type: 0
-                    }
+                controlLayer: {
+                    ...CONFIG_TEST.network!.controlLayer!,
+                    entryPoints: DEFAULT_ENTRYPOINTS
                 },
-                networkNode:
+                node:
                     merge(
-                        CONFIG_TEST!.network!.networkNode,
-                        clientOptions?.network?.networkNode
+                        CONFIG_TEST!.network!.node,
+                        clientOptions?.network?.node
                     )
             }
         },

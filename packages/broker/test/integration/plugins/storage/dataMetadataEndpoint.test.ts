@@ -12,6 +12,7 @@ import { toEthereumAddress } from '@streamr/utils'
 
 jest.setTimeout(30000)
 const httpPort1 = 12371
+const networkLayerPort = 40412
 
 const httpGet = (url: string): Promise<[number, string]> => { // return tuple is of form [statusCode, body]
     return new Promise((resolve, reject) => {
@@ -26,23 +27,18 @@ const httpGet = (url: string): Promise<[number, string]> => { // return tuple is
     })
 }
 
-describe('DataMetadataEndpoints', () => {
+describe('dataMetadataEndpoints', () => {
     let storageNode: Broker
     let client1: StreamrClient
     let storageNodeAccount: Wallet
-    let stream: Stream
 
     beforeAll(async () => {
         storageNodeAccount = new Wallet(await fetchPrivateKeyWithGas())
-
         client1 = await createClient(await fetchPrivateKeyWithGas())
-
-        stream = await createTestStream(client1, module)
-
         storageNode = await startStorageNode(
             storageNodeAccount.privateKey,
             httpPort1,
-            40412
+            networkLayerPort
         )
     })
 
@@ -76,21 +72,23 @@ describe('DataMetadataEndpoints', () => {
         expect(res.lastMessage).toEqual(0)
     })
 
-    it('returns (non-zero) metadata for existing stream', async () => {
-        await stream.addToStorageNode(toEthereumAddress(storageNodeAccount.address))
+    async function setUpStream(): Promise<Stream> {	
+        const freshStream = await createTestStream(client1, module)	
+        await freshStream.addToStorageNode(toEthereumAddress(storageNodeAccount.address))	
+        return freshStream	
+    }
 
+    it('returns (non-zero) metadata for existing stream', async () => {
+        const stream = await setUpStream()
         await client1.publish(stream.id, {
             key: 1
         })
-
         await client1.publish(stream.id, {
             key: 2
         })
-
         await client1.publish(stream.id, {
             key: 3
         })
-
         const lastItem = await client1.publish(stream.id, {
             key: 4
         })

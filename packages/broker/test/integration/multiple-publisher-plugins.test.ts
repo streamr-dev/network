@@ -14,6 +14,7 @@ const MESSAGE_COUNT = 120
 const mqttPort = 13611
 const wsPort = 13612
 const httpPort = 13613
+const networkLayerPort = 44409
 
 const sendPostRequest = (url: string, content: object): Promise<unknown> => {
     return fetch(url, {
@@ -127,9 +128,9 @@ describe('multiple publisher plugins', () => {
                 },
                 http: {},
             },
-            networkLayerWsServerPort: 44409
+            networkLayerWsServerPort: networkLayerPort
         })
-    }, 15000)
+    })
 
     afterEach(async () => {
         await broker?.stop()

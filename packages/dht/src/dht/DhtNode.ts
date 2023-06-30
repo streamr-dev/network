@@ -40,6 +40,7 @@ import { LocalDataStore } from './store/LocalDataStore'
 import { IceServer } from '../connection/WebRTC/WebRtcConnector'
 import { ExternalApi } from './ExternalApi'
 import { RemoteExternalApi } from './RemoteExternalApi'
+import { UUID } from '../exports'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -75,10 +76,10 @@ export interface DhtNodeOptions {
     nodeName?: string
     rpcRequestTimeout?: number
     iceServers?: IceServer[]
-    webrtcDisallowPrivateAddresses?: boolean
+    webrtcAllowPrivateAddresses?: boolean
     webrtcDatachannelBufferThresholdLow?: number
     webrtcDatachannelBufferThresholdHigh?: number
-    newWebrtcConnectionTimeout?: number
+    webrtcNewConnectionTimeout?: number
     maxConnections?: number
 }
 
@@ -96,20 +97,20 @@ export class DhtNodeConfig {
     storeMaxTtl = 60000
     storeNumberOfCopies = 5
     metricsContext = new MetricsContext()
+    peerIdString = new UUID().toString()
 
     transportLayer?: ITransport
     peerDescriptor?: PeerDescriptor
     entryPoints?: PeerDescriptor[]
     webSocketHost?: string
     webSocketPort?: number
-    peerIdString?: string
     nodeName?: string
     rpcRequestTimeout?: number
     iceServers?: IceServer[]
-    webrtcDisallowPrivateAddresses?: boolean
+    webrtcAllowPrivateAddresses?: boolean
     webrtcDatachannelBufferThresholdLow?: number
     webrtcDatachannelBufferThresholdHigh?: number
-    newWebrtcConnectionTimeout?: number
+    webrtcNewConnectionTimeout?: number
 
     constructor(conf: Partial<DhtNodeOptions>) {
         // assign given non-undefined config vars over defaults
@@ -195,10 +196,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 entryPoints: this.config.entryPoints,
                 iceServers: this.config.iceServers,
                 metricsContext: this.config.metricsContext,
-                webrtcDisallowPrivateAddresses: this.config.webrtcDisallowPrivateAddresses,
+                webrtcAllowPrivateAddresses: this.config.webrtcAllowPrivateAddresses,
                 webrtcDatachannelBufferThresholdLow: this.config.webrtcDatachannelBufferThresholdLow,
                 webrtcDatachannelBufferThresholdHigh: this.config.webrtcDatachannelBufferThresholdHigh,
-                newWebrtcConnectionTimeout: this.config.newWebrtcConnectionTimeout,
+                webrtcNewConnectionTimeout: this.config.webrtcNewConnectionTimeout,
                 nodeName: this.getNodeName(),
                 maxConnections: this.config.maxConnections
             }

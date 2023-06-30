@@ -1,3 +1,4 @@
+import { NodeType } from '@streamr/dht'
 import { createStrictConfig, JsonPeerDescriptor, redactConfig } from '../../src/Config'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { generateEthereumAccount } from '../../src/Ethereum'
@@ -20,14 +21,14 @@ describe('Config', () => {
             expect(() => {
                 return createStrictConfig({
                     network: {
-                        layer0: {
+                        controlLayer: {
                             entryPoints: [{
-                                kademliaId: 'test'
+                                id: 'test'
                             }]
                         }
                     }
                 } as any)
-            }).toThrow("/network/layer0/entryPoints/0 must have required property 'type'")
+            }).toThrow('/network/controlLayer/entryPoints/0 must have required property \'type\'')
         })
 
         it('empty array', () => {
@@ -48,12 +49,12 @@ describe('Config', () => {
                 expect(() => {
                     return createStrictConfig({
                         network: {
-                            layer0: {
+                            controlLayer: {
                                 webSocketPort: 'aaaa'
                             }
                         }
                     } as any)
-                }).toThrow('/network/layer0/webSocketPort must be number')
+                }).toThrow('/network/controlLayer/webSocketPort must be number')
             })
 
             it('ajv-format', () => {
@@ -105,8 +106,8 @@ describe('Config', () => {
         it('can override network.entryPoints arrays', () => {
             const clientDefaults = createStrictConfig()
             const clientOverrides = createStrictConfig(CONFIG_TEST)
-            expect(clientOverrides.network.layer0!.entryPoints).not.toEqual(clientDefaults.network.layer0!.entryPoints)
-            expect(clientOverrides.network.layer0!.entryPoints).toEqual(CONFIG_TEST.network!.layer0!.entryPoints)
+            expect(clientOverrides.network.controlLayer!.entryPoints).not.toEqual(clientDefaults.network.controlLayer!.entryPoints)
+            expect(clientOverrides.network.controlLayer!.entryPoints).toEqual(CONFIG_TEST.network!.controlLayer!.entryPoints)
         })
 
         it('network can be empty', () => {
@@ -115,13 +116,13 @@ describe('Config', () => {
                 network: {}
             })
             expect(clientOverrides.network).toEqual(clientDefaults.network)
-            expect(clientOverrides.network.layer0!.entryPoints![0].kademliaId).toEqual('productionEntryPoint1')
+            expect(clientOverrides.network.controlLayer!.entryPoints![0].id).toEqual('productionEntryPoint1')
         })
 
         it('can override entryPoints', () => {
             const entryPoints = [{
-                kademliaId: '0xFBB6066c44bc8132bA794C73f58F391273E3bdA1',
-                type: 0,
+                id: '0xFBB6066c44bc8132bA794C73f58F391273E3bdA1',
+                type: NodeType.NODEJS,
                 websocket: {
                     ip: 'brubeck3.streamr.network',
                     port: 30401
@@ -129,14 +130,14 @@ describe('Config', () => {
             }]
             const clientOverrides = createStrictConfig({
                 network: {
-                    layer0: {
+                    controlLayer: {
                         entryPoints
                     }
                 }
             })
-            expect(clientOverrides.network.layer0!.entryPoints!).toEqual(entryPoints)
-            expect(clientOverrides.network.layer0!.entryPoints!).not.toBe(entryPoints)
-            expect((clientOverrides.network.layer0! as JsonPeerDescriptor[])[0]).not.toBe(entryPoints[0])
+            expect(clientOverrides.network.controlLayer!.entryPoints!).toEqual(entryPoints)
+            expect(clientOverrides.network.controlLayer!.entryPoints!).not.toBe(entryPoints)
+            expect((clientOverrides.network.controlLayer! as JsonPeerDescriptor[])[0]).not.toBe(entryPoints[0])
         })
     })
 

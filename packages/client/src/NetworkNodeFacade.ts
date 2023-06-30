@@ -20,15 +20,14 @@ export interface NetworkNodeStub {
     getNodeId: () => string
     addMessageListener: (listener: (msg: StreamMessage) => void) => void
     removeMessageListener: (listener: (msg: StreamMessage) => void) => void
-    subscribe: (streamPartId: StreamPartID, entryPointDescriptors?: PeerDescriptor[]) => Promise<void>
-    subscribeAndWaitForJoin: (streamPart: StreamPartID, entryPointDescriptors?: PeerDescriptor[], timeout?: number) => Promise<number>
-    waitForJoinAndPublish: (msg: StreamMessage, entryPointDescriptors?: PeerDescriptor[], timeout?: number) => Promise<number>
+    subscribe: (streamPartId: StreamPartID) => Promise<void>
+    subscribeAndWaitForJoin: (streamPart: StreamPartID, timeout?: number) => Promise<number>
+    waitForJoinAndPublish: (msg: StreamMessage, timeout?: number) => Promise<number>
     unsubscribe: (streamPartId: StreamPartID) => void
-    publish: (streamMessage: StreamMessage, entryPointDescriptors?: PeerDescriptor[]) => Promise<void>
+    publish: (streamMessage: StreamMessage) => Promise<void>
     getStreamParts: () => StreamPartID[]
     getNeighbors: () => string[]
     getNeighborsForStreamPart: (streamPartId: StreamPartID) => ReadonlyArray<string>
-    // getRtt: (nodeId: string) => number | undefined
     setExtraMetadata: (metadata: Record<string, unknown>) => void
     getMetricsContext: () => MetricsContext
     getDiagnosticInfo: () => Record<string, unknown>
@@ -49,6 +48,7 @@ export interface NetworkNodeStub {
     ) => Promise<void>
     /** @internal */
     findPeer: (id: Uint8Array) => Promise<PeerDescriptor[]>
+    setStreamPartEntryPoints: (streamPartId: StreamPartID, peerDescriptors: PeerDescriptor[]) => void
 }
 
 export interface Events {
@@ -101,12 +101,12 @@ export class NetworkNodeFacade {
     }
 
     private async getNetworkOptions(): Promise<NetworkOptions> {
-        let id = this.config.network!.networkNode!.id
+        let id = this.config.network!.node!.id
 
         const entryPoints = this.getEntryPoints()
 
-        const ownPeerDescriptor: PeerDescriptor | undefined = this.config.network.layer0!.peerDescriptor ? 
-            this.jsonToPeerDescriptor(this.config.network.layer0!.peerDescriptor) : undefined
+        const ownPeerDescriptor: PeerDescriptor | undefined = this.config.network.controlLayer!.peerDescriptor ? 
+            this.jsonToPeerDescriptor(this.config.network.controlLayer!.peerDescriptor) : undefined
 
         if (id == null || id === '') {
             id = await this.generateId()
@@ -119,12 +119,12 @@ export class NetworkNodeFacade {
 
         return {
             layer0: {
-                ...this.config.network.layer0,
+                ...this.config.network.controlLayer,
                 entryPoints,
                 peerDescriptor: ownPeerDescriptor
             },
             networkNode: {
-                ...this.config.network.networkNode,
+                ...this.config.network.node,
                 id
             },
             metricsContext: new MetricsContext()
@@ -135,8 +135,8 @@ export class NetworkNodeFacade {
         return {
             ...jsonPeerDescriptor,
             websocket: jsonPeerDescriptor.websocket,
-            kademliaId: PeerID.fromString(jsonPeerDescriptor!.kademliaId).value,
-            nodeName: jsonPeerDescriptor!.kademliaId,
+            kademliaId: PeerID.fromString(jsonPeerDescriptor!.id).value,
+            nodeName: jsonPeerDescriptor!.id,
         }
     }
 
@@ -161,17 +161,17 @@ export class NetworkNodeFacade {
      * Subsequent calls to getNode/start will fail.
      */
     private destroy = pOnce(async () => {
-        const network = this.cachedNode
+        const node = this.cachedNode
         this.cachedNode = undefined
         // stop node only if started or in progress
-        if (network && this.startNodeCalled) {
+        if (node && this.startNodeCalled) {
             if (!this.startNodeComplete) {
                 // wait for start to finish before stopping node
                 const startNodeTask = this.startNodeTask()
                 this.startNodeTask.reset() // allow subsequent calls to fail
                 await startNodeTask
             }
-            await network.stop()
+            await node.stop()
         }
         this.startNodeTask.reset() // allow subsequent calls to fail
     })
@@ -214,7 +214,7 @@ export class NetworkNodeFacade {
      * but will be sync in case that node is already started.
      * Zalgo intentional. See below.
      */
-    async publishToNode(streamMessage: StreamMessage, knownEntryPoints: PeerDescriptor[]): Promise<void> {
+    async publishToNode(streamMessage: StreamMessage): Promise<void> {
         // NOTE: function is intentionally not async for performance reasons.
         // Will call cachedNode.publish immediately if cachedNode is set.
         // Otherwise will wait for node to start.
@@ -223,22 +223,22 @@ export class NetworkNodeFacade {
             // use .then instead of async/await so
             // this.cachedNode.publish call can be sync
             return this.startNodeTask().then((node) =>
-                node.publish(streamMessage, knownEntryPoints)
+                node.publish(streamMessage)
             )
         }
-        return this.cachedNode!.publish(streamMessage, knownEntryPoints)
+        return this.cachedNode!.publish(streamMessage)
     }
-    
+
     async setProxies(
         streamPartId: StreamPartID,
-        nodeDescriptors: JsonPeerDescriptor[],
+        proxyNodes: JsonPeerDescriptor[],
         direction: ProxyDirection,
         connectionCount?: number
     ): Promise<void> {
         if (this.isStarting()) {
             await this.startNodeTask(false)
         }
-        const peerDescriptors = nodeDescriptors.map(this.jsonToPeerDescriptor)
+        const peerDescriptors = proxyNodes.map(this.jsonToPeerDescriptor)
         await this.cachedNode!.setProxies(
             streamPartId,
             peerDescriptors,
@@ -246,6 +246,14 @@ export class NetworkNodeFacade {
             () => this.authentication.getAddress(),
             connectionCount
         )
+    }
+
+    async setStreamPartEntryPoints(streamPartId: StreamPartID, nodeDescriptors: JsonPeerDescriptor[]): Promise<void> {
+        if (this.isStarting()) {
+            await this.startNodeTask(false)
+        }
+        const peerDescriptors = nodeDescriptors.map(this.jsonToPeerDescriptor)
+        this.cachedNode!.setStreamPartEntryPoints(streamPartId, peerDescriptors)
     }
 
     private isStarting(): boolean {
@@ -257,7 +265,6 @@ export class NetworkNodeFacade {
     }
 
     getEntryPoints(): PeerDescriptor[] {
-        return entryPointTranslator(this.config.network.layer0!.entryPoints!)
+        return entryPointTranslator(this.config.network.controlLayer!.entryPoints!)
     }
 }
-

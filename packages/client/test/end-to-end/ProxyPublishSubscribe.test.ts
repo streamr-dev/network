@@ -2,6 +2,7 @@ import { createTestStream, createTestClient } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
+import { NodeType } from '@streamr/dht'
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { wait } from '@streamr/utils'
 import { toStreamPartID } from '@streamr/protocol'
@@ -29,16 +30,16 @@ describe('PubSub with proxy connections', () => {
     const proxyNodePort2 = 14232
 
     const proxyNodeDescriptor1: JsonPeerDescriptor = {
-        kademliaId: proxyNodeId1,
-        type: 0,
+        id: proxyNodeId1,
+        type: NodeType.NODEJS,
         websocket: {
             ip: 'localhost',
             port: proxyNodePort1
         }
     }
     const proxyNodeDescriptor2: JsonPeerDescriptor = {
-        kademliaId: proxyNodeId2,
-        type: 0,
+        id: proxyNodeId2,
+        type: NodeType.NODEJS,
         websocket: {
             ip: 'localhost',
             port: proxyNodePort2

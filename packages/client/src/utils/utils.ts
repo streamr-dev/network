@@ -115,11 +115,9 @@ export class MaxSizedSet<T> {
 export function entryPointTranslator(json: JsonPeerDescriptor[]): PeerDescriptor[] {
     return json.map((ep: JsonPeerDescriptor) => {
         const peerDescriptor: PeerDescriptor = {
-            kademliaId: PeerID.fromString(ep.kademliaId).value,
+            kademliaId: PeerID.fromString(ep.id).value,
             type: ep.type,
             openInternet: ep.openInternet,
-            udp: ep.udp,
-            tcp: ep.tcp,
             websocket: ep.websocket
         }
         return peerDescriptor

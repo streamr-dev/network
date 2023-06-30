@@ -48,7 +48,7 @@ describe('Subscriber', () => {
             const sub = await subscriber.subscribe(stream.id)
     
             const publisherNode = environment.startNode(publisherWallet.address)
-            publisherNode.publish(await createMockMessage({
+            await publisherNode.publish(await createMockMessage({
                 stream,
                 publisher: publisherWallet,
                 content: MOCK_CONTENT
@@ -75,12 +75,12 @@ describe('Subscriber', () => {
             const sub = await subscriber.subscribe(stream.id)
     
             const publisherNode = await publisher.getNode()
-            publisherNode.publish(await createMockMessage({
+            await publisherNode.publish(await createMockMessage({
                 stream,
                 publisher: publisherWallet,
                 content: MOCK_CONTENT,
                 encryptionKey: groupKey
-            }), publisher.getEntryPoints())
+            }))
     
             const receivedMessage = await nextValue(sub[Symbol.asyncIterator]())
             expect(receivedMessage!.content).toEqual(MOCK_CONTENT)
@@ -100,7 +100,7 @@ describe('Subscriber', () => {
             const sub = await subscriber.subscribe({ streamId: stream.id, raw: true })
     
             const publisherNode = environment.startNode(publisherWallet.address)
-            publisherNode.publish(await createMockMessage({
+            await publisherNode.publish(await createMockMessage({
                 stream,
                 publisher: publisherWallet,
                 content: MOCK_CONTENT
@@ -127,12 +127,12 @@ describe('Subscriber', () => {
             const sub = await subscriber.subscribe({ streamId: stream.id, raw: true })
     
             const publisherNode = await publisher.getNode()
-            publisherNode.publish(await createMockMessage({
+            await publisherNode.publish(await createMockMessage({
                 stream,
                 publisher: publisherWallet,
                 content: MOCK_CONTENT,
                 encryptionKey: groupKey
-            }), publisher.getEntryPoints())
+            }))
     
             const receivedMessage = await nextValue(sub[Symbol.asyncIterator]())
             expect(receivedMessage!.content).toBeString()

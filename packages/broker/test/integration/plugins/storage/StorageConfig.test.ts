@@ -20,6 +20,7 @@ const localDataCenter = 'datacenter1'
 const keyspace = 'streamr_dev_v2'
 
 const HTTP_PORT = 17770
+const NETWORK_LAYER_PORT = 44405
 
 describe('StorageConfig', () => {
     let cassandraClient: Client
@@ -44,15 +45,12 @@ describe('StorageConfig', () => {
     })
 
     beforeEach(async () => {
-
         client = await createClient(publisherAccount.privateKey)
-
         stream = await createTestStream(client, module)
-
         storageNode = await startStorageNode(
             storageNodeAccount.privateKey,
             HTTP_PORT,
-            44405 
+            NETWORK_LAYER_PORT 
         )
     })
 
@@ -68,7 +66,6 @@ describe('StorageConfig', () => {
         const publishMessage = await client.publish(stream.id, {
             foo: 'bar'
         })
-
         await waitForCondition(async () => {
             const result = await cassandraClient.execute('SELECT COUNT(*) FROM stream_data WHERE stream_id = ? ALLOW FILTERING', [stream.id])
             return (result.first().count > 0)

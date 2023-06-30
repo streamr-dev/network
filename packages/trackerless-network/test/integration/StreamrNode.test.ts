@@ -72,7 +72,9 @@ describe('StreamrNode', () => {
         node1 = new StreamrNode({})
         node2 = new StreamrNode({})
         await node1.start(layer01, transport1, transport1)
+        node1.setStreamPartEntryPoints(STREAM_ID, [peer1])
         await node2.start(layer02, transport2, transport2)
+        node2.setStreamPartEntryPoints(STREAM_ID, [peer1])
     })
 
     it('starts', async () => {
@@ -81,8 +83,8 @@ describe('StreamrNode', () => {
     })
 
     it('Joining stream', async () => {
-        await node1.joinStream(STREAM_ID, [peer1])
-        await node2.joinStream(STREAM_ID, [peer1])
+        await node1.joinStream(STREAM_ID)
+        await node2.joinStream(STREAM_ID)
         await waitForCondition(() => node1.getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length === 1)
         await waitForCondition(() => node2.getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length === 1)
         expect(node1.getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length).toEqual(1)
@@ -90,24 +92,26 @@ describe('StreamrNode', () => {
     })
 
     it('Publishing after joining and waiting for neighbors', async () => {
-        node1.subscribeToStream(STREAM_ID, [peer1])
-        await node2.joinStream(STREAM_ID, [peer1])
+        node1.subscribeToStream(STREAM_ID)
+        await node2.joinStream(STREAM_ID)
         await waitForCondition(() => node1.getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length === 1)
         await waitForCondition(() => node2.getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length === 1)
         await Promise.all([
             waitForEvent3<Events>(node1, 'newMessage'),
-            node2.publishToStream(STREAM_ID, [peer1], msg)
+            node2.publishToStream(STREAM_ID, msg)
         ])
     })
 
     it('multi-stream pub/sub', async () => {
         const stream2 = 'test2'
-        await node1.joinStream(STREAM_ID, [peer1])
-        await node1.joinStream(stream2, [peer1])
-        await node2.joinStream(STREAM_ID, [peer1])
-        await node2.joinStream(stream2, [peer1])
-        node1.subscribeToStream(STREAM_ID, [peer1])
-        node2.subscribeToStream(stream2, [peer1])
+        node1.setStreamPartEntryPoints(stream2, [peer1])
+        node2.setStreamPartEntryPoints(stream2, [peer1])
+        await node1.joinStream(STREAM_ID)
+        await node1.joinStream(stream2)
+        await node2.joinStream(STREAM_ID)
+        await node2.joinStream(stream2)
+        node1.subscribeToStream(STREAM_ID)
+        node2.subscribeToStream(stream2)
         await Promise.all([
             waitForCondition(() => node1.getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length === 1),
             waitForCondition(() => node2.getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length === 1),
@@ -122,14 +126,14 @@ describe('StreamrNode', () => {
         await Promise.all([
             waitForEvent3<Events>(node1, 'newMessage'),
             waitForEvent3<Events>(node2, 'newMessage'),
-            node1.publishToStream(stream2, [peer1], msg2),
-            node2.publishToStream(STREAM_ID, [peer1], msg)
+            node1.publishToStream(stream2, msg2),
+            node2.publishToStream(STREAM_ID, msg)
         ])
     })
 
     it('leaving streams', async () => {
-        await node1.joinStream(STREAM_ID, [peer1])
-        await node2.joinStream(STREAM_ID, [peer1])
+        await node1.joinStream(STREAM_ID)
+        await node2.joinStream(STREAM_ID)
         await Promise.all([
             waitForCondition(() => node1.getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length === 1),
             waitForCondition(() => node2.getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length === 1)

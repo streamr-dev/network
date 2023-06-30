@@ -11,7 +11,6 @@ import { Authentication, AuthenticationInjectionToken, createAuthentication } fr
 import { ConfigInjectionToken, StreamrClientConfig, StrictStreamrClientConfig, createStrictConfig, redactConfig, JsonPeerDescriptor } from './Config'
 import { DestroySignal } from './DestroySignal'
 import { generateEthereumAccount as _generateEthereumAccount } from './Ethereum'
-import { PeerDescriptor } from '@streamr/dht'
 import { ProxyDirection } from '@streamr/trackerless-network'
 import { Message, convertStreamMessageToMessage } from './Message'
 import { MetricsPublisher } from './MetricsPublisher'
@@ -52,12 +51,6 @@ export interface ExtraSubscribeOptions {
      * and decryption _disabled_.
      */
     raw?: boolean
-
-    /**
-     * Configure known entry points to the stream 
-     * (e.g. for private streams, or if you want to avoid DHT lookups).
-     */
-    entryPoints?: JsonPeerDescriptor[]
 }
 
 /**
@@ -204,7 +197,6 @@ export class StreamrClient {
                 eventEmitter,
                 this.loggerFactory
             )
-
         }
         await this.subscriber.add(sub)
         if (onMessage !== undefined) {
@@ -327,8 +319,9 @@ export class StreamrClient {
      *
      * @returns rejects if the stream is not found
      */
-    getStream(streamIdOrPath: string): Promise<Stream> {
-        return this.streamRegistry.getStream(streamIdOrPath)
+    async getStream(streamIdOrPath: string): Promise<Stream> {
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+        return this.streamRegistry.getStream(streamId, false)
     }
 
     /**
@@ -463,14 +456,16 @@ export class StreamrClient {
      * Checks whether a given ethereum address has {@link StreamPermission.PUBLISH} permission to a stream.
      */
     async isStreamPublisher(streamIdOrPath: string, userAddress: string): Promise<boolean> {
-        return this.streamRegistry.isStreamPublisher(streamIdOrPath, toEthereumAddress(userAddress))
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+        return this.streamRegistry.isStreamPublisher(streamId, toEthereumAddress(userAddress), false)
     }
 
     /**
      * Checks whether a given ethereum address has {@link StreamPermission.SUBSCRIBE} permission to a stream.
      */
     async isStreamSubscriber(streamIdOrPath: string, userAddress: string): Promise<boolean> {
-        return this.streamRegistry.isStreamSubscriber(streamIdOrPath, toEthereumAddress(userAddress))
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+        return this.streamRegistry.isStreamSubscriber(streamId, toEthereumAddress(userAddress), false)
     }
 
     // --------------------------------------------------------------------------------------------
@@ -559,19 +554,23 @@ export class StreamrClient {
         return this.node.getNode()
     }
 
-    getEntryPoints(): PeerDescriptor[] {
-        return this.node.getEntryPoints()
-    }
-
-    // eslint-disable-next-line class-methods-use-this
     async setProxies(
         streamDefinition: StreamDefinition,
-        nodeDescriptors: JsonPeerDescriptor[],
+        proxyNodes: JsonPeerDescriptor[],
         direction: ProxyDirection,
         connectionCount?: number
     ): Promise<void> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        await this.node.setProxies(streamPartId, nodeDescriptors, direction, connectionCount)
+        await this.node.setProxies(streamPartId, proxyNodes, direction, connectionCount)
+    }
+
+    /**
+     * Used to set known entry points for a stream partition. If entry points are not set they 
+     * will be automatically discovered from the Streamr Network.
+    */
+    async setStreamEntryPoints(streamDefinition: StreamDefinition, entryPoints: JsonPeerDescriptor[]): Promise<void> {
+        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
+        await this.node.setStreamPartEntryPoints(streamPartId, entryPoints)
     }
 
     // --------------------------------------------------------------------------------------------

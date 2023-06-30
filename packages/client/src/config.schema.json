@@ -63,9 +63,9 @@
             "additionalProperties": false,
             "required": [],
             "properties": {
-                "layer0": {
+                "controlLayer": {
                     "type": "object",
-                    "additionalProperties": true,
+                    "additionalProperties": false,
                     "properties": {
                         "entryPoints": {
                             "type": "array",
@@ -73,16 +73,13 @@
                                 "$ref": "#/definitions/peerDescriptor"
                             },
                             "default": [{
-                                "kademliaId": "productionEntryPoint1",
+                                "id": "productionEntryPoint1",
                                 "type": 0,
                                 "websocket": {
                                     "ip": "127.0.0.1",
                                     "port": 40401
                                 }
                             }]
-                        },
-                        "stringKademliaId": {
-                            "type": "string"
                         },
                         "webSocketPort": {
                             "type": "number"
@@ -137,11 +134,11 @@
                                 }
                             ]
                         },
-                        "webrtcDisallowPrivateAddresses": {
+                        "webrtcAllowPrivateAddresses": {
                             "type": "boolean",
-                            "default": true
+                            "default": false
                         },
-                        "newWebrtcConnectionTimeout": {
+                        "webNewrtcConnectionTimeout": {
                             "type": "number",
                             "default": 15000
                         },
@@ -156,22 +153,20 @@
                     },
                     "default": {}
                 },
-                "networkNode": {
+                "node": {
                     "type": "object",
-                    "additionalProperties": true,
+                    "additionalProperties": false,
                     "properties": {
                         "id": {
                             "type": "string"
                         },
-                        "layer2NumOfTargetNeighbors": {
+                        "streamPartitionNumOfTargetNeighbors": {
                             "type": "number",
                             "default": 4
                         },
-                        "layer2MaxNumberOfContact": {
-                            "type": "number"
-                        },
-                        "layer2MinPropagationTargets": {
-                            "type": "number"
+                        "streamPartitionMinPropagationTargets": {
+                            "type": "number",
+                            "default": 2
                         },
                         "firstConnectionTimeout": {
                             "type": "number",
@@ -463,21 +458,15 @@
             "type": "object",
             "additionalProperties": false,
             "required": [
-                "kademliaId",
+                "id",
                 "type"
             ],
             "properties": {
-                "kademliaId": {
+                "id": {
                     "type": "string"
                 },
                 "type": {
                     "type": "number"
-                },
-                "udp": {
-                    "$ref": "#/definitions/connectivityMethod"
-                },
-                "tcp": {
-                    "$ref": "#/definitions/connectivityMethod"
                 },
                 "websocket": {
                     "$ref": "#/definitions/connectivityMethod"

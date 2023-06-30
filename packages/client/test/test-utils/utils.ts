@@ -1,6 +1,7 @@
 import 'reflect-metadata'
 
 import { Wallet } from '@ethersproject/wallet'
+import { NodeType } from '@streamr/dht'
 import { MAX_PARTITION_COUNT, StreamMessage, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { fastPrivateKey, fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { EthereumAddress, Logger, merge, wait, waitForCondition } from '@streamr/utils'
@@ -25,7 +26,7 @@ import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchang
 import { StreamrClientEventEmitter } from '../../src/events'
 import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
 import { MessageFactory } from '../../src/publish/MessageFactory'
-import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
+import { StreamRegistry } from '../../src/registry/StreamRegistry'
 import { LoggerFactory } from '../../src/utils/LoggerFactory'
 import { counterId } from '../../src/utils/utils'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
@@ -118,7 +119,7 @@ export const createMockMessage = async (
     const factory = new MessageFactory({
         authentication,
         streamId,
-        streamRegistry: createStreamRegistryCached({
+        streamRegistry: createStreamRegistry({
             partitionCount: MAX_PARTITION_COUNT,
             isPublicStream: (opts.encryptionKey === undefined),
             isStreamPublisher: true
@@ -153,26 +154,26 @@ export const startPublisherKeyExchangeSubscription = async (
     publisherClient: StreamrClient,
     streamPartId: StreamPartID): Promise<void> => {
     const node = await publisherClient.getNode()
-    node.subscribe(streamPartId)
+    await node.subscribe(streamPartId)
 }
 
 export const createRandomAuthentication = (): Authentication => {
     return createPrivateKeyAuthentication(`0x${fastPrivateKey()}`, undefined as any)
 }
 
-export const createStreamRegistryCached = (opts?: {
+export const createStreamRegistry = (opts?: {
     partitionCount?: number
     isPublicStream?: boolean
     isStreamPublisher?: boolean
     isStreamSubscriber?: boolean
-}): StreamRegistryCached => {
+}): StreamRegistry => {
     return {
         getStream: async () => ({
             getMetadata: () => ({
                 partitions: opts?.partitionCount ?? 1
             })
         }),
-        isPublic: async () => {
+        hasPublicSubscribePermission: async () => {
             return opts?.isPublicStream ?? false
         },
         isStreamPublisher: async () => {
@@ -229,25 +230,25 @@ export const waitForCalls = async (mockFunction: jest.Mock<any>, n: number): Pro
     })
 }
 
-export const createTestClient = (privateKey: string, stringKademliaId: string, wsPort?: number, acceptProxyConnections = false): StreamrClient => {
+export const createTestClient = (privateKey: string, id: string, wsPort?: number, acceptProxyConnections = false): StreamrClient => {
     return new StreamrClient({
         ...CONFIG_TEST,
         auth: {
             privateKey
         },
         network: {
-            layer0: {
-                ...CONFIG_TEST.network!.layer0,
+            controlLayer: {
+                ...CONFIG_TEST.network!.controlLayer,
                 peerDescriptor: {
-                    kademliaId: stringKademliaId,
-                    type: 0,
+                    id,
+                    type: NodeType.NODEJS,
                     websocket: wsPort ? {
                         ip: 'localhost',
                         port: wsPort
                     } : undefined
                 }
             },
-            networkNode: {
+            node: {
                 acceptProxyConnections
             }
         }

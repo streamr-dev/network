@@ -23,6 +23,7 @@ describe('StreamrNode', () => {
         node = new StreamrNode({})
         const mockLayer0 = new MockLayer0(peerDescriptor)
         await node.start(mockLayer0, new MockTransport(), mockConnectionLocker)
+        node.setStreamPartEntryPoints(stream, [peerDescriptor])
     })
 
     afterEach(async () => {
@@ -34,39 +35,39 @@ describe('StreamrNode', () => {
     })
 
     it('can join streams', async () => {
-        await node.joinStream(stream, [peerDescriptor])
+        await node.joinStream(stream)
         expect(node.hasStream(stream)).toEqual(true)
     })
 
     it('can leave streams', async () => {
-        await node.joinStream(stream, [peerDescriptor])
+        await node.joinStream(stream)
         expect(node.hasStream(stream)).toEqual(true)
         node.leaveStream(stream)
         expect(node.hasStream(stream)).toEqual(false)
     })
 
     it('subscribe and wait for join', async () => {
-        await node.waitForJoinAndSubscribe(stream, [peerDescriptor])
+        await node.waitForJoinAndSubscribe(stream)
         expect(node.hasStream(stream)).toEqual(true)
     })
 
     it('publish and wait for join', async () => {
-        await node.waitForJoinAndPublish(stream, [peerDescriptor], message)
+        await node.waitForJoinAndPublish(stream, message)
         expect(node.hasStream(stream)).toEqual(true)
     })
 
     it('subscribe joins stream', async () => {
-        node.subscribeToStream(stream, [peerDescriptor])
+        node.subscribeToStream(stream)
         await waitForCondition(() => node.hasStream(stream))
     })
 
     it('publish joins stream', async () => {
-        await node.publishToStream(stream, [peerDescriptor], message)
+        await node.publishToStream(stream, message)
         await waitForCondition(() => node.hasStream(stream))
     })
 
     it('can unsubscribe', async () => {
-        await node.joinStream(stream, [peerDescriptor])
+        await node.joinStream(stream)
         await node.unsubscribeFromStream(stream)
     })
 

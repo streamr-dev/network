@@ -63,11 +63,11 @@ describe('proxy and full node', () => {
             }
         })
         await proxyNode.start()
-        await proxyNode.stack.getStreamrNode()!.joinStream(proxyStreamId, [])
-        await proxyNode.stack.getStreamrNode()!.joinStream(regularStreamId1, [])
-        await proxyNode.stack.getStreamrNode()!.joinStream(regularStreamId2, [])
-        await proxyNode.stack.getStreamrNode()!.joinStream(regularStreamId3, [])
-        await proxyNode.stack.getStreamrNode()!.joinStream(regularStreamId4, [])
+        await proxyNode.stack.getStreamrNode()!.joinStream(proxyStreamId)
+        await proxyNode.stack.getStreamrNode()!.joinStream(regularStreamId1)
+        await proxyNode.stack.getStreamrNode()!.joinStream(regularStreamId2)
+        await proxyNode.stack.getStreamrNode()!.joinStream(regularStreamId3)
+        await proxyNode.stack.getStreamrNode()!.joinStream(regularStreamId4)
 
         proxiedNode = new NetworkNode({
             layer0: {

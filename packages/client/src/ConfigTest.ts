@@ -1,5 +1,5 @@
+import { NodeType } from '@streamr/dht'
 import { toEthereumAddress } from '@streamr/utils'
-import { v4 as uuid } from 'uuid'
 import { StreamrClientConfig } from './Config'
 import { MIN_KEY_LENGTH } from './encryption/RSAKeyPair'
 
@@ -21,24 +21,17 @@ const sideChainConfig = {
  */
 export const CONFIG_TEST: StreamrClientConfig = {
     network: {
-        layer0: {
+        controlLayer: {
             entryPoints: [{
-                kademliaId: 'entryPointBroker',
-                type: 0,
+                id: 'entryPointBroker',
+                type: NodeType.NODEJS,
                 websocket: {
                     ip: '127.0.0.1',
                     port: 40401
                 }
             }],
-            peerDescriptor: {
-                kademliaId: uuid(),
-                type: 0
-            },
             iceServers: [],
-            webrtcDisallowPrivateAddresses: false
-        },
-        networkNode: {
-            firstConnectionTimeout: 15 * 1000
+            webrtcAllowPrivateAddresses: true
         }
     },
     contracts: {
@@ -65,7 +58,7 @@ export const CONFIG_TEST: StreamrClientConfig = {
             indexPollInterval: 500
         },
         storageNode: {
-            timeout: 60 * 1000,
+            timeout: 30 * 1000,
             retryInterval: 500
         },
         ensStreamCreation: {

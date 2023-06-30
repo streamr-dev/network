@@ -4,7 +4,6 @@ import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { getCreateClient, createTestClient } from '../test-utils/utils'
-import { CONFIG_TEST } from '../../src/ConfigTest'
 
 const NUM_OF_PARTITIONS = 10
 
@@ -29,12 +28,6 @@ describe('NodeMetrics', () => {
                     }
                 ],
                 maxPublishDelay: 50
-            },
-            network: {
-                layer0: {
-                    ...CONFIG_TEST.network!.layer0,
-                    stringKademliaId: 'generator'
-                }
             }
         })
         stream = await generatorClient.createStream({
@@ -69,7 +62,7 @@ describe('NodeMetrics', () => {
         const dummyStream = await generatorClient.createStream(`/${Date.now()}`)
         await generatorClient.subscribe(dummyStream, () => {})
 
-        await waitForCondition(() => report !== undefined, 15000)
+        await waitForCondition(() => report !== undefined, 10000)
         expect(report!).toMatchObject({
             node: {
                 publishMessagesPerSecond: expect.any(Number),

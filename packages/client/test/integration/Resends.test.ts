@@ -9,7 +9,7 @@ import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'
 import { MessageFactory } from '../../src/publish/MessageFactory'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
-import { createGroupKeyQueue, createStreamRegistryCached } from '../test-utils/utils'
+import { createGroupKeyQueue, createStreamRegistry } from '../test-utils/utils'
 
 describe('Resends', () => {
 
@@ -40,7 +40,7 @@ describe('Resends', () => {
         messageFactory = new MessageFactory({
             authentication,
             streamId: stream.id,
-            streamRegistry: createStreamRegistryCached(),
+            streamRegistry: createStreamRegistry(),
             groupKeyQueue: await createGroupKeyQueue(authentication, groupKey)
         })
         // store the encryption key publisher's local group key store

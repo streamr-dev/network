@@ -5,22 +5,23 @@ import { Lifecycle, scoped } from 'tsyringe'
 import { NetworkNodeFactory, NetworkNodeStub } from '../../../src/NetworkNodeFacade'
 import { FakeNetwork } from './FakeNetwork'
 import { PeerDescriptor } from '@streamr/dht'
-import { NetworkOptions } from '@streamr/trackerless-network'
+import { NetworkOptions, NodeId } from '@streamr/trackerless-network'
 
 type MessageListener = (msg: StreamMessage) => void
 
 export class FakeNetworkNode implements NetworkNodeStub {
 
-    public readonly id: string
+    public readonly id: NodeId
     readonly subscriptions: Set<StreamPartID> = new Set()
     readonly messageListeners: MessageListener[] = []
     private readonly network: FakeNetwork
+
     constructor(opts: NetworkOptions, network: FakeNetwork) {
         this.id = opts.networkNode!.id!
         this.network = network
     }
 
-    getNodeId(): string {
+    getNodeId(): NodeId {
         return this.id
     }
 
@@ -40,15 +41,15 @@ export class FakeNetworkNode implements NetworkNodeStub {
         this.subscriptions.delete(streamPartId)
     }
 
-    async subscribeAndWaitForJoin(streamPartId: StreamPartID, _entryPointDescriptors?: PeerDescriptor[], _timeout?: number): Promise<number> {
+    async subscribeAndWaitForJoin(streamPartId: StreamPartID, _timeout?: number): Promise<number> {
         this.subscriptions.add(streamPartId)
         return this.getNeighborsForStreamPart(streamPartId).length
     }
 
-    async waitForJoinAndPublish(msg: StreamMessage, _entryPointDescriptors?: PeerDescriptor[], _timeout?: number): Promise<number> {
+    async waitForJoinAndPublish(msg: StreamMessage, _timeout?: number): Promise<number> {
         const streamPartID = msg.getStreamPartID()
         this.subscriptions.add(streamPartID)
-        this.publish(msg)
+        await this.publish(msg)
         return this.getNeighborsForStreamPart(streamPartID).length
     }
 
@@ -75,6 +76,10 @@ export class FakeNetworkNode implements NetworkNodeStub {
             .filter((node) => (node.id !== this.id))
             .filter((node) => node.subscriptions.has(streamPartId))
             .map((node) => node.id)
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    setStreamPartEntryPoints(_streamPartId: StreamPartID, _peerDescriptors: PeerDescriptor[]): void {
     }
 
     // eslint-disable-next-line class-methods-use-this

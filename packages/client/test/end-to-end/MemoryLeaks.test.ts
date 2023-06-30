@@ -13,7 +13,7 @@ import { createStrictConfig, ConfigInjectionToken, StrictStreamrClientConfig } f
 import * as ethersAbi from '@ethersproject/abi'
 import { NetworkNodeFacade } from '../../src/NetworkNodeFacade'
 import { StorageNodeRegistry } from '../../src/registry/StorageNodeRegistry'
-import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
+import { StreamRegistry } from '../../src/registry/StreamRegistry'
 import { Resends } from '../../src/subscribe/Resends'
 import { Publisher } from '../../src/publish/Publisher'
 import { Subscriber } from '../../src/subscribe/Subscriber'
@@ -27,7 +27,7 @@ import { StreamrClientEventEmitter } from '../../src/events'
 const Dependencies = {
     NetworkNodeFacade,
     StorageNodeRegistry,
-    StreamRegistryCached,
+    StreamRegistry,
     Resends,
     Publisher,
     Subscriber,
@@ -147,7 +147,7 @@ describe('MemoryLeaks', () => {
                 const client = await createClient()
                 await client.connect()
                 await client.destroy()
-                leaksDetector.addAll(instanceId(client), client) // Should this be moved up by catch leaks?
+                leaksDetector.addAll(instanceId(client), client)
             })
         })
 

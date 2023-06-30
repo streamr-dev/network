@@ -32,7 +32,8 @@ describe('Full node network with WebSocket connections only', () => {
             networkNode: {}
         })
         await entryPoint.start()
-        await entryPoint.getStreamrNode()!.joinStream(randomGraphId, [epPeerDescriptor])
+        entryPoint.getStreamrNode()!.setStreamPartEntryPoints(randomGraphId, [epPeerDescriptor])
+        await entryPoint.getStreamrNode()!.joinStream(randomGraphId)
 
         await Promise.all(range(NUM_OF_NODES).map(async (i) => {
             const node = new NetworkStack({
@@ -48,8 +49,9 @@ describe('Full node network with WebSocket connections only', () => {
             })
             nodes.push(node)
             await node.start()
-            await node.getStreamrNode().joinStream(randomGraphId, [epPeerDescriptor])
-            node.getStreamrNode!().subscribeToStream(randomGraphId, [epPeerDescriptor])
+            node.getStreamrNode!().setStreamPartEntryPoints(randomGraphId, [epPeerDescriptor])
+            await node.getStreamrNode().joinStream(randomGraphId)
+            node.getStreamrNode!().subscribeToStream(randomGraphId)
         }))
 
     }, 120000)
@@ -84,7 +86,7 @@ describe('Full node network with WebSocket connections only', () => {
             randomGraphId,
             peerIdFromPeerDescriptor(epPeerDescriptor).toString()
         )
-        entryPoint.getStreamrNode()!.publishToStream(randomGraphId, [epPeerDescriptor], msg)
+        entryPoint.getStreamrNode()!.publishToStream(randomGraphId, msg)
         await waitForCondition(() => numOfMessagesReceived === NUM_OF_NODES)
     }, 220000)
 

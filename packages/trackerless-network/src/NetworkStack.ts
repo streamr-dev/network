@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/parameter-properties */
 
 import { ConnectionManager, DhtNode, DhtNodeOptions, isSamePeerDescriptor, PeerDescriptor } from '@streamr/dht'
-import { StreamrNode, StreamrNodeOpts } from './logic/StreamrNode'
+import { StreamrNode, StreamrNodeConfig } from './logic/StreamrNode'
 import { MetricsContext, waitForEvent3 } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { StreamPartID } from '@streamr/protocol'
@@ -44,7 +44,7 @@ class ReadynessListener {
 
 export interface NetworkOptions {
     layer0: DhtNodeOptions
-    networkNode: StreamrNodeOpts
+    networkNode: StreamrNodeConfig
     metricsContext?: MetricsContext
 }
 
@@ -59,7 +59,6 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
     private streamrNode?: StreamrNode
     private readonly metricsContext: MetricsContext
     private readonly options: NetworkOptions
-    private stopped = false
     private readonly firstConnectionTimeout: number
     private dhtJoinRequired = true
 
@@ -84,6 +83,7 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
         this.connectionManager = this.layer0DhtNode!.getTransport() as ConnectionManager
         const entryPoint = this.options.layer0.entryPoints![0]
         if (isSamePeerDescriptor(entryPoint, this.layer0DhtNode!.getPeerDescriptor())) {
+            this.dhtJoinRequired = false
             await this.layer0DhtNode?.joinDht(entryPoint)
             await this.streamrNode?.start(this.layer0DhtNode!, this.connectionManager!, this.connectionManager!)
         } else {
@@ -124,10 +124,6 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
         return this.streamrNode!
     }
 
-    getConnectionManager(): ConnectionManager | undefined {
-        return this.connectionManager
-    }
-
     getLayer0DhtNode(): DhtNode {
         return this.layer0DhtNode!
     }
@@ -137,7 +133,6 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
     }
 
     async stop(): Promise<void> {
-        this.stopped = true
         await this.streamrNode!.destroy()
         this.streamrNode = undefined
         this.layer0DhtNode = undefined

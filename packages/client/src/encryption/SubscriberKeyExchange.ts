@@ -10,14 +10,14 @@ import {
     StreamPartIDUtils
 } from '@streamr/protocol'
 import { EthereumAddress, Logger } from '@streamr/utils'
-import { Lifecycle, delay, inject, scoped } from 'tsyringe'
+import { Lifecycle, inject, scoped } from 'tsyringe'
 import { v4 as uuidv4 } from 'uuid'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { createSignedMessage } from '../publish/MessageFactory'
 import { createRandomMsgChainId } from '../publish/messageChain'
-import { StreamRegistryCached } from '../registry/StreamRegistryCached'
+import { StreamRegistry } from '../registry/StreamRegistry'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { pOnce, withThrottling } from '../utils/promises'
 import { MaxSizedSet } from '../utils/utils'
@@ -38,7 +38,7 @@ export class SubscriberKeyExchange {
     private rsaKeyPair?: RSAKeyPair
     private readonly pendingRequests: MaxSizedSet<string> = new MaxSizedSet(MAX_PENDING_REQUEST_COUNT)
     private readonly networkNodeFacade: NetworkNodeFacade
-    private readonly streamRegistryCached: StreamRegistryCached
+    private readonly streamRegistry: StreamRegistry
     private readonly store: LocalGroupKeyStore
     private readonly authentication: Authentication
     private readonly logger: Logger
@@ -47,14 +47,14 @@ export class SubscriberKeyExchange {
 
     constructor(
         networkNodeFacade: NetworkNodeFacade,
-        @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
+        streamRegistry: StreamRegistry,
         store: LocalGroupKeyStore,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'encryption'>,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         loggerFactory: LoggerFactory
     ) {
         this.networkNodeFacade = networkNodeFacade
-        this.streamRegistryCached = streamRegistryCached
+        this.streamRegistry = streamRegistry
         this.store = store
         this.authentication = authentication
         this.logger = loggerFactory.createLogger(module)
@@ -80,7 +80,7 @@ export class SubscriberKeyExchange {
             this.rsaKeyPair!.getPublicKey(),
             requestId)
         const node = await this.networkNodeFacade.getNode()
-        node.publish(request)
+        await node.publish(request)
         this.pendingRequests.add(requestId)
         this.logger.debug('Sent group key request (waiting for response)', {
             groupKeyId,
@@ -126,7 +126,7 @@ export class SubscriberKeyExchange {
                 if ((recipient === authenticatedUser) && (this.pendingRequests.has(requestId))) {
                     this.logger.debug('Handle group key response', { requestId })
                     this.pendingRequests.delete(requestId)
-                    await validateStreamMessage(msg, this.streamRegistryCached)
+                    await validateStreamMessage(msg, this.streamRegistry)
                     await Promise.all(encryptedGroupKeys.map(async (encryptedKey) => {
                         const key = GroupKey.decryptRSAEncrypted(encryptedKey, this.rsaKeyPair!.getPrivateKey())
                         await this.store.set(key.id, msg.getPublisherId(), key.data)

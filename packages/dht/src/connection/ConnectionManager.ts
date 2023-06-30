@@ -47,10 +47,10 @@ export class ConnectionManagerConfig {
     maxConnections: number = 80
     iceServers?: IceServer[]
     metricsContext?: MetricsContext
-    webrtcDisallowPrivateAddresses?: boolean
+    webrtcAllowPrivateAddresses?: boolean
     webrtcDatachannelBufferThresholdLow?: number
     webrtcDatachannelBufferThresholdHigh?: number
-    newWebrtcConnectionTimeout?: number
+    webrtcNewConnectionTimeout?: number
 
     // the following fields are used in simulation only
     simulator?: Simulator
@@ -168,10 +168,10 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 rpcTransport: this.config.transportLayer!,
                 protocolVersion: ConnectionManager.PROTOCOL_VERSION,
                 iceServers: this.config.iceServers,
-                disallowPrivateAddresses: this.config.webrtcDisallowPrivateAddresses,
+                allowPrivateAddresses: this.config.webrtcAllowPrivateAddresses,
                 bufferThresholdLow: this.config.webrtcDatachannelBufferThresholdLow,
                 bufferThresholdHigh: this.config.webrtcDatachannelBufferThresholdHigh,
-                connectionTimeout: this.config.newWebrtcConnectionTimeout
+                connectionTimeout: this.config.webrtcNewConnectionTimeout
             }, this.incomingConnectionCallback)
         }
         this.serviceId = (this.config.serviceIdPrefix ? this.config.serviceIdPrefix : '') + 'ConnectionManager'

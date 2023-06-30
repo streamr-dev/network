@@ -41,11 +41,11 @@ describe('SubscriberKeyExchange', () => {
 
     const triggerGroupKeyRequest = async (key: GroupKey, publisher: StreamrClient): Promise<void> => {
         const publisherNode = await publisher.getNode()
-        publisherNode.publish(await createMockMessage({
+        await publisherNode.publish(await createMockMessage({
             streamPartId,
             publisher: publisherWallet,
             encryptionKey: key
-        }), publisher.getEntryPoints())
+        }))
     }
 
     const assertGroupKeyRequest = async (request: StreamMessage, expectedRequestedKeyIds: string[]): Promise<void> => {
