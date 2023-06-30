@@ -1,5 +1,5 @@
 import { StreamMessage, StreamPartID, StreamMessageType } from '@streamr/protocol'
-import { PeerDescriptor, PeerID, PeerIDKey } from '@streamr/dht'
+import { PeerDescriptor, PeerID, PeerIDKey, peerIdFromPeerDescriptor } from '@streamr/dht'
 import { StreamMessageTranslator } from './logic/protocol-integration/stream-message/StreamMessageTranslator'
 import { NetworkOptions, NetworkStack } from './NetworkStack'
 import { MetricsContext } from '@streamr/utils'
@@ -111,9 +111,15 @@ export class NetworkNode {
         this.stack.getStreamrNode().unsubscribeFromStream(streamPartId)
     }
 
-    async findPeer(id: NodeId): Promise<PeerDescriptor[]> {
-        const result = await this.stack.getLayer0DhtNode()!.startRecursiveFind(PeerID.fromKey(id as PeerIDKey).value)
-        return result.closestNodes
+    async findPeer(id: NodeId): Promise<PeerDescriptor | undefined> {
+        const searchedId = PeerID.fromKey(id as PeerIDKey)
+        const result = await this.stack.getLayer0DhtNode()!.startRecursiveFind(searchedId.value)
+        const closest = result.closestNodes[0]
+        if (closest) {
+            const closestPeerId = peerIdFromPeerDescriptor(closest)
+            return closestPeerId.equals(searchedId) ? closest : undefined
+        }
+        return undefined
     }
 
     getNeighborsForStreamPart(streamPartId: StreamPartID): ReadonlyArray<string> {

@@ -98,7 +98,12 @@ describe('NetworkNode', () => {
 
     it('can find peer', async () => {
         const result = await node1.findPeer(node2.getNodeId())
-        expect(isSamePeerDescriptor(result[0], pd2)).toBe(true)
+        expect(isSamePeerDescriptor(result!, pd2)).toBe(true)
+    })
+
+    it('find peer returns undefined if peer not found', async () => {
+        const result = await node1.findPeer('does not exist')
+        expect(result).toBe(undefined)
     })
 
 })
