@@ -2,9 +2,9 @@ import { Provider } from "@ethersproject/providers"
 import { Chains } from "@streamr/config"
 import { Wallet } from "@ethersproject/wallet"
 import { parseEther } from "@ethersproject/units"
-import { Logger, toEthereumAddress, wait, waitForCondition } from '@streamr/utils'
+import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
 
-import type { IERC677, Operator, Sponsorship } from "@streamr/network-contracts"
+import type { IERC677, Operator } from "@streamr/network-contracts"
 
 import { tokenABI } from "@streamr/network-contracts"
 import { Contract } from "@ethersproject/contracts"
@@ -14,7 +14,6 @@ import { MaintainOperatorValueService } from "../../../../src/plugins/operator/M
 import { OperatorServiceConfig } from "../../../../src/plugins/operator/OperatorPlugin"
 import { ADMIN_WALLET_PK, deployOperatorContract, generateWalletWithGasAndTokens, getProvider } from "./smartContractUtils"
 import StreamrClient, { CONFIG_TEST } from "streamr-client"
-import exp from "constants"
 
 const config = Chains.load()["dev1"]
 const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '127.0.0.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`
