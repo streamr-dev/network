@@ -1,17 +1,16 @@
-import 'reflect-metadata'
 import type { Overrides } from '@ethersproject/contracts'
-import cloneDeep from 'lodash/cloneDeep'
-import Ajv, { ErrorObject } from 'ajv'
-import addFormats from 'ajv-formats'
 import type { ExternalProvider } from '@ethersproject/providers'
-import { MarkOptional, DeepRequired } from 'ts-essentials'
-
-import CONFIG_SCHEMA from './config.schema.json'
+import type { ConnectionInfo } from '@ethersproject/web'
+import { ExternalIP, IceServer, Location, WebRtcPortRange } from '@streamr/network-node'
 import { TrackerRegistryRecord } from '@streamr/protocol'
 import { LogLevel } from '@streamr/utils'
-
-import { IceServer, Location, WebRtcPortRange, ExternalIP } from '@streamr/network-node'
-import type { ConnectionInfo } from '@ethersproject/web'
+import Ajv, { ErrorObject } from 'ajv'
+import addFormats from 'ajv-formats'
+import cloneDeep from 'lodash/cloneDeep'
+import 'reflect-metadata'
+import { DeepRequired, MarkOptional } from 'ts-essentials'
+import CONFIG_SCHEMA from './config.schema.json'
+import { GapFillStrategy } from './subscribe/ordering/GapFiller'
 import { generateClientId } from './utils/utils'
 
 export interface ProviderAuthConfig {
@@ -107,6 +106,27 @@ export interface StreamrClientConfig {
      * proceeding to the next attempt.
      */
     retryResendAfter?: number
+
+    /**
+     * When gap filling is enabled, this setting controls whether to enable a
+     * lighter (default) or a full gap fill strategy.
+     *
+     * While filling a gap, new gaps may emerge further along the message
+     * chain. After a gap has been filled, the gap filling mechanism will
+     * attend to the next gap until that has been resolved and so forth.
+     *
+     * This is great in theory, but sometimes in practice, especially in
+     * streams with heavy traffic, the gap filling mechanism may never catch
+     * up leading to permanently increased latency, and even dropped messages
+     * (due to buffer overflows) further exacerbating the presence of gaps.
+     *
+     * With `light` strategy, when a gap cannot be successfully filled and
+     * must be dropped, all subsequent accumulated gaps will be dropped as
+     * well. This improves the ability to stay up-to-date at the cost of
+     * potentially missing messages. With `full` strategy the subsequent gaps
+     * will not be dropped.
+     */
+    gapFillStrategy?: GapFillStrategy
 
     /**
      * Controls how messages encryption and decryption should be handled and

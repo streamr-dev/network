@@ -5,10 +5,13 @@ import { Gap, OrderedMessageChain } from './OrderedMessageChain'
 
 const logger = new Logger(module)
 
+export type GapFillStrategy = 'light' | 'full'
+
 interface GapFillerOptions {
     chain: OrderedMessageChain
     resend: (gap: Gap, storageNodeAddress: EthereumAddress, abortSignal: AbortSignal) => AsyncGenerator<StreamMessage>
     getStorageNodeAddresses: () => Promise<EthereumAddress[]>
+    strategy: 'full' | 'light'
     initialWaitTime: number
     retryWaitTime: number
     maxRequestsPerGap: number
@@ -33,6 +36,7 @@ export class GapFiller {
     private readonly chain: OrderedMessageChain
     private readonly resend: (gap: Gap, storageNodeAddress: EthereumAddress, abortSignal: AbortSignal) => AsyncGenerator<StreamMessage>
     private readonly getStorageNodeAddresses: () => Promise<EthereumAddress[]>
+    private readonly strategy: GapFillStrategy
     private readonly initialWaitTime: number
     private readonly retryWaitTime: number
     private readonly maxRequestsPerGap: number
@@ -41,6 +45,7 @@ export class GapFiller {
         this.chain = opts.chain
         this.resend = opts.resend
         this.getStorageNodeAddresses = opts.getStorageNodeAddresses
+        this.strategy = opts.strategy
         this.initialWaitTime = opts.initialWaitTime
         this.retryWaitTime = opts.retryWaitTime
         this.maxRequestsPerGap = opts.maxRequestsPerGap
@@ -74,9 +79,13 @@ export class GapFiller {
                  * before we reach this line. Alternatively the callback may have been called by the chain because
                  * it received the missing messages from another source (i.e. the real-time pipeline). But if
                  * this task has not been aborted by either of these reasons, we resolve the gap manually as we
-                 * don't try to fill it anymore. We also drop all accumulated gaps.
+                 * don't try to fill it anymore.
                  */
-                this.chain.resolveMessages()
+                if (this.strategy === 'full') {
+                    this.chain.resolveMessages(gap.to.getMessageRef())
+                } else if (this.strategy === 'light') {
+                    this.chain.resolveMessages(undefined, false)
+                }
             })
         } catch (err: any) {
             this.onError(err, gap)

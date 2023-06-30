@@ -107,19 +107,23 @@ export class OrderedMessageChain {
         }
     }
 
-    resolveMessages(): void {
+    resolveMessages(to: MessageRef | undefined, gapCheckEnabled: boolean = true): void {
         this.consumePendingOrderedMessages(
             (msg) => {
-                if (!this.isNextOrderedMessage(msg)) {
+                if (this.isNextOrderedMessage(msg)) {
+                    return true
+                } else if ((to === undefined) || (msg.getMessageRef().compareTo(to) <= 0)) {
                     const gap = {
                         from: this.lastOrderedMsg!,
                         to: msg
                     }
                     this.eventEmitter.emit('unfillableGap', gap)
+                    return true
+                } else {
+                    return false
                 }
-                return true
             }, 
-            false
+            gapCheckEnabled
         )
     }
 

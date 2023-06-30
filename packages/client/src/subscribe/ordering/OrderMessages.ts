@@ -13,7 +13,7 @@ const createMessageChain = (
     getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>,
     onUnfillableGap: ((gap: Gap) => void),
     resends: Resends,
-    config: Pick<StrictStreamrClientConfig, 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill'>,
+    config: Pick<StrictStreamrClientConfig, 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'>,
     abortSignal: AbortSignal
 ) => {
     const resend = async function*(gap: Gap, storageNodeAddress: EthereumAddress, abortSignal: AbortSignal) {
@@ -38,6 +38,7 @@ const createMessageChain = (
         // - maybe the caching should be done at application level, e.g. with a new CacheStreamStorageRegistry class?
         // - also not that this is a cache which contains just one item (as streamPartId always the same)
         getStorageNodeAddresses: CacheAsyncFn(() => getStorageNodes(StreamPartIDUtils.getStreamID(context.streamPartId))),
+        strategy: config.gapFillStrategy,
         initialWaitTime: config.gapFillTimeout,
         retryWaitTime: config.retryResendAfter,
         maxRequestsPerGap: (config.gapFill) ? config.maxGapRequests : 0,
@@ -61,7 +62,7 @@ export class OrderMessages {
         getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>,
         onUnfillableGap: ((gap: Gap) => void),
         resends: Resends,
-        config: Pick<StrictStreamrClientConfig, 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill'>
+        config: Pick<StrictStreamrClientConfig, 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'>
     ) {
         this.chains = new Mapping(async (publisherId: EthereumAddress, msgChainId: string) => {
             const chain = createMessageChain(

@@ -109,9 +109,9 @@ function calculateNumberOfUnfillableGaps(messageInfosInOrder: MessageInfo[]): nu
     return gaps
 }
 
-describe.skip('OrderMessages2', () => {
+describe('OrderMessages2', () => {
 
-    it('randomized "worst-case" scenario with unavailable messages and gap fill needs', async () => {
+    it('randomized "worst-case" scenario with unavailable messages and gap fill needs (full strategy)', async () => {
         const groundTruthMessages: Record<string, MessageInfo[]> = {}
         const actual: Record<string, number[]> = {}
         const expected: Record<string, number[]> = {}
@@ -158,6 +158,7 @@ describe.skip('OrderMessages2', () => {
             } as any,
             {
                 gapFill: true,
+                gapFillStrategy: 'full',
                 gapFillTimeout: PROPAGATION_TIMEOUT,
                 retryResendAfter: RESEND_TIMEOUT,
                 maxGapRequests: MAX_GAP_REQUESTS

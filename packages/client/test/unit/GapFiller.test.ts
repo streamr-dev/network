@@ -1,7 +1,7 @@
 import { MessageID, MessageRef, StreamMessage, StreamPartIDUtils } from '@streamr/protocol'
 import { Defer, EthereumAddress, toEthereumAddress, wait, waitForCondition } from '@streamr/utils'
 import { OrderedMessageChain } from '../../src/subscribe/ordering/OrderedMessageChain'
-import { GapFiller } from '../../src/subscribe/ordering/GapFiller'
+import { GapFiller, GapFillStrategy } from '../../src/subscribe/ordering/GapFiller'
 import { Gap } from '../../src/subscribe/ordering/OrderedMessageChain'
 import { fromArray } from '../../src/utils/GeneratorUtils'
 
@@ -45,12 +45,14 @@ describe('GapFiller', () => {
 
     const startActiveGapFiller = (
         resend: (gap: Gap, storageNodeAddress: EthereumAddress, abortSignal: AbortSignal) => AsyncGenerator<StreamMessage>,
-        getStorageNodeAddresses: () => Promise<EthereumAddress[]>
+        getStorageNodeAddresses: () => Promise<EthereumAddress[]>,
+        strategy: GapFillStrategy = 'light'
     ) => {
         const filler = new GapFiller({
             chain,
             resend,
             getStorageNodeAddresses,
+            strategy,
             initialWaitTime: INITIAL_WAIT_TIME,
             retryWaitTime: 20,
             maxRequestsPerGap: MAX_REQUESTS_PER_GAP,
@@ -64,6 +66,7 @@ describe('GapFiller', () => {
             chain,
             resend: undefined as any,
             getStorageNodeAddresses: undefined as any,
+            strategy: 'light',
             initialWaitTime: INITIAL_WAIT_TIME,
             retryWaitTime: undefined as any,
             maxRequestsPerGap: 0,
@@ -160,11 +163,12 @@ describe('GapFiller', () => {
             const getStorageNodeAddresses = jest.fn().mockResolvedValue([])
             startActiveGapFiller(
                 resend,
-                getStorageNodeAddresses
+                getStorageNodeAddresses,
+                'full'
             )
             addMessages([1, 3, 5])
             await expectOrderedMessages([1, 3, 5])
-            expect(getStorageNodeAddresses).toBeCalledTimes(1)
+            expect(getStorageNodeAddresses).toBeCalledTimes(2)
             expect(resend).not.toBeCalled()
         })
 

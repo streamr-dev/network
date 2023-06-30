@@ -9,6 +9,7 @@ export { PublishMetadata } from './publish/Publisher'
 export { Subscription, SubscriptionEvents, } from './subscribe/Subscription'
 export type { MessageStream, MessageListener } from './subscribe/MessageStream'
 export { ResendOptions, ResendLastOptions, ResendFromOptions, ResendRangeOptions, ResendRef } from './subscribe/Resends'
+export { GapFillStrategy } from './subscribe/ordering/GapFiller'
 export {
     StreamPermission,
     PermissionQuery,
