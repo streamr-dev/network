@@ -13,6 +13,8 @@ found [here](packages/broker/CHANGELOG.md).
 
 #### Added
 
+- Add config option `gapFillStrategy` to control gap filling strategy
+
 #### Changed
 
 #### Deprecated
