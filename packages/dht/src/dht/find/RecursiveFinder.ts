@@ -96,7 +96,7 @@ export class RecursiveFinder implements IRecursiveFinder {
             rpcTransport: this.sessionTransport,
             kademliaIdToFind: idToFind,
             ownPeerID: this.ownPeerId!,
-            waitedRoutingPathCompletions: this.connections.size > 1 ? 2 : 1,
+            waitedRoutingPathCompletions: this.connections.size > 0 ? 2 : 1,
             mode: findMode
         })
         if (this.connections.size === 0) {

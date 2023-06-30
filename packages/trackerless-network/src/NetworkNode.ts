@@ -1,9 +1,10 @@
 import { StreamMessage, StreamPartID, StreamMessageType } from '@streamr/protocol'
-import { PeerDescriptor, PeerIDKey } from '@streamr/dht'
+import { PeerDescriptor, PeerID, PeerIDKey } from '@streamr/dht'
 import { StreamMessageTranslator } from './logic/protocol-integration/stream-message/StreamMessageTranslator'
 import { NetworkOptions, NetworkStack } from './NetworkStack'
 import { MetricsContext } from '@streamr/utils'
 import { ProxyDirection } from './proto/packages/trackerless-network/protos/NetworkRpc'
+import { NodeId } from './identifiers'
 
 /*
 Convenience wrapper for building client-facing functionality. Used by client.
@@ -110,8 +111,8 @@ export class NetworkNode {
         this.stack.getStreamrNode().unsubscribeFromStream(streamPartId)
     }
 
-    async findPeer(id: Uint8Array): Promise<PeerDescriptor[]> {
-        const result = await this.stack.getLayer0DhtNode()!.startRecursiveFind(id)
+    async findPeer(id: NodeId): Promise<PeerDescriptor[]> {
+        const result = await this.stack.getLayer0DhtNode()!.startRecursiveFind(PeerID.fromKey(id as PeerIDKey).value)
         return result.closestNodes
     }
 

@@ -1,5 +1,5 @@
 import { NetworkNode } from '../../src/NetworkNode'
-import { NodeType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
+import { NodeType, PeerDescriptor, Simulator, SimulatorTransport, isSamePeerDescriptor } from '@streamr/dht'
 import {
     MessageID,
     MessageRef,
@@ -94,6 +94,11 @@ describe('NetworkNode', () => {
         })
         await node2.waitForJoinAndPublish(streamMessage)
         await waitForCondition(() => msgCount === 1)
+    })
+
+    it('can find peer', async () => {
+        const result = await node1.findPeer(node2.getNodeId())
+        expect(isSamePeerDescriptor(result[0], pd2)).toBe(true)
     })
 
 })

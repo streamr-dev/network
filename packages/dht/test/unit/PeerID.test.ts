@@ -13,11 +13,9 @@ describe('PeerID', () => {
     })
 
     it('peerKey', () => {
-        const peerId = PeerID.fromString('asdadstqj12312f12f123')
-        const peerKey = peerId.toKey()
-        const kademliaId = Uint8Array.from(Buffer.from(peerKey, 'hex'))
-        const same = PeerID.fromValue(kademliaId)
-        expect(peerId.equals(same)).toEqual(true)
-        
+        const peerIdFromString = PeerID.fromString('asdadstqj12312f12f123')
+        const peerKey = peerIdFromString.toKey()
+        const peerIdFromKey = PeerID.fromKey(peerKey)
+        expect(peerIdFromString.equals(peerIdFromKey)).toEqual(true)        
     })
 })

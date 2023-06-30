@@ -3,7 +3,7 @@
  */
 import { PeerDescriptor, PeerID } from '@streamr/dht'
 import { StreamMessage, StreamPartID } from '@streamr/protocol'
-import { NetworkNode, NetworkOptions, ProxyDirection } from '@streamr/trackerless-network'
+import { NetworkNode, NetworkOptions, ProxyDirection, NodeId } from '@streamr/trackerless-network'
 import { MetricsContext } from '@streamr/utils'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import EventEmitter from 'eventemitter3'
@@ -47,7 +47,7 @@ export interface NetworkNodeStub {
         connectionCount?: number
     ) => Promise<void>
     /** @internal */
-    findPeer: (id: Uint8Array) => Promise<PeerDescriptor[]>
+    findPeer: (id: NodeId) => Promise<PeerDescriptor[]>
     setStreamPartEntryPoints: (streamPartId: StreamPartID, peerDescriptors: PeerDescriptor[]) => void
 }
 
