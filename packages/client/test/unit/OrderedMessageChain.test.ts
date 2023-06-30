@@ -154,7 +154,7 @@ describe('OrderedMessageChain', () => {
         expectFoundGaps([])
     })
 
-    it('disabled gap finding when resolvin all messages', () => {
+    it('disabled gap finding when resolving all messages', () => {
         chain.addMessage(createMessage(1))
         chain.addMessage(createMessage(2))
         chain.addMessage(createMessage(4))
