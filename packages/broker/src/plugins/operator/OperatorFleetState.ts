@@ -2,6 +2,7 @@ import { StreamrClient, Subscription } from 'streamr-client'
 import { Logger } from '@streamr/utils'
 import { StreamID } from '@streamr/protocol'
 import { EventEmitter } from 'eventemitter3'
+import { NodeId } from '@streamr/network-node'
 
 const logger = new Logger(module)
 
@@ -20,7 +21,7 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
     private readonly timeProvider: () => number
     private readonly pruneAgeInMs: number
     private readonly pruneIntervalInMs: number
-    private readonly nodeActivityTimestamps = new Map<string, number>()
+    private readonly heartbeatTimestamps = new Map<NodeId, number>()
     private subscription?: Subscription
     private pruneNodesIntervalRef?: NodeJS.Timeout
 
@@ -52,8 +53,8 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
                 return
             }
             if (msgType === 'heartbeat') {
-                const exists = this.nodeActivityTimestamps.has(nodeId)
-                this.nodeActivityTimestamps.set(nodeId, this.timeProvider())
+                const exists = this.heartbeatTimestamps.has(nodeId)
+                this.heartbeatTimestamps.set(nodeId, this.timeProvider())
                 if (!exists) {
                     this.emit('added', nodeId)
                 }
@@ -68,14 +69,14 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
     }
 
     getNodeIds(): string[] {
-        return [...this.nodeActivityTimestamps.keys()]
+        return [...this.heartbeatTimestamps.keys()]
     }
 
     private pruneOfflineNodes(): void {
         const now = this.timeProvider()
-        for (const [nodeId, time] of this.nodeActivityTimestamps) {
+        for (const [nodeId, time] of this.heartbeatTimestamps) {
             if (now - time >= this.pruneAgeInMs) {
-                this.nodeActivityTimestamps.delete(nodeId)
+                this.heartbeatTimestamps.delete(nodeId)
                 this.emit('removed', nodeId)
             }
         }
