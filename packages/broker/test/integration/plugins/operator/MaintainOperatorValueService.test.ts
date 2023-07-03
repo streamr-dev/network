@@ -58,10 +58,6 @@ describe("MaintainOperatorValueService", () => {
         return diff
     }
 
-    beforeAll(async () => {
-
-    })
-
     beforeEach(async () => {
         provider = getProvider()
         logger.debug("Connected to: ", await provider.getNetwork())

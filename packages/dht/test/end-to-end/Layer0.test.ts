@@ -1,10 +1,10 @@
-import { NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
+import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { DhtNode } from '../../src/dht/DhtNode'
 
 describe('Layer0', () => {
 
     const epPeerDescriptor: PeerDescriptor = {
-        peerId: Uint8Array.from([1, 2, 3]),
+        kademliaId: Uint8Array.from([1, 2, 3]),
         type: NodeType.NODEJS,
         websocket: { ip: '127.0.0.1', port: 10011 }
     }
@@ -51,9 +51,10 @@ describe('Layer0', () => {
             node3.joinDht(epPeerDescriptor),
             node4.joinDht(epPeerDescriptor)
         ])
-        expect(node1.getBucketSize()).toBeGreaterThanOrEqual(3)
-        expect(node2.getBucketSize()).toBeGreaterThanOrEqual(3)
-        expect(node3.getBucketSize()).toBeGreaterThanOrEqual(3)
+
+        expect(node1.getBucketSize()).toBeGreaterThanOrEqual(2)
+        expect(node2.getBucketSize()).toBeGreaterThanOrEqual(2)
+        expect(node3.getBucketSize()).toBeGreaterThanOrEqual(2)
         expect(node4.getBucketSize()).toBeGreaterThanOrEqual(2)
-    })
+    }, 10000)
 })

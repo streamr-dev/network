@@ -1,5 +1,5 @@
 import { Contract, ContractReceipt, ContractTransaction } from '@ethersproject/contracts'
-import { NameDirectory } from '@streamr/network-node'
+import { NameDirectory } from '@streamr/trackerless-network'
 import { initEventGateway } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import shuffle from 'lodash/shuffle'

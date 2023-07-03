@@ -6,7 +6,7 @@ import { fastWallet } from '@streamr/test-utils'
 import { collect, toEthereumAddress } from '@streamr/utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
-import { createGroupKeyQueue, createStreamRegistryCached, createTestStream, startFailingStorageNode } from '../test-utils/utils'
+import { createGroupKeyQueue, createStreamRegistry, createTestStream, startFailingStorageNode } from '../test-utils/utils'
 import { createPrivateKeyAuthentication } from './../../src/Authentication'
 import { Stream } from './../../src/Stream'
 import { MessageFactory } from './../../src/publish/MessageFactory'
@@ -37,7 +37,7 @@ describe('gap fill', () => {
         messageFactory = new MessageFactory({
             authentication,
             streamId: stream.id,
-            streamRegistry: createStreamRegistryCached(),
+            streamRegistry: createStreamRegistry(),
             groupKeyQueue: await createGroupKeyQueue(authentication, GROUP_KEY)
         })
     })

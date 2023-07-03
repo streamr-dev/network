@@ -95,7 +95,7 @@ describe('ControlMessage', () => {
         })
 
         it('should throw on unsupported type', () => {
-            const m = new TestControlMessage(VERSION, 999, REQUEST_ID)
+            const m = new TestControlMessage(VERSION, 999 as any, REQUEST_ID)
             assert.throws(() => m.serialize(), (err: UnsupportedTypeError) => {
                 assert(err instanceof UnsupportedTypeError)
                 assert.strictEqual(err.type, 999)

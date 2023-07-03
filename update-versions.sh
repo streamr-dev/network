@@ -13,8 +13,7 @@ test-utils
 protocol
 proto-rpc
 dht
-network
-network-tracker
+trackerless-network
 client
 cli-tools
 broker"
@@ -24,8 +23,7 @@ PKG_NAMES="@streamr/utils
 @streamr/protocol
 @streamr/proto-rpc
 @streamr/dht
-@streamr/network-node
-@streamr/network-tracker
+@streamr/trackerless-network
 streamr-client
 @streamr/cli-tools
 "

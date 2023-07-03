@@ -1,49 +1,49 @@
-import { parseWrapper, serializeWrapper } from '../../src/ServerRegistry'
-import { RpcMessage } from '../../src/proto/ProtoRpc'
+import { wait } from "@streamr/utils"
+import { ServerRegistry } from "../../src/ServerRegistry"
+import { RpcMessage } from "../../src/proto/ProtoRpc"
+import { Any } from "../../src/proto/google/protobuf/any"
+import { HelloRequest, HelloResponse } from "../proto/HelloRpc"
 
-describe('ConversionWrappers', () => {
-    const msg: RpcMessage = {
-        header: { test: 'testheader' },
-        body: new Uint8Array(),
-        requestId: '1'
+describe('ServerRegistry', () => {
+
+    let serverRegistry: ServerRegistry
+
+    const request: HelloRequest = {
+        myName: 'test'
+    }
+    
+    const requestWrapper: RpcMessage = {
+        header: {
+            method: 'sayHello',
+            request: 'request'
+        },
+        body: Any.pack(request, HelloRequest),
+        requestId: 'request-id'
     }
 
-    it('Parses successfully', () => {
-        const binary = RpcMessage.toBinary(msg)
-        const parsed = parseWrapper<RpcMessage>(() => RpcMessage.fromBinary(binary))
-        expect(parsed.requestId).toEqual('1')
+    beforeEach(() => {
+        serverRegistry = new ServerRegistry()
     })
 
-    it('Parsing throws on incorrect messages', () => {
-        let errorCount = 0
-        try {
-            parseWrapper<RpcMessage>(() => RpcMessage.fromBinary(Buffer.from('adda')))
-        } catch (err) {
-            errorCount += 1
-        }
-        expect(errorCount).toEqual(1)
+    it('Can bind methods', async () => {
+        serverRegistry.registerRpcMethod(HelloRequest, HelloResponse, 'sayHello', async () => {
+            return {
+                greeting: 'hello' 
+            }
+        })
+        const res = await serverRegistry.handleRequest(requestWrapper, {} as any)
+        expect(Any.unpack(res, HelloResponse).greeting).toEqual('hello')
     })
 
-    it('Serializing successfully', () => {
-        const directSerialized = RpcMessage.toBinary(msg)
-        const serialized = serializeWrapper(() => RpcMessage.toBinary(msg))
-        expect(Buffer.compare(directSerialized, serialized)).toEqual(0)
+    it('can set server timeouts', async () => {
+        serverRegistry.registerRpcMethod(HelloRequest, HelloResponse, 'sayHello', async () => {
+            await wait(2000)
+            return {
+                greeting: 'hello' 
+            }
+        }, { timeout: 2100 })
+        const res = await serverRegistry.handleRequest(requestWrapper, {} as any)
+        expect(Any.unpack(res, HelloResponse).greeting).toEqual('hello')
     })
 
-    it('Serializing fails on incorrect messages', () => {
-        let errorCount = 0
-        try {
-            serializeWrapper(() =>
-                RpcMessage.toBinary(
-                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                    // @ts-ignore
-                    { asd: "aaaaa" }
-                )
-            )
-
-        } catch (err) {
-            errorCount += 1
-        }
-        expect(errorCount).toEqual(1)
-    })
 })

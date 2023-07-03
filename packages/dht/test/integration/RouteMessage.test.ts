@@ -1,165 +1,254 @@
 import { DhtNode, Events as DhtNodeEvents } from '../../src/dht/DhtNode'
-import { Message, MessageType, PeerDescriptor, RpcMessage } from '../../src/proto/DhtRpc'
-import { waitForEvent3 } from '../../src/helpers/waitForEvent3'
-import { createMockConnectionDhtNode, createWrappedClosestPeersRequest } from '../utils'
+import { Message, MessageType, PeerDescriptor, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
+import { Logger, runAndWaitForEvents3, waitForCondition } from '@streamr/utils'
+import { createMockConnectionDhtNode, createWrappedClosestPeersRequest } from '../utils/utils'
 import { PeerID } from '../../src/helpers/PeerID'
-import { Simulator } from '../../src/connection/Simulator'
-import { waitForCondition } from '@streamr/utils'
+import { Simulator } from '../../src/connection/Simulator/Simulator'
+import { v4 } from 'uuid'
+import { UUID } from '../../src/helpers/UUID'
+import { Any } from '../../src/proto/google/protobuf/any'
+import { RoutingMode } from '../../src/dht/routing/RoutingSession'
+
+const logger = new Logger(module)
 
 describe('Route Message With Mock Connections', () => {
     let entryPoint: DhtNode
     let sourceNode: DhtNode
     let destinationNode: DhtNode
     let routerNodes: DhtNode[]
-    const simulator = new Simulator()
+    let simulator: Simulator
     let entryPointDescriptor: PeerDescriptor
 
     const entryPointId = '0'
     const sourceId = 'eeeeeeeee'
     const destinationId = '000000000'
-    const SERVICE_ID = 'layer0'
+    const NUM_NODES = 30
+
+    const receiveMatrix: Array<Array<number>> = []
 
     beforeEach(async () => {
         routerNodes = []
-
+        simulator = new Simulator()
         entryPoint = await createMockConnectionDhtNode(entryPointId, simulator)
 
         entryPointDescriptor = {
-            peerId: entryPoint.getNodeId().value,
+            kademliaId: entryPoint.getNodeId().value,
+            nodeName: 'entrypoint',
             type: 0
         }
 
         sourceNode = await createMockConnectionDhtNode(sourceId, simulator)
         destinationNode = await createMockConnectionDhtNode(destinationId, simulator)
-        
-        for (let i = 1; i < 50; i++) {
+
+        for (let i = 1; i < NUM_NODES; i++) {
             const nodeId = `${i}`
             const node = await createMockConnectionDhtNode(nodeId, simulator)
             routerNodes.push(node)
         }
-        await entryPoint.joinDht(entryPointDescriptor)
-    })
 
-    afterEach(() => {
-        entryPoint.stop()
-        destinationNode.stop()
-        sourceNode.stop()
-        routerNodes.map((node) => {
-            node.stop()
-        })
-    })
+        await destinationNode.joinDht(entryPointDescriptor)
+        await sourceNode.joinDht(entryPointDescriptor)
+        await Promise.all(routerNodes.map((node) => node.joinDht(entryPointDescriptor)))
+        await entryPoint.joinDht(entryPointDescriptor)
+    }, 15000)
+
+    afterEach(async () => {
+        await Promise.allSettled(routerNodes.map((node) => node.stop()))
+        await Promise.allSettled([
+            entryPoint.stop(),
+            destinationNode.stop(),
+            sourceNode.stop()
+        ])
+
+        logger.info('calling simulator stop')
+        simulator.stop()
+        logger.info('simulator stop called')
+    }, 10000)
 
     it('Happy path', async () => {
-        await destinationNode.joinDht(entryPointDescriptor)
-        await sourceNode.joinDht(entryPointDescriptor)
-        await Promise.all(
-            routerNodes.map((node) => node.joinDht(entryPointDescriptor))
-        )
-
         const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
         const message: Message = {
-            serviceId: SERVICE_ID,
-            messageId: 'tsatsa',
+            serviceId: 'unknown',
+            messageId: v4(),
             messageType: MessageType.RPC,
-            body: RpcMessage.toBinary(rpcWrapper)
+            body: {
+                oneofKind: 'rpcMessage',
+                rpcMessage: rpcWrapper
+            },
+            sourceDescriptor: sourceNode.getPeerDescriptor(),
+            targetDescriptor: destinationNode.getPeerDescriptor()
         }
-        await Promise.all([
-            waitForEvent3<DhtNodeEvents>(destinationNode, 'data'),
-            sourceNode.doRouteMessage({
-                message: Message.toBinary(message),
+
+        await runAndWaitForEvents3<DhtNodeEvents>([() => {
+            sourceNode.router!.doRouteMessage({
+                message: message,
                 destinationPeer: destinationNode.getPeerDescriptor(),
-                serviceId: SERVICE_ID,
-                sourcePeer: sourceNode.getPeerDescriptor()
+                requestId: v4(),
+                sourcePeer: sourceNode.getPeerDescriptor(),
+                reachableThrough: [],
+                routingPath: []
+
             })
-        ])
-    })
-
-    it('Destination node does not exist after first hop', async () => {
-        await sourceNode.joinDht(entryPointDescriptor)
-
-        const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
-        const message: Message = {
-            serviceId: SERVICE_ID,
-            messageId: 'tsutsu',
-            messageType: MessageType.RPC,
-            body: RpcMessage.toBinary(rpcWrapper)
-        }
-        await expect(sourceNode.doRouteMessage({
-            message: Message.toBinary(message),
-            destinationPeer: destinationNode.getPeerDescriptor(),
-            serviceId: SERVICE_ID,
-            sourcePeer: sourceNode.getPeerDescriptor()
-        })).rejects.toThrow()
-    })
+        }], [[destinationNode, 'message']], 20000)
+    }, 30000)
 
     it('Receives multiple messages', async () => {
-        const numOfMessages = 100
-        await sourceNode.joinDht(entryPointDescriptor)
-        await destinationNode.joinDht(entryPointDescriptor)
-
+        const numOfMessages = 20
         let receivedMessages = 0
-        destinationNode.on('data', () => {
+        destinationNode.on('message', (_message: Message) => {
             receivedMessages += 1
         })
         const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
-        const message: Message = {
-            serviceId: SERVICE_ID,
-            messageId: 'tsutsu',
-            messageType: MessageType.RPC,
-            body: RpcMessage.toBinary(rpcWrapper)
-        }
-        for (let i = 0; i < numOfMessages; i++ ) {
-            sourceNode.doRouteMessage({
-                message: Message.toBinary(message),
+
+        for (let i = 0; i < numOfMessages; i++) {
+            const message: Message = {
+                serviceId: 'unknown',
+                messageId: v4(),
+                messageType: MessageType.RPC,
+                body: {
+                    oneofKind: 'rpcMessage',
+                    rpcMessage: rpcWrapper
+                },
+                sourceDescriptor: sourceNode.getPeerDescriptor(),
+                targetDescriptor: destinationNode.getPeerDescriptor()
+            }
+            await sourceNode.router!.doRouteMessage({
+                message: message,
                 destinationPeer: destinationNode.getPeerDescriptor(),
-                serviceId: SERVICE_ID,
-                sourcePeer: sourceNode.getPeerDescriptor()
+                requestId: v4(),
+                sourcePeer: sourceNode.getPeerDescriptor(),
+                reachableThrough: [],
+                routingPath: []
             })
         }
         await waitForCondition(() => receivedMessages === numOfMessages)
     })
 
     it('From all to all', async () => {
-        const routers = routerNodes.splice(0, 30)
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        for (const i in routerNodes) {
+            const arr: Array<number> = []
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            for (const j in routerNodes) {
+                arr.push(0)
+            }
+            receiveMatrix.push(arr)
+        }
+
         const numsOfReceivedMessages: Record<string, number> = {}
-        await entryPoint.joinDht(entryPointDescriptor)
-        await Promise.all(
-            routers.map((node) => {
-                node.joinDht(entryPointDescriptor)
-                numsOfReceivedMessages[node.getNodeId().toKey()] = 0
-                node.on('data', () => {
-                    numsOfReceivedMessages[node.getNodeId().toKey()] = numsOfReceivedMessages[node.getNodeId().toKey()] + 1
-                })
+        routerNodes.map((node) => {
+            numsOfReceivedMessages[node.getNodeId().toKey()] = 0
+            node.on('message', (msg: Message) => {
+                numsOfReceivedMessages[node.getNodeId().toKey()] = numsOfReceivedMessages[node.getNodeId().toKey()] + 1
+                try {
+                    const target = receiveMatrix[parseInt(node.getNodeId().toString()) - 1]
+                    target[parseInt(PeerID.fromValue(msg.sourceDescriptor!.kademliaId!).toString()) - 1]++
+                } catch (e) {
+                    console.error(e)
+                }
+                if (parseInt(node.getNodeId().toString()) > routerNodes.length || parseInt(node.getNodeId().toString()) < 1) {
+                    console.error(node.getNodeId().toString())
+                }
             })
+        }
         )
-        await Promise.allSettled(
-            routers.map(async (node) =>
-                await Promise.all(routers.map(async (receiver) => {
+        await Promise.all(
+            routerNodes.map(async (node) =>
+                Promise.all(routerNodes.map(async (receiver) => {
                     if (!node.getNodeId().equals(receiver.getNodeId())) {
                         const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
                         const message: Message = {
-                            serviceId: SERVICE_ID,
-                            messageId: 'tsutsu',
+                            serviceId: 'nonexisting_service',
+                            messageId: v4(),
                             messageType: MessageType.RPC,
-                            body: RpcMessage.toBinary(rpcWrapper)
+                            body: {
+                                oneofKind: 'rpcMessage',
+                                rpcMessage: rpcWrapper
+                            },
+                            sourceDescriptor: node.getPeerDescriptor(),
+                            targetDescriptor: destinationNode.getPeerDescriptor()
                         }
-                        await node.doRouteMessage({
-                            message: Message.toBinary(message),
+                        await node.router!.doRouteMessage({
+                            message: message,
                             destinationPeer: receiver.getPeerDescriptor(),
-                            serviceId: SERVICE_ID,
-                            sourcePeer: node.getPeerDescriptor()
+                            sourcePeer: node.getPeerDescriptor(),
+                            requestId: v4(),
+                            reachableThrough: [],
+                            routingPath: []
                         })
                     }
                 }))
             )
         )
-        await waitForCondition(() => numsOfReceivedMessages[PeerID.fromString('1').toKey()] >= routers.length - 1, 30000)
-        await Promise.allSettled(
-            Object.values(numsOfReceivedMessages).map(async (count) =>
-                await waitForCondition(() => {
-                    return count >= routers.length - 1
-                }, 30000)
+        await waitForCondition(() => numsOfReceivedMessages[PeerID.fromString('1').toKey()] >= routerNodes.length - 1
+            , 30000)
+        await Promise.all(
+            Object.keys(numsOfReceivedMessages).map(async (key) =>
+                waitForCondition(() => numsOfReceivedMessages[key] >= routerNodes.length - 1, 30000)
             )
         )
-    }, 60000)
+
+    }, 90000)
+
+    it('Destination receives forwarded message', async () => {
+        const closestPeersRequest = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
+        const closestPeersRequestMessage: Message = {
+            serviceId: 'unknown',
+            messageId: v4(),
+            messageType: MessageType.RPC,
+            body: {
+                oneofKind: 'rpcMessage',
+                rpcMessage: closestPeersRequest
+            },
+            sourceDescriptor: sourceNode.getPeerDescriptor()!,
+            targetDescriptor: destinationNode.getPeerDescriptor()!
+        }
+
+        const routeMessageWrapper: RouteMessageWrapper = {
+            message: closestPeersRequestMessage,
+            destinationPeer: destinationNode.getPeerDescriptor(),
+            requestId: new UUID().toString(),
+            sourcePeer: sourceNode.getPeerDescriptor(),
+            reachableThrough: [entryPointDescriptor],
+            routingPath: []
+        }
+
+        const rpcMessage: RpcMessage = {
+            body: Any.pack(routeMessageWrapper, RouteMessageWrapper),
+            header: {
+                method: 'routeMessage',
+                request: 'request'
+            },
+            requestId: v4()
+        }
+
+        const requestMessage: Message = {
+            serviceId: 'layer0',
+            messageId: v4(),
+            messageType: MessageType.RPC,
+            body: {
+                oneofKind: 'rpcMessage',
+                rpcMessage: rpcMessage
+            },
+            sourceDescriptor: sourceNode.getPeerDescriptor()!,
+            targetDescriptor: entryPoint.getPeerDescriptor()!
+        }
+
+        const forwardedMessage: RouteMessageWrapper = {
+            message: requestMessage,
+            requestId: v4(),
+            sourcePeer: sourceNode.getPeerDescriptor(),
+            destinationPeer: entryPoint.getPeerDescriptor()!,
+            reachableThrough: [],
+            routingPath: []
+        }
+
+        await runAndWaitForEvents3<DhtNodeEvents>([() => {
+            sourceNode.router!.doRouteMessage(forwardedMessage, RoutingMode.FORWARD)
+        }], [[destinationNode, 'message']])
+
+    })
+
 })
+

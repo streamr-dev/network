@@ -1,7 +1,7 @@
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { createTestStream } from '../test-utils/utils'
+import { createTestStream, createTestClient } from '../test-utils/utils'
 import range from 'lodash/range'
-import { CONFIG_TEST, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { wait, waitForCondition } from '@streamr/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamPermission } from '../../src/permission'
@@ -16,18 +16,8 @@ describe('resend', () => {
     let resendClient: StreamrClient
 
     beforeEach(async () => {
-        publisherClient = new StreamrClient({
-            ...CONFIG_TEST,
-            auth: {
-                privateKey: await fetchPrivateKeyWithGas()
-            }
-        })
-        resendClient = new StreamrClient({
-            ...CONFIG_TEST,
-            auth: {
-                privateKey: fastPrivateKey()
-            }
-        })
+        publisherClient = createTestClient(await fetchPrivateKeyWithGas(), 'resend-e2e-publisher-client', 43232)
+        resendClient = createTestClient(fastPrivateKey(), 'resend-e2e-resend-client', 43233)
     }, TIMEOUT)
 
     afterEach(async () => {
@@ -47,7 +37,6 @@ describe('resend', () => {
                 user: await resendClient.getAddress()
             })
             await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
-
             for (const idx of range(NUM_OF_MESSAGES)) {
                 await publisherClient.publish({
                     id: stream.id,

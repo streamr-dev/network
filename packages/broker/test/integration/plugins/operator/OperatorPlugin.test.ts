@@ -21,7 +21,6 @@ describe('OperatorPlugin', () => {
     it('can start broker with operator plugin', async () => {
         const promise = startBroker({
             privateKey: brokerWallet.privateKey,
-            trackerPort: 12345,
             extraPlugins: {
                 operator: {
                     operatorContractAddress: '0x4A5C0EC07F7ddBd4B6050181638e24b0153991b2'

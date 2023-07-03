@@ -38,27 +38,6 @@
           "DEBUG": "*",
           "STREAMR_DOCKER_DEV_HOST": "localhost"
         }
-      },
-      {
-        "name": "test this file",
-        "request": "launch",
-        "runtimeArgs": [
-          "jest",
-          "${file}"
-        ],
-        "runtimeExecutable": "npx",
-        "skipFiles": [
-          "<node_internals>/**"
-        ],
-        "console": "internalConsole", 
-        "outputCapture": "std",
-        "type": "node",
-        "env": {
-          "LOG_LEVEL": "trace",
-          "DEBUG": "*",
-          "STREAMR_DOCKER_DEV_HOST": "localhost"
-        }
       }
-
     ]
 }

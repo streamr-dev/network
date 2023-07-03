@@ -6,10 +6,10 @@ import {
     createSignaturePayload,
 } from '@streamr/protocol'
 import { EthereumAddress } from '@streamr/utils'
-import { StreamRegistryCached } from '../registry/StreamRegistryCached'
+import { StreamRegistry } from '../registry/StreamRegistry'
 import { verify } from '../utils/signingUtils'
 
-export const validateStreamMessage = async (msg: StreamMessage, streamRegistry: StreamRegistryCached): Promise<void> => {
+export const validateStreamMessage = async (msg: StreamMessage, streamRegistry: StreamRegistry): Promise<void> => {
     await doValidate(msg, streamRegistry).catch((err: any) => {
         // all StreamMessageError already have this streamMessage, maybe this is 
         // here if e.g. contract call fails? TODO is this really needed as
@@ -31,7 +31,7 @@ export const validateStreamMessage = async (msg: StreamMessage, streamRegistry: 
  *
  * @param streamMessage the StreamMessage to validate.
  */
-const doValidate = (streamMessage: StreamMessage, streamRegistry: StreamRegistryCached): Promise<void> => {
+const doValidate = (streamMessage: StreamMessage, streamRegistry: StreamRegistry): Promise<void> => {
     assertSignatureIsValid(streamMessage)
     switch (streamMessage.messageType) {
         case StreamMessageType.MESSAGE:
@@ -81,7 +81,7 @@ const assertSignatureIsValid = (streamMessage: StreamMessage): void => {
 
 const validateMessage = async (
     streamMessage: StreamMessage,
-    streamRegistry: StreamRegistryCached
+    streamRegistry: StreamRegistry
 ): Promise<void> => {
     const streamId = streamMessage.getStreamId()
     const stream = await streamRegistry.getStream(streamId)
@@ -100,7 +100,7 @@ const validateGroupKeyMessage = async (
     streamMessage: StreamMessage,
     expectedPublisher: EthereumAddress,
     expectedSubscriber: EthereumAddress,
-    streamRegistry: StreamRegistryCached
+    streamRegistry: StreamRegistry
 ): Promise<void> => {
     const streamId = streamMessage.getStreamId()
     const isPublisher = await streamRegistry.isStreamPublisher(streamId, expectedPublisher)

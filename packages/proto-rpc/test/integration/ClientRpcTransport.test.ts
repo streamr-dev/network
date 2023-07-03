@@ -5,12 +5,13 @@ import { DhtRpcServiceClient } from '../proto/TestProtos.client'
 import { getMockPeers } from '../utils'
 import { ProtoCallContext } from '../../src/ProtoCallContext'
 import { toProtoRpcClient } from '../../src/toProtoRpcClient'
+import { Any } from '../../src/proto/google/protobuf/any'
 
 describe('DhtClientRpcTransport', () => {
     it('Happy Path getClosestNeighbors', async () => {
         const rpcCommunicator = new RpcCommunicator()
-        rpcCommunicator.on('outgoingMessage', (message: Uint8Array, _ucallContext?: ProtoCallContext) => {
-            const request = RpcMessage.fromBinary(message)
+        rpcCommunicator.on('outgoingMessage', (message: RpcMessage, _requestId: string, _ucallContext?: ProtoCallContext) => {
+            //const request = RpcMessage.fromBinary(message)
             const responseBody: ClosestPeersResponse = {
                 peers: getMockPeers(),
                 requestId: 'TO BE REMOVED'
@@ -20,11 +21,11 @@ describe('DhtClientRpcTransport', () => {
                 header: {
                     response: 'hiihii'
                 },
-                body: ClosestPeersResponse.toBinary(responseBody),
-                requestId: request.requestId
+                body: Any.pack(responseBody, ClosestPeersResponse),
+                requestId: message.requestId
             }
             
-            rpcCommunicator.handleIncomingMessage(RpcMessage.toBinary(response))
+            rpcCommunicator.handleIncomingMessage(response)
         })
 
         const client = toProtoRpcClient(new DhtRpcServiceClient(rpcCommunicator.getRpcClientTransport()))

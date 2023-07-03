@@ -5,7 +5,7 @@ import { Message } from '../../../../src/helpers/PayloadFormat'
 import { createMessagingPluginTest } from '../../createMessagingPluginTest'
 
 const MQTT_PORT = 12430
-const TRACKER_PORT = 12432
+const NETWORK_LAYER_PORT = 40420
 
 jest.setTimeout(30000)
 
@@ -39,7 +39,7 @@ createMessagingPluginTest('mqtt',
     },
     {
         plugin: MQTT_PORT,
-        tracker: TRACKER_PORT
+        networkLayer: NETWORK_LAYER_PORT,
     },
     module
 )

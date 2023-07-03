@@ -63,191 +63,121 @@
             "additionalProperties": false,
             "required": [],
             "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "acceptProxyConnections": {
-                    "type": "boolean",
-                    "default": false
-                },
-                "trackers": {
-                    "anyOf": [
-                        {
+                "controlLayer": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "entryPoints": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/peerDescriptor"
+                            },
+                            "default": [{
+                                "id": "productionEntryPoint1",
+                                "type": 0,
+                                "websocket": {
+                                    "ip": "127.0.0.1",
+                                    "port": 40401
+                                }
+                            }]
+                        },
+                        "webSocketPort": {
+                            "type": "number"
+                        },
+                        "peerDescriptor": {
+                            "$ref": "#/definitions/peerDescriptor"
+                        },
+                        "iceServers": {
                             "type": "array",
                             "items": {
                                 "type": "object",
-                                "additionalProperties": false,
                                 "required": [
-                                    "id",
-                                    "http",
-                                    "ws"
+                                    "url",
+                                    "port"
                                 ],
+                                "additionalProperties": false,
                                 "properties": {
-                                    "id": {
-                                        "type": "string",
-                                        "format": "ethereum-address"
+                                    "url": {
+                                        "type": "string"
                                     },
-                                    "http": {
-                                        "type": "string",
-                                        "format": "uri"
+                                    "port": {
+                                        "type": "number"
                                     },
-                                    "ws": {
-                                        "type": "string",
-                                        "format": "uri"
+                                    "username": {
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    },
+                                    "tcp": {
+                                        "type": "boolean"
                                     }
                                 }
-                            }
-                        },
-                        {
-                            "type": "object",
-                            "required": [
-                                "contractAddress"
-                            ],
-                            "additionalProperties": false,
-                            "properties": {
-                                "contractAddress": {
-                                    "type": "string",
-                                    "format": "ethereum-address"
+                            },
+                            "default": [
+                                {
+                                    "url": "stun:stun.streamr.network",
+                                    "port": 5349
+                                },
+                                {
+                                    "url": "turn:turn.streamr.network",
+                                    "port": 5349,
+                                    "username": "BrubeckTurn1",
+                                    "password": "MIlbgtMw4nhpmbgqRrht1Q=="
+                                },
+                                {
+                                    "url": "turn:turn.streamr.network",
+                                    "port": 5349,
+                                    "username": "BrubeckTurn1",
+                                    "password": "MIlbgtMw4nhpmbgqRrht1Q==",
+                                    "tcp": true
                                 }
-                            }
-                        }
-                    ],
-                    "default": {
-                        "contractAddress": "0xab9BEb0e8B106078c953CcAB4D6bF9142BeF854d"
-                    }
-                },
-                "trackerPingInterval": {
-                    "type": "number",
-                    "default": 60000
-                },
-                "trackerConnectionMaintenanceInterval": {
-                    "type": "number",
-                    "default": 5000
-                },
-                "webrtcDisallowPrivateAddresses": {
-                    "type": "boolean",
-                    "default": true
-                },
-                "newWebrtcConnectionTimeout": {
-                    "type": "number",
-                    "default": 15000
-                },
-                "webrtcDatachannelBufferThresholdLow": {
-                    "type": "number",
-                    "default": 32768
-                },
-                "webrtcDatachannelBufferThresholdHigh": {
-                    "type": "number",
-                    "default": 131072
-                },
-                "webrtcSendBufferMaxMessageCount": {
-                    "type": "number",
-                    "default": 500
-                },
-                "webrtcMaxMessageSize": {
-                    "type": "number",
-                    "default": 1048576
-                },
-                "webrtcPortRange": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "required": [
-                        "min",
-                        "max"
-                    ],
-                    "properties": {
-                        "min": {
-                            "type": "number"
+                            ]
                         },
-                        "max": {
-                            "type": "number"
+                        "webrtcAllowPrivateAddresses": {
+                            "type": "boolean",
+                            "default": false
+                        },
+                        "webNewrtcConnectionTimeout": {
+                            "type": "number",
+                            "default": 15000
+                        },
+                        "webrtcDatachannelBufferThresholdLow": {
+                            "type": "number",
+                            "default": 32768
+                        },
+                        "webrtcDatachannelBufferThresholdHigh": {
+                            "type": "number",
+                            "default": 131072
                         }
                     },
-                    "default": {
-                        "min": 6000,
-                        "max": 65535
-                    }
+                    "default": {}
                 },
-                "disconnectionWaitTime": {
-                    "type": "number",
-                    "default": 200
-                },
-                "peerPingInterval": {
-                    "type": "number",
-                    "default": 30000
-                },
-                "rttUpdateTimeout": {
-                    "type": "number",
-                    "default": 15000
-                },
-                "externalIp": {
-                    "type": "string",
-                    "format": "ipv4"
-                },
-                "iceServers": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "required": [
-                            "url",
-                            "port"
-                        ],
-                        "additionalProperties": false,
-                        "properties": {
-                            "url": {
-                                "type": "string"
-                            },
-                            "port": {
-                                "type": "number"
-                            },
-                            "username": {
-                                "type": "string"
-                            },
-                            "password": {
-                                "type": "string"
-                            },
-                            "tcp": {
-                                "type": "boolean"
-                            }
-                        }
-                    },
-                    "default": [
-                        {
-                            "url": "stun:stun.streamr.network",
-                            "port": 5349
-                        },
-                        {
-                            "url": "turn:turn.streamr.network",
-                            "port": 5349,
-                            "username": "BrubeckTurn1",
-                            "password": "MIlbgtMw4nhpmbgqRrht1Q=="
-                        },
-                        {
-                            "url": "turn:turn.streamr.network",
-                            "port": 5349,
-                            "username": "BrubeckTurn1",
-                            "password": "MIlbgtMw4nhpmbgqRrht1Q==",
-                            "tcp": true
-                        }
-                    ]
-                },
-                "location": {
+                "node": {
                     "type": "object",
                     "additionalProperties": false,
                     "properties": {
-                        "latitude": {
-                            "type": "number"
-                        },
-                        "longitude": {
-                            "type": "number"
-                        },
-                        "country": {
+                        "id": {
                             "type": "string"
                         },
-                        "city": {
-                            "type": "string"
+                        "streamPartitionNumOfTargetNeighbors": {
+                            "type": "number",
+                            "default": 4
+                        },
+                        "streamPartitionMinPropagationTargets": {
+                            "type": "number",
+                            "default": 2
+                        },
+                        "firstConnectionTimeout": {
+                            "type": "number",
+                            "default": 10000
+                        }, 
+                        "acceptProxyConnections": {
+                            "type": "boolean",
+                            "default": false
                         }
-                    }
+                    },
+                    "default": {}
                 }
             },
             "default": {}
@@ -521,6 +451,47 @@
                         "$ref": "#/definitions/rpcProviderConfig"
                     },
                     "minItems": 1
+                }
+            }
+        },
+        "peerDescriptor": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "id",
+                "type"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "number"
+                },
+                "websocket": {
+                    "$ref": "#/definitions/connectivityMethod"
+                },
+                "openInternet": {
+                    "type": "boolean"
+                },
+                "region": {
+                    "type": "number"
+                }
+            }
+        },
+        "connectivityMethod": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "port",
+                "ip"
+            ],
+            "properties": {
+                "port": {
+                    "type": "number"
+                },
+                "ip": {
+                    "type": "string"
                 }
             }
         }

@@ -1,4 +1,4 @@
-import { Logger, toEthereumAddress } from '@streamr/utils'
+import { EthereumAddress, Logger, toEthereumAddress } from '@streamr/utils'
 import StreamrClient, { NetworkNodeStub } from 'streamr-client'
 import { Server as HttpServer } from 'http'
 import { Server as HttpsServer } from 'https'
@@ -15,6 +15,7 @@ const logger = new Logger(module)
 
 export interface Broker {
     getNode: () => Promise<NetworkNodeStub>
+    getAddress: () => Promise<EthereumAddress>
     start: () => Promise<unknown>
     stop: () => Promise<unknown>
 }
@@ -42,8 +43,13 @@ export const createBroker = async (configWithoutDefaults: Config): Promise<Broke
         return streamrClient.getNode()
     }
 
+    const getAddress = async (): Promise<EthereumAddress> => {
+        return streamrClient.getAddress()
+    }
+
     return {
         getNode,
+        getAddress,
         start: async () => {
             logger.info(`Start broker version ${CURRENT_VERSION}`)
             await Promise.all(plugins.map((plugin) => plugin.start()))
@@ -55,7 +61,6 @@ export const createBroker = async (configWithoutDefaults: Config): Promise<Broke
             if (httpServerEndpoints.length > 0) {
                 httpServer = await startHttpServer(httpServerEndpoints, config.httpServer)
             }
-
             const nodeId = (await streamrClient.getNode()).getNodeId()
             const brokerAddress = await streamrClient.getAddress()
             const mnemonic = generateMnemonicFromAddress(toEthereumAddress(brokerAddress))
@@ -64,11 +69,10 @@ export const createBroker = async (configWithoutDefaults: Config): Promise<Broke
             logger.info(`View your node in the Network Explorer: https://streamr.network/network-explorer/nodes/${encodeURIComponent(nodeId)}`)
             logger.info(`Network node ${nodeId} running`)
             logger.info(`Ethereum address ${brokerAddress}`)
-            logger.info(`Tracker Configuration: ${config.client.network?.trackers ? JSON.stringify(config.client.network?.trackers) : 'default'}`)
 
             logger.info(`Plugins: ${JSON.stringify(plugins.map((p) => p.name))}`)
 
-            if (config.client.network?.webrtcDisallowPrivateAddresses === undefined || config.client.network.webrtcDisallowPrivateAddresses) {
+            if (!config.client.network?.controlLayer?.webrtcAllowPrivateAddresses) {
                 logger.warn('WebRTC private address probing is disabled. ' +
                     'This makes it impossible to create network layer connections directly via local routers ' +
                     'More info: https://github.com/streamr-dev/network-monorepo/wiki/WebRTC-private-addresses')

@@ -1,12 +1,14 @@
-import { createTestStream, getCreateClient } from '../test-utils/utils'
+import { createTestStream, createTestClient } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
-import { CONFIG_TEST } from '../../src/ConfigTest'
+import { NodeType } from '@streamr/dht'
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { wait } from '@streamr/utils'
-import { ProxyDirection, toStreamPartID } from '@streamr/protocol'
+import { toStreamPartID } from '@streamr/protocol'
+import { ProxyDirection } from '@streamr/trackerless-network'
 import { until } from '../../src/utils/promises'
+import { JsonPeerDescriptor } from '../../src/Config'
 
 jest.setTimeout(50000)
 const SUBSCRIBE_WAIT_TIME = 2000
@@ -19,52 +21,51 @@ describe('PubSub with proxy connections', () => {
     let pubPrivateKey: string
     let proxyPrivateKey1: string
     let proxyPrivateKey2: string
-    let proxyNodeId1: string
-    let proxyNodeId2: string
-    const createClient = getCreateClient()
+    let proxyPeerKey1: string
+    let proxyPeerKey2: string
+
+    const proxyNodeId1 = 'proxy1'
+    const proxyNodeId2 = 'proxy2'
+    const proxyNodePort1 = 14231
+    const proxyNodePort2 = 14232
+
+    const proxyNodeDescriptor1: JsonPeerDescriptor = {
+        id: proxyNodeId1,
+        type: NodeType.NODEJS,
+        websocket: {
+            ip: 'localhost',
+            port: proxyNodePort1
+        }
+    }
+    const proxyNodeDescriptor2: JsonPeerDescriptor = {
+        id: proxyNodeId2,
+        type: NodeType.NODEJS,
+        websocket: {
+            ip: 'localhost',
+            port: proxyNodePort2
+        }
+    }
 
     beforeEach(async () => {
         pubPrivateKey = await fetchPrivateKeyWithGas()
         proxyPrivateKey1 = fastPrivateKey()
         proxyPrivateKey2 = fastPrivateKey()
 
-        onewayClient = await createClient({
-            id: 'publisher',
-            auth: {
-                privateKey: pubPrivateKey
-            }
-        })
-        proxyClient1 = await createClient({
-            id: 'proxy',
-            auth: {
-                privateKey: proxyPrivateKey1
-            },
-            network: {
-                acceptProxyConnections: true,
-                trackers: CONFIG_TEST.network!.trackers
-            }
-        })
-        proxyClient2 = await createClient({
-            id: 'proxy',
-            auth: {
-                privateKey: proxyPrivateKey2
-            },
-            network: {
-                acceptProxyConnections: true,
-                trackers: CONFIG_TEST.network!.trackers
-            }
-        })
+        onewayClient = createTestClient(pubPrivateKey, 'proxiedNode')
+
+        proxyClient1 = await createTestClient(proxyPrivateKey1, proxyNodeId1, proxyNodePort1, true)
+        proxyClient2 = await createTestClient(proxyPrivateKey2, proxyNodeId2, proxyNodePort2, true)
+
     }, 10000)
 
     beforeEach(async () => {
-        // @ts-expect-error private
-        proxyNodeId1 = await proxyClient1.node.getNodeId()
-        // @ts-expect-error private
-        proxyNodeId2 = await proxyClient2.node.getNodeId()
         stream = await createTestStream(onewayClient, module)
 
         const proxyUser1 = await proxyClient1.getAddress()
         const proxyUser2 = await proxyClient2.getAddress()
+
+        proxyPeerKey1 = (await proxyClient1.getNode()).getNodeId()
+        proxyPeerKey2 = (await proxyClient2.getNode()).getNodeId()
 
         await onewayClient.setPermissions({
             streamId: stream.id,
@@ -75,16 +76,24 @@ describe('PubSub with proxy connections', () => {
         })
     }, 60000)
 
+    afterEach(async () => {
+        await Promise.all([
+            proxyClient1?.destroy(),
+            proxyClient2?.destroy(),
+            onewayClient?.destroy()
+        ])
+    })
+
     it('Proxy publish connections work', async () => {
         const receivedMessagesProxy: any[] = []
         await proxyClient1.subscribe(stream, (msg) => {
             receivedMessagesProxy.push(msg)
         })
         await wait(SUBSCRIBE_WAIT_TIME)
-        await onewayClient.setProxies(stream, [proxyNodeId1], ProxyDirection.PUBLISH)
+        await onewayClient.setProxies(stream, [proxyNodeDescriptor1], ProxyDirection.PUBLISH)
 
         expect((await onewayClient.getNode())
-            .hasProxyConnection(toStreamPartID(stream.id, 0), proxyNodeId1, ProxyDirection.PUBLISH))
+            .hasProxyConnection(toStreamPartID(stream.id, 0), proxyPeerKey1, ProxyDirection.PUBLISH))
             .toEqual(true)
 
         await onewayClient.publish(stream, {
@@ -100,7 +109,7 @@ describe('PubSub with proxy connections', () => {
         expect(receivedMessagesProxy.length).toEqual(3)
 
         expect((await onewayClient.getNode())
-            .hasProxyConnection(toStreamPartID(stream.id, 0), proxyNodeId1, ProxyDirection.PUBLISH))
+            .hasProxyConnection(toStreamPartID(stream.id, 0), proxyPeerKey1, ProxyDirection.PUBLISH))
             .toEqual(true)
     }, 15000)
 
@@ -114,14 +123,14 @@ describe('PubSub with proxy connections', () => {
             receivedMessagesProxy2.push(msg)
         })
         await wait(SUBSCRIBE_WAIT_TIME)
-        await onewayClient.setProxies(stream, [proxyNodeId1, proxyNodeId2], ProxyDirection.PUBLISH)
+        await onewayClient.setProxies(stream, [proxyNodeDescriptor1, proxyNodeDescriptor2], ProxyDirection.PUBLISH)
 
         expect((await onewayClient.getNode())
-            .hasProxyConnection(toStreamPartID(stream.id, 0), proxyNodeId1, ProxyDirection.PUBLISH))
+            .hasProxyConnection(toStreamPartID(stream.id, 0), proxyPeerKey1, ProxyDirection.PUBLISH))
             .toEqual(true)
 
         expect((await onewayClient.getNode())
-            .hasProxyConnection(toStreamPartID(stream.id, 0), proxyNodeId2, ProxyDirection.PUBLISH))
+            .hasProxyConnection(toStreamPartID(stream.id, 0), proxyPeerKey2, ProxyDirection.PUBLISH))
             .toEqual(true)
 
         await onewayClient.setProxies(stream, [], ProxyDirection.PUBLISH)
@@ -141,12 +150,12 @@ describe('PubSub with proxy connections', () => {
         await proxyClient1.subscribe(stream)
         await wait(SUBSCRIBE_WAIT_TIME)
 
-        await onewayClient.setProxies(stream, [proxyNodeId1], ProxyDirection.SUBSCRIBE)
+        await onewayClient.setProxies(stream, [proxyNodeDescriptor1], ProxyDirection.SUBSCRIBE)
         await onewayClient.subscribe(stream, (msg) => {
             receivedMessages.push(msg)
         })
         expect((await onewayClient.getNode())
-            .hasProxyConnection(toStreamPartID(stream.id, 0), proxyNodeId1, ProxyDirection.SUBSCRIBE))
+            .hasProxyConnection(toStreamPartID(stream.id, 0), proxyPeerKey1, ProxyDirection.SUBSCRIBE))
             .toEqual(true)
 
         await proxyClient1.publish(stream, {
@@ -162,7 +171,7 @@ describe('PubSub with proxy connections', () => {
         expect(receivedMessages.length).toEqual(3)
 
         expect((await onewayClient.getNode())
-            .hasProxyConnection(toStreamPartID(stream.id, 0), proxyNodeId1, ProxyDirection.SUBSCRIBE))
+            .hasProxyConnection(toStreamPartID(stream.id, 0), proxyPeerKey1, ProxyDirection.SUBSCRIBE))
             .toEqual(true)
     }, 15000)
 
@@ -170,14 +179,14 @@ describe('PubSub with proxy connections', () => {
         await proxyClient1.subscribe(stream)
         await proxyClient2.subscribe(stream)
         await wait(SUBSCRIBE_WAIT_TIME)
-        await onewayClient.setProxies(stream, [proxyNodeId1, proxyNodeId2], ProxyDirection.SUBSCRIBE)
+        await onewayClient.setProxies(stream, [proxyNodeDescriptor1, proxyNodeDescriptor2], ProxyDirection.SUBSCRIBE)
 
         expect((await onewayClient.getNode())
-            .hasProxyConnection(toStreamPartID(stream.id, 0), proxyNodeId1, ProxyDirection.SUBSCRIBE))
+            .hasProxyConnection(toStreamPartID(stream.id, 0), proxyPeerKey1, ProxyDirection.SUBSCRIBE))
             .toEqual(true)
 
         expect((await onewayClient.getNode())
-            .hasProxyConnection(toStreamPartID(stream.id, 0), proxyNodeId2, ProxyDirection.SUBSCRIBE))
+            .hasProxyConnection(toStreamPartID(stream.id, 0), proxyPeerKey2, ProxyDirection.SUBSCRIBE))
             .toEqual(true)
 
         await onewayClient.unsubscribe(stream)
@@ -202,14 +211,14 @@ describe('PubSub with proxy connections', () => {
             receivedMessagesProxy2.push(msg)
         })
         await wait(SUBSCRIBE_WAIT_TIME)
-        await onewayClient.setProxies(stream, [proxyNodeId1, proxyNodeId2], ProxyDirection.PUBLISH)
+        await onewayClient.setProxies(stream, [proxyNodeDescriptor1, proxyNodeDescriptor2], ProxyDirection.PUBLISH)
 
         expect((await onewayClient.getNode())
-            .hasProxyConnection(toStreamPartID(stream.id, 0), proxyNodeId1, ProxyDirection.PUBLISH))
+            .hasProxyConnection(toStreamPartID(stream.id, 0), proxyPeerKey1, ProxyDirection.PUBLISH))
             .toEqual(true)
 
         expect((await onewayClient.getNode())
-            .hasProxyConnection(toStreamPartID(stream.id, 0), proxyNodeId2, ProxyDirection.PUBLISH))
+            .hasProxyConnection(toStreamPartID(stream.id, 0), proxyPeerKey2, ProxyDirection.PUBLISH))
             .toEqual(true)
 
         await onewayClient.setProxies(stream, [], ProxyDirection.PUBLISH)
