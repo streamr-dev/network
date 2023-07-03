@@ -2,7 +2,7 @@ import { StreamrClient, Subscription } from 'streamr-client'
 import { Logger } from '@streamr/utils'
 import { StreamID } from '@streamr/protocol'
 import { EventEmitter } from 'eventemitter3'
-import { NodeId } from '@streamr/network-node'
+import { NodeId } from '@streamr/trackerless-network'
 
 const logger = new Logger(module)
 
