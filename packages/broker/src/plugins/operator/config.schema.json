@@ -1,0 +1,17 @@
+{
+  "$id": "config.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "description": "Operator plugin configuration",
+  "additionalProperties": false,
+  "required": [
+    "operatorContractAddress"
+  ],
+  "properties": {
+    "operatorContractAddress": {
+      "type": "string",
+      "description": "Operator contract Ethereum address",
+      "format": "ethereum-address"
+    }
+  }
+}
