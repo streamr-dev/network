@@ -22,8 +22,9 @@ Monorepo containing all the main components of Streamr Network.
 * [cli-tools](packages/cli-tools/README.md) (@streamr/cli-tools)
 
 ### Internal
-* [network-node](packages/network/README.md) (@streamr/network-node)
-* [network-tracker](packages/network-tracker/README.md) (@streamr/network-tracker)
+* [trackerless-network](packages/trackerless-network/README.md) (@streamr/trackerless-network)
+* [dht](packages/dht/README.md) (@streamr/dht)
+* [proto-rpc](packages/proto-rpc/README.md) (@streamr/proto-rpc)
 * [protocol](packages/protocol/README.md) (@streamr/protocol)
 * [utils](packages/utils/README.md) (@streamr/utils)
 * [test-utils](packages/test-utils/README.md) (@streamr/test-utils)

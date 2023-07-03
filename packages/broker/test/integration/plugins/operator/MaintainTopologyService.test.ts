@@ -1,8 +1,8 @@
 import { MaintainTopologyService } from '../../../../src/plugins/operator/MaintainTopologyService'
 import { toEthereumAddress, waitForCondition } from '@streamr/utils'
-import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { parseEther } from '@ethersproject/units'
-import StreamrClient, { CONFIG_TEST, Stream } from 'streamr-client'
+import StreamrClient, { Stream } from 'streamr-client'
 import {
     deploySponsorship,
     deployOperatorContract,
@@ -12,15 +12,11 @@ import {
 } from './smartContractUtils'
 import { StreamPartID } from '@streamr/protocol'
 import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
+import { createClient } from '../../../utils'
 
 async function setUpStreams(): Promise<[Stream, Stream]> {
     const privateKey = await fetchPrivateKeyWithGas()
-    const client = new StreamrClient({
-        auth: {
-            privateKey
-        },
-        ...CONFIG_TEST
-    })
+    const client = createClient(privateKey)
     const s1 = await client.createStream({ id: '/test1/' + Date.now(), partitions: 1 })
     const s2 = await client.createStream({ id: '/test2/' + Date.now(), partitions: 3 })
     await client.destroy()
@@ -59,9 +55,7 @@ describe('MaintainTopologyService', () => {
             theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`,
         }
 
-        const client = new StreamrClient({
-            ...CONFIG_TEST
-        })
+        client = createClient(fastPrivateKey())
         service = new MaintainTopologyService(client, new MaintainTopologyHelper(
             serviceConfig
         ))

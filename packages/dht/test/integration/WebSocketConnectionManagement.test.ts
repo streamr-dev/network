@@ -1,14 +1,14 @@
 /* eslint-disable promise/no-nesting */
 
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
-import { Simulator } from '../../src/connection/Simulator'
-import { SimulatorTransport } from '../../src/connection/SimulatorTransport'
-import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
+import { Simulator } from '../../src/connection/Simulator/Simulator'
+import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { PeerID } from '../../src/helpers/PeerID'
 import { ConnectionType } from '../../src/connection/IConnection'
 import { ITransport } from '../../src/transport/ITransport'
 import * as Err from '../../src/helpers/errors'
 import { waitForCondition } from '@streamr/utils'
+import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 
 describe('WebSocket Connection Management', () => {
 
@@ -19,7 +19,7 @@ describe('WebSocket Connection Management', () => {
     const simulator = new Simulator()
 
     const wsServerConnectorPeerDescriptor: PeerDescriptor = {
-        peerId: PeerID.fromString("peerWithServer").value,
+        kademliaId: PeerID.fromString("peerWithServer").value,
         type: NodeType.NODEJS,
         websocket: {
             ip: '127.0.0.1',
@@ -28,7 +28,7 @@ describe('WebSocket Connection Management', () => {
     }
 
     const noWsServerConnectorPeerDescriptor: PeerDescriptor = {
-        peerId: PeerID.fromString("peerWithoutServer").value,
+        kademliaId: PeerID.fromString("peerWithoutServer").value,
         type: NodeType.NODEJS,
     }
 
@@ -37,8 +37,8 @@ describe('WebSocket Connection Management', () => {
 
     beforeEach(async () => {
 
-        connectorTransport1 = new SimulatorTransport(wsServerConnectorPeerDescriptor, simulator)
-        connectorTransport2 = new SimulatorTransport(noWsServerConnectorPeerDescriptor, simulator)
+        connectorTransport1 = new ConnectionManager({ ownPeerDescriptor: wsServerConnectorPeerDescriptor, simulator: simulator })
+        connectorTransport2 = new ConnectionManager({ ownPeerDescriptor: noWsServerConnectorPeerDescriptor, simulator: simulator })
 
         const config1 = {
             transportLayer: connectorTransport1,
@@ -59,16 +59,22 @@ describe('WebSocket Connection Management', () => {
     afterEach(async () => {
         await wsServerManager.stop()
         await noWsServerManager.stop()
+        await connectorTransport1.stop()
+        await connectorTransport2.stop()
     })
 
     it('Can open connections to serverless peer', (done) => {
         const dummyMessage: Message = {
             serviceId: serviceId,
-            body: new Uint8Array(),
+            body: {
+                oneofKind: 'rpcMessage',
+                rpcMessage: RpcMessage.create()
+            },
             messageType: MessageType.RPC,
-            messageId: 'mockerer'
+            messageId: 'mockerer',
+            targetDescriptor: noWsServerConnectorPeerDescriptor
         }
-        noWsServerManager.on('data', (message: Message, _peerDescriptor: PeerDescriptor) => {
+        noWsServerManager.on('message', (message: Message) => {
             expect(message.messageId).toEqual('mockerer')
             expect(wsServerManager.getConnection(noWsServerConnectorPeerDescriptor)!.connectionType).toEqual(ConnectionType.WEBSOCKET_SERVER)
             expect(noWsServerManager.getConnection(wsServerConnectorPeerDescriptor)!.connectionType).toEqual(ConnectionType.WEBSOCKET_CLIENT)
@@ -76,17 +82,21 @@ describe('WebSocket Connection Management', () => {
             done()
         })
 
-        wsServerManager.send(dummyMessage, noWsServerConnectorPeerDescriptor)
+        wsServerManager.send(dummyMessage)
     })
 
     it('Can open connections to peer with server', async () => {
         const dummyMessage: Message = {
             serviceId: serviceId,
-            body: new Uint8Array(),
+            body: {
+                oneofKind: 'rpcMessage',
+                rpcMessage: RpcMessage.create()
+            },
             messageType: MessageType.RPC,
-            messageId: 'mockerer'
+            messageId: 'mockerer',
+            targetDescriptor: wsServerConnectorPeerDescriptor
         }
-        await noWsServerManager.send(dummyMessage, wsServerConnectorPeerDescriptor)
+        await noWsServerManager.send(dummyMessage)
         await waitForCondition(
             () => {
                 return (!!wsServerManager.getConnection(noWsServerConnectorPeerDescriptor)
@@ -101,15 +111,20 @@ describe('WebSocket Connection Management', () => {
     it('Connecting to self throws', async () => {
         const dummyMessage: Message = {
             serviceId: serviceId,
-            body: new Uint8Array(),
+            body: {
+                oneofKind: 'rpcMessage',
+                rpcMessage: RpcMessage.create()
+            },
             messageType: MessageType.RPC,
-            messageId: 'mockerer'
+            messageId: 'mockerer',
+            targetDescriptor: noWsServerConnectorPeerDescriptor
         }
-        await expect(noWsServerManager.send(dummyMessage, noWsServerConnectorPeerDescriptor))
+        await expect(noWsServerManager.send(dummyMessage))
             .rejects
             .toEqual(new Err.CannotConnectToSelf('Cannot send to self'))
 
-        await expect(wsServerManager.send(dummyMessage, wsServerConnectorPeerDescriptor))
+        dummyMessage.targetDescriptor = wsServerConnectorPeerDescriptor
+        await expect(wsServerManager.send(dummyMessage))
             .rejects
             .toEqual(new Err.CannotConnectToSelf('Cannot send to self'))
     })

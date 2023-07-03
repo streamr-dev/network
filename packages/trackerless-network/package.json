@@ -1,0 +1,61 @@
+{
+  "name": "@streamr/trackerless-network",
+  "version": "8.5.4",
+  "description": "Minimal and extendable implementation of the Streamr Network node.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/streamr-dev/network-monorepo.git",
+    "directory": "packages/trackerless-network"
+  },
+  "main": "dist/src/exports.js",
+  "types": "dist/src/exports.d.ts",
+  "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
+  "author": "Streamr Network AG <contact@streamr.network>",
+  "scripts": {
+    "build": "tsc -b tsconfig.node.json",
+    "build-browser": "webpack --mode=development --progress",
+    "generate-protoc-code": "./proto.sh",
+    "check": "tsc -p ./tsconfig.jest.json --noEmit",
+    "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
+    "coverage": "jest --coverage",
+    "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
+    "test": "jest",
+    "test-browser": "karma start karma.config.js",
+    "test-unit": "jest test/unit",
+    "test-integration": "jest test/integration",
+    "test-e2e": "jest test/end-to-end",
+    "network": "ts-node bin/network",
+    "run-joining-benchmark": "node --max-old-space-size=24288 dist/test/benchmark/first-message.js"
+  },
+  "dependencies": {
+    "@protobuf-ts/runtime": "^2.8.2",
+    "@protobuf-ts/runtime-rpc": "^2.8.2",
+    "@streamr/dht": "8.5.4",
+    "@streamr/proto-rpc": "8.5.4",
+    "@streamr/protocol": "8.5.4",
+    "@streamr/test-utils": "8.5.4",
+    "@streamr/utils": "8.5.4",
+    "eventemitter3": "^5.0.0",
+    "lodash": "^4.17.21",
+    "yallist": "^4.0.0"
+  },
+  "devDependencies": {
+    "@streamr/browser-test-runner": "^0.0.1",
+    "@streamr/dev-config": "^1.0.0",
+    "@types/lodash": "^4.14.175",
+    "@types/node": "^18.16.18",
+    "@types/yallist": "^4.0.1",
+    "commander": "^11.0.0",
+    "expect": "^29.5.0",
+    "express": "^4.17.1",
+    "jest": "^29.5.0",
+    "jest-circus": "^28.0.5",
+    "jest-extended": "^4.0.0",
+    "jest-mock": "^29.4.3",
+    "ts-essentials": "^9.3.0",
+    "ts-jest": "^29.1.0",
+    "ts-loader": "^9.3.1",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.1.3"
+  }
+}

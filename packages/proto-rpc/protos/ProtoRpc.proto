@@ -1,20 +1,27 @@
 syntax = "proto3";
 option optimize_for = CODE_SIZE;
 
-import "google/protobuf/empty.proto";
+package protorpc;
 
-enum RpcResponseError {
-    SERVER_TIMOUT = 0;
+import "google/protobuf/empty.proto";
+import "google/protobuf/any.proto";
+
+enum RpcErrorType {
+    SERVER_TIMEOUT = 0;
     CLIENT_TIMEOUT = 1;
-    SERVER_ERROR = 2;
-    UNKNOWN_RPC_METHOD = 3;
+    UNKNOWN_RPC_METHOD = 2;
+    CLIENT_ERROR = 3;
+    SERVER_ERROR = 4;
   }
 
 message RpcMessage {
     map<string, string> header = 1;
-    bytes body = 2;
+    google.protobuf.Any body = 2;
     string requestId = 3;
-    optional RpcResponseError responseError = 4;
+    optional RpcErrorType errorType = 4;
+    optional string errorClassName = 5;
+    optional string errorCode = 6;
+    optional string errorMessage = 7;
   }
 
 // Dummy message to force the generation of the typescript class "google.prototype.Empty"

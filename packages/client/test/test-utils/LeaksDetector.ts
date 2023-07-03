@@ -11,9 +11,7 @@ export class LeaksDetector {
     private seen = new WeakSet()
     private didGC = false
 
-    // temporary whitelist leaks in network code
     ignoredKeys = new Set([
-        '/cachedNode',
         '/container',
         '/childContainer',
         'rovider/formatter',
