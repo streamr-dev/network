@@ -1,8 +1,8 @@
 import { MaintainTopologyService } from '../../../../src/plugins/operator/MaintainTopologyService'
 import { toEthereumAddress, waitForCondition } from '@streamr/utils'
-import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { parseEther } from '@ethersproject/units'
-import StreamrClient, { CONFIG_TEST, Stream } from 'streamr-client'
+import StreamrClient, { Stream } from 'streamr-client'
 import {
     deploySponsorship,
     deployOperatorContract,

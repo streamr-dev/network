@@ -2,7 +2,7 @@ import { Provider } from "@ethersproject/providers"
 import { Chains } from "@streamr/config"
 import { Wallet } from "@ethersproject/wallet"
 import { parseEther } from "@ethersproject/units"
-import { Logger, toEthereumAddress, wait, waitForCondition } from '@streamr/utils'
+import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
 
 import type { TestToken, Operator } from "@streamr/network-contracts"
 
@@ -13,7 +13,7 @@ import { deploySponsorship } from "./deploySponsorshipContract"
 import { MaintainOperatorValueService } from "../../../../src/plugins/operator/MaintainOperatorValueService"
 import { OperatorServiceConfig } from "../../../../src/plugins/operator/OperatorPlugin"
 import { deployOperatorContract, generateWalletWithGasAndTokens, getProvider } from "./smartContractUtils"
-import StreamrClient, { CONFIG_TEST } from "streamr-client"
+import { createClient } from "../../../utils"
 
 const config = Chains.load()["dev1"]
 const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '127.0.0.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`
@@ -51,27 +51,26 @@ describe("MaintainOperatorValueService", () => {
 
     const getDiffBetweenApproxAndRealValues = async (): Promise<bigint> => {
         const { sponsorshipAddresses, approxValues, realValues } = await operatorContract.getApproximatePoolValuesPerSponsorship()
-        let diff = BigInt(0)
+        let totalDiff = BigInt(0)
         for (let i = 0; i < sponsorshipAddresses.length; i++) {
-            diff = realValues[i].toBigInt() - approxValues[i].toBigInt()
+            const diff = realValues[i].toBigInt() - approxValues[i].toBigInt()
+            totalDiff += diff
         }
-        return diff
+        return totalDiff
     }
+
+    beforeAll(async () => {
+        const client = createClient(STREAM_CREATION_KEY)
+        streamId1 = (await client.createStream(`/operatorvalueservicetest-1-${Date.now()}`)).id
+        streamId2 = (await client.createStream(`/operatorvalueservicetest-2-${Date.now()}`)).id
+        await client.destroy()
+    })
 
     beforeEach(async () => {
         provider = getProvider()
         logger.debug("Connected to: ", await provider.getNetwork())
 
         token = new Contract(config.contracts.LINK, tokenABI) as unknown as TestToken
-        const client = new StreamrClient({
-            ...CONFIG_TEST,
-            auth: {
-                privateKey: STREAM_CREATION_KEY
-            }
-        })
-        streamId1 = (await client.createStream(`/operatorvalueservicetest-1-${Date.now()}`)).id
-        streamId2 = (await client.createStream(`/operatorvalueservicetest-2-${Date.now()}`)).id
-        await client.destroy();
 
         ({ operatorWallet, operatorContract } = await deployNewOperator())
 
@@ -85,25 +84,48 @@ describe("MaintainOperatorValueService", () => {
         }
     }, 60 * 1000)
 
-    test.each([parseEther("0.001"), parseEther("0.0005")])("updates the sponsorships to stay over the threshold", async (penaltyFraction) => {
+    // TODO: split into two test, where one verifies that not all sponsorships are used to update
+    // .each([parseEther("0.001"),]
+    test("updates only some (1) of the sponsorships to get under the threshold", async () => {
+        const penaltyFraction = parseEther("0.001")
         const maintainOperatorValueService = new MaintainOperatorValueService(operatorConfig, penaltyFraction.toBigInt())
 
         const totalValueInSponsorshipsBefore = await operatorContract.totalValueInSponsorshipsWei()
 
-        // wait for sponsorships to accumulate earnings so approximate values differ enough form the real values
-        await wait(6000)
+        const approxValuesBefore = (await operatorContract.getApproximatePoolValuesPerSponsorship()).approxValues
+        for (const approxValue of approxValuesBefore) {
+            logger.debug(`approxValue: ${approxValue.toString()}`)
+        }
+
+        await waitForCondition(async () => {
+            const diff = await getDiffBetweenApproxAndRealValues()
+            const poolValue = await operatorContract.totalValueInSponsorshipsWei()
+            const threshold = penaltyFraction.mul(poolValue).div(parseEther("1")).toBigInt()
+            logger.debug(`diff: ${diff}, threshold: ${threshold}`)
+            return diff > threshold 
+        }, 10000, 1000)
 
         await maintainOperatorValueService.start()
 
-        await waitForCondition(async () => (await operatorContract.totalValueInSponsorshipsWei()).gt(totalValueInSponsorshipsBefore), 20000, 1000)
+        await waitForCondition(async () => (await operatorContract.totalValueInSponsorshipsWei()).gt(totalValueInSponsorshipsBefore), 10000, 1000)
         
         const diff = await getDiffBetweenApproxAndRealValues()
 
         const poolValue = await operatorContract.totalValueInSponsorshipsWei()
-        const threshold = penaltyFraction.mul(poolValue).toBigInt()
+        const threshold = penaltyFraction.mul(poolValue).div(parseEther("1")).toBigInt()
 
         expect((await operatorContract.totalValueInSponsorshipsWei()).toBigInt()).toBeGreaterThan(totalValueInSponsorshipsBefore.toBigInt())
+        logger.debug(`at end diff: ${diff}, threshold: ${threshold}`)
         expect(diff).toBeLessThan(threshold)
+        const approxValuesAfter = (await operatorContract.getApproximatePoolValuesPerSponsorship()).approxValues
+        for (const approxValue of approxValuesAfter) {
+            logger.debug(`approxValue: ${approxValue.toString()}`)
+        }
+        // one of the values should have increased, but not both
+        expect((approxValuesAfter[0].toBigInt() > approxValuesBefore[0].toBigInt()
+            || approxValuesAfter[1].toBigInt() > approxValuesBefore[1].toBigInt())
+            && !((approxValuesAfter[0].toBigInt() > approxValuesBefore[0].toBigInt()
+            && approxValuesAfter[1].toBigInt() > approxValuesBefore[1].toBigInt()))).toBeTruthy()
 
         await maintainOperatorValueService.stop()
     }, 60 * 1000)
