@@ -71,7 +71,7 @@
     "nightwatch": "^3.0.1",
     "node-polyfill-webpack-plugin": "^2.0.1",
     "terser-webpack-plugin": "^5.2.5",
-    "ts-loader": "^9.3.1",
+    "ts-loader": "^9.4.4",
     "typedoc": "^0.24.8",
     "util": "^0.12.4",
     "weak-napi": "^2.0.2",
