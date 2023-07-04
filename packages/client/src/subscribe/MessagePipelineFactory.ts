@@ -4,7 +4,7 @@ import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { ConfigInjectionToken } from '../Config'
 import { DestroySignal } from '../DestroySignal'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'
-import { StreamRegistryCached } from '../registry/StreamRegistryCached'
+import { StreamRegistry } from '../registry/StreamRegistry'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { PushPipeline } from '../utils/PushPipeline'
 import { Resends } from './Resends'
@@ -13,7 +13,7 @@ import { MessagePipelineOptions, createMessagePipeline as _createMessagePipeline
 type MessagePipelineFactoryOptions = MarkOptional<Omit<MessagePipelineOptions,
     'resends' |
     'groupKeyManager' |
-    'streamRegistryCached' |
+    'streamRegistry' |
     'destroySignal' |
     'loggerFactory'>,
     'config'> 
@@ -22,7 +22,7 @@ type MessagePipelineFactoryOptions = MarkOptional<Omit<MessagePipelineOptions,
 export class MessagePipelineFactory {
 
     private readonly resends: Resends
-    private readonly streamRegistryCached: StreamRegistryCached
+    private readonly streamRegistry: StreamRegistry
     private readonly groupKeyManager: GroupKeyManager
     private readonly config: MessagePipelineOptions['config']
     private readonly destroySignal: DestroySignal
@@ -31,14 +31,14 @@ export class MessagePipelineFactory {
     /* eslint-disable indent */
     constructor(
         @inject(delay(() => Resends)) resends: Resends,
-        @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
+        @inject(delay(() => StreamRegistry)) streamRegistry: StreamRegistry,
         @inject(delay(() => GroupKeyManager)) groupKeyManager: GroupKeyManager,
         @inject(ConfigInjectionToken) config: MessagePipelineOptions['config'],
         destroySignal: DestroySignal,
         loggerFactory: LoggerFactory
     ) {
         this.resends = resends
-        this.streamRegistryCached = streamRegistryCached
+        this.streamRegistry = streamRegistry
         this.groupKeyManager = groupKeyManager
         this.config = config
         this.destroySignal = destroySignal
@@ -50,7 +50,7 @@ export class MessagePipelineFactory {
         return _createMessagePipeline({
             ...opts,
             resends: this.resends,
-            streamRegistryCached: this.streamRegistryCached,
+            streamRegistry: this.streamRegistry,
             groupKeyManager: this.groupKeyManager,
             config: opts.config ?? this.config,
             destroySignal: this.destroySignal,

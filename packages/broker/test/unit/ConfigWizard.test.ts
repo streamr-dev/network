@@ -33,7 +33,6 @@ const createMockLogger = () => {
 describe('ConfigWizard', () => {
     const importPrivateKeyPrompt = PROMPTS.privateKey[1]
     const portPrompt = PROMPTS.plugins[1]
-    const beneficiaryAddressPrompt = PROMPTS.plugins[6]
 
     describe('importPrivateKey validate', () => {
         it('happy path, prefixed', () => {
@@ -82,18 +81,6 @@ describe('ConfigWizard', () => {
             const validate = portPrompt.validate!
             const port = 'Not A Number!'
             expect(validate(port)).toBe(`Non-numeric value provided`)
-        })
-    })
-
-    describe('beneficiary address validation', () => {
-        it('happy path, prefixed', () => {
-            const validate = beneficiaryAddressPrompt.validate!
-            expect(validate('0x535620aa186d3243A10b929c8A854510dE00bf77')).toBe(true)
-        })
-
-        it('invalid data', () => {
-            const validate = beneficiaryAddressPrompt.validate!
-            expect(validate('0xloremipsum')).toEqual('Invalid Ethereum address provided.')
         })
     })
 
@@ -151,8 +138,7 @@ describe('ConfigWizard', () => {
             const numericPort = (typeof port === 'string') ? parseInt(port) : port
             const pluginsAnswers: PluginAnswers = {
                 enabledApiPlugins: [pluginName],
-                websocketPort: String(port),
-                enableMinerPlugin: true
+                websocketPort: String(port)
             }
             const config = getConfig(MOCK_PRIVATE_KEY, pluginsAnswers)
             expect(config.plugins[pluginName].port).toBe(numericPort)
@@ -171,15 +157,13 @@ describe('ConfigWizard', () => {
                 enabledApiPlugins: [ 'websocket', 'mqtt', 'http' ],
                 websocketPort: String(DEFAULT_CONFIG_PORTS.WS),
                 mqttPort: String(DEFAULT_CONFIG_PORTS.MQTT),
-                httpPort: String(DEFAULT_CONFIG_PORTS.HTTP),
-                enableMinerPlugin: true,
+                httpPort: String(DEFAULT_CONFIG_PORTS.HTTP)
             }
             const config = getConfig(MOCK_PRIVATE_KEY, pluginsAnswers)
             expect(config.plugins.websocket).toMatchObject({})
             expect(config.plugins.mqtt).toMatchObject({})
             expect(config.plugins.http).toMatchObject({})
             expect(config.httpServer).toBe(undefined)
-            expect(config.plugins.brubeckMiner).toEqual({})
         })
 
         it('should exercise the happy path with user-provided data', () => {
@@ -187,25 +171,15 @@ describe('ConfigWizard', () => {
                 enabledApiPlugins: [ 'websocket', 'mqtt', 'http' ],
                 websocketPort: '3170',
                 mqttPort: '3171',
-                httpPort: '3172',
-                enableMinerPlugin: true
+                httpPort: '3172'
             }
             const config = getConfig(MOCK_PRIVATE_KEY, pluginsAnswers)
             expect(config.plugins.websocket.port).toBe(parseInt(pluginsAnswers.websocketPort!))
             expect(config.plugins.mqtt.port).toBe(parseInt(pluginsAnswers.mqttPort!))
             expect(config.httpServer.port).toBe(parseInt(pluginsAnswers.httpPort!))
             expect(config.plugins.http).toMatchObject({})
-            expect(config.plugins.brubeckMiner).toEqual({})
         })
 
-        it('disable miner plugin', () => {
-            const pluginsAnswers: PluginAnswers = {
-                enabledApiPlugins: [],
-                enableMinerPlugin: false,
-            }
-            const config = getConfig(MOCK_PRIVATE_KEY, pluginsAnswers)
-            expect(config.plugins.brubeckMiner).toBeUndefined()
-        })
     })
 
     describe('identity', () => {
@@ -256,8 +230,7 @@ describe('ConfigWizard', () => {
 
         it('no plugins', async () => {
             await assertValidFlow({
-                enabledApiPlugins: [],
-                enableMinerPlugin: false
+                enabledApiPlugins: []
             },
             (config: any) => {
                 expect(config.plugins).toEqual({})
@@ -270,36 +243,16 @@ describe('ConfigWizard', () => {
                 enabledApiPlugins: [ 'websocket', 'mqtt', 'http' ],
                 websocketPort: '3170',
                 mqttPort: '3171',
-                httpPort: '3172',
-                enableMinerPlugin: true
+                httpPort: '3172'
             }
             await assertValidFlow(
                 pluginAnswers,
                 (config: any) => {
-                    expect(Object.keys(config.plugins)).toIncludeSameMembers(['brubeckMiner', 'websocket', 'mqtt', 'http'])
+                    expect(Object.keys(config.plugins)).toIncludeSameMembers(['websocket', 'mqtt', 'http'])
                     expect(config.plugins.websocket.port).toBe(parseInt(pluginAnswers.websocketPort!))
                     expect(config.plugins.mqtt.port).toBe(parseInt(pluginAnswers.mqttPort!))
-                    expect(config.plugins.brubeckMiner).toEqual({})
                     expect(config.plugins.http).toMatchObject({})
                     expect(config.httpServer.port).toBe(parseInt(pluginAnswers.httpPort!))
-                }
-            )
-        })
-
-        it('miner with beneficiaryAddress enabled', async () => {
-            const pluginAnswers: PluginAnswers = {
-                enabledApiPlugins: [],
-                enableMinerPlugin: true,
-                wantToSetBeneficiaryAddress: true,
-                beneficiaryAddress: '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
-            }
-            await assertValidFlow(
-                pluginAnswers,
-                (config: any) => {
-                    expect(Object.keys(config.plugins)).toIncludeSameMembers(['brubeckMiner'])
-                    expect(config.plugins.brubeckMiner).toEqual({
-                        beneficiaryAddress: '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
-                    })
                 }
             )
         })

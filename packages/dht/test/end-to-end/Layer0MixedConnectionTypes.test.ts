@@ -1,12 +1,12 @@
-import { NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
+import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { waitForEvent3 } from '../../src/helpers/waitForEvent3'
+import { waitForEvent3 } from '@streamr/utils'
 import { ConnectionManager, Events as ConnectionManagerEvents } from '../../src/connection/ConnectionManager'
 
 describe('Layer0MixedConnectionTypes', () => {
 
     const epPeerDescriptor: PeerDescriptor = {
-        peerId: Uint8Array.from([1, 2, 3]),
+        kademliaId: Uint8Array.from([1, 2, 3]),
         type: NodeType.NODEJS,
         websocket: { ip: '127.0.0.1', port: 11221 }
     }
@@ -25,7 +25,7 @@ describe('Layer0MixedConnectionTypes', () => {
 
         await epDhtNode.joinDht(epPeerDescriptor)
         node1 = new DhtNode({ peerIdString: 'Peer1', webSocketPort: 11222, entryPoints: [epPeerDescriptor] })
-        node2 = new DhtNode({ peerIdString: 'Peer2', webSocketPort: 11223, entryPoints: [epPeerDescriptor] })
+        node2 = new DhtNode({ peerIdString: 'Peer2', webSocketPort: 11228, entryPoints: [epPeerDescriptor] })
         node3 = new DhtNode({ peerIdString: 'Peer3', entryPoints: [epPeerDescriptor] })
         node4 = new DhtNode({ peerIdString: 'Peer4', entryPoints: [epPeerDescriptor] })
         node5 = new DhtNode({ peerIdString: 'Peer5', entryPoints: [epPeerDescriptor] })
@@ -53,23 +53,28 @@ describe('Layer0MixedConnectionTypes', () => {
     })
 
     it('2 non-server peers join first', async () => {
+
         const promise = Promise.all([
             waitForEvent3<ConnectionManagerEvents>((node3.getTransport() as ConnectionManager), 'newConnection'),
             waitForEvent3<ConnectionManagerEvents>((node4.getTransport() as ConnectionManager), 'newConnection'),
         ])
+
         node3.joinDht(epPeerDescriptor)
         node4.joinDht(epPeerDescriptor)
+
         await promise
         await Promise.all([
             node1.joinDht(epPeerDescriptor),
             node2.joinDht(epPeerDescriptor),
             node5.joinDht(epPeerDescriptor)
         ])
+
         expect(node1.getBucketSize()).toBeGreaterThanOrEqual(2)
         expect(node2.getBucketSize()).toBeGreaterThanOrEqual(2)
         expect(node3.getBucketSize()).toBeGreaterThanOrEqual(2)
         expect(node4.getBucketSize()).toBeGreaterThanOrEqual(2)
         expect(node5.getBucketSize()).toBeGreaterThanOrEqual(1)
+
     }, 15000)
 
     it('Simultaneous joins', async () => {

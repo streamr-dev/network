@@ -2,6 +2,7 @@ import EventEmitter from "eventemitter3"
 import { WebRtcConnectionEvents, IWebRtcConnection, RtcDescription } from "./IWebRtcConnection"
 import { IConnection, ConnectionID, ConnectionEvents, ConnectionType } from "../IConnection"
 import { Logger } from '@streamr/utils'
+import { DisconnectionType } from "../../transport/ITransport"
 
 const logger = new Logger(module)
 
@@ -23,15 +24,20 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
 
     private lastState: RTCPeerConnectionState = 'connecting'
 
-    private stunUrls = ['stun:stun.l.google.com:19302']
+    private iceServers = []
     private peerConnection?: RTCPeerConnection
     private dataChannel?: RTCDataChannel
     private makingOffer = false
     private isOffering = false
+    private closed = false
 
-    start(isOffering: boolean): void {
+    public start(isOffering: boolean): void {
         this.isOffering = isOffering
-        const urls: RTCIceServer[] = this.stunUrls.map((url) => { return { urls: [url] } })
+        const urls: RTCIceServer[] = this.iceServers.map(({ url, port, username, password }) => ({
+            urls: `${url}:${port}`,
+            username,
+            credential: password
+        }))
         this.peerConnection = new RTCPeerConnection({ iceServers: urls })
 
         this.peerConnection.onicecandidate = (event) => {
@@ -76,8 +82,8 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
         }
     }
 
-    async setRemoteDescription(description: string, type: string): Promise<void> {
-        const offerCollision = (type.toLowerCase() == RtcDescription.OFFER) && (this.makingOffer || !this.peerConnection ||
+    public async setRemoteDescription(description: string, type: string): Promise<void> {
+        const offerCollision = (type.toLowerCase() === RtcDescription.OFFER) && (this.makingOffer || !this.peerConnection ||
             this.peerConnection.signalingState != "stable")
 
         const ignoreOffer = this.isOffering && offerCollision
@@ -90,7 +96,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
             logger.warn('error', { err })
         }
 
-        if (type.toLowerCase() == RtcDescription.OFFER && this.peerConnection) {
+        if (type.toLowerCase() === RtcDescription.OFFER && this.peerConnection) {
             try {
                 await this.peerConnection.setLocalDescription()
             } catch (err) {
@@ -102,7 +108,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
         }
     }
 
-    addRemoteCandidate(candidate: string, mid: string): void {
+    public addRemoteCandidate(candidate: string, mid: string): void {
         try {
             this.peerConnection?.addIceCandidate({ candidate: candidate, sdpMid: mid }).then(() => { return }).catch((err: any) => {
                 logger.warn('error', { err })
@@ -112,37 +118,55 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
         }
     }
 
-    isOpen(): boolean {
+    public isOpen(): boolean {
         return this.lastState === 'connected'
     }
 
     // IConnection implementation
-    close(): void {
-        this.lastState = 'closed'
+    
+    public async close(disconnectionType: DisconnectionType, reason?: string): Promise<void> {
+        this.doClose(disconnectionType, reason)
+    }
+    
+    private doClose(disconnectionType: DisconnectionType, reason?: string): void {
+        if (!this.closed) {
+            this.closed = true
+            this.lastState = 'closed'
 
-        if (this.dataChannel) {
-            try {
-                this.dataChannel.close()
-            } catch (e) {
-                logger.warn(`dc.close() errored: ${e}`)
+            this.stopListening()
+            this.emit('disconnected', disconnectionType, undefined, reason)
+            
+            this.removeAllListeners()
+
+            if (this.dataChannel) {
+                try {
+                    this.dataChannel.close()
+                } catch (e) {
+                    logger.warn(`dc.close() errored: ${e}`)
+                }
             }
-        }
 
-        this.dataChannel = undefined
+            this.dataChannel = undefined
 
-        if (this.peerConnection) {
-            try {
-                this.peerConnection.close()
-            } catch (e) {
-                logger.warn(`conn.close() errored: ${e}`)
+            if (this.peerConnection) {
+                try {
+                    this.peerConnection.close()
+                } catch (e) {
+                    logger.warn(`conn.close() errored: ${e}`)
+                }
             }
+            this.peerConnection = undefined
+            
         }
-
-        this.peerConnection = undefined
     }
 
-    send(data: Uint8Array): void {
-        if (this.lastState == 'connected') {
+    public destroy(): void {
+        this.removeAllListeners()
+        this.doClose('OTHER')
+    }
+
+    public send(data: Uint8Array): void {
+        if (this.lastState === 'connected') {
             this.dataChannel?.send(data as Buffer)
         } else {
             logger.warn('Tried to send on a connection with last state ' + this.lastState)
@@ -157,7 +181,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
 
         dataChannel.onclose = () => {
             logger.trace('dc.onClosed')
-            this.close()
+            this.doClose('OTHER')
         }
 
         dataChannel.onerror = (err) => {
@@ -171,6 +195,23 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
         dataChannel.onmessage = (msg) => {
             logger.trace('dc.onmessage')
             this.emit('data', new Uint8Array(msg.data))
+        }
+    }
+
+    private stopListening() {
+        if (this.dataChannel) {
+            this.dataChannel.onopen = null
+            this.dataChannel.onclose = null
+            this.dataChannel.onerror = null
+            this.dataChannel.onbufferedamountlow = null
+            this.dataChannel.onmessage = null
+        }
+
+        if (this.peerConnection) {
+            this.peerConnection.onicecandidate = null
+            this.peerConnection.onicegatheringstatechange = null
+            this.peerConnection.onnegotiationneeded = null
+            this.peerConnection.ondatachannel = null
         }
     }
 

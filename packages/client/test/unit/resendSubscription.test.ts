@@ -9,7 +9,7 @@ import { ResendRangeOptions } from '../../src/subscribe/Resends'
 import { Subscription, SubscriptionEvents } from '../../src/subscribe/Subscription'
 import { initResendSubscription } from '../../src/subscribe/resendSubscription'
 import { PushPipeline } from '../../src/utils/PushPipeline'
-import { createGroupKeyQueue, createRandomAuthentication, createStreamRegistryCached, mockLoggerFactory } from '../test-utils/utils'
+import { createGroupKeyQueue, createRandomAuthentication, createStreamRegistry, mockLoggerFactory } from '../test-utils/utils'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
 const MAX_GAP_REQUESTS = 2
@@ -51,7 +51,7 @@ describe('resend subscription', () => {
         messageFactory = new MessageFactory({
             authentication,
             streamId: StreamPartIDUtils.getStreamID(STREAM_PART_ID),
-            streamRegistry: createStreamRegistryCached({
+            streamRegistry: createStreamRegistry({
                 isPublicStream: true
             }),
             groupKeyQueue: await createGroupKeyQueue(authentication)

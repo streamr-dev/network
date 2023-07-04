@@ -40,3 +40,15 @@ const streamId = {
 };
 ```
 :::
+
+:::note
+The domain portion of the stream ID is case-insensitive and the Streamr SDK will force this portion of the stream ID to be lowercase for you.
+
+However the path portion, i.e. anything that comes after the 0x address or ENS domain is **case-sensitive**.
+
+For example,
+```ts
+0x123a/cat === 0x123A/cat
+0x123a/CAT !== 0x123a/cat
+```
+:::

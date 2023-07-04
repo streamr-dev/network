@@ -12,7 +12,7 @@ type ClassType = Record<any | symbol | number, (...args: any) => any> & object |
 type ProtoRpcRealApi<T extends ClassType> = {
     [k in keyof T as T[k] extends Function ? k : never]:
     (...args: Parameters<T[k]>) => (
-        Promise<Empty> extends (ReturnType<T[k]>)['response'] ? void :
+        Promise<Empty> extends (ReturnType<T[k]>)['response'] ? Promise<void> :
         (ReturnType<T[k]>)['response'])
 }
 
@@ -22,7 +22,7 @@ export function toProtoRpcClient<T extends ServiceInfo & ClassType>(orig: T): Pr
     const ret: ClassType = {}
     Object.assign(ret, orig)
 
-    const notify = (methodName: string, obj: ClassType, args: any[]): void => {
+    const notify = async (methodName: string, obj: ClassType, args: any[]): Promise<void> => {
         if (args.length < 2) {
             args.push({})
         } else if (!args[1]) {
@@ -31,7 +31,7 @@ export function toProtoRpcClient<T extends ServiceInfo & ClassType>(orig: T): Pr
         args[1].isProtoRpc = true
         args[1].notification = true
        
-        obj[methodName].apply(obj, args)
+        await obj[methodName].apply(obj, args)
     }
 
     const callRpc = (methodName: string, obj: ClassType, args: any[]) => {
@@ -47,7 +47,7 @@ export function toProtoRpcClient<T extends ServiceInfo & ClassType>(orig: T): Pr
     orig.methods.forEach((method) => {
         if (method.O.typeName === Empty.typeName) {
             ret[method.name] = (...args: any[]) => {
-                notify(method.name, orig, args)
+                return notify(method.name, orig, args)
             }
         } else {
             ret[method.name] = (...args: any[]) => {

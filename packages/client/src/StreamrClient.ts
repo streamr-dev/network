@@ -1,7 +1,6 @@
 import 'reflect-metadata'
 import './utils/PatchTsyringe'
 
-import { ProxyDirection } from '@streamr/protocol'
 import { EthereumAddress, TheGraphClient, toEthereumAddress } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import merge from 'lodash/merge'
@@ -9,9 +8,10 @@ import omit from 'lodash/omit'
 import { container as rootContainer } from 'tsyringe'
 import { PublishMetadata } from '../src/publish/Publisher'
 import { Authentication, AuthenticationInjectionToken, createAuthentication } from './Authentication'
-import { ConfigInjectionToken, StreamrClientConfig, StrictStreamrClientConfig, createStrictConfig, redactConfig } from './Config'
+import { ConfigInjectionToken, StreamrClientConfig, StrictStreamrClientConfig, createStrictConfig, redactConfig, JsonPeerDescriptor } from './Config'
 import { DestroySignal } from './DestroySignal'
 import { generateEthereumAccount as _generateEthereumAccount } from './Ethereum'
+import { ProxyDirection } from '@streamr/trackerless-network'
 import { Message, convertStreamMessageToMessage } from './Message'
 import { MetricsPublisher } from './MetricsPublisher'
 import { NetworkNodeFacade, NetworkNodeStub } from './NetworkNodeFacade'
@@ -319,8 +319,9 @@ export class StreamrClient {
      *
      * @returns rejects if the stream is not found
      */
-    getStream(streamIdOrPath: string): Promise<Stream> {
-        return this.streamRegistry.getStream(streamIdOrPath)
+    async getStream(streamIdOrPath: string): Promise<Stream> {
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+        return this.streamRegistry.getStream(streamId, false)
     }
 
     /**
@@ -455,14 +456,16 @@ export class StreamrClient {
      * Checks whether a given ethereum address has {@link StreamPermission.PUBLISH} permission to a stream.
      */
     async isStreamPublisher(streamIdOrPath: string, userAddress: string): Promise<boolean> {
-        return this.streamRegistry.isStreamPublisher(streamIdOrPath, toEthereumAddress(userAddress))
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+        return this.streamRegistry.isStreamPublisher(streamId, toEthereumAddress(userAddress), false)
     }
 
     /**
      * Checks whether a given ethereum address has {@link StreamPermission.SUBSCRIBE} permission to a stream.
      */
     async isStreamSubscriber(streamIdOrPath: string, userAddress: string): Promise<boolean> {
-        return this.streamRegistry.isStreamSubscriber(streamIdOrPath, toEthereumAddress(userAddress))
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+        return this.streamRegistry.isStreamSubscriber(streamId, toEthereumAddress(userAddress), false)
     }
 
     // --------------------------------------------------------------------------------------------
@@ -553,12 +556,21 @@ export class StreamrClient {
 
     async setProxies(
         streamDefinition: StreamDefinition,
-        nodeIds: string[],
+        proxyNodes: JsonPeerDescriptor[],
         direction: ProxyDirection,
         connectionCount?: number
     ): Promise<void> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        await this.node.setProxies(streamPartId, nodeIds, direction, connectionCount)
+        await this.node.setProxies(streamPartId, proxyNodes, direction, connectionCount)
+    }
+
+    /**
+     * Used to set known entry points for a stream partition. If entry points are not set they 
+     * will be automatically discovered from the Streamr Network.
+    */
+    async setStreamEntryPoints(streamDefinition: StreamDefinition, entryPoints: JsonPeerDescriptor[]): Promise<void> {
+        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
+        await this.node.setStreamPartEntryPoints(streamPartId, entryPoints)
     }
 
     // --------------------------------------------------------------------------------------------

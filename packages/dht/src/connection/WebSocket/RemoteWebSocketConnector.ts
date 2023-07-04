@@ -1,8 +1,8 @@
 import {
     PeerDescriptor,
     WebSocketConnectionRequest
-} from '../../proto/DhtRpc'
-import { IWebSocketConnectorServiceClient } from '../../proto/DhtRpc.client'
+} from '../../proto/packages/dht/protos/DhtRpc'
+import { IWebSocketConnectorServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { DhtRpcOptions } from '../../rpc-protocol/DhtRpcOptions'
 import { Logger } from '@streamr/utils'
 import * as Err from '../../helpers/errors'
@@ -21,7 +21,7 @@ export class RemoteWebSocketConnector {
     }
 
     async requestConnection(sourceDescriptor: PeerDescriptor, ip: string, port: number): Promise<boolean> {
-        logger.trace(`Requesting WebSocket connection from ${this.peerDescriptor.peerId.toString()}`)
+        logger.trace(`Requesting WebSocket connection from ${this.peerDescriptor.kademliaId.toString()}`)
         const request: WebSocketConnectionRequest = {
             target: this.peerDescriptor,
             requester: sourceDescriptor,
