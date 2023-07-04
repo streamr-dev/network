@@ -19,7 +19,7 @@
     }
   },
   "scripts": {
-    "prebuild": "bash vendor-hack.sh",
+    "prebuild": "node bin/generate-config-validator.js && bash vendor-hack.sh",
     "postbuild": "bash copy-package.sh && bash fix-esm.sh",
     "build": "tsc --build ./tsconfig.node.json",
     "build-production": "npm run clean; NODE_ENV=production npm run build && npm run build-browser-production",

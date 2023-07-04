@@ -1,18 +1,16 @@
 import 'reflect-metadata'
 import type { Overrides } from '@ethersproject/contracts'
 import cloneDeep from 'lodash/cloneDeep'
-import Ajv, { ErrorObject } from 'ajv'
-import addFormats from 'ajv-formats'
 import type { ExternalProvider } from '@ethersproject/providers'
 import { MarkOptional, DeepRequired } from 'ts-essentials'
 
-import CONFIG_SCHEMA from './config.schema.json'
 import { TrackerRegistryRecord } from '@streamr/protocol'
 import { LogLevel } from '@streamr/utils'
 
 import { IceServer, Location, WebRtcPortRange, ExternalIP } from '@streamr/network-node'
 import type { ConnectionInfo } from '@ethersproject/web'
 import { generateClientId } from './utils/utils'
+import validate from './generated/validateConfig'
 
 export interface ProviderAuthConfig {
     ethereum: ExternalProvider
@@ -377,23 +375,16 @@ export const createStrictConfig = (input: StreamrClientConfig = {}): StrictStrea
 }
 
 export const validateConfig = (data: unknown): StrictStreamrClientConfig | never => {
-    const ajv = new Ajv({
-        useDefaults: true
-    })
-    addFormats(ajv)
-    ajv.addFormat('ethereum-address', /^0x[a-zA-Z0-9]{40}$/)
-    ajv.addFormat('ethereum-private-key', /^(0x)?[a-zA-Z0-9]{64}$/)
-    const validate = ajv.compile<StrictStreamrClientConfig>(CONFIG_SCHEMA)
     if (!validate(data)) {
-        throw new Error(validate.errors!.map((e: ErrorObject) => {
-            let text = ajv.errorsText([e], { dataVar: '' }).trim()
+        throw new Error((validate as any).errors!.map((e: any) => {
+            let text = e.instancePath + " " + e.message
             if (e.params.additionalProperty) {
                 text += `: ${e.params.additionalProperty}`
             }
             return text
         }).join('\n'))
     }
-    return data
+    return data as any
 }
 
 export const redactConfig = (config: StrictStreamrClientConfig): void => {
