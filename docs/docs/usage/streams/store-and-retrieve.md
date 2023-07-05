@@ -7,7 +7,7 @@ sidebar_position: 6
 You can enable data storage on your streams to retain historical message and access it later via a `resend`. Storage needs to be enabled and is not on by default. Storage is currently centralized and offered via the Streamr Storage nodes.
 
 :::info Good to know:
-To retrieve data from storage, a key exchange between the publisher and subscriber needs to be performed. This means that the publisher must be online and present in the Network at the time of the retrieval. You can get around this liveness requirement by using the Lit protocol for key exchange (see #[Working with Lit](./store-and-retrieve#working-with-lit-protocol)).
+To retrieve data from storage, a key exchange between the publisher and subscriber needs to be performed. This means that the publisher must be online and present in the Network at the time of the retrieval. You can get around this liveness requirement by using the Lit protocol for key exchange (see #[Working with Lit](#working-with-lit-protocol)).
 :::
 
 ## Enable storage
@@ -61,7 +61,7 @@ The [Lit Protocol](https://litprotocol.com) is a decentralized key management ne
 ## Request historical messages
 
 :::caution Important:
-In order to fetch historical messages the stream needs to have **[storage enabled](./store-and-retrieve#enable-storage)**.
+In order to fetch historical messages the stream needs to have **[storage enabled](#enable-storage)**.
 :::
 
 By default `subscribe` will not request historical messages.
