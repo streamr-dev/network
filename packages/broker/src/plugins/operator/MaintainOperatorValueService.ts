@@ -60,16 +60,16 @@ export class MaintainOperatorValueService {
 
             // find the number of sponsorships needed to get the total diff under the threshold
             let neededSponsorshipsCount = 0
-            let diff = BigInt(0)
+            let diffSum = BigInt(0)
             for (const sponsorship of sortedSponsorships) {
-                diff = diff + sponsorship.diff.toBigInt()
+                diffSum = diffSum + sponsorship.diff.toBigInt()
                 neededSponsorshipsCount += 1
-                if (diff > threshold) {
+                if (diffSum > totalDiff - threshold) {
                     break
                 }
             }
             
-            logger.info('Update approximate pool values of sponsorships', { threshold, diffPercentage: diff / totalDiff })
+            logger.info('Update approximate pool values of sponsorships', { threshold, diffPercentage: diffSum / totalDiff })
             // pick the first entries needed to get the total diff under the threshold
             const neededSponsorshipAddresses = sortedSponsorships.slice(0, neededSponsorshipsCount).map((sponsorship) => sponsorship.address)
             await this.helper.updateApproximatePoolValueOfSponsorships(neededSponsorshipAddresses)
