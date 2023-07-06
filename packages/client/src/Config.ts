@@ -3,8 +3,6 @@ import type { Overrides } from '@ethersproject/contracts'
 import cloneDeep from 'lodash/cloneDeep'
 import type { ExternalProvider } from '@ethersproject/providers'
 import { MarkOptional, DeepRequired } from 'ts-essentials'
-
-import CONFIG_SCHEMA from './config.schema.json'
 import { LogLevel } from '@streamr/utils'
 import { IceServer, NodeType } from '@streamr/dht'
 
