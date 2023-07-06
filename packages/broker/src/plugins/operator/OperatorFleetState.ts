@@ -10,7 +10,7 @@ const DEFAULT_PRUNE_AGE_IN_MS = 5 * 60 * 1000
 
 const DEFAULT_PRUNE_INTERVAL_IN_MS = 30 * 1000
 
-interface OperatorFleetStateEvents {
+export interface OperatorFleetStateEvents {
     added: (nodeId: string) => void
     removed: (nodeId: string) => void
 }
