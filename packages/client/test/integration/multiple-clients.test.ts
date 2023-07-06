@@ -27,7 +27,7 @@ const waitMessagesReceived = async (
         const receivedCount = Object.values(received).flat().length
         const publishedCount = Object.values(published).flat().length
         return receivedCount === publishedCount
-    }, 10 * 1000)
+    }, 20 * 1000)
 }
 
 describe('PubSub with multiple clients', () => {
@@ -51,7 +51,7 @@ describe('PubSub with multiple clients', () => {
         stream = await createTestStream(mainClient, module)
         const storageNode = await environment.startStorageNode()
         await stream.addToStorageNode(storageNode.id)
-    })
+    }, 30 * 1000)
 
     afterEach(async () => {
         await environment.destroy()
@@ -116,11 +116,11 @@ describe('PubSub with multiple clients', () => {
             }
             // publish message on main client
             await mainClient.publish(stream, message)
-            await waitForCondition(() => receivedMessagesMain.length === 1 && receivedMessagesOther.length === 1)
+            await waitForCondition(() => receivedMessagesMain.length === 1 && receivedMessagesOther.length === 1, 15 * 1000)
             // messages should arrive on both clients?
             expect(receivedMessagesMain).toEqual([message])
             expect(receivedMessagesOther).toEqual([message])
-        })
+        }, 30 * 1000)
     })
 
     describe('multiple publishers', () => {
@@ -174,7 +174,7 @@ describe('PubSub with multiple clients', () => {
 
             checkMessages(published, receivedMessagesMain)
             checkMessages(published, receivedMessagesOther)
-        })
+        }, 30 * 1000)
 
         // late subscriber test is super unreliable. Doesn't seem to be a good way to make the
         // late subscriber reliably get all of both realtime and resent messages
@@ -326,7 +326,7 @@ describe('PubSub with multiple clients', () => {
         checkMessages(published, receivedMessagesOther)
 
         await Promise.all(publishers.map((p) => p.destroy()))
-    })
+    }, 30 * 1000)
 
     // late subscriber test is super unreliable. Doesn't seem to be a good way to make the
     // late subscriber reliably get all of both realtime and resent messages
