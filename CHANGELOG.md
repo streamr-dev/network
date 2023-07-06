@@ -38,6 +38,15 @@ found [here](packages/broker/CHANGELOG.md).
 #### Security
 
 
+## [8.5.5] - 2023-07-06
+
+### client
+
+#### Changed
+
+- Use pre-built JSON schema validators instead of compiling at run-time
+
+
 ## [8.5.4] - 2023-06-26
 
 ### client
@@ -528,7 +537,8 @@ found [here](packages/broker/CHANGELOG.md).
 - Fixed an import so that the client successfully loads in a web browser environment (NET-721)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/client/v8.5.4...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/client/v8.5.5...HEAD
+[8.5.5]: https://github.com/streamr-dev/network/compare/client/v8.5.4...client/v8.5.5
 [8.5.4]: https://github.com/streamr-dev/network/compare/client/v8.5.3...client/v8.5.4
 [8.5.3]: https://github.com/streamr-dev/network/compare/client/v8.5.2...client/v8.5.3
 [8.5.2]: https://github.com/streamr-dev/network/compare/client/v8.5.1...client/v8.5.2
