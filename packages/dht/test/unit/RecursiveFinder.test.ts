@@ -17,7 +17,6 @@ import { LocalDataStore } from '../../src/dht/store/LocalDataStore'
 import { v4 } from 'uuid'
 import { MockRouter } from '../utils/mock/Router'
 import { MockTransport } from '../utils/mock/Transport'
-import { expect } from 'expect'
 import { isSamePeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 
 describe('RecursiveFinder', () => {
