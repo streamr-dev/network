@@ -52,7 +52,7 @@ describe('VoteOnSuspectNodeService', () => {
         logger.trace('Create stream', { streamId2 })
         await (await contracts.streamRegistry.createStream(streamPath2, '{"partitions":"1"}')).wait()
 
-    })
+    }, TIMEOUT)
     
     it('allows to flag an operator as malicious', async () => {
         const flagger = await createWalletAndDeployOperator(provider, config, theGraphUrl, ADMIN_PRIV_KEY)
