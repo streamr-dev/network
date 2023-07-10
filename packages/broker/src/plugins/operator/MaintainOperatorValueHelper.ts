@@ -84,7 +84,12 @@ export class MaintainOperatorValueHelper {
         }
     }
 
-    // returns a wei value (1 ETH means 100%)
+    /**
+     * The "hard limit" for paying out rewards to `withdrawEarningsFromSponsorships` caller.
+     * Operator is expected to call `withdrawEarningsFromSponsorships` before
+     *   `unwithdrawn earnings / (total staked + free funds)` exceeds this limit.
+     * @returns a "wei" fraction: 1e18 or "1 ether" means limit is at unwithdrawn earnings == total staked + free funds
+     */
     async getPenaltyLimitFraction(): Promise<bigint> {
         const streamrConfigAddress = await this.operator.streamrConfig()
         const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, this.config.provider) as unknown as StreamrConfig
