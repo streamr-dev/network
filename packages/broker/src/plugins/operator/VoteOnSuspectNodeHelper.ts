@@ -1,6 +1,5 @@
 import { Contract } from '@ethersproject/contracts'
 import { Provider } from '@ethersproject/providers'
-import { Signer } from '@ethersproject/abstract-signer'
 import { operatorABI } from '@streamr/network-contracts'
 import type { Operator } from '@streamr/network-contracts'
 import { Logger } from '@streamr/utils'
