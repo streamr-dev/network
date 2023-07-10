@@ -1,11 +1,11 @@
 import { OperatorFleetStateEvents } from './OperatorFleetState'
 import { MaintainTopologyHelperEvents } from './MaintainTopologyHelper'
-import ConsistentHash from 'consistent-hash'
 import { StreamID, StreamPartID } from '@streamr/protocol'
 import { StreamrClient } from 'streamr-client'
 import { Logger } from '@streamr/utils'
 import pLimit from 'p-limit'
 import EventEmitter3 from 'eventemitter3'
+import { ConstHash } from './ConstHash'
 
 const logger = new Logger(module)
 
@@ -18,11 +18,7 @@ export class StreamAssignmentLoadBalancer extends EventEmitter3<StreamAssignment
     private readonly allStreamParts = new Set<StreamPartID>()
     private readonly myStreamParts = new Set<StreamPartID>()
     private readonly concurrencyLimit = pLimit(1)
-    private readonly consistentHash = new ConsistentHash({
-        range: 100003, // number of nodes supported is range / weight (default 2500)
-        weight: 40,
-        distribution: 'uniform' // seems to make it deterministic
-    })
+    private readonly consistentHash = new ConstHash()
     private readonly myNodeId: string
     private readonly streamrClient: StreamrClient
     private readonly operatorFleetState: EventEmitter3<OperatorFleetStateEvents>
