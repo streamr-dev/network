@@ -47,6 +47,7 @@ export class VoteOnSuspectNodeHelper {
     }
 
     stop(): void {
+        // TODO: remove only the listener added by this class
         this.provider.removeAllListeners()
     }
 }
