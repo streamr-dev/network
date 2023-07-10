@@ -23,8 +23,8 @@ export interface OperatorServiceConfig {
     signer: Signer
     operatorContractAddress: EthereumAddress
     theGraphUrl: string
-    maxSponsorshipsCount: number
-    minSponsorshipEarnings: number
+    maxSponsorshipsCount?: number
+    minSponsorshipEarnings?: number
 }
 
 export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
