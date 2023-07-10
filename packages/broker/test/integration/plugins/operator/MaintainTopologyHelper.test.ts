@@ -61,7 +61,7 @@ describe("MaintainTopologyHelper", () => {
         let operatorClient: MaintainTopologyHelper
         beforeAll(async () => {
             ({ operatorWallet, operatorContract, operatorConfig } = await createWalletAndDeployOperator(
-                provider, config, theGraphUrl, adminWallet.privateKey
+                provider, config, theGraphUrl
             ))
         })
         afterEach(async () => {
