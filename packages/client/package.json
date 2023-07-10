@@ -102,7 +102,7 @@
     "@streamr/network-node": "8.5.5",
     "@streamr/protocol": "8.5.5",
     "@streamr/utils": "8.5.5",
-    "core-js": "^3.31.0",
+    "core-js": "^3.31.1",
     "env-paths": "^2.2.1",
     "eventemitter3": "^5.0.0",
     "heap": "^0.2.6",
