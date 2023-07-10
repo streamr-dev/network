@@ -2,9 +2,9 @@ import { Provider } from "@ethersproject/providers"
 import { Chains } from "@streamr/config"
 import { Wallet } from "@ethersproject/wallet"
 import { parseEther } from "@ethersproject/units"
-import { Logger, toEthereumAddress, wait, waitForCondition } from '@streamr/utils'
+import { Logger, toEthereumAddress } from '@streamr/utils'
 
-import type { IERC677, Operator } from "@streamr/network-contracts"
+import type { TestToken, Operator } from "@streamr/network-contracts"
 
 import { tokenABI } from "@streamr/network-contracts"
 import { Contract } from "@ethersproject/contracts"
@@ -27,7 +27,7 @@ describe("OperatorValueBreachWatcher", () => {
     let provider: Provider
     let operatorWallet: Wallet
     let operatorContract: Operator
-    let token: IERC677
+    let token: TestToken
     let adminWallet: Wallet
     let streamId1: string
     let streamId2: string
@@ -43,7 +43,9 @@ describe("OperatorValueBreachWatcher", () => {
             operatorContractAddress: toEthereumAddress(operatorContract.address),
             provider,
             theGraphUrl,
-            signer: operatorWallet
+            signer: operatorWallet,
+            maxSponsorshipsCount: 20,
+            minSponsorshipEarnings: 0.01
         }
         return { operatorWallet, operatorContract }
     }
@@ -54,7 +56,7 @@ describe("OperatorValueBreachWatcher", () => {
 
         adminWallet = new Wallet(ADMIN_WALLET_PK, provider)
 
-        token = new Contract(config.contracts.LINK, tokenABI, adminWallet) as unknown as IERC677
+        token = new Contract(config.contracts.LINK, tokenABI, adminWallet) as unknown as TestToken
         const client = createClient(ADMIN_WALLET_PK)
         streamId1 = (await client.createStream(`/operatorvalueservicetest-1-${Date.now()}`)).id
         streamId2 = (await client.createStream(`/operatorvalueservicetest-2-${Date.now()}`)).id
@@ -70,6 +72,13 @@ describe("OperatorValueBreachWatcher", () => {
             await (await token.connect(operatorWallet).transferAndCall(sponsorship.address, parseEther(`${SPONSOR_AMOUNT}`), "0x")).wait()
             await (await operatorContract.stake(sponsorship.address, parseEther(`${STAKE_AMOUNT}`))).wait()
         }
+
+        const watcher = new OperatorValueBreachWatcher(operatorConfig)
+        console.log("Starting watcher")
+        await watcher.start()
+        console.log("Watcher started")
+        await watcher.stop()
+        console.log("Watcher stopped")
     }, 60 * 1000)
 
     test("rewards the watcher for withdrawing from sponsorships", async () => {

@@ -12,6 +12,7 @@ import { Wallet } from 'ethers'
 import { VoteOnSuspectNodeService } from './VoteOnSuspectNodeService'
 import { MaintainTopologyHelper } from './MaintainTopologyHelper'
 import { MaintainOperatorValueService } from './MaintainOperatorValueService'
+import { OperatorValueBreachWatcher } from './OperatorValueBreachWatcher'
 
 export interface OperatorPluginConfig {
     operatorContractAddress: string
@@ -22,6 +23,8 @@ export interface OperatorServiceConfig {
     signer: Signer
     operatorContractAddress: EthereumAddress
     theGraphUrl: string
+    maxSponsorshipsCount: number
+    minSponsorshipEarnings: number
 }
 
 export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
@@ -31,6 +34,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     private readonly voteOnSuspectNodeService = new VoteOnSuspectNodeService()
     private readonly maintainTopologyService: MaintainTopologyService
     private readonly maintainOperatorValueService: MaintainOperatorValueService
+    private readonly operatorValueBreachWatcher: OperatorValueBreachWatcher
 
     constructor(options: PluginOptions) {
         super(options)
@@ -39,7 +43,9 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             provider,
             operatorContractAddress: toEthereumAddress(this.pluginConfig.operatorContractAddress),
             theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`,
-            signer: Wallet.createRandom().connect(provider)
+            signer: Wallet.createRandom().connect(provider),
+            maxSponsorshipsCount: 20, // max number of sponsorships to loop over before tx reverts
+            minSponsorshipEarnings: 0.01 // token value, not wei
         }
         this.announceNodeService = new AnnounceNodeService(
             this.streamrClient,
@@ -52,6 +58,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             )
         )
         this.maintainOperatorValueService = new MaintainOperatorValueService(serviceHelperConfig)
+        this.operatorValueBreachWatcher = new OperatorValueBreachWatcher(serviceHelperConfig)
     
     }
 
@@ -62,6 +69,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         await this.maintainOperatorValueService.start()
         await this.maintainTopologyService.start()
         await this.voteOnSuspectNodeService.start()
+        await this.operatorValueBreachWatcher.start()
     }
 
     async stop(): Promise<void> {
@@ -71,6 +79,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         await this.maintainOperatorValueService.stop()
         await this.maintainTopologyService.stop()
         await this.voteOnSuspectNodeService.stop()
+        await this.operatorValueBreachWatcher.stop()
     }
 
     // eslint-disable-next-line class-methods-use-this

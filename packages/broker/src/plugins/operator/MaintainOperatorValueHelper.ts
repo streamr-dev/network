@@ -7,6 +7,8 @@ import fetch from 'node-fetch'
 
 const logger = new Logger(module)
 
+const ONE_ETHER = BigInt(1e18)
+
 export class MaintainOperatorValueHelper {
     private readonly operator: Operator
     private readonly theGraphClient: TheGraphClient
@@ -22,55 +24,65 @@ export class MaintainOperatorValueHelper {
         })
     }
 
-    // returns a wei value (1 ETH means 100%)
-    async getPenaltyLimitFraction(): Promise<bigint> {
-        const streamrConfigAddress = await this.operator.streamrConfig()
-        const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, this.config.provider) as unknown as StreamrConfig
-        return (await streamrConfig.poolValueDriftLimitFraction()).toBigInt()
-    }
-
-    // returns a wei value (1 ETH means 100%)
-    async getOperatorsShareFraction(operatorContractAddress?: EthereumAddress): Promise<bigint> {
-        const operator = operatorContractAddress
-            ? new Contract(operatorContractAddress, operatorABI, this.config.provider) as unknown as Operator
-            : this.operator
-        return (await operator.operatorsShareFraction()).toBigInt()
-    }
-
-    // ethers5 handles BigIng as BigNumber, but once it's upgrated to ethers6, it will be changed to BigInt (see ETH-536)
-    async getEarningsFromSponsorships(operatorContractAddress?: EthereumAddress): Promise<{
-        sponsorshipAddresses: string[]
-        earnings: BigNumber[]
-    }> {
-        const operator = operatorContractAddress
-            ? new Contract(operatorContractAddress, operatorABI, this.config.provider) as unknown as Operator
-            : this.operator
-        return await operator.getEarningsFromSponsorships()
-    }
-
-    async getApproximatePoolValue(operatorContractAddress?: EthereumAddress): Promise<bigint> {
-        const operator = operatorContractAddress
-            ? new Contract(operatorContractAddress, operatorABI, this.config.provider) as unknown as Operator
-            : this.operator
-        return (await operator.totalValueInSponsorshipsWei()).toBigInt()
-    }
-
-    async withdrawEarningsFromSponsorships(sponsorshipAddresses: string[]): Promise<void> {
-        logger.info(`Withdraw earnings from ${sponsorshipAddresses.length} sponsorships`, { sponsorshipAddresses })
-        await (await this.operator.withdrawEarningsFromSponsorships(sponsorshipAddresses)).wait()
-    }
-
     async getRandomOperator(): Promise<EthereumAddress> {
         const latestBlock = await this.operator.provider.getBlockNumber()
         const queryFilter = '' // e.g. (first: 10, orderBy: poolValue, orderDirection: desc)
         const operatorIds = await this.getOperatorIds(latestBlock, queryFilter)
         logger.info(`Found ${operatorIds.length} operators`, { operatorIds })
-        const randomIndex = this.getRandomInt(operatorIds.length)
+        const randomIndex = Math.floor(Math.random() * operatorIds.length)
         return operatorIds[randomIndex]
     }
 
-    private getRandomInt(max = 10): number {
-        return Math.floor(Math.random() * max)
+    // ethers5 handles BigIng as BigNumber, but once it's upgrated to ethers6, it will be changed to BigInt (see ETH-536)
+    async checkAndWithdrawEarningsFromSponsorships(
+        penaltyLimitFraction: bigint,
+        operatorContractAddress?: EthereumAddress,
+    ): Promise<void> {
+        const operator = operatorContractAddress
+            ? new Contract(operatorContractAddress, operatorABI, this.config.provider) as unknown as Operator
+            : this.operator
+        const minSponsorshipEarningsWei = this.config.minSponsorshipEarnings
+            ? BigNumber.from(this.config.minSponsorshipEarnings)
+            : BigNumber.from(0)
+        const { sponsorshipAddresses, earnings } = await operator.getEarningsFromSponsorships()
+        
+        const sponsorships: { address: string, earnings: bigint }[] = []
+        for (let i = 0; i < sponsorshipAddresses.length; i++) {
+            if (earnings[i] < minSponsorshipEarningsWei) {
+                // skip sponsorships with too low earnings
+                continue
+            }
+            const sponsorship = {
+                address: sponsorshipAddresses[i],
+                earnings: earnings[i].toBigInt(),
+            }
+            sponsorships.push(sponsorship)
+        }
+
+        // sort sponsorships by earnings in descending order and pick the most valuable ones
+        const sortedSponsorships = sponsorships.sort((a: any, b: any) => b.earnings - a.earnings)
+        const neededSponsorshipAddresses = sortedSponsorships.slice(0, this.config.maxSponsorshipsCount).map((sponsorship) => sponsorship.address)
+
+        let sumEarnings = BigInt(0)
+        for (const sponsorship of sponsorships) {
+            sumEarnings += sponsorship.earnings
+        }
+        
+        const approxPoolValueBeforeWithdraw = (await operator.totalValueInSponsorshipsWei()).toBigInt()
+        const allowedUnwithdrawnEarnings = approxPoolValueBeforeWithdraw * penaltyLimitFraction / ONE_ETHER
+
+        logger.info('Withdraw earnings from sponsorships', { sumEarnings, allowedUnwithdrawnEarnings })
+        if (sumEarnings > allowedUnwithdrawnEarnings) {
+            logger.info(`Withdraw earnings from ${neededSponsorshipAddresses.length} sponsorships`, { neededSponsorshipAddresses })
+            await (await this.operator.withdrawEarningsFromSponsorships(neededSponsorshipAddresses)).wait()
+        }
+    }
+
+    // returns a wei value (1 ETH means 100%)
+    async getPenaltyLimitFraction(): Promise<bigint> {
+        const streamrConfigAddress = await this.operator.streamrConfig()
+        const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, this.config.provider) as unknown as StreamrConfig
+        return (await streamrConfig.poolValueDriftLimitFraction()).toBigInt()
     }
 
     private async getOperatorIds(requiredBlockNumber: number, queryFilter: string): Promise<EthereumAddress[]> {
