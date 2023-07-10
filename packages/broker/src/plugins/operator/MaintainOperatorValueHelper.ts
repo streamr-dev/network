@@ -33,9 +33,15 @@ export class MaintainOperatorValueHelper {
         return operatorIds[randomIndex]
     }
 
-    // ethers5 handles BigIng as BigNumber, but once it's upgrated to ethers6, it will be changed to BigInt (see ETH-536)
+    /**
+     * Checks if the Operator contract has too much outstanding earnings in Sponsorships.
+     * Too much unwithdrawn earnings means if the operator doesn't withdraw, someone else can do it and get rewarded.
+     * @dev ethers5 uses BigNumber, but once it's upgrated to ethers6, it will be changed to BigInt (see ETH-536)
+     * @param withdrawLimitFraction Fraction of the pool value that triggers the withdraw
+     * @param operatorContractAddress default to "my" Operator contract
+     */
     async checkAndWithdrawEarningsFromSponsorships(
-        penaltyLimitFraction: bigint,
+        withdrawLimitFraction: bigint,
         operatorContractAddress?: EthereumAddress,
     ): Promise<void> {
         const operator = operatorContractAddress
@@ -45,11 +51,11 @@ export class MaintainOperatorValueHelper {
             ? BigNumber.from(this.config.minSponsorshipEarnings)
             : BigNumber.from(0)
         const { sponsorshipAddresses, earnings } = await operator.getEarningsFromSponsorships()
-        
+
         const sponsorships: { address: string, earnings: bigint }[] = []
         for (let i = 0; i < sponsorshipAddresses.length; i++) {
+            // skip sponsorships with too low earnings
             if (earnings[i] < minSponsorshipEarningsWei) {
-                // skip sponsorships with too low earnings
                 continue
             }
             const sponsorship = {
@@ -63,17 +69,17 @@ export class MaintainOperatorValueHelper {
         const sortedSponsorships = sponsorships.sort((a: any, b: any) => b.earnings - a.earnings)
         const neededSponsorships = sortedSponsorships.slice(0, this.config.maxSponsorshipsCount)
 
-        let sumEarnings = BigInt(0)
+        let sumEarningsDataWei = BigInt(0)
         for (const sponsorship of neededSponsorships) {
-            sumEarnings += sponsorship.earnings
+            sumEarningsDataWei += sponsorship.earnings
         }
-        
-        const approxPoolValueBeforeWithdraw = (await operator.totalValueInSponsorshipsWei()).toBigInt()
-        const allowedUnwithdrawnEarnings = approxPoolValueBeforeWithdraw * penaltyLimitFraction / ONE_ETHER
 
-        logger.info('Withdraw earnings from sponsorships', { sumEarnings, allowedUnwithdrawnEarnings })
-        if (sumEarnings > allowedUnwithdrawnEarnings) {
-            logger.info(`Withdraw earnings from ${neededSponsorships.length} sponsorships`, { neededSponsorship: neededSponsorships })
+        const approxPoolValueBeforeWithdraw = (await operator.totalValueInSponsorshipsWei()).toBigInt()
+        const withdrawLimitDataWei = approxPoolValueBeforeWithdraw * withdrawLimitFraction / ONE_ETHER
+
+        logger.info('Withdraw earnings from sponsorships', { sumEarningsDataWei, withdrawLimitDataWei })
+        if (sumEarningsDataWei > withdrawLimitDataWei) {
+            logger.info(`Withdraw earnings from ${neededSponsorships.length} sponsorships`, { neededSponsorships })
             await (await this.operator.withdrawEarningsFromSponsorships(neededSponsorships.map((sponsorship) => sponsorship.address))).wait()
         }
     }
