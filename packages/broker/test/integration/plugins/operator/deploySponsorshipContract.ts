@@ -15,6 +15,7 @@ export async function deploySponsorship(
         minimumStakeWei = parseEther("60"),
         minHorizonSeconds = 0,
         minOperatorCount = 1,
+        earningsPerSecond = parseEther("0.01"),
     } = {},
 ): Promise<Sponsorship> {
 
@@ -33,7 +34,7 @@ export async function deploySponsorship(
             chainConfig.contracts.DefaultLeavePolicy,
             chainConfig.contracts.VoteKickPolicy,
         ], [
-            parseEther("0.01"),
+            earningsPerSecond,
             "0",
             "0"
         ]
