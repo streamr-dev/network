@@ -61,10 +61,10 @@ export class MaintainOperatorValueHelper {
 
         // sort sponsorships by earnings in descending order and pick the most valuable ones
         const sortedSponsorships = sponsorships.sort((a: any, b: any) => b.earnings - a.earnings)
-        const neededSponsorshipAddresses = sortedSponsorships.slice(0, this.config.maxSponsorshipsCount).map((sponsorship) => sponsorship.address)
+        const neededSponsorships = sortedSponsorships.slice(0, this.config.maxSponsorshipsCount)
 
         let sumEarnings = BigInt(0)
-        for (const sponsorship of sponsorships) {
+        for (const sponsorship of neededSponsorships) {
             sumEarnings += sponsorship.earnings
         }
         
@@ -73,8 +73,8 @@ export class MaintainOperatorValueHelper {
 
         logger.info('Withdraw earnings from sponsorships', { sumEarnings, allowedUnwithdrawnEarnings })
         if (sumEarnings > allowedUnwithdrawnEarnings) {
-            logger.info(`Withdraw earnings from ${neededSponsorshipAddresses.length} sponsorships`, { neededSponsorshipAddresses })
-            await (await this.operator.withdrawEarningsFromSponsorships(neededSponsorshipAddresses)).wait()
+            logger.info(`Withdraw earnings from ${neededSponsorships.length} sponsorships`, { neededSponsorship: neededSponsorships })
+            await (await this.operator.withdrawEarningsFromSponsorships(neededSponsorships.map((sponsorship) => sponsorship.address))).wait()
         }
     }
 
