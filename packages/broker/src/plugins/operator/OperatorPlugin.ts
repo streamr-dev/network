@@ -45,7 +45,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`,
             signer: Wallet.createRandom().connect(provider),
             maxSponsorshipsCount: 20, // max number of sponsorships to loop over before tx reverts
-            minSponsorshipEarnings: 0.01 // token value, not wei
+            minSponsorshipEarnings: 1 // token value, not wei
         }
         this.announceNodeService = new AnnounceNodeService(
             this.streamrClient,
