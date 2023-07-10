@@ -16,8 +16,6 @@ export class VoteOnSuspectNodeHelper {
     address: string
     contract: Operator
     signer: Signer
-    streamIdOfSponsorship: Map<string, string> = new Map()
-    sponsorshipCountOfStream: Map<string, number> = new Map()
     callback: (sponsorship: string, operatorContractAddress: string) => void
 
     constructor(config: OperatorServiceConfig,
