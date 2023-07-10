@@ -7,6 +7,7 @@ import { parseEther } from '@ethersproject/units'
 import { deploySponsorship as _deploySponsorship } from './deploySponsorshipContract'
 import { deployOperatorContract as _deployOperatorContract } from './deployOperatorContract'
 import { Chain, Chains } from '@streamr/config'
+import { wait } from '@streamr/utils'
 
 export const ADMIN_WALLET_PK = '0x4059de411f15511a85ce332e7a428f36492ab4e87c7830099dadbf130f1896ae'
 const CONFIG = Chains.load()["dev1"]
@@ -23,29 +24,23 @@ export async function generateWalletWithGasAndTokens(provider: Provider, config?
     const newWallet = new Wallet(fastPrivateKey())
     const adminWallet = new Wallet(adminKey ?? ADMIN_WALLET_PK).connect(provider)
 
+    // we have LINK in the local dev env, and DATA in the env deployed by the network-contracts package
+    // TOTO: change this to only use DATA once we moved to the new cleaned up docker dev env
     if (config && !config.contracts.LINK) {
         const token = new Contract(config.contracts.DATA, tokenABI, adminWallet) as unknown as TestToken 
-        // eslint-disable-next-line no-console
-        console.log("trying data with nonce " + await adminWallet.getTransactionCount() + " time " + new Date().getTime() / 1000)
         await (await token.mint(newWallet.address, parseEther("1000000"), {
             nonce: await adminWallet.getTransactionCount()
         })).wait()
-        // eslint-disable-next-line no-console
-        console.log("sent Data to " + newWallet.address)
     } else {
         const token = getTokenContract().connect(adminWallet)
         for (let i = 0; i < 5; i++) {
             try {
-                // eslint-disable-next-line no-console
-                console.log("trying with nonce " + await adminWallet.getTransactionCount() + " time " + new Date().getTime() / 1000)
                 await (await token.transfer(newWallet.address, parseEther("1000"), {
                     nonce: await adminWallet.getTransactionCount()
                 })).wait()
                 break
             } catch (e) {
-                await new Promise((resolve) => setTimeout(resolve, 3000))
-                // eslint-disable-next-line no-console
-                console.log("sending link failed, retrying")
+                await wait(3000)
             }
         }
     }

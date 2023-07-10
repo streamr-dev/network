@@ -12,27 +12,22 @@ export const VOTE_NO_KICK = '0x0000000000000000000000000000000000000000000000000
 const logger = new Logger(module)
 
 export class VoteOnSuspectNodeHelper {
-    provider: Provider
-    address: string
-    contract: Operator
-    signer: Signer
-    callback: (sponsorship: string, operatorContractAddress: string) => void
+    private readonly provider: Provider
+    private readonly contract: Operator
+    private readonly callback: (sponsorship: string, operatorContractAddress: string) => void
 
     constructor(config: OperatorServiceConfig,
-        callback: (sponsorship: string, soperatorContractAddress: string) => void) {
-        logger.trace('OperatorClient created')
+        callback: (sponsorship: string, operatorContractAddress: string) => void) {
         this.callback = callback
-        this.address = config.operatorContractAddress
         this.provider = config.provider
-        this.signer = config.signer
-        this.signer.connect(this.provider)
-        this.contract = new Contract(config.operatorContractAddress, operatorABI, this.signer) as unknown as Operator
+        const signer = config.signer.connect(this.provider)
+        this.contract = new Contract(config.operatorContractAddress, operatorABI, signer) as unknown as Operator
     }
 
     async start(): Promise<void> {
-        logger.info('Starting NodeInspectionHelper')
+        logger.debug('Starting')
         this.contract.on('ReviewRequest', async (sponsorship: string, targetOperator: string) => {
-            logger.info(`${this.contract.address} got ReviewRequest event ${sponsorship} ${targetOperator}`)
+            logger.debug('Receive review request', { address: this.contract.address, sponsorship, targetOperator })
             this.callback(sponsorship, targetOperator)
         })
     }

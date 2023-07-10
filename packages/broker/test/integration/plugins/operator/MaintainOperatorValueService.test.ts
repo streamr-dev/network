@@ -2,7 +2,7 @@ import { Provider } from "@ethersproject/providers"
 import { Chains } from "@streamr/config"
 import { Wallet } from "@ethersproject/wallet"
 import { parseEther } from "@ethersproject/units"
-import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
+import { Logger, waitForCondition } from '@streamr/utils'
 
 import type { TestToken, Operator } from "@streamr/network-contracts"
 
@@ -12,8 +12,9 @@ import { Contract } from "@ethersproject/contracts"
 import { deploySponsorship } from "./deploySponsorshipContract"
 import { MaintainOperatorValueService } from "../../../../src/plugins/operator/MaintainOperatorValueService"
 import { OperatorServiceConfig } from "../../../../src/plugins/operator/OperatorPlugin"
-import { deployOperatorContract, generateWalletWithGasAndTokens, getProvider } from "./smartContractUtils"
+import { getProvider } from "./smartContractUtils"
 import { createClient } from "../../../utils"
+import { createWalletAndDeployOperator } from "./createWalletAndDeployOperator"
 
 const config = Chains.load()["dev1"]
 const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '127.0.0.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`
@@ -34,20 +35,6 @@ describe("MaintainOperatorValueService", () => {
     let streamId2: string
 
     let operatorConfig: OperatorServiceConfig
-
-    const deployNewOperator = async () => {
-        const operatorWallet = await generateWalletWithGasAndTokens(provider)
-        logger.debug("Deploying operator contract")
-        const operatorContract = await deployOperatorContract(operatorWallet)
-        logger.debug(`Operator deployed at ${operatorContract.address}`)
-        operatorConfig = {
-            operatorContractAddress: toEthereumAddress(operatorContract.address),
-            provider,
-            theGraphUrl,
-            signer: operatorWallet
-        }
-        return { operatorWallet, operatorContract }
-    }
 
     const getDiffBetweenApproxAndRealValues = async (): Promise<bigint> => {
         const { sponsorshipAddresses, approxValues, realValues } = await operatorContract.getApproximatePoolValuesPerSponsorship()
@@ -72,7 +59,9 @@ describe("MaintainOperatorValueService", () => {
 
         token = new Contract(config.contracts.LINK, tokenABI) as unknown as TestToken
 
-        ({ operatorWallet, operatorContract } = await deployNewOperator())
+        ({ operatorWallet, operatorContract } = await createWalletAndDeployOperator(
+            provider, config, theGraphUrl
+        ))
 
         await (
             await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther(`${STAKE_AMOUNT * 2}`), operatorWallet.address)
@@ -130,3 +119,4 @@ describe("MaintainOperatorValueService", () => {
         await maintainOperatorValueService.stop()
     }, 60 * 1000)
 })
+

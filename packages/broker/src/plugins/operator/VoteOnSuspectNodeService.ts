@@ -10,31 +10,27 @@ export class VoteOnSuspectNodeService {
 
     constructor(streamrClient: StreamrClient, serviceConfig: OperatorServiceConfig) {
         this.streamrClient = streamrClient
-        this.voteOnSuspectNodeHelper = new VoteOnSuspectNodeHelper(serviceConfig,
-            this.handleNodeInspectionRequest.bind(this))
+        this.voteOnSuspectNodeHelper = new VoteOnSuspectNodeHelper(
+            serviceConfig,
+            this.handleNodeInspectionRequest.bind(this)
+        )
     }
 
     async start(): Promise<void> {
-        logger.info('Starting NodeInspectionService')
+        logger.debug('starting')
         await this.voteOnSuspectNodeHelper.start()
-        logger.info('Started MaintainTopologyService')
+        logger.debug('started')
     }
 
     async stop(): Promise<void> {
         this.voteOnSuspectNodeHelper.stop()
-        logger.info('stopped')
     }
 
     async handleNodeInspectionRequest(sponsorship: string, targetOperator: string): Promise<void> {
-        logger.info(`got node inspection request for target ${targetOperator} on sponsorship ${sponsorship}`)
+        logger.info('Received inspection request', { targetOperator, sponsorship })
         //const operatorIsMalicious = this.streamrClient.inspectNodes(sponsorship, targetOperato)
         const operatorIsMalicious = true
-        if (operatorIsMalicious) {
-            logger.info(`operatorIsMalicious, voting KICK on ${targetOperator} on sponsorship ${sponsorship}`)
-            await this.voteOnSuspectNodeHelper.voteOnFlag(sponsorship, targetOperator, true)
-        } else {
-            logger.info(`operatorIsNotMalicious, voting NO KICK on, ${targetOperator} on sponsorship ${sponsorship}`)
-            await this.voteOnSuspectNodeHelper.voteOnFlag(sponsorship, targetOperator, false)
-        }
+        logger.info(`Vote on inspection request', ${{ sponsorship, targetOperator, kick: operatorIsMalicious }}`)
+        await this.voteOnSuspectNodeHelper.voteOnFlag(sponsorship, targetOperator, operatorIsMalicious)
     }
 }
