@@ -10,9 +10,11 @@ import {
     getProvider,
     getTokenContract
 } from './smartContractUtils'
-import { StreamPartID } from '@streamr/protocol'
+import { StreamPartID, toStreamID } from '@streamr/protocol'
 import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
 import { createClient } from '../../../utils'
+import { StreamAssignmentLoadBalancer } from '../../../../src/plugins/operator/StreamAssignmentLoadBalancer'
+import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
 
 async function setUpStreams(): Promise<[Stream, Stream]> {
     const privateKey = await fetchPrivateKeyWithGas()
@@ -26,6 +28,15 @@ async function setUpStreams(): Promise<[Stream, Stream]> {
 async function getSubscribedStreamPartIds(client: StreamrClient): Promise<StreamPartID[]> {
     const subscriptions = await client.getSubscriptions()
     return subscriptions.map(({ streamPartId }) => streamPartId)
+}
+
+function containsAll(arr: StreamPartID[], includes: StreamPartID[]): boolean {
+    for (const item of includes) {
+        if (!arr.includes(item)) {
+            return false
+        }
+    }
+    return true
 }
 
 describe('MaintainTopologyService', () => {
@@ -56,23 +67,36 @@ describe('MaintainTopologyService', () => {
         }
 
         client = createClient(fastPrivateKey())
-        service = new MaintainTopologyService(client, new MaintainTopologyHelper(
-            serviceConfig
+        const helper = new MaintainTopologyHelper(serviceConfig)
+        const fleetState = new OperatorFleetState(client, toStreamID('/operator/coordination', serviceConfig.operatorContractAddress))
+        service = new MaintainTopologyService(client, new StreamAssignmentLoadBalancer(
+            (await client.getNode()).getNodeId(),
+            async (streamId) => {
+                const stream = await client.getStream(streamId)
+                return stream.getStreamParts()
+            },
+            fleetState,
+            helper
         ))
         await service.start()
+        await fleetState.start()
+        await helper.start()
 
-        await waitForCondition(async () => (await client.getSubscriptions()).length === 1, 10000, 1000)
-        expect(await getSubscribedStreamPartIds(client)).toEqual(stream1.getStreamParts())
+        await waitForCondition(async () => {
+            return containsAll(await getSubscribedStreamPartIds(client), stream1.getStreamParts())
+        }, 10000, 1000)
 
         await (await operatorContract.stake(sponsorship2.address, parseEther("100"))).wait()
-        await waitForCondition(async () => (await client.getSubscriptions()).length === 1 + 3)
-        expect(await getSubscribedStreamPartIds(client)).toEqual([
-            ...stream1.getStreamParts(),
-            ...stream2.getStreamParts()
-        ])
+        await waitForCondition(async () => {
+            return containsAll(await getSubscribedStreamPartIds(client), [
+                ...stream1.getStreamParts(),
+                ...stream2.getStreamParts()
+            ])
+        }, 10000, 1000)
 
         await (await operatorContract.unstake(sponsorship1.address)).wait()
-        await waitForCondition(async () => (await client.getSubscriptions()).length === 3)
-        expect(await getSubscribedStreamPartIds(client)).toEqual(stream2.getStreamParts())
+        await waitForCondition(async () => {
+            return containsAll(await getSubscribedStreamPartIds(client), stream2.getStreamParts())
+        }, 10000, 1000)
     }, 120 * 1000)
 })

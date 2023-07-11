@@ -1,68 +1,54 @@
-import { Logger, Multimap } from '@streamr/utils'
-import { MaintainTopologyHelper } from './MaintainTopologyHelper'
-import StreamrClient, { Stream, Subscription } from 'streamr-client'
-import { StreamID, StreamPartIDUtils } from '@streamr/protocol'
+import { Logger } from '@streamr/utils'
+import StreamrClient, { Subscription } from 'streamr-client'
+import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import pLimit from 'p-limit'
+import { StreamAssignmentLoadBalancer } from './StreamAssignmentLoadBalancer'
 
 const logger = new Logger(module)
 
 export class MaintainTopologyService {
     private readonly streamrClient: StreamrClient
-    private readonly maintainTopologyHelper: MaintainTopologyHelper
-    private readonly subscriptions = new Multimap<StreamID, Subscription>()
+    private readonly streamAssignmentLoadBalancer: StreamAssignmentLoadBalancer
+    private readonly subscriptions = new Map<StreamPartID, Subscription>()
     private readonly concurrencyLimit = pLimit(1)
 
-    constructor(streamrClient: StreamrClient, maintainTopologyHelper: MaintainTopologyHelper) {
+    constructor(streamrClient: StreamrClient, streamAssignmentLoadBalancer: StreamAssignmentLoadBalancer) {
         this.streamrClient = streamrClient
-        this.maintainTopologyHelper = maintainTopologyHelper
+        this.streamAssignmentLoadBalancer = streamAssignmentLoadBalancer
     }
 
     async start(): Promise<void> {
-        this.maintainTopologyHelper.on('addStakedStream', this.onAddStakedStreams)
-        this.maintainTopologyHelper.on('removeStakedStream', this.onRemoveStakedStream)
-        await this.maintainTopologyHelper.start()
+        this.streamAssignmentLoadBalancer.on('assigned', this.onAddStakedStream)
+        this.streamAssignmentLoadBalancer.on('unassigned', this.onRemoveStakedStream)
         logger.info('Started')
     }
 
+    // eslint-disable-next-line class-methods-use-this
     async stop(): Promise<void> {
-        this.maintainTopologyHelper.stop()
     }
 
-    private onAddStakedStreams = (streamIDs: StreamID[]) => {
-        streamIDs.map(this.concurrencyLimiter(this.addStream.bind(this)))
-    }
-
-    private onRemoveStakedStream = this.concurrencyLimiter(async (streamId: StreamID) => {
-        const subscriptions = this.subscriptions.get(streamId)
-        this.subscriptions.removeAll(streamId, subscriptions)
-        await Promise.all(subscriptions.map((sub) => sub.unsubscribe())) // TODO: rejects?
+    private onAddStakedStream = this.concurrencyLimiter(async (streamPartId: StreamPartID): Promise<void> => {
+        const id = StreamPartIDUtils.getStreamID(streamPartId)
+        const partition = StreamPartIDUtils.getStreamPartition(streamPartId)
+        const subscription = await this.streamrClient.subscribe({
+            id,
+            partition,
+            raw: true
+        }) // TODO: rejects?
+        this.subscriptions.set(streamPartId, subscription)
     })
 
-    private async addStream(streamId: StreamID): Promise<void> {
-        let stream: Stream
-        try {
-            stream = await this.streamrClient.getStream(streamId)
-        } catch (err) {
-            logger.warn('Ignore non-existing stream', { streamId, reason: err?.message })
-            return
-        }
-        for (const streamPart of stream.getStreamParts()) {
-            const id = StreamPartIDUtils.getStreamID(streamPart)
-            const partition = StreamPartIDUtils.getStreamPartition(streamPart)
-            const subscription = await this.streamrClient.subscribe({
-                id,
-                partition,
-                raw: true
-            }) // TODO: rejects?
-            this.subscriptions.add(id, subscription)
-        }
-    }
+    private onRemoveStakedStream = this.concurrencyLimiter(async (streamPartId: StreamPartID): Promise<void> => {
+        const subscription = this.subscriptions.get(streamPartId)
+        this.subscriptions.delete(streamPartId)
+        await subscription?.unsubscribe() // TODO: rejects?
+    })
 
     private concurrencyLimiter(
-        fn: (streamId: StreamID) => Promise<void>
-    ): (streamId: StreamID) => void {
-        return (streamId) => {
-            this.concurrencyLimit(() => fn(streamId)).catch((err) => {
+        fn: (streamPartId: StreamPartID) => Promise<void>
+    ): (streamPartId: StreamPartID) => void {
+        return (streamPartId) => {
+            this.concurrencyLimit(() => fn(streamPartId)).catch((err) => {
                 logger.warn('Encountered error while processing event', { err })
             })
         }

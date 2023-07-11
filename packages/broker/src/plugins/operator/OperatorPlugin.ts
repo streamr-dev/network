@@ -12,6 +12,9 @@ import { Wallet } from 'ethers'
 import { VoteOnSuspectNodeService } from './VoteOnSuspectNodeService'
 import { MaintainTopologyHelper } from './MaintainTopologyHelper'
 import { MaintainOperatorValueService } from './MaintainOperatorValueService'
+import { StreamAssignmentLoadBalancer } from './StreamAssignmentLoadBalancer'
+import { OperatorFleetState } from './OperatorFleetState'
+import { toStreamID } from '@streamr/protocol'
 
 export interface OperatorPluginConfig {
     operatorContractAddress: string
@@ -45,10 +48,20 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             this.streamrClient,
             toEthereumAddress(this.pluginConfig.operatorContractAddress)
         )
+        const operatorFleetState = new OperatorFleetState(
+            this.streamrClient,
+            toStreamID('/operator/coordination', serviceHelperConfig.operatorContractAddress)
+        )
         this.maintainTopologyService = new MaintainTopologyService(
             this.streamrClient,
-            new MaintainTopologyHelper(
-                serviceHelperConfig
+            new StreamAssignmentLoadBalancer(
+                'myNodeId', // TODO: real nodeId here
+                async (streamId) => {
+                    const stream = await this.streamrClient.getStream(streamId)
+                    return stream.getStreamParts()
+                },
+                operatorFleetState,
+                new MaintainTopologyHelper(serviceHelperConfig)
             )
         )
         this.maintainOperatorValueService = new MaintainOperatorValueService(serviceHelperConfig)
