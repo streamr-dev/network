@@ -89,7 +89,7 @@ describe("OperatorValueBreachWatcher", () => {
             for (const sponsorship of [sponsorship1, sponsorship2]) {
                 sumEarnings = sumEarnings.add(await sponsorship.getEarnings(operatorContract.address))
             }
-            console.log("sumEarnings, allowedDifference", formatEther(sumEarnings), formatEther(allowedDifference))
+            logger.debug(`sumEarnings ${formatEther(sumEarnings)}, allowedDifference ${formatEther(allowedDifference)}`)
             return sumEarnings.gt(allowedDifference)
         }, 10000, 1000)
 
