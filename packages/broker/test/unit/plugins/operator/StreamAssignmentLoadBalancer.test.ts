@@ -162,5 +162,24 @@ describe(StreamAssignmentLoadBalancer, () => {
         ])
     })
 
-    // TODO: all-out test with concurrency and multiple balancers
+    it('concurrency is handled appropriately', async () => {
+        const ROUNDS = 10
+        for (let i = 0; i < ROUNDS; ++i) {
+            maintainTopologyHelper.emit('addStakedStream', [S3])
+            maintainTopologyHelper.emit('removeStakedStream', S3)
+        }
+        await wait(0)
+        expect(events).toEqual(range(ROUNDS).map(() => {
+            return [
+                ['assigned', toStreamPartID(S3, 0)],
+                ['assigned', toStreamPartID(S3, 1)],
+                ['assigned', toStreamPartID(S3, 2)],
+                ['unassigned', toStreamPartID(S3, 0)],
+                ['unassigned', toStreamPartID(S3, 1)],
+                ['unassigned', toStreamPartID(S3, 2)],
+            ]
+        }).flat())
+    })
+
+    // TODO: test with multiple balancers, verify that partitioning is complete
 })
