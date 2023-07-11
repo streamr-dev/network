@@ -1,7 +1,6 @@
 import { OperatorFleetStateEvents } from './OperatorFleetState'
 import { MaintainTopologyHelperEvents } from './MaintainTopologyHelper'
 import { StreamID, StreamPartID } from '@streamr/protocol'
-import { StreamrClient } from 'streamr-client'
 import { Logger } from '@streamr/utils'
 import pLimit from 'p-limit'
 import EventEmitter3 from 'eventemitter3'
@@ -20,19 +19,19 @@ export class StreamAssignmentLoadBalancer extends EventEmitter3<StreamAssignment
     private readonly concurrencyLimit = pLimit(1)
     private readonly consistentHash = new ConstHash()
     private readonly myNodeId: string
-    private readonly getStream: StreamrClient['getStream']
+    private readonly getStreamParts: (streamId: StreamID) => Promise<StreamPartID[]>
     private readonly operatorFleetState: EventEmitter3<OperatorFleetStateEvents>
     private readonly maintainTopologyHelper: EventEmitter3<MaintainTopologyHelperEvents>
 
     constructor(
         myNodeId: string,
-        getStream: StreamrClient['getStream'],
+        getStreamParts: (streamId: StreamID) => Promise<StreamPartID[]>,
         operatorFleetState: EventEmitter3<OperatorFleetStateEvents>,
         maintainTopologyHelper: EventEmitter3<MaintainTopologyHelperEvents>,
     ) {
         super()
         this.myNodeId = myNodeId
-        this.getStream = getStream
+        this.getStreamParts = getStreamParts
         this.operatorFleetState = operatorFleetState
         this.maintainTopologyHelper = maintainTopologyHelper
         this.consistentHash.add(myNodeId)
@@ -91,8 +90,7 @@ export class StreamAssignmentLoadBalancer extends EventEmitter3<StreamAssignment
 
     private getStreamPartIds = async (streamId: StreamID): Promise<StreamPartID[]> => {
         try {
-            const stream = await this.getStream(streamId)
-            return stream.getStreamParts()
+            return await this.getStreamParts(streamId)
         } catch (err) {
             logger.warn('Ignore non-existing stream', { streamId, reason: err?.message })
             return []

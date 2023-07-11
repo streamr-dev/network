@@ -1,5 +1,4 @@
 import { StreamAssignmentLoadBalancer } from '../../../../src/plugins/operator/StreamAssignmentLoadBalancer'
-import { Stream } from 'streamr-client'
 import EventEmitter3 from 'eventemitter3'
 import { OperatorFleetStateEvents } from '../../../../src/plugins/operator/OperatorFleetState'
 import { MaintainTopologyHelperEvents } from '../../../../src/plugins/operator/MaintainTopologyHelper'
@@ -33,20 +32,19 @@ describe(StreamAssignmentLoadBalancer, () => {
     }
 
     beforeEach(() => {
-        const getStream = jest.fn<Promise<Stream>, [string]>()
-        getStream.mockImplementation(async (streamId) => {
+        const getStreamParts = jest.fn<Promise<StreamPartID[]>, [StreamID]>()
+        getStreamParts.mockImplementation(async (streamId) => {
             const streamParts = streamPartMappings.get(toStreamID(streamId))
             if (streamParts === undefined) {
                 throw new Error('does not exist')
-            } else {
-                return { getStreamParts: () => streamParts } as Pick<Stream, 'getStreamParts'> as any
             }
+            return streamParts
         })
         operatorFleetState = new EventEmitter3()
         maintainTopologyHelper = new EventEmitter3()
         balancer = new StreamAssignmentLoadBalancer(
             MY_NODE_ID,
-            getStream,
+            getStreamParts,
             operatorFleetState,
             maintainTopologyHelper
         )
