@@ -20,19 +20,19 @@ export class StreamAssignmentLoadBalancer extends EventEmitter3<StreamAssignment
     private readonly concurrencyLimit = pLimit(1)
     private readonly consistentHash = new ConstHash()
     private readonly myNodeId: string
-    private readonly streamrClient: StreamrClient
+    private readonly getStream: StreamrClient['getStream']
     private readonly operatorFleetState: EventEmitter3<OperatorFleetStateEvents>
     private readonly maintainTopologyHelper: EventEmitter3<MaintainTopologyHelperEvents>
 
     constructor(
         myNodeId: string,
-        streamrClient: StreamrClient,
+        getStream: StreamrClient['getStream'],
         operatorFleetState: EventEmitter3<OperatorFleetStateEvents>,
         maintainTopologyHelper: EventEmitter3<MaintainTopologyHelperEvents>,
     ) {
         super()
         this.myNodeId = myNodeId
-        this.streamrClient = streamrClient
+        this.getStream = getStream
         this.operatorFleetState = operatorFleetState
         this.maintainTopologyHelper = maintainTopologyHelper
         this.consistentHash.add(myNodeId)
@@ -91,7 +91,7 @@ export class StreamAssignmentLoadBalancer extends EventEmitter3<StreamAssignment
 
     private getStreamPartIds = async (streamId: StreamID): Promise<StreamPartID[]> => {
         try {
-            const stream = await this.streamrClient.getStream(streamId)
+            const stream = await this.getStream(streamId)
             return stream.getStreamParts()
         } catch (err) {
             logger.warn('Ignore non-existing stream', { streamId, reason: err?.message })

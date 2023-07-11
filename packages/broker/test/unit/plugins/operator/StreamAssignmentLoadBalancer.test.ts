@@ -1,6 +1,5 @@
 import { StreamAssignmentLoadBalancer } from '../../../../src/plugins/operator/StreamAssignmentLoadBalancer'
-import { mock, MockProxy } from 'jest-mock-extended'
-import StreamrClient, { Stream } from 'streamr-client'
+import { Stream } from 'streamr-client'
 import EventEmitter3 from 'eventemitter3'
 import { OperatorFleetStateEvents } from '../../../../src/plugins/operator/OperatorFleetState'
 import { MaintainTopologyHelperEvents } from '../../../../src/plugins/operator/MaintainTopologyHelper'
@@ -25,7 +24,6 @@ const streamPartMappings = new Map<StreamID, StreamPartID[]>()
 
 describe(StreamAssignmentLoadBalancer, () => {
     let events: [string, ...any[]][]
-    let streamrClient: MockProxy<StreamrClient>
     let operatorFleetState: EventEmitter3<OperatorFleetStateEvents>
     let maintainTopologyHelper: EventEmitter3<MaintainTopologyHelperEvents>
     let balancer: StreamAssignmentLoadBalancer
@@ -35,18 +33,20 @@ describe(StreamAssignmentLoadBalancer, () => {
     }
 
     beforeEach(() => {
-        streamrClient = mock<StreamrClient>()
-        for (const [streamId, streamParts] of streamPartMappings) {
-            streamrClient.getStream
-                .calledWith(streamId)
-                .mockReturnValue({ getStreamParts: () => streamParts } as Pick<Stream, 'getStreamParts'> as any)
-        }
-        streamrClient.getStream.calledWith(NON_EXISTING_STREAM).mockRejectedValueOnce(new Error('does not exist'))
+        const getStream = jest.fn<Promise<Stream>, [string]>()
+        getStream.mockImplementation(async (streamId) => {
+            const streamParts = streamPartMappings.get(toStreamID(streamId))
+            if (streamParts === undefined) {
+                throw new Error('does not exist')
+            } else {
+                return { getStreamParts: () => streamParts } as Pick<Stream, 'getStreamParts'> as any
+            }
+        })
         operatorFleetState = new EventEmitter3()
         maintainTopologyHelper = new EventEmitter3()
         balancer = new StreamAssignmentLoadBalancer(
             MY_NODE_ID,
-            streamrClient,
+            getStream,
             operatorFleetState,
             maintainTopologyHelper
         )
