@@ -8,7 +8,7 @@ import { ConstHash } from './ConstHash'
 
 const logger = new Logger(module)
 
-interface StreamAssignmentLoadBalancerEvents {
+export interface StreamAssignmentLoadBalancerEvents {
     assigned(streamPartId: StreamPartID): void
     unassigned(streamPartId: StreamPartID): void
 }
