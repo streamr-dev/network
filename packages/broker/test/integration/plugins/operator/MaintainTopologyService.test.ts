@@ -1,4 +1,7 @@
-import { MaintainTopologyService } from '../../../../src/plugins/operator/MaintainTopologyService'
+import {
+    MaintainTopologyService,
+    setUpAndStartMaintainTopologyService
+} from '../../../../src/plugins/operator/MaintainTopologyService'
 import { toEthereumAddress, waitForCondition } from '@streamr/utils'
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { parseEther } from '@ethersproject/units'
@@ -10,11 +13,8 @@ import {
     getProvider,
     getTokenContract
 } from './smartContractUtils'
-import { StreamPartID, toStreamID } from '@streamr/protocol'
-import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
+import { StreamPartID } from '@streamr/protocol'
 import { createClient } from '../../../utils'
-import { StreamAssignmentLoadBalancer } from '../../../../src/plugins/operator/StreamAssignmentLoadBalancer'
-import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
 
 async function setUpStreams(): Promise<[Stream, Stream]> {
     const privateKey = await fetchPrivateKeyWithGas()
@@ -59,7 +59,7 @@ describe('MaintainTopologyService', () => {
         await (await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther("200"), operatorWallet.address)).wait()
         await (await operatorContract.stake(sponsorship1.address, parseEther("100"))).wait()
 
-        const serviceConfig = {
+        const serviceHelperConfig = {
             provider,
             signer: operatorWallet,
             operatorContractAddress: toEthereumAddress(operatorContract.address),
@@ -67,20 +67,10 @@ describe('MaintainTopologyService', () => {
         }
 
         client = createClient(fastPrivateKey())
-        const helper = new MaintainTopologyHelper(serviceConfig)
-        const fleetState = new OperatorFleetState(client, toStreamID('/operator/coordination', serviceConfig.operatorContractAddress))
-        service = new MaintainTopologyService(client, new StreamAssignmentLoadBalancer(
-            (await client.getNode()).getNodeId(),
-            async (streamId) => {
-                const stream = await client.getStream(streamId)
-                return stream.getStreamParts()
-            },
-            fleetState,
-            helper
-        ))
-        await service.start()
-        await fleetState.start()
-        await helper.start()
+        service = await setUpAndStartMaintainTopologyService({
+            streamrClient: client,
+            serviceHelperConfig
+        })
 
         await waitForCondition(async () => {
             return containsAll(await getSubscribedStreamPartIds(client), stream1.getStreamParts())
