@@ -26,7 +26,8 @@ const STAKE_AMOUNT = 100
 
 const STREAM_CREATION_KEY = "0xb1abdb742d3924a45b0a54f780f0f21b9d9283b231a0a0b35ce5e455fa5375e7"
 
-describe("MaintainOperatorValueService", () => {
+// test is outdated, is completely rewritten and will be merged with PR #1629 
+describe.skip("MaintainOperatorValueService", () => {
     let provider: Provider
     let operatorWallet: Wallet
     let operatorContract: Operator
