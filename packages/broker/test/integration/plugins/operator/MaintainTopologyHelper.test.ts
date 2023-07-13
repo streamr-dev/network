@@ -3,19 +3,18 @@ import { MaintainTopologyHelper } from '../../../../src/plugins/operator/Maintai
 import { Chains } from "@streamr/config"
 import { Wallet } from "@ethersproject/wallet"
 import { parseEther } from "@ethersproject/units"
-import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
+import { Logger, waitForCondition } from '@streamr/utils'
 
-import type { IERC677, Operator } from "@streamr/network-contracts"
+import type { TestToken, Operator } from "@streamr/network-contracts"
 import type { StreamRegistry } from "@streamr/network-contracts"
 
 import { tokenABI } from "@streamr/network-contracts"
 import { streamRegistryABI } from "@streamr/network-contracts"
 import { Contract } from "@ethersproject/contracts"
 
-import { deployOperatorContract } from "./deployOperatorContract"
 import { deploySponsorship } from "./deploySponsorshipContract"
-import { generateWalletWithGasAndTokens } from "./smartContractUtils"
 import { OperatorServiceConfig } from "../../../../src/plugins/operator/OperatorPlugin"
+import { createWalletAndDeployOperator } from "./createWalletAndDeployOperator"
 
 const config = Chains.load()["dev1"]
 const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`
@@ -28,25 +27,10 @@ describe("MaintainTopologyHelper", () => {
     const chainURL = config.rpcEndpoints[0].url
 
     let provider: Provider
-    let token: IERC677
+    let token: TestToken
     let adminWallet: Wallet
     let streamId1: string
     let streamId2: string
-
-    const deployNewOperator = async () => {
-        const operatorWallet = await generateWalletWithGasAndTokens(provider)
-
-        logger.debug("Deploying operator contract")
-        const operatorContract = await deployOperatorContract(config, operatorWallet)
-        logger.debug(`Operator deployed at ${operatorContract.address}`)
-        const operatorConfig = {
-            operatorContractAddress: toEthereumAddress(operatorContract.address),
-            signer: operatorWallet,
-            provider,
-            theGraphUrl
-        }
-        return { operatorWallet, operatorContract, operatorConfig }
-    }
 
     beforeAll(async () => {
         provider = new JsonRpcProvider(chainURL)
@@ -55,7 +39,7 @@ describe("MaintainTopologyHelper", () => {
         const streamCreatorKey = "0xfe1d528b7e204a5bdfb7668a1ed3adfee45b4b96960a175c9ef0ad16dd58d728"
         adminWallet = new Wallet(streamCreatorKey, provider)
 
-        token = new Contract(config.contracts.LINK, tokenABI) as unknown as IERC677
+        token = new Contract(config.contracts.LINK, tokenABI) as unknown as TestToken
         const timeString = (new Date()).getTime().toString()
         const streamPath1 = "/operatorclienttest-1-" + timeString
         const streamPath2 = "/operatorclienttest-2-" + timeString
@@ -76,7 +60,9 @@ describe("MaintainTopologyHelper", () => {
         let sponsorship2: Contract
         let operatorClient: MaintainTopologyHelper
         beforeAll(async () => {
-            ({ operatorWallet, operatorContract, operatorConfig } = await deployNewOperator())
+            ({ operatorWallet, operatorContract, operatorConfig } = await createWalletAndDeployOperator(
+                provider, config, theGraphUrl
+            ))
         })
         afterEach(async () => {
             operatorClient.stop()
@@ -169,7 +155,9 @@ describe("MaintainTopologyHelper", () => {
         let operatorClient: MaintainTopologyHelper
 
         beforeAll(async () => {
-            ({ operatorWallet, operatorContract, operatorConfig } = await deployNewOperator())
+            ({ operatorWallet, operatorContract, operatorConfig } = await createWalletAndDeployOperator(
+                provider, config, theGraphUrl
+            ))
         })
         afterEach(async () => {
             operatorClient.stop()

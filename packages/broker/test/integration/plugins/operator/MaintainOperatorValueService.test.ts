@@ -2,9 +2,9 @@ import { Provider } from "@ethersproject/providers"
 import { Chains } from "@streamr/config"
 import { Wallet } from "@ethersproject/wallet"
 import { parseEther } from "@ethersproject/units"
-import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
+import { Logger, waitForCondition } from '@streamr/utils'
 
-import type { IERC677, Operator } from "@streamr/network-contracts"
+import type { TestToken, Operator } from "@streamr/network-contracts"
 
 import { tokenABI } from "@streamr/network-contracts"
 import { Contract } from "@ethersproject/contracts"
@@ -12,8 +12,9 @@ import { Contract } from "@ethersproject/contracts"
 import { deploySponsorship } from "./deploySponsorshipContract"
 import { MaintainOperatorValueService } from "../../../../src/plugins/operator/MaintainOperatorValueService"
 import { OperatorServiceConfig } from "../../../../src/plugins/operator/OperatorPlugin"
-import { ADMIN_WALLET_PK, deployOperatorContract, generateWalletWithGasAndTokens, getProvider } from "./smartContractUtils"
-import { createClient } from '../../../utils'
+import { getProvider } from "./smartContractUtils"
+import { createClient } from "../../../utils"
+import { createWalletAndDeployOperator } from "./createWalletAndDeployOperator"
 
 const config = Chains.load()["dev1"]
 const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '127.0.0.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`
@@ -23,29 +24,18 @@ const logger = new Logger(module)
 const SPONSOR_AMOUNT = 250
 const STAKE_AMOUNT = 100
 
-describe("MaintainOperatorValueService", () => {
+const STREAM_CREATION_KEY = "0xb1abdb742d3924a45b0a54f780f0f21b9d9283b231a0a0b35ce5e455fa5375e7"
+
+// test is outdated, is completely rewritten and will be merged with PR #1629 
+describe.skip("MaintainOperatorValueService", () => {
     let provider: Provider
     let operatorWallet: Wallet
     let operatorContract: Operator
-    let token: IERC677
+    let token: TestToken
     let streamId1: string
     let streamId2: string
 
     let operatorConfig: OperatorServiceConfig
-
-    const deployNewOperator = async () => {
-        const operatorWallet = await generateWalletWithGasAndTokens(provider)
-        logger.debug("Deploying operator contract")
-        const operatorContract = await deployOperatorContract(operatorWallet)
-        logger.debug(`Operator deployed at ${operatorContract.address}`)
-        operatorConfig = {
-            operatorContractAddress: toEthereumAddress(operatorContract.address),
-            provider,
-            theGraphUrl,
-            signer: operatorWallet
-        }
-        return { operatorWallet, operatorContract }
-    }
 
     const getDiffBetweenApproxAndRealValues = async (): Promise<bigint> => {
         const { sponsorshipAddresses, approxValues, realValues } = await operatorContract.getApproximatePoolValuesPerSponsorship()
@@ -58,7 +48,7 @@ describe("MaintainOperatorValueService", () => {
     }
 
     beforeAll(async () => {
-        const client = createClient(ADMIN_WALLET_PK)
+        const client = createClient(STREAM_CREATION_KEY)
         streamId1 = (await client.createStream(`/operatorvalueservicetest-1-${Date.now()}`)).id
         streamId2 = (await client.createStream(`/operatorvalueservicetest-2-${Date.now()}`)).id
         await client.destroy()
@@ -68,9 +58,11 @@ describe("MaintainOperatorValueService", () => {
         provider = getProvider()
         logger.debug("Connected to: ", await provider.getNetwork())
 
-        token = new Contract(config.contracts.LINK, tokenABI) as unknown as IERC677
+        token = new Contract(config.contracts.LINK, tokenABI) as unknown as TestToken
 
-        ({ operatorWallet, operatorContract } = await deployNewOperator())
+        ({ operatorWallet, operatorContract } = await createWalletAndDeployOperator(
+            provider, config, theGraphUrl
+        ))
 
         await (
             await token.connect(operatorWallet).transferAndCall(operatorContract.address, parseEther(`${STAKE_AMOUNT * 2}`), operatorWallet.address)
@@ -128,3 +120,4 @@ describe("MaintainOperatorValueService", () => {
         await maintainOperatorValueService.stop()
     }, 60 * 1000)
 })
+

@@ -29,9 +29,9 @@ export async function deploySponsorship(
         streamId,
         metadata,
         [
-            chainConfig.contracts.StakeWeightedAllocationPolicy,
-            chainConfig.contracts.DefaultLeavePolicy,
-            chainConfig.contracts.VoteKickPolicy,
+            chainConfig.contracts.SponsorshipStakeWeightedAllocationPolicy,
+            chainConfig.contracts.SponsorshipDefaultLeavePolicy,
+            chainConfig.contracts.SponsorshipVoteKickPolicy,
         ], [
             parseEther("0.01"),
             "0",
