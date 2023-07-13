@@ -73,18 +73,28 @@ export class MaintainTopologyService {
     private onAddStakedStream = this.concurrencyLimiter(async (streamPartId: StreamPartID): Promise<void> => {
         const id = StreamPartIDUtils.getStreamID(streamPartId)
         const partition = StreamPartIDUtils.getStreamPartition(streamPartId)
-        const subscription = await this.streamrClient.subscribe({
-            id,
-            partition,
-            raw: true
-        }) // TODO: rejects?
+        let subscription: Subscription
+        try {
+            subscription = await this.streamrClient.subscribe({
+                id,
+                partition,
+                raw: true
+            })
+        } catch (err) {
+            logger.warn('Failed to subscribe', { streamPartId, reason: err?.reason })
+            return
+        }
         this.subscriptions.set(streamPartId, subscription)
     })
 
     private onRemoveStakedStream = this.concurrencyLimiter(async (streamPartId: StreamPartID): Promise<void> => {
         const subscription = this.subscriptions.get(streamPartId)
         this.subscriptions.delete(streamPartId)
-        await subscription?.unsubscribe() // TODO: rejects?
+        try {
+            await subscription?.unsubscribe()
+        } catch (err) {
+            logger.warn('Failed to unsubscribe', { streamPartId, reason: err?.reason })
+        }
     })
 
     private concurrencyLimiter(
