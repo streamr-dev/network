@@ -4,8 +4,23 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+    {
+      "name": "Launch via NPM",
+      "request": "launch",
+      "runtimeArgs": [
+        "run",
+        "test"
+      ],
+      "console": "internalConsole", 
+      "outputCapture": "std",
+      "runtimeExecutable": "npm",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "type": "node"
+    },
       {
-        "name": "test via npm",
+        "name": "test this file",
         "request": "launch",
         "runtimeArgs": [
           "jest",
@@ -15,6 +30,8 @@
         "skipFiles": [
           "<node_internals>/**"
         ],
+        "console": "internalConsole", 
+        "outputCapture": "std",
         "type": "node",
         "env": {
           "LOG_LEVEL": "trace",
@@ -42,6 +59,5 @@
           "STREAMR_DOCKER_DEV_HOST": "localhost"
         }
       }
-
     ]
 }

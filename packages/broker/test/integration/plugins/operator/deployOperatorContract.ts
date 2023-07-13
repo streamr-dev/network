@@ -36,9 +36,9 @@ export async function deployOperatorContract(
     const operatorReceipt = await (await operatorFactory.deployOperator(
         [ poolTokenName, operatorMetadata ],
         [
-            chainConfig.contracts.DefaultDelegationPolicy,
-            chainConfig.contracts.DefaultPoolYieldPolicy,
-            chainConfig.contracts.DefaultUndelegationPolicy,
+            chainConfig.contracts.OperatorDefaultDelegationPolicy,
+            chainConfig.contracts.OperatorDefaultPoolYieldPolicy,
+            chainConfig.contracts.OperatorDefaultUndelegationPolicy,
         ], [
             0,
             parseEther("1").mul(minOperatorStakePercent).div(100),

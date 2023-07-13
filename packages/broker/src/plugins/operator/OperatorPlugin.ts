@@ -31,7 +31,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     private readonly announceNodeService: AnnounceNodeService
     private readonly inspectRandomNodeService = new InspectRandomNodeService()
     private readonly maintainOperatorContractService = new MaintainOperatorContractService()
-    private readonly voteOnSuspectNodeService = new VoteOnSuspectNodeService()
+    private readonly voteOnSuspectNodeService: VoteOnSuspectNodeService
     private readonly maintainTopologyService: MaintainTopologyService
     private readonly maintainOperatorValueService: MaintainOperatorValueService
 
@@ -65,6 +65,10 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             )
         )
         this.maintainOperatorValueService = new MaintainOperatorValueService(serviceHelperConfig)
+        this.voteOnSuspectNodeService = new VoteOnSuspectNodeService(
+            this.streamrClient,
+            serviceHelperConfig
+        )
     
     }
 
