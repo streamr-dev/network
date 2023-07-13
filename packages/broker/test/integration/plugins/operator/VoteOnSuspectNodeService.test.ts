@@ -93,11 +93,14 @@ describe('VoteOnSuspectNodeService', () => {
         await (await token.connect(voter.operatorWallet).transferAndCall(voter.operatorContract.address,
             parseEther('200'), voter.operatorWallet.address)).wait()
         
+        await wait(3000) // sometimes these stake fail, possibly when they end up in the same block
         logger.trace('staking to sponsorship contract from flagger and target and voter')
         logger.trace('staking from flagger: ' + flagger.operatorContract.address)
         await (await flagger.operatorContract.stake(sponsorship.address, parseEther('150'))).wait()
+        await wait(3000)
         logger.trace('staking from target: ' + target.operatorContract.address)
         await (await target.operatorContract.stake(sponsorship.address, parseEther('150'))).wait()
+        await wait(3000)
         logger.trace('staking from voter: ' + voter.operatorContract.address)
         await (await voter.operatorContract.stake(sponsorship.address, parseEther('150'))).wait()
 
