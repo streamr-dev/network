@@ -105,6 +105,7 @@ describe('VoteOnSuspectNodeService', () => {
         await (await flagger.operatorContract.setNodeAddresses([await flagger.operatorContract.owner()])).wait()
 
         logger.trace('flagging target operator')
+        // TODO: replace mock voting with real voting down the line to make this a e2e test in the true sense
         const mockVoteOnSuspectNodeHelper = mock<VoteOnSuspectNodeHelper>()
         mockVoteOnSuspectNodeHelper.voteOnFlag.mockImplementation(async (operatorAddress, suspectAddress, flag) => {
             logger.trace('mockVoteOnSuspectNodeHelper.voteOnFlag called')
@@ -119,6 +120,6 @@ describe('VoteOnSuspectNodeService', () => {
         await waitForCondition(() => mockVoteOnSuspectNodeHelper.voteOnFlag.mock.calls.length > 0, 10000)
         expect(mockVoteOnSuspectNodeHelper.voteOnFlag).toHaveBeenCalledTimes(1)
         expect(mockVoteOnSuspectNodeHelper.voteOnFlag).toHaveBeenCalledWith(sponsorship.address, target.operatorContract.address, true)
-        flaggerVoteService.stop()
+        await flaggerVoteService.stop()
     }, TIMEOUT)
 })

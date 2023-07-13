@@ -17,20 +17,20 @@ export class VoteOnSuspectNodeService {
     }
 
     async start(): Promise<void> {
-        logger.debug('starting')
         await this.voteOnSuspectNodeHelper.start()
-        logger.debug('started')
     }
 
     async stop(): Promise<void> {
         this.voteOnSuspectNodeHelper.stop()
     }
 
-    async handleNodeInspectionRequest(sponsorship: string, targetOperator: string): Promise<void> {
+    handleNodeInspectionRequest(sponsorship: string, targetOperator: string): void {
         logger.info('Received inspection request', { targetOperator, sponsorship })
         //const operatorIsMalicious = this.streamrClient.inspectNodes(sponsorship, targetOperato)
         const operatorIsMalicious = true
         logger.info(`Vote on inspection request', ${{ sponsorship, targetOperator, kick: operatorIsMalicious }}`)
-        await this.voteOnSuspectNodeHelper.voteOnFlag(sponsorship, targetOperator, operatorIsMalicious)
+        this.voteOnSuspectNodeHelper.voteOnFlag(sponsorship, targetOperator, operatorIsMalicious).catch((err) => {
+            logger.warn('Encountered error while trying to vote on flag', { err })
+        })
     }
 }
