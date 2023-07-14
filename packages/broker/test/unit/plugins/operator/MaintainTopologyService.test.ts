@@ -18,7 +18,7 @@ const SP5 = toStreamPartID(toStreamID('cc'), 5)
 const STREAM_NOT_EXIST = toStreamID('STREAM_NOT_EXIST')
 const STREAM_PART_NOT_EXIST = toStreamPartID(STREAM_NOT_EXIST, 1)
 
-const ALL_STREAMS = [SP1, SP2, SP3, SP4, SP5, STREAM_PART_NOT_EXIST]
+const ALL_STREAM_PARTS = [SP1, SP2, SP3, SP4, SP5, STREAM_PART_NOT_EXIST]
 
 const NOTHING_HAPPENED_DELAY = 250
 
@@ -26,7 +26,7 @@ function setUpFixturesAndMocks(streamrClient: MockProxy<StreamrClient>): Record<
     const result: Record<StreamPartID, MockSubscription> = {}
 
     // Set up streamrClient#subscribe
-    for (const streamPartId of ALL_STREAMS) {
+    for (const streamPartId of ALL_STREAM_PARTS) {
         result[streamPartId] = { unsubscribe: jest.fn() }
     }
     streamrClient.subscribe.mockImplementation(async (opts) => {
@@ -80,13 +80,14 @@ describe('MaintainTopologyService', () => {
         return fixtures[streamPartId].unsubscribe.mock.calls.length
     }
 
-    it('handles "unassigned"" event (happy path)', async () => {
+    it('handles "unassigned" event (happy path)', async () => {
         streamAssignmentLoadBalancer.emit('assigned', SP1)
         streamAssignmentLoadBalancer.emit('assigned', SP2)
 
         streamAssignmentLoadBalancer.emit('unassigned', SP1)
 
         await waitForCondition(() => totalUnsubscribes(SP1) === 1)
+        expect(totalUnsubscribes(SP2)).toEqual(0)
     })
 
     it('handles "unassigned" event once even if triggered twice', async () => {
