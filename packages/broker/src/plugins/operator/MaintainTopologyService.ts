@@ -61,8 +61,8 @@ export class MaintainTopologyService {
     }
 
     async start(): Promise<void> {
-        this.streamAssignmentLoadBalancer.on('assigned', this.onAddStakedStream)
-        this.streamAssignmentLoadBalancer.on('unassigned', this.onRemoveStakedStream)
+        this.streamAssignmentLoadBalancer.on('assigned', this.onAddStakedStreamPart)
+        this.streamAssignmentLoadBalancer.on('unassigned', this.onRemoveStakedStreamPart)
         logger.info('Started')
     }
 
@@ -70,7 +70,7 @@ export class MaintainTopologyService {
     async stop(): Promise<void> {
     }
 
-    private onAddStakedStream = this.concurrencyLimiter(async (streamPartId: StreamPartID): Promise<void> => {
+    private onAddStakedStreamPart = this.concurrencyLimiter(async (streamPartId: StreamPartID): Promise<void> => {
         const id = StreamPartIDUtils.getStreamID(streamPartId)
         const partition = StreamPartIDUtils.getStreamPartition(streamPartId)
         let subscription: Subscription
@@ -87,7 +87,7 @@ export class MaintainTopologyService {
         this.subscriptions.set(streamPartId, subscription)
     })
 
-    private onRemoveStakedStream = this.concurrencyLimiter(async (streamPartId: StreamPartID): Promise<void> => {
+    private onRemoveStakedStreamPart = this.concurrencyLimiter(async (streamPartId: StreamPartID): Promise<void> => {
         const subscription = this.subscriptions.get(streamPartId)
         this.subscriptions.delete(streamPartId)
         try {
