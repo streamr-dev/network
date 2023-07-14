@@ -41,7 +41,7 @@ export class StreamAssignmentLoadBalancer extends EventEmitter3<StreamAssignment
         this.maintainTopologyHelper.on('removeStakedStream', this.streamRemoved)
     }
 
-    private nodeAdded = this.concurrencyLimiter( async (nodeId: string): Promise<void> => {
+    private nodeAdded = this.concurrencyLimiter(async (nodeId: string): Promise<void> => {
         if (nodeId === this.myNodeId) {
             return
         }
@@ -49,7 +49,7 @@ export class StreamAssignmentLoadBalancer extends EventEmitter3<StreamAssignment
         this.recalculateAssignments()
     })
 
-    private nodeRemoved = this.concurrencyLimiter( async (nodeId: string): Promise<void> => {
+    private nodeRemoved = this.concurrencyLimiter(async (nodeId: string): Promise<void> => {
         if (nodeId === this.myNodeId) {
             return
         }
