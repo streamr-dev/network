@@ -39,6 +39,15 @@ function containsAll(arr: StreamPartID[], includes: StreamPartID[]): boolean {
     return true
 }
 
+function doesNotContainAny(arr: StreamPartID[], notToInclude: StreamPartID[]): boolean {
+    for (const item of notToInclude) {
+        if (arr.includes(item)) {
+            return false
+        }
+    }
+    return true
+}
+
 describe('MaintainTopologyService', () => {
     let service: MaintainTopologyService
     let client: StreamrClient
@@ -86,7 +95,8 @@ describe('MaintainTopologyService', () => {
 
         await (await operatorContract.unstake(sponsorship1.address)).wait()
         await waitForCondition(async () => {
-            return containsAll(await getSubscribedStreamPartIds(client), stream2.getStreamParts())
+            const state = await getSubscribedStreamPartIds(client)
+            return containsAll(state, stream2.getStreamParts()) && doesNotContainAny(state, stream1.getStreamParts())
         }, 10000, 1000)
     }, 120 * 1000)
 })
