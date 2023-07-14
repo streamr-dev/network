@@ -4,6 +4,7 @@ import random from 'lodash/random'
 import { randomString } from '@streamr/utils'
 import { toStreamID, toStreamPartID } from '@streamr/protocol'
 
+// caveat: statistically unlikely to get 10 consecutive assignments, but not impossible
 function checkForConsistentSequentialAssignments(assignments: string[]): void {
     let count = 0
     let lastAssignment = null
@@ -21,7 +22,7 @@ function checkForConsistentSequentialAssignments(assignments: string[]): void {
 }
 
 describe(ConstHash, () => {
-    it('consistent assignments regardless of node adding order', () => {
+    it('consistent assignments regardless of node insertion order', () => {
         const h1 = new ConstHash()
         const h2 = new ConstHash()
         const h3 = new ConstHash()
