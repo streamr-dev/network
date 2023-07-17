@@ -4,16 +4,14 @@ import { Contract } from "@ethersproject/contracts"
 
 import { Chains } from "@streamr/config"
 import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
-import { tokenABI, streamrConfigABI, sponsorshipFactoryABI } from "@streamr/network-contracts"
-
-import type { TestToken, Operator, SponsorshipFactory, StreamrConfig } from "@streamr/network-contracts"
+import { tokenABI, TestToken, Operator } from "@streamr/network-contracts"
 
 import { deploySponsorship } from "./deploySponsorshipContract"
 import { ADMIN_WALLET_PK, deployOperatorContract, generateWalletWithGasAndTokens, getProvider } from "./smartContractUtils"
 
 import { MaintainOperatorValueService } from "../../../../src/plugins/operator/MaintainOperatorValueService"
 import { OperatorServiceConfig } from "../../../../src/plugins/operator/OperatorPlugin"
-import { createClient } from '../../../utils'
+import { createClient } from "../../../utils"
 
 const config = Chains.load()["dev1"]
 const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '127.0.0.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`
@@ -30,7 +28,8 @@ async function getTotalUnwithdrawnEarnings(operatorContract: Operator): Promise<
     return unwithdrawnEarnings
 }
 
-describe("MaintainOperatorValueService", () => {
+// test is outdated, is completely rewritten and will be merged with PR #1629 
+describe.skip("MaintainOperatorValueService", () => {
     let provider: Provider
     let token: TestToken
     let streamId1: string
@@ -124,3 +123,4 @@ describe("MaintainOperatorValueService", () => {
         expect(formatEther(earnings3after)).toEqual("0.5")
     }, 60 * 1000)
 })
+
