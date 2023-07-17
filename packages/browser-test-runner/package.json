@@ -19,7 +19,7 @@
     "@electron/rebuild": "^3.2.9",
     "@jest/fake-timers": "^29.6.1",
     "buffer": "^6.0.3",
-    "electron": "^25.2.0",
+    "electron": "^25.3.0",
     "expect": "^29.6.1",
     "jest-mock": "^29.6.1",
     "karma": "^6.4.0",
