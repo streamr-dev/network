@@ -1,4 +1,4 @@
-import { Logger, scheduleAtInterval } from '@streamr/utils'
+import { EthereumAddress, Logger, scheduleAtInterval } from '@streamr/utils'
 import { MaintainOperatorValueHelper } from './MaintainOperatorValueHelper'
 import { OperatorServiceConfig } from './OperatorPlugin'
 
@@ -16,11 +16,11 @@ export class OperatorValueBreachWatcher {
         this.abortController = new AbortController()
     }
 
-    async start(): Promise<void> {
+    async start(operatorId?: EthereumAddress): Promise<void> {
         this.penaltyLimitFraction = await this.helper.getPenaltyLimitFraction()
 
         await scheduleAtInterval(
-            () => this.watchOperators().catch((err) => {
+            () => this.watchOperators(operatorId).catch((err) => {
                 logger.warn('Encountered error while watching operators', { err })
             }),
             CHECK_VALUE_INTERVAL,
@@ -29,9 +29,11 @@ export class OperatorValueBreachWatcher {
         )
     }
 
-    private async watchOperators(): Promise<void> {
-        const operatorId = await this.helper.getRandomOperator()
-        logger.info('Wathcing if other operator earnings are above the allowed amount to get rewarded', { operatorId })
+    private async watchOperators(myOperatorId?: EthereumAddress): Promise<void> {
+        const operatorId = myOperatorId
+            ? myOperatorId
+            : await this.helper.getRandomOperator()
+        logger.info('Wathcing if other operator earnings are above the allowed amount to get rewarded', { operatorId: operatorId })
         await this.helper.checkAndWithdrawEarningsFromSponsorships(this.penaltyLimitFraction, operatorId)
     }
 

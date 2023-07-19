@@ -1,7 +1,7 @@
 import { Provider } from "@ethersproject/providers"
 import { Chains } from "@streamr/config"
 import { Wallet } from "@ethersproject/wallet"
-import { parseEther, formatEther } from "@ethersproject/units"
+import { parseEther } from "@ethersproject/units"
 import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
 
 import type { TestToken, Operator, Sponsorship } from "@streamr/network-contracts"
@@ -85,17 +85,28 @@ describe("OperatorValueBreachWatcher", () => {
         const allowedDifference = poolValueBeforeWithdraw.mul(PENALTY_LIMIT_FRACTION).div(parseEther("1"))
 
         await waitForCondition(async () => {
+            const { earnings } = await operatorContract.getEarningsFromSponsorships()
             let sumEarnings: BigNumber = BigNumber.from(0)
-            for (const sponsorship of [sponsorship1, sponsorship2]) {
-                sumEarnings = sumEarnings.add(await sponsorship.getEarnings(operatorContract.address))
+            for (const earning of earnings) {
+                sumEarnings = sumEarnings.add(earning)
             }
-            logger.debug(`sumEarnings ${formatEther(sumEarnings)}, allowedDifference ${formatEther(allowedDifference)}`)
             return sumEarnings.gt(allowedDifference)
         }, 10000, 1000)
 
-        await operatorValueBreachWatcher.start()
+        await operatorValueBreachWatcher.start(toEthereumAddress(operatorContract.address))
+
+        await waitForCondition(async () => {
+            const { earnings } = await operatorContract.getEarningsFromSponsorships()
+            let sumEarnings: BigNumber = BigNumber.from(0)
+            for (const earning of earnings) {
+                sumEarnings = sumEarnings.add(earning)
+            }
+            return sumEarnings.lt(allowedDifference)
+        }, 10000, 1000)
 
         const poolValueAfterWithdraw = await operatorContract.getApproximatePoolValue()
         expect(poolValueAfterWithdraw.toBigInt()).toBeGreaterThan(poolValueBeforeWithdraw.toBigInt())
+
+        await operatorValueBreachWatcher.stop()
     }, 60 * 1000)
 })

@@ -45,14 +45,14 @@ export class MaintainOperatorValueHelper {
         operatorContractAddress?: EthereumAddress,
     ): Promise<void> {
         const operator = operatorContractAddress
-            ? new Contract(operatorContractAddress, operatorABI, this.config.provider) as unknown as Operator
+            ? new Contract(operatorContractAddress, operatorABI, this.config.signer) as unknown as Operator
             : this.operator
         const minSponsorshipEarningsWei = this.config.minSponsorshipEarnings
             ? BigNumber.from(this.config.minSponsorshipEarnings)
             : BigNumber.from(0)
         const { sponsorshipAddresses, earnings } = await operator.getEarningsFromSponsorships()
 
-        const sponsorships: { address: string, earnings: bigint }[] = []
+        const sponsorships: { address: string, earnings: BigNumber }[] = []
         for (let i = 0; i < sponsorshipAddresses.length; i++) {
             // skip sponsorships with too low earnings
             if (earnings[i] < minSponsorshipEarningsWei) {
@@ -60,7 +60,7 @@ export class MaintainOperatorValueHelper {
             }
             const sponsorship = {
                 address: sponsorshipAddresses[i],
-                earnings: earnings[i].toBigInt(),
+                earnings: earnings[i],
             }
             sponsorships.push(sponsorship)
         }
@@ -71,16 +71,15 @@ export class MaintainOperatorValueHelper {
 
         let sumEarningsDataWei = BigInt(0)
         for (const sponsorship of neededSponsorships) {
-            sumEarningsDataWei += sponsorship.earnings
+            sumEarningsDataWei += sponsorship.earnings.toBigInt()
         }
 
         const approxPoolValueBeforeWithdraw = (await operator.totalValueInSponsorshipsWei()).toBigInt()
         const withdrawLimitDataWei = approxPoolValueBeforeWithdraw * withdrawLimitFraction / ONE_ETHER
 
-        logger.info('Withdraw earnings from sponsorships', { sumEarningsDataWei, withdrawLimitDataWei })
+        logger.info(`Withdraw earnings from ${neededSponsorships.length} sponsorships`, { sumEarningsDataWei, withdrawLimitDataWei })
         if (sumEarningsDataWei > withdrawLimitDataWei) {
-            logger.info(`Withdraw earnings from ${neededSponsorships.length} sponsorships`, { neededSponsorships })
-            await (await this.operator.withdrawEarningsFromSponsorships(neededSponsorships.map((sponsorship) => sponsorship.address))).wait()
+            await (await operator.withdrawEarningsFromSponsorships(neededSponsorships.map((sponsorship) => sponsorship.address))).wait()
         }
     }
 
