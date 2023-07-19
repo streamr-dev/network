@@ -27,7 +27,9 @@ export class MaintainOperatorValueHelper {
     async getRandomOperator(): Promise<EthereumAddress> {
         const latestBlock = await this.operator.provider.getBlockNumber()
         const queryFilter = '' // e.g. (first: 10, orderBy: poolValue, orderDirection: desc)
-        const operatorIds = await this.getOperatorIds(latestBlock, queryFilter)
+        const ids = await this.getOperatorIds(latestBlock, queryFilter)
+        // filter out my own operator
+        const operatorIds = ids.filter((id) => id !== this.config.operatorContractAddress)
         logger.info(`Found ${operatorIds.length} operators`, { operatorIds })
         const randomIndex = Math.floor(Math.random() * operatorIds.length)
         return operatorIds[randomIndex]
