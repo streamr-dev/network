@@ -1,7 +1,7 @@
 import { Provider } from "@ethersproject/providers"
 import { Chains } from "@streamr/config"
 import { Wallet } from "@ethersproject/wallet"
-import { parseEther } from "@ethersproject/units"
+import { parseEther, formatEther } from "@ethersproject/units"
 import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
 
 import type { TestToken, Operator, Sponsorship } from "@streamr/network-contracts"
@@ -25,6 +25,16 @@ const logger = new Logger(module)
 const SPONSOR_AMOUNT = 250
 const STAKE_AMOUNT = 100
 const PENALTY_LIMIT_FRACTION = parseEther("0.1")
+
+async function getTotalUnwithdrawnEarnings(operatorContract: Operator): Promise<bigint> {
+    const { earnings } = await operatorContract.getEarningsFromSponsorships()
+    let unwithdrawnEarnings = BigInt(0)
+    for (const e of earnings) {
+        unwithdrawnEarnings += e.toBigInt()
+    }
+    logger.debug(`Total unwithdrawn earnings: ${formatEther(unwithdrawnEarnings.toString())} (t = ${Date.now()})`)
+    return unwithdrawnEarnings
+}
 
 describe("OperatorValueBreachWatcher", () => {
     let provider: Provider
@@ -82,28 +92,16 @@ describe("OperatorValueBreachWatcher", () => {
         const operatorValueBreachWatcher = new OperatorValueBreachWatcher(operatorConfig)
 
         const poolValueBeforeWithdraw = await operatorContract.getApproximatePoolValue()
-        const allowedDifference = poolValueBeforeWithdraw.mul(PENALTY_LIMIT_FRACTION).div(parseEther("1"))
+        const allowedDifference = poolValueBeforeWithdraw.mul(PENALTY_LIMIT_FRACTION).div(parseEther("1")).toBigInt()
 
-        await waitForCondition(async () => {
-            const { earnings } = await operatorContract.getEarningsFromSponsorships()
-            let sumEarnings: BigNumber = BigNumber.from(0)
-            for (const earning of earnings) {
-                sumEarnings = sumEarnings.add(earning)
-            }
-            return sumEarnings.gt(allowedDifference)
-        }, 10000, 1000)
-
+        await waitForCondition(async () => await getTotalUnwithdrawnEarnings(operatorContract) > allowedDifference, 10000, 1000)
         await operatorValueBreachWatcher.start(toEthereumAddress(operatorContract.address))
-
-        await waitForCondition(async () => {
-            const { earnings } = await operatorContract.getEarningsFromSponsorships()
-            let sumEarnings: BigNumber = BigNumber.from(0)
-            for (const earning of earnings) {
-                sumEarnings = sumEarnings.add(earning)
-            }
-            return sumEarnings.lt(allowedDifference)
-        }, 10000, 1000)
-
+        await waitForCondition(async () => await getTotalUnwithdrawnEarnings(operatorContract) < allowedDifference, 10000, 1000)
+        // deploy new env w 2 op
+        // if should pick the other one
+        // test against the "other" one
+        // develop agains the fast chain
+        
         const poolValueAfterWithdraw = await operatorContract.getApproximatePoolValue()
         expect(poolValueAfterWithdraw.toBigInt()).toBeGreaterThan(poolValueBeforeWithdraw.toBigInt())
 
