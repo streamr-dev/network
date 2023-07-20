@@ -16,6 +16,11 @@ export class OperatorValueBreachWatcher {
         this.abortController = new AbortController()
     }
 
+    // TODO: remove operator contract address param from start() AND:
+    //      deploy new env (using streamrEnvDeployer) with 2 operator contracts
+    //      if should pick the other one, not itself
+    //      test against the "other" one
+    //      develop agains the fast chain
     async start(operatorId?: EthereumAddress): Promise<void> {
         this.penaltyLimitFraction = await this.helper.getPenaltyLimitFraction()
 
