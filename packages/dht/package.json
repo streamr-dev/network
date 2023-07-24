@@ -35,7 +35,7 @@
     "bloomfilter": "^0.0.18",
     "k-bucket": "^5.1.0",
     "lodash": "^4.17.21",
-    "node-datachannel": "^0.4.2",
+    "node-datachannel": "^0.4.3",
     "p-queue": "6.3.0",
     "uuid": "^9.0.0",
     "websocket": "^1.0.34"
