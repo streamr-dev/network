@@ -32,7 +32,7 @@
         "@types/jest": "^29.5.3",
         "@types/node": "^18.17.0",
         "@typescript-eslint/eslint-plugin": "^5.61.0",
-        "@typescript-eslint/parser": "^6.0.0",
+        "@typescript-eslint/parser": "^6.2.0",
         "cli-table": "^0.3.6",
         "eslint": "^8.45.0",
         "eslint-config-streamr-ts": "^4.1.0",
