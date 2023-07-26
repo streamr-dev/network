@@ -15,10 +15,12 @@ const logger = new Logger(module)
  */
 export async function setUpAndStartMaintainTopologyService({
     streamrClient,
+    replicationFactor,
     serviceHelperConfig,
     operatorFleetState
 }: {
     streamrClient: StreamrClient
+    replicationFactor: number
     serviceHelperConfig: OperatorServiceConfig
     operatorFleetState?: OperatorFleetState
 }): Promise<MaintainTopologyService> {
@@ -33,6 +35,7 @@ export async function setUpAndStartMaintainTopologyService({
         streamrClient,
         new StreamAssignmentLoadBalancer(
             nodeId,
+            replicationFactor,
             async (streamId) => {
                 const stream = await streamrClient.getStream(streamId)
                 return stream.getStreamParts()

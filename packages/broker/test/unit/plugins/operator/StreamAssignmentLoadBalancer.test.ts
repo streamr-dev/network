@@ -44,6 +44,7 @@ describe(StreamAssignmentLoadBalancer, () => {
         maintainTopologyHelper = new EventEmitter3()
         balancer = new StreamAssignmentLoadBalancer(
             MY_NODE_ID,
+            1,
             getStreamParts,
             operatorFleetState,
             maintainTopologyHelper

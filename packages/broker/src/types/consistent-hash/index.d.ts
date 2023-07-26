@@ -8,7 +8,7 @@ declare module 'consistent-hash' {
 
         add(node: string): ConsistentHash
 
-        get(name: string): string
+        get(name: string, count?: number): string[] | string
 
         remove(node: string): ConsistentHash
     }

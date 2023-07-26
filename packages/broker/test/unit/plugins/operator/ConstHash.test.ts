@@ -23,9 +23,9 @@ function checkForConsistentSequentialAssignments(assignments: string[]): void {
 
 describe(ConstHash, () => {
     it('consistent assignments regardless of node insertion order', () => {
-        const h1 = new ConstHash()
-        const h2 = new ConstHash()
-        const h3 = new ConstHash()
+        const h1 = new ConstHash(1)
+        const h2 = new ConstHash(1)
+        const h3 = new ConstHash(1)
 
         h1.add('node-1')
         h1.add('node-2')
@@ -52,27 +52,27 @@ describe(ConstHash, () => {
     })
 
     it('partitions of same stream get spread around sufficiently', () => {
-        const h = new ConstHash()
+        const h = new ConstHash(1)
         h.add('node-1')
         h.add('node-2')
         h.add('node-3')
 
         const assignments = []
         for (const idx of range(100)) {
-            assignments.push(h.get(toStreamPartID(toStreamID('helloworld'), idx)))
+            assignments.push(h.get(toStreamPartID(toStreamID('helloworld'), idx))[0])
         }
 
         checkForConsistentSequentialAssignments(assignments)
     })
 
     it('streams with same partition number get spread around sufficiently', () => {
-        const h = new ConstHash()
+        const h = new ConstHash(1)
         h.add('node-1')
         h.add('node-2')
         h.add('node-3')
 
         const assignments = range(50).map((_idx) => {
-            return h.get(toStreamPartID(toStreamID(randomString(16)), 0))
+            return h.get(toStreamPartID(toStreamID(randomString(16)), 0))[0]
         })
         checkForConsistentSequentialAssignments(assignments)
     })
@@ -80,7 +80,7 @@ describe(ConstHash, () => {
     it('consistent assignments even when adding / removing nodes in-between', () => {
         const streamParts = range(50).map(() => toStreamPartID(toStreamID(randomString(6)), random(1, 10)))
 
-        const h1 = new ConstHash()
+        const h1 = new ConstHash(1)
         h1.add('node-1')
         h1.add('node-2')
         streamParts.forEach((sp) => h1.get(sp))
@@ -97,7 +97,7 @@ describe(ConstHash, () => {
         streamParts.forEach((sp) => h1.get(sp))
         streamParts.forEach((sp) => h1.get(sp))
 
-        const h2 = new ConstHash()
+        const h2 = new ConstHash(1)
         h2.add('node-1')
         h2.add('node-3')
         h2.add('node-4')
@@ -107,5 +107,35 @@ describe(ConstHash, () => {
             const h2result = h2.get(sp)
             expect(h1result).toEqual(h2result)
         }
+    })
+
+    it('replication factor > 1', () => {
+        const h = new ConstHash(3)
+        h.add('node-1')
+        h.add('node-2')
+        h.add('node-3')
+
+        const assignments = h.get(toStreamPartID(toStreamID('foo'), 0))
+        expect(assignments).toIncludeSameMembers(['node-1', 'node-2', 'node-3'])
+
+        const assignments2 = h.get(toStreamPartID(toStreamID('bar'), 0))
+        expect(assignments2).toIncludeSameMembers(['node-1', 'node-2', 'node-3'])
+
+        const h2 = new ConstHash(3)
+        h2.add('node-1')
+        h2.add('node-2')
+        h2.add('node-3')
+        h2.add('node-4')
+        h2.add('node-5')
+        h2.add('node-6')
+        h2.add('node-7')
+        h2.add('node-8')
+        h2.add('node-9')
+
+        const assignments3 = h2.get(toStreamPartID(toStreamID('foo'), 0))
+        expect(assignments3).toIncludeSameMembers(['node-5', 'node-6', 'node-7']) // expectation based on arbitrary hashing
+
+        const assignments4 = h2.get(toStreamPartID(toStreamID('barbar'), 0))
+        expect(assignments4).toIncludeSameMembers(['node-3', 'node-4', 'node-5']) // expectation based on arbitrary hashing
     })
 })

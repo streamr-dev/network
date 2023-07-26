@@ -17,7 +17,7 @@ export class StreamAssignmentLoadBalancer extends EventEmitter3<StreamAssignment
     private readonly allStreamParts = new Set<StreamPartID>()
     private readonly myStreamParts = new Set<StreamPartID>()
     private readonly concurrencyLimit = pLimit(1)
-    private readonly consistentHash = new ConstHash()
+    private readonly consistentHash: ConstHash
     private readonly myNodeId: string
     private readonly getStreamParts: (streamId: StreamID) => Promise<StreamPartID[]>
     private readonly operatorFleetState: EventEmitter3<OperatorFleetStateEvents>
@@ -25,6 +25,7 @@ export class StreamAssignmentLoadBalancer extends EventEmitter3<StreamAssignment
 
     constructor(
         myNodeId: string,
+        replicationFactor: number,
         getStreamParts: (streamId: StreamID) => Promise<StreamPartID[]>,
         operatorFleetState: EventEmitter3<OperatorFleetStateEvents>,
         maintainTopologyHelper: EventEmitter3<MaintainTopologyHelperEvents>,
@@ -34,6 +35,7 @@ export class StreamAssignmentLoadBalancer extends EventEmitter3<StreamAssignment
         this.getStreamParts = getStreamParts
         this.operatorFleetState = operatorFleetState
         this.maintainTopologyHelper = maintainTopologyHelper
+        this.consistentHash = new ConstHash(replicationFactor)
         this.consistentHash.add(myNodeId)
         this.operatorFleetState.on('added', this.nodeAdded)
         this.operatorFleetState.on('removed', this.nodeRemoved)
@@ -75,13 +77,13 @@ export class StreamAssignmentLoadBalancer extends EventEmitter3<StreamAssignment
 
     private recalculateAssignments(): void {
         for (const streamPartId of this.allStreamParts) {
-            if (this.consistentHash.get(streamPartId) === this.myNodeId && !this.myStreamParts.has(streamPartId)) {
+            if (this.consistentHash.get(streamPartId).includes(this.myNodeId) && !this.myStreamParts.has(streamPartId)) {
                 this.myStreamParts.add(streamPartId)
                 this.emit('assigned', streamPartId)
             }
         }
         for (const streamPartId of this.myStreamParts) {
-            if (!this.allStreamParts.has(streamPartId) || this.consistentHash.get(streamPartId) !== this.myNodeId) {
+            if (!this.allStreamParts.has(streamPartId) || !this.consistentHash.get(streamPartId).includes(this.myNodeId)) {
                 this.myStreamParts.delete(streamPartId)
                 this.emit('unassigned', streamPartId)
             }

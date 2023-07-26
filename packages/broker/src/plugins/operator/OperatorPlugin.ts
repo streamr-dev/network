@@ -18,6 +18,7 @@ import { toStreamID } from '@streamr/protocol'
 
 export interface OperatorPluginConfig {
     operatorContractAddress: string
+    replicationFactor: number
 }
 
 export interface OperatorServiceConfig {
@@ -56,6 +57,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             this.streamrClient,
             new StreamAssignmentLoadBalancer(
                 'myNodeId', // TODO: real nodeId here
+                this.pluginConfig.replicationFactor,
                 async (streamId) => {
                     const stream = await this.streamrClient.getStream(streamId)
                     return stream.getStreamParts()

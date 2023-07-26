@@ -78,6 +78,7 @@ describe('MaintainTopologyService', () => {
         client = createClient(fastPrivateKey())
         service = await setUpAndStartMaintainTopologyService({
             streamrClient: client,
+            replicationFactor: 3,
             serviceHelperConfig
         })
 

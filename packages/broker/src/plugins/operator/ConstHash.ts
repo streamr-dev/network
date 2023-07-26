@@ -23,6 +23,11 @@ function formKey(streamPartId: StreamPartID): string {
 export class ConstHash {
     private readonly nodes = new Array<string>()
     private consistentHash?: ConsistentHash
+    private readonly replicationFactor: number
+
+    constructor(replicationFactor: number) {
+        this.replicationFactor = replicationFactor
+    }
 
     add(nodeId: string): void {
         if (!this.nodes.includes(nodeId)) {
@@ -39,7 +44,7 @@ export class ConstHash {
         }
     }
 
-    get(streamPartId: StreamPartID): string {
+    get(streamPartId: StreamPartID): string[] {
         if (this.consistentHash === undefined) {
             this.consistentHash = new ConsistentHash({
                 distribution: 'uniform'
@@ -49,6 +54,10 @@ export class ConstHash {
                 this.consistentHash.add(nodeId)
             }
         }
-        return this.consistentHash.get(formKey(streamPartId))
+        if (this.replicationFactor > 1) {
+            return this.consistentHash.get(formKey(streamPartId), this.replicationFactor) as string[]
+        } else {
+            return [...this.consistentHash.get(formKey(streamPartId), 1)]
+        }
     }
 }
