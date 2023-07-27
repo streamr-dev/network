@@ -33,6 +33,7 @@ eventPerType[TrackerMessage.TYPES.StatusAckMessage] = Event.STATUS_ACK_RECEIVED
 eventPerType[TrackerMessage.TYPES.RelayMessage] = Event.RELAY_MESSAGE_RECEIVED
 eventPerType[TrackerMessage.TYPES.ErrorMessage] = Event.RTC_ERROR_RECEIVED
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export interface NodeToTracker {
     on(event: Event.CONNECTED_TO_TRACKER, listener: (trackerId: TrackerId) => void): this
     on(event: Event.TRACKER_DISCONNECTED, listener: (trackerId: TrackerId) => void): this
@@ -46,6 +47,7 @@ export type UUID = string
 
 const logger = new Logger(module)
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export class NodeToTracker extends EventEmitter {
     private readonly endpoint: AbstractClientWsEndpoint<AbstractWsConnection>
 

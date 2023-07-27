@@ -52,6 +52,7 @@ interface Metrics extends MetricsDefinition {
     nodeStatusProcessed: Metric
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export interface Tracker {
     on(event: Event.NODE_CONNECTED, listener: (nodeId: NodeId) => void): this
 }
@@ -97,6 +98,7 @@ export function convertTestNet3Status(statusMessage: StatusMessage): void {
 
 const logger = new Logger(module)
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export class Tracker extends EventEmitter {
     private readonly maxNeighborsPerNode: number
     private readonly trackerServer: TrackerServer
