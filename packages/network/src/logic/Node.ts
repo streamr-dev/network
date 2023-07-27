@@ -56,6 +56,7 @@ interface Metrics extends MetricsDefinition {
     publishBytesPerSecond: Metric
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export interface Node {
     on(event: Event.NODE_CONNECTED, listener: (nodeId: NodeId) => void): this
     on(event: Event.NODE_DISCONNECTED, listener: (nodeId: NodeId) => void): this
@@ -69,6 +70,7 @@ export interface Node {
     on(event: Event.JOIN_FAILED, listener: (streamPartId: StreamPartID, error: string) => void): this
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export class Node extends EventEmitter {
     public readonly peerInfo: PeerInfo
     protected readonly nodeToNode: NodeToNode
