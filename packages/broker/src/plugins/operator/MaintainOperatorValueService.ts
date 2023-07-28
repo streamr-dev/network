@@ -4,7 +4,7 @@ import { OperatorServiceConfig } from './OperatorPlugin'
 
 const logger = new Logger(module)
 
-const CHECK_VALUE_INTERVAL = 1000 * 60 * 60 * 24 // 1 day
+const CHECK_VALUE_INTERVAL_MS = 1000 * 60 * 60 * 24 // 1 day
 
 export class MaintainOperatorValueService {
     private readonly withdrawLimitSafetyFraction: bigint
@@ -18,23 +18,28 @@ export class MaintainOperatorValueService {
         this.abortController = new AbortController()
     }
 
+    async checkMyUnwithdrawnEarnings(): Promise<void> {
+        logger.info('Check unwithdrawn earnings and check if they are above the safe threshold')
+        const { fraction, sponsorshipAddresses } = await this.helper.getMyUnwithdrawnEarnings()
+        const safeUnwithdrawnEarningsFraction = this.penaltyLimitFraction! * this.withdrawLimitSafetyFraction / BigInt(1e18)
+        logger.info(` -> is ${fraction} > ${safeUnwithdrawnEarningsFraction}?`)
+        if (fraction > safeUnwithdrawnEarningsFraction) {
+            logger.info("Withdrawing earnings from sponsorships", { sponsorshipAddresses })
+            await this.helper.withdrawEarningsFromSponsorships(sponsorshipAddresses)
+        }
+    }
+
     async start(): Promise<void> {
         this.penaltyLimitFraction = await this.helper.getPenaltyLimitFraction()
 
         await scheduleAtInterval(
-            () => this.checkValue().catch((err) => {
-                logger.warn('Encountered error while checking value', { err })
+            () => this.checkMyUnwithdrawnEarnings().catch((err) => {
+                logger.warn('Encountered error during checkUnwithdrawnEarnings', { err })
             }),
-            CHECK_VALUE_INTERVAL,
+            CHECK_VALUE_INTERVAL_MS,
             true,
             this.abortController.signal
         )
-    }
-
-    private async checkValue(): Promise<void> {
-        logger.info('Check earnings and withdraw them if they are above the safe threshold')
-        const safeUnwithdrawnEarningsFraction = this.penaltyLimitFraction! * this.withdrawLimitSafetyFraction / BigInt(1e18)
-        await this.helper.checkAndWithdrawEarningsFromSponsorships(safeUnwithdrawnEarningsFraction)
     }
 
     async stop(): Promise<void> {

@@ -1,5 +1,5 @@
 import { BigNumber, Contract } from 'ethers'
-import { Operator, StreamrConfig, operatorABI, streamrConfigABI } from '@streamr/network-contracts'
+import { Operator, Sponsorship, StreamrConfig, operatorABI, streamrConfigABI } from '@streamr/network-contracts'
 import { OperatorServiceConfig } from './OperatorPlugin'
 import { EthereumAddress } from 'streamr-client'
 import { Logger, TheGraphClient, toEthereumAddress } from '@streamr/utils'
@@ -27,15 +27,61 @@ export class MaintainOperatorValueHelper {
     async getRandomOperator(): Promise<EthereumAddress> {
         const latestBlock = await this.operator.provider.getBlockNumber()
         const queryFilter = '' // e.g. (first: 10, orderBy: poolValue, orderDirection: desc)
-        const ids = await this.getOperatorIds(latestBlock, queryFilter)
+        const operators = await this.getOperatorAddresses(latestBlock, queryFilter)
         // filter out my own operator
-        const operatorIds = ids.filter((id) => id !== this.config.operatorContractAddress)
-        logger.info(`Found ${operatorIds.length} operators`, { operatorIds })
-        const randomIndex = Math.floor(Math.random() * operatorIds.length)
-        return operatorIds[randomIndex]
+        const operatorAddresses = operators.filter((id) => id !== this.config.operatorContractAddress)
+        logger.info(`Found ${operatorAddresses.length} operators`, { operatorAddresses })
+        const randomIndex = Math.floor(Math.random() * operatorAddresses.length)
+        return operatorAddresses[randomIndex]
     }
 
     /**
+     * The "hard limit" for paying out rewards to `withdrawEarningsFromSponsorships` caller.
+     * Operator is expected to call `withdrawEarningsFromSponsorships` before
+     *   `unwithdrawn earnings / (total staked + free funds)` exceeds this limit.
+     * @returns a "wei" fraction: 1e18 or "1 ether" means limit is at unwithdrawn earnings == total staked + free funds
+     */
+    async getPenaltyLimitFraction(): Promise<bigint> {
+        const streamrConfigAddress = await this.operator.streamrConfig()
+        const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, this.config.provider) as unknown as StreamrConfig
+        return (await streamrConfig.poolValueDriftLimitFraction()).toBigInt()
+    }
+
+    /**
+     * Find the sum of unwithdrawn earnings in Sponsorships (that the Operator must withdraw before the sum reaches a limit),
+     * SUBJECT TO the constraints, set in the OperatorServiceConfig:
+     *  - only take at most maxSponsorshipsCount addresses (those with most earnings), or all if undefined
+     *  - only take sponsorships that have more than minSponsorshipEarnings, or all if undefined
+     * @param operatorContractAddress
+     */
+    async getUnwithdrawnEarningsOf(operatorContractAddress: EthereumAddress) {
+        const operator = new Contract(operatorContractAddress, operatorABI, this.config.signer) as unknown as Operator
+        const minSponsorshipEarningsWei = BigNumber.from(this.config.minSponsorshipEarnings ?? 0)
+        const { sponsorshipAddresses: allSponsorshipAddresses, earnings } = await operator.getEarningsFromSponsorships()
+
+        const sponsorships = allSponsorshipAddresses
+            .map((address, i) => ({ address, earnings: earnings[i] }))
+            .filter((sponsorship) => sponsorship.earnings.gte(minSponsorshipEarningsWei))
+            .sort((a, b) => b.earnings.sub(a.earnings).toNumber())
+            .slice(0, this.config.maxSponsorshipsCount) // take all if maxSponsorshipsCount is undefined
+        const sponsorshipAddresses = sponsorships.map((sponsorship) => sponsorship.address as EthereumAddress)
+
+        const approxPoolValue = (await operator.totalValueInSponsorshipsWei()).toBigInt()
+        const sumDataWei = sponsorships.reduce((sum, sponsorship) => sum.add(sponsorship.earnings), BigNumber.from(0)).toBigInt()
+        const fraction = sumDataWei * ONE_ETHER / approxPoolValue
+
+        return { sumDataWei, fraction, sponsorshipAddresses }
+    }
+
+    async getMyUnwithdrawnEarnings() {
+        return this.getUnwithdrawnEarningsOf(this.config.operatorContractAddress)
+    }
+
+    async withdrawEarningsFromSponsorships(sponsorshipAddresses: EthereumAddress[]): Promise<void> {
+        await (await this.operator.withdrawEarningsFromSponsorships(sponsorshipAddresses)).wait()
+    }
+
+    /**  TODO: remove. Logic should be in the service side.
      * Checks if the Operator contract has too much outstanding earnings in Sponsorships.
      * Too much unwithdrawn earnings means if the operator doesn't withdraw, someone else can do it and get rewarded.
      * @dev ethers5 uses BigNumber, but once it's upgrated to ethers6, it will be changed to BigInt (see ETH-536)
@@ -85,19 +131,7 @@ export class MaintainOperatorValueHelper {
         }
     }
 
-    /**
-     * The "hard limit" for paying out rewards to `withdrawEarningsFromSponsorships` caller.
-     * Operator is expected to call `withdrawEarningsFromSponsorships` before
-     *   `unwithdrawn earnings / (total staked + free funds)` exceeds this limit.
-     * @returns a "wei" fraction: 1e18 or "1 ether" means limit is at unwithdrawn earnings == total staked + free funds
-     */
-    async getPenaltyLimitFraction(): Promise<bigint> {
-        const streamrConfigAddress = await this.operator.streamrConfig()
-        const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, this.config.provider) as unknown as StreamrConfig
-        return (await streamrConfig.poolValueDriftLimitFraction()).toBigInt()
-    }
-
-    private async getOperatorIds(requiredBlockNumber: number, queryFilter: string): Promise<EthereumAddress[]> {
+    private async getOperatorAddresses(requiredBlockNumber: number, queryFilter: string): Promise<EthereumAddress[]> {
         const createQuery = () => {
             return {
                 query: `
@@ -124,10 +158,10 @@ export class MaintainOperatorValueHelper {
         this.theGraphClient.updateRequiredBlockNumber(requiredBlockNumber)
         const queryResult = this.theGraphClient.queryEntities<any>(createQuery, parseItems)
 
-        const operatorIds: EthereumAddress[] = []
+        const operatorAddresses: EthereumAddress[] = []
         for await (const operator of queryResult) {
-            operatorIds.push(toEthereumAddress(operator.id))
+            operatorAddresses.push(toEthereumAddress(operator.id))
         }
-        return operatorIds
+        return operatorAddresses
     }
 }

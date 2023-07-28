@@ -10,9 +10,9 @@ import { mock } from 'jest-mock-extended'
 import { VoteOnSuspectNodeHelper } from '../../../../src/plugins/operator/VoteOnSuspectNodeHelper'
 import { Chain } from '@streamr/config'
 import { createWalletAndDeployOperator } from './createWalletAndDeployOperator'
-import { createClient } from '../../../utils'
+import { STREAMR_DOCKER_DEV_HOST, createClient } from '../../../utils'
 
-const theGraphUrl = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`
+const theGraphUrl = `http://${STREAMR_DOCKER_DEV_HOST}:8000/subgraphs/name/streamr-dev/network-subgraphs`
 
 const TIMEOUT = 1000 * 60 * 10
 const ADMIN_PRIV_KEY = "0x2cd9855d17e01ce041953829398af7e48b24ece04ff9d0e183414de54dc52285" // sidechain
@@ -28,11 +28,12 @@ describe('VoteOnSuspectNodeService', () => {
     let streamrEnvDeployer: StreamrEnvDeployer
     let config: Chain
 
-    const chainURL = `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8546`
+    // const chainURL = "http://127.0.0.1:8545"
+    const chainURL = `http://${STREAMR_DOCKER_DEV_HOST}:8546`
 
     beforeAll(async () => {
         streamrEnvDeployer = new StreamrEnvDeployer(ADMIN_PRIV_KEY, chainURL)
-        await streamrEnvDeployer.deployEvironment()
+        await streamrEnvDeployer.deployEnvironment()
         const { contracts } = streamrEnvDeployer
         config = { contracts: streamrEnvDeployer.addresses } as unknown as Chain
 
@@ -40,7 +41,7 @@ describe('VoteOnSuspectNodeService', () => {
         logger.trace('Connected', { networkInfo: await provider.getNetwork() })
 
         adminWallet = new Wallet(ADMIN_PRIV_KEY, provider)
-    
+
         token = contracts.DATA as unknown as TestToken
         const timeString = (new Date()).getTime().toString()
         const streamPath1 = '/voteonsuspectnodeservicetest-1-' + timeString
@@ -53,7 +54,7 @@ describe('VoteOnSuspectNodeService', () => {
         await (await contracts.streamRegistry.createStream(streamPath2, '{"partitions":"1"}')).wait()
 
     }, TIMEOUT)
-    
+
     it('allows to flag an operator as malicious', async () => {
         const flagger = await createWalletAndDeployOperator(provider, config, theGraphUrl, ADMIN_PRIV_KEY)
         logger.trace('deployed flagger contract ' + flagger.operatorConfig.operatorContractAddress)
@@ -76,8 +77,7 @@ describe('VoteOnSuspectNodeService', () => {
         await voterVoteService.start()
 
         logger.trace('deploying sponsorship contract')
-        const sponsorship = await deploySponsorship(config, adminWallet, {
-            streamId: streamId1 })
+        const sponsorship = await deploySponsorship(config, adminWallet, { streamId: streamId1 })
         logger.trace('sponsoring sponsorship contract')
         await (await token.connect(flagger.operatorWallet).approve(sponsorship.address, parseEther('500'))).wait()
         await (await sponsorship.connect(flagger.operatorWallet).sponsor(parseEther('500'))).wait()
@@ -92,7 +92,7 @@ describe('VoteOnSuspectNodeService', () => {
         logger.trace('delegating from voter: ' + voter.operatorWallet.address)
         await (await token.connect(voter.operatorWallet).transferAndCall(voter.operatorContract.address,
             parseEther('200'), voter.operatorWallet.address)).wait()
-        
+
         await wait(3000) // sometimes these stake fail, possibly when they end up in the same block
         logger.trace('staking to sponsorship contract from flagger and target and voter')
         logger.trace('staking from flagger: ' + flagger.operatorContract.address)

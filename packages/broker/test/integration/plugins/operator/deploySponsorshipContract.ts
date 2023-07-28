@@ -1,11 +1,14 @@
-// TODO: copy-paste from network-contracts, import from there?
-import { Chain } from "@streamr/config"
 import { utils, Wallet, Contract, ContractReceipt } from "ethers"
 
-import { sponsorshipABI, sponsorshipFactoryABI } from "@streamr/network-contracts"
-import type { Sponsorship, SponsorshipFactory } from "@streamr/network-contracts"
+import { Chain } from "@streamr/config"
+import { Logger } from "@streamr/utils"
+
+import { sponsorshipABI, sponsorshipFactoryABI, streamRegistryABI } from "@streamr/network-contracts"
+import type { Sponsorship, SponsorshipFactory, StreamRegistry } from "@streamr/network-contracts"
 
 const { parseEther } = utils
+
+const logger = new Logger(module)
 
 export async function deploySponsorship(
     chainConfig: Chain,
@@ -18,11 +21,17 @@ export async function deploySponsorship(
         earningsPerSecond = parseEther("0.01"),
     } = {},
 ): Promise<Sponsorship> {
+    const { contracts } = chainConfig
+    logger.debug("deploySponsorship", { contracts, deployerBalance: await deployer.getBalance() })
 
-    // console.log("Chain config: %o", chainConfig)
-    const sponsorshipFactory =
-        new Contract(chainConfig.contracts.SponsorshipFactory, sponsorshipFactoryABI, deployer) as unknown as SponsorshipFactory
-    // console.log("deployer balance", await deployer.getBalance())
+    const sponsorshipFactory = new Contract(contracts.SponsorshipFactory, sponsorshipFactoryABI, deployer) as unknown as SponsorshipFactory
+    const streamRegistry = new Contract(contracts.StreamRegistry, streamRegistryABI, deployer) as unknown as StreamRegistry
+
+    const streamExists = await streamRegistry.exists(streamId)
+    logger.debug("Stream to be sponsored", { streamId, streamExists })
+
+    if (!streamExists) { throw new Error(`Can't deploy Sponsorship contract for non-existent stream: ${streamId}`) }
+
     const sponsorshipDeployTx = await sponsorshipFactory.deploySponsorship(
         minimumStakeWei.toString(),
         minHorizonSeconds.toString(),
@@ -30,9 +39,9 @@ export async function deploySponsorship(
         streamId,
         metadata,
         [
-            chainConfig.contracts.SponsorshipStakeWeightedAllocationPolicy,
-            chainConfig.contracts.SponsorshipDefaultLeavePolicy,
-            chainConfig.contracts.SponsorshipVoteKickPolicy,
+            contracts.SponsorshipStakeWeightedAllocationPolicy,
+            contracts.SponsorshipDefaultLeavePolicy,
+            contracts.SponsorshipVoteKickPolicy,
         ], [
             earningsPerSecond,
             "0",
