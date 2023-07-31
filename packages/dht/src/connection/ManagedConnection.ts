@@ -251,7 +251,7 @@ export class ManagedConnection extends EventEmitter<Events> {
                 result = await runAndRaceEvents3<Events>([() => { this.outputBuffer.push(data) }], this, ['handshakeCompleted', 'handshakeFailed',
                     'bufferSentByOtherConnection', 'closing', 'internal_disconnected'], 15000)
             } catch (e) {
-                logger.error('Exception from raceEvents3 ' + e)
+                logger.debug(`Connection from ${this.ownPeerDescriptor.nodeName} to ${this.peerDescriptor?.nodeName} timed out`)
                 throw e
             }
 
