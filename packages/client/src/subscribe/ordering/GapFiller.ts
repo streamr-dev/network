@@ -45,9 +45,7 @@ export class GapFiller {
         this.retryWaitTime = opts.retryWaitTime
         this.maxRequestsPerGap = opts.maxRequestsPerGap
         opts.abortSignal.addEventListener('abort', () => {
-            if (this.currentTask !== undefined) {
-                this.currentTask.abortController.abort()
-            }
+            this.currentTask?.abortController.abort()
         })
     }
 
