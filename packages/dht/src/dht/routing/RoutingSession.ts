@@ -10,7 +10,6 @@ import { RemoteRouter } from './RemoteRouter'
 import { RoutingRpcCommunicator } from "../../transport/RoutingRpcCommunicator"
 import { RoutingServiceClient } from "../../proto/packages/dht/protos/DhtRpc.client"
 import { toProtoRpcClient } from '@streamr/proto-rpc'
-import { protoToString } from "../../helpers/protoToString"
 
 const logger = new Logger(module)
 
