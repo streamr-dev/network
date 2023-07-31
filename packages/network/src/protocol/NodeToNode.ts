@@ -32,6 +32,7 @@ eventPerType[ControlMessage.TYPES.ProxyConnectionRequest] = Event.PROXY_CONNECTI
 eventPerType[ControlMessage.TYPES.ProxyConnectionResponse] = Event.PROXY_CONNECTION_RESPONSE_RECEIVED
 eventPerType[ControlMessage.TYPES.UnsubscribeRequest] = Event.LEAVE_REQUEST_RECEIVED
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export interface NodeToNode {
     on(event: Event.NODE_CONNECTED, listener: (nodeId: NodeId) => void): this
     on(event: Event.NODE_DISCONNECTED, listener: (nodeId: NodeId) => void): this
@@ -48,6 +49,7 @@ export interface NodeToNode {
 
 const logger = new Logger(module)
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export class NodeToNode extends EventEmitter {
     private readonly endpoint: IWebRtcEndpoint
 

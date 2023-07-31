@@ -7,7 +7,7 @@
 # Generated files
 .docusaurus
 .cache-loader
-/docs/api
+/docs/usage/streamr-js-client/api
 
 # Misc
 .DS_Store

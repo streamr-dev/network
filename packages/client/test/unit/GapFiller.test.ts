@@ -34,12 +34,13 @@ const INITIAL_WAIT_TIME = 50
 describe('GapFiller', () => {
 
     let chain: OrderedMessageChain
-    const onOrderedMessageAdded = jest.fn()
+    let onOrderedMessageAdded: jest.Mock<(msg: StreamMessage) => void>
     let abortController: AbortController
 
     beforeEach(() => {
         abortController = new AbortController()
         chain = new OrderedMessageChain(CONTEXT, abortController.signal)
+        onOrderedMessageAdded = jest.fn()
         chain.on('orderedMessageAdded', onOrderedMessageAdded)
     })
 

@@ -49,7 +49,9 @@ const createMessageChain = (
 }
 
 /**
- * Implements gap filling
+ * Manages message ordering and gap filling (per stream part). Provides an iterator
+ * to read the sequence of messages which are in ascending order and gaps are filled
+ * (if enabled, and the missing message available in a storage node)
  */
 export class OrderMessages {
 
