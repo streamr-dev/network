@@ -97,11 +97,13 @@ describe('NetworkNode', () => {
     })
 
     it('can find peer', async () => {
+        await waitForCondition(() => node1.stack.getLayer0DhtNode().getBucketSize() === 1)
         const result = await node1.findPeer(node2.getNodeId())
         expect(isSamePeerDescriptor(result!, pd2)).toBe(true)
     })
 
     it('find peer returns undefined if peer not found', async () => {
+        await waitForCondition(() => node1.stack.getLayer0DhtNode().getBucketSize() === 1)
         const result = await node1.findPeer('does not exist')
         expect(result).toBe(undefined)
     })
