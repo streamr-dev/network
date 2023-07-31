@@ -68,7 +68,7 @@ export class GapFiller {
                 }
                 /*
                  * The "fetchFromStorageNode" typically provides all the missing messages and the chain emits the
-                 * "gapResolved" event. In that case "chain.once('gapResolved')" callback aborts this task 
+                 * "gapResolved" event. In that case "chain.on('gapResolved')" callback aborts this task 
                  * before we reach this line. Alternatively the callback may have been called by the chain because
                  * it received the missing messages from another source (i.e. the real-time pipeline). But if
                  * this task has not been aborted by either of these reasons, we resolve the gap manually as we
