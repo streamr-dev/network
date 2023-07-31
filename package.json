@@ -30,7 +30,7 @@
         "@manypkg/cli": "^0.21.0",
         "@tsconfig/node16": "^16.1.0",
         "@types/jest": "^29.5.3",
-        "@types/node": "^18.17.0",
+        "@types/node": "^18.17.1",
         "@typescript-eslint/eslint-plugin": "^6.2.0",
         "@typescript-eslint/parser": "^6.2.0",
         "cli-table": "^0.3.6",
