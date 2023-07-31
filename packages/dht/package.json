@@ -38,7 +38,7 @@
     "ipaddr.js": "^2.0.1",
     "k-bucket": "^5.1.0",
     "lodash": "^4.17.21",
-    "node-datachannel": "^0.4.2",
+    "node-datachannel": "^0.4.3",
     "sinon": "15.1.2",
     "uuid": "^9.0.0",
     "websocket": "^1.0.34"
@@ -54,7 +54,7 @@
     "@types/uuid": "^9.0.2",
     "@types/websocket": "^1.0.3",
     "express": "^4.17.1",
-    "patch-package": "^7.0.0",
+    "patch-package": "^7.0.2",
     "ts-node": "^10.9.1"
   },
   "optionalDependencies": {
