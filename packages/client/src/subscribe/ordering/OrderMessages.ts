@@ -1,5 +1,5 @@
 import { StreamID, StreamMessage, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
-import { EthereumAddress } from '@streamr/utils'
+import { EthereumAddress, executeSafePromise } from '@streamr/utils'
 import { StrictStreamrClientConfig } from '../../Config'
 import { Mapping } from '../../utils/Mapping'
 import { PushBuffer } from '../../utils/PushBuffer'
@@ -86,7 +86,7 @@ export class OrderMessages {
 
     private onOrdered(orderedMessage: StreamMessage): void {
         if (!this.outBuffer.isDone()) {
-            this.outBuffer.push(orderedMessage)
+            executeSafePromise(() => this.outBuffer.push(orderedMessage))
         }
     }
 

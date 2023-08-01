@@ -12,7 +12,6 @@ import { shuffle } from 'lodash'
 import { ResendRangeOptions } from '../../src/subscribe/Resends'
 import { OrderMessages } from '../../src/subscribe/ordering/OrderMessages'
 import { PushPipeline } from '../../src/utils/PushPipeline'
-import sortedUniqBy from 'lodash/sortedUniqBy'
 
 const MESSAGES_PER_PUBLISHER = 1000
 const NUM_OF_DUPLICATE_MESSAGES = 500
@@ -134,9 +133,9 @@ describe('OrderMessages2', () => {
 
         const gapHandler = async (from: number, to: number, publisherId: string): Promise<PushPipeline<StreamMessage>> => {
             const pipeline = new PushPipeline<StreamMessage>
-            const requestedMessages = sortedUniqBy(groundTruthMessages[publisherId].filter(({ delivery, timestamp }) => {
+            const requestedMessages = groundTruthMessages[publisherId].filter(({ delivery, timestamp }) => {
                 return delivery === Delivery.GAP_FILL && (timestamp > from && timestamp <= to)
-            }), (msgInfo) => msgInfo.timestamp)
+            })
             for (const msgInfo of requestedMessages) {
                 await wait(Math.random() * MAX_GAP_FILL_MESSAGE_LATENCY)
                 const msg = createMsg(msgInfo)
