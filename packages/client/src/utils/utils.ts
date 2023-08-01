@@ -118,7 +118,6 @@ export function peerDescriptorTranslator(json: JsonPeerDescriptor): PeerDescript
         ...json,
         kademliaId: PeerID.fromString(json.id).value,
         type,
-        openInternet: json.openInternet,
         websocket: json.websocket
     }
     return peerDescriptor
