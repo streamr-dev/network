@@ -33,7 +33,8 @@ export {
     ControlLayerConfig as Layer0Config,
     NetworkNodeConfig,
     JsonPeerDescriptor,
-    ConnectivityMethod
+    ConnectivityMethod,
+    JsonNodeType
 } from './Config'
 export { GroupKey as EncryptionKey } from './encryption/GroupKey'
 export { UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
