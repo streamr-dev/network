@@ -143,7 +143,7 @@ export class StreamrNode extends EventEmitter<Events> {
         if (!this.started || this.destroyed) {
             return
         }
-        logger.info('Destroying StreamrNode...')
+        logger.trace('Destroying StreamrNode...')
         this.destroyed = true
         this.streams.forEach((stream) => {
             stream.layer2.stop()
@@ -199,7 +199,7 @@ export class StreamrNode extends EventEmitter<Events> {
         if (this.streams.has(streamPartId)) {
             return
         }
-        logger.info(`Joining stream ${streamPartId}`)
+        logger.debug(`Joining stream ${streamPartId}`)
         const knownEntryPoints = this.knownStreamEntryPoints.get(streamPartId) ?? []
         let entryPoints = knownEntryPoints.concat(knownEntryPoints)
         const [layer1, layer2] = this.createStream(streamPartId, knownEntryPoints)

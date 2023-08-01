@@ -131,7 +131,7 @@ export class Router implements IRouter {
                     this.removeRoutingSession(session.sessionId)
                 })
                 .catch(() => {
-                    logger.debug('raceEvents timed out for routingSession ' + session.sessionId) 
+                    logger.trace('raceEvents timed out for routingSession ' + session.sessionId) 
                     this.removeRoutingSession(session.sessionId) 
                 })
             session.start()
@@ -151,7 +151,7 @@ export class Router implements IRouter {
         if (excludedPeer) {
             excludedPeers.push(peerIdFromPeerDescriptor(excludedPeer))
         }
-        logger.debug(' routing session created with connections: ' + this.connections.size )
+        logger.trace(' routing session created with connections: ' + this.connections.size )
         return new RoutingSession(
             this.rpcCommunicator,
             this.ownPeerDescriptor!,

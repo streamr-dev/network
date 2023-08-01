@@ -74,10 +74,10 @@ export class ConnectivityChecker {
             const retPromise = responseAwaiter()
             logger.trace('trying to send connectivity request')
             outgoingConnection.send(Message.toBinary(msg))
-            logger.info('connectivity request sent: ' + JSON.stringify(Message.toJson(msg)))
+            logger.debug('connectivity request sent: ' + JSON.stringify(Message.toJson(msg)))
             return await retPromise
         } catch (e) {
-            logger.info('error getting connectivityresponse')
+            logger.error('error getting connectivityresponse')
 
             throw e
         }

@@ -52,7 +52,7 @@ export class PeerDiscovery {
             return
         }
         this.joinCalled = true
-        logger.info(
+        logger.debug(
             `Joining ${this.config.serviceId === 'layer0' ? 'The Streamr Network' : `Control Layer for ${this.config.serviceId}`}`
             + ` via entrypoint ${keyFromPeerDescriptor(entryPointDescriptor)}`
         )
@@ -112,14 +112,14 @@ export class PeerDiscovery {
         if (this.stopped || this.rejoinOngoing) {
             return
         }
-        logger.info(`Rejoining DHT ${this.config.serviceId} ${this.config.ownPeerDescriptor.nodeName}!`)
+        logger.debug(`Rejoining DHT ${this.config.serviceId} ${this.config.ownPeerDescriptor.nodeName}!`)
         this.rejoinOngoing = true
         try {
             this.config.neighborList.clear()
             await this.joinDht(entryPoint)
-            logger.info(`Rejoined DHT successfully ${this.config.serviceId}!`)
+            logger.debug(`Rejoined DHT successfully ${this.config.serviceId}!`)
         } catch (err) {
-            logger.warn(`rejoining DHT ${this.config.serviceId} failed`)
+            logger.warn(`Rejoining DHT ${this.config.serviceId} failed`)
             if (!this.stopped) {
                 setTimeout(() => this.rejoinDht(entryPoint), 5000)
             }
