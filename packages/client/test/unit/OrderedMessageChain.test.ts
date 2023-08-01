@@ -183,7 +183,7 @@ describe('OrderedMessageChain', () => {
             chain.addMessage(createMessage(5))
             chain.addMessage(createMessage(3))
             chain.addMessage(createMessage(6))
-            chain.resolveMessages(new MessageRef(5, 0))
+            chain.resolveMessages(new MessageRef(5, 0), true)
             expect(getOrderedTimestamps()).toEqual([1, 3, 5, 6])
             expectFoundGaps([
                 createGap(1, 5)
@@ -200,7 +200,7 @@ describe('OrderedMessageChain', () => {
             chain.addMessage(createMessage(4))
             chain.addMessage(createMessage(5))
             chain.addMessage(createMessage(7))
-            chain.resolveMessages(new MessageRef(4, 0))
+            chain.resolveMessages(new MessageRef(4, 0), true)
             expect(getOrderedTimestamps()).toEqual([1, 2, 4, 5])
             expectFoundGaps([
                 createGap(2, 4),
@@ -220,7 +220,7 @@ describe('OrderedMessageChain', () => {
             chain.addMessage(createMessage(7))
             chain.addMessage(createMessage(8))
             chain.addMessage(createMessage(10))
-            chain.resolveMessages(undefined)
+            chain.resolveMessages(undefined, true)
             expect(getOrderedTimestamps()).toEqual([1, 2, 4, 5, 7, 8, 10])
             expectFoundGaps([
                 createGap(2, 4)

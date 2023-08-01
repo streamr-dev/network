@@ -107,7 +107,7 @@ export class OrderedMessageChain {
         }
     }
 
-    resolveMessages(to: MessageRef | undefined, gapCheckEnabled: boolean = true): void {
+    resolveMessages(to: MessageRef | undefined, gapCheckEnabled: boolean): void {
         this.consumePendingOrderedMessages(
             (msg) => {
                 if (this.isNextOrderedMessage(msg)) {

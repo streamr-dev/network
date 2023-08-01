@@ -80,7 +80,7 @@ export class GapFiller {
                  * don't try to fill it anymore.
                  */
                 if (this.strategy === 'full') {
-                    this.chain.resolveMessages(gap.to.getMessageRef())
+                    this.chain.resolveMessages(gap.to.getMessageRef(), true)
                 } else if (this.strategy === 'light') {
                     this.chain.resolveMessages(undefined, false)
                 }
