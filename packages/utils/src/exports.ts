@@ -35,6 +35,7 @@ import { collect } from './collect'
 import { Gate } from './Gate'
 import { TheGraphClient, GraphQLQuery, FetchResponse } from './TheGraphClient'
 import { Heap } from './Heap'
+import { executeSafePromise } from './executeSafePromise'
 
 export {
     BrandedString,
@@ -74,7 +75,8 @@ export {
     TheGraphClient,
     GraphQLQuery,
     FetchResponse,
-    Heap
+    Heap,
+    executeSafePromise
 }
 
 export {
