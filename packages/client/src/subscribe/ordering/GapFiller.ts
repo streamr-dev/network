@@ -11,7 +11,7 @@ interface GapFillerOptions {
     chain: OrderedMessageChain
     resend: (gap: Gap, storageNodeAddress: EthereumAddress, abortSignal: AbortSignal) => AsyncGenerator<StreamMessage>
     getStorageNodeAddresses: () => Promise<EthereumAddress[]>
-    strategy: 'full' | 'light'
+    strategy: GapFillStrategy
     initialWaitTime: number
     retryWaitTime: number
     maxRequestsPerGap: number
