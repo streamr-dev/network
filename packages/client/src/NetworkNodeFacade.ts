@@ -1,7 +1,7 @@
 /**
  * Wrap a network node.
  */
-import { PeerDescriptor, PeerID } from '@streamr/dht'
+import { PeerDescriptor } from '@streamr/dht'
 import { StreamMessage, StreamPartID } from '@streamr/protocol'
 import { NetworkNode, NetworkOptions, ProxyDirection } from '@streamr/trackerless-network'
 import { MetricsContext } from '@streamr/utils'
@@ -12,7 +12,7 @@ import { ConfigInjectionToken, StrictStreamrClientConfig, JsonPeerDescriptor } f
 import { DestroySignal } from './DestroySignal'
 import { pOnce } from './utils/promises'
 import { uuid } from './utils/uuid'
-import { entryPointTranslator } from './utils/utils'
+import { peerDescriptorTranslator } from './utils/utils'
 
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
 /** @deprecated This in an internal interface */
@@ -104,7 +104,7 @@ export class NetworkNodeFacade {
         const entryPoints = this.getEntryPoints()
 
         const ownPeerDescriptor: PeerDescriptor | undefined = this.config.network.controlLayer!.peerDescriptor ? 
-            this.jsonToPeerDescriptor(this.config.network.controlLayer!.peerDescriptor) : undefined
+            peerDescriptorTranslator(this.config.network.controlLayer!.peerDescriptor) : undefined
 
         if (id == null || id === '') {
             id = await this.generateId()
@@ -126,15 +126,6 @@ export class NetworkNodeFacade {
                 id
             },
             metricsContext: new MetricsContext()
-        }
-    }
-
-    private jsonToPeerDescriptor(jsonPeerDescriptor: JsonPeerDescriptor): PeerDescriptor {
-        return {
-            ...jsonPeerDescriptor,
-            websocket: jsonPeerDescriptor.websocket,
-            kademliaId: PeerID.fromString(jsonPeerDescriptor!.id).value,
-            nodeName: jsonPeerDescriptor!.id,
         }
     }
 
@@ -236,7 +227,7 @@ export class NetworkNodeFacade {
         if (this.isStarting()) {
             await this.startNodeTask(false)
         }
-        const peerDescriptors = proxyNodes.map(this.jsonToPeerDescriptor)
+        const peerDescriptors = proxyNodes.map(peerDescriptorTranslator)
         await this.cachedNode!.setProxies(
             streamPartId,
             peerDescriptors,
@@ -250,7 +241,7 @@ export class NetworkNodeFacade {
         if (this.isStarting()) {
             await this.startNodeTask(false)
         }
-        const peerDescriptors = nodeDescriptors.map(this.jsonToPeerDescriptor)
+        const peerDescriptors = nodeDescriptors.map(peerDescriptorTranslator)
         this.cachedNode!.setStreamPartEntryPoints(streamPartId, peerDescriptors)
     }
 
@@ -263,6 +254,6 @@ export class NetworkNodeFacade {
     }
 
     getEntryPoints(): PeerDescriptor[] {
-        return entryPointTranslator(this.config.network.controlLayer!.entryPoints!)
+        return this.config.network.controlLayer!.entryPoints!.map(peerDescriptorTranslator)
     }
 }

@@ -1,7 +1,6 @@
 import 'reflect-metadata'
 
 import { Wallet } from '@ethersproject/wallet'
-import { NodeType } from '@streamr/dht'
 import { MAX_PARTITION_COUNT, StreamMessage, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { fastPrivateKey, fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { EthereumAddress, Logger, merge, wait, waitForCondition } from '@streamr/utils'
@@ -241,7 +240,6 @@ export const createTestClient = (privateKey: string, id: string, wsPort?: number
                 ...CONFIG_TEST.network!.controlLayer,
                 peerDescriptor: {
                     id,
-                    type: NodeType.NODEJS,
                     websocket: wsPort ? {
                         ip: 'localhost',
                         port: wsPort

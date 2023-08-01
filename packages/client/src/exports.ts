@@ -63,7 +63,6 @@ export {
     StreamMessageType
 } from '@streamr/protocol'
 
-export { NodeType } from '@streamr/dht'
 export type { IceServer, PeerDescriptor } from '@streamr/dht' 
 export type { ConnectionInfo } from '@ethersproject/web'
 export type { ExternalProvider } from '@ethersproject/providers'
