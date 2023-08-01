@@ -83,6 +83,8 @@ export class GapFiller {
                     this.chain.resolveMessages(gap.to.getMessageRef(), true)
                 } else if (this.strategy === 'light') {
                     this.chain.resolveMessages(undefined, false)
+                } else {
+                    throw new Error(`Assertion failed: unexpected gap fill strategy "${this.strategy}"`)
                 }
             })
         } catch (err: any) {
