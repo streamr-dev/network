@@ -12,7 +12,6 @@ import { shuffle } from 'lodash'
 import { ResendRangeOptions } from '../../src/subscribe/Resends'
 import { OrderMessages } from '../../src/subscribe/ordering/OrderMessages'
 import { PushPipeline } from '../../src/utils/PushPipeline'
-import sortedUniqBy from 'lodash/sortedUniqBy'
 
 const MESSAGES_PER_PUBLISHER = 1000
 const NUM_OF_DUPLICATE_MESSAGES = 500
