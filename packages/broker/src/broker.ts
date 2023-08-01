@@ -1,4 +1,4 @@
-import { EthereumAddress, Logger, toEthereumAddress } from '@streamr/utils'
+import { Logger, toEthereumAddress } from '@streamr/utils'
 import StreamrClient, { NetworkNodeStub } from 'streamr-client'
 import { Server as HttpServer } from 'http'
 import { Server as HttpsServer } from 'https'
@@ -15,7 +15,6 @@ const logger = new Logger(module)
 
 export interface Broker {
     getNode: () => Promise<NetworkNodeStub>
-    getAddress: () => Promise<EthereumAddress>
     start: () => Promise<unknown>
     stop: () => Promise<unknown>
 }
@@ -43,13 +42,8 @@ export const createBroker = async (configWithoutDefaults: Config): Promise<Broke
         return streamrClient.getNode()
     }
 
-    const getAddress = async (): Promise<EthereumAddress> => {
-        return streamrClient.getAddress()
-    }
-
     return {
         getNode,
-        getAddress,
         start: async () => {
             logger.info(`Start broker version ${CURRENT_VERSION}`)
             await Promise.all(plugins.map((plugin) => plugin.start()))
