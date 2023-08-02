@@ -8,7 +8,7 @@ import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
  */
 function formKey(streamPartId: StreamPartID): string {
     const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
-    return partition + `#` + streamId
+    return `${partition}#${streamId}`
 }
 
 /**
