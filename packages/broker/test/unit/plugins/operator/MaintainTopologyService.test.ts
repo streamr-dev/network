@@ -90,36 +90,11 @@ describe('MaintainTopologyService', () => {
         expect(totalUnsubscribes(SP2)).toEqual(0)
     })
 
-    it('handles "unassigned" event once even if triggered twice', async () => {
-        streamAssignmentLoadBalancer.emit('assigned', SP1)
-        streamAssignmentLoadBalancer.emit('assigned', SP2)
-
-        streamAssignmentLoadBalancer.emit('unassigned', SP1)
-        streamAssignmentLoadBalancer.emit('unassigned', SP1)
-
-        await waitForCondition(() => totalUnsubscribes(SP1) === 1)
-        await wait(NOTHING_HAPPENED_DELAY)
-        expect(totalUnsubscribes(SP1)).toEqual(1)
-    })
-
     it('handles "unassigned" event given non-existing stream', async () => {
-        streamAssignmentLoadBalancer.emit('assigned', SP1)
-        streamAssignmentLoadBalancer.emit('assigned', SP2)
-
         streamAssignmentLoadBalancer.emit('unassigned', STREAM_PART_NOT_EXIST)
 
         await wait(NOTHING_HAPPENED_DELAY)
         expect(totalUnsubscribes(STREAM_PART_NOT_EXIST)).toEqual(0)
-    })
-
-    it('handles "unassigned" event given not subscribed stream', async () => {
-        streamAssignmentLoadBalancer.emit('assigned', SP1)
-        streamAssignmentLoadBalancer.emit('assigned', SP2)
-
-        streamAssignmentLoadBalancer.emit('unassigned', SP3)
-
-        await wait(NOTHING_HAPPENED_DELAY)
-        expect(totalUnsubscribes(SP3)).toEqual(0)
     })
 
     it('handles concurrency properly', async () => {

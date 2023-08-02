@@ -5,6 +5,8 @@ import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
  * Slight variations at the very end of a string will not result in the keys
  * being sufficiently assigned around. By having the partition number first,
  * we properly randomize the assignments of stream parts of a stream.
+ *
+ * TODO: use md5 instead?
  */
 function formKey(streamPartId: StreamPartID): string {
     const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)

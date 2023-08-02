@@ -43,11 +43,11 @@ describe(ConsistentHashRing, () => {
         for (const _idx of range(50)) {
             const streamId = toStreamID(randomString(random(1, 50)))
             const streamPartId = toStreamPartID(streamId, random(0, 99))
-            const v1 = h1.get(streamPartId)
-            const v2 = h2.get(streamPartId)
-            const v3 = h3.get(streamPartId)
-            expect(v1).toEqual(v2)
-            expect(v1).toEqual(v3)
+            const assignment1 = h1.get(streamPartId)
+            const assignment2 = h2.get(streamPartId)
+            const assignment3 = h3.get(streamPartId)
+            expect(assignment1).toEqual(assignment2)
+            expect(assignment1).toEqual(assignment3)
         }
     })
 

@@ -52,6 +52,10 @@ describe('MaintainTopologyService', () => {
     let client: StreamrClient
     let operatorFleetState: OperatorFleetState
 
+    beforeEach(() => {
+        client = createClient(fastPrivateKey())
+    })
+
     afterEach(async () => {
         await client?.destroy()
     })
@@ -74,7 +78,6 @@ describe('MaintainTopologyService', () => {
             theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`,
         }
 
-        client = createClient(fastPrivateKey())
         operatorFleetState = new OperatorFleetState(client, toStreamID('/operator/coordination', serviceHelperConfig.operatorContractAddress))
         await setUpAndStartMaintainTopologyService({
             streamrClient: client,
