@@ -1,4 +1,4 @@
-import { ConstHash } from '../../../../src/plugins/operator/ConstHash'
+import { ConsistentHashRing } from '../../../../src/plugins/operator/ConsistentHashRing'
 import range from 'lodash/range'
 import random from 'lodash/random'
 import { randomString } from '@streamr/utils'
@@ -21,11 +21,11 @@ function checkForConsistentSequentialAssignments(assignments: string[]): void {
     }
 }
 
-describe(ConstHash, () => {
+describe(ConsistentHashRing, () => {
     it('consistent assignments regardless of node insertion order', () => {
-        const h1 = new ConstHash(1)
-        const h2 = new ConstHash(1)
-        const h3 = new ConstHash(1)
+        const h1 = new ConsistentHashRing(1)
+        const h2 = new ConsistentHashRing(1)
+        const h3 = new ConsistentHashRing(1)
 
         h1.add('node-1')
         h1.add('node-2')
@@ -52,7 +52,7 @@ describe(ConstHash, () => {
     })
 
     it('partitions of same stream get spread around sufficiently', () => {
-        const h = new ConstHash(1)
+        const h = new ConsistentHashRing(1)
         h.add('node-1')
         h.add('node-2')
         h.add('node-3')
@@ -66,7 +66,7 @@ describe(ConstHash, () => {
     })
 
     it('streams with same partition number get spread around sufficiently', () => {
-        const h = new ConstHash(1)
+        const h = new ConsistentHashRing(1)
         h.add('node-1')
         h.add('node-2')
         h.add('node-3')
@@ -80,7 +80,7 @@ describe(ConstHash, () => {
     it('consistent assignments even when adding / removing nodes in-between', () => {
         const streamParts = range(50).map(() => toStreamPartID(toStreamID(randomString(6)), random(1, 10)))
 
-        const h1 = new ConstHash(1)
+        const h1 = new ConsistentHashRing(1)
         h1.add('node-1')
         h1.add('node-2')
         streamParts.forEach((sp) => h1.get(sp))
@@ -97,7 +97,7 @@ describe(ConstHash, () => {
         streamParts.forEach((sp) => h1.get(sp))
         streamParts.forEach((sp) => h1.get(sp))
 
-        const h2 = new ConstHash(1)
+        const h2 = new ConsistentHashRing(1)
         h2.add('node-1')
         h2.add('node-3')
         h2.add('node-4')
@@ -110,7 +110,7 @@ describe(ConstHash, () => {
     })
 
     it('replication factor > 1', () => {
-        const h = new ConstHash(3)
+        const h = new ConsistentHashRing(3)
         h.add('node-1')
         h.add('node-2')
         h.add('node-3')
@@ -121,7 +121,7 @@ describe(ConstHash, () => {
         const assignments2 = h.get(toStreamPartID(toStreamID('bar'), 0))
         expect(assignments2).toIncludeSameMembers(['node-1', 'node-2', 'node-3'])
 
-        const h2 = new ConstHash(3)
+        const h2 = new ConsistentHashRing(3)
         h2.add('node-1')
         h2.add('node-2')
         h2.add('node-3')

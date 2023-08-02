@@ -4,7 +4,7 @@ import { StreamID, StreamPartID } from '@streamr/protocol'
 import { Logger } from '@streamr/utils'
 import pLimit from 'p-limit'
 import EventEmitter3 from 'eventemitter3'
-import { ConstHash } from './ConstHash'
+import { ConsistentHashRing } from './ConsistentHashRing'
 
 const logger = new Logger(module)
 
@@ -17,7 +17,7 @@ export class StreamAssignmentLoadBalancer extends EventEmitter3<StreamAssignment
     private readonly allStreamParts = new Set<StreamPartID>()
     private readonly myStreamParts = new Set<StreamPartID>()
     private readonly concurrencyLimit = pLimit(1)
-    private readonly consistentHash: ConstHash
+    private readonly consistentHashRing: ConsistentHashRing
     private readonly myNodeId: string
     private readonly getStreamParts: (streamId: StreamID) => Promise<StreamPartID[]>
     private readonly operatorFleetState: EventEmitter3<OperatorFleetStateEvents>
@@ -35,8 +35,8 @@ export class StreamAssignmentLoadBalancer extends EventEmitter3<StreamAssignment
         this.getStreamParts = getStreamParts
         this.operatorFleetState = operatorFleetState
         this.maintainTopologyHelper = maintainTopologyHelper
-        this.consistentHash = new ConstHash(replicationFactor)
-        this.consistentHash.add(myNodeId)
+        this.consistentHashRing = new ConsistentHashRing(replicationFactor)
+        this.consistentHashRing.add(myNodeId)
         this.operatorFleetState.on('added', this.nodeAdded)
         this.operatorFleetState.on('removed', this.nodeRemoved)
         this.maintainTopologyHelper.on('addStakedStream', this.streamAdded)
@@ -47,7 +47,7 @@ export class StreamAssignmentLoadBalancer extends EventEmitter3<StreamAssignment
         if (nodeId === this.myNodeId) {
             return
         }
-        this.consistentHash.add(nodeId)
+        this.consistentHashRing.add(nodeId)
         this.recalculateAssignments()
     })
 
@@ -55,7 +55,7 @@ export class StreamAssignmentLoadBalancer extends EventEmitter3<StreamAssignment
         if (nodeId === this.myNodeId) {
             return
         }
-        this.consistentHash.remove(nodeId)
+        this.consistentHashRing.remove(nodeId)
         this.recalculateAssignments()
     })
 
@@ -77,13 +77,13 @@ export class StreamAssignmentLoadBalancer extends EventEmitter3<StreamAssignment
 
     private recalculateAssignments(): void {
         for (const streamPartId of this.allStreamParts) {
-            if (this.consistentHash.get(streamPartId).includes(this.myNodeId) && !this.myStreamParts.has(streamPartId)) {
+            if (this.consistentHashRing.get(streamPartId).includes(this.myNodeId) && !this.myStreamParts.has(streamPartId)) {
                 this.myStreamParts.add(streamPartId)
                 this.emit('assigned', streamPartId)
             }
         }
         for (const streamPartId of this.myStreamParts) {
-            if (!this.allStreamParts.has(streamPartId) || !this.consistentHash.get(streamPartId).includes(this.myNodeId)) {
+            if (!this.allStreamParts.has(streamPartId) || !this.consistentHashRing.get(streamPartId).includes(this.myNodeId)) {
                 this.myStreamParts.delete(streamPartId)
                 this.emit('unassigned', streamPartId)
             }

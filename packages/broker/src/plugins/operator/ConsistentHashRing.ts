@@ -20,7 +20,7 @@ function formKey(streamPartId: StreamPartID): string {
  *
  * See the corresponding test, ConstHash.test.ts, for details.
  */
-export class ConstHash {
+export class ConsistentHashRing {
     private readonly nodes = new Array<string>()
     private consistentHash?: ConsistentHash
     private readonly replicationFactor: number
