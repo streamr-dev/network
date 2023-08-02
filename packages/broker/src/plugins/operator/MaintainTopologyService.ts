@@ -1,6 +1,6 @@
 import { Logger } from '@streamr/utils'
 import StreamrClient, { Subscription } from 'streamr-client'
-import { StreamPartID, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
+import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import pLimit from 'p-limit'
 import { StreamAssignmentLoadBalancer } from './StreamAssignmentLoadBalancer'
 import { MaintainTopologyHelper } from './MaintainTopologyHelper'

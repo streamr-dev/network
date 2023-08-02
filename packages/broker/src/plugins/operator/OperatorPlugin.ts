@@ -4,15 +4,13 @@ import { Schema } from 'ajv'
 import { AnnounceNodeService } from './AnnounceNodeService'
 import { InspectRandomNodeService } from './InspectRandomNodeService'
 import { MaintainOperatorContractService } from './MaintainOperatorContractService'
-import { MaintainTopologyService } from './MaintainTopologyService'
+import { MaintainTopologyService, setUpAndStartMaintainTopologyService } from './MaintainTopologyService'
 import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 import { Provider, JsonRpcProvider } from '@ethersproject/providers'
 import { Signer } from '@ethersproject/abstract-signer'
 import { Wallet } from 'ethers'
 import { VoteOnSuspectNodeService } from './VoteOnSuspectNodeService'
-import { MaintainTopologyHelper } from './MaintainTopologyHelper'
 import { MaintainOperatorValueService } from './MaintainOperatorValueService'
-import { StreamAssignmentLoadBalancer } from './StreamAssignmentLoadBalancer'
 import { OperatorFleetState } from './OperatorFleetState'
 import { toStreamID } from '@streamr/protocol'
 
@@ -33,13 +31,15 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     private readonly inspectRandomNodeService = new InspectRandomNodeService()
     private readonly maintainOperatorContractService = new MaintainOperatorContractService()
     private readonly voteOnSuspectNodeService: VoteOnSuspectNodeService
-    private readonly maintainTopologyService: MaintainTopologyService
+    private maintainTopologyService?: MaintainTopologyService
     private readonly maintainOperatorValueService: MaintainOperatorValueService
+    private readonly fleetState: OperatorFleetState
+    private readonly serviceConfig: OperatorServiceConfig
 
     constructor(options: PluginOptions) {
         super(options)
         const provider = new JsonRpcProvider(this.brokerConfig.client.contracts!.streamRegistryChainRPCs!.rpcs[0].url)
-        const serviceHelperConfig = {
+        this.serviceConfig = {
             provider,
             operatorContractAddress: toEthereumAddress(this.pluginConfig.operatorContractAddress),
             theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST ?? '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-subgraphs`,
@@ -49,38 +49,33 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             this.streamrClient,
             toEthereumAddress(this.pluginConfig.operatorContractAddress)
         )
-        const operatorFleetState = new OperatorFleetState(
+        this.fleetState = new OperatorFleetState(
             this.streamrClient,
-            toStreamID('/operator/coordination', serviceHelperConfig.operatorContractAddress)
+            toStreamID('/operator/coordination', this.serviceConfig.operatorContractAddress)
         )
-        this.maintainTopologyService = new MaintainTopologyService(
-            this.streamrClient,
-            new StreamAssignmentLoadBalancer(
-                'myNodeId', // TODO: real nodeId here
-                this.pluginConfig.replicationFactor,
-                async (streamId) => {
-                    const stream = await this.streamrClient.getStream(streamId)
-                    return stream.getStreamParts()
-                },
-                operatorFleetState,
-                new MaintainTopologyHelper(serviceHelperConfig)
-            )
-        )
-        this.maintainOperatorValueService = new MaintainOperatorValueService(serviceHelperConfig)
+        this.maintainOperatorValueService = new MaintainOperatorValueService(this.serviceConfig)
         this.voteOnSuspectNodeService = new VoteOnSuspectNodeService(
             this.streamrClient,
-            serviceHelperConfig
+            this.serviceConfig
         )
     
     }
 
     async start(): Promise<void> {
+        this.maintainTopologyService = await setUpAndStartMaintainTopologyService({
+            streamrClient: this.streamrClient,
+            replicationFactor: this.pluginConfig.replicationFactor,
+            serviceHelperConfig: this.serviceConfig,
+            operatorFleetState: this.fleetState
+        })
         await this.announceNodeService.start()
         await this.inspectRandomNodeService.start()
         await this.maintainOperatorContractService.start()
         await this.maintainOperatorValueService.start()
         await this.maintainTopologyService.start()
         await this.voteOnSuspectNodeService.start()
+
+        await this.fleetState.start() // must be started last!
     }
 
     async stop(): Promise<void> {
