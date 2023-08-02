@@ -38,6 +38,7 @@
     "cassandra-driver": "^4.6.4",
     "chalk": "^4.0.0",
     "commander": "^11.0.0",
+    "consistent-hash": "^1.1.1",
     "cors": "^2.8.5",
     "ethers": "^5.4.7",
     "express": "^4.17.1",
