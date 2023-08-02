@@ -6,7 +6,6 @@ import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { StreamrClientError } from '../StreamrClientError'
 import { StorageNodeRegistry } from '../registry/StorageNodeRegistry'
-import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
 import { forEach, map, transformError } from '../utils/GeneratorUtils'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { pull } from '../utils/PushBuffer'
@@ -98,20 +97,18 @@ const getHttpErrorTransform = (): (error: any) => Promise<StreamrClientError> =>
 @scoped(Lifecycle.ContainerScoped)
 export class Resends {
 
-    private readonly streamStorageRegistry: StreamStorageRegistry
     private readonly storageNodeRegistry: StorageNodeRegistry
     private readonly messagePipelineFactory: MessagePipelineFactory
     private readonly config: StrictStreamrClientConfig
     private readonly logger: Logger
 
+    /* eslint-disable indent */
     constructor(
-        streamStorageRegistry: StreamStorageRegistry,
         @inject(delay(() => StorageNodeRegistry)) storageNodeRegistry: StorageNodeRegistry,
         messagePipelineFactory: MessagePipelineFactory,
         @inject(ConfigInjectionToken) config: StrictStreamrClientConfig,
         loggerFactory: LoggerFactory
     ) {
-        this.streamStorageRegistry = streamStorageRegistry
         this.storageNodeRegistry = storageNodeRegistry
         this.messagePipelineFactory = messagePipelineFactory
         this.config = config
@@ -121,7 +118,7 @@ export class Resends {
     async resend(
         streamPartId: StreamPartID,
         options: ResendOptions & { raw?: boolean },
-        getStorageNodes?: (streamId: StreamID) => Promise<EthereumAddress[]>,
+        getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>,
         abortSignal?: AbortSignal
     ): Promise<PushPipeline<StreamMessage, StreamMessage>> {
         const raw = options.raw ?? false
@@ -162,7 +159,7 @@ export class Resends {
         streamPartId: StreamPartID,
         query: QueryDict,
         raw: boolean,
-        getStorageNodes?: (streamId: StreamID) => Promise<EthereumAddress[]>,
+        getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>,
         abortSignal?: AbortSignal
     ): Promise<PushPipeline<StreamMessage, StreamMessage>> {
         const traceId = randomString(5)
@@ -173,9 +170,7 @@ export class Resends {
             query
         })
         const streamId = StreamPartIDUtils.getStreamID(streamPartId)
-        // eslint-disable-next-line no-underscore-dangle
-        const _getStorageNodes = getStorageNodes ?? ((streamId: StreamID) => this.streamStorageRegistry.getStorageNodes(streamId))
-        const nodeAddresses = await _getStorageNodes(streamId)
+        const nodeAddresses = await getStorageNodes(streamId)
         if (!nodeAddresses.length) {
             throw new StreamrClientError(`no storage assigned: ${streamId}`, 'NO_STORAGE_NODES')
         }
