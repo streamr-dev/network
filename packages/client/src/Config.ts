@@ -77,7 +77,9 @@ export interface ControlLayerConfig {
 
     /**
      * The port to use for the client's Network Node WebSocket server.
-     * If not specified, the server will not be started
+     * If not specified, the server will not be started.
+     * The server is used by the network layer to accept incoming connections
+     * over the public internet to improve the network node's connectivity.
      */
     webSocketPort?: number
 }
