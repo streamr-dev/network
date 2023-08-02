@@ -127,7 +127,6 @@ export class Handshaker implements IHandshaker {
         const result = await targetNeighbor.handshake(
             this.config.ownPeerDescriptor,
             this.config.targetNeighbors.getStringIds(),
-            this.config.nearbyContactPool.getStringIds(),
             concurrentStringId
         )
         if (result.accepted) {
@@ -152,7 +151,6 @@ export class Handshaker implements IHandshaker {
         const result = await targetNeighbor.handshake(
             this.config.ownPeerDescriptor,
             this.config.targetNeighbors.getStringIds(),
-            this.config.nearbyContactPool.getStringIds(),
             undefined,
             interleavingFrom
         )
