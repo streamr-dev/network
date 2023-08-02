@@ -95,8 +95,7 @@ message StreamHandshakeRequest {
   repeated string neighbors = 5;
   repeated string peerView = 6;
   dht.PeerDescriptor senderDescriptor = 7;
-  bool interleaving = 8;
-  optional string interleavingFrom = 9;
+  optional string interleavingFrom = 8;
 }
 
 message StreamHandshakeResponse {

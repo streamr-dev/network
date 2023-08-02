@@ -154,7 +154,6 @@ export class Handshaker implements IHandshaker {
             this.config.targetNeighbors.getStringIds(),
             this.config.nearbyContactPool.getStringIds(),
             undefined,
-            true,
             interleavingFrom
         )
         if (result.accepted) {

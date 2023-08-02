@@ -177,11 +177,7 @@ export interface StreamHandshakeRequest {
      */
     senderDescriptor?: PeerDescriptor;
     /**
-     * @generated from protobuf field: bool interleaving = 8;
-     */
-    interleaving: boolean;
-    /**
-     * @generated from protobuf field: optional string interleavingFrom = 9;
+     * @generated from protobuf field: optional string interleavingFrom = 8;
      */
     interleavingFrom?: string;
 }
@@ -490,8 +486,7 @@ class StreamHandshakeRequest$Type extends MessageType<StreamHandshakeRequest> {
             { no: 5, name: "neighbors", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
             { no: 6, name: "peerView", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
             { no: 7, name: "senderDescriptor", kind: "message", T: () => PeerDescriptor },
-            { no: 8, name: "interleaving", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 9, name: "interleavingFrom", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
+            { no: 8, name: "interleavingFrom", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
