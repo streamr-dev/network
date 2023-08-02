@@ -12,8 +12,9 @@ import {
     getProvider,
     getTokenContract
 } from './smartContractUtils'
-import { StreamPartID } from '@streamr/protocol'
+import { StreamPartID, toStreamID } from '@streamr/protocol'
 import { createClient } from '../../../utils'
+import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
 
 async function setUpStreams(): Promise<[Stream, Stream]> {
     const privateKey = await fetchPrivateKeyWithGas()
@@ -49,6 +50,7 @@ function doesNotContainAny(arr: StreamPartID[], notToInclude: StreamPartID[]): b
 
 describe('MaintainTopologyService', () => {
     let client: StreamrClient
+    let operatorFleetState: OperatorFleetState
 
     afterEach(async () => {
         await client?.destroy()
@@ -73,10 +75,12 @@ describe('MaintainTopologyService', () => {
         }
 
         client = createClient(fastPrivateKey())
+        operatorFleetState = new OperatorFleetState(client, toStreamID('/operator/coordination', serviceHelperConfig.operatorContractAddress))
         await setUpAndStartMaintainTopologyService({
             streamrClient: client,
             replicationFactor: 3,
-            serviceHelperConfig
+            serviceHelperConfig,
+            operatorFleetState
         })
 
         await waitForCondition(async () => {

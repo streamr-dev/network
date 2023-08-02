@@ -22,13 +22,9 @@ export async function setUpAndStartMaintainTopologyService({
     streamrClient: StreamrClient
     replicationFactor: number
     serviceHelperConfig: OperatorServiceConfig
-    operatorFleetState?: OperatorFleetState
+    operatorFleetState: OperatorFleetState
 }): Promise<MaintainTopologyService> {
-    const operatorFleetStateGiven = operatorFleetState !== undefined
-    if (operatorFleetState === undefined) {
-        const coordinationStreamId = toStreamID('/operator/coordination', serviceHelperConfig.operatorContractAddress)
-        operatorFleetState = new OperatorFleetState(streamrClient, coordinationStreamId)
-    }
+    // TODO: check that operatorFleetState is NOT started
     const maintainTopologyHelper = new MaintainTopologyHelper(serviceHelperConfig)
     const nodeId = (await streamrClient.getNode()).getNodeId()
     const service = new MaintainTopologyService(
@@ -45,9 +41,6 @@ export async function setUpAndStartMaintainTopologyService({
         )
     )
     await service.start()
-    if (!operatorFleetStateGiven) {
-        await operatorFleetState.start()
-    }
     await maintainTopologyHelper.start()
     return service
 }
