@@ -54,10 +54,7 @@ export class ConstHash {
                 this.consistentHash.add(nodeId)
             }
         }
-        if (this.replicationFactor > 1) {
-            return this.consistentHash.get(formKey(streamPartId), this.replicationFactor) as string[]
-        } else {
-            return [...this.consistentHash.get(formKey(streamPartId), 1)]
-        }
+        const result = this.consistentHash.get(formKey(streamPartId), this.replicationFactor)
+        return this.replicationFactor > 1 ? result : [result] as any
     }
 }
