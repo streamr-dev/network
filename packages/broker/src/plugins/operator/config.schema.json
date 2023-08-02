@@ -16,7 +16,8 @@
     "replicationFactor": {
       "type": "integer",
       "description": "How many nodes a stream partition should be assigned to",
-      "default": 1
+      "default": 1,
+      "minimum": 1
     }
   }
 }
