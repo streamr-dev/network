@@ -74,8 +74,7 @@ export class MaintainTopologyService {
     }
 
     private onAddStakedStreamPart = this.concurrencyLimiter(async (streamPartId: StreamPartID): Promise<void> => {
-        const id = StreamPartIDUtils.getStreamID(streamPartId)
-        const partition = StreamPartIDUtils.getStreamPartition(streamPartId)
+        const [id, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
         let subscription: Subscription
         try {
             subscription = await this.streamrClient.subscribe({
