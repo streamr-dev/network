@@ -33,7 +33,8 @@ export {
     ControlLayerConfig as Layer0Config,
     NetworkNodeConfig,
     JsonPeerDescriptor,
-    ConnectivityMethod
+    ConnectivityMethod,
+    JsonNodeType
 } from './Config'
 export { GroupKey as EncryptionKey } from './encryption/GroupKey'
 export { UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
@@ -63,7 +64,6 @@ export {
     StreamMessageType
 } from '@streamr/protocol'
 
-export { NodeType } from '@streamr/dht'
 export type { IceServer, PeerDescriptor } from '@streamr/dht' 
 export type { ConnectionInfo } from '@ethersproject/web'
 export type { ExternalProvider } from '@ethersproject/providers'

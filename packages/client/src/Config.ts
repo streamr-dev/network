@@ -4,7 +4,7 @@ import cloneDeep from 'lodash/cloneDeep'
 import type { ExternalProvider } from '@ethersproject/providers'
 import { MarkOptional, DeepRequired } from 'ts-essentials'
 import { LogLevel } from '@streamr/utils'
-import { IceServer, NodeType } from '@streamr/dht'
+import { IceServer } from '@streamr/dht'
 
 import type { ConnectionInfo } from '@ethersproject/web'
 import { generateClientId } from './utils/utils'
@@ -120,9 +120,14 @@ export interface NetworkConfig {
     node?: NetworkNodeConfig
 }
 
+export enum JsonNodeType {
+    NODEJS = 'nodejs',
+    BROWSER = 'browser'
+}
+
 export interface JsonPeerDescriptor {
     id: string
-    type: NodeType
+    type?: JsonNodeType
     websocket?: ConnectivityMethod
     openInternet?: boolean
     region?: number
