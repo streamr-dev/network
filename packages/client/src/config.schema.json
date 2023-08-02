@@ -58,6 +58,14 @@
             "type": "number",
             "default": 5000
         },
+        "gapFillStrategy": {
+            "type": "string",
+            "enum": [
+                "light",
+                "full"
+            ],
+            "default": "light"
+        },
         "network": {
             "type": "object",
             "additionalProperties": false,
