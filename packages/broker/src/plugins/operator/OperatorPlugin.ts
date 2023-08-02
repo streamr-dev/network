@@ -88,7 +88,6 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         await this.inspectRandomNodeService.stop()
         await this.maintainOperatorContractService.stop()
         await this.maintainOperatorValueService.stop()
-        await this.maintainTopologyService.stop()
         await this.voteOnSuspectNodeService.stop()
     }
 

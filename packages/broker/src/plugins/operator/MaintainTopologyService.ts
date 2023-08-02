@@ -69,10 +69,6 @@ export class MaintainTopologyService {
         logger.info('Started')
     }
 
-    // eslint-disable-next-line class-methods-use-this
-    async stop(): Promise<void> {
-    }
-
     private onAddStakedStreamPart = this.concurrencyLimiter(async (streamPartId: StreamPartID): Promise<void> => {
         const [id, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
         let subscription: Subscription

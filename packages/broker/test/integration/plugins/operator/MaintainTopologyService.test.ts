@@ -1,5 +1,4 @@
 import {
-    MaintainTopologyService,
     setUpAndStartMaintainTopologyService
 } from '../../../../src/plugins/operator/MaintainTopologyService'
 import { toEthereumAddress, waitForCondition } from '@streamr/utils'
@@ -49,11 +48,9 @@ function doesNotContainAny(arr: StreamPartID[], notToInclude: StreamPartID[]): b
 }
 
 describe('MaintainTopologyService', () => {
-    let service: MaintainTopologyService
     let client: StreamrClient
 
     afterEach(async () => {
-        await service.stop()
         await client?.destroy()
     })
 
@@ -76,7 +73,7 @@ describe('MaintainTopologyService', () => {
         }
 
         client = createClient(fastPrivateKey())
-        service = await setUpAndStartMaintainTopologyService({
+        await setUpAndStartMaintainTopologyService({
             streamrClient: client,
             replicationFactor: 3,
             serviceHelperConfig
