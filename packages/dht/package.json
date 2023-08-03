@@ -29,7 +29,7 @@
     "run-kademlia-simulation": "ts-node --project tsconfig.node.json $NODE_DEBUG_OPTION --files test/benchmark/kademlia-simulation/KademliaSimulation.ts"
   },
   "dependencies": {
-    "@protobuf-ts/plugin": "^2.8.0",
+    "@protobuf-ts/plugin": "^2.9.1",
     "@streamr/proto-rpc": "8.5.5",
     "@streamr/utils": "8.5.5",
     "bloomfilter": "^0.0.18",
@@ -46,11 +46,11 @@
     "@types/bloomfilter": "^0.0.0",
     "@types/express": "^4.17.13",
     "@types/k-bucket": "^5.0.1",
-    "@types/lodash": "^4.14.175",
+    "@types/lodash": "^4.14.196",
     "@types/uuid": "^9.0.2",
     "@types/websocket": "^1.0.3",
     "express": "^4.17.1",
-    "patch-package": "^7.0.2",
+    "patch-package": "^8.0.0",
     "setimmediate": "^1.0.5",
     "ts-node": "^10.9.1"
   },
