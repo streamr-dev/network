@@ -3,7 +3,7 @@ import { wait, waitForCondition } from '@streamr/utils'
 import { MessageQueue } from '../../src/connection/MessageQueue'
 import { BrowserWebRtcConnection } from '../../src/connection/webrtc/BrowserWebRtcConnection'
 import { DeferredConnectionAttempt } from '../../src/connection/webrtc/DeferredConnectionAttempt'
-import { ConstructorOptions } from "../../src/connection/webrtc/WebRtcConnection"
+import { ConstructorOptions } from '../../src/connection/webrtc/WebRtcConnection'
 import { TEST_CONFIG } from '../../src/createNetworkNode'
 /**
  * Test that Connections can be established and message sent between them successfully. Tracker

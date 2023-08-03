@@ -1,8 +1,8 @@
 import WebSocket from 'ws'
 import { PeerId, PeerInfo } from '../PeerInfo'
-import { AbstractWsEndpoint, DisconnectionCode, DisconnectionReason } from "./AbstractWsEndpoint"
-import { AbstractWsConnection, ReadyState } from "./AbstractWsConnection"
-import { IMessageEvent, w3cwebsocket } from "websocket"
+import { AbstractWsEndpoint, DisconnectionCode, DisconnectionReason } from './AbstractWsEndpoint'
+import { AbstractWsConnection, ReadyState } from './AbstractWsConnection'
+import { IMessageEvent, w3cwebsocket } from 'websocket'
 import { Logger } from '@streamr/utils'
 
 export type ServerUrl = string

@@ -8,7 +8,7 @@ import {
     StreamPartID,
     UnsubscribeRequest
 } from '@streamr/protocol'
-import { Logger } from "@streamr/utils"
+import { Logger } from '@streamr/utils'
 import { Propagation } from '../propagation/Propagation'
 
 const logger = new Logger(module)

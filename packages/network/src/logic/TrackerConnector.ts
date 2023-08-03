@@ -1,6 +1,6 @@
 import { TrackerRegistryRecord, StreamPartID, TrackerRegistry } from '@streamr/protocol'
 import { NodeId, TrackerId } from '../identifiers'
-import { Logger } from "@streamr/utils"
+import { Logger } from '@streamr/utils'
 import { PeerInfo } from '../connection/PeerInfo'
 import { NameDirectory } from '../NameDirectory'
 

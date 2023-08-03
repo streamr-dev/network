@@ -1,8 +1,8 @@
-import { webRtcConnectionFactory } from "../../src/connection/webrtc/BrowserWebRtcConnection"
+import { webRtcConnectionFactory } from '../../src/connection/webrtc/BrowserWebRtcConnection'
 import { runAndWaitForEvents } from '@streamr/test-utils'
-import { MessageQueue } from "../../src/connection/MessageQueue"
-import { ConstructorOptions } from "../../src/connection/webrtc/WebRtcConnection"
-import { DeferredConnectionAttempt } from "../../src/connection/webrtc/DeferredConnectionAttempt"
+import { MessageQueue } from '../../src/connection/MessageQueue'
+import { ConstructorOptions } from '../../src/connection/webrtc/WebRtcConnection'
+import { DeferredConnectionAttempt } from '../../src/connection/webrtc/DeferredConnectionAttempt'
 import { TEST_CONFIG } from '../../src/createNetworkNode'
 
 const connectionOpts1: ConstructorOptions = {

@@ -4,7 +4,7 @@ import { w3cwebsocket } from 'websocket'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { ServerWsEndpoint, startHttpServer } from '../../src/connection/ws/ServerWsEndpoint'
 import { waitForCondition } from '@streamr/utils'
-import NodeClientWsEndpoint from "../../src/connection/ws/NodeClientWsEndpoint"
+import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { createTestNodeClientWsEndpoint, createTestServerWsEndpoint, startServerWsEndpoint } from '../utils'
 
 // eslint-disable-next-line no-underscore-dangle

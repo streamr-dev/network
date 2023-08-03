@@ -1,7 +1,7 @@
-import { webRtcConnectionFactory } from "../../src/connection/webrtc/NodeWebRtcConnection"
-import { MessageQueue } from "../../src/connection/MessageQueue"
-import { ConstructorOptions } from "../../src/connection/webrtc/WebRtcConnection"
-import { DeferredConnectionAttempt } from "../../src/connection/webrtc/DeferredConnectionAttempt"
+import { webRtcConnectionFactory } from '../../src/connection/webrtc/NodeWebRtcConnection'
+import { MessageQueue } from '../../src/connection/MessageQueue'
+import { ConstructorOptions } from '../../src/connection/webrtc/WebRtcConnection'
+import { DeferredConnectionAttempt } from '../../src/connection/webrtc/DeferredConnectionAttempt'
 import { TEST_CONFIG } from '../../src/createNetworkNode'
 
 const connectionOpts1: ConstructorOptions = {

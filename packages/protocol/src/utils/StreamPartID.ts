@@ -1,4 +1,4 @@
-import { StreamID, toStreamID } from "./StreamID"
+import { StreamID, toStreamID } from './StreamID'
 import { BrandedString } from '@streamr/utils'
 import { ensureValidStreamPartitionIndex } from './partition'
 

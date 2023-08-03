@@ -9,7 +9,7 @@ import { Location, Rtts, NodeId, TrackerId } from '../identifiers'
 import { TrackerConnector } from './TrackerConnector'
 import { NodeToTracker, Event as NodeToTrackerEvent } from '../protocol/NodeToTracker'
 import { StreamPartManager } from './StreamPartManager'
-import { Logger } from "@streamr/utils"
+import { Logger } from '@streamr/utils'
 import { InstructionThrottler } from './InstructionThrottler'
 import { InstructionRetryManager } from './InstructionRetryManager'
 import { NameDirectory } from '../NameDirectory'

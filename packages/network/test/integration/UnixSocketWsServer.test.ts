@@ -16,7 +16,7 @@ describe('ServerWsEndpoint', () => {
     })
 
     test('WS connection can established with unix sockets', async () => {
-        const listen = "/tmp/server1.sock"
+        const listen = '/tmp/server1.sock'
         const httpsServer = await startHttpServer(
             listen,
         )
@@ -33,7 +33,7 @@ describe('ServerWsEndpoint', () => {
                 webSocketClient.close()
             }
         })
-        webSocketClient.on("error", (error) => {
+        webSocketClient.on('error', (error) => {
             throw error
         })
         await waitForCondition(() => webSocketClient.readyState === webSocketClient.CLOSED)

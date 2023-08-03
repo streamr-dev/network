@@ -3,8 +3,8 @@ import { Client, types as cassandraTypes } from 'cassandra-driver'
 import StreamrClient, { CONFIG_TEST } from 'streamr-client'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { BucketId } from '../../../../src/plugins/storage/Bucket'
-import { DeleteExpiredCmd } from "../../../../src/plugins/storage/DeleteExpiredCmd"
-import { STREAMR_DOCKER_DEV_HOST, createTestStream } from "../../../utils"
+import { DeleteExpiredCmd } from '../../../../src/plugins/storage/DeleteExpiredCmd'
+import { STREAMR_DOCKER_DEV_HOST, createTestStream } from '../../../utils'
 const { TimeUuid } = cassandraTypes
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]

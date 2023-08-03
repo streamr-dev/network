@@ -15,7 +15,7 @@ export class ParsedLocalCandidate {
     private readonly type: CandidateType
 
     constructor(candidate: string) {
-        const split = candidate.split(" ")
+        const split = candidate.split(' ')
         this.id = split[0]
         this.component = split[1]
         this.protocol = split[2]

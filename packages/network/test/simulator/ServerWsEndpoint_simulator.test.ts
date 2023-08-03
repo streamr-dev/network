@@ -2,7 +2,7 @@
 
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { ServerWsEndpoint } from '../../src/connection/ws/ServerWsEndpoint'
-import NodeClientWsEndpoint from "../../src/connection/ws/NodeClientWsEndpoint"
+import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { runAndWaitForEvents } from '@streamr/test-utils'
 import { DisconnectionCode, DisconnectionReason, Event } from '../../src/connection/ws/AbstractWsEndpoint'
 import { createTestNodeClientWsEndpoint, startServerWsEndpoint } from '../utils'

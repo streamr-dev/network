@@ -2,9 +2,9 @@ import { EventEmitter } from 'events'
 import StrictEventEmitter from 'strict-event-emitter-types'
 import nodeDataChannel, { DataChannel, DescriptionType, LogLevel, PeerConnection } from 'node-datachannel'
 import { ConstructorOptions, WebRtcConnection } from './WebRtcConnection'
-import { Logger } from "@streamr/utils"
-import { NameDirectory } from "../../NameDirectory"
-import { WebRtcConnectionFactory } from "./WebRtcEndpoint"
+import { Logger } from '@streamr/utils'
+import { NameDirectory } from '../../NameDirectory'
+import { WebRtcConnectionFactory } from './WebRtcEndpoint'
 import { iceServerAsString } from './iceServerAsString'
 import { ParsedLocalCandidate, CandidateType } from './ParsedLocalCandidate'
 
@@ -162,7 +162,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
                     this.close(new Error('addRemoteCandidate failed'))
                 }
             } else {
-                this.logger.warn("Close connection (tried setting remote candidate before remote description)")
+                this.logger.warn('Close connection (tried setting remote candidate before remote description)')
                 this.close(new Error('Tried setting remoteCandidate before remote description'))
             }
         } else {

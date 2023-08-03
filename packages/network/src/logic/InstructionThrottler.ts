@@ -1,6 +1,6 @@
 import { InstructionMessage, StreamPartID } from '@streamr/protocol'
 import { cancelable, CancelablePromise } from 'cancelable-promise'
-import { Logger } from "@streamr/utils"
+import { Logger } from '@streamr/utils'
 import { TrackerId } from '../identifiers'
 
 type Queue = Record<StreamPartID, {

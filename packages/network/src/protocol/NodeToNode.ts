@@ -9,11 +9,11 @@ import {
     StreamPartIDUtils,
     UnsubscribeRequest
 } from '@streamr/protocol'
-import { Logger } from "@streamr/utils"
+import { Logger } from '@streamr/utils'
 import { decode } from './utils'
 import { IWebRtcEndpoint, Event as WebRtcEndpointEvent } from '../connection/webrtc/IWebRtcEndpoint'
 import { PeerInfo } from '../connection/PeerInfo'
-import { Rtts, NodeId } from "../identifiers"
+import { Rtts, NodeId } from '../identifiers'
 
 export enum Event {
     NODE_CONNECTED = 'streamr:node-node:node-connected',
