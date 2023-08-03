@@ -1,7 +1,8 @@
-import { StreamMessage, toStreamPartID } from '@streamr/protocol'
+import { StreamID, StreamMessage, toStreamPartID } from '@streamr/protocol'
 import { Logger, collect, wait } from '@streamr/utils'
 import { Message, convertStreamMessageToMessage } from '../Message'
 import { StreamrClientError } from '../StreamrClientError'
+import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
 import { Resends } from './Resends'
 
 const logger = new Logger(module)
@@ -14,7 +15,8 @@ export const waitForStorage = async (
         count: number
         messageMatchFn?: (msgTarget: Message, msgGot: Message) => boolean
     },
-    resends: Resends
+    resends: Resends,
+    streamStorageRegistry: StreamStorageRegistry
 ): Promise<void> => {
     if (!message) {
         throw new StreamrClientError('waitForStorage requires a Message', 'INVALID_ARGUMENT')
@@ -32,7 +34,8 @@ export const waitForStorage = async (
             })
             throw new Error(`timed out after ${duration}ms waiting for message`)
         }
-        const resendStream = await resends.resend(toStreamPartID(message.streamId, message.streamPartition), { last: opts.count })
+        const getStorageNodes = (streamId: StreamID) => streamStorageRegistry.getStorageNodes(streamId)
+        const resendStream = await resends.resend(toStreamPartID(message.streamId, message.streamPartition), { last: opts.count }, getStorageNodes)
         last = await collect(resendStream)
         for (const lastMsg of last) {
             if (macher(message, convertStreamMessageToMessage(lastMsg))) {

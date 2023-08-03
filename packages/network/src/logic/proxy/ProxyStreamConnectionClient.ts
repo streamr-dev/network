@@ -36,6 +36,7 @@ export enum Event {
     CONNECTION_REJECTED = 'proxy-connection-rejected'
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export interface ProxyStreamConnectionClient {
     on(event: Event.CONNECTION_ACCEPTED,
        listener: (nodeId: NodeId, streamPartId: StreamPartID, direction: ProxyDirection) => void): this
@@ -58,6 +59,7 @@ export const retry = async <T>(task: () => Promise<T>, description: string, abor
     }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export class ProxyStreamConnectionClient extends EventEmitter {
     private readonly connections: Map<StreamPartID, Map<NodeId, ProxyDirection>>
     private readonly definitions: Map<StreamPartID, ProxyDefinition>
