@@ -132,7 +132,7 @@ as you expect e.g. `^X.Y.Z` vs `X.Y.Z`
 
 | Variable                     | Description                                                                            | Packages                                    |
 |------------------------------|----------------------------------------------------------------------------------------|---------------------------------------------|
-| `BROWSER_TEST_DEBUG_MODE`    | Leaves the Electron window open while running browser tests                            | utils, proto-rpc, dht, network-node, client |
+| `BROWSER_TEST_DEBUG_MODE`    | Leaves the Electron window open while running browser tests                            | utils, proto-rpc, network-node, client |
 | `STREAMR_DOCKER_DEV_HOST`    | Sets an alternative IP address for streamr-docker-dev in end-to-end tests              | client, broker                              |
 | `LOG_LEVEL`                  | Adjust logging level                                                                   | _all_                                       |
 | `DISABLE_PRETTY_LOG`         | Set to true to disable pretty printing of logs and print JSONL instead                 | _all_                                       |
