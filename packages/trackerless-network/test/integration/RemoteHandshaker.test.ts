@@ -72,7 +72,7 @@ describe('RemoteHandshaker', () => {
     })
 
     it('handshake', async () => {
-        const result = await remoteHandshaker.handshake(clientPeer, [])
+        const result = await remoteHandshaker.handshake(clientPeer, [], [])
         expect(result.accepted).toEqual(true)
     })
 })

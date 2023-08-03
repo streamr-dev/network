@@ -341,6 +341,14 @@ export class StreamrNode extends EventEmitter<Events> {
         })
     }
 
+    async inspect(peerDescriptor: PeerDescriptor, streamPartId: string): Promise<boolean> {
+        if (this.streams.get(streamPartId)?.type === StreamNodeType.RANDOM_GRAPH) {
+            const streamNode = this.streams.get(streamPartId)!.layer2 as RandomGraphNode
+            return streamNode.inspect(peerDescriptor)
+        }
+        return false
+    }
+
     setStreamPartEntryPoints(streamPartId: string, entryPoints: PeerDescriptor[]): void {
         this.knownStreamEntryPoints.set(streamPartId, entryPoints)
     }

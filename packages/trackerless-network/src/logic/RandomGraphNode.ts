@@ -30,6 +30,7 @@ import { PeerIDKey } from '@streamr/dht/dist/src/helpers/PeerID'
 import { StreamNodeServer } from './StreamNodeServer'
 import { IStreamNode } from './IStreamNode'
 import { ProxyStreamConnectionServer } from './proxy/ProxyStreamConnectionServer'
+import { IInspector, Inspector } from './inspect/Inspector'
 
 export interface Events {
     message: (message: StreamMessage) => void
@@ -70,12 +71,20 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
     private readonly abortController: AbortController
     private config: StrictRandomGraphNodeConfig
     private readonly server: INetworkRpc
+    private readonly inspector: IInspector
 
     constructor(config: StrictRandomGraphNodeConfig) {
         super()
         this.config = config
         this.duplicateDetectors = new Map()
         this.abortController = new AbortController()
+        this.inspector = new Inspector({
+            neighbors: this.config.targetNeighbors,
+            ownPeerDescriptor: this.config.ownPeerDescriptor,
+            rpcCommunicator: this.config.rpcCommunicator,
+            graphId: this.config.randomGraphId,
+            connectionLocker: this.config.connectionLocker
+        })
         this.server = new StreamNodeServer({
             ownPeerDescriptor: this.config.ownPeerDescriptor,
             randomGraphId: this.config.randomGraphId,
@@ -97,7 +106,8 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
                     this.config.neighborFinder.start([senderId])
                     this.config.proxyConnectionServer?.removeConnection(senderId as PeerIDKey)
                 }
-            }
+            },
+            markForInspection: (senderId: PeerIDKey, messageRef: MessageRef) => this.inspector.markMessage(senderId, messageRef)
         })
     }
 
@@ -243,15 +253,21 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         this.config.neighborFinder.stop()
         this.config.neighborUpdateManager.stop()
         this.config.proxyConnectionServer?.stop()
+        this.inspector.stop()
     }
 
     broadcast(msg: StreamMessage, previousPeer?: string): void {
         if (!previousPeer) {
             this.markAndCheckDuplicate(msg.messageRef!, msg.previousMessageRef)
+        } else {
+            this.inspector.markMessage(previousPeer as PeerIDKey, msg.messageRef!)
         }
         this.emit('message', msg)
-        
         this.config.propagation.feedUnseenMessage(msg, this.getPropagationTargets(msg), previousPeer || null)
+    }
+
+    inspect(peerDescriptor: PeerDescriptor): Promise<boolean> {
+        return this.inspector.inspect(peerDescriptor)
     }
 
     private getPropagationTargets(msg: StreamMessage): string[] {
@@ -264,6 +280,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
                 propagationTargets = propagationTargets.concat(this.config.proxyConnectionServer!.getSubscribers())
             }
         }
+        propagationTargets = propagationTargets.filter((target) => !this.inspector.isInspected(target as PeerIDKey))
         return propagationTargets
     }
 

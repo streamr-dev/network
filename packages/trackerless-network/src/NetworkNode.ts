@@ -27,6 +27,10 @@ export class NetworkNode {
         this.stack.getStreamrNode().setExtraMetadata(metadata)
     }
 
+    async inspect(peerDescriptor: PeerDescriptor, streamPartId: StreamPartID): Promise<boolean> {
+        return this.stack.getStreamrNode().inspect(peerDescriptor, streamPartId)
+    }
+
     async publish(streamMessage: StreamMessage): Promise<void> {
         const streamPartId = streamMessage.getStreamPartID()
         if (this.stack.getStreamrNode().isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE) 
