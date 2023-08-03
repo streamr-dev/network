@@ -41,14 +41,6 @@ jobs:
     uses: ./.github/workflows/test-setup.yml
     with:
       package: protocol
-  proto-rpc:
-    needs: build
-    uses: ./.github/workflows/test-setup.yml
-    with:
-      package: proto-rpc
-      command: |
-        npm run test
-        xvfb-run --auto-servernum npm run test-browser
   network:
     needs: build
     uses: ./.github/workflows/test-setup.yml

@@ -19,9 +19,6 @@ network:
 tracker:
   - 'packages/network-tracker/*'
   - 'packages/network-tracker/**/*'
-proto-rpc:
-  - 'packages/proto-rpc/*'
-  - 'packages/proto-rpc/**/*'
 client:
   - 'packages/client/*'
   - 'packages/client/**/*'

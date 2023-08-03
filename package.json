@@ -18,7 +18,6 @@
         "packages/utils",
         "packages/test-utils",
         "packages/protocol",
-        "packages/proto-rpc",
         "packages/network",
         "packages/network-tracker",
         "packages/client",

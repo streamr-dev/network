@@ -11,7 +11,6 @@ fi
 PKG_DIRS="utils
 test-utils
 protocol
-proto-rpc
 network
 network-tracker
 client
@@ -21,7 +20,6 @@ broker"
 PKG_NAMES="@streamr/utils
 @streamr/test-utils
 @streamr/protocol
-@streamr/proto-rpc
 @streamr/network-node
 @streamr/network-tracker
 streamr-client
