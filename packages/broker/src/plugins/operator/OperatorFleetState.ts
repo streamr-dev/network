@@ -3,6 +3,7 @@ import { Logger } from '@streamr/utils'
 import { StreamID } from '@streamr/protocol'
 import { EventEmitter } from 'eventemitter3'
 import { NodeId } from '@streamr/trackerless-network'
+import min from 'lodash/min'
 
 const logger = new Logger(module)
 
@@ -69,7 +70,7 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
     }
 
     getLeaderNodeId(): string | undefined {
-        return this.getNodeIds().sort()[0]
+        return min(this.getNodeIds()) // we just need the leader to be consistent
     }
 
     getNodeIds(): string[] {

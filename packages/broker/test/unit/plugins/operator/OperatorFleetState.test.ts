@@ -133,10 +133,10 @@ describe(OperatorFleetState, () => {
 
     it('getLeaderNodeId returns leader node when nodes', async () => {
         await state.start()
-        await setTimeAndPublishMessage(5, { msgType: 'heartbeat', nodeId: 'a' })
-        await setTimeAndPublishMessage(5, { msgType: 'heartbeat', nodeId: 'b' })
-        await setTimeAndPublishMessage(5, { msgType: 'heartbeat', nodeId: 'c' })
         await setTimeAndPublishMessage(5, { msgType: 'heartbeat', nodeId: 'd' })
+        await setTimeAndPublishMessage(5, { msgType: 'heartbeat', nodeId: 'a' })
+        await setTimeAndPublishMessage(5, { msgType: 'heartbeat', nodeId: 'c' })
+        await setTimeAndPublishMessage(5, { msgType: 'heartbeat', nodeId: 'b' })
 
         expect(state.getLeaderNodeId()).toEqual('a')
     })
