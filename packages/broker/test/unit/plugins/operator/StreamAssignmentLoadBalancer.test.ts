@@ -67,14 +67,14 @@ describe(StreamAssignmentLoadBalancer, () => {
     })
 
     it('no events emitted if assigning non-existing stream (also does not crash)', async () => {
-        maintainTopologyHelper.emit('addStakedStream', [NON_EXISTING_STREAM])
+        maintainTopologyHelper.emit('addStakedStreams', [NON_EXISTING_STREAM])
         await wait(0)
         expect(events).toEqual([])
     })
 
     it('all streams get assigned to myself if no other nodes present', async () => {
-        maintainTopologyHelper.emit('addStakedStream', [S1, S2])
-        maintainTopologyHelper.emit('addStakedStream', [S3])
+        maintainTopologyHelper.emit('addStakedStreams', [S1, S2])
+        maintainTopologyHelper.emit('addStakedStreams', [S3])
         await wait(0)
         expect(events).toEqual([
             ['assigned', toStreamPartID(S1, 0)],
@@ -87,8 +87,8 @@ describe(StreamAssignmentLoadBalancer, () => {
     })
 
     it('unassigning a stream with only me present', async () => {
-        maintainTopologyHelper.emit('addStakedStream', [S1, S2])
-        maintainTopologyHelper.emit('addStakedStream', [S3])
+        maintainTopologyHelper.emit('addStakedStreams', [S1, S2])
+        maintainTopologyHelper.emit('addStakedStreams', [S3])
         await wait(0)
         clearEvents()
 
@@ -101,9 +101,9 @@ describe(StreamAssignmentLoadBalancer, () => {
     })
 
     it('adding nodes in the presence of streams', async () => {
-        maintainTopologyHelper.emit('addStakedStream', [S1, S2])
-        maintainTopologyHelper.emit('addStakedStream', [S3])
-        maintainTopologyHelper.emit('addStakedStream', [S4])
+        maintainTopologyHelper.emit('addStakedStreams', [S1, S2])
+        maintainTopologyHelper.emit('addStakedStreams', [S3])
+        maintainTopologyHelper.emit('addStakedStreams', [S4])
         await wait(0)
         clearEvents()
 
@@ -118,9 +118,9 @@ describe(StreamAssignmentLoadBalancer, () => {
     it('removing nodes in the presence of streams', async () => {
         operatorFleetState.emit('added', 'node1')
         await wait(0)
-        maintainTopologyHelper.emit('addStakedStream', [S1, S2])
-        maintainTopologyHelper.emit('addStakedStream', [S3])
-        maintainTopologyHelper.emit('addStakedStream', [S4])
+        maintainTopologyHelper.emit('addStakedStreams', [S1, S2])
+        maintainTopologyHelper.emit('addStakedStreams', [S3])
+        maintainTopologyHelper.emit('addStakedStreams', [S4])
         await wait(0)
         clearEvents()
 
@@ -136,8 +136,8 @@ describe(StreamAssignmentLoadBalancer, () => {
         operatorFleetState.emit('added', 'node1')
         operatorFleetState.emit('added', 'node2')
         await wait(0)
-        maintainTopologyHelper.emit('addStakedStream', [S4, S2])
-        maintainTopologyHelper.emit('addStakedStream', [S3])
+        maintainTopologyHelper.emit('addStakedStreams', [S4, S2])
+        maintainTopologyHelper.emit('addStakedStreams', [S3])
         await wait(0)
 
         expect(events).toEqual([ // expectation based on arbitrary hashing
@@ -150,8 +150,8 @@ describe(StreamAssignmentLoadBalancer, () => {
         operatorFleetState.emit('added', 'node1')
         operatorFleetState.emit('added', 'node2')
         await wait(0)
-        maintainTopologyHelper.emit('addStakedStream', [S4, S2])
-        maintainTopologyHelper.emit('addStakedStream', [S3])
+        maintainTopologyHelper.emit('addStakedStreams', [S4, S2])
+        maintainTopologyHelper.emit('addStakedStreams', [S3])
         await wait(0)
         clearEvents()
 
@@ -166,7 +166,7 @@ describe(StreamAssignmentLoadBalancer, () => {
     it('concurrency is handled appropriately', async () => {
         const ROUNDS = 10
         for (let i = 0; i < ROUNDS; ++i) {
-            maintainTopologyHelper.emit('addStakedStream', [S3])
+            maintainTopologyHelper.emit('addStakedStreams', [S3])
             maintainTopologyHelper.emit('removeStakedStream', S3)
         }
         await wait(0)
