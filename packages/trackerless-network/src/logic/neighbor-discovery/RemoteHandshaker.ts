@@ -16,9 +16,7 @@ export class RemoteHandshaker extends Remote<IHandshakeRpcClient> {
     async handshake(
         ownPeerDescriptor: PeerDescriptor,
         neighbors: string[],
-        peerView: string[],
         concurrentHandshakeTargetId?: string,
-        interleaving = false,
         interleavingFrom?: string
     ): Promise<HandshakeResponse> {
         const request: StreamHandshakeRequest = {
@@ -26,9 +24,7 @@ export class RemoteHandshaker extends Remote<IHandshakeRpcClient> {
             requestId: new UUID().toString(),
             senderId: keyFromPeerDescriptor(ownPeerDescriptor),
             neighbors,
-            peerView,
             concurrentHandshakeTargetId,
-            interleaving,
             interleavingFrom,
             senderDescriptor: ownPeerDescriptor
         }
