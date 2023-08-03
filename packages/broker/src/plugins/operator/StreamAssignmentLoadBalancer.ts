@@ -39,7 +39,7 @@ export class StreamAssignmentLoadBalancer extends EventEmitter3<StreamAssignment
         this.consistentHashRing.add(myNodeId)
         this.operatorFleetState.on('added', this.nodeAdded)
         this.operatorFleetState.on('removed', this.nodeRemoved)
-        this.maintainTopologyHelper.on('addStakedStream', this.streamAdded)
+        this.maintainTopologyHelper.on('addStakedStreams', this.streamsAdded)
         this.maintainTopologyHelper.on('removeStakedStream', this.streamRemoved)
     }
 
@@ -59,7 +59,7 @@ export class StreamAssignmentLoadBalancer extends EventEmitter3<StreamAssignment
         this.recalculateAssignments()
     })
 
-    private streamAdded = this.concurrencyLimiter(async (streamIds: StreamID[]): Promise<void> => {
+    private streamsAdded = this.concurrencyLimiter(async (streamIds: StreamID[]): Promise<void> => {
         const streamPartIds = (await Promise.all(streamIds.map(this.getStreamPartIds))).flat()
         for (const streamPartId of streamPartIds) {
             this.allStreamParts.add(streamPartId)

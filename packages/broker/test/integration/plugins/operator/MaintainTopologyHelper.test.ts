@@ -72,7 +72,7 @@ describe("MaintainTopologyHelper", () => {
         it("client emits events when sponsorships are staked", async () => {
             operatorClient = new MaintainTopologyHelper(operatorConfig)
             let eventcount = 0
-            operatorClient.on("addStakedStream", (streamid: string[]) => {
+            operatorClient.on("addStakedStreams", (streamid: string[]) => {
                 logger.debug(`got addStakedStream event for stream ${streamid}`)
                 eventcount += 1
             })
@@ -106,7 +106,7 @@ describe("MaintainTopologyHelper", () => {
             await new Promise((resolve) => setTimeout(resolve, 5000))
             operatorClient = new MaintainTopologyHelper(operatorConfig)
             let streams: string[] = []
-            operatorClient.on("addStakedStream", (streamid: string[]) => {
+            operatorClient.on("addStakedStreams", (streamid: string[]) => {
                 logger.debug(`got addStakedStream event for stream ${streamid}`)
                 streams = streams.concat(streamid)
             })
@@ -125,7 +125,7 @@ describe("MaintainTopologyHelper", () => {
 
             operatorClient = new MaintainTopologyHelper(operatorConfig)
             let eventcount = 0
-            operatorClient.on("addStakedStream", (streamid: string[]) => {
+            operatorClient.on("addStakedStreams", (streamid: string[]) => {
                 logger.debug(`got addStakedStream event for stream ${streamid}`)
             })
             operatorClient.on("removeStakedStream", (streamid: string) => {
@@ -168,7 +168,7 @@ describe("MaintainTopologyHelper", () => {
 
             operatorClient = new MaintainTopologyHelper(operatorConfig)
             let receivedAddStreams = 0
-            operatorClient.on("addStakedStream", (streamid: string[]) => {
+            operatorClient.on("addStakedStreams", (streamid: string[]) => {
                 logger.debug(`got addStakedStream event for stream ${streamid}`)
                 receivedAddStreams += 1
             })
@@ -207,7 +207,7 @@ describe("MaintainTopologyHelper", () => {
 
             const operatorClient = new MaintainTopologyHelper(operatorConfig)
             let streams: string[] = []
-            operatorClient.on("addStakedStream", (streamIDs: string[]) => {
+            operatorClient.on("addStakedStreams", (streamIDs: string[]) => {
                 logger.debug(`got addStakedStream event for stream ${streamIDs}`)
                 streams = streamIDs
             })
@@ -224,7 +224,7 @@ describe("MaintainTopologyHelper", () => {
 
             operatorClient = new MaintainTopologyHelper(operatorConfig)
             let receivedRemoveStreams = 0
-            operatorClient.on("addStakedStream", (streamid: string[]) => {
+            operatorClient.on("addStakedStreams", (streamid: string[]) => {
                 logger.debug(`got addStakedStream event for stream ${streamid}`)
             })
             operatorClient.on("removeStakedStream", (streamid: string) => {
