@@ -26,11 +26,11 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
     private readonly timeProvider: () => number
     private readonly pruneAgeInMs: number
     private readonly pruneIntervalInMs: number
-    private readonly heartBeatIntervalInMs: number
+    private readonly heartbeatIntervalInMs: number
     private readonly latencyExtraInMs: number
     private readonly heartbeatTimestamps = new Map<NodeId, number>()
     private readonly abortController = new AbortController()
-    private ready = new Gate(false)
+    private readonly ready = new Gate(false)
     private subscription?: Subscription
 
     constructor(
@@ -39,7 +39,7 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
         timeProvider = Date.now,
         pruneAgeInMs = DEFAULT_PRUNE_AGE_IN_MS,
         pruneIntervalInMs = DEFAULT_PRUNE_INTERVAL_IN_MS,
-        heartBeatIntervalInMs = DEFAULT_INTERVAL_IN_MS,
+        heartbeatIntervalInMs = DEFAULT_INTERVAL_IN_MS,
         latencyExtraInMs = DEFAULT_LATENCY_EXTRA_MS
     ) {
         super()
@@ -48,7 +48,7 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
         this.timeProvider = timeProvider
         this.pruneAgeInMs = pruneAgeInMs
         this.pruneIntervalInMs = pruneIntervalInMs
-        this.heartBeatIntervalInMs = heartBeatIntervalInMs
+        this.heartbeatIntervalInMs = heartbeatIntervalInMs
         this.latencyExtraInMs = latencyExtraInMs
     }
 
@@ -98,7 +98,7 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
     private launchOpenReadyGateTimer = once(() => {
         setAbortableTimeout(() => {
             this.ready.open()
-        }, this.heartBeatIntervalInMs + this.latencyExtraInMs, this.abortController.signal)
+        }, this.heartbeatIntervalInMs + this.latencyExtraInMs, this.abortController.signal)
     })
 
     private pruneOfflineNodes(): void {
