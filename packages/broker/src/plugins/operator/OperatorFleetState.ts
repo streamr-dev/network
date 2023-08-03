@@ -68,6 +68,10 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
         await this.subscription?.unsubscribe()
     }
 
+    getLeaderNodeId(): string | undefined {
+        return this.getNodeIds().sort()[0]
+    }
+
     getNodeIds(): string[] {
         return [...this.heartbeatTimestamps.keys()]
     }
