@@ -169,15 +169,11 @@ export interface StreamHandshakeRequest {
      */
     neighbors: string[];
     /**
-     * @generated from protobuf field: repeated string peerView = 6;
-     */
-    peerView: string[];
-    /**
-     * @generated from protobuf field: dht.PeerDescriptor senderDescriptor = 7;
+     * @generated from protobuf field: dht.PeerDescriptor senderDescriptor = 6;
      */
     senderDescriptor?: PeerDescriptor;
     /**
-     * @generated from protobuf field: optional string interleavingFrom = 8;
+     * @generated from protobuf field: optional string interleavingFrom = 7;
      */
     interleavingFrom?: string;
 }
@@ -502,9 +498,8 @@ class StreamHandshakeRequest$Type extends MessageType<StreamHandshakeRequest> {
             { no: 3, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 4, name: "concurrentHandshakeTargetId", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
             { no: 5, name: "neighbors", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
-            { no: 6, name: "peerView", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
-            { no: 7, name: "senderDescriptor", kind: "message", T: () => PeerDescriptor },
-            { no: 8, name: "interleavingFrom", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
+            { no: 6, name: "senderDescriptor", kind: "message", T: () => PeerDescriptor },
+            { no: 7, name: "interleavingFrom", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
