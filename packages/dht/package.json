@@ -46,7 +46,7 @@
     "@types/bloomfilter": "^0.0.0",
     "@types/express": "^4.17.13",
     "@types/k-bucket": "^5.0.1",
-    "@types/lodash": "^4.14.175",
+    "@types/lodash": "^4.14.196",
     "@types/uuid": "^9.0.2",
     "@types/websocket": "^1.0.3",
     "express": "^4.17.1",

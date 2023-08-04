@@ -35,7 +35,7 @@
     "@streamr/browser-test-runner": "^0.0.1",
     "@streamr/test-utils": "8.5.5",
     "@types/express": "^4.17.13",
-    "@types/lodash": "^4.14.175",
+    "@types/lodash": "^4.14.196",
     "@types/uuid": "^9.0.2",
     "express": "^4.17.1",
     "patch-package": "^7.0.2",
