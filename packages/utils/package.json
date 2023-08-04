@@ -23,7 +23,7 @@
     "eventemitter3": "^5.0.0",
     "lodash": "^4.17.21",
     "pino": "^8.11.0",
-    "pino-pretty": "^10.1.0"
+    "pino-pretty": "^10.2.0"
   },
   "devDependencies": {
     "@streamr/browser-test-runner": "^0.0.1",
