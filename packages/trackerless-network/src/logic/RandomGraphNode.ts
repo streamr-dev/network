@@ -13,7 +13,9 @@ import {
     LeaveStreamNotice,
     MessageRef,
     StreamMessageType,
-    GroupKeyRequest
+    GroupKeyRequest,
+    InspectConnectionRequest,
+    InspectConnectionResponse,
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { PeerList } from './PeerList'
 import { NetworkRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
@@ -30,7 +32,7 @@ import { PeerIDKey } from '@streamr/dht/dist/src/helpers/PeerID'
 import { StreamNodeServer } from './StreamNodeServer'
 import { IStreamNode } from './IStreamNode'
 import { ProxyStreamConnectionServer } from './proxy/ProxyStreamConnectionServer'
-import { IInspector, Inspector } from './inspect/Inspector'
+import { IInspector } from './inspect/Inspector'
 
 export interface Events {
     message: (message: StreamMessage) => void
@@ -59,6 +61,8 @@ export interface StrictRandomGraphNodeConfig {
     nodeName: string
     acceptProxyConnections: boolean
     neighborUpdateInterval: number
+    inspector: IInspector
+    inspectingConnections: PeerList
     proxyConnectionServer?: ProxyStreamConnectionServer
 }
 
@@ -71,20 +75,12 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
     private readonly abortController: AbortController
     private config: StrictRandomGraphNodeConfig
     private readonly server: INetworkRpc
-    private readonly inspector: IInspector
 
     constructor(config: StrictRandomGraphNodeConfig) {
         super()
         this.config = config
         this.duplicateDetectors = new Map()
         this.abortController = new AbortController()
-        this.inspector = new Inspector({
-            neighbors: this.config.targetNeighbors,
-            ownPeerDescriptor: this.config.ownPeerDescriptor,
-            rpcCommunicator: this.config.rpcCommunicator,
-            graphId: this.config.randomGraphId,
-            connectionLocker: this.config.connectionLocker
-        })
         this.server = new StreamNodeServer({
             ownPeerDescriptor: this.config.ownPeerDescriptor,
             randomGraphId: this.config.randomGraphId,
@@ -107,7 +103,15 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
                     this.config.proxyConnectionServer?.removeConnection(senderId as PeerIDKey)
                 }
             },
-            markForInspection: (senderId: PeerIDKey, messageRef: MessageRef) => this.inspector.markMessage(senderId, messageRef)
+            onInspectConnection: (peerDescriptor: PeerDescriptor) => {
+                const remote = new RemoteRandomGraphNode(
+                    peerDescriptor,
+                    this.config.randomGraphId,
+                    toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
+                )
+                this.config.inspectingConnections.add(remote)
+            },
+            markForInspection: (senderId: PeerIDKey, messageRef: MessageRef) => this.config.inspector.markMessage(senderId, messageRef)
         })
     }
 
@@ -141,6 +145,8 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
             (msg: StreamMessage, context) => this.server.sendData(msg, context))
         this.config.rpcCommunicator.registerRpcNotification(LeaveStreamNotice, 'leaveStreamNotice',
             (req: LeaveStreamNotice, context) => this.server.leaveStreamNotice(req, context))
+        this.config.rpcCommunicator.registerRpcMethod(InspectConnectionRequest, InspectConnectionResponse, 'inspectConnection',
+            (req: InspectConnectionRequest, context) => this.server.inspectConnection(req, context))
     }
 
     private newContact(_newContact: PeerDescriptor, closestTen: PeerDescriptor[]): void {
@@ -216,6 +222,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
             this.config.targetNeighbors.remove(peerDescriptor)
             this.config.connectionLocker.unlockConnection(peerDescriptor, this.config.randomGraphId)
             this.config.neighborFinder.start([keyFromPeerDescriptor(peerDescriptor)])
+            this.config.inspectingConnections.remove(peerDescriptor)
         }
     }
 
@@ -253,21 +260,21 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         this.config.neighborFinder.stop()
         this.config.neighborUpdateManager.stop()
         this.config.proxyConnectionServer?.stop()
-        this.inspector.stop()
+        this.config.inspector.stop()
     }
 
     broadcast(msg: StreamMessage, previousPeer?: string): void {
         if (!previousPeer) {
             this.markAndCheckDuplicate(msg.messageRef!, msg.previousMessageRef)
         } else {
-            this.inspector.markMessage(previousPeer as PeerIDKey, msg.messageRef!)
+            this.config.inspector.markMessage(previousPeer as PeerIDKey, msg.messageRef!)
         }
         this.emit('message', msg)
         this.config.propagation.feedUnseenMessage(msg, this.getPropagationTargets(msg), previousPeer || null)
     }
 
     inspect(peerDescriptor: PeerDescriptor): Promise<boolean> {
-        return this.inspector.inspect(peerDescriptor)
+        return this.config.inspector.inspect(peerDescriptor)
     }
 
     private getPropagationTargets(msg: StreamMessage): string[] {
@@ -280,7 +287,9 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
                 propagationTargets = propagationTargets.concat(this.config.proxyConnectionServer!.getSubscribers())
             }
         }
-        propagationTargets = propagationTargets.filter((target) => !this.inspector.isInspected(target as PeerIDKey))
+
+        propagationTargets = propagationTargets.filter((target) => !this.config.inspector.isInspected(target as PeerIDKey))
+        propagationTargets = propagationTargets.concat(this.config.inspectingConnections.getStringIds())
         return propagationTargets
     }
 

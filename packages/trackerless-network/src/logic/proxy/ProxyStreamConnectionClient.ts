@@ -82,8 +82,9 @@ export class ProxyStreamConnectionClient extends EventEmitter implements IStream
                     setImmediate(() => this.onPeerDisconnected(contact.getPeerDescriptor()))
                 }
             },
+            onInspectConnection: (_peerDescriptor: PeerDescriptor) => {},
             rpcCommunicator: this.rpcCommunicator,
-            markForInspection: (senderId: PeerIDKey, messageRef: MessageRef) => {}
+            markForInspection: (_senderId: PeerIDKey, _messageRef: MessageRef) => {}
         })
         this.propagation = new Propagation({
             minPropagationTargets: 2,

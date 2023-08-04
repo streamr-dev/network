@@ -2,7 +2,8 @@ import { INetworkRpcClient } from '../proto/packages/trackerless-network/protos/
 import { PeerDescriptor, DhtRpcOptions, keyFromPeerDescriptor } from '@streamr/dht'
 import {
     StreamMessage,
-    LeaveStreamNotice
+    LeaveStreamNotice,
+    InspectConnectionRequest
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { Logger } from '@streamr/utils'
 import { Remote } from './Remote'
@@ -10,6 +11,23 @@ import { Remote } from './Remote'
 const logger = new Logger(module)
 
 export class RemoteRandomGraphNode extends Remote<INetworkRpcClient> {
+
+    async inspectConnection(ownPeerDescriptor: PeerDescriptor): Promise<boolean> {
+        const options: DhtRpcOptions = {
+            sourceDescriptor: ownPeerDescriptor as PeerDescriptor,
+            targetDescriptor: this.remotePeerDescriptor as PeerDescriptor,
+        }
+        const request: InspectConnectionRequest = {
+            senderId: keyFromPeerDescriptor(ownPeerDescriptor)
+        }
+        try {
+            const response = await this.client.inspectConnection(request, options)
+            return response.accepted
+        } catch (err: any) {
+            logger.debug(`inspectConnection to ${keyFromPeerDescriptor(this.getPeerDescriptor())} failed: ${err}`)
+            return false
+        }
+    }
 
     async sendData(ownPeerDescriptor: PeerDescriptor, msg: StreamMessage): Promise<void> {
         const options: DhtRpcOptions = {

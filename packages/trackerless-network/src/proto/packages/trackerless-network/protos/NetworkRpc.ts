@@ -317,6 +317,24 @@ export interface ProxyConnectionResponse {
     accepted: boolean;
 }
 /**
+ * @generated from protobuf message InspectConnectionRequest
+ */
+export interface InspectConnectionRequest {
+    /**
+     * @generated from protobuf field: string senderId = 1;
+     */
+    senderId: string;
+}
+/**
+ * @generated from protobuf message InspectConnectionResponse
+ */
+export interface InspectConnectionResponse {
+    /**
+     * @generated from protobuf field: bool accepted = 1;
+     */
+    accepted: boolean;
+}
+/**
  * @generated from protobuf enum StreamMessageType
  */
 export enum StreamMessageType {
@@ -596,12 +614,37 @@ class ProxyConnectionResponse$Type extends MessageType<ProxyConnectionResponse> 
  * @generated MessageType for protobuf message ProxyConnectionResponse
  */
 export const ProxyConnectionResponse = new ProxyConnectionResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class InspectConnectionRequest$Type extends MessageType<InspectConnectionRequest> {
+    constructor() {
+        super("InspectConnectionRequest", [
+            { no: 1, name: "senderId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message InspectConnectionRequest
+ */
+export const InspectConnectionRequest = new InspectConnectionRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class InspectConnectionResponse$Type extends MessageType<InspectConnectionResponse> {
+    constructor() {
+        super("InspectConnectionResponse", [
+            { no: 1, name: "accepted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message InspectConnectionResponse
+ */
+export const InspectConnectionResponse = new InspectConnectionResponse$Type();
 /**
  * @generated ServiceType for protobuf service NetworkRpc
  */
 export const NetworkRpc = new ServiceType("NetworkRpc", [
     { name: "sendData", options: {}, I: StreamMessage, O: Empty },
-    { name: "leaveStreamNotice", options: {}, I: LeaveStreamNotice, O: Empty }
+    { name: "leaveStreamNotice", options: {}, I: LeaveStreamNotice, O: Empty },
+    { name: "inspectConnection", options: {}, I: InspectConnectionRequest, O: InspectConnectionResponse }
 ]);
 /**
  * @generated ServiceType for protobuf service ProxyConnectionRpc

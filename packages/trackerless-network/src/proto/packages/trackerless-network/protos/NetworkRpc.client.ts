@@ -13,6 +13,8 @@ import type { ProxyConnectionRequest } from "./NetworkRpc";
 import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
 import { NetworkRpc } from "./NetworkRpc";
+import type { InspectConnectionResponse } from "./NetworkRpc";
+import type { InspectConnectionRequest } from "./NetworkRpc";
 import type { LeaveStreamNotice } from "./NetworkRpc";
 import { stackIntercept } from "@protobuf-ts/runtime-rpc";
 import type { Empty } from "../../../google/protobuf/empty";
@@ -31,6 +33,10 @@ export interface INetworkRpcClient {
      * @generated from protobuf rpc: leaveStreamNotice(LeaveStreamNotice) returns (google.protobuf.Empty);
      */
     leaveStreamNotice(input: LeaveStreamNotice, options?: RpcOptions): UnaryCall<LeaveStreamNotice, Empty>;
+    /**
+     * @generated from protobuf rpc: inspectConnection(InspectConnectionRequest) returns (InspectConnectionResponse);
+     */
+    inspectConnection(input: InspectConnectionRequest, options?: RpcOptions): UnaryCall<InspectConnectionRequest, InspectConnectionResponse>;
 }
 /**
  * @generated from protobuf service NetworkRpc
@@ -54,6 +60,13 @@ export class NetworkRpcClient implements INetworkRpcClient, ServiceInfo {
     leaveStreamNotice(input: LeaveStreamNotice, options?: RpcOptions): UnaryCall<LeaveStreamNotice, Empty> {
         const method = this.methods[1], opt = this._transport.mergeOptions(options);
         return stackIntercept<LeaveStreamNotice, Empty>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: inspectConnection(InspectConnectionRequest) returns (InspectConnectionResponse);
+     */
+    inspectConnection(input: InspectConnectionRequest, options?: RpcOptions): UnaryCall<InspectConnectionRequest, InspectConnectionResponse> {
+        const method = this.methods[2], opt = this._transport.mergeOptions(options);
+        return stackIntercept<InspectConnectionRequest, InspectConnectionResponse>("unary", this._transport, method, opt, input);
     }
 }
 /**

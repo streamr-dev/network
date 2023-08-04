@@ -9,6 +9,7 @@ import "packages/dht/protos/DhtRpc.proto";
 service NetworkRpc {
   rpc sendData (StreamMessage) returns (google.protobuf.Empty);
   rpc leaveStreamNotice (LeaveStreamNotice) returns (google.protobuf.Empty);
+  rpc inspectConnection (InspectConnectionRequest) returns (InspectConnectionResponse);
 }
 
 service ProxyConnectionRpc {
@@ -142,6 +143,14 @@ message ProxyConnectionResponse {
   uint32 streamPartition = 3;
   ProxyDirection direction = 4;  
   bool accepted = 5;
+}
+
+message InspectConnectionRequest {
+  string senderId = 1;
+}
+
+message InspectConnectionResponse {
+  bool accepted = 1;
 }
 
 enum ProxyDirection {

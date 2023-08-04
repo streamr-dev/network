@@ -1,6 +1,12 @@
 import { keyFromPeerDescriptor, ListeningRpcCommunicator, PeerDescriptor, DhtCallContext, PeerIDKey } from "@streamr/dht"
 import { Empty } from "../proto/google/protobuf/empty"
-import { LeaveStreamNotice, MessageRef, StreamMessage } from "../proto/packages/trackerless-network/protos/NetworkRpc"
+import { 
+    InspectConnectionRequest,
+    InspectConnectionResponse, 
+    LeaveStreamNotice,
+    MessageRef,
+    StreamMessage
+} from "../proto/packages/trackerless-network/protos/NetworkRpc"
 import { INetworkRpc } from "../proto/packages/trackerless-network/protos/NetworkRpc.server"
 import { ServerCallContext } from "@protobuf-ts/runtime-rpc"
 
@@ -11,6 +17,7 @@ export interface StreamNodeServerConfig {
     broadcast: (message: StreamMessage, previousPeer?: string) => void
     onLeaveNotice(notice: LeaveStreamNotice): void
     markForInspection(senderId: PeerIDKey, messageRef: MessageRef): void
+    onInspectConnection(peerDescriptor: PeerDescriptor): void
     rpcCommunicator: ListeningRpcCommunicator
 }
 
@@ -36,5 +43,16 @@ export class StreamNodeServer implements INetworkRpc {
             this.config.onLeaveNotice(message)
         }
         return Empty
+    }
+
+    async inspectConnection(
+        _request: InspectConnectionRequest,
+        context: ServerCallContext
+    ): Promise<InspectConnectionResponse> {
+        const sender = (context as DhtCallContext).incomingSourceDescriptor!
+        this.config.onInspectConnection(sender)
+        return {
+            accepted: true
+        }
     }
 }

@@ -10,6 +10,9 @@ interface InspectSessionConfig {
     inspectedPeer: PeerIDKey
 }
 
+const createMessageKey = (messageRef: MessageRef): string => {
+    return `${messageRef.messageChainId}:${messageRef.timestamp}:${messageRef.sequenceNumber}`
+}
 export class InspectSession extends EventEmitter<Events> {
     
     // Boolean indicates if the message has been received by the inspected node
@@ -22,7 +25,7 @@ export class InspectSession extends EventEmitter<Events> {
     }
 
     markMessage(senderId: PeerIDKey, messageRef: MessageRef): void {
-        const messageKey = this.createMessageKey(messageRef)
+        const messageKey = createMessageKey(messageRef)
         if (!this.inspectionMessages.has(messageKey)) {
             this.inspectionMessages.set(messageKey, senderId === this.inspectedPeer)
         } else if (this.inspectionMessages.has(messageKey)
@@ -34,10 +37,6 @@ export class InspectSession extends EventEmitter<Events> {
             && this.inspectionMessages.get(messageKey) === true) {
             this.emit('done')
         }
-    }
-
-    private createMessageKey(messageRef: MessageRef): string {
-        return `${messageRef.messageChainId}:${messageRef.timestamp}:${messageRef.sequenceNumber}`
     }
 
     getInspectedMessageCount(): number {
