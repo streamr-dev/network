@@ -9,6 +9,12 @@ const logger = new Logger(module)
 
 const ONE_ETHER = BigInt(1e18)
 
+interface UnwithdrawnEarningsData {
+    sumDataWei: bigint
+    fraction: bigint
+    sponsorshipAddresses: EthereumAddress[]
+}
+
 export class MaintainOperatorValueHelper {
     private readonly operator: Operator
     private readonly theGraphClient: TheGraphClient
@@ -54,7 +60,7 @@ export class MaintainOperatorValueHelper {
      *  - only take sponsorships that have more than minSponsorshipEarnings, or all if undefined
      * @param operatorContractAddress
      */
-    async getUnwithdrawnEarningsOf(operatorContractAddress: EthereumAddress) {
+    async getUnwithdrawnEarningsOf(operatorContractAddress: EthereumAddress): Promise<UnwithdrawnEarningsData> {
         const operator = new Contract(operatorContractAddress, operatorABI, this.config.signer) as unknown as Operator
         const minSponsorshipEarningsWei = BigNumber.from(this.config.minSponsorshipEarnings ?? 0)
         const { sponsorshipAddresses: allSponsorshipAddresses, earnings } = await operator.getEarningsFromSponsorships()
@@ -62,7 +68,7 @@ export class MaintainOperatorValueHelper {
         const sponsorships = allSponsorshipAddresses
             .map((address, i) => ({ address, earnings: earnings[i] }))
             .filter((sponsorship) => sponsorship.earnings.gte(minSponsorshipEarningsWei))
-            .sort((a, b) => b.earnings.sub(a.earnings).toNumber())
+            .sort((a, b) => Number(b.earnings.sub(a.earnings).toBigInt())) // TODO: after Node 20, use .toSorted() instead
             .slice(0, this.config.maxSponsorshipsCount) // take all if maxSponsorshipsCount is undefined
         const sponsorshipAddresses = sponsorships.map((sponsorship) => sponsorship.address as EthereumAddress)
 
@@ -73,7 +79,7 @@ export class MaintainOperatorValueHelper {
         return { sumDataWei, fraction, sponsorshipAddresses }
     }
 
-    async getMyUnwithdrawnEarnings() {
+    async getMyUnwithdrawnEarnings(): Promise<UnwithdrawnEarningsData> {
         return this.getUnwithdrawnEarningsOf(this.config.operatorContractAddress)
     }
 

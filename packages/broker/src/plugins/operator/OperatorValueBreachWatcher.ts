@@ -7,7 +7,7 @@ const logger = new Logger(module)
 const CHECK_VALUE_INTERVAL = 1000 * 60 * 60 // 1 hour
 
 export class OperatorValueBreachWatcher {
-    private penaltyLimitFraction = BigInt(0)
+    private penaltyLimitFractionCached?: bigint
     private readonly helper: MaintainOperatorValueHelper
     private readonly abortController: AbortController
 
@@ -18,17 +18,26 @@ export class OperatorValueBreachWatcher {
 
     async checkRandomUnwithdrawnEarnings(): Promise<void> {
         const randomOperatorAddress = await this.helper.getRandomOperator()
+        logger.info("Checking unwithdrawn earnings", { randomOperatorAddress })
         return this.checkUnwithdrawnEarningsOf(randomOperatorAddress)
     }
 
     async checkUnwithdrawnEarningsOf(operatorAddress: EthereumAddress): Promise<void> {
         logger.info('Check unwithdrawn earnings and check if they are above the safe threshold')
         const { fraction, sponsorshipAddresses } = await this.helper.getUnwithdrawnEarningsOf(operatorAddress)
-        logger.info(` -> is ${fraction} > ${this.penaltyLimitFraction}?`)
-        if (fraction > this.penaltyLimitFraction) {
+        const limit = await this.getPenaltyLimitFraction()
+        logger.info(` -> is ${fraction} > ${limit}?`)
+        if (fraction > limit) {
             logger.info("Withdrawing earnings from sponsorships", { sponsorshipAddresses })
             await this.helper.withdrawEarningsFromSponsorships(sponsorshipAddresses)
         }
+    }
+
+    async getPenaltyLimitFraction(): Promise<bigint> {
+        if (!this.penaltyLimitFractionCached) {
+            this.penaltyLimitFractionCached = await this.helper.getPenaltyLimitFraction()
+        }
+        return this.penaltyLimitFractionCached
     }
 
     // TODO: remove operator contract address param from start() AND:
@@ -37,8 +46,6 @@ export class OperatorValueBreachWatcher {
     //      test against the "other" one
     //      develop agains the fast chain
     async start(): Promise<void> {
-        this.penaltyLimitFraction = await this.helper.getPenaltyLimitFraction()
-
         await scheduleAtInterval(
             () => this.checkRandomUnwithdrawnEarnings().catch((err) => {
                 logger.warn('Encountered error while watching operators', { err })
