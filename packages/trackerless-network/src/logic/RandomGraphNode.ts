@@ -20,7 +20,7 @@ import {
 import { PeerList } from './PeerList'
 import { NetworkRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { RemoteRandomGraphNode } from './RemoteRandomGraphNode'
-import { INetworkRpc } from '../proto/packages/trackerless-network/protos/NetworkRpc.server'
+import { IInspectionService, INetworkRpc } from '../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { DuplicateMessageDetector, NumberPair } from '@streamr/utils'
 import { Logger } from '@streamr/utils'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
@@ -33,6 +33,7 @@ import { StreamNodeServer } from './StreamNodeServer'
 import { IStreamNode } from './IStreamNode'
 import { ProxyStreamConnectionServer } from './proxy/ProxyStreamConnectionServer'
 import { IInspector } from './inspect/Inspector'
+import { InspectionServiceServer } from './inspect/InspectionServiceServer'
 
 export interface Events {
     message: (message: StreamMessage) => void
@@ -75,6 +76,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
     private readonly abortController: AbortController
     private config: StrictRandomGraphNodeConfig
     private readonly server: INetworkRpc
+    private readonly inspectionServer: IInspectionService
 
     constructor(config: StrictRandomGraphNodeConfig) {
         super()
@@ -103,6 +105,9 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
                     this.config.proxyConnectionServer?.removeConnection(senderId as PeerIDKey)
                 }
             },
+            markForInspection: (senderId: PeerIDKey, messageRef: MessageRef) => this.config.inspector.markMessage(senderId, messageRef)
+        })
+        this.inspectionServer = new InspectionServiceServer({
             onInspectConnection: (peerDescriptor: PeerDescriptor) => {
                 const remote = new RemoteRandomGraphNode(
                     peerDescriptor,
@@ -110,8 +115,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
                     toProtoRpcClient(new NetworkRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
                 )
                 this.config.inspectingConnections.add(remote)
-            },
-            markForInspection: (senderId: PeerIDKey, messageRef: MessageRef) => this.config.inspector.markMessage(senderId, messageRef)
+            }
         })
     }
 
@@ -146,7 +150,7 @@ export class RandomGraphNode extends EventEmitter<Events> implements IStreamNode
         this.config.rpcCommunicator.registerRpcNotification(LeaveStreamNotice, 'leaveStreamNotice',
             (req: LeaveStreamNotice, context) => this.server.leaveStreamNotice(req, context))
         this.config.rpcCommunicator.registerRpcMethod(InspectConnectionRequest, InspectConnectionResponse, 'inspectConnection',
-            (req: InspectConnectionRequest, context) => this.server.inspectConnection(req, context))
+            (req: InspectConnectionRequest, context) => this.inspectionServer.inspectConnection(req, context))
     }
 
     private newContact(_newContact: PeerDescriptor, closestTen: PeerDescriptor[]): void {

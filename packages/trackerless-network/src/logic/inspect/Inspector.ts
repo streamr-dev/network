@@ -1,14 +1,12 @@
 import { PeerIDKey, PeerDescriptor, keyFromPeerDescriptor, ConnectionLocker } from "@streamr/dht"
 import { MessageRef } from "../../proto/packages/trackerless-network/protos/NetworkRpc"
 import { InspectSession, Events as InspectSessionEvents } from "./InspectSession"
-import { PeerList } from "../PeerList"
-import { NetworkRpcClient, INetworkRpcClient } from "../../proto/packages/trackerless-network/protos/NetworkRpc.client"
+import { InspectionServiceClient } from "../../proto/packages/trackerless-network/protos/NetworkRpc.client"
 import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from "@streamr/proto-rpc"
 import { Logger, waitForEvent3 } from "@streamr/utils"
-import { RemoteRandomGraphNode } from "../RemoteRandomGraphNode"
+import { RemoteInspectionServiceServer } from "./RemoteInspectionServiceServer"
 
 interface InspectorConfig {
-    neighbors: PeerList
     ownPeerDescriptor: PeerDescriptor
     graphId: string
     rpcCommunicator: RpcCommunicator
@@ -30,26 +28,24 @@ const DEFAULT_TIMEOUT = 60 * 1000
 export class Inspector implements IInspector {
 
     private readonly sessions: Map<PeerIDKey, InspectSession> = new Map()
-    private readonly neighbors: PeerList
     private readonly graphId: string
-    private readonly client: ProtoRpcClient<INetworkRpcClient>
+    private readonly client: ProtoRpcClient<InspectionServiceClient>
     private readonly ownPeerDescriptor: PeerDescriptor
     private readonly connectionLocker: ConnectionLocker
     private readonly inspectionTimeout: number
     private readonly openInspectConnection: (peerDescriptor: PeerDescriptor, lockId: string) => Promise<void>
 
     constructor(config: InspectorConfig) {
-        this.neighbors = config.neighbors
         this.graphId = config.graphId
         this.ownPeerDescriptor = config.ownPeerDescriptor
-        this.client = toProtoRpcClient(new NetworkRpcClient(config.rpcCommunicator.getRpcClientTransport()))
+        this.client = toProtoRpcClient(new InspectionServiceClient(config.rpcCommunicator.getRpcClientTransport()))
         this.connectionLocker = config.connectionLocker
         this.inspectionTimeout = config.inspectionTimeout || DEFAULT_TIMEOUT
         this.openInspectConnection = config.openInspectConnection || this.defaultOpenInspectConnection
     }
 
     async defaultOpenInspectConnection(peerDescriptor: PeerDescriptor, lockId: string): Promise<void> {
-        const remoteRandomGraphNode = new RemoteRandomGraphNode(peerDescriptor, this.graphId, this.client)
+        const remoteRandomGraphNode = new RemoteInspectionServiceServer(peerDescriptor, this.graphId, this.client)
         await remoteRandomGraphNode.inspectConnection(this.ownPeerDescriptor)
         this.connectionLocker.lockConnection(peerDescriptor, lockId)
     }

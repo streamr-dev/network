@@ -1,7 +1,6 @@
 import { ListeningRpcCommunicator, NodeType, PeerDescriptor, PeerID, keyFromPeerDescriptor } from "@streamr/dht"
-import { PeerList } from "../../src/logic/PeerList"
 import { Inspector } from "../../src/logic/inspect/Inspector"
-import { createMockRemotePeer, mockConnectionLocker } from "../utils/utils"
+import { mockConnectionLocker } from "../utils/utils"
 import { MockTransport } from "../utils/mock/Transport"
 
 describe('Inspector', () => {
@@ -19,7 +18,6 @@ describe('Inspector', () => {
     }
 
     const otherPeerKey = PeerID.fromString('other').toKey()
-    let neighbors: PeerList
     let mockConnect: jest.Mock
 
     const messageRef = {
@@ -33,9 +31,7 @@ describe('Inspector', () => {
 
     beforeEach(() => {
         mockConnect = jest.fn(() => {})
-        neighbors = new PeerList(inspectorPeerId, 10)
         inspector = new Inspector({
-            neighbors,
             ownPeerDescriptor: inspectorDescriptor,
             graphId: 'test',
             rpcCommunicator: new ListeningRpcCommunicator('inspector', new MockTransport()),
@@ -45,9 +41,7 @@ describe('Inspector', () => {
     })
 
     afterEach(() => {
-        neighbors.clear()
         inspector.stop()
-        mockConnect.mockClear()
     })
 
     it('Opens inspection connection and runs successfully', async () => {
@@ -60,14 +54,4 @@ describe('Inspector', () => {
         expect(mockConnect).toBeCalledTimes(1)
     })
 
-    it('Negotiated inspection connection even a stream connection if already exists', async () => {
-        neighbors.add(createMockRemotePeer(inspectedDescriptor))
-        setTimeout(() => {
-            inspector.markMessage(keyFromPeerDescriptor(inspectedDescriptor), messageRef)
-            inspector.markMessage(otherPeerKey, messageRef)
-        }, 250)
-        await inspector.inspect(inspectedDescriptor)
-        expect(inspector.isInspected(keyFromPeerDescriptor(inspectedDescriptor))).toBe(false)
-        expect(mockConnect).toBeCalledTimes(1)
-    })
 })

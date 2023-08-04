@@ -9,7 +9,6 @@ import "packages/dht/protos/DhtRpc.proto";
 service NetworkRpc {
   rpc sendData (StreamMessage) returns (google.protobuf.Empty);
   rpc leaveStreamNotice (LeaveStreamNotice) returns (google.protobuf.Empty);
-  rpc inspectConnection (InspectConnectionRequest) returns (InspectConnectionResponse);
 }
 
 service ProxyConnectionRpc {
@@ -23,6 +22,10 @@ service HandshakeRpc {
 
 service NeighborUpdateRpc {
   rpc neighborUpdate (NeighborUpdate) returns (NeighborUpdate);
+}
+
+service InspectionService {
+  rpc inspectConnection (InspectConnectionRequest) returns (InspectConnectionResponse);
 }
 
 message MessageRef {

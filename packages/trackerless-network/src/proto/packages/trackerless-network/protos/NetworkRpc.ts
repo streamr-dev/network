@@ -643,8 +643,7 @@ export const InspectConnectionResponse = new InspectConnectionResponse$Type();
  */
 export const NetworkRpc = new ServiceType("NetworkRpc", [
     { name: "sendData", options: {}, I: StreamMessage, O: Empty },
-    { name: "leaveStreamNotice", options: {}, I: LeaveStreamNotice, O: Empty },
-    { name: "inspectConnection", options: {}, I: InspectConnectionRequest, O: InspectConnectionResponse }
+    { name: "leaveStreamNotice", options: {}, I: LeaveStreamNotice, O: Empty }
 ]);
 /**
  * @generated ServiceType for protobuf service ProxyConnectionRpc
@@ -664,4 +663,10 @@ export const HandshakeRpc = new ServiceType("HandshakeRpc", [
  */
 export const NeighborUpdateRpc = new ServiceType("NeighborUpdateRpc", [
     { name: "neighborUpdate", options: {}, I: NeighborUpdate, O: NeighborUpdate }
+]);
+/**
+ * @generated ServiceType for protobuf service InspectionService
+ */
+export const InspectionService = new ServiceType("InspectionService", [
+    { name: "inspectConnection", options: {}, I: InspectConnectionRequest, O: InspectConnectionResponse }
 ]);

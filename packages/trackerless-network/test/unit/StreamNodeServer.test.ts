@@ -25,21 +25,18 @@ describe('StreamNodeServer', () => {
     let mockBroadcast: jest.Mock
     let mockDuplicateCheck: jest.Mock
     let mockOnLeaveNotice: jest.Mock
-    let mockOnInspectConnection: jest.Mock
     let mockMarkForInspection: jest.Mock
 
     beforeEach(async () => {
         mockDuplicateCheck = jest.fn((_c, _p) => true)
         mockBroadcast = jest.fn((_m, _p) => {})
         mockOnLeaveNotice = jest.fn((_m) => {})
-        mockOnInspectConnection = jest.fn((_m) => {})
         mockMarkForInspection = jest.fn((_m) => {})
 
         streamNodeServer = new StreamNodeServer({
             markAndCheckDuplicate: mockDuplicateCheck,
             broadcast: mockBroadcast,
             onLeaveNotice: mockOnLeaveNotice,
-            onInspectConnection: mockOnInspectConnection,
             markForInspection: mockMarkForInspection,
             ownPeerDescriptor: peerDescriptor,
             randomGraphId: 'random-graph',

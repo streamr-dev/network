@@ -1,8 +1,6 @@
 import { keyFromPeerDescriptor, ListeningRpcCommunicator, PeerDescriptor, DhtCallContext, PeerIDKey } from "@streamr/dht"
 import { Empty } from "../proto/google/protobuf/empty"
-import { 
-    InspectConnectionRequest,
-    InspectConnectionResponse, 
+import {
     LeaveStreamNotice,
     MessageRef,
     StreamMessage
@@ -17,7 +15,6 @@ export interface StreamNodeServerConfig {
     broadcast: (message: StreamMessage, previousPeer?: string) => void
     onLeaveNotice(notice: LeaveStreamNotice): void
     markForInspection(senderId: PeerIDKey, messageRef: MessageRef): void
-    onInspectConnection(peerDescriptor: PeerDescriptor): void
     rpcCommunicator: ListeningRpcCommunicator
 }
 
@@ -43,16 +40,5 @@ export class StreamNodeServer implements INetworkRpc {
             this.config.onLeaveNotice(message)
         }
         return Empty
-    }
-
-    async inspectConnection(
-        _request: InspectConnectionRequest,
-        context: ServerCallContext
-    ): Promise<InspectConnectionResponse> {
-        const sender = (context as DhtCallContext).incomingSourceDescriptor!
-        this.config.onInspectConnection(sender)
-        return {
-            accepted: true
-        }
     }
 }

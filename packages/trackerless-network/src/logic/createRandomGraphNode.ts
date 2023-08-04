@@ -83,7 +83,6 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         neighborUpdateInterval
     })
     const inspector = config.inspector ?? new Inspector({
-        neighbors: targetNeighbors,
         ownPeerDescriptor: config.ownPeerDescriptor,
         rpcCommunicator,
         graphId: config.randomGraphId,
