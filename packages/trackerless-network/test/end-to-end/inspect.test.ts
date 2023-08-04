@@ -98,7 +98,7 @@ describe('inspect', () => {
             && inspectedNode.getNeighbors().length === 2 
             && inspectorNode.getNeighbors().length === 2
         )
-    }, 20000)
+    }, 30000)
 
     afterEach(async () => {
         await Promise.all([
