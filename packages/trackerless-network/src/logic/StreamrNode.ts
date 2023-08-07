@@ -179,8 +179,8 @@ export class StreamrNode extends EventEmitter<Events> {
                 })
             this.streams.get(streamPartID)!.layer2.broadcast(msg)
         }
-        this.metrics.publishMessagesPerSecond.add(1)
-        this.metrics.publishBytesPerSecond.add(msg.content.length)
+        this.metrics.publishMessagesPerSecond.record(1)
+        this.metrics.publishBytesPerSecond.record(msg.content.length)
     }
 
     unsubscribeFromStream(streamPartID: string): void {
