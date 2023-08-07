@@ -22,7 +22,7 @@
   "dependencies": {
     "eventemitter3": "^5.0.0",
     "lodash": "^4.17.21",
-    "pino": "^8.14.2",
+    "pino": "^8.15.0",
     "pino-pretty": "^10.2.0"
   },
   "devDependencies": {

@@ -29,7 +29,7 @@
     "run-kademlia-simulation": "ts-node --project tsconfig.node.json $NODE_DEBUG_OPTION --files test/benchmark/kademlia-simulation/KademliaSimulation.ts"
   },
   "dependencies": {
-    "@protobuf-ts/plugin": "^2.8.0",
+    "@protobuf-ts/plugin": "^2.9.1",
     "@streamr/proto-rpc": "8.5.5",
     "@streamr/utils": "8.5.5",
     "bloomfilter": "^0.0.18",

@@ -26,7 +26,7 @@
     "test-integration": "jest test/integration"
   },
   "dependencies": {
-    "@protobuf-ts/plugin": "^2.8.0",
+    "@protobuf-ts/plugin": "^2.9.1",
     "@streamr/utils": "8.5.5",
     "lodash": "^4.17.21",
     "uuid": "^9.0.0"
