@@ -8,7 +8,14 @@ import omit from 'lodash/omit'
 import { container as rootContainer } from 'tsyringe'
 import { PublishMetadata } from '../src/publish/Publisher'
 import { Authentication, AuthenticationInjectionToken, createAuthentication } from './Authentication'
-import { ConfigInjectionToken, StreamrClientConfig, StrictStreamrClientConfig, createStrictConfig, redactConfig, NetworkPeerDescriptor } from './Config'
+import { 
+    ConfigInjectionToken,
+    StreamrClientConfig,
+    StrictStreamrClientConfig,
+    createStrictConfig,
+    redactConfig,
+    NetworkPeerDescriptor
+} from './Config'
 import { DestroySignal } from './DestroySignal'
 import { generateEthereumAccount as _generateEthereumAccount } from './Ethereum'
 import { ProxyDirection } from '@streamr/trackerless-network'
